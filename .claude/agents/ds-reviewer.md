@@ -91,7 +91,7 @@ disabled is communicated, not just greyed. Test ids follow the existing
 If a rule can be broken by a caller, the type is wrong.
 
 **8. House shape.** The component and its stories colocate
-(`<Name>.tsx` + `<Name>.stories.tsx`) in the layer or area that owns it —
+(`<name>.tsx` + `<name>.stories.tsx`, kebab-case) in the layer or area that owns it —
 design-system components in `src/design-system/primitives|patterns/`,
 domain-free; app components in their area; no barrel
 files; comments say *why* and carry dates and the owner's decisions, in
@@ -103,7 +103,7 @@ repo's unit tests live in `tests/unit/` and run through `npm run test:unit`.
 
 1. Read the component's stories first — they are the contract.
 2. Read the component.
-3. Read a settled peer (`src/features/routes/cards/route-card.tsx`, `stop-timeline.tsx`)
+3. Read a settled peer (`src/features/routes/cards/route-card.tsx`, `direction-timeline.tsx`)
    for the house style you are comparing against.
 4. Run `npx tsc --noEmit` and `npm run lint`.
 5. Report.

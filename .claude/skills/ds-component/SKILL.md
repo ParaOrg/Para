@@ -46,7 +46,8 @@ something fit.
 
 ## 4. Files, the house way
 
-`<Name>.tsx` beside `<Name>.stories.tsx`. A design-system component
+`<name>.tsx` beside `<name>.stories.tsx`, kebab-case, the component inside
+PascalCase (`button.tsx` exports `Button`). A design-system component
 lives in its PalimosPoDesignSystem layer — `src/design-system/primitives/`
 for single elements, `patterns/` for compositions of them — and is
 domain-free: no routes, no hintuans. An app component that merely uses
