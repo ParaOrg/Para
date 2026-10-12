@@ -10,10 +10,11 @@ import type {
  * instead (the cheap-phone plan, step 3, 2026-10-04).
  *
  * MapLibre compiles a layer's GL program the first time it draws the layer,
- * and a layer with nothing in view draws nothing. The end circles have
- * nothing until a route is lit, so the first tap that lit one compiled
- * their program, as the card came up: in the harness's baseline every list
- * and trip tap did (5 of 5 runs). A first-use program can hold a cheap
+ * and a layer with nothing in view draws nothing. The end circles (a layer
+ * until 2026-10-12, DOM markers since) had nothing until a route was lit,
+ * so the first tap that lit one compiled their program, as the card came
+ * up: in the harness's baseline every list and trip tap did (5 of 5 runs).
+ * A first-use program can hold a cheap
  * phone's main thread for 5-50 ms, and SwiftShader's for a second and more;
  * a program is keyed on which paint properties vary by feature and zoom, so
  * one layer drawn once compiles it for every layer painted alike.
@@ -21,8 +22,9 @@ import type {
  * So, once: a twin of each such layer — its paint, unseen — over a speck
  * of its own at the middle of the view (a point, a short line, a small
  * box, each twin over the one its type draws), at the bottom of the stack,
- * drawn once. The end circles need one, and since 2026-10-05 the five
- * layers that draw only what is lit, which are off from the start
+ * drawn once. The end circles needed one while they were a layer; since
+ * 2026-10-05 the five layers that draw only what is lit, which are off from
+ * the start
  * (layerSwitch.ts): their twins compile the lit line's program, which the
  * orange stretches share since step 2, and the marked boxes'. The basemaps'
  * own fills and lines already compile the programs the chevrons and the

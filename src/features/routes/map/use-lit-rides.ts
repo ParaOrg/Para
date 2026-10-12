@@ -13,9 +13,9 @@ import { directionEndHotspots, directionEnds, type Direction } from '../model/ro
 
 /**
  * What a lit route wears on the map, in both apps: its orange stretches
- * where it passes a hintuan, its chevrons and end circles, the rest of its
- * line past a picked hintuan in its card's pale, and the chosen direction's
- * side of each hintuan it cuts across. Returns the rides, for the names over
+ * where it passes a hintuan, its chevrons, the rest of its line past a
+ * picked hintuan in its card's pale, and the chosen direction's side of each
+ * hintuan it cuts across. Returns the rides, for the circles and names at
  * their ends (EndTitles). Split from CommuterApp and StudioApp, which each
  * had it word for word (2026-10-01).
  */
@@ -54,7 +54,7 @@ export function useLitRides(
       saved.litDirections.map((v) => ({
         id: v.id,
         line: travelLine(v, hotspots),
-        ...(ridden?.directionId === v.id ? { flow: ridden.line } : {}),
+        ...(ridden?.directionId === v.id ? { flow: ridden.line, rest: ridden.rest } : {}),
         ...directionEnds(v),
         ...directionEndHotspots(v),
       })),
@@ -63,8 +63,8 @@ export function useLitRides(
   useDirectionArrows(map, rides);
   // Past the picked hintuan, the rest of the trip's line in its card's pale
   // (the owner's ask, 2026-10-12: "the remaining line should be surface-pale
-  // of the selected colour"), over the lit line and under the chevrons and
-  // the end circles; nothing while nothing is picked.
+  // of the selected colour"), over the lit line and under the chevrons;
+  // nothing while nothing is picked.
   useRideRest(map, ridden?.rest ?? null);
   // The chosen direction's side of each hintuan it cuts across: its right.
   useBabaanSides(map, saved.selected, hotspots);

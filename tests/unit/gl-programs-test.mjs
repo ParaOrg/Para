@@ -18,7 +18,6 @@ import {
 } from '@maplibre/maplibre-gl-style-spec';
 import { PASS_LAYER } from '../../src/features/routes/geo/pass-stretches.ts';
 import { RIDE_REST_LAYER } from '../../src/features/routes/map/ride-rest.ts';
-import { ENDS_PAINT, ENDS_TWIN } from '../../src/features/routes/map/direction-arrows.ts';
 import {
   WARM_SOURCE,
   afterIdle,
@@ -37,6 +36,16 @@ import { litOpacity } from '../../src/features/routes/map/saved-routes-layers.ts
 import { litWidth } from '../../src/features/routes/map/line-style.ts';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
+/**
+ * A twin over a point, as the end circles' was until they became DOM markers
+ * (EndTitles, 2026-10-12) and no layer of ours drew circles: warmPrograms'
+ * Point speck, drawn clear.
+ */
+const POINT_TWIN = {
+  type: 'circle',
+  paint: { 'circle-color': 'rgba(0, 0, 0, 0)', 'circle-stroke-color': 'rgba(0, 0, 0, 0)' },
+};
 
 /**
  * The part of a layer's GL program key its paint decides, as MapLibre 6.7
@@ -166,33 +175,18 @@ test("the rest of a ride past a picked hintuan is drawn by the resting line's pr
 
 // ------------------------------------------------------------ step 3
 
-test("the end circles' twin is drawn by their program, unseen", () => {
-  const ends = { type: 'circle', paint: ENDS_PAINT };
-  assert.equal(ENDS_TWIN.type, 'circle');
-  assert.equal(programOf(ENDS_TWIN), programOf(ends));
-  // One program for the layer whatever a card paints its ring (useRideColours sets a colour).
-  assert.doesNotMatch(programOf(ends), /(^|\/)[az]_/);
-  // Clear, but drawn: MapLibre skips a circle layer only for an opacity of 0.
-  for (const k of ['circle-color', 'circle-stroke-color'])
-    assert.equal(Color.parse(ENDS_TWIN.paint[k])?.a, 0, k);
-  for (const k of ['circle-opacity', 'circle-stroke-opacity'])
-    assert.equal(ENDS_TWIN.paint[k], undefined, k);
-  assert.equal(ENDS_TWIN.paint['circle-stroke-width'], ENDS_PAINT['circle-stroke-width']);
-  assert.deepEqual(ENDS_TWIN.paint['circle-radius'], ENDS_PAINT['circle-radius']);
-});
-
 /** A map with the calls warmPrograms makes, its style a list of layers over sources, and its events fired by hand. */
 function fakeMap(
   order = [
     'background',
     'saved-stops-fill',
     'saved-routes-casing',
-    'direction-end-circles',
+    'direction-arrow-chevrons',
     'saved-routes-hit',
   ],
 ) {
   const sources = new Map([
-    ['direction-ends', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }],
+    ['direction-arrows', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }],
   ]);
   const layers = order.map((id) => ({ id }));
   const once = new Map();
@@ -256,7 +250,7 @@ test('a warm-up: a speck at the middle of the view, each twin over its own at th
     type: 'line',
     paint: { 'line-color': '#000000', 'line-width': litWidth(), 'line-opacity': litOpacity() },
   };
-  assert.equal(warmPrograms(map, [ENDS_TWIN, line]), true);
+  assert.equal(warmPrograms(map, [POINT_TWIN, line]), true);
   const src = map.getSource(WARM_SOURCE);
   // A point, a line and a box, 16 px each way at the zoom (512 px tiles): no tile simplifies them away.
   const d = (16 * 360) / (512 * 2 ** 10);
@@ -292,16 +286,16 @@ test('a warm-up: a speck at the middle of the view, each twin over its own at th
     'warm-programs-1',
     'saved-stops-fill',
     'saved-routes-casing',
-    'direction-end-circles',
+    'direction-arrow-chevrons',
     'saved-routes-hit',
   ]);
-  assert.deepEqual(map.getLayer('warm-programs-0').paint, ENDS_TWIN.paint);
+  assert.deepEqual(map.getLayer('warm-programs-0').paint, POINT_TWIN.paint);
   assert.deepEqual(map.getLayer('warm-programs-0').filter, ['==', ['geometry-type'], 'Point']);
   assert.deepEqual(map.getLayer('warm-programs-1').paint, line.paint);
   assert.deepEqual(map.getLayer('warm-programs-1').filter, ['==', ['geometry-type'], 'LineString']);
-  // Its own source and ids: none of the editor's, and the ends' untouched.
+  // Its own source and ids: none of the editor's, and the chevrons' untouched.
   assert.ok(map.getLayersOrder().every((id) => !id.startsWith('draw-')));
-  assert.deepEqual(map.getSource('direction-ends').data.features, []);
+  assert.deepEqual(map.getSource('direction-arrows').data.features, []);
   // No twins: nothing.
   assert.equal(warmPrograms(map, []), false);
   assert.equal(map.log.length, 3);
@@ -315,7 +309,7 @@ test('a warm-up: a speck at the middle of the view, each twin over its own at th
     'background',
     'saved-stops-fill',
     'saved-routes-casing',
-    'direction-end-circles',
+    'direction-arrow-chevrons',
     'saved-routes-hit',
   ]);
   assert.equal(map.getSource(WARM_SOURCE), undefined);
@@ -328,7 +322,7 @@ test('a warm-up: a speck at the middle of the view, each twin over its own at th
     '-source warm-programs',
   ]);
   // And again, as after a lost GL context: the same once more.
-  assert.equal(warmPrograms(map, [ENDS_TWIN]), true);
+  assert.equal(warmPrograms(map, [POINT_TWIN]), true);
   map.fire('idle');
   map.fire('movestart');
   assert.equal(map.getSource(WARM_SOURCE), undefined);
@@ -336,7 +330,7 @@ test('a warm-up: a speck at the middle of the view, each twin over its own at th
 
 test('a warm-up still on the map is joined: beside its twins, over its specks, and all go with the move after the next idle', () => {
   const map = fakeMap();
-  warmPrograms(map, [ENDS_TWIN]);
+  warmPrograms(map, [POINT_TWIN]);
   map.fire('idle');
   // Asked again before a move: on beside the first, the source as it was.
   const fill = {
@@ -366,7 +360,7 @@ test('a warm-up still on the map is joined: beside its twins, over its specks, a
 test('a basemap switch while the twin is there: it goes by its id all the same, or is already gone', () => {
   // Carried across, in another place among the new basemap's layers (basemap.ts's transform).
   const map = fakeMap();
-  warmPrograms(map, [ENDS_TWIN]);
+  warmPrograms(map, [POINT_TWIN]);
   const twin = map.layers.splice(1, 1)[0];
   map.layers.splice(3, 0, { id: 'road' }, twin);
   map.fire('idle');
@@ -375,7 +369,7 @@ test('a basemap switch while the twin is there: it goes by its id all the same, 
   assert.equal(map.getSource(WARM_SOURCE), undefined);
   // A style rebuilt without it: nothing to take away, no error.
   const bare = fakeMap();
-  warmPrograms(bare, [ENDS_TWIN]);
+  warmPrograms(bare, [POINT_TWIN]);
   bare.layers.splice(1, 1);
   bare.sources.delete(WARM_SOURCE);
   bare.fire('idle');
@@ -465,7 +459,7 @@ test('warmSoon: the hooks that ask before the idle are one warm-up, asked as it 
   const browser = fakeBrowser();
   const line = { type: 'line', paint: { 'line-color': '#000000', 'line-opacity': litOpacity() } };
   let ends = 0;
-  warmSoon(map, () => (ends === 0 ? [ENDS_TWIN] : []), browser);
+  warmSoon(map, () => (ends === 0 ? [POINT_TWIN] : []), browser);
   warmSoon(map, () => [line], browser);
   assert.equal(browser.queue.length, 0, 'nothing before the idle');
   map.fire('idle');
@@ -487,7 +481,7 @@ test('warmSoon: the hooks that ask before the idle are one warm-up, asked as it 
   // A provider with nothing to warm by then adds nothing; a warm-up with nothing adds no source.
   const quiet = fakeMap();
   ends = 1;
-  warmSoon(quiet, () => (ends === 0 ? [ENDS_TWIN] : []), browser);
+  warmSoon(quiet, () => (ends === 0 ? [POINT_TWIN] : []), browser);
   quiet.fire('idle');
   browser.flush();
   assert.equal(quiet.getSource(WARM_SOURCE), undefined);
@@ -496,13 +490,13 @@ test('warmSoon: the hooks that ask before the idle are one warm-up, asked as it 
 test('warmSoon cancelled: the last one cancels the warm-up, before the idle or after it; one of two leaves the other', () => {
   const browser = fakeBrowser();
   const a = fakeMap();
-  const cancel = warmSoon(a, () => [ENDS_TWIN], browser);
+  const cancel = warmSoon(a, () => [POINT_TWIN], browser);
   cancel();
   assert.equal(a.waiting('idle'), 0);
   a.fire('idle');
   assert.equal(browser.queue.length, 0);
   const b = fakeMap();
-  const one = warmSoon(b, () => [ENDS_TWIN], browser);
+  const one = warmSoon(b, () => [POINT_TWIN], browser);
   const line = { type: 'line', paint: { 'line-color': '#000000', 'line-opacity': litOpacity() } };
   warmSoon(b, () => [line], browser);
   one();
@@ -514,13 +508,13 @@ test('warmSoon cancelled: the last one cancels the warm-up, before the idle or a
   );
   assert.deepEqual(b.getLayer('warm-programs-0').paint, line.paint);
   const c = fakeMap();
-  const after = warmSoon(c, () => [ENDS_TWIN], browser);
+  const after = warmSoon(c, () => [POINT_TWIN], browser);
   c.fire('idle');
   after();
   browser.flush();
   assert.equal(c.getSource(WARM_SOURCE), undefined);
   // Asked again after a cancel: a warm-up of its own.
-  warmSoon(c, () => [ENDS_TWIN], browser);
+  warmSoon(c, () => [POINT_TWIN], browser);
   c.fire('idle');
   browser.flush();
   assert.ok(c.getLayer('warm-programs-0'));

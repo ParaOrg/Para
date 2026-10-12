@@ -258,7 +258,7 @@ test('held, every chevron a draw for the view would make is there, the same poly
 /** A map of what useDirectionArrows asks: its events, its view, and each source's setData kept. */
 function chevronMap(view) {
   const handlers = new Map();
-  const sets = { 'direction-arrows': [], 'direction-ends': [] };
+  const sets = { 'direction-arrows': [] };
   const sources = new Map();
   const map = {
     view,

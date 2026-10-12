@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
  * The layer ids one file paints and another places its own layers against.
  * The map's layer order is a contract between hooks — the orange stretches
  * go under the routes' hit area, the babaan sides and the hotspots under the
- * routes' casing, the ride-to preview under the ends' circles — and these
+ * routes' casing, the rest of a ride right above the lit line — and these
  * names are its terms; the headless suites read the same strings, so they
  * never change. A layer only its own file uses stays named there.
  */
@@ -20,8 +20,6 @@ export const LAYERS = {
   hotspotsFill: 'saved-stops-fill',
   /** A hintuan's name. */
   hotspotsHintuanLabel: 'saved-stops-label-hintuan',
-  /** A lit ride's end circles. */
-  endCircles: 'direction-end-circles',
   /** The line being drawn: its rim, and its snapped and freehand stretches. */
   drawCasing: 'draw-line-casing',
   drawSnapped: 'draw-line-snapped',
@@ -29,14 +27,14 @@ export const LAYERS = {
 } as const;
 
 /**
- * How far past its edges each tile of the chevrons' and the end circles'
- * sources carries their features, in pixels of the 512 px tile: 32, where
+ * How far past its edges each tile of the chevrons' source carries its
+ * features, in pixels of the 512 px tile: 32, where
  * MapLibre's default is 128 (the cheap-phone plan, step 10 (d), 2026-10-04).
  * A tile is drawn clipped to its own square, so what it carries past its
  * edge shows only as far as a shape reaches back in. A chevron is at most
  * 23 px from corner to corner (13 px across and 22 along, at zoom 20), so
- * none reaches from inside a tile to where it is cut; an end circle is laid
- * out only in the tile its point is in (MapLibre's circle_bucket.ts). The
+ * none reaches from inside a tile to where it is cut (the end circles'
+ * source carried it too, until they became DOM markers on 2026-10-12). The
  * same pixels either way, then, and fewer chevrons laid out fifteen times a
  * second: a trip framed, 48 vertices in the tiles on screen -> 36; at zoom
  * 16, 156 -> 65; at zoom 19, 404 -> 215 (exposed builds, 2026-10-05).

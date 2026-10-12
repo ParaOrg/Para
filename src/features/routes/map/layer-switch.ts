@@ -29,7 +29,8 @@ import { warmSoon, type Twin } from './warm-programs';
  * then, and an opening of many directions is many frames of the whole map:
  * in the suites' maps of 5,000 directions at 1,280 x 800 on SwiftShader,
  * 0.5-1.7 s each (timed in the page, 2026-10-05). Their programs are
- * compiled by twins instead, as the end circles' are: each layer's type and
+ * compiled by twins instead (as the end circles' was, until they became DOM
+ * markers on 2026-10-12): each layer's type and
  * paint over a speck of its own, drawn once while the map is idle
  * (warmPrograms.ts, warmSoon), which the switch asks for once its layers
  * are on the map, and again once a lost GL context is given back. A tap

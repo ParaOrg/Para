@@ -176,14 +176,9 @@ if (!spot) {
     const map = await page.evaluate(async () => {
       const m = window.__map;
       const lit = (await window.__lit('saved-routes')) ?? [];
-      const endFeatures = (await window.__src('direction-ends'))?.features ?? [];
-      const ends = endFeatures.length;
-      // Every end, named or not: where its name was left off matters too.
-      const endList = endFeatures.map((f) => ({
-        name: f.properties.name,
-        named: !!f.properties.named,
-        at: f.geometry.coordinates,
-      }));
+      // Every end, named or not: where its name was left off matters too (EndTitles' markers).
+      const endList = window.__ends().map((e) => ({ name: e.name, named: e.named, at: e.at }));
+      const ends = endList.length;
       const names = endList.filter((e) => e.named).map((e) => e.name);
       const centres = ((await window.__src('direction-arrows'))?.features ?? []).map((f) => {
         const ring = f.geometry.coordinates[0].map((c) => m.project(c));
@@ -492,9 +487,7 @@ if (!spot) {
     const title = await tripTitle();
     check("a row opens that direction's card", title === `${place.from} → ${row.to}`, title);
     const litOne = ((await page.evaluate(() => window.__lit('saved-routes'))) ?? []).length;
-    const endsOne = await page.evaluate(
-      async () => ((await window.__src('direction-ends'))?.features ?? []).length,
-    );
+    const endsOne = await page.evaluate(() => window.__ends().length);
     check(
       '  lit alone, with its two circles',
       litOne === 1 && endsOne === 2,
@@ -604,9 +597,7 @@ if (!spot) {
     }
     await page.locator('[data-testid="card"] button[aria-label="Close"]').first().click();
     await page.waitForTimeout(400);
-    const endsNone = await page.evaluate(
-      async () => ((await window.__src('direction-ends'))?.features ?? []).length,
-    );
+    const endsNone = await page.evaluate(() => window.__ends().length);
     check('  closing it leaves no circles', endsNone === 0, `${endsNone} circle(s)`);
   }
 

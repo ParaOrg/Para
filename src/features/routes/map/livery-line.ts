@@ -9,7 +9,7 @@ import type { Livery } from '../model/liveries';
 /**
  * How a lit route line is painted: the line, the chevrons flowing inside it,
  * and the rest of the line past a picked hintuan. The end circles ring in
- * the line's colour.
+ * the line's colour by the card's own classes (EndTitles).
  */
 export interface LineLook {
   line: string;

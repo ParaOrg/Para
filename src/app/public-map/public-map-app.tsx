@@ -103,7 +103,7 @@ export function PublicMapApp() {
   const age = useMapAge(saved.directions);
   const needRefresh = useNeedRefresh();
 
-  const { tripLivery, look, inCardColour, height } = cards;
+  const { tripLivery, look, litLivery, height } = cards;
 
   // The open trip's hintuans, worked out as the trip or the hotspots change,
   // not at each render of the page (the cheap-phone plan, step 15,
@@ -175,7 +175,7 @@ export function PublicMapApp() {
           map={map}
           rides={rides}
           look={look}
-          marked={inCardColour}
+          livery={litLivery}
           onPick={openPlace}
           onTrip={saved.selected ? undefined : openRide}
         />

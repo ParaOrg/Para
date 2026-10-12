@@ -1,7 +1,7 @@
-import type { CircleLayerSpecification, GeoJSONSource, MapLibreMap } from 'maplibre-gl';
+import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { MAP_CLEAR, MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
+import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
 import { haversine, metresPerPixel, type LngLat } from '@/shared/utils/geo';
 
 import {
@@ -15,17 +15,17 @@ import {
   type Measured,
   type View,
 } from './chevrons';
-import { LAYERS, TILE_BUFFER, useLayerReady } from './layers';
-import { endRadius, litWidthAt } from './line-style';
+import { TILE_BUFFER, useLayerReady } from './layers';
+import { litWidthAt } from './line-style';
 import type { LineLook } from './livery-line';
-import { REST_LAYER } from './ride-rest';
+import { REST_LAYER, restDrawn } from './ride-rest';
 import { ROUTES_HIT_LAYER } from './tap';
-import { warmSoon, type Twin } from './warm-programs';
 
 /**
- * Which way the jeep goes, drawn on the lit directions only, with a circle
- * at each end of each and the place's name over it (EndTitles.tsx; the owner's asks of
- * 2026-09-25).
+ * Which way the jeep goes, drawn on the lit directions only; each end of
+ * each is circled and named by EndTitles.tsx (the owner's asks of
+ * 2026-09-25; the circles were a layer of this hook's until his ask of
+ * 2026-10-12 made them the hintuan's own dot).
  *
  * Decided with the owner 2026-09-23: marks *inside* the line, never as a
  * second offset line, only on what is lit — on every resting line they would
@@ -59,34 +59,6 @@ import { warmSoon, type Twin } from './warm-programs';
 
 const SRC = 'direction-arrows';
 const CHEVRONS = 'direction-arrow-chevrons';
-const ENDS_SRC = 'direction-ends';
-const ENDS = LAYERS.endCircles;
-
-/**
- * The end circles' paint: white, ringed in the selected blue, or in a
- * picked card's or an open trip's colour (useRideColours). Every property
- * one value for the layer, or of the zoom alone: one GL program, which
- * ENDS_TWIN compiles while the map is idle (warmPrograms.ts).
- */
-export const ENDS_PAINT = {
-  'circle-radius': endRadius(),
-  'circle-color': MAP_PAINT['Paint/casing'],
-  'circle-stroke-color': MAP_COLOURS['Map/RouteLine/surface-selected'],
-  'circle-stroke-color-transition': { duration: 0, delay: 0 },
-  'circle-stroke-width': 2,
-} satisfies CircleLayerSpecification['paint'];
-
-/**
- * The end circles' twin: their paint, its colours clear. Drawn once while
- * the map is idle, it compiles their GL program, which the first tap that
- * lit a route used to compile as its card came up (the cheap-phone plan,
- * step 3, 2026-10-04).
- */
-export const ENDS_TWIN = {
-  type: 'circle',
-  paint: { ...ENDS_PAINT, 'circle-color': MAP_CLEAR, 'circle-stroke-color': MAP_CLEAR },
-} as const satisfies Twin;
-
 /** Two ends of one name closer than this are one place, and named once: Tala, where two rides start. */
 const SAME_END_M = 150;
 
@@ -94,12 +66,15 @@ const SAME_END_M = 150;
  * One lit ride: its direction, its line in travel order, and the places it
  * runs from and to; `flow`, where its chevrons stop short of the line's end
  * — the stretch to a picked hintuan, where the ride now ends (the owner's
- * SelectedHintuanRouteTitle, 2026-10-02) — the line and its ends staying whole.
+ * SelectedHintuanRouteTitle, 2026-10-02) — the line and its ends staying whole;
+ * and `rest`, the way on from there to the end (useRideTo's ridden), which
+ * useRideRest draws in the card's pale and whose end circle wears it too.
  */
 export interface Ride {
   id?: string;
   line: readonly LngLat[];
   flow?: readonly LngLat[];
+  rest?: readonly LngLat[];
   from: string;
   to: string;
   fromHotspot?: string | null;
@@ -110,7 +85,9 @@ export interface Ride {
  * An end of a lit ride: where it is, its place, whether it is the one of its
  * place that carries the name, its hotspot, when the ride says which, and
  * the directions of every lit ride that ends there, this way round
- * (`rides`, on the named one only: the rest are empty).
+ * (`rides`, on the named one only: the rest are empty); `of`, the ride's own
+ * direction, when it has an id; and `paled`, where it is the end of a ride
+ * past a picked hintuan, along the rest drawn in the card's pale.
  */
 export interface RideEnd {
   end: 'from' | 'to';
@@ -119,13 +96,15 @@ export interface RideEnd {
   at: LngLat;
   hotspotId: string | null;
   rides: string[];
+  of: string | null;
+  paled: boolean;
 }
 
 /**
  * Where each lit ride starts and finishes, each place named once: two ends
  * of one name closer than SAME_END_M are one place (Tala, where two rides
- * start). The circles are drawn at every end; the names (EndTitles.tsx) at
- * the named ones.
+ * start). EndTitles.tsx circles every end and names the named ones; the
+ * end of a ride whose rest is drawn (`paled`) wears the rest's pale.
  */
 export function rideEnds(rides: readonly Ride[]): RideEnd[] {
   const named: RideEnd[] = [];
@@ -149,6 +128,8 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           at,
           hotspotId,
           rides: !same && r.id ? [r.id] : [],
+          of: r.id ?? null,
+          paled: end === 'to' && restDrawn(r.rest ?? null),
         };
         if (e.named) named.push(e);
         return e;
@@ -198,21 +179,21 @@ function stillPlease(): boolean {
 }
 
 /**
- * The chevrons' colour, the end circles' ring, and the rest of the line past
- * a picked hintuan: the selected blue's white chevrons and blue ring unless
- * the public map says otherwise — a picked card's or an open trip's
- * (liveryLine.ts), the ring in the line's colour and the rest in its pale
- * (the owner's ask, 2026-10-12: the remaining line should be surface-pale of
- * the selected colour).
+ * The chevrons' colour and the rest of the line past a picked hintuan: the
+ * selected blue's white chevrons unless the public map says otherwise — a
+ * picked card's or an open trip's (liveryLine.ts) — and the rest in the
+ * card's pale (the owner's ask, 2026-10-12: the remaining line should be
+ * surface-pale of the selected colour). The end circles wear the line's
+ * colour by their own classes (EndTitles), nothing to paint since they left
+ * the map's layers the same day.
  */
 export function useRideColours(map: MapLibreMap | null, look: LineLook) {
-  // The chevrons' hook adds both layers together; wait for them.
-  const ready = useLayerReady(map, ENDS);
+  // The chevrons' hook adds their layer; wait for it.
+  const ready = useLayerReady(map, CHEVRONS);
   useEffect(() => {
-    if (!map || !ready || !map.getLayer(CHEVRONS)) return;
+    if (!map || !ready) return;
     map.setPaintProperty(CHEVRONS, 'fill-color', look.arrow);
-    map.setPaintProperty(ENDS, 'circle-stroke-color', look.line);
-  }, [map, look.line, look.arrow, ready]);
+  }, [map, look.arrow, ready]);
   // The rest is another hook's layer (ride-rest.ts), added once the lit line
   // is there: waited for the same way, and painted as it arrives.
   const restReady = useLayerReady(map, REST_LAYER);
@@ -223,9 +204,9 @@ export function useRideColours(map: MapLibreMap | null, look: LineLook) {
 }
 
 /**
- * The chevrons' and the end circles' sources and layers, added to `map`
- * under the routes' hit area, which must be there: what useDirectionArrows
- * adds, apart so a unit check can read it (map-sources-test).
+ * The chevrons' source and layer, added to `map` under the routes' hit
+ * area, which must be there: what useDirectionArrows adds, apart so a unit
+ * check can read it (map-sources-test).
  */
 export function addDirectionArrows(map: Pick<MapLibreMap, 'addSource' | 'addLayer'>): void {
   map.addSource(SRC, {
@@ -246,12 +227,6 @@ export function addDirectionArrows(map: Pick<MapLibreMap, 'addSource' | 'addLaye
     },
     ROUTES_HIT_LAYER,
   );
-  map.addSource(ENDS_SRC, {
-    type: 'geojson',
-    buffer: TILE_BUFFER,
-    data: { type: 'FeatureCollection', features: [] },
-  });
-  map.addLayer({ id: ENDS, type: 'circle', source: ENDS_SRC, paint: ENDS_PAINT }, ROUTES_HIT_LAYER);
 }
 
 /** What of the map is on screen now, and at what zoom. */
@@ -307,8 +282,8 @@ export function onAMove(held: View | null, drawnAt: number, now: View): 'hold' |
 
 /**
  * Draw chevrons along each ride's line, flowing for as long as it is lit
- * (STEP_MS), and a circle at both ends of each (named by EndTitles);
- * nothing when there are none. Pass the same array while what is lit is
+ * (STEP_MS); nothing when there are none. Each ride's ends are EndTitles'
+ * to circle and name. Pass the same array while what is lit is
  * unchanged (a memo), or the flow restarts.
  */
 export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride[]): void {
@@ -317,58 +292,12 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
   useEffect(() => {
     // Over the lit line and its orange stretches, under the hit area and the
     // basemap's labels: the line hook's layers must be there first, and are,
-    // since it is called before this one on both surfaces. The end circles
-    // go in just after, so they sit over the chevrons; their names go on top
-    // of everything, so a street name gives way to them rather than the
-    // other way round.
+    // since it is called before this one on both surfaces. The ends' circles
+    // and names are DOM markers (EndTitles), on top of everything, so a
+    // street name gives way to them rather than the other way round.
     if (!map || map.getSource(SRC) || !hitReady) return;
     addDirectionArrows(map);
   }, [map, hitReady]);
-
-  // The ends: where each lit ride starts and finishes, each named once.
-  // Still, so drawn once. How many are drawn is kept for the warm-up below.
-  const endsDrawn = useRef(0);
-  useEffect(() => {
-    const src = map?.getSource(ENDS_SRC) as GeoJSONSource | undefined;
-    if (!src) return;
-    const features = rideEnds(rides).map(({ end, name, named, at }) => ({
-      type: 'Feature' as const,
-      properties: { end, name, named },
-      geometry: { type: 'Point' as const, coordinates: at },
-    }));
-    src.setData({ type: 'FeatureCollection', features });
-    endsDrawn.current = features.length;
-  }, [map, rides, hitReady]);
-
-  // The circles' GL program, compiled while the map is idle rather than at
-  // the first tap (ENDS_TWIN): once a map, after the first 'idle' that
-  // follows their layer's arrival, and again once a lost GL context is
-  // given back, its programs gone with it. Not when ends are drawn by then:
-  // drawing them compiled it. In the same warm-up as the lit layers' twins
-  // since 2026-10-05 (warmSoon; layerSwitch.ts).
-  const warmed = useRef<MapLibreMap | null>(null);
-  useEffect(() => {
-    if (!map || !hitReady || !map.getLayer(ENDS) || warmed.current === map) return;
-    return warmSoon(map, () => {
-      warmed.current = map;
-      return endsDrawn.current === 0 ? [ENDS_TWIN] : [];
-    });
-  }, [map, hitReady]);
-  useEffect(() => {
-    if (!map) return;
-    let cancel = () => {};
-    const restored = () => {
-      cancel();
-      cancel = warmSoon(map, () =>
-        endsDrawn.current === 0 && map.getLayer(ENDS) ? [ENDS_TWIN] : [],
-      );
-    };
-    map.on('webglcontextrestored', restored);
-    return () => {
-      map.off('webglcontextrestored', restored);
-      cancel();
-    };
-  }, [map]);
 
   const frame = useRef(0);
   useEffect(() => {

@@ -39,7 +39,17 @@
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, takeHeldReload, waitForSource } from './lib/harness.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
-import { lookReaders, paintNow, programsAtRest, programsSince, rideLook } from './lib/looks.mjs';
+import {
+  colourOf,
+  endRings,
+  lookReaders,
+  paintNow,
+  programsAtRest,
+  programsSince,
+  rideLook,
+  ringVar,
+  ringed,
+} from './lib/looks.mjs';
 
 const { check, skip, tally } = harness();
 
@@ -1853,10 +1863,18 @@ const LOOKS = await page.evaluate(async () => {
     return null;
   }
 });
-/** Whether the lit line wears `want` (a LineLook), chevrons and rings too; true when the looks cannot be read. */
+/** Whether the lit line wears `want` (a LineLook), chevrons too; true when the looks cannot be read. */
 const wears = (seen, want) =>
-  !LOOKS ||
-  (!!want && seen.line === want.line && seen.arrow === want.arrow && seen.ends === want.line);
+  !LOOKS || (!!want && seen.line === want.line && seen.arrow === want.arrow);
+/** Whether the end circles ring in `livery`'s surface, or the selected blue for null (EndTitles), as the page computes them. */
+const endsWear = async (livery) => {
+  const rings = await endRings(page);
+  const want = await colourOf(page, ringVar(livery));
+  return {
+    ok: ringed(rings, want),
+    detail: `${rings.circles} circle(s) ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
+  };
+};
 /** The directions lit now, by id. */
 const litIds = (p) => p.evaluate(() => window.__lit('saved-routes'));
 
@@ -1865,17 +1883,18 @@ const litIds = (p) => p.evaluate(() => window.__lit('saved-routes'));
 // main thread: 5-50 ms on a phone, a second and more in a runner's software
 // GPU. The first tap that lit a route compiled two as its card came up, the
 // end circles' and the orange stretches'. Since 2026-10-04 the stretches are
-// drawn with the lit line's program, and the circles' is compiled while the
-// map is idle (the cheap-phone plan, steps 2 and 3). So, on the view the map
-// opened on with nothing tapped yet: the circles' program is there, and a
+// drawn with the lit line's program, and the lit layers' are compiled while
+// the map is idle (the cheap-phone plan, steps 2 and 3; the circles' too,
+// until they became DOM markers on 2026-10-12). So, on the view the map
+// opened on with nothing tapped yet: the warm-up has drawn its twins, and a
 // finger on a route line, its card up and the map settled, adds none. Then
 // the page is loaded again, for the sections below to start as they did.
 {
   const rest = await programsAtRest(page);
   check(
-    "at rest, before any tap, the end circles' GL program is compiled (warmPrograms)",
-    rest.circle,
-    rest.circle
+    'at rest, before any tap, the warm-up has drawn its twins (warmPrograms)',
+    rest.warmed,
+    rest.warmed
       ? `after ${(rest.ms / 1000).toFixed(1)} s more`
       : `none in ${rest.ms / 1000} s: ${rest.keys.length} programs`,
   );
@@ -2235,13 +2254,12 @@ if (routeA) {
   // its icons in place of the words Start and End the same day).
   const ends = await page.evaluate(async () => {
     const m = window.__map;
-    const named = ((await window.__src('direction-ends'))?.features ?? []).filter(
-      (f) => f.properties.named,
-    );
+    const all = window.__ends();
+    const named = all.filter((e) => e.named);
     const pills = [...document.querySelectorAll('[data-testid="end-title"]')];
-    const ring = m.getPaintProperty('direction-end-circles', 'circle-stroke-color');
+    // The line's colour as the page computes it: a plain pill wears it inline (livery-line.ts's hex).
     const probe = document.createElement('i');
-    probe.style.color = ring;
+    probe.style.color = m.getPaintProperty('saved-routes-selected', 'line-color');
     document.body.append(probe);
     const ringRgb = getComputedStyle(probe).color;
     probe.remove();
@@ -2257,8 +2275,8 @@ if (routeA) {
     };
     const c = m.getCanvas().getBoundingClientRect();
     const rows = named.map((f) => {
-      const pill = pills.find((p) => p.dataset.name === f.properties.name);
-      if (!pill) return { name: f.properties.name, missing: true };
+      const pill = pills.find((p) => p.dataset.name === f.name);
+      if (!pill) return { name: f.name, missing: true };
       const namePill = pill.querySelector('[data-part="name"]');
       const icon = namePill.querySelector('[data-part="start"] svg')
         ? 'Start'
@@ -2268,12 +2286,14 @@ if (routeA) {
       // Marked, the pill wears its icon's colour; plain, the line's.
       const wants = icon ? wornBy(icon) : ringRgb;
       const box = namePill.getBoundingClientRect();
-      const q = m.project(f.geometry.coordinates);
+      const q = m.project(f.at);
+      // The circle under the pill: the hintuan's own dot, 24 across, its centre on the point (EndTitles).
+      const dot = pill.querySelector('[data-part="circle"] > span').getBoundingClientRect();
       return {
-        name: f.properties.name,
+        name: f.name,
         // Head Route where the ride starts, Start's S first; Tail Route where it goes, End's E first.
         look:
-          f.properties.end === 'from'
+          f.end === 'from'
             ? pill.dataset.end === 'head' && icon === 'Start'
             : pill.dataset.end === 'tail' && icon === 'End',
         colour: getComputedStyle(namePill).backgroundColor === wants,
@@ -2283,14 +2303,18 @@ if (routeA) {
         pointer: getComputedStyle([...namePill.querySelectorAll('svg')].at(-1)).fill === wants,
         across: box.left + box.width / 2 - (c.left + q.x),
         above: c.top + q.y - box.bottom,
+        dotAcross: dot.left + dot.width / 2 - (c.left + q.x),
+        dotDown: dot.top + dot.height / 2 - (c.top + q.y),
+        dotSize: dot.width,
       };
     });
-    return { named: named.length, pills: pills.length, rows };
+    return { named: named.length, pills: pills.length, circles: all.length, rows };
   });
   check(
-    "  each end named once, in a pill over its circle in its icon's colour, or the line's with none, its pointer the same, Start's S before where the ride starts and End's E before where it goes",
+    "  each end named once, in a pill over its circle in its icon's colour, or the line's with none, its pointer the same, Start's S before where the ride starts and End's E before where it goes; the circle the hintuan's dot, 24 across, on the point",
     ends.named > 0 &&
       ends.pills === ends.named &&
+      ends.circles >= ends.named &&
       ends.rows.every(
         (r) =>
           !r.missing &&
@@ -2299,7 +2323,10 @@ if (routeA) {
           r.pointer &&
           Math.abs(r.across) < 1.5 &&
           r.above > 14 &&
-          r.above < 40,
+          r.above < 40 &&
+          Math.abs(r.dotAcross) < 1.5 &&
+          Math.abs(r.dotDown) < 1.5 &&
+          Math.abs(r.dotSize - 24) < 0.5,
       ),
     JSON.stringify(ends),
   );
@@ -2307,10 +2334,11 @@ if (routeA) {
   // An end's name is a button (the owner's ask, 2026-10-01): its place's
   // card opens over the trip, the map flown in to it, and its ‹ brings the
   // trip back as it was.
-  const named = await page.evaluate(async () =>
-    ((await window.__src('direction-ends'))?.features ?? [])
-      .filter((f) => f.properties.named)
-      .map((f) => ({ name: f.properties.name, at: f.geometry.coordinates })),
+  const named = await page.evaluate(() =>
+    window
+      .__ends()
+      .filter((e) => e.named)
+      .map((e) => ({ name: e.name, at: e.at })),
   );
   const endButton = (name) => page.locator(`[data-testid="end-title"][data-name="${name}"] button`);
   const tappable = [];
@@ -2544,10 +2572,11 @@ if (!shared) {
     );
   }
   const seenPicked = await rideLook(page);
+  const endsPicked = await endsWear(cardColour);
   check(
     "  its routes in the card's colour, chevrons and end circles too",
-    wears(seenPicked, LOOKS?.byLivery[cardColour]),
-    `${cardColour}: ${JSON.stringify(seenPicked)}`,
+    wears(seenPicked, LOOKS?.byLivery[cardColour]) && endsPicked.ok,
+    `${cardColour}: ${JSON.stringify(seenPicked)}; ${endsPicked.detail}`,
   );
   // Narrower than the list only where the list has other cards.
   if (pickedIds.length > 0 && pickedIds.length < new Set(listedIds).size) {
@@ -2588,10 +2617,11 @@ if (!shared) {
     `card ${cardColour}, trip ${tripColour}`,
   );
   const seenTrip = await rideLook(page);
+  const endsTrip = await endsWear(tripColour);
   check(
-    '  and so does its line',
-    wears(seenTrip, LOOKS?.byLivery[tripColour]),
-    `${tripColour}: ${JSON.stringify(seenTrip)}`,
+    '  and so do its line and its end circles',
+    wears(seenTrip, LOOKS?.byLivery[tripColour]) && endsTrip.ok,
+    `${tripColour}: ${JSON.stringify(seenTrip)}; ${endsTrip.detail}`,
   );
   const trip3 = await tripChecks();
   const back = card().getByRole('button', { name: 'Back' });
@@ -2623,12 +2653,13 @@ if (!shared) {
     const oneCard =
       (await listCards.count()) === 1 ? await listCards.first().getAttribute('data-livery') : null;
     const seenRest = await rideLook(page);
+    const endsRest = await endsWear(oneCard);
     check(
       oneCard
         ? "  and its lines are its one card's colour again"
         : '  and its lines are the selected blue again',
-      wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit),
-      `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}`,
+      wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit) && endsRest.ok,
+      `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
     );
     // A Tail Route one lit ride alone goes to opens that ride's trip, its
     // line lit (the owner's ask, 2026-10-01); ‹ back to the list. The card
@@ -2684,10 +2715,7 @@ if (!shared) {
         (b) => b.closest('[data-testid="end-title"]').dataset.name,
       );
       const tailAt = await page.evaluate(
-        async (n) =>
-          ((await window.__src('direction-ends'))?.features ?? []).find(
-            (f) => f.properties.named && f.properties.name === n,
-          )?.geometry.coordinates,
+        (n) => window.__ends().find((e) => e.named && e.name === n)?.at,
         tailName,
       );
       // Where a finger could tap it: a list left at Max (its handle's taps

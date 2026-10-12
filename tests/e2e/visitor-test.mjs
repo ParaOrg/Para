@@ -24,7 +24,17 @@
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
-import { lookReaders, paintNow, programsAtRest, programsSince, rideLook } from './lib/looks.mjs';
+import {
+  colourOf,
+  endRings,
+  lookReaders,
+  paintNow,
+  programsAtRest,
+  programsSince,
+  rideLook,
+  ringVar,
+  ringed,
+} from './lib/looks.mjs';
 
 const { check, skip, tally } = harness();
 
@@ -319,10 +329,18 @@ const LOOKS = await page.evaluate(async () => {
     return null;
   }
 });
-/** Whether the lit line wears `want` (a LineLook), chevrons and rings too; true when the looks cannot be read. */
+/** Whether the lit line wears `want` (a LineLook), chevrons too; true when the looks cannot be read. */
 const wears = (seen, want) =>
-  !LOOKS ||
-  (!!want && seen.line === want.line && seen.arrow === want.arrow && seen.ends === want.line);
+  !LOOKS || (!!want && seen.line === want.line && seen.arrow === want.arrow);
+/** Whether the end circles ring in `livery`'s surface, or the selected blue for null (EndTitles), as the page computes them. */
+const endsWear = async (livery) => {
+  const rings = await endRings(page);
+  const want = await colourOf(page, ringVar(livery));
+  return {
+    ok: ringed(rings, want),
+    detail: `${rings.circles} circle(s) ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
+  };
+};
 
 const snapshot = await page.evaluate(async () => {
   const m = window.__map;
@@ -418,14 +436,15 @@ check(
   drawLayers.length === 0,
   drawLayers.join(', '),
 );
-// The end circles' GL program is compiled while the map is idle, before any
-// tap, so the first tap that lights a route does not compile it as its card
-// comes up (warm-programs.ts, the cheap-phone plan, step 3, 2026-10-04).
+// The lit layers' GL programs are compiled while the map is idle, before any
+// tap, so the first tap that lights a route does not compile them as its
+// card comes up (warm-programs.ts, the cheap-phone plan, step 3, 2026-10-04;
+// the end circles' too, until they became DOM markers on 2026-10-12).
 const atRest = await programsAtRest(page);
 check(
-  "at rest, before any tap, the end circles' GL program is compiled (warmPrograms)",
-  atRest.circle,
-  `${atRest.keys.length} programs${atRest.circle ? '' : `, none a circle's in ${atRest.ms / 1000} s`}`,
+  'at rest, before any tap, the warm-up has drawn its twins (warmPrograms)',
+  atRest.warmed,
+  `${atRest.keys.length} programs${atRest.warmed ? '' : `, no warm-up in ${atRest.ms / 1000} s`}`,
 );
 
 // 3. Tap each hotspot: fly to a point inside it, click, read the card.
@@ -887,10 +906,11 @@ if (PART !== 1) {
       JSON.stringify(looks),
     );
     const seenPicked = await rideLook(page);
+    const endsPicked = await endsWear(colour);
     check(
       "  its chevrons in the card's words' colour, its end circles ringed in its own",
-      wears(seenPicked, cardLook),
-      `${colour}: ${JSON.stringify(seenPicked)}`,
+      wears(seenPicked, cardLook) && endsPicked.ok,
+      `${colour}: ${JSON.stringify(seenPicked)}; ${endsPicked.detail}`,
     );
     // Narrower than the list only where the list has other cards.
     if (cardIds.length < listed.length)
@@ -925,10 +945,11 @@ if (PART !== 1) {
         `card ${colour}, trip ${tripColour}`,
       );
       const seenTrip = await rideLook(page);
+      const endsTrip = await endsWear(tripColour);
       check(
-        "  its line in the trip card's colour too",
-        wears(seenTrip, LOOKS?.byLivery[tripColour]),
-        `${tripColour}: ${JSON.stringify(seenTrip)}`,
+        "  its line in the trip card's colour too, its end circles ringed in it",
+        wears(seenTrip, LOOKS?.byLivery[tripColour]) && endsTrip.ok,
+        `${tripColour}: ${JSON.stringify(seenTrip)}; ${endsTrip.detail}`,
       );
       // The list stays behind the trip, hidden, for its ‹.
       const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
@@ -955,10 +976,11 @@ if (PART !== 1) {
           ? await listCards.first().getAttribute('data-livery')
           : null;
       const seenRest = await rideLook(page);
+      const endsRest = await endsWear(oneCard);
       check(
         oneCard ? "  in its one card's colour again" : '  in the selected blue again',
-        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit),
-        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}`,
+        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit) && endsRest.ok,
+        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
       );
       // Picked, a second tap lets it go.
       await name.click();
@@ -1020,9 +1042,8 @@ if (PART !== 1) {
 
 // The GL programs a tap at `at`, at zoom 17, adds as the first tap of a page
 // of its own, once its trip is framed and the map settled, read as 4b's own
-// tap was until 2026-10-05: `{ opened, circle, added, standIn }`, `opened`
-// whether a trip came up, `circle` whether the end circles' program was
-// there before it (programsAtRest, programsSince). A page of its own, not
+// tap was until 2026-10-05: `{ opened, added, standIn }`, `opened` whether a
+// trip came up (programsAtRest's keys, programsSince). A page of its own, not
 // this one loaded again: section 5 counts this page's map file once. Its
 // errors and requests are watched as this page's are.
 const firstTapPrograms = async (at) => {
@@ -1049,7 +1070,8 @@ const firstTapPrograms = async (at) => {
     await p.waitForTimeout(1200);
     await p.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), at);
     await p.waitForTimeout(700);
-    const rest = await programsAtRest(p);
+    // Its keys as the baseline: the warm-up has come and gone with the jump above.
+    const rest = await programsAtRest(p, 0);
     const box = await p.locator('canvas.maplibregl-canvas').boundingBox();
     await p.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     const opened = await p
@@ -1070,7 +1092,7 @@ const firstTapPrograms = async (at) => {
           else setTimeout(done, 800);
         }),
     );
-    return { opened, circle: rest.circle, ...(await programsSince(p, rest.keys)) };
+    return { opened, ...(await programsSince(p, rest.keys)) };
   } finally {
     await p.close();
   }
@@ -1222,8 +1244,9 @@ if (PART === 1) {
             .map((f) => f.geometry.coordinates[0][0].map((v) => v.toFixed(7)).join())
             .join('|'),
         );
-      // The tap compiled no GL program: the end circles' was compiled while
-      // the map was idle, and the orange stretches draw with the lit line's
+      // The tap compiled no GL program: the lit layers' were compiled while
+      // the map was idle (the end circles' too, until they became DOM markers
+      // on 2026-10-12), and the orange stretches draw with the lit line's
       // (the cheap-phone plan, steps 2 and 3, 2026-10-04). Asked of this tap
       // made again as the first of a page of its own (firstTapPrograms): on
       // this page the taps of 3, 4 and 4a lit routes at zoom 18 and opened a
@@ -1234,7 +1257,7 @@ if (PART === 1) {
       check(
         '  and it compiled no GL program',
         compiled.opened && compiled.added.length === 0,
-        `the same tap, the first of a page of its own: ${compiled.opened ? 'its trip' : 'no trip'} opened, the circles' program ${compiled.circle ? 'there before it' : 'not there before it'}; ` +
+        `the same tap, the first of a page of its own: ${compiled.opened ? 'its trip' : 'no trip'} opened; ` +
           `${compiled.added.length} added${compiled.added.length ? ': ' + compiled.added.join(', ') : ''}` +
           (compiled.standIn.length
             ? `; and ${compiled.standIn.length} a real basemap compiles at load, which the stand-in does not: ${compiled.standIn.map((k) => k.split('/')[0]).join(', ')}`
@@ -1438,8 +1461,8 @@ if (PART === 1) {
         );
         // The rest of the line past the pick, in the card's surface-pale (the
         // owner's ask, 2026-10-12): one stretch, from the hintuan to where the
-        // trip goes, right above the lit line and under the end circles, so
-        // the far end still closes in its circle.
+        // trip goes, right above the lit line; the far end's circle stands over
+        // it, a DOM marker (EndTitles), paled too.
         const restLine = seen.rest[0] ?? null;
         const metresApart = (p, q) =>
           Math.hypot(
@@ -1449,17 +1472,15 @@ if (PART === 1) {
         const pale = LOOKS?.byLivery[seen.livery]?.pale ?? null;
         const restAt = seen.order.indexOf('ride-rest-line');
         const litAt = seen.order.indexOf('saved-routes-selected');
-        const endsAt = seen.order.indexOf('direction-end-circles');
         check(
-          "  and the rest of its line past the hintuan drawn over it in the card's surface-pale, from there to where the trip goes, under the end circles",
+          "  and the rest of its line past the hintuan drawn over it in the card's surface-pale, from there to where the trip goes, right above the lit line",
           seen.rest.length === 1 &&
             (!want ||
               (metresApart(restLine[0], want.at) < 2 &&
                 metresApart(restLine[restLine.length - 1], want.end) < 2)) &&
             (!LOOKS || seen.restColour === pale) &&
-            restAt === litAt + 1 &&
-            endsAt > restAt,
-          `${seen.rest.length} stretch(es) at rest, in ${seen.restColour}${LOOKS ? ` (the ${seen.livery} card's pale ${pale})` : ''}; the rest layer at ${restAt}, the lit line at ${litAt}, the end circles at ${endsAt}`,
+            restAt === litAt + 1,
+          `${seen.rest.length} stretch(es) at rest, in ${seen.restColour}${LOOKS ? ` (the ${seen.livery} card's pale ${pale})` : ''}; the rest layer at ${restAt}, the lit line at ${litAt}`,
         );
         // The dots along the rest ring in its pale, the ones before the pick
         // in the line's colour (the owner's ask, 2026-10-12, with a
@@ -1479,6 +1500,18 @@ if (PART === 1) {
             before.every((s) => s.ring === seen.line),
           `${paled.length} dot(s) along the rest for ${rowsAfter} row(s) past the pick, ringed ${rings(paled)} (the pale ${seen.pale}); ${before.length} before it for ${pickedIndex} row(s), ringed ${rings(before)} (the line ${seen.line})`,
         );
+        // The circle where the trip goes sits at the rest's end, in the pale
+        // too; the one where it starts keeps the line's colour (EndTitles).
+        const endsPicked = await endRings(page);
+        check(
+          "  and the circle where the trip goes, at the rest's end, ringed in the pale too, the start's in the line's colour",
+          endsPicked.circles === 2 &&
+            endsPicked.paledRings.length === 1 &&
+            endsPicked.paledRings[0] === seen.pale &&
+            endsPicked.rings.length === 1 &&
+            endsPicked.rings[0] === seen.line,
+          `${endsPicked.circles} circle(s): paled ${endsPicked.paledRings.join(', ') || 'none'} (the pale ${seen.pale}), the rest ringed ${endsPicked.rings.join(', ') || 'none'} (the line ${seen.line})`,
+        );
         if (want) {
           check(
             '  the camera glides it right of the card in the corner, no padding left',
@@ -1496,6 +1529,7 @@ if (PART === 1) {
           pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
           rest: ((await window.__src('ride-rest'))?.features ?? []).length,
           paled: document.querySelectorAll('[data-testid="station-label"][data-paled]').length,
+          paledEnds: window.__ends().filter((e) => e.paled).length,
         }));
         const kmAfter = await cardEl.locator('[data-testid="trip-km"]').innerText();
         check(
@@ -1504,8 +1538,9 @@ if (PART === 1) {
             letGo.pins === 0 &&
             letGo.rest === 0 &&
             letGo.paled === 0 &&
+            letGo.paledEnds === 0 &&
             kmAfter === kmBefore,
-          `${letGo.pins} circle(s); ${letGo.rest} stretch(es) at rest, ${letGo.paled} dot(s) along it; ${kmAfter}, the whole ${kmBefore}`,
+          `${letGo.pins} circle(s); ${letGo.rest} stretch(es) at rest, ${letGo.paled} dot(s) and ${letGo.paledEnds} end(s) along it; ${kmAfter}, the whole ${kmBefore}`,
         );
         // Where the trip goes is a button too (the owner's ask, 2026-09-29):
         // picked again, a tap there lets the pick go and glides the map to

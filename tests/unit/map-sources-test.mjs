@@ -1,6 +1,7 @@
 // Our GeoJSON sources (the cheap-phone plan, step 10, 2026-10-04): each tile
-// of the chevrons and the end circles carries 32 px past its edges, not
-// MapLibre's 128, and every layer drawn from them still fits in that, while
+// of the chevrons carries 32 px past its edges, not MapLibre's 128 (the end
+// circles' too, until they became DOM markers on 2026-10-12), and every
+// layer drawn from it still fits in that, while
 // the lines and boxes keep the 128 (d; review of step 10 (d), 2026-10-05);
 // the routes and the hotspots are
 // laid out as their sources are added, when they are in by then, and not a
@@ -81,7 +82,7 @@ function allAdded() {
   return map;
 }
 
-const BUFFERED = ['direction-arrows', 'direction-ends'];
+const BUFFERED = ['direction-arrows'];
 /**
  * Our sources that keep MapLibre's 128 px: the lines and boxes, where a tile
  * cut nearer moved their edges on screen (review of step 10 (d),
@@ -142,7 +143,7 @@ function reach(layer) {
   assert.fail(`${layer.id}: a ${layer.type} layer, which this check does not read`);
 }
 
-test('the chevrons and the end circles carry 32 px past each tile edge; the lines, the boxes and the place wash keep MapLibre’s 128', () => {
+test('the chevrons carry 32 px past each tile edge; the lines, the boxes and the place wash keep MapLibre’s 128', () => {
   const { sources } = allAdded();
   assert.equal(TILE_BUFFER, 32);
   for (const id of BUFFERED) assert.equal(sources.get(id)?.buffer, TILE_BUFFER, id);
@@ -157,7 +158,7 @@ test('the chevrons and the end circles carry 32 px past each tile edge; the line
   );
 });
 
-test('every layer drawn from the two reaches less than 32 px from its geometry, and every other of ours less than 128, at every zoom', () => {
+test('every layer drawn from it reaches less than 32 px from its geometry, and every other of ours less than 128, at every zoom', () => {
   const { layers } = allAdded();
   const ours = [...BUFFERED, ...DEFAULT_BUFFER];
   const drawn = layers.filter((l) => ours.includes(l.source));
@@ -173,10 +174,9 @@ test('every layer drawn from the two reaches less than 32 px from its geometry, 
     );
   }
   // The widest: the routes' hit area, 24 px at zoom 20 and up; the lit
-  // line's casing, 15 px; the end circles, 8.5 px and a 2 px ring.
+  // line's casing, 15 px.
   assert.equal(reaches['saved-routes-hit'], 12.5);
   assert.equal(reaches['saved-routes-selected-casing'], 8);
-  assert.equal(reaches['direction-end-circles'], 11.5);
   assert.equal(reaches['direction-arrow-chevrons'], 1);
   assert.deepEqual(
     Object.entries(reaches)
@@ -192,15 +192,12 @@ test('every layer drawn from the two reaches less than 32 px from its geometry, 
 
 test('the two draw no line and no chevron as wide as 32 px: none is cut where a tile shows it', () => {
   const { layers } = allAdded();
-  // A line's edge moves when it is cut nearer (DEFAULT_BUFFER says how): the
-  // two draw only the chevrons' fill and the ends' circles. A circle is laid
-  // out only in the tile its point is in (MapLibre's circle_bucket.ts).
+  // A line's edge moves when it is cut nearer (DEFAULT_BUFFER says how): it
+  // draws only the chevrons' fill (and the ends' circles, until they became
+  // DOM markers on 2026-10-12).
   assert.deepEqual(
     layers.filter((l) => BUFFERED.includes(l.source)).map((l) => [l.source, l.type]),
-    [
-      ['direction-arrows', 'fill'],
-      ['direction-ends', 'circle'],
-    ],
+    [['direction-arrows', 'fill']],
   );
   // A chevron, shaped in pixels at the view's zoom, as wide as the lit line
   // there: from corner to corner, at every zoom and turned any way, less
@@ -226,20 +223,15 @@ test('the two draw no line and no chevron as wide as 32 px: none is cut where a 
 
 // ------------------------------------------------------------ the rest of a ride (2026-10-12)
 
-test('the rest of a ride past a picked hintuan sits right above the lit line, under its stretches, the chevrons and the end circles, whichever hook adds first', () => {
+test('the rest of a ride past a picked hintuan sits right above the lit line, under its stretches and the chevrons, whichever hook adds first', () => {
   const { layers } = allAdded();
   const order = layers.map((l) => l.id);
   // Right above the lit line (the owner's ask, 2026-10-12: the remaining
   // line in the card's surface-pale, the picked hintuan's circle and the
-  // end's over it): the green stretches, the chevrons, the end circles and
-  // the hit area all above it.
+  // end's over it, DOM markers): the green stretches, the chevrons and the
+  // hit area all above it.
   assert.equal(order[order.indexOf('saved-routes-selected') + 1], 'ride-rest-line');
-  for (const id of [
-    'saved-routes-selected-pass',
-    'direction-arrow-chevrons',
-    'direction-end-circles',
-    'saved-routes-hit',
-  ])
+  for (const id of ['saved-routes-selected-pass', 'direction-arrow-chevrons', 'saved-routes-hit'])
     assert.ok(order.indexOf(id) > order.indexOf('ride-rest-line'), `${id} above the rest`);
   // Added before the stretches and the arrows — the hooks' order is no
   // contract (useLayerReady) — the same place: it goes before whatever is

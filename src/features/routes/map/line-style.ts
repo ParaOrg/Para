@@ -91,13 +91,5 @@ export function litWidthAt(zoom: number, extra = 0): number {
   return curveAt(lit(extra), zoom);
 }
 
-/**
- * The circle at each end of a lit direction, as a radius inside its 2 px
- * ring: half the lit line and two pixels more, so the line reads as ending
- * in it at every zoom. Plain for now; the owner decides its look.
- */
-export function endRadius() {
-  return curve(lit(0).map(([z, w]) => [z, w / 2 + 2]));
-}
 /** The casing shows one pixel either side of whatever it wraps. */
 export const CASING_EXTRA = 2;
