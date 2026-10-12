@@ -38,9 +38,9 @@ import { warmSoon, type Twin } from './warm-programs';
  * (since 2026-09-25), or a hotspot's cards do (2026-09-29). Where two of
  * those share a road they flow as one stream, not two.
  *
- * The mark is a white chevron (near-black, Arrow/Inverse, on a yellow line —
- * and a mist one, until mist left on 2026-09-30 — since 2026-09-29:
- * useRideColours), one to a place and all alike, with
+ * The mark is a white chevron (near-black, Arrow/Inverse, on a yellow or a
+ * mist line, until mist left on 2026-09-30 and yellow on 2026-10-12; since
+ * 2026-09-29: useRideColours), one to a place and all alike, with
  * no trail: his call the night of 2026-09-23, after white arrows, a train of
  * four fading chevrons ("not good visually") and jeepneys (parked for a
  * Simulate button, PLAN.md). It is a chevron bigger than the line and cut off

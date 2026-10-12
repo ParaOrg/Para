@@ -78,13 +78,13 @@ export const DefaultLit: Story = {
   },
 };
 
-/** Default in a card's colour: a yellow route's words near-black, as its chevrons are. */
-export const DefaultOnYellow: Story = {
-  args: { variant: 'default', look: LIVERY_LINE.yellow },
+/** Default in a card's colour: a rose route's, its words white as its chevrons are. */
+export const DefaultOnRose: Story = {
+  args: { variant: 'default', look: LIVERY_LINE.rose },
   play: async ({ canvasElement }) => {
     await expect(pillOf(canvasElement)).toHaveStyle({
-      backgroundColor: LIVERY_LINE.yellow.line,
-      color: LIVERY_LINE.yellow.arrow,
+      backgroundColor: LIVERY_LINE.rose.line,
+      color: LIVERY_LINE.rose.arrow,
     });
   },
 };

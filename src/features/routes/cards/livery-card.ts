@@ -7,20 +7,20 @@ import type { Livery } from '../model/liveries';
  * 2026-09-28) — for the list's cards and a trip's card alike (RouteTripDetail,
  * 2026-09-29), so a trip opens in the colours of the card it was picked from.
  *
- * Red and orange write in Content/inverse under Route/RouteCardPrimary;
- * yellow in Content/primary under Route/RouteCardInverse, its Blob brighter
- * and softened 2px more. The owner's yellow trip frames (3762:3546) wear the
- * red card's Primary Blob and shadow; the yellow card's own are used here, so
- * the card and the trip it opens match. Violet, rose and fuchsia (2026-09-30)
- * are the three between: white words, as on red and orange, under yellow's
- * Inverse shadow and softened Blob. Mist, dark words like yellow's, left the
- * set the same day.
+ * Red and orange write in Content/inverse under Route/RouteCardPrimary.
+ * Violet, rose and fuchsia (2026-09-30) write the same white words under
+ * Route/RouteCardInverse, its Blob brighter and softened 2px more — the
+ * yellow card's shadow and Blob, drawn for its dark words (Content/primary;
+ * his yellow trip frames, 3762:3546, wore the red card's, and the card's own
+ * were used here so the card and the trip it opens matched). Mist, dark
+ * words like yellow's, left the set on 2026-09-30; yellow itself on
+ * 2026-10-12 ("it's not good on the eyes"), so every livery's words are
+ * white now.
  */
 
 export const CARD_SURFACE = {
   red: 'bg-card-red-surface border-card-red-border-primary',
   orange: 'bg-card-orange-surface border-card-orange-border-primary',
-  yellow: 'bg-card-yellow-surface border-card-yellow-border-primary',
   violet: 'bg-card-violet-surface border-card-violet-border-primary',
   rose: 'bg-card-rose-surface border-card-rose-border-primary',
   fuchsia: 'bg-card-fuchsia-surface border-card-fuchsia-border-primary',
@@ -29,7 +29,6 @@ export const CARD_SURFACE = {
 export const CARD_TEXT = {
   red: 'text-content-inverse',
   orange: 'text-content-inverse',
-  yellow: 'text-content-primary',
   violet: 'text-content-inverse',
   rose: 'text-content-inverse',
   fuchsia: 'text-content-inverse',
@@ -39,7 +38,6 @@ export const CARD_TEXT = {
 export const CARD_SHADOW = {
   red: 'shadow-route-card-primary',
   orange: 'shadow-route-card-primary',
-  yellow: 'shadow-route-card-inverse',
   violet: 'shadow-route-card-inverse',
   rose: 'shadow-route-card-inverse',
   fuchsia: 'shadow-route-card-inverse',
@@ -50,7 +48,6 @@ export const CARD_SHADOW = {
 export const CARD_SHADOW_SELECTED = {
   red: 'shadow-route-card-primary-selected',
   orange: 'shadow-route-card-primary-selected',
-  yellow: 'shadow-route-card-inverse-selected',
   violet: 'shadow-route-card-inverse-selected',
   rose: 'shadow-route-card-inverse-selected',
   fuchsia: 'shadow-route-card-inverse-selected',
@@ -72,7 +69,6 @@ export const CARD_SHADOW_SELECTED = {
 export const CARD_BLOB = {
   red: { src: blobPrimary, className: '' },
   orange: { src: blobPrimary, className: '' },
-  yellow: { src: blobInverse, className: 'blur-[2px]' },
   violet: { src: blobInverse, className: 'blur-[2px]' },
   rose: { src: blobInverse, className: 'blur-[2px]' },
   fuchsia: { src: blobInverse, className: 'blur-[2px]' },
@@ -87,7 +83,6 @@ export const BLOB_PLACE =
 export const TIMELINE_SURFACE = {
   red: 'bg-card-red-timeline-surface',
   orange: 'bg-card-orange-timeline-surface',
-  yellow: 'bg-card-yellow-timeline-surface',
   violet: 'bg-card-violet-timeline-surface',
   rose: 'bg-card-rose-timeline-surface',
   fuchsia: 'bg-card-fuchsia-timeline-surface',
@@ -104,7 +99,6 @@ export const TIMELINE_SURFACE = {
 export const ROW_PRESSED = {
   red: 'active:bg-card-red-timeline-surface [-webkit-tap-highlight-color:transparent]',
   orange: 'active:bg-card-orange-timeline-surface [-webkit-tap-highlight-color:transparent]',
-  yellow: 'active:bg-card-yellow-timeline-surface [-webkit-tap-highlight-color:transparent]',
   violet: 'active:bg-card-violet-timeline-surface [-webkit-tap-highlight-color:transparent]',
   rose: 'active:bg-card-rose-timeline-surface [-webkit-tap-highlight-color:transparent]',
   fuchsia: 'active:bg-card-fuchsia-timeline-surface [-webkit-tap-highlight-color:transparent]',
@@ -112,15 +106,14 @@ export const ROW_PRESSED = {
 
 /**
  * A picked hintuan's pill, with the pesos to it (the owner's Timeline
- * State=Selected, 3769:2847; his yellow card, 3785:4462): the card's own
- * colour on Content/inverse where its words are white, on Content/primary
- * where they are dark. Orange follows red: he drew no orange trip; nor
- * violet, rose and fuchsia, whose words are white too.
+ * State=Selected, 3769:2847): the card's own colour on Content/inverse, the
+ * words being white on every livery (on Content/primary where they were
+ * dark: his yellow card, 3785:4462, until yellow left on 2026-10-12).
+ * Orange follows red: he drew no orange trip; nor violet, rose and fuchsia.
  */
 export const TIMELINE_PILL = {
   red: 'bg-content-inverse text-card-red-surface',
   orange: 'bg-content-inverse text-card-orange-surface',
-  yellow: 'bg-content-primary text-card-yellow-surface',
   violet: 'bg-content-inverse text-card-violet-surface',
   rose: 'bg-content-inverse text-card-rose-surface',
   fuchsia: 'bg-content-inverse text-card-fuchsia-surface',

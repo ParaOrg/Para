@@ -169,21 +169,6 @@ function TokensPage() {
           cls="bg-card-orange-timeline-surface"
         />
         <Swatch
-          box="bg-card-yellow-surface border-3 border-card-yellow-border-primary"
-          token="Card/yellow"
-          cls="bg-card-yellow-surface"
-        />
-        <Swatch
-          box="bg-card-yellow-surface-pale"
-          token="Card/yellow/surface-pale"
-          cls="bg-card-yellow-surface-pale"
-        />
-        <Swatch
-          box="bg-card-yellow-timeline-surface"
-          token="Card/yellow/Timeline"
-          cls="bg-card-yellow-timeline-surface"
-        />
-        <Swatch
           box="bg-card-violet-surface border-3 border-card-violet-border-primary"
           token="Card/violet"
           cls="bg-card-violet-surface"
@@ -411,7 +396,7 @@ function TokensPage() {
           cls="shadow-route-card-primary"
         />
         <Swatch
-          box="bg-surface shadow-route-card-inverse"
+          box="bg-card-violet-surface shadow-route-card-inverse"
           token="Route/RouteCardInverse"
           cls="shadow-route-card-inverse"
         />
@@ -421,7 +406,7 @@ function TokensPage() {
           cls="shadow-route-card-primary-selected"
         />
         <Swatch
-          box="bg-card-yellow-surface shadow-route-card-inverse-selected"
+          box="bg-card-violet-surface shadow-route-card-inverse-selected"
           token="Route/RouteCardInverseSelected"
           cls="shadow-route-card-inverse-selected"
         />

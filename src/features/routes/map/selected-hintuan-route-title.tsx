@@ -38,9 +38,9 @@ interface Props {
  *
  * Default is the name alone in 14/20 (3846:11748), in the brand's blue as
  * the frame draws it or, given `look`, in what is lit — the line's colour,
- * and the chevrons' white, near-black on yellow, for its words, as a
- * card's: a list's routes lit in the selected blue, named without Start or
- * End (the owner's ask, 2026-10-02: there are too many). Head Route and
+ * and the chevrons' white for its words, as a card's: a list's routes lit
+ * in the selected blue, named without Start or End (the owner's ask,
+ * 2026-10-02: there are too many). Head Route and
  * Tail Route say which end a place is (his redrawing of 2026-10-12: "start
  * and end will follow this color, blue is the end, green is the start"): a
  * 24px circled S in Start's green, Map/HotspotsCard/Hintuan/surface, or a

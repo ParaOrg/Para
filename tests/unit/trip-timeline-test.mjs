@@ -33,7 +33,7 @@ const { TripTimeline } = await vite.ssrLoadModule('/src/features/routes/cards/tr
 const render = (n, props = {}) =>
   renderToStaticMarkup(
     createElement(TripTimeline, {
-      livery: 'yellow',
+      livery: 'violet',
       routeOrigin: 'Tala',
       hintuans: Array.from({ length: n }, (_, i) => ({ id: `h${i}`, label: `Hintuan ${i}` })),
       picked: null,

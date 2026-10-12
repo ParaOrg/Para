@@ -40,18 +40,6 @@ export const OnRed: Story = {
   ],
 };
 
-/** On a yellow RouteCard: near-black words. */
-export const OnYellow: Story = {
-  args: { on: 'yellow' },
-  decorators: [
-    (Story) => (
-      <div className={'w-96 ' + CARD_SURFACE.yellow + ' ' + CARD_TEXT.yellow}>
-        <Story />
-      </div>
-    ),
-  ],
-};
-
 /** A long place wraps under itself, the arrow staying at its first line's side. */
 export const LongName: Story = {
   args: { routeDirection: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },

@@ -87,7 +87,8 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
-    livery: 'yellow',
+    // Violet since yellow left the set (2026-10-12); his frames (3762:3546) were drawn yellow.
+    livery: 'violet',
     // 12.8 km, as the owner's frame has it; its pesos on today's rule.
     metres: 12_800,
     fare: { regular: '₱30–32', discounted: '₱24–26' },
@@ -308,9 +309,6 @@ export const PickedFuchsia: Story = {
   play: pickedAsDrawn,
 };
 
-/** Yellow (3785:4462): the pill near-black, Content/primary, its pesos in the card's yellow. */
-export const PickedYellow: Story = { args: { picked: 'h3' }, play: pickedAsDrawn };
-
 /** Tapped through: Amparo's row picks it, pill and all; the tile turned to Discounted, the pill with it; a second tap lets it go. */
 export const PickAndLetGo: Story = {
   play: async (ctx) => {
@@ -383,9 +381,6 @@ export const OriginPicked: Story = { args: { livery: 'red', endPicked: 'from' } 
 
 /** Where the trip goes, picked, the same way. */
 export const DestinationPicked: Story = { args: { livery: 'red', endPicked: 'to' } };
-
-/** Both ends' picks on a light card: here, where it goes. */
-export const DestinationPickedYellow: Story = { args: { endPicked: 'to' } };
 
 /** Folded away and opened again, the pick is still there, pill and all (the default he kept). */
 export const PickFoldedAway: Story = {

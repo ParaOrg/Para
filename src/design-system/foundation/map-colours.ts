@@ -46,7 +46,6 @@ export const MAP_OPACITY = {
 export const CARD_COLOURS = {
   'Card/red/surface': '#9f0712', // red/800
   'Card/orange/surface': '#ca3500', // orange/700
-  'Card/yellow/surface': '#ffdf20', // yellow/300
   'Card/violet/surface': '#7008e7', // violet/700
   'Card/rose/surface': '#c70036', // rose/700
   'Card/fuchsia/surface': '#a800b7', // fuchsia/700
@@ -63,7 +62,6 @@ export const CARD_COLOURS = {
 export const CARD_PALE_COLOURS = {
   'Card/red/surface-pale': '#ffc9c9', // red/200
   'Card/orange/surface-pale': '#ffd6a8', // orange/200
-  'Card/yellow/surface-pale': '#fff085', // yellow/200
   'Card/violet/surface-pale': '#ddd6ff', // violet/200
   'Card/rose/surface-pale': '#ffccd3', // rose/200
   'Card/fuchsia/surface-pale': '#f6cfff', // fuchsia/200

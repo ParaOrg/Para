@@ -1,8 +1,9 @@
 /**
  * The route cards' colours — the jeepney liveries of the owner's RouteCard
- * set (Figma 3665:2265): red, orange, yellow, violet, rose and fuchsia. Violet
- * and rose came on 2026-09-30; later that day mist left ("mist is no longer
- * with us") and fuchsia joined. His rule of 2026-09-28:
+ * set (Figma 3665:2265): red, orange, violet, rose and fuchsia. Violet and
+ * rose came on 2026-09-30; later that day mist left ("mist is no longer
+ * with us") and fuchsia joined; yellow left on 2026-10-12 ("it's not good
+ * on the eyes"), its Card/yellow variables with it. His rule of 2026-09-28:
  * shown at random, but kept for the whole visit, the same in the list and on
  * the trip's own card, and two cards side by side never alike.
  *
@@ -13,7 +14,7 @@
  * round, it is the same card (the owner, 2026-09-29; `useTripLivery` in
  * commuter/TripCard.tsx, since its line wears the colour too).
  */
-export const LIVERIES = ['red', 'orange', 'yellow', 'violet', 'rose', 'fuchsia'] as const;
+export const LIVERIES = ['red', 'orange', 'violet', 'rose', 'fuchsia'] as const;
 export type Livery = (typeof LIVERIES)[number];
 
 /** This visit's draws, by place. A new visit draws again. */

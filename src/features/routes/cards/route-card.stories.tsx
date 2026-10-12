@@ -35,9 +35,6 @@ export const Red: Story = {};
 /** Orange — Figma's Pink, the Card/orange tokens. */
 export const Orange: Story = { args: { livery: 'orange', routeOrigin: 'SM Fairview' } };
 
-/** Yellow: Content/primary under Route/RouteCardInverse, the Inverse Blob. */
-export const Yellow: Story = { args: { livery: 'yellow', routeOrigin: 'Lagro' } };
-
 /** State=Selected, red: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
 export const RedSelected: Story = { args: { state: 'selected' } };
 
@@ -46,15 +43,10 @@ export const OrangeSelected: Story = {
   args: { state: 'selected', livery: 'orange', routeOrigin: 'SM Fairview' },
 };
 
-/** Selected, yellow: pressed in under Route/RouteCardInverseSelected. */
-export const YellowSelected: Story = {
-  args: { state: 'selected', livery: 'yellow', routeOrigin: 'Lagro' },
-};
-
-/** Violet (2026-09-30): white words, as Red, under Yellow's Inverse shadow and Blob. */
+/** Violet (2026-09-30): white words, as Red, under Route/RouteCardInverse's shadow and Blob (yellow's, until yellow left the set on 2026-10-12). */
 export const Violet: Story = { args: { livery: 'violet', routeOrigin: 'Fairview' } };
 
-/** Selected, violet: as Yellow. */
+/** Selected, violet: pressed in under Route/RouteCardInverseSelected. */
 export const VioletSelected: Story = {
   args: { state: 'selected', livery: 'violet', routeOrigin: 'Fairview' },
 };
@@ -62,7 +54,7 @@ export const VioletSelected: Story = {
 /** Rose (2026-09-30): as Violet. */
 export const Rose: Story = { args: { livery: 'rose', routeOrigin: 'Novaliches' } };
 
-/** Selected, rose: as Yellow. */
+/** Selected, rose: as Violet. */
 export const RoseSelected: Story = {
   args: { state: 'selected', livery: 'rose', routeOrigin: 'Novaliches' },
 };
@@ -70,7 +62,7 @@ export const RoseSelected: Story = {
 /** Fuchsia (2026-09-30, Figma's Fuschia, in mist's place): as Violet. */
 export const Fuchsia: Story = { args: { livery: 'fuchsia', routeOrigin: 'SM Fairview' } };
 
-/** Selected, fuchsia: as Yellow. */
+/** Selected, fuchsia: as Violet. */
 export const FuchsiaSelected: Story = {
   args: { state: 'selected', livery: 'fuchsia', routeOrigin: 'SM Fairview' },
 };

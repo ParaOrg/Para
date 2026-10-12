@@ -22,12 +22,12 @@ export interface LineLook {
  * A picked RouteCard's routes, and an open trip's line, in the card's own
  * colour (the owner's ask, 2026-09-29: "the highlighted route should change
  * the color to the surface color of selected routecard", and the trip's
- * line too). Card/<livery>/surface, the chevrons in Map/RouteLine/Arrow/Rest
- * on the dark liveries and …/Arrow/Inverse on the light one, as the card's
- * own words are white on red, orange, violet, rose and fuchsia, near-black
- * on yellow; and past a picked hintuan the rest of the trip's line in
- * Card/<livery>/surface-pale (the owner's ask, 2026-10-12: "the remaining
- * line should be surface-pale of the selected colour").
+ * line too). Card/<livery>/surface, the chevrons in Map/RouteLine/Arrow/Rest,
+ * white, as the card's own words are on every livery (…/Arrow/Inverse,
+ * near-black, on the light one until yellow left on 2026-10-12); and past a
+ * picked hintuan the rest of the trip's line in Card/<livery>/surface-pale
+ * (the owner's ask, 2026-10-12: "the remaining line should be surface-pale
+ * of the selected colour").
  */
 export const LIVERY_LINE = {
   red: {
@@ -39,11 +39,6 @@ export const LIVERY_LINE = {
     line: CARD_COLOURS['Card/orange/surface'],
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
     pale: CARD_PALE_COLOURS['Card/orange/surface-pale'],
-  },
-  yellow: {
-    line: CARD_COLOURS['Card/yellow/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Inverse'],
-    pale: CARD_PALE_COLOURS['Card/yellow/surface-pale'],
   },
   violet: {
     line: CARD_COLOURS['Card/violet/surface'],

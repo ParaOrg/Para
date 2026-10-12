@@ -42,7 +42,7 @@ const meta = {
     ),
   ],
   args: {
-    livery: 'yellow',
+    livery: 'violet',
     routeOrigin: 'Tala',
     hintuans: talaToNovaliches,
     routeDirection: 'Novaliches',

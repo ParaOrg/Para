@@ -17,10 +17,10 @@ import './end-titles.css';
  * End&TailRoute (Figma 3848:12135, 2026-09-30): a pill over the end's
  * circle, its pointer at the circle, in place of the plain name the map
  * wrote beside it. Unmarked, the pill is its Default: it wears what is lit,
- * the line's colour, and the chevrons' white — near-black on yellow — for
- * its words, as a card's are. Marked, it is a Head Route or a Tail Route
- * (the owner's redrawing of 2026-10-12: "start and end will follow this
- * color, blue is the end, green is the start"): Start's green with its
+ * the line's colour, and the chevrons' white for its words, as a card's
+ * are. Marked, it is a Head Route or a Tail Route (the owner's redrawing of
+ * 2026-10-12: "start and end will follow this color, blue is the end,
+ * green is the start"): Start's green with its
  * circled S on where a ride starts, End's blue with its circled E on where
  * it goes, white words on both, and the pointer the same.
  *
