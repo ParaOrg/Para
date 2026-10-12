@@ -103,24 +103,31 @@
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
 
-  /* The jeepney-livery cards. Figma: Card/… */
+  /* The jeepney-livery cards. Figma: Card/… Each livery's surface-pale is the
+     rest of a lit line past a picked hintuan (the owner's six, 2026-10-12;
+     red's alone, and red/700, until then). */
   --card-red-surface: var(--color-red-800);
-  --card-red-surface-pale: var(--color-red-700);
+  --card-red-surface-pale: var(--color-red-200);
   --card-red-border-primary: var(--color-red-900);
   --card-red-timeline-surface: var(--color-red-900);
   --card-orange-surface: var(--color-orange-700);
+  --card-orange-surface-pale: var(--color-orange-200);
   --card-orange-border-primary: var(--color-orange-800);
   --card-orange-timeline-surface: var(--color-orange-900);
   --card-yellow-surface: var(--color-yellow-300);
+  --card-yellow-surface-pale: var(--color-yellow-200);
   --card-yellow-border-primary: var(--color-yellow-500);
   --card-yellow-timeline-surface: var(--color-yellow-500);
   --card-violet-surface: var(--color-violet-700);
+  --card-violet-surface-pale: var(--color-violet-200);
   --card-violet-border-primary: var(--color-violet-800);
   --card-violet-timeline-surface: var(--color-violet-900);
   --card-rose-surface: var(--color-rose-700);
+  --card-rose-surface-pale: var(--color-rose-200);
   --card-rose-border-primary: var(--color-rose-800);
   --card-rose-timeline-surface: var(--color-rose-900);
   --card-fuchsia-surface: var(--color-fuchsia-700);
+  --card-fuchsia-surface-pale: var(--color-fuchsia-200);
   --card-fuchsia-border-primary: var(--color-fuchsia-800);
   --card-fuchsia-timeline-surface: var(--color-fuchsia-800);
 
@@ -203,18 +210,23 @@
   --color-card-red-border-primary: var(--card-red-border-primary);
   --color-card-red-timeline-surface: var(--card-red-timeline-surface);
   --color-card-orange-surface: var(--card-orange-surface);
+  --color-card-orange-surface-pale: var(--card-orange-surface-pale);
   --color-card-orange-border-primary: var(--card-orange-border-primary);
   --color-card-orange-timeline-surface: var(--card-orange-timeline-surface);
   --color-card-yellow-surface: var(--card-yellow-surface);
+  --color-card-yellow-surface-pale: var(--card-yellow-surface-pale);
   --color-card-yellow-border-primary: var(--card-yellow-border-primary);
   --color-card-yellow-timeline-surface: var(--card-yellow-timeline-surface);
   --color-card-violet-surface: var(--card-violet-surface);
+  --color-card-violet-surface-pale: var(--card-violet-surface-pale);
   --color-card-violet-border-primary: var(--card-violet-border-primary);
   --color-card-violet-timeline-surface: var(--card-violet-timeline-surface);
   --color-card-rose-surface: var(--card-rose-surface);
+  --color-card-rose-surface-pale: var(--card-rose-surface-pale);
   --color-card-rose-border-primary: var(--card-rose-border-primary);
   --color-card-rose-timeline-surface: var(--card-rose-timeline-surface);
   --color-card-fuchsia-surface: var(--card-fuchsia-surface);
+  --color-card-fuchsia-surface-pale: var(--card-fuchsia-surface-pale);
   --color-card-fuchsia-border-primary: var(--card-fuchsia-border-primary);
   --color-card-fuchsia-timeline-surface: var(--card-fuchsia-timeline-surface);
 

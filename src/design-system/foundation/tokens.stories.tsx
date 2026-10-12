@@ -159,6 +159,11 @@ function TokensPage() {
           cls="bg-card-orange-surface"
         />
         <Swatch
+          box="bg-card-orange-surface-pale"
+          token="Card/orange/surface-pale"
+          cls="bg-card-orange-surface-pale"
+        />
+        <Swatch
           box="bg-card-orange-timeline-surface"
           token="Card/orange/Timeline"
           cls="bg-card-orange-timeline-surface"
@@ -167,6 +172,11 @@ function TokensPage() {
           box="bg-card-yellow-surface border-3 border-card-yellow-border-primary"
           token="Card/yellow"
           cls="bg-card-yellow-surface"
+        />
+        <Swatch
+          box="bg-card-yellow-surface-pale"
+          token="Card/yellow/surface-pale"
+          cls="bg-card-yellow-surface-pale"
         />
         <Swatch
           box="bg-card-yellow-timeline-surface"
@@ -179,6 +189,11 @@ function TokensPage() {
           cls="bg-card-violet-surface"
         />
         <Swatch
+          box="bg-card-violet-surface-pale"
+          token="Card/violet/surface-pale"
+          cls="bg-card-violet-surface-pale"
+        />
+        <Swatch
           box="bg-card-violet-timeline-surface"
           token="Card/violet/Timeline"
           cls="bg-card-violet-timeline-surface"
@@ -189,6 +204,11 @@ function TokensPage() {
           cls="bg-card-rose-surface"
         />
         <Swatch
+          box="bg-card-rose-surface-pale"
+          token="Card/rose/surface-pale"
+          cls="bg-card-rose-surface-pale"
+        />
+        <Swatch
           box="bg-card-rose-timeline-surface"
           token="Card/rose/Timeline"
           cls="bg-card-rose-timeline-surface"
@@ -197,6 +217,11 @@ function TokensPage() {
           box="bg-card-fuchsia-surface border-3 border-card-fuchsia-border-primary"
           token="Card/fuchsia"
           cls="bg-card-fuchsia-surface"
+        />
+        <Swatch
+          box="bg-card-fuchsia-surface-pale"
+          token="Card/fuchsia/surface-pale"
+          cls="bg-card-fuchsia-surface-pale"
         />
         <Swatch
           box="bg-card-fuchsia-timeline-surface"
