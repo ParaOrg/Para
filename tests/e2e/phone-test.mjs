@@ -1328,29 +1328,30 @@ const tripChecks = async () => {
       `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} ring ${drawn.ring}, the rail ${drawn.rail}; pointer-events ${drawn.taps}`,
     );
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
-    // Beside the circle, the hintuan's name in the trip card's colours
-    // (SelectedHintuanRouteTitle, Figma 3847:11777): 10px right of it and
-    // centred on it.
+    // Beside the circle, the hintuan's name in End's colours, as the badge
+    // over it (SelectedHintuanRouteTitle, Figma 3847:11777; the trip card's
+    // colours until the owner's redrawing of 2026-10-12): 10px right of it
+    // and centred on it.
     const rowName = (
       await pickButton.evaluate((b) => b.lastElementChild.firstElementChild.textContent)
     ).trim();
     const title = await page.evaluate(() => {
       const t = document.querySelector('[data-testid="hintuan-pin-title"]');
       const pin = document.querySelector('[data-testid="hintuan-pin"]');
-      const trip = document.querySelector('[data-testid="trip"]');
-      if (!t || !pin || !trip) return null;
+      const badge = t?.parentElement?.querySelector('[data-part="badge"]');
+      if (!t || !pin || !badge) return null;
       const [a, b] = [t.getBoundingClientRect(), pin.getBoundingClientRect()];
-      const [ts, cs] = [getComputedStyle(t), getComputedStyle(trip)];
+      const [ts, bs] = [getComputedStyle(t), getComputedStyle(badge)];
       return {
         text: t.textContent.trim(),
-        colours: ts.backgroundColor === cs.backgroundColor && ts.color === cs.color,
-        detail: `${ts.color} on ${ts.backgroundColor}; the card ${cs.color} on ${cs.backgroundColor}`,
+        colours: ts.backgroundColor === bs.backgroundColor && ts.color === bs.color,
+        detail: `${ts.color} on ${ts.backgroundColor}; End ${bs.color} on ${bs.backgroundColor}`,
         gap: a.left - b.right,
         drop: a.top + a.height / 2 - (b.top + b.height / 2),
       };
     });
     check(
-      "  its name beside the circle, in the trip card's colours",
+      "  its name beside the circle, in End's colours",
       !!title &&
         title.text === rowName &&
         title.colours &&
@@ -2186,7 +2187,8 @@ if (routeA) {
     `${openColour}: ${JSON.stringify(looks)}`,
   );
   // Each end named in a pill over its circle, its pointer at the circle, in
-  // the line's colour (End&TailRoute, Figma 3848:12135).
+  // the line's colour, or, with Start or End over it, in that badge's
+  // (End&TailRoute, Figma 3848:12135; the owner's redrawing of 2026-10-12).
   const ends = await page.evaluate(async () => {
     const m = window.__map;
     const named = ((await window.__src('direction-ends'))?.features ?? []).filter(
@@ -2204,7 +2206,10 @@ if (routeA) {
       const pill = pills.find((p) => p.dataset.name === f.properties.name);
       if (!pill) return { name: f.properties.name, missing: true };
       const namePill = pill.querySelector('[data-part="name"]');
-      const badge = pill.querySelector('[data-part="badge"]')?.textContent.trim();
+      const badgeEl = pill.querySelector('[data-part="badge"]');
+      const badge = badgeEl?.textContent.trim();
+      // Badged, the pill wears its badge's colour; plain, the line's.
+      const wants = badgeEl ? getComputedStyle(badgeEl).backgroundColor : ringRgb;
       const box = namePill.getBoundingClientRect();
       const q = m.project(f.geometry.coordinates);
       return {
@@ -2218,7 +2223,9 @@ if (routeA) {
             : pill.dataset.end === 'tail' &&
               !!pill.querySelector('[data-part="arrow"]') &&
               badge === 'End',
-        colour: getComputedStyle(namePill).backgroundColor === ringRgb,
+        colour: getComputedStyle(namePill).backgroundColor === wants,
+        // Its pointer the same: a class on the badged pill, the line's colour inline on a plain one.
+        pointer: getComputedStyle(namePill.querySelector('svg')).fill === wants,
         across: box.left + box.width / 2 - (c.left + q.x),
         above: c.top + q.y - box.bottom,
       };
@@ -2226,7 +2233,7 @@ if (routeA) {
     return { named: named.length, pills: pills.length, rows };
   });
   check(
-    "  each end named once, in a pill over its circle in the line's colour, where it goes led by an arrow, Start or End over it",
+    "  each end named once, in a pill over its circle in its badge's colour, or the line's with none, its pointer the same, where it goes led by an arrow, Start or End over it",
     ends.named > 0 &&
       ends.pills === ends.named &&
       ends.rows.every(
@@ -2234,6 +2241,7 @@ if (routeA) {
           !r.missing &&
           r.look &&
           r.colour &&
+          r.pointer &&
           Math.abs(r.across) < 1.5 &&
           r.above > 14 &&
           r.above < 40,

@@ -16,8 +16,12 @@ import './end-titles.css';
  * Each lit ride's ends named in the owner's SelectedHintuanRouteTitle,
  * End&TailRoute (Figma 3848:12135, 2026-09-30): a pill over the end's
  * circle, its pointer at the circle, in place of the plain name the map
- * wrote beside it. The pill wears what is lit: the line's colour, and the
- * chevrons' white — near-black on yellow — for its words, as a card's are.
+ * wrote beside it. Unbadged, the pill wears what is lit: the line's colour,
+ * and the chevrons' white — near-black on yellow — for its words, as a
+ * card's are. Badged, it wears its badge's colour (the owner's redrawing of
+ * 2026-10-12: "start and end will follow this color, blue is the end,
+ * green is the start"): Start's green on a Head Route, End's blue on a Tail
+ * Route, white words on both, and the pointer the same.
  *
  * Its Head and Tail Route variants (2026-10-01) read as the RouteCard
  * does: where a ride starts, the top of its timeline, is the card's title;
@@ -100,6 +104,26 @@ export function EndTitles({
   );
 }
 
+/**
+ * Start and End, and the name pill and pointer under each, in one colour
+ * (Figma 3848:12135, the owner's of 2026-10-12): Map/HotspotsCard/Hintuan/
+ * surface, the hintuan's green, for where a ride starts; Brand/surface-
+ * secondary for where it goes; Content/inverse words on both. Literal
+ * class names: Tailwind reads the source.
+ */
+const BADGED = {
+  head: {
+    badge: 'bg-map-hotspots-card-hintuan-surface',
+    pill: 'bg-map-hotspots-card-hintuan-surface text-content-inverse',
+    pointer: 'fill-map-hotspots-card-hintuan-surface',
+  },
+  tail: {
+    badge: 'bg-brand-surface-secondary',
+    pill: 'bg-brand-surface-secondary text-content-inverse',
+    pointer: 'fill-brand-surface-secondary',
+  },
+} satisfies Record<'head' | 'tail', { badge: string; pill: string; pointer: string }>;
+
 /** The pointer's tip below the pill's bottom edge: Figma's Arrow, 13 tall, its centre 5px below the pill. */
 const TIP_PX = 11.5;
 /** Between the pointer's tip and the circle's ring. */
@@ -170,6 +194,7 @@ function EndTitle({
   el.dataset.end = head ? 'head' : 'tail';
   el.dataset.opens = onPick ? opens : '';
   const Pill = onPick ? 'button' : 'div';
+  const worn = BADGED[head ? 'head' : 'tail'];
   return createPortal(
     <Pill
       {...(onPick
@@ -185,20 +210,21 @@ function EndTitle({
         <span
           data-part="badge"
           className={
-            'rounded-full px-2 py-1 text-sm/5 font-medium text-content-inverse ' +
-            (head ? 'bg-map-hotspots-card-hintuan-surface' : 'bg-brand-surface-secondary')
+            'rounded-full px-2 py-1 text-sm/5 font-medium text-content-inverse ' + worn.badge
           }
         >
           {head ? 'Start' : 'End'}
         </span>
       )}
+      {/* Unbadged, the line's colour, which only the map knows: a value computed at runtime. */}
       <span
         data-part="name"
         className={
           'relative flex max-w-full items-center gap-1 rounded-full py-1 text-sm/5 font-medium ' +
-          (head ? 'px-2' : 'pr-2 pl-1')
+          (head ? 'px-2 ' : 'pr-2 pl-1 ') +
+          (badged ? worn.pill : '')
         }
-        style={{ backgroundColor: look.line, color: look.arrow }}
+        style={badged ? undefined : { backgroundColor: look.line, color: look.arrow }}
       >
         {!head && (
           <span aria-hidden data-part="arrow" className="size-5 shrink-0 *:size-full">
@@ -210,8 +236,11 @@ function EndTitle({
         <svg
           aria-hidden
           viewBox="0 0 14.7047 13"
-          className="absolute top-full left-1/2 -mt-[1.5px] h-[13px] w-[14.7px] -translate-x-1/2 rotate-180"
-          style={{ fill: look.line }}
+          className={
+            'absolute top-full left-1/2 -mt-[1.5px] h-[13px] w-[14.7px] -translate-x-1/2 rotate-180 ' +
+            (badged ? worn.pointer : '')
+          }
+          style={badged ? undefined : { fill: look.line }}
         >
           <path d="M6.48632 0.5C6.87122 -0.166666 7.83347 -0.166667 8.21837 0.499999L14.5692 11.5C14.9541 12.1667 14.473 13 13.7032 13H1.00149C0.231692 13 -0.249434 12.1667 0.135466 11.5L6.48632 0.5Z" />
         </svg>

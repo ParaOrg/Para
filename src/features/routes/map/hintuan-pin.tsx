@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { tapsOnItsButton } from './marker-tap';
-import { CARD_SURFACE, CARD_TEXT, TIMELINE_SURFACE } from '../cards/livery-card';
+import { TIMELINE_SURFACE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Livery } from '../model/liveries';
 import './hintuan-pin.css';
@@ -36,9 +36,11 @@ interface Props {
  * fresh circle.
  *
  * Beside it, its name (the owner's SelectedHintuanRouteTitle, Figma
- * 3847:11777, 2026-09-30): a pill in the trip card's surface and words,
- * 10px right of the circle and centred on it, so the circle stays on the
- * point the marker is anchored to. Given `onPick`, the name is a button
+ * 3847:11777, 2026-09-30): a pill 10px right of the circle and centred on
+ * it, so the circle stays on the point the marker is anchored to. It wears
+ * End's blue with white words, as the badge over it does (his redrawing of
+ * 2026-10-12, 3848:12135: "blue is the end"); the trip card's surface and
+ * words until then. Given `onPick`, the name is a button
  * (it opened the hintuan's place, the owner's ask of 2026-10-01, until his
  * of 2026-10-03: it lets the pick go, the camera back); the circle still
  * takes no taps.
@@ -99,12 +101,7 @@ export function HintuanPin({ map, at, label, livery, onPick }: Props) {
           </span>
           <span
             data-testid="hintuan-pin-title"
-            className={
-              'max-w-full truncate rounded-full px-2 py-1 text-sm/5 font-medium shadow-selected-hintuan-route-title ' +
-              CARD_SURFACE[livery] +
-              ' ' +
-              CARD_TEXT[livery]
-            }
+            className="max-w-full truncate rounded-full bg-brand-surface-secondary px-2 py-1 text-sm/5 font-medium text-content-inverse shadow-selected-hintuan-route-title"
           >
             {label}
           </span>
