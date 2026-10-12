@@ -3,39 +3,21 @@
  * along its line (StationLabels.tsx; a train's stations alone until
  * 2026-10-12); both import this sheet, so only the maps that draw them load
  * it. The marker's own element is MapLibre's to move — it sets its
- * transform — so the pop is on the circle inside, TimelineDot's own span
- * (and, on a train line, the picked station's code box left of it:
- * HintuanPin, 2026-10-12): from nothing to its size, over the base duration
- * with the arriving ease (tokens.css, Motion), and without the 2px it tucks
- * into a rail on the card. `prefers-reduced-motion` has it simply there.
+ * transform — so the pop is on the circle inside, TimelineDot's own span,
+ * the first in the marker (HintuanLabel): from nothing to its size, over the
+ * base duration with the arriving ease (tokens.css, Motion). Its label pops by its own sheet
+ * (hintuan-label.css). `prefers-reduced-motion` has it simply there.
  */
 .hintuan-pin {
   pointer-events: none;
 }
-/*
- * A name that opens its place takes taps, and so does a hintuan's dot
- * and name, one button (StationLabels.tsx); the picked hintuan's circle never does.
- */
-button.hintuan-pin-title,
+/* A hintuan's dot and name, one button (StationLabels.tsx); the picked hintuan's circle never takes a tap. */
 button.station-label-tap {
   pointer-events: auto;
   cursor: pointer;
 }
-/* The name beside it pops from its left edge, a beat after the circle. */
-.hintuan-pin-title {
-  white-space: nowrap;
-  transform-origin: left center;
-  translate: 0 -50%;
-  animation: hintuan-pin-pop var(--transition-duration-base) var(--ease-enter) 60ms both;
-}
-/* The picked station's code box, left of the circle and centred on it, pops with the circle. */
-.hintuan-pin-code {
-  white-space: nowrap;
-  translate: 0 -50%;
-}
-.hintuan-pin > span,
+.hintuan-pin > span:first-child,
 .station-label-tap > span:first-child {
-  margin-bottom: 0;
   animation: hintuan-pin-pop var(--transition-duration-base) var(--ease-enter) both;
 }
 /*
@@ -58,9 +40,8 @@ button.station-label-tap {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hintuan-pin > span,
-  .station-label-tap > span:first-child,
-  .hintuan-pin-title {
+  .hintuan-pin > span:first-child,
+  .station-label-tap > span:first-child {
     animation: none;
   }
 }

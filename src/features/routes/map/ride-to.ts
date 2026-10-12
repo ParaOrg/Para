@@ -188,10 +188,11 @@ export function useRideTo(
     /** The picked hintuan's name, as its row reads it: the circle's title on the map (HintuanPin). */
     pickedLabel,
     /**
-     * On a train line, the picked station's code, GL02, for the box beside
-     * its circle (HintuanPin; the owner's LRTHintuanCodes, 2026-10-12);
-     * null for a jeepney's hintuan, the ferry's, and a station the table
-     * does not know.
+     * On a train line, the picked station's code, GL02, in a white chip
+     * before its name on the map (HintuanPin, RouteLineLabel's CodeSignEnd,
+     * 2026-10-13; a box left of its circle from the owner's LRTHintuanCodes
+     * of 2026-10-12); null for a jeepney's hintuan, the ferry's, and a
+     * station the table does not know.
      */
     pickedCode: pickedLabel && isRailLine(line) ? stationCode(line, pickedLabel) : null,
     pick,

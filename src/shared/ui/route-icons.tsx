@@ -113,10 +113,11 @@ export function InformationIcon() {
 }
 
 /**
- * Figma's Start and End (the owner's SelectedHintuanRouteTitle, 3848:12135,
- * redrawn 2026-10-12; 4055:6468 and 4055:6446), 24 across: a disc with the
- * letter cut out — S before the name of where a ride starts, E before where
- * it goes, and before the picked hintuan's, where the ride now ends.
+ * Figma's Start and End (4055:6468 and 4055:6446, 2026-10-12): a disc with
+ * the letter cut out, drawn at the size its box gives it (20 in the map's
+ * labels, 24 in a station's disc, 2026-10-13) — S before the name of where
+ * a ride starts, E before where it goes, and before the picked hintuan's,
+ * where the ride now ends.
  */
 export function StartIcon() {
   return (

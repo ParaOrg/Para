@@ -68,3 +68,42 @@ export const LIT_LINE: LineLook = {
   arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
   pale: MAP_COLOURS['Map/RouteLine/surface-selected'],
 };
+
+/**
+ * What a lit line wears, for the labels on the map (RouteLineLabel,
+ * RouteLineEndingsLabel): a card's colour, or `selected`, the blue with no
+ * card picked.
+ */
+export type LineColour = Livery | 'selected';
+
+/** A label's fill in the line's colour (the owner's "must be the color of routeline", 2026-10-13). */
+export const LINE_SURFACE = {
+  red: 'bg-card-red-surface',
+  orange: 'bg-card-orange-surface',
+  violet: 'bg-card-violet-surface',
+  rose: 'bg-card-rose-surface',
+  fuchsia: 'bg-card-fuchsia-surface',
+  selected: 'bg-map-route-line-surface-selected',
+} satisfies Record<LineColour, string>;
+
+/**
+ * Words in the line's colour, on white: a station's sign code (RouteLineLabel's
+ * CodeSignEnd), on an open trip, which always wears a card's colour.
+ */
+export const LINE_TEXT = {
+  red: 'text-card-red-surface',
+  orange: 'text-card-orange-surface',
+  violet: 'text-card-violet-surface',
+  rose: 'text-card-rose-surface',
+  fuchsia: 'text-card-fuchsia-surface',
+} satisfies Record<Livery, string>;
+
+/** The pointer under an end's label, in the line's colour (RouteLineEndingsLabel). */
+export const LINE_FILL = {
+  red: 'fill-card-red-surface',
+  orange: 'fill-card-orange-surface',
+  violet: 'fill-card-violet-surface',
+  rose: 'fill-card-rose-surface',
+  fuchsia: 'fill-card-fuchsia-surface',
+  selected: 'fill-map-route-line-surface-selected',
+} satisfies Record<LineColour, string>;

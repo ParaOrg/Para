@@ -123,7 +123,6 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
     snap,
     clearOf,
     tripLivery,
-    look,
     /** The card's colour what is lit wears — the open trip's, the picked card's or a list's only card's — or null: the list's blue. */
     litLivery,
     /** A trip stepped behind a place's card: the list behind it stays hidden. */

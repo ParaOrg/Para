@@ -4,15 +4,15 @@ import { createPortal } from 'react-dom';
 
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
+import { HintuanLabel } from './hintuan-label';
 import { restDrawn } from './ride-rest';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
-import { CARD_SURFACE, CARD_SURFACE_PALE, CARD_TEXT } from '../cards/livery-card';
-import { TimelineDot } from '../cards/trip-timeline';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { rowStops } from '../model/ride';
 import type { Direction } from '../model/routes';
 import type { TimelineRow } from '../model/timeline';
+
 import './hintuan-pin.css';
 
 /** The scale bar's width (MapView's ScaleControl, MapLibre's default maxWidth). */
@@ -46,18 +46,14 @@ function namesShow(map: MapLibreMap): boolean {
  * One dot per row of the trip card's timeline (`rows`, its `between`),
  * on the line at the middle of the stretch past the row's box, where the
  * picked circle pops (rowStops; his "middle of the line", 2026-10-12), so
- * a pick replaces the dot in its spot. The name is the owner's
- * RouteLineLabel: SelectedHintuanRouteTitle's Default (Figma 3846:11748)
- * as he drew it on 2026-10-02, a pill in the trip card's surface and
- * words, lifted off the map, as the picked hintuan's own was. Kept so on
- * 2026-10-12, when his redrawing put the pin's in End's blue with its E,
- * drawn flat, and the Default itself in the brand's blue
- * (SelectedHintuanRouteTitle, which draws no pill here): whether this
- * label follows is his to say. The dot is the timeline's own TimelineDot
- * at rest, ringed
- * in the lit line's colour, the card's surface, so the dot and its name
- * are one colour, as the owner asked ("the circle must be the same color
- * as routeline color lit", 2026-10-12). Past a picked hintuan the line is
+ * a pick replaces the dot in its spot. Each is the owner's HintuanLabel,
+ * Hintuan (Figma 4068:4791, 2026-10-13): the timeline's own TimelineDot at
+ * rest and beside it the name, his Label's Default, in the line's colour,
+ * SN Pro 14/20, drawn flat (a 12px pill in the card's surface, lifted off
+ * the map by a shadow, from 2026-10-02 until then). The dot is ringed in
+ * the lit line's colour, the card's surface, so the dot and its name are
+ * one colour, as the owner asked ("the circle must be the same color as
+ * routeline color lit", 2026-10-12). Past a picked hintuan the line is
  * drawn in the card's surface-pale (useRideRest), and the dots along that
  * rest ring in the same pale — the rows after the picked one, in travel
  * order as the rows are, while the rest is drawn (`rest`; his ask the same
@@ -75,8 +71,7 @@ function namesShow(map: MapLibreMap): boolean {
  *
  * The two ends are left to their end titles (EndTitles): the rows leave
  * them out. A picked row is left to its HintuanPin. Once the scale bar
- * reads 3 km only the dots show, smaller. The names are 12px, the picked
- * one's pill 14px (the owner's ask, 2026-10-02). That 3 km is his for
+ * reads 3 km only the dots show, smaller. That 3 km is his for
  * stations a kilometre or two apart; a jeepney's hintuans sit a few
  * hundred metres apart, so at the bar's 2 km their names overlap — kept at
  * 3 km until he says otherwise (asked, 2026-10-12). Given `onPick`, the
@@ -192,23 +187,7 @@ function StationLabel({
       {...(onPick ? { type: 'button' as const, 'aria-label': label } : {})}
       className="station-label-tap relative flex rounded-full"
     >
-      <TimelineDot rail={paled ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery]} />
-      {named && (
-        // 10 after the dot (3847:11777).
-        <span className="hintuan-pin-title absolute top-1/2 left-full ml-2.5 flex max-w-56">
-          <span
-            data-testid="station-label-title"
-            className={
-              'max-w-full truncate rounded-full px-2 py-1 text-xs/4 font-medium shadow-selected-hintuan-route-title ' +
-              CARD_SURFACE[livery] +
-              ' ' +
-              CARD_TEXT[livery]
-            }
-          >
-            {label}
-          </span>
-        </span>
-      )}
+      <HintuanLabel variant="hintuan" name={named ? label : null} livery={livery} isPaled={paled} />
     </Tap>,
     el,
   );

@@ -5,8 +5,10 @@ import { createPortal } from 'react-dom';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { rideEnds, type Ride } from './direction-arrows';
-import type { LineLook } from './livery-line';
-import { SelectedHintuanRouteTitle } from './selected-hintuan-route-title';
+import {
+  RouteLineEndingsLabel,
+  type RouteLineEndingsLabelVariant,
+} from './route-line-endings-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
@@ -16,8 +18,8 @@ import './end-titles.css';
 
 /**
  * Each lit ride's ends: a circle at each, and over the named ones the
- * owner's SelectedHintuanRouteTitle, End&TailRoute (Figma 3848:12135,
- * 2026-09-30), a pill over the circle, its pointer at the circle, in place
+ * owner's RouteLineEndingsLabels (Figma 3848:12135, 2026-09-30, redrawn
+ * 2026-10-13), a pill over the circle, its pointer at the circle, in place
  * of the plain name the map wrote beside it.
  *
  * The circle is the hintuan's own — the card timeline's TimelineDot, as the
@@ -33,33 +35,27 @@ import './end-titles.css';
  * (warm-programs.ts). 24 across at every zoom, since the pills show at
  * every zoom.
  *
- * Unmarked, the pill is its Default: it wears what is lit, the line's colour,
- * and the chevrons' white for its words, as a card's are. Marked, it is a
- * Head Route or a Tail Route (the owner's redrawing of 2026-10-12: "start and
- * end will follow this color, blue is the end, green is the start"): Start's
- * green with its circled S on where a ride starts, End's blue with its
- * circled E on where it goes, white words on both, and the pointer the same.
+ * Each name says which end it is: a Head Route, Start's green with its
+ * circled S, where a ride starts; a Tail Route, End's circled E in the
+ * line's colour, where it goes; white words on both, and the pointer the
+ * same (RouteLineEndingsLabel; End in the brand's blue until the owner's
+ * redrawing of 2026-10-13). They read as the RouteCard does (2026-10-01):
+ * where a ride starts, the top of its timeline, is the card's title; where
+ * it goes is one of the card's rows. The words Start and End stood over the
+ * names from 2026-10-02 until his icons of 2026-10-12. Every lit line's
+ * ends are marked since his "the rules for RouteLineEndingsLabel must be
+ * applicable to these RouteLine" (2026-10-13), a list's in the selected
+ * blue too: they kept plain names from 2026-10-02 ("there are too many").
+ * A ride a picked hintuan stops short (`flow`) ends there, End's E before
+ * the hintuan's name (HintuanPin), so its own tail keeps its name without
+ * one, the label's Default in the line's colour (the owner's ask,
+ * 2026-10-02). A place two rides share is named by the first to reach it
+ * (`rideEnds`), so a trip's change of ride is the earlier ride's tail, as
+ * it sits under the start on the timeline; the other ride's end there keeps
+ * its circle, bare.
  *
- * Head Route and Tail Route (2026-10-01) read as the RouteCard does: where
- * a ride starts, the top of its timeline, is the card's title; where it
- * goes is one of the card's rows. While what is lit wears a card's colour
- * (`livery`) — an open trip, or a picked card's rides, Tala's to Novaliches
- * and to SM Fairview — each name says which end it is (2026-10-02): the
- * words Start and End stood over the names until the icons took their
- * place, and the Tail Route's circled arrow, the rows' own, went with them
- * (his redrawing of 2026-10-12). A ride a picked hintuan stops short
- * (`flow`) ends there, End's E before the hintuan's name (HintuanPin), so
- * its own tail keeps its name without one (the owner's ask, 2026-10-02). A
- * list's routes lit in the selected blue keep their plain names: there are
- * too many (the owner's ask, the same day). A place two rides share is
- * named by the first to reach it (`rideEnds`), so a trip's change of ride
- * is the earlier ride's tail, as it sits under the start on the timeline;
- * the other ride's end there keeps its circle, bare.
- *
- * DOM markers, like the picked hintuan's circle (HintuanPin), whose pill is
- * the same SelectedHintuanRouteTitle, 256 across at most, as the pin's:
- * Figma's own sample, North Caloocan City Hall, whole at 16/24 after the
- * icon (224 held the 14px names until the icons). Each place is named once
+ * DOM markers, like the picked hintuan's circle (HintuanPin), 256 across at
+ * most, as the pin's label is. Each place is named once
  * (`rideEnds`). A list of twenty routes is forty of these, which the
  * cheap-phone plan should count, as it counts the dots along a trip.
  *
@@ -79,18 +75,15 @@ import './end-titles.css';
 export function EndTitles({
   map,
   rides,
-  look,
   livery = null,
   onPick,
   onTrip,
 }: {
   map: MapLibreMap;
   rides: readonly Ride[];
-  look: LineLook;
   /**
-   * The card's colour what is lit wears: the circles ringed in it, Start's S
-   * and End's E before the names. Null, the list's selected blue: the
-   * circles ringed in it, the names plain.
+   * The card's colour what is lit wears: the circles ringed in it, End's
+   * label in it. Null, the list's selected blue, worn the same way.
    */
   livery?: Livery | null;
   onPick?: (hotspotId: string) => void;
@@ -112,10 +105,9 @@ export function EndTitles({
             name={name}
             named={named}
             head={end === 'from'}
-            marked={!!livery && !(end === 'to' && here.some((id) => short.has(id)))}
+            marked={!(end === 'to' && here.some((id) => short.has(id)))}
             livery={livery}
             paled={paled}
-            look={look}
             opens={trip ? 'trip' : 'place'}
             onPick={
               trip
@@ -134,6 +126,19 @@ export function EndTitles({
 /** The circle across: TimelineDot at rest (trip-timeline.tsx), its centre on the point. */
 const DOT_PX = 24;
 
+/** What a pill's button says before the name: which end, as its icon shows it. */
+const SPOKEN = {
+  head: 'Start, ',
+  tail: 'End, ',
+  default: '',
+} satisfies Record<RouteLineEndingsLabelVariant, string>;
+
+/** What a pill's button says a tap opens. */
+const OPENS = {
+  trip: 'the trip there',
+  place: 'the routes there',
+} satisfies Record<'trip' | 'place', string>;
+
 /** The selected blue's ring, Map/RouteLine/surface-selected, with no card's colour on. */
 const LIT_RAIL = 'bg-map-route-line-surface-selected';
 
@@ -146,7 +151,6 @@ function EndTitle({
   marked,
   livery,
   paled,
-  look,
   opens,
   onPick,
 }: {
@@ -162,7 +166,6 @@ function EndTitle({
   livery: Livery | null;
   /** Along the rest past a picked hintuan: the circle ringed in the card's pale. */
   paled: boolean;
-  look: LineLook;
   /** What a tap opens: the ride's trip, or the place's card. */
   opens: 'trip' | 'place';
   onPick?: () => void;
@@ -184,6 +187,8 @@ function EndTitle({
     el.toggleAttribute('data-paled', paled);
   }, [el, named, name, head, opensWhat, at, paled]);
   const rail = livery ? (paled ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery]) : LIT_RAIL;
+  const markedAs = head ? 'head' : 'tail';
+  const variant: RouteLineEndingsLabelVariant = marked ? markedAs : 'default';
   const Pill = onPick ? 'button' : 'div';
   return createPortal(
     <>
@@ -192,30 +197,26 @@ function EndTitle({
           {...(onPick
             ? {
                 type: 'button' as const,
-                'aria-label': `${marked ? (head ? 'Start, ' : 'End, ') : ''}${name}: ${opens === 'trip' ? 'the trip there' : 'the routes there'}`,
+                'aria-label': `${SPOKEN[variant]}${name}: ${OPENS[opens]}`,
               }
             : {})}
           className="flex max-w-64 flex-col items-center"
         >
-          {marked ? (
-            <SelectedHintuanRouteTitle variant={head ? 'head' : 'tail'} name={name} pointer />
-          ) : (
-            <SelectedHintuanRouteTitle variant="default" name={name} look={look} pointer />
-          )}
+          <RouteLineEndingsLabel variant={variant} name={name} livery={livery} />
         </Pill>
       )}
       {/*
-        The circle at the point, the pill's pointer at its ring: 13.5 below the
-        pill — the pointer's 11.5 past the pill's edge (SelectedHintuanRouteTitle)
+        The circle at the point, the pill's pointer at its ring: 13 below the
+        pill — the pointer's 11 past the pill's edge (RouteLineEndingsLabel)
         and the 2 between its tip and the ring (Figma 3847:11777). Decoration:
         the pill names the end, and a bare circle has nothing to say.
       */}
       <span
         aria-hidden
         data-part="circle"
-        className={'end-title-circle flex justify-center' + (named ? ' mt-[13.5px]' : '')}
+        className={'end-title-circle flex justify-center' + (named ? ' mt-3.25' : '')}
       >
-        <TimelineDot rail={rail} />
+        <TimelineDot rail={rail} isTucked={false} />
       </span>
     </>,
     el,

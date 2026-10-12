@@ -17,15 +17,12 @@
   cursor: pointer;
 }
 .end-title > * {
-  transform-origin: center calc(100% + 11.5px);
+  transform-origin: center calc(100% + 11px);
   animation: end-title-pop var(--transition-duration-base) var(--ease-enter) both;
 }
-/* The circle pops from its own centre, and is untucked from a rail it has none of (TimelineDot's -2px). */
+/* The circle pops from its own centre. */
 .end-title > .end-title-circle {
   transform-origin: center;
-}
-.end-title > .end-title-circle > span {
-  margin-bottom: 0;
 }
 @keyframes end-title-pop {
   from {

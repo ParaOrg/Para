@@ -277,7 +277,7 @@ function Workshop({
     }
   };
 
-  const { choice, choosing, closeAll, tripLivery, look, litLivery, height } = cards;
+  const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
 
   // "Draw the return trip" only while the route still has a way undrawn: after
   // an edit of a route drawn both ways it once started a drawing whose save
@@ -317,7 +317,7 @@ function Workshop({
       )}
 
       {/* Each lit ride's ends, named over their circles. */}
-      {map && !draw.drawing && <EndTitles map={map} rides={rides} look={look} livery={litLivery} />}
+      {map && !draw.drawing && <EndTitles map={map} rides={rides} livery={litLivery} />}
       {/* The open trip's hintuans along its line, a train's stations and a jeepney's alike, named (RouteLineLabel). */}
       {map && !draw.drawing && saved.selected && tripLivery && timeline && (
         <StationLabels

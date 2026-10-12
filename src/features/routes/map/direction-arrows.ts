@@ -66,7 +66,7 @@ const SAME_END_M = 150;
  * One lit ride: its direction, its line in travel order, and the places it
  * runs from and to; `flow`, where its chevrons stop short of the line's end
  * — the stretch to a picked hintuan, where the ride now ends (the owner's
- * SelectedHintuanRouteTitle, 2026-10-02) — the line and its ends staying whole;
+ * ask, 2026-10-02; HintuanLabel's HintuanEnd) — the line and its ends staying whole;
  * and `rest`, the way on from there to the end (useRideTo's ridden), which
  * useRideRest draws in the card's pale and whose end circle wears it too.
  */
