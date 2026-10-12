@@ -38,7 +38,8 @@ interface Props {
  * surface (the owner's call of 2026-10-12, "match the line"; the card's
  * rail colour, Card/<livery>/Timeline/surface, until then), so the map and
  * the card point at the same place the same way, and the circle is one
- * colour with the line it sits on and the dots along it (StationLabels).
+ * colour with the line it sits on and the dots before it (StationLabels;
+ * past it, the line and its dots are the card's pale, useRideRest).
  *
  * A DOM marker, like the visitor's own (LocatorIndicatorOverlay): the pop
  * is a CSS animation that costs the map nothing, and it takes no taps, so

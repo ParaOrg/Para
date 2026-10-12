@@ -194,6 +194,7 @@ export function PublicMapApp() {
           rows={timeline.between}
           livery={tripLivery}
           pickedId={ride.pickedId}
+          rest={ride.ridden?.rest ?? null}
           onPick={ride.pick}
         />
       )}

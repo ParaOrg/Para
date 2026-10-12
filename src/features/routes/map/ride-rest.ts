@@ -18,7 +18,9 @@ import { LIT_LINE } from './livery-line';
  * green hintuan stretches, the chevrons, the end circles — so the trip's far
  * end still closes in its circle, and the picked hintuan's own circle
  * (HintuanPin, a DOM marker) stands over it all. Nothing picked, no
- * features: the source is empty and the layer draws nothing.
+ * features: the source is empty and the layer draws nothing. The dots along
+ * the rest ring in the same pale (StationLabels; the owner's ask the same
+ * evening, with a screenshot of them still in the line's colour).
  *
  * The way not ridden was drawn at rest once (useRideTo, until the owner's
  * "now I don't want to cut the route", 2026-09-30), in the resting blue in
@@ -70,6 +72,15 @@ export function addRideRest(
   map.addLayer(RIDE_REST_LAYER, layerAbove(map, LAYERS.routesLit));
 }
 
+/**
+ * Whether `rest` (useRideTo's `ridden.rest`) is drawn: a line needs two
+ * points. The one rule for the layer and for the dots along the rest
+ * (StationLabels), so a dot is paled only where the pale is drawn under it.
+ */
+export function restDrawn(rest: LngLat[] | null): rest is LngLat[] {
+  return !!rest && rest.length > 1;
+}
+
 /** Draws `rest`, the line from the picked hintuan to the end (useRideTo's `ridden.rest`); nothing for null. */
 export function useRideRest(map: MapLibreMap | null, rest: LngLat[] | null): void {
   // Over the lit line: this waits for the line hook's layers (useLayerReady),
@@ -85,16 +96,15 @@ export function useRideRest(map: MapLibreMap | null, rest: LngLat[] | null): voi
     if (!src) return;
     src.setData({
       type: 'FeatureCollection',
-      features:
-        rest && rest.length > 1
-          ? [
-              {
-                type: 'Feature',
-                properties: {},
-                geometry: { type: 'LineString', coordinates: rest },
-              },
-            ]
-          : [],
+      features: restDrawn(rest)
+        ? [
+            {
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates: rest },
+            },
+          ]
+        : [],
     });
   }, [map, rest, litReady]);
 }

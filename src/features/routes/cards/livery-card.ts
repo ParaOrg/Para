@@ -26,6 +26,23 @@ export const CARD_SURFACE = {
   fuchsia: 'bg-card-fuchsia-surface border-card-fuchsia-border-primary',
 } satisfies Record<Livery, string>;
 
+/**
+ * The rest of a lit line past a picked hintuan, and the dots along it:
+ * Figma's Card/<livery>/surface-pale (the owner's asks, 2026-10-12: "the
+ * remaining line should be surface-pale of the selected colour", then,
+ * with a screenshot, its circles too — "the circle is still the color of
+ * routeline instead of pale color of routeline"). The line is painted from
+ * the same tokens in hex (map-colours.ts, useRideRest); these ring the
+ * dots, DOM markers (StationLabels).
+ */
+export const CARD_SURFACE_PALE = {
+  red: 'bg-card-red-surface-pale',
+  orange: 'bg-card-orange-surface-pale',
+  violet: 'bg-card-violet-surface-pale',
+  rose: 'bg-card-rose-surface-pale',
+  fuchsia: 'bg-card-fuchsia-surface-pale',
+} satisfies Record<Livery, string>;
+
 export const CARD_TEXT = {
   red: 'text-content-inverse',
   orange: 'text-content-inverse',

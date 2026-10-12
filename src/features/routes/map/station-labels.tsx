@@ -5,7 +5,8 @@ import { createPortal } from 'react-dom';
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
 import { tapsOnItsButton } from './marker-tap';
-import { CARD_SURFACE, CARD_TEXT } from '../cards/livery-card';
+import { restDrawn } from './ride-rest';
+import { CARD_SURFACE, CARD_SURFACE_PALE, CARD_TEXT } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
@@ -56,7 +57,14 @@ function namesShow(map: MapLibreMap): boolean {
  * at rest, ringed
  * in the lit line's colour, the card's surface, so the dot and its name
  * are one colour, as the owner asked ("the circle must be the same color
- * as routeline color lit", 2026-10-12).
+ * as routeline color lit", 2026-10-12). Past a picked hintuan the line is
+ * drawn in the card's surface-pale (useRideRest), and the dots along that
+ * rest ring in the same pale — the rows after the picked one, in travel
+ * order as the rows are, while the rest is drawn (`rest`; his ask the same
+ * evening, with a screenshot: "the circle is still the color of routeline
+ * instead of pale color of routeline"). Their names keep the card's
+ * surface: white words on the pale would not read, and he asked for the
+ * circles; whether the names follow is his to say (asked, 2026-10-12).
  *
  * On a train line the dots stay dots: the owner's LRTHintuanCodes (Figma
  * 4051:6426, 2026-10-12) put each station's code, GL02, in its dot's place
@@ -89,6 +97,7 @@ export function StationLabels({
   livery,
   pickedId,
   onPick,
+  rest = null,
 }: {
   map: MapLibreMap;
   selected: Direction;
@@ -100,6 +109,13 @@ export function StationLabels({
   pickedId?: string | null;
   /** Called with the tapped row's id. */
   onPick?: (rowId: string) => void;
+  /**
+   * The way on from the picked row to the end, drawn in the card's pale
+   * (useRideTo's `ridden.rest`, what useRideRest draws): the dots along it
+   * wear the pale too. Null, or a point alone, and every dot wears the
+   * line's colour.
+   */
+  rest?: LngLat[] | null;
 }) {
   const [named, setNamed] = useState(() => namesShow(map));
   useEffect(() => {
@@ -114,11 +130,13 @@ export function StationLabels({
   // Where each row sits: worked out as the trip, the hotspots or the rows
   // change, not at each move of the map.
   const stops = useMemo(() => rowStops(selected, hotspots, rows), [selected, hotspots, rows]);
+  // The rows after the picked one sit along the rest, while it is drawn: the
+  // stops keep the rows' travel order. Nothing drawn, or no pick, and none do.
+  const pickedAt = restDrawn(rest) ? stops.findIndex((s) => s.id === pickedId) : -1;
   return (
     <>
-      {stops
-        .filter((s) => s.id !== pickedId)
-        .map((s) => (
+      {stops.map((s, i) =>
+        s.id === pickedId ? null : (
           <StationLabel
             key={s.id}
             map={map}
@@ -127,9 +145,11 @@ export function StationLabels({
             label={s.label}
             livery={livery}
             named={named}
+            paled={pickedAt >= 0 && i > pickedAt}
             onPick={onPick}
           />
-        ))}
+        ),
+      )}
     </>
   );
 }
@@ -141,6 +161,7 @@ function StationLabel({
   label,
   livery,
   named,
+  paled,
   onPick,
 }: {
   map: MapLibreMap;
@@ -149,6 +170,8 @@ function StationLabel({
   label: string;
   livery: Livery;
   named: boolean;
+  /** Along the rest past the picked row: its dot rings in the card's pale, the line's colour there. */
+  paled: boolean;
   onPick?: (rowId: string) => void;
 }) {
   const [el] = useState(() => {
@@ -182,6 +205,8 @@ function StationLabel({
 
   // Further out, a smaller dot (hintuanPin.css), so the stations read as beads, not a wall.
   el.toggleAttribute('data-far', !named);
+  // Said on the marker for the suites to read; the ring's colour is the dot's own class.
+  el.toggleAttribute('data-paled', paled);
   // The dot and its name are one tap (the owner's ask, 2026-10-02): one button around both.
   const Tap = onPick ? 'button' : 'div';
   return createPortal(
@@ -189,7 +214,7 @@ function StationLabel({
       {...(onPick ? { type: 'button' as const, 'aria-label': label } : {})}
       className="station-label-tap relative flex rounded-full"
     >
-      <TimelineDot rail={CARD_SURFACE[livery]} />
+      <TimelineDot rail={paled ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery]} />
       {named && (
         // 10 after the dot (3847:11777).
         <span className="hintuan-pin-title absolute top-1/2 left-full ml-2.5 flex max-w-56">

@@ -1168,7 +1168,8 @@ const tripChecks = async () => {
       );
       await page.waitForTimeout(450);
     }
-    const row = rows.nth(Math.floor(((await rows.count()) - 1) / 2));
+    const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
+    const row = rows.nth(pickedIndex);
     const rowId = await row.getAttribute('data-hintuan');
     const pickWant = await page.evaluate(
       async ([id, rowId]) => {
@@ -1287,6 +1288,14 @@ const tripChecks = async () => {
       const r = pin?.getBoundingClientRect();
       const c = m.getCanvas().getBoundingClientRect();
       const q = at && m.project(at);
+      // The card's pale, Card/<livery>/surface-pale (tokens.css's own variable; the
+      // @theme inline alias is never emitted), as the DOM computes it, oklch as the
+      // rings come: what the dots along the rest wear.
+      const probe = document.createElement('span');
+      probe.style.backgroundColor = `var(--card-${trip?.dataset.livery}-surface-pale)`;
+      document.body.append(probe);
+      const cardPale = getComputedStyle(probe).backgroundColor;
+      probe.remove();
       return {
         lit: (await window.__lit('saved-routes')) ?? [],
         rest: ((await window.__src('ride-rest'))?.features ?? []).length,
@@ -1294,6 +1303,12 @@ const tripChecks = async () => {
         restColour: m.getLayer('ride-rest-line')
           ? m.getPaintProperty('ride-rest-line', 'line-color')
           : null,
+        // The dots along the line (StationLabels): along the rest past the pick, or before it, and their rings.
+        stations: [...document.querySelectorAll('[data-testid="station-label"]')].map((e) => ({
+          paled: e.hasAttribute('data-paled'),
+          ring: getComputedStyle(e.querySelector('.station-label-tap > span:first-child'))
+            .backgroundColor,
+        })),
         pins: pins.length,
         off:
           r && q
@@ -1305,6 +1320,7 @@ const tripChecks = async () => {
         ring: ring ? getComputedStyle(ring).backgroundColor : null,
         // The line's colour is the card's surface (liveryLine.ts): the card's own background.
         line: trip ? getComputedStyle(trip).backgroundColor : null,
+        pale: cardPale,
         livery: pin?.dataset.livery ?? null,
         tripLivery: trip?.dataset.livery ?? null,
         taps: pin ? getComputedStyle(pin).pointerEvents : null,
@@ -1333,6 +1349,23 @@ const tripChecks = async () => {
         drawn.ring === drawn.line &&
         drawn.taps === 'none',
       `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} ring ${drawn.ring}, the line ${drawn.line}; pointer-events ${drawn.taps}`,
+    );
+    // The dots along the rest ring in its pale, the ones before the pick in
+    // the line's colour (the owner's ask, 2026-10-12, with a screenshot of
+    // them still in the line's): the rows after the picked one.
+    const paled = drawn.stations.filter((s) => s.paled);
+    const before = drawn.stations.filter((s) => !s.paled);
+    const rowsAfter = (await rows.count()) - 1 - pickedIndex;
+    const rings = (dots) => [...new Set(dots.map((s) => s.ring))].join(', ') || 'none';
+    check(
+      "  the dots along the rest ringed in the card's pale, the ones before the hintuan in the line's colour",
+      paled.length === rowsAfter &&
+        before.length === pickedIndex &&
+        drawn.pale !== 'rgba(0, 0, 0, 0)' &&
+        drawn.pale !== drawn.line &&
+        paled.every((s) => s.ring === drawn.pale) &&
+        before.every((s) => s.ring === drawn.line),
+      `${paled.length} dot(s) along the rest for ${rowsAfter} row(s) past the pick, ringed ${rings(paled)} (the pale ${drawn.pale}); ${before.length} before it for ${pickedIndex} row(s), ringed ${rings(before)} (the line ${drawn.line})`,
     );
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
     // Beside the circle, the hintuan's name in End's colours, its circled E
@@ -1457,17 +1490,19 @@ const tripChecks = async () => {
     );
     const letGo = await page.evaluate(async () => ({
       pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+      paled: document.querySelectorAll('[data-testid="station-label"][data-paled]').length,
       lit: (await window.__lit('saved-routes')) ?? [],
     }));
     check(
-      '  a second tap lets it go: no pill, no circle, the trip still lit, both tiles the whole ride again',
+      '  a second tap lets it go: no pill, no circle, no dot along a rest, the trip still lit, both tiles the whole ride again',
       !(await isPicked()) &&
         (await pill.count()) === 0 &&
         letGo.pins === 0 &&
+        letGo.paled === 0 &&
         letGo.lit.length === 1 &&
         (await tile('trip-fare')) === fare &&
         (await tile('trip-km')) === km,
-      `${letGo.pins} circle(s), ${letGo.lit.length} lit; tiles "${await tile('trip-km')}", "${await tile('trip-fare')}", the whole "${km}", "${fare}"`,
+      `${letGo.pins} circle(s), ${letGo.paled} dot(s) along a rest, ${letGo.lit.length} lit; tiles "${await tile('trip-km')}", "${await tile('trip-fare')}", the whole "${km}", "${fare}"`,
     );
     // At Max the card stays at Max (the owner's ask, 2026-10-01: "since the
     // card can settle anywhere, don't move the bottomsheet to the middle"),

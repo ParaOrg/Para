@@ -530,18 +530,39 @@ if (!spot) {
         await fold.first().click();
         await page.waitForTimeout(450);
       }
-      const hintuanRow = hintuanRows.nth(Math.floor(((await hintuanRows.count()) - 1) / 2));
+      const pickedIndex = Math.floor(((await hintuanRows.count()) - 1) / 2);
+      const hintuanRow = hintuanRows.nth(pickedIndex);
       const pick = hintuanRow.locator('button[data-testid="trip-hintuan-pick"]');
       await pick.scrollIntoViewIfNeeded();
       await pick.click();
       await page.waitForTimeout(900);
       const onMap = async () =>
-        page.evaluate(async () => ({
-          lit: ((await window.__lit('saved-routes')) ?? []).length,
-          rest: ((await window.__src('ride-rest'))?.features ?? []).length,
-          dots: document.querySelectorAll('[data-testid="ride-dot"]').length,
-          pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
-        }));
+        page.evaluate(async () => {
+          const trip = document.querySelector('[data-testid="trip"]');
+          // The card's pale, Card/<livery>/surface-pale (tokens.css's own variable; the
+          // @theme inline alias is never emitted), as the DOM computes it, oklch as the
+          // rings come: what the dots along the rest wear.
+          const probe = document.createElement('span');
+          probe.style.backgroundColor = `var(--card-${trip?.dataset.livery}-surface-pale)`;
+          document.body.append(probe);
+          const cardPale = getComputedStyle(probe).backgroundColor;
+          probe.remove();
+          return {
+            lit: ((await window.__lit('saved-routes')) ?? []).length,
+            rest: ((await window.__src('ride-rest'))?.features ?? []).length,
+            dots: document.querySelectorAll('[data-testid="ride-dot"]').length,
+            pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+            // The dots along the line (StationLabels): along the rest past the pick, or before it, and their rings.
+            stations: [...document.querySelectorAll('[data-testid="station-label"]')].map((e) => ({
+              paled: e.hasAttribute('data-paled'),
+              ring: getComputedStyle(e.querySelector('.station-label-tap > span:first-child'))
+                .backgroundColor,
+            })),
+            // The line's colour is the card's surface (livery-line.ts): the card's own background.
+            line: trip ? getComputedStyle(trip).backgroundColor : null,
+            pale: cardPale,
+          };
+        });
       const seen = await onMap();
       check(
         '  a hintuan row picks it: the route left whole, a circle at it, the rest past it paled over the lit line',
@@ -552,13 +573,33 @@ if (!spot) {
           seen.pins === 1,
         `${seen.lit} lit; ${seen.rest} stretch(es) at rest; ${seen.pins} circle(s); ${seen.dots} get-off circle(s)`,
       );
+      // The dots along the rest ring in its pale, the ones before the pick in
+      // the line's colour (the owner's ask, 2026-10-12): the rows after the
+      // picked one, as on the public map.
+      const paled = seen.stations.filter((s) => s.paled);
+      const before = seen.stations.filter((s) => !s.paled);
+      const rowsAfter = (await hintuanRows.count()) - 1 - pickedIndex;
+      const rings = (dots) => [...new Set(dots.map((s) => s.ring))].join(', ') || 'none';
+      check(
+        "  the dots along the rest ringed in the card's pale, the ones before the hintuan in the line's colour",
+        paled.length === rowsAfter &&
+          before.length === pickedIndex &&
+          seen.pale !== 'rgba(0, 0, 0, 0)' &&
+          seen.pale !== seen.line &&
+          paled.every((s) => s.ring === seen.pale) &&
+          before.every((s) => s.ring === seen.line),
+        `${paled.length} dot(s) along the rest for ${rowsAfter} row(s) past the pick, ringed ${rings(paled)} (the pale ${seen.pale}); ${before.length} before it for ${pickedIndex} row(s), ringed ${rings(before)} (the line ${seen.line})`,
+      );
       await pick.click();
       await page.waitForTimeout(400);
       const after = await onMap();
       check(
-        '  and a second tap lets it go, its circle and the pale rest too',
-        after.pins === 0 && after.rest === 0 && after.lit === 1,
-        `${after.pins} circle(s), ${after.rest} stretch(es) at rest, ${after.lit} lit`,
+        '  and a second tap lets it go, its circle and the pale rest too, no dot along it',
+        after.pins === 0 &&
+          after.rest === 0 &&
+          after.stations.every((s) => !s.paled) &&
+          after.lit === 1,
+        `${after.pins} circle(s), ${after.rest} stretch(es) at rest, ${after.stations.filter((s) => s.paled).length} dot(s) along it, ${after.lit} lit`,
       );
     }
     await page.locator('[data-testid="card"] button[aria-label="Close"]').first().click();
