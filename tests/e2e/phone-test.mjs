@@ -2230,8 +2230,10 @@ if (routeA) {
               !!pill.querySelector('[data-part="arrow"]') &&
               badge === 'End',
         colour: getComputedStyle(namePill).backgroundColor === wants,
-        // Its pointer the same: a class on the badged pill, the line's colour inline on a plain one.
-        pointer: getComputedStyle(namePill.querySelector('svg')).fill === wants,
+        // Its pointer the same: a class on the badged pill, the line's colour
+        // inline on a plain one. The last svg: a tail's pill leads with the
+        // circled arrow, in the words' colour.
+        pointer: getComputedStyle([...namePill.querySelectorAll('svg')].at(-1)).fill === wants,
         across: box.left + box.width / 2 - (c.left + q.x),
         above: c.top + q.y - box.bottom,
       };
@@ -3496,6 +3498,18 @@ if (!routeA) {
         window.__map.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
       });
       await buttonTap(handle(), async () => (await sheetState()) === 'middle');
+      // The overview starts a beat after the sheet settles — most of a second
+      // from a cold zoom-16 view, with the main thread busy over it (measured
+      // on the refactor's base too, 2026-10-12): let it start, then end, as
+      // the pick's glide is waited for.
+      await page
+        .waitForFunction(() => window.__map.isMoving() || window.__map.getZoom() < 15.9, null, {
+          timeout: 4000,
+        })
+        .catch(() => {});
+      await page
+        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+        .catch(() => {});
       const back = await framedAboveCard(r.bbox);
       check(
         '  moved away, then up to Middle: the overview again, 5 km on the bar at the farthest',
