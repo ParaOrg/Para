@@ -57,6 +57,7 @@ export function useLitRides(
         ...(ridden?.directionId === v.id ? { flow: ridden.line, rest: ridden.rest } : {}),
         ...directionEnds(v),
         ...directionEndHotspots(v),
+        routeCode: v.route?.routeCode ?? null,
       })),
     [saved.litDirections, hotspots, ridden],
   );

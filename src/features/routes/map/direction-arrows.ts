@@ -82,6 +82,8 @@ export interface Ride {
   to: string;
   fromHotspot?: string | null;
   toHotspot?: string | null;
+  /** Its route's code: a train's names its line, LRT-1, so its ends are named with their stations' codes (EndTitles). */
+  routeCode?: string | null;
 }
 
 /**

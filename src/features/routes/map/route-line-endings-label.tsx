@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { EndIcon, StartIcon } from '@/shared/ui/route-icons';
 
-import { LINE_FILL, LINE_SURFACE } from './livery-line';
+import { LINE_FILL, LINE_SURFACE, LINE_TEXT } from './livery-line';
 import type { Livery } from '../model/liveries';
 
 /**
@@ -20,6 +20,12 @@ interface RouteLineEndingsLabelProps {
    * the line.
    */
   livery: Livery | null;
+  /**
+   * Figma's Property=CodeSign: a train station's sign code, YL06, in a white
+   * chip before the name, the S or E then in a disc of its own. Head and
+   * Tail Route alone, as Figma draws it.
+   */
+  codeSign?: string | null;
 }
 
 /**
@@ -33,6 +39,13 @@ interface RouteLineEndingsLabelProps {
  * "the rules for RouteLineEndingsLabel must be applicable to these
  * RouteLine", the same day).
  *
+ * At a train station, CodeSign (his addition of 2026-10-13, 4073:7215 and
+ * 4073:7220): the S or E in a 28 disc of its own, 4 left of the pill, and
+ * in the pill the station's code in a white chip, its words the pill's
+ * colour, before the name. The pointer stays at the pill's middle, as
+ * Figma has it, so the pill is what stands over the circle and the disc
+ * hangs beside it.
+ *
  * Default is the name alone in the line's colour, which Figma's set does
  * not draw: a ride a picked hintuan stops short ends there, End's E before
  * the hintuan's name (HintuanLabel), so its own tail keeps its name without
@@ -44,12 +57,20 @@ interface RouteLineEndingsLabelProps {
  * screen reader, unseen; a pill inside a button says it in the button's
  * label instead.
  */
-export function RouteLineEndingsLabel({ variant, name, livery }: RouteLineEndingsLabelProps) {
+export function RouteLineEndingsLabel({
+  variant,
+  name,
+  livery,
+  codeSign = null,
+}: RouteLineEndingsLabelProps) {
   const look = LOOK[variant];
   const colour = livery ?? 'selected';
   const worn =
-    look.wears === 'start' ? START : { pill: LINE_SURFACE[colour], pointer: LINE_FILL[colour] };
+    look.wears === 'start'
+      ? START
+      : { pill: LINE_SURFACE[colour], pointer: LINE_FILL[colour], code: LINE_TEXT[colour] };
   const Icon = look.icon ? ICON[look.icon] : null;
+  const code = Icon ? codeSign : null;
   return (
     <span
       data-part="name"
@@ -60,12 +81,31 @@ export function RouteLineEndingsLabel({ variant, name, livery }: RouteLineEnding
         worn.pill
       }
     >
-      {Icon && (
+      {Icon && !code && (
         <span aria-hidden data-part={look.icon} className="size-5 shrink-0 *:size-full">
           <Icon />
         </span>
       )}
+      {Icon && code && (
+        <span
+          aria-hidden
+          data-part={look.icon}
+          className={'absolute top-0 right-full mr-1 flex rounded-full p-1 ' + worn.pill}
+        >
+          <span className="size-5 *:size-full">
+            <Icon />
+          </span>
+        </span>
+      )}
       {look.word && <span className="sr-only">{look.word}</span>}
+      {code && (
+        <span
+          data-part="code"
+          className={'shrink-0 rounded-full bg-content-inverse px-1.5 ' + worn.code}
+        >
+          {code}
+        </span>
+      )}
       <span data-part="words" className="min-w-0 truncate">
         {name}
       </span>
@@ -112,4 +152,5 @@ const ICON = { start: StartIcon, end: EndIcon } satisfies Record<'start' | 'end'
 const START = {
   pill: 'bg-map-hotspots-card-hintuan-surface',
   pointer: 'fill-map-hotspots-card-hintuan-surface',
+  code: 'text-map-hotspots-card-hintuan-surface',
 };

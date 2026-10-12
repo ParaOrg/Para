@@ -13,6 +13,8 @@ import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Livery } from '../model/liveries';
+import { stationCode } from '../model/rail-codes';
+import { isRailLine } from '../model/routes';
 
 import './end-titles.css';
 
@@ -92,6 +94,13 @@ export function EndTitles({
 }) {
   // Rides that end short of their tail, at a picked hintuan.
   const short = new Set(rides.filter((r) => r.flow && r.id).map((r) => r.id));
+  // A train's ends are stations: each named with its sign code, GL02, as
+  // the owner's CodeSign draws it (4073:7215, 2026-10-13); null for a
+  // jeepney's, the ferry's, and a station the table does not know.
+  const codeAt = (rideId: string | null, name: string): string | null => {
+    const line = rides.find((r) => r.id === rideId)?.routeCode;
+    return isRailLine(line) ? stationCode(line, name) : null;
+  };
   return (
     <>
       {rideEnds(rides).map(({ end, name, named, at, hotspotId, rides: here, of, paled }) => {
@@ -107,6 +116,7 @@ export function EndTitles({
             head={end === 'from'}
             marked={!(end === 'to' && here.some((id) => short.has(id)))}
             livery={livery}
+            codeSign={codeAt(of, name)}
             paled={paled}
             opens={trip ? 'trip' : 'place'}
             onPick={
@@ -150,6 +160,7 @@ function EndTitle({
   head,
   marked,
   livery,
+  codeSign,
   paled,
   opens,
   onPick,
@@ -164,6 +175,8 @@ function EndTitle({
   /** Start's S or End's E before the name: a Head or a Tail Route; else Default. */
   marked: boolean;
   livery: Livery | null;
+  /** A train station's sign code, before its name (RouteLineEndingsLabel's CodeSign). */
+  codeSign: string | null;
   /** Along the rest past a picked hintuan: the circle ringed in the card's pale. */
   paled: boolean;
   /** What a tap opens: the ride's trip, or the place's card. */
@@ -197,12 +210,18 @@ function EndTitle({
           {...(onPick
             ? {
                 type: 'button' as const,
-                'aria-label': `${SPOKEN[variant]}${name}: ${OPENS[opens]}`,
+                // The code is only on the map: the button says it too.
+                'aria-label': `${SPOKEN[variant]}${codeSign && variant !== 'default' ? `${codeSign} ` : ''}${name}: ${OPENS[opens]}`,
               }
             : {})}
           className="flex max-w-64 flex-col items-center"
         >
-          <RouteLineEndingsLabel variant={variant} name={name} livery={livery} />
+          <RouteLineEndingsLabel
+            variant={variant}
+            name={name}
+            livery={livery}
+            codeSign={codeSign}
+          />
         </Pill>
       )}
       {/*

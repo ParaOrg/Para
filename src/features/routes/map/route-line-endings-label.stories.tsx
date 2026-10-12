@@ -131,6 +131,58 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Head Route's CodeSign (4073:7215): a train station's start — the S in a
+ * 28 disc of its own, 4 left of the pill; in the pill the code in a white
+ * chip, its words the pill's green; the pointer at the pill's middle.
+ */
+export const HeadRouteCodeSign: Story = {
+  args: { variant: 'head', codeSign: 'YL06' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expectFigmaType(pill);
+    const disc = pill.querySelector<HTMLElement>('[data-part="start"]');
+    const code = pill.querySelector<HTMLElement>('[data-part="code"]');
+    if (!disc || !code) throw new Error('no disc or code');
+    const [d, p] = [disc.getBoundingClientRect(), pill.getBoundingClientRect()];
+    await expect([d.width, d.height]).toEqual([28, 28]);
+    await expect(p.left - d.right).toBe(4);
+    await expect(getComputedStyle(disc).backgroundColor).toBe(
+      getComputedStyle(pill).backgroundColor,
+    );
+    await expect(code.textContent).toBe('YL06');
+    await expect(getComputedStyle(code).color).toBe(getComputedStyle(pill).backgroundColor);
+    await expect(getComputedStyle(code).backgroundColor).toBe(wornBy('bg-content-inverse'));
+    const knobb = pill.querySelector('[data-part="knobb"]')?.getBoundingClientRect();
+    await expect(knobb && knobb.left + knobb.width / 2).toBeCloseTo(p.left + p.width / 2, 0);
+  },
+};
+
+/** Tail Route's CodeSign (4073:7220): the E's disc and the code's words in the line's colour. */
+export const TailRouteCodeSign: Story = {
+  args: { variant: 'tail', codeSign: 'GL02' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    const code = pill.querySelector<HTMLElement>('[data-part="code"]');
+    await expect(code && getComputedStyle(code).color).toBe(getComputedStyle(pill).backgroundColor);
+    await expect(pill.querySelector('[data-part="end"]')?.getBoundingClientRect().width).toBe(28);
+  },
+};
+
+/** Tail Route's CodeSign on a list's lines: the selected blue. */
+export const TailRouteCodeSignSelectedBlue: Story = {
+  args: { variant: 'tail', codeSign: 'PL08', livery: null },
+};
+
+/** A code given to Default draws nothing: Figma's CodeSign is Head and Tail Route's alone. */
+export const DefaultIgnoresCode: Story = {
+  args: { variant: 'default', codeSign: 'YL06' },
+  play: async ({ canvasElement }) => {
+    await expect(pillOf(canvasElement).querySelector('[data-part="code"]')).toBeNull();
+  },
+};
+
 /** A name longer than the marker: cut short with an ellipsis, the icon whole. */
 export const LongName: Story = {
   args: { variant: 'tail', name: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },
@@ -141,5 +193,24 @@ export const LongName: Story = {
     await expect(words).not.toBeNull();
     await expect(words?.scrollWidth).toBeGreaterThan(words?.clientWidth ?? 0);
     await expect(pill.querySelector('[data-part="end"]')?.getBoundingClientRect().width).toBe(20);
+  },
+};
+
+/** A long station name with its code: the name cut short, the code and the disc whole. */
+export const LongNameCodeSign: Story = {
+  args: {
+    variant: 'tail',
+    codeSign: 'YL06',
+    name: 'North Caloocan City Hall Station Northbound Platform',
+  },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expect(pill.getBoundingClientRect().width).toBeLessThanOrEqual(256);
+    const words = pill.querySelector('[data-part="words"]');
+    await expect(words).not.toBeNull();
+    await expect(words?.scrollWidth).toBeGreaterThan(words?.clientWidth ?? 0);
+    const code = pill.querySelector('[data-part="code"]');
+    await expect(code?.scrollWidth).toBe(code?.clientWidth);
+    await expect(pill.querySelector('[data-part="end"]')?.getBoundingClientRect().width).toBe(28);
   },
 };

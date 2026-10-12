@@ -88,7 +88,7 @@ export const LINE_SURFACE = {
 
 /**
  * Words in the line's colour, on white: a station's sign code (RouteLineLabel's
- * CodeSignEnd), on an open trip, which always wears a card's colour.
+ * CodeSignEnd, RouteLineEndingsLabel's CodeSign).
  */
 export const LINE_TEXT = {
   red: 'text-card-red-surface',
@@ -96,7 +96,8 @@ export const LINE_TEXT = {
   violet: 'text-card-violet-surface',
   rose: 'text-card-rose-surface',
   fuchsia: 'text-card-fuchsia-surface',
-} satisfies Record<Livery, string>;
+  selected: 'text-map-route-line-surface-selected',
+} satisfies Record<LineColour, string>;
 
 /** The pointer under an end's label, in the line's colour (RouteLineEndingsLabel). */
 export const LINE_FILL = {
