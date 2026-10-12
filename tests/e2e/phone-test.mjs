@@ -1506,6 +1506,86 @@ const tripChecks = async () => {
         Math.abs(camAfterLetGo.lat - camBeforePick.lat) < 1e-6,
       JSON.stringify({ camBeforePick, camAfterLetGo }),
     );
+    // Closer in than 300 m on the scale bar, a pick keeps the visitor's zoom
+    // (the owner's ask, 2026-10-13: "if it's below 300m and tapped the
+    // hintuan, don't zoom out, remain where the user camera was"): with the
+    // hintuan in view above the card the camera stays put; off the screen,
+    // it slides there at the same zoom (his pick, the same day).
+    if (pickWant) {
+      const settle = async () => {
+        await page.waitForTimeout(300);
+        await page
+          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+          .catch(() => {});
+      };
+      // 150 m on the scale bar, the hintuan halfway up the map above the card, or a screen and a half aside.
+      const closeIn = async (offScreen) => {
+        await page.evaluate(
+          async ({ at, offScreen }) => {
+            const m = window.__map;
+            const { zoomForScale } = await import('/src/shared/utils/geo.ts');
+            m.jumpTo({ center: at, zoom: zoomForScale(150, at[1]) });
+            const c = m.getCanvas().getBoundingClientRect();
+            const d = document.querySelector('[data-testid="card"]').getBoundingClientRect();
+            const wantY = (Math.min(d.top, c.bottom) - c.top) / 2;
+            m.panBy(offScreen ? [1.5 * c.width, 0] : [0, m.project(at).y - wantY], {
+              duration: 0,
+            });
+          },
+          { at: pickWant.at, offScreen },
+        );
+        return camNow();
+      };
+      const inView = await closeIn(false);
+      await buttonTap(pickButton, isPicked);
+      await settle();
+      const stayed = await camNow();
+      check(
+        '  closer in than 300 m on the scale bar, a hintuan in view above the card: the camera stays where it was',
+        (await isPicked()) &&
+          Math.abs(stayed.zoom - inView.zoom) < 0.01 &&
+          Math.abs(stayed.lng - inView.lng) < 1e-6 &&
+          Math.abs(stayed.lat - inView.lat) < 1e-6,
+        JSON.stringify({ inView, stayed }),
+      );
+      await buttonTap(pickButton, async () => !(await isPicked()));
+      await settle();
+      const away = await closeIn(true);
+      await buttonTap(pickButton, isPicked);
+      await settle();
+      const slid = await page.evaluate((at) => {
+        const m = window.__map;
+        const c = m.getCanvas().getBoundingClientRect();
+        const q = m.project(at);
+        const d = document.querySelector('[data-testid="card"]').getBoundingClientRect();
+        return {
+          zoom: m.getZoom(),
+          x: c.left + q.x,
+          y: c.top + q.y,
+          left: c.left,
+          right: c.right,
+          top: c.top,
+          cardTop: d.top,
+        };
+      }, pickWant.at);
+      check(
+        '  and off the screen, it slides into view above the card at the same zoom',
+        (await isPicked()) &&
+          Math.abs(slid.zoom - away.zoom) < 0.01 &&
+          slid.y > slid.top + 16 &&
+          slid.y < slid.cardTop - 16 &&
+          slid.x > slid.left + 16 &&
+          slid.x < slid.right - 16,
+        `zoom ${slid.zoom.toFixed(2)}, was ${away.zoom.toFixed(2)}; at ${Math.round(slid.x)},${Math.round(slid.y)}, the map ${Math.round(slid.top)}–${Math.round(slid.cardTop)} above the card`,
+      );
+      await buttonTap(pickButton, async () => !(await isPicked()));
+      await settle();
+      // Back where the first pick began, for the checks after.
+      await page.evaluate(
+        (cam) => window.__map.jumpTo({ center: [cam.lng, cam.lat], zoom: cam.zoom }),
+        camBeforePick,
+      );
+    }
     const letGo = await page.evaluate(async () => ({
       pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
       paled: document.querySelectorAll('[data-testid="station-label"][data-paled]').length,
