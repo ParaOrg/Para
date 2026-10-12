@@ -4,7 +4,9 @@
  * 2026-10-12); both import this sheet, so only the maps
  * that draw them load it. The marker's own
  * element is MapLibre's to move — it sets its transform — so the pop is on
- * the circle inside, TimelineDot's own span: from nothing to its size,
+ * the circle inside, TimelineDot's own span (or, on a train line, the
+ * station's code box in its place: StationLabels, 2026-10-12): from nothing
+ * to its size,
  * over the base duration with the arriving ease (tokens.css, Motion), and
  * without the 2px it tucks into a rail on the card. `prefers-reduced-motion`
  * has it simply there.
