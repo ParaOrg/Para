@@ -1290,6 +1290,9 @@ const tripChecks = async () => {
         lit: (await window.__lit('saved-routes')) ?? [],
         rest: ((await window.__src('ride-rest'))?.features ?? []).length,
         restLayer: !!m.getLayer('ride-rest-line'),
+        restColour: m.getLayer('ride-rest-line')
+          ? m.getPaintProperty('ride-rest-line', 'line-color')
+          : null,
         pins: pins.length,
         off:
           r && q
@@ -1308,10 +1311,17 @@ const tripChecks = async () => {
         padding: Object.values(m.getPadding()).every((v) => v === 0),
       };
     }, pickWant?.at ?? null);
+    // The rest of the line past the pick, over the lit line in the card's
+    // surface-pale (the owner's ask, 2026-10-12).
+    const pale = LOOKS?.byLivery[drawn.tripLivery]?.pale ?? null;
     check(
-      '  the map: the trip still lit and whole — nothing drawn at rest over it',
-      drawn.lit.length === 1 && drawn.lit[0] === tripId && drawn.rest === 0 && !drawn.restLayer,
-      `${drawn.lit.length} lit; ${drawn.rest} stretch(es) at rest; the rest layer ${drawn.restLayer ? 'there' : 'never added'}`,
+      "  the map: the trip still lit and whole — the rest past the hintuan drawn over it in the card's surface-pale",
+      drawn.lit.length === 1 &&
+        drawn.lit[0] === tripId &&
+        drawn.rest === 1 &&
+        drawn.restLayer &&
+        (!LOOKS || drawn.restColour === pale),
+      `${drawn.lit.length} lit; ${drawn.rest} stretch(es) at rest, the rest layer ${drawn.restLayer ? 'there' : 'never added'}, in ${drawn.restColour}${LOOKS ? ` (the ${drawn.tripLivery} card's pale ${pale})` : ''}`,
     );
     check(
       "  a circle pops up at the hintuan, ringed in the line's colour, taking no taps",
@@ -1692,7 +1702,7 @@ const tripChecks = async () => {
 };
 /** Whether the hintuan pick has been checked: once, on the first trip with a hintuan. */
 let picksChecked = false;
-/** The picked hintuan's circle, gone — and no cut or get-off circle, which the public map never draws. */
+/** The picked hintuan's circle, gone, and the pale rest with it — and no get-off circle, which the public map never draws. */
 const noPickLeft = async () =>
   page.evaluate(
     async () =>

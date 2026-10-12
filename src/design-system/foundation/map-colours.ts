@@ -53,6 +53,23 @@ export const CARD_COLOURS = {
 } as const satisfies Record<`Card/${string}/surface`, `#${string}`>;
 
 /**
+ * The RouteCards' Card/<livery>/surface-pale, in hex, for the map: the rest
+ * of an open trip's line past a picked hintuan, from there to where the trip
+ * goes, in the card's own hue paled (the owner's ask, 2026-10-12: the
+ * remaining line should be surface-pale of the selected colour). Each hex is
+ * the primitive its token aliases, each hue's 200, held to tokens.css by
+ * tests/unit/map-colours-test.mjs as CARD_COLOURS is.
+ */
+export const CARD_PALE_COLOURS = {
+  'Card/red/surface-pale': '#ffc9c9', // red/200
+  'Card/orange/surface-pale': '#ffd6a8', // orange/200
+  'Card/yellow/surface-pale': '#fff085', // yellow/200
+  'Card/violet/surface-pale': '#ddd6ff', // violet/200
+  'Card/rose/surface-pale': '#ffccd3', // rose/200
+  'Card/fuchsia/surface-pale': '#f6cfff', // fuchsia/200
+} as const satisfies Record<`Card/${string}/surface-pale`, `#${string}`>;
+
+/**
  * Everything else the map paints — the public map's and the editor's — in
  * the value it has always had: colours no Figma variable names yet. One file
  * for every colour the map's painters paint, so

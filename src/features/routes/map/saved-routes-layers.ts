@@ -21,7 +21,7 @@ export const ROUTES_LINE = 'saved-routes-line';
 const LINE = ROUTES_LINE;
 /** The lit directions, drawn again on top: thick, in the selected blue, or on the public map in a picked card's or an open trip's colour. */
 const SELECTED_CASING = 'saved-routes-selected-casing';
-const SELECTED = 'saved-routes-selected';
+const SELECTED = LAYERS.routesLit;
 /** The two that draw the lit directions only, switched off while none is (layerSwitch.ts). */
 const LIT_LAYERS = [SELECTED_CASING, SELECTED] as const;
 const HIT = ROUTES_HIT_LAYER;

@@ -513,14 +513,15 @@ if (!spot) {
     );
     // A hintuan picked on the trip, as on the public map since 2026-09-30 (the
     // owner: "most of the interaction of public map should be in studio"):
-    // the route left whole, nothing at rest over it and no get-off circles,
-    // a circle popping up at the hintuan; a second tap lets it go, circle and
-    // all. The middle hintuan is the one checked.
+    // the route left whole and no get-off circles, a circle popping up at the
+    // hintuan, and since 2026-10-12 the rest of the line past it drawn over
+    // the lit line in the card's surface-pale (the owner's ask); a second tap
+    // lets it go, circle, rest and all. The middle hintuan is the one checked.
     const cardEl = page.locator('[data-testid="card"]').first();
     const hintuanRows = cardEl.locator('[data-testid="trip-hintuan"]');
     if ((await hintuanRows.count()) === 0) {
       skip(
-        '  a hintuan row picks it: the route left whole, a circle at it',
+        '  a hintuan row picks it: the route left whole, a circle at it, the rest past it paled over the lit line',
         'no hintuan on this direction',
       );
     } else {
@@ -543,10 +544,10 @@ if (!spot) {
         }));
       const seen = await onMap();
       check(
-        '  a hintuan row picks it: the route left whole, a circle at it',
+        '  a hintuan row picks it: the route left whole, a circle at it, the rest past it paled over the lit line',
         (await hintuanRow.getAttribute('data-state')) === 'selected' &&
           seen.lit === 1 &&
-          seen.rest === 0 &&
+          seen.rest === 1 &&
           seen.dots === 0 &&
           seen.pins === 1,
         `${seen.lit} lit; ${seen.rest} stretch(es) at rest; ${seen.pins} circle(s); ${seen.dots} get-off circle(s)`,
@@ -555,9 +556,9 @@ if (!spot) {
       await page.waitForTimeout(400);
       const after = await onMap();
       check(
-        '  and a second tap lets it go, its circle too',
-        after.pins === 0 && after.lit === 1,
-        `${after.pins} circle(s), ${after.lit} lit`,
+        '  and a second tap lets it go, its circle and the pale rest too',
+        after.pins === 0 && after.rest === 0 && after.lit === 1,
+        `${after.pins} circle(s), ${after.rest} stretch(es) at rest, ${after.lit} lit`,
       );
     }
     await page.locator('[data-testid="card"] button[aria-label="Close"]').first().click();
