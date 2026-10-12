@@ -1,15 +1,17 @@
 import { Marker, type MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { haversine } from '@/shared/utils/geo';
+import { haversine, type LngLat } from '@/shared/utils/geo';
 
 import { tapsOnItsButton } from './marker-tap';
 import { CARD_SURFACE, CARD_TEXT } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
-import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { isLineMode, servedBy, type Direction } from '../model/routes';
+import { rowStops } from '../model/ride';
+import type { Direction } from '../model/routes';
+import type { TimelineRow } from '../model/timeline';
 import './hintuan-pin.css';
 
 /** The scale bar's width (MapView's ScaleControl, MapLibre's default maxWidth). */
@@ -35,26 +37,44 @@ function namesShow(map: MapLibreMap): boolean {
 }
 
 /**
- * The selected line's stations along it, a train's or the ferry's (the
- * ferry the same way, his ask of 2026-10-03) — the owner's asks of
- * 2026-10-02: a dot at each, its name beside it, for the selected line
- * only. The name is the owner's RouteLineLabel, SelectedHintuanRouteTitle's
- * Default (Figma 3846:11748): the picked hintuan's pill (HintuanPin), in
- * the trip card's surface and words, without its End. The dot is the
- * timeline's own TimelineDot at rest, its accent that same surface, so
- * the dot and its name are one colour, as the owner asked.
+ * The selected direction's hintuans along its line, a dot at each with
+ * its name beside it: a train's or the ferry's stations (the owner's asks
+ * of 2026-10-02 and 2026-10-03) and, since 2026-10-12, a jeepney's
+ * hintuans the same way (his ask: "if the route is selected specially
+ * jeepney, it must show their hintuans similar to LRT, MRT, and Ferry").
+ * One dot per row of the trip card's timeline (`rows`, its `between`),
+ * on the line at the middle of the stretch past the row's box, where the
+ * picked circle pops (rowStops; his "middle of the line", 2026-10-12), so
+ * a pick replaces the dot in its spot. The name is the owner's
+ * RouteLineLabel, SelectedHintuanRouteTitle's Default (Figma 3846:11748):
+ * the picked hintuan's pill (HintuanPin), in the trip card's surface and
+ * words, without its End — kept so on 2026-10-12, when the pin's own went
+ * to End's blue. The dot is the timeline's own TimelineDot at rest, ringed
+ * in the lit line's colour, the card's surface, so the dot and its name
+ * are one colour, as the owner asked ("the circle must be the same color
+ * as routeline color lit", 2026-10-12).
  *
- * The two ends are left to their end titles (EndTitles), and a picked
- * station to its HintuanPin. Once the scale bar reads 3 km only the
- * dots show, smaller. The names are 12px, the picked one's pill 14px (the
- * owner's ask, 2026-10-02). Given `onPick`, the dot and its name are one
- * button that hands it the station's id: the public map opens its place,
- * the studio picks it.
+ * The two ends are left to their end titles (EndTitles): the rows leave
+ * them out. A picked row is left to its HintuanPin. Once the scale bar
+ * reads 3 km only the dots show, smaller. The names are 12px, the picked
+ * one's pill 14px (the owner's ask, 2026-10-02). That 3 km is his for
+ * stations a kilometre or two apart; a jeepney's hintuans sit a few
+ * hundred metres apart, so at the bar's 2 km their names overlap — kept at
+ * 3 km until he says otherwise (asked, 2026-10-12). Given `onPick`, the
+ * dot and its name are one button that hands it the row's id, as the
+ * row's tap on the card does (useRideTo's pick): the public map and the
+ * studio both pick it. A long jeepney trip is thirty or forty of these
+ * markers, each a button MapLibre re-projects at every move — the one
+ * place a trip puts dozens of DOM markers on the map, as many as the end
+ * titles at their most, which the cheap-phone plan should count. Still
+ * named for the stations it began with; a jeepney's hintuans ride along
+ * until the refactor renames it.
  */
 export function StationLabels({
   map,
   selected,
   hotspots,
+  rows,
   livery,
   pickedId,
   onPick,
@@ -62,11 +82,13 @@ export function StationLabels({
   map: MapLibreMap;
   selected: Direction;
   hotspots: readonly Hotspot[];
+  /** The trip card's hintuan rows (Timeline's `between`), in travel order. */
+  rows: readonly TimelineRow[];
   livery: Livery;
-  /** The picked hintuan, which its HintuanPin names. */
+  /** The picked row, which its HintuanPin marks. */
   pickedId?: string | null;
-  /** Called with the tapped station's id. */
-  onPick?: (hotspotId: string) => void;
+  /** Called with the tapped row's id. */
+  onPick?: (rowId: string) => void;
 }) {
   const [named, setNamed] = useState(() => namesShow(map));
   useEffect(() => {
@@ -78,39 +100,45 @@ export function StationLabels({
     };
   }, [map]);
 
-  const route = selected.route;
-  if (!isLineMode(route?.mode)) return null;
-  // A line's stations, a train's or the ferry's (servedBy): both directions stop at each.
-  const ends = new Set([route.headHotspotId, route.tailHotspotId, pickedId]);
-  const stations = hotspots.filter((s) => servedBy(s, route) && !ends.has(s.id));
+  // Where each row sits: worked out as the trip, the hotspots or the rows
+  // change, not at each move of the map.
+  const stops = useMemo(() => rowStops(selected, hotspots, rows), [selected, hotspots, rows]);
   return (
     <>
-      {stations.map((s) => (
-        <StationLabel
-          key={s.id}
-          map={map}
-          hotspot={s}
-          livery={livery}
-          named={named}
-          onPick={onPick}
-        />
-      ))}
+      {stops
+        .filter((s) => s.id !== pickedId)
+        .map((s) => (
+          <StationLabel
+            key={s.id}
+            map={map}
+            rowId={s.id}
+            at={s.at}
+            label={s.label}
+            livery={livery}
+            named={named}
+            onPick={onPick}
+          />
+        ))}
     </>
   );
 }
 
 function StationLabel({
   map,
-  hotspot,
+  rowId,
+  at,
+  label,
   livery,
   named,
   onPick,
 }: {
   map: MapLibreMap;
-  hotspot: Hotspot;
+  rowId: string;
+  at: LngLat;
+  label: string;
   livery: Livery;
   named: boolean;
-  onPick?: (hotspotId: string) => void;
+  onPick?: (rowId: string) => void;
 }) {
   const [el] = useState(() => {
     const div = document.createElement('div');
@@ -118,22 +146,31 @@ function StationLabel({
     div.dataset.testid = 'station-label';
     return div;
   });
+  const marker = useRef<Marker | null>(null);
   useEffect(() => {
-    const m = new Marker({ element: el, anchor: 'center' })
-      .setLngLat(hotspot.point.coordinates)
-      .addTo(map);
+    const m = new Marker({ element: el, anchor: 'center' }).setLngLat(at).addTo(map);
+    marker.current = m;
     return () => {
       m.remove();
+      marker.current = null;
     };
-  }, [map, el, hotspot.point.coordinates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- made once per map; the effect below moves it
+  }, [map, el]);
+
+  // The row's spot moves as the trip's full line lands over its overview
+  // (rowStops runs again on the new line): the marker is moved there, not
+  // made anew, which would pop its dot a second time and jump it from the
+  // overview's point (HintuanPin's way; the ds-reviewer's finding, 2026-10-12).
+  useEffect(() => {
+    marker.current?.setLngLat(at);
+  }, [at]);
   // Read as the tap comes: a fresh function each render binds nothing anew (HintuanPin).
   const pick = useRef(onPick);
   pick.current = onPick;
-  useEffect(() => tapsOnItsButton(el, () => pick.current?.(hotspot.id)), [el, hotspot.id]);
+  useEffect(() => tapsOnItsButton(el, () => pick.current?.(rowId)), [el, rowId]);
 
   // Further out, a smaller dot (hintuanPin.css), so the stations read as beads, not a wall.
   el.toggleAttribute('data-far', !named);
-  const label = hotspotLabel(hotspot);
   // The dot and its name are one tap (the owner's ask, 2026-10-02): one button around both.
   const Tap = onPick ? 'button' : 'div';
   return createPortal(

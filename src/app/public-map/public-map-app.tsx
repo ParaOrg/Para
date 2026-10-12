@@ -181,15 +181,17 @@ export function PublicMapApp() {
         />
       )}
       {/*
-        A selected train line's stations, named along it (RouteLineLabel). A
-        tap picks the station as its row on the trip card does, the map
-        gliding in to it (the owner's ask, 2026-10-03), as the studio's do.
+        The open trip's hintuans along its line, a train's stations and a
+        jeepney's hintuans alike since 2026-10-12, each named (RouteLineLabel).
+        A tap picks one as its row on the trip card does, the map gliding in
+        to it (the owner's ask, 2026-10-03), as the studio's do.
       */}
-      {map && saved.selected && tripLivery && (
+      {map && saved.selected && tripLivery && timeline && (
         <StationLabels
           map={map}
           selected={saved.selected}
           hotspots={hotspots.hotspots}
+          rows={timeline.between}
           livery={tripLivery}
           pickedId={ride.pickedId}
           onPick={ride.pick}

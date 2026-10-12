@@ -19,7 +19,7 @@ import {
   orderLinked,
 } from '../../src/features/routes/model/timeline.ts';
 import { directionLine } from '../../src/features/routes/model/routes.ts';
-import { rideCut, routeTimeline } from '../../src/features/routes/model/ride.ts';
+import { rideCut, routeTimeline, rowStops } from '../../src/features/routes/model/ride.ts';
 import { otherRoutesFrom, sharingAnEnd } from '../../src/features/routes/model/departures.ts';
 import { haversine, lineLength } from '../../src/shared/utils/geo.ts';
 import { fileURLToPath } from 'node:url';
@@ -250,6 +250,72 @@ test('the committed map: every trip-card row cuts, forward, short of the whole',
       last = cut.metres;
       rows++;
     }
+  }
+  assert.ok(rows > 0, 'no rows on the committed map');
+});
+
+// Where each row's dot sits on the map (src/features/routes/model/ride.ts, rowStops): the
+// dots along every lit route, a jeepney's as a train's (the owner's ask of
+// 2026-10-12), each where its pick would pop, so the pick replaces it in place.
+test('a dot per row, where its pick would pop; a row whose box the line misses at its own point', () => {
+  const aside = {
+    ...mini('aside', 0.015, 'Aside'),
+    point: { type: 'Point', coordinates: [0.015, 0.01] },
+    area: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [0.0149, 0.0099],
+          [0.0151, 0.0099],
+          [0.0151, 0.0101],
+          [0.0149, 0.0101],
+          [0.0149, 0.0099],
+        ],
+      ],
+    },
+  };
+  const hotspots = [...RIDE_HOTSPOTS, aside];
+  const rows = [
+    { id: 'near', label: 'Amparo', kind: 'hintuan' },
+    { id: 'aside', label: 'Aside', kind: 'hintuan' },
+  ];
+  const stops = rowStops(vr(LINE), hotspots, rows);
+  assert.deepEqual(
+    stops.map((s) => [s.id, s.label]),
+    [
+      ['near', 'Amparo'],
+      ['aside', 'Aside'],
+    ],
+  );
+  assert.deepEqual(stops[0].at, rideCut(vr(LINE), hotspots, 'near').at);
+  assert.deepEqual(stops[1].at, [0.015, 0.01]);
+  // A row of no hotspot at all is left out, not thrown on.
+  assert.deepEqual(
+    rowStops(vr(LINE), hotspots, [{ id: 'gone', label: 'Gone', kind: 'hintuan' }]),
+    [],
+  );
+});
+
+test('the committed map: every trip-card row has its dot, in order, where its pick pops', () => {
+  const m = published();
+  let rows = 0;
+  for (const v of m.directions.filter((x) => x.shape?.coordinates?.length > 1)) {
+    const along = m.links
+      .filter((l) => l.directionId === v.id)
+      .sort((a, b) => a.sequence - b.sequence)
+      .map((l) => m.hotspots.find((s) => s.id === l.hotspotId))
+      .filter(Boolean);
+    const { between } = routeTimeline(v, m.hotspots, along);
+    const stops = rowStops(v, m.hotspots, between);
+    assert.deepEqual(
+      stops.map((s) => s.id),
+      between.map((r) => r.id),
+      `${v.name}: a dot per row, in order`,
+    );
+    for (const s of stops) {
+      assert.deepEqual(s.at, rideCut(v, m.hotspots, s.id).at, `${v.name}: ${s.label}`);
+    }
+    rows += stops.length;
   }
   assert.ok(rows > 0, 'no rows on the committed map');
 });

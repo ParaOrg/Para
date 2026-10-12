@@ -156,6 +156,25 @@ function Workshop({
   // none of the orange over the direction being redrawn.
   const rides = useLitRides(map, saved, hotspots.hotspots, draw.target.directionId, ride.ridden);
 
+  // The open trip's hintuans, worked out as the trip or the hotspots change,
+  // as the public map works them out (PublicMapApp): the card's rows and
+  // their dots along the line read one timeline, and the dots hang on its
+  // identity — a fresh `between` each render would place every dot anew
+  // (StationLabels' rowStops memo) — so the memo is load-bearing, not a
+  // saving.
+  const trip = saved.selected;
+  const timeline = useMemo(
+    () =>
+      trip
+        ? routeTimeline(
+            trip,
+            hotspots.hotspots,
+            hotspots.hotspotsAlong(trip.id, directionLine(trip)),
+          )
+        : null,
+    [trip, hotspots.hotspots, hotspots.hotspotsAlong],
+  );
+
   // The pill counts routes, not directions: a route is two rows, one of them
   // perhaps an empty slot, and five routes once read "10 routes" (finding 7).
   const routeCount = useMemo(
@@ -301,12 +320,13 @@ function Workshop({
       {map && !draw.drawing && (
         <EndTitles map={map} rides={rides} look={look} badged={inCardColour} />
       )}
-      {/* A selected train line's stations, named along it (RouteLineLabel). */}
-      {map && !draw.drawing && saved.selected && tripLivery && (
+      {/* The open trip's hintuans along its line, a train's stations and a jeepney's alike, named (RouteLineLabel). */}
+      {map && !draw.drawing && saved.selected && tripLivery && timeline && (
         <StationLabels
           map={map}
           selected={saved.selected}
           hotspots={hotspots.hotspots}
+          rows={timeline.between}
           livery={tripLivery}
           pickedId={ride.pickedId}
           onPick={ride.pick}
@@ -328,16 +348,12 @@ function Workshop({
         2026-09-30), the editor's facts and its Edit, Extend and Delete under
         its tiles. Keyed on the route, as there: SWITCH keeps its colour.
       */}
-      {!draw.drawing && saved.selected && tripLivery && (
+      {!draw.drawing && saved.selected && tripLivery && timeline && (
         <TripCard
           key={saved.selected.routeId}
           direction={saved.selected}
           directions={saved.directions}
-          timeline={routeTimeline(
-            saved.selected,
-            hotspots.hotspots,
-            hotspots.hotspotsAlong(saved.selected.id, directionLine(saved.selected)),
-          )}
+          timeline={timeline}
           livery={tripLivery}
           onBackToList={backFromTrip}
           onSwitch={switchTrip}

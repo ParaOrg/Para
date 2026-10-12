@@ -3,7 +3,7 @@ import { haversine, lineLength, type LngLat } from '@/shared/utils/geo';
 import { hotspotRing, type Hotspot } from './hotspots';
 import { placeKey } from './places';
 import { servedBy, directionLine, type Direction } from './routes';
-import { drawnFromTheEnd, timelineFor, type Timeline } from './timeline';
+import { drawnFromTheEnd, timelineFor, type Timeline, type TimelineRow } from './timeline';
 import { passStretches } from '../geo/pass';
 
 /*
@@ -110,6 +110,40 @@ export function rideCut(
     endHotspotId: end.hotspotId,
     dots,
   };
+}
+
+/** One row of a trip's timeline placed on the map: its dot's spot, and its name. */
+export interface RowStop {
+  id: string;
+  label: string;
+  at: LngLat;
+}
+
+/**
+ * Where each hintuan row of a trip sits on the map — the dots along every
+ * lit route, a jeepney's as a train's (the owner's ask, 2026-10-12: "if
+ * the route is selected specially jeepney, it must show their hintuans
+ * similar to LRT, MRT, and Ferry"): on the line, at the middle of the
+ * stretch past the row's last box, where the picked circle pops (rideCut's
+ * `at`; his "middle of the line", the same day), so a pick replaces the
+ * dot in its own spot. A row whose box the line misses sits at its
+ * hotspot's own point, as its pin does (useRideTo's pinAt). Each row cuts
+ * the line once more here: a trip's twenty-five rows walk a line of a few
+ * thousand points a few times each — twice as a trip opens, on its overview
+ * and then its full line, and again as the studio reloads its hotspots
+ * (StationLabels memoises it) — tens of milliseconds on a cheap phone,
+ * which is nothing beside drawing them.
+ */
+export function rowStops(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  rows: readonly TimelineRow[],
+): RowStop[] {
+  return rows.flatMap((row) => {
+    const at =
+      rideCut(v, hotspots, row.id)?.at ?? hotspots.find((s) => s.id === row.id)?.point.coordinates;
+    return at ? [{ id: row.id, label: row.label, at }] : [];
+  });
 }
 
 /**
