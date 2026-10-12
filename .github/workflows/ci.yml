@@ -5,9 +5,11 @@
 # shipping fast"). Three ideas:
 #
 #   1. Only what a change can reach. `changes` reads the files a pull request
-#      touches: docs and Markdown alone run nothing; src/studio/ and the
-#      studio's suites alone skip the public suites; src/commuter/, public/
-#      and the public suites alone skip the studio's. Anything else — shared
+#      touches: docs and Markdown alone run nothing; src/app/studio/,
+#      src/features/studio/ and the studio's suites alone skip the public
+#      suites; src/app/public-map/, src/features/locator/,
+#      src/features/published-map/, public/ and the public suites alone skip
+#      the studio's. Anything else — shared
 #      code, the build, the lockfile, this file — runs both. A push to main
 #      or staging, the nightly run and "Run workflow" run everything.
 #   2. Every suite at once. Each suite is its own job, so the run takes as
@@ -88,9 +90,9 @@ jobs:
             [ -z "$f" ] && continue
             case "$f" in
               docs/*|*.md) ;;
-              src/studio/*|tests/e2e/studio-scale-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              src/app/studio/*|src/features/studio/*|tests/e2e/studio-scale-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/commuter/*|public/*|tests/e2e/visitor-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs)
+              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/visitor-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs)
                 public=true ;;
               *) public=true; studio=true ;;
             esac
@@ -112,6 +114,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Prettier, as .prettierrc asks: a file left unformatted fails here.
+      - name: Formatting
+        run: npm run format:check
+      # ESLint: the rules the standards name are errors (eslint.config.js).
+      - name: Lint
+        run: npm run lint
       # Import boundaries, no editor code on /, the installable app's files.
       - name: Build, with the boundary and build checks
         run: npm run build

@@ -1,0 +1,60 @@
+/*
+ * The picked hintuan's circle (HintuanPin.tsx) and a selected train line's
+ * stations (StationLabels.tsx); both import this sheet, so only the maps
+ * that draw them load it. The marker's own
+ * element is MapLibre's to move — it sets its transform — so the pop is on
+ * the circle inside, TimelineDot's own span: from nothing to its size,
+ * over the base duration with the arriving ease (tokens.css, Motion), and
+ * without the 2px it tucks into a rail on the card. `prefers-reduced-motion`
+ * has it simply there.
+ */
+.hintuan-pin {
+  pointer-events: none;
+}
+/*
+ * A name that opens its place takes taps, and so does a train station's dot
+ * and name, one button (StationLabels.tsx); the picked hintuan's circle never does.
+ */
+button.hintuan-pin-title,
+button.station-label-tap {
+  pointer-events: auto;
+  cursor: pointer;
+}
+/* The name beside it pops from its left edge, a beat after the circle. */
+.hintuan-pin-title {
+  white-space: nowrap;
+  transform-origin: left center;
+  translate: 0 -50%;
+  animation: hintuan-pin-pop var(--transition-duration-base) var(--ease-enter) 60ms both;
+}
+.hintuan-pin > span,
+.station-label-tap > span:first-child {
+  margin-bottom: 0;
+  animation: hintuan-pin-pop var(--transition-duration-base) var(--ease-enter) both;
+}
+/*
+ * A train's station further out (StationLabels.tsx): its dot smaller. On
+ * the dot, not the marker: MapLibre moves the marker by its transform, and
+ * a scale there would scale where it sits too. `scale`, not `transform`,
+ * so the pop keeps its own.
+ */
+.station-label[data-far] .station-label-tap > span:first-child {
+  scale: 0.6;
+}
+@keyframes hintuan-pin-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hintuan-pin > span,
+  .station-label-tap > span:first-child,
+  .hintuan-pin-title {
+    animation: none;
+  }
+}
