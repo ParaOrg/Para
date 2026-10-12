@@ -1,11 +1,11 @@
-import { Marker, type MapLibreMap } from 'maplibre-gl';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import type { MapLibreMap } from 'maplibre-gl';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
-import { tapsOnItsButton } from './marker-tap';
 import { restDrawn } from './ride-rest';
+import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE, CARD_TEXT } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Hotspot } from '../model/hotspots';
@@ -174,39 +174,17 @@ function StationLabel({
   paled: boolean;
   onPick?: (rowId: string) => void;
 }) {
-  const [el] = useState(() => {
-    const div = document.createElement('div');
-    div.className = 'hintuan-pin station-label';
-    div.dataset.testid = 'station-label';
-    return div;
-  });
-  const marker = useRef<Marker | null>(null);
-  useEffect(() => {
-    const m = new Marker({ element: el, anchor: 'center' }).setLngLat(at).addTo(map);
-    marker.current = m;
-    return () => {
-      m.remove();
-      marker.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- made once per map; the effect below moves it
-  }, [map, el]);
-
+  const el = useMarkerElement('station-label', 'hintuan-pin station-label');
   // The row's spot moves as the trip's full line lands over its overview
-  // (rowStops runs again on the new line): the marker is moved there, not
-  // made anew, which would pop its dot a second time and jump it from the
-  // overview's point (HintuanPin's way; the ds-reviewer's finding, 2026-10-12).
+  // (rowStops runs again on the new line): moved there, not made anew (useMapMarker).
+  useMapMarker(map, el, at, { anchor: 'center', onTap: () => onPick?.(rowId) });
+  // Further out, a smaller dot (hintuanPin.css), so the stations read as
+  // beads, not a wall; and along the rest, said for the suites, the ring's
+  // colour being the dot's own class.
   useEffect(() => {
-    marker.current?.setLngLat(at);
-  }, [at]);
-  // Read as the tap comes: a fresh function each render binds nothing anew (HintuanPin).
-  const pick = useRef(onPick);
-  pick.current = onPick;
-  useEffect(() => tapsOnItsButton(el, () => pick.current?.(rowId)), [el, rowId]);
-
-  // Further out, a smaller dot (hintuanPin.css), so the stations read as beads, not a wall.
-  el.toggleAttribute('data-far', !named);
-  // Said on the marker for the suites to read; the ring's colour is the dot's own class.
-  el.toggleAttribute('data-paled', paled);
+    el.toggleAttribute('data-far', !named);
+    el.toggleAttribute('data-paled', paled);
+  }, [el, named, paled]);
   // The dot and its name are one tap (the owner's ask, 2026-10-02): one button around both.
   const Tap = onPick ? 'button' : 'div';
   return createPortal(

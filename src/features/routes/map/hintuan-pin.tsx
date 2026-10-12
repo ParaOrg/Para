@@ -1,11 +1,11 @@
-import { Marker, type MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef, useState } from 'react';
+import type { MapLibreMap } from 'maplibre-gl';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import type { LngLat } from '@/shared/utils/geo';
 
-import { tapsOnItsButton } from './marker-tap';
 import { SelectedHintuanRouteTitle } from './selected-hintuan-route-title';
+import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_TEXT } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Livery } from '../model/liveries';
@@ -72,35 +72,14 @@ interface Props {
  * the map, so the name's button says it too.
  */
 export function HintuanPin({ map, at, label, code, livery, onPick }: Props) {
-  const [el] = useState(() => {
-    const div = document.createElement('div');
-    div.className = 'hintuan-pin';
-    div.dataset.testid = 'hintuan-pin';
-    return div;
-  });
-  const marker = useRef<Marker | null>(null);
-
+  const el = useMarkerElement('hintuan-pin', 'hintuan-pin');
+  // Moved, not made anew: the line's point for a pick can land a moment after the pick itself.
+  useMapMarker(map, el, at, { anchor: 'center', onTap: onPick });
+  // For the suites: the card's colour it wears.
   useEffect(() => {
-    const m = new Marker({ element: el, anchor: 'center' }).setLngLat(at).addTo(map);
-    marker.current = m;
-    return () => {
-      m.remove();
-      marker.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- made once per map; the effect below moves it
-  }, [map, el]);
+    el.dataset.livery = livery;
+  }, [el, livery]);
 
-  // The line's point for a pick can land a moment after the pick itself.
-  useEffect(() => {
-    marker.current?.setLngLat(at);
-  }, [at]);
-
-  // Read as the tap comes: a fresh function each render binds nothing anew.
-  const pick = useRef(onPick);
-  pick.current = onPick;
-  useEffect(() => tapsOnItsButton(el, () => pick.current?.()), [el]);
-
-  el.dataset.livery = livery;
   const Title = onPick ? 'button' : 'div';
   // Popped, and untucked from a rail it has none of, by hintuanPin.css.
   return createPortal(

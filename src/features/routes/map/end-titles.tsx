@@ -1,13 +1,13 @@
-import { Marker, type MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef, useState } from 'react';
+import type { MapLibreMap } from 'maplibre-gl';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import type { LngLat } from '@/shared/utils/geo';
 
 import { rideEnds, type Ride } from './direction-arrows';
 import type { LineLook } from './livery-line';
-import { tapsOnItsButton } from './marker-tap';
 import { SelectedHintuanRouteTitle } from './selected-hintuan-route-title';
+import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Livery } from '../model/liveries';
@@ -167,43 +167,22 @@ function EndTitle({
   opens: 'trip' | 'place';
   onPick?: () => void;
 }) {
-  const [el] = useState(() => {
-    const div = document.createElement('div');
-    div.className = 'end-title';
-    return div;
-  });
-  const marker = useRef<Marker | null>(null);
-
+  const el = useMarkerElement(named ? 'end-title' : 'end-circle', 'end-title');
+  // The circle is the marker's foot: its bottom half a radius below the
+  // point, so the centre sits on it, the pill above.
+  useMapMarker(map, el, at, { anchor: 'bottom', offset: [0, DOT_PX / 2], onTap: onPick });
+  // Said on the marker for the suites: which end, of which name, where, and
+  // what it wears. The name can pass to another ride's end (rideEnds names
+  // the first to reach a place), so the test id follows.
+  const opensWhat = onPick ? opens : '';
   useEffect(() => {
-    // The circle is the marker's foot: its bottom half a radius below the
-    // point, so the centre sits on it, the pill above.
-    const m = new Marker({ element: el, anchor: 'bottom', offset: [0, DOT_PX / 2] })
-      .setLngLat(at)
-      .addTo(map);
-    marker.current = m;
-    return () => {
-      m.remove();
-      marker.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- made once per map; the effect below moves it
-  }, [map, el]);
-
-  useEffect(() => {
-    marker.current?.setLngLat(at);
-  }, [at]);
-
-  // Read as the tap comes: a fresh function each render binds nothing anew.
-  const pick = useRef(onPick);
-  pick.current = onPick;
-  useEffect(() => tapsOnItsButton(el, () => pick.current?.()), [el]);
-
-  // Said on the marker for the suites: which end, of which name, where, and what it wears.
-  el.dataset.testid = named ? 'end-title' : 'end-circle';
-  el.dataset.name = name;
-  el.dataset.end = head ? 'head' : 'tail';
-  el.dataset.opens = onPick ? opens : '';
-  el.dataset.at = `${at[0]},${at[1]}`;
-  el.toggleAttribute('data-paled', paled);
+    el.dataset.testid = named ? 'end-title' : 'end-circle';
+    el.dataset.name = name;
+    el.dataset.end = head ? 'head' : 'tail';
+    el.dataset.opens = opensWhat;
+    el.dataset.at = `${at[0]},${at[1]}`;
+    el.toggleAttribute('data-paled', paled);
+  }, [el, named, name, head, opensWhat, at, paled]);
   const rail = livery ? (paled ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery]) : LIT_RAIL;
   const Pill = onPick ? 'button' : 'div';
   return createPortal(

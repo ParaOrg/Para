@@ -1,8 +1,8 @@
-import { Marker, type MapLibreMap } from 'maplibre-gl';
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import type { MapLibreMap } from 'maplibre-gl';
+import { useEffect, useId, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 
-import { tapsOnItsButton } from '@/features/routes/map/marker-tap';
+import { useMapMarker, useMarkerElement } from '@/features/routes/map/use-map-marker';
 import { metresPerPixel } from '@/shared/utils/geo';
 
 import './locator.css';
@@ -176,42 +176,25 @@ export function LocatorOnMap({
   /** A tap on the dot (locatorMood's `poke`). */
   onPoke: () => void;
 }) {
-  const [el] = useState(() => {
-    const div = document.createElement('div');
-    div.dataset.testid = 'locator-overlay';
-    return div;
+  const el = useMarkerElement('locator-overlay');
+  // The dot answers a tap itself, and the map beneath never hears the tap
+  // (markerTap.ts): no line opens, the camera stays. A drag that starts on
+  // it still pans the map: it sits mid-screen, where a finger lands to pan.
+  useMapMarker(map, el, fix.at, {
+    anchor: 'center',
+    pitchAlignment: 'map',
+    rotationAlignment: 'map',
+    onTap: onPoke,
+    dragsPass: true,
   });
-  const [marker] = useState(
-    () =>
-      new Marker({
-        element: el,
-        anchor: 'center',
-        pitchAlignment: 'map',
-        rotationAlignment: 'map',
-      }),
-  );
   const [zoom, setZoom] = useState(() => map.getZoom());
-
   useEffect(() => {
-    marker.setLngLat(fix.at).addTo(map);
     const zoomed = () => setZoom(map.getZoom());
     map.on('zoom', zoomed);
     return () => {
       map.off('zoom', zoomed);
-      marker.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- added once per map; the effect below moves it
-  }, [map, marker]);
-  useEffect(() => {
-    marker.setLngLat(fix.at);
-  }, [marker, fix.at]);
-
-  // The dot answers a tap itself, and the map beneath never hears the tap
-  // (markerTap.ts): no line opens, the camera stays. A drag that starts on
-  // it still pans the map: it sits mid-screen, where a finger lands to pan.
-  const poke = useRef(onPoke);
-  poke.current = onPoke;
-  useEffect(() => tapsOnItsButton(el, () => poke.current(), { dragsPass: true }), [el]);
+  }, [map]);
 
   const gazeDeg = useDotGaze(fix.at, gazeAt, hushedAt);
   const haloPx = (2 * circleRadius(fix.accuracy)) / metresPerPixel(fix.at[1], zoom);
