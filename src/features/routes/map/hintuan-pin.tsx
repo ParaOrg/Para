@@ -54,8 +54,8 @@ interface Props {
  * circle (LRTHintuanCodes, 4051:6426). The codes stood in place of every
  * station's dot for a morning (StationLabels), until his "we will go back
  * to circle, but only one is selected it must show": the picked one's
- * alone, here. Picked, the hintuan is where the ride ends, so the chevrons
- * stop here (useLitRides) and the route's own tail keeps its name without
+ * alone, here. Picked, the hintuan is where the ride ends, the line on from
+ * here in the card's pale (useLitRides) and the route's own tail keeps its name without
  * an E (EndTitles). Given `onPick`, the name is a button (it opened the
  * hintuan's place, the owner's ask of 2026-10-01, until his of 2026-10-03:
  * it lets the pick go, the camera back); the circle still takes no taps.

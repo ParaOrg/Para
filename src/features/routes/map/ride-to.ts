@@ -200,7 +200,7 @@ export function useRideTo(
     /** The row picked, cut or not: a row whose box the line misses is still shown picked, with nothing to price. */
     pickedId: live?.rowId ?? null,
     /**
-     * The ride from its start to the picked hintuan, where its chevrons stop,
+     * The ride from its start to the picked hintuan, where it now ends,
      * and `rest`, the way on from there to the end, drawn in the trip's pale
      * (useLitRides; the owner's ask, 2026-10-12). Null with nothing cut.
      */

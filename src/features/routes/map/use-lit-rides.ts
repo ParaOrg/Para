@@ -32,7 +32,7 @@ export function useLitRides(
   hotspots: readonly Hotspot[],
   /** The direction being redrawn in the studio: no stretches over the draft. */
   hiddenDirectionId: string | null = null,
-  /** A hintuan picked on the trip (useRideTo's `ridden`): that ride's chevrons stop there, and its line on from there is drawn in the trip's pale (`rest`). */
+  /** A hintuan picked on the trip (useRideTo's `ridden`): that ride ends there, and its line on from there is drawn in the trip's pale (`rest`), the chevrons flowing on over it. */
   ridden: { directionId: string; line: LngLat[]; rest: LngLat[] } | null = null,
 ): Ride[] {
   // Where a lit direction passes a hintuan, the line turns orange for that

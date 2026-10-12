@@ -64,11 +64,14 @@ const SAME_END_M = 150;
 
 /**
  * One lit ride: its direction, its line in travel order, and the places it
- * runs from and to; `flow`, where its chevrons stop short of the line's end
- * — the stretch to a picked hintuan, where the ride now ends (the owner's
- * ask, 2026-10-02; HintuanLabel's HintuanEnd) — the line and its ends staying whole;
- * and `rest`, the way on from there to the end (useRideTo's ridden), which
- * useRideRest draws in the card's pale and whose end circle wears it too.
+ * runs from and to; `flow`, the stretch to a picked hintuan, where the ride
+ * now ends (the owner's ask, 2026-10-02; HintuanLabel's HintuanEnd) — the
+ * line and its ends staying whole; and `rest`, the way on from there to the
+ * end (useRideTo's ridden), which useRideRest draws in the card's pale and
+ * whose end circle wears it too. The chevrons flow on along the rest, white
+ * on the pale as on the line (the owner's ask, 2026-10-13: "continue the
+ * arrow into the pale lines", and of two colours tried, "I love the
+ * white"); they stopped at the pick from 2026-10-02 until then.
  */
 export interface Ride {
   id?: string;
@@ -287,7 +290,8 @@ export function onAMove(held: View | null, drawnAt: number, now: View): 'hold' |
  * unchanged (a memo), or the flow restarts.
  */
 export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride[]): void {
-  const lines = useMemo(() => rides.map((r) => r.flow ?? r.line), [rides]);
+  // The whole line, on past a picked hintuan too (Ride, above).
+  const lines = useMemo(() => rides.map((r) => r.line), [rides]);
   const hitReady = useLayerReady(map, ROUTES_HIT_LAYER);
   useEffect(() => {
     // Over the lit line and its orange stretches, under the hit area and the
