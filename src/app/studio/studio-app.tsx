@@ -318,7 +318,7 @@ function Workshop({
 
       {/* Each lit ride's ends, named over their circles. */}
       {map && !draw.drawing && (
-        <EndTitles map={map} rides={rides} look={look} badged={inCardColour} />
+        <EndTitles map={map} rides={rides} look={look} marked={inCardColour} />
       )}
       {/* The open trip's hintuans along its line, a train's stations and a jeepney's alike, named (RouteLineLabel). */}
       {map && !draw.drawing && saved.selected && tripLivery && timeline && (

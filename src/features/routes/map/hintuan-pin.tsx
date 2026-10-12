@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { tapsOnItsButton } from './marker-tap';
+import { SelectedHintuanRouteTitle } from './selected-hintuan-route-title';
 import { CARD_SURFACE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Livery } from '../model/liveries';
@@ -40,18 +41,17 @@ interface Props {
  *
  * Beside it, its name (the owner's SelectedHintuanRouteTitle, Figma
  * 3847:11777, 2026-09-30): a pill 10px right of the circle and centred on
- * it, so the circle stays on the point the marker is anchored to. It wears
- * End's blue with white words, as the badge over it does (his redrawing of
- * 2026-10-12, 3848:12135: "blue is the end"); the trip card's surface and
- * words until then. Given `onPick`, the name is a button
- * (it opened the hintuan's place, the owner's ask of 2026-10-01, until his
- * of 2026-10-03: it lets the pick go, the camera back); the circle still
- * takes no taps.
- *
- * Over the name, End (the owner's SelectedHintuanRouteTitle, Figma
- * 3848:12135, 2026-10-02): picked, the hintuan is where the ride ends, so
- * the chevrons stop here (useLitRides) and the route's own tail keeps its
- * name without the word (EndTitles).
+ * it, so the circle stays on the point the marker is anchored to. It is the
+ * Tail Route, one drawing with the end titles' (SelectedHintuanRouteTitle):
+ * End's blue with its circled E before the name, white words, drawn flat
+ * (his redrawing of 2026-10-12, 3848:12135: "blue is the end"; the trip
+ * card's surface and words until then, lifted off the map by a shadow,
+ * 3847:11760, and the word End over the name from 2026-10-02 until his
+ * icons). Picked, the hintuan is where the ride ends, so the chevrons
+ * stop here (useLitRides) and the route's own tail keeps its name without
+ * an E (EndTitles). Given `onPick`, the name is a button (it opened the
+ * hintuan's place, the owner's ask of 2026-10-01, until his of 2026-10-03:
+ * it lets the pick go, the camera back); the circle still takes no taps.
  */
 export function HintuanPin({ map, at, label, livery, onPick }: Props) {
   const [el] = useState(() => {
@@ -93,21 +93,10 @@ export function HintuanPin({ map, at, label, livery, onPick }: Props) {
           // Says what the tap does since the owner's ask of 2026-10-03: it
           // lets the pick go, no longer opening the routes there.
           {...(onPick ? { type: 'button' as const, 'aria-label': `End, ${label}: let it go` } : {})}
-          className="hintuan-pin-title absolute top-1/2 left-full ml-2.5 flex max-w-56 flex-col items-center"
+          data-testid="hintuan-pin-title"
+          className="hintuan-pin-title absolute top-1/2 left-full ml-2.5 flex max-w-64"
         >
-          {/* Over the name, as over a ride's own end (EndTitles): the ride now ends here. */}
-          <span
-            data-part="badge"
-            className="absolute bottom-full mb-1 rounded-full bg-brand-surface-secondary px-2 py-1 text-sm/5 font-medium text-content-inverse"
-          >
-            End
-          </span>
-          <span
-            data-testid="hintuan-pin-title"
-            className="max-w-full truncate rounded-full bg-brand-surface-secondary px-2 py-1 text-sm/5 font-medium text-content-inverse shadow-selected-hintuan-route-title"
-          >
-            {label}
-          </span>
+          <SelectedHintuanRouteTitle variant="tail" name={label} />
         </Title>
       )}
     </>,

@@ -479,11 +479,13 @@ function measureSafeTop() {
 /** Between a route fitted whole and the map's edges, or the sheet's. */
 const FIT_MARGIN_PX = 48;
 /**
- * Over the top margin, an end's Start or End badge and its gap: the names
- * stand over their circles (EndTitles), and a route starting at the top of
- * the room kept its name in the margin but put the badge under the map's edge.
+ * Over the top margin, what Start's S or End's E adds to an end's name: the
+ * names stand over their circles (EndTitles), and a marked pill is 32 tall
+ * against a plain one's 28 (SelectedHintuanRouteTitle), so a route starting
+ * at the top of the room keeps its name in the margin. The badge over the
+ * name and its gap, 32, until the owner's icons of 2026-10-12.
  */
-const FIT_BADGE_PX = 32;
+const FIT_MARK_PX = 4;
 /** The least map a whole route is fitted into, the margins given up for it where the sheet leaves less. */
 const FIT_ROOM_MIN_PX = 48;
 
@@ -501,7 +503,7 @@ export function roomBeside(
   snap: Snap,
 ): { top: number; bottom: number; left: number; right: number } {
   const room = {
-    top: FIT_MARGIN_PX + FIT_BADGE_PX,
+    top: FIT_MARGIN_PX + FIT_MARK_PX,
     bottom: FIT_MARGIN_PX,
     left: FIT_MARGIN_PX,
     right: FIT_MARGIN_PX,
@@ -519,7 +521,7 @@ export function roomBeside(
   // A thin strip above a tall sheet: the margins give way, so the route still fits.
   const margin = Math.max(0, Math.min(FIT_MARGIN_PX, (m.height - shows - FIT_ROOM_MIN_PX) / 2));
   room.top =
-    margin + Math.max(0, Math.min(FIT_BADGE_PX, m.height - shows - FIT_ROOM_MIN_PX - 2 * margin));
+    margin + Math.max(0, Math.min(FIT_MARK_PX, m.height - shows - FIT_ROOM_MIN_PX - 2 * margin));
   room.bottom = shows + margin;
   return room;
 }

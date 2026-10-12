@@ -47,10 +47,14 @@ function namesShow(map: MapLibreMap): boolean {
  * on the line at the middle of the stretch past the row's box, where the
  * picked circle pops (rowStops; his "middle of the line", 2026-10-12), so
  * a pick replaces the dot in its spot. The name is the owner's
- * RouteLineLabel, SelectedHintuanRouteTitle's Default (Figma 3846:11748):
- * the picked hintuan's pill (HintuanPin), in the trip card's surface and
- * words, without its End — kept so on 2026-10-12, when the pin's own went
- * to End's blue. The dot is the timeline's own TimelineDot at rest, ringed
+ * RouteLineLabel: SelectedHintuanRouteTitle's Default (Figma 3846:11748)
+ * as he drew it on 2026-10-02, a pill in the trip card's surface and
+ * words, lifted off the map, as the picked hintuan's own was. Kept so on
+ * 2026-10-12, when his redrawing put the pin's in End's blue with its E,
+ * drawn flat, and the Default itself in the brand's blue
+ * (SelectedHintuanRouteTitle, which draws no pill here): whether this
+ * label follows is his to say. The dot is the timeline's own TimelineDot
+ * at rest, ringed
  * in the lit line's colour, the card's surface, so the dot and its name
  * are one colour, as the owner asked ("the circle must be the same color
  * as routeline color lit", 2026-10-12).

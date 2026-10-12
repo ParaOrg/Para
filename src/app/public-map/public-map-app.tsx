@@ -175,7 +175,7 @@ export function PublicMapApp() {
           map={map}
           rides={rides}
           look={look}
-          badged={inCardColour}
+          marked={inCardColour}
           onPick={openPlace}
           onTrip={saved.selected ? undefined : openRide}
         />

@@ -1334,72 +1334,72 @@ const tripChecks = async () => {
       `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} ring ${drawn.ring}, the line ${drawn.line}; pointer-events ${drawn.taps}`,
     );
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
-    // Beside the circle, the hintuan's name in End's colours, as the badge
-    // over it (SelectedHintuanRouteTitle, Figma 3847:11777; the trip card's
-    // colours until the owner's redrawing of 2026-10-12): 10px right of it
-    // and centred on it.
+    // Beside the circle, the hintuan's name in End's colours, its circled E
+    // before it (SelectedHintuanRouteTitle, Figma 3847:11777; the trip
+    // card's colours until the owner's redrawing of 2026-10-12, and the
+    // word End over it until his icons the same day): 10px right of it and
+    // centred on it.
     const rowName = (
       await pickButton.evaluate((b) => b.lastElementChild.firstElementChild.textContent)
     ).trim();
     const title = await page.evaluate(() => {
-      const t = document.querySelector('[data-testid="hintuan-pin-title"]');
+      const t = document.querySelector('[data-testid="hintuan-pin-title"] [data-part="name"]');
       const pin = document.querySelector('[data-testid="hintuan-pin"]');
-      const badge = t?.parentElement?.querySelector('[data-part="badge"]');
-      if (!t || !pin || !badge) return null;
+      if (!t || !pin) return null;
+      // What a Tail Route wears, read off its own classes.
+      const probe = document.createElement('i');
+      probe.className = 'bg-brand-surface-secondary text-content-inverse';
+      document.body.append(probe);
+      const want = getComputedStyle(probe);
       const [a, b] = [t.getBoundingClientRect(), pin.getBoundingClientRect()];
-      const [ts, bs] = [getComputedStyle(t), getComputedStyle(badge)];
-      return {
-        text: t.textContent.trim(),
-        colours: ts.backgroundColor === bs.backgroundColor && ts.color === bs.color,
-        detail: `${ts.color} on ${ts.backgroundColor}; End ${bs.color} on ${bs.backgroundColor}`,
+      const ts = getComputedStyle(t);
+      const seen = {
+        // The name alone: a screen reader's "End, " sits before it, unseen.
+        text: t.querySelector('[data-part="words"]')?.textContent.trim(),
+        colours: ts.backgroundColor === want.backgroundColor && ts.color === want.color,
+        detail: `${ts.color} on ${ts.backgroundColor}; End ${want.color} on ${want.backgroundColor}`,
+        icon: !!t.querySelector('[data-part="end"] svg') && !t.querySelector('[data-part="start"]'),
         gap: a.left - b.right,
         drop: a.top + a.height / 2 - (b.top + b.height / 2),
       };
+      probe.remove();
+      return seen;
     });
     check(
-      "  its name beside the circle, in End's colours",
+      "  its name beside the circle, in End's colours, its E before it",
       !!title &&
         title.text === rowName &&
         title.colours &&
+        title.icon &&
         Math.abs(title.gap - 10) < 1.5 &&
         Math.abs(title.drop) < 1.5,
       title
-        ? `"${title.text}" for "${rowName}"; ${title.detail}; ${title.gap.toFixed(1)} px right, ${title.drop.toFixed(1)} px low`
+        ? `"${title.text}" for "${rowName}"; ${title.detail}; E ${title.icon}; ${title.gap.toFixed(1)} px right, ${title.drop.toFixed(1)} px low`
         : 'no title',
     );
     // The ride ends at the hintuan now (SelectedHintuanRouteTitle, Figma
-    // 3848:12135): End over its name, and the route's own tail keeps its
-    // name without the word.
+    // 3848:12135): End's E before its name, and the route's own tail keeps
+    // its name without one; Start's S still before the start.
     const words = await page.evaluate(() => {
-      const t = document.querySelector('[data-testid="hintuan-pin-title"]');
-      const badge = t?.parentElement?.querySelector('[data-part="badge"]');
-      const word = (end) =>
-        document
-          .querySelector(`[data-testid="end-title"][data-end="${end}"] [data-part="badge"]`)
-          ?.textContent.trim() ?? null;
-      const tails = document.querySelectorAll(
-        '[data-testid="end-title"][data-end="tail"] [data-part="name"]',
-      ).length;
-      if (!t || !badge) return { pin: null, head: word('head'), tail: word('tail'), tails };
-      const [a, b] = [badge.getBoundingClientRect(), t.getBoundingClientRect()];
+      const iconIn = (sel) => {
+        const pill = document.querySelector(sel);
+        if (!pill) return null;
+        if (pill.querySelector('[data-part="start"] svg')) return 'Start';
+        return pill.querySelector('[data-part="end"] svg') ? 'End' : 'none';
+      };
       return {
-        pin: badge.textContent.trim(),
-        over: b.top - a.bottom,
-        centred: a.left + a.width / 2 - (b.left + b.width / 2),
-        head: word('head'),
-        tail: word('tail'),
-        tails,
+        pin: iconIn('[data-testid="hintuan-pin-title"] [data-part="name"]'),
+        head: iconIn('[data-testid="end-title"][data-end="head"] [data-part="name"]'),
+        tail: iconIn('[data-testid="end-title"][data-end="tail"] [data-part="name"]'),
+        tails: document.querySelectorAll(
+          '[data-testid="end-title"][data-end="tail"] [data-part="name"]',
+        ).length,
       };
     });
     check(
-      '  End over its name, Start still over the start, the tail named without End',
-      words.pin === 'End' &&
-        Math.abs(words.over - 4) < 1.5 &&
-        Math.abs(words.centred) < 1.5 &&
-        words.head === 'Start' &&
-        words.tail === null &&
-        words.tails > 0,
-      `pin "${words.pin}" ${words.over?.toFixed(1)} px over, ${words.centred?.toFixed(1)} px off centre; head "${words.head}", tail "${words.tail}", ${words.tails} tail name(s)`,
+      "  End's E before its name, Start's S still before the start, the tail named without one",
+      words.pin === 'End' && words.head === 'Start' && words.tail === 'none' && words.tails > 0,
+      `pin "${words.pin}"; head "${words.head}", tail "${words.tail}", ${words.tails} tail name(s)`,
     );
     if (pickWant) {
       const where = await page.evaluate((at) => {
@@ -2193,8 +2193,9 @@ if (routeA) {
     `${openColour}: ${JSON.stringify(looks)}`,
   );
   // Each end named in a pill over its circle, its pointer at the circle, in
-  // the line's colour, or, with Start or End over it, in that badge's
-  // (End&TailRoute, Figma 3848:12135; the owner's redrawing of 2026-10-12).
+  // the line's colour, or, led by Start's S or End's E, in that icon's
+  // (End&TailRoute, Figma 3848:12135; the owner's redrawing of 2026-10-12,
+  // its icons in place of the words Start and End the same day).
   const ends = await page.evaluate(async () => {
     const m = window.__map;
     const named = ((await window.__src('direction-ends'))?.features ?? []).filter(
@@ -2207,32 +2208,41 @@ if (routeA) {
     document.body.append(probe);
     const ringRgb = getComputedStyle(probe).color;
     probe.remove();
+    // What a Head Route and a Tail Route wear, read off their own classes.
+    const wornBy = (icon) => {
+      const p = document.createElement('i');
+      p.className =
+        icon === 'Start' ? 'bg-map-hotspots-card-hintuan-surface' : 'bg-brand-surface-secondary';
+      document.body.append(p);
+      const colour = getComputedStyle(p).backgroundColor;
+      p.remove();
+      return colour;
+    };
     const c = m.getCanvas().getBoundingClientRect();
     const rows = named.map((f) => {
       const pill = pills.find((p) => p.dataset.name === f.properties.name);
       if (!pill) return { name: f.properties.name, missing: true };
       const namePill = pill.querySelector('[data-part="name"]');
-      const badgeEl = pill.querySelector('[data-part="badge"]');
-      const badge = badgeEl?.textContent.trim();
-      // Badged, the pill wears its badge's colour; plain, the line's.
-      const wants = badgeEl ? getComputedStyle(badgeEl).backgroundColor : ringRgb;
+      const icon = namePill.querySelector('[data-part="start"] svg')
+        ? 'Start'
+        : namePill.querySelector('[data-part="end"] svg')
+          ? 'End'
+          : null;
+      // Marked, the pill wears its icon's colour; plain, the line's.
+      const wants = icon ? wornBy(icon) : ringRgb;
       const box = namePill.getBoundingClientRect();
       const q = m.project(f.geometry.coordinates);
       return {
         name: f.properties.name,
-        // Head Route where the ride starts; Tail Route where it goes, its circled arrow first.
+        // Head Route where the ride starts, Start's S first; Tail Route where it goes, End's E first.
         look:
           f.properties.end === 'from'
-            ? pill.dataset.end === 'head' &&
-              !pill.querySelector('[data-part="arrow"]') &&
-              badge === 'Start'
-            : pill.dataset.end === 'tail' &&
-              !!pill.querySelector('[data-part="arrow"]') &&
-              badge === 'End',
+            ? pill.dataset.end === 'head' && icon === 'Start'
+            : pill.dataset.end === 'tail' && icon === 'End',
         colour: getComputedStyle(namePill).backgroundColor === wants,
-        // Its pointer the same: a class on the badged pill, the line's colour
-        // inline on a plain one. The last svg: a tail's pill leads with the
-        // circled arrow, in the words' colour.
+        // Its pointer the same: a class on the marked pill, the line's colour
+        // inline on a plain one. The last svg: a marked pill leads with its
+        // icon, in the words' colour.
         pointer: getComputedStyle([...namePill.querySelectorAll('svg')].at(-1)).fill === wants,
         across: box.left + box.width / 2 - (c.left + q.x),
         above: c.top + q.y - box.bottom,
@@ -2241,7 +2251,7 @@ if (routeA) {
     return { named: named.length, pills: pills.length, rows };
   });
   check(
-    "  each end named once, in a pill over its circle in its badge's colour, or the line's with none, its pointer the same, where it goes led by an arrow, Start or End over it",
+    "  each end named once, in a pill over its circle in its icon's colour, or the line's with none, its pointer the same, Start's S before where the ride starts and End's E before where it goes",
     ends.named > 0 &&
       ends.pills === ends.named &&
       ends.rows.every(
@@ -2587,23 +2597,25 @@ if (!shared) {
     // line lit (the owner's ask, 2026-10-01); ‹ back to the list. The card
     // picked first: the list's routes may all end at one place (the way
     // back), and a tail two rides share opens the place instead.
-    // Start and End over the ends only in a card's colour: the list's routes
-    // in the selected blue keep their plain names, a picked card's are
-    // badged (the owner's ask, 2026-10-02).
-    const badges = () =>
+    // Start's S and End's E before the ends only in a card's colour: the
+    // list's routes in the selected blue keep their plain names, a picked
+    // card's are marked (the owner's ask, 2026-10-02; the words Start and
+    // End over the names until his icons of 2026-10-12).
+    const marks = () =>
       page.evaluate(() => {
         const titles = [...document.querySelectorAll('[data-testid="end-title"]')];
         return {
           titles: titles.length,
-          badged: titles.filter((t) => t.querySelector('[data-part="badge"]')).length,
+          marked: titles.filter((t) => t.querySelector('[data-part="start"], [data-part="end"]'))
+            .length,
         };
       });
-    const inBlue = await badges();
+    const inBlue = await marks();
     check(
       oneCard
-        ? "  in its one card's colour, the ends wear Start or End"
-        : '  in the selected blue, the ends are named without Start or End',
-      inBlue.titles > 0 && inBlue.badged === (oneCard ? inBlue.titles : 0),
+        ? "  in its one card's colour, the ends wear Start's S or End's E"
+        : "  in the selected blue, the ends are named without Start's S or End's E",
+      inBlue.titles > 0 && inBlue.marked === (oneCard ? inBlue.titles : 0),
       JSON.stringify(inBlue),
     );
     await buttonTap(wantedName, isPicked);
@@ -2611,16 +2623,16 @@ if (!shared) {
       .waitForFunction(
         () =>
           [...document.querySelectorAll('[data-testid="end-title"]')].every((t) =>
-            t.querySelector('[data-part="badge"]'),
+            t.querySelector('[data-part="start"], [data-part="end"]'),
           ),
         null,
         { timeout: 2000 },
       )
       .catch(() => {});
-    const inCard = await badges();
+    const inCard = await marks();
     check(
-      "  a picked card's ends wear Start or End, every one",
-      inCard.titles > 0 && inCard.badged === inCard.titles,
+      "  a picked card's ends wear Start's S or End's E, every one",
+      inCard.titles > 0 && inCard.marked === inCard.titles,
       JSON.stringify(inCard),
     );
     const tails = page.locator('[data-testid="end-title"][data-opens="trip"] button');

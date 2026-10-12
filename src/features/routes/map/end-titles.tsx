@@ -2,13 +2,13 @@ import { Marker, type MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { CircleArrowRightIcon } from '@/shared/ui/route-icons';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { rideEnds, type Ride } from './direction-arrows';
 import { litWidthAt } from './line-style';
 import type { LineLook } from './livery-line';
 import { tapsOnItsButton } from './marker-tap';
+import { SelectedHintuanRouteTitle } from './selected-hintuan-route-title';
 
 import './end-titles.css';
 
@@ -16,31 +16,33 @@ import './end-titles.css';
  * Each lit ride's ends named in the owner's SelectedHintuanRouteTitle,
  * End&TailRoute (Figma 3848:12135, 2026-09-30): a pill over the end's
  * circle, its pointer at the circle, in place of the plain name the map
- * wrote beside it. Unbadged, the pill wears what is lit: the line's colour,
- * and the chevrons' white — near-black on yellow — for its words, as a
- * card's are. Badged, it wears its badge's colour (the owner's redrawing of
- * 2026-10-12: "start and end will follow this color, blue is the end,
- * green is the start"): Start's green on a Head Route, End's blue on a Tail
- * Route, white words on both, and the pointer the same.
+ * wrote beside it. Unmarked, the pill is its Default: it wears what is lit,
+ * the line's colour, and the chevrons' white — near-black on yellow — for
+ * its words, as a card's are. Marked, it is a Head Route or a Tail Route
+ * (the owner's redrawing of 2026-10-12: "start and end will follow this
+ * color, blue is the end, green is the start"): Start's green with its
+ * circled S on where a ride starts, End's blue with its circled E on where
+ * it goes, white words on both, and the pointer the same.
  *
- * Its Head and Tail Route variants (2026-10-01) read as the RouteCard
- * does: where a ride starts, the top of its timeline, is the card's title;
- * where it goes is one of the card's rows, so its pill leads with the rows'
- * circled arrow. While what is lit wears a card's colour (`badged`) — an
- * open trip, or a picked card's rides, Tala's to Novaliches and to SM
- * Fairview — a badge over each name says which end it is (2026-10-02):
- * Start in the hintuan's green, End in the brand's blue, the two one
- * label and one button. A ride a picked hintuan stops short (`flow`) ends
- * there, End over the hintuan's name (HintuanPin), so its own tail keeps
- * its name without the word (the owner's ask, 2026-10-02). A list's routes lit in the selected blue keep their
- * plain names: there are too many (the owner's ask, the same day). A place
- * two rides share is named by
- * the first to reach it (`rideEnds`), so a trip's change of ride is the
- * earlier ride's tail, as it sits under the start on the timeline.
+ * Head Route and Tail Route (2026-10-01) read as the RouteCard does: where
+ * a ride starts, the top of its timeline, is the card's title; where it
+ * goes is one of the card's rows. While what is lit wears a card's colour
+ * (`marked`) — an open trip, or a picked card's rides, Tala's to Novaliches
+ * and to SM Fairview — each name says which end it is (2026-10-02): the
+ * words Start and End stood over the names until the icons took their
+ * place, and the Tail Route's circled arrow, the rows' own, went with them
+ * (his redrawing of 2026-10-12). A ride a picked hintuan stops short
+ * (`flow`) ends there, End's E before the hintuan's name (HintuanPin), so
+ * its own tail keeps its name without one (the owner's ask, 2026-10-02). A
+ * list's routes lit in the selected blue keep their plain names: there are
+ * too many (the owner's ask, the same day). A place two rides share is
+ * named by the first to reach it (`rideEnds`), so a trip's change of ride
+ * is the earlier ride's tail, as it sits under the start on the timeline.
  *
- * DOM markers, like the picked hintuan's circle (HintuanPin): a pill with a
- * pointer is a box and a triangle, which a map symbol would need
- * a stretched picture for in every livery. Each place is named once
+ * DOM markers, like the picked hintuan's circle (HintuanPin), whose pill is
+ * the same SelectedHintuanRouteTitle, 256 across at most, as the pin's:
+ * Figma's own sample, North Caloocan City Hall, whole at 16/24 after the
+ * icon (224 held the 14px names until the icons). Each place is named once
  * (`rideEnds`).
  *
  * Given `onPick`, a pill whose ride says which hotspot it ends at is a
@@ -59,15 +61,15 @@ export function EndTitles({
   map,
   rides,
   look,
-  badged = false,
+  marked = false,
   onPick,
   onTrip,
 }: {
   map: MapLibreMap;
   rides: readonly Ride[];
   look: LineLook;
-  /** What is lit wears a card's colour: Start and End over the names. */
-  badged?: boolean;
+  /** What is lit wears a card's colour: Start's S and End's E before the names. */
+  marked?: boolean;
   onPick?: (hotspotId: string) => void;
   /** A direction's trip to open, from the one ride a tail names. */
   onTrip?: (directionId: string) => void;
@@ -87,7 +89,7 @@ export function EndTitles({
               at={at}
               name={name}
               head={end === 'from'}
-              badged={badged && !(end === 'to' && here.some((id) => short.has(id)))}
+              marked={marked && !(end === 'to' && here.some((id) => short.has(id)))}
               look={look}
               opens={trip ? 'trip' : 'place'}
               onPick={
@@ -104,26 +106,6 @@ export function EndTitles({
   );
 }
 
-/**
- * Start and End, and the name pill and pointer under each, in one colour
- * (Figma 3848:12135, the owner's of 2026-10-12): Map/HotspotsCard/Hintuan/
- * surface, the hintuan's green, for where a ride starts; Brand/surface-
- * secondary for where it goes; Content/inverse words on both. Literal
- * class names: Tailwind reads the source.
- */
-const BADGED = {
-  head: {
-    badge: 'bg-map-hotspots-card-hintuan-surface',
-    pill: 'bg-map-hotspots-card-hintuan-surface text-content-inverse',
-    pointer: 'fill-map-hotspots-card-hintuan-surface',
-  },
-  tail: {
-    badge: 'bg-brand-surface-secondary',
-    pill: 'bg-brand-surface-secondary text-content-inverse',
-    pointer: 'fill-brand-surface-secondary',
-  },
-} satisfies Record<'head' | 'tail', { badge: string; pill: string; pointer: string }>;
-
 /** The pointer's tip below the pill's bottom edge: Figma's Arrow, 13 tall, its centre 5px below the pill. */
 const TIP_PX = 11.5;
 /** Between the pointer's tip and the circle's ring. */
@@ -139,7 +121,7 @@ function EndTitle({
   at,
   name,
   head,
-  badged,
+  marked,
   look,
   opens,
   onPick,
@@ -149,8 +131,8 @@ function EndTitle({
   name: string;
   /** Where the ride starts (Head Route), or where it goes (Tail Route). */
   head: boolean;
-  /** Start or End over the name. */
-  badged: boolean;
+  /** Start's S or End's E before the name: a Head or a Tail Route; else Default. */
+  marked: boolean;
   look: LineLook;
   /** What a tap opens: the ride's trip, or the place's card. */
   opens: 'trip' | 'place';
@@ -194,57 +176,21 @@ function EndTitle({
   el.dataset.end = head ? 'head' : 'tail';
   el.dataset.opens = onPick ? opens : '';
   const Pill = onPick ? 'button' : 'div';
-  const worn = BADGED[head ? 'head' : 'tail'];
   return createPortal(
     <Pill
       {...(onPick
         ? {
             type: 'button' as const,
-            'aria-label': `${badged ? (head ? 'Start, ' : 'End, ') : ''}${name}: ${opens === 'trip' ? 'the trip there' : 'the routes there'}`,
+            'aria-label': `${marked ? (head ? 'Start, ' : 'End, ') : ''}${name}: ${opens === 'trip' ? 'the trip there' : 'the routes there'}`,
           }
         : {})}
-      className="flex max-w-56 flex-col items-center gap-1"
+      className="flex max-w-64 flex-col items-center"
     >
-      {/* Over the name, which end it is: Start in the hintuan's green, End in the brand's blue. */}
-      {badged && (
-        <span
-          data-part="badge"
-          className={
-            'rounded-full px-2 py-1 text-sm/5 font-medium text-content-inverse ' + worn.badge
-          }
-        >
-          {head ? 'Start' : 'End'}
-        </span>
+      {marked ? (
+        <SelectedHintuanRouteTitle variant={head ? 'head' : 'tail'} name={name} pointer />
+      ) : (
+        <SelectedHintuanRouteTitle variant="default" name={name} look={look} pointer />
       )}
-      {/* Unbadged, the line's colour, which only the map knows: a value computed at runtime. */}
-      <span
-        data-part="name"
-        className={
-          'relative flex max-w-full items-center gap-1 rounded-full py-1 text-sm/5 font-medium ' +
-          (head ? 'px-2 ' : 'pr-2 pl-1 ') +
-          (badged ? worn.pill : '')
-        }
-        style={badged ? undefined : { backgroundColor: look.line, color: look.arrow }}
-      >
-        {!head && (
-          <span aria-hidden data-part="arrow" className="size-5 shrink-0 *:size-full">
-            <CircleArrowRightIcon />
-          </span>
-        )}
-        <span className="min-w-0 truncate">{name}</span>
-        {/* Figma's Arrow, turned to point down at the circle. */}
-        <svg
-          aria-hidden
-          viewBox="0 0 14.7047 13"
-          className={
-            'absolute top-full left-1/2 -mt-[1.5px] h-[13px] w-[14.7px] -translate-x-1/2 rotate-180 ' +
-            (badged ? worn.pointer : '')
-          }
-          style={badged ? undefined : { fill: look.line }}
-        >
-          <path d="M6.48632 0.5C6.87122 -0.166666 7.83347 -0.166667 8.21837 0.499999L14.5692 11.5C14.9541 12.1667 14.473 13 13.7032 13H1.00149C0.231692 13 -0.249434 12.1667 0.135466 11.5L6.48632 0.5Z" />
-        </svg>
-      </span>
     </Pill>,
     el,
   );
