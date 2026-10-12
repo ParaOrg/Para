@@ -1281,7 +1281,8 @@ const tripChecks = async () => {
       const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')];
       const pin = pins[0];
       const trip = document.querySelector('[data-testid="trip"]');
-      const ring = pin?.firstElementChild;
+      // The circle: on a train line the station's code box comes before it (HintuanPin).
+      const ring = pin?.querySelector(':scope > span:not(.hintuan-pin-code)');
       // The circle's centre on the screen, and the hintuan's.
       const r = pin?.getBoundingClientRect();
       const c = m.getCanvas().getBoundingClientRect();
@@ -1337,8 +1338,9 @@ const tripChecks = async () => {
     // Beside the circle, the hintuan's name in End's colours, its circled E
     // before it (SelectedHintuanRouteTitle, Figma 3847:11777; the trip
     // card's colours until the owner's redrawing of 2026-10-12, and the
-    // word End over it until his icons the same day): 10px right of it and
-    // centred on it.
+    // word End over it until his icons the same day): 12px right of it
+    // (10 until his LRTHintuanCodes, 4051:6426, the same day) and centred
+    // on it.
     const rowName = (
       await pickButton.evaluate((b) => b.lastElementChild.firstElementChild.textContent)
     ).trim();
@@ -1371,7 +1373,7 @@ const tripChecks = async () => {
         title.text === rowName &&
         title.colours &&
         title.icon &&
-        Math.abs(title.gap - 10) < 1.5 &&
+        Math.abs(title.gap - 12) < 1.5 &&
         Math.abs(title.drop) < 1.5,
       title
         ? `"${title.text}" for "${rowName}"; ${title.detail}; E ${title.icon}; ${title.gap.toFixed(1)} px right, ${title.drop.toFixed(1)} px low`

@@ -5,8 +5,9 @@ import { zoomForScale, type LngLat } from '@/shared/utils/geo';
 
 import { APP_MOVE } from './map-view';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import { stationCode } from '../model/rail-codes';
 import { rideCut, travelLine } from '../model/ride';
-import type { Direction } from '../model/routes';
+import { isRailLine, type Direction } from '../model/routes';
 
 /** How close a picked hintuan is brought in: the scale bar reading this. */
 const PICKED_SCALE_M = 500;
@@ -159,6 +160,8 @@ export function useRideTo(
   }, [map, cut]);
 
   const pickedHotspot = live ? hotspots.find((s) => s.id === live.rowId) : undefined;
+  const pickedLabel = pickedHotspot ? hotspotLabel(pickedHotspot) : null;
+  const line = selected?.route?.routeCode;
   // Kept one object while the cut is, so the lit rides are not made anew each render.
   const ridden = useMemo(
     () =>
@@ -183,7 +186,14 @@ export function useRideTo(
      */
     pinAt: live ? (cut?.at ?? pickedHotspot?.point.coordinates ?? null) : null,
     /** The picked hintuan's name, as its row reads it: the circle's title on the map (HintuanPin). */
-    pickedLabel: pickedHotspot ? hotspotLabel(pickedHotspot) : null,
+    pickedLabel,
+    /**
+     * On a train line, the picked station's code, GL02, for the box beside
+     * its circle (HintuanPin; the owner's LRTHintuanCodes, 2026-10-12);
+     * null for a jeepney's hintuan, the ferry's, and a station the table
+     * does not know.
+     */
+    pickedCode: pickedLabel && isRailLine(line) ? stationCode(line, pickedLabel) : null,
     pick,
     /** The end picked from its row (`toEnd`), or null. */
     endPicked,

@@ -1,15 +1,13 @@
 /*
  * The picked hintuan's circle (HintuanPin.tsx) and the open trip's hintuans
  * along its line (StationLabels.tsx; a train's stations alone until
- * 2026-10-12); both import this sheet, so only the maps
- * that draw them load it. The marker's own
- * element is MapLibre's to move — it sets its transform — so the pop is on
- * the circle inside, TimelineDot's own span (or, on a train line, the
- * station's code box in its place: StationLabels, 2026-10-12): from nothing
- * to its size,
- * over the base duration with the arriving ease (tokens.css, Motion), and
- * without the 2px it tucks into a rail on the card. `prefers-reduced-motion`
- * has it simply there.
+ * 2026-10-12); both import this sheet, so only the maps that draw them load
+ * it. The marker's own element is MapLibre's to move — it sets its
+ * transform — so the pop is on the circle inside, TimelineDot's own span
+ * (and, on a train line, the picked station's code box left of it:
+ * HintuanPin, 2026-10-12): from nothing to its size, over the base duration
+ * with the arriving ease (tokens.css, Motion), and without the 2px it tucks
+ * into a rail on the card. `prefers-reduced-motion` has it simply there.
  */
 .hintuan-pin {
   pointer-events: none;
@@ -29,6 +27,11 @@ button.station-label-tap {
   transform-origin: left center;
   translate: 0 -50%;
   animation: hintuan-pin-pop var(--transition-duration-base) var(--ease-enter) 60ms both;
+}
+/* The picked station's code box, left of the circle and centred on it, pops with the circle. */
+.hintuan-pin-code {
+  white-space: nowrap;
+  translate: 0 -50%;
 }
 .hintuan-pin > span,
 .station-label-tap > span:first-child {

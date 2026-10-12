@@ -208,6 +208,7 @@ export function PublicMapApp() {
           map={map}
           at={ride.pinAt}
           label={ride.pickedLabel}
+          code={ride.pickedCode}
           livery={tripLivery}
           onPick={() => ride.pick(ride.pickedId)}
         />

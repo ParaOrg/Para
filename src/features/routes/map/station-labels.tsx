@@ -9,9 +9,8 @@ import { CARD_SURFACE, CARD_TEXT } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { stationCode } from '../model/rail-codes';
 import { rowStops } from '../model/ride';
-import { isRailLine, type Direction } from '../model/routes';
+import type { Direction } from '../model/routes';
 import type { TimelineRow } from '../model/timeline';
 import './hintuan-pin.css';
 
@@ -59,14 +58,12 @@ function namesShow(map: MapLibreMap): boolean {
  * are one colour, as the owner asked ("the circle must be the same color
  * as routeline color lit", 2026-10-12).
  *
- * On a train line, where the names show, the dot gives way to the
- * station's code — GL02, PL08, YL13 — in a rounded box before the name
- * (the owner's LRTHintuanCodes, Figma 4051:6426, 2026-10-12: "instead of
- * circle we must show their code"; stationCode). Further out it is the
- * small dot again, so the codes never pile up (his call, the same day).
- * The box wears the lit line's colour until his per-line branding lands:
- * he drew the codes in the brand's blue as a stand-in, and asked for that
- * theme to wait on him. The ferry has no codes, and keeps its dots.
+ * On a train line the dots stay dots: the owner's LRTHintuanCodes (Figma
+ * 4051:6426, 2026-10-12) put each station's code, GL02, in its dot's place
+ * for a morning ("instead of circle we must show their code"), then went
+ * back ("we will go back to circle, but only one is selected it must
+ * show"): the picked station's code is on its pin (HintuanPin), and the
+ * rest are circles, as a jeepney's hintuans are.
  *
  * The two ends are left to their end titles (EndTitles): the rows leave
  * them out. A picked row is left to its HintuanPin. Once the scale bar
@@ -117,7 +114,6 @@ export function StationLabels({
   // Where each row sits: worked out as the trip, the hotspots or the rows
   // change, not at each move of the map.
   const stops = useMemo(() => rowStops(selected, hotspots, rows), [selected, hotspots, rows]);
-  const line = selected.route?.routeCode;
   return (
     <>
       {stops
@@ -129,7 +125,6 @@ export function StationLabels({
             rowId={s.id}
             at={s.at}
             label={s.label}
-            code={isRailLine(line) ? stationCode(line, s.label) : null}
             livery={livery}
             named={named}
             onPick={onPick}
@@ -144,7 +139,6 @@ function StationLabel({
   rowId,
   at,
   label,
-  code,
   livery,
   named,
   onPick,
@@ -153,8 +147,6 @@ function StationLabel({
   rowId: string;
   at: LngLat;
   label: string;
-  /** A train station's code, GL02; null for a jeepney's hintuan, the ferry's, and a station the table does not know, which keeps its dot. */
-  code: string | null;
   livery: Livery;
   named: boolean;
   onPick?: (rowId: string) => void;
@@ -192,36 +184,15 @@ function StationLabel({
   el.toggleAttribute('data-far', !named);
   // The dot and its name are one tap (the owner's ask, 2026-10-02): one button around both.
   const Tap = onPick ? 'button' : 'div';
-  // The code is only on the map, so a screen reader hears it with the name.
-  const name = code ? `${code} ${label}` : label;
   return createPortal(
     <Tap
-      {...(onPick ? { type: 'button' as const, 'aria-label': name } : {})}
+      {...(onPick ? { type: 'button' as const, 'aria-label': label } : {})}
       className="station-label-tap relative flex rounded-full"
     >
-      {named && code ? (
-        <span
-          data-testid="station-label-code"
-          className={
-            'rounded-md px-2 py-0.5 text-sm/5 font-medium whitespace-nowrap ' +
-            CARD_SURFACE[livery] +
-            ' ' +
-            CARD_TEXT[livery]
-          }
-        >
-          {code}
-        </span>
-      ) : (
-        <TimelineDot rail={CARD_SURFACE[livery]} />
-      )}
+      <TimelineDot rail={CARD_SURFACE[livery]} />
       {named && (
-        <span
-          className={
-            'hintuan-pin-title absolute top-1/2 left-full flex max-w-56 ' +
-            // 8 after a code's box (4051:6426), 10 after the dot (3847:11777).
-            (code ? 'ml-2' : 'ml-2.5')
-          }
-        >
+        // 10 after the dot (3847:11777).
+        <span className="hintuan-pin-title absolute top-1/2 left-full ml-2.5 flex max-w-56">
           <span
             data-testid="station-label-title"
             className={
