@@ -522,9 +522,11 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * Figma's Signboard (3919:11355): the direction's boards right under the
- * header, in their own white strip (the owner's RouteTripDetail of
- * 2026-10-12; under the tiles with a heading until then), 40 tall, 8 apart.
+ * Figma's Signboard (3919:11355): the direction's boards between the card
+ * and the tiles, in their own white strip (the owner's RouteTripDetail of
+ * 2026-10-12, 4051:5528; right under the header by his first redrawing that
+ * day, under the tiles with a heading until then), 40 tall, 8 apart, 16
+ * under the card and 16 over the tiles.
  */
 export const Signboards: Story = {
   args: { signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')] },
@@ -533,38 +535,35 @@ export const Signboards: Story = {
     const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
     await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(40));
-    // Over the card, and no heading over them.
+    // Under the card, over the tiles, and no heading over them.
     const strip = canvas.getByTestId('trip-signboards');
     const card = canvas.getByTestId('trip');
+    const tiles = canvas.getByTestId('trip-tiles');
     await expect(
-      strip.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING,
+      card.compareDocumentPosition(strip) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await expect(
+      strip.compareDocumentPosition(tiles) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     await expect(canvas.queryByRole('heading', { name: 'Signboard' })).toBeNull();
+    const top = (el: Element) => el.getBoundingClientRect().top;
+    await expect(top(boards[0]) - card.getBoundingClientRect().bottom).toBe(16);
+    await expect(top(tiles) - boards[0].getBoundingClientRect().bottom).toBe(0);
+    await expect(getComputedStyle(tiles).paddingTop).toBe('16px');
   },
 };
 
-/**
- * At Low, no boards: the header and the origin along the bottom, as the
- * owner's Low frame (3814:3976) has it; the strip is back from Middle up.
- * Claude's call for an undrawn state, 2026-10-12, for the owner to confirm.
- */
-export const SheetLowSignboards: Story = {
-  args: Signboards.args,
-  play: async (ctx) => {
-    const canvas = within(ctx.canvasElement);
-    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'middle');
-    await expect(canvas.getByTestId('trip-signboards')).toBeVisible();
-    await tapHandle(ctx.canvasElement, 2);
-    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
-    await expect(canvas.getByTestId('trip-signboards')).not.toBeVisible();
-  },
-};
-
-/** None uploaded: no strip, the card right under the header. */
+/** None uploaded: no strip, the tiles 16 under the card. */
 export const NoSignboards: Story = {
   args: { signboards: [] },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).queryByTestId('trip-signboards')).toBeNull();
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByTestId('trip-signboards')).toBeNull();
+    const tiles = canvas.getByTestId('trip-tiles');
+    await expect(tiles.getBoundingClientRect().top).toBe(
+      canvas.getByTestId('trip').getBoundingClientRect().bottom,
+    );
+    await expect(getComputedStyle(tiles).paddingTop).toBe('16px');
   },
 };
 
@@ -596,7 +595,7 @@ export const ManySignboards: Story = {
   },
 };
 
-/** The signboards at the top and Other routes under the tiles, as the frame stacks them (3778:3183). */
+/** The signboards between the card and the tiles, and Other routes under the tiles, as the frame stacks them (3778:3183). */
 export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],

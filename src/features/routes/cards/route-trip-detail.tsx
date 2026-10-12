@@ -67,15 +67,16 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
 
 /**
  * One direction as a trip — the owner's RouteTripDetail (Figma 3778:3183,
- * 2026-09-29): RouteCardHeader's Variant2; under it the direction's
- * signboards as pictures (his Signboard, 3919:11355, 2026-10-01, uploaded in
- * the studio; moved up from under the tiles by his RouteTripDetail of
- * 2026-10-12, its strip 4051:5324, and its "Signboard" heading gone with the
- * move); then a card in the livery of the place the trip leaves from, inset
- * from the sides and rounded, where a rail runs from the origin
- * (TimelineTop) down to the place it goes to (TimelineBottomEndRoute); then
- * two tiles under it, the ride's Kilometer and its fare (moved under the
- * card in his redrawing the same day).
+ * 2026-09-29): RouteCardHeader's Variant2; under it a card in the livery of
+ * the place the trip leaves from, inset from the sides and rounded, where a
+ * rail runs from the origin (TimelineTop) down to the place it goes to
+ * (TimelineBottomEndRoute); under the card the direction's signboards as
+ * pictures (his Signboard, 3919:11355, 2026-10-01, uploaded in the studio)
+ * in their own strip (4051:5528); then two tiles, the ride's Kilometer and
+ * its fare (moved under the card in his redrawing of 2026-09-29). The
+ * boards sat under the tiles with a "Signboard" heading until 2026-10-12,
+ * went right under the header by his first redrawing that day, and between
+ * the card and the tiles by his second, where the strip is now.
  *
  * The fare tile (his 3778:3183, redrawn 2026-09-30) is a button: the pesos,
  * and under them ↻ and which fare they are, Regular or Discounted; a tap turns
@@ -155,42 +156,7 @@ export function RouteTripDetail({
         />
       }
     >
-      {/*
-        Right under the header, the direction's signboards (the owner's
-        RouteTripDetail of 2026-10-12, 3778:3183; under the tiles with a
-        "Signboard" heading from 2026-10-01 until then): a white strip, 12 in
-        from the sides and 16 above and below, each board 40 tall at its own
-        width, 8 apart, wrapping on a narrow phone (3919:11447). No heading:
-        the boards say what they are. Pictures, so nothing in a file can run.
-        None uploaded, no strip: the card sits right under the header.
-        At a sheet's Low the strip is gone: Low is as tall as the header and
-        the origin (sheetGesture's LOW_PX; the owner's 3814:3976, drawn with
-        no boards), and the boards would stand where the origin should. From
-        Middle up they are there. Claude's call, 2026-10-12, for the owner
-        to confirm or redraw.
-      */}
-      {signboards.length > 0 && (
-        <ul
-          data-testid="trip-signboards"
-          aria-label="Signboards"
-          className="flex w-full flex-wrap gap-2 bg-surface px-3 py-4 sheet-low:hidden"
-        >
-          {signboards.map((src, i) => (
-            <li key={src}>
-              <img
-                data-testid="trip-signboard"
-                src={src}
-                alt={
-                  signboards.length > 1 ? `Signboard ${i + 1} of ${signboards.length}` : 'Signboard'
-                }
-                className="block h-10 w-auto max-w-full"
-                decoding="async"
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      {/* Under the header, whose 12 below is the gap (the owner's RouteTripDetail, 3778:3183, 2026-10-01), or under the signboards' strip, whose 16 is. */}
+      {/* Under the header, whose 12 below is the gap (the owner's RouteTripDetail, 3778:3183, 2026-10-01). */}
       <div className="w-full px-3">
         <TripTimeline
           livery={livery}
@@ -207,9 +173,44 @@ export function RouteTripDetail({
           routeDirection={routeDirection}
         />
       </div>
+      {/*
+        Between the card and the tiles, the direction's signboards (the
+        owner's RouteTripDetail of 2026-10-12, its strip 4051:5528; right
+        under the header by his first redrawing that day, under the tiles
+        with a "Signboard" heading from 2026-10-01 until then): a white
+        strip, 12 in from the sides and 16 above, each board 40 tall at its
+        own width, 8 apart, wrapping on a narrow phone (3919:11447). No
+        heading: the boards say what they are. Pictures, so nothing in a
+        file can run. None uploaded, no strip: the tiles sit right under the
+        card. At a sheet's Low the card's top is all that shows (sheetGesture's
+        LOW_PX), so the strip needs no hiding of its own, as it did under the
+        header.
+      */}
+      {signboards.length > 0 && (
+        <ul
+          data-testid="trip-signboards"
+          aria-label="Signboards"
+          className="flex w-full flex-wrap gap-2 bg-surface px-3 pt-4"
+        >
+          {signboards.map((src, i) => (
+            <li key={src}>
+              <img
+                data-testid="trip-signboard"
+                src={src}
+                alt={
+                  signboards.length > 1 ? `Signboard ${i + 1} of ${signboards.length}` : 'Signboard'
+                }
+                className="block h-10 w-auto max-w-full"
+                decoding="async"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+      {/* 16 under the card, or under the signboards' strip (the owner's RouteTripDetail of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). */}
       <div
         data-testid="trip-tiles"
-        className="flex w-full gap-3 bg-surface px-3 pt-3 pb-4 text-center font-sn-pro"
+        className="flex w-full gap-3 bg-surface px-3 py-4 text-center font-sn-pro"
       >
         <div className={TILE}>
           <span data-testid="trip-km" className={FIGURE}>

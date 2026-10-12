@@ -2149,7 +2149,7 @@ if (routeA) {
   // Dropped by the owner for now, to design later (2026-09-28). The words
   // signboard went with them; the boards uploaded in the studio came back
   // as pictures (3919:11355; under their own heading until 2026-10-12, in a
-  // strip under the header since), left out here.
+  // strip between the card and the tiles since), left out here.
   const extras = await card()
     .first()
     .evaluate((c) => {
