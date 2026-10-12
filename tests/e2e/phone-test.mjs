@@ -1149,8 +1149,10 @@ const tripChecks = async () => {
   // from where the trip leaves to there — the app's own sums over rideCut's
   // metres on the published line — in the card's own colours swapped; the
   // tiles keep the whole ride; the route left whole on the map, and a circle
-  // popping up at the hintuan in the trip's rail colour (the owner's ask of
-  // 2026-09-30: "now I don't want to cut the route"), no get-off circles,
+  // popping up at the hintuan (the owner's ask of 2026-09-30: "now I don't
+  // want to cut the route") ringed in the line's colour, the card's surface
+  // (his call of 2026-10-12, "match the line"; the trip's rail colour until
+  // then), no get-off circles,
   // the camera gliding the hintuan clear of the card, and no padding left
   // on the map; a second tap lets it go, circle and all. Checked
   // once, on the first trip with a hintuan; it is picked again after, for
@@ -1284,13 +1286,6 @@ const tripChecks = async () => {
       const r = pin?.getBoundingClientRect();
       const c = m.getCanvas().getBoundingClientRect();
       const q = at && m.project(at);
-      // The rail's colour: the card's Card/<livery>/Timeline/surface.
-      // Its plain class: a row's Pressed carries the same name behind `active:`.
-      const dot =
-        trip &&
-        [...trip.querySelectorAll('*')].find((e) =>
-          [...e.classList].some((c) => /^bg-card-[a-z]+-timeline-surface$/.test(c)),
-        );
       return {
         lit: (await window.__lit('saved-routes')) ?? [],
         rest: ((await window.__src('ride-rest'))?.features ?? []).length,
@@ -1304,7 +1299,8 @@ const tripChecks = async () => {
               )
             : null,
         ring: ring ? getComputedStyle(ring).backgroundColor : null,
-        rail: dot ? getComputedStyle(dot).backgroundColor : null,
+        // The line's colour is the card's surface (liveryLine.ts): the card's own background.
+        line: trip ? getComputedStyle(trip).backgroundColor : null,
         livery: pin?.dataset.livery ?? null,
         tripLivery: trip?.dataset.livery ?? null,
         taps: pin ? getComputedStyle(pin).pointerEvents : null,
@@ -1318,14 +1314,14 @@ const tripChecks = async () => {
       `${drawn.lit.length} lit; ${drawn.rest} stretch(es) at rest; the rest layer ${drawn.restLayer ? 'there' : 'never added'}`,
     );
     check(
-      "  a circle pops up at the hintuan, in the trip's rail colour, taking no taps",
+      "  a circle pops up at the hintuan, ringed in the line's colour, taking no taps",
       drawn.pins === 1 &&
         (!pickWant || (drawn.off !== null && drawn.off < 2)) &&
         drawn.livery === drawn.tripLivery &&
         !!drawn.ring &&
-        (!drawn.rail || drawn.ring === drawn.rail) &&
+        drawn.ring === drawn.line &&
         drawn.taps === 'none',
-      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} ring ${drawn.ring}, the rail ${drawn.rail}; pointer-events ${drawn.taps}`,
+      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} ring ${drawn.ring}, the line ${drawn.line}; pointer-events ${drawn.taps}`,
     );
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
     // Beside the circle, the hintuan's name in End's colours, as the badge

@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { tapsOnItsButton } from './marker-tap';
-import { TIMELINE_SURFACE } from '../cards/livery-card';
+import { CARD_SURFACE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/trip-timeline';
 import type { Livery } from '../model/liveries';
 import './hintuan-pin.css';
@@ -16,7 +16,7 @@ interface Props {
   at: LngLat;
   /** The hintuan's name, written beside the circle; none, and the circle stands alone. */
   label?: string | null;
-  /** The trip's colour: the circle is ringed in its rail's. */
+  /** The trip's colour: the circle is ringed in its line's, the card's surface. */
   livery: Livery;
   /** Given, the name is a button: the public map's lets the pick go. */
   onPick?: () => void;
@@ -27,8 +27,11 @@ interface Props {
  * route left whole — the owner's ask of 2026-09-30: "now I don't want to
  * cut the route, but we still select hintuan it is just the a circle will
  * pop up when that hintuan is selected". It is the timeline's own
- * TimelineDot, Selected, in the trip's livery, so the map and the card
- * point at the same place the same way.
+ * TimelineDot, Selected, ringed in the lit line's colour, the card's
+ * surface (the owner's call of 2026-10-12, "match the line"; the card's
+ * rail colour, Card/<livery>/Timeline/surface, until then), so the map and
+ * the card point at the same place the same way, and the circle is one
+ * colour with the line it sits on and the dots along it (StationLabels).
  *
  * A DOM marker, like the visitor's own (LocatorIndicatorOverlay): the pop
  * is a CSS animation that costs the map nothing, and it takes no taps, so
@@ -84,7 +87,7 @@ export function HintuanPin({ map, at, label, livery, onPick }: Props) {
   // Popped, and untucked from a rail it has none of, by hintuanPin.css.
   return createPortal(
     <>
-      <TimelineDot rail={TIMELINE_SURFACE[livery]} selected />
+      <TimelineDot rail={CARD_SURFACE[livery]} selected />
       {label && (
         <Title
           // Says what the tap does since the owner's ask of 2026-10-03: it
