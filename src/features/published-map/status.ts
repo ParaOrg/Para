@@ -1,5 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
+import { noop } from '@/shared/utils/noop';
+
 import { fetchIndex, indexIsStale } from './api/fetch-index';
 
 /**
@@ -38,7 +40,7 @@ export function useMapAge(loaded: unknown): MapAge {
       (f) =>
         live &&
         setAge((was) => sameAge(was, { publishedAt: f.publishedAt, stale: indexIsStale() })),
-      () => {},
+      noop,
     );
     return () => {
       live = false;

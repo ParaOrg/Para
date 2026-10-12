@@ -1,6 +1,8 @@
 import type { LayerSpecification, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
+import { noop } from '@/shared/utils/noop';
+
 import { warmSoon, type Twin } from './warm-programs';
 
 /*
@@ -134,7 +136,7 @@ export function useLayerSwitch(
       return twinsOf(map as unknown as TwinMap, sw.layers);
     };
     // Once a map: the programs stay with its GL context.
-    let cancel = warmed.current === map ? () => {} : warmSoon(map, twins);
+    let cancel = warmed.current === map ? noop : warmSoon(map, twins);
     // The programs went with the context; MapLibre makes the style afresh
     // from its own copy a frame after the context is back, these layers at
     // the opacity they had then, so a style's load is where they get the

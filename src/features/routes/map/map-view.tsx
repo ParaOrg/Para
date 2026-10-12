@@ -9,6 +9,8 @@ import {
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { useEffect, useRef, useState } from 'react';
 
+import { noop } from '@/shared/utils/noop';
+
 import { DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } from './basemap';
 import { BasemapControl } from './basemap-control';
 import { diagnose, type Diagnosis } from './diagnose';
@@ -211,8 +213,8 @@ export function MapView({
     // cancels before any map exists, so only the surviving mount builds one.
     let cancelled = false;
     let map: MapLibreMap | null = null;
-    let stopClock = () => {};
-    let stopLift = () => {};
+    let stopClock: () => void = noop;
+    let stopLift: () => void = noop;
 
     const startId = window.setTimeout(async () => {
       // A URL for the plain designs; for "Gray, detailed" the style is fetched

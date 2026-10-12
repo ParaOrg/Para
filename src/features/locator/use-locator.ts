@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 import { haversine, zoomForScale, type LngLat } from '@/shared/utils/geo';
+import { noop } from '@/shared/utils/noop';
 
 import type { LocatorMode } from './locator-button';
 
@@ -224,7 +225,7 @@ function askForCompass() {
     globalThis.DeviceOrientationEvent as unknown as
       { requestPermission?: () => Promise<string> } | undefined
   )?.requestPermission;
-  if (ask) void ask().catch(() => {});
+  if (ask) void ask().catch(noop);
 }
 
 export interface Locator {

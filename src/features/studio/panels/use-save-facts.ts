@@ -13,6 +13,7 @@ import {
 } from '@/features/routes/model/routes';
 import { hintuansAlong, timelineFor } from '@/features/routes/model/timeline';
 import { haversine, joinSegments, type LngLat } from '@/shared/utils/geo';
+import { noop } from '@/shared/utils/noop';
 
 import { lineOf } from '../data/live';
 import { sharedMetres } from '../drawing/borrow';
@@ -128,12 +129,9 @@ export function useSaveFacts({
   useEffect(() => {
     if (!borrowFromId) return;
     let live = true;
-    lineOf(borrowFromId).then(
-      (l) => {
-        if (live && l) setParentFull({ id: borrowFromId, line: l.coordinates });
-      },
-      () => {},
-    );
+    lineOf(borrowFromId).then((l) => {
+      if (live && l) setParentFull({ id: borrowFromId, line: l.coordinates });
+    }, noop);
     return () => {
       live = false;
     };

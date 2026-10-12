@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import type { Direction } from '@/features/routes/model/routes';
+import { noop } from '@/shared/utils/noop';
 
 import { SignboardEditor, type SignboardCalls } from './signboard-editor';
 
@@ -90,7 +91,7 @@ export const Pabalik: Story = {
 
 /** While a file goes up: every button rests, and Add SVG says Saving…. */
 export const Saving: Story = {
-  args: { calls: { ...standIn(), addSignboard: () => new Promise<string[]>(() => {}) } },
+  args: { calls: { ...standIn(), addSignboard: () => new Promise<string[]>(noop) } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.upload(
