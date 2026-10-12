@@ -14,6 +14,8 @@ export const LAYERS = {
   routesHit: 'saved-routes-hit',
   /** The routes' white rim, bottom of their stack: what paints under the lines goes under it. */
   routesCasing: 'saved-routes-casing',
+  /** The lit directions' line: what paints on the lit line alone, and under all else on it, goes right above it. */
+  routesLit: 'saved-routes-selected',
   /** The hotspots' fill: a tap asks it for boxes. */
   hotspotsFill: 'saved-stops-fill',
   /** A hintuan's name. */
@@ -87,6 +89,22 @@ export function firstLayerOfType(
   type: string,
 ): string | undefined {
   return map.getLayersOrder().find((id) => map.getLayer(id)?.type === type);
+}
+
+/**
+ * The id of the layer drawn right after `id`, or undefined: what to hand
+ * addLayer to put a layer right above `id`, as MapLibre places one only
+ * before another. Undefined is the top of the stack, where a layer goes
+ * when `id` is the last, or not there (a caller waits for it: useLayerReady).
+ * Off getLayersOrder, as firstLayerOfType is, not getStyle's copy.
+ */
+export function layerAbove(
+  map: Pick<MapLibreMap, 'getLayersOrder'>,
+  id: string,
+): string | undefined {
+  const order = map.getLayersOrder();
+  const at = order.indexOf(id);
+  return at < 0 ? undefined : order[at + 1];
 }
 
 /**

@@ -18,6 +18,7 @@ import {
 import { LAYERS, TILE_BUFFER, useLayerReady } from './layers';
 import { endRadius, litWidthAt } from './line-style';
 import type { LineLook } from './livery-line';
+import { REST_LAYER } from './ride-rest';
 import { ROUTES_HIT_LAYER } from './tap';
 import { warmSoon, type Twin } from './warm-programs';
 
@@ -197,9 +198,12 @@ function stillPlease(): boolean {
 }
 
 /**
- * The chevrons' colour, and the end circles' ring: the selected blue's white
- * chevrons and blue ring unless the public map says otherwise — a picked
- * card's or an open trip's (liveryLine.ts), the ring in the line's colour.
+ * The chevrons' colour, the end circles' ring, and the rest of the line past
+ * a picked hintuan: the selected blue's white chevrons and blue ring unless
+ * the public map says otherwise — a picked card's or an open trip's
+ * (liveryLine.ts), the ring in the line's colour and the rest in its pale
+ * (the owner's ask, 2026-10-12: the remaining line should be surface-pale of
+ * the selected colour).
  */
 export function useRideColours(map: MapLibreMap | null, look: LineLook) {
   // The chevrons' hook adds both layers together; wait for them.
@@ -209,6 +213,13 @@ export function useRideColours(map: MapLibreMap | null, look: LineLook) {
     map.setPaintProperty(CHEVRONS, 'fill-color', look.arrow);
     map.setPaintProperty(ENDS, 'circle-stroke-color', look.line);
   }, [map, look.line, look.arrow, ready]);
+  // The rest is another hook's layer (ride-rest.ts), added once the lit line
+  // is there: waited for the same way, and painted as it arrives.
+  const restReady = useLayerReady(map, REST_LAYER);
+  useEffect(() => {
+    if (!map || !restReady) return;
+    map.setPaintProperty(REST_LAYER, 'line-color', look.pale);
+  }, [map, look.pale, restReady]);
 }
 
 /**

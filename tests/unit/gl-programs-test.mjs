@@ -17,6 +17,7 @@ import {
   latest,
 } from '@maplibre/maplibre-gl-style-spec';
 import { PASS_LAYER } from '../../src/features/routes/geo/pass-stretches.ts';
+import { RIDE_REST_LAYER } from '../../src/features/routes/map/ride-rest.ts';
 import { ENDS_PAINT, ENDS_TWIN } from '../../src/features/routes/map/direction-arrows.ts';
 import {
   WARM_SOURCE,
@@ -124,6 +125,43 @@ test('the same pixels as the step it replaces: nothing below 15, the lit stretch
       assert.equal(after, before, `zoom ${zoom}, ${JSON.stringify(state)}`);
     }
   }
+});
+
+// ------------------------------------------------------------ the rest of a ride (2026-10-12)
+
+test("the rest of a ride past a picked hintuan is drawn by the resting line's program, compiled at load", () => {
+  const layers = [
+    { id: 'background', type: 'background' },
+    { id: 'road-label', type: 'symbol' },
+  ];
+  const map = {
+    addSource: () => {},
+    addLayer: (spec, before) =>
+      layers.splice(before ? layers.findIndex((l) => l.id === before) : layers.length, 0, spec),
+    getLayer: (id) => layers.find((l) => l.id === id),
+    getLayersOrder: () => layers.map((l) => l.id),
+  };
+  addSavedRoutes(map);
+  // A colour for the layer, a width of the zoom alone and no opacity of the
+  // feature state: every paint one value for the layer, as the resting
+  // line's and its casing's are, so the program the opening frames compiled
+  // draws it, and the tap that picks the first hintuan compiles none.
+  assert.equal(programOf(RIDE_REST_LAYER), programOf(map.getLayer('saved-routes-line')));
+  assert.equal(programOf(RIDE_REST_LAYER), programOf(map.getLayer('saved-routes-casing')));
+  assert.doesNotMatch(programOf(RIDE_REST_LAYER), /(^|\/)[az]_/);
+  assert.equal(RIDE_REST_LAYER.paint['line-opacity'], undefined);
+  // No switch either: its source is empty while nothing is picked, and an
+  // empty source draws nothing.
+  assert.ok(
+    !Object.keys(RIDE_REST_LAYER.paint).some((k) => k.includes('layer-opacity')),
+    'no layer opacity',
+  );
+  // The lit line's width, square ends — the paint starts at the pick and
+  // stops at the line's end, under its circle — and a new colour in its
+  // own frame, as the lit line's.
+  assert.deepEqual(RIDE_REST_LAYER.paint['line-width'], litWidth());
+  assert.equal(RIDE_REST_LAYER.layout['line-cap'], 'butt');
+  assert.deepEqual(RIDE_REST_LAYER.paint['line-color-transition'], { duration: 0, delay: 0 });
 });
 
 // ------------------------------------------------------------ step 3

@@ -5,7 +5,8 @@
 // is the primitive its token aliases — Tailwind's own oklch, converted, or
 // one of ours from tokens.css. It holds CARD_COLOURS the same way: the
 // Card/<livery>/surface hexes a picked card's routes and an open trip's line
-// are lit in (2026-09-29).
+// are lit in (2026-09-29); and CARD_PALE_COLOURS, the Card/<livery>/surface-pale
+// hexes the rest of a trip's line past a picked hintuan wears (2026-10-12).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/map-colours-test.mjs
 import { test } from 'node:test';
@@ -13,6 +14,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import {
   CARD_COLOURS,
+  CARD_PALE_COLOURS,
   MAP_COLOURS,
   MAP_PAINT,
 } from '../../src/design-system/foundation/map-colours.ts';
@@ -80,16 +82,43 @@ const near = (x, y) =>
     (i) => Math.abs(parseInt(x.slice(i, i + 2), 16) - parseInt(y.slice(i, i + 2), 16)) <= 1,
   );
 
+/** The primitive a Card/… token aliases in tokens.css (Card/red/surface → red-800), and that primitive's hex. */
+function cardToken(figma) {
+  const css = cssName(figma);
+  const primitive = tokens.match(
+    new RegExp(`^\\s*--${css}:\\s*var\\(--color-([a-z0-9-]+)\\);`, 'm'),
+  )?.[1];
+  assert.ok(primitive, `no --${css} in tokens.css`);
+  return { primitive, want: primitiveHex(primitive) };
+}
+
 test('each card colour is the primitive its Card/<livery>/surface aliases', () => {
   assert.ok(Object.keys(CARD_COLOURS).length === 6, 'the six liveries');
   for (const [figma, hex] of Object.entries(CARD_COLOURS)) {
-    const css = cssName(figma);
-    const primitive = tokens.match(
-      new RegExp(`^\\s*--${css}:\\s*var\\(--color-([a-z0-9-]+)\\);`, 'm'),
-    )?.[1];
-    assert.ok(primitive, `no --${css} in tokens.css`);
-    const want = primitiveHex(primitive);
-    assert.ok(near(hex, want), `${figma} is ${hex}, but --${css} is ${primitive}, ${want}`);
+    const { primitive, want } = cardToken(figma);
+    assert.ok(
+      near(hex, want),
+      `${figma} is ${hex}, but --${cssName(figma)} is ${primitive}, ${want}`,
+    );
+  }
+});
+
+test("each pale is the primitive its Card/<livery>/surface-pale aliases: the rest of a trip's line past a picked hintuan", () => {
+  // One a livery, named after its card's surface (the owner's ask, 2026-10-12).
+  assert.deepEqual(
+    Object.keys(CARD_PALE_COLOURS).sort(),
+    Object.keys(CARD_COLOURS)
+      .map((k) => `${k}-pale`)
+      .sort(),
+  );
+  for (const [figma, hex] of Object.entries(CARD_PALE_COLOURS)) {
+    const { primitive, want } = cardToken(figma);
+    assert.ok(
+      near(hex, want),
+      `${figma} is ${hex}, but --${cssName(figma)} is ${primitive}, ${want}`,
+    );
+    // Each hue's 200: the card's own hue paled, as the owner's variables alias them.
+    assert.match(primitive, /-200$/, figma);
   }
 });
 

@@ -161,7 +161,8 @@ export function useRideTo(
   const pickedHotspot = live ? hotspots.find((s) => s.id === live.rowId) : undefined;
   // Kept one object while the cut is, so the lit rides are not made anew each render.
   const ridden = useMemo(
-    () => (cut && selectedId ? { directionId: selectedId, line: cut.ridden } : null),
+    () =>
+      cut && selectedId ? { directionId: selectedId, line: cut.ridden, rest: cut.rest } : null,
     [cut, selectedId],
   );
 
@@ -169,7 +170,11 @@ export function useRideTo(
     rideTo: cut && live ? { hotspotId: live.rowId, metres: cut.metres } : null,
     /** The row picked, cut or not: a row whose box the line misses is still shown picked, with nothing to price. */
     pickedId: live?.rowId ?? null,
-    /** The ride from its start to the picked hintuan, where its chevrons stop (useLitRides); null with nothing cut. */
+    /**
+     * The ride from its start to the picked hintuan, where its chevrons stop,
+     * and `rest`, the way on from there to the end, drawn in the trip's pale
+     * (useLitRides; the owner's ask, 2026-10-12). Null with nothing cut.
+     */
     ridden,
     /**
      * Where the picked hintuan is: where the ride would end on the line, as

@@ -7,7 +7,8 @@
 // second time (c); and a full line read is patched into the routes once (e),
 // and once more into a style made afresh (2026-10-05). And the hotspots'
 // three box fills, as they are added, are one bucket for MapLibre's worker
-// (step 5, 2026-10-05).
+// (step 5, 2026-10-05). And the rest of a ride past a picked hintuan sits
+// right above the lit line, under all else drawn on it (2026-10-12).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/map-sources-test.mjs
 import { test } from 'node:test';
@@ -31,6 +32,7 @@ import { hotspotRing } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
 import { addPassStretches } from '../../src/features/routes/geo/pass-stretches.ts';
 import { addDirectionArrows } from '../../src/features/routes/map/direction-arrows.ts';
+import { addRideRest } from '../../src/features/routes/map/ride-rest.ts';
 import { addBabaanSides } from '../../src/features/routes/geo/babaan-sides.ts';
 import { INSET_PX, chevronAt } from '../../src/features/routes/map/chevrons.ts';
 import { litWidthAt } from '../../src/features/routes/map/line-style.ts';
@@ -74,6 +76,7 @@ function allAdded() {
   addSavedHotspots(map);
   addPassStretches(map);
   addDirectionArrows(map);
+  addRideRest(map);
   addBabaanSides(map);
   return map;
 }
@@ -84,7 +87,8 @@ const BUFFERED = ['direction-arrows', 'direction-ends'];
  * cut nearer moved their edges on screen (review of step 10 (d),
  * 2026-10-05: the cut point is rounded to the tile's grid and kept where
  * the rest of a line is simplified, so the stretch inside turns a little),
- * and the place wash, whose dashes count from where its ring was cut.
+ * and the place wash, whose dashes count from where its ring was cut. The
+ * rest of a ride past a picked hintuan is a line too (2026-10-12).
  */
 const DEFAULT_BUFFER = [
   'saved-routes',
@@ -92,6 +96,7 @@ const DEFAULT_BUFFER = [
   'place-wash',
   'saved-routes-pass',
   'babaan-side',
+  'ride-rest',
 ];
 /** MapLibre's own buffer for a GeoJSON source given none. */
 const MAPLIBRE_BUFFER = 128;
@@ -217,6 +222,47 @@ test('the two draw no line and no chevron as wide as 32 px: none is cut where a 
   assert.ok(widest < TILE_BUFFER, `a chevron ${widest} px across`);
   // 13 px across and 22 along, at zoom 20 and up: its tip to a back corner.
   assert.ok(Math.abs(widest - 22.85) < 0.01, `${widest}`);
+});
+
+// ------------------------------------------------------------ the rest of a ride (2026-10-12)
+
+test('the rest of a ride past a picked hintuan sits right above the lit line, under its stretches, the chevrons and the end circles, whichever hook adds first', () => {
+  const { layers } = allAdded();
+  const order = layers.map((l) => l.id);
+  // Right above the lit line (the owner's ask, 2026-10-12: the remaining
+  // line in the card's surface-pale, the picked hintuan's circle and the
+  // end's over it): the green stretches, the chevrons, the end circles and
+  // the hit area all above it.
+  assert.equal(order[order.indexOf('saved-routes-selected') + 1], 'ride-rest-line');
+  for (const id of [
+    'saved-routes-selected-pass',
+    'direction-arrow-chevrons',
+    'direction-end-circles',
+    'saved-routes-hit',
+  ])
+    assert.ok(order.indexOf(id) > order.indexOf('ride-rest-line'), `${id} above the rest`);
+  // Added before the stretches and the arrows — the hooks' order is no
+  // contract (useLayerReady) — the same place: it goes before whatever is
+  // drawn after the lit line by then.
+  const early = standInMap();
+  addSavedRoutes(early);
+  addRideRest(early);
+  addSavedHotspots(early);
+  addPassStretches(early);
+  addDirectionArrows(early);
+  addBabaanSides(early);
+  assert.deepEqual(
+    early.layers.map((l) => l.id),
+    order,
+  );
+  // A line at the lit line's width: half of it and its antialiasing, well
+  // inside the 128 px a line's source keeps.
+  assert.equal(reach(layers.find((l) => l.id === 'ride-rest-line')), 7);
+  // Empty as added: nothing drawn while nothing is picked.
+  assert.deepEqual(allAdded().sources.get('ride-rest').data, {
+    type: 'FeatureCollection',
+    features: [],
+  });
 });
 
 // ------------------------------------------------------------ the hotspots' buckets (step 5)
