@@ -67,11 +67,15 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
 
 /**
  * One direction as a trip — the owner's RouteTripDetail (Figma 3778:3183,
- * 2026-09-29): RouteCardHeader's Variant2; a card in the livery of the place
- * the trip leaves from, inset from the sides and rounded, where a rail runs
- * from the origin (TimelineTop) down to the place it goes to
- * (TimelineBottomEndRoute); then two tiles under it, the ride's Kilometer and
- * its fare (moved under the card in his redrawing the same day).
+ * 2026-09-29): RouteCardHeader's Variant2; under it the direction's
+ * signboards as pictures (his Signboard, 3919:11355, 2026-10-01, uploaded in
+ * the studio; moved up from under the tiles by his RouteTripDetail of
+ * 2026-10-12, its strip 4051:5324, and its "Signboard" heading gone with the
+ * move); then a card in the livery of the place the trip leaves from, inset
+ * from the sides and rounded, where a rail runs from the origin
+ * (TimelineTop) down to the place it goes to (TimelineBottomEndRoute); then
+ * two tiles under it, the ride's Kilometer and its fare (moved under the
+ * card in his redrawing the same day).
  *
  * The fare tile (his 3778:3183, redrawn 2026-09-30) is a button: the pesos,
  * and under them ↻ and which fare they are, Regular or Discounted; a tap turns
@@ -94,10 +98,6 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
  * With none, there is no heading either.
  *
  * The card and its rail are TripTimeline's.
- *
- * Under the tiles, the direction's signboards as pictures (the owner's
- * Signboard, 3919:11355, 2026-10-01), uploaded in the studio, then "Other
- * routes".
  */
 export function RouteTripDetail({
   livery,
@@ -136,7 +136,6 @@ export function RouteTripDetail({
   // the same day).
   const [turns, setTurns] = useState(0);
   const othersHeading = useId();
-  const boardsHeading = useId();
   const shown = picked && pickedFare ? pickedFare : fare;
   const shownMetres = picked && pickedMetres !== undefined ? pickedMetres : metres;
   return (
@@ -156,7 +155,42 @@ export function RouteTripDetail({
         />
       }
     >
-      {/* Right under the header, whose 12 below is the gap (the owner's RouteTripDetail, 3778:3183, 2026-10-01). */}
+      {/*
+        Right under the header, the direction's signboards (the owner's
+        RouteTripDetail of 2026-10-12, 3778:3183; under the tiles with a
+        "Signboard" heading from 2026-10-01 until then): a white strip, 12 in
+        from the sides and 16 above and below, each board 40 tall at its own
+        width, 8 apart, wrapping on a narrow phone (3919:11447). No heading:
+        the boards say what they are. Pictures, so nothing in a file can run.
+        None uploaded, no strip: the card sits right under the header.
+        At a sheet's Low the strip is gone: Low is as tall as the header and
+        the origin (sheetGesture's LOW_PX; the owner's 3814:3976, drawn with
+        no boards), and the boards would stand where the origin should. From
+        Middle up they are there. Claude's call, 2026-10-12, for the owner
+        to confirm or redraw.
+      */}
+      {signboards.length > 0 && (
+        <ul
+          data-testid="trip-signboards"
+          aria-label="Signboards"
+          className="flex w-full flex-wrap gap-2 bg-surface px-3 py-4 sheet-low:hidden"
+        >
+          {signboards.map((src, i) => (
+            <li key={src}>
+              <img
+                data-testid="trip-signboard"
+                src={src}
+                alt={
+                  signboards.length > 1 ? `Signboard ${i + 1} of ${signboards.length}` : 'Signboard'
+                }
+                className="block h-10 w-auto max-w-full"
+                decoding="async"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+      {/* Under the header, whose 12 below is the gap (the owner's RouteTripDetail, 3778:3183, 2026-10-01), or under the signboards' strip, whose 16 is. */}
       <div className="w-full px-3">
         <TripTimeline
           livery={livery}
@@ -229,36 +263,6 @@ export function RouteTripDetail({
         >
           {note}
         </p>
-      )}
-      {signboards.length > 0 && (
-        // Each board 40 tall at its own width, 8 apart, wrapping on a narrow
-        // phone (3919:11447). Pictures, so nothing in a file can run.
-        <section
-          data-testid="trip-signboards"
-          aria-labelledby={boardsHeading}
-          className="flex w-full flex-col gap-2 px-3 pt-2 pb-4 font-sn-pro"
-        >
-          <h3 id={boardsHeading} className="text-sm/5 font-medium text-content-tertiary">
-            Signboard
-          </h3>
-          <ul className="flex flex-wrap gap-2">
-            {signboards.map((src, i) => (
-              <li key={src}>
-                <img
-                  data-testid="trip-signboard"
-                  src={src}
-                  alt={
-                    signboards.length > 1
-                      ? `Signboard ${i + 1} of ${signboards.length}`
-                      : 'Signboard'
-                  }
-                  className="block h-10 w-auto max-w-full"
-                  decoding="async"
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
       )}
       {otherRoutes.length > 0 && (
         <section

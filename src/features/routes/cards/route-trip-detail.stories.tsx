@@ -521,18 +521,46 @@ const board = (top: string, under: string) =>
       `<text x="49" y="34" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="9" fill="#FFB400">${under}</text></svg>`,
   );
 
-/** Figma's Signboard (3919:11355): the direction's boards under the tiles, 40 tall, 8 apart. */
+/**
+ * Figma's Signboard (3919:11355): the direction's boards right under the
+ * header, in their own white strip (the owner's RouteTripDetail of
+ * 2026-10-12; under the tiles with a heading until then), 40 tall, 8 apart.
+ */
 export const Signboards: Story = {
   args: { signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')] },
   play: async ({ canvasElement }) => {
-    const boards = within(canvasElement).getAllByTestId('trip-signboard');
+    const canvas = within(canvasElement);
+    const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
     await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(40));
-    await expect(within(canvasElement).getByRole('heading', { name: 'Signboard' })).toBeVisible();
+    // Over the card, and no heading over them.
+    const strip = canvas.getByTestId('trip-signboards');
+    const card = canvas.getByTestId('trip');
+    await expect(
+      strip.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await expect(canvas.queryByRole('heading', { name: 'Signboard' })).toBeNull();
   },
 };
 
-/** None uploaded: no heading, no row. */
+/**
+ * At Low, no boards: the header and the origin along the bottom, as the
+ * owner's Low frame (3814:3976) has it; the strip is back from Middle up.
+ * Claude's call for an undrawn state, 2026-10-12, for the owner to confirm.
+ */
+export const SheetLowSignboards: Story = {
+  args: Signboards.args,
+  play: async (ctx) => {
+    const canvas = within(ctx.canvasElement);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'middle');
+    await expect(canvas.getByTestId('trip-signboards')).toBeVisible();
+    await tapHandle(ctx.canvasElement, 2);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
+    await expect(canvas.getByTestId('trip-signboards')).not.toBeVisible();
+  },
+};
+
+/** None uploaded: no strip, the card right under the header. */
 export const NoSignboards: Story = {
   args: { signboards: [] },
   play: async ({ canvasElement }) => {
@@ -568,7 +596,7 @@ export const ManySignboards: Story = {
   },
 };
 
-/** Signboard over Other routes, as the frame stacks them (3778:3183). */
+/** The signboards at the top and Other routes under the tiles, as the frame stacks them (3778:3183). */
 export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
