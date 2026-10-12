@@ -29,9 +29,10 @@ interface Props {
 
 /**
  * Routes one way round as the owner's RouteCards (2026-09-28): a card per
- * place they leave from (departures), each in its livery — liveries.ts: at
- * random, kept for the visit, never two alike side by side — with a row per
- * drawn direction. One card at a time is Selected, and the map lights its
+ * place they leave from (departures), each in its livery — liveries.ts: its
+ * first row's route's, at random, kept for the visit, the same the other
+ * way round (the owner's ask, 2026-10-12), never two alike side by side — with
+ * a row per drawn direction. One card at a time is Selected, and the map lights its
  * directions alone; a row opens its trip straight away, whether its card is
  * picked or not, and picks none — selecting it too was confusing — and the
  * trip's ‹ comes back to every card at rest (the owner's calls, 2026-09-29).
@@ -43,10 +44,14 @@ interface Props {
 export function RouteCardStack({ routes, back, selected, onSelect, onRoute, testId }: Props) {
   const places = drawnDepartures(routes, back);
 
-  // Drawn once per stack, not per render: a place whose kept colour would
-  // match its neighbour's wears a random other one, and must not flicker.
-  const placeKey = places.map((p) => p.from).join('\n');
-  const liveries = useMemo(() => (placeKey ? liveriesFor(placeKey.split('\n')) : []), [placeKey]);
+  // Drawn once per stack, not per render. Each card by its rows' routes,
+  // its first row's first (drawnDepartures leaves no card empty); the ids
+  // are uuids, with no space or newline to split on.
+  const routeKey = places.map((p) => p.directions.map((d) => d.v.routeId).join(' ')).join('\n');
+  const liveries = useMemo(
+    () => (routeKey ? liveriesFor(routeKey.split('\n').map((card) => card.split(' '))) : []),
+    [routeKey],
+  );
 
   const byId = new Map(places.flatMap((p) => p.directions.map((d) => [d.v.id, d.v] as const)));
 

@@ -67,9 +67,9 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
 
   // The colour a card wore — in the list, or in a hotspot's card — for the
   // trip picked from it. Read only as the trip opens, and only while that
-  // card stands behind it: a clash colour is "for this list only"
+  // card stands behind it: a card of several routes wears one of them
   // (liveries.ts), so the same trip opened again any other way wears its
-  // place's kept colour. Once open, the trip keeps what it opened in until
+  // own route's kept colour. Once open, the trip keeps what it opened in until
   // it closes — through SWITCH, and even when a tap on its own line closes
   // the list behind it: a card never changes colour while it is open (the
   // owner, 2026-09-29).
@@ -78,12 +78,18 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   // A list of one RouteCard: its routes wear that card's colour, picked or
   // not, a pick only bringing the camera to them (the owner's ask,
   // 2026-10-02). The colour is the one the card is drawn in (liveriesFor
-  // keeps a place's colour for the visit, so the card reads the same).
+  // keeps a route's colour for the visit, so the card reads the same).
   // Only while the list is what is up: behind a place's card it decides nothing (showingOf).
   const onlyPlace =
     choosing && !hotspots.selected ? drawnDepartures(saved.candidates, saved.back) : [];
-  const onlyFrom = onlyPlace.length === 1 ? onlyPlace[0].from : null;
-  const onlyLivery = useMemo(() => (onlyFrom ? liveriesFor([onlyFrom])[0] : null), [onlyFrom]);
+  // Its rows' routes, the first row's first, as RouteCardStack keys the card
+  // (a card is never empty; the ids are uuids, with no space to split on).
+  const onlyRoutes =
+    onlyPlace.length === 1 ? onlyPlace[0].directions.map((d) => d.v.routeId).join(' ') : null;
+  const onlyLivery = useMemo(
+    () => (onlyRoutes ? liveriesFor([onlyRoutes.split(' ')])[0] : null),
+    [onlyRoutes],
+  );
   // What is lit wears the colour of the card it answers: the open trip's,
   // the picked RouteCard's, or a list's only card's; a list of several with
   // none picked lights its routes in the selected blue (the owner's ask,

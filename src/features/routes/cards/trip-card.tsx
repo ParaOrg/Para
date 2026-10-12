@@ -23,9 +23,11 @@ import type { Timeline } from '../model/timeline';
 /**
  * The trip's colour, one owner for it (the review's 6.6): decided as the trip
  * opens — the RouteCard's it was picked from, in the list or a hotspot's card,
- * while that card stands behind it (a clash colour is "for this list only",
- * liveries.ts), else its place's for the visit (drawn when first met, kept
- * after) — and kept until it closes, through SWITCH and even when a tap on
+ * while that card stands behind it (a card of several routes wears its
+ * first row's, liveries.ts), else its route's for the visit (drawn when
+ * first met, kept after; its place's until the owner's ask of 2026-10-12) —
+ * and kept until
+ * it closes, through SWITCH and even when a tap on
  * its own line closes the list behind it: a card never changes colour while
  * it is open (the owner, 2026-09-29). Its line wears it too, so the page
  * reads it, not the card. Settled while rendering, as derived state is, so
@@ -41,7 +43,7 @@ export function useTripLivery(
   if (open && !tripLivery) {
     tripLivery =
       (wornBehind && worn?.id === open.id ? worn.livery : undefined) ??
-      liveriesFor([directionEnds(open).from])[0];
+      liveriesFor([[open.routeId]])[0];
     setTripWears({ routeId: open.routeId, livery: tripLivery });
   } else if (!open && tripWears) {
     setTripWears(null);
@@ -52,9 +54,9 @@ export function useTripLivery(
 /**
  * The chosen direction as the owner's trip card (RouteTripDetail,
  * 2026-09-29), from what the map file knows: its ends as the list names
- * them, the whole ride's length and pesos, the hintuans on the way, and the colour of
- * the place it leaves from — the one its RouteCard wore, when it was picked
- * from one, in the list or in a hotspot's card. SWITCH turns it round, what
+ * them, the whole ride's length and pesos, the hintuans on the way, and its
+ * colour — the one its RouteCard wore, when it was picked from one, in the
+ * list or in a hotspot's card; its route's, kept for the visit, when not. SWITCH turns it round, what
  * it was picked from staying behind it, and the card keeps the colour it
  * opened in: turned round, it is still the same card (the owner, 2026-09-29).
  *

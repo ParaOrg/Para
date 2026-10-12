@@ -100,21 +100,24 @@ export function otherDirection<V extends Direction>(all: readonly V[], of: V): V
 
 /**
  * Every direction of the routes sharing an end with `of`'s — the same head or
- * the same tail — its own route's included: PLAN.md's fan, an extension being
+ * the same tail — its own route's first: PLAN.md's fan, an extension being
  * "grouped by the end it shares" (decided 2026-09-21; no screen groups them
  * that way yet but this), Tala – SM Fairview beside Tala – Novaliches. A
  * route that only starts where this one ends is not among them: that is a
  * change of jeep, not another way. An old file's route may carry no ends; it
- * then shares none.
+ * then shares none. The trip's own route leads, so the card its ‹ lists it
+ * on leads with it and wears its colour (liveries.ts: a card wears its first
+ * row's route's; the owner's ask of 2026-10-12, that colours stop changing).
  */
 export function sharingAnEnd<V extends Direction>(all: readonly V[], of: V): V[] {
   const { headHotspotId: head, tailHotspotId: tail } = of.route;
-  return all.filter(
+  const own = all.filter((v) => v.routeId === of.routeId);
+  const shares = all.filter(
     (v) =>
-      v.routeId === of.routeId ||
-      (!!head && v.route.headHotspotId === head) ||
-      (!!tail && v.route.tailHotspotId === tail),
+      v.routeId !== of.routeId &&
+      ((!!head && v.route.headHotspotId === head) || (!!tail && v.route.tailHotspotId === tail)),
   );
+  return [...own, ...shares];
 }
 
 /**

@@ -47,7 +47,7 @@ export interface TripTimelineProps {
 
 /**
  * A trip's card, RouteTripDetail's (split from it, 2026-09-29): in the
- * livery of the place the trip leaves from, a rail from the origin
+ * trip's livery, its route's (liveries.ts), a rail from the origin
  * (TimelineTop) down to the place it goes to (TimelineBottomEndRoute).
  *
  * The hintuans between fold into one row, "10 more hintuans" (with an s

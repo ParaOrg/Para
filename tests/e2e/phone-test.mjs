@@ -3618,7 +3618,10 @@ if (!fannedOne) {
       JSON.stringify(lit) === JSON.stringify(fan.map((d) => d.id).sort()),
       JSON.stringify(lit),
     );
-    // One place, one card: it wears the colour the trip wore, its place's.
+    // One place, one card: it wears the colour the trip wore — the list
+    // leads with the trip's route (sharingAnEnd), a card wears its first
+    // row's route's colour (liveries.ts), and the trip's route was drawn as
+    // it opened.
     if (places === 1) {
       const listColour = await chooser.locator('[data-livery]').first().getAttribute('data-livery');
       check(

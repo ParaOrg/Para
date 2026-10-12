@@ -691,17 +691,63 @@ for (const [i, p] of snapshot.polys.entries()) {
           Math.abs(a.zoom - b.zoom) < 0.01 &&
           Math.abs(a.lng - b.lng) < 1e-6 &&
           Math.abs(a.lat - b.lat) < 1e-6;
+        // Each card's colour and its first row's route, which it wears
+        // (liveries.ts; the map's features know each direction's route).
+        const worn = () =>
+          page.evaluate(async () => {
+            const routeOf = new Map(
+              ((await window.__src('saved-routes'))?.features ?? []).map((f) => [
+                f.properties.id,
+                f.properties.routeId,
+              ]),
+            );
+            return [
+              ...document.querySelectorAll('[data-testid="card"] [data-testid="card-origin"]'),
+            ].map((c) => ({
+              route: routeOf.get(c.querySelector('[data-direction]')?.dataset.direction) ?? null,
+              livery: c.dataset.livery,
+            }));
+          });
         const before = await view();
         await flip.click();
         await page.waitForTimeout(900);
         const turned = await view();
+        const wornTurned = await worn();
         await flip.click();
         await page.waitForTimeout(900);
         const back = await view();
+        const wornBack = await worn();
         check(
           `  ⇄ turns the routes round with the camera kept still, there and back`,
           still(before, turned) && still(before, back),
           JSON.stringify({ before, turned, back }),
+        );
+        // A route wears one colour both ways round (the owner's ask,
+        // 2026-10-12: "stop randomly changing colors"): a card the turn
+        // keeps, by its first row's route, keeps its colour; one the turn
+        // adds, a route of its own, wears one of its own. A kept colour that
+        // clashes on the turn draws again once and keeps that (liveries.ts),
+        // so the readings are held from the first turn on, over a second
+        // round trip.
+        await flip.click();
+        await page.waitForTimeout(900);
+        const wornTurned2 = await worn();
+        await flip.click();
+        await page.waitForTimeout(900);
+        const wornBack2 = await worn();
+        const keeps = (from, to) =>
+          from.every((a) => {
+            const b = to.find((x) => x.route === a.route);
+            return !b || b.livery === a.livery;
+          });
+        const readings = [wornTurned, wornBack, wornTurned2, wornBack2];
+        check(
+          `  and each route keeps its colour turned round, there and back, and round again`,
+          wornTurned.length > 0 &&
+            readings.flat().every((w) => !!w.route && !!w.livery) &&
+            readings.every((r, i) => i === 0 || keeps(readings[i - 1], r)) &&
+            keeps(wornTurned, wornTurned2),
+          JSON.stringify({ wornTurned, wornBack, wornTurned2, wornBack2 }),
         );
       }
       // ✕ closes it, a picked card and all: nothing stays lit.

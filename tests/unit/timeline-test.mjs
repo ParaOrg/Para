@@ -348,6 +348,17 @@ test('the fan: every route sharing its head or its tail, both ways round, its ow
   assert.deepEqual(idsOf(sharingAnEnd(FAN, FAN[1])), want, 'the way back has the same fan');
 });
 
+test("the fan leads with the trip's own route: the card its ‹ lists it on wears the trip's colour", () => {
+  // liveries.ts keys a card by its first row's route (the owner's ask, 2026-10-12).
+  const bsNova = FAN.find((v) => v.routeId === 'bsNova');
+  assert.deepEqual(
+    sharingAnEnd(FAN, bsNova)
+      .slice(0, 2)
+      .map((v) => v.routeId),
+    ['bsNova', 'bsNova'],
+  );
+});
+
 test('a route sharing no end, or with none in an old file, fans out to itself', () => {
   assert.deepEqual(idsOf(sharingAnEnd(FAN, FAN.at(-1))), idsOf(both('far', 'x', 'y')));
   const old = [...both('a', undefined, undefined), ...both('b', undefined, undefined)];
