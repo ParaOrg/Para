@@ -25,6 +25,7 @@ import {
   getSupabase,
   supabaseConfigError,
   CardActions,
+  RouteExportPanel,
   RouteFacts,
   SignboardEditor,
   signboardUrl,
@@ -398,6 +399,11 @@ function Workshop({
                     />
                   )
                 }
+              />
+              <RouteExportPanel
+                directions={saved.directions.filter((v) => v.routeId === saved.selected?.routeId)}
+                hotspots={hotspots.hotspots}
+                hotspotsAlong={hotspots.hotspotsAlong}
               />
               {userId !== null && userId === saved.selected.ownerId && (
                 <SignboardEditor direction={saved.selected} onChanged={() => void saved.reload()} />
