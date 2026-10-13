@@ -255,11 +255,13 @@ export default defineConfig({
         // then drops every chunk the public page does not load, so a studio-only
         // chunk (the editor, the Supabase client) is never stored on a phone.
         // The fonts too, since they were subset to Latin (2026-09-29, 109 kB
-        // for all six): offline, the text keeps its face.
+        // for all six): offline, the text keeps its face. And the install
+        // prompt's picture (48 kB, the owner's call of 2026-10-13), so the
+        // card is whole offline too; the transform keeps only the page's own.
         globPatterns: [
           'index.html',
           'manifest.webmanifest',
-          'assets/*.{js,css,woff2}',
+          'assets/*.{js,css,woff2,webp}',
           'icons/icon-*.png',
         ],
         manifestTransforms: [
