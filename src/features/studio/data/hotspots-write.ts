@@ -138,6 +138,7 @@ export async function saveHotspot(
     throw new Error(
       `The hotspot is saved, but its route links are not: ${err instanceof Error ? err.message : String(err)}. ` +
         'Press Save again to retry.',
+      { cause: err },
     );
   }
   return hotspot;
