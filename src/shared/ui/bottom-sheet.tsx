@@ -138,6 +138,20 @@ export function BottomSheet({
   useDialogFocus(own, hidden);
   useEscape(onClose, !hidden);
 
+  /**
+   * Where the sheet slides to. The page's `[data-dock-host]` hears it too, as
+   * `--dock-y`, while this is the sheet on show: what sits on the map above
+   * the sheet follows it (the owner's ScreenLocationBehavior, 3870:5941,
+   * 2026-10-01). The same length, so both glide alike.
+   */
+  function at(y: string) {
+    const sheet = own.current;
+    if (!sheet) return;
+    sheet.style.setProperty('--sheet-y', y);
+    if (!sheet.hidden)
+      sheet.closest<HTMLElement>('[data-dock-host]')?.style.setProperty('--dock-y', y);
+  }
+
   // Whether this sheet put the mark on the page: only it takes it off, so a
   // hidden sheet's change, or one unmounting, leaves another's drag alone.
   const markedRef = useRef(false);
@@ -173,20 +187,6 @@ export function BottomSheet({
   /** Docked, not floating: the notch is drawn only then. */
   const docked = () => handleRef.current?.offsetParent != null;
   const show = (shown: number) => at(slideShowing(shown));
-  /**
-   * Where the sheet slides to. The page's `[data-dock-host]` hears it too, as
-   * `--dock-y`, while this is the sheet on show: what sits on the map above
-   * the sheet follows it (the owner's ScreenLocationBehavior, 3870:5941,
-   * 2026-10-01). The same length, so both glide alike.
-   */
-  function at(y: string) {
-    const sheet = own.current;
-    if (!sheet) return;
-    sheet.style.setProperty('--sheet-y', y);
-    if (!sheet.hidden)
-      sheet.closest<HTMLElement>('[data-dock-host]')?.style.setProperty('--dock-y', y);
-  }
-
   // When a finger or a mouse last pressed on the sheet: focus that follows a
   // press is the press's, not the keyboard's (the body's onFocus).
   const lastPress = useRef(-Infinity);
