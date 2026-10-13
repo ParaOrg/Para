@@ -11,8 +11,8 @@ import { LIT_LINE, LIVERY_LINE, type LineLook } from '../map/livery-line';
 import { useLitLineColour } from '../map/saved-routes-layers';
 import type { Highlight } from '../map/use-saved-routes';
 import { drawnDepartures, sharingAnEnd } from '../model/departures';
-import { liveriesFor, type Livery } from '../model/liveries';
-import type { Direction } from '../model/routes';
+import { cardLiveries, type Livery } from '../model/liveries';
+import { railLineOf, type Direction } from '../model/routes';
 
 interface Routes<V extends Direction> {
   directions: readonly V[];
@@ -86,9 +86,11 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   // (a card is never empty; the ids are uuids, with no space to split on).
   const onlyRoutes =
     onlyPlace.length === 1 ? onlyPlace[0].directions.map((d) => d.v.routeId).join(' ') : null;
+  // Its train line, if its first row's route is a train's: then the line's colour, as the card wears.
+  const onlyLine = onlyPlace.length === 1 ? railLineOf(onlyPlace[0].directions[0].v) : null;
   const onlyLivery = useMemo(
-    () => (onlyRoutes ? liveriesFor([onlyRoutes.split(' ')])[0] : null),
-    [onlyRoutes],
+    () => (onlyRoutes ? cardLiveries([onlyRoutes.split(' ')], [onlyLine])[0] : null),
+    [onlyRoutes, onlyLine],
   );
   // What is lit wears the colour of the card it answers: the open trip's,
   // the picked RouteCard's, or a list's only card's; a list of several with

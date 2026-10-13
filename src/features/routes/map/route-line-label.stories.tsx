@@ -115,6 +115,15 @@ export const CodeSignEndFuchsia: Story = {
 export const CodeSignEndPink: Story = {
   args: { variant: 'end', codeSign: 'GL05', livery: 'pink' },
 };
+export const CodeSignEndLightRailWayOne: Story = {
+  args: { variant: 'end', codeSign: 'GL05', livery: 'light-rail-way-one' },
+};
+export const CodeSignEndLightRailWayTwo: Story = {
+  args: { variant: 'end', codeSign: 'PL05', livery: 'light-rail-way-two' },
+};
+export const CodeSignEndMetroRailWayThree: Story = {
+  args: { variant: 'end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
+};
 
 /** A name longer than the room: cut short with an ellipsis, the disc and the code whole. */
 export const LongName: Story = {

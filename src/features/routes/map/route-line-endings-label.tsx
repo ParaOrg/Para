@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { EndIcon, StartIcon } from '@/shared/ui/route-icons';
 
-import { LINE_FILL, LINE_SURFACE, LINE_TEXT } from './livery-line';
+import { LINE_FILL, LINE_SURFACE, LINE_TEXT, LINE_WORDS } from './livery-line';
 import type { Livery } from '../model/liveries';
 
 /**
@@ -68,14 +68,21 @@ export function RouteLineEndingsLabel({
   const worn =
     look.wears === 'start'
       ? START
-      : { pill: LINE_SURFACE[colour], pointer: LINE_FILL[colour], code: LINE_TEXT[colour] };
+      : {
+          pill: LINE_SURFACE[colour],
+          pointer: LINE_FILL[colour],
+          code: LINE_TEXT[colour],
+          words: LINE_WORDS[colour],
+        };
   const Icon = look.icon ? ICON[look.icon] : null;
   const code = Icon ? codeSign : null;
   return (
     <span
       data-part="name"
       className={
-        'relative flex max-w-full min-w-0 items-center gap-1 rounded-full py-1 font-sn-pro text-sm/5 font-medium whitespace-nowrap text-content-inverse ' +
+        'relative flex max-w-full min-w-0 items-center gap-1 rounded-full py-1 font-sn-pro text-sm/5 font-medium whitespace-nowrap ' +
+        worn.words +
+        ' ' +
         look.padding +
         ' ' +
         worn.pill
@@ -153,4 +160,5 @@ const START = {
   pill: 'bg-map-hotspots-card-hintuan-surface',
   pointer: 'fill-map-hotspots-card-hintuan-surface',
   code: 'text-map-hotspots-card-hintuan-surface',
+  words: 'text-content-inverse',
 };

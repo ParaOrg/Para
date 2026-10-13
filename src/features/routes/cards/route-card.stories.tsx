@@ -75,6 +75,36 @@ export const PinkSelected: Story = {
   args: { state: 'selected', livery: 'pink', routeOrigin: 'Lagro' },
 };
 
+/** LRT-1, a train route: its line's Map/Rail/LightRailWayOne colours and Content/inverse words under the Primary shadow (4074:7402, 2026-10-13), never a draw. */
+export const LightRailWayOne: Story = {
+  args: { livery: 'light-rail-way-one', routeOrigin: 'Fernando Poe Jr.' },
+};
+
+/** Selected, LRT-1: pressed in, under Route/RouteCardPrimarySelected. */
+export const LightRailWayOneSelected: Story = {
+  args: { state: 'selected', livery: 'light-rail-way-one', routeOrigin: 'Fernando Poe Jr.' },
+};
+
+/** LRT-2, a train route: its line's Map/Rail/LightRailWayTwo colours and Content/inverse words under the Primary shadow (4080:4124, 2026-10-13), never a draw. */
+export const LightRailWayTwo: Story = {
+  args: { livery: 'light-rail-way-two', routeOrigin: 'Fernando Poe Jr.' },
+};
+
+/** Selected, LRT-2: pressed in, under Route/RouteCardPrimarySelected. */
+export const LightRailWayTwoSelected: Story = {
+  args: { state: 'selected', livery: 'light-rail-way-two', routeOrigin: 'Fernando Poe Jr.' },
+};
+
+/** MRT-3, a train route: its line's Map/Rail/MetroRailWayThree colours and Content/primary, dark, words under the Primary shadow (4080:4241, 2026-10-13), never a draw. */
+export const MetroRailWayThree: Story = {
+  args: { livery: 'metro-rail-way-three', routeOrigin: 'Fernando Poe Jr.' },
+};
+
+/** Selected, MRT-3: pressed in, under Route/RouteCardPrimarySelected. */
+export const MetroRailWayThreeSelected: Story = {
+  args: { state: 'selected', livery: 'metro-rail-way-three', routeOrigin: 'Fernando Poe Jr.' },
+};
+
 /**
  * At rest, a row opens its direction straight away; a tap anywhere else on
  * the card — its name, the room around its rows — selects it (the owner,

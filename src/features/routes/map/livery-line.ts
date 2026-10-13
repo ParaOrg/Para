@@ -27,7 +27,9 @@ export interface LineLook {
  * near-black, on the light one until yellow left on 2026-10-12); and past a
  * picked hintuan the rest of the trip's line in Card/<livery>/surface-pale
  * (the owner's ask, 2026-10-12: "the remaining line should be surface-pale
- * of the selected colour").
+ * of the selected colour"). A train's line wears its own line's
+ * Map/Rail/<line>/surface and surface-pale (2026-10-13), and MRT-3's
+ * yellow takes …/Arrow/Inverse, near-black, as its card's words are dark.
  */
 export const LIVERY_LINE = {
   red: {
@@ -60,6 +62,21 @@ export const LIVERY_LINE = {
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
     pale: CARD_PALE_COLOURS['Card/pink/surface-pale'],
   },
+  'light-rail-way-one': {
+    line: MAP_COLOURS['Map/Rail/LightRailWayOne/surface'],
+    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
+    pale: MAP_COLOURS['Map/Rail/LightRailWayOne/surface-pale'],
+  },
+  'light-rail-way-two': {
+    line: MAP_COLOURS['Map/Rail/LightRailWayTwo/surface'],
+    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
+    pale: MAP_COLOURS['Map/Rail/LightRailWayTwo/surface-pale'],
+  },
+  'metro-rail-way-three': {
+    line: MAP_COLOURS['Map/Rail/MetroRailWayThree/surface'],
+    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Inverse'],
+    pale: MAP_COLOURS['Map/Rail/MetroRailWayThree/surface-pale'],
+  },
 } satisfies Record<Livery, LineLook>;
 
 /**
@@ -89,12 +106,17 @@ export const LINE_SURFACE = {
   rose: 'bg-card-rose-surface',
   fuchsia: 'bg-card-fuchsia-surface',
   pink: 'bg-card-pink-surface',
+  'light-rail-way-one': 'bg-map-rail-light-rail-way-one-surface',
+  'light-rail-way-two': 'bg-map-rail-light-rail-way-two-surface',
+  'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-surface',
   selected: 'bg-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
 /**
  * Words in the line's colour, on white: a station's sign code (RouteLineLabel's
- * CodeSignEnd, RouteLineEndingsLabel's CodeSign).
+ * CodeSignEnd, RouteLineEndingsLabel's CodeSign). A train's are its line's
+ * Timeline/surface, as the white pill on its trip card has them (the owner's
+ * train frames, 2026-10-13): MRT-3's yellow would not read on white.
  */
 export const LINE_TEXT = {
   red: 'text-card-red-surface',
@@ -103,6 +125,9 @@ export const LINE_TEXT = {
   rose: 'text-card-rose-surface',
   fuchsia: 'text-card-fuchsia-surface',
   pink: 'text-card-pink-surface',
+  'light-rail-way-one': 'text-map-rail-light-rail-way-one-timeline-surface',
+  'light-rail-way-two': 'text-map-rail-light-rail-way-two-timeline-surface',
+  'metro-rail-way-three': 'text-map-rail-metro-rail-way-three-timeline-surface',
   selected: 'text-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -114,5 +139,26 @@ export const LINE_FILL = {
   rose: 'fill-card-rose-surface',
   fuchsia: 'fill-card-fuchsia-surface',
   pink: 'fill-card-pink-surface',
+  'light-rail-way-one': 'fill-map-rail-light-rail-way-one-surface',
+  'light-rail-way-two': 'fill-map-rail-light-rail-way-two-surface',
+  'metro-rail-way-three': 'fill-map-rail-metro-rail-way-three-surface',
   selected: 'fill-map-route-line-surface-selected',
+} satisfies Record<LineColour, string>;
+
+/**
+ * A label's own words and icons, on its line-coloured fill: white, as the
+ * chevrons are; near-black (Map/RouteLine/Arrow/Inverse) on MRT-3's
+ * yellow, as its chevrons and its card's words are (2026-10-13).
+ */
+export const LINE_WORDS = {
+  red: 'text-content-inverse',
+  orange: 'text-content-inverse',
+  violet: 'text-content-inverse',
+  rose: 'text-content-inverse',
+  fuchsia: 'text-content-inverse',
+  pink: 'text-content-inverse',
+  'light-rail-way-one': 'text-content-inverse',
+  'light-rail-way-two': 'text-content-inverse',
+  'metro-rail-way-three': 'text-map-route-line-arrow-inverse',
+  selected: 'text-content-inverse',
 } satisfies Record<LineColour, string>;

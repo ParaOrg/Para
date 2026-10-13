@@ -127,3 +127,12 @@ export const Orange: Story = { args: { variant: 'hintuan', livery: 'orange' } };
 export const Violet: Story = { args: { variant: 'hintuan-end', livery: 'violet' } };
 export const Fuchsia: Story = { args: { variant: 'hintuan', livery: 'fuchsia' } };
 export const Pink: Story = { args: { variant: 'hintuan-end', livery: 'pink' } };
+export const LightRailWayOne: Story = {
+  args: { variant: 'hintuan-end', livery: 'light-rail-way-one' },
+};
+export const LightRailWayTwo: Story = {
+  args: { variant: 'hintuan-end', livery: 'light-rail-way-two' },
+};
+export const MetroRailWayThree: Story = {
+  args: { variant: 'hintuan-end', livery: 'metro-rail-way-three' },
+};

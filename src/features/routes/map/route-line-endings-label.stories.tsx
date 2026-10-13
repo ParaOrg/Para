@@ -118,6 +118,15 @@ export const TailRouteOrange: Story = { args: { variant: 'tail', livery: 'orange
 export const TailRouteViolet: Story = { args: { variant: 'tail', livery: 'violet' } };
 export const TailRouteFuchsia: Story = { args: { variant: 'tail', livery: 'fuchsia' } };
 export const TailRoutePink: Story = { args: { variant: 'tail', livery: 'pink' } };
+export const TailRouteLightRailWayOne: Story = {
+  args: { variant: 'tail', livery: 'light-rail-way-one' },
+};
+export const TailRouteLightRailWayTwo: Story = {
+  args: { variant: 'tail', livery: 'light-rail-way-two' },
+};
+export const TailRouteMetroRailWayThree: Story = {
+  args: { variant: 'tail', livery: 'metro-rail-way-three' },
+};
 
 /** Default: a ride's own tail past a picked hintuan, the name alone in the line's colour. */
 export const Default: Story = {
