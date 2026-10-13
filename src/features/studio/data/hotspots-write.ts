@@ -119,13 +119,17 @@ export async function saveHotspot(
           hotspotId: hotspot.id,
           sequence: l.sequence,
         }))
-      : (input.directionIds ?? [])
-          .filter((id) => byId.has(id))
-          .map((id) => ({
-            directionId: id,
-            hotspotId: hotspot.id,
-            sequence: Math.max(0, firstTouchIndex(directionLine(byId.get(id)!), ring)),
-          }))
+      : (input.directionIds ?? []).flatMap((id) => {
+          const direction = byId.get(id);
+          if (!direction) return [];
+          return [
+            {
+              directionId: id,
+              hotspotId: hotspot.id,
+              sequence: Math.max(0, firstTouchIndex(directionLine(direction), ring)),
+            },
+          ];
+        })
   ).map(toLinkRow);
 
   try {
