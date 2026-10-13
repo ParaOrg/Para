@@ -125,6 +125,26 @@ test('a lone hintuan is drawn as it is: shown, its button, nothing to fold and n
   assert.equal(askers(html).length, 0);
 });
 
+// The owner's answer of 2026-10-13 to the "YL06" his train frames draw in
+// the pill: the station's code before the pesos, on a train only.
+test("a train's picked station: its code, then the pesos, in the one pill", () => {
+  const html = render(1, {
+    livery: 'metro-rail-way-three',
+    picked: 'h0',
+    pickedPesos: '₱20',
+    pickedCode: 'YL06',
+  });
+  const [row] = rows(html);
+  assert.match(
+    row.inside,
+    /data-testid="trip-hintuan-fare"[^>]*><span data-testid="trip-hintuan-code">YL06<\/span><span aria-hidden="true"> · <\/span><span data-part="pesos">₱20<\/span><\/span>/,
+  );
+  // A station the table does not know: the pesos alone, as a jeepney's.
+  const alone = rows(render(1, { picked: 'h0', pickedPesos: '₱20', pickedCode: null }))[0];
+  assert.match(alone.inside, /data-testid="trip-hintuan-fare"[^>]*>₱20<\/span>/);
+  assert.ok(!alone.inside.includes('trip-hintuan-code'));
+});
+
 test('no hintuans: no rows, no fold, nothing hidden', () => {
   const html = render(0);
   assert.equal(rows(html).length, 0);

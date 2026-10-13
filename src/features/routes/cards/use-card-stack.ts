@@ -77,8 +77,9 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   const tripLivery = useTripLivery(saved.selected, worn, choosing || !!hotspots.selected);
   // A list of one RouteCard: its routes wear that card's colour, picked or
   // not, a pick only bringing the camera to them (the owner's ask,
-  // 2026-10-02). The colour is the one the card is drawn in (liveriesFor
-  // keeps a route's colour for the visit, so the card reads the same).
+  // 2026-10-02). The colour is the one the card is drawn in (cardLiveries
+  // keeps a jeepney route's draw for the visit, and a train's is its line's,
+  // so the card reads the same).
   // Only while the list is what is up: behind a place's card it decides nothing (showingOf).
   const onlyPlace =
     choosing && !hotspots.selected ? drawnDepartures(saved.candidates, saved.back) : [];

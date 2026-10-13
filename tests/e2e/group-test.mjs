@@ -536,7 +536,11 @@ if (!spot) {
           // @theme inline alias is never emitted), as the DOM computes it, oklch as the
           // rings come: what the dots along the rest wear.
           const probe = document.createElement('span');
-          probe.style.backgroundColor = `var(--card-${trip?.dataset.livery}-surface-pale)`;
+          // A train's is its line's, Map/Rail/<line>/surface-pale (2026-10-13).
+          const livery = trip?.dataset.livery ?? '';
+          probe.style.backgroundColor = /rail-way/.test(livery)
+            ? `var(--map-rail-${livery}-surface-pale)`
+            : `var(--card-${livery}-surface-pale)`;
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
           probe.remove();

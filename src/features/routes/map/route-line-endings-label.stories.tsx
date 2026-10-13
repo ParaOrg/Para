@@ -36,11 +36,11 @@ const iconOf = (el: HTMLElement) => {
 };
 
 /** The colour a token class paints, read off a probe wearing it. */
-const wornBy = (className: string) => {
+const wornBy = (className: string, property: 'backgroundColor' | 'color' = 'backgroundColor') => {
   const probe = document.createElement('i');
   probe.className = className;
   document.body.append(probe);
-  const colour = getComputedStyle(probe).backgroundColor;
+  const colour = getComputedStyle(probe)[property];
   probe.remove();
   return colour;
 };
@@ -124,8 +124,18 @@ export const TailRouteLightRailWayOne: Story = {
 export const TailRouteLightRailWayTwo: Story = {
   args: { variant: 'tail', livery: 'light-rail-way-two' },
 };
+/** MRT-3 (2026-10-13): the yellow pill and pointer, its words and E near-black (Map/RouteLine/Arrow/Inverse). */
 export const TailRouteMetroRailWayThree: Story = {
   args: { variant: 'tail', livery: 'metro-rail-way-three' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-map-rail-metro-rail-way-three-surface'),
+    );
+    const dark = wornBy('text-map-route-line-arrow-inverse', 'color');
+    await expect(getComputedStyle(pill).color).toBe(dark);
+    await expect(iconOf(pill)).toBe('end');
+  },
 };
 
 /** Default: a ride's own tail past a picked hintuan, the name alone in the line's colour. */

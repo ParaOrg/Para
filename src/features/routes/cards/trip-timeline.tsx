@@ -32,6 +32,13 @@ export interface TripTimelineProps {
    * no pill.
    */
   pickedPesos?: string;
+  /**
+   * On a train, the picked station's code, YL06, before the pesos in its
+   * pill: "YL06 · ₱20" (the owner's answer of 2026-10-13 to the "YL06" his
+   * train frames draw there, code first). Null for a jeepney's hintuan,
+   * the ferry's, and a station the table does not know: the pesos alone.
+   */
+  pickedCode?: string | null;
   /** The origin's row (`from`) or the destination's (`to`) was tapped: the whole ride again, and that end shown. */
   onEnd: (end: 'from' | 'to') => void;
   /**
@@ -99,6 +106,7 @@ export function TripTimeline({
   picked,
   onPick,
   pickedPesos,
+  pickedCode = null,
   onEnd,
   endPicked,
   routeDirection,
@@ -156,6 +164,7 @@ export function TripTimeline({
             drawn={drawn}
             selected={h.id === picked}
             pesos={h.id === picked ? pickedPesos : undefined}
+            code={h.id === picked ? pickedCode : null}
             pill={TIMELINE_PILL[livery]}
             onPick={onPick}
           />
@@ -312,6 +321,7 @@ function TimelineHintuan({
   drawn,
   selected,
   pesos,
+  code,
   pill,
   onPick,
 }: {
@@ -326,6 +336,8 @@ function TimelineHintuan({
   selected: boolean;
   /** The ride's pesos to here, for the pill; picked and priced only. */
   pesos?: string;
+  /** A train station's code, before the pesos in the pill; null for any other hintuan. */
+  code: string | null;
   /** TIMELINE_PILL's classes for the card's livery. */
   pill: string;
   onPick: (id: string) => void;
@@ -371,7 +383,15 @@ function TimelineHintuan({
                     pill
                   }
                 >
-                  {pesos}
+                  {code ? (
+                    <>
+                      <span data-testid="trip-hintuan-code">{code}</span>
+                      <span aria-hidden> · </span>
+                      <span data-part="pesos">{pesos}</span>
+                    </>
+                  ) : (
+                    pesos
+                  )}
                 </span>
               )}
             </span>

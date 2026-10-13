@@ -113,6 +113,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The colour a token class paints, read off a probe wearing it. */
+const wornBy = (className: string) => {
+  const probe = document.createElement('i');
+  probe.className = className;
+  document.body.append(probe);
+  const colour = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return colour;
+};
+
 /** The picked row, its pill and the pesos in it, and the fare and Kilometer tiles following the pick. */
 const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await openFold(ctx);
@@ -123,7 +133,10 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await expect(rows.length).toBe(1);
   const pill = rows[0].querySelector<HTMLElement>('[data-testid="trip-hintuan-fare"]');
   const pesos = args.pickedFare === FREE ? 'Free' : args.pickedFare?.regular;
-  await expect(pill?.textContent).toBe(pesos);
+  // A train's station code goes before the pesos, in a part of its own.
+  const code = pill?.querySelector('[data-testid="trip-hintuan-code"]')?.textContent ?? null;
+  await expect(code).toBe(args.pickedCode ?? null);
+  await expect(pill?.textContent).toBe(code ? `${code} · ${pesos}` : pesos);
   await expect(within(canvasElement).getByTestId('trip-fare').textContent).toBe(pesos);
   // The Kilometer tile follows the pick too.
   await expect(within(canvasElement).getByTestId('trip-km').textContent).toBe(
@@ -159,7 +172,7 @@ const pickedOnATrain: Story['play'] = async (ctx) => {
   );
   await expect(rail).toBeDefined();
   if (pill && rail) {
-    await expect(getComputedStyle(pill).backgroundColor).toBe('rgb(255, 255, 255)');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-content-inverse'));
     await expect(getComputedStyle(pill).color).toBe(getComputedStyle(rail).backgroundColor);
   }
 };
@@ -344,27 +357,27 @@ export const PickedPink: Story = {
 /** LRT-1, a train's trip (4074:7402, 2026-10-13): its line's colours, Content/inverse words. */
 export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
 
-/** Picked, LRT-1: the pill white, its pesos in the line's Timeline/surface. */
+/** Picked, LRT-1: the pill white, the station's code and its pesos in the line's Timeline/surface. */
 export const PickedLightRailWayOne: Story = {
-  args: { livery: 'light-rail-way-one', picked: 'h3' },
+  args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04' },
   play: pickedOnATrain,
 };
 
 /** LRT-2, a train's trip (4080:4124, 2026-10-13): its line's colours, Content/inverse words. */
 export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
 
-/** Picked, LRT-2: the pill white, its pesos in the line's Timeline/surface. */
+/** Picked, LRT-2: the pill white, the station's code and its pesos in the line's Timeline/surface. */
 export const PickedLightRailWayTwo: Story = {
-  args: { livery: 'light-rail-way-two', picked: 'h3' },
+  args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04' },
   play: pickedOnATrain,
 };
 
 /** MRT-3, a train's trip (4080:4241, 2026-10-13): its line's colours, Content/primary, dark, words. */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
-/** Picked, MRT-3: the pill white, its pesos in the line's Timeline/surface. */
+/** Picked, MRT-3: the pill white, "YL06 · ₱20–22" in the line's Timeline/surface. */
 export const PickedMetroRailWayThree: Story = {
-  args: { livery: 'metro-rail-way-three', picked: 'h3' },
+  args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
   play: pickedOnATrain,
 };
 

@@ -23,7 +23,7 @@ export interface LineLook {
  * colour (the owner's ask, 2026-09-29: "the highlighted route should change
  * the color to the surface color of selected routecard", and the trip's
  * line too). Card/<livery>/surface, the chevrons in Map/RouteLine/Arrow/Rest,
- * white, as the card's own words are on every livery (…/Arrow/Inverse,
+ * white, as the card's own words are on every jeepney livery (…/Arrow/Inverse,
  * near-black, on the light one until yellow left on 2026-10-12); and past a
  * picked hintuan the rest of the trip's line in Card/<livery>/surface-pale
  * (the owner's ask, 2026-10-12: "the remaining line should be surface-pale

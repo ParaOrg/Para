@@ -136,3 +136,13 @@ export const LightRailWayTwo: Story = {
 export const MetroRailWayThree: Story = {
   args: { variant: 'hintuan-end', livery: 'metro-rail-way-three' },
 };
+
+/** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it (2026-10-13). */
+export const MetroRailWayThreeHintuan: Story = {
+  args: { variant: 'hintuan', livery: 'metro-rail-way-three' },
+};
+
+/** Past a picked MRT-3 station: the dot in the line's surface-pale, as the rest of the line. */
+export const MetroRailWayThreePaled: Story = {
+  args: { variant: 'hintuan', livery: 'metro-rail-way-three', isPaled: true },
+};

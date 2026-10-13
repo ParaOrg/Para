@@ -112,27 +112,27 @@ export const HintuanPickedPink: Story = {
 /** LRT-1: the rail in Map/Rail/LightRailWayOne/Timeline/surface, Content/inverse words (4074:7402, 2026-10-13). */
 export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
 
-/** Picked, LRT-1: the pill white, its words in the line's Timeline/surface, as his frame draws it. */
+/** Picked, LRT-1: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
 export const HintuanPickedLightRailWayOne: Story = {
-  args: { livery: 'light-rail-way-one', picked: 'h3' },
+  args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04' },
   play: openFold,
 };
 
 /** LRT-2: the rail in Map/Rail/LightRailWayTwo/Timeline/surface, Content/inverse words (4080:4124, 2026-10-13). */
 export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
 
-/** Picked, LRT-2: the pill white, its words in the line's Timeline/surface, as his frame draws it. */
+/** Picked, LRT-2: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
 export const HintuanPickedLightRailWayTwo: Story = {
-  args: { livery: 'light-rail-way-two', picked: 'h3' },
+  args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04' },
   play: openFold,
 };
 
 /** MRT-3: the rail in Map/Rail/MetroRailWayThree/Timeline/surface, Content/primary, dark, words (4080:4241, 2026-10-13). */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
-/** Picked, MRT-3: the pill white, its words in the line's Timeline/surface, as his frame draws it. */
+/** Picked, MRT-3: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
 export const HintuanPickedMetroRailWayThree: Story = {
-  args: { livery: 'metro-rail-way-three', picked: 'h3' },
+  args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
   play: openFold,
 };
 

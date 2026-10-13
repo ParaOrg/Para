@@ -22,8 +22,8 @@ import type { Livery } from '../model/liveries';
  * Map/Rail/<line>/surface and border-primary, the rail and the pressed rows
  * in its Timeline/surface, all three under Route/RouteCardPrimary and the
  * Primary Blob. LRT-1 and LRT-2 write in Content/inverse; MRT-3, on its
- * yellow, in Content/primary — dark words again, under the Primary shadow
- * this time, as his frame draws it, not the Inverse yellow's wore.
+ * yellow, in Content/primary — dark words again, but under the Primary
+ * shadow and Blob his frame draws, not the Inverse ones yellow wore.
  */
 
 export const CARD_SURFACE = {
