@@ -30,6 +30,8 @@ export function useGapResolver(
   },
   setSegments: (next: Segment[]) => void,
 ) {
+  // Named as refs, so they read as the refs they are.
+  const { points: pointsRef, segments: segmentsRef, area: areaRef } = refs;
   /** How many router requests are out. */
   const [snapping, setSnapping] = useState(0);
   const standInRef = useRef(new WeakSet<Segment>());
@@ -37,7 +39,7 @@ export function useGapResolver(
 
   const writeSegments = useCallback(
     (next: Segment[]) => {
-      refs.segments.current = next;
+      segmentsRef.current = next;
       setSegments(next);
       for (const request of requestsRef.current) {
         if (!request.standIns.some((s) => next.includes(s))) {
@@ -46,16 +48,16 @@ export function useGapResolver(
         }
       }
     },
-    [refs.segments, setSegments],
+    [segmentsRef, setSegments],
   );
 
   const writeSegment = useCallback(
     (i: number, seg: Segment) => {
-      const next = [...refs.segments.current];
+      const next = [...segmentsRef.current];
       next[i] = seg;
       writeSegments(next);
     },
-    [refs.segments, writeSegments],
+    [segmentsRef, writeSegments],
   );
 
   /**
@@ -70,12 +72,12 @@ export function useGapResolver(
    */
   const resolveGaps = useCallback(
     async (first: number, modes: SnapMode[]) => {
-      const pts = refs.points.current.slice(first, first + modes.length + 1);
+      const pts = pointsRef.current.slice(first, first + modes.length + 1);
       if (modes.length === 0 || pts.length < modes.length + 1) return;
 
       // A hotspot's edges are never routed: it is an outline, not a path.
-      const routed = modes.map((mode) => mode === 'snapped' && !refs.area.current);
-      const next = [...refs.segments.current];
+      const routed = modes.map((mode) => mode === 'snapped' && !areaRef.current);
+      const next = [...segmentsRef.current];
       const standIns = modes.map((_, k) => {
         if (!routed[k]) {
           next[first + k] = straightSegment(pts[k], pts[k + 1]);
@@ -108,7 +110,7 @@ export function useGapResolver(
           try {
             const answer = await snapSegments(pts.slice(a, b + 2), request.controller.signal);
             answer.forEach((seg, j) => {
-              const at = refs.segments.current.indexOf(request.standIns[j]);
+              const at = segmentsRef.current.indexOf(request.standIns[j]);
               if (at !== -1) writeSegment(at, seg);
             });
           } catch (err) {
@@ -120,7 +122,7 @@ export function useGapResolver(
         }),
       );
     },
-    [refs.points, refs.segments, refs.area, writeSegment, writeSegments],
+    [pointsRef, segmentsRef, areaRef, writeSegment, writeSegments],
   );
 
   /** Whether a segment is a stand-in: drawn straight, the router's answer not in. */
