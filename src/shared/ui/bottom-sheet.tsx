@@ -180,9 +180,12 @@ export function BottomSheet({
     if (next === 'close') onClose();
     else setSnap(next);
   };
-  // Read by the listeners bound once below: today's snap and settle.
+  // Read by the listeners bound once below: today's snap and settle,
+  // written as the render commits, before a finger or a wheel can come.
   const now = useRef({ snap, settle });
-  now.current = { snap, settle };
+  useLayoutEffect(() => {
+    now.current = { snap, settle };
+  });
 
   /** Docked, not floating: the notch is drawn only then. */
   const docked = () => handleRef.current?.offsetParent != null;
