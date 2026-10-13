@@ -7,13 +7,22 @@ const meta = {
   title: 'Features/Studio/CardActions',
   component: CardActions,
   parameters: { layout: 'padded' },
-  // The row as both cards lay their `actions` slot out: `flex gap-2`.
+  // The row as both cards lay their `actions` slot out: `flex gap-2`. The
+  // `phone` parameter puts it in a card over the map at a handset's width
+  // instead, the way hotspot-card.stories.tsx switches its box.
   decorators: [
-    (Story) => (
-      <div className="flex w-[369px] gap-2 bg-surface p-3">
-        <Story />
-      </div>
-    ),
+    (Story, ctx) =>
+      ctx.parameters.phone ? (
+        <div className="@container w-[390px] bg-surface-quaternary p-3">
+          <div className="flex gap-2 rounded-xl bg-surface p-4">
+            <Story />
+          </div>
+        </div>
+      ) : (
+        <div className="flex w-[369px] gap-2 bg-surface p-3">
+          <Story />
+        </div>
+      ),
   ],
   args: {
     editLabel: 'Edit route',
@@ -51,14 +60,4 @@ export const Slot: Story = {
 export const Terminal: Story = { args: { editLabel: 'Edit terminal', onExtend: undefined } };
 
 /** At phone width, inside a card over the map, as the studio shows it on a phone. */
-export const Phone: Story = {
-  decorators: [
-    (Story) => (
-      <div className="@container w-[390px] bg-surface-quaternary p-3">
-        <div className="flex gap-2 rounded-xl bg-surface p-4">
-          <Story />
-        </div>
-      </div>
-    ),
-  ],
-};
+export const Phone: Story = { parameters: { phone: true } };
