@@ -360,6 +360,7 @@ function Workshop({
           onClose={closeAll}
           picked={ride.pickedId}
           pickedMetres={saved.fullIds.has(saved.selected.id) ? ride.rideTo?.metres : undefined}
+          pickedCode={ride.pickedCode}
           onPick={ride.pick}
           onEnd={ride.toEnd}
           endPicked={ride.endPicked}

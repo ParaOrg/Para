@@ -8,7 +8,6 @@ import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { cardLiveries, type Livery } from '../model/liveries';
-import { stationCode } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -90,6 +89,7 @@ export function TripCard({
   onClose,
   picked,
   pickedMetres,
+  pickedCode,
   onPick,
   onEnd,
   endPicked,
@@ -110,6 +110,8 @@ export function TripCard({
   /** The hintuan picked on the timeline (useRideTo), and how far the ride to it runs, when its line reaches it. */
   picked: string | null;
   pickedMetres: number | undefined;
+  /** On a train, the picked station's sign code for its pill (useRideTo's `pickedCode`, the map's label's too); else null. */
+  pickedCode: string | null;
   onPick: (id: string) => void;
   /** The origin's or the destination's row: the whole ride, and that end on the map. */
   onEnd: (end: 'from' | 'to') => void;
@@ -146,7 +148,7 @@ export function TripCard({
       hintuans={timeline.between}
       picked={picked}
       pickedFare={pickedFareFor(direction, pickedMetres, timeline, picked)}
-      pickedCode={pickedCodeFor(direction, timeline, picked)}
+      pickedCode={pickedCode}
       onPick={onPick}
       onEnd={onEnd}
       endPicked={endPicked}
@@ -202,13 +204,6 @@ function pickedFareFor(
     return row ? railFares(direction.route.routeCode, timeline.from?.label, row.label) : undefined;
   }
   return pickedMetres === undefined ? undefined : faresFor(direction.route?.mode, pickedMetres);
-}
-
-/** A train's picked station, its sign code (YL06) for the pill; null for any other route, and a station the table does not know. */
-function pickedCodeFor(direction: Direction, timeline: Timeline, picked: string | null) {
-  const line = railLineOf(direction);
-  const row = line && picked ? timeline.between.find((r) => r.id === picked) : undefined;
-  return line && row ? stationCode(line, row.label) : null;
 }
 
 /** A board as the publish writes it, beside the map's own files. */

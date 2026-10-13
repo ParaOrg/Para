@@ -137,12 +137,12 @@ test("a train's picked station: its code, then the pesos, in the one pill", () =
   const [row] = rows(html);
   assert.match(
     row.inside,
-    /data-testid="trip-hintuan-fare"[^>]*><span data-testid="trip-hintuan-code">YL06<\/span><span aria-hidden="true"> · <\/span><span data-part="pesos">₱20<\/span><\/span>/,
+    /data-testid="trip-hintuan-fare"[^>]*><span data-part="code">YL06<\/span> <span aria-hidden="true">·<\/span> <span data-part="pesos">₱20<\/span><\/span>/,
   );
   // A station the table does not know: the pesos alone, as a jeepney's.
   const alone = rows(render(1, { picked: 'h0', pickedPesos: '₱20', pickedCode: null }))[0];
   assert.match(alone.inside, /data-testid="trip-hintuan-fare"[^>]*>₱20<\/span>/);
-  assert.ok(!alone.inside.includes('trip-hintuan-code'));
+  assert.ok(!alone.inside.includes('data-part="code"'));
 });
 
 test('no hintuans: no rows, no fold, nothing hidden', () => {

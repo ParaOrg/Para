@@ -266,6 +266,7 @@ export function PublicMapApp() {
           // The pesos to a picked hintuan are the full line's: none while
           // only its overview is here.
           pickedMetres={saved.fullIds.has(saved.selected.id) ? ride.rideTo?.metres : undefined}
+          pickedCode={ride.pickedCode}
           onPick={ride.pick}
           onEnd={ride.toEnd}
           endPicked={ride.endPicked}

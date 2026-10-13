@@ -115,9 +115,18 @@ export const endRings = (page) =>
 /** A colour as the page computes it (window.__colour): `var(--card-red-surface)`. */
 export const colourOf = (page, background) => page.evaluate((b) => window.__colour(b), background);
 
-/** The variable the end circles' ring reads for `livery` (livery-card.ts), or the selected blue's for null (EndTitles). */
+/**
+ * The variable the end circles' ring reads for `livery` (livery-card.ts):
+ * a jeepney card's Card/<livery>/surface, a train's its line's
+ * Map/Rail/<line>/surface (2026-10-13), or the selected blue's for null
+ * (EndTitles).
+ */
 export const ringVar = (livery) =>
-  livery ? `var(--card-${livery}-surface)` : 'var(--map-route-line-surface-selected)';
+  !livery
+    ? 'var(--map-route-line-surface-selected)'
+    : /rail-way/.test(livery)
+      ? `var(--map-rail-${livery}-surface)`
+      : `var(--card-${livery}-surface)`;
 
 /** Whether every end circle (endRings) rings in `want`, none paled: one colour, the one asked. */
 export const ringed = (rings, want) =>

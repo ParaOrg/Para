@@ -385,9 +385,9 @@ function TimelineHintuan({
                 >
                   {code ? (
                     <>
-                      <span data-testid="trip-hintuan-code">{code}</span>
-                      <span aria-hidden> · </span>
-                      <span data-part="pesos">{pesos}</span>
+                      <span data-part="code">{code}</span>{' '}
+                      {/* The dot is for the eye; the spaces round it keep "YL06 ₱20" two words to a screen reader. */}
+                      <span aria-hidden>·</span> <span data-part="pesos">{pesos}</span>
                     </>
                   ) : (
                     pesos

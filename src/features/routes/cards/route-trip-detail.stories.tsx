@@ -134,7 +134,7 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   const pill = rows[0].querySelector<HTMLElement>('[data-testid="trip-hintuan-fare"]');
   const pesos = args.pickedFare === FREE ? 'Free' : args.pickedFare?.regular;
   // A train's station code goes before the pesos, in a part of its own.
-  const code = pill?.querySelector('[data-testid="trip-hintuan-code"]')?.textContent ?? null;
+  const code = pill?.querySelector('[data-part="code"]')?.textContent ?? null;
   await expect(code).toBe(args.pickedCode ?? null);
   await expect(pill?.textContent).toBe(code ? `${code} · ${pesos}` : pesos);
   await expect(within(canvasElement).getByTestId('trip-fare').textContent).toBe(pesos);
