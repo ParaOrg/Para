@@ -1,5 +1,5 @@
 import type { LayerSpecification, MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { noop } from '@/shared/utils/noop';
 
@@ -125,9 +125,7 @@ export function useLayerSwitch(
   layers: readonly string[],
   added: boolean,
 ): LayerSwitch {
-  const kept = useRef<LayerSwitch | null>(null);
-  kept.current ??= new LayerSwitch(layers);
-  const sw = kept.current;
+  const [sw] = useState(() => new LayerSwitch(layers));
   const warmed = useRef<MapLibreMap | null>(null);
   useEffect(() => {
     if (!map || !added) return;
