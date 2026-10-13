@@ -122,8 +122,11 @@ const drawn = (state: Partial<Drawing> = {}) =>
 const asFinger = () => {
   const real = window.matchMedia;
   window.matchMedia = (query: string) => {
+    // Each call answers a fresh list, so changing this one touches nothing else.
     const list = real.call(window, query);
-    return query === '(pointer: coarse)' ? Object.create(list, { matches: { value: true } }) : list;
+    return query === '(pointer: coarse)'
+      ? Object.defineProperty(list, 'matches', { value: true })
+      : list;
   };
   return () => {
     window.matchMedia = real;
@@ -199,11 +202,31 @@ export const Keys: Story = {
   },
 };
 
-/** With a panel open the keys belong to it: Enter does nothing here. */
+/**
+ * Lets the toolbar's effects land, so a key pressed after it would reach a
+ * bound listener if there were one.
+ */
+const settled = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+/** With a panel open the keys belong to it: Enter and Ctrl+Z do nothing here. */
 export const KeysOff: Story = {
   args: { keys: false },
   play: async ({ args }) => {
+    await settled();
     await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{Control>}z{/Control}');
+    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.draw.undo).not.toHaveBeenCalled();
+  },
+};
+
+/** Enter on a focused button presses that button, and is not Done (review of 2026-10-03). */
+export const EnterOnAButton: Story = {
+  play: async ({ canvasElement, args }) => {
+    await settled();
+    within(canvasElement).getByRole('button', { name: '↶ Undo' }).focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.draw.undo).toHaveBeenCalledOnce();
     await expect(args.onDone).not.toHaveBeenCalled();
   },
 };
@@ -233,6 +256,22 @@ export const Snapping: Story = {
     const done = within(canvasElement).getByRole('button', { name: '✓ Done' });
     await expect(done).toBeDisabled();
     await expect(done).toHaveAttribute('title', 'Waiting for the router');
+  },
+};
+
+/**
+ * A stand-in still on the line with nothing snapping: Done waits for the
+ * router all the same, without the snapping… note.
+ */
+export const WaitingForTheLine: Story = {
+  args: { draw: drawn({ unresolved: true }) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: '✓ Done' })).toHaveAttribute(
+      'title',
+      'Waiting for the router',
+    );
+    await expect(canvas.queryByText(/snapping/)).toBeNull();
   },
 };
 
@@ -310,6 +349,23 @@ export const ExtendPickASpot: Story = {
   args: { draw: drawing({ picking: { direction: parent, spot: null } }) },
 };
 
+/** Extend from a line whose ends are not known: the buttons say the start and the end. */
+export const ExtendWithoutEnds: Story = {
+  args: {
+    draw: drawing({
+      picking: {
+        direction: parent,
+        spot: { seg: 0, edge: 0, point: points[1], metres: 160 },
+      },
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('keep-start')).toHaveTextContent('Keep the start → here');
+    await expect(canvas.getByTestId('keep-end')).toHaveTextContent('Keep here → the end');
+  },
+};
+
 /** Extend, a spot tapped: keep the part before it or after it, named in travel order. */
 export const ExtendKeepAPart: Story = {
   args: {
@@ -367,6 +423,40 @@ export const ExtendLongNames: Story = {
 export const FingerEmpty: Story = {
   args: { draw: drawing() },
   beforeEach: asFinger,
+};
+
+/** Under a finger, one point placed: the count says what Done still needs. */
+export const FingerOnePoint: Story = {
+  args: { draw: drawing({ controlPoints: [points[0]], line: [points[0]] }) },
+  beforeEach: asFinger,
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText(/add at least 2 points/)).toBeVisible();
+  },
+};
+
+/** Under a finger, a hotspot not yet begun: tap its corners. */
+export const FingerHotspot: Story = {
+  args: { draw: drawing({ area: { kind: 'terminal', hotspotId: null } }) },
+  beforeEach: asFinger,
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText('Tap the corners of the hotspot')).toBeVisible();
+  },
+};
+
+/** Under a finger, ✕ on a hotspot's outline asks about the hotspot. */
+export const FingerConfirmDiscardHotspot: Story = {
+  args: {
+    draw: drawing({
+      area: { kind: 'hintuan', hotspotId: null },
+      controlPoints: [...points, [121.0435, 14.7415]],
+    }),
+  },
+  beforeEach: asFinger,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: '✕' }));
+    await expect(canvas.getByText('Discard this hotspot?')).toBeVisible();
+  },
 };
 
 /** Under a finger, ✕ asks before it throws the drawing away. */

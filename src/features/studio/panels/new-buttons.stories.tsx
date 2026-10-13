@@ -34,7 +34,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The map is there: + New Route draws, + New hotspot opens its menu. */
+/** The map is there: + New Route draws, + New hotspot asks the workshop to toggle its menu. */
 export const Ready: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
@@ -44,6 +44,7 @@ export const Ready: Story = {
     await expect(hotspot).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(hotspot);
     await expect(args.setMenu).toHaveBeenCalledOnce();
+    await expect(args.setMenu).toHaveBeenCalledWith(expect.any(Function));
   },
 };
 
@@ -59,6 +60,16 @@ export const MenuOpen: Story = {
     await userEvent.click(canvas.getByRole('menuitem', { name: /Hintuan/ }));
     await expect(args.setMenu).toHaveBeenCalledWith(false);
     await expect(args.onNewHotspot).toHaveBeenCalledWith('hintuan');
+  },
+};
+
+/** The menu open, Terminal picked: the menu closes and a terminal's outline starts. */
+export const PickTerminal: Story = {
+  args: { menu: true },
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(within(canvasElement).getByRole('menuitem', { name: /Terminal/ }));
+    await expect(args.setMenu).toHaveBeenCalledWith(false);
+    await expect(args.onNewHotspot).toHaveBeenCalledWith('terminal');
   },
 };
 

@@ -6,10 +6,18 @@ import { AuthDialogs } from './auth-dialogs';
 const meta = {
   title: 'Features/Studio/AuthDialogs',
   component: AuthDialogs,
-  // The dialogs dim the map they sit over, so give them a map-sized box.
+  // The dialogs dim the map they sit over, so give them a map-sized box. The
+  // `phone` parameter gives it a handset's width, as card-actions.stories.tsx
+  // does.
   decorators: [
-    (Story) => (
-      <div className="relative h-160 bg-surface-quaternary">
+    (Story, ctx) => (
+      <div
+        className={
+          ctx.parameters.phone
+            ? 'relative h-160 w-[390px] bg-surface-quaternary'
+            : 'relative h-160 bg-surface-quaternary'
+        }
+      >
         <Story />
       </div>
     ),
@@ -64,3 +72,6 @@ export const ChangingPassword: Story = {
     await expect(canvas.getByText('Signed in as owner@example.com.')).toBeVisible();
   },
 };
+
+/** At phone width, signing in. */
+export const Phone: Story = { args: { signingIn: true }, parameters: { phone: true } };

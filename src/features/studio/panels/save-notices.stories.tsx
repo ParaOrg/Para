@@ -148,6 +148,16 @@ export const SameEndsUnnamedDirection: Story = {
   },
 };
 
+/** The same, with that direction drawn already. */
+export const SameEndsDrawnUnnamedDirection: Story = {
+  args: { sameEnds: { name: 'Tala – SM Fairview', drawn: true }, direction: '' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('save-same-ends')).toHaveTextContent(
+      'already has this direction drawn',
+    );
+  },
+};
+
 /** No hotspots saved at all: a route is named after its ends, so draw those first. */
 export const NoHotspots: Story = {
   args: { hotspotsCount: 0 },

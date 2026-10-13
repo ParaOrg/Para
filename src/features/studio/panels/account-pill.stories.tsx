@@ -66,6 +66,17 @@ export const NoHotspots: Story = {
   args: { routes: 3, hotspots: 0 },
 };
 
+/**
+ * Hotspots saved but no routes: the counts hang on the route count, so the
+ * hotspots go unsaid too.
+ */
+export const HotspotsNoRoutes: Story = {
+  args: { routes: 0, hotspots: 5 },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByText(/hotspot/)).toBeNull();
+  },
+};
+
 /** One of each: the singulars. */
 export const OneOfEach: Story = {
   args: { routes: 1, hotspots: 1 },

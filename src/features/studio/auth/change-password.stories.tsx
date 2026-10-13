@@ -3,8 +3,11 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { ChangePassword } from './change-password';
 
-/** Fills the three fields; each new password long enough to pass the form's own check. */
-async function fill(
+/**
+ * Fills the three fields and presses Save password. Callers pass passwords of
+ * 12 characters or more, the form's own minimum, so the browser lets it submit.
+ */
+async function submitPasswords(
   canvas: ReturnType<typeof within>,
   current: string,
   next: string,
@@ -57,7 +60,7 @@ export const Cancelled: Story = {
 export const NewPasswordsDiffer: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await fill(canvas, 'Old-password-1', 'New-password-22', 'New-password-23');
+    await submitPasswords(canvas, 'Old-password-1', 'New-password-22', 'New-password-23');
     await expect(canvas.getByText('The two new passwords do not match.')).toBeVisible();
   },
 };
@@ -66,7 +69,7 @@ export const NewPasswordsDiffer: Story = {
 export const SameAsCurrent: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await fill(canvas, 'Same-password-1', 'Same-password-1', 'Same-password-1');
+    await submitPasswords(canvas, 'Same-password-1', 'Same-password-1', 'Same-password-1');
     await expect(
       canvas.getByText('The new password is the same as the current one.'),
     ).toBeVisible();
