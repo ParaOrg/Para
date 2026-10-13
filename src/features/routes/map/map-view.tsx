@@ -331,7 +331,7 @@ export function MapView({
           ?.classList.remove('maplibregl-compact-show');
 
       let isLoaded = false;
-      map.on('load', () => {
+      map.on('load', (e) => {
         isLoaded = true;
         setLoaded(true);
         setError(null);
@@ -345,7 +345,7 @@ export function MapView({
         // it is read here and nowhere else, for the timer and the suites to
         // see what a tap compiles (the cheap-phone plan, Step 0, 2026-10-04).
         if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
-          const shown = map!;
+          const shown = e.target;
           const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
           w.__map = shown;
           w.__programs = () =>
@@ -353,7 +353,7 @@ export function MapView({
         }
         setReady(map);
         // The public map's was handed over at its style's load (above).
-        if (!openOn) onReadyRef.current?.(map!);
+        if (!openOn) onReadyRef.current?.(e.target);
       });
 
       map.on('error', (e) => {

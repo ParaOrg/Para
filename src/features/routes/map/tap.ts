@@ -191,7 +191,9 @@ export function resolveTap(t: TapTargets): TapOutcome {
   const hotspots = t.hotspotIds.length;
   if (routes + hotspots === 0) return { kind: 'none' };
   if (routes === 1 && hotspots === 0) return { kind: 'route', routeIds: t.routeIds };
-  if (hotspots === 1 && routes === 0) return { kind: 'hotspot', hotspotId: t.hotspotIds[0]! };
+  const [onlyHotspotId] = t.hotspotIds;
+  if (hotspots === 1 && routes === 0 && onlyHotspotId !== undefined)
+    return { kind: 'hotspot', hotspotId: onlyHotspotId };
   return {
     kind: 'several',
     routeIds: t.routeIds,

@@ -61,7 +61,7 @@ export function useRouteTaps<T extends Direction>(
         const routeId = under[0]?.routeId;
         const open =
           under.length === 1
-            ? under[0]!
+            ? under[0]
             : (under.find((v) => read.shown.current.includes(v.id)) ??
               directionToOpen(all.filter((v) => v.routeId === routeId)));
         set.selectedId(open?.id ?? null);
