@@ -52,6 +52,7 @@ export function ResetPassword({ onDone }: { onDone: () => void }) {
           <input
             type="password"
             required
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
             autoFocus={!coarse}
             minLength={12}
             autoComplete="new-password"

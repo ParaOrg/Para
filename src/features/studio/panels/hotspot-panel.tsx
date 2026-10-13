@@ -219,6 +219,7 @@ export function HotspotPanel({
           Ground name <span className="text-neutral-400">(as written on the ground)</span>
           <input
             required
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
             autoFocus={!coarse}
             value={name}
             onChange={(e) => setName(e.target.value)}
