@@ -41,7 +41,9 @@ if (forwardTo) {
   // supabase-js out of this page's bundle, which scripts/checks/check-build.mjs proves.
   registerServiceWorker();
   listenForInstallOffer();
-  createRoot(document.getElementById('root')!).render(
+  const root = document.getElementById('root');
+  if (!root) throw new Error('index.html has no #root to draw the map into');
+  createRoot(root).render(
     <StrictMode>
       <PublicMapApp />
     </StrictMode>,

@@ -154,7 +154,7 @@ export function inATemper({ now, taps }: Pick<Signals, 'now' | 'taps'>): boolean
 export function moodAt(s: Signals): Mood {
   const { now, fix, arrivedAt } = s;
   if (inATemper(s)) return 'angry';
-  if (reacting(s)) return s.reaction!.mood;
+  if (s.reaction && reacting(s)) return s.reaction.mood;
   if (arrivedAt !== null && now >= arrivedAt && now - arrivedAt < HAPPY_FOR_MS) return 'happy';
   if (fix && fix.speed >= MOVING_FROM_MPS) return 'happy';
   return 'neutral';

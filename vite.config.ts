@@ -94,7 +94,7 @@ export function stylesheetsBeforeScripts(html: string): string {
       new RegExp(`\\n?[ \\t]*${sheet.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`),
       '',
     );
-  const indent = /[ \t]*$/.exec(html.slice(0, script))![0];
+  const indent = /[ \t]*$/.exec(html.slice(0, script))?.[0] ?? '';
   return (
     html.slice(0, script) + sheets.map((s) => `${s}\n${indent}`).join('') + rest + html.slice(head)
   );
