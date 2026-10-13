@@ -247,9 +247,12 @@ export function TimelineDot({ rail, selected = false, isTucked = true }: Timelin
 const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
 
 /**
- * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
- * Black; the whole row is its button. Picked, its dot is TimelineDot's
- * Selected one.
+ * Figma's TimelineTop: the dot the rail leaves from, and the origin at
+ * Figma's text-xl/extrabold, 20/28 (24/32 until the owner's 3778:3183 was
+ * read for its type, 2026-10-13), set in SN Pro Black, the app's weight
+ * wherever Figma says ExtraBold: no 800 face is loaded, and the owner kept
+ * it so that day; the whole row is its button. Picked, its dot is
+ * TimelineDot's Selected one.
  */
 function TimelineTop({
   rail,
@@ -279,7 +282,7 @@ function TimelineTop({
         </span>
         <span className="flex min-w-0 flex-1 flex-col justify-center pb-2 pl-3">
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
-          <span className="text-2xl/8 font-black sheet-low:line-clamp-1">{routeOrigin}</span>
+          <span className="text-xl/7 font-black sheet-low:line-clamp-1">{routeOrigin}</span>
         </span>
       </button>
     </li>
