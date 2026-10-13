@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@/styles/global.css';
-import { registerServiceWorker } from '@/features/published-map';
+import { listenForInstallOffer, registerServiceWorker } from '@/features/published-map';
 
 import { PublicMapApp } from './public-map-app.tsx';
 
@@ -40,6 +40,7 @@ if (forwardTo) {
   // (src/commuter/mapFile.ts) and never talk to the database. That keeps
   // supabase-js out of this page's bundle, which scripts/checks/check-build.mjs proves.
   registerServiceWorker();
+  listenForInstallOffer();
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <PublicMapApp />

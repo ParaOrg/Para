@@ -49,6 +49,7 @@ export const CARD_COLOURS = {
   'Card/violet/surface': '#7008e7', // violet/700
   'Card/rose/surface': '#c70036', // rose/700
   'Card/fuchsia/surface': '#a800b7', // fuchsia/700
+  'Card/pink/surface': '#c6005c', // pink/700
 } as const satisfies Record<`Card/${string}/surface`, `#${string}`>;
 
 /**
@@ -65,6 +66,7 @@ export const CARD_PALE_COLOURS = {
   'Card/violet/surface-pale': '#ddd6ff', // violet/200
   'Card/rose/surface-pale': '#ffccd3', // rose/200
   'Card/fuchsia/surface-pale': '#f6cfff', // fuchsia/200
+  'Card/pink/surface-pale': '#fccee8', // pink/200
 } as const satisfies Record<`Card/${string}/surface-pale`, `#${string}`>;
 
 /**

@@ -82,6 +82,9 @@ export const Orange: Story = { args: { livery: 'orange' } };
 /** Fuchsia. */
 export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
 
+/** Pink. */
+export const Pink: Story = { args: { livery: 'pink' } };
+
 /** A hintuan picked: its dot a white ring round the rail's colour, its name Black, its pill with the pesos to there. Opened, since the fold keeps it. */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: openFold };
 
@@ -97,6 +100,12 @@ export const HintuanPickedOrange: Story = {
 /** Picked, fuchsia: the pill white, as red's. */
 export const HintuanPickedFuchsia: Story = {
   args: { livery: 'fuchsia', picked: 'h3' },
+  play: openFold,
+};
+
+/** Picked, pink: the pill white, as fuchsia's. */
+export const HintuanPickedPink: Story = {
+  args: { livery: 'pink', picked: 'h3' },
   play: openFold,
 };
 

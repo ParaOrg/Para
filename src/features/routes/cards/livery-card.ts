@@ -8,11 +8,12 @@ import type { Livery } from '../model/liveries';
  * 2026-09-29), so a trip opens in the colours of the card it was picked from.
  *
  * Red and orange write in Content/inverse under Route/RouteCardPrimary.
- * Violet, rose and fuchsia (2026-09-30) write the same white words under
- * Route/RouteCardInverse, its Blob brighter and softened 2px more — the
- * yellow card's shadow and Blob, drawn for its dark words (Content/primary;
- * his yellow trip frames, 3762:3546, wore the red card's, and the card's own
- * were used here so the card and the trip it opens matched). Mist, dark
+ * Violet, rose and fuchsia (2026-09-30), and pink (4071:7014, 2026-10-13),
+ * write the same white words under Route/RouteCardInverse, its Blob
+ * brighter and softened 2px more — the yellow card's shadow and Blob, drawn
+ * for its dark words (Content/primary; his yellow trip frames, 3762:3546,
+ * wore the red card's, and the card's own were used here so the card and
+ * the trip it opens matched). Mist, dark
  * words like yellow's, left the set on 2026-09-30; yellow itself on
  * 2026-10-12 ("it's not good on the eyes"), so every livery's words are
  * white now.
@@ -24,6 +25,7 @@ export const CARD_SURFACE = {
   violet: 'bg-card-violet-surface border-card-violet-border-primary',
   rose: 'bg-card-rose-surface border-card-rose-border-primary',
   fuchsia: 'bg-card-fuchsia-surface border-card-fuchsia-border-primary',
+  pink: 'bg-card-pink-surface border-card-pink-border-primary',
 } satisfies Record<Livery, string>;
 
 /**
@@ -41,6 +43,7 @@ export const CARD_SURFACE_PALE = {
   violet: 'bg-card-violet-surface-pale',
   rose: 'bg-card-rose-surface-pale',
   fuchsia: 'bg-card-fuchsia-surface-pale',
+  pink: 'bg-card-pink-surface-pale',
 } satisfies Record<Livery, string>;
 
 export const CARD_TEXT = {
@@ -49,6 +52,7 @@ export const CARD_TEXT = {
   violet: 'text-content-inverse',
   rose: 'text-content-inverse',
   fuchsia: 'text-content-inverse',
+  pink: 'text-content-inverse',
 } satisfies Record<Livery, string>;
 
 // Drawn over the card, as Figma lays it: above the Blob and the words.
@@ -58,6 +62,7 @@ export const CARD_SHADOW = {
   violet: 'shadow-route-card-inverse',
   rose: 'shadow-route-card-inverse',
   fuchsia: 'shadow-route-card-inverse',
+  pink: 'shadow-route-card-inverse',
 } satisfies Record<Livery, string>;
 
 // A RouteCard's State=Selected (2026-09-29): pressed in, and nothing else
@@ -68,6 +73,7 @@ export const CARD_SHADOW_SELECTED = {
   violet: 'shadow-route-card-inverse-selected',
   rose: 'shadow-route-card-inverse-selected',
   fuchsia: 'shadow-route-card-inverse-selected',
+  pink: 'shadow-route-card-inverse-selected',
 } satisfies Record<Livery, string>;
 
 // Figma's Blob, Primary and Inverse: a white glow over the card's top,
@@ -89,6 +95,7 @@ export const CARD_BLOB = {
   violet: { src: blobInverse, className: 'blur-[2px]' },
   rose: { src: blobInverse, className: 'blur-[2px]' },
   fuchsia: { src: blobInverse, className: 'blur-[2px]' },
+  pink: { src: blobInverse, className: 'blur-[2px]' },
 } satisfies Record<Livery, { src: string; className: string }>;
 
 // Pixels, all three, like the glow inside the file: the rem scale
@@ -103,6 +110,7 @@ export const TIMELINE_SURFACE = {
   violet: 'bg-card-violet-timeline-surface',
   rose: 'bg-card-rose-timeline-surface',
   fuchsia: 'bg-card-fuchsia-timeline-surface',
+  pink: 'bg-card-pink-timeline-surface',
 } satisfies Record<Livery, string>;
 
 /**
@@ -119,6 +127,7 @@ export const ROW_PRESSED = {
   violet: 'active:bg-card-violet-timeline-surface [-webkit-tap-highlight-color:transparent]',
   rose: 'active:bg-card-rose-timeline-surface [-webkit-tap-highlight-color:transparent]',
   fuchsia: 'active:bg-card-fuchsia-timeline-surface [-webkit-tap-highlight-color:transparent]',
+  pink: 'active:bg-card-pink-timeline-surface [-webkit-tap-highlight-color:transparent]',
 } satisfies Record<Livery, string>;
 
 /**
@@ -126,7 +135,7 @@ export const ROW_PRESSED = {
  * State=Selected, 3769:2847): the card's own colour on Content/inverse, the
  * words being white on every livery (on Content/primary where they were
  * dark: his yellow card, 3785:4462, until yellow left on 2026-10-12).
- * Orange follows red: he drew no orange trip; nor violet, rose and fuchsia.
+ * Orange follows red: he drew no orange trip; nor violet, rose, fuchsia and pink.
  */
 export const TIMELINE_PILL = {
   red: 'bg-content-inverse text-card-red-surface',
@@ -134,4 +143,5 @@ export const TIMELINE_PILL = {
   violet: 'bg-content-inverse text-card-violet-surface',
   rose: 'bg-content-inverse text-card-rose-surface',
   fuchsia: 'bg-content-inverse text-card-fuchsia-surface',
+  pink: 'bg-content-inverse text-card-pink-surface',
 } satisfies Record<Livery, string>;

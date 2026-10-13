@@ -135,6 +135,11 @@ function TokensPage() {
         />
         <Swatch box="bg-surface-error" token="…/surface-error" cls="bg-surface-error" />
         <Swatch box="bg-surface-success" token="…/surface-success" cls="bg-surface-success" />
+        <Swatch
+          box="bg-surface-transparent"
+          token="…/surface-transparent"
+          cls="bg-surface-transparent"
+        />
       </Group>
 
       <Group title="Card — the jeepney liveries">
@@ -212,6 +217,21 @@ function TokensPage() {
           box="bg-card-fuchsia-timeline-surface"
           token="Card/fuchsia/Timeline"
           cls="bg-card-fuchsia-timeline-surface"
+        />
+        <Swatch
+          box="bg-card-pink-surface border-3 border-card-pink-border-primary"
+          token="Card/pink"
+          cls="bg-card-pink-surface"
+        />
+        <Swatch
+          box="bg-card-pink-surface-pale"
+          token="Card/pink/surface-pale"
+          cls="bg-card-pink-surface-pale"
+        />
+        <Swatch
+          box="bg-card-pink-timeline-surface"
+          token="Card/pink/Timeline"
+          cls="bg-card-pink-timeline-surface"
         />
       </Group>
 

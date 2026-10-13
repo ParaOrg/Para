@@ -93,7 +93,7 @@ function cardToken(figma) {
 }
 
 test('each card colour is the primitive its Card/<livery>/surface aliases', () => {
-  assert.ok(Object.keys(CARD_COLOURS).length === 5, 'the five liveries');
+  assert.ok(Object.keys(CARD_COLOURS).length === 6, 'the six liveries');
   for (const [figma, hex] of Object.entries(CARD_COLOURS)) {
     const { primitive, want } = cardToken(figma);
     assert.ok(

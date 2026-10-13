@@ -32,20 +32,26 @@ type Story = StoryObj<typeof meta>;
  */
 export const Special: Story = {};
 
+/** Special's surface and shadows in SN Pro Medium: the quieter of a pair, beside a Primary (3732:2512). */
+export const Secondary: Story = { args: { variant: 'secondary' } };
+
 /** Brand blue, SN Pro Medium, bevelled. Hover lights it from the top; press darkens and sinks it. */
 export const Primary: Story = { args: { variant: 'primary' } };
 
 /** The destructive red, on Primary's shadows. Press darkens to Error/surface-secondary. */
 export const Error: Story = { args: { variant: 'error' } };
 
-/** Small exists only for Special — on the other variants it is a compile error. */
+/** Small exists only for Special and Secondary — on the other variants it is a compile error. */
 export const SpecialSmall: Story = { args: { variant: 'special', size: 'small' } };
+
+export const SecondarySmall: Story = { args: { variant: 'secondary', size: 'small' } };
 
 /** The set's opacity/60, communicated to the browser too, not just greyed. */
 export const Disabled: Story = {
   render: () => (
     <div className="flex gap-3">
       <Button variant="special" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
+      <Button variant="secondary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
       <Button variant="primary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
       <Button variant="error" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
     </div>
@@ -62,6 +68,7 @@ export const AllVariants: Story = {
   render: () => (
     <div className="flex items-center gap-3">
       <Button variant="special" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
+      <Button variant="secondary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
       <Button variant="primary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
       <Button variant="error" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
     </div>
