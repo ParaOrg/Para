@@ -72,7 +72,8 @@ export function useSavedRoutes<T extends Direction>(
     () =>
       lines.size === 0
         ? rows
-        : rows.map((v) => {
+        : // eslint-disable-next-line react-hooks/refs -- a cache of identities, not state: written and read only here, the same row and line always give the same object
+          rows.map((v) => {
             const line = lines.get(v.id);
             if (!line) return v;
             const was = withLine.current.get(v.id);
@@ -222,9 +223,11 @@ export function useSavedRoutes<T extends Direction>(
     [selectedId, directions, highlight, showing],
   );
   const litKept = useRef(litNow);
+  // eslint-disable-next-line react-hooks/refs -- the last array kept while it holds the same; state would cost the whole app a second render each time it changes
   const litDirections = (litKept.current = steady(litKept.current, litNow));
   const litIdsNow = useMemo(() => litDirections.map((v) => v.id), [litDirections]);
   const litIdsKept = useRef(litIdsNow);
+  // eslint-disable-next-line react-hooks/refs -- kept as litDirections is, above
   const lit = (litIdsKept.current = steady(litIdsKept.current, litIdsNow));
 
   // ----------------------------------------------------------------- layers
