@@ -330,7 +330,7 @@ export const Tablet: Story = { parameters: { frame: 'tablet' } };
 /**
  * A hintuan picked, red — the Timeline set's Selected row on the owner's
  * card (3769:2895), recoloured 2026-09-30 (3778:3183): Amparo's dot a white
- * ring round the rail's red, no longer green, its name Black, and
+ * ring round the rail's red, no longer green, its name ExtraBold, and
  * a white pill with the pesos from Tala to there in the card's red. Opened,
  * since the fold keeps it.
  */
@@ -539,22 +539,28 @@ export const SheetLow: Story = {
   },
 };
 
-/** Low with a long origin: one line of it, cut short (3814:3976). */
+/**
+ * An origin too long for one line on a phone at 20/28 (the origin's size
+ * since 2026-10-13; LongNames' fits on one now).
+ */
+const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
+
+/** Low with a long origin: one line of it, 28 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
-  args: LongNames.args,
+  args: { ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement, 2);
-    const origin = within(ctx.canvasElement).getByText(LongNames.args!.routeOrigin!);
-    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(32));
+    const origin = within(ctx.canvasElement).getByText(longOrigin);
+    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
   },
 };
 
 /** Middle with a long origin: all of it, on as many lines as it takes. */
 export const SheetMiddleLongName: Story = {
-  args: LongNames.args,
+  args: { ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
-    const origin = within(ctx.canvasElement).getByText(LongNames.args!.routeOrigin!);
-    await expect(origin.getBoundingClientRect().height).toBeGreaterThan(32);
+    const origin = within(ctx.canvasElement).getByText(longOrigin);
+    await expect(origin.getBoundingClientRect().height).toBeGreaterThan(28);
   },
 };
 

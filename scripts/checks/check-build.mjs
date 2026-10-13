@@ -37,7 +37,8 @@
 //    the worker's navigation denylist; a new version waits to be asked.
 //
 // 5. Weight (stage 6 of the clean-up, 2026-09-29): the fonts are under
-//    120 kB together, and what both pages share — MapLibre, React and the
+//    135 kB together (120 until SN Pro ExtraBold joined, the owner's call of
+//    2026-10-13), and what both pages share — MapLibre, React and the
 //    shared code — is under 400 kB gzipped, so neither creeps back
 //    unnoticed. The fonts are precached. Since the cheap-phone plan's steps
 //    12 and 14 (2026-10-05) that is four chunks, named in vite.config.ts,
@@ -431,7 +432,7 @@ if (existsSync(swPath)) {
 }
 
 // 5. Weight.
-const FONTS_MAX_KB = 120;
+const FONTS_MAX_KB = 135;
 const assetFiles = readdirSync(join(dist, 'assets'));
 const fontBytes = assetFiles
   .filter((f) => f.endsWith('.woff2'))

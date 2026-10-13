@@ -508,11 +508,14 @@ function TokensPage() {
           <p className="font-sn-pro text-lg font-bold text-content-primary">
             SN Pro Bold — Tala to SM Fairview
           </p>
+          <p className="font-sn-pro text-lg font-extrabold text-content-primary">
+            SN Pro ExtraBold — Novaliches, a trip&rsquo;s origin
+          </p>
           <p className="font-sn-pro text-lg font-black text-content-primary">
             SN Pro Black — Novaliches (Bayan)
           </p>
           <p className="mt-1 font-mono text-[11px] text-content-quaternary">
-            font-sn-pro · font-medium · font-semibold · font-bold · font-black
+            font-sn-pro · font-medium · font-semibold · font-bold · font-extrabold · font-black
           </p>
         </div>
       </Group>
