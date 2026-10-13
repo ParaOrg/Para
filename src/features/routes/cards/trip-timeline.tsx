@@ -485,7 +485,9 @@ function TimelineBottomEndRoute({
           <span aria-hidden className="shrink-0 p-1 *:size-5">
             <EndIcon />
           </span>
-          {/* Bold, Figma's text-xl/bold (the owner, 2026-09-30: "bold"). */}
+          {/* Bold, Figma's text-xl/bold (the owner, 2026-09-30: "bold"). The
+              Timeline set (3716:1894) draws it Medium, ExtraBold picked; the
+              owner kept the trip frame's Bold on 2026-10-13. */}
           <span className="min-w-0 flex-1 text-xl/7 font-bold">{routeDirection}</span>
         </span>
       </button>

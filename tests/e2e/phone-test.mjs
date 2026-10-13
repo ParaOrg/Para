@@ -1157,7 +1157,8 @@ const tripChecks = async () => {
   }
 
   // A hintuan's row picks it (the owner's Timeline State=Selected,
-  // 2026-09-29): that one row Selected, its name Black, a pill with the pesos
+  // 2026-09-29): that one row Selected, its name ExtraBold (Black until
+  // 2026-10-13), a pill with the pesos
   // from where the trip leaves to there — the app's own sums over rideCut's
   // metres on the published line — in the card's own colours swapped; the
   // tiles keep the whole ride; the route left whole on the map, and a circle
@@ -1225,7 +1226,6 @@ const tripChecks = async () => {
       (b) => getComputedStyle(b.lastElementChild.firstElementChild).fontWeight,
     );
     check(
-      // ExtraBold since the owner's RouteTripDetail of 2026-10-13 (Black, 900, until then).
       '  a hintuan row picks it: that one row Selected, its name ExtraBold',
       (await isPicked()) &&
         selectedRows === 1 &&
