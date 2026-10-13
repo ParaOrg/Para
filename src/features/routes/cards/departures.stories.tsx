@@ -96,7 +96,7 @@ export const NotMappedYet: Story = {
 /** No routes through here yet: nothing to list. */
 export const Empty: Story = { args: { routes: [] } };
 
-/** Names too long for the row are cut with an ellipsis; the place above them wraps. */
+/** Names too long for the row are cut with an ellipsis; the place above them wraps. Its way back is a slot (below). */
 export const LongNames: Story = {
   args: {
     routes: [
@@ -117,3 +117,6 @@ export const LongNames: Story = {
     ],
   },
 };
+
+/** The way back of the same, still a slot: a long "Not mapped yet" row, cut as the drawn one is. */
+export const LongNamesNotMappedYet: Story = { args: { ...LongNames.args, back: true } };

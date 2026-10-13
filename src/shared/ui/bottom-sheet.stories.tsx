@@ -56,7 +56,7 @@ const meta = {
   // The sheet fills the map it sits on, so give it a map-sized box marked
   // `@container`, as the apps' roots are, and `data-dock-host`, as the page
   // is. The `phone` parameter shrinks the box to a handset, where it docks
-  // along the bottom; wider, it floats.
+  // along the bottom; otherwise it is 1024 wide, where it floats (`@float:`).
   decorators: [
     (Story, ctx) => (
       <div
@@ -64,7 +64,7 @@ const meta = {
         className={
           ctx.parameters.phone
             ? '@container relative h-[700px] w-[390px] overflow-clip bg-surface-quaternary'
-            : '@container relative h-[40rem] overflow-clip bg-surface-quaternary'
+            : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary'
         }
       >
         <Story />
@@ -97,6 +97,19 @@ export const Low: Story = {
 export const Max: Story = {
   render: (args) => <Keeping {...args} startsAt="max" />,
   args: { height: { snap: 'max', onSnap: fn() }, children: <Rows count={30} /> },
+};
+
+/** Let go between Middle and Max: it stays where it was left, its body still, and the handle says so. */
+export const Free: Story = {
+  render: (args) => <Keeping {...args} startsAt={0.75} />,
+  args: { height: { snap: 0.75, onSnap: fn() } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName(
+      'Sheet raised past half the screen. Raise to full screen',
+    );
+  },
 };
 
 /** The handle from the keyboard goes round: Middle → Max → Low → Middle, and says where it is. */

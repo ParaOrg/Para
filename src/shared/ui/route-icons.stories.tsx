@@ -1,34 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ComponentType } from 'react';
 
-import {
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  CircleArrowRightIcon,
-  CloseIcon,
-  EndIcon,
-  HintuanIcon,
-  InformationIcon,
-  JeepIcon,
-  ReloadIcon,
-  StartIcon,
-  TerminalIcon,
-} from './route-icons';
+import * as routeIcons from './route-icons';
 
-/** Every icon the file draws, by the name it is exported as. */
-const ICONS: readonly { name: string; Icon: ComponentType }[] = [
-  { name: 'JeepIcon', Icon: JeepIcon },
-  { name: 'CloseIcon', Icon: CloseIcon },
-  { name: 'ChevronLeftIcon', Icon: ChevronLeftIcon },
-  { name: 'ChevronDownIcon', Icon: ChevronDownIcon },
-  { name: 'CircleArrowRightIcon', Icon: CircleArrowRightIcon },
-  { name: 'ReloadIcon', Icon: ReloadIcon },
-  { name: 'TerminalIcon', Icon: TerminalIcon },
-  { name: 'HintuanIcon', Icon: HintuanIcon },
-  { name: 'InformationIcon', Icon: InformationIcon },
-  { name: 'StartIcon', Icon: StartIcon },
-  { name: 'EndIcon', Icon: EndIcon },
-];
+/** Every icon the file draws, by the name it is exported as: read off the module, so a new one shows here too. */
+const ICONS: readonly { name: string; Icon: ComponentType }[] = Object.entries(routeIcons).map(
+  ([name, Icon]) => ({ name, Icon }),
+);
 
 type Ground = 'primary' | 'inverse';
 /** The two inks Figma draws them in, each on a ground it is read against. */

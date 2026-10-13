@@ -109,14 +109,14 @@ const meta = {
   render: (args) => <Keeping {...args} />,
   // A map-sized box, marked @container as the apps' roots are: the trip docks
   // along its bottom on a phone, and sits in the top-left corner from 1024
-  // wide. The `phone` parameter shrinks the box to a handset.
+  // wide, as this box is. The `phone` parameter shrinks it to a handset.
   decorators: [
     (Story, ctx) => (
       <div
         className={
           ctx.parameters.phone
             ? '@container relative h-[852px] w-[393px] overflow-clip bg-surface-quaternary'
-            : '@container relative h-[40rem] overflow-clip bg-surface-quaternary'
+            : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary'
         }
       >
         <Story />
@@ -173,11 +173,7 @@ export const TurnsRound: Story = {
 export const TheWayBack: Story = {
   args: {
     direction: novalichesToTala,
-    timeline: timelineOf(
-      'Novaliches',
-      'Tala',
-      [...talaTimeline.between.map((r) => r.label)].reverse(),
-    ),
+    timeline: timelineOf('Novaliches', 'Tala', talaTimeline.between.map((r) => r.label).reverse()),
   },
 };
 
@@ -187,6 +183,7 @@ export const NoWayBack: Story = {
   play: async ({ args, canvasElement }) => {
     const turn = within(canvasElement).getByTestId('card-switch');
     await expect(turn).toBeDisabled();
+    await userEvent.click(turn);
     await expect(args.onSwitch).not.toHaveBeenCalled();
   },
 };
@@ -252,6 +249,30 @@ export const Ferry: Story = {
   },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('trip-note')).toHaveTextContent('MMDA');
+  },
+};
+
+/**
+ * A sample board, not a real one: a picture standing in for the owner's
+ * photographs, so its colours are the picture's, not the page's.
+ */
+const sampleBoard = (name: string) =>
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="98" height="40" viewBox="0 0 98 40"><rect width="98" height="40" fill="black"/>` +
+      `<text x="49" y="25" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="12" fill="yellow">${name}</text></svg>`,
+  );
+
+/** The direction's boards, by file name: `signboardUrl` says where each is read (the studio's bucket here; the published map's folder by default). */
+export const Signboards: Story = {
+  args: {
+    direction: { ...talaToNovaliches, signboards: ['NOVA', 'TALA'] },
+    signboardUrl: sampleBoard,
+  },
+  play: async ({ canvasElement }) => {
+    const boards = within(canvasElement).getAllByTestId('trip-signboard');
+    await expect(boards).toHaveLength(2);
+    await expect(boards[0]).toHaveAttribute('src', sampleBoard('NOVA'));
   },
 };
 
