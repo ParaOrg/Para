@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { ChevronDownIcon, CircleArrowRightIcon } from '@/shared/ui/route-icons';
+import { ChevronDownIcon, EndIcon } from '@/shared/ui/route-icons';
 
 import {
   BLOB_PLACE,
@@ -82,7 +82,7 @@ export interface TripTimelineProps {
  *
  * A hintuan's row picks it (his Timeline State=Selected, 3769:2847,
  * 2026-09-29): its dot turns to a white ring round a centre in the card's
- * rail colour (green until 2026-09-30; TimelineDot), its name black-weight,
+ * rail colour (green until 2026-09-30; TimelineDot), its name ExtraBold,
  * and a pill beside it holds the pesos from where the trip leaves to there,
  * the same the fare tile under the card shows, Regular or Discounted as it is
  * turned (it said "Calculated Fare" for part of 2026-09-30),
@@ -257,8 +257,9 @@ const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
 
 /**
  * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
- * Black; the whole row is its button. Picked, its dot is TimelineDot's
- * Selected one.
+ * ExtraBold 20/28 (the owner's RouteTripDetail of 2026-10-13, 3778:3183;
+ * Black 24/32 until then); the whole row is its button. Picked, its dot is
+ * TimelineDot's Selected one.
  */
 function TimelineTop({
   rail,
@@ -288,7 +289,7 @@ function TimelineTop({
         </span>
         <span className="flex min-w-0 flex-1 flex-col justify-center pb-2 pl-3">
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
-          <span className="text-2xl/8 font-black sheet-low:line-clamp-1">{routeOrigin}</span>
+          <span className="text-xl/7 font-extrabold sheet-low:line-clamp-1">{routeOrigin}</span>
         </span>
       </button>
     </li>
@@ -309,7 +310,8 @@ const ROW_FOLDED = 'invisible grid-rows-[0fr] duration-base ease-exit';
 
 /**
  * Figma's TimelineHintuan: a hintuan on the way, its dot on the rail; the
- * whole row is its button. Selected (State=Selected), its name is Black and
+ * whole row is its button. Selected (State=Selected), its name is ExtraBold
+ * (Black until 2026-10-13) and
  * the pill of its pesos sits 8 after it, 16 in from the card's edge.
  */
 function TimelineHintuan({
@@ -370,7 +372,7 @@ function TimelineHintuan({
             <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3">
               <span
                 className={
-                  'min-w-0 flex-1 text-base/6 ' + (selected ? 'font-black' : 'font-medium')
+                  'min-w-0 flex-1 text-base/6 ' + (selected ? 'font-extrabold' : 'font-medium')
                 }
               >
                 {label}
@@ -449,8 +451,9 @@ function TimelineDisclosure({
 
 /**
  * Figma's TimelineBottomEndRoute: the rail's last dot, and where the trip
- * goes, behind the list's arrow; the whole row is its button. Picked, its
- * dot is TimelineDot's Selected one.
+ * goes, behind End's circled E (the owner's RouteTripDetail of 2026-10-13,
+ * 3778:3183, as the map's end label has it; the list's arrow until then);
+ * the whole row is its button. Picked, its dot is TimelineDot's Selected one.
  */
 function TimelineBottomEndRoute({
   rail,
@@ -480,7 +483,7 @@ function TimelineBottomEndRoute({
         </span>
         <span className="flex min-w-0 flex-1 items-start gap-1 pt-3 pl-2">
           <span aria-hidden className="shrink-0 p-1 *:size-5">
-            <CircleArrowRightIcon />
+            <EndIcon />
           </span>
           {/* Bold, Figma's text-xl/bold (the owner, 2026-09-30: "bold"). */}
           <span className="min-w-0 flex-1 text-xl/7 font-bold">{routeDirection}</span>

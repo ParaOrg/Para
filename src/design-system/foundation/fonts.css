@@ -2,14 +2,16 @@
  * PalimosPoDesignSystem type: the two families the Figma variables name
  * (font/family/SNPRO, font/family/Cubao), from the owner's files of
  * 2026-09-28. Only the faces designs use are wired — SN Pro 400–700, its
- * Black 900 (the route cards' titles, the same day), and Cubao Free
- * Regular — SN Pro as woff2 subset to Latin, Cubao whole, its kerning a
- * table the subsetter drops (fonts/subset.sh: 113 kB for all six, from
- * 290 kB, 2026-09-29); the full sets, italics, and Cubao's
+ * ExtraBold 800 (a trip's origin and its picked hintuan, the owner's
+ * RouteTripDetail of 2026-10-13), its Black 900 (the route cards' titles,
+ * 2026-09-28), and Cubao Free Regular — SN Pro as woff2 subset to Latin,
+ * Cubao whole, its kerning a table the subsetter drops (fonts/subset.sh:
+ * 129 kB for all seven; 113 kB for six, from 290 kB, on 2026-09-29); the
+ * full sets, italics, and Cubao's
  * narrow and wide cuts sit beside them in fonts/, unwired until a design
  * asks. `swap` because the app is a map first: text in a fallback beats
  * text held back. The worker precaches them, so offline text keeps its
- * face; check-build.mjs holds them under 120 kB together.
+ * face; check-build.mjs holds them under 135 kB together.
  */
 
 @font-face {
@@ -37,6 +39,13 @@
   font-family: 'SN Pro';
   src: url('./fonts/SNPro/SNPro-Bold.woff2') format('woff2');
   font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SN Pro';
+  src: url('./fonts/SNPro/SNPro-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
   font-style: normal;
   font-display: swap;
 }

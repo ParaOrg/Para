@@ -1225,10 +1225,11 @@ const tripChecks = async () => {
       (b) => getComputedStyle(b.lastElementChild.firstElementChild).fontWeight,
     );
     check(
-      '  a hintuan row picks it: that one row Selected, its name Black',
+      // ExtraBold since the owner's RouteTripDetail of 2026-10-13 (Black, 900, until then).
+      '  a hintuan row picks it: that one row Selected, its name ExtraBold',
       (await isPicked()) &&
         selectedRows === 1 &&
-        weight === '900' &&
+        weight === '800' &&
         (await pickButton.getAttribute('aria-pressed')) === 'true',
       `${selectedRows} Selected, weight ${weight}`,
     );
