@@ -102,6 +102,11 @@
   --surface-quaternary: var(--color-neutral-200);
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
+  /* Black at 60%: what dims the page under a dialog laid over it, the
+     install prompt's (3732:2512, 2026-10-13). Figma keeps the 60 as the
+     variable's opacity (opacity/60); here it is in the value, since the
+     token means the see-through colour itself. */
+  --surface-transparent: color-mix(in srgb, var(--color-black) 60%, transparent);
 
   /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia and pink
      (pink came on 2026-10-13, RouteCard 4071:7014); yellow left on 2026-10-12 ("it's not
@@ -206,6 +211,7 @@
   --color-surface-quaternary: var(--surface-quaternary);
   --color-surface-error: var(--surface-error);
   --color-surface-success: var(--surface-success);
+  --color-surface-transparent: var(--surface-transparent);
 
   --color-card-red-surface: var(--card-red-surface);
   --color-card-red-surface-pale: var(--card-red-surface-pale);

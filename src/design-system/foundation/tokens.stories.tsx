@@ -135,6 +135,11 @@ function TokensPage() {
         />
         <Swatch box="bg-surface-error" token="…/surface-error" cls="bg-surface-error" />
         <Swatch box="bg-surface-success" token="…/surface-success" cls="bg-surface-success" />
+        <Swatch
+          box="bg-surface-transparent"
+          token="…/surface-transparent"
+          cls="bg-surface-transparent"
+        />
       </Group>
 
       <Group title="Card — the jeepney liveries">

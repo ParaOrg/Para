@@ -5,7 +5,9 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
  * (node 3668:2812): a pill in three voices. Special is the jeepney one —
  * SN Pro Bold on the quiet surface with an edge and a soft shadow (Cubao
  * Free in the set, all capitals; SN Pro since the owner's "Papunta at
- * Pabalik", 2026-10-01, so its word reads as written); Primary
+ * Pabalik", 2026-10-01, so its word reads as written); Secondary is
+ * Special's surface and shadows in SN Pro Medium, the quiet one of a pair
+ * (the install prompt's "I'll do it later", 3732:2512, 2026-10-13); Primary
  * speaks brand blue and Error the destructive red, both in SN Pro Medium.
  * Each state wears the set's effect style of the same name (tokens.css):
  * Rest, Hover (drawn 2026-09-28 — until then it matched Default), Pressed
@@ -20,12 +22,13 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 type Size = 'base' | 'small';
 
 /**
- * Small exists only for Special in the set — the types keep code from
- * getting ahead of the design: `size="small"` on primary or error is a
- * compile error until the owner designs it.
+ * Small exists only for Special and Secondary in the set — the types keep
+ * code from getting ahead of the design: `size="small"` on primary or error
+ * is a compile error until the owner designs it.
  */
 type VariantAndSize =
-  { variant: 'special'; size?: Size } | { variant: 'primary' | 'error'; size?: 'base' };
+  | { variant: 'special' | 'secondary'; size?: Size }
+  | { variant: 'primary' | 'error'; size?: 'base' };
 
 type Props = Omit<
   ComponentPropsWithoutRef<'button'>,
@@ -44,6 +47,10 @@ const VARIANT = {
     'bg-surface-tertiary font-sn-pro font-bold text-content-primary shadow-special-button-rest ' +
     'enabled:hover:shadow-special-button-hover ' +
     'enabled:active:bg-surface-quaternary enabled:active:shadow-special-button-pressed',
+  secondary:
+    'bg-surface-tertiary font-sn-pro font-medium text-content-primary shadow-special-button-rest ' +
+    'enabled:hover:shadow-special-button-hover ' +
+    'enabled:active:bg-surface-quaternary enabled:active:shadow-special-button-pressed',
   primary:
     'bg-brand-surface font-sn-pro font-medium text-content-inverse shadow-primary-button-rest ' +
     'enabled:hover:shadow-primary-button-hover ' +
@@ -54,7 +61,7 @@ const VARIANT = {
     'enabled:active:bg-error-surface-secondary enabled:active:shadow-primary-button-pressed',
 } satisfies Record<Props['variant'], string>;
 
-// The weight is each voice's own (VARIANT): Small is only Special's, bold.
+// The weight is each voice's own (VARIANT): Small is Special's, bold, and Secondary's, medium.
 const SIZE = {
   base: 'gap-1 px-4 py-2 text-base/6',
   small: 'gap-1 px-3 py-1.5 text-sm/5',

@@ -5,12 +5,15 @@ import { VisitorLocation, useGazeHush } from '@/features/locator';
 import {
   MAP_FILE_TOO_NEW,
   fetchLine,
+  InstallPrompt,
+  installApp,
   loadDirectionsFromFile,
   loadHotspotsFromFile,
   openingDirections,
   reloadForNewerApp,
   reloadToUpdate,
   useNeedRefresh,
+  useInstallOffer,
   Notices,
   useMapAge,
   useOffline,
@@ -102,6 +105,12 @@ export function PublicMapApp() {
   useStatusBarColour(map);
   const age = useMapAge(saved.directions);
   const needRefresh = useNeedRefresh();
+  // The install prompt, on an Android phone that has not installed Para Po,
+  // once the routes are on the map; "later" hides it until the next visit
+  // (the owner's picks, 2026-10-13).
+  const canInstall = useInstallOffer();
+  const [installLater, setInstallLater] = useState(false);
+  const showInstall = canInstall && !installLater && saved.directions.length > 0;
 
   const { tripLivery, litLivery, height } = cards;
 
@@ -233,6 +242,9 @@ export function PublicMapApp() {
         needRefresh={needRefresh}
         onUpdate={reloadToUpdate}
       />
+      {showInstall && (
+        <InstallPrompt onInstall={() => void installApp()} onLater={() => setInstallLater(true)} />
+      )}
 
       {saved.selected && tripLivery && timeline && (
         // One card for as long as a trip is open: SWITCH, and another
