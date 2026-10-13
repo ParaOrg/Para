@@ -575,6 +575,7 @@ export function useDrawing(
     const d = readDraft();
     if (!d) return;
     const a = d.area ?? null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the draft is read from storage once per page, together with the router requests for its pending gaps below; lazy initial state would split the two and change useDraftSaving's first run
     setArea(a);
     areaRef.current = a;
     const saved = d.segments ?? [];
