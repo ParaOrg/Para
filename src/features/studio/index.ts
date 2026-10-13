@@ -19,6 +19,7 @@ export { AccountPill } from './panels/account-pill';
 export { CardActions } from './panels/card-actions';
 export { HotspotPanel } from './panels/hotspot-panel';
 export { NewButtons } from './panels/new-buttons';
+export { RouteExportPanel } from './panels/route-export-panel';
 export { RouteFacts } from './panels/route-facts';
 export { SavePanel } from './panels/save-panel';
 export { SignboardEditor } from './panels/signboard-editor';
