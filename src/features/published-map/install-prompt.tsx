@@ -38,12 +38,15 @@ export function InstallPrompt({ onInstall, onLater }: InstallPromptProps) {
   // focus back where it was, as the cards do: an unmounted dialog does not.
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog || dialog.open) return;
+    if (!dialog) return;
     const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog.showModal();
     dialog.focus();
     return () => {
-      // Only when the focus is still ours to give back.
+      // Closed first, so the page behind can take the focus again (and
+      // StrictMode's rehearsal opens it afresh). Only when the focus is still
+      // ours to give back.
+      if (dialog.open) dialog.close();
       const now = document.activeElement;
       if ((now === null || now === document.body || dialog.contains(now)) && before?.isConnected)
         before.focus({ preventScroll: true });
