@@ -239,6 +239,10 @@ export function TimelineDot({ rail, selected = false, isTucked = true }: Timelin
  * padding of its own: the 16 above the first row and below the last are
  * theirs (the owner's RouteTripDetail, 3778:3183, 2026-10-01), so a row
  * Pressed fills to the card's edge, the rail starting under that padding.
+ * Every row is 16 in from both sides, its names 8 above and below (10 until
+ * the owner's spacing of 2026-10-13, 3778:3183), the destination 12 down
+ * (16 before), and the rail's last stretch 16 tall, Figma's TimelineStick
+ * Bottom (20 before).
  */
 const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
 
@@ -267,13 +271,13 @@ function TimelineTop({
         type="button"
         aria-pressed={selected}
         onClick={onTap}
-        className={'flex w-full items-center pt-4 pl-4 text-left ' + pressed}
+        className={'flex w-full items-center px-4 pt-4 text-left ' + pressed}
       >
         <span aria-hidden className={STICK}>
           <TimelineDot rail={rail} selected={selected} />
           <span className={'min-h-px w-2 flex-1 ' + rail} />
         </span>
-        <span className="flex min-w-0 flex-1 flex-col justify-center pb-2.5 pl-3">
+        <span className="flex min-w-0 flex-1 flex-col justify-center pb-2 pl-3">
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span className="text-2xl/8 font-black sheet-low:line-clamp-1">{routeOrigin}</span>
         </span>
@@ -351,7 +355,7 @@ function TimelineHintuan({
               <TimelineDot rail={rail} selected={selected} />
               <span className={'min-h-px w-2 flex-1 ' + rail} />
             </span>
-            <span className="flex min-w-0 flex-1 items-center gap-2 py-2.5 pl-3">
+            <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3">
               <span
                 className={
                   'min-w-0 flex-1 text-base/6 ' + (selected ? 'font-black' : 'font-medium')
@@ -400,12 +404,12 @@ function TimelineDisclosure({
         data-testid="trip-fold"
         aria-expanded={open}
         onClick={onToggle}
-        className={'flex w-full items-start pl-4 text-left ' + pressed}
+        className={'flex w-full items-start px-4 text-left ' + pressed}
       >
         <span aria-hidden className={STICK}>
           <span className={'min-h-px w-2 flex-1 ' + rail} />
         </span>
-        <span className="flex min-w-0 flex-1 items-center gap-2 py-2.5 pl-3 text-sm/5 font-normal whitespace-nowrap">
+        <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3 text-sm/5 font-normal whitespace-nowrap">
           {/* One chevron, turned: Figma's chevron-down, and its chevron-up opened. */}
           <span
             aria-hidden
@@ -448,13 +452,13 @@ function TimelineBottomEndRoute({
         type="button"
         aria-pressed={selected}
         onClick={onTap}
-        className={'flex w-full items-center pb-4 pl-4 text-left ' + pressed}
+        className={'flex w-full items-center px-4 pb-4 text-left ' + pressed}
       >
         <span aria-hidden className={STICK}>
-          <span className={'-mb-0.5 h-5 w-2 shrink-0 ' + rail} />
+          <span className={'-mb-0.5 h-4 w-2 shrink-0 ' + rail} />
           <TimelineDot rail={rail} selected={selected} />
         </span>
-        <span className="flex min-w-0 flex-1 items-start gap-1 pt-4 pl-2">
+        <span className="flex min-w-0 flex-1 items-start gap-1 pt-3 pl-2">
           <span aria-hidden className="shrink-0 p-1 *:size-5">
             <CircleArrowRightIcon />
           </span>

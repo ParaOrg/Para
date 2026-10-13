@@ -207,10 +207,10 @@ export function RouteTripDetail({
           ))}
         </ul>
       )}
-      {/* 16 under the card, or under the signboards' strip (the owner's RouteTripDetail of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). */}
+      {/* 16 under the card, or under the signboards' strip (the owner's RouteTripDetail of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). The tiles 8 apart (his spacing of 2026-10-13: 3778:3183, its row 3886:6278; 12 before). */}
       <div
         data-testid="trip-tiles"
-        className="flex w-full gap-3 bg-surface px-3 py-4 text-center font-sn-pro"
+        className="flex w-full gap-2 bg-surface px-3 py-4 text-center font-sn-pro"
       >
         <div className={TILE}>
           <span data-testid="trip-km" className={FIGURE}>
