@@ -23,6 +23,18 @@ export const MAP_COLOURS = {
   'Map/HotspotsCard/Terminal/border-primary': '#024a70', // sky/900
   'Map/LocatorIndicatorOverlay/surface': '#8ec5ff', // blue/300, at 15%
   'Map/LocatorIndicatorOverlay/border': '#155dfc', // blue/600, at 75%
+  'Map/Rail/LightRailWayOne/surface': '#1d7739', // light-rail-way-one/600
+  'Map/Rail/LightRailWayOne/surface-pale': '#b7f5ca', // light-rail-way-one/200
+  'Map/Rail/LightRailWayOne/border-primary': '#12612a', // light-rail-way-one/700
+  'Map/Rail/LightRailWayOne/Timeline/surface': '#0c5924', // light-rail-way-one/800
+  'Map/Rail/LightRailWayTwo/surface': '#4a3a6b', // light-rail-way-two/600
+  'Map/Rail/LightRailWayTwo/surface-pale': '#d0b9ff', // light-rail-way-two/200
+  'Map/Rail/LightRailWayTwo/border-primary': '#382859', // light-rail-way-two/700
+  'Map/Rail/LightRailWayTwo/Timeline/surface': '#372b4f', // light-rail-way-two/800
+  'Map/Rail/MetroRailWayThree/surface': '#e2b709', // metro-rail-way-three/600
+  'Map/Rail/MetroRailWayThree/surface-pale': '#fae385', // metro-rail-way-three/200
+  'Map/Rail/MetroRailWayThree/border-primary': '#ac8b0b', // metro-rail-way-three/700
+  'Map/Rail/MetroRailWayThree/Timeline/surface': '#967906', // metro-rail-way-three/800
 } as const satisfies Record<`Map/${string}`, `#${string}`>;
 
 /**

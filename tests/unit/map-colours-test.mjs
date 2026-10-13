@@ -148,6 +148,16 @@ test('each hex is the primitive its token aliases', () => {
   }
 });
 
+test('each train line has the four colours a livery has', () => {
+  // Map/Rail/<line>/… (2026-10-13): a train route wears its line's colour as
+  // a jeep's wears its card's, so each line needs every role a Card/<livery> has.
+  for (const line of ['LightRailWayOne', 'LightRailWayTwo', 'MetroRailWayThree']) {
+    for (const role of ['surface', 'surface-pale', 'border-primary', 'Timeline/surface']) {
+      assert.ok(`Map/Rail/${line}/${role}` in MAP_COLOURS, `Map/Rail/${line}/${role}`);
+    }
+  }
+});
+
 // Every colour the map paints comes from map-colours.ts (stage 9 of the
 // clean-up): the Map/… tokens, the cards', and MAP_PAINT for those Figma does
 // not name yet. A colour written in the map's code itself — a quoted hex or

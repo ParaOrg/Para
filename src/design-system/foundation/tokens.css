@@ -70,6 +70,24 @@
   --color-taupe-800: #2b2422;
   --color-taupe-900: #1d1816;
   --color-taupe-950: #0c0a09;
+
+  /* Primitive: the train lines' own colours (2026-10-13), one family a line,
+     only the four steps its Map/Rail/… semantics use: 200 the pale, 600 the
+     surface, 700 the border, 800 the timeline. */
+  --color-light-rail-way-one-200: #b7f5ca;
+  --color-light-rail-way-one-600: #1d7739;
+  --color-light-rail-way-one-700: #12612a;
+  --color-light-rail-way-one-800: #0c5924;
+
+  --color-light-rail-way-two-200: #d0b9ff;
+  --color-light-rail-way-two-600: #4a3a6b;
+  --color-light-rail-way-two-700: #382859;
+  --color-light-rail-way-two-800: #372b4f;
+
+  --color-metro-rail-way-three-200: #fae385;
+  --color-metro-rail-way-three-600: #e2b709;
+  --color-metro-rail-way-three-700: #ac8b0b;
+  --color-metro-rail-way-three-800: #967906;
 }
 
 /*
@@ -185,6 +203,22 @@
   /* Its circle's hairline, at 75%, and the beam's colour (3870:5247, the
      owner's second and third passes, 2026-10-01; blue/800 at first). */
   --map-locator-indicator-overlay-border: var(--color-blue-600);
+  /* The train lines, each in its own colour (2026-10-13): LRT-1, LRT-2 and
+     MRT-3 as Figma names them, LightRailWayOne… The owner's RouteCards for
+     them (4074:7402, 4080:4124, 4080:4241) wear surface and border-primary,
+     as a livery's card does. */
+  --map-rail-light-rail-way-one-surface: var(--color-light-rail-way-one-600);
+  --map-rail-light-rail-way-one-surface-pale: var(--color-light-rail-way-one-200);
+  --map-rail-light-rail-way-one-border-primary: var(--color-light-rail-way-one-700);
+  --map-rail-light-rail-way-one-timeline-surface: var(--color-light-rail-way-one-800);
+  --map-rail-light-rail-way-two-surface: var(--color-light-rail-way-two-600);
+  --map-rail-light-rail-way-two-surface-pale: var(--color-light-rail-way-two-200);
+  --map-rail-light-rail-way-two-border-primary: var(--color-light-rail-way-two-700);
+  --map-rail-light-rail-way-two-timeline-surface: var(--color-light-rail-way-two-800);
+  --map-rail-metro-rail-way-three-surface: var(--color-metro-rail-way-three-600);
+  --map-rail-metro-rail-way-three-surface-pale: var(--color-metro-rail-way-three-200);
+  --map-rail-metro-rail-way-three-border-primary: var(--color-metro-rail-way-three-700);
+  --map-rail-metro-rail-way-three-timeline-surface: var(--color-metro-rail-way-three-800);
 }
 
 /* The semantics as utilities: text-content-primary, bg-surface, border-border-primary… */
@@ -268,6 +302,32 @@
   );
   --color-map-locator-indicator-overlay-surface: var(--map-locator-indicator-overlay-surface);
   --color-map-locator-indicator-overlay-border: var(--map-locator-indicator-overlay-border);
+  --color-map-rail-light-rail-way-one-surface: var(--map-rail-light-rail-way-one-surface);
+  --color-map-rail-light-rail-way-one-surface-pale: var(--map-rail-light-rail-way-one-surface-pale);
+  --color-map-rail-light-rail-way-one-border-primary: var(
+    --map-rail-light-rail-way-one-border-primary
+  );
+  --color-map-rail-light-rail-way-one-timeline-surface: var(
+    --map-rail-light-rail-way-one-timeline-surface
+  );
+  --color-map-rail-light-rail-way-two-surface: var(--map-rail-light-rail-way-two-surface);
+  --color-map-rail-light-rail-way-two-surface-pale: var(--map-rail-light-rail-way-two-surface-pale);
+  --color-map-rail-light-rail-way-two-border-primary: var(
+    --map-rail-light-rail-way-two-border-primary
+  );
+  --color-map-rail-light-rail-way-two-timeline-surface: var(
+    --map-rail-light-rail-way-two-timeline-surface
+  );
+  --color-map-rail-metro-rail-way-three-surface: var(--map-rail-metro-rail-way-three-surface);
+  --color-map-rail-metro-rail-way-three-surface-pale: var(
+    --map-rail-metro-rail-way-three-surface-pale
+  );
+  --color-map-rail-metro-rail-way-three-border-primary: var(
+    --map-rail-metro-rail-way-three-border-primary
+  );
+  --color-map-rail-metro-rail-way-three-timeline-surface: var(
+    --map-rail-metro-rail-way-three-timeline-surface
+  );
 }
 
 /*

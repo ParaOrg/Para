@@ -334,6 +334,54 @@ function TokensPage() {
         />
       </Group>
 
+      <Group title="Map — the train lines, LRT-1, LRT-2 and MRT-3 (in map-colours.ts, for the map to paint)">
+        <Swatch
+          box="bg-map-rail-light-rail-way-one-surface border-3 border-map-rail-light-rail-way-one-border-primary"
+          token="Map/Rail/LightRailWayOne"
+          cls="bg-map-rail-light-rail-way-one-surface"
+        />
+        <Swatch
+          box="bg-map-rail-light-rail-way-one-surface-pale"
+          token="…/LightRailWayOne/surface-pale"
+          cls="bg-map-rail-light-rail-way-one-surface-pale"
+        />
+        <Swatch
+          box="bg-map-rail-light-rail-way-one-timeline-surface"
+          token="…/LightRailWayOne/Timeline"
+          cls="bg-map-rail-light-rail-way-one-timeline-surface"
+        />
+        <Swatch
+          box="bg-map-rail-light-rail-way-two-surface border-3 border-map-rail-light-rail-way-two-border-primary"
+          token="Map/Rail/LightRailWayTwo"
+          cls="bg-map-rail-light-rail-way-two-surface"
+        />
+        <Swatch
+          box="bg-map-rail-light-rail-way-two-surface-pale"
+          token="…/LightRailWayTwo/surface-pale"
+          cls="bg-map-rail-light-rail-way-two-surface-pale"
+        />
+        <Swatch
+          box="bg-map-rail-light-rail-way-two-timeline-surface"
+          token="…/LightRailWayTwo/Timeline"
+          cls="bg-map-rail-light-rail-way-two-timeline-surface"
+        />
+        <Swatch
+          box="bg-map-rail-metro-rail-way-three-surface border-3 border-map-rail-metro-rail-way-three-border-primary"
+          token="Map/Rail/MetroRailWayThree"
+          cls="bg-map-rail-metro-rail-way-three-surface"
+        />
+        <Swatch
+          box="bg-map-rail-metro-rail-way-three-surface-pale"
+          token="…/MetroRailWayThree/surface-pale"
+          cls="bg-map-rail-metro-rail-way-three-surface-pale"
+        />
+        <Swatch
+          box="bg-map-rail-metro-rail-way-three-timeline-surface"
+          token="…/MetroRailWayThree/Timeline"
+          cls="bg-map-rail-metro-rail-way-three-timeline-surface"
+        />
+      </Group>
+
       <Group title="Motion — hover a row to play it">
         {/* Classes written out whole: Tailwind cannot see a built name. */}
         <div className="w-full rounded-lg border border-border-primary bg-surface p-4">
@@ -534,6 +582,33 @@ function TokensPage() {
               { step: '800', cls: 'bg-taupe-800' },
               { step: '900', cls: 'bg-taupe-900' },
               { step: '950', cls: 'bg-taupe-950' },
+            ]}
+          />
+          <Ramp
+            name="light-rail-way-one"
+            boxes={[
+              { step: '200', cls: 'bg-light-rail-way-one-200' },
+              { step: '600', cls: 'bg-light-rail-way-one-600' },
+              { step: '700', cls: 'bg-light-rail-way-one-700' },
+              { step: '800', cls: 'bg-light-rail-way-one-800' },
+            ]}
+          />
+          <Ramp
+            name="light-rail-way-two"
+            boxes={[
+              { step: '200', cls: 'bg-light-rail-way-two-200' },
+              { step: '600', cls: 'bg-light-rail-way-two-600' },
+              { step: '700', cls: 'bg-light-rail-way-two-700' },
+              { step: '800', cls: 'bg-light-rail-way-two-800' },
+            ]}
+          />
+          <Ramp
+            name="metro-rail-way-three"
+            boxes={[
+              { step: '200', cls: 'bg-metro-rail-way-three-200' },
+              { step: '600', cls: 'bg-metro-rail-way-three-600' },
+              { step: '700', cls: 'bg-metro-rail-way-three-700' },
+              { step: '800', cls: 'bg-metro-rail-way-three-800' },
             ]}
           />
           <Ramp
