@@ -28,7 +28,7 @@ import {
   hiddenHotspotFilters,
   hotspotsData,
 } from '../../src/features/routes/map/saved-hotspots-layers.ts';
-import { directionLine } from '../../src/features/routes/model/routes.ts';
+import { directionLine, isRailLine } from '../../src/features/routes/model/routes.ts';
 import { hotspotRing } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
 import { addPassStretches } from '../../src/features/routes/geo/pass-stretches.ts';
@@ -304,7 +304,12 @@ const index = JSON.parse(
 const rows = index.variants.map(({ overview, ...v }) => ({ ...v, shape: overview ?? null }));
 const stops = index.stops;
 
-/** What the routes' effect laid out before 2026-10-04, word for word. */
+/**
+ * What the routes' effect laid out before 2026-10-04, word for word, with
+ * the one property added since: `line`, the train line a route runs on, ''
+ * for every other, which picks the resting layer that draws it (a train's
+ * pale, the owner's ask of 2026-10-13).
+ */
 const routesBefore = (rows) => ({
   type: 'FeatureCollection',
   features: rows
@@ -317,6 +322,7 @@ const routesBefore = (rows) => ({
         routeId: v.routeId,
         name: v.route?.name ?? '',
         mode: v.route?.mode ?? 'jeepney',
+        line: isRailLine(v.route?.routeCode) ? v.route.routeCode : '',
       },
       geometry: { type: 'LineString', coordinates: line },
     })),

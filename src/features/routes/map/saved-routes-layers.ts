@@ -7,11 +7,18 @@ import { useLayerSwitch, type LayerSwitch } from './layer-switch';
 import { LAYERS, applyHidden, firstLayerOfType, layOutOnce } from './layers';
 import { CASING_EXTRA, litWidth, roadWidth } from './line-style';
 import { ROUTES_HIT_LAYER } from './tap';
-import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
+import {
+  directionLine,
+  railLineOf,
+  type LineStringGeoJSON,
+  type Direction,
+  type RailLine,
+} from '../model/routes';
 
 /*
- * The saved directions on the map: their source, their five layers, and
- * what lights them. Split from useSavedRoutes.ts, 2026-09-29.
+ * The saved directions on the map: their source, their layers (five, and
+ * a resting one for each train line since 2026-10-13), and what lights
+ * them. Split from useSavedRoutes.ts, 2026-09-29.
  */
 
 const SRC = 'saved-routes';
@@ -25,6 +32,42 @@ const SELECTED = LAYERS.routesLit;
 /** The two that draw the lit directions only, switched off while none is (layerSwitch.ts). */
 const LIT_LAYERS = [SELECTED_CASING, SELECTED] as const;
 const HIT = ROUTES_HIT_LAYER;
+
+/**
+ * A train line at rest, in its own line's pale, Map/Rail/<line>/surface-pale,
+ * where every jeepney line rests in the light blue (the owner's ask of
+ * 2026-10-13, looking at the map at rest). A layer a line, each one colour
+ * and a filter set once: one data-driven line-color would give the resting
+ * line a GL program of its own, which the casing, the ride's rest and the
+ * warm-up share with it now (gl-programs-test). Lit, a train's line is drawn
+ * over its pale as every lit line is, in its card's colour (useLitLineColour).
+ */
+const RAIL_AT_REST = {
+  'LRT-1': {
+    id: 'saved-routes-rail-lrt-1',
+    colour: MAP_COLOURS['Map/Rail/LightRailWayOne/surface-pale'],
+  },
+  'LRT-2': {
+    id: 'saved-routes-rail-lrt-2',
+    colour: MAP_COLOURS['Map/Rail/LightRailWayTwo/surface-pale'],
+  },
+  'MRT-3': {
+    id: 'saved-routes-rail-mrt-3',
+    colour: MAP_COLOURS['Map/Rail/MetroRailWayThree/surface-pale'],
+  },
+} satisfies Record<RailLine, { id: string; colour: string }>;
+const RAIL_LAYERS = Object.values(RAIL_AT_REST).map((l) => l.id);
+/** The resting lines' layers, the light blue's and each train line's: what a query for the lines on screen asks. */
+export const RESTING_LAYERS = [ROUTES_LINE, ...RAIL_LAYERS];
+
+/** Which features each resting layer draws, by the train line a feature's route runs on ('' for none). */
+const restsOn = (line: RailLine | '') => ['==', ['get', 'line'], line] as const;
+const RESTING_FILTER: Record<string, ReturnType<typeof restsOn>> = {
+  [ROUTES_LINE]: restsOn(''),
+  ...Object.fromEntries(
+    (Object.keys(RAIL_AT_REST) as RailLine[]).map((line) => [RAIL_AT_REST[line].id, restsOn(line)]),
+  ),
+};
 
 /**
  * Two looks, the owner's of 2026-09-29, and no opacity: every direction
@@ -118,6 +161,8 @@ export function routesData(rows: readonly Direction[]) {
           routeId: v.routeId,
           name: v.route?.name ?? '',
           mode: v.route?.mode ?? 'jeepney',
+          // The train line it runs on, '' for every other route: which resting layer draws it.
+          line: railLineOf(v) ?? '',
         },
         geometry: { type: 'LineString' as const, coordinates: line },
       })),
@@ -144,7 +189,7 @@ export function unpatched(
 }
 
 /**
- * The saved directions' source, laid out from `rows`, and its five layers,
+ * The saved directions' source, laid out from `rows`, and its layers,
  * added to `map` under the basemap's first label: what useSavedRoutesLayers
  * adds once a map is there, apart so a unit check can read it
  * (map-sources-test).
@@ -180,6 +225,7 @@ export function addSavedRoutes(
       type: 'line',
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
+      filter: RESTING_FILTER[LINE] as never,
       paint: {
         'line-color': MAP_COLOURS['Map/RouteLine/surface-default'],
         'line-width': roadWidth(0),
@@ -187,6 +233,18 @@ export function addSavedRoutes(
     },
     before,
   );
+  for (const { id, colour } of Object.values(RAIL_AT_REST))
+    map.addLayer(
+      {
+        id,
+        type: 'line',
+        source: SRC,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        filter: RESTING_FILTER[id] as never,
+        paint: { 'line-color': colour, 'line-width': roadWidth(0) },
+      },
+      before,
+    );
   // The lit directions — the one chosen, the Selected card's, or else
   // everything a list or a hotspot's card shows — drawn once more above the
   // rest, in the selected blue (or a card's, useLitLineColour): over a
@@ -361,8 +419,10 @@ export function useSavedRoutesLayers(
     if (!map || !map.getLayer(LINE)) return;
     applyHidden(hiddenNow, hiddenDirectionId, (hidden) => {
       const filter = ['!=', ['get', 'id'], hidden] as const;
-      for (const id of [CASING, LINE, SELECTED_CASING, SELECTED, HIT])
-        map.setFilter(id, filter as never);
+      for (const id of [CASING, SELECTED_CASING, SELECTED, HIT]) map.setFilter(id, filter as never);
+      // A resting layer keeps its own filter, the line it draws, with the hidden one taken out.
+      for (const id of RESTING_LAYERS)
+        map.setFilter(id, ['all', RESTING_FILTER[id], filter] as never);
     });
   }, [map, hiddenDirectionId]);
 
