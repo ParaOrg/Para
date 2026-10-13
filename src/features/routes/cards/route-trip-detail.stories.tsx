@@ -657,11 +657,13 @@ export const ManySignboards: Story = {
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByTestId('trip-signboards');
     const boards = within(canvasElement).getAllByTestId('trip-signboard');
-    await waitFor(() =>
-      expect(boards.at(-1)!.getBoundingClientRect().right).toBeLessThanOrEqual(
+    await waitFor(() => {
+      const last = boards.at(-1);
+      if (!last) throw new Error('The trip shows no signboard.');
+      return expect(last.getBoundingClientRect().right).toBeLessThanOrEqual(
         row.getBoundingClientRect().right,
-      ),
-    );
+      );
+    });
     await expect(
       new Set(boards.map((b) => Math.round(b.getBoundingClientRect().top))).size,
     ).toBeGreaterThan(1);
