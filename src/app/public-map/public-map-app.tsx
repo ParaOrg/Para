@@ -118,16 +118,13 @@ export function PublicMapApp() {
   // not at each render of the page (the cheap-phone plan, step 15,
   // 2026-10-05): they read nothing else (timeline-test).
   const trip = saved.selected;
+  const { hotspotsAlong } = hotspots;
   const timeline = useMemo(
     () =>
       trip
-        ? routeTimeline(
-            trip,
-            hotspots.hotspots,
-            hotspots.hotspotsAlong(trip.id, directionLine(trip)),
-          )
+        ? routeTimeline(trip, hotspots.hotspots, hotspotsAlong(trip.id, directionLine(trip)))
         : null,
-    [trip, hotspots.hotspots, hotspots.hotspotsAlong],
+    [trip, hotspots.hotspots, hotspotsAlong],
   );
 
   return (
