@@ -147,14 +147,22 @@ export function useSavedRoutes<T extends Direction>(
   // The full lines asked for, and those whose read failed.
   const requestedRef = useRef(new Set<string>());
   const failedRef = useRef(new Set<string>());
-  const drawingRef = useRef(opts.drawing ?? false);
-  drawingRef.current = opts.drawing ?? false;
-  // A chooser left open when drawing starts would come back, stale, after it.
+  // Kept from an effect declared before the routes' fit below, which reads it.
+  const isDrawing = opts.drawing ?? false;
+  const drawingRef = useRef(isDrawing);
   useEffect(() => {
-    if (!opts.drawing) return;
-    setCandidates([]);
-    setHighlight(null);
-  }, [opts.drawing]);
+    drawingRef.current = isDrawing;
+  }, [isDrawing]);
+  // A chooser left open when drawing starts would come back, stale, after
+  // it: let go in the render drawing starts (the last value kept to tell).
+  const [wasDrawing, setWasDrawing] = useState(isDrawing);
+  if (wasDrawing !== isDrawing) {
+    setWasDrawing(isDrawing);
+    if (isDrawing) {
+      setCandidates([]);
+      setHighlight(null);
+    }
+  }
 
   // The click handler is bound once; this is how it reads today's directions.
   const byId = useRef(new Map<string, T>());
