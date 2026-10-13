@@ -53,6 +53,15 @@ export function lookReaders() {
       );
     return {
       rest: m.getPaintProperty('saved-routes-line', 'line-color'),
+      // Each train line at rest, in its own line's pale (2026-10-13): null where the layer is missing.
+      rails: Object.fromEntries(
+        ['lrt-1', 'lrt-2', 'mrt-3'].map((l) => [
+          l,
+          m.getLayer(`saved-routes-rail-${l}`)
+            ? m.getPaintProperty(`saved-routes-rail-${l}`, 'line-color')
+            : null,
+        ]),
+      ),
       lit: m.getPaintProperty('saved-routes-selected', 'line-color'),
       shaded,
     };

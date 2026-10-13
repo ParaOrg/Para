@@ -55,23 +55,32 @@ const RAIL_AT_REST = {
     id: 'saved-routes-rail-mrt-3',
     colour: MAP_COLOURS['Map/Rail/MetroRailWayThree/surface-pale'],
   },
-} satisfies Record<RailLine, { id: string; colour: string }>;
-const RAIL_LAYERS = Object.values(RAIL_AT_REST).map((l) => l.id);
+} as const satisfies Record<RailLine, { id: string; colour: string }>;
+
+/** A resting layer: the light blue's, or a train line's pale. */
+type RestingLayer = typeof ROUTES_LINE | (typeof RAIL_AT_REST)[RailLine]['id'];
+
 /** The resting lines' layers, the light blue's and each train line's: what a query for the lines on screen asks. */
-export const RESTING_LAYERS = [ROUTES_LINE, ...RAIL_LAYERS];
+export const RESTING_LAYERS: RestingLayer[] = [
+  ROUTES_LINE,
+  RAIL_AT_REST['LRT-1'].id,
+  RAIL_AT_REST['LRT-2'].id,
+  RAIL_AT_REST['MRT-3'].id,
+];
 
 /** Which features each resting layer draws, by the train line a feature's route runs on ('' for none). */
 const restsOn = (line: RailLine | '') => ['==', ['get', 'line'], line] as const;
-const RESTING_FILTER: Record<string, ReturnType<typeof restsOn>> = {
+const RESTING_FILTER = {
   [ROUTES_LINE]: restsOn(''),
-  ...Object.fromEntries(
-    (Object.keys(RAIL_AT_REST) as RailLine[]).map((line) => [RAIL_AT_REST[line].id, restsOn(line)]),
-  ),
-};
+  [RAIL_AT_REST['LRT-1'].id]: restsOn('LRT-1'),
+  [RAIL_AT_REST['LRT-2'].id]: restsOn('LRT-2'),
+  [RAIL_AT_REST['MRT-3'].id]: restsOn('MRT-3'),
+} satisfies Record<RestingLayer, ReturnType<typeof restsOn>>;
 
 /**
  * Two looks, the owner's of 2026-09-29, and no opacity: every direction
- * rests in Map/RouteLine/surface-default, opaque, in its white casing; the
+ * rests in Map/RouteLine/surface-default, opaque, in its white casing (a
+ * train's in its own line's pale since 2026-10-13, RAIL_AT_REST); the
  * lit ones — the trip open, the Selected card's directions, or else every
  * direction a list or a hotspot's card shows — are drawn again on top in
  * Map/RouteLine/surface-selected, thicker; on the public map a picked

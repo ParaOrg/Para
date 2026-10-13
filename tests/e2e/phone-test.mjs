@@ -273,8 +273,10 @@ function liftRecorder() {
     const m = window.__mapEarly;
     let drawn = null;
     try {
+      // Every resting layer: the light blue's, and each train line's pale (2026-10-13).
+      const resting = m.getLayersOrder().filter((l) => /^saved-routes-(line|rail-)/.test(l));
       drawn = m.getLayer('saved-routes-line')
-        ? m.queryRenderedFeatures({ layers: ['saved-routes-line'] }).length
+        ? m.queryRenderedFeatures({ layers: resting }).length
         : 0;
     } catch {}
     window.__lift = { at: Math.round(performance.now()), loaded: !!window.__map, drawn };

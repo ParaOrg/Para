@@ -1109,6 +1109,20 @@ if (PART === 1) {
     twoLooks(looks),
     JSON.stringify(looks),
   );
+  // A train line rests in its own line's pale, not the blue (the owner's ask, 2026-10-13).
+  if (!MAP)
+    skip(
+      "a train line rests in its own line's pale",
+      'map-colours.ts cannot be read from this server',
+    );
+  else
+    check(
+      "a train line rests in its own line's pale: Map/Rail/<line>/surface-pale",
+      looks?.rails['lrt-1'] === MAP['Map/Rail/LightRailWayOne/surface-pale'] &&
+        looks?.rails['lrt-2'] === MAP['Map/Rail/LightRailWayTwo/surface-pale'] &&
+        looks?.rails['mrt-3'] === MAP['Map/Rail/MetroRailWayThree/surface-pale'],
+      JSON.stringify(looks?.rails),
+    );
   const clean = findVertexOutsideHotspots(snapshot.routes, snapshot.polys);
   if (!clean) {
     skip(
