@@ -2,7 +2,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 /**
  * PalimosPoDesignSystem's Button, from the owner's Figma set of 2026-09-28
- * (node 3668:2812): a pill in three voices. Special is the jeepney one —
+ * (node 3668:2812): a pill in four voices. Special is the jeepney one —
  * SN Pro Bold on the quiet surface with an edge and a soft shadow (Cubao
  * Free in the set, all capitals; SN Pro since the owner's "Papunta at
  * Pabalik", 2026-10-01, so its word reads as written); Secondary is

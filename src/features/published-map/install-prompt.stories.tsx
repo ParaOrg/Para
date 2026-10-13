@@ -25,6 +25,14 @@ export const Default: Story = {
   },
 };
 
+/**
+ * On a phone, the only place it shows: 16 in from each side. A modal dialog
+ * sits against the viewport, not a container, so the story sets the viewport.
+ */
+export const Phone: Story = {
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};
+
 /** "I'll do it later", and Escape the same. */
 export const Later: Story = {
   play: async ({ canvasElement, args }) => {

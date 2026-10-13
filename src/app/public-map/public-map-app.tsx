@@ -109,8 +109,8 @@ export function PublicMapApp() {
   // once the routes are on the map; "later" hides it until the next visit
   // (the owner's picks, 2026-10-13).
   const canInstall = useInstallOffer();
-  const [installLater, setInstallLater] = useState(false);
-  const showInstall = canInstall && !installLater && saved.directions.length > 0;
+  const [isInstallPostponed, setIsInstallPostponed] = useState(false);
+  const shouldShowInstall = canInstall && !isInstallPostponed && saved.directions.length > 0;
 
   const { tripLivery, litLivery, height } = cards;
 
@@ -242,8 +242,11 @@ export function PublicMapApp() {
         needRefresh={needRefresh}
         onUpdate={reloadToUpdate}
       />
-      {showInstall && (
-        <InstallPrompt onInstall={() => void installApp()} onLater={() => setInstallLater(true)} />
+      {shouldShowInstall && (
+        <InstallPrompt
+          onInstall={() => void installApp()}
+          onLater={() => setIsInstallPostponed(true)}
+        />
       )}
 
       {saved.selected && tripLivery && timeline && (

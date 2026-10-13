@@ -34,12 +34,20 @@ export function InstallPrompt({ onInstall, onLater }: InstallPromptProps) {
   // Shown as a modal from the start; the browser drops it with the element.
   // The focus goes to the dialog itself, not its first button, as the cards
   // take it (useDialogFocus): nothing is pressed by accident, and no focus
-  // ring stands on "later" before anyone has touched it.
+  // ring stands on "later" before anyone has touched it. Gone, it gives the
+  // focus back where it was, as the cards do: an unmounted dialog does not.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog || dialog.open) return;
+    const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog.showModal();
     dialog.focus();
+    return () => {
+      // Only when the focus is still ours to give back.
+      const now = document.activeElement;
+      if ((now === null || now === document.body || dialog.contains(now)) && before?.isConnected)
+        before.focus({ preventScroll: true });
+    };
   }, []);
 
   return (
