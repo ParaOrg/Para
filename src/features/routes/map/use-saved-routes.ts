@@ -6,7 +6,7 @@ import { loadOnce } from './load-once';
 import { perFrame, type PerFrame } from './per-frame';
 import { useRouteTaps } from './route-taps';
 import { litOf, shownOf, showingOf, steady } from './routes-shown';
-import { ROUTES_LINE, useSavedRoutesLayers } from './saved-routes-layers';
+import { RESTING_LAYERS, ROUTES_LINE, useSavedRoutesLayers } from './saved-routes-layers';
 import type { Livery } from '../model/liveries';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 
@@ -284,7 +284,7 @@ export function useSavedRoutes<T extends Direction>(
     if (!map || !loadLine) return;
     const readInView = () => {
       if (map.getZoom() < FULL_LINES_FROM || !map.getLayer(ROUTES_LINE)) return;
-      for (const f of map.queryRenderedFeatures({ layers: [ROUTES_LINE] })) {
+      for (const f of map.queryRenderedFeatures({ layers: RESTING_LAYERS })) {
         const id = String(f.properties?.id ?? '');
         if (id && !failedRef.current.has(id)) request(id);
       }

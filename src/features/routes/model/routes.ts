@@ -40,6 +40,12 @@ export type RailLine = (typeof RAIL_LINES)[number];
 export const isRailLine = (code: string | null | undefined): code is RailLine =>
   (RAIL_LINES as readonly string[]).includes(code ?? '');
 
+/** The train line a direction's route runs on, by its routeCode; null for every other route. */
+export const railLineOf = (v: Pick<Direction, 'route'>): RailLine | null => {
+  const code = v.route?.routeCode;
+  return isRailLine(code) ? code : null;
+};
+
 export const isRail = (mode: TransportMode | null | undefined): boolean =>
   !!mode && RAIL_MODES.includes(mode);
 

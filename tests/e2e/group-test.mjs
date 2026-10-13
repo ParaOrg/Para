@@ -243,7 +243,9 @@ if (!spot) {
       );
       await settle();
       const byId = {};
-      for (const f of m.queryRenderedFeatures({ layers: ['saved-routes-line'] }))
+      // Every resting layer: the light blue's, and each train line's pale (2026-10-13).
+      const resting = m.getLayersOrder().filter((l) => /^saved-routes-(line|rail-)/.test(l));
+      for (const f of m.queryRenderedFeatures({ layers: resting }))
         byId[f.properties.id] = f.layer.paint?.['line-opacity'] ?? 1;
       m.jumpTo(camera);
       await settle();
@@ -536,7 +538,11 @@ if (!spot) {
           // @theme inline alias is never emitted), as the DOM computes it, oklch as the
           // rings come: what the dots along the rest wear.
           const probe = document.createElement('span');
-          probe.style.backgroundColor = `var(--card-${trip?.dataset.livery}-surface-pale)`;
+          // A train's is its line's, Map/Rail/<line>/surface-pale (2026-10-13).
+          const livery = trip?.dataset.livery ?? '';
+          probe.style.backgroundColor = /rail-way/.test(livery)
+            ? `var(--map-rail-${livery}-surface-pale)`
+            : `var(--card-${livery}-surface-pale)`;
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
           probe.remove();

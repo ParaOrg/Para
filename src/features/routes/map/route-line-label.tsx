@@ -1,6 +1,6 @@
 import { EndIcon } from '@/shared/ui/route-icons';
 
-import { LINE_SURFACE, LINE_TEXT } from './livery-line';
+import { LINE_SURFACE, LINE_TEXT, LINE_WORDS } from './livery-line';
 import type { Livery } from '../model/liveries';
 
 /** Figma's Label, Property 1: Default, the name alone; End, End's E before it. */
@@ -25,7 +25,8 @@ interface RouteLineLabelProps {
  * Default beside a hintuan's dot along a trip, End beside the picked one,
  * where the ride now ends, and CodeSignEnd for a picked train station. All
  * three wear the line's colour (his "must be color of route line") with
- * white words in SN Pro Medium 14/20, 28 tall, drawn flat.
+ * white words in SN Pro Medium 14/20, 28 tall, drawn flat — near-black on
+ * MRT-3's yellow (LINE_WORDS, 2026-10-13).
  *
  * The font is set here, not inherited: every label sits in a DOM marker
  * inside MapLibre's container, whose stylesheet sets Helvetica Neue on all
@@ -44,7 +45,10 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
   return (
     <span
       data-part="label"
-      className="flex max-w-full min-w-0 items-center gap-2 font-sn-pro text-sm/5 font-medium whitespace-nowrap text-content-inverse"
+      className={
+        'flex max-w-full min-w-0 items-center gap-2 font-sn-pro text-sm/5 font-medium whitespace-nowrap ' +
+        LINE_WORDS[livery]
+      }
     >
       {/* CodeSignEnd: the E in a disc of its own, 28 across, beside the pill. */}
       {code && (

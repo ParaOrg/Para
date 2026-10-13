@@ -110,6 +110,7 @@ export function RouteTripDetail({
   picked,
   onPick,
   pickedFare,
+  pickedCode,
   onEnd,
   endPicked,
   routeDirection,
@@ -168,6 +169,7 @@ export function RouteTripDetail({
             pickedFare &&
             (pickedFare === FREE ? 'Free' : discounted ? pickedFare.discounted : pickedFare.regular)
           }
+          pickedCode={pickedCode}
           onEnd={onEnd}
           endPicked={endPicked}
           routeDirection={routeDirection}

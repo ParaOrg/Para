@@ -7,7 +7,11 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/liveries-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LIVERIES, liveriesFor } from '../../src/features/routes/model/liveries.ts';
+import {
+  cardLiveries,
+  JEEPNEY_LIVERIES,
+  liveriesFor,
+} from '../../src/features/routes/model/liveries.ts';
 
 /** A stand-in for Math.random that plays back the given draws, then repeats the last. */
 const draws = (...xs) => {
@@ -20,7 +24,7 @@ test('the colour is a draw: different draws, different colours', () => {
   const first = liveriesFor([['Tala']], draws(0), new Map());
   const last = liveriesFor([['Tala']], draws(0.99), new Map());
   assert.notEqual(first[0], last[0]);
-  assert.ok(LIVERIES.includes(first[0]) && LIVERIES.includes(last[0]));
+  assert.ok(JEEPNEY_LIVERIES.includes(first[0]) && JEEPNEY_LIVERIES.includes(last[0]));
 });
 
 test('a route keeps its colour for the visit, whatever is drawn after', () => {
@@ -95,15 +99,15 @@ test('a route keeps its colour the other way round: the same id, the same draw',
 // The owner, 2026-09-30: "make the routecard not repeating the color, it must
 // exhaust the existing colors before repeating it".
 test('no colour twice in a list until every colour has come once', () => {
-  const places = Array.from({ length: LIVERIES.length * 2 + 3 }, (_, i) => `Place ${i}`);
+  const places = Array.from({ length: JEEPNEY_LIVERIES.length * 2 + 3 }, (_, i) => `Place ${i}`);
   for (const x of [0, 0.3, 0.6, 0.99]) {
     const ls = liveriesFor(
       places.map((p) => [p]),
       draws(x),
       new Map(),
     );
-    for (let start = 0; start < ls.length; start += LIVERIES.length) {
-      const round = ls.slice(start, start + LIVERIES.length);
+    for (let start = 0; start < ls.length; start += JEEPNEY_LIVERIES.length) {
+      const round = ls.slice(start, start + JEEPNEY_LIVERIES.length);
       assert.equal(new Set(round).size, round.length, `draw ${x}: ${round.join(', ')}`);
     }
     assert.ok(neighboursDiffer(ls), `draw ${x}`);
@@ -154,4 +158,44 @@ test('a redraw clears every listed route, so the way round and back settles', ()
     'fuchsia',
   ]);
   assert.deepEqual(liveriesFor(pabalik, draws(0.5), visit), turned);
+});
+
+// The owner's train RouteCards, 2026-10-13: a train route wears its line's
+// colour, never a draw, and the jeepneys around it draw as they would
+// without it.
+test("a train card wears its line's colour, whatever is drawn", () => {
+  for (const x of [0, 0.5, 0.99]) {
+    assert.deepEqual(
+      cardLiveries(
+        [['lrt1'], ['lrt2'], ['mrt3']],
+        ['LRT-1', 'LRT-2', 'MRT-3'],
+        draws(x),
+        new Map(),
+      ),
+      ['light-rail-way-one', 'light-rail-way-two', 'metro-rail-way-three'],
+    );
+  }
+});
+
+test('a train card changes nothing the jeepneys draw, and keeps no draw for the visit', () => {
+  const jeepneys = [['Tala'], ['Fatima'], ['Lagro'], ['Bayan']];
+  for (const x of [0, 0.3, 0.6, 0.99]) {
+    const alone = liveriesFor(jeepneys, draws(x), new Map());
+    const visit = new Map();
+    const mixed = cardLiveries(
+      [['lrt1'], ...jeepneys.slice(0, 2), ['mrt3'], ...jeepneys.slice(2)],
+      ['LRT-1', null, null, 'MRT-3', null, null],
+      draws(x),
+      visit,
+    );
+    assert.deepEqual(mixed, [
+      'light-rail-way-one',
+      alone[0],
+      alone[1],
+      'metro-rail-way-three',
+      alone[2],
+      alone[3],
+    ]);
+    assert.ok(!visit.has('lrt1') && !visit.has('mrt3'), `draw ${x}`);
+  }
 });

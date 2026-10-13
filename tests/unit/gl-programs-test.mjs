@@ -138,6 +138,42 @@ test('the same pixels as the step it replaces: nothing below 15, the lit stretch
 
 // ------------------------------------------------------------ the rest of a ride (2026-10-12)
 
+// The owner's ask of 2026-10-13: a train line rests in its own line's pale.
+// A layer a line, each one colour, so the opening frames compile no program
+// for them that the light blue's does not; and between them every route is
+// drawn at rest once, by the line its feature names.
+test("a train line at rest is drawn by the resting line's program, one layer a line", () => {
+  const layers = [
+    { id: 'background', type: 'background' },
+    { id: 'road-label', type: 'symbol' },
+  ];
+  const map = {
+    addSource: () => {},
+    addLayer: (spec, before) =>
+      layers.splice(before ? layers.findIndex((l) => l.id === before) : layers.length, 0, spec),
+    getLayer: (id) => layers.find((l) => l.id === id),
+    getLayersOrder: () => layers.map((l) => l.id),
+  };
+  addSavedRoutes(map);
+  const resting = map.getLayer('saved-routes-line');
+  const rails = ['lrt-1', 'lrt-2', 'mrt-3'].map((l) => map.getLayer(`saved-routes-rail-${l}`));
+  for (const rail of rails) {
+    assert.ok(rail, 'a resting layer for each train line');
+    assert.equal(programOf(rail), programOf(resting));
+  }
+  // Over the light blue, under the lit lines.
+  const order = map.getLayersOrder();
+  for (const rail of rails) {
+    assert.ok(order.indexOf(rail.id) > order.indexOf('saved-routes-line'));
+    assert.ok(order.indexOf(rail.id) < order.indexOf('saved-routes-selected-casing'));
+  }
+  assert.deepEqual(resting.filter, ['==', ['get', 'line'], '']);
+  assert.deepEqual(
+    rails.map((r) => r.filter),
+    ['LRT-1', 'LRT-2', 'MRT-3'].map((l) => ['==', ['get', 'line'], l]),
+  );
+});
+
 test("the rest of a ride past a picked hintuan is drawn by the resting line's program, compiled at load", () => {
   const layers = [
     { id: 'background', type: 'background' },

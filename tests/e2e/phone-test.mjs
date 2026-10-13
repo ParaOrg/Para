@@ -273,8 +273,10 @@ function liftRecorder() {
     const m = window.__mapEarly;
     let drawn = null;
     try {
+      // Every resting layer: the light blue's, and each train line's pale (2026-10-13).
+      const resting = m.getLayersOrder().filter((l) => /^saved-routes-(line|rail-)/.test(l));
       drawn = m.getLayer('saved-routes-line')
-        ? m.queryRenderedFeatures({ layers: ['saved-routes-line'] }).length
+        ? m.queryRenderedFeatures({ layers: resting }).length
         : 0;
     } catch {}
     window.__lift = { at: Math.round(performance.now()), loaded: !!window.__map, drawn };
@@ -1231,7 +1233,13 @@ const tripChecks = async () => {
       `${selectedRows} Selected, weight ${weight}`,
     );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
-    const pillText = (await pill.count()) ? (await pill.first().innerText()).trim() : null;
+    // On a train the station's code comes first, "GL04 · ₱20" (the owner,
+    // 2026-10-13): the pesos are their own part then.
+    const pesosOf = async (p) =>
+      (await p.locator('[data-part="pesos"]').count())
+        ? (await p.locator('[data-part="pesos"]').innerText()).trim()
+        : (await p.innerText()).trim();
+    const pillText = (await pill.count()) ? await pesosOf(pill.first()) : null;
     // The pill and the fare tile both hold the pesos to there (the owner,
     // 2026-09-30: the pill's "Calculated Fare" gave way to its value).
     const pickedTile = await tile('trip-fare');
@@ -1256,16 +1264,35 @@ const tripChecks = async () => {
       const trip = document.querySelector('[data-testid="trip"]');
       if (!pill || !trip) return null;
       const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
+      // A train's pill is white with its words in the line's Timeline/surface,
+      // as the owner's train frames draw it (2026-10-13), not the card's swapped.
+      const line = trip.dataset.livery;
+      if (/rail-way/.test(line)) {
+        const probe = document.createElement('i');
+        probe.style.backgroundColor = 'var(--content-inverse)';
+        probe.style.color = `var(--map-rail-${line}-timeline-surface)`;
+        document.body.append(probe);
+        const want = getComputedStyle(probe);
+        const seen = {
+          swapped: p.backgroundColor === want.backgroundColor && p.color === want.color,
+          detail: `${p.color} on ${p.backgroundColor}; the train's ${want.color} on ${want.backgroundColor}`,
+        };
+        probe.remove();
+        return seen;
+      }
       return {
         swapped: p.backgroundColor === t.color && p.color === t.backgroundColor,
         detail: `${p.color} on ${p.backgroundColor}; the card ${t.color} on ${t.backgroundColor}`,
       };
     });
     if (pickWant && pickWant.fare == null)
-      skip("  in the card's own colours, swapped", 'an unpriced route shows no pill');
+      skip(
+        "  in the card's own colours, swapped (a train's: white, in its line's rail colour)",
+        'an unpriced route shows no pill',
+      );
     else
       check(
-        "  in the card's own colours, swapped",
+        "  in the card's own colours, swapped (a train's: white, in its line's rail colour)",
         !!colours?.swapped,
         colours?.detail ?? 'no pill',
       );
@@ -1302,7 +1329,11 @@ const tripChecks = async () => {
       // @theme inline alias is never emitted), as the DOM computes it, oklch as the
       // rings come: what the dots along the rest wear.
       const probe = document.createElement('span');
-      probe.style.backgroundColor = `var(--card-${trip?.dataset.livery}-surface-pale)`;
+      // A train's is its line's, Map/Rail/<line>/surface-pale (2026-10-13).
+      const livery = trip?.dataset.livery ?? '';
+      probe.style.backgroundColor = /rail-way/.test(livery)
+        ? `var(--map-rail-${livery}-surface-pale)`
+        : `var(--card-${livery}-surface-pale)`;
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
       probe.remove();
@@ -1394,9 +1425,18 @@ const tripChecks = async () => {
       const t = name?.querySelector('[data-part="name"]');
       const pin = document.querySelector('[data-testid="hintuan-pin"]');
       if (!name || !label || !t || !pin) return null;
-      // What the line wears, the trip's card colour, read off its own classes.
+      // What the line wears, the trip's card colour, read off its tokens: a
+      // train's its line's, with near-black words on MRT-3's yellow (2026-10-13).
+      const livery = pin.dataset.livery;
+      const isTrain = /rail-way/.test(livery);
       const probe = document.createElement('i');
-      probe.className = `bg-card-${pin.dataset.livery}-surface text-content-inverse`;
+      probe.style.backgroundColor = isTrain
+        ? `var(--map-rail-${livery}-surface)`
+        : `var(--card-${livery}-surface)`;
+      probe.style.color =
+        livery === 'metro-rail-way-three'
+          ? 'var(--map-route-line-arrow-inverse)'
+          : 'var(--content-inverse)';
       document.body.append(probe);
       const want = getComputedStyle(probe);
       const [a, b] = [label.getBoundingClientRect(), pin.getBoundingClientRect()];

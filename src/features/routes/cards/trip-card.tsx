@@ -7,7 +7,7 @@ import { FREE, RouteTripDetail, type Fare, type Fares } from './route-trip-detai
 import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
-import { liveriesFor, type Livery } from '../model/liveries';
+import { cardLiveries, type Livery } from '../model/liveries';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -15,6 +15,7 @@ import {
   isFerry,
   isRail,
   LINE_NOTES,
+  railLineOf,
   directionLine,
   type Direction,
 } from '../model/routes';
@@ -25,7 +26,8 @@ import type { Timeline } from '../model/timeline';
  * opens — the RouteCard's it was picked from, in the list or a hotspot's card,
  * while that card stands behind it (a card of several routes wears its
  * first row's, liveries.ts), else its route's for the visit (drawn when
- * first met, kept after; its place's until the owner's ask of 2026-10-12) —
+ * first met, kept after; its place's until the owner's ask of 2026-10-12;
+ * a train's, its line's, never drawn, since 2026-10-13) —
  * and kept until
  * it closes, through SWITCH and even when a tap on
  * its own line closes the list behind it: a card never changes colour while
@@ -43,7 +45,7 @@ export function useTripLivery(
   if (open && !tripLivery) {
     tripLivery =
       (wornBehind && worn?.id === open.id ? worn.livery : undefined) ??
-      liveriesFor([[open.routeId]])[0];
+      cardLiveries([[open.routeId]], [railLineOf(open)])[0];
     setTripWears({ routeId: open.routeId, livery: tripLivery });
   } else if (!open && tripWears) {
     setTripWears(null);
@@ -87,6 +89,7 @@ export function TripCard({
   onClose,
   picked,
   pickedMetres,
+  pickedCode,
   onPick,
   onEnd,
   endPicked,
@@ -107,6 +110,8 @@ export function TripCard({
   /** The hintuan picked on the timeline (useRideTo), and how far the ride to it runs, when its line reaches it. */
   picked: string | null;
   pickedMetres: number | undefined;
+  /** On a train, the picked station's sign code for its pill (useRideTo's `pickedCode`, the map's label's too); else null. */
+  pickedCode: string | null;
   onPick: (id: string) => void;
   /** The origin's or the destination's row: the whole ride, and that end on the map. */
   onEnd: (end: 'from' | 'to') => void;
@@ -143,6 +148,7 @@ export function TripCard({
       hintuans={timeline.between}
       picked={picked}
       pickedFare={pickedFareFor(direction, pickedMetres, timeline, picked)}
+      pickedCode={pickedCode}
       onPick={onPick}
       onEnd={onEnd}
       endPicked={endPicked}

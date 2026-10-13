@@ -115,6 +115,32 @@ export const CodeSignEndFuchsia: Story = {
 export const CodeSignEndPink: Story = {
   args: { variant: 'end', codeSign: 'GL05', livery: 'pink' },
 };
+export const CodeSignEndLightRailWayOne: Story = {
+  args: { variant: 'end', codeSign: 'GL05', livery: 'light-rail-way-one' },
+};
+export const CodeSignEndLightRailWayTwo: Story = {
+  args: { variant: 'end', codeSign: 'PL05', livery: 'light-rail-way-two' },
+};
+/**
+ * MRT-3 (2026-10-13): its yellow pill and disc, the words and the E
+ * near-black (Map/RouteLine/Arrow/Inverse, as its chevrons), and the code
+ * in the line's Timeline/surface on white, as its trip card's pill has it.
+ */
+export const CodeSignEndMetroRailWayThree: Story = {
+  args: { variant: 'end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
+  play: async ({ canvasElement }) => {
+    const pill = partOf(canvasElement, 'name');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-map-rail-metro-rail-way-three-surface'),
+    );
+    const dark = wornBy('text-map-route-line-arrow-inverse', 'color');
+    await expect(getComputedStyle(partOf(canvasElement, 'words')).color).toBe(dark);
+    await expect(getComputedStyle(partOf(canvasElement, 'end')).color).toBe(dark);
+    await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(
+      wornBy('text-map-rail-metro-rail-way-three-timeline-surface', 'color'),
+    );
+  },
+};
 
 /** A name longer than the room: cut short with an ellipsis, the disc and the code whole. */
 export const LongName: Story = {

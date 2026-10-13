@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 
 import { RouteCard } from './route-card';
 import { drawnDepartures } from '../model/departures';
-import { liveriesFor, type Livery } from '../model/liveries';
-import type { Direction } from '../model/routes';
+import { cardLiveries, type Livery } from '../model/liveries';
+import { isRailLine, railLineOf, type Direction } from '../model/routes';
 
 /** A card picked: the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
 export interface PickedPlace {
@@ -31,7 +31,8 @@ interface Props {
  * Routes one way round as the owner's RouteCards (2026-09-28): a card per
  * place they leave from (departures), each in its livery — liveries.ts: its
  * first row's route's, at random, kept for the visit, the same the other
- * way round (the owner's ask, 2026-10-12), never two alike side by side — with
+ * way round (the owner's ask, 2026-10-12), never two alike side by side; a
+ * train's, its line's own, never drawn (2026-10-13) — with
  * a row per drawn direction. One card at a time is Selected, and the map lights its
  * directions alone; a row opens its trip straight away, whether its card is
  * picked or not, and picks none — selecting it too was confusing — and the
@@ -45,13 +46,26 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
   const places = drawnDepartures(routes, back);
 
   // Drawn once per stack, not per render. Each card by its rows' routes,
-  // its first row's first (drawnDepartures leaves no card empty); the ids
-  // are uuids, with no space or newline to split on.
-  const routeKey = places.map((p) => p.directions.map((d) => d.v.routeId).join(' ')).join('\n');
-  const liveries = useMemo(
-    () => (routeKey ? liveriesFor(routeKey.split('\n').map((card) => card.split(' '))) : []),
-    [routeKey],
-  );
+  // its first row's first (drawnDepartures leaves no card empty), after its
+  // train line and a bar ('' before it for a jeepney's): a train card wears
+  // its line's colour, never a draw (cardLiveries). The ids are uuids, with
+  // no space, bar or newline to split on.
+  const cardKey = places
+    .map(
+      (p) =>
+        (railLineOf(p.directions[0].v) ?? '') +
+        '|' +
+        p.directions.map((d) => d.v.routeId).join(' '),
+    )
+    .join('\n');
+  const liveries = useMemo(() => {
+    if (!cardKey) return [];
+    const cards = cardKey.split('\n').map((card) => card.split('|'));
+    return cardLiveries(
+      cards.map(([, routes]) => routes.split(' ')),
+      cards.map(([line]) => (isRailLine(line) ? line : null)),
+    );
+  }, [cardKey]);
 
   const byId = new Map(places.flatMap((p) => p.directions.map((d) => [d.v.id, d.v] as const)));
 

@@ -1109,6 +1109,20 @@ if (PART === 1) {
     twoLooks(looks),
     JSON.stringify(looks),
   );
+  // A train line rests in its own line's pale, not the blue (the owner's ask, 2026-10-13).
+  if (!MAP)
+    skip(
+      "a train line rests in its own line's pale",
+      'map-colours.ts cannot be read from this server',
+    );
+  else
+    check(
+      "a train line rests in its own line's pale: Map/Rail/<line>/surface-pale",
+      looks?.rails['lrt-1'] === MAP['Map/Rail/LightRailWayOne/surface-pale'] &&
+        looks?.rails['lrt-2'] === MAP['Map/Rail/LightRailWayTwo/surface-pale'] &&
+        looks?.rails['mrt-3'] === MAP['Map/Rail/MetroRailWayThree/surface-pale'],
+      JSON.stringify(looks?.rails),
+    );
   const clean = findVertexOutsideHotspots(snapshot.routes, snapshot.polys);
   if (!clean) {
     skip(
@@ -1376,8 +1390,12 @@ if (PART === 1) {
         await page
           .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
           .catch(() => {});
-        const pill = (await row.locator('[data-testid="trip-hintuan-fare"]').count())
-          ? (await row.locator('[data-testid="trip-hintuan-fare"]').innerText()).trim()
+        // On a train the station's code comes first, "GL04 · ₱20" (the
+        // owner, 2026-10-13): the pesos are their own part then.
+        const fare = row.locator('[data-testid="trip-hintuan-fare"]');
+        const pesos = fare.locator('[data-part="pesos"]');
+        const pill = (await fare.count())
+          ? ((await pesos.count()) ? await pesos.innerText() : await fare.innerText()).trim()
           : null;
         const seen = await page.evaluate(async (at) => {
           const m = window.__map;
@@ -1391,7 +1409,11 @@ if (PART === 1) {
           // @theme inline alias is never emitted), as the DOM computes it, oklch as the
           // rings come: what the dots along the rest wear.
           const probe = document.createElement('span');
-          probe.style.backgroundColor = `var(--card-${trip?.dataset.livery}-surface-pale)`;
+          // A train's is its line's, Map/Rail/<line>/surface-pale (2026-10-13).
+          const livery = trip?.dataset.livery ?? '';
+          probe.style.backgroundColor = /rail-way/.test(livery)
+            ? `var(--map-rail-${livery}-surface-pale)`
+            : `var(--card-${livery}-surface-pale)`;
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
           probe.remove();

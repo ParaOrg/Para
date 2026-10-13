@@ -15,8 +15,15 @@ import type { Livery } from '../model/liveries';
  * wore the red card's, and the card's own were used here so the card and
  * the trip it opens matched). Mist, dark
  * words like yellow's, left the set on 2026-09-30; yellow itself on
- * 2026-10-12 ("it's not good on the eyes"), so every livery's words are
- * white now.
+ * 2026-10-12 ("it's not good on the eyes").
+ *
+ * A train route wears its line's colours (the owner's RouteCards for them,
+ * 4074:7402 LRT-1, 4080:4124 LRT-2, 4080:4241 MRT-3, 2026-10-13):
+ * Map/Rail/<line>/surface and border-primary, the rail and the pressed rows
+ * in its Timeline/surface, all three under Route/RouteCardPrimary and the
+ * Primary Blob. LRT-1 and LRT-2 write in Content/inverse; MRT-3, on its
+ * yellow, in Content/primary — dark words again, but under the Primary
+ * shadow and Blob his frame draws, not the Inverse ones yellow wore.
  */
 
 export const CARD_SURFACE = {
@@ -26,6 +33,12 @@ export const CARD_SURFACE = {
   rose: 'bg-card-rose-surface border-card-rose-border-primary',
   fuchsia: 'bg-card-fuchsia-surface border-card-fuchsia-border-primary',
   pink: 'bg-card-pink-surface border-card-pink-border-primary',
+  'light-rail-way-one':
+    'bg-map-rail-light-rail-way-one-surface border-map-rail-light-rail-way-one-border-primary',
+  'light-rail-way-two':
+    'bg-map-rail-light-rail-way-two-surface border-map-rail-light-rail-way-two-border-primary',
+  'metro-rail-way-three':
+    'bg-map-rail-metro-rail-way-three-surface border-map-rail-metro-rail-way-three-border-primary',
 } satisfies Record<Livery, string>;
 
 /**
@@ -44,6 +57,9 @@ export const CARD_SURFACE_PALE = {
   rose: 'bg-card-rose-surface-pale',
   fuchsia: 'bg-card-fuchsia-surface-pale',
   pink: 'bg-card-pink-surface-pale',
+  'light-rail-way-one': 'bg-map-rail-light-rail-way-one-surface-pale',
+  'light-rail-way-two': 'bg-map-rail-light-rail-way-two-surface-pale',
+  'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-surface-pale',
 } satisfies Record<Livery, string>;
 
 export const CARD_TEXT = {
@@ -53,6 +69,9 @@ export const CARD_TEXT = {
   rose: 'text-content-inverse',
   fuchsia: 'text-content-inverse',
   pink: 'text-content-inverse',
+  'light-rail-way-one': 'text-content-inverse',
+  'light-rail-way-two': 'text-content-inverse',
+  'metro-rail-way-three': 'text-content-primary',
 } satisfies Record<Livery, string>;
 
 // Drawn over the card, as Figma lays it: above the Blob and the words.
@@ -63,6 +82,9 @@ export const CARD_SHADOW = {
   rose: 'shadow-route-card-inverse',
   fuchsia: 'shadow-route-card-inverse',
   pink: 'shadow-route-card-inverse',
+  'light-rail-way-one': 'shadow-route-card-primary',
+  'light-rail-way-two': 'shadow-route-card-primary',
+  'metro-rail-way-three': 'shadow-route-card-primary',
 } satisfies Record<Livery, string>;
 
 // A RouteCard's State=Selected (2026-09-29): pressed in, and nothing else
@@ -74,6 +96,9 @@ export const CARD_SHADOW_SELECTED = {
   rose: 'shadow-route-card-inverse-selected',
   fuchsia: 'shadow-route-card-inverse-selected',
   pink: 'shadow-route-card-inverse-selected',
+  'light-rail-way-one': 'shadow-route-card-primary-selected',
+  'light-rail-way-two': 'shadow-route-card-primary-selected',
+  'metro-rail-way-three': 'shadow-route-card-primary-selected',
 } satisfies Record<Livery, string>;
 
 // Figma's Blob, Primary and Inverse: a white glow over the card's top,
@@ -96,6 +121,9 @@ export const CARD_BLOB = {
   rose: { src: blobInverse, className: 'blur-[2px]' },
   fuchsia: { src: blobInverse, className: 'blur-[2px]' },
   pink: { src: blobInverse, className: 'blur-[2px]' },
+  'light-rail-way-one': { src: blobPrimary, className: '' },
+  'light-rail-way-two': { src: blobPrimary, className: '' },
+  'metro-rail-way-three': { src: blobPrimary, className: '' },
 } satisfies Record<Livery, { src: string; className: string }>;
 
 // Pixels, all three, like the glow inside the file: the rem scale
@@ -111,6 +139,9 @@ export const TIMELINE_SURFACE = {
   rose: 'bg-card-rose-timeline-surface',
   fuchsia: 'bg-card-fuchsia-timeline-surface',
   pink: 'bg-card-pink-timeline-surface',
+  'light-rail-way-one': 'bg-map-rail-light-rail-way-one-timeline-surface',
+  'light-rail-way-two': 'bg-map-rail-light-rail-way-two-timeline-surface',
+  'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-timeline-surface',
 } satisfies Record<Livery, string>;
 
 /**
@@ -128,6 +159,12 @@ export const ROW_PRESSED = {
   rose: 'active:bg-card-rose-timeline-surface [-webkit-tap-highlight-color:transparent]',
   fuchsia: 'active:bg-card-fuchsia-timeline-surface [-webkit-tap-highlight-color:transparent]',
   pink: 'active:bg-card-pink-timeline-surface [-webkit-tap-highlight-color:transparent]',
+  'light-rail-way-one':
+    'active:bg-map-rail-light-rail-way-one-timeline-surface [-webkit-tap-highlight-color:transparent]',
+  'light-rail-way-two':
+    'active:bg-map-rail-light-rail-way-two-timeline-surface [-webkit-tap-highlight-color:transparent]',
+  'metro-rail-way-three':
+    'active:bg-map-rail-metro-rail-way-three-timeline-surface [-webkit-tap-highlight-color:transparent]',
 } satisfies Record<Livery, string>;
 
 /**
@@ -136,6 +173,9 @@ export const ROW_PRESSED = {
  * words being white on every livery (on Content/primary where they were
  * dark: his yellow card, 3785:4462, until yellow left on 2026-10-12).
  * Orange follows red: he drew no orange trip; nor violet, rose, fuchsia and pink.
+ * A train's pill is white too, on every line, its words in the line's
+ * Timeline/surface, not its surface: his three train frames draw it so,
+ * MRT-3's dark words included (2026-10-13).
  */
 export const TIMELINE_PILL = {
   red: 'bg-content-inverse text-card-red-surface',
@@ -144,4 +184,7 @@ export const TIMELINE_PILL = {
   rose: 'bg-content-inverse text-card-rose-surface',
   fuchsia: 'bg-content-inverse text-card-fuchsia-surface',
   pink: 'bg-content-inverse text-card-pink-surface',
+  'light-rail-way-one': 'bg-content-inverse text-map-rail-light-rail-way-one-timeline-surface',
+  'light-rail-way-two': 'bg-content-inverse text-map-rail-light-rail-way-two-timeline-surface',
+  'metro-rail-way-three': 'bg-content-inverse text-map-rail-metro-rail-way-three-timeline-surface',
 } satisfies Record<Livery, string>;

@@ -113,12 +113,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Opened to the picked row, which checks it as Figma's State=Selected draws
- * it: the one row, its pill of pesos in the card's own colours swapped, and
- * the fare tile pricing the ride to there, the same pesos.
- */
-const pickedAsDrawn: Story['play'] = async (ctx) => {
+/** The colour a token class paints, read off a probe wearing it. */
+const wornBy = (className: string) => {
+  const probe = document.createElement('i');
+  probe.className = className;
+  document.body.append(probe);
+  const colour = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return colour;
+};
+
+/** The picked row, its pill and the pesos in it, and the fare and Kilometer tiles following the pick. */
+const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await openFold(ctx);
   const { canvasElement, args } = ctx;
   const rows = canvasElement.querySelectorAll<HTMLElement>(
@@ -127,17 +133,47 @@ const pickedAsDrawn: Story['play'] = async (ctx) => {
   await expect(rows.length).toBe(1);
   const pill = rows[0].querySelector<HTMLElement>('[data-testid="trip-hintuan-fare"]');
   const pesos = args.pickedFare === FREE ? 'Free' : args.pickedFare?.regular;
-  await expect(pill?.textContent).toBe(pesos);
+  // A train's station code goes before the pesos, in a part of its own.
+  const code = pill?.querySelector('[data-part="code"]')?.textContent ?? null;
+  await expect(code).toBe(args.pickedCode ?? null);
+  await expect(pill?.textContent).toBe(code ? `${code} · ${pesos}` : pesos);
   await expect(within(canvasElement).getByTestId('trip-fare').textContent).toBe(pesos);
   // The Kilometer tile follows the pick too.
   await expect(within(canvasElement).getByTestId('trip-km').textContent).toBe(
     kmLabel(args.pickedMetres ?? args.metres),
   );
-  const card = within(canvasElement).getByTestId('trip');
+  return { card: within(canvasElement).getByTestId('trip'), row: rows[0], pill };
+};
+
+/**
+ * Opened to the picked row, which checks it as Figma's State=Selected draws
+ * it: the one row, its pill of pesos in the card's own colours swapped, and
+ * the fare tile pricing the ride to there, the same pesos.
+ */
+const pickedAsDrawn: Story['play'] = async (ctx) => {
+  const { card, pill } = await pickedPesos(ctx);
   if (pill) {
     // Its words' colour behind the pesos, its fill for them.
     await expect(getComputedStyle(pill).backgroundColor).toBe(getComputedStyle(card).color);
     await expect(getComputedStyle(pill).color).toBe(getComputedStyle(card).backgroundColor);
+  }
+};
+
+/**
+ * A train's pick, as the owner's train frames draw it (2026-10-13): the
+ * pill white on every line, MRT-3's dark-worded card too, and its pesos in
+ * the line's Timeline/surface, the rail's colour, not the card's.
+ */
+const pickedOnATrain: Story['play'] = async (ctx) => {
+  const { row, pill } = await pickedPesos(ctx);
+  // The rail's own fill (the picked dot's ring), not the row's active: one.
+  const rail = [...row.querySelectorAll<HTMLElement>('[class*="timeline-surface"]')].find((el) =>
+    [...el.classList].some((c) => c.startsWith('bg-') && c.endsWith('-timeline-surface')),
+  );
+  await expect(rail).toBeDefined();
+  if (pill && rail) {
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-content-inverse'));
+    await expect(getComputedStyle(pill).color).toBe(getComputedStyle(rail).backgroundColor);
   }
 };
 
@@ -316,6 +352,33 @@ export const PickedFuchsia: Story = {
 export const PickedPink: Story = {
   args: { livery: 'pink', picked: 'h3' },
   play: pickedAsDrawn,
+};
+
+/** LRT-1, a train's trip (4074:7402, 2026-10-13): its line's colours, Content/inverse words. */
+export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
+
+/** Picked, LRT-1: the pill white, the station's code and its pesos in the line's Timeline/surface. */
+export const PickedLightRailWayOne: Story = {
+  args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04' },
+  play: pickedOnATrain,
+};
+
+/** LRT-2, a train's trip (4080:4124, 2026-10-13): its line's colours, Content/inverse words. */
+export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
+
+/** Picked, LRT-2: the pill white, the station's code and its pesos in the line's Timeline/surface. */
+export const PickedLightRailWayTwo: Story = {
+  args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04' },
+  play: pickedOnATrain,
+};
+
+/** MRT-3, a train's trip (4080:4241, 2026-10-13): its line's colours, Content/primary, dark, words. */
+export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
+
+/** Picked, MRT-3: the pill white, "YL06 · ₱20–22" in the line's Timeline/surface. */
+export const PickedMetroRailWayThree: Story = {
+  args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
+  play: pickedOnATrain,
 };
 
 /** Tapped through: Amparo's row picks it, pill and all; the tile turned to Discounted, the pill with it; a second tap lets it go. */
