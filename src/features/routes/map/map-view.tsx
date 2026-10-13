@@ -266,6 +266,9 @@ export function MapView({
         return;
       }
 
+      // The map for the handlers below, which cannot tell the `let` was set.
+      const made = map;
+
       // The map from its making, for the builds that hand it out (see 'load'
       // below): the cheap-phone timer stamps its 'load' and its first frame
       // with the routes drawn from here, before any of its events can fire
@@ -284,7 +287,6 @@ export function MapView({
       // a basemap switch's. Registered here, before anything can load.
       if (openOn) {
         openedOn(map, framing);
-        const made = map;
         made.once('style.load', () => onReadyRef.current?.(made));
       }
 
@@ -335,7 +337,7 @@ export function MapView({
           ?.classList.remove('maplibregl-compact-show');
 
       let isLoaded = false;
-      map.on('load', (e) => {
+      map.on('load', () => {
         isLoaded = true;
         setLoaded(true);
         setError(null);
@@ -349,7 +351,7 @@ export function MapView({
         // it is read here and nowhere else, for the timer and the suites to
         // see what a tap compiles (the cheap-phone plan, Step 0, 2026-10-04).
         if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
-          const shown = e.target;
+          const shown = made;
           const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
           w.__map = shown;
           w.__programs = () =>
@@ -357,7 +359,7 @@ export function MapView({
         }
         setReady(map);
         // The public map's was handed over at its style's load (above).
-        if (!openOn) onReadyRef.current?.(e.target);
+        if (!openOn) onReadyRef.current?.(made);
       });
 
       map.on('error', (e) => {
