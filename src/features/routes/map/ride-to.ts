@@ -99,16 +99,24 @@ export function useRideTo(
   );
 
   // A different direction is a different ride, and so is the same one opened
-  // again: start it whole.
-  useEffect(() => {
+  // again: start it whole. The picks are let go in the render that opens it
+  // (the previous id kept to tell), the camera kept for a second tap after.
+  const [rideId, setRideId] = useState(selected?.id);
+  if (rideId !== selected?.id) {
+    setRideId(selected?.id);
     setPicked(null);
     setAtEnd(null);
+  }
+  useEffect(() => {
     before.current = null;
   }, [selected?.id]);
 
   // Called as a glide starts, so a fresh function each render moves nothing.
+  // Kept before the glide's effect below, which reads it in the same commit.
   const onGlide = useRef(opts.onGlide);
-  onGlide.current = opts.onGlide;
+  useEffect(() => {
+    onGlide.current = opts.onGlide;
+  });
 
   const cut = useMemo(
     () => (selected && live ? rideCut(selected, hotspots, live.rowId) : null),
