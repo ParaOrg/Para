@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 
+import { Button } from '@/design-system/primitives/button';
 import type { Hotspot } from '@/features/routes/model/hotspots';
 import { isDrawn, type Direction, type LineStringGeoJSON } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
@@ -78,17 +79,15 @@ export function RouteExportPanel({
       <h3 id={heading} className="text-sm/5 font-medium text-content-tertiary">
         Export route · both ways
       </h3>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {EXPORT_FORMATS.map(({ format, label }) => (
-          <button
+          <Button
             key={format}
-            type="button"
+            variant="secondary"
+            label={busyFormat === format ? 'Exporting…' : label}
             disabled={busyFormat !== null}
             onClick={() => void handleExport(format)}
-            className="flex-1 rounded-lg px-3 py-2 text-sm text-content-primary ring-1 ring-border-primary hover:bg-surface-secondary disabled:opacity-60 pointer-coarse:min-h-11"
-          >
-            {busyFormat === format ? 'Exporting…' : label}
-          </button>
+          />
         ))}
       </div>
       {problem && (
