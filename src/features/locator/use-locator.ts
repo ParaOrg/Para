@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import type { Turn } from '@/shared/hooks/commit-turn';
 import type { Snap } from '@/shared/ui/sheet-gesture';
@@ -294,20 +294,24 @@ export function useLocator(
   const fixesRef = useRef<{ at: LngLat; accuracy: number; time: number }[]>([]);
   const headingRef = useRef<number | null>(null);
   const offsetRef = useRef(offset);
-  offsetRef.current = offset;
 
   const phone = useCompass(compass && status === 'on');
   const heading = phone ?? fix?.heading ?? null;
   const read = phone !== null;
   const readRef = useRef(read);
-  readRef.current = read;
 
   // TrackedLocation's zoom, chosen as the camera comes to the visitor from
   // elsewhere (trackedZoom) and kept through the compass view and back.
   // Null: to be chosen at the next fix.
   const trackedZoomRef = useRef<number | null>(null);
   const cameraRef = useRef(camera);
-  cameraRef.current = camera;
+  // Today's, for the tap and the camera's follow: written as the render
+  // commits, before any effect of it runs or a tap can come.
+  useLayoutEffect(() => {
+    offsetRef.current = offset;
+    readRef.current = read;
+    cameraRef.current = camera;
+  });
 
   const tap = useCallback(() => {
     setTaps((n) => n + 1);
