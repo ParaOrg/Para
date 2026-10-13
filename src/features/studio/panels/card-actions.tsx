@@ -1,46 +1,37 @@
-/**
- * Edit and Delete along the bottom of a card, and Extend on a drawn route.
- * The editor passes these into a shared card's `actions` slot; the public map
- * passes nothing.
- */
-export function CardActions({
-  editLabel,
-  onEdit,
-  onDelete,
-  onExtend,
-}: {
+import { Button } from '@/design-system/primitives/button';
+
+interface CardActionsProps {
   editLabel: string;
   onEdit: () => void;
   onDelete: () => void;
   /** A new route that borrows part of this direction's line. Drawn directions only. */
   onExtend?: () => void;
-}) {
+}
+
+/**
+ * Edit and Delete along the bottom of a card, and Extend on a drawn route.
+ * The editor passes these into a shared card's `actions` slot; the public map
+ * passes nothing.
+ *
+ * The design system's Button in three voices (the owner, 2026-10-13): Edit
+ * Primary, Extend Secondary, Delete Error, each a pill at its word's width as
+ * the Button set draws them. Base size is 40 px tall, under the 44 px the
+ * hand-made row kept on phones; the owner took the design's height as it is
+ * until a phone size is drawn.
+ */
+export function CardActions({ editLabel, onEdit, onDelete, onExtend }: CardActionsProps) {
   return (
     <>
-      <button
-        type="button"
-        onClick={onEdit}
-        className="flex-1 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white pointer-coarse:min-h-11"
-      >
-        {editLabel}
-      </button>
+      <Button variant="primary" label={editLabel} onClick={onEdit} />
       {onExtend && (
-        <button
-          type="button"
-          onClick={onExtend}
+        <Button
+          variant="secondary"
+          label="Extend"
           title="Start a new route from part of this line"
-          className="rounded-lg px-3 py-2 text-sm text-neutral-800 ring-1 ring-neutral-300 hover:bg-neutral-50 pointer-coarse:min-h-11"
-        >
-          Extend
-        </button>
+          onClick={onExtend}
+        />
       )}
-      <button
-        type="button"
-        onClick={onDelete}
-        className="rounded-lg px-3 py-2 text-sm text-red-600 ring-1 ring-red-200 hover:bg-red-50 pointer-coarse:ml-2 pointer-coarse:min-h-11"
-      >
-        Delete
-      </button>
+      <Button variant="error" label="Delete" onClick={onDelete} />
     </>
   );
 }
