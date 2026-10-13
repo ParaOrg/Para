@@ -180,8 +180,12 @@ export function MapView({
   openOn,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Kept from an effect declared before the map's own: the map hands itself
+  // over a tick or more after mounting, to the latest `onReady`.
   const onReadyRef = useRef(onReady);
-  onReadyRef.current = onReady;
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  });
 
   // A blank map with no explanation is the worst possible failure mode, so
   // surface whatever went wrong rather than rendering nothing.
@@ -402,7 +406,7 @@ export function MapView({
       setReady(null);
       map?.remove();
     };
-    // `basemap`, `zoomButtons` and `openOn` are read once at mount and never change afterwards.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `zoomButtons`, `maxBounds`, `foldCredits` and `openOn` are read once, as it is made (each prop says so)
   }, []);
 
   return (
