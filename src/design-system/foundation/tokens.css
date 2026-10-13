@@ -70,6 +70,24 @@
   --color-taupe-800: #2b2422;
   --color-taupe-900: #1d1816;
   --color-taupe-950: #0c0a09;
+
+  /* Primitive: the train lines' own colours (2026-10-13), one family a line,
+     only the four steps its Map/Rail/… semantics use: 200 the pale, 600 the
+     surface, 700 the border, 800 the timeline. */
+  --color-light-rail-way-one-200: #b7f5ca;
+  --color-light-rail-way-one-600: #1d7739;
+  --color-light-rail-way-one-700: #12612a;
+  --color-light-rail-way-one-800: #0c5924;
+
+  --color-light-rail-way-two-200: #d0b9ff;
+  --color-light-rail-way-two-600: #4a3a6b;
+  --color-light-rail-way-two-700: #382859;
+  --color-light-rail-way-two-800: #372b4f;
+
+  --color-metro-rail-way-three-200: #fae385;
+  --color-metro-rail-way-three-600: #e2b709;
+  --color-metro-rail-way-three-700: #ac8b0b;
+  --color-metro-rail-way-three-800: #967906;
 }
 
 /*
@@ -102,27 +120,41 @@
   --surface-quaternary: var(--color-neutral-200);
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
+  /* Black at 60%: what dims the page under a dialog laid over it, the
+     install prompt's (3732:2512, 2026-10-13). Figma keeps the 60 as the
+     variable's opacity (opacity/60); here it is in the value, since the
+     token means the see-through colour itself. */
+  --surface-transparent: color-mix(in srgb, var(--color-black) 60%, transparent);
 
-  /* The jeepney-livery cards. Figma: Card/… */
+  /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia and pink
+     (pink came on 2026-10-13, RouteCard 4071:7014); yellow left on 2026-10-12 ("it's not
+     good on the eyes"), its variables with it. Each livery's
+     surface-pale is the rest of a lit line past a picked hintuan (the owner's, 2026-10-12;
+     red's alone, and red/700, until then). */
   --card-red-surface: var(--color-red-800);
-  --card-red-surface-pale: var(--color-red-700);
+  --card-red-surface-pale: var(--color-red-200);
   --card-red-border-primary: var(--color-red-900);
   --card-red-timeline-surface: var(--color-red-900);
   --card-orange-surface: var(--color-orange-700);
+  --card-orange-surface-pale: var(--color-orange-200);
   --card-orange-border-primary: var(--color-orange-800);
   --card-orange-timeline-surface: var(--color-orange-900);
-  --card-yellow-surface: var(--color-yellow-300);
-  --card-yellow-border-primary: var(--color-yellow-500);
-  --card-yellow-timeline-surface: var(--color-yellow-500);
   --card-violet-surface: var(--color-violet-700);
+  --card-violet-surface-pale: var(--color-violet-200);
   --card-violet-border-primary: var(--color-violet-800);
   --card-violet-timeline-surface: var(--color-violet-900);
   --card-rose-surface: var(--color-rose-700);
+  --card-rose-surface-pale: var(--color-rose-200);
   --card-rose-border-primary: var(--color-rose-800);
   --card-rose-timeline-surface: var(--color-rose-900);
   --card-fuchsia-surface: var(--color-fuchsia-700);
+  --card-fuchsia-surface-pale: var(--color-fuchsia-200);
   --card-fuchsia-border-primary: var(--color-fuchsia-800);
   --card-fuchsia-timeline-surface: var(--color-fuchsia-800);
+  --card-pink-surface: var(--color-pink-700);
+  --card-pink-surface-pale: var(--color-pink-200);
+  --card-pink-border-primary: var(--color-pink-800);
+  --card-pink-timeline-surface: var(--color-pink-900);
 
   /* Error actions — the destructive button. Figma: Error/… (2026-09-28,
      added for the Button so its fill stopped being the one primitive). */
@@ -171,6 +203,22 @@
   /* Its circle's hairline, at 75%, and the beam's colour (3870:5247, the
      owner's second and third passes, 2026-10-01; blue/800 at first). */
   --map-locator-indicator-overlay-border: var(--color-blue-600);
+  /* The train lines, each in its own colour (2026-10-13): LRT-1, LRT-2 and
+     MRT-3 as Figma names them, LightRailWayOne… The owner's RouteCards for
+     them (4074:7402, 4080:4124, 4080:4241) wear surface and border-primary,
+     as a livery's card does. */
+  --map-rail-light-rail-way-one-surface: var(--color-light-rail-way-one-600);
+  --map-rail-light-rail-way-one-surface-pale: var(--color-light-rail-way-one-200);
+  --map-rail-light-rail-way-one-border-primary: var(--color-light-rail-way-one-700);
+  --map-rail-light-rail-way-one-timeline-surface: var(--color-light-rail-way-one-800);
+  --map-rail-light-rail-way-two-surface: var(--color-light-rail-way-two-600);
+  --map-rail-light-rail-way-two-surface-pale: var(--color-light-rail-way-two-200);
+  --map-rail-light-rail-way-two-border-primary: var(--color-light-rail-way-two-700);
+  --map-rail-light-rail-way-two-timeline-surface: var(--color-light-rail-way-two-800);
+  --map-rail-metro-rail-way-three-surface: var(--color-metro-rail-way-three-600);
+  --map-rail-metro-rail-way-three-surface-pale: var(--color-metro-rail-way-three-200);
+  --map-rail-metro-rail-way-three-border-primary: var(--color-metro-rail-way-three-700);
+  --map-rail-metro-rail-way-three-timeline-surface: var(--color-metro-rail-way-three-800);
 }
 
 /* The semantics as utilities: text-content-primary, bg-surface, border-border-primary… */
@@ -197,26 +245,32 @@
   --color-surface-quaternary: var(--surface-quaternary);
   --color-surface-error: var(--surface-error);
   --color-surface-success: var(--surface-success);
+  --color-surface-transparent: var(--surface-transparent);
 
   --color-card-red-surface: var(--card-red-surface);
   --color-card-red-surface-pale: var(--card-red-surface-pale);
   --color-card-red-border-primary: var(--card-red-border-primary);
   --color-card-red-timeline-surface: var(--card-red-timeline-surface);
   --color-card-orange-surface: var(--card-orange-surface);
+  --color-card-orange-surface-pale: var(--card-orange-surface-pale);
   --color-card-orange-border-primary: var(--card-orange-border-primary);
   --color-card-orange-timeline-surface: var(--card-orange-timeline-surface);
-  --color-card-yellow-surface: var(--card-yellow-surface);
-  --color-card-yellow-border-primary: var(--card-yellow-border-primary);
-  --color-card-yellow-timeline-surface: var(--card-yellow-timeline-surface);
   --color-card-violet-surface: var(--card-violet-surface);
+  --color-card-violet-surface-pale: var(--card-violet-surface-pale);
   --color-card-violet-border-primary: var(--card-violet-border-primary);
   --color-card-violet-timeline-surface: var(--card-violet-timeline-surface);
   --color-card-rose-surface: var(--card-rose-surface);
+  --color-card-rose-surface-pale: var(--card-rose-surface-pale);
   --color-card-rose-border-primary: var(--card-rose-border-primary);
   --color-card-rose-timeline-surface: var(--card-rose-timeline-surface);
   --color-card-fuchsia-surface: var(--card-fuchsia-surface);
+  --color-card-fuchsia-surface-pale: var(--card-fuchsia-surface-pale);
   --color-card-fuchsia-border-primary: var(--card-fuchsia-border-primary);
   --color-card-fuchsia-timeline-surface: var(--card-fuchsia-timeline-surface);
+  --color-card-pink-surface: var(--card-pink-surface);
+  --color-card-pink-surface-pale: var(--card-pink-surface-pale);
+  --color-card-pink-border-primary: var(--card-pink-border-primary);
+  --color-card-pink-timeline-surface: var(--card-pink-timeline-surface);
 
   --color-error-surface: var(--error-surface);
   --color-error-surface-secondary: var(--error-surface-secondary);
@@ -233,7 +287,9 @@
   --color-map-route-line-arrow-inverse: var(--map-route-line-arrow-inverse);
   --color-map-route-line-hintuan-surface-default: var(--map-route-line-hintuan-surface-default);
   --color-map-overlay-card-hintuan-surface: var(--map-overlay-card-hintuan-surface);
-  --color-map-overlay-card-hintuan-surface-selected: var(--map-overlay-card-hintuan-surface-selected);
+  --color-map-overlay-card-hintuan-surface-selected: var(
+    --map-overlay-card-hintuan-surface-selected
+  );
   --color-map-overlay-card-hintuan-content: var(--map-overlay-card-hintuan-content);
   --color-map-overlay-card-terminal-surface: var(--map-overlay-card-terminal-surface);
   --color-map-overlay-card-terminal-border: var(--map-overlay-card-terminal-border);
@@ -241,9 +297,37 @@
   --color-map-hotspots-card-hintuan-surface: var(--map-hotspots-card-hintuan-surface);
   --color-map-hotspots-card-hintuan-border-primary: var(--map-hotspots-card-hintuan-border-primary);
   --color-map-hotspots-card-terminal-surface: var(--map-hotspots-card-terminal-surface);
-  --color-map-hotspots-card-terminal-border-primary: var(--map-hotspots-card-terminal-border-primary);
+  --color-map-hotspots-card-terminal-border-primary: var(
+    --map-hotspots-card-terminal-border-primary
+  );
   --color-map-locator-indicator-overlay-surface: var(--map-locator-indicator-overlay-surface);
   --color-map-locator-indicator-overlay-border: var(--map-locator-indicator-overlay-border);
+  --color-map-rail-light-rail-way-one-surface: var(--map-rail-light-rail-way-one-surface);
+  --color-map-rail-light-rail-way-one-surface-pale: var(--map-rail-light-rail-way-one-surface-pale);
+  --color-map-rail-light-rail-way-one-border-primary: var(
+    --map-rail-light-rail-way-one-border-primary
+  );
+  --color-map-rail-light-rail-way-one-timeline-surface: var(
+    --map-rail-light-rail-way-one-timeline-surface
+  );
+  --color-map-rail-light-rail-way-two-surface: var(--map-rail-light-rail-way-two-surface);
+  --color-map-rail-light-rail-way-two-surface-pale: var(--map-rail-light-rail-way-two-surface-pale);
+  --color-map-rail-light-rail-way-two-border-primary: var(
+    --map-rail-light-rail-way-two-border-primary
+  );
+  --color-map-rail-light-rail-way-two-timeline-surface: var(
+    --map-rail-light-rail-way-two-timeline-surface
+  );
+  --color-map-rail-metro-rail-way-three-surface: var(--map-rail-metro-rail-way-three-surface);
+  --color-map-rail-metro-rail-way-three-surface-pale: var(
+    --map-rail-metro-rail-way-three-surface-pale
+  );
+  --color-map-rail-metro-rail-way-three-border-primary: var(
+    --map-rail-metro-rail-way-three-border-primary
+  );
+  --color-map-rail-metro-rail-way-three-timeline-surface: var(
+    --map-rail-metro-rail-way-three-timeline-surface
+  );
 }
 
 /*
@@ -313,7 +397,9 @@
    * effect style still reads BottomToolbar/TopShadow). */
   --shadow-bottom-sheet-top-shadow: 0 -3px 8px 0 rgb(43 43 43 / 0.08);
 
-  /* The picked hintuan's name on the map, lifted off it (SelectedHintuanRouteTitle, 3847:11760, 2026-09-30). */
+  /* A hintuan's name lifted off the map: the picked one's (3847:11760, 2026-09-30) until the
+   * owner's redrawing of 2026-10-12, those along an open trip's line until his labels of
+   * 2026-10-13 (HintuanLabel, 4068:4791) drew them flat. Mirrored from Figma; nothing wears it now. */
   --shadow-selected-hintuan-route-title: 0 2px 8px 0 rgb(0 0 0 / 0.32);
 
   /* The visitor's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242, 2026-10-01). */

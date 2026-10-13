@@ -46,7 +46,8 @@ something fit.
 
 ## 4. Files, the house way
 
-`<Name>.tsx` beside `<Name>.stories.tsx`. A design-system component
+`<name>.tsx` beside `<name>.stories.tsx`, kebab-case, the component inside
+PascalCase (`button.tsx` exports `Button`). A design-system component
 lives in its PalimosPoDesignSystem layer — `src/design-system/primitives/`
 for single elements, `patterns/` for compositions of them — and is
 domain-free: no routes, no hintuans. An app component that merely uses
@@ -54,7 +55,7 @@ the system stays in its area. No barrels, no types file — types live
 with the component. Comments say why, with dates and the owner's
 decisions, in the voice of the files around them. Boundaries hold —
 foundation ← primitives ← patterns ← the apps
-(`node scripts/checks/check-boundaries.mjs`).
+(`npm run lint`: `import-x/no-restricted-paths` in `eslint.config.js`).
 
 **Class maps are literal**, and checked:
 
@@ -72,7 +73,7 @@ ramps on 2026-09-28; only a screenshot caught it).
 ## 5. Stories, then look at them
 
 One story per variant, plus the component's real states, plus one phone
-specimen (`@container` decorator, as `RouteSheet.stories.tsx` does).
+specimen (`@container` decorator, as `route-card.stories.tsx` does).
 
 ```bash
 npm run build-storybook

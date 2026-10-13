@@ -35,9 +35,9 @@ traces hotspot boxes, and saves. The database's row-level security refuses
 every write from anyone else, so the publishable key in `.env.production`
 is public by design.
 
-Nothing from `src/studio/` reaches the public page: `npm run build` checks
-the import boundaries and the built page, and fails if the editor or the
-database's address ever gets in.
+Nothing from `src/app/studio/` or `src/features/studio/` reaches the public page: `npm run lint`
+checks the import boundaries (`eslint.config.js`) and `npm run build` the built page, and each
+fails if the editor or the database's address ever gets in.
 
 ## Running it
 
@@ -56,7 +56,9 @@ The editor needs the project's address and publishable key in `.env.local`
 nothing. `/studio/?e2e=1` skips the sign-in door in development builds, for
 the headless checks — drawing works, saving still needs an account.
 
-    npm run check                   # build with its guards, then the unit checks
+    npm run check                   # formatting, build with its guards, then the unit checks
+    npm run format                  # Prettier over the tree (.prettierrc); blame skips the format commit
+                                    # once per clone: git config blame.ignoreRevsFile .git-blame-ignore-revs
     node tests/e2e/visitor-test.mjs # and the other headless suites, see tests/e2e/README.md
     npm run check:data              # the committed map against the app's own rules
     npm run storybook               # the cards, the chooser, the panels, on their own
@@ -86,9 +88,13 @@ with warnings, and closed by the first run with nothing to report.
 
 | | |
 | --- | --- |
-| `src/commuter/` | the public map: its shell, the published-file reader (`mapFile.ts`), "Where am I" and the service worker |
-| `src/studio/` | the editor: `StudioApp.tsx`, then `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions) |
-| `src/shared/` | what both draw: `model/` (routes, stops, fares, liveries — no React, no MapLibre), `geo/` (geometry), `map/` (the map and what is painted on it, the routes and hotspots hooks), `cards/` (the cards, sheets and timelines, with their stories; `useCardStack`, which card is up, and `useCardCamera`, the camera with them: the map and the cards together, for both apps), `styles/` (the one stylesheet) |
+| `src/app/` | the two front doors, wiring only: `public-map/` (the public map's entry, its shell and status bar) and `studio/` (the editor's entry and shell) |
+| `src/features/routes/` | the core both apps draw: `model/` (routes, stops, places, timelines, rides, fares, liveries — no React, no MapLibre), `geo/` (the pass and babaan-side rules), `map/` (the map view with its basemap and layers, the route and hotspot layers and hooks), `cards/` (the cards, sheets and timelines, with their stories; `use-card-stack`, which card is up, and `use-card-camera`, the camera with them). Imported through its concern folders; it has no `index.ts` on purpose, since Node runs the publish and the unit checks against its files |
+| `src/features/locator/` | "Where am I": the visitor's dot, its button and its moods |
+| `src/features/published-map/` | the published map's reader (`map-file.ts`), its freshness and the installed app's updates (`pwa.ts`), and the notices |
+| `src/features/studio/` | the editor: `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions). Its `index.ts`, like the locator's and the published map's, is what the shells import |
+| `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths) |
+| `src/styles/` | `global.css`, the one stylesheet: Tailwind, then the design system's tokens and fonts |
 | `src/design-system/` | the tokens, fonts and primitives (foundation ← primitives) |
 | `public/data/` | the published map, every version kept in history: `index.v4.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v3.json` (without the ferry), `index.json` and the older single file `map.json` (without any line) |
 | `supabase/migrations/` | the schema and its policies, in order |
