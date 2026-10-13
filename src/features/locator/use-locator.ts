@@ -17,7 +17,9 @@ import type { LocatorMode } from './locator-button';
  * Google Maps has none); the button only moves the camera:
  *
  *  - LocationOff, no location yet: a tap asks the browser for it, and its
- *    first fix brings the camera as TrackOwnLocation's tap does.
+ *    first fix brings the camera as TrackOwnLocation's tap does. Any tap
+ *    after QUIET_MS without a fix asks again, so Android can offer to turn
+ *    the phone's location on.
  *  - TrackOwnLocation, the camera elsewhere — the moment it moves off the
  *    visitor at all, by a finger or by the app. A tap brings it to them at
  *    the zoom it is at; from further out than 2 km on the scale bar, in to
@@ -71,6 +73,11 @@ export const FAR_SCALE_M = 2000;
  */
 export const ACCURACY_MIN_M = 40;
 export const ACCURACY_MAX_M = 80;
+/**
+ * A watch that has given no fix for this long has gone quiet, and a tap
+ * starts a new one. A phone with location on gives one about every second.
+ */
+export const QUIET_MS = 10_000;
 /** How far the compass view tilts: "slightly ... diagonally", as Google's does. */
 export const COMPASS_PITCH = 45;
 
@@ -282,6 +289,8 @@ export function useLocator(
   const [taps, setTaps] = useState(0);
   const [noFix, setNoFix] = useState(false);
   const watchRef = useRef<number | null>(null);
+  // When the watch last gave a fix, or was started: a tap after QUIET_MS without one asks again.
+  const heardRef = useRef(0);
   const fixesRef = useRef<{ at: LngLat; accuracy: number; time: number }[]>([]);
   const headingRef = useRef<number | null>(null);
   const offsetRef = useRef(offset);
@@ -307,17 +316,26 @@ export function useLocator(
       // Each tap is a gesture Safari's prompt may need: asked again until it is answered.
       if (compass && !readRef.current) askForCompass();
       setCamera((c) => afterTap(c, readRef.current));
-      return;
+      if (Date.now() - heardRef.current < QUIET_MS) return;
+      // A watch gone quiet: the phone's location was off when it started, or
+      // was turned off since. Android offers to turn it on only to a new
+      // request, made in a tap, so the quiet watch makes way for one (the
+      // owner, 2026-10-13: "it doesn't show the turn on location").
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+    } else {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        setStatus('unavailable');
+        return;
+      }
+      if (compass) askForCompass();
+      setStatus('asking');
+      setCamera('tracked');
     }
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setStatus('unavailable');
-      return;
-    }
-    if (compass) askForCompass();
-    setStatus('asking');
-    setCamera('tracked');
+    heardRef.current = Date.now();
     watchRef.current = navigator.geolocation.watchPosition(
       (p) => {
+        heardRef.current = Date.now();
         const at: LngLat = [p.coords.longitude, p.coords.latitude];
         const time = p.timestamp || Date.now();
         const run = [

@@ -611,6 +611,7 @@ await page3.addInitScript(() => {
         ),
       );
       window.__watches = timers.size;
+      window.__started = n;
       return id;
     },
     clearWatch: (id) => {
@@ -640,6 +641,18 @@ check(
   '  a second tap starts no second watch',
   (await page3.evaluate(() => window.__watches)) === 1,
   `${await page3.evaluate(() => window.__watches)} watch(es)`,
+);
+// Quiet past QUIET_MS (use-locator.ts): the phone's location off, say. A tap
+// asks again, a new watch in its place, for Android's "turn on location"
+// answers only a new request (the owner, 2026-10-13).
+await page3.waitForTimeout(10_500);
+await where3.click();
+await page3.waitForTimeout(300);
+const watches3 = await page3.evaluate(() => [window.__started, window.__watches]);
+check(
+  "  a tap after 10 s with no fix asks again: a new watch in the old one's place",
+  watches3[0] === 2 && watches3[1] === 1,
+  `${watches3[0]} started, ${watches3[1]} running`,
 );
 await ctx3.close();
 
