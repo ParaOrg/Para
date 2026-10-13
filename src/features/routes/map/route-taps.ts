@@ -34,6 +34,14 @@ export function useRouteTaps<T extends Direction>(
     back: (b: boolean) => void;
   },
 ) {
+  // Refs and setters: the same each render, so the click is bound once per map.
+  const { drawing, byId, shown } = read;
+  const {
+    highlight: setHighlight,
+    selectedId: setSelectedId,
+    candidates: setCandidates,
+    back: setBack,
+  } = set;
   useEffect(() => {
     if (!map || !map.getLayer(HIT)) return;
     const canvas = map.getCanvas();
@@ -45,11 +53,11 @@ export function useRouteTaps<T extends Direction>(
     // included, so the studio's rows can say "return not mapped yet".
     // The hotspots hook reads the same tap and keeps its own half.
     const onMapClick = (e: MapMouseEvent) => {
-      if (read.drawing.current) return;
+      if (drawing.current) return;
       // Whatever the tap opens, the card picked before it is let go.
-      set.highlight(null);
+      setHighlight(null);
       const out = resolveTap(tapTargets(map, e.point, e.originalEvent));
-      const all = [...read.byId.current.values()];
+      const all = [...byId.current.values()];
       if (out.kind === 'route') {
         // The line under the finger wins: where a route's two directions run
         // on different roads, tapping the other one must open it (the owner's
@@ -57,37 +65,37 @@ export function useRouteTaps<T extends Direction>(
         // (the owner's ask of 2026-09-25: a tap on the lit Novaliches → Tala
         // opened Tala → Novaliches); with neither shown, the outbound rule
         // decides.
-        const under = out.routeIds.map((id) => read.byId.current.get(id)).filter((v) => !!v);
+        const under = out.routeIds.map((id) => byId.current.get(id)).filter((v) => !!v);
         const routeId = under[0]?.routeId;
         const open =
           under.length === 1
             ? under[0]
-            : (under.find((v) => read.shown.current.includes(v.id)) ??
+            : (under.find((v) => shown.current.includes(v.id)) ??
               directionToOpen(all.filter((v) => v.routeId === routeId)));
-        set.selectedId(open?.id ?? null);
-        set.candidates([]);
+        setSelectedId(open?.id ?? null);
+        setCandidates([]);
       } else if (out.kind === 'several') {
         const keys = new Set(out.routeKeys);
-        set.selectedId(null);
-        set.candidates(all.filter((v) => keys.has(v.routeId)));
+        setSelectedId(null);
+        setCandidates(all.filter((v) => keys.has(v.routeId)));
         // The way round under the finger, as for one route: outbound where an
         // outbound line was hit, the way back where only ways back were — so
         // a tap on the light-blue way back switches to it (the owner's
         // report, 2026-09-25) — and, where a line shown was hit, the way
         // round already shown.
-        const hit = out.routeIds.map((id) => read.byId.current.get(id)).filter((v) => !!v);
-        const shownHit = hit.find((v) => read.shown.current.includes(v.id));
-        set.back(shownHit ? shownHit.reversed : hit.length > 0 && hit.every((v) => v.reversed));
+        const hit = out.routeIds.map((id) => byId.current.get(id)).filter((v) => !!v);
+        const shownHit = hit.find((v) => shown.current.includes(v.id));
+        setBack(shownHit ? shownHit.reversed : hit.length > 0 && hit.every((v) => v.reversed));
       } else {
-        set.selectedId(null);
-        set.candidates([]);
+        setSelectedId(null);
+        setCandidates([]);
       }
     };
     const enter = () => {
-      if (!read.drawing.current) canvas.style.cursor = 'pointer';
+      if (!drawing.current) canvas.style.cursor = 'pointer';
     };
     const leave = () => {
-      if (!read.drawing.current) canvas.style.cursor = '';
+      if (!drawing.current) canvas.style.cursor = '';
     };
 
     map.on('click', onMapClick);
@@ -100,5 +108,5 @@ export function useRouteTaps<T extends Direction>(
       map.off('click', onMapClick);
       unhover();
     };
-  }, [map]);
+  }, [map, drawing, byId, shown, setHighlight, setSelectedId, setCandidates, setBack]);
 }

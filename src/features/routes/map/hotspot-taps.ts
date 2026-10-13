@@ -23,6 +23,9 @@ export function useHotspotTaps<S extends Hotspot>(
   read: { drawing: RefObject<boolean>; byId: RefObject<Map<string, S>> },
   set: { selectedId: (id: string | null) => void; candidates: (c: S[]) => void },
 ) {
+  // Refs and setters: the same each render, so the click is bound once per map.
+  const { drawing, byId } = read;
+  const { selectedId: setSelectedId, candidates: setCandidates } = set;
   useEffect(() => {
     if (!map || !map.getLayer(FILL)) return;
     const canvas = map.getCanvas();
@@ -37,24 +40,24 @@ export function useHotspotTaps<S extends Hotspot>(
     // inside a box is the hotspot's alone, a route through it or not
     // (tapTargets); the routes hook reads the same tap and keeps its half.
     const onMapClick = (e: MapMouseEvent) => {
-      if (read.drawing.current) return;
+      if (drawing.current) return;
       const out = resolveTap(tapTargets(map, e.point, e.originalEvent));
       if (out.kind === 'hotspot') {
-        set.selectedId(out.hotspotId);
-        set.candidates([]);
+        setSelectedId(out.hotspotId);
+        setCandidates([]);
       } else if (out.kind === 'several') {
-        set.selectedId(null);
-        set.candidates(out.hotspotIds.map((id) => read.byId.current.get(id)).filter((s) => !!s));
+        setSelectedId(null);
+        setCandidates(out.hotspotIds.map((id) => byId.current.get(id)).filter((s) => !!s));
       } else {
-        set.selectedId(null);
-        set.candidates([]);
+        setSelectedId(null);
+        setCandidates([]);
       }
     };
     const enter = (e: MapMouseEvent) => {
-      if (!read.drawing.current && !routeUnder(e)) canvas.style.cursor = 'pointer';
+      if (!drawing.current && !routeUnder(e)) canvas.style.cursor = 'pointer';
     };
     const leave = () => {
-      if (!read.drawing.current) canvas.style.cursor = '';
+      if (!drawing.current) canvas.style.cursor = '';
     };
 
     map.on('click', onMapClick);
@@ -66,5 +69,5 @@ export function useHotspotTaps<S extends Hotspot>(
       map.off('click', onMapClick);
       unhover();
     };
-  }, [map]);
+  }, [map, drawing, byId, setSelectedId, setCandidates]);
 }
