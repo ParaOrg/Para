@@ -32,7 +32,7 @@ type Story = StoryObj<typeof meta>;
 /** Red: Content/inverse under Route/RouteCardPrimary, the Primary Blob. */
 export const Red: Story = {};
 
-/** Orange — Figma's Pink, the Card/orange tokens. */
+/** Orange, the Card/orange tokens (Figma's Pink until 2026-10-13). */
 export const Orange: Story = { args: { livery: 'orange', routeOrigin: 'SM Fairview' } };
 
 /** State=Selected, red: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
@@ -65,6 +65,14 @@ export const Fuchsia: Story = { args: { livery: 'fuchsia', routeOrigin: 'SM Fair
 /** Selected, fuchsia: as Violet. */
 export const FuchsiaSelected: Story = {
   args: { state: 'selected', livery: 'fuchsia', routeOrigin: 'SM Fairview' },
+};
+
+/** Pink (4071:7014, 2026-10-13): as Violet. */
+export const Pink: Story = { args: { livery: 'pink', routeOrigin: 'Lagro' } };
+
+/** Selected, pink: as Violet. */
+export const PinkSelected: Story = {
+  args: { state: 'selected', livery: 'pink', routeOrigin: 'Lagro' },
 };
 
 /**

@@ -213,6 +213,21 @@ function TokensPage() {
           token="Card/fuchsia/Timeline"
           cls="bg-card-fuchsia-timeline-surface"
         />
+        <Swatch
+          box="bg-card-pink-surface border-3 border-card-pink-border-primary"
+          token="Card/pink"
+          cls="bg-card-pink-surface"
+        />
+        <Swatch
+          box="bg-card-pink-surface-pale"
+          token="Card/pink/surface-pale"
+          cls="bg-card-pink-surface-pale"
+        />
+        <Swatch
+          box="bg-card-pink-timeline-surface"
+          token="Card/pink/Timeline"
+          cls="bg-card-pink-timeline-surface"
+        />
       </Group>
 
       <Group title="Error actions">

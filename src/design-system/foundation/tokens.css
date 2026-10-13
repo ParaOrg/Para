@@ -103,8 +103,9 @@
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
 
-  /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose and fuchsia; yellow
-     left on 2026-10-12 ("it's not good on the eyes"), its variables with it. Each livery's
+  /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia and pink
+     (pink came on 2026-10-13, RouteCard 4071:7014); yellow left on 2026-10-12 ("it's not
+     good on the eyes"), its variables with it. Each livery's
      surface-pale is the rest of a lit line past a picked hintuan (the owner's, 2026-10-12;
      red's alone, and red/700, until then). */
   --card-red-surface: var(--color-red-800);
@@ -127,6 +128,10 @@
   --card-fuchsia-surface-pale: var(--color-fuchsia-200);
   --card-fuchsia-border-primary: var(--color-fuchsia-800);
   --card-fuchsia-timeline-surface: var(--color-fuchsia-800);
+  --card-pink-surface: var(--color-pink-700);
+  --card-pink-surface-pale: var(--color-pink-200);
+  --card-pink-border-primary: var(--color-pink-800);
+  --card-pink-timeline-surface: var(--color-pink-900);
 
   /* Error actions — the destructive button. Figma: Error/… (2026-09-28,
      added for the Button so its fill stopped being the one primitive). */
@@ -222,6 +227,10 @@
   --color-card-fuchsia-surface-pale: var(--card-fuchsia-surface-pale);
   --color-card-fuchsia-border-primary: var(--card-fuchsia-border-primary);
   --color-card-fuchsia-timeline-surface: var(--card-fuchsia-timeline-surface);
+  --color-card-pink-surface: var(--card-pink-surface);
+  --color-card-pink-surface-pale: var(--card-pink-surface-pale);
+  --color-card-pink-border-primary: var(--card-pink-border-primary);
+  --color-card-pink-timeline-surface: var(--card-pink-timeline-surface);
 
   --color-error-surface: var(--error-surface);
   --color-error-surface-secondary: var(--error-surface-secondary);

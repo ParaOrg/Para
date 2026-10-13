@@ -215,11 +215,14 @@ export const NoHintuan: Story = {
 /** In red, the Timeline set's own colour, with Content/inverse words. */
 export const Red: Story = { args: { livery: 'red' } };
 
-/** Orange (Figma's Pink). */
+/** Orange (Figma's Pink until 2026-10-13). */
 export const Orange: Story = { args: { livery: 'orange' } };
 
 /** Fuchsia, with Content/inverse words, like red. */
 export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
+
+/** Pink (4071:7014, 2026-10-13), with Content/inverse words, like fuchsia. */
+export const Pink: Story = { args: { livery: 'pink' } };
 
 /** SWITCHed: the way back. SWITCH is pressed for a screen reader only; it has no drawn "on" look yet. */
 export const TheWayBack: Story = {
@@ -306,6 +309,12 @@ export const PickedOrange: Story = {
 /** Fuchsia, as red: the pill white, its pesos in the card's fuchsia. */
 export const PickedFuchsia: Story = {
   args: { livery: 'fuchsia', picked: 'h3' },
+  play: pickedAsDrawn,
+};
+
+/** Pink, as fuchsia: the pill white, its pesos in the card's pink. */
+export const PickedPink: Story = {
+  args: { livery: 'pink', picked: 'h3' },
   play: pickedAsDrawn,
 };
 

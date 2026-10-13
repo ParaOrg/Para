@@ -55,6 +55,11 @@ export const LIVERY_LINE = {
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
     pale: CARD_PALE_COLOURS['Card/fuchsia/surface-pale'],
   },
+  pink: {
+    line: CARD_COLOURS['Card/pink/surface'],
+    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
+    pale: CARD_PALE_COLOURS['Card/pink/surface-pale'],
+  },
 } satisfies Record<Livery, LineLook>;
 
 /**
@@ -83,6 +88,7 @@ export const LINE_SURFACE = {
   violet: 'bg-card-violet-surface',
   rose: 'bg-card-rose-surface',
   fuchsia: 'bg-card-fuchsia-surface',
+  pink: 'bg-card-pink-surface',
   selected: 'bg-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -96,6 +102,7 @@ export const LINE_TEXT = {
   violet: 'text-card-violet-surface',
   rose: 'text-card-rose-surface',
   fuchsia: 'text-card-fuchsia-surface',
+  pink: 'text-card-pink-surface',
   selected: 'text-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -106,5 +113,6 @@ export const LINE_FILL = {
   violet: 'fill-card-violet-surface',
   rose: 'fill-card-rose-surface',
   fuchsia: 'fill-card-fuchsia-surface',
+  pink: 'fill-card-pink-surface',
   selected: 'fill-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;

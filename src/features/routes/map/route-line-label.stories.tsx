@@ -112,6 +112,9 @@ export const CodeSignEndViolet: Story = {
 export const CodeSignEndFuchsia: Story = {
   args: { variant: 'end', codeSign: 'YL06', livery: 'fuchsia' },
 };
+export const CodeSignEndPink: Story = {
+  args: { variant: 'end', codeSign: 'GL05', livery: 'pink' },
+};
 
 /** A name longer than the room: cut short with an ellipsis, the disc and the code whole. */
 export const LongName: Story = {

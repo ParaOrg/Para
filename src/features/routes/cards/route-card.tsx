@@ -14,8 +14,9 @@ import type { Livery } from '../model/liveries';
  * RouteCard set (Figma 3665:2265): the place in SN Pro Black, and a row for
  * each place it goes to (his .RouteEndPointBar). The Figma property Variants
  * is `livery` here, the name the tokens give these colours, because a variant
- * in this codebase is a direction; Figma's Pink is the orange tokens (the
- * owner, 2026-09-28). How each livery paints the card — surface, words, glow,
+ * in this codebase is a direction. Figma's Pink was the orange tokens (the
+ * owner, 2026-09-28) until the set named it Orange and drew a pink of its
+ * own, Card/pink (4071:7014, 2026-10-13). How each livery paints the card — surface, words, glow,
  * shadow — is liveryCard.ts, shared with the trip card it opens.
  *
  * Figma's State (2026-09-29): Rest, or Selected — pressed in, under the
