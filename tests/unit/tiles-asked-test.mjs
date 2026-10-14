@@ -91,6 +91,7 @@ test('the public map notes its tiles, the studio none, and the worker asks for t
     new URL('../../src/app/studio/workshop.tsx', import.meta.url),
     'utf8',
   );
+  assert.match(studio, /<MapView\b/, 'the studio renders its MapView here');
   assert.doesNotMatch(studio, /openOn/);
 
   const pwa = readFileSync(
