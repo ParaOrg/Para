@@ -21,7 +21,7 @@ export { RouteExportPanel } from './panels/route-export-panel';
 export { RouteFacts } from './panels/route-facts';
 export { returnTripLeft } from './panels/return-trip';
 export { SavePanel } from './panels/save-panel';
+export { SaveToasts, type SaveToast } from './panels/save-toasts';
 export { SignboardEditor } from './panels/signboard-editor';
-export { Toast } from './panels/toast';
 export { useDeleteActions } from './panels/use-delete-actions';
 export { useSaveTarget } from './panels/use-save-target';

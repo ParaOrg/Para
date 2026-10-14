@@ -14,11 +14,10 @@ import { StationLabels } from '@/features/routes/map/station-labels';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
-import { hotspotLabel, hotspotRing, type HotspotRow } from '@/features/routes/model/hotspots';
+import { hotspotRing, type HotspotRow } from '@/features/routes/model/hotspots';
 import { hotspotCount } from '@/features/routes/model/places';
 import { routeTimeline } from '@/features/routes/model/ride';
 import { isDrawn, directionLine, type DirectionRow } from '@/features/routes/model/routes';
-import type { usePasswordRecovery } from '@/features/studio';
 import {
   lineOf,
   listDirections,
@@ -37,7 +36,9 @@ import {
   DrawToolbar,
   HotspotPanel,
   SavePanel,
-  Toast,
+  SaveToasts,
+  type SaveToast,
+  type usePasswordRecovery,
   useDrawing,
   useFollow,
   useSaveTarget,
@@ -53,8 +54,8 @@ interface WorkshopProps {
  * The map and every editing tool, for a signed-in editor or a test session.
  * The composition root: the state and the hooks' results passed down. What
  * it decides lives in the studio's panels: the return-trip offer
- * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts), and the deletes
- * themselves (use-delete-actions.ts).
+ * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts), the deletes
+ * themselves (use-delete-actions.ts) and the saved toasts (save-toasts.tsx).
  */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -66,12 +67,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // link (expired, already used) is the first one: just a notice, since the
   // user is plainly signed out and can ask for another. The link is read once,
   // on arrival, so its error is known before this mounts and never comes later.
-  const [toast, setToast] = useState<
-    | { kind: 'route'; v: DirectionRow }
-    | { kind: 'hotspot'; s: HotspotRow }
-    | { kind: 'notice'; text: string }
-    | null
-  >(() =>
+  const [toast, setToast] = useState<SaveToast | null>(() =>
     recovery.error ? { kind: 'notice', text: `Reset link problem: ${recovery.error}` } : null,
   );
   const setNotice = (text: string | null) =>
@@ -406,42 +402,16 @@ export function Workshop({ session, recovery }: WorkshopProps) {
         />
       )}
 
-      {toast?.kind === 'hotspot' && !draw.drawing && (
-        <Toast onDismiss={() => setToast(null)}>
-          Saved {toast.s.kind === 'terminal' ? 'terminal' : 'hintuan'}{' '}
-          <strong>{hotspotLabel(toast.s)}</strong>
-        </Toast>
-      )}
-
-      {/* After a save, the other direction is almost always next — while there is one to draw. */}
-      {toast?.kind === 'route' && !draw.drawing && (
-        <Toast
-          onDismiss={() => setToast(null)}
-          action={
-            slotLeft && (
-              <button
-                type="button"
-                onClick={() => {
-                  const routeId = toast.v.routeId;
-                  setToast(null);
-                  draw.start(routeId);
-                }}
-                className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-900 pointer-coarse:min-h-11 pointer-coarse:px-4 pointer-coarse:text-sm"
-              >
-                Draw the return trip
-              </button>
-            )
-          }
-        >
-          Saved <strong>{toast.v.route?.name}</strong> · {toast.v.name}
-        </Toast>
-      )}
-
-      {toast?.kind === 'notice' && (
-        <Toast tone="alert" onDismiss={() => setToast(null)}>
-          {toast.text}
-        </Toast>
-      )}
+      <SaveToasts
+        toast={toast}
+        isDrawing={draw.drawing}
+        canDrawReturnTrip={slotLeft}
+        onDismiss={() => setToast(null)}
+        onDrawReturnTrip={(routeId) => {
+          setToast(null);
+          draw.start(routeId);
+        }}
+      />
 
       {draw.drawing ? (
         <DrawToolbar
