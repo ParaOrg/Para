@@ -14,6 +14,7 @@ import {
 import { cutAt, nearestSpot, reverseDrawing, type BorrowPart } from './borrow';
 import { readDraft, useDraftSaving } from './draft';
 import { useDrawLayers, useDrawRendering } from './draw-layers';
+import { addBeforeJoin, insertInGap, removeAt, ringSegments, waitingRuns } from './drawing-edits';
 import type {
   AreaTarget,
   Borrow,
@@ -155,20 +156,10 @@ export function useDrawing(
       if (join !== -1 && !areaRef.current) {
         // Before a borrowed end: the new point goes in just ahead of the join,
         // and both gaps it touches are new drawing.
-        const pts = [...cpRef.current];
-        pts.splice(join, 0, point);
-        writePoints(pts);
-        const segs = [...segRef.current];
-        if (join === 0) segs.unshift(straightSegment(point, pts[1]));
-        else
-          segs.splice(
-            join - 1,
-            1,
-            straightSegment(pts[join - 1], point),
-            straightSegment(point, pts[join + 1]),
-          );
-        writeSegments(segs);
-        await resolveGaps(join === 0 ? 0 : join - 1, join === 0 ? [mode] : [mode, mode]);
+        const edit = addBeforeJoin(cpRef.current, segRef.current, join, point, mode);
+        writePoints(edit.points);
+        writeSegments(edit.segments);
+        if (edit.resolve) await resolveGaps(edit.resolve.from, edit.resolve.modes);
         return;
       }
       const prevLen = cpRef.current.length;
@@ -182,16 +173,10 @@ export function useDrawing(
   /** Split a segment by dropping a new control point into it. */
   const insertPoint = useCallback(
     async (gap: number, point: LngLat) => {
-      const mode: SnapMode = segRef.current[gap]?.snap ?? 'snapped';
-      const pts = [...cpRef.current];
-      pts.splice(gap + 1, 0, point);
-      writePoints(pts);
-
-      const segs = [...segRef.current];
-      segs.splice(gap, 1, straightSegment(pts[gap], point), straightSegment(point, pts[gap + 2]));
-      writeSegments(segs);
-
-      await resolveGaps(gap, [mode, mode]);
+      const edit = insertInGap(cpRef.current, segRef.current, gap, point);
+      writePoints(edit.points);
+      writeSegments(edit.segments);
+      if (edit.resolve) await resolveGaps(edit.resolve.from, edit.resolve.modes);
     },
     [resolveGaps, writePoints, writeSegments],
   );
@@ -199,23 +184,10 @@ export function useDrawing(
   /** Remove a control point, healing the two segments around it into one. */
   const deletePoint = useCallback(
     async (idx: number) => {
-      const origLen = cpRef.current.length;
-      const modeBefore = segRef.current[idx - 1]?.snap;
-      const modeAfter = segRef.current[idx]?.snap;
-
-      const pts = [...cpRef.current];
-      pts.splice(idx, 1);
-      writePoints(pts);
-
-      const segs = [...segRef.current];
-      if (idx === 0) segs.splice(0, 1);
-      else if (idx === origLen - 1) segs.splice(segs.length - 1, 1);
-      else segs.splice(idx - 1, 2, straightSegment(pts[idx - 1], pts[idx]));
-      writeSegments(segs);
-
-      if (idx > 0 && idx < pts.length) {
-        await resolveGaps(idx - 1, [modeBefore ?? modeAfter ?? 'snapped']);
-      }
+      const edit = removeAt(cpRef.current, segRef.current, idx);
+      writePoints(edit.points);
+      writeSegments(edit.segments);
+      if (edit.resolve) await resolveGaps(edit.resolve.from, edit.resolve.modes);
     },
     [resolveGaps, writePoints, writeSegments],
   );
@@ -281,18 +253,12 @@ export function useDrawing(
     setDeleted(null);
     // A stretch still waiting for the router lost its request to the Delete:
     // ask again, each run of them in one request.
-    let from = -1;
-    segments.forEach((s, i) => {
-      const waiting = !!s && isStandIn(s);
-      if (waiting && from === -1) from = i;
-      if (from === -1 || (waiting && i < segments.length - 1)) return;
-      const to = waiting ? i : i - 1;
+    for (const [from, to] of waitingRuns(segments, isStandIn)) {
       void resolveGaps(
         from,
         segments.slice(from, to + 1).map((g) => g.snap),
       );
-      from = -1;
-    });
+    }
   }, [deleted, writePoints, writeSegments, isStandIn, resolveGaps]);
 
   // Put back is offered for a few seconds after the Delete.
@@ -507,9 +473,7 @@ export function useDrawing(
       setArea(a);
       areaRef.current = a;
       writePoints(ring);
-      const segs: Segment[] = [];
-      for (let i = 1; i < ring.length; i++) segs.push(straightSegment(ring[i - 1], ring[i]));
-      writeSegments(segs);
+      writeSegments(ringSegments(ring));
       setFreehand(false);
       setTarget({ routeId: null, directionId: null });
       setDrawing(true);
