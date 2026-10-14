@@ -15,7 +15,7 @@ import { useRouteSave } from './use-route-save';
 import { useSaveFacts } from './use-save-facts';
 import type { Drawing } from '../drawing/use-drawing';
 
-interface Props {
+interface SavePanelProps {
   draw: Drawing;
   /** The direction being edited, when this is an edit rather than a new save. */
   existing: DirectionRow | null;
@@ -47,6 +47,12 @@ interface Props {
  * name is generated from them and cannot be typed over, so a hotspot renamed
  * once fixes every route through it. Nothing here is required except the two
  * ends — the signboard is an observed fact and can wait until it is known.
+ *
+ * Its pieces live beside it: the places and the first guess at the ends
+ * (`places.ts`), what the line is (`useSaveFacts`), why a save is refused
+ * (`save-checks.ts`), the save itself (`useRouteSave`), the two ends
+ * (`PlacePicker`), the route's facts (`RouteFields`), the notices
+ * (`SaveNotices`) and the phone layout's classes (`sheet.ts`).
  */
 export function SavePanel({
   draw,
@@ -57,7 +63,7 @@ export function SavePanel({
   directions = [],
   onSaved,
   onCancel,
-}: Props) {
+}: SavePanelProps) {
   const parent = existing?.route ?? route;
   const line = draw.controlPoints;
   const places = useMemo(() => groupPlaces(hotspots), [hotspots]);
