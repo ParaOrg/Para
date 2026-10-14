@@ -11,6 +11,7 @@ import {
 } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
+import { PlacePicker } from './place-picker';
 import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
 import { saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
@@ -209,42 +210,24 @@ export function SavePanel({
         />
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="block text-xs font-medium text-neutral-700">
-            Head <span className="text-neutral-400">(where the jeeps wait)</span>
-            <select
-              required
-              disabled={routeLocked}
-              value={headPlace?.key ?? ''}
-              onChange={(e) => setHeadId(pickPlace(e.target.value, nearHead))}
-              className={FIELD}
-              data-testid="save-head"
-            >
-              <option value="">Pick a place…</option>
-              {places.map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-xs font-medium text-neutral-700">
-            Tail <span className="text-neutral-400">(the far end)</span>
-            <select
-              required
-              disabled={routeLocked}
-              value={tailPlace?.key ?? ''}
-              onChange={(e) => setTailId(pickPlace(e.target.value, nearTail))}
-              className={FIELD}
-              data-testid="save-tail"
-            >
-              <option value="">Pick a place…</option>
-              {places.map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <PlacePicker
+            label="Head"
+            hint="(where the jeeps wait)"
+            places={places}
+            value={headPlace?.key ?? ''}
+            disabled={routeLocked}
+            onChange={(key) => setHeadId(pickPlace(key, nearHead))}
+            testId="save-head"
+          />
+          <PlacePicker
+            label="Tail"
+            hint="(the far end)"
+            places={places}
+            value={tailPlace?.key ?? ''}
+            disabled={routeLocked}
+            onChange={(key) => setTailId(pickPlace(key, nearTail))}
+            testId="save-tail"
+          />
         </div>
 
         {/* What the line passes, by the rule the save will apply: seen first, stored the same. */}
