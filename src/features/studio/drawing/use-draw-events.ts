@@ -6,7 +6,7 @@ import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
 import { nearestSpot } from './borrow';
 import { CLOSING, HIT_LAYER, POINT_LAYER } from './draw-layers';
-import type { AreaTarget, Borrow, FollowOffer, Picking } from './use-drawing';
+import type { AreaTarget, Borrow, FollowOffer, Picking } from './drawing-types';
 
 /** A tap this many pixels off the line being extended does not pick a spot on it. */
 const PICK_PX = 40;
