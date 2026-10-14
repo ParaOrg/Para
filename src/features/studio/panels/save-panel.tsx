@@ -2,24 +2,20 @@ import { useMemo, useState } from 'react';
 
 import { DirectionTimeline, passesThrough } from '@/features/routes/cards/direction-timeline';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import {
-  isLineMode,
-  MODES,
-  type RouteRow,
-  type TransportMode,
-  type DirectionRow,
-} from '@/features/routes/model/routes';
-import { haversine, type LngLat } from '@/shared/utils/geo';
+import type { RouteRow, TransportMode, DirectionRow } from '@/features/routes/model/routes';
+import type { LngLat } from '@/shared/utils/geo';
 
-import { boxFor, groupPlaces, nearestHotspot } from './places';
+import { PlacePicker } from './place-picker';
+import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
+import { RouteFields } from './route-fields';
+import { saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
-import { FIELD_TEXT, FOOTER, OVERLAY, PANEL } from './sheet';
+import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
+import { useRouteSave } from './use-route-save';
 import { useSaveFacts } from './use-save-facts';
-import { ENDS_TAKEN } from '../data/routes-write';
-import { saveRouteAndLinks } from '../data/save-route';
 import type { Drawing } from '../drawing/use-drawing';
 
-interface Props {
+interface SavePanelProps {
   draw: Drawing;
   /** The direction being edited, when this is an edit rather than a new save. */
   existing: DirectionRow | null;
@@ -44,10 +40,6 @@ interface Props {
   onCancel: () => void;
 }
 
-const field =
-  `mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 ${FIELD_TEXT} outline-none ` +
-  'focus:border-neutral-900 disabled:bg-neutral-100 disabled:text-neutral-500';
-
 /**
  * The one form in the app. Appears once, at ✓ Done.
  *
@@ -55,6 +47,12 @@ const field =
  * name is generated from them and cannot be typed over, so a hotspot renamed
  * once fixes every route through it. Nothing here is required except the two
  * ends — the signboard is an observed fact and can wait until it is known.
+ *
+ * Its pieces live beside it: the places and the first guess at the ends
+ * (`places.ts`), what the line is (`useSaveFacts`), why a save is refused
+ * (`save-checks.ts`), the save itself (`useRouteSave`), the two ends
+ * (`PlacePicker`), the route's facts (`RouteFields`), the notices
+ * (`SaveNotices`) and the phone layout's classes (`sheet.ts`).
  */
 export function SavePanel({
   draw,
@@ -65,26 +63,16 @@ export function SavePanel({
   directions = [],
   onSaved,
   onCancel,
-}: Props) {
+}: SavePanelProps) {
   const parent = existing?.route ?? route;
   const line = draw.controlPoints;
   const places = useMemo(() => groupPlaces(hotspots), [hotspots]);
-  const placeOf = (id: string) => places.find((p) => p.boxes.some((s) => s.id === id));
-  const lineStart = line[0];
-  const lineEnd = line[line.length - 1];
-  // Where a picked end's box is looked for: at the end of the line nearer
-  // the route's head, and the tail at the other — whichever way it was
-  // drawn; a new route's line starts at its head.
+  // Where a picked end's box is looked for: the end of the line nearer the
+  // route's head, whichever way it was drawn.
   const headNow = existing
     ? hotspots.find((s) => s.id === existing.route.headHotspotId)
     : undefined;
-  const startsAtHead =
-    !headNow ||
-    !lineStart ||
-    !lineEnd ||
-    haversine(lineStart, headNow.point.coordinates) <=
-      haversine(lineEnd, headNow.point.coordinates);
-  const [nearHead, nearTail] = startsAtHead ? [lineStart, lineEnd] : [lineEnd, lineStart];
+  const [nearHead, nearTail] = endsByHead(line, headNow);
 
   const [signboard, setSignboard] = useState(parent?.signboard ?? '');
   const [mode, setMode] = useState<TransportMode>(parent?.mode ?? 'jeepney');
@@ -92,41 +80,16 @@ export function SavePanel({
   const [via, setVia] = useState(parent?.via ?? '');
   // The ends are the route's: a return trip takes them as they are, and Edit
   // route starts from them; a new route's are guessed from where the line
-  // actually starts and finishes — the nearest box, then that box's place,
-  // then the place's own box — and corrected by hand when the guess is wrong.
-  const guess = (to: LngLat | undefined) => {
-    const place = placeOf(nearestHotspot(hotspots, to));
-    return place ? boxFor(place, to) : '';
-  };
-  // The guess reads the line's own order: it starts at the head. A return trip
-  // starts at the tail, so when the guessed pair is already a route the other
-  // way round, that route is the one meant — the head is where its jeeps wait.
-  const [firstGuess] = useState(() => {
-    const [h, t] = [guess(lineStart), guess(lineEnd)];
-    const swapped = directions.some(
-      (v) => v.route.headHotspotId === t && v.route.tailHotspotId === h,
-    );
-    return swapped ? [t, h] : [h, t];
-  });
+  // actually starts and finishes, once, and corrected by hand when the guess
+  // is wrong.
+  const [firstGuess] = useState(() => guessEnds(places, hotspots, line, directions));
   const [headId, setHeadId] = useState(parent?.headHotspotId ?? firstGuess[0]);
   const [tailId, setTailId] = useState(parent?.tailHotspotId ?? firstGuess[1]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // The direction as a save wrote it, when the link sync after it failed.
-  // Saves are two steps, not one transaction (PLAN.md's known risk #3): a
-  // second press inserted the route again, met its own row and was refused as
-  // "already drawn" (review finding 13). Now it updates the row it wrote.
-  const [written, setWritten] = useState<{ routeId: string; directionId: string } | null>(null);
 
-  // A return trip fills its route's slot and leaves the route as it is; Edit
-  // route may change the route's facts, for both its directions. A new
-  // route's are fixed once a save has written it: the retry finishes that
-  // row and would ignore a changed end.
-  const routeLocked = !existing && (!!parent || !!written);
   const head = hotspots.find((s) => s.id === headId);
   const tail = hotspots.find((s) => s.id === tailId);
-  const headPlace = head ? placeOf(head.id) : undefined;
-  const tailPlace = tail ? placeOf(tail.id) : undefined;
+  const headPlace = head ? placeOfBox(places, head.id) : undefined;
+  const tailPlace = tail ? placeOfBox(places, tail.id) : undefined;
 
   const pickPlace = (key: string, to: LngLat | undefined) => {
     const place = places.find((p) => p.key === key);
@@ -155,65 +118,37 @@ export function SavePanel({
     endsTaken,
     turnedRound,
     borrowParent,
-    borrowPart,
     borrowedM,
     name,
     direction,
     preview,
   } = facts;
+  const { busy, error, setError, written, save } = useRouteSave({ facts, draw, hotspots, onSaved });
+
+  // A return trip fills its route's slot and leaves the route as it is; Edit
+  // route may change the route's facts, for both its directions. A new
+  // route's are fixed once a save has written it: the retry finishes that
+  // row and would ignore a changed end.
+  const routeLocked = !existing && (!!parent || !!written);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!headId || !tailId) {
-      setError('Pick the place at each end. The route is named after them.');
+    const refusal = saveRefusal({ headId, tailId, headPlace, tailPlace, endsTaken, turnedRound });
+    if (refusal) {
+      setError(refusal);
       return;
     }
-    if (headPlace && headPlace === tailPlace) {
-      setError('The two ends have to be different places.');
-      return;
-    }
-    if (endsTaken) {
-      setError(ENDS_TAKEN);
-      return;
-    }
-    if (turnedRound) {
-      setError(
-        'Head and tail swapped would turn the route round, which Edit route cannot do: its directions keep their way round. Change one end at a time.',
-      );
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      // The borrow on the parent's full line, read now if it has not come.
-      const borrowed = await facts.borrowedForSave();
-      const named = await saveRouteAndLinks(
-        {
-          routeId: written?.routeId ?? parent?.id ?? null,
-          directionId: written?.directionId ?? existing?.id ?? null,
-          writeRoute: !!existing,
-          signboard,
-          mode,
-          fareNote: fareNote,
-          headHotspotId: headId,
-          tailHotspotId: tailId,
-          via,
-          reversed,
-          controlPoints: draw.controlPoints,
-          segments: draw.segments,
-          // A parent deleted since, or a borrowed part redrawn away, borrows nothing.
-          borrowedFrom: borrowParent && borrowed > 0 ? borrowParent.id : null,
-          borrowedPart: borrowPart,
-          borrowedMetres: borrowed > 0 ? Math.round(borrowed) : null,
-        },
-        hotspots,
-        setWritten,
-      );
-      onSaved(named);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setBusy(false);
-    }
+    await save({
+      routeId: written?.routeId ?? parent?.id ?? null,
+      directionId: written?.directionId ?? existing?.id ?? null,
+      writeRoute: !!existing,
+      signboard,
+      mode,
+      fareNote,
+      headHotspotId: headId,
+      tailHotspotId: tailId,
+      via,
+    });
   }
 
   return (
@@ -249,42 +184,24 @@ export function SavePanel({
         />
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="block text-xs font-medium text-neutral-700">
-            Head <span className="text-neutral-400">(where the jeeps wait)</span>
-            <select
-              required
-              disabled={routeLocked}
-              value={headPlace?.key ?? ''}
-              onChange={(e) => setHeadId(pickPlace(e.target.value, nearHead))}
-              className={field}
-              data-testid="save-head"
-            >
-              <option value="">Pick a place…</option>
-              {places.map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-xs font-medium text-neutral-700">
-            Tail <span className="text-neutral-400">(the far end)</span>
-            <select
-              required
-              disabled={routeLocked}
-              value={tailPlace?.key ?? ''}
-              onChange={(e) => setTailId(pickPlace(e.target.value, nearTail))}
-              className={field}
-              data-testid="save-tail"
-            >
-              <option value="">Pick a place…</option>
-              {places.map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <PlacePicker
+            label="Head"
+            hint="(where the jeeps wait)"
+            places={places}
+            value={headPlace?.key ?? ''}
+            isDisabled={routeLocked}
+            onChange={(key) => setHeadId(pickPlace(key, nearHead))}
+            testId="save-head"
+          />
+          <PlacePicker
+            label="Tail"
+            hint="(the far end)"
+            places={places}
+            value={tailPlace?.key ?? ''}
+            isDisabled={routeLocked}
+            onChange={(key) => setTailId(pickPlace(key, nearTail))}
+            testId="save-tail"
+          />
         </div>
 
         {/* What the line passes, by the rule the save will apply: seen first, stored the same. */}
@@ -306,7 +223,7 @@ export function SavePanel({
             value={via}
             onChange={(e) => setVia(e.target.value)}
             placeholder="Zabarte"
-            className={field}
+            className={FIELD}
           />
         </label>
 
@@ -333,50 +250,15 @@ export function SavePanel({
 
         <hr className="my-4 border-neutral-200" />
 
-        <label className="block text-xs font-medium text-neutral-700">
-          Signboard{' '}
-          <span className="text-neutral-400">(what is painted on the jeep — optional)</span>
-          <input
-            disabled={routeLocked}
-            value={signboard}
-            onChange={(e) => setSignboard(e.target.value)}
-            placeholder="Fairview – Tala"
-            className={field}
-          />
-        </label>
-
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="block text-xs font-medium text-neutral-700">
-            Mode
-            {/* A line, a train's or the ferry's, comes in by its import, with
-                its line named; one drawn here would have none and stop
-                nowhere. And a line stays one: its mode decides which hintuans
-                both directions hotspot at, and a save re-links only the
-                direction saved (servedBy). */}
-            <select
-              disabled={routeLocked || isLineMode(mode)}
-              value={mode}
-              onChange={(e) => setMode(e.target.value as TransportMode)}
-              className={field}
-            >
-              {MODES.filter((m) => !isLineMode(m.value) || m.value === mode).map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-xs font-medium text-neutral-700">
-            Fare note <span className="text-neutral-400">(optional)</span>
-            <input
-              disabled={routeLocked}
-              value={fareNote}
-              onChange={(e) => setFareNote(e.target.value)}
-              placeholder="₱13 first 4 km"
-              className={field}
-            />
-          </label>
-        </div>
+        <RouteFields
+          signboard={signboard}
+          mode={mode}
+          fareNote={fareNote}
+          isLocked={routeLocked}
+          onSignboardChange={setSignboard}
+          onModeChange={setMode}
+          onFareNoteChange={setFareNote}
+        />
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 

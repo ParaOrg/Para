@@ -24,3 +24,8 @@ export const FOOTER =
  * the field is focused; 14 px wider, as before.
  */
 export const FIELD_TEXT = 'text-base sm:text-sm';
+
+/** A long form's input or select: full width, greyed while locked (SavePanel). */
+export const FIELD =
+  `mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 ${FIELD_TEXT} outline-none ` +
+  'focus:border-neutral-900 disabled:bg-neutral-100 disabled:text-neutral-500';
