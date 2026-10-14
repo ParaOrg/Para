@@ -58,12 +58,18 @@ export function useSavedHotspots<S extends Hotspot>(
     if (!opts.keepList) setCandidates([]);
   }, []);
 
-  const drawingRef = useRef(opts.drawing ?? false);
-  drawingRef.current = opts.drawing ?? false;
-  // A chooser left open when drawing starts would come back, stale, after it.
+  const isDrawing = opts.drawing ?? false;
+  const drawingRef = useRef(isDrawing);
   useEffect(() => {
-    if (opts.drawing) setCandidates([]);
-  }, [opts.drawing]);
+    drawingRef.current = isDrawing;
+  }, [isDrawing]);
+  // A chooser left open when drawing starts would come back, stale, after
+  // it: let go in the render drawing starts (the last value kept to tell).
+  const [wasDrawing, setWasDrawing] = useState(isDrawing);
+  if (wasDrawing !== isDrawing) {
+    setWasDrawing(isDrawing);
+    if (isDrawing) setCandidates([]);
+  }
 
   // The click handler is bound once; this is how it reads today's hotspots.
   const byId = useRef(new Map<string, S>());

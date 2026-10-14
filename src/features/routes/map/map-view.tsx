@@ -180,8 +180,12 @@ export function MapView({
   openOn,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Kept from an effect declared before the map's own: the map hands itself
+  // over a tick or more after mounting, to the latest `onReady`.
   const onReadyRef = useRef(onReady);
-  onReadyRef.current = onReady;
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  });
 
   // A blank map with no explanation is the worst possible failure mode, so
   // surface whatever went wrong rather than rendering nothing.
@@ -262,6 +266,9 @@ export function MapView({
         return;
       }
 
+      // The map for the handlers below, which cannot tell the `let` was set.
+      const made = map;
+
       // The map from its making, for the builds that hand it out (see 'load'
       // below): the cheap-phone timer stamps its 'load' and its first frame
       // with the routes drawn from here, before any of its events can fire
@@ -280,7 +287,6 @@ export function MapView({
       // a basemap switch's. Registered here, before anything can load.
       if (openOn) {
         openedOn(map, framing);
-        const made = map;
         made.once('style.load', () => onReadyRef.current?.(made));
       }
 
@@ -345,7 +351,7 @@ export function MapView({
         // it is read here and nowhere else, for the timer and the suites to
         // see what a tap compiles (the cheap-phone plan, Step 0, 2026-10-04).
         if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
-          const shown = map!;
+          const shown = made;
           const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
           w.__map = shown;
           w.__programs = () =>
@@ -353,7 +359,7 @@ export function MapView({
         }
         setReady(map);
         // The public map's was handed over at its style's load (above).
-        if (!openOn) onReadyRef.current?.(map!);
+        if (!openOn) onReadyRef.current?.(made);
       });
 
       map.on('error', (e) => {
@@ -402,7 +408,7 @@ export function MapView({
       setReady(null);
       map?.remove();
     };
-    // `basemap`, `zoomButtons` and `openOn` are read once at mount and never change afterwards.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `zoomButtons`, `maxBounds`, `foldCredits` and `openOn` are read once, as it is made (each prop says so)
   }, []);
 
   return (

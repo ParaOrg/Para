@@ -192,11 +192,11 @@ function EndTitle({
   // the first to reach a place), so the test id follows.
   const opensWhat = onPick ? opens : '';
   useEffect(() => {
-    el.dataset.testid = named ? 'end-title' : 'end-circle';
-    el.dataset.name = name;
-    el.dataset.end = head ? 'head' : 'tail';
-    el.dataset.opens = opensWhat;
-    el.dataset.at = `${at[0]},${at[1]}`;
+    el.setAttribute('data-testid', named ? 'end-title' : 'end-circle');
+    el.setAttribute('data-name', name);
+    el.setAttribute('data-end', head ? 'head' : 'tail');
+    el.setAttribute('data-opens', opensWhat);
+    el.setAttribute('data-at', `${at[0]},${at[1]}`);
     el.toggleAttribute('data-paled', paled);
   }, [el, named, name, head, opensWhat, at, paled]);
   const rail = livery ? (paled ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery]) : LIT_RAIL;
