@@ -25,10 +25,7 @@ import {
   getSupabase,
   supabaseConfigError,
   CardActions,
-  RouteExportPanel,
-  RouteFacts,
   returnTripLeft,
-  SignboardEditor,
   signboardUrl,
   AuthDialogs,
   AccountPill,
@@ -37,6 +34,7 @@ import {
   HotspotPanel,
   SavePanel,
   SaveToasts,
+  TripCardExtras,
   type SaveToast,
   type usePasswordRecovery,
   useDrawing,
@@ -55,7 +53,8 @@ interface WorkshopProps {
  * The composition root: the state and the hooks' results passed down. What
  * it decides lives in the studio's panels: the return-trip offer
  * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts), the deletes
- * themselves (use-delete-actions.ts) and the saved toasts (save-toasts.tsx).
+ * themselves (use-delete-actions.ts) the saved toasts (save-toasts.tsx) and what the trip card
+ * adds for an editor (trip-card-extras.tsx).
  */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -274,45 +273,33 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           height={height}
           signboardUrl={signboardUrl}
           extras={
-            <>
-              <RouteFacts
-                direction={saved.selected}
-                actions={
-                  canEdit && (
-                    <CardActions
-                      editLabel="Edit route"
-                      onEdit={() => {
-                        const v = saved.selected;
-                        if (!v) return;
-                        closeAll();
-                        void opening(v, draw.load);
-                      }}
-                      onDelete={() => {
-                        if (saved.selected) void onDelete(saved.selected);
-                      }}
-                      onExtend={
-                        isDrawn(saved.selected)
-                          ? () => {
-                              const v = saved.selected;
-                              if (!v) return;
-                              closeAll();
-                              void opening(v, draw.startExtend);
-                            }
-                          : undefined
-                      }
-                    />
-                  )
-                }
-              />
-              <RouteExportPanel
-                directions={saved.directions.filter((v) => v.routeId === saved.selected?.routeId)}
-                hotspots={hotspots.hotspots}
-                hotspotsAlong={hotspots.hotspotsAlong}
-              />
-              {canEdit && (
-                <SignboardEditor direction={saved.selected} onChanged={() => void saved.reload()} />
-              )}
-            </>
+            <TripCardExtras
+              direction={saved.selected}
+              directions={saved.directions}
+              hotspots={hotspots.hotspots}
+              hotspotsAlong={hotspots.hotspotsAlong}
+              canEdit={canEdit}
+              onEdit={() => {
+                const v = saved.selected;
+                if (!v) return;
+                closeAll();
+                void opening(v, draw.load);
+              }}
+              onDelete={() => {
+                if (saved.selected) void onDelete(saved.selected);
+              }}
+              onExtend={
+                isDrawn(saved.selected)
+                  ? () => {
+                      const v = saved.selected;
+                      if (!v) return;
+                      closeAll();
+                      void opening(v, draw.startExtend);
+                    }
+                  : undefined
+              }
+              onSignboardsChanged={() => void saved.reload()}
+            />
           }
         />
       )}
