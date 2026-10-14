@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { coarsePointer } from '@/features/routes/map/tap';
 import type { DirectionDrawing } from '@/features/routes/model/routes';
@@ -131,11 +131,8 @@ export function useDrawing(
   const cpRef = useRef<LngLat[]>([]);
   const segRef = useRef<Segment[]>([]);
   const freehandRef = useRef(false);
-  freehandRef.current = freehand;
   const areaRef = useRef<AreaTarget | null>(null);
-  areaRef.current = area;
   const pickingRef = useRef<Picking | null>(null);
-  pickingRef.current = picking;
   /**
    * The point where a kept *end* begins, when a new route joins a saved one
    * there. New clicks go in just before it rather than after the last point,
@@ -146,9 +143,18 @@ export function useDrawing(
    */
   const joinRef = useRef<LngLat | null>(null);
   const borrowRef = useRef<Borrow | null>(null);
-  borrowRef.current = borrow;
   const followRef = useRef(opts.onFollow);
-  followRef.current = opts.onFollow;
+  // The refs that mirror state or a prop also follow it on every commit, for
+  // the setters that write no ref (setFreehand, setBorrow): in a layout effect,
+  // before the map can fire another event, not during render, where a render
+  // React throws away would leave its values behind.
+  useLayoutEffect(() => {
+    freehandRef.current = freehand;
+    areaRef.current = area;
+    pickingRef.current = picking;
+    borrowRef.current = borrow;
+    followRef.current = opts.onFollow;
+  });
   const selectedRef = useRef<number | null>(null);
   /**
    * The first and last points a right-click added by joining a saved line.
@@ -569,6 +575,7 @@ export function useDrawing(
     const d = readDraft();
     if (!d) return;
     const a = d.area ?? null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the draft is read from storage once per page, together with the router requests for its pending gaps below; lazy initial state would split the two and change useDraftSaving's first run
     setArea(a);
     areaRef.current = a;
     const saved = d.segments ?? [];

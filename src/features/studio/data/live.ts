@@ -157,7 +157,7 @@ async function unsummarised(): Promise<Map<string, LineStringGeoJSON>> {
       .order('id')
       .range(from, to),
   );
-  return new Map(rows.filter((r) => r.shape).map((r) => [r.id, r.shape!]));
+  return new Map(rows.flatMap((r) => (r.shape ? [[r.id, r.shape] as const] : [])));
 }
 
 /** One direction's full line: what the list's overview stands for. */

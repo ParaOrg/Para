@@ -13,7 +13,10 @@ import { StudioApp } from './studio-app.tsx';
 // session and finishes password-reset links.
 if (supabaseConfig) setSupabase(createClient(supabaseConfig.url, supabaseConfig.key));
 
-createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root');
+if (!root) throw new Error('studio/index.html has no #root element to mount the studio in.');
+
+createRoot(root).render(
   <StrictMode>
     <StudioApp />
   </StrictMode>,

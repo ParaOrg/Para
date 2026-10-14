@@ -1,6 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { HotspotCard } from '@/features/routes/cards/hotspot-card';
 import { RouteCardList } from '@/features/routes/cards/route-card-list';
@@ -62,10 +62,9 @@ export function StudioApp() {
   // Read on the very first render, before supabase-js consumes the reset link.
   const recovery = usePasswordRecovery();
   const [admitted, setAdmitted] = useState(false);
-
-  useEffect(() => {
-    if (session) setAdmitted(true);
-  }, [session]);
+  // Once through the door, the editor stays admitted: set during render, the
+  // way React adjusts state to a prop, so no frame shows the door after it.
+  if (session && !admitted) setAdmitted(true);
 
   // Still restoring a saved session: show nothing rather than flash the door.
   if (session === undefined && !admitted) {
@@ -103,13 +102,18 @@ function Workshop({
   const [changingPassword, setChangingPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hotspotMenu, setHotspotMenu] = useState(false);
-  // One toast at a time, the newest: a save's, or a problem.
+  // One toast at a time, the newest: a save's, or a problem. A rejected reset
+  // link (expired, already used) is the first one: just a notice, since the
+  // user is plainly signed out and can ask for another. The link is read once,
+  // on arrival, so its error is known before this mounts and never comes later.
   const [toast, setToast] = useState<
     | { kind: 'route'; v: DirectionRow }
     | { kind: 'hotspot'; s: HotspotRow }
     | { kind: 'notice'; text: string }
     | null
-  >(null);
+  >(() =>
+    recovery.error ? { kind: 'notice', text: `Reset link problem: ${recovery.error}` } : null,
+  );
   const setNotice = (text: string | null) =>
     setToast(text === null ? null : { kind: 'notice', text });
   const justSaved = toast?.kind === 'route' ? toast.v : null;
@@ -164,16 +168,12 @@ function Workshop({
   // (StationLabels' rowStops memo) — so the memo is load-bearing, not a
   // saving.
   const trip = saved.selected;
+  // The hook's result is a fresh object each render; its members are stable.
+  const { hotspots: hotspotRows, hotspotsAlong } = hotspots;
   const timeline = useMemo(
     () =>
-      trip
-        ? routeTimeline(
-            trip,
-            hotspots.hotspots,
-            hotspots.hotspotsAlong(trip.id, directionLine(trip)),
-          )
-        : null,
-    [trip, hotspots.hotspots, hotspots.hotspotsAlong],
+      trip ? routeTimeline(trip, hotspotRows, hotspotsAlong(trip.id, directionLine(trip))) : null,
+    [trip, hotspotRows, hotspotsAlong],
   );
 
   // The pill counts routes, not directions: a route is two rows, one of them
@@ -187,20 +187,13 @@ function Workshop({
   const userId = session?.user.id ?? null;
 
   // Signed in from the dialog Done opened: the dialog hides itself on the
-  // session, so its flag is cleared here — left set, it kept the drawing keys
-  // (Ctrl+Z, Enter, F) off for the rest of the visit (finding 9).
-  useEffect(() => {
-    if (signedIn) setSigningIn(false);
-  }, [signedIn]);
+  // session, so its flag is cleared here, during render — left set, it kept
+  // the drawing keys (Ctrl+Z, Enter, F) off for the rest of the visit
+  // (finding 9).
+  if (signedIn && signingIn) setSigningIn(false);
 
   // Back from a valid reset link: the link gave us a session, now set the password.
   const resetting = recovery.recovering && signedIn;
-
-  // A rejected reset link (expired, already used) is just a notice; the user
-  // is plainly signed out and can ask for another.
-  useEffect(() => {
-    if (recovery.error) setNotice(`Reset link problem: ${recovery.error}`);
-  }, [recovery.error]);
 
   // What the save panel saves into, and where the drawing is headed.
   const target = useSaveTarget(draw, saved.directions, hotspots.hotspots);

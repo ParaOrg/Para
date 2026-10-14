@@ -135,13 +135,11 @@ export function HotspotPanel({
 
   // A terminal's checklist is pre-ticked from the full lines, once they are
   // in; a box the owner ticks or unticks before then keeps the owner's
-  // choice over the pre-tick.
+  // choice over the pre-tick. Set during render, once, as the lines arrive.
   const [startTicks, setStartTicks] = useState<Set<string> | null>(() =>
     existing ? new Set(existingLinks) : null,
   );
-  useEffect(() => {
-    if (lined && startTicks === null) setStartTicks(new Set(directionsStartingIn(ring, lined)));
-  }, [lined, startTicks, ring]);
+  if (lined && startTicks === null) setStartTicks(new Set(directionsStartingIn(ring, lined)));
   const [chosen, setChosen] = useState<ReadonlyMap<string, boolean>>(() => new Map());
   const ticked = useMemo(() => {
     const t = new Set(startTicks ?? []);
@@ -219,6 +217,7 @@ export function HotspotPanel({
           Ground name <span className="text-neutral-400">(as written on the ground)</span>
           <input
             required
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
             autoFocus={!coarse}
             value={name}
             onChange={(e) => setName(e.target.value)}
