@@ -49,15 +49,19 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
   // its first row's first (drawnDepartures leaves no card empty), after its
   // train line and a bar ('' before it for a jeepney's): a train card wears
   // its line's colour, never a draw (cardLiveries). The ids are uuids, with
-  // no space, bar or newline to split on.
-  const cardKey = places
-    .map(
-      (p) =>
-        (railLineOf(p.directions[0].v) ?? '') +
-        '|' +
-        p.directions.map((d) => d.v.routeId).join(' '),
-    )
-    .join('\n');
+  // no space, bar or newline to split on. String(), because the React
+  // Compiler cannot tell what drawnDepartures' join gives is a string, and
+  // would otherwise drop the memo below as one that may change under it.
+  const cardKey = String(
+    places
+      .map(
+        (p) =>
+          (railLineOf(p.directions[0].v) ?? '') +
+          '|' +
+          p.directions.map((d) => d.v.routeId).join(' '),
+      )
+      .join('\n'),
+  );
   const liveries = useMemo(() => {
     if (!cardKey) return [];
     const cards = cardKey.split('\n').map((card) => card.split('|'));

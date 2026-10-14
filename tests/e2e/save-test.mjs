@@ -28,6 +28,8 @@
 // in from Done (9); no React warnings (the duplicate key). And the camera
 // with the cards, the public map's in the studio too (the owner, 2026-09-30):
 // a trip opened on its whole route, beside the card.
+import { readFileSync } from 'node:fs';
+
 import { chromium } from 'playwright';
 import { readPublished } from './lib/big-map.mjs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
@@ -966,6 +968,49 @@ check(
     bucket.size === 0 &&
     (await page.getByTestId('trip-signboards').count()) === 0,
   `${JSON.stringify(outRow()?.signboards)}; ${bucket.size} in the bucket; ${await page.getByTestId('trip-signboards').count()} row(s) on the card`,
+);
+
+// ---- 5c. Export, the route both ways (the owner's ask of 2026-10-13)
+await openCard(OUT[1]);
+const exported = async (label) => {
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('route-export').getByRole('button', { name: label, exact: true }).click(),
+  ]);
+  const path = await download.path();
+  return { name: download.suggestedFilename(), text: path ? readFileSync(path, 'utf8') : '' };
+};
+const bothWays = directionsOf(outRow()?.route_id ?? '');
+const fullPoints = bothWays.reduce((sum, v) => sum + (v.shape?.coordinates.length ?? 0), 0);
+n = log.length;
+const csv = await exported('CSV');
+const csvRows = csv.text.replace(/^﻿/, '').trimEnd().split('\r\n');
+check(
+  'Export CSV: a row per point of both full lines, read on their own, under one header',
+  csv.name.endsWith('.csv') &&
+    csvRows[0] === 'route,direction,way,sequence,lng,lat' &&
+    csvRows.length === 1 + fullPoints &&
+    csvRows.some((r) => r.includes(',outbound,')) &&
+    csvRows.some((r) => r.includes(',return,')) &&
+    since(n).filter((x) => x.table === 'route_variant' && x.query.includes('select=shape'))
+      .length >= 2,
+  `${csv.name}: ${csvRows.length - 1} rows for ${fullPoints} points; ${said(since(n))}`,
+);
+const geo = JSON.parse((await exported('GeoJSON')).text);
+check(
+  '  GeoJSON: a FeatureCollection with both lines and their places',
+  geo.type === 'FeatureCollection' &&
+    geo.features.filter((f) => f.geometry.type === 'LineString').length === 2 &&
+    geo.features.some((f) => f.geometry.type === 'Point'),
+  JSON.stringify(geo.features.map((f) => f.geometry.type)),
+);
+const json = JSON.parse((await exported('JSON')).text);
+check(
+  '  JSON: the route and its directions, outbound first, each with its line',
+  json.route?.id === outRow()?.route_id &&
+    json.directions.map((v) => v.way).join() === 'outbound,return' &&
+    json.directions.every((v) => v.line?.length > 1 && v.places.length >= 2),
+  JSON.stringify(json.directions?.map((v) => [v.way, v.line?.length, v.places?.length])),
 );
 
 // ---- 6. Delete a direction, then draw it again

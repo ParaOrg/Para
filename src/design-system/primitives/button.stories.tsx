@@ -76,9 +76,9 @@ export const AllVariants: Story = {
 };
 
 /**
- * A real specimen: the card-actions row the Button will one day replace,
- * at phone width over a map-coloured box, the way CardActions lays out
- * Edit, Extend and Delete today.
+ * A real specimen: the studio's card-actions row, at phone width over a
+ * map-coloured box, the way CardActions lays out Edit, Extend and Delete —
+ * Primary, Secondary and Error since the owner's 2026-10-13.
  */
 export const CardActionsSpecimen: Story = {
   render: () => (
@@ -87,7 +87,7 @@ export const CardActionsSpecimen: Story = {
         <p className="mb-3 font-sn-pro text-sm text-content-tertiary">Tala → SM Fairview</p>
         <div className="flex gap-2">
           <Button variant="primary" label="Edit route" />
-          <Button variant="special" label="Extend" />
+          <Button variant="secondary" label="Extend" />
           <Button variant="error" label="Delete" />
         </div>
       </div>

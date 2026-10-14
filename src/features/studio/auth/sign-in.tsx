@@ -134,6 +134,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
             <input
               type="email"
               required
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
               autoFocus={!coarse}
               autoComplete="email"
               value={email}

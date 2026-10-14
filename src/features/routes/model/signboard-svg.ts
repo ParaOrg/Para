@@ -104,6 +104,7 @@ export function keepsAttribute(element: string, name: string, raw: string): bool
   const n = name.toLowerCase();
   if (!/^[a-z_][\w:.-]*$/i.test(name) || n.startsWith('on')) return false;
   const value = decodeReferences(raw);
+  // eslint-disable-next-line no-control-regex -- stripping control characters is the point: `java\x01script:` must not slip past the test below
   const v = value.replace(/[\s\u0000-\u001f]/g, '').toLowerCase();
   if (
     /(javascript|vbscript|data):/.test(v) &&
@@ -146,7 +147,7 @@ export function cleanSignboardSvg(text: string): { svg: string } | { error: stri
     return { error: 'This SVG declares its own entities; export it again without them.' };
   // What carries nothing to draw: the XML line, comments, instructions, CDATA (only ever a script's or style's).
   const src = text
-    .replace(/^﻿/, '')
+    .replace(/^\uFEFF/, '')
     .replace(/<\?[\s\S]*?\?>/g, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, '');

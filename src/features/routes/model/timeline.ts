@@ -130,7 +130,7 @@ export function timelineFor(
   // An end is its place, never a box: "SM Fairview", not the terminal's long name.
   const row = (s: Hotspot): TimelineRow => ({ id: s.id, label: hotspotLabel(s), kind: s.kind });
   const [from, to] = reversed ? [tail, head] : [head, tail];
-  const endPlaces = new Set([head, tail].filter((s) => !!s).map((s) => placeKey(s!)));
+  const endPlaces = new Set([head, tail].filter((s) => !!s).map((s) => placeKey(s)));
   let between = along.filter((s) => s.kind === 'hintuan' && !endPlaces.has(placeKey(s)));
   if (lineStart && from && to && drawnFromTheEnd(lineStart, from, to)) between = between.reverse();
   const rows = between

@@ -27,6 +27,7 @@ export async function saveRouteAndLinks(
     throw new Error(
       `The line is saved, but its hintuan links are not: ${err instanceof Error ? err.message : String(err)}. ` +
         'Press Save again to retry.',
+      { cause: err },
     );
   }
   return named;

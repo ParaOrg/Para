@@ -67,7 +67,7 @@ export function HintuanPin({ map, at, label, code, livery, onPick }: Props) {
   useMapMarker(map, el, at, { anchor: 'center', onTap: onPick });
   // For the suites: the card's colour it wears.
   useEffect(() => {
-    el.dataset.livery = livery;
+    el.setAttribute('data-livery', livery);
   }, [el, livery]);
 
   // Popped by hintuan-pin.css, its label by hintuan-label.css.

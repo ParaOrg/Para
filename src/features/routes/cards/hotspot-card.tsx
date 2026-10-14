@@ -99,7 +99,10 @@ export function HotspotCard({
         .join('\n')
     : '';
   const onShown = useRef(routeCards?.onShown);
-  onShown.current = routeCards?.onShown;
+  // Kept current as each render commits, ahead of the effect below that reads it.
+  useLayoutEffect(() => {
+    onShown.current = routeCards?.onShown;
+  });
   // Before the first paint, and null once closed, as HintuanCard's (2026-10-03).
   useLayoutEffect(() => {
     const tell = onShown.current;

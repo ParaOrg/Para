@@ -237,7 +237,11 @@ export const LetGoAndPickBack: Story = {
   args: { hotspot: main, onDeselect: fn() },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const row = () => canvas.getAllByTestId('card-box').find((b) => b.dataset.box === 'h2')!;
+    const row = () => {
+      const box = canvas.getAllByTestId('card-box').find((b) => b.dataset.box === 'h2');
+      if (!box) throw new Error('The card shows no row for the box h2.');
+      return box;
+    };
     await expect(canvas.getByTestId('card-count').textContent).toBe('1 route passes here');
     await userEvent.click(row());
     await expect(args.onDeselect).toHaveBeenCalledOnce();

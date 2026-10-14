@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useMemo, useRef, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 
 import { clearOfSheet, roomBeside } from '@/shared/ui/bottom-sheet';
 import { shownAt, type Snap } from '@/shared/ui/sheet-gesture';
@@ -127,7 +127,10 @@ export function useListOverview(
   snap: Snap,
 ): void {
   const litRef = useRef(lit);
-  litRef.current = lit;
+  // Kept current as each render commits, for the frame below to read.
+  useLayoutEffect(() => {
+    litRef.current = lit;
+  });
   const key = listed
     .map((v) => v.id)
     .sort()
@@ -157,7 +160,10 @@ export function useSwitchOverview(
   snap: Snap,
 ): void {
   const litRef = useRef(lit);
-  litRef.current = lit;
+  // Kept current as each render commits, for the frame below to read.
+  useLayoutEffect(() => {
+    litRef.current = lit;
+  });
   useEffect(() => {
     if (!map || switches === 0) return;
     const frame = requestAnimationFrame(() =>
@@ -189,7 +195,10 @@ export function useHeightOverview(
 ): void {
   const last = useRef(snap);
   const now = useRef({ frame, dock });
-  now.current = { frame, dock };
+  // Kept current as each render commits, ahead of the effect below.
+  useLayoutEffect(() => {
+    now.current = { frame, dock };
+  });
   useEffect(() => {
     const was = last.current;
     if (was === snap) return;

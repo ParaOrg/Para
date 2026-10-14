@@ -87,6 +87,7 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
             <input
               type="password"
               required
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
               autoFocus={!coarse}
               autoComplete="current-password"
               value={current}

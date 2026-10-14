@@ -169,8 +169,8 @@ export function simplifyLine(line: readonly LngLat[], epsilonM: number): LngLat[
   const keep = new Array<boolean>(line.length).fill(false);
   keep[0] = keep[line.length - 1] = true;
   const stack: [number, number][] = [[0, line.length - 1]];
-  while (stack.length) {
-    const [a, b] = stack.pop()!;
+  for (let span = stack.pop(); span; span = stack.pop()) {
+    const [a, b] = span;
     let worst = -1;
     let worstD = epsilonM;
     for (let i = a + 1; i < b; i++) {

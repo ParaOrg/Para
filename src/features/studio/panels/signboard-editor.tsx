@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 
 import type { Direction } from '@/features/routes/model/routes';
 
@@ -36,17 +36,18 @@ export function SignboardEditor({
   const heading = useId();
   const way = direction.reversed ? 'Pabalik' : 'Papunta';
 
-  // Another direction, or the list read again: the boards as they stand.
+  // Another direction, or the list read again: the boards as they stand, set
+  // during render against the ones last shown.
   const listed = (direction.signboards ?? []).join('\n');
-  useEffect(() => {
+  const [shown, setShown] = useState({ directionId: direction.id, listed });
+  if (shown.directionId !== direction.id || shown.listed !== listed) {
+    setShown({ directionId: direction.id, listed });
     setNames(listed ? listed.split('\n') : []);
-  }, [direction.id, listed]);
-  // A problem stays until the next change or another direction: the list read
-  // again after an earlier change can land after it, and took it away unread
-  // (save-test on a GitHub runner, 2026-10-01).
-  useEffect(() => {
-    setProblem(null);
-  }, [direction.id]);
+    // A problem stays until the next change or another direction: the list
+    // read again after an earlier change can land after it, and took it away
+    // unread (save-test on a GitHub runner, 2026-10-01).
+    if (shown.directionId !== direction.id) setProblem(null);
+  }
 
   // `step` takes a list already written, before the change is done: what a
   // later refusal must not take back (addSignboards).

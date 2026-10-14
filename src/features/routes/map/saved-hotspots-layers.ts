@@ -177,14 +177,17 @@ export function hotspotsData(hotspots: readonly Hotspot[]) {
   // three boxes of one place would otherwise carry three identical labels.
   // Tapping still opens a card that leads with the informal name and shows
   // the ground name beneath it, so neither is lost. Decided 2026-09-22.
-  const withArea = hotspots.filter((s) => hotspotRing(s).length >= 3);
+  const withArea = hotspots.filter(
+    (s): s is Hotspot & { area: NonNullable<Hotspot['area']> } =>
+      s.area !== null && hotspotRing(s).length >= 3,
+  );
   return {
     type: 'FeatureCollection' as const,
     features: [
       ...withArea.map((s) => ({
         type: 'Feature' as const,
         properties: { id: s.id, kind: s.kind, name: s.name },
-        geometry: s.area!,
+        geometry: s.area,
       })),
       // One label per hintuan: a box on each side of the road shares one
       // (labelGroups), halfway between them; a box alone has its name in

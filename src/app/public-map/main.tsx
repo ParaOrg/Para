@@ -10,8 +10,8 @@ import { PublicMapApp } from './public-map-app.tsx';
 /**
  * Where to send an auth result that arrived here, or null.
  *
- * A password-reset email sent before /studio/ existed still links to /, and
- * Supabase reports a refused link with `error_code` and `error_description`
+ * A password-reset email sent before /studio/ existed still links to /, an
+ * invite links to the project's Site URL (/), and Supabase reports a refused link with `error_code` and `error_description`
  * in the address. Only the studio can finish either, so the query and fragment
  * go there untouched. This page never reads the token itself: its client has
  * detectSessionInUrl off.
@@ -25,7 +25,10 @@ function studioAddressForAuthResult(): string | null {
   // Never forward the studio to itself, should this page ever be served there.
   if (pathname.startsWith('/studio')) return null;
   const carriesAuth = (p: URLSearchParams) =>
-    p.get('type') === 'recovery' || p.has('error_code') || p.has('error_description');
+    p.get('type') === 'recovery' ||
+    p.get('type') === 'invite' ||
+    p.has('error_code') ||
+    p.has('error_description');
   const query = new URLSearchParams(search);
   const fragment = new URLSearchParams(hash.replace(/^#/, ''));
   return carriesAuth(query) || carriesAuth(fragment) ? `/studio/${search}${hash}` : null;
@@ -41,7 +44,9 @@ if (forwardTo) {
   // supabase-js out of this page's bundle, which scripts/checks/check-build.mjs proves.
   registerServiceWorker();
   listenForInstallOffer();
-  createRoot(document.getElementById('root')!).render(
+  const root = document.getElementById('root');
+  if (!root) throw new Error('index.html has no #root to draw the map into');
+  createRoot(root).render(
     <StrictMode>
       <PublicMapApp />
     </StrictMode>,
