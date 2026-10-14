@@ -23,10 +23,15 @@ import { findUTurns } from './uturns';
 /**
  * The drawing tool: a route's control points and the road between them, or a
  * hotspot's outline, from the first click to the save. This file keeps the
- * state, the edits and the modes; what it paints is drawLayers.ts, how the
- * pointer drives it useDrawEvents.ts, the router's answers gapResolver.ts,
- * and the draft on this device draft.ts (split 2026-09-29, stage 10 of the
- * clean-up; nothing it does changed).
+ * state, the refs the map's handlers read, the edits as thin callers and the
+ * modes, and wires the rest together. Its types are drawing-types.ts and the
+ * array arithmetic behind the edits drawing-edits.ts; the finger's Delete,
+ * Put back and follow offer are use-point-bar.ts, Extend's keep and the
+ * right-click's join use-line-borrowing.ts (split 2026-10-14, the big-file
+ * wave); what it paints is draw-layers.ts, how the pointer drives it
+ * use-draw-events.ts, the router's answers gap-resolver.ts, and the draft on
+ * this device draft.ts (split 2026-09-29, stage 10 of the clean-up). Nothing
+ * it does changed in either split.
  */
 
 export type Drawing = ReturnType<typeof useDrawing>;
@@ -57,7 +62,7 @@ export function useDrawing(
   const [borrow, setBorrow] = useState<Borrow | null>(null);
   /** Non-null while choosing where a new route leaves a saved direction. */
   const [picking, setPicking] = useState<Picking | null>(null);
-  /** The point a finger tapped, whose bar of actions is open (PointBar.tsx). */
+  /** The point a finger tapped, whose bar of actions is open (point-bar.tsx). */
   const [selected, setSelected] = useState<number | null>(null);
 
   // Map event handlers are registered once and must always see current state,
@@ -443,7 +448,7 @@ export function useDrawing(
     segments,
     line,
     snapping: gaps.snapping,
-    /** True while a stand-in is still on the line (gapResolver.ts). */
+    /** True while a stand-in is still on the line (gap-resolver.ts). */
     unresolved,
     freehand,
     setFreehand,
@@ -473,7 +478,7 @@ export function useDrawing(
     insertPoint,
     deletePoint,
     toggleSegment,
-    /** The point a finger tapped, or null; its bar is PointBar.tsx. */
+    /** The point a finger tapped, or null; its bar is point-bar.tsx. */
     selected,
     select,
     deleteSelected: pointBar.deleteSelected,
