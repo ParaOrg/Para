@@ -52,5 +52,15 @@ export const PasswordsDiffer: Story = {
   },
 };
 
+/** Back from an invite: the account's first password, with no Skip. */
+export const Invite: Story = {
+  args: { isInvite: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('heading', { name: 'Set your password' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Skip for now' })).toBeNull();
+  },
+};
+
 /** At phone width. */
 export const Phone: Story = { parameters: { phone: true } };

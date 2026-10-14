@@ -97,6 +97,13 @@ check(
   page.url() === `${BASE}/studio/?type=recovery&probe=1#frag=2`,
   page.url(),
 );
+await page.goto(`${BASE}/?type=invite&probe=1`, { waitUntil: 'load' });
+await page.waitForURL(/\/studio\//, { timeout: 10000 }).catch(() => {});
+check(
+  '/ forwards ?type=invite to /studio/, query intact',
+  page.url() === `${BASE}/studio/?type=invite&probe=1`,
+  page.url(),
+);
 await page.goto(
   `${BASE}/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired`,
   { waitUntil: 'load' },

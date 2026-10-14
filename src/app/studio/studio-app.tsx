@@ -192,7 +192,8 @@ function Workshop({
   // (finding 9).
   if (signedIn && signingIn) setSigningIn(false);
 
-  // Back from a valid reset link: the link gave us a session, now set the password.
+  // Back from a valid reset link or an invite: the link gave us a session, now
+  // set the password.
   const resetting = recovery.recovering && signedIn;
 
   // What the save panel saves into, and where the drawing is headed.
@@ -556,6 +557,7 @@ function Workshop({
         signingIn={signingIn && !signedIn}
         onSignInDismiss={() => setSigningIn(false)}
         resetting={resetting}
+        isInvite={recovery.isInvite}
         onResetDone={recovery.done}
         changingPasswordFor={changingPassword && !resetting ? (session?.user.email ?? null) : null}
         onPasswordDone={() => setChangingPassword(false)}
