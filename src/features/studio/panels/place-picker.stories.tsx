@@ -32,7 +32,7 @@ const meta = {
     hint: '(where the jeeps wait)',
     places,
     value: '',
-    disabled: false,
+    isDisabled: false,
     onChange: fn(),
     testId: 'save-head',
   },
@@ -62,7 +62,7 @@ export const Picked: Story = {
 
 /** A return trip's ends: the route's, shown and locked. */
 export const Disabled: Story = {
-  args: { value: 'sm fairview', disabled: true },
+  args: { value: 'sm fairview', isDisabled: true },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('save-head')).toBeDisabled();
   },
@@ -85,8 +85,12 @@ export const ManyPlaces: Story = {
   },
 };
 
-/** At phone width, where the two ends stack. */
+/**
+ * At phone width, where the two ends stack and the field reads 16 px: both
+ * follow the viewport, not this box — hence the phone viewport as well.
+ */
 export const Phone: Story = {
   args: ManyPlaces.args,
   parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };

@@ -63,11 +63,15 @@ export const Locked: Story = {
   },
 };
 
-/** A long signboard and fare note, at a phone's width where Mode and Fare note stack. */
+/**
+ * A long signboard and fare note at a phone's width, where Mode and Fare note
+ * stack and the fields read 16 px: both follow the viewport, not this box.
+ */
 export const Phone: Story = {
   args: {
     signboard: 'SM City Fairview – Novaliches Bayan via Quirino Highway and Regalado Avenue',
     fareNote: '₱13 first 4 km, ₱1.80 each km after; students, seniors and PWDs 20% off',
   },
   parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };

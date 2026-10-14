@@ -144,7 +144,7 @@ export function SavePanel({
       writeRoute: !!existing,
       signboard,
       mode,
-      fareNote: fareNote,
+      fareNote,
       headHotspotId: headId,
       tailHotspotId: tailId,
       via,
@@ -189,7 +189,7 @@ export function SavePanel({
             hint="(where the jeeps wait)"
             places={places}
             value={headPlace?.key ?? ''}
-            disabled={routeLocked}
+            isDisabled={routeLocked}
             onChange={(key) => setHeadId(pickPlace(key, nearHead))}
             testId="save-head"
           />
@@ -198,7 +198,7 @@ export function SavePanel({
             hint="(the far end)"
             places={places}
             value={tailPlace?.key ?? ''}
-            disabled={routeLocked}
+            isDisabled={routeLocked}
             onChange={(key) => setTailId(pickPlace(key, nearTail))}
             testId="save-tail"
           />

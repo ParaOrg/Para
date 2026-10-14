@@ -10,7 +10,7 @@ interface PlacePickerProps {
   /** The picked place's key, '' for none. */
   value: string;
   /** The ends belong to the route, so a return trip and a retried new route keep them. */
-  disabled: boolean;
+  isDisabled: boolean;
   onChange: (placeKey: string) => void;
   testId: 'save-head' | 'save-tail';
 }
@@ -25,7 +25,7 @@ export function PlacePicker({
   hint,
   places,
   value,
-  disabled,
+  isDisabled,
   onChange,
   testId,
 }: PlacePickerProps) {
@@ -34,7 +34,7 @@ export function PlacePicker({
       {label} <span className="text-neutral-400">{hint}</span>
       <select
         required
-        disabled={disabled}
+        disabled={isDisabled}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={FIELD}
