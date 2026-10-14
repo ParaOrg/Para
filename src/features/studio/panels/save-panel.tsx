@@ -2,17 +2,12 @@ import { useMemo, useState } from 'react';
 
 import { DirectionTimeline, passesThrough } from '@/features/routes/cards/direction-timeline';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import {
-  isLineMode,
-  MODES,
-  type RouteRow,
-  type TransportMode,
-  type DirectionRow,
-} from '@/features/routes/model/routes';
+import type { RouteRow, TransportMode, DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { PlacePicker } from './place-picker';
 import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
+import { RouteFields } from './route-fields';
 import { saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
 import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
@@ -276,50 +271,15 @@ export function SavePanel({
 
         <hr className="my-4 border-neutral-200" />
 
-        <label className="block text-xs font-medium text-neutral-700">
-          Signboard{' '}
-          <span className="text-neutral-400">(what is painted on the jeep — optional)</span>
-          <input
-            disabled={routeLocked}
-            value={signboard}
-            onChange={(e) => setSignboard(e.target.value)}
-            placeholder="Fairview – Tala"
-            className={FIELD}
-          />
-        </label>
-
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="block text-xs font-medium text-neutral-700">
-            Mode
-            {/* A line, a train's or the ferry's, comes in by its import, with
-                its line named; one drawn here would have none and stop
-                nowhere. And a line stays one: its mode decides which hintuans
-                both directions hotspot at, and a save re-links only the
-                direction saved (servedBy). */}
-            <select
-              disabled={routeLocked || isLineMode(mode)}
-              value={mode}
-              onChange={(e) => setMode(e.target.value as TransportMode)}
-              className={FIELD}
-            >
-              {MODES.filter((m) => !isLineMode(m.value) || m.value === mode).map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-xs font-medium text-neutral-700">
-            Fare note <span className="text-neutral-400">(optional)</span>
-            <input
-              disabled={routeLocked}
-              value={fareNote}
-              onChange={(e) => setFareNote(e.target.value)}
-              placeholder="₱13 first 4 km"
-              className={FIELD}
-            />
-          </label>
-        </div>
+        <RouteFields
+          signboard={signboard}
+          mode={mode}
+          fareNote={fareNote}
+          isLocked={routeLocked}
+          onSignboardChange={setSignboard}
+          onModeChange={setMode}
+          onFareNoteChange={setFareNote}
+        />
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
