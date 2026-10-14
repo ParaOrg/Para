@@ -9,11 +9,9 @@ import {
   type Ref,
 } from 'react';
 
-import { IconButton } from '@/design-system/primitives/icon-button';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
 
-import { CloseIcon } from './route-icons';
 import {
   DRAG_PX,
   MAX_STRIP_PX,
@@ -402,22 +400,6 @@ export function BottomSheet({
       >
         {children}
       </div>
-    </div>
-  );
-}
-
-/**
- * The header a hotspot's card and the studio's route card have always had:
- * what was tapped, and ✕ — the route cards' own IconButton since the
- * owner's yes of 2026-09-30, so every card closes the same way. The route
- * list and a trip's card bring their own header (RouteCardHeader). Their
- * bodies sit 16 in, as this does (px-4).
- */
-export function SheetHeader({ onClose, children }: { onClose: () => void; children: ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-3 px-4">
-      <div className="min-w-0 flex-1">{children}</div>
-      <IconButton icon={<CloseIcon />} label="Close" tooltip="top" onClick={onClose} />
     </div>
   );
 }

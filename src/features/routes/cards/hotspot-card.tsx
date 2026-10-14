@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
-import { BottomSheet, SheetHeader, type SheetHeight } from '@/shared/ui/bottom-sheet';
+import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
+import { SheetHeader } from '@/shared/ui/sheet-header';
 
 import { Departures } from './departures';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
