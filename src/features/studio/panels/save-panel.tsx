@@ -12,10 +12,10 @@ import {
 import type { LngLat } from '@/shared/utils/geo';
 
 import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
+import { saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
 import { FIELD_TEXT, FOOTER, OVERLAY, PANEL } from './sheet';
 import { useSaveFacts } from './use-save-facts';
-import { ENDS_TAKEN } from '../data/routes-write';
 import { saveRouteAndLinks } from '../data/save-route';
 import type { Drawing } from '../drawing/use-drawing';
 
@@ -141,22 +141,9 @@ export function SavePanel({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!headId || !tailId) {
-      setError('Pick the place at each end. The route is named after them.');
-      return;
-    }
-    if (headPlace && headPlace === tailPlace) {
-      setError('The two ends have to be different places.');
-      return;
-    }
-    if (endsTaken) {
-      setError(ENDS_TAKEN);
-      return;
-    }
-    if (turnedRound) {
-      setError(
-        'Head and tail swapped would turn the route round, which Edit route cannot do: its directions keep their way round. Change one end at a time.',
-      );
+    const refusal = saveRefusal({ headId, tailId, headPlace, tailPlace, endsTaken, turnedRound });
+    if (refusal) {
+      setError(refusal);
       return;
     }
     setBusy(true);
