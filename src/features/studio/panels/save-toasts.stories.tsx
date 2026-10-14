@@ -51,10 +51,17 @@ const tala: HotspotRow = {
 const meta = {
   title: 'Features/Studio/SaveToasts',
   component: SaveToasts,
-  // Over the foot of the map, as the workshop shows it.
+  // Over the foot of the map, as the workshop shows it. The `phone` parameter
+  // puts it at a handset's width, as account-pill.stories.tsx does.
   decorators: [
-    (Story) => (
-      <div className="relative h-40 w-[28rem] bg-neutral-200">
+    (Story, ctx) => (
+      <div
+        className={
+          ctx.parameters.phone
+            ? 'relative h-40 w-[390px] bg-surface-quaternary'
+            : 'relative h-40 w-[28rem] bg-surface-quaternary'
+        }
+      >
         <Story />
       </div>
     ),
@@ -97,6 +104,14 @@ export const HotspotSaved: Story = {
     await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
       'Saved terminal Tala',
     );
+  },
+};
+
+/** A hintuan saved: the other wording. */
+export const HintuanSaved: Story = {
+  args: { toast: { kind: 'hotspot', s: { ...tala, kind: 'hintuan' } } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent('Saved hintuan Tala');
   },
 };
 
@@ -145,6 +160,17 @@ export const LongContent: Story = {
       },
     },
   },
+};
+
+/**
+ * On a phone the toast goes to the top, as wide as the screen, and wraps: the
+ * `sm` breakpoint reads the viewport, not this box, hence the phone viewport
+ * as well as the phone width. A long name with the return trip offered.
+ */
+export const Phone: Story = {
+  args: LongContent.args,
+  parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };
 
 /** Nothing to say: nothing shown. */

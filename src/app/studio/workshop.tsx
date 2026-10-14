@@ -52,9 +52,10 @@ interface WorkshopProps {
  * The map and every editing tool, for a signed-in editor or a test session.
  * The composition root: the state and the hooks' results passed down. What
  * it decides lives in the studio's panels: the return-trip offer
- * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts), the deletes
- * themselves (use-delete-actions.ts) the saved toasts (save-toasts.tsx) and what the trip card
- * adds for an editor (trip-card-extras.tsx).
+ * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts), the
+ * deletes themselves (use-delete-actions.ts), the saved toasts
+ * (save-toasts.tsx) and what the trip card adds for an editor
+ * (trip-card-extras.tsx).
  */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);

@@ -68,10 +68,11 @@ const hotspot = (id: string, name: string, coordinates: [number, number]): Hotsp
 const meta = {
   title: 'Features/Studio/TripCardExtras',
   component: TripCardExtras,
-  // Under the trip card's tiles, at the card's width, as route-facts.stories.tsx has it.
+  // Under the trip card's tiles, at the card's width, as route-facts.stories.tsx
+  // has it. The `phone` parameter puts it at a handset's width.
   decorators: [
-    (Story) => (
-      <div className="w-[369px] bg-surface">
+    (Story, ctx) => (
+      <div className={ctx.parameters.phone ? 'w-[390px] bg-surface' : 'w-[369px] bg-surface'}>
         <Story />
       </div>
     ),
@@ -130,4 +131,10 @@ export const SignedOut: Story = {
 /** Signed out on the undrawn way back. */
 export const SignedOutUndrawn: Story = {
   args: { canEdit: false, direction: back, onExtend: undefined },
+};
+
+/** At phone width, an editor on a drawn direction, as the studio shows it on a phone. */
+export const Phone: Story = {
+  parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };
