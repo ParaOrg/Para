@@ -12,7 +12,7 @@ import {
 } from '@/shared/utils/geo';
 
 import { cutAt, nearestSpot, reverseDrawing, type BorrowPart } from './borrow';
-import { readDraft, useDraftSaving } from './draft';
+import { readDraft, restoredState, useDraftSaving } from './draft';
 import { useDrawLayers, useDrawRendering } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments, waitingRuns } from './drawing-edits';
 import type {
@@ -500,32 +500,22 @@ export function useDrawing(
     restoredRef.current = true;
     const d = readDraft();
     if (!d) return;
-    const a = d.area ?? null;
+    const restored = restoredState(d);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the draft is read from storage once per page, together with the router requests for its pending gaps below; lazy initial state would split the two and change useDraftSaving's first run
-    setArea(a);
-    areaRef.current = a;
-    const saved = d.segments ?? [];
-    writePoints(d.controlPoints);
-    writeSegments(
-      saved.map((s) => (s?.pending ? { snap: s.snap, coordinates: s.coordinates } : s)),
-    );
-    setTarget(d.target ?? { routeId: null, directionId: null });
-    setBorrow(d.borrow ?? null);
-    joinRef.current = typeof d.join === 'number' ? (d.controlPoints[d.join] ?? null) : null;
+    setArea(restored.area);
+    areaRef.current = restored.area;
+    writePoints(restored.controlPoints);
+    writeSegments(restored.segments);
+    setTarget(restored.target);
+    setBorrow(restored.borrow);
+    joinRef.current = restored.join;
     setDrawing(true);
 
     // Gaps still waiting for the router when the page went away: their answers
     // went with it, so ask again, adjacent ones in one request as before.
-    if (a) return;
-    let from = -1;
-    saved.forEach((s, i) => {
-      const pending = !!s?.pending;
-      if (pending && from === -1) from = i;
-      if (from === -1 || (pending && i < saved.length - 1)) return;
-      const to = pending ? i : i - 1;
+    for (const [from, to] of restored.pendingRuns) {
       void resolveGaps(from, new Array<SnapMode>(to - from + 1).fill('snapped'));
-      from = -1;
-    });
+    }
   }, [writePoints, writeSegments, resolveGaps]);
 
   useDraftSaving({ drawing, controlPoints, segments, target, area, borrow }, joinRef, isStandIn);
