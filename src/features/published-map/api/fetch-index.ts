@@ -37,7 +37,7 @@ function takeEarly(): EarlyMapFile | null {
   const page = globalThis as { [EARLY_MAP_FILE]?: EarlyMapFile };
   const early = page[EARLY_MAP_FILE];
   if (!early) return null;
-  delete page[EARLY_MAP_FILE];
+  Reflect.deleteProperty(page, EARLY_MAP_FILE);
   return typeof early.then === 'function' ? early : null;
 }
 

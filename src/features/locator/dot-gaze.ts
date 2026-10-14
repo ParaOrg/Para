@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import type { Highlight } from '@/features/routes/map/use-saved-routes';
 import type { Hotspot } from '@/features/routes/model/hotspots';
@@ -162,24 +162,27 @@ export function useDotGaze(
   const [gaze, setGaze] = useState<number | null>(null);
   const keys = subjects.map((s) => s.key);
   const was = useRef(keys);
-  const latest = useRef({ from, subjects });
-  latest.current = { from, subjects };
   const timer = useRef(0);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  useEffect(() => {
+  // Read as something is picked: today's subjects and where the dot is then.
+  const gazeAtPick = useEffectEvent(() => {
     const before = was.current;
     was.current = keys;
     if (hushedAt && performance.now() - hushedAt.current < HUSH_MS) return;
-    const picked = latest.current.subjects.find((s, i) => s.key !== null && s.key !== before[i]);
+    const picked = subjects.find((s, i) => s.key !== null && s.key !== before[i]);
     if (!picked) return;
     const there = picked.at();
-    const next = there ? gazeToward(latest.current.from, there) : null;
+    const next = there ? gazeToward(from, there) : null;
     window.clearTimeout(timer.current);
     setGaze(next);
     if (next !== null) timer.current = window.setTimeout(() => setGaze(null), GAZE_MS);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the joined keys say when something was picked; the rest is read then
-  }, [keys.join('\n')]);
+  });
+  // The joined keys say when something was picked; the rest is read then.
+  const pickedKeys = keys.join('\n');
+  useEffect(() => {
+    gazeAtPick();
+  }, [pickedKeys]);
 
   return gaze;
 }

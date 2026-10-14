@@ -19,6 +19,15 @@ const LABEL = {
   TracksTheMapBasedOnCompassFacing: 'Put north up',
 } as const;
 
+/** What the note says for the locator's state, or null for none. */
+function noteFor(status: State['status'], noFix: boolean): string | null {
+  if (status === 'denied')
+    return 'Location is off for this site. Allow it in your browser settings, then try again.';
+  if (status === 'unavailable') return 'This browser cannot give a location.';
+  if (noFix) return 'No fix yet. Try again outdoors, or check that location is on.';
+  return null;
+}
+
 /**
  * The LocatorButton where the owner put it (ScreenLocationBehavior,
  * 3870:5941, 2026-10-01): at the map's right edge, 12 above the card's
@@ -34,15 +43,13 @@ const LABEL = {
  */
 export function Locator({ locator, docked }: Props) {
   const { status, noFix, mode, heading, compass, tap } = locator;
-  const [note, setNote] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (status === 'denied')
-      setNote('Location is off for this site. Allow it in your browser settings, then try again.');
-    else if (status === 'unavailable') setNote('This browser cannot give a location.');
-    else if (noFix) setNote('No fix yet. Try again outdoors, or check that location is on.');
-    else setNote(null);
-  }, [status, noFix]);
+  const [note, setNote] = useState(() => noteFor(status, noFix));
+  // Each change of the state says its note afresh, even one the timer below has hidden.
+  const [noted, setNoted] = useState({ status, noFix });
+  if (noted.status !== status || noted.noFix !== noFix) {
+    setNoted({ status, noFix });
+    setNote(noteFor(status, noFix));
+  }
   useEffect(() => {
     if (!note) return;
     const t = window.setTimeout(() => setNote(null), 5000);

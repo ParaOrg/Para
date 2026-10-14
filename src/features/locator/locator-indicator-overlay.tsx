@@ -201,10 +201,10 @@ export function LocatorOnMap({
   const scale = indicatorScale(zoom);
   // For the suites (where-test): what the overlay was drawn from.
   useEffect(() => {
-    el.dataset.accuracyM = String(Math.round(fix.accuracy));
-    el.dataset.haloPx = String(haloFor(haloPx, scale));
-    el.dataset.scale = scale.toFixed(2);
-    el.dataset.heading = heading === null ? '' : String(Math.round(heading));
+    el.setAttribute('data-accuracy-m', String(Math.round(fix.accuracy)));
+    el.setAttribute('data-halo-px', String(haloFor(haloPx, scale)));
+    el.setAttribute('data-scale', scale.toFixed(2));
+    el.setAttribute('data-heading', heading === null ? '' : String(Math.round(heading)));
   }, [el, fix.accuracy, haloPx, heading, scale]);
   return createPortal(
     <LocatorIndicatorOverlay
