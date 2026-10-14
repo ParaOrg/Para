@@ -2,10 +2,12 @@
 //
 // `npm run lint` is part of `npm run check` and of CI's build job, so a
 // regression fails the build rather than adding a warning nobody reads. The
-// rules the standards name are errors (the block of rules below). The
-// presets' rules are warnings until their own pass clears them (asWarnings,
-// and the list above it): the standards postdate most of the tree, and a
-// rule flips to an error in its own change once no file trips it.
+// rules the standards name are errors (the block of rules below), and so are
+// the presets' own. Until 2026-10-14 the presets' rules were downgraded to
+// warnings while the hooks, non-null and leftovers passes cleared the tree
+// (81 warnings, PRs #143, #148, #149, #150); with none left, they run at the
+// level each preset sets. A single-line disable carries its reason
+// (`-- why`); there is no file-wide disable.
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import checkFile from 'eslint-plugin-check-file';
@@ -13,42 +15,6 @@ import importX, { createNodeResolver } from 'eslint-plugin-import-x';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
-
-/** 'error' becomes 'warn'; anything else is kept. */
-const downgrade = (level) => (level === 'error' || level === 2 ? 'warn' : level);
-
-/**
- * The same configs with every rule at most a warning. What still warns, by
- * the pass that clears it (counts of 2026-10-07, after the pattern pass):
- *   the hooks pass      react-hooks/refs 32, set-state-in-effect 12,
- *                       immutability 10, exhaustive-deps 4, purity 1,
- *                       preserve-manual-memoization 1 (the React Compiler's
- *                       rules, each a behaviour question, not a rename)
- *   the non-null pass   @typescript-eslint/no-non-null-assertion 21
- *   the leftovers pass  @typescript-eslint/no-empty-function 8,
- *                       jsx-a11y/no-autofocus 4, preserve-caught-error 2,
- *                       @typescript-eslint/no-dynamic-delete 1,
- *                       no-control-regex 1, no-irregular-whitespace 1,
- *                       @typescript-eslint/no-unused-vars 1
- * A single-line disable carries its reason (`-- why`); there is no
- * file-wide disable.
- */
-const asWarnings = (configs) =>
-  configs.flat().map((config) =>
-    config.rules
-      ? {
-          ...config,
-          rules: Object.fromEntries(
-            Object.entries(config.rules).map(([rule, setting]) => [
-              rule,
-              Array.isArray(setting)
-                ? [downgrade(setting[0]), ...setting.slice(1)]
-                : downgrade(setting),
-            ]),
-          ),
-        }
-      : config,
-  );
 
 const SOURCE = [
   'src/**/*.{ts,tsx}',
@@ -60,14 +26,16 @@ const SOURCE = [
 export default defineConfig([
   globalIgnores(['dist/', 'storybook-static/', 'node_modules/', 'public/', '.vite/', '.scratch/']),
 
-  ...asWarnings([
+  ...[
     js.configs.recommended,
     tseslint.configs.strict,
     tseslint.configs.stylistic,
     reactHooks.configs.flat.recommended,
     jsxA11y.flatConfigs.recommended,
     importX.flatConfigs.recommended,
-  ]).map((config) => ({ files: SOURCE, ...config })),
+  ]
+    .flat()
+    .map((config) => ({ files: SOURCE, ...config })),
 
   {
     files: SOURCE,
