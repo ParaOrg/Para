@@ -19,7 +19,7 @@ import {
   MAX_STRIP_PX,
   aboveMiddle,
   follow,
-  setSafeTop,
+  measureSafeTop,
   shownAt,
   slide,
   slideShowing,
@@ -432,19 +432,3 @@ const HANDLE_LABEL = {
   max: 'Sheet at full screen. Lower it',
   free: 'Sheet raised past half the screen. Raise to full screen',
 } satisfies Record<SnapName, string>;
-
-/**
- * The status bar's height as the page reads it, once: what Max leaves above
- * it besides its strip of map (sheetGesture). 0 where the page hotspots under it.
- */
-let safeTopRead = false;
-function measureSafeTop() {
-  if (safeTopRead || typeof document === 'undefined') return;
-  safeTopRead = true;
-  const probe = document.createElement('div');
-  probe.style.cssText =
-    'position:fixed;top:0;visibility:hidden;padding-top:env(safe-area-inset-top)';
-  document.body.appendChild(probe);
-  setSafeTop(parseFloat(getComputedStyle(probe).paddingTop) || 0);
-  probe.remove();
-}
