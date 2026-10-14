@@ -11,8 +11,8 @@ import { RouteFields } from './route-fields';
 import { saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
 import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
+import { useRouteSave } from './use-route-save';
 import { useSaveFacts } from './use-save-facts';
-import { saveRouteAndLinks } from '../data/save-route';
 import type { Drawing } from '../drawing/use-drawing';
 
 interface Props {
@@ -79,19 +79,7 @@ export function SavePanel({
   const [firstGuess] = useState(() => guessEnds(places, hotspots, line, directions));
   const [headId, setHeadId] = useState(parent?.headHotspotId ?? firstGuess[0]);
   const [tailId, setTailId] = useState(parent?.tailHotspotId ?? firstGuess[1]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // The direction as a save wrote it, when the link sync after it failed.
-  // Saves are two steps, not one transaction (PLAN.md's known risk #3): a
-  // second press inserted the route again, met its own row and was refused as
-  // "already drawn" (review finding 13). Now it updates the row it wrote.
-  const [written, setWritten] = useState<{ routeId: string; directionId: string } | null>(null);
 
-  // A return trip fills its route's slot and leaves the route as it is; Edit
-  // route may change the route's facts, for both its directions. A new
-  // route's are fixed once a save has written it: the retry finishes that
-  // row and would ignore a changed end.
-  const routeLocked = !existing && (!!parent || !!written);
   const head = hotspots.find((s) => s.id === headId);
   const tail = hotspots.find((s) => s.id === tailId);
   const headPlace = head ? placeOfBox(places, head.id) : undefined;
@@ -124,12 +112,18 @@ export function SavePanel({
     endsTaken,
     turnedRound,
     borrowParent,
-    borrowPart,
     borrowedM,
     name,
     direction,
     preview,
   } = facts;
+  const { busy, error, setError, written, save } = useRouteSave({ facts, draw, hotspots, onSaved });
+
+  // A return trip fills its route's slot and leaves the route as it is; Edit
+  // route may change the route's facts, for both its directions. A new
+  // route's are fixed once a save has written it: the retry finishes that
+  // row and would ignore a changed end.
+  const routeLocked = !existing && (!!parent || !!written);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -138,38 +132,17 @@ export function SavePanel({
       setError(refusal);
       return;
     }
-    setBusy(true);
-    setError(null);
-    try {
-      // The borrow on the parent's full line, read now if it has not come.
-      const borrowed = await facts.borrowedForSave();
-      const named = await saveRouteAndLinks(
-        {
-          routeId: written?.routeId ?? parent?.id ?? null,
-          directionId: written?.directionId ?? existing?.id ?? null,
-          writeRoute: !!existing,
-          signboard,
-          mode,
-          fareNote: fareNote,
-          headHotspotId: headId,
-          tailHotspotId: tailId,
-          via,
-          reversed,
-          controlPoints: draw.controlPoints,
-          segments: draw.segments,
-          // A parent deleted since, or a borrowed part redrawn away, borrows nothing.
-          borrowedFrom: borrowParent && borrowed > 0 ? borrowParent.id : null,
-          borrowedPart: borrowPart,
-          borrowedMetres: borrowed > 0 ? Math.round(borrowed) : null,
-        },
-        hotspots,
-        setWritten,
-      );
-      onSaved(named);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setBusy(false);
-    }
+    await save({
+      routeId: written?.routeId ?? parent?.id ?? null,
+      directionId: written?.directionId ?? existing?.id ?? null,
+      writeRoute: !!existing,
+      signboard,
+      mode,
+      fareNote: fareNote,
+      headHotspotId: headId,
+      tailHotspotId: tailId,
+      via,
+    });
   }
 
   return (
