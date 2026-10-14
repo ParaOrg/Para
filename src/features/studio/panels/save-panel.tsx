@@ -14,7 +14,7 @@ import type { LngLat } from '@/shared/utils/geo';
 import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
 import { saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
-import { FIELD_TEXT, FOOTER, OVERLAY, PANEL } from './sheet';
+import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
 import { useSaveFacts } from './use-save-facts';
 import { saveRouteAndLinks } from '../data/save-route';
 import type { Drawing } from '../drawing/use-drawing';
@@ -43,10 +43,6 @@ interface Props {
   onSaved: (v: DirectionRow) => void;
   onCancel: () => void;
 }
-
-const field =
-  `mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 ${FIELD_TEXT} outline-none ` +
-  'focus:border-neutral-900 disabled:bg-neutral-100 disabled:text-neutral-500';
 
 /**
  * The one form in the app. Appears once, at ✓ Done.
@@ -220,7 +216,7 @@ export function SavePanel({
               disabled={routeLocked}
               value={headPlace?.key ?? ''}
               onChange={(e) => setHeadId(pickPlace(e.target.value, nearHead))}
-              className={field}
+              className={FIELD}
               data-testid="save-head"
             >
               <option value="">Pick a place…</option>
@@ -238,7 +234,7 @@ export function SavePanel({
               disabled={routeLocked}
               value={tailPlace?.key ?? ''}
               onChange={(e) => setTailId(pickPlace(e.target.value, nearTail))}
-              className={field}
+              className={FIELD}
               data-testid="save-tail"
             >
               <option value="">Pick a place…</option>
@@ -270,7 +266,7 @@ export function SavePanel({
             value={via}
             onChange={(e) => setVia(e.target.value)}
             placeholder="Zabarte"
-            className={field}
+            className={FIELD}
           />
         </label>
 
@@ -305,7 +301,7 @@ export function SavePanel({
             value={signboard}
             onChange={(e) => setSignboard(e.target.value)}
             placeholder="Fairview – Tala"
-            className={field}
+            className={FIELD}
           />
         </label>
 
@@ -321,7 +317,7 @@ export function SavePanel({
               disabled={routeLocked || isLineMode(mode)}
               value={mode}
               onChange={(e) => setMode(e.target.value as TransportMode)}
-              className={field}
+              className={FIELD}
             >
               {MODES.filter((m) => !isLineMode(m.value) || m.value === mode).map((m) => (
                 <option key={m.value} value={m.value}>
@@ -337,7 +333,7 @@ export function SavePanel({
               value={fareNote}
               onChange={(e) => setFareNote(e.target.value)}
               placeholder="₱13 first 4 km"
-              className={field}
+              className={FIELD}
             />
           </label>
         </div>
