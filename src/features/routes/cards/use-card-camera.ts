@@ -1,8 +1,9 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
-import { clearOfSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
+import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
+import { clearOfSheet } from '@/shared/ui/sheet-room';
 
 import { framedBy, type Framed } from './card-stack';
 import type { PickedPlace } from './route-card-stack';

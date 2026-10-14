@@ -1,8 +1,8 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 
-import { clearOfSheet, roomBeside } from '@/shared/ui/bottom-sheet';
 import { shownAt, type Snap } from '@/shared/ui/sheet-gesture';
+import { clearOfSheet, roomBeside } from '@/shared/ui/sheet-room';
 import { bboxOf, zoomForScale, type LngLat } from '@/shared/utils/geo';
 
 import type { Framed } from './card-stack';
