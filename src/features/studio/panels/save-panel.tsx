@@ -9,9 +9,9 @@ import {
   type TransportMode,
   type DirectionRow,
 } from '@/features/routes/model/routes';
-import { haversine, type LngLat } from '@/shared/utils/geo';
+import type { LngLat } from '@/shared/utils/geo';
 
-import { boxFor, groupPlaces, nearestHotspot } from './places';
+import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
 import { SaveNotices } from './save-notices';
 import { FIELD_TEXT, FOOTER, OVERLAY, PANEL } from './sheet';
 import { useSaveFacts } from './use-save-facts';
@@ -69,22 +69,12 @@ export function SavePanel({
   const parent = existing?.route ?? route;
   const line = draw.controlPoints;
   const places = useMemo(() => groupPlaces(hotspots), [hotspots]);
-  const placeOf = (id: string) => places.find((p) => p.boxes.some((s) => s.id === id));
-  const lineStart = line[0];
-  const lineEnd = line[line.length - 1];
-  // Where a picked end's box is looked for: at the end of the line nearer
-  // the route's head, and the tail at the other — whichever way it was
-  // drawn; a new route's line starts at its head.
+  // Where a picked end's box is looked for: the end of the line nearer the
+  // route's head, whichever way it was drawn.
   const headNow = existing
     ? hotspots.find((s) => s.id === existing.route.headHotspotId)
     : undefined;
-  const startsAtHead =
-    !headNow ||
-    !lineStart ||
-    !lineEnd ||
-    haversine(lineStart, headNow.point.coordinates) <=
-      haversine(lineEnd, headNow.point.coordinates);
-  const [nearHead, nearTail] = startsAtHead ? [lineStart, lineEnd] : [lineEnd, lineStart];
+  const [nearHead, nearTail] = endsByHead(line, headNow);
 
   const [signboard, setSignboard] = useState(parent?.signboard ?? '');
   const [mode, setMode] = useState<TransportMode>(parent?.mode ?? 'jeepney');
@@ -92,22 +82,9 @@ export function SavePanel({
   const [via, setVia] = useState(parent?.via ?? '');
   // The ends are the route's: a return trip takes them as they are, and Edit
   // route starts from them; a new route's are guessed from where the line
-  // actually starts and finishes — the nearest box, then that box's place,
-  // then the place's own box — and corrected by hand when the guess is wrong.
-  const guess = (to: LngLat | undefined) => {
-    const place = placeOf(nearestHotspot(hotspots, to));
-    return place ? boxFor(place, to) : '';
-  };
-  // The guess reads the line's own order: it starts at the head. A return trip
-  // starts at the tail, so when the guessed pair is already a route the other
-  // way round, that route is the one meant — the head is where its jeeps wait.
-  const [firstGuess] = useState(() => {
-    const [h, t] = [guess(lineStart), guess(lineEnd)];
-    const swapped = directions.some(
-      (v) => v.route.headHotspotId === t && v.route.tailHotspotId === h,
-    );
-    return swapped ? [t, h] : [h, t];
-  });
+  // actually starts and finishes, once, and corrected by hand when the guess
+  // is wrong.
+  const [firstGuess] = useState(() => guessEnds(places, hotspots, line, directions));
   const [headId, setHeadId] = useState(parent?.headHotspotId ?? firstGuess[0]);
   const [tailId, setTailId] = useState(parent?.tailHotspotId ?? firstGuess[1]);
   const [busy, setBusy] = useState(false);
@@ -125,8 +102,8 @@ export function SavePanel({
   const routeLocked = !existing && (!!parent || !!written);
   const head = hotspots.find((s) => s.id === headId);
   const tail = hotspots.find((s) => s.id === tailId);
-  const headPlace = head ? placeOf(head.id) : undefined;
-  const tailPlace = tail ? placeOf(tail.id) : undefined;
+  const headPlace = head ? placeOfBox(places, head.id) : undefined;
+  const tailPlace = tail ? placeOfBox(places, tail.id) : undefined;
 
   const pickPlace = (key: string, to: LngLat | undefined) => {
     const place = places.find((p) => p.key === key);

@@ -1,14 +1,18 @@
 // The save panel's places (src/features/studio/panels/places.ts): the hotspots a route
-// can end at, grouped by the name people say, and the one box a picked place
-// stands on.
+// can end at, grouped by the name people say, the one box a picked place
+// stands on, and the panel's first guess at a new route's ends.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/places-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   boxFor,
+  endsByHead,
   groupPlaces,
+  guessBox,
+  guessEnds,
   nearestHotspot,
+  placeOfBox,
   terminalAlreadyAt,
 } from '../../src/features/studio/panels/places.ts';
 
@@ -81,4 +85,57 @@ test('a place has one terminal: a second is found by the name people say, or the
   // The terminal itself, saved again, is no clash; a new place is none either.
   assert.equal(terminalAlreadyAt(stops, { id: tala.id, name: 'Tala', informal: '' }), null);
   assert.equal(terminalAlreadyAt(stops, { id: null, name: 'Novaliches', informal: '' }), null);
+});
+
+test('a box belongs to its place; an unknown or empty id to none', () => {
+  const a = box('Bestlink', 121.0);
+  const b = box('Tala', 121.1);
+  const places = groupPlaces([a, b]);
+  assert.equal(placeOfBox(places, b.id)?.label, 'Tala');
+  assert.equal(placeOfBox(places, 'nowhere'), undefined);
+  assert.equal(placeOfBox(places, ''), undefined);
+});
+
+test("the line's ends by the route's head, whichever way it was drawn", () => {
+  const start = [121.0, 14.7];
+  const mid = [121.05, 14.7];
+  const end = [121.1, 14.7];
+  const head = box('Tala', 121.099);
+  // Drawn from the tail: the end nearer the head comes first.
+  assert.deepEqual(endsByHead([start, mid, end], head), [end, start]);
+  assert.deepEqual(endsByHead([end, mid, start], head), [end, start]);
+  // A new route has no head yet: its line starts at its head.
+  assert.deepEqual(endsByHead([start, mid, end], undefined), [start, end]);
+  // Equally far either way: the line's own order.
+  assert.deepEqual(endsByHead([start, end], box('Middle', 121.05)), [start, end]);
+  assert.deepEqual(endsByHead([], head), [undefined, undefined]);
+});
+
+test("a line end's box: the nearest box's place, standing on its terminal", () => {
+  const ilalim = box('SM Fairview Ilalim', 121.0, 'hintuan', 'SM Fairview');
+  const terminal = box('SM Fairview Terminal B', 121.01, 'terminal', 'SM Fairview');
+  const stops = [ilalim, terminal];
+  const places = groupPlaces(stops);
+  assert.equal(guessBox(places, stops, [121.0, 14.7]), terminal.id);
+  assert.equal(guessBox(places, stops, undefined), '');
+  assert.equal(guessBox([], [], [121.0, 14.7]), '');
+});
+
+test("a new route's ends follow its line, swapped when that pair is a route the other way round", () => {
+  const tala = box('Tala', 121.0, 'terminal');
+  const fairview = box('SM Fairview', 121.1, 'terminal');
+  const stops = [tala, fairview];
+  const places = groupPlaces(stops);
+  const line = [
+    [121.001, 14.7],
+    [121.099, 14.7],
+  ];
+  assert.deepEqual(guessEnds(places, stops, line, []), [tala.id, fairview.id]);
+  const fairviewTala = { route: { headHotspotId: fairview.id, tailHotspotId: tala.id } };
+  assert.deepEqual(guessEnds(places, stops, line, [fairviewTala]), [fairview.id, tala.id]);
+  // The pair the same way round is no reason to swap.
+  const talaFairview = { route: { headHotspotId: tala.id, tailHotspotId: fairview.id } };
+  assert.deepEqual(guessEnds(places, stops, line, [talaFairview]), [tala.id, fairview.id]);
+  // No places: nothing guessed.
+  assert.deepEqual(guessEnds([], [], line, []), ['', '']);
 });
