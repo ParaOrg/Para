@@ -63,6 +63,16 @@ export const Resetting: Story = {
   },
 };
 
+/** Back from an invite: set the account's first password. */
+export const Invited: Story = {
+  args: { resetting: true, isInvite: true },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('heading', { name: 'Set your password' }),
+    ).toBeVisible();
+  },
+};
+
 /** From the pill's Password: change it, for the signed-in email. */
 export const ChangingPassword: Story = {
   args: { changingPasswordFor: 'owner@example.com' },

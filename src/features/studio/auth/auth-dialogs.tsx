@@ -5,7 +5,7 @@ import { SignIn } from './sign-in';
 /**
  * The account's dialogs over the workshop: sign-in, from the pill's Sign in
  * or asked for at Done when signed out; setting a new password, back from a
- * reset link; changing it, from the pill. Each shows on its own flag; the workshop keeps them apart
+ * reset link, or a first one, back from an invite; changing it, from the pill. Each shows on its own flag; the workshop keeps them apart
  * (a password change waits while a reset is up). Split from StudioApp.tsx,
  * 2026-09-29.
  */
@@ -13,6 +13,7 @@ export function AuthDialogs({
   signingIn,
   onSignInDismiss,
   resetting,
+  isInvite = false,
   onResetDone,
   changingPasswordFor,
   onPasswordDone,
@@ -20,6 +21,8 @@ export function AuthDialogs({
   signingIn: boolean;
   onSignInDismiss: () => void;
   resetting: boolean;
+  /** The link being finished was an invite: the account's first password. */
+  isInvite?: boolean;
   onResetDone: () => void;
   /** The signed-in email while its password is being changed; null otherwise. */
   changingPasswordFor: string | null;
@@ -29,7 +32,7 @@ export function AuthDialogs({
     <>
       {signingIn && <SignIn onDismiss={onSignInDismiss} />}
 
-      {resetting && <ResetPassword onDone={onResetDone} />}
+      {resetting && <ResetPassword onDone={onResetDone} isInvite={isInvite} />}
 
       {changingPasswordFor && (
         <ChangePassword email={changingPasswordFor} onDone={onPasswordDone} />
