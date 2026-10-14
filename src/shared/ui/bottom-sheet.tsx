@@ -100,6 +100,11 @@ const FLOATS_AT = {
  * takes hold of the sheet — to Middle held slowly, to Low flicked. A tap on
  * the handle goes round, Low → Middle → Max. Between Middle and Max it
  * stays where it is let go (sheetGesture's snapFor), its body still.
+ *
+ * Its siblings: sheet-gesture.ts decides the heights and the drags, and
+ * measures the status bar; use-sheet-gestures.ts binds the finger, the
+ * mouse and the wheel; sheet-header.tsx is the header with ✕ a card may
+ * bring; sheet-room.ts is the room the sheet leaves the camera.
  */
 export function BottomSheet({
   label,

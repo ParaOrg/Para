@@ -1,7 +1,8 @@
 /**
  * How BottomSheet's handle and drags decide, on a phone: every card's,
  * since the owner's ask of 2026-09-30 ("make it a universal rule as
- * component").
+ * component"). It also measures the status bar Max stands clear of
+ * (measureSafeTop). The listeners that act on these are useSheetGestures'.
  */
 
 /** How far a drag must travel before it counts as a pull rather than a tap. */
