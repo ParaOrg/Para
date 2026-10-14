@@ -40,6 +40,7 @@ import {
   Toast,
   deleteDirection,
   deleteHotspot,
+  endsRefusal,
   useDrawing,
   useFollow,
   useSaveTarget,
@@ -54,7 +55,7 @@ interface WorkshopProps {
  * The map and every editing tool, for a signed-in editor or a test session.
  * The composition root: the state and the hooks' results passed down. What
  * it decides lives in the studio's panels: the return-trip offer
- * (return-trip.ts).
+ * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts).
  */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -209,20 +210,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       setSigningIn(true);
       return;
     }
-    // A route's end cannot go while the route names it: the database refuses
-    // (0006's foreign keys), and its refusal was the notice (finding 15).
-    const ending = [
-      ...new Set(
-        saved.directions
-          .filter((v) => v.route.headHotspotId === s.id || v.route.tailHotspotId === s.id)
-          .map((v) => v.route.name),
-      ),
-    ];
-    if (ending.length > 0) {
-      setNotice(
-        `"${hotspotLabel(s)}" is where ${ending.join(', ')} ${ending.length === 1 ? 'ends' : 'end'}. ` +
-          `Delete ${ending.length === 1 ? 'that route' : 'those routes'} first.`,
-      );
+    // A route's end cannot go while the route names it (endsRefusal).
+    const refusal = endsRefusal(s, saved.directions);
+    if (refusal) {
+      setNotice(refusal);
       return;
     }
     if (!window.confirm(`Delete ${s.kind} "${hotspotLabel(s)}"?`)) return;

@@ -17,6 +17,7 @@ export { useDrawing } from './drawing/use-drawing';
 export { useFollow } from './drawing/use-follow';
 export { AccountPill } from './panels/account-pill';
 export { CardActions } from './panels/card-actions';
+export { endsRefusal } from './panels/hotspot-in-use';
 export { HotspotPanel } from './panels/hotspot-panel';
 export { NewButtons } from './panels/new-buttons';
 export { RouteExportPanel } from './panels/route-export-panel';
