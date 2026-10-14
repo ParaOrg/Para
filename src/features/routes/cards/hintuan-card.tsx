@@ -178,7 +178,10 @@ export function HintuanCard({
   // a ref, so one made afresh each render cannot set the lights going in a loop.
   const shownKey = shown.join('\n');
   const onShown = useRef(routeCards.onShown);
-  onShown.current = routeCards.onShown;
+  // Kept current as each render commits, ahead of the effect below that reads it.
+  useLayoutEffect(() => {
+    onShown.current = routeCards.onShown;
+  });
   useLayoutEffect(() => {
     const tell = onShown.current;
     tell(shownKey ? shownKey.split('\n') : []);

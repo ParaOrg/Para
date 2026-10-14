@@ -81,7 +81,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   // The HintuanCard's, for a picked box to land clear of it.
   const hotspotDock = useRef<HTMLDivElement>(null);
   const ride = useRideTo(map, saved.selected, hotspots.hotspots, {
-    onGlide: cards.clearOf(tripDock),
+    onGlide: () => cards.clearOf(tripDock)(),
   });
   useTripOverview(cam, saved.selected, tripDock, cards.snap);
   // The page, and the card's sheet on show in it, for what the camera keeps clear of.

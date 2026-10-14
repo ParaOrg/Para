@@ -140,14 +140,13 @@ const fairview = (id: string, name: string, kind: HotspotRow['kind']): HotspotRo
   kind,
   point: { type: 'Point', coordinates: [121.0424 + Math.random() * 0.001, 14.7415] },
 });
-const fairviewBoxes = [
-  fairview('fv-terminal', 'SM City Fairview Jeepney Terminal', 'terminal'),
-  fairview('fv-babaan', 'SM Fairview Main Babaan', 'hintuan'),
-  fairview('fv-teraccess', 'Fairview Teraccess', 'hintuan'),
-];
+const fairviewTerminal = fairview('fv-terminal', 'SM City Fairview Jeepney Terminal', 'terminal');
+const fairviewBabaan = fairview('fv-babaan', 'SM Fairview Main Babaan', 'hintuan');
+const fairviewTeraccess = fairview('fv-teraccess', 'Fairview Teraccess', 'hintuan');
+const fairviewBoxes = [fairviewTerminal, fairviewBabaan, fairviewTeraccess];
 export const PartOfAPlace: Story = {
   args: {
-    hotspot: fairviewBoxes[1]!,
+    hotspot: fairviewBabaan,
     hotspots: fairviewBoxes,
     onPickSibling: fn(),
     linkedDirectionIds: [inbound.id],
@@ -206,7 +205,7 @@ const talaRoutes = [
 export const RouteCards: Story = {
   args: {
     routeCards,
-    hotspot: fairviewBoxes[2]!,
+    hotspot: fairviewTeraccess,
     hotspots: fairviewBoxes,
     onPickSibling: fn(),
     linkedDirectionIds: talaRoutes.map((v) => v.id),
