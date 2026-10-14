@@ -21,6 +21,7 @@ export { HotspotPanel } from './panels/hotspot-panel';
 export { NewButtons } from './panels/new-buttons';
 export { RouteExportPanel } from './panels/route-export-panel';
 export { RouteFacts } from './panels/route-facts';
+export { returnTripLeft } from './panels/return-trip';
 export { SavePanel } from './panels/save-panel';
 export { SignboardEditor } from './panels/signboard-editor';
 export { Toast } from './panels/toast';

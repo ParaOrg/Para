@@ -28,6 +28,7 @@ import {
   CardActions,
   RouteExportPanel,
   RouteFacts,
+  returnTripLeft,
   SignboardEditor,
   signboardUrl,
   AuthDialogs,
@@ -49,7 +50,12 @@ interface WorkshopProps {
   recovery: ReturnType<typeof usePasswordRecovery>;
 }
 
-/** The map and every editing tool, for a signed-in editor or a test session. */
+/**
+ * The map and every editing tool, for a signed-in editor or a test session.
+ * The composition root: the state and the hooks' results passed down. What
+ * it decides lives in the studio's panels: the return-trip offer
+ * (return-trip.ts).
+ */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [signingIn, setSigningIn] = useState(false);
@@ -231,15 +237,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
 
-  // "Draw the return trip" only while the route still has a way undrawn: after
-  // an edit of a route drawn both ways it once started a drawing whose save
-  // replaced the other direction's line (review finding 2). The direction
-  // just saved is drawn whatever the list says until its reload lands.
-  const slotLeft = justSaved
-    ? saved.directions.some(
-        (v) => v.routeId === justSaved.routeId && v.id !== justSaved.id && v.shape === null,
-      )
-    : false;
+  // "Draw the return trip" only while the route still has a way undrawn.
+  const slotLeft = returnTripLeft(justSaved, saved.directions);
 
   const onDelete = async (v: DirectionRow) => {
     // Signed out, the delete would match nothing and say nothing (onDeleteHotspot).
