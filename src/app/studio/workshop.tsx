@@ -38,12 +38,10 @@ import {
   HotspotPanel,
   SavePanel,
   Toast,
-  deleteDirection,
-  deleteHotspot,
-  endsRefusal,
   useDrawing,
   useFollow,
   useSaveTarget,
+  useDeleteActions,
 } from '@/features/studio';
 
 interface WorkshopProps {
@@ -55,7 +53,8 @@ interface WorkshopProps {
  * The map and every editing tool, for a signed-in editor or a test session.
  * The composition root: the state and the hooks' results passed down. What
  * it decides lives in the studio's panels: the return-trip offer
- * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts).
+ * (return-trip.ts), a route's end refusing a delete (hotspot-in-use.ts), and the deletes
+ * themselves (use-delete-actions.ts).
  */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -202,50 +201,19 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     setToast({ kind: 'hotspot', s });
   };
 
-  const onDeleteHotspot = async (s: HotspotRow) => {
-    // As Done does: with the session gone the delete went out on the
-    // publishable key, matched no row, came back 2xx, and the box was still
-    // there after the reload, with nothing said (review of 2026-10-03).
-    if (!signedIn) {
-      setSigningIn(true);
-      return;
-    }
-    // A route's end cannot go while the route names it (endsRefusal).
-    const refusal = endsRefusal(s, saved.directions);
-    if (refusal) {
-      setNotice(refusal);
-      return;
-    }
-    if (!window.confirm(`Delete ${s.kind} "${hotspotLabel(s)}"?`)) return;
-    try {
-      await deleteHotspot(s);
-      hotspots.select(null);
-      await hotspots.reload();
-    } catch (e) {
-      setNotice(e instanceof Error ? e.message : String(e));
-    }
-  };
-
   const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
 
   // "Draw the return trip" only while the route still has a way undrawn.
   const slotLeft = returnTripLeft(justSaved, saved.directions);
 
-  const onDelete = async (v: DirectionRow) => {
-    // Signed out, the delete would match nothing and say nothing (onDeleteHotspot).
-    if (!signedIn) {
-      setSigningIn(true);
-      return;
-    }
-    if (!window.confirm(`Delete "${v.route?.name}" — ${v.name}?`)) return;
-    try {
-      await deleteDirection(v);
-      saved.select(null);
-      await saved.reload();
-    } catch (e) {
-      setNotice(e instanceof Error ? e.message : String(e));
-    }
-  };
+  // Delete on the trip's card and the hotspot's: signed out, it asks for sign-in.
+  const { onDelete, onDeleteHotspot } = useDeleteActions({
+    signedIn,
+    onSignInNeeded: () => setSigningIn(true),
+    saved,
+    hotspots,
+    setNotice,
+  });
 
   return (
     <div ref={root} className="@container relative h-full w-full overflow-clip">
