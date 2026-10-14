@@ -19,6 +19,15 @@ const pt = (lng) => [lng, 14.7];
 const routed = (a, b) => ({ snap: 'snapped', coordinates: [a, b, [b[0], b[1] + 0.001]] });
 /** A straight stretch, the owner's choice. */
 const straight = (a, b) => ({ snap: 'freehand', coordinates: [a, b] });
+/**
+ * Every element the very object expected, not a copy: the join point and a
+ * right-click's join are held by identity (joinRef, connectedRef), so an edit
+ * that copied a kept point or segment would lose them.
+ */
+const sameObjects = (actual, expected) => {
+  assert.equal(actual.length, expected.length);
+  expected.forEach((o, i) => assert.equal(actual[i], o));
+};
 /** A drawing of `n` points joined by routed gaps. */
 const line = (n) => {
   const points = Array.from({ length: n }, (_, i) => pt(121 + i / 100));
@@ -30,7 +39,7 @@ test('insertInGap splits one gap into two straight ones and asks for both in its
   const { points, segments } = line(3);
   const p = pt(121.005);
   const e = insertInGap(points, segments, 0, p);
-  assert.deepEqual(e.points, [points[0], p, points[1], points[2]]);
+  sameObjects(e.points, [points[0], p, points[1], points[2]]);
   assert.equal(e.segments.length, 3);
   assert.deepEqual(e.segments[0], straight(points[0], p));
   assert.deepEqual(e.segments[1], straight(p, points[1]));
@@ -47,20 +56,21 @@ test('insertInGap splits one gap into two straight ones and asks for both in its
 test('removeAt the first or last point drops its one gap and asks for nothing', () => {
   const { points, segments } = line(3);
   const first = removeAt(points, segments, 0);
-  assert.deepEqual(first.points, [points[1], points[2]]);
-  assert.deepEqual(first.segments, [segments[1]]);
+  sameObjects(first.points, [points[1], points[2]]);
+  sameObjects(first.segments, [segments[1]]);
   assert.equal(first.resolve, null);
   const last = removeAt(points, segments, 2);
-  assert.deepEqual(last.points, [points[0], points[1]]);
-  assert.deepEqual(last.segments, [segments[0]]);
+  sameObjects(last.points, [points[0], points[1]]);
+  sameObjects(last.segments, [segments[0]]);
   assert.equal(last.resolve, null);
 });
 
 test('removeAt a middle point heals its two gaps into one, asked for in the mode before, else after, else snapped', () => {
   const { points, segments } = line(4);
   const e = removeAt(points, segments, 1);
-  assert.deepEqual(e.points, [points[0], points[2], points[3]]);
+  sameObjects(e.points, [points[0], points[2], points[3]]);
   assert.deepEqual(e.segments, [straight(points[0], points[2]), segments[2]]);
+  assert.equal(e.segments[1], segments[2]);
   assert.deepEqual(e.resolve, { from: 0, modes: ['snapped'] });
   const before = [straight(points[0], points[1]), segments[1], segments[2]];
   assert.deepEqual(removeAt(points, before, 1).resolve, { from: 0, modes: ['freehand'] });
