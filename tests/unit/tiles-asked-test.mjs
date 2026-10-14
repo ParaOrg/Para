@@ -88,7 +88,7 @@ test('the public map notes its tiles, the studio none, and the worker asks for t
   assert.match(view, /\.\.\.\(openOn \? \{ transformRequest: noteTile \} : \{\}\)/);
   assert.equal(view.match(/transformRequest/g).length, 1, 'no other transform');
   const studio = readFileSync(
-    new URL('../../src/app/studio/studio-app.tsx', import.meta.url),
+    new URL('../../src/app/studio/workshop.tsx', import.meta.url),
     'utf8',
   );
   assert.doesNotMatch(studio, /openOn/);
