@@ -1,4 +1,4 @@
-import type { HotspotKind } from '../drawing/use-drawing';
+import type { HotspotKind } from '../drawing/drawing-types';
 
 /**
  * The studio's two ways to start, at the bottom right: + New Route, and +

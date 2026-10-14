@@ -1,7 +1,6 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { coarsePointer } from '@/features/routes/map/tap';
 import type { DirectionDrawing } from '@/features/routes/model/routes';
 import {
   joinSegments,
@@ -11,81 +10,31 @@ import {
   type SnapMode,
 } from '@/shared/utils/geo';
 
-import { cutAt, nearestSpot, reverseDrawing, type BorrowPart, type LineSpot } from './borrow';
-import { readDraft, useDraftSaving } from './draft';
+import { readDraft, restoredState, useDraftSaving } from './draft';
 import { useDrawLayers, useDrawRendering } from './draw-layers';
+import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
+import type { AreaTarget, Borrow, HotspotKind, Picking, Target } from './drawing-types';
 import { useGapResolver } from './gap-resolver';
-import { straightSegment } from './snap';
 import { useDrawEvents } from './use-draw-events';
+import { useLineBorrowing } from './use-line-borrowing';
+import { usePointBar } from './use-point-bar';
 import { findUTurns } from './uturns';
 
 /**
  * The drawing tool: a route's control points and the road between them, or a
  * hotspot's outline, from the first click to the save. This file keeps the
- * state, the edits and the modes; what it paints is drawLayers.ts, how the
- * pointer drives it useDrawEvents.ts, the router's answers gapResolver.ts,
- * and the draft on this device draft.ts (split 2026-09-29, stage 10 of the
- * clean-up; nothing it does changed).
+ * state, the refs the map's handlers read, the edits as thin callers and the
+ * modes, and wires the rest together. Its types are drawing-types.ts and the
+ * array arithmetic behind the edits drawing-edits.ts; the finger's Delete,
+ * Put back and follow offer are use-point-bar.ts, Extend's keep and the
+ * right-click's join use-line-borrowing.ts (split 2026-10-14, the big-file
+ * wave); what it paints is draw-layers.ts, how the pointer drives it
+ * use-draw-events.ts, the router's answers gap-resolver.ts, and the draft on
+ * this device draft.ts (split 2026-09-29, stage 10 of the clean-up). Nothing
+ * it does changed in either split.
  */
-
-/** What a save will write to: an existing direction, a new direction on an existing route, or (both null) a new route. */
-export interface Target {
-  routeId: string | null;
-  directionId: string | null;
-}
-
-/** Which kind of hotspot an area trace will become. */
-export type HotspotKind = 'terminal' | 'hintuan';
-
-/**
- * Set while tracing a hotspot instead of a route. The same click / drag /
- * insert / delete / undo machinery runs; the differences are that every edge
- * is a straight line (no router), the ring closes itself, and a fill is drawn.
- * `hotspotId` is the saved hotspot being edited, or null for a new one.
- */
-export interface AreaTarget {
-  kind: HotspotKind;
-  hotspotId: string | null;
-}
-
-/**
- * Set once a drawing has taken over part of a saved direction (Extend): which
- * one, and which part. What the save records, so a later change to the parent
- * can offer to follow into this line.
- */
-export interface Borrow {
-  directionId: string;
-  part: BorrowPart;
-}
-
-/**
- * Set while choosing where a new route leaves a saved direction, before any
- * of it is taken: the direction, and the spot tapped on it so far.
- */
-export interface Picking {
-  direction: DirectionDrawing;
-  spot: LineSpot | null;
-}
 
 export type Drawing = ReturnType<typeof useDrawing>;
-
-/** See `followOffer` in useDrawing. */
-export interface FollowOffer {
-  ids: string[];
-  at: LngLat;
-  point: LngLat;
-}
-
-/** What the point bar's Delete keeps, to put back. */
-interface Undone {
-  points: LngLat[];
-  segments: Segment[];
-  join: LngLat | null;
-  connected: { spot: LngLat; end: LngLat } | null;
-}
-
-/** How long Put back is offered after the point bar's Delete. */
-const PUT_BACK_MS = 6000;
 
 export function useDrawing(
   map: MapLibreMap | null,
@@ -113,18 +62,8 @@ export function useDrawing(
   const [borrow, setBorrow] = useState<Borrow | null>(null);
   /** Non-null while choosing where a new route leaves a saved direction. */
   const [picking, setPicking] = useState<Picking | null>(null);
-  /** The point a finger tapped, whose bar of actions is open (PointBar.tsx). */
+  /** The point a finger tapped, whose bar of actions is open (point-bar.tsx). */
   const [selected, setSelected] = useState<number | null>(null);
-  /**
-   * The drawing as it was before the point bar's Delete, and as Delete left
-   * it: Put back restores `before` while the drawing is still `after`.
-   */
-  const [deleted, setDeleted] = useState<{ before: Undone; after: LngLat[] } | null>(null);
-  /**
-   * A finger tap that added a point on a saved line offers to follow that
-   * line instead: the lines under it, where, and the point the tap added.
-   */
-  const [followOffer, setFollowOffer] = useState<FollowOffer | null>(null);
 
   // Map event handlers are registered once and must always see current state,
   // so every mutator updates these refs synchronously.
@@ -193,20 +132,10 @@ export function useDrawing(
       if (join !== -1 && !areaRef.current) {
         // Before a borrowed end: the new point goes in just ahead of the join,
         // and both gaps it touches are new drawing.
-        const pts = [...cpRef.current];
-        pts.splice(join, 0, point);
-        writePoints(pts);
-        const segs = [...segRef.current];
-        if (join === 0) segs.unshift(straightSegment(point, pts[1]));
-        else
-          segs.splice(
-            join - 1,
-            1,
-            straightSegment(pts[join - 1], point),
-            straightSegment(point, pts[join + 1]),
-          );
-        writeSegments(segs);
-        await resolveGaps(join === 0 ? 0 : join - 1, join === 0 ? [mode] : [mode, mode]);
+        const edit = addBeforeJoin(cpRef.current, segRef.current, join, point, mode);
+        writePoints(edit.points);
+        writeSegments(edit.segments);
+        if (edit.resolve) await resolveGaps(edit.resolve.from, edit.resolve.modes);
         return;
       }
       const prevLen = cpRef.current.length;
@@ -220,16 +149,10 @@ export function useDrawing(
   /** Split a segment by dropping a new control point into it. */
   const insertPoint = useCallback(
     async (gap: number, point: LngLat) => {
-      const mode: SnapMode = segRef.current[gap]?.snap ?? 'snapped';
-      const pts = [...cpRef.current];
-      pts.splice(gap + 1, 0, point);
-      writePoints(pts);
-
-      const segs = [...segRef.current];
-      segs.splice(gap, 1, straightSegment(pts[gap], point), straightSegment(point, pts[gap + 2]));
-      writeSegments(segs);
-
-      await resolveGaps(gap, [mode, mode]);
+      const edit = insertInGap(cpRef.current, segRef.current, gap, point);
+      writePoints(edit.points);
+      writeSegments(edit.segments);
+      if (edit.resolve) await resolveGaps(edit.resolve.from, edit.resolve.modes);
     },
     [resolveGaps, writePoints, writeSegments],
   );
@@ -237,23 +160,10 @@ export function useDrawing(
   /** Remove a control point, healing the two segments around it into one. */
   const deletePoint = useCallback(
     async (idx: number) => {
-      const origLen = cpRef.current.length;
-      const modeBefore = segRef.current[idx - 1]?.snap;
-      const modeAfter = segRef.current[idx]?.snap;
-
-      const pts = [...cpRef.current];
-      pts.splice(idx, 1);
-      writePoints(pts);
-
-      const segs = [...segRef.current];
-      if (idx === 0) segs.splice(0, 1);
-      else if (idx === origLen - 1) segs.splice(segs.length - 1, 1);
-      else segs.splice(idx - 1, 2, straightSegment(pts[idx - 1], pts[idx]));
-      writeSegments(segs);
-
-      if (idx > 0 && idx < pts.length) {
-        await resolveGaps(idx - 1, [modeBefore ?? modeAfter ?? 'snapped']);
-      }
+      const edit = removeAt(cpRef.current, segRef.current, idx);
+      writePoints(edit.points);
+      writeSegments(edit.segments);
+      if (edit.resolve) await resolveGaps(edit.resolve.from, edit.resolve.modes);
     },
     [resolveGaps, writePoints, writeSegments],
   );
@@ -295,63 +205,24 @@ export function useDrawing(
     writeSegments(segRef.current.slice(0, -1));
   }, [deletePoint, writePoints, writeSegments]);
 
-  /** The point bar's Delete: the selected point goes, and can be put back for a while. */
-  const deleteSelected = useCallback(() => {
-    const i = selectedRef.current;
-    if (i === null) return;
-    const before = {
-      points: cpRef.current,
-      segments: segRef.current,
-      join: joinRef.current,
-      connected: connectedRef.current,
-    };
-    void deletePoint(i);
-    setDeleted({ before, after: cpRef.current });
-  }, [deletePoint]);
-
-  const putBack = useCallback(() => {
-    if (!deleted || cpRef.current !== deleted.after) return;
-    const { points, segments, join, connected } = deleted.before;
-    writePoints(points);
-    writeSegments(segments);
-    joinRef.current = join;
-    connectedRef.current = connected;
-    setDeleted(null);
-    // A stretch still waiting for the router lost its request to the Delete:
-    // ask again, each run of them in one request.
-    let from = -1;
-    segments.forEach((s, i) => {
-      const waiting = !!s && isStandIn(s);
-      if (waiting && from === -1) from = i;
-      if (from === -1 || (waiting && i < segments.length - 1)) return;
-      const to = waiting ? i : i - 1;
-      void resolveGaps(
-        from,
-        segments.slice(from, to + 1).map((g) => g.snap),
-      );
-      from = -1;
-    });
-  }, [deleted, writePoints, writeSegments, isStandIn, resolveGaps]);
-
-  // Put back is offered for a few seconds after the Delete.
-  useEffect(() => {
-    if (!deleted) return;
-    const t = setTimeout(() => setDeleted(null), PUT_BACK_MS);
-    return () => clearTimeout(t);
-  }, [deleted]);
-
-  /** Take the follow offer: the point the tap added goes, and the line is followed from there. */
-  /**
-   * Take the follow offer: the line is followed from where the tap was, and
-   * the point the tap added goes only once the join goes ahead (`connect`),
-   * so a refused follow leaves the drawing as it was.
-   */
-  const takeFollowOffer = useCallback(() => {
-    const o = followOffer;
-    setFollowOffer(null);
-    if (!o || cpRef.current[cpRef.current.length - 1] !== o.point) return;
-    followRef.current?.(o.ids, o.at, o.point);
-  }, [followOffer]);
+  // The finger's Delete, Put back and the follow offer. Called here so its Put
+  // back timer keeps its place among the effects.
+  const pointBar = usePointBar(
+    useMemo(
+      () => ({
+        points: cpRef,
+        segments: segRef,
+        join: joinRef,
+        connected: connectedRef,
+        selected: selectedRef,
+        follow: followRef,
+      }),
+      [],
+    ),
+    { deletePoint, writePoints, writeSegments, resolveGaps, isStandIn },
+    controlPoints,
+  );
+  const { setFollowOffer, clear: clearPointBar } = pointBar;
 
   /** The drawing's line as it is now, without its last point when that is `drop`. */
   const lineNow = useCallback((drop?: LngLat) => {
@@ -362,14 +233,13 @@ export function useDrawing(
   const reset = useCallback(() => {
     writePoints([]);
     writeSegments([]);
-    setDeleted(null);
-    setFollowOffer(null);
+    clearPointBar();
     setBorrow(null);
     setPicking(null);
     pickingRef.current = null;
     joinRef.current = null;
     connectedRef.current = null;
-  }, [writePoints, writeSegments]);
+  }, [writePoints, writeSegments, clearPointBar]);
 
   /** Begin a new direction — of an existing route when routeId is given. */
   const start = useCallback(
@@ -418,95 +288,22 @@ export function useDrawing(
     [reset],
   );
 
-  /**
-   * Take over one side of the picked spot. The kept part becomes ordinary
-   * control points and segments — a copy, editable like any drawing. Keeping
-   * the start, new clicks carry on from the spot; keeping the end, they are
-   * drawn from where the new route starts and join it at the spot.
-   */
-  const keep = useCallback(
-    (part: BorrowPart) => {
-      const p = pickingRef.current;
-      if (!p?.spot) return;
-      const cut = cutAt(p.direction.controlPoints ?? [], p.direction.segments ?? [], p.spot, part);
-      writePoints(cut.controlPoints);
-      writeSegments(cut.segments);
-      joinRef.current = part === 'end' ? (cut.controlPoints[0] ?? null) : null;
-      setBorrow({ directionId: p.direction.id, part });
-      setPicking(null);
-      pickingRef.current = null;
-    },
-    [writePoints, writeSegments],
-  );
-
-  /**
-   * Join a saved direction where the owner right-clicked it, and follow it to
-   * its end: a routed gap from the drawing's last point to the spot, then a
-   * copy of the rest of that line. For a return trip that meets another
-   * route's line and rides it home. `backwards` when that line was stored
-   * from its far end, so the copy is turned to run the way the jeep goes.
-   *
-   * Returns a sentence for the owner when it cannot join, or null.
-   */
-  /**
-   * Whether a join can start now, asked before the line's drawing is fetched
-   * (live.ts withDrawing), so the owner hears "draw first" at once rather
-   * than after a request. `go` false with no problem: nothing to say, as when
-   * tracing a hotspot. `connect` asks the same again when the drawing lands.
-   */
-  const joinGate = useCallback((): { go: boolean; problem: string | null } => {
-    if (areaRef.current || pickingRef.current) return { go: false, problem: null };
-    if (cpRef.current.length === 0) {
-      return {
-        go: false,
-        problem: coarsePointer()
-          ? 'Draw from where the jeep starts first, then tap the line it joins and follow it.'
-          : 'Draw from where the jeep starts first, then right-click the line it joins.',
-      };
-    }
-    if (joinRef.current || borrowRef.current) {
-      return {
-        go: false,
-        problem: 'This drawing already follows part of another line. One per drawing, for now.',
-      };
-    }
-    return { go: true, problem: null };
-  }, []);
-
-  /**
-   * `drop`, from the follow offer: the point the finger's tap added, which
-   * the join replaces, taken out only once the join goes ahead.
-   */
-  const connect = useCallback(
-    (v: DirectionDrawing, at: LngLat, backwards: boolean, drop?: LngLat): string | null => {
-      const gate = joinGate();
-      if (!gate.go) return gate.problem;
-      const cp = v.controlPoints ?? [];
-      const segs = v.segments ?? [];
-      const src = backwards ? reverseDrawing(cp, segs) : { controlPoints: cp, segments: segs };
-      const spot = nearestSpot(src.segments, at);
-      if (!spot) return null;
-      const cut = cutAt(src.controlPoints, src.segments, spot, 'end');
-      if (cut.segments.length === 0)
-        return 'That is the very end of the line: nothing left to follow.';
-
-      const dropping =
-        !!drop && cpRef.current.length > 1 && cpRef.current[cpRef.current.length - 1] === drop;
-      const mine = dropping ? cpRef.current.slice(0, -1) : cpRef.current;
-      const mineSegs = dropping ? segRef.current.slice(0, -1) : segRef.current;
-      const gap = mine.length - 1;
-      const last = mine[gap];
-      writePoints([...mine, ...cut.controlPoints]);
-      writeSegments([...mineSegs, straightSegment(last, cut.controlPoints[0]), ...cut.segments]);
-      connectedRef.current = {
-        spot: cut.controlPoints[0],
-        end: cut.controlPoints[cut.controlPoints.length - 1],
-      };
-      setBorrow({ directionId: v.id, part: 'end' });
-      void resolveGaps(gap, [freehandRef.current ? 'freehand' : 'snapped']);
-      return null;
-    },
-    [joinGate, resolveGaps, writePoints, writeSegments],
+  // Extend's keep of one side of the picked spot, and a right-click's join.
+  const { keep, joinGate, connect } = useLineBorrowing(
+    useMemo(
+      () => ({
+        points: cpRef,
+        segments: segRef,
+        area: areaRef,
+        picking: pickingRef,
+        join: joinRef,
+        borrow: borrowRef,
+        connected: connectedRef,
+        freehand: freehandRef,
+      }),
+      [],
+    ),
+    { writePoints, writeSegments, resolveGaps, setBorrow, setPicking },
   );
 
   /** Begin tracing a hotspot outline. */
@@ -545,9 +342,7 @@ export function useDrawing(
       setArea(a);
       areaRef.current = a;
       writePoints(ring);
-      const segs: Segment[] = [];
-      for (let i = 1; i < ring.length; i++) segs.push(straightSegment(ring[i - 1], ring[i]));
-      writeSegments(segs);
+      writeSegments(ringSegments(ring));
       setFreehand(false);
       setTarget({ routeId: null, directionId: null });
       setDrawing(true);
@@ -574,32 +369,22 @@ export function useDrawing(
     restoredRef.current = true;
     const d = readDraft();
     if (!d) return;
-    const a = d.area ?? null;
+    const restored = restoredState(d);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the draft is read from storage once per page, together with the router requests for its pending gaps below; lazy initial state would split the two and change useDraftSaving's first run
-    setArea(a);
-    areaRef.current = a;
-    const saved = d.segments ?? [];
-    writePoints(d.controlPoints);
-    writeSegments(
-      saved.map((s) => (s?.pending ? { snap: s.snap, coordinates: s.coordinates } : s)),
-    );
-    setTarget(d.target ?? { routeId: null, directionId: null });
-    setBorrow(d.borrow ?? null);
-    joinRef.current = typeof d.join === 'number' ? (d.controlPoints[d.join] ?? null) : null;
+    setArea(restored.area);
+    areaRef.current = restored.area;
+    writePoints(restored.controlPoints);
+    writeSegments(restored.segments);
+    setTarget(restored.target);
+    setBorrow(restored.borrow);
+    joinRef.current = restored.join;
     setDrawing(true);
 
     // Gaps still waiting for the router when the page went away: their answers
     // went with it, so ask again, adjacent ones in one request as before.
-    if (a) return;
-    let from = -1;
-    saved.forEach((s, i) => {
-      const pending = !!s?.pending;
-      if (pending && from === -1) from = i;
-      if (from === -1 || (pending && i < saved.length - 1)) return;
-      const to = pending ? i : i - 1;
+    for (const [from, to] of restored.pendingRuns) {
       void resolveGaps(from, new Array<SnapMode>(to - from + 1).fill('snapped'));
-      from = -1;
-    });
+    }
   }, [writePoints, writeSegments, resolveGaps]);
 
   useDraftSaving({ drawing, controlPoints, segments, target, area, borrow }, joinRef, isStandIn);
@@ -663,7 +448,7 @@ export function useDrawing(
     segments,
     line,
     snapping: gaps.snapping,
-    /** True while a stand-in is still on the line (gapResolver.ts). */
+    /** True while a stand-in is still on the line (gap-resolver.ts). */
     unresolved,
     freehand,
     setFreehand,
@@ -693,18 +478,15 @@ export function useDrawing(
     insertPoint,
     deletePoint,
     toggleSegment,
-    /** The point a finger tapped, or null; its bar is PointBar.tsx. */
+    /** The point a finger tapped, or null; its bar is point-bar.tsx. */
     selected,
     select,
-    deleteSelected,
+    deleteSelected: pointBar.deleteSelected,
     /** Whether the last Delete can still be put back. */
-    canPutBack: deleted !== null && controlPoints === deleted.after,
-    putBack,
+    canPutBack: pointBar.canPutBack,
+    putBack: pointBar.putBack,
     /** The lines a finger tap just added a point on, while that point is still the last. */
-    followOffer:
-      followOffer && controlPoints[controlPoints.length - 1] === followOffer.point
-        ? followOffer
-        : null,
-    takeFollowOffer,
+    followOffer: pointBar.followOffer,
+    takeFollowOffer: pointBar.takeFollowOffer,
   };
 }

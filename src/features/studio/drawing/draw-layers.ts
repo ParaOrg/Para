@@ -7,7 +7,7 @@ import { LAYERS } from '@/features/routes/map/layers';
 import { directionLine } from '@/features/routes/model/routes';
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
-import type { AreaTarget, Picking } from './use-drawing';
+import type { AreaTarget, Picking } from './drawing-types';
 import type { UTurn } from './uturns';
 
 /**
