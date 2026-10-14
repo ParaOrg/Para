@@ -184,7 +184,10 @@ function Workshop({
   );
 
   const signedIn = !!session;
-  const userId = session?.user.id ?? null;
+  // Every editor edits every route and hotspot (migration 0015, the owner's
+  // ask of 2026-10-14). There is no sign-up, so a session is an editor's; the
+  // database refuses anyone else's writes whatever this shows.
+  const canEdit = signedIn;
 
   // Signed in from the dialog Done opened: the dialog hides itself on the
   // session, so its flag is cleared here, during render — left set, it kept
@@ -366,8 +369,7 @@ function Workshop({
               <RouteFacts
                 direction={saved.selected}
                 actions={
-                  userId !== null &&
-                  userId === saved.selected.ownerId && (
+                  canEdit && (
                     <CardActions
                       editLabel="Edit route"
                       onEdit={() => {
@@ -398,7 +400,7 @@ function Workshop({
                 hotspots={hotspots.hotspots}
                 hotspotsAlong={hotspots.hotspotsAlong}
               />
-              {userId !== null && userId === saved.selected.ownerId && (
+              {canEdit && (
                 <SignboardEditor direction={saved.selected} onChanged={() => void saved.reload()} />
               )}
             </>
@@ -433,8 +435,7 @@ function Workshop({
             hotspots.show(id, clearOfOpen);
           }}
           actions={
-            userId !== null &&
-            userId === hotspots.selected.ownerId && (
+            canEdit && (
               <CardActions
                 editLabel={hotspots.selected.kind === 'terminal' ? 'Edit terminal' : 'Edit hintuan'}
                 onEdit={() => {
