@@ -422,10 +422,13 @@ function dress(l: LayerSpecification): LayerSpecification[] {
  * Positron as Monochrome. A Positron layer this looks for and does not find
  * leaves its addition out. The 3D buildings go over the roads, as Colour's
  * do; the one-way arrows are the first labels, so a street's name wins over
- * an arrow where they meet; the places come last. Pure: the input is left
- * alone.
+ * an arrow where they meet; the places come last. A style without
+ * OpenFreeMap's tiles to draw them from (the e2e suites' bare stand-in, a gray
+ * background alone) is left as it is: every layer added here reads them.
+ * Pure: the input is left alone.
  */
 export function monochromeStyle(style: StyleSpecification): StyleSpecification {
+  if (!(SOURCE in style.sources)) return style;
   const layers = style.layers.flatMap(dress);
   const firstLabel = layers.findIndex((l) => l.type === 'symbol');
   const cut = firstLabel < 0 ? layers.length : firstLabel;
