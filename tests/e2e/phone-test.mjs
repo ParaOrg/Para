@@ -1785,11 +1785,7 @@ const tripChecks = async () => {
           },
           [rideWant?.from ?? null, rideWant?.at ?? null],
         );
-        const fareOk =
-          !rideWant ||
-          rideWant.fare == null ||
-          rideFareShown === rideWant.fare.regular ||
-          rideFareShown === rideWant.fare.discounted;
+        const fareOk = !rideWant || rideWant.fare == null || rideFareShown === rideWant.fare;
         check(
           '  Set as start, then an end: S and E on their rows, the tiles and the map read the ride between them',
           !!rideWant &&
@@ -1803,7 +1799,7 @@ const tripChecks = async () => {
             onMap.start < 3 &&
             onMap.end !== null &&
             onMap.end < 3,
-          `${JSON.stringify(marks)}; Distance "${rideKm}", the sums "${rideWant?.km}"; fare "${rideFareShown}"; ${onMap.pins} circle(s), S ${onMap.start?.toFixed(1)} px off, E ${onMap.end?.toFixed(1)} px off`,
+          `${JSON.stringify(marks)}; Distance "${rideKm}", the sums "${rideWant?.km}"; fare "${rideFareShown}", the sums "${rideWant?.fare}"; ${onMap.pins} circle(s), S ${onMap.start?.toFixed(1)} px off, E ${onMap.end?.toFixed(1)} px off`,
         );
         const removeStart = card().getByRole('button', { name: 'Remove as start' });
         await removeStart.scrollIntoViewIfNeeded();
