@@ -29,7 +29,8 @@ import { recolouredStyle, type Recolour } from './recolour';
  * "I don't want to add the terminal and routeline as additional detail"): its
  * bus terminals and stops, its ferry stops and its busway stood beside
  * ParaPo's own hotspots and routes as if they were ours. Rail stations stay
- * ("wait including the railstops too?"), with the train icon.
+ * ("wait including the railstops too?"), by their names alone ("can we
+ * remove those logo?").
  *
  * Roads — after Dark (2026-10-15: "Dark has overpass, can we make the gray
  * like these?"). Every road in the tiles says whether it is a bridge or a
@@ -55,13 +56,17 @@ const FONT = ['Noto Sans Italic'];
 const NAME: ExpressionSpecification = ['get', 'name'];
 /**
  * The icons in OpenFreeMap's sprite are coloured pictures, which MapLibre
- * cannot gray. Rail stations keep the train, a quiet blue beside their
- * blue-gray names; every other place takes the sprite's gray dot.
+ * cannot gray: a place takes the sprite's gray dot, and a rail station none.
  */
 const DOT = 'dot_11';
-const TRAIN = 'railway_11';
-const RAIL_COLOUR = MAP_PAINT['Paint/basemap-transit'];
-const LANDMARK_COLOUR = MAP_PAINT['Paint/basemap-landmark'];
+
+/** A basemap name's look: italic, small, on a white halo. */
+const namePaint = (colour: string): SymbolLayerSpecification['paint'] => ({
+  'text-color': colour,
+  'text-halo-color': MAP_PAINT['Paint/casing'],
+  'text-halo-width': 1.2,
+  'text-halo-blur': 0.4,
+});
 
 /** Rail and subway stations: `railway` is their only class (counted over Cubao and Quiapo). */
 const IS_RAIL_STOP: ExpressionSpecification = ['==', ['get', 'class'], 'railway'];
@@ -94,12 +99,11 @@ const IS_MINOR_LANDMARK: ExpressionSpecification = [
   false,
 ];
 
+/** A place: the gray dot, its name under it. */
 const place = (
   id: string,
   minzoom: number,
   filter: ExpressionSpecification,
-  colour: string = LANDMARK_COLOUR,
-  icon: string = DOT,
 ): SymbolLayerSpecification => ({
   id,
   type: 'symbol',
@@ -108,7 +112,7 @@ const place = (
   minzoom,
   filter: ['all', ['==', ['geometry-type'], 'Point'], filter],
   layout: {
-    'icon-image': icon,
+    'icon-image': DOT,
     'icon-allow-overlap': false,
     'text-field': NAME,
     'text-font': FONT,
@@ -118,14 +122,20 @@ const place = (
     'text-max-width': 8,
     'text-optional': true,
   },
-  paint: {
-    'icon-opacity': 0.75,
-    'text-color': colour,
-    'text-halo-color': MAP_PAINT['Paint/casing'],
-    'text-halo-width': 1.2,
-    'text-halo-blur': 0.4,
-  },
+  paint: { ...namePaint(MAP_PAINT['Paint/basemap-landmark']), 'icon-opacity': 0.75 },
 });
+
+/** A rail station by its name alone, blue-gray, on the station: no train icon (the owner, 2026-10-15). */
+const RAIL_STOPS: SymbolLayerSpecification = {
+  id: 'detail-rail-stops',
+  type: 'symbol',
+  source: SOURCE,
+  'source-layer': 'poi',
+  minzoom: 13,
+  filter: ['all', ['==', ['geometry-type'], 'Point'], IS_RAIL_STOP],
+  layout: { 'text-field': NAME, 'text-font': FONT, 'text-size': 11, 'text-max-width': 8 },
+  paint: namePaint(MAP_PAINT['Paint/basemap-transit']),
+};
 
 /**
  * Last in the style, after Positron's labels, and in rising order: MapLibre
@@ -158,7 +168,7 @@ const PLACE_LAYERS: readonly LayerSpecification[] = [
   ]),
   place('detail-landmarks-minor', 16, IS_MINOR_LANDMARK),
   place('detail-landmarks', 15, IS_LANDMARK),
-  place('detail-rail-stops', 13, IS_RAIL_STOP, RAIL_COLOUR, TRAIN),
+  RAIL_STOPS,
 ];
 
 // --------------------------------------------------------------- buildings
