@@ -9,6 +9,7 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
 import { monochromeStyle } from './monochrome';
 import { mutedStyle } from './muted';
+import { terrainStyle } from './terrain';
 
 /**
  * The basemap designs a viewer can choose between, the owner's three
@@ -20,6 +21,8 @@ import { mutedStyle } from './muted';
  * still only grays, so the routes and hotspots painted on top carry all the
  * colour (monochrome.ts). Colour is Liberty, muted so the routes still carry
  * the strongest colour (muted.ts). Fiord, dark blue-gray, is for night.
+ * Terrain, on this branch to look at, is the muted Colour with the hills
+ * shaded and raised when the map is tilted (terrain.ts).
  *
  * Satellite is the studio's only (the owner, 2026-10-15): the studio adds it
  * to these (features/studio), so the photo's host never reaches the public
@@ -36,8 +39,8 @@ export interface Basemap {
   imagery?: Imagery;
 }
 
-/** Monochrome's detail on Positron, or Liberty's colours muted. */
-export type Dressing = 'monochrome' | 'muted';
+/** Monochrome's detail on Positron, Liberty's colours muted, or those with the ground's shape. */
+export type Dressing = 'monochrome' | 'muted' | 'terrain';
 
 export interface Imagery {
   /** The photo's tile address, with `{z}`, `{x}` and `{y}`. */
@@ -62,6 +65,7 @@ export const BASEMAPS: readonly Basemap[] = [
   },
   { id: 'liberty', label: 'Colour', url: `${OPENFREEMAP}/styles/liberty`, dressing: 'muted' },
   { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` },
+  { id: 'terrain', label: 'Terrain', url: `${OPENFREEMAP}/styles/liberty`, dressing: 'terrain' },
 ];
 
 export const DEFAULT_BASEMAP = BASEMAPS[0];
@@ -136,11 +140,12 @@ function satelliteStyle(style: StyleSpecification, imagery: Imagery): StyleSpeci
 /** A design MapLibre can take by its URL, with nothing to add. */
 const isPlain = (b: Basemap): boolean => !b.dressing && !b.imagery;
 
-/** What a design does to the style it fetches: the photo, Monochrome's detail, or Colour's muting. */
+/** What a design does to the style it fetches: the photo, Monochrome's detail, Colour's muting, or Terrain's hills. */
 function dressed(b: Basemap, style: StyleSpecification): StyleSpecification {
   if (b.imagery) return satelliteStyle(style, b.imagery);
   if (b.dressing === 'monochrome') return monochromeStyle(style);
   if (b.dressing === 'muted') return mutedStyle(style);
+  if (b.dressing === 'terrain') return terrainStyle(mutedStyle(style));
   return style;
 }
 

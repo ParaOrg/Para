@@ -107,6 +107,9 @@ export const MAP_PAINT = {
   'Paint/basemap-tunnel': 'rgb(234, 234, 231)', // an underpass, paler than a street, under a dashed edge
   'Paint/basemap-path': 'rgb(196, 196, 192)', // a path or footbridge, dashed
   'Paint/basemap-house-number': '#9a9a96', // Monochrome: house numbers from z17
+  'Paint/terrain-shadow': 'rgb(96, 90, 80)', // Terrain: a slope away from the light, a warm gray
+  'Paint/terrain-highlight': '#ffffff', // a slope toward it
+  'Paint/terrain-accent': 'rgb(122, 116, 104)', // the steepest ground
   'Paint/basemap-photo-label': '#ffffff', // Satellite, labelled: street and place names over the photo
   'Paint/basemap-photo-halo': '#1a1a1a', // near-black, so a name reads over a bright roof
   'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims
