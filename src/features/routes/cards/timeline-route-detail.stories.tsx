@@ -6,8 +6,9 @@ import { LIVERIES } from '../model/liveries';
 
 /**
  * A trip's card on its own, as TimelineRouteDetailCard insets it: one story a state,
- * and the pick in each livery. Long names, the pick kept while folded, and
- * the taps are TimelineRouteDetailCard's stories. Sample data only: the places of
+ * and the pick in each livery. Long names, the rows after a pick folding,
+ * and the taps, Set as start's among them, are TimelineRouteDetailCard's
+ * stories. Sample data only: the places of
  * the owner's frames (3762:3546), not the real map.
  */
 const hintuans = (...labels: string[]) => labels.map((label, i) => ({ id: 'h' + i, label }));
@@ -229,7 +230,10 @@ const onMrt3 = {
 } as const;
 
 /** Variant6 (4157:7737): folded, S at North Avenue and E at Taft Avenue. */
-export const RideRest: Story = { args: onMrt3 };
+export const RideFolded: Story = { args: onMrt3 };
+
+/** Rest (4137:9884): opened, nothing picked; the rail end to end. */
+export const RideRest: Story = { args: onMrt3, play: openFold };
 
 /**
  * Choosing (4137:9887): Shaw Boulevard tapped is the end, E and its pill,
@@ -247,6 +251,19 @@ export const RideChoosing: Story = {
  */
 export const RideStartPicked: Story = {
   args: { ...onMrt3, start: shaw, startCode: 'YL07', pickedPesos: '₱10' },
+};
+
+/** Variant3 with the stations before the start opened: their dots alone, no rail, and their fold none either. */
+export const RideStartPickedOpened: Story = {
+  args: RideStartPicked.args,
+  play: async ({ canvasElement }) => {
+    const fold = canvasElement.querySelector<HTMLButtonElement>(
+      'button[data-testid="trip-fold"][data-part="before"]',
+    );
+    if (!fold) throw new Error('no fold before the start');
+    await userEvent.click(fold);
+    fold.blur();
+  },
 };
 
 /** Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride Shaw Boulevard → Ayala. */

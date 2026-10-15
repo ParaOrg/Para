@@ -33,24 +33,39 @@ const openFold: Story['play'] = async ({ canvasElement }) => {
 
 /**
  * Keeps the picks as the public map does (useRideTo): a row picks its
- * hintuan, or an end, and again lets it go; one at a time.
+ * hintuan, or an end, and again lets it go; Set as start makes the picked
+ * hintuan the start, and × Remove as start, or its row again, lets the
+ * start go; an end row lets both go.
  */
 function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
   const [picked, setPicked] = useState(props.picked);
+  const [start, setStart] = useState(props.start ?? null);
   const [atEnd, setAtEnd] = useState(props.endPicked);
   return (
     <TimelineRouteDetailCard
       {...props}
       picked={picked}
+      start={start}
       endPicked={atEnd}
       onPick={(id) => {
         props.onPick(id);
+        if (id === start) return setStart(null);
         setAtEnd(null);
         setPicked((cur) => (cur === id ? null : id));
+      }}
+      onSetStart={() => {
+        props.onSetStart?.();
+        setStart(picked);
+        setPicked(null);
+      }}
+      onRemoveStart={() => {
+        props.onRemoveStart?.();
+        setStart(null);
       }}
       onEnd={(end) => {
         props.onEnd(end);
         setPicked(null);
+        setStart(null);
         setAtEnd((cur) => (cur === end ? null : end));
       }}
     />
@@ -458,21 +473,56 @@ export const OriginPicked: Story = { args: { livery: 'red', endPicked: 'from' } 
 /** Where the trip goes, picked, the same way. */
 export const DestinationPicked: Story = { args: { livery: 'red', endPicked: 'to' } };
 
-/** Folded away and opened again, the pick is still there, pill and all (the default he kept). */
-export const PickFoldedAway: Story = {
+/**
+ * A pick is in the ride, so it never folds away (2026-10-15): View less
+ * folds only the rows after it, and opened again they are back, the pick
+ * still there, pill and all.
+ */
+export const PickWithTheRestFolded: Story = {
   play: async (ctx) => {
     await openFold(ctx);
     const { canvasElement } = ctx;
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await userEvent.click(canvas.getByRole('button', { name: /View less/ }));
-    await expect(
-      canvasElement.querySelectorAll('[data-testid="trip-hintuan"][data-state="selected"]').length,
-    ).toBe(1);
+    await expect(canvas.getByRole('button', { name: /Amparo/, pressed: true })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: /6 more hintuans/ })).toBeTruthy();
     await openFold(ctx);
-    await expect(await canvas.findByRole('button', { name: /Amparo/, pressed: true })).toBeTruthy();
+    await expect(await canvas.findByRole('button', { name: /Bestlink/ })).toBeVisible();
     await expect(canvas.getByTestId('trip-hintuan-fare').textContent).toBe('₱20–22');
     await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱20–22');
+  },
+};
+
+/**
+ * Set as start (the owner's TimelineRouteDetail, 2026-10-15): Amparo picked,
+ * then made the start, S before it and × Remove as start under it, the
+ * tiles the ride from there; Bistek tapped is the end. × Remove as start
+ * lets the start go, the keyboard's focus kept on Amparo's row.
+ */
+export const StartAndEnd: Story = {
+  args: {
+    pickedMetres: 4_200,
+    pickedFare: { regular: '₱14', discounted: '₱11–12' },
+  },
+  play: async (ctx) => {
+    await openFold(ctx);
+    const { canvasElement } = ctx;
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Set as start' }));
+    const amparo = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h3"]');
+    await expect(amparo?.querySelector('[data-part="start"]')).toBeTruthy();
+    await expect(canvas.getByTestId('trip-km').textContent).toBe(kmLabel(4_200));
+    await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱14');
+    await userEvent.click(canvas.getByRole('button', { name: /Bistek/, pressed: false }));
+    const bistek = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h7"]');
+    await expect(bistek?.querySelector('[data-part="end"]')).toBeTruthy();
+    await userEvent.click(canvas.getByRole('button', { name: 'Remove as start' }));
+    await expect(amparo?.querySelector('[data-part="start"]')).toBeNull();
+    await expect(document.activeElement).toBe(
+      amparo?.querySelector('[data-testid="trip-hintuan-pick"]'),
+    );
   },
 };
 

@@ -226,13 +226,30 @@ export function rowsOutsideRide(
   startId: string | null,
   endId: string | null,
 ): Set<string> {
-  if (startId === null && endId === null) return new Set();
+  const ride = rideRows(rows, startId, endId);
+  if (!ride) return new Set();
+  return new Set(rows.filter((_, i) => i < ride.first || i > ride.last).map((r) => r.id));
+}
+
+/**
+ * Where a picked ride lies on a trip's timeline: its first row and its last,
+ * whichever of the start and the end is above (an end picked above the start
+ * is ridden the other way round). -1 is the origin, a start left there, and
+ * `rows.length` the destination, an end left there. Null with nothing
+ * picked, or a pick that is no row of these (another trip's, a moment
+ * before it goes): the whole ride. The one rule the card's rail and folds
+ * read (rowsOutsideRide).
+ */
+export function rideRows(
+  rows: readonly { id: string }[],
+  startId: string | null,
+  endId: string | null,
+): { first: number; last: number } | null {
+  if (startId === null && endId === null) return null;
   const startAt = startId === null ? -1 : rows.findIndex((r) => r.id === startId);
   const endAt = endId === null ? rows.length : rows.findIndex((r) => r.id === endId);
-  // A pick that is no row of these (another trip's, a moment before it goes): nothing outside.
-  if ((startId !== null && startAt < 0) || (endId !== null && endAt < 0)) return new Set();
-  const [first, last] = startAt <= endAt ? [startAt, endAt] : [endAt, startAt];
-  return new Set(rows.filter((_, i) => i < first || i > last).map((r) => r.id));
+  if ((startId !== null && startAt < 0) || (endId !== null && endAt < 0)) return null;
+  return startAt <= endAt ? { first: startAt, last: endAt } : { first: endAt, last: startAt };
 }
 
 /** One row of a trip's timeline placed on the map: its dot's spot, and its name. */
