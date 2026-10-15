@@ -22,33 +22,29 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
  * no-key style that fits (2026-10-15), so the owner can pick on a phone.
  * Bright and Fiord are OpenFreeMap's too. CARTO's and VersaTiles' are other
  * hosts: not preconnected, not kept offline by the worker, and drawn with
- * OpenFreeMap's fonts (see `withOurFonts`). The two satellite designs are
- * Esri's World Imagery under Positron's labels, or none (see `satelliteStyle`).
+ * OpenFreeMap's fonts (see `withOurFonts`).
+ *
+ * Satellite is the studio's only (the owner, 2026-10-15): the studio adds its
+ * own designs with `imagery` to these (features/studio), so the photo's host
+ * never reaches the public page.
  */
-export type BasemapId =
-  | 'positron'
-  | 'positron-detailed'
-  | 'liberty'
-  | 'dark'
-  | 'satellite'
-  | 'satellite-labelled'
-  | 'bright'
-  | 'fiord'
-  | 'carto-voyager'
-  | 'carto-positron'
-  | 'carto-dark-matter'
-  | 'versatiles-colorful'
-  | 'versatiles-gray'
-  | 'versatiles-muted'
-  | 'versatiles-colorful-dark'
-  | 'versatiles-gray-dark';
 export interface Basemap {
-  id: BasemapId;
+  /** What the device remembers; the studio's designs bring ids of their own. */
+  id: string;
   label: string;
   url: string;
   detailed?: true;
-  /** A photo of the ground in place of Positron's drawing, bare or under its labels. */
-  imagery?: 'bare' | 'labelled';
+  /** A photo of the ground in place of Positron's drawing (see `satelliteStyle`). */
+  imagery?: Imagery;
+}
+
+export interface Imagery {
+  /** The photo's tile address, with `{z}`, `{x}` and `{y}`. */
+  tiles: string;
+  /** The credit its provider asks for, shown in the map's attribution. */
+  attribution: string;
+  /** Positron's labels over the photo, or none at all. */
+  isLabelled: boolean;
 }
 
 const OPENFREEMAP = 'https://tiles.openfreemap.org';
@@ -61,8 +57,6 @@ export const BASEMAPS: readonly Basemap[] = [
   { id: 'positron-detailed', label: 'Gray, detailed', url: POSITRON, detailed: true },
   { id: 'liberty', label: 'Colour', url: `${OPENFREEMAP}/styles/liberty` },
   { id: 'dark', label: 'Dark', url: `${OPENFREEMAP}/styles/dark` },
-  { id: 'satellite', label: 'Satellite', url: POSITRON, imagery: 'bare' },
-  { id: 'satellite-labelled', label: 'Satellite, labelled', url: POSITRON, imagery: 'labelled' },
   { id: 'bright', label: 'Bright', url: `${OPENFREEMAP}/styles/bright` },
   { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` },
   { id: 'carto-voyager', label: 'CARTO Voyager', url: `${CARTO}/voyager-gl-style/style.json` },
@@ -100,10 +94,11 @@ export const DEFAULT_BASEMAP = BASEMAPS[0];
  */
 const STORAGE_KEY = 'parapo.basemap.v1';
 
-export function readBasemap(): Basemap {
+/** The remembered design among `offered`; one this page does not offer (the studio's satellite, on the public map) falls back to the default. */
+export function readBasemap(offered: readonly Basemap[]): Basemap {
   try {
     const id = localStorage.getItem(STORAGE_KEY);
-    return BASEMAPS.find((b) => b.id === id) ?? DEFAULT_BASEMAP;
+    return offered.find((b) => b.id === id) ?? DEFAULT_BASEMAP;
   } catch {
     return DEFAULT_BASEMAP;
   }
@@ -239,15 +234,6 @@ function detailStyle(style: StyleSpecification): StyleSpecification {
 
 // ------------------------------------------------------------- the photo
 
-/*
- * Esri's World Imagery: the one street-level satellite photo with no key to
- * ask for (2026-10-15), sharp to z19 over Metro Manila. To look at on the
- * theme-comparison branch only: going live needs Esri's free developer key
- * (or MapTiler's), and its tiles are not kept offline.
- */
-const IMAGERY_TILES =
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-
 const IMAGERY_LAYER: LayerSpecification = { id: 'imagery', type: 'raster', source: 'imagery' };
 
 /** A Positron label made to read on a photo: white, on a dark halo. */
@@ -265,10 +251,10 @@ const onPhoto = (l: SymbolLayerSpecification): SymbolLayerSpecification => ({
 /**
  * Positron with the photo in place of its drawing. Its symbol layers are its
  * labels; everything else (ground, water, roads, buildings) the photo shows
- * already. Bare keeps no label at all. Pure: the input is left alone.
+ * already. Unlabelled keeps no label at all. Pure: the input is left alone.
  */
-function satelliteStyle(style: StyleSpecification, isLabelled: boolean): StyleSpecification {
-  const labels = isLabelled
+function satelliteStyle(style: StyleSpecification, imagery: Imagery): StyleSpecification {
+  const labels = imagery.isLabelled
     ? style.layers.filter((l): l is SymbolLayerSpecification => l.type === 'symbol').map(onPhoto)
     : [];
   return {
@@ -277,10 +263,10 @@ function satelliteStyle(style: StyleSpecification, isLabelled: boolean): StyleSp
       ...style.sources,
       imagery: {
         type: 'raster',
-        tiles: [IMAGERY_TILES],
+        tiles: [imagery.tiles],
         tileSize: 256,
         maxzoom: 19,
-        attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
+        attribution: imagery.attribution,
       },
     },
     layers: [IMAGERY_LAYER, ...labels],
@@ -325,7 +311,7 @@ const isPlain = (b: Basemap): boolean => !b.detailed && !b.imagery && isOpenFree
 
 /** What a design adds to the style it fetches: the photo, the detail, or our fonts on another host's. */
 function dressed(b: Basemap, style: StyleSpecification): StyleSpecification {
-  if (b.imagery) return satelliteStyle(style, b.imagery === 'labelled');
+  if (b.imagery) return satelliteStyle(style, b.imagery);
   if (b.detailed) return detailStyle(style);
   return isOpenFreeMap(b) ? style : withOurFonts(style);
 }

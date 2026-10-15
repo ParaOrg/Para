@@ -53,7 +53,7 @@ const meta = {
     ),
   ],
   parameters: { layout: 'fullscreen' },
-  args: { initial: BASEMAPS[0], under: 'nothing' },
+  args: { basemaps: BASEMAPS, initial: BASEMAPS[0], under: 'nothing' },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
 export default meta;
