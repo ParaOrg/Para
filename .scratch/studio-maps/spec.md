@@ -38,12 +38,12 @@ For routes and hintuans alike.
 | Status | Who acts | Buttons |
 | --- | --- | --- |
 | **Draft** | The editor drawing it | **Submit** |
-| **Pending** | Any other editor | **Approve** · **Send back** (with a note; it returns to Draft) |
+| **Pending** | Any editor, the one who drew it included | **Approve** · **Send back** (with a note; it returns to Draft) |
 | **Approved** | Reaches commuters at that night's publish | **Take down** |
 
 **Rules:**
 
-- **Any editor can approve, but not their own work.** That's the default; allowing it is a one-line change if the owner wants.
+- **Any editor can approve, their own work included** (the owner's call, 2026-10-15). Pending still marks work as finished and ready, apart from drafts in progress.
 - **Editing an approved route or hintuan starts a new draft.** Commuters keep the approved version until the new one is approved.
 - **A route can't be approved without its two end places.** Approving a route offers to approve its pending hintuans too.
 - **A hintuan can be approved alone.** Public routes that pass it gain it on their timelines.
@@ -98,7 +98,7 @@ Keeping an approved version apart from a draft of the same route or hintuan need
 ## Build order
 
 1. **Docs.** The words, and the new ADR.
-2. **Database.** Versions and status, and the database rules: any editor approves, but not their own.
+2. **Database.** Versions and status, and the database rules: any editor approves, their own work included.
 3. **Drafts and Public.** The switch with these two choices; Submit, Approve, Send back, Take down; the review list; the waiting list; the publish reading approved versions only.
 4. **Tracking joins the switch.** Lines and filters, hintos, Draw a hintuan here, Use this line, auto-verify. It needs driver data (`driver-app`).
 
