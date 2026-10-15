@@ -41,10 +41,45 @@ export const Primary: Story = { args: { variant: 'primary' } };
 /** The destructive red, on Primary's shadows. Press darkens to Error/surface-secondary. */
 export const Error: Story = { args: { variant: 'error' } };
 
-/** Small exists only for Special and Secondary — on the other variants it is a compile error. */
+/** Small exists for Special, Secondary and Primary — on Error it is a compile error. */
 export const SpecialSmall: Story = { args: { variant: 'special', size: 'small' } };
 
 export const SecondarySmall: Story = { args: { variant: 'secondary', size: 'small' } };
+
+/** Primary at Small's sizes, as the timeline's "Set as start" will wear it (2026-10-15, 3742:1196). */
+export const PrimarySmall: Story = { args: { variant: 'primary', size: 'small' } };
+
+/** Primary Small's Disabled (3742:1208): Primary's Rest look at the set's opacity/60. */
+export const PrimarySmallDisabled: Story = {
+  args: { variant: 'primary', size: 'small', disabled: true },
+};
+
+/**
+ * Primary Small's states side by side: Default and Disabled. Hover (3742:1200)
+ * and Pressed (3742:1204) are the pointer's own — hover or press the first —
+ * since this Storybook has no addon to force a pseudo-class.
+ */
+export const PrimarySmallStates: Story = {
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Button
+        variant="primary"
+        size="small"
+        label="Button"
+        firstIcon={NavIcon}
+        lastIcon={NavIcon}
+      />
+      <Button
+        variant="primary"
+        size="small"
+        label="Button"
+        firstIcon={NavIcon}
+        lastIcon={NavIcon}
+        disabled
+      />
+    </div>
+  ),
+};
 
 /** The set's opacity/60, communicated to the browser too, not just greyed. */
 export const Disabled: Story = {
