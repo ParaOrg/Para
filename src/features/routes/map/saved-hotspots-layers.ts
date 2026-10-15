@@ -26,20 +26,22 @@ const LABEL = 'saved-stops-label';
 const HINTUAN_LABEL = LAYERS.hotspotsHintuanLabel;
 /** The scale bar's width (MapView's ScaleControl, MapLibre's default maxWidth). */
 const SCALE_PX = 100;
-/** The ground under the bar's width once it reads 300 m: from 500 m down, it rounds to 300. */
-const NAMES_WITHIN_M = 500;
+/** The most ground the bar's width may cover with the names on. */
+const NAMES_WITHIN_M = 700;
 /** Metres a pixel spans at zoom 0 over Metro Manila (14.6° N), MapLibre's tiles being 512 px. */
 const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / 512;
 
 /**
- * Hotspot names, terminals' and hintuans' alike, from where the scale bar
- * reads 300 m: zoom 13.89 (the owner, 2026-10-15: "at 300m show the hintuan
- * label and terminal"). Close in only, as before, but nearer the overview:
- * from 2026-09-25 they waited for zoom 16.24, where the bar reads 50 m, so a
- * name would not sit over the line's stretch through its hotspot; at 300 m
- * one may, and where names meet, MapLibre keeps one. A bar's reading is the
- * zoom's at a given latitude, so the bar's rule is a zoom for a layer here
- * (station-labels.tsx measures it live, for markers). Two layers, one a
+ * Hotspot names, terminals' and hintuans' alike, once the scale bar's width
+ * covers 700 m or less: zoom 13.40 (the owner, 2026-10-15: "at 300m show the
+ * hintuan label and terminal", then "make it 700m"). The bar steps 1, 2, 3,
+ * 5, so it never reads 700 m: it reads 500 m there, the names coming in
+ * halfway through its 500 m. Close in only, as before, but nearer the
+ * overview: from 2026-09-25 they waited for zoom 16.24, where the bar reads
+ * 50 m, so a name would not sit over the line's stretch through its hotspot;
+ * now one may, and where names meet, MapLibre keeps one. A bar's reading is
+ * the zoom's at a given latitude, so the bar's rule is a zoom for a layer
+ * here (station-labels.tsx measures it live, for markers). Two layers, one a
  * kind, so each can be set apart.
  */
 const NAMES_FROM = Math.log2((METRES_PER_PX_AT_ZOOM_0 * SCALE_PX) / NAMES_WITHIN_M);
