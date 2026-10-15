@@ -53,8 +53,10 @@ const CARTO = 'https://basemaps.cartocdn.com/gl';
 const VERSATILES = 'https://tiles.versatiles.org/assets/styles';
 
 export const BASEMAPS: readonly Basemap[] = [
-  { id: 'positron', label: 'Gray', url: POSITRON },
-  { id: 'positron-detailed', label: 'Gray, detailed', url: POSITRON, detailed: true },
+  // Gray and Gray, detailed made one (the owner, 2026-10-15): the default is
+  // the detailed one, and the plain one stays on this branch to compare.
+  { id: 'positron', label: 'Gray', url: POSITRON, detailed: true },
+  { id: 'positron-plain', label: 'Gray (before)', url: POSITRON },
   { id: 'liberty', label: 'Colour', url: `${OPENFREEMAP}/styles/liberty` },
   { id: 'dark', label: 'Dark', url: `${OPENFREEMAP}/styles/dark` },
   { id: 'bright', label: 'Bright', url: `${OPENFREEMAP}/styles/bright` },
@@ -217,18 +219,157 @@ const BUILDING_PAINT = {
   'fill-outline-color': MAP_PAINT['Paint/basemap-building-edge'],
 };
 
-/** Positron plus the detail layers and firmer buildings. Pure: the input is left alone. */
+/*
+ * The roads, after Dark (the owner, 2026-10-15: "Dark has overpass, can we
+ * make the gray like these?"). Positron draws every road but the motorways
+ * flat, light on light, so a bridge or a flyover reads as one more street.
+ * Gray, detailed draws them as Dark does, still gray: white streets with an
+ * edge from z14, bridges and flyovers with a firmer edge above the roads
+ * they cross, and the one-way arrows Dark has, faint.
+ */
+
+/** A line, in one piece or several: the tiles carry both. */
+const IS_LINE: ExpressionSpecification = [
+  'match',
+  ['geometry-type'],
+  ['LineString', 'MultiLineString'],
+  true,
+  false,
+];
+const STREET_CLASSES = ['minor', 'service'];
+const BRIDGE_CLASSES = ['trunk', 'primary', 'secondary', 'tertiary', ...STREET_CLASSES];
+const IS_STREET: ExpressionSpecification = ['match', ['get', 'class'], STREET_CLASSES, true, false];
+
+/** A street's or a main road's width at a zoom: Positron's own, made a touch wider for an edge. */
+const byClass = (street: number, road: number): ExpressionSpecification => [
+  'case',
+  IS_STREET,
+  street,
+  road,
+];
+
+const STREET_EDGE: LayerSpecification = {
+  id: 'detail-street-edge',
+  type: 'line',
+  source: SOURCE,
+  'source-layer': 'transportation',
+  minzoom: 14,
+  filter: ['all', IS_LINE, IS_STREET],
+  layout: { 'line-cap': 'round', 'line-join': 'round' },
+  paint: {
+    'line-color': MAP_PAINT['Paint/basemap-street-edge'],
+    'line-width': ['interpolate', ['exponential', 1.55], ['zoom'], 14, 4, 20, 23],
+  },
+};
+
+/** Positron's streets, white from z14 where their edge starts. */
+const STREET_COLOUR: ExpressionSpecification = [
+  'step',
+  ['zoom'],
+  MAP_PAINT['Paint/basemap-street-far'],
+  14,
+  MAP_PAINT['Paint/basemap-street'],
+];
+
+const IS_BRIDGE: ExpressionSpecification = [
+  'all',
+  IS_LINE,
+  ['==', ['get', 'brunnel'], 'bridge'],
+  ['match', ['get', 'class'], BRIDGE_CLASSES, true, false],
+];
+
+/** Every bridge and flyover but the motorways', which Positron draws already. */
+const BRIDGE_LAYERS: readonly LayerSpecification[] = [
+  {
+    id: 'detail-bridge-edge',
+    type: 'line',
+    source: SOURCE,
+    'source-layer': 'transportation',
+    minzoom: 13,
+    filter: IS_BRIDGE,
+    layout: { 'line-cap': 'butt', 'line-join': 'miter' },
+    paint: {
+      'line-color': MAP_PAINT['Paint/basemap-bridge-edge'],
+      'line-width': [
+        'interpolate',
+        ['exponential', 1.4],
+        ['zoom'],
+        13,
+        byClass(3, 6),
+        20,
+        byClass(24, 28),
+      ],
+    },
+  },
+  {
+    id: 'detail-bridge',
+    type: 'line',
+    source: SOURCE,
+    'source-layer': 'transportation',
+    minzoom: 13,
+    filter: IS_BRIDGE,
+    layout: { 'line-cap': 'butt', 'line-join': 'round' },
+    paint: {
+      'line-color': MAP_PAINT['Paint/basemap-street'],
+      'line-width': [
+        'interpolate',
+        ['exponential', 1.4],
+        ['zoom'],
+        13,
+        byClass(1.8, 4),
+        20,
+        byClass(20, 23),
+      ],
+    },
+  },
+];
+
+/** Dark's one-way arrows: `oneway` is in OpenFreeMap's sprite, which every design shares. */
+const oneWay = (id: string, direction: 1 | -1): SymbolLayerSpecification => ({
+  id,
+  type: 'symbol',
+  source: SOURCE,
+  'source-layer': 'transportation',
+  minzoom: 15,
+  filter: ['==', ['get', 'oneway'], direction],
+  layout: {
+    'icon-image': 'oneway',
+    'icon-padding': 2,
+    'icon-rotate': direction === 1 ? 0 : 180,
+    'icon-rotation-alignment': 'map',
+    'icon-size': ['interpolate', ['linear'], ['zoom'], 15, 0.5, 19, 1],
+    'symbol-placement': 'line',
+    'symbol-spacing': 200,
+  },
+  paint: { 'icon-opacity': 0.4 },
+});
+
+const ONE_WAY_LAYERS = [oneWay('detail-one-way', 1), oneWay('detail-one-way-back', -1)];
+
+/**
+ * Positron plus the detail: firmer buildings, edged streets, bridges, the
+ * one-way arrows, and the names of stations and landmarks. A Positron layer
+ * this looks for and does not find leaves its addition out. The arrows are
+ * the first labels, so a street's name wins over an arrow where they meet.
+ * Pure: the input is left alone.
+ */
 function detailStyle(style: StyleSpecification): StyleSpecification {
+  const layers = style.layers.flatMap((l): LayerSpecification[] => {
+    if (l.id === 'building' && l.type === 'fill') {
+      return [{ ...l, paint: { ...l.paint, ...BUILDING_PAINT } }];
+    }
+    if (l.id === 'highway_minor' && l.type === 'line') {
+      return [STREET_EDGE, { ...l, paint: { ...l.paint, 'line-color': STREET_COLOUR } }];
+    }
+    // Under the motorways' own bridges: the Skyway passes over the rest.
+    if (l.id === 'highway_motorway_bridge_casing') return [...BRIDGE_LAYERS, l];
+    return [l];
+  });
+  const firstLabel = layers.findIndex((l) => l.type === 'symbol');
+  const cut = firstLabel < 0 ? layers.length : firstLabel;
   return {
     ...style,
-    layers: [
-      ...style.layers.map((l) =>
-        l.id === 'building' && l.type === 'fill'
-          ? { ...l, paint: { ...l.paint, ...BUILDING_PAINT } }
-          : l,
-      ),
-      ...DETAIL_LAYERS,
-    ],
+    layers: [...layers.slice(0, cut), ...ONE_WAY_LAYERS, ...layers.slice(cut), ...DETAIL_LAYERS],
   };
 }
 

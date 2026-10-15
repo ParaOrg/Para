@@ -99,6 +99,10 @@ export const MAP_PAINT = {
   'Paint/basemap-landmark': '#6b6b6b', // Gray, detailed: the other landmarks' names
   'Paint/basemap-building': 'rgb(224, 224, 219)', // Gray, detailed: a building, a shade firmer than Positron's
   'Paint/basemap-building-edge': 'rgb(204, 204, 201)',
+  'Paint/basemap-street': '#ffffff', // Gray, detailed: a street from z14, and a bridge's deck
+  'Paint/basemap-street-far': 'rgb(224, 224, 224)', // Positron's own street colour, below z14
+  'Paint/basemap-street-edge': 'rgb(218, 218, 214)', // a street's edge, a shade under the buildings'
+  'Paint/basemap-bridge-edge': 'rgb(176, 176, 172)', // a bridge's or flyover's edge, firmer so it reads as above
   'Paint/basemap-photo-label': '#ffffff', // Satellite, labelled: street and place names over the photo
   'Paint/basemap-photo-halo': '#1a1a1a', // near-black, so a name reads over a bright roof
   'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims

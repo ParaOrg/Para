@@ -72,7 +72,7 @@ export const Closed: Story = {};
 export const Open: Story = {
   play: async ({ canvasElement }) => {
     const menu = await openMenu(canvasElement);
-    await expect(within(menu).getByRole('menuitemradio', { name: /Gray$/ })).toBeChecked();
+    await expect(within(menu).getByRole('menuitemradio', { name: /^✓\s*Gray$/ })).toBeChecked();
     await expect(within(menu).getAllByRole('menuitemradio')).toHaveLength(BASEMAPS.length);
   },
 };
@@ -84,7 +84,7 @@ export const DarkChosen: Story = {
     const button = await within(canvasElement).findByRole('button', { name: 'Map design' });
     await expect(button).toHaveAttribute('title', 'Map design: Dark');
     const menu = await openMenu(canvasElement);
-    await expect(within(menu).getByRole('menuitemradio', { name: /Dark/ })).toBeChecked();
+    await expect(within(menu).getByRole('menuitemradio', { name: /^✓\s*Dark$/ })).toBeChecked();
   },
 };
 
@@ -114,7 +114,7 @@ export const TapOutsideCloses: Story = {
 export const SameDesignAgain: Story = {
   play: async ({ canvasElement }) => {
     const menu = await openMenu(canvasElement);
-    await userEvent.click(within(menu).getByRole('menuitemradio', { name: /Gray$/ }));
+    await userEvent.click(within(menu).getByRole('menuitemradio', { name: /^✓\s*Gray$/ }));
     await expect(within(canvasElement).queryByRole('menu')).toBeNull();
   },
 };
