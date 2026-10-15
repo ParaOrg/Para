@@ -1,6 +1,6 @@
 import { RouteLineLabel } from './route-line-label';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
-import { TimelineDot } from '../cards/trip-timeline';
+import { TimelineDot } from '../cards/timeline-route-detail';
 import type { Livery } from '../model/liveries';
 
 import './hintuan-label.css';

@@ -5,7 +5,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { kmLabel } from '@/shared/utils/geo';
 
-import { FREE, RouteTripDetail } from './route-trip-detail';
+import { FREE, TimelineRouteDetailCard } from './timeline-route-detail-card';
 
 /** Sample data only: the places of the owner's frames (3762:3546), not the real map. */
 const hintuans = (...labels: string[]) => labels.map((label, i) => ({ id: 'h' + i, label }));
@@ -35,11 +35,11 @@ const openFold: Story['play'] = async ({ canvasElement }) => {
  * Keeps the picks as the public map does (useRideTo): a row picks its
  * hintuan, or an end, and again lets it go; one at a time.
  */
-function Picking(props: ComponentProps<typeof RouteTripDetail>) {
+function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
   const [picked, setPicked] = useState(props.picked);
   const [atEnd, setAtEnd] = useState(props.endPicked);
   return (
-    <RouteTripDetail
+    <TimelineRouteDetailCard
       {...props}
       picked={picked}
       endPicked={atEnd}
@@ -66,8 +66,8 @@ const FRAME = {
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
 const meta = {
-  title: 'Features/Routes/RouteTripDetail',
-  component: RouteTripDetail,
+  title: 'Features/Routes/TimelineRouteDetailCard',
+  component: TimelineRouteDetailCard,
   // Keyed on the picks, so the controls panel's `picked` starts it afresh.
   render: (args) => <Picking key={`${args.picked}:${args.endPicked}`} {...args} />,
   // A map-sized box, marked @container as the apps' roots are: the trip
@@ -108,7 +108,7 @@ const meta = {
     pickedMetres: 7_300,
     pickedFare: { regular: '₱20–22', discounted: '₱16–18' },
   },
-} satisfies Meta<typeof RouteTripDetail>;
+} satisfies Meta<typeof TimelineRouteDetailCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -272,7 +272,7 @@ export const TheWayBack: Story = {
 
 /** Opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so no ‹. */
 export const NothingToGoBackTo: Story = {
-  render: (args) => <RouteTripDetail {...args} onBackToList={null} />,
+  render: (args) => <TimelineRouteDetailCard {...args} onBackToList={null} />,
 };
 
 /** The route's other way is not drawn yet: SWITCH rests disabled. */
@@ -565,7 +565,7 @@ export const SheetMiddleLongName: Story = {
 };
 
 /**
- * "Other routes" under the tiles (the owner's RouteTripDetail, 3778:3183,
+ * "Other routes" under the tiles (the owner's TimelineRouteDetailCard, 3778:3183,
  * 2026-10-01): the other routes out of where the trip starts, each by where
  * it goes; a tap opens that route's trip in this one's place. With none,
  * as in every story above, the section is not there.
@@ -596,7 +596,7 @@ const board = (top: string, under: string) =>
 
 /**
  * Figma's Signboard (3919:11355): the direction's boards between the card
- * and the tiles, in their own white strip (the owner's RouteTripDetail of
+ * and the tiles, in their own white strip (the owner's TimelineRouteDetailCard of
  * 2026-10-12, 4051:5528; right under the header by his first redrawing that
  * day, under the tiles with a heading until then), 40 tall, 8 apart, 16
  * under the card and 16 over the tiles.

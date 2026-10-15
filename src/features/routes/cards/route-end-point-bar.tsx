@@ -24,7 +24,7 @@ const ON_SURFACE =
  * The owner's .RouteEndPointBar (Figma 3656:132): a route by where it goes,
  * the circled arrow before it, a button that opens it. One component where
  * Figma has one — a RouteCard's rows (RouteCard) and a trip's "Other routes"
- * (RouteTripDetail) — so a change to the row is made once.
+ * (TimelineRouteDetailCard) — so a change to the row is made once.
  */
 export function RouteEndPointBar({ routeDirection, on, className, ...rest }: Props) {
   return (

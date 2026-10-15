@@ -122,7 +122,7 @@ export function sharingAnEnd<V extends Direction>(all: readonly V[], of: V): V[]
 
 /**
  * The other routes out of where `of` starts — the owner's "Other routes"
- * under a trip (RouteTripDetail, 3778:3183, 2026-10-01): on Tala →
+ * under a trip (TimelineRouteDetailCard, 3778:3183, 2026-10-01): on Tala →
  * Novaliches, Tala → SM Fairview, and another route making the same trip,
  * if there is one. One direction each, drawn, leaving from the same hotspot
  * as `of` does; its own route's way back is SWITCH, not another route. An
