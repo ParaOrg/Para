@@ -167,17 +167,28 @@ export const programsAtRest = async (page, ms = 20000) => {
     await page.waitForTimeout(200);
   }
   const waited = Date.now() - from;
-  // Then the map at rest, its view's tiles in, before the keys are read.
+  // Then the map at rest, its view drawn, before the keys are read: the
+  // 'idle' after a frame asked for now. loaded() and areTilesLoaded() alone
+  // can be true before the first frame after a jumpTo, which is the frame
+  // that asks for the new view's tiles: the keys were then read with nothing
+  // of the view drawn, and its basemap's programs counted as the tap's
+  // (visitor-test's first tap of a page of its own, 1 run in 4 on
+  // Monochrome, 2026-10-15).
   const keys = await page.evaluate(
     () =>
       new Promise((done) => {
         const m = window.__map;
-        const t0 = performance.now();
-        const read = () =>
-          (m.loaded() && m.areTilesLoaded() && !m.isMoving()) || performance.now() - t0 > 10000
-            ? done(window.__programs?.() ?? [])
-            : setTimeout(read, 100);
-        read();
+        const read = () => done(window.__programs?.() ?? []);
+        const onIdle = () => {
+          clearTimeout(timer);
+          read();
+        };
+        const timer = setTimeout(() => {
+          m.off('idle', onIdle);
+          read();
+        }, 10000);
+        m.once('idle', onIdle);
+        m.triggerRepaint();
       }),
   );
   return { keys, warmed: await warmedNow(), ms: waited };
