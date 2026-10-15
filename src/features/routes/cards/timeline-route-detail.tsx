@@ -415,12 +415,6 @@ function TimelineTop({
 const ROW_SHOWN = 'visible grid-rows-[1fr] duration-gentle ease-enter';
 const ROW_FOLDED = 'invisible grid-rows-[0fr] duration-base ease-exit';
 
-/**
- * Figma's TimelineHintuan: a hintuan on the way, its dot on the rail; the
- * whole row is its button. Selected (State=Selected), its name is ExtraBold
- * (Black until 2026-10-13) and
- * the pill of its pesos sits 8 after it, 16 in from the card's edge.
- */
 /** A row's part in the ride: its S or E, the code for its pill, and the button under it. */
 interface RowRole {
   mark: 'start' | 'end' | null;
@@ -465,6 +459,12 @@ function rowRole(row: {
   return { mark: null, code: null, action: null };
 }
 
+/**
+ * Figma's TimelineHintuan: a hintuan on the way, its dot on the rail; the
+ * whole row is its button. Selected (State=Selected), its name is ExtraBold
+ * (Black until 2026-10-13) and
+ * the pill of its pesos sits 8 after it, 16 in from the card's edge.
+ */
 function TimelineHintuan({
   id,
   rail,
