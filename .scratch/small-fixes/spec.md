@@ -1,6 +1,6 @@
 # Small fixes on the trip card
 
-Three changes, one pull request each. All show on the public map and in the studio, which share the trip card. They don't depend on each other.
+Four changes, one pull request each. All show on the public map and in the studio, which share the trip card. They don't depend on each other.
 
 ## 1. "Kilometer" → "Distance"
 
@@ -57,3 +57,30 @@ The rule moves into one pure function in `src/features/routes/model/`, used by b
 - Left as they are: the dated write-ups in `docs/`.
 
 **Done when:** typecheck, lint, unit tests and `npm run build` pass; Storybook lists both under their new names.
+
+## 4. Trains say their bound, not Papunta and Pabalik
+
+**The ask (2026-10-15):** on the LRT and MRT, SWITCH reads the direction's **bound**, as riders and the operators say it. Jeeps keep Papunta and Pabalik.
+
+| Line | Toward | Word |
+| --- | --- | --- |
+| MRT-3 | North Avenue | Northbound |
+| MRT-3 | Taft Avenue | Southbound |
+| LRT-1 | Fernando Poe Jr. | Northbound |
+| LRT-1 | Dr. Santos | Southbound |
+| LRT-2 | Antipolo | Eastbound |
+| LRT-2 | Recto | Westbound |
+
+**LRT-2 runs east–west**, so its words are Eastbound and Westbound, as LRTA says them (the owner to confirm).
+
+**Where:**
+
+- `wayWord` (`src/features/routes/cards/route-card-header.tsx`) takes the direction (its line, and the end it goes to) instead of only whether it's the way back.
+- The words come from a table by line and end, beside `src/features/routes/model/rail-codes.ts`.
+- Every place that shows the word: the trip card and the route list (`route-card-header.tsx`), the counter's SWITCH on a hintuan's card (`hintuan-card.tsx`), and the studio's signboard editor (`src/features/studio/panels/signboard-editor.tsx`).
+- **A list with jeeps and trains together** keeps Papunta and Pabalik, since one word has to fit every route in it. That's a place where a station shares its informal name with jeep hintuans.
+- **The ferry** keeps Papunta and Pabalik.
+
+**Words (for `CONTEXT.md`):** the Outbound / Return entry gains: on a train line, a direction is called by its bound, Northbound or Southbound on LRT-1 and MRT-3, Eastbound or Westbound on LRT-2.
+
+**Done when:** a unit test covers the table; the stories show a train's trip card both ways; the headless steps that tap SWITCH by name on a train use the new words (the button's accessible name is its word).

@@ -30,15 +30,15 @@
 - **Fares need no new data.** Jeeps price by the metres between the two picks (`fareFor` in `src/features/routes/model/fares.ts`). Trains price by the station pair: `railFare` (`src/features/routes/model/rail-fares.ts`) already takes any two stations, from LRMC's and LRTA's full matrices and MRT-3's count of stations.
 - **Jeeps and trains alike:** the design's example is a train, and it is read as the same for jeep hintuans.
 - **The studio** gets it too, since it shares the card.
+- **An end before the start (Variant5)** switches the card to the other direction (the owner's call, 2026-10-15). Shaw Boulevard → Quezon Avenue runs the other way, so the card turns to that direction with both picks kept. It finds them there with `small-fixes` 2's rule: the same box, else the nearest box of the same place. On MRT-3 that's Southbound to Northbound (`small-fixes` 4).
 
 ## Proposals where the design leaves it open (to confirm)
 
-1. **An end before the start (Variant5).** Shaw Boulevard → Quezon Avenue runs the other way, so the card switches to the other direction with both picks kept. It finds them on the other direction with `small-fixes` 2's rule: the same box, else the nearest box of the same place.
-2. **SWITCH with picks.** The picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
-3. **View** glides the map to that row's place, as a tap does today. The alternative is opening the place's own card (HintuanCard).
-4. **The pill.** The design shows the code (YL06) on a station just tapped, and "Calculated Fare" on the end once a start is picked. Proposal: the end's pill shows the pesos, and a train station keeps its code beside its name.
-5. **The fold** reads "7 more stops", but the glossary avoids "stop" for a hintuan. Proposal: "N more stations" on trains, "N more hintuans" on jeeps; today it says hintuans for both. Once a start or end is picked, the rows outside the ride fold and the ride's own rows stay open.
-6. **Wording:** "Set as start" may read more naturally than "Make as start". The owner's call.
+1. **SWITCH with picks.** The picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
+2. **View** glides the map to that row's place, as a tap does today. The alternative is opening the place's own card (HintuanCard).
+3. **The pill.** The design shows the code (YL06) on a station just tapped, and "Calculated Fare" on the end once a start is picked. Proposal: the end's pill shows the pesos, and a train station keeps its code beside its name.
+4. **The fold** reads "7 more stops", but the glossary avoids "stop" for a hintuan. Proposal: "N more stations" on trains, "N more hintuans" on jeeps; today it says hintuans for both. Once a start or end is picked, the rows outside the ride fold and the ride's own rows stay open.
+5. **Wording:** "Set as start" may read more naturally than "Make as start". The owner's call.
 
 ## Words (for `CONTEXT.md`)
 
