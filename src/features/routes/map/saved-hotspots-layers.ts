@@ -24,15 +24,25 @@ const FILL = HOTSPOTS_FILL_LAYER;
 const OUTLINE = 'saved-stops-outline';
 const LABEL = 'saved-stops-label';
 const HINTUAN_LABEL = LAYERS.hotspotsHintuanLabel;
+/** The scale bar's width (MapView's ScaleControl, MapLibre's default maxWidth). */
+const SCALE_PX = 100;
+/** The ground under the bar's width once it reads 300 m: from 500 m down, it rounds to 300. */
+const NAMES_WITHIN_M = 500;
+/** Metres a pixel spans at zoom 0 over Metro Manila (14.6° N), MapLibre's tiles being 512 px. */
+const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / 512;
+
 /**
- * Hotspot names show only close in. Further out a name sat over the line's
- * stretch through the hotspot. The owner's asks of
- * 2026-09-25: hintuan names from zoom 16.5 (between a view at 16, names in
- * the way, and one at 16.7, names kept); then the terminals' the same; then
- * the names lasting 12/10 as far out — gone once the map shows 1.2 times the
- * ground it did at 16.5. Two layers, one a kind, so each can be set apart.
+ * Hotspot names, terminals' and hintuans' alike, from where the scale bar
+ * reads 300 m: zoom 13.89 (the owner, 2026-10-15: "at 300m show the hintuan
+ * label and terminal"). Close in only, as before, but nearer the overview:
+ * from 2026-09-25 they waited for zoom 16.24, where the bar reads 50 m, so a
+ * name would not sit over the line's stretch through its hotspot; at 300 m
+ * one may, and where names meet, MapLibre keeps one. A bar's reading is the
+ * zoom's at a given latitude, so the bar's rule is a zoom for a layer here
+ * (station-labels.tsx measures it live, for markers). Two layers, one a
+ * kind, so each can be set apart.
  */
-const NAMES_FROM = 16.5 - Math.log2(1.2);
+const NAMES_FROM = Math.log2((METRES_PER_PX_AT_ZOOM_0 * SCALE_PX) / NAMES_WITHIN_M);
 
 /** A flag of the feature state a tap sets on a box: `lit`, `sibling` or `chosen`. */
 const state = (name: 'lit' | 'sibling' | 'chosen') =>
