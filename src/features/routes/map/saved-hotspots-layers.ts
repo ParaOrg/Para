@@ -8,6 +8,7 @@ import { HOTSPOT_COLOUR, HOTSPOT_CONTENT, HOTSPOT_OPACITY } from './colours';
 import type { BoxMark } from './hotspots-shown';
 import { useLayerSwitch } from './layer-switch';
 import { LAYERS, applyHidden, firstLayerOfType, layOutOnce } from './layers';
+import { maskStations } from './station-mask';
 import { HOTSPOTS_FILL_LAYER } from './tap';
 import { ringToPolygon, type Ring } from '../geo/ring';
 import { hotspotRing, nameOnMap, type HotspotKind, type Hotspot } from '../model/hotspots';
@@ -415,6 +416,7 @@ export function useSavedHotspotsLayers(
   useEffect(() => {
     if (!map || map.getSource(SRC)) return;
     addSavedHotspots(map, hotspots);
+    maskStations(map, hotspots);
     laidOut.current = hotspots;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the hotspots the source is made with; later ones are the next effect's
   }, [map]);
@@ -422,7 +424,12 @@ export function useSavedHotspotsLayers(
   useEffect(() => {
     if (!map) return;
     const src = map.getSource(SRC) as GeoJSONSource | undefined;
-    if (src) layOutOnce(laidOut, hotspots, (next) => src.setData(hotspotsData(next)));
+    if (!src) return;
+    layOutOnce(laidOut, hotspots, (next) => {
+      src.setData(hotspotsData(next));
+      // The basemap's stations beside ours, hidden (station-mask.ts).
+      maskStations(map, next);
+    });
   }, [map, hotspots]);
 
   // What a tap did to each box, as feature state: lit (chosen, or under the

@@ -9,6 +9,7 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
 import { monochromeStyle } from './monochrome';
 import { mutedStyle } from './muted';
+import { maskedStyle } from './station-mask';
 import { terrainStyle } from './terrain';
 
 /**
@@ -197,12 +198,13 @@ export async function initialStyle(b: Basemap): Promise<StyleSpecification | str
  * the order they had, so casing-under-line and draw-above-saved still hold.
  * The route and hotspot hooks never notice.
  */
-function styleTransform(b: Basemap) {
+function styleTransform(b: Basemap, map: MapLibreMap) {
   return (
     previous: StyleSpecification | undefined,
     next: StyleSpecification,
   ): StyleSpecification => {
-    const styled = dressed(b, next);
+    // The basemap's stations near ours stay hidden on the new one (station-mask.ts).
+    const styled = maskedStyle(dressed(b, next), map);
     if (!previous) return styled;
     const ours = Object.fromEntries(
       Object.entries(previous.sources).filter(([, s]) => s.type === 'geojson'),
@@ -234,5 +236,5 @@ function styleTransform(b: Basemap) {
  * plan, step 1, 2026-10-04).
  */
 export function applyBasemap(map: MapLibreMap, b: Basemap): void {
-  map.setStyle(b.url, { transformStyle: styleTransform(b) });
+  map.setStyle(b.url, { transformStyle: styleTransform(b, map) });
 }
