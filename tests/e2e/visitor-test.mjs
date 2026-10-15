@@ -1390,8 +1390,8 @@ if (PART === 1) {
         await page
           .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
           .catch(() => {});
-        // On a train the station's code comes first, "GL04 · ₱20" (the
-        // owner, 2026-10-13): the pesos are their own part then.
+        // On a train the station's code comes first, "GL04 ₱20" (the
+        // owner, 2026-10-13): the pesos are their own half then.
         const fare = row.locator('[data-testid="trip-hintuan-fare"]');
         const pesos = fare.locator('[data-part="pesos"]');
         const pill = (await fare.count())
