@@ -116,6 +116,7 @@ export function TimelineRouteDetailCard({
   onEnd,
   endPicked,
   routeDirection,
+  isTrain,
   discounted: kept,
   onDiscounted,
   onSwitch,
@@ -177,6 +178,7 @@ export function TimelineRouteDetailCard({
           onEnd={onEnd}
           endPicked={endPicked}
           routeDirection={routeDirection}
+          isTrain={isTrain}
         />
       </div>
       {/*
