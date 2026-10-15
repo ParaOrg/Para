@@ -30,7 +30,7 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 | **MiddleBottom**, Connected | yes | none | The row the ride ends at, mid-list |
 | Any piece, **Disconnected** | none | none | A row on its own, with no rail |
 
-**Still being drawn:** the states use the pieces in different ways. In Choosing (North Avenue → Shaw Boulevard), the rail breaks after Shaw Boulevard and starts again at Boni, so the rows after the end keep a rail of their own. In Variant4 (Shaw Boulevard → Ayala), Taft Avenue has no rail, and in Variant3 Shaw Boulevard sits alone between two rails. Which rule to follow is open (below).
+**The rule (the owner, 2026-10-15): the rail runs only along the ride.** The rows outside it show their dots with no rail (Disconnected); the start is MiddleTop (or Top at the origin) and the end MiddleBottom (or Bottom at the destination). Read at a glance, the one rail is the ride, matching the map, where everything outside the ride is pale. Some of the Figma states still draw the earlier way, where the rail breaks at the ride's ends but the rows outside keep a rail of their own (Choosing, Variant3, Variant4); the code follows the rule.
 
 ## How it works, as read from the design
 
@@ -43,7 +43,12 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 - **Fares need no new data.** Jeeps price by the metres between the two picks (`fareFor` in `src/features/routes/model/fares.ts`). Trains price by the station pair: `railFare` (`src/features/routes/model/rail-fares.ts`) already takes any two stations, from LRMC's and LRTA's full matrices and MRT-3's count of stations.
 - **Jeeps and trains alike:** the design's example is a train, and it is read as the same for jeep hintuans.
 - **The studio** gets it too, since it shares the card.
-- **An end before the start (Variant5)** is a ride the other way: Shaw Boulevard → Quezon Avenue is Northbound on a Southbound card. How the card gets there is open (see Still open 2). Either way it finds both picks on the other direction with `small-fixes` 2's rule: the same box, else the nearest box of the same place.
+- **A row before the start (Variant5)** is a ride the other way: Shaw Boulevard → Quezon Avenue is Northbound on a Southbound card. **The rider flips it; a tap never does** (the owner, 2026-10-15). The tapped row is picked and shows two buttons:
+  - **Set as start**, as on any row: the start moves up to here.
+  - **Switch to Northbound** (on a jeep, Switch to Papunta or Pabalik): the card turns to the other direction, the ride from the start to here. It finds both picks there with `small-fixes` 2's rule: the same box, else the nearest box of the same place.
+  - No E, no pill and no rail on that row until it's switched: this direction has no ride there.
+  - **Why not flip on the tap:** the list would reverse, the stations jump, the word on SWITCH change and the map's arrows turn, all from one tap. That loses the rider, and it's a "change of context on input" (WCAG 3.2.2) that loses a screen reader user's place.
+  - **In Figma** (2026-10-15): the Timeline component's TimelineDisconnected / Selected row (4122:8540) gained a second button, "Switch to Northbound", shown by a new **🎈 Switch** property (off by default, so no other row changed). Variant5 (4151:13619) is now this state: Quezon Avenue picked, Set as start and Switch to Northbound under it, no E, no pill, no rail.
 
 ## Decided (the owner, 2026-10-15)
 
@@ -60,14 +65,7 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 - **SWITCH with picks:** the picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
 - **The fold once a start or end is picked:** the rows outside the ride fold, and the ride's own rows stay open.
 
-## Still open
-
-1. **The rail outside the ride.** Either (a) the rail breaks at the start and the end, and the rows outside the ride keep a rail of their own (Choosing), or (b) the rail runs only along the ride, and the rows outside show their dots with no rail (Variant4's Taft Avenue). Proposal: (b). Read at a glance, the one rail is the ride, matching the map, where everything outside the ride is pale.
-2. **An end before the start: flip on its own, or on a tap?** It was decided that the card flips (2026-10-15); the owner then asked whether a sudden flip loses the rider. It can: the list reverses, the stations jump, the word on SWITCH changes and the map's arrows turn, all from a tap on a station. That is also an accessibility problem: a tap that changes the whole card without warning is a "change of context on input" (WCAG 3.2.2), and a screen reader user loses their place.
-   **Proposal: the rider flips it.** Tapping a row before the start picks it and shows two buttons under it:
-   - **Set as start**, as on any row: the start moves up to here.
-   - **Switch to Northbound** (on a jeep, Switch to Papunta or Pabalik): the card turns to the other direction, the ride from the start to here, both picks kept.
-   No E and no pill on that row until it's switched, since this direction has no ride there. Variant5 becomes the design for this moment, with the second button added.
+Nothing is left open.
 
 ## Words (for `CONTEXT.md`)
 
