@@ -404,8 +404,9 @@ check(
     hintuanLabelIdx > hitIdx,
   `terminal labels ${labelIdx}, hintuan labels ${hintuanLabelIdx}, hit ${hitIdx}`,
 );
-// Hotspot names only close in, terminals' and hintuans' alike (the owner,
-// 2026-09-25): from zoom 16.24, so none is drawn at 16 and some are at 17.
+// Hotspot names only close in, terminals' and hintuans' alike: once the scale
+// bar's width covers 700 m, zoom 13.40 (the owner, 2026-10-15), so none is
+// drawn at 13 and some are at 14.
 const namesAt = (zoom) =>
   page.evaluate(async (zoom) => {
     const m = window.__map;
@@ -424,11 +425,11 @@ const namesAt = (zoom) =>
         .map((f) => f.properties.name),
     ).size;
   }, zoom);
-const [namesFar, namesNear] = [await namesAt(16), await namesAt(17)];
+const [namesFar, namesNear] = [await namesAt(13), await namesAt(14)];
 check(
-  'hotspot names only close in: none at zoom 16, some at 17',
+  'hotspot names only close in: none at zoom 13, some at 14',
   namesFar === 0 && namesNear > 0,
-  `${namesFar} at 16, ${namesNear} at 17`,
+  `${namesFar} at 13, ${namesNear} at 14`,
 );
 const drawLayers = snapshot.order.filter((id) => id.startsWith('draw-'));
 check(
