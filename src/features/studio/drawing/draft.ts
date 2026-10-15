@@ -2,7 +2,8 @@ import { useEffect, type RefObject } from 'react';
 
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
-import type { AreaTarget, Borrow, Target } from './use-drawing';
+import { waitingRuns } from './drawing-edits';
+import type { AreaTarget, Borrow, Target } from './drawing-types';
 
 /**
  * An in-progress drawing lives here until it is saved or discarded. Signing in
@@ -70,6 +71,36 @@ export function readDraft(): Draft | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * What the restore effect sets, from a draft: each piece of the drawing with
+ * its absent ones defaulted, the pending stand-ins stripped to plain segments,
+ * the join point by index (the very object in `controlPoints`, which the hook
+ * holds by identity), and the runs of pending gaps to ask the router for
+ * again, none for an area (a hotspot's edges are never routed). Pure: the
+ * effect in useDrawing reads the draft and asks.
+ */
+export function restoredState(d: Draft): {
+  area: AreaTarget | null;
+  controlPoints: LngLat[];
+  segments: Segment[];
+  target: Target;
+  borrow: Borrow | null;
+  join: LngLat | null;
+  pendingRuns: [number, number][];
+} {
+  const area = d.area ?? null;
+  const saved = d.segments ?? [];
+  return {
+    area,
+    controlPoints: d.controlPoints,
+    segments: saved.map((s) => (s?.pending ? { snap: s.snap, coordinates: s.coordinates } : s)),
+    target: d.target ?? { routeId: null, directionId: null },
+    borrow: d.borrow ?? null,
+    join: typeof d.join === 'number' ? (d.controlPoints[d.join] ?? null) : null,
+    pendingRuns: area ? [] : waitingRuns(saved, (s) => !!s.pending),
+  };
 }
 
 /**

@@ -2,8 +2,8 @@ import { useCallback, useRef, useState, type RefObject } from 'react';
 
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
+import type { AreaTarget } from './drawing-types';
 import { snapSegments, straightSegment } from './snap';
-import type { AreaTarget } from './use-drawing';
 
 /** A router request still wanted: the stand-ins its answer will replace. */
 interface Request {

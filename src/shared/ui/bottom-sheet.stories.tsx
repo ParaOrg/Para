@@ -3,8 +3,9 @@ import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { BottomSheet, SheetHeader } from './bottom-sheet';
+import { BottomSheet } from './bottom-sheet';
 import type { Snap } from './sheet-gesture';
+import { SheetHeader } from './sheet-header';
 
 /** Sample rows only: enough of them to need the sheet's whole height. */
 const rows = (count: number) =>

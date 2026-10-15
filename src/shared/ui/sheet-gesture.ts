@@ -1,7 +1,8 @@
 /**
  * How BottomSheet's handle and drags decide, on a phone: every card's,
  * since the owner's ask of 2026-09-30 ("make it a universal rule as
- * component").
+ * component"). It also measures the status bar Max stands clear of
+ * (measureSafeTop). The listeners that act on these are useSheetGestures'.
  */
 
 /** How far a drag must travel before it counts as a pull rather than a tap. */
@@ -108,6 +109,22 @@ const MAX_GAP_CSS = `calc(env(safe-area-inset-top) + ${MAX_STRIP_PX}px)`;
 let safeTop = 0;
 export function setSafeTop(px: number) {
   safeTop = Math.max(0, Math.round(px));
+}
+
+/**
+ * The status bar's height as the page reads it, once: what Max leaves above
+ * it besides its strip of map (sheetGesture). 0 where the page hotspots under it.
+ */
+let safeTopRead = false;
+export function measureSafeTop() {
+  if (safeTopRead || typeof document === 'undefined') return;
+  safeTopRead = true;
+  const probe = document.createElement('div');
+  probe.style.cssText =
+    'position:fixed;top:0;visibility:hidden;padding-top:env(safe-area-inset-top)';
+  document.body.appendChild(probe);
+  setSafeTop(parseFloat(getComputedStyle(probe).paddingTop) || 0);
+  probe.remove();
 }
 
 /** What each magnet shows of a sheet `h` tall, the map's height. */
