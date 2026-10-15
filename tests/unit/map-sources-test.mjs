@@ -29,7 +29,7 @@ import {
   hotspotsData,
 } from '../../src/features/routes/map/saved-hotspots-layers.ts';
 import { directionLine, isRailLine } from '../../src/features/routes/model/routes.ts';
-import { hotspotRing } from '../../src/features/routes/model/hotspots.ts';
+import { hotspotRing, nameOnMap } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
 import { addPassStretches } from '../../src/features/routes/geo/pass-stretches.ts';
 import { addDirectionArrows } from '../../src/features/routes/map/direction-arrows.ts';
@@ -328,13 +328,18 @@ const routesBefore = (rows) => ({
     })),
 });
 
-/** What the hotspots' effect laid out before 2026-10-04, word for word (boxMiddle as it was). */
+/**
+ * What the hotspots' effect laid out before 2026-10-04, word for word (boxMiddle as it was),
+ * but for one change since: a label's name leaves a station's line out (nameOnMap, the
+ * owner's ask of 2026-10-15), "MRT-3 Boni Station" read "Boni Station".
+ */
 const boxMiddle = (ring) => {
   const lngs = ring.map((p) => p[0]);
   const lats = ring.map((p) => p[1]);
   return [(Math.min(...lngs) + Math.max(...lngs)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
 };
 const hotspotsBefore = (stops) => {
+  const byId = new Map(stops.map((s) => [s.id, s]));
   const withArea = stops.filter((s) => hotspotRing(s).length >= 3);
   return {
     type: 'FeatureCollection',
@@ -351,7 +356,12 @@ const hotspotsBefore = (stops) => {
         })),
       ).map((g) => ({
         type: 'Feature',
-        properties: { id: g.ids[0], ids: g.ids.join(','), kind: g.kind, name: g.name },
+        properties: {
+          id: g.ids[0],
+          ids: g.ids.join(','),
+          kind: g.kind,
+          name: nameOnMap(byId.get(g.ids[0])),
+        },
         geometry: { type: 'Point', coordinates: g.point },
       })),
     ],
