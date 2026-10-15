@@ -21,12 +21,10 @@ import { terrainStyle } from './terrain';
  * still only grays, so the routes and hotspots painted on top carry all the
  * colour (monochrome.ts). Colour is Liberty, muted so the routes still carry
  * the strongest colour (muted.ts). Fiord, dark blue-gray, is for night.
- * Terrain, on this branch to look at, is the muted Colour with the hills
- * shaded and raised when the map is tilted (terrain.ts).
  *
- * Satellite is the studio's only (the owner, 2026-10-15): the studio adds it
- * to these (features/studio), so the photo's host never reaches the public
- * page.
+ * Satellite and Terrain are the studio's only (the owner, 2026-10-15): the
+ * studio adds them to these (features/studio), so the hosts of the photo and
+ * of the elevation never reach the public page.
  */
 export interface Basemap {
   /** What the device remembers; the studio's designs bring ids of their own. */
@@ -37,10 +35,21 @@ export interface Basemap {
   dressing?: Dressing;
   /** A photo of the ground in place of Positron's drawing (see `satelliteStyle`). */
   imagery?: Imagery;
+  /** The ground's shape under the design: its slopes shaded, raised when tilted (terrain.ts). */
+  elevation?: Elevation;
 }
 
-/** Monochrome's detail on Positron, Liberty's colours muted, or those with the ground's shape. */
-export type Dressing = 'monochrome' | 'muted' | 'terrain';
+/** Monochrome's detail on Positron, or Liberty's colours muted. */
+export type Dressing = 'monochrome' | 'muted';
+
+export interface Elevation {
+  /** Terrarium-encoded elevation tiles, with `{z}`, `{x}` and `{y}`. */
+  tiles: string;
+  /** The deepest zoom the tiles go to; MapLibre stretches the last beyond it. */
+  maxzoom: number;
+  /** The credit its provider asks for, shown in the map's attribution. */
+  attribution: string;
+}
 
 export interface Imagery {
   /** The photo's tile address, with `{z}`, `{x}` and `{y}`. */
@@ -53,22 +62,26 @@ export interface Imagery {
 
 const OPENFREEMAP = 'https://tiles.openfreemap.org';
 
-export const BASEMAPS: readonly Basemap[] = [
-  // `positron` still, so a device that chose the old Gray or nothing at all
-  // keeps the default; Gray, detailed (`positron-detailed`) and Dark (`dark`)
-  // are gone, and a device that chose one falls back to it.
-  {
-    id: 'positron',
-    label: 'Monochrome',
-    url: `${OPENFREEMAP}/styles/positron`,
-    dressing: 'monochrome',
-  },
-  { id: 'liberty', label: 'Colour', url: `${OPENFREEMAP}/styles/liberty`, dressing: 'muted' },
-  { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` },
-  { id: 'terrain', label: 'Terrain', url: `${OPENFREEMAP}/styles/liberty`, dressing: 'terrain' },
-];
+// `positron` still, so a device that chose the old Gray or nothing at all
+// keeps the default; Gray, detailed (`positron-detailed`) and Dark (`dark`)
+// are gone, and a device that chose one falls back to it.
+export const MONOCHROME: Basemap = {
+  id: 'positron',
+  label: 'Monochrome',
+  url: `${OPENFREEMAP}/styles/positron`,
+  dressing: 'monochrome',
+};
+export const COLOUR: Basemap = {
+  id: 'liberty',
+  label: 'Colour',
+  url: `${OPENFREEMAP}/styles/liberty`,
+  dressing: 'muted',
+};
+const FIORD: Basemap = { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` };
 
-export const DEFAULT_BASEMAP = BASEMAPS[0];
+export const BASEMAPS: readonly Basemap[] = [MONOCHROME, COLOUR, FIORD];
+
+export const DEFAULT_BASEMAP = MONOCHROME;
 
 /**
  * Remembered on the device only, and only once a viewer has chosen: a visitor
@@ -138,15 +151,18 @@ function satelliteStyle(style: StyleSpecification, imagery: Imagery): StyleSpeci
 }
 
 /** A design MapLibre can take by its URL, with nothing to add. */
-const isPlain = (b: Basemap): boolean => !b.dressing && !b.imagery;
+const isPlain = (b: Basemap): boolean => !b.dressing && !b.imagery && !b.elevation;
+
+const DRESSINGS: Record<Dressing, (style: StyleSpecification) => StyleSpecification> = {
+  monochrome: monochromeStyle,
+  muted: mutedStyle,
+};
 
 /** What a design does to the style it fetches: the photo, Monochrome's detail, Colour's muting, or Terrain's hills. */
 function dressed(b: Basemap, style: StyleSpecification): StyleSpecification {
   if (b.imagery) return satelliteStyle(style, b.imagery);
-  if (b.dressing === 'monochrome') return monochromeStyle(style);
-  if (b.dressing === 'muted') return mutedStyle(style);
-  if (b.dressing === 'terrain') return terrainStyle(mutedStyle(style));
-  return style;
+  const drawn = b.dressing ? DRESSINGS[b.dressing](style) : style;
+  return b.elevation ? terrainStyle(drawn, b.elevation) : drawn;
 }
 
 /**

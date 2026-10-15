@@ -8,6 +8,8 @@ import type {
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
+import { recolouredStyle, type Recolour } from './recolour';
+
 /*
  * Monochrome: Positron, as detailed as its tiles allow, and still only grays
  * (the owner, 2026-10-15: "gray only but that gray is detailed", easy on the
@@ -35,6 +37,8 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
  *
  * Buildings — firmer than Positron's whisper, and in 3D from z15 as Colour
  * has them: they stand up when the map is tilted (two fingers up or down).
+ *
+ * And all of it in cool gray, last (see `toCoolGray`).
  */
 
 const SOURCE = 'openmaptiles';
@@ -424,7 +428,7 @@ export function monochromeStyle(style: StyleSpecification): StyleSpecification {
   const layers = style.layers.flatMap(dress);
   const firstLabel = layers.findIndex((l) => l.type === 'symbol');
   const cut = firstLabel < 0 ? layers.length : firstLabel;
-  return {
+  const detailed = {
     ...style,
     layers: [
       ...layers.slice(0, cut),
@@ -434,4 +438,24 @@ export function monochromeStyle(style: StyleSpecification): StyleSpecification {
       ...PLACE_LAYERS,
     ],
   };
+  return recolouredStyle(detailed, toCoolGray);
 }
+
+// -------------------------------------------------------------- cool gray
+
+/*
+ * Cool gray (the owner, 2026-10-15: "make the monochrome in cool colours,
+ * cool gray"). Positron's grays lean warm, toward beige; here every colour
+ * Monochrome draws, Positron's and ours, turns to the same slate hue with
+ * the same small saturation, the cool gray of Tailwind's `gray`, and keeps
+ * its lightness, so nothing gets lighter or darker and white stays white. A
+ * colour already more saturated (the transit names' blue) keeps its own.
+ */
+const COOL_HUE = 218;
+const COOL_SATURATION = 14;
+
+const toCoolGray: Recolour = (c) => ({
+  ...c,
+  hue: COOL_HUE,
+  saturation: Math.max(c.saturation, COOL_SATURATION),
+});
