@@ -477,10 +477,10 @@ function TimelineHintuan({
               rail={rail}
               dot={<TimelineDot rail={rail} selected={selected} />}
             />
+            {mark && <RideMark mark={mark} isSmall />}
             <span
-              className={'flex min-w-0 flex-1 items-center gap-2 py-2 ' + (mark ? 'pl-2' : 'pl-3')}
+              className={'flex min-w-0 flex-1 items-center gap-2 py-2 ' + (mark ? 'pl-1' : 'pl-3')}
             >
-              {mark && <RideMark mark={mark} isSmall />}
               <span
                 className={
                   'min-w-0 flex-1 text-base/6 ' + (selected ? 'font-extrabold' : 'font-medium')
@@ -488,6 +488,8 @@ function TimelineHintuan({
               >
                 {label}
               </span>
+              {/* After the name, so the name is still the row's first words; the circled letter is for the eye. */}
+              {mark && <span className="sr-only">{mark === 'start' ? ', start' : ', end'}</span>}
               {pesos && <RouteTripLineDetailPill livery={livery} code={code} pesos={pesos} />}
             </span>
           </button>
@@ -633,26 +635,23 @@ function TimelineBottomEndRoute({
  * Head Route wears it) and End's circled E in the card's words. They move
  * with the picks (his TimelineRouteDetail, 2026-10-15): the S from the
  * origin to a start picked further on, the E from the destination to a
- * picked end. A screen reader hears the word, as on the map's labels.
- * `isSmall`, beside a hintuan's 16/24 name, the circle is 16 across; beside
- * the ends' 20/28, 20.
+ * picked end. For the eye: a hintuan's row says "start" or "end" after its
+ * name, and the ends' rows are where a ride leaves and goes, as before.
+ * `isSmall`, beside a hintuan's 16/24 name: 24 across, 8 down to sit on
+ * its line, as the name's padding does; beside the ends' 20/28, 28.
  */
 function RideMark({ mark, isSmall = false }: { mark: 'start' | 'end'; isSmall?: boolean }) {
-  const size = isSmall ? '*:size-4' : '*:size-5';
   return (
-    <>
-      <span
-        aria-hidden
-        data-part={mark}
-        className={
-          'shrink-0 p-1 ' +
-          size +
-          (mark === 'start' ? ' text-map-hotspots-card-hintuan-surface' : '')
-        }
-      >
-        {mark === 'start' ? <StartIcon /> : <EndIcon />}
-      </span>
-      <span className="sr-only">{mark === 'start' ? 'Start, ' : 'End, '}</span>
-    </>
+    <span
+      aria-hidden
+      data-part={mark}
+      className={
+        'shrink-0 *:size-5 ' +
+        (isSmall ? 'mt-2 ml-2 p-0.5' : 'p-1') +
+        (mark === 'start' ? ' text-map-hotspots-card-hintuan-surface' : '')
+      }
+    >
+      {mark === 'start' ? <StartIcon /> : <EndIcon />}
+    </span>
   );
 }

@@ -86,19 +86,21 @@ export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
 export const Pink: Story = { args: { livery: 'pink' } };
 
 /**
- * A hintuan picked: its dot a white ring round the rail's colour, its name
- * ExtraBold, its pill with the pesos to there. The rail runs only along the
- * ride (the owner, 2026-10-15): from the origin down to it, ending there
- * (MiddleBottom); the rows after it, the fold's and the destination's, are
- * their dots alone (Disconnected). Opened, since the fold keeps it.
+ * A hintuan picked: its dot a white ring round the rail's colour, End's E
+ * before its name, now ExtraBold, its pill with the pesos to there, and Set
+ * as start under it when there is a button for it. The rail runs only along
+ * the ride (the owner, 2026-10-15): from the origin down to it, ending
+ * there (MiddleBottom); the rows after it, the fold's and the destination's,
+ * are their dots alone (Disconnected), the destination without its E.
+ * The fold after it opened.
  */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: openFold };
 
-/** A hintuan picked and folded away: the rail leaves the origin into the fold, which has none. */
+/** A hintuan picked, the rows after it folded away: the ride's own rows stay open. */
 export const HintuanPickedFolded: Story = { args: { picked: 'h3' } };
 
-/** The last hintuan picked: the rail runs to it, and only the destination is left without one. */
-export const LastHintuanPicked: Story = { args: { picked: 'h9' }, play: openFold };
+/** The last hintuan picked: the rail runs to it, nothing after it to fold, and only the destination is left without a rail. */
+export const LastHintuanPicked: Story = { args: { picked: 'h9' } };
 
 /** Picked, red: the pill in the card's own colours, swapped. */
 export const HintuanPickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: openFold };
@@ -194,4 +196,89 @@ export const RowPressed: Story = {
       ))}
     </div>
   ),
+};
+
+/**
+ * The owner's TimelineRouteDetail (Figma 4137:9886, 2026-10-15), on his
+ * example: MRT-3 Southbound, North Avenue to Taft Avenue. Station names and
+ * codes as the line's tables have them (rail-codes.ts); his frames write
+ * YL60 for every pick.
+ */
+const mrt3 = hintuans(
+  'Quezon Avenue',
+  'GMA Kamuning',
+  'Araneta Center-Cubao',
+  'Santolan-Annapolis',
+  'Ortigas',
+  'Shaw Boulevard',
+  'Boni',
+  'Guadalupe',
+  'Buendia',
+  'Ayala',
+  'Magallanes',
+);
+const [quezon, shaw, ayala] = ['h0', 'h5', 'h9'];
+const onMrt3 = {
+  livery: 'metro-rail-way-three',
+  routeOrigin: 'North Avenue',
+  hintuans: mrt3,
+  routeDirection: 'Taft Avenue',
+  isTrain: true,
+  onSetStart: fn(),
+  onRemoveStart: fn(),
+} as const;
+
+/** Variant6 (4157:7737): folded, S at North Avenue and E at Taft Avenue. */
+export const RideRest: Story = { args: onMrt3 };
+
+/**
+ * Choosing (4137:9887): Shaw Boulevard tapped is the end, E and its pill,
+ * Set as start under it; the stations after it folded.
+ */
+export const RideChoosing: Story = {
+  args: { ...onMrt3, picked: shaw, pickedCode: 'YL07', pickedPesos: '₱10' },
+};
+
+/**
+ * Variant3 (4148:12161): after Set as start, Shaw Boulevard is the start,
+ * × Remove as start under it, the pill pricing the ride on to Taft Avenue,
+ * which keeps its E. North Avenue loses its S, and the stations before
+ * Shaw Boulevard fold.
+ */
+export const RideStartPicked: Story = {
+  args: { ...onMrt3, start: shaw, startCode: 'YL07', pickedPesos: '₱10' },
+};
+
+/** Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride Shaw Boulevard → Ayala. */
+export const RideStartAndEnd: Story = {
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    picked: ayala,
+    pickedCode: 'YL11',
+    pickedPesos: '₱8',
+  },
+};
+
+/**
+ * Variant5 (4151:13619): start at Shaw Boulevard, Quezon Avenue tapped, a
+ * station before it. The card stays as it is (the owner, 2026-10-15): E at
+ * Quezon Avenue above S at Shaw Boulevard, the rail between them. The map
+ * serves the ride on the Northbound line.
+ */
+export const RideEndBeforeStart: Story = {
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    picked: quezon,
+    pickedCode: 'YL02',
+    pickedPesos: '₱10',
+  },
+};
+
+/** A jeep's ride between two hintuans: the pesos alone in the pill, the same buttons. */
+export const RideStartAndEndJeep: Story = {
+  args: { start: 'h2', picked: 'h6', pickedPesos: '₱14', onSetStart: fn(), onRemoveStart: fn() },
 };

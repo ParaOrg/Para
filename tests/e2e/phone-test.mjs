@@ -1676,6 +1676,150 @@ const tripChecks = async () => {
         (await tile('trip-km')) === km,
       `${letGo.pins} circle(s), ${letGo.paled} dot(s) along a rest, ${letGo.lit.length} lit; tiles "${await tile('trip-km')}", "${await tile('trip-fare')}", the whole "${km}", "${fare}"`,
     );
+    // A ride's start and end (the owner's TimelineRouteDetail, 2026-10-15):
+    // Set as start under a picked row makes it the start, S before it; a row
+    // after it tapped is the end, E before it. The Distance tile reads the
+    // ride between them, the app's own sums over rideSpan on the published
+    // line, and so does the fare tile on a jeep; on the map, the start's
+    // circle and the end's sit where the ride starts and ends, the line
+    // before and after it pale. × Remove as start, then a second tap on the
+    // end, let both go.
+    {
+      const count = await rows.count();
+      const startIndex = Math.floor((count - 1) / 3);
+      const endIndex = Math.min(count - 1, startIndex + Math.max(1, Math.floor(count / 3)));
+      if (count < 2 || endIndex <= startIndex) {
+        skip(
+          '  Set as start, then an end: the tiles and the map read the ride between them',
+          'fewer than two hintuans',
+        );
+      } else {
+        const startRow = rows.nth(startIndex);
+        const endRow = rows.nth(endIndex);
+        const ids = [
+          await startRow.getAttribute('data-hintuan'),
+          await endRow.getAttribute('data-hintuan'),
+        ];
+        const rideWant = await page.evaluate(
+          async ([id, startId, endId]) => {
+            try {
+              const [{ rideFare }, { rideSpan }, { kmLabel }] = await Promise.all([
+                import('/src/features/routes/model/fares.ts'),
+                import('/src/features/routes/model/ride.ts'),
+                import('/src/shared/utils/geo.ts'),
+              ]);
+              const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
+              const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+              const m = await fetchIndex();
+              const found = m.directions.find((x) => x.id === id);
+              const v = found && { ...found, shape: (await fetchLine(id)) ?? found.shape };
+              const span = v && rideSpan(v, m.hotspots, startId, endId);
+              return span
+                ? {
+                    km: kmLabel(span.metres),
+                    fare: rideFare(v.route?.mode, span.metres) ?? null,
+                    from: span.from,
+                    at: span.at,
+                  }
+                : null;
+            } catch {
+              return null;
+            }
+          },
+          [tripId, ...ids],
+        );
+        const isSelected = async (r) => (await r.getAttribute('data-state')) === 'selected';
+        const startPick = startRow.locator('button[data-testid="trip-hintuan-pick"]');
+        await startPick.scrollIntoViewIfNeeded();
+        await buttonTap(startPick, () => isSelected(startRow));
+        const setStart = card().getByRole('button', { name: 'Set as start' });
+        await setStart.scrollIntoViewIfNeeded();
+        await buttonTap(
+          setStart,
+          async () => (await startRow.locator('[data-part="start"]').count()) === 1,
+        );
+        const endPick = endRow.locator('button[data-testid="trip-hintuan-pick"]');
+        await endPick.scrollIntoViewIfNeeded();
+        await buttonTap(endPick, () => isSelected(endRow));
+        await page.waitForTimeout(200);
+        await page
+          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+          .catch(() => {});
+        const rideKm = await tile('trip-km');
+        const rideFareShown = await tile('trip-fare');
+        const marks = await card().evaluate((c) => ({
+          origin: !!c.querySelector('[data-testid="trip-origin"] [data-part="start"]'),
+          destination: !!c.querySelector('[data-testid="trip-destination"] [data-part="end"]'),
+          rows: [
+            ...c.querySelectorAll(
+              '[data-testid="trip-hintuan"] [data-part="start"], [data-testid="trip-hintuan"] [data-part="end"]',
+            ),
+          ].map(
+            (e) => `${e.closest('[data-testid="trip-hintuan"]').dataset.hintuan}:${e.dataset.part}`,
+          ),
+        }));
+        const onMap = await page.evaluate(
+          ([from, at]) => {
+            const m = window.__map;
+            const c = m.getCanvas().getBoundingClientRect();
+            const offOf = (el, lngLat) => {
+              if (!el || !lngLat) return null;
+              const r = el.getBoundingClientRect();
+              const q = m.project(lngLat);
+              return Math.hypot(
+                r.left + r.width / 2 - (c.left + q.x),
+                r.top + r.height / 2 - (c.top + q.y),
+              );
+            };
+            return {
+              pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+              start: offOf(
+                document.querySelector('[data-testid="hintuan-pin"][data-marks="start"]'),
+                from,
+              ),
+              end: offOf(
+                document.querySelector('[data-testid="hintuan-pin"][data-marks="end"]'),
+                at,
+              ),
+            };
+          },
+          [rideWant?.from ?? null, rideWant?.at ?? null],
+        );
+        const fareOk =
+          !rideWant ||
+          rideWant.fare == null ||
+          rideFareShown === rideWant.fare.regular ||
+          rideFareShown === rideWant.fare.discounted;
+        check(
+          '  Set as start, then an end: S and E on their rows, the tiles and the map read the ride between them',
+          !!rideWant &&
+            !marks.origin &&
+            !marks.destination &&
+            marks.rows.join() === `${ids[0]}:start,${ids[1]}:end` &&
+            rideKm === rideWant.km &&
+            fareOk &&
+            onMap.pins === 2 &&
+            onMap.start !== null &&
+            onMap.start < 3 &&
+            onMap.end !== null &&
+            onMap.end < 3,
+          `${JSON.stringify(marks)}; Distance "${rideKm}", the sums "${rideWant?.km}"; fare "${rideFareShown}"; ${onMap.pins} circle(s), S ${onMap.start?.toFixed(1)} px off, E ${onMap.end?.toFixed(1)} px off`,
+        );
+        const removeStart = card().getByRole('button', { name: 'Remove as start' });
+        await removeStart.scrollIntoViewIfNeeded();
+        await buttonTap(removeStart, async () => !(await isSelected(startRow)));
+        await endPick.scrollIntoViewIfNeeded();
+        await buttonTap(endPick, async () => !(await isSelected(endRow)));
+        check(
+          '  × Remove as start, then the end tapped again: the whole ride again',
+          (await tile('trip-km')) === km &&
+            (await page.evaluate(
+              () => document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+            )) === 0,
+          `Distance "${await tile('trip-km')}", the whole "${km}"`,
+        );
+      }
+    }
     // At Max the card stays at Max (the owner's ask, 2026-10-01: "since the
     // card can settle anywhere, don't move the bottomsheet to the middle"),
     // the hintuan landing above where Middle would be, there to see when the
