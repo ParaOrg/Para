@@ -28,8 +28,9 @@ import './end-titles.css';
  * dots along the line (StationLabels) and the picked hintuan's circle
  * (HintuanPin) are — ringed in what the line wears: the card's colour
  * (`livery`), the selected blue with none, and the card's pale at the far
- * end of a ride past a picked hintuan, along the rest drawn in it (Ride.rest,
- * useRideRest), as the dots along the rest are. The owner's ask of
+ * end of a ride past a picked hintuan, along the rest drawn in it (Ride.pale,
+ * useRideRest), as the dots along the rest are; and at the start too, since
+ * a ride's start could be picked (2026-10-15). The owner's ask of
  * 2026-10-12: "make the end and last hintuan circle similar to the hintuan
  * circle so it's consistent, and reusable"; until then the ends were a
  * circle layer of the map's (direction-arrows.ts), a 2 px ring half the
@@ -48,10 +49,11 @@ import './end-titles.css';
  * ends are marked since his "the rules for RouteLineEndingsLabel must be
  * applicable to these RouteLine" (2026-10-13), a list's in the selected
  * blue too: they kept plain names from 2026-10-02 ("there are too many").
- * A ride a picked hintuan stops short (`flow`) ends there, End's E before
- * the hintuan's name (HintuanPin), so its own tail keeps its name without
- * one, the label's Default in the line's colour (the owner's ask,
- * 2026-10-02). A place two rides share is named by the first to reach it
+ * A ride a picked hintuan stops short ends there, End's E before the
+ * hintuan's name (HintuanPin), so its own tail keeps its name without one,
+ * the label's Default in the line's colour (the owner's ask, 2026-10-02);
+ * a ride started at a picked hintuan, Start's S on its pin, leaves its
+ * head the same way (2026-10-15). Either is an end on the pale (`paled`). A place two rides share is named by the first to reach it
  * (`rideEnds`), so a trip's change of ride is the earlier ride's tail, as
  * it sits under the start on the timeline; the other ride's end there keeps
  * its circle, bare.
@@ -92,8 +94,6 @@ export function EndTitles({
   /** A direction's trip to open, from the one ride a tail names. */
   onTrip?: (directionId: string) => void;
 }) {
-  // Rides that end short of their tail, at a picked hintuan.
-  const short = new Set(rides.filter((r) => r.flow && r.id).map((r) => r.id));
   // A train's ends are stations: each named with its sign code, GL02, as
   // the owner's CodeSign draws it (4073:7215, 2026-10-13); null for a
   // jeepney's, the ferry's, and a station the table does not know.
@@ -114,7 +114,8 @@ export function EndTitles({
             name={name}
             named={named}
             head={end === 'from'}
-            marked={!(end === 'to' && here.some((id) => short.has(id)))}
+            // An end the ride picked on its trip doesn't reach: its S or E is on the pick's pin.
+            marked={!paled}
             livery={livery}
             codeSign={codeAt(of, name)}
             paled={paled}

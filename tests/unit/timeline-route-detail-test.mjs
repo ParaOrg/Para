@@ -72,7 +72,7 @@ const SHOWN =
   'grid transition-[grid-template-rows,visibility] motion-reduce:transition-none visible grid-rows-[1fr] duration-gentle ease-enter';
 
 test('folded and never opened, every row is its bare <li>: its data and its fold classes, nothing inside', () => {
-  const html = render(10, { picked: 'h3' });
+  const html = render(10);
   const r = rows(html);
   assert.equal(r.length, 10);
   assert.deepEqual(
@@ -87,15 +87,78 @@ test('folded and never opened, every row is its bare <li>: its data and its fold
     r.every((x) => x.inside === ''),
     'no inside drawn',
   );
-  // Folded away, a picked row stays picked (the owner's default).
-  assert.deepEqual(
-    r.map((x) => x.state),
-    r.map((x) => (x.id === 'h3' ? 'selected' : 'rest')),
-  );
+  assert.ok(r.every((x) => x.state === 'rest'));
   assert.ok(!html.includes('trip-hintuan-pick'), 'no row button');
   assert.ok(!html.includes('trip-hintuan-fare'), 'no pill');
   assert.match(html, /data-testid="trip-fold" aria-expanded="false"/);
   assert.match(html, />10 more hintuans</);
+});
+
+// The owner's TimelineRouteDetail of 2026-10-15 (Figma 4137:9886): once a
+// start or an end is picked, the ride's own rows stay open and the rows
+// outside it fold, before it and after it.
+test('a picked end: the ride’s rows open, the rows after it folded into one row above the destination', () => {
+  const html = render(10, { picked: 'h3' });
+  const r = rows(html);
+  assert.deepEqual(
+    r.filter((x) => x.cls === SHOWN).map((x) => x.id),
+    ['h0', 'h1', 'h2', 'h3'],
+  );
+  assert.ok(r.slice(4).every((x) => x.cls === FOLDED && x.inside === ''));
+  assert.equal(r.find((x) => x.id === 'h3').state, 'selected');
+  assert.match(html, /data-testid="trip-fold" aria-expanded="false" data-part="after"/);
+  assert.match(html, />6 more hintuans</);
+  assert.doesNotMatch(html, /data-part="before"/);
+});
+
+test('a start and an end: folds before and after, S and E on their rows, the origin’s S and the destination’s E gone', () => {
+  const html = render(10, { start: 'h3', picked: 'h6', onSetStart() {}, onRemoveStart() {} });
+  const r = rows(html);
+  assert.deepEqual(
+    r.filter((x) => x.cls === SHOWN).map((x) => x.id),
+    ['h3', 'h4', 'h5', 'h6'],
+  );
+  assert.match(html, /data-part="before"[^>]*>.*?3 more hintuans/s);
+  assert.match(html, /data-part="after"[^>]*>.*?3 more hintuans/s);
+  const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
+  assert.deepEqual(marks, ['start', 'end'], 'one S and one E, on the rows');
+  // The start's row carries × Remove as start; the end's no Set as start, a start being picked.
+  assert.match(html, />Remove as start</);
+  assert.doesNotMatch(html, />Set as start</);
+});
+
+test('an end alone carries Set as start; with no start the origin keeps its S', () => {
+  const html = render(5, { picked: 'h2', onSetStart() {}, onRemoveStart() {} });
+  assert.match(html, />Set as start</);
+  const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
+  assert.deepEqual(marks, ['start', 'end']);
+});
+
+test('an end before the start (Variant5): the rail and the open rows run from the E down to the S', () => {
+  const html = render(10, { start: 'h6', picked: 'h2' });
+  const r = rows(html);
+  assert.deepEqual(
+    r.filter((x) => x.cls === SHOWN).map((x) => x.id),
+    ['h2', 'h3', 'h4', 'h5', 'h6'],
+  );
+  const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
+  // The origin and the fold of the two rows before the ride (folded, they
+  // draw nothing yet), then E (rail below), three through, S (rail above),
+  // and the fold of the three after it, and the destination: no rail
+  // outside the ride.
+  assert.deepEqual(pieces, [
+    'disconnected',
+    'disconnected',
+    'below',
+    'through',
+    'through',
+    'through',
+    'above',
+    'disconnected',
+    'disconnected',
+  ]);
+  const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
+  assert.deepEqual(marks, ['end', 'start'], 'E above S, as Variant5 draws it');
 });
 
 test('a train’s fold reads stations, a jeep’s hintuans (the owner, 2026-10-15)', () => {

@@ -234,7 +234,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           rows={timeline.between}
           livery={tripLivery}
           pickedId={ride.pickedId}
-          rest={ride.ridden?.rest ?? null}
+          startId={ride.startId}
+          hasRide={ride.ridden !== null}
           onPick={ride.pick}
         />
       )}
@@ -247,6 +248,17 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           label={ride.pickedLabel}
           code={ride.pickedCode}
           livery={tripLivery}
+        />
+      )}
+      {map && !draw.drawing && ride.startPinAt && tripLivery && (
+        <HintuanPin
+          key={`start:${ride.startId}`}
+          map={map}
+          at={ride.startPinAt}
+          label={ride.startLabel}
+          code={ride.startCode}
+          livery={tripLivery}
+          marks="start"
         />
       )}
 
@@ -268,6 +280,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           picked={ride.pickedId}
           pickedMetres={saved.fullIds.has(saved.selected.id) ? ride.rideTo?.metres : undefined}
           pickedCode={ride.pickedCode}
+          start={ride.startId}
+          startCode={ride.startCode}
+          onSetStart={ride.setStart}
+          onRemoveStart={ride.removeStart}
           onPick={ride.pick}
           onEnd={ride.toEnd}
           endPicked={ride.endPicked}

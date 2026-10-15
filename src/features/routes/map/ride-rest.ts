@@ -39,6 +39,12 @@ import { LIT_LINE } from './livery-line';
 const SRC = 'ride-rest';
 /** The rest's layer: useRideColours paints its colour from the look, as it does the chevrons'. */
 export const REST_LAYER = 'ride-rest-line';
+/**
+ * A ride picked with its end before its start, drawn on the other
+ * direction's line in the lit line's colour (the owner's Variant5,
+ * 2026-10-15): the trip's own line is all pale under it.
+ */
+export const OTHER_WAY_LAYER = 'ride-other-way-line';
 
 /**
  * The rest's layer, as added: the lit line's width, with square ends — the
@@ -49,6 +55,7 @@ export const RIDE_REST_LAYER = {
   id: REST_LAYER,
   type: 'line',
   source: SRC,
+  filter: ['==', ['get', 'part'], 'pale'],
   layout: { 'line-cap': 'butt', 'line-join': 'round' },
   paint: {
     'line-color': LIT_LINE.pale,
@@ -56,6 +63,18 @@ export const RIDE_REST_LAYER = {
     'line-color-transition': { duration: 0, delay: 0 },
     'line-width': litWidth(),
   },
+} as const satisfies LineLayerSpecification;
+
+/**
+ * The other way's ride: the rest's layer and program, its own feature of the
+ * same source, painted the lit line's colour (useRideColours). Round ends, as
+ * the lit line's: it is a ride on its own, not a piece of one.
+ */
+export const RIDE_OTHER_WAY_LAYER = {
+  ...RIDE_REST_LAYER,
+  id: OTHER_WAY_LAYER,
+  filter: ['==', ['get', 'part'], 'ride'],
+  paint: { ...RIDE_REST_LAYER.paint, 'line-color': LIT_LINE.line },
 } as const satisfies LineLayerSpecification;
 
 /**
@@ -70,7 +89,9 @@ export function addRideRest(
   // Before the layer drawn right after the lit line, whichever that is by
   // now — the hintuan stretches, or the routes' hit area — so what the other
   // hooks draw on the lit line stays above this, whichever hook adds first.
-  map.addLayer(RIDE_REST_LAYER, layerAbove(map, LAYERS.routesLit));
+  const above = layerAbove(map, LAYERS.routesLit);
+  map.addLayer(RIDE_REST_LAYER, above);
+  map.addLayer(RIDE_OTHER_WAY_LAYER, above);
 }
 
 /**
@@ -83,8 +104,16 @@ export function restDrawn(rest: readonly LngLat[] | null): rest is readonly LngL
   return !!rest && rest.length > 1;
 }
 
-/** Draws `rest`, the line from the picked hintuan to the end (useRideTo's `ridden.rest`); nothing for null. */
-export function useRideRest(map: MapLibreMap | null, rest: LngLat[] | null): void {
+/**
+ * Draws `pale`, the way not ridden on either side of the picks (useRideTo's
+ * `ridden.pale`), as one feature; and `otherWay`, a ride the other way round,
+ * as another. Nothing for empty and null.
+ */
+export function useRideRest(
+  map: MapLibreMap | null,
+  pale: readonly (readonly LngLat[])[],
+  otherWay: readonly LngLat[] | null,
+): void {
   // Over the lit line: this waits for the line hook's layers (useLayerReady),
   // whichever hook the page calls first.
   const litReady = useLayerReady(map, LAYERS.routesLit);
@@ -96,17 +125,32 @@ export function useRideRest(map: MapLibreMap | null, rest: LngLat[] | null): voi
   useEffect(() => {
     const src = map?.getSource<GeoJSONSource>(SRC);
     if (!src) return;
+    const drawn = pale.filter(restDrawn);
     src.setData({
       type: 'FeatureCollection',
-      features: restDrawn(rest)
-        ? [
-            {
-              type: 'Feature',
-              properties: {},
-              geometry: { type: 'LineString', coordinates: rest },
-            },
-          ]
-        : [],
+      features: [
+        ...(drawn.length > 0
+          ? [
+              {
+                type: 'Feature' as const,
+                properties: { part: 'pale' },
+                geometry: {
+                  type: 'MultiLineString' as const,
+                  coordinates: drawn.map((l) => [...l]),
+                },
+              },
+            ]
+          : []),
+        ...(restDrawn(otherWay)
+          ? [
+              {
+                type: 'Feature' as const,
+                properties: { part: 'ride' },
+                geometry: { type: 'LineString' as const, coordinates: [...otherWay] },
+              },
+            ]
+          : []),
+      ],
     });
-  }, [map, rest, litReady]);
+  }, [map, pale, otherWay, litReady]);
 }

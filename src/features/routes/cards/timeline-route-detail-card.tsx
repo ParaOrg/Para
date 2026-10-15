@@ -20,11 +20,11 @@ export type Fare = Fares | typeof FREE;
 type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** Figma's Distance tile (Kilometer until the owner's ask of 2026-10-15): the whole ride's length, in metres; written `12.8km`. */
   metres: number;
-  /** …and the ride to the picked hintuan, which the tile shows while it is picked, as the fare tile does. */
+  /** …and the ride between the picks, which the tile shows while a start or an end is picked, as the fare tile does. */
   pickedMetres?: number;
   /** The fare tile's pesos for the whole ride, or FREE. Omitted when unpriced, and the tile with it. */
   fare?: Fare;
-  /** …and for the ride to the picked hintuan, which the tile shows while it is picked. */
+  /** …and for the ride between the picks, which the tile shows while a start or an end is picked. */
   pickedFare?: Fare;
   /**
    * Whether the tile shows the Discounted fare, and where a tap says so: the
@@ -90,7 +90,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
  * 2026-09-30). Its second fare was "Student fare" until he named it
  * "Discounted fare" (2026-09-30). A first visit opens on Regular. The Distance tile follows the pick the
  * same way, from where the trip leaves to there (the owner, 2026-09-30: "it
- * should follow the picked hintuan").
+ * should follow the picked hintuan"). Since a start can be picked too
+ * (2026-10-15), both tiles read the ride from the start to the end.
  * The pesos moved off the rail into their tile with this set; a route no
  * fare rule prices has no Expected fare tile, and Distance takes the row
  * (the owner kept that default, 2026-09-29: nothing is drawn for it).
@@ -110,6 +111,10 @@ export function TimelineRouteDetailCard({
   routeOrigin,
   hintuans,
   picked,
+  start = null,
+  startCode,
+  onSetStart,
+  onRemoveStart,
   onPick,
   pickedFare,
   pickedCode,
@@ -142,8 +147,10 @@ export function TimelineRouteDetailCard({
   // the same day).
   const [turns, setTurns] = useState(0);
   const othersHeading = useId();
-  const shown = picked && pickedFare ? pickedFare : fare;
-  const shownMetres = picked && pickedMetres !== undefined ? pickedMetres : metres;
+  // A start or an end picked: the tiles read the ride between them.
+  const hasRide = picked !== null || start !== null;
+  const shown = hasRide && pickedFare ? pickedFare : fare;
+  const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
   return (
     <BottomSheet
       ref={dockRef}
@@ -169,6 +176,10 @@ export function TimelineRouteDetailCard({
           routeOrigin={routeOrigin}
           hintuans={hintuans}
           picked={picked}
+          start={start}
+          startCode={startCode}
+          onSetStart={onSetStart}
+          onRemoveStart={onRemoveStart}
           onPick={onPick}
           pickedPesos={
             pickedFare &&

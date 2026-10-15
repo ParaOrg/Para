@@ -18,7 +18,7 @@ import {
 import { TILE_BUFFER, useLayerReady } from './layers';
 import { litWidthAt } from './line-style';
 import type { LineLook } from './livery-line';
-import { REST_LAYER, restDrawn } from './ride-rest';
+import { OTHER_WAY_LAYER, REST_LAYER, restDrawn } from './ride-rest';
 import { ROUTES_HIT_LAYER } from './tap';
 
 /**
@@ -64,20 +64,21 @@ const SAME_END_M = 150;
 
 /**
  * One lit ride: its direction, its line in travel order, and the places it
- * runs from and to; `flow`, the stretch to a picked hintuan, where the ride
- * now ends (the owner's ask, 2026-10-02; HintuanLabel's HintuanEnd) — the
- * line and its ends staying whole; and `rest`, the way on from there to the
- * end (useRideTo's ridden), which useRideRest draws in the card's pale and
- * whose end circle wears it too. The chevrons flow on along the rest, white
- * on the pale as on the line (the owner's ask, 2026-10-13: "continue the
- * arrow into the pale lines", and of two colours tried, "I love the
- * white"); they stopped at the pick from 2026-10-02 until then.
+ * runs from and to; and `pale`, the way not ridden when a start or an end is
+ * picked on its trip (useRideTo's ridden): before the start and after the
+ * end, or the whole line when the ride runs the other way round. useRideRest
+ * draws it in the card's pale, and an end circle on it wears the pale too
+ * and loses its S or E (EndTitles), the picks' pins carrying them. The
+ * chevrons flow on along the pale, white on it as on the line (the owner's
+ * ask, 2026-10-13: "continue the arrow into the pale lines", and of two
+ * colours tried, "I love the white"); they stopped at the pick from
+ * 2026-10-02 until then. `rest`, after the end alone, until the ride's start
+ * could be picked (2026-10-15).
  */
 export interface Ride {
   id?: string;
   line: readonly LngLat[];
-  flow?: readonly LngLat[];
-  rest?: readonly LngLat[];
+  pale?: readonly (readonly LngLat[])[];
   from: string;
   to: string;
   fromHotspot?: string | null;
@@ -91,8 +92,9 @@ export interface Ride {
  * place that carries the name, its hotspot, when the ride says which, and
  * the directions of every lit ride that ends there, this way round
  * (`rides`, on the named one only: the rest are empty); `of`, the ride's own
- * direction, when it has an id; and `paled`, where it is the end of a ride
- * past a picked hintuan, along the rest drawn in the card's pale.
+ * direction, when it has an id; and `paled`, where the ride picked on its
+ * trip starts after it or ends before it, the line there drawn in the card's
+ * pale.
  */
 export interface RideEnd {
   end: 'from' | 'to';
@@ -134,12 +136,19 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           hotspotId,
           rides: !same && r.id ? [r.id] : [],
           of: r.id ?? null,
-          paled: end === 'to' && restDrawn(r.rest ?? null),
+          paled: (r.pale ?? []).some(
+            (l) => restDrawn(l) && samePoint(end === 'from' ? l[0] : l[l.length - 1], at),
+          ),
         };
         if (e.named) named.push(e);
         return e;
       }),
     );
+}
+
+/** Whether two points are one: a pale stretch starting or ending where the line does. */
+function samePoint(a: LngLat, b: LngLat): boolean {
+  return a[0] === b[0] && a[1] === b[1];
 }
 
 /**
@@ -206,6 +215,12 @@ export function useRideColours(map: MapLibreMap | null, look: LineLook) {
     if (!map || !restReady) return;
     map.setPaintProperty(REST_LAYER, 'line-color', look.pale);
   }, [map, look.pale, restReady]);
+  // A ride the other way round wears the lit line's own colour (ride-rest.ts).
+  const otherWayReady = useLayerReady(map, OTHER_WAY_LAYER);
+  useEffect(() => {
+    if (!map || !otherWayReady) return;
+    map.setPaintProperty(OTHER_WAY_LAYER, 'line-color', look.line);
+  }, [map, look.line, otherWayReady]);
 }
 
 /**

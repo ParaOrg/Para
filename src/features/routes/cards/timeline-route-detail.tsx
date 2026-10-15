@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
-import { ChevronDownIcon, EndIcon } from '@/shared/ui/route-icons';
+import { Button } from '@/design-system/primitives/button';
+import { ChevronDownIcon, CloseIcon, EndIcon, StartIcon } from '@/shared/ui/route-icons';
 
 import {
   BLOB_PLACE,
@@ -12,7 +13,12 @@ import {
   TIMELINE_SURFACE,
 } from './livery-card';
 import { RouteTripLineDetailPill } from './route-trip-line-detail-pill';
-import { TimelineStick, type TimelineStickConnection } from './timeline-stick';
+import { timelineFolds, type FoldPart } from './timeline-folds';
+import {
+  TimelineStick,
+  type TimelineStickConnection,
+  type TimelineStickVariant,
+} from './timeline-stick';
 import type { Livery } from '../model/liveries';
 
 export interface TimelineRouteDetailProps {
@@ -21,16 +27,28 @@ export interface TimelineRouteDetailProps {
   routeOrigin: string;
   /** Figma's TimelineHintuan rows: every hintuan on the way, in the order the jeep reaches them. */
   hintuans: readonly { id: string; label: string }[];
-  /** The hintuan picked, by its row's id — Figma's Timeline State=Selected — or null. */
+  /** The hintuan picked, by its row's id — Figma's Timeline State=Selected — or null: where the ride ends (E). */
   picked: string | null;
+  /**
+   * The hintuan made the ride's start (S) by Set as start, by its row's id,
+   * or null: the ride leaves from the origin (the owner's TimelineRouteDetail,
+   * 2026-10-15, Figma 4137:9886).
+   */
+  start?: string | null;
+  /** On a train, the start station's code, for its pill while no end is picked (Variant3). */
+  startCode?: string | null;
+  /** Set as start, under the picked row while no start is picked. Without it, no button. */
+  onSetStart?: () => void;
+  /** × Remove as start, under the start's row. Without it, no button. */
+  onRemoveStart?: () => void;
   /** A hintuan's row was tapped: pick it, or, picked, let it go. */
   onPick: (id: string) => void;
   /**
-   * The pesos of the ride to the picked hintuan, for its pill: the fare the
-   * tile under the card shows, Regular or Discounted (the owner, 2026-09-30:
-   * "why it shows calculated fare instead of its real value?" — the pill
-   * said "Calculated Fare" for the day before). Omitted when unpriced, and
-   * no pill.
+   * The pesos of the ride between the picks, for the pill on the end's row,
+   * or on the start's while no end is picked: the fare the tile under the
+   * card shows, Regular or Discounted (the owner, 2026-09-30: "why it shows
+   * calculated fare instead of its real value?" — the pill said "Calculated
+   * Fare" for the day before). Omitted when unpriced, and no pill.
    */
   pickedPesos?: string;
   /**
@@ -118,6 +136,10 @@ export function TimelineRouteDetail({
   hintuans,
   picked,
   onPick,
+  start = null,
+  startCode = null,
+  onSetStart,
+  onRemoveStart,
   pickedPesos,
   pickedCode = null,
   onEnd,
@@ -126,6 +148,25 @@ export function TimelineRouteDetail({
   isTrain = false,
 }: TimelineRouteDetailProps) {
   const [open, setOpen] = useState(false);
+  // Once a start or an end is picked, the rows outside the ride fold apart,
+  // before it and after it, each its own fold (timelineFolds). A ride picked
+  // from the open list leaves both open: nothing folds under the finger.
+  // Let go, the one fold is as the two left it.
+  const hasRide = start !== null || picked !== null;
+  const [hadRide, setHadRide] = useState(hasRide);
+  const [openParts, setOpenParts] = useState({ before: false, after: false });
+  if (hadRide !== hasRide) {
+    setHadRide(hasRide);
+    if (hasRide) setOpenParts({ before: open, after: open });
+    else setOpen(openParts.before || openParts.after);
+  }
+  const isOpen = (part: FoldPart) => (part === 'all' ? open : openParts[part]);
+  const toggle = (part: FoldPart) => {
+    if (part === 'all') setOpen((o) => !o);
+    else setOpenParts((p) => ({ ...p, [part]: !p[part] }));
+    // The first tap opens it (it starts folded): from then on, drawn.
+    setEverOpened(true);
+  };
   // Whether the fold has ever been opened on this card: until then its rows
   // are their bare <li>s, the hidden insides left out (the cheap-phone
   // plan, step 11, 2026-10-04). A trip with 10 to 25 hintuans drew all of
@@ -134,15 +175,24 @@ export function TimelineRouteDetail({
   // in view and open again as they always did. Set with `open` itself, in
   // the same render, so the first opening moves as every other.
   const [everOpened, setEverOpened] = useState(false);
-  const folds = hintuans.length > 1;
-  const drawn = !folds || open || everOpened;
+  const folds = timelineFolds(hintuans, start, picked);
+  const foldOf = new Map(folds.flatMap((f) => f.rowIds.map((id) => [id, f] as const)));
+  const isShown = (id: string) => {
+    const fold = foldOf.get(id);
+    return !fold || isOpen(fold.part);
+  };
   const rail = TIMELINE_SURFACE[livery];
-  // The rail runs only along the ride (the owner, 2026-10-15). A ride starts
-  // at the origin until a start can be picked; a picked hintuan ends it
-  // there, the rows after it, the fold's and the destination's, left
-  // without a rail. No pick, it runs end to end.
-  const rideEnd = hintuans.findIndex((h) => h.id === picked);
-  const isRideCut = rideEnd !== -1;
+  // The rail runs only along the ride (the owner, 2026-10-15): from its
+  // first row to its last, whichever of the start and the end is above (an
+  // end picked above the start, Variant5, is ridden the other way round).
+  // The origin is the start with none picked, -1; the destination the end,
+  // the row count. No pick, it runs end to end.
+  const startAt = start === null ? -1 : hintuans.findIndex((h) => h.id === start);
+  const endAt = picked === null ? hintuans.length : hintuans.findIndex((h) => h.id === picked);
+  const [first, last] = startAt <= endAt ? [startAt, endAt] : [endAt, startAt];
+  const isOnRide = (i: number) => i >= first && i <= last;
+  const pieceAt = (i: number): TimelineStickVariant =>
+    i === first ? 'middleTop' : i === last ? 'middleBottom' : 'middle';
   // Every row's Pressed: the rail's colour, while the finger is down.
   const pressed = ROW_PRESSED[livery];
 
@@ -170,47 +220,64 @@ export function TimelineRouteDetail({
           rail={rail}
           pressed={pressed}
           routeOrigin={routeOrigin}
+          isStart={start === null}
+          connection={first === -1 ? 'connected' : 'disconnected'}
           selected={endPicked === 'from'}
           onTap={() => onEnd('from')}
         />
-        {hintuans.map((h, i) => (
-          <TimelineHintuan
-            key={i + ':' + h.id}
-            id={h.id}
-            rail={rail}
-            pressed={pressed}
-            label={h.label}
-            shown={!folds || open}
-            drawn={drawn}
-            selected={h.id === picked}
-            pesos={h.id === picked ? pickedPesos : undefined}
-            code={h.id === picked ? pickedCode : null}
-            livery={livery}
-            connection={!isRideCut || i <= rideEnd ? 'connected' : 'disconnected'}
-            isRideEnd={i === rideEnd}
-            onPick={onPick}
-          />
-        ))}
-        {folds && (
-          <TimelineDisclosure
-            rail={rail}
-            pressed={pressed}
-            open={open}
-            count={hintuans.length}
-            isTrain={isTrain}
-            connection={isRideCut ? 'disconnected' : 'connected'}
-            onToggle={() => {
-              setOpen((o) => !o);
-              // The first tap opens it (it starts folded): from then on, drawn.
-              setEverOpened(true);
-            }}
-          />
-        )}
+        {hintuans.map((h, i) => {
+          const isStart = h.id === start;
+          const isEnd = h.id === picked;
+          const fold = foldOf.get(h.id);
+          const shown = isShown(h.id);
+          return (
+            <Fragment key={i + ':' + h.id}>
+              <TimelineHintuan
+                id={h.id}
+                rail={rail}
+                pressed={pressed}
+                label={h.label}
+                shown={shown}
+                drawn={shown || everOpened}
+                selected={isStart || isEnd}
+                mark={isStart ? 'start' : isEnd ? 'end' : null}
+                // The ride's pesos on its end, or on its start while it runs on to the destination (Variant3).
+                pesos={isEnd || (isStart && picked === null) ? pickedPesos : undefined}
+                code={isEnd ? pickedCode : isStart ? startCode : null}
+                livery={livery}
+                connection={isOnRide(i) ? 'connected' : 'disconnected'}
+                piece={pieceAt(i)}
+                action={
+                  isStart && onRemoveStart
+                    ? { label: 'Remove as start', isRemove: true, onTap: onRemoveStart }
+                    : isEnd && start === null && onSetStart
+                      ? { label: 'Set as start', isRemove: false, onTap: onSetStart }
+                      : null
+                }
+                onPick={onPick}
+              />
+              {fold && fold.rowIds[fold.rowIds.length - 1] === h.id && (
+                <TimelineDisclosure
+                  part={fold.part}
+                  rail={rail}
+                  pressed={pressed}
+                  open={isOpen(fold.part)}
+                  count={fold.rowIds.length}
+                  isTrain={isTrain}
+                  // The rows outside the ride fold with no rail; with nothing picked, the rail runs through.
+                  connection={fold.part === 'all' ? 'connected' : 'disconnected'}
+                  onToggle={() => toggle(fold.part)}
+                />
+              )}
+            </Fragment>
+          );
+        })}
         <TimelineBottomEndRoute
           rail={rail}
           pressed={pressed}
           routeDirection={routeDirection}
-          connection={isRideCut ? 'disconnected' : 'connected'}
+          isEnd={picked === null}
+          connection={last === hintuans.length ? 'connected' : 'disconnected'}
           selected={endPicked === 'to'}
           onTap={() => onEnd('to')}
         />
@@ -221,7 +288,7 @@ export function TimelineRouteDetail({
           it as the card opened; undrawn, they would ask only as they open,
           and show their names in a stand-in font until it came
           (font-display: swap). One hidden name asks for it as they did. */}
-      {!drawn && (
+      {!everOpened && folds.some((f) => !isOpen(f.part)) && (
         <span aria-hidden className="pointer-events-none invisible absolute font-medium">
           {hintuans[0]?.label}
         </span>
@@ -278,6 +345,8 @@ function TimelineTop({
   rail,
   pressed,
   routeOrigin,
+  isStart,
+  connection,
   selected,
   onTap,
 }: {
@@ -285,6 +354,10 @@ function TimelineTop({
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
   routeOrigin: string;
+  /** Where the ride starts, Start's S before its name: no start picked further on. */
+  isStart: boolean;
+  /** Disconnected once a start picked further on leaves it outside the ride. */
+  connection: TimelineStickConnection;
   selected: boolean;
   onTap: () => void;
 }) {
@@ -298,12 +371,21 @@ function TimelineTop({
       >
         <TimelineStick
           variant="top"
+          connection={connection}
           rail={rail}
           dot={<TimelineDot rail={rail} selected={selected} />}
         />
-        <span className="flex min-w-0 flex-1 flex-col justify-center pb-2 pl-3">
+        <span className="flex min-w-0 flex-1 items-start gap-1 pb-2 pl-2">
+          {isStart && <RideMark mark="start" />}
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
-          <span className="text-xl/7 font-extrabold sheet-low:line-clamp-1">{routeOrigin}</span>
+          <span
+            className={
+              'min-w-0 flex-1 text-xl/7 font-extrabold sheet-low:line-clamp-1' +
+              (isStart ? '' : ' pl-1')
+            }
+          >
+            {routeOrigin}
+          </span>
         </span>
       </button>
     </li>
@@ -340,7 +422,9 @@ function TimelineHintuan({
   code,
   livery,
   connection,
-  isRideEnd,
+  piece,
+  mark,
+  action,
   onPick,
 }: {
   id: string;
@@ -357,10 +441,14 @@ function TimelineHintuan({
   /** A train station's code, before the pesos in the pill (RouteTripLineDetailPill); null for any other hintuan. */
   code: string | null;
   livery: Livery;
-  /** On the ride's rail, or after its end, its dot alone. */
+  /** On the ride's rail, or outside it, its dot alone. */
   connection: TimelineStickConnection;
-  /** The row the ride ends at, a picked hintuan's: the rail stops at its dot (MiddleBottom). */
-  isRideEnd: boolean;
+  /** Its piece of the rail: MiddleTop where the ride starts, MiddleBottom where it ends, Middle between. */
+  piece: TimelineStickVariant;
+  /** The ride's start (S) or end (E), before its name; null for any other row. */
+  mark: 'start' | 'end' | null;
+  /** The button under the row: Set as start under the end, × Remove as start under the start. */
+  action: { label: string; isRemove: boolean; onTap: () => void } | null;
   onPick: (id: string) => void;
 }) {
   return (
@@ -384,12 +472,15 @@ function TimelineHintuan({
             className={'flex w-full items-start px-4 text-left ' + pressed}
           >
             <TimelineStick
-              variant={isRideEnd ? 'middleBottom' : 'middle'}
+              variant={piece}
               connection={connection}
               rail={rail}
               dot={<TimelineDot rail={rail} selected={selected} />}
             />
-            <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3">
+            <span
+              className={'flex min-w-0 flex-1 items-center gap-2 py-2 ' + (mark ? 'pl-2' : 'pl-3')}
+            >
+              {mark && <RideMark mark={mark} isSmall />}
               <span
                 className={
                   'min-w-0 flex-1 text-base/6 ' + (selected ? 'font-extrabold' : 'font-medium')
@@ -400,6 +491,31 @@ function TimelineHintuan({
               {pesos && <RouteTripLineDetailPill livery={livery} code={code} pesos={pesos} />}
             </span>
           </button>
+          {/* Under the row, its own button (the owner's Choosing and Variant3,
+              4137:9887 and 4148:12161): a sibling of the row's, never inside it.
+              The rail runs on beside it where the ride does, past a start. */}
+          {action && (
+            <div className="flex px-4">
+              <TimelineStick
+                variant="disclosure"
+                connection={
+                  connection === 'connected' && piece !== 'middleBottom'
+                    ? 'connected'
+                    : 'disconnected'
+                }
+                rail={rail}
+              />
+              <span className="pb-2 pl-3">
+                <Button
+                  variant="primary"
+                  size="small"
+                  label={action.label}
+                  firstIcon={action.isRemove ? <CloseIcon /> : undefined}
+                  onClick={action.onTap}
+                />
+              </span>
+            </div>
+          )}
         </div>
       )}
     </li>
@@ -408,6 +524,7 @@ function TimelineHintuan({
 
 /** Figma's TimelineDisclosure: the hintuans folded into one row, or, opened, the row that folds them. */
 function TimelineDisclosure({
+  part,
   rail,
   pressed,
   open,
@@ -416,6 +533,8 @@ function TimelineDisclosure({
   connection,
   onToggle,
 }: {
+  /** Which rows it folds: every hintuan, or those before or after a picked ride (timelineFolds). */
+  part: FoldPart;
   rail: string;
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
@@ -423,7 +542,7 @@ function TimelineDisclosure({
   count: number;
   /** "N more stations" on a train, "N more hintuans" else. */
   isTrain: boolean;
-  /** Disconnected once a picked hintuan ends the ride above it. */
+  /** Disconnected once its rows are outside a picked ride. */
   connection: TimelineStickConnection;
   onToggle: () => void;
 }) {
@@ -433,6 +552,7 @@ function TimelineDisclosure({
         type="button"
         data-testid="trip-fold"
         aria-expanded={open}
+        data-part={part}
         onClick={onToggle}
         className={'flex w-full items-start px-4 text-left ' + pressed}
       >
@@ -465,6 +585,7 @@ function TimelineBottomEndRoute({
   rail,
   pressed,
   routeDirection,
+  isEnd,
   connection,
   selected,
   onTap,
@@ -473,6 +594,8 @@ function TimelineBottomEndRoute({
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
   routeDirection: string;
+  /** Where the ride ends, End's E before its name: no hintuan picked as the end. */
+  isEnd: boolean;
   /** Disconnected once a picked hintuan ends the ride before it. */
   connection: TimelineStickConnection;
   selected: boolean;
@@ -492,10 +615,8 @@ function TimelineBottomEndRoute({
           rail={rail}
           dot={<TimelineDot rail={rail} selected={selected} />}
         />
-        <span className="flex min-w-0 flex-1 items-start gap-1 pt-3 pl-2">
-          <span aria-hidden className="shrink-0 p-1 *:size-5">
-            <EndIcon />
-          </span>
+        <span className={'flex min-w-0 flex-1 items-start gap-1 pt-3 ' + (isEnd ? 'pl-2' : 'pl-3')}>
+          {isEnd && <RideMark mark="end" />}
           {/* Bold, Figma's text-xl/bold (the owner, 2026-09-30: "bold"). The
               Timeline set (3716:1894) draws it Medium, ExtraBold picked; the
               owner kept the trip frame's Bold on 2026-10-13. */}
@@ -503,5 +624,35 @@ function TimelineBottomEndRoute({
         </span>
       </button>
     </li>
+  );
+}
+
+/**
+ * Where the ride starts and ends, before a row's name: Start's circled S in
+ * its green (the owner's TimelineRouteDetailCard, 3778:3183, as the map's
+ * Head Route wears it) and End's circled E in the card's words. They move
+ * with the picks (his TimelineRouteDetail, 2026-10-15): the S from the
+ * origin to a start picked further on, the E from the destination to a
+ * picked end. A screen reader hears the word, as on the map's labels.
+ * `isSmall`, beside a hintuan's 16/24 name, the circle is 16 across; beside
+ * the ends' 20/28, 20.
+ */
+function RideMark({ mark, isSmall = false }: { mark: 'start' | 'end'; isSmall?: boolean }) {
+  const size = isSmall ? '*:size-4' : '*:size-5';
+  return (
+    <>
+      <span
+        aria-hidden
+        data-part={mark}
+        className={
+          'shrink-0 p-1 ' +
+          size +
+          (mark === 'start' ? ' text-map-hotspots-card-hintuan-surface' : '')
+        }
+      >
+        {mark === 'start' ? <StartIcon /> : <EndIcon />}
+      </span>
+      <span className="sr-only">{mark === 'start' ? 'Start, ' : 'End, '}</span>
+    </>
   );
 }

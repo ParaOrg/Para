@@ -7,8 +7,22 @@ import { APP_MOVE } from './map-view';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
-import { rideCut, travelLine } from '../model/ride';
+import { endsBeforeStart, rideCut, rideSpan, rideTheOtherWay, travelLine } from '../model/ride';
 import { isRailLine, railLineOf, type Direction } from '../model/routes';
+
+/**
+ * The ride between the picks as the map draws it (useLitRides): `line`, the
+ * ride on the trip's own line, and `pale`, the stretches before the start and
+ * after the end, in the card's pale; or, an end picked before the start,
+ * the trip's whole line pale and the ride on the other direction's line
+ * (`otherWay`).
+ */
+export interface Ridden {
+  directionId: string;
+  line: readonly LngLat[];
+  pale: readonly (readonly LngLat[])[];
+  otherWay: { directionId: string; line: readonly LngLat[] } | null;
+}
 
 /** How close a picked hintuan is brought in: the scale bar reading this. */
 const PICKED_SCALE_M = 500;
@@ -75,6 +89,14 @@ export function useRideTo(
      * map's centre, in pixels — clear of a card over the map (clearOfSheet).
      */
     onGlide?: () => [number, number];
+    /**
+     * The route's other direction, for an end picked before the start: that
+     * ride runs on it, the card left as it is (rideTheOtherWay; the owner,
+     * 2026-10-15). Null for a route drawn one way only.
+     */
+    otherWay?: Direction | null;
+    /** The directions that pass a hotspot (its links): where a pick lands on the other way. */
+    linkedDirectionIds?: (hotspotId: string) => readonly string[];
   } = {},
 ) {
   // Which direction the pick was made on: a pick belongs to its ride, so the
@@ -90,6 +112,13 @@ export function useRideTo(
   // direction, as a pick is.
   const [atEnd, setAtEnd] = useState<{ directionId: string; end: 'from' | 'to' } | null>(null);
   const endPicked = selected && atEnd?.directionId === selected.id ? atEnd.end : null;
+
+  // A hintuan made the ride's start by Set as start (the owner's
+  // TimelineRouteDetail, 2026-10-15): the ride runs from it, not from where
+  // the direction leaves, to the picked hintuan or on to the end. Kept by
+  // direction, as the end's pick is.
+  const [start, setStartPick] = useState<{ directionId: string; rowId: string } | null>(null);
+  const liveStart = start && start.directionId === selected?.id ? start : null;
 
   // The camera as the first hintuan or end was picked: a second tap on the
   // picked row brings it back (the owner's asks, 2026-10-02, and for the
@@ -109,6 +138,7 @@ export function useRideTo(
     setRideId(selected?.id);
     setPicked((p) => (p?.directionId === selected?.id ? p : null));
     setAtEnd((e) => (e?.directionId === selected?.id ? e : null));
+    setStartPick((s) => (s?.directionId === selected?.id ? s : null));
   }
   useEffect(() => {
     before.current = null;
@@ -126,10 +156,31 @@ export function useRideTo(
     onGlide.current = opts.onGlide;
   });
 
+  // The picked hintuan on this trip's own line: where the camera glides.
   const cut = useMemo(
     () => (selected && live ? rideCut(selected, hotspots, live.rowId) : null),
     [selected, hotspots, live],
   );
+
+  // The ride between the picks: from the start (or where the direction
+  // leaves) to the picked hintuan (or where it goes). An end before the start
+  // runs on the other direction's line (the owner's Variant5, 2026-10-15),
+  // its picks landing on boxes that way passes.
+  const otherWay = opts.otherWay ?? null;
+  const linked = opts.linkedDirectionIds;
+  const span = useMemo(() => {
+    if (!selected || (!live && !liveStart)) return null;
+    const startId = liveStart?.rowId ?? null;
+    const endId = live?.rowId ?? null;
+    if (startId !== null && endId !== null && endsBeforeStart(selected, hotspots, startId, endId)) {
+      if (!otherWay || !linked) return null;
+      const passes = (id: string) => linked(id).includes(otherWay.id);
+      const ride = rideTheOtherWay(otherWay, hotspots, startId, endId, passes);
+      return ride && { ...ride, otherWayId: otherWay.id };
+    }
+    const ride = rideSpan(selected, hotspots, startId, endId);
+    return ride && { ...ride, otherWayId: null };
+  }, [selected, hotspots, live, liveStart, otherWay, linked]);
 
   /** Keeps the camera as the first pick is made; a later pick keeps the first one's. */
   const remember = useCallback(() => {
@@ -152,8 +203,14 @@ export function useRideTo(
   /** A hintuan row picks its ride (again puts it back); an end row passes null. */
   const selectedId = selected?.id;
   const liveRow = live?.rowId ?? null;
+  const startRow = liveStart?.rowId ?? null;
   const pick = useCallback(
     (id: string | null) => {
+      // The start's row tapped again lets the start go, as × Remove as start does.
+      if (id !== null && id === startRow) {
+        setStartPick(null);
+        return;
+      }
       setAtEnd(null);
       carried.current = null;
       if (id !== null && selectedId && liveRow === id) goBack();
@@ -165,8 +222,22 @@ export function useRideTo(
           : { directionId: selectedId, rowId: id },
       );
     },
-    [selectedId, liveRow, remember, goBack],
+    [selectedId, liveRow, startRow, remember, goBack],
   );
+
+  /**
+   * Set as start, under the picked hintuan's row (the owner's Choosing and
+   * Variant3, 2026-10-15): it becomes the ride's start, and the ride runs
+   * from it to where the direction goes until another row is tapped.
+   */
+  const setStart = useCallback(() => {
+    if (!selectedId || liveRow === null) return;
+    setStartPick({ directionId: selectedId, rowId: liveRow });
+    setPicked(null);
+  }, [selectedId, liveRow]);
+
+  /** × Remove as start: the ride leaves where the direction does again. */
+  const removeStart = useCallback(() => setStartPick(null), []);
 
   /**
    * An end row: the whole ride again, that end picked, and the map gliding
@@ -176,6 +247,7 @@ export function useRideTo(
   const toEnd = useCallback(
     (end: 'from' | 'to') => {
       setPicked(null);
+      setStartPick(null);
       carried.current = null;
       const on = endPicked !== end;
       setAtEnd(on && selectedId ? { directionId: selectedId, end } : null);
@@ -205,13 +277,29 @@ export function useRideTo(
 
   const pickedHotspot = live ? hotspots.find((s) => s.id === live.rowId) : undefined;
   const pickedLabel = pickedHotspot ? hotspotLabel(pickedHotspot) : null;
+  const startHotspot = liveStart ? hotspots.find((s) => s.id === liveStart.rowId) : undefined;
+  const startLabel = startHotspot ? hotspotLabel(startHotspot) : null;
   const line = selected?.route?.routeCode;
-  // Kept one object while the cut is, so the lit rides are not made anew each render.
-  const ridden = useMemo(
-    () =>
-      cut && selectedId ? { directionId: selectedId, line: cut.ridden, rest: cut.rest } : null,
-    [cut, selectedId],
-  );
+  // Kept one object while the span is, so the lit rides are not made anew each render.
+  const ridden = useMemo((): Ridden | null => {
+    if (!span || !selected) return null;
+    // The other way round, the trip's own line is all pale and the ride is
+    // drawn on the other direction's.
+    if (span.otherWayId !== null) {
+      return {
+        directionId: selected.id,
+        line: [],
+        pale: [travelLine(selected, hotspots)],
+        otherWay: { directionId: span.otherWayId, line: span.ridden },
+      };
+    }
+    return {
+      directionId: selected.id,
+      line: span.ridden,
+      pale: [span.before, span.rest].filter((l) => l.length > 1),
+      otherWay: null,
+    };
+  }, [span, selected, hotspots]);
 
   /**
    * SWITCH on a jeep's trip, just before it turns: the pick goes with it to
@@ -226,9 +314,16 @@ export function useRideTo(
   const carryTo = useCallback(
     (next: Direction, passesNext: (hotspotId: string) => boolean) => {
       if (railLineOf(next)) return;
+      const land = (rowId: string) => {
+        const box = hotspots.find((s) => s.id === rowId);
+        return box ? boxTheOtherWay(box, hotspots, passesNext) : null;
+      };
+      // A start goes the same way, kept a start (its place's box the other
+      // way passes); with none, the ride leaves where the other way does.
+      const startLanded = liveStart ? land(liveStart.rowId) : null;
+      if (startLanded) setStartPick({ directionId: next.id, rowId: startLanded.id });
       if (live) {
-        const box = hotspots.find((s) => s.id === live.rowId);
-        const landed = box ? boxTheOtherWay(box, hotspots, passesNext) : null;
+        const landed = land(live.rowId);
         if (!landed) return;
         carried.current = landed.id;
         setPicked({ directionId: next.id, rowId: landed.id });
@@ -236,17 +331,18 @@ export function useRideTo(
         setAtEnd({ directionId: next.id, end: endPicked === 'to' ? 'from' : 'to' });
       }
     },
-    [live, hotspots, endPicked],
+    [live, liveStart, hotspots, endPicked],
   );
 
   return {
-    rideTo: cut && live ? { hotspotId: live.rowId, metres: cut.metres } : null,
+    /** The ride between the picks, how far it runs; null with no ride to price. */
+    rideTo: span ? { metres: span.metres, isOtherWay: span.otherWayId !== null } : null,
     /** The row picked, cut or not: a row whose box the line misses is still shown picked, with nothing to price. */
     pickedId: live?.rowId ?? null,
     /**
-     * The ride from its start to the picked hintuan, where it now ends,
-     * and `rest`, the way on from there to the end, drawn in the trip's pale
-     * (useLitRides; the owner's ask, 2026-10-12). Null with nothing cut.
+     * The ride between the picks, and the way not ridden on either side of
+     * it, drawn in the trip's pale (useLitRides; the owner's asks of
+     * 2026-10-12 and 2026-10-15). Null with nothing cut.
      */
     ridden,
     /**
@@ -254,7 +350,7 @@ export function useRideTo(
      * the glide goes; for a row whose box the line misses, the hintuan's own
      * point. Null with nothing picked.
      */
-    pinAt: live ? (cut?.at ?? pickedHotspot?.point.coordinates ?? null) : null,
+    pinAt: live ? (span?.at ?? cut?.at ?? pickedHotspot?.point.coordinates ?? null) : null,
     /** The picked hintuan's name, as its row reads it: the circle's title on the map (HintuanPin). */
     pickedLabel,
     /**
@@ -266,6 +362,21 @@ export function useRideTo(
      */
     pickedCode: pickedLabel && isRailLine(line) ? stationCode(line, pickedLabel) : null,
     pick,
+    /** The row made the ride's start (Set as start), or null: the ride leaves where the direction does. */
+    startId: liveStart?.rowId ?? null,
+    /** Where the start is on the map: where the ride leaves on the line, else its hintuan's own point. */
+    startPinAt: liveStart
+      ? (span?.from ??
+        (selected ? rideCut(selected, hotspots, liveStart.rowId)?.at : undefined) ??
+        startHotspot?.point.coordinates ??
+        null)
+      : null,
+    /** The start's name, as its row reads it. */
+    startLabel,
+    /** On a train line, the start station's code, as `pickedCode` is the end's. */
+    startCode: startLabel && isRailLine(line) ? stationCode(line, startLabel) : null,
+    setStart,
+    removeStart,
     /** The end picked from its row (`toEnd`), or null. */
     endPicked,
     toEnd,
