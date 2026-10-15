@@ -150,7 +150,7 @@ export const toDirection = (raw: RawDirection) => ({
   route: toRouteSummary(raw.route),
   /**
    * The ride's length in metres, measured on its full line: the published
-   * index carries it, so a trip's Kilometer and fare never read an overview.
+   * index carries it, so a trip's Distance and fare never read an overview.
    * Absent from the studio's rows and from map.json's, whose lines are whole.
    */
   ...(raw.metres === undefined ? {} : { metres: raw.metres }),

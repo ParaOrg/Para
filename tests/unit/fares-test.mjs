@@ -113,7 +113,7 @@ test("a ride's pesos never fall as it grows: a picked hintuan's pill stays withi
   }
 });
 
-test('the Kilometer tile: to a tenth, no space', () => {
+test('the Distance tile: to a tenth, no space', () => {
   assert.equal(kmLabel(12_800), '12.8km');
   assert.equal(kmLabel(12_849), '12.8km');
   assert.equal(kmLabel(940), '0.9km');
