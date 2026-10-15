@@ -19,6 +19,19 @@
 | Variant4 (4151:13124) | Start at Shaw Boulevard, then Ayala tapped: Ayala is the end (E), with the fare pill. The ride is Shaw Boulevard → Ayala |
 | Variant5 (4151:13619) | Start at Shaw Boulevard, then Quezon Avenue tapped, a station **before** the start: E Quezon Avenue, with the fare pill |
 
+## The rail: TimelineStick (Figma 3716:1759)
+
+The owner's TimelineStick set gained pieces for a ride that doesn't run end to end (2026-10-15). In code the rail is `STICK` in `trip-timeline.tsx`, which today draws only the connected pieces.
+
+| Piece | Rail above the dot | Rail below the dot | For |
+| --- | --- | --- | --- |
+| Top / Middle / Bottom / Disclosure, Connected | as today | as today | A row inside the ride |
+| **MiddleTop**, Connected | none | yes | The row the ride starts at, mid-list |
+| **MiddleBottom**, Connected | yes | none | The row the ride ends at, mid-list |
+| Any piece, **Disconnected** | none | none | A row on its own, with no rail |
+
+**Still being drawn:** the states use the pieces in different ways. In Choosing (North Avenue → Shaw Boulevard), the rail breaks after Shaw Boulevard and starts again at Boni, so the rows after the end keep a rail of their own. In Variant4 (Shaw Boulevard → Ayala), Taft Avenue has no rail, and in Variant3 Shaw Boulevard sits alone between two rails. Which rule to follow is open (below).
+
 ## How it works, as read from the design
 
 - **Tap a row:** it becomes the end, and the ride runs from the start to there, as today.
@@ -41,7 +54,10 @@
 - **SWITCH with picks:** the picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
 - **The fold once a start or end is picked:** the rows outside the ride fold, and the ride's own rows stay open.
 
-Nothing is left open.
+## Still open
+
+1. **The rail outside the ride.** Either (a) the rail breaks at the start and the end, and the rows outside the ride keep a rail of their own (Choosing), or (b) the rail runs only along the ride, and the rows outside show their dots with no rail (Variant4's Taft Avenue). Proposal: (b). Read at a glance, the one rail is the ride, matching the map, where everything outside the ride is pale.
+2. **Variant5 in the app.** An end before the start now switches the card to the other direction (decided above). So the app shows that ride in its own direction's order (Northbound, Shaw Boulevard → Quezon Avenue, top to bottom), and Variant5's layout, with the end above the start, never appears.
 
 ## Words (for `CONTEXT.md`)
 
