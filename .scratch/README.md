@@ -4,8 +4,8 @@ Five projects for now and one for later, planned with the owner on 2026-10-15. *
 
 | # | Project | Spec | In one line | Waiting on |
 | --- | --- | --- | --- | --- |
-| 1 | Small fixes | [small-fixes/spec.md](small-fixes/spec.md) | The trip card's "Distance" tile; SWITCH keeps the picked hintuan; the card and its timeline take their Figma names; trains say Northbound / Southbound | Nothing |
-| 2 | Ride start and end | [ride-start-and-end/spec.md](ride-start-and-end/spec.md) | On the trip's timeline, any hintuan or station can be the ride's start, not only its end | The owner's answer: does Northbound / Southbound clear the picks? |
+| 1 | Small fixes | [small-fixes/spec.md](small-fixes/spec.md) | The trip card's "Distance" tile; Papunta / Pabalik keeps a jeep's picked hintuan; the card and its timeline take their Figma names; trains say Northbound / Southbound | Nothing |
+| 2 | Ride start and end | [ride-start-and-end/spec.md](ride-start-and-end/spec.md) | On the trip's timeline, any hintuan or station can be the ride's start, not only its end | Nothing |
 | 3 | Commuter rename | [commuter-rename/spec.md](commuter-rename/spec.md) | "Visitor" becomes "commuter", in the docs and then the code | Nothing |
 | 4 | Driver app | [driver-app/spec.md](driver-app/spec.md) | `/driver/`: drivers record each ikot offline, and it uploads by itself | The owner's design of the driver screens; the field test |
 | 5 | Studio maps | [studio-maps/spec.md](studio-maps/spec.md) | Drafts \| Tracking \| Public, and Draft → Pending → Approved | Nothing (Tracking needs driver data to be useful) |

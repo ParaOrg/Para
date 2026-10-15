@@ -16,9 +16,11 @@ Four changes, one pull request each. All show on the public map and in the studi
 
 **Done when:** typecheck, lint and unit tests pass; the trip card's stories show "Distance"; phone-test and visitor-test pass (they find the tile by its test id, not its word).
 
-## 2. SWITCH keeps the picked hintuan
+## 2. Papunta / Pabalik keeps the picked hintuan (jeeps)
 
 **The ask (2026-10-15):** on Antipolo → Recto, with Betty Go – Belmonte picked, the card shows Antipolo → Betty Go: 9.5 km, ₱12–13. Tapping Pabalik should show **Recto → Betty Go**, with its own distance and fare, not the whole of Recto → Antipolo.
+
+**Jeeps only** (the owner, later the same day: "trains reset, jeeps keep"). The ask came on LRT-2, but on a train, Northbound / Southbound clears the picks instead. A train rider can pick a station on either side of the start on the same card (`ride-start-and-end`), so they never need the switch to keep a pick.
 
 **Today:** the pick belongs to one direction, on purpose. `useRideTo` (`src/features/routes/map/ride-to.ts`) lets it go whenever another direction opens: "A different direction is a different ride… start it whole." SWITCH becomes the one exception. Another route, a new trip, ‹ and ✕ still start the ride whole.
 
@@ -36,7 +38,7 @@ The rule moves into one pure function in `src/features/routes/model/`, used by b
 - **Camera:** SWITCH frames the whole ride, as it does today (`useSwitchOverview` in `use-card-camera.ts`). It does not glide in to the kept hintuan.
 - **The studio** gets the same behaviour: its trip card uses the same hook.
 
-**Done when:** unit tests cover the three cases and an end; the trip card's story shows it; visitor-test gains a step: pick a hintuan, SWITCH, and the Distance and fare tiles read the shorter ride.
+**Done when:** unit tests cover the three cases, an end, and a train's switch clearing the picks; the trip card's story shows it; visitor-test gains two steps: on a jeep route, pick a hintuan, SWITCH, and the Distance and fare tiles read the shorter ride; on a train, the same leaves the whole ride.
 
 ## 3. The card and its timeline take their Figma names
 

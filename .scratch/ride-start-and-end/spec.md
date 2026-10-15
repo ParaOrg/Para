@@ -64,9 +64,9 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 - **The fold says "stations" on trains:** "N more stations". Jeeps keep "N more hintuans". Today it says hintuans for both (`trip-timeline.tsx`); the glossary avoids "stop". Changed in Figma the same day: the fold row in the Timeline component's Rest, Pressed and Selected variants, which every TimelineRouteDetail state and card example inherits.
 - **The fold once a start or end is picked:** the rows outside the ride fold, and the ride's own rows stay open.
 
-## Still open
+- **SWITCH and the picks: trains reset, jeeps keep.** On a train, Northbound / Southbound clears the start and the end, and the turned card shows its whole ride. On a jeep, Papunta / Pabalik keeps them, found on the other direction with `small-fixes` 2's rule.
 
-1. **What Northbound / Southbound does to the picks.** The owner (2026-10-15): "only when they use north bound south bound it will reset". That clashes with `small-fixes` 2, the owner's earlier ask that Papunta / Pabalik keep the picked hintuan (Antipolo → Betty Go becomes Recto → Betty Go). Read as: **on a train, Northbound / Southbound clears the picks; on a jeep, Papunta / Pabalik keeps them** (`small-fixes` 2). To confirm. (Before this, both picks were to stay and trade roles on SWITCH.)
+Nothing is left open.
 
 ## Words (for `CONTEXT.md`)
 
