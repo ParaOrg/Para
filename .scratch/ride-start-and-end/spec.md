@@ -43,13 +43,19 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 - **Fares need no new data.** Jeeps price by the metres between the two picks (`fareFor` in `src/features/routes/model/fares.ts`). Trains price by the station pair: `railFare` (`src/features/routes/model/rail-fares.ts`) already takes any two stations, from LRMC's and LRTA's full matrices and MRT-3's count of stations.
 - **Jeeps and trains alike:** the design's example is a train, and it is read as the same for jeep hintuans.
 - **The studio** gets it too, since it shares the card.
-- **An end before the start (Variant5)** switches the card to the other direction (the owner's call, 2026-10-15). Shaw Boulevard → Quezon Avenue runs the other way, so the card turns to that direction with both picks kept. It finds them there with `small-fixes` 2's rule: the same box, else the nearest box of the same place. On MRT-3 that's Southbound to Northbound (`small-fixes` 4).
+- **An end before the start (Variant5)** is a ride the other way: Shaw Boulevard → Quezon Avenue is Northbound on a Southbound card. How the card gets there is open (see Still open 2). Either way it finds both picks on the other direction with `small-fixes` 2's rule: the same box, else the nearest box of the same place.
 
 ## Decided (the owner, 2026-10-15)
 
 - **No View button.** The owner took it out of the design; the row's only button is Set as start (or × Remove as start).
 - **"Set as start", not "Make as start".** Changed in Figma the same day: the button in the Timeline component's Selected variant (which the Choosing state shows), the RouteTripDetail mockup's button, and four draft frames on the RouteTripDetail page.
-- **The pill stays as today**, on the end: on a train, the station's code then the pesos (`YL06 · ₱13`); on a jeep, the pesos. The design's "Calculated Fare" stands for those pesos.
+- **The pill is the owner's RouteTripLineDetailPill** (Figma 4161:8299, 2026-10-15), on the end:
+  - **Two**, on a train: the station's code and the pesos as two white halves side by side, 1 px apart (`spacing/px`), so the card's colour shows between them as the divider. The code's half is rounded on the left, the pesos' on the right.
+  - **One**, on a jeep: the pesos alone, rounded both ends.
+  - Each half: `Content/inverse` fill, padding 2 × 6 (`spacing/0-5`, `spacing/1-5`), text `text-sm/medium` (SN Pro Medium 14/20) in the livery's surface colour (`Card/red/surface` in the red livery).
+  - Today's pill is one piece with a dot between, `YL06 · ₱13` (`trip-timeline.tsx`). The halves replace the dot; a screen reader still hears "YL06 ₱13" as two words.
+  - The design writes `₱13-24` with a hyphen; the code keeps its en dash, `₱13–24` (`pesoRange`).
+- **Set as start is the Button primitive, Primary, Small** (Figma: Button, Variants=Primary, Size=Small, in the Timeline component's TimelineDisconnected / Selected variant, 4122:8540). The code's Button allows Small only on Special and Secondary, "until the owner designs it" (`src/design-system/primitives/button.tsx`). It's designed now, so Primary gains Small, with a story.
 - **The fold says "stations" on trains:** "N more stations". Jeeps keep "N more hintuans". Today it says hintuans for both (`trip-timeline.tsx`); the glossary avoids "stop". Changed in Figma the same day: the fold row in the Timeline component's Rest, Pressed and Selected variants, which every TimelineRouteDetail state and card example inherits.
 - **SWITCH with picks:** the picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
 - **The fold once a start or end is picked:** the rows outside the ride fold, and the ride's own rows stay open.
@@ -57,7 +63,11 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 ## Still open
 
 1. **The rail outside the ride.** Either (a) the rail breaks at the start and the end, and the rows outside the ride keep a rail of their own (Choosing), or (b) the rail runs only along the ride, and the rows outside show their dots with no rail (Variant4's Taft Avenue). Proposal: (b). Read at a glance, the one rail is the ride, matching the map, where everything outside the ride is pale.
-2. **Variant5 in the app.** An end before the start now switches the card to the other direction (decided above). So the app shows that ride in its own direction's order (Northbound, Shaw Boulevard → Quezon Avenue, top to bottom), and Variant5's layout, with the end above the start, never appears.
+2. **An end before the start: flip on its own, or on a tap?** It was decided that the card flips (2026-10-15); the owner then asked whether a sudden flip loses the rider. It can: the list reverses, the stations jump, the word on SWITCH changes and the map's arrows turn, all from a tap on a station. That is also an accessibility problem: a tap that changes the whole card without warning is a "change of context on input" (WCAG 3.2.2), and a screen reader user loses their place.
+   **Proposal: the rider flips it.** Tapping a row before the start picks it and shows two buttons under it:
+   - **Set as start**, as on any row: the start moves up to here.
+   - **Switch to Northbound** (on a jeep, Switch to Papunta or Pabalik): the card turns to the other direction, the ride from the start to here, both picks kept.
+   No E and no pill on that row until it's switched, since this direction has no ride there. Variant5 becomes the design for this moment, with the second button added.
 
 ## Words (for `CONTEXT.md`)
 
