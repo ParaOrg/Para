@@ -48,7 +48,7 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
   - **Switch to Northbound** (on a jeep, Switch to Papunta or Pabalik): the card turns to the other direction, the ride from the start to here. It finds both picks there with `small-fixes` 2's rule: the same box, else the nearest box of the same place.
   - No E, no pill and no rail on that row until it's switched: this direction has no ride there.
   - **Why not flip on the tap:** the list would reverse, the stations jump, the word on SWITCH change and the map's arrows turn, all from one tap. That loses the rider, and it's a "change of context on input" (WCAG 3.2.2) that loses a screen reader user's place.
-  - **In Figma** (2026-10-15): the Timeline component's TimelineDisconnected / Selected row (4122:8540) gained a second button, "Switch to Northbound", shown by a new **🎈 Switch** property (off by default, so no other row changed). Variant5 (4151:13619) is now this state: Quezon Avenue picked, Set as start and Switch to Northbound under it, no E, no pill, no rail.
+  - **The look is the owner's to draw.** A first try at the button in Figma was taken out the same day at the owner's word ("it's ugly"); Variant5 (4151:13619) is back as the owner drew it. The screens wait for the owner's design of this moment.
 
 ## Decided (the owner, 2026-10-15)
 
