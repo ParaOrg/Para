@@ -1235,8 +1235,8 @@ const tripChecks = async () => {
       `${selectedRows} Selected, weight ${weight}`,
     );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
-    // On a train the station's code comes first, "GL04 · ₱20" (the owner,
-    // 2026-10-13): the pesos are their own part then.
+    // On a train the station's code comes first, "GL04 ₱20" (the owner,
+    // 2026-10-13): the pesos are their own half then.
     const pesosOf = async (p) =>
       (await p.locator('[data-part="pesos"]').count())
         ? (await p.locator('[data-part="pesos"]').innerText()).trim()
@@ -1262,7 +1262,10 @@ const tripChecks = async () => {
         `pill "${pillText}"; tile "${pickedTile}", the sums "${pickWant.fare}"`,
       );
     const colours = await page.evaluate(() => {
-      const pill = document.querySelector('[data-testid="trip-hintuan-fare"]');
+      // A train's pill is two halves (RouteTripLineDetailPill's Two, 2026-10-15),
+      // the card showing between them: the colours are the pesos' half's.
+      const fare = document.querySelector('[data-testid="trip-hintuan-fare"]');
+      const pill = fare?.querySelector('[data-part="pesos"]') ?? fare;
       const trip = document.querySelector('[data-testid="trip"]');
       if (!pill || !trip) return null;
       const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
