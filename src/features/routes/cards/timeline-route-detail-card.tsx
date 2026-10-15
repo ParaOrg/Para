@@ -39,6 +39,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   switchable: boolean;
   /** Whether this trip is the route's way back: SWITCH is pressed then, as over the list. */
   back: boolean;
+  /** The word on SWITCH (wayWord): Papunta or Pabalik, or a train's bound. */
+  way: string;
   /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none. */
   onBackToList: (() => void) | null;
   onClose: () => void;
@@ -119,6 +121,7 @@ export function TimelineRouteDetailCard({
   onSwitch,
   switchable,
   back,
+  way,
   onBackToList,
   onClose,
   dockRef,
@@ -153,6 +156,7 @@ export function TimelineRouteDetailCard({
           onSwitch={onSwitch}
           switchable={switchable}
           back={back}
+          way={way}
           onClose={onClose}
         />
       }
