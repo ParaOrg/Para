@@ -22,13 +22,16 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
  * no-key style that fits (2026-10-15), so the owner can pick on a phone.
  * Bright and Fiord are OpenFreeMap's too. CARTO's and VersaTiles' are other
  * hosts: not preconnected, not kept offline by the worker, and drawn with
- * OpenFreeMap's fonts (see `withOurFonts`).
+ * OpenFreeMap's fonts (see `withOurFonts`). The two satellite designs are
+ * Esri's World Imagery under Positron's labels, or none (see `satelliteStyle`).
  */
 export type BasemapId =
   | 'positron'
   | 'positron-detailed'
   | 'liberty'
   | 'dark'
+  | 'satellite'
+  | 'satellite-labelled'
   | 'bright'
   | 'fiord'
   | 'carto-voyager'
@@ -44,6 +47,8 @@ export interface Basemap {
   label: string;
   url: string;
   detailed?: true;
+  /** A photo of the ground in place of Positron's drawing, bare or under its labels. */
+  imagery?: 'bare' | 'labelled';
 }
 
 const OPENFREEMAP = 'https://tiles.openfreemap.org';
@@ -56,6 +61,8 @@ export const BASEMAPS: readonly Basemap[] = [
   { id: 'positron-detailed', label: 'Gray, detailed', url: POSITRON, detailed: true },
   { id: 'liberty', label: 'Colour', url: `${OPENFREEMAP}/styles/liberty` },
   { id: 'dark', label: 'Dark', url: `${OPENFREEMAP}/styles/dark` },
+  { id: 'satellite', label: 'Satellite', url: POSITRON, imagery: 'bare' },
+  { id: 'satellite-labelled', label: 'Satellite, labelled', url: POSITRON, imagery: 'labelled' },
   { id: 'bright', label: 'Bright', url: `${OPENFREEMAP}/styles/bright` },
   { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` },
   { id: 'carto-voyager', label: 'CARTO Voyager', url: `${CARTO}/voyager-gl-style/style.json` },
@@ -230,6 +237,56 @@ function detailStyle(style: StyleSpecification): StyleSpecification {
   };
 }
 
+// ------------------------------------------------------------- the photo
+
+/*
+ * Esri's World Imagery: the one street-level satellite photo with no key to
+ * ask for (2026-10-15), sharp to z19 over Metro Manila. To look at on the
+ * theme-comparison branch only: going live needs Esri's free developer key
+ * (or MapTiler's), and its tiles are not kept offline.
+ */
+const IMAGERY_TILES =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+
+const IMAGERY_LAYER: LayerSpecification = { id: 'imagery', type: 'raster', source: 'imagery' };
+
+/** A Positron label made to read on a photo: white, on a dark halo. */
+const onPhoto = (l: SymbolLayerSpecification): SymbolLayerSpecification => ({
+  ...l,
+  paint: {
+    ...l.paint,
+    'text-color': MAP_PAINT['Paint/basemap-photo-label'],
+    'text-halo-color': MAP_PAINT['Paint/basemap-photo-halo'],
+    'text-halo-width': 1.5,
+    'text-halo-blur': 0.5,
+  },
+});
+
+/**
+ * Positron with the photo in place of its drawing. Its symbol layers are its
+ * labels; everything else (ground, water, roads, buildings) the photo shows
+ * already. Bare keeps no label at all. Pure: the input is left alone.
+ */
+function satelliteStyle(style: StyleSpecification, isLabelled: boolean): StyleSpecification {
+  const labels = isLabelled
+    ? style.layers.filter((l): l is SymbolLayerSpecification => l.type === 'symbol').map(onPhoto)
+    : [];
+  return {
+    ...style,
+    sources: {
+      ...style.sources,
+      imagery: {
+        type: 'raster',
+        tiles: [IMAGERY_TILES],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
+      },
+    },
+    layers: [IMAGERY_LAYER, ...labels],
+  };
+}
+
 // ------------------------------------------------- another provider's fonts
 
 /** OpenFreeMap serves one font per request; these are its three. */
@@ -263,22 +320,26 @@ function withOurFonts(style: StyleSpecification): StyleSpecification {
 
 const isOpenFreeMap = (b: Basemap): boolean => b.url.startsWith(OPENFREEMAP);
 
-/** What a design adds to the style it fetches: the detail, or our fonts on another host's. */
+/** A design MapLibre can take by its URL, with nothing to add. */
+const isPlain = (b: Basemap): boolean => !b.detailed && !b.imagery && isOpenFreeMap(b);
+
+/** What a design adds to the style it fetches: the photo, the detail, or our fonts on another host's. */
 function dressed(b: Basemap, style: StyleSpecification): StyleSpecification {
+  if (b.imagery) return satelliteStyle(style, b.imagery === 'labelled');
   if (b.detailed) return detailStyle(style);
   return isOpenFreeMap(b) ? style : withOurFonts(style);
 }
 
 /**
  * What to build a map with. `Map` takes a style URL or a style object and has
- * no transform hook, so a detailed design, or another host's, fetches its
- * style here and is dressed before the map exists — one request, the same one
+ * no transform hook, so a design with something to add (`dressed`) fetches
+ * its style here and is dressed before the map exists — one request, the same one
  * MapLibre would have made, and no plain-gray flash first. If the fetch fails
  * the plain URL goes in instead, and MapLibre's own error path reports what it
  * can.
  */
 export async function initialStyle(b: Basemap): Promise<StyleSpecification | string> {
-  if (!b.detailed && isOpenFreeMap(b)) return b.url;
+  if (isPlain(b)) return b.url;
   try {
     const r = await fetch(b.url);
     if (!r.ok) return b.url;

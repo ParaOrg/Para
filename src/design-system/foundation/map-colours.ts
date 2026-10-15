@@ -99,6 +99,8 @@ export const MAP_PAINT = {
   'Paint/basemap-landmark': '#6b6b6b', // Gray, detailed: the other landmarks' names
   'Paint/basemap-building': 'rgb(224, 224, 219)', // Gray, detailed: a building, a shade firmer than Positron's
   'Paint/basemap-building-edge': 'rgb(204, 204, 201)',
+  'Paint/basemap-photo-label': '#ffffff', // Satellite, labelled: street and place names over the photo
+  'Paint/basemap-photo-halo': '#1a1a1a', // near-black, so a name reads over a bright roof
   'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
   'Paint/draw-borrow': '#2563eb', // blue/600: the stretch an Extend borrows
