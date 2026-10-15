@@ -101,7 +101,7 @@ export function BasemapControl({ map, initial, under }: Props) {
         <ul
           role="menu"
           data-testid="basemap-menu"
-          className="min-w-28 overflow-hidden rounded-lg bg-surface py-1 text-sm text-content-secondary shadow-lg ring-1 ring-black/10"
+          className="max-h-[calc(100dvh-8rem)] min-w-28 overflow-y-auto rounded-lg bg-surface py-1 text-sm text-content-secondary shadow-lg ring-1 ring-black/10"
         >
           {BASEMAPS.map((b) => (
             <li key={b.id} role="none">

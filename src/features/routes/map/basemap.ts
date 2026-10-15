@@ -17,8 +17,28 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
  * carry all the colour. "Gray, detailed" is Positron plus a few layers drawn
  * from data the tiles already carry (see `detailStyle`). Liberty is the
  * colourful OSM look; Dark is for night.
+ *
+ * Below the four: candidates on the theme-comparison branch only, every free
+ * no-key style that fits (2026-10-15), so the owner can pick on a phone.
+ * Bright and Fiord are OpenFreeMap's too. CARTO's and VersaTiles' are other
+ * hosts: not preconnected, not kept offline by the worker, and drawn with
+ * OpenFreeMap's fonts (see `withOurFonts`).
  */
-export type BasemapId = 'positron' | 'positron-detailed' | 'liberty' | 'dark';
+export type BasemapId =
+  | 'positron'
+  | 'positron-detailed'
+  | 'liberty'
+  | 'dark'
+  | 'bright'
+  | 'fiord'
+  | 'carto-voyager'
+  | 'carto-positron'
+  | 'carto-dark-matter'
+  | 'versatiles-colorful'
+  | 'versatiles-gray'
+  | 'versatiles-muted'
+  | 'versatiles-colorful-dark'
+  | 'versatiles-gray-dark';
 export interface Basemap {
   id: BasemapId;
   label: string;
@@ -26,13 +46,42 @@ export interface Basemap {
   detailed?: true;
 }
 
-const POSITRON = 'https://tiles.openfreemap.org/styles/positron';
+const OPENFREEMAP = 'https://tiles.openfreemap.org';
+const POSITRON = `${OPENFREEMAP}/styles/positron`;
+const CARTO = 'https://basemaps.cartocdn.com/gl';
+const VERSATILES = 'https://tiles.versatiles.org/assets/styles';
 
 export const BASEMAPS: readonly Basemap[] = [
   { id: 'positron', label: 'Gray', url: POSITRON },
   { id: 'positron-detailed', label: 'Gray, detailed', url: POSITRON, detailed: true },
-  { id: 'liberty', label: 'Colour', url: 'https://tiles.openfreemap.org/styles/liberty' },
-  { id: 'dark', label: 'Dark', url: 'https://tiles.openfreemap.org/styles/dark' },
+  { id: 'liberty', label: 'Colour', url: `${OPENFREEMAP}/styles/liberty` },
+  { id: 'dark', label: 'Dark', url: `${OPENFREEMAP}/styles/dark` },
+  { id: 'bright', label: 'Bright', url: `${OPENFREEMAP}/styles/bright` },
+  { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` },
+  { id: 'carto-voyager', label: 'CARTO Voyager', url: `${CARTO}/voyager-gl-style/style.json` },
+  { id: 'carto-positron', label: 'CARTO Positron', url: `${CARTO}/positron-gl-style/style.json` },
+  {
+    id: 'carto-dark-matter',
+    label: 'CARTO Dark Matter',
+    url: `${CARTO}/dark-matter-gl-style/style.json`,
+  },
+  {
+    id: 'versatiles-colorful',
+    label: 'VersaTiles Colorful',
+    url: `${VERSATILES}/colorful/style.json`,
+  },
+  { id: 'versatiles-gray', label: 'VersaTiles Gray', url: `${VERSATILES}/gray/style.json` },
+  { id: 'versatiles-muted', label: 'VersaTiles Muted', url: `${VERSATILES}/muted/style.json` },
+  {
+    id: 'versatiles-colorful-dark',
+    label: 'VersaTiles Dark',
+    url: `${VERSATILES}/colorful-dark/style.json`,
+  },
+  {
+    id: 'versatiles-gray-dark',
+    label: 'VersaTiles Gray Dark',
+    url: `${VERSATILES}/gray-dark/style.json`,
+  },
 ];
 
 export const DEFAULT_BASEMAP = BASEMAPS[0];
@@ -181,19 +230,59 @@ function detailStyle(style: StyleSpecification): StyleSpecification {
   };
 }
 
+// ------------------------------------------------- another provider's fonts
+
+/** OpenFreeMap serves one font per request; these are its three. */
+function notoFor(firstFont: string): string {
+  const face = firstFont.toLowerCase();
+  if (face.includes('italic')) return 'Noto Sans Italic';
+  if (face.includes('bold') || face.includes('medium')) return 'Noto Sans Bold';
+  return 'Noto Sans Regular';
+}
+
+/**
+ * Another provider's style, set to fetch its fonts from OpenFreeMap. Our
+ * hotspot names ask for Noto Sans Bold, which CARTO's and VersaTiles' font
+ * servers answer with a 404 (checked 2026-10-15), so on their own glyphs the
+ * names would vanish. Each of the provider's labels takes the Noto face
+ * closest to the first font of its stack. Pure: the input is left alone.
+ */
+function withOurFonts(style: StyleSpecification): StyleSpecification {
+  return {
+    ...style,
+    glyphs: `${OPENFREEMAP}/fonts/{fontstack}/{range}.pbf`,
+    layers: style.layers.map((l) => {
+      if (l.type !== 'symbol') return l;
+      const stack: unknown = l.layout?.['text-font'];
+      const first: unknown = Array.isArray(stack) ? stack[0] : undefined;
+      if (typeof first !== 'string') return l;
+      return { ...l, layout: { ...l.layout, 'text-font': [notoFor(first)] } };
+    }),
+  };
+}
+
+const isOpenFreeMap = (b: Basemap): boolean => b.url.startsWith(OPENFREEMAP);
+
+/** What a design adds to the style it fetches: the detail, or our fonts on another host's. */
+function dressed(b: Basemap, style: StyleSpecification): StyleSpecification {
+  if (b.detailed) return detailStyle(style);
+  return isOpenFreeMap(b) ? style : withOurFonts(style);
+}
+
 /**
  * What to build a map with. `Map` takes a style URL or a style object and has
- * no transform hook, so a detailed design fetches its style here and adds the
- * detail before the map exists — one request, the same one MapLibre would
- * have made, and no plain-gray flash first. If the fetch fails the plain URL
- * goes in instead, and MapLibre's own error path reports what it can.
+ * no transform hook, so a detailed design, or another host's, fetches its
+ * style here and is dressed before the map exists — one request, the same one
+ * MapLibre would have made, and no plain-gray flash first. If the fetch fails
+ * the plain URL goes in instead, and MapLibre's own error path reports what it
+ * can.
  */
 export async function initialStyle(b: Basemap): Promise<StyleSpecification | string> {
-  if (!b.detailed) return b.url;
+  if (!b.detailed && isOpenFreeMap(b)) return b.url;
   try {
     const r = await fetch(b.url);
     if (!r.ok) return b.url;
-    return detailStyle((await r.json()) as StyleSpecification);
+    return dressed(b, (await r.json()) as StyleSpecification);
   } catch {
     return b.url;
   }
@@ -217,7 +306,7 @@ function styleTransform(b: Basemap) {
     previous: StyleSpecification | undefined,
     next: StyleSpecification,
   ): StyleSpecification => {
-    const styled = b.detailed ? detailStyle(next) : next;
+    const styled = dressed(b, next);
     if (!previous) return styled;
     const ours = Object.fromEntries(
       Object.entries(previous.sources).filter(([, s]) => s.type === 'geojson'),
