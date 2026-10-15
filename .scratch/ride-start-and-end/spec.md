@@ -43,12 +43,12 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 - **Fares need no new data.** Jeeps price by the metres between the two picks (`fareFor` in `src/features/routes/model/fares.ts`). Trains price by the station pair: `railFare` (`src/features/routes/model/rail-fares.ts`) already takes any two stations, from LRMC's and LRTA's full matrices and MRT-3's count of stations.
 - **Jeeps and trains alike:** the design's example is a train, and it is read as the same for jeep hintuans.
 - **The studio** gets it too, since it shares the card.
-- **A row before the start (Variant5)** is a ride the other way: Shaw Boulevard → Quezon Avenue is Northbound on a Southbound card. **The rider flips it; a tap never does** (the owner, 2026-10-15). The tapped row is picked and shows two buttons:
-  - **Set as start**, as on any row: the start moves up to here.
-  - **Switch to Northbound** (on a jeep, Switch to Papunta or Pabalik): the card turns to the other direction, the ride from the start to here. It finds both picks there with `small-fixes` 2's rule: the same box, else the nearest box of the same place.
-  - No E, no pill and no rail on that row until it's switched: this direction has no ride there.
-  - **Why not flip on the tap:** the list would reverse, the stations jump, the word on SWITCH change and the map's arrows turn, all from one tap. That loses the rider, and it's a "change of context on input" (WCAG 3.2.2) that loses a screen reader user's place.
-  - **The look is the owner's to draw.** A first try at the button in Figma was taken out the same day at the owner's word ("it's ugly"); Variant5 (4151:13619) is back as the owner drew it. The screens wait for the owner's design of this moment.
+- **A row before the start (Variant5): the card stays as it is** (the owner, 2026-10-15). Variant5 is the design, exactly as drawn: on the Southbound card, E Quezon Avenue sits above S Shaw Boulevard. The card never flips on a tap, and no switch button is ever added under the row (a first try in Figma was taken out at the owner's word).
+  - **The map serves the ride by itself,** so the rider keeps their place: it draws Shaw Boulevard → Quezon Avenue along the other direction's line (here Northbound), its arrows pointing the way the ride goes, with S and E where the picks are.
+  - **The tiles** read that ride: a train's fare by the station pair (`railFare`), a jeep's by the metres along the other direction's line between the two places.
+  - **On a jeep**, the other direction may run other roads: the two picks are found on it with `small-fixes` 2's rule (the same box, else the nearest box of the same place). If it passes no box of one of the places, there's no ride to price: the row is picked, with no pill.
+  - **The rail** is the ride's stretch on the card, from the E row down to the S row (MiddleTop at Quezon Avenue, MiddleBottom at Shaw Boulevard, as Variant5 draws it).
+  - **The card only turns when the rider taps Northbound or Southbound** (Papunta or Pabalik on a jeep).
 
 ## Decided (the owner, 2026-10-15)
 
@@ -62,14 +62,15 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
   - The design writes `₱13-24` with a hyphen; the code keeps its en dash, `₱13–24` (`pesoRange`).
 - **Set as start is the Button primitive, Primary, Small** (Figma: Button, Variants=Primary, Size=Small, in the Timeline component's TimelineDisconnected / Selected variant, 4122:8540). The code's Button allows Small only on Special and Secondary, "until the owner designs it" (`src/design-system/primitives/button.tsx`). It's designed now, so Primary gains Small, with a story.
 - **The fold says "stations" on trains:** "N more stations". Jeeps keep "N more hintuans". Today it says hintuans for both (`trip-timeline.tsx`); the glossary avoids "stop". Changed in Figma the same day: the fold row in the Timeline component's Rest, Pressed and Selected variants, which every TimelineRouteDetail state and card example inherits.
-- **SWITCH with picks:** the picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
 - **The fold once a start or end is picked:** the rows outside the ride fold, and the ride's own rows stay open.
 
-Nothing is left open.
+## Still open
+
+1. **What Northbound / Southbound does to the picks.** The owner (2026-10-15): "only when they use north bound south bound it will reset". That clashes with `small-fixes` 2, the owner's earlier ask that Papunta / Pabalik keep the picked hintuan (Antipolo → Betty Go becomes Recto → Betty Go). Read as: **on a train, Northbound / Southbound clears the picks; on a jeep, Papunta / Pabalik keeps them** (`small-fixes` 2). To confirm. (Before this, both picks were to stay and trade roles on SWITCH.)
 
 ## Words (for `CONTEXT.md`)
 
-- **Ride:** "A ride may be cut short at a hintuan …" becomes: a ride may start and end at any hintuan it passes, in its travel order. It's the ride from there to there, priced between them.
+- **Ride:** "A ride may be cut short at a hintuan …" becomes: a ride may start and end at any hintuan it passes. It's the ride from there to there, priced between them; an end before the start is ridden the other way, on the other direction's line.
 - **Trip:** "A hintuan picked on the trip prices the ride to there" becomes: a start and an end picked on the trip price the ride between them.
 
 ## Depends on
@@ -79,6 +80,6 @@ Nothing is left open.
 
 ## Done when
 
-- Unit tests: a ride between two picks (metres, a jeep's fare and a train's), an end before the start switching direction, and SWITCH trading roles.
+- Unit tests: a ride between two picks (metres, a jeep's fare and a train's); an end before the start ridden on the other direction's line with the card unturned; a jeep whose other direction misses one of the places; and what Northbound / Southbound and Papunta / Pabalik do to the picks.
 - A story for each Figma state.
 - A headless check on the public map: pick a start and an end, and the Distance and fare tiles and the map's S and E agree.
