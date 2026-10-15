@@ -14,15 +14,15 @@
 | --- | --- |
 | Variant6 (4157:7737) | Folded: S North Avenue, "7 more stops", E Taft Avenue |
 | Rest (4137:9884) | Open, nothing picked |
-| Choosing (4137:9887) | Shaw Boulevard tapped: it becomes the end (E), with its code pill (YL06). Under the row: **Make as start** and **View** |
-| Variant3 (4148:12161) | After Make as start: Shaw Boulevard is the start (S), and North Avenue loses its S. Under the row: **× Remove as start** and **View** |
+| Choosing (4137:9887) | Shaw Boulevard tapped: it becomes the end (E), with its code pill (YL06). Under the row: **Set as start** |
+| Variant3 (4148:12161) | After Set as start: Shaw Boulevard is the start (S), and North Avenue loses its S. Under the row: **× Remove as start** |
 | Variant4 (4151:13124) | Start at Shaw Boulevard, then Ayala tapped: Ayala is the end (E), with the fare pill. The ride is Shaw Boulevard → Ayala |
 | Variant5 (4151:13619) | Start at Shaw Boulevard, then Quezon Avenue tapped, a station **before** the start: E Quezon Avenue, with the fare pill |
 
 ## How it works, as read from the design
 
 - **Tap a row:** it becomes the end, and the ride runs from the start to there, as today.
-- **Make as start:** that row becomes the start instead. Until another row is tapped, the ride runs from it to where the direction goes. Variant3 marks no row E; read as Taft Avenue keeping its E, as today.
+- **Set as start:** that row becomes the start instead. Until another row is tapped, the ride runs from it to where the direction goes. Variant3 marks no row E; read as Taft Avenue keeping its E, as today.
 - **Remove as start:** the start goes back to where the direction leaves.
 - **With a start picked,** tapping a row after it sets the end (Variant4).
 - **The tiles:** Distance and fare read from the start to the end.
@@ -32,13 +32,17 @@
 - **The studio** gets it too, since it shares the card.
 - **An end before the start (Variant5)** switches the card to the other direction (the owner's call, 2026-10-15). Shaw Boulevard → Quezon Avenue runs the other way, so the card turns to that direction with both picks kept. It finds them there with `small-fixes` 2's rule: the same box, else the nearest box of the same place. On MRT-3 that's Southbound to Northbound (`small-fixes` 4).
 
-## Proposals where the design leaves it open (to confirm)
+## Decided (the owner, 2026-10-15)
 
-1. **SWITCH with picks.** The picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
-2. **View** glides the map to that row's place, as a tap does today. The alternative is opening the place's own card (HintuanCard).
-3. **The pill.** The design shows the code (YL06) on a station just tapped, and "Calculated Fare" on the end once a start is picked. Proposal: the end's pill shows the pesos, and a train station keeps its code beside its name.
-4. **The fold** reads "7 more stops", but the glossary avoids "stop" for a hintuan. Proposal: "N more stations" on trains, "N more hintuans" on jeeps; today it says hintuans for both. Once a start or end is picked, the rows outside the ride fold and the ride's own rows stay open.
-5. **Wording:** "Set as start" may read more naturally than "Make as start". The owner's call.
+- **No View button.** The owner took it out of the design; the row's only button is Set as start (or × Remove as start).
+- **"Set as start", not "Make as start".** Changed in Figma the same day: the button in the Timeline component's Selected variant (which the Choosing state shows), the RouteTripDetail mockup's button, and four draft frames on the RouteTripDetail page.
+- **The pill stays as today**, on the end: on a train, the station's code then the pesos (`YL06 · ₱13`); on a jeep, the pesos. The design's "Calculated Fare" stands for those pesos.
+- **The fold says "stations" on trains:** "N more stations". Jeeps keep "N more hintuans". Today it says hintuans for both (`trip-timeline.tsx`), and the design's "7 more stops" reads "stations" in code; the glossary avoids "stop".
+
+## Still open
+
+1. **SWITCH with picks.** Proposal: the picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
+2. **Where the fold sits once a start or end is picked.** Proposal: the rows outside the ride fold, and the ride's own rows stay open.
 
 ## Words (for `CONTEXT.md`)
 
