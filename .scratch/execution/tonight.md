@@ -63,7 +63,7 @@ Merge top to bottom. Each PR's base is the branch above it, so after each merge 
 | 6 | #166 | `claude/button-primary-small` | The Button gains Primary Small (base: `claude/plans`) | green, every suite |
 | 7 | #170 | `claude/ride-pill` | RouteTripLineDetailPill: the code and the pesos as two halves (base: `claude/figma-names`) | green, after the branch took in #168's fix for the GL-program flake in visitor-test part 1 |
 | 8 | #172 | `claude/timeline-rail-pieces` | TimelineStick's pieces; the rail runs only along the ride (base: `claude/figma-names`) | green, every suite |
-| 9 | #173 | `claude/ride-start-and-end` | **Draft.** Set as start, × Remove as start, an end before the start ridden the other way, trains reset and jeeps keep the start on SWITCH | re-running on 3993866. On f5cb733 everything passed but one visitor-test check, whose reader still took the map's pale stretches as one line per feature: fixed, and that part passes on this machine (104 passed, 0 failed) |
+| 9 | #173 | `claude/ride-start-and-end` | **Draft.** Set as start, × Remove as start, an end before the start ridden the other way, trains reset and jeeps keep the start on SWITCH | green on 3993866. On f5cb733 everything had passed but one visitor-test check, whose reader still took the map's pale stretches as one line per feature: that reader is fixed |
 
 #166, #170 and #172 don't depend on each other or on 2–5: merge them any time after #163 (#166 after #162). #173 already contains all of them, so merging it last brings nothing new in twice.
 
