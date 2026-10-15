@@ -1,7 +1,7 @@
 import { haversine, lineLength, type LngLat } from '@/shared/utils/geo';
 
 import { hotspotRing, type Hotspot } from './hotspots';
-import { placeKey } from './places';
+import { boxTheOtherWay, placeKey } from './places';
 import { servedBy, directionLine, type Direction } from './routes';
 import { drawnFromTheEnd, timelineFor, type Timeline, type TimelineRow } from './timeline';
 import { passStretches } from '../geo/pass';
@@ -110,6 +110,129 @@ export function rideCut(
     endHotspotId: end.hotspotId,
     dots,
   };
+}
+
+/**
+ * A ride between two picks on a trip, the owner's TimelineRouteDetail of
+ * 2026-10-15 (Figma 4137:9886): `ridden` from the start to the end, `before`
+ * from where the direction leaves to the start, and `rest` from the end on
+ * to where it goes. The map draws `before` and `rest` in the card's pale
+ * (useRideRest). `metres` is the ride's own length, for the Distance tile
+ * and a jeep's fare; `from` and `at` are where it starts and ends.
+ */
+export interface RideSpan {
+  before: LngLat[];
+  ridden: LngLat[];
+  rest: LngLat[];
+  metres: number;
+  from: LngLat;
+  at: LngLat;
+}
+
+/**
+ * The ride on `v` from the start row to the end row. A null start is where
+ * the direction leaves, and a null end is where it goes. Each pick sits where
+ * its row's dot does, at the middle of the stretch past its place's last box
+ * (rideCut's `at`, rowStops), so the S and E on the map sit on the dots.
+ *
+ * Null when nothing is picked, when the line misses a picked row's box (that
+ * row is shown picked with nothing to price, as before), or when the end
+ * comes before the start. That ride runs the other way round
+ * (rideTheOtherWay).
+ */
+export function rideSpan(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  startId: string | null,
+  endId: string | null,
+): RideSpan | null {
+  if (startId === null && endId === null) return null;
+  const line = travelLine(v, hotspots);
+  if (line.length < 2) return null;
+  const start = startId === null ? 0 : rideCut(v, hotspots, startId)?.metres;
+  const end = endId === null ? lineLength(line) : rideCut(v, hotspots, endId)?.metres;
+  if (start === undefined || end === undefined || end - start < 1) return null;
+  const s = pointAt(line, start);
+  const e = pointAt(line, end);
+  // Nothing to pale before the origin or after the destination: an empty
+  // line, not a point or a sliver the float sums leave.
+  return {
+    before: startId === null ? [] : [...line.slice(0, s.index + 1), s.point],
+    ridden: [s.point, ...line.slice(s.index + 1, e.index + 1), e.point],
+    rest: endId === null ? [] : [e.point, ...line.slice(e.index + 1)],
+    metres: end - start,
+    from: s.point,
+    at: e.point,
+  };
+}
+
+/**
+ * Whether the end row comes before the start row on `v`: the owner's
+ * Variant5 (2026-10-15), Quezon Avenue tapped above a start at Shaw
+ * Boulevard. Read along the line, where each row's dot sits; false when the
+ * line misses either.
+ */
+export function endsBeforeStart(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  startId: string,
+  endId: string,
+): boolean {
+  const start = rideCut(v, hotspots, startId)?.metres;
+  const end = rideCut(v, hotspots, endId)?.metres;
+  return start !== undefined && end !== undefined && end < start;
+}
+
+/**
+ * An end picked before the start, ridden the other way round (the owner,
+ * 2026-10-15): the card stays as it is, and the ride runs on `other`, the
+ * route's other direction, from the start's place to the end's. Each pick
+ * lands on a box `other` passes by the rule a jeep's SWITCH carries a pick by
+ * (boxTheOtherWay): the same box, else the nearest box of its place. A
+ * train's stations are one box both ways, so they land on themselves.
+ *
+ * Null when `other` passes no box of either place, or its line doesn't take
+ * the start before the end: there is no ride to price, and the row is
+ * shown picked with no pill.
+ */
+export function rideTheOtherWay<S extends Hotspot>(
+  other: Direction,
+  hotspots: readonly S[],
+  startId: string,
+  endId: string,
+  passesOther: (hotspotId: string) => boolean,
+): (RideSpan & { startHotspotId: string; endHotspotId: string }) | null {
+  const landOn = (id: string) => {
+    const box = hotspots.find((s) => s.id === id);
+    return box ? boxTheOtherWay(box, hotspots, passesOther) : null;
+  };
+  const start = landOn(startId);
+  const end = landOn(endId);
+  if (!start || !end) return null;
+  const span = rideSpan(other, hotspots, start.id, end.id);
+  return span && { ...span, startHotspotId: start.id, endHotspotId: end.id };
+}
+
+/**
+ * The rows of a trip's timeline outside its ride: before the start and
+ * after the end, or, with the end before the start (Variant5), outside the
+ * stretch between the two rows. A null start is the origin and a null end
+ * the destination. The card folds these rows and draws them with no rail,
+ * and the map's dots along them wear the pale (the owner's rule of
+ * 2026-10-15: "the rail runs only along the ride").
+ */
+export function rowsOutsideRide(
+  rows: readonly { id: string }[],
+  startId: string | null,
+  endId: string | null,
+): Set<string> {
+  if (startId === null && endId === null) return new Set();
+  const startAt = startId === null ? -1 : rows.findIndex((r) => r.id === startId);
+  const endAt = endId === null ? rows.length : rows.findIndex((r) => r.id === endId);
+  // A pick that is no row of these (another trip's, a moment before it goes): nothing outside.
+  if ((startId !== null && startAt < 0) || (endId !== null && endAt < 0)) return new Set();
+  const [first, last] = startAt <= endAt ? [startAt, endAt] : [endAt, startAt];
+  return new Set(rows.filter((_, i) => i < first || i > last).map((r) => r.id));
 }
 
 /** One row of a trip's timeline placed on the map: its dot's spot, and its name. */
