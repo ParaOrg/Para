@@ -38,17 +38,22 @@ The rule moves into one pure function in `src/features/routes/model/`, used by b
 
 **Done when:** unit tests cover the three cases and an end; the trip card's story shows it; visitor-test gains a step: pick a hintuan, SWITCH, and the Distance and fare tiles read the shorter ride.
 
-## 3. RouteTripDetail → TimelineRouteDetailCard
+## 3. The card and its timeline take their Figma names
 
-**The ask (2026-10-15):** the owner renamed the Figma component (3778:3183) from RouteTripDetail to **TimelineRouteDetailCard**. The code takes the same name, as its card components follow the owner's Figma names.
+**The ask (2026-10-15):** the owner renamed two Figma components. The code takes the same names, as its card components follow the owner's Figma names.
+
+| Figma | Code today | Code after |
+| --- | --- | --- |
+| TimelineRouteDetailCard (3778:3183) | `RouteTripDetail`, `route-trip-detail.tsx` | `TimelineRouteDetailCard`, `timeline-route-detail-card.tsx` |
+| TimelineRouteDetail (4137:9886) | `TripTimeline`, `trip-timeline.tsx` | `TimelineRouteDetail`, `timeline-route-detail.tsx` |
 
 **Where:**
 
-- `git mv src/features/routes/cards/route-trip-detail.tsx src/features/routes/cards/timeline-route-detail-card.tsx`, and its stories file the same way.
-- `RouteTripDetail` → `TimelineRouteDetailCard` in the component and in `trip-card.tsx`, its one user.
-- The story title `Features/Routes/RouteTripDetail` → `Features/Routes/TimelineRouteDetailCard`.
-- Comments naming it: `livery-card.ts`, `route-end-point-bar.tsx`, `trip-timeline.tsx`, `trip-timeline.stories.tsx`, `end-titles.tsx`, `src/features/routes/model/departures.ts`, `src/design-system/foundation/tokens.css`, `fonts.css`, `fonts/README.md`, `tests/e2e/phone-test.mjs`.
-- `TripCard` keeps its name: it is the glossary's Trip, the card a direction opens as, and it wraps this one.
+- `git mv` each component, its stories file and `tests/unit/trip-timeline-test.mjs` (→ `timeline-route-detail-test.mjs`).
+- The names where they're used: `trip-card.tsx` uses the card, and the card uses the timeline.
+- The story titles: `Features/Routes/RouteTripDetail` → `Features/Routes/TimelineRouteDetailCard`, and `Features/Routes/TripTimeline` → `Features/Routes/TimelineRouteDetail`.
+- Comments naming them: `livery-card.ts`, `route-end-point-bar.tsx`, `end-titles.tsx`, `hintuan-label.tsx`, `src/features/routes/model/departures.ts`, `src/design-system/foundation/tokens.css`, `fonts.css`, `fonts/README.md`, `tests/e2e/phone-test.mjs`.
+- `TripCard` keeps its name: it's the glossary's Trip, the card a direction opens as, and it wraps both.
 - Left as they are: the dated write-ups in `docs/`.
 
-**Done when:** typecheck, lint, unit tests and `npm run build` pass; Storybook lists the card under its new name.
+**Done when:** typecheck, lint, unit tests and `npm run build` pass; Storybook lists both under their new names.
