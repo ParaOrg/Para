@@ -10,7 +10,7 @@ import { useLayerSwitch } from './layer-switch';
 import { LAYERS, applyHidden, firstLayerOfType, layOutOnce } from './layers';
 import { HOTSPOTS_FILL_LAYER } from './tap';
 import { ringToPolygon, type Ring } from '../geo/ring';
-import { hotspotRing, type HotspotKind, type Hotspot } from '../model/hotspots';
+import { hotspotRing, nameOnMap, type HotspotKind, type Hotspot } from '../model/hotspots';
 import { labelGroups } from '../model/places';
 
 /*
@@ -187,6 +187,7 @@ export function hotspotsData(hotspots: readonly Hotspot[]) {
   // three boxes of one place would otherwise carry three identical labels.
   // Tapping still opens a card that leads with the informal name and shows
   // the ground name beneath it, so neither is lost. Decided 2026-09-22.
+  const byId = new Map(hotspots.map((s) => [s.id, s]));
   const withArea = hotspots.filter(
     (s): s is Hotspot & { area: NonNullable<Hotspot['area']> } =>
       s.area !== null && hotspotRing(s).length >= 3,
@@ -209,7 +210,15 @@ export function hotspotsData(hotspots: readonly Hotspot[]) {
         })),
       ).map((g) => ({
         type: 'Feature' as const,
-        properties: { id: g.ids[0], ids: g.ids.join(','), kind: g.kind, name: g.name },
+        // A station's label leaves its line out (nameOnMap): "Boni Station".
+        // Grouped by the whole name first, so MRT-3's Guadalupe and the
+        // ferry's never share one label.
+        properties: {
+          id: g.ids[0],
+          ids: g.ids.join(','),
+          kind: g.kind,
+          name: nameOnMap(byId.get(g.ids[0]) ?? g),
+        },
         geometry: { type: 'Point' as const, coordinates: g.point },
       })),
     ],

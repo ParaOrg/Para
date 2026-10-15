@@ -24,6 +24,21 @@ export function hotspotLabel(s: Pick<Hotspot, 'name' | 'informal'>): string {
   return s.informal?.trim() || s.name;
 }
 
+/**
+ * The name a hotspot's label on the map shows: a station's without its line
+ * in front, "MRT-3 Boni Station" → "Boni Station" (the owner, 2026-10-15:
+ * "remove the mrt 3 or the railway or route title before the name of the
+ * stops"); the line drawn through it in its colour says which line already.
+ * Every other name as it is, and a station's too when it does not start with
+ * its line. The saved name keeps the line: cards and searches read it whole.
+ */
+export function nameOnMap(s: Pick<Hotspot, 'name' | 'line'>): string {
+  const name = normaliseName(s.name);
+  const prefix = s.line ? `${normaliseName(s.line)} `.toLowerCase() : '';
+  if (!prefix || !name.toLowerCase().startsWith(prefix)) return s.name;
+  return name.slice(prefix.length) || s.name;
+}
+
 /** Trim and collapse inner spaces, so "SM  Fairview " and "SM Fairview" are one group. Case is left alone. */
 export function normaliseName(s: string): string {
   return s.replace(/\s+/g, ' ').trim();
