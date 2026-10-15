@@ -228,7 +228,7 @@ export function MapView({
     let stopLift: () => void = noop;
 
     const startId = window.setTimeout(async () => {
-      // A URL for the plain designs; for "Gray, detailed" the style is fetched
+      // A URL for the plain designs; for Monochrome and Colour the style is fetched
       // and extended first, since `Map` has no transform hook of its own.
       // Beside it, the public map's framing (`openOn`): none if it fails or
       // has not come within OPENING_WAIT_MS.

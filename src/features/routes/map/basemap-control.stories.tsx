@@ -72,19 +72,21 @@ export const Closed: Story = {};
 export const Open: Story = {
   play: async ({ canvasElement }) => {
     const menu = await openMenu(canvasElement);
-    await expect(within(menu).getByRole('menuitemradio', { name: /^✓\s*Gray$/ })).toBeChecked();
+    await expect(
+      within(menu).getByRole('menuitemradio', { name: /^✓\s*Monochrome$/ }),
+    ).toBeChecked();
     await expect(within(menu).getAllByRole('menuitemradio')).toHaveLength(BASEMAPS.length);
   },
 };
 
-/** Remembered on the device as Dark: Dark is ticked, and the button's title says so. */
-export const DarkChosen: Story = {
-  args: { initial: BASEMAPS[3] },
+/** Remembered on the device as Fiord: Fiord is ticked, and the button's title says so. */
+export const FiordChosen: Story = {
+  args: { initial: BASEMAPS[2] },
   play: async ({ canvasElement }) => {
     const button = await within(canvasElement).findByRole('button', { name: 'Map design' });
-    await expect(button).toHaveAttribute('title', 'Map design: Dark');
+    await expect(button).toHaveAttribute('title', 'Map design: Fiord');
     const menu = await openMenu(canvasElement);
-    await expect(within(menu).getByRole('menuitemradio', { name: /^✓\s*Dark$/ })).toBeChecked();
+    await expect(within(menu).getByRole('menuitemradio', { name: /^✓\s*Fiord$/ })).toBeChecked();
   },
 };
 
@@ -114,7 +116,7 @@ export const TapOutsideCloses: Story = {
 export const SameDesignAgain: Story = {
   play: async ({ canvasElement }) => {
     const menu = await openMenu(canvasElement);
-    await userEvent.click(within(menu).getByRole('menuitemradio', { name: /^✓\s*Gray$/ }));
+    await userEvent.click(within(menu).getByRole('menuitemradio', { name: /^✓\s*Monochrome$/ }));
     await expect(within(canvasElement).queryByRole('menu')).toBeNull();
   },
 };

@@ -22,18 +22,16 @@ const ESRI_WORLD_IMAGERY: Omit<Imagery, 'isLabelled'> = {
   attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
 };
 
-/** The public map's designs, then the photo, bare and under Positron's labels. */
+/**
+ * The public map's designs, then the photo under Positron's street and place
+ * names: the one satellite design the owner kept (2026-10-15), the names
+ * helping to tell one road from the next while tracing.
+ */
 export const STUDIO_BASEMAPS: readonly Basemap[] = [
   ...BASEMAPS,
   {
     id: 'satellite',
     label: 'Satellite',
-    url: DEFAULT_BASEMAP.url,
-    imagery: { ...ESRI_WORLD_IMAGERY, isLabelled: false },
-  },
-  {
-    id: 'satellite-labelled',
-    label: 'Satellite, labelled',
     url: DEFAULT_BASEMAP.url,
     imagery: { ...ESRI_WORLD_IMAGERY, isLabelled: true },
   },
