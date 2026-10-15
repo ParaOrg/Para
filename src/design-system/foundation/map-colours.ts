@@ -95,7 +95,7 @@ export const CARD_PALE_COLOURS = {
 export const MAP_PAINT = {
   'Paint/casing': '#ffffff', // white: the rim under every line, circles' fill, text halos
   'Paint/hit': '#000000', // the tap area, drawn at opacity 0
-  'Paint/basemap-transit': '#3d5a73', // Monochrome: terminal and station names
+  'Paint/basemap-transit': '#3d5a73', // Monochrome: rail station names
   'Paint/basemap-landmark': '#6b6b6b', // Monochrome: the other landmarks' names
   'Paint/basemap-building': 'rgb(224, 224, 219)', // Monochrome: a building, a shade firmer than Positron's
   'Paint/basemap-building-edge': 'rgb(204, 204, 201)',

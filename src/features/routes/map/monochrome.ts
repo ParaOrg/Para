@@ -19,11 +19,17 @@ import { recolouredStyle, type Recolour } from './recolour';
  *
  * Places — "Gray, detailed", decided 2026-09-22. The z14 tile over SM
  * Fairview holds the `poi`, `building` and `housenumber` layers: 19 of 22
- * names read off the owner's openstreetmap.org screenshot were in it.
- * Transit first, then the landmarks a driver would name, then, close in,
- * every other place and the house numbers. Italic is the basemap's voice; our
- * own labels are bold. Taps are unaffected: `tapTargets` queries our two hit
- * layers by name and nothing else.
+ * names read off the owner's openstreetmap.org screenshot were in it. Rail
+ * stations first, then the landmarks a driver would name, then, close in,
+ * every other place and the house numbers. Italic is the basemap's voice; our own labels are bold. Taps
+ * are unaffected: `tapTargets` queries our two hit layers by name and nothing
+ * else.
+ *
+ * No road transit of the basemap's own (the owner, 2026-10-15, over Cubao:
+ * "I don't want to add the terminal and routeline as additional detail"): its
+ * bus terminals and stops, its ferry stops and its busway stood beside
+ * ParaPo's own hotspots and routes as if they were ours. Rail stations stay
+ * ("wait including the railstops too?"), with the train icon.
  *
  * Roads — after Dark (2026-10-15: "Dark has overpass, can we make the gray
  * like these?"). Every road in the tiles says whether it is a bridge or a
@@ -33,7 +39,7 @@ import { recolouredStyle, type Recolour } from './recolour';
  * road above it. Here the roads on the ground are drawn without either; the
  * underpasses go under everything, dashed; the bridges go over, one pair of
  * layers a level so the higher crosses the lower, edged firmer the higher
- * they are; and the EDSA busway, which Positron leaves out, is drawn too.
+ * they are. The busway is left out, as Positron leaves it.
  *
  * Buildings — firmer than Positron's whisper, and in 3D from z15 as Colour
  * has them: they stand up when the map is tilted (two fingers up or down).
@@ -47,28 +53,25 @@ const SOURCE = 'openmaptiles';
 
 const FONT = ['Noto Sans Italic'];
 const NAME: ExpressionSpecification = ['get', 'name'];
-/*
+/**
  * The icons in OpenFreeMap's sprite are coloured pictures, which MapLibre
- * cannot gray. Transit keeps its own, the bus and the train, quiet blues
- * beside the blue-gray names; every other place takes the sprite's gray dot.
+ * cannot gray. Rail stations keep the train, a quiet blue beside their
+ * blue-gray names; every other place takes the sprite's gray dot.
  */
-/** The 11 px transit icon, `<class>_11`, or the dot for a class with none. */
-const TRANSIT_ICON: ExpressionSpecification = [
-  'coalesce',
-  ['image', ['concat', ['get', 'class'], '_11']],
-  ['image', 'dot_11'],
-];
 const DOT = 'dot_11';
-
-const TRANSIT_COLOUR = MAP_PAINT['Paint/basemap-transit'];
+const TRAIN = 'railway_11';
+const RAIL_COLOUR = MAP_PAINT['Paint/basemap-transit'];
 const LANDMARK_COLOUR = MAP_PAINT['Paint/basemap-landmark'];
 
-const IS_STATION: ExpressionSpecification = [
+/** Rail and subway stations: `railway` is their only class (counted over Cubao and Quiapo). */
+const IS_RAIL_STOP: ExpressionSpecification = ['==', ['get', 'class'], 'railway'];
+
+/** The basemap's other transit, never drawn: bus stops and terminals, ferry stops, subway entrances. */
+const IS_TRANSIT: ExpressionSpecification = [
   'any',
-  ['==', ['get', 'subclass'], 'bus_station'],
-  ['==', ['get', 'class'], 'railway'],
+  ['match', ['get', 'class'], ['bus', 'ferry_terminal'], true, false],
+  ['==', ['get', 'subclass'], 'subway_entrance'],
 ];
-const IS_STOP: ExpressionSpecification = ['==', ['get', 'subclass'], 'bus_stop'];
 // The big anchors people give directions by: the mall, the market, the
 // hospital, the college, the hall, the police station.
 const IS_LANDMARK: ExpressionSpecification = [
@@ -95,8 +98,8 @@ const place = (
   id: string,
   minzoom: number,
   filter: ExpressionSpecification,
-  colour: string,
-  icon: ExpressionSpecification | string = DOT,
+  colour: string = LANDMARK_COLOUR,
+  icon: string = DOT,
 ): SymbolLayerSpecification => ({
   id,
   type: 'symbol',
@@ -149,16 +152,13 @@ const PLACE_LAYERS: readonly LayerSpecification[] = [
   },
   // Every other place close in: the eateries, the stores, the gates (2,594
   // under one z15 viewport over Fairview) leave room for each other by z17.
-  place(
-    'detail-places',
-    17,
-    ['!', ['any', IS_STATION, IS_STOP, IS_LANDMARK, IS_MINOR_LANDMARK]],
-    LANDMARK_COLOUR,
-  ),
-  place('detail-landmarks-minor', 16, IS_MINOR_LANDMARK, LANDMARK_COLOUR),
-  place('detail-landmarks', 15, IS_LANDMARK, LANDMARK_COLOUR),
-  place('detail-stops', 15, IS_STOP, TRANSIT_COLOUR, TRANSIT_ICON),
-  place('detail-stations', 13, IS_STATION, TRANSIT_COLOUR, TRANSIT_ICON),
+  place('detail-places', 17, [
+    '!',
+    ['any', IS_TRANSIT, IS_RAIL_STOP, IS_LANDMARK, IS_MINOR_LANDMARK],
+  ]),
+  place('detail-landmarks-minor', 16, IS_MINOR_LANDMARK),
+  place('detail-landmarks', 15, IS_LANDMARK),
+  place('detail-rail-stops', 13, IS_RAIL_STOP, RAIL_COLOUR, TRAIN),
 ];
 
 // --------------------------------------------------------------- buildings
@@ -194,7 +194,7 @@ const IS_LINE: ExpressionSpecification = [
   true,
   false,
 ];
-const STREET_CLASSES = ['minor', 'service', 'track', 'busway'];
+const STREET_CLASSES = ['minor', 'service', 'track'];
 const ROAD_CLASSES = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'];
 const ALL_CLASSES = [...ROAD_CLASSES, ...STREET_CLASSES, 'path'];
 const IS_STREET: ExpressionSpecification = ['match', ['get', 'class'], STREET_CLASSES, true, false];
@@ -264,7 +264,7 @@ const roadLine = (
   paint,
 });
 
-/** Streets edged from z14, white inside, as Dark draws its roads; the busway, which Positron leaves out, among them. */
+/** Streets edged from z14, white inside, as Dark draws its roads. */
 const STREET_EDGE = roadLine(
   'detail-street-edge',
   14,
@@ -272,16 +272,6 @@ const STREET_EDGE = roadLine(
   {
     'line-color': MAP_PAINT['Paint/basemap-street-edge'],
     'line-width': ['interpolate', ['exponential', 1.55], ['zoom'], 14, 4, 20, 23],
-  },
-  'round',
-);
-const BUSWAY = roadLine(
-  'detail-busway',
-  13,
-  ['all', ['==', ['get', 'class'], 'busway'], ON_GROUND],
-  {
-    'line-color': MAP_PAINT['Paint/basemap-street'],
-    'line-width': ['interpolate', ['exponential', 1.55], ['zoom'], 13, 1.8, 20, 20],
   },
   'round',
 );
@@ -359,7 +349,12 @@ const oneWay = (id: string, direction: 1 | -1): SymbolLayerSpecification => ({
   source: SOURCE,
   'source-layer': 'transportation',
   minzoom: 15,
-  filter: ['==', ['get', 'oneway'], direction],
+  // On the roads drawn here only: not on the busway, which is not.
+  filter: [
+    'all',
+    ['==', ['get', 'oneway'], direction],
+    ['match', ['get', 'class'], ALL_CLASSES, true, false],
+  ],
   layout: {
     'icon-image': 'oneway',
     'icon-padding': 2,
@@ -407,11 +402,7 @@ function dress(l: LayerSpecification): LayerSpecification[] {
     filter: ['all', IS_LINE, ['match', ['get', 'class'], classes, true, false], ON_GROUND],
   };
   if (l.id === 'highway_minor') {
-    return [
-      STREET_EDGE,
-      { ...grounded, paint: { ...l.paint, 'line-color': STREET_COLOUR } },
-      BUSWAY,
-    ];
+    return [STREET_EDGE, { ...grounded, paint: { ...l.paint, 'line-color': STREET_COLOUR } }];
   }
   if (l.id === 'highway_path') return [{ ...grounded, paint: { ...l.paint, ...PATH_PAINT } }];
   return [grounded];
@@ -449,7 +440,7 @@ export function monochromeStyle(style: StyleSpecification): StyleSpecification {
  * Monochrome draws, Positron's and ours, turns to the same slate hue with
  * the same small saturation, the cool gray of Tailwind's `gray`, and keeps
  * its lightness, so nothing gets lighter or darker and white stays white. A
- * colour already more saturated (the transit names' blue) keeps its own.
+ * colour already more saturated (the rail stations' blue names) keeps its own.
  */
 const COOL_HUE = 218;
 const COOL_SATURATION = 14;
