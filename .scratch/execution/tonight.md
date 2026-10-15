@@ -2,16 +2,18 @@
 
 The owner's calls before sleeping: **small fixes** and **ride start and end**, **one pull request per change**, stacked. Not tonight: the commuter rename, the driver app, the studio maps, train tracking.
 
-**Nothing merges and nothing goes live.** `main` is what Cloudflare deploys; every change waits in its PR for the owner. No database and no Figma changes tonight.
+**Nothing merges and nothing goes live.** The PRs target `staging`, as the repo's feature PRs do; the owner merges them and releases `staging` to `main`, which is what Cloudflare deploys. No database and no Figma changes tonight.
+
+**Another session's PRs may merge into `staging` tonight** (the owner, 2026-10-15; #161, the map designs, is open). When one does, `staging` is merged into the stack's first branch and down the stack, conflicts resolved, checks run again.
 
 ## The stack, in merge order
 
-Each branch starts from the one before it, so the PRs merge top to bottom.
+Each branch starts from the one before it, so the PRs merge top to bottom. The first starts from `staging`.
 
 | # | Branch | Change | Spec |
 | --- | --- | --- | --- |
-| 0 | `claude/loving-pascal-whopdf` | The plans in `.scratch/` | `README.md` |
-| 1 | `claude/timeline-figma-names` | RouteTripDetail → TimelineRouteDetailCard, TripTimeline → TimelineRouteDetail | `small-fixes` 3 |
+| 0 | `claude/plans` | The plans in `.scratch/` | `README.md` |
+| 1 | `claude/figma-names` | RouteTripDetail → TimelineRouteDetailCard, TripTimeline → TimelineRouteDetail | `small-fixes` 3 |
 | 2 | `claude/distance-tile` | "Kilometer" → "Distance" | `small-fixes` 1 |
 | 3 | `claude/train-bound-words` | Trains say Northbound / Southbound (Eastbound / Westbound on LRT-2) | `small-fixes` 4 |
 | 4 | `claude/jeep-switch-keeps-pick` | Papunta / Pabalik keeps a jeep's picked hintuan | `small-fixes` 2 |
