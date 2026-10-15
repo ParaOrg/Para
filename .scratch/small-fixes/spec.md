@@ -71,7 +71,7 @@ The rule moves into one pure function in `src/features/routes/model/`, used by b
 | LRT-2 | Antipolo | Eastbound |
 | LRT-2 | Recto | Westbound |
 
-**LRT-2 runs east–west**, so its words are Eastbound and Westbound, as LRTA says them (the owner to confirm).
+**LRT-2 runs east–west**, so its words are Eastbound and Westbound, as LRTA says them (the owner confirmed, 2026-10-15).
 
 **Where:**
 

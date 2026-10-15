@@ -37,12 +37,11 @@
 - **No View button.** The owner took it out of the design; the row's only button is Set as start (or × Remove as start).
 - **"Set as start", not "Make as start".** Changed in Figma the same day: the button in the Timeline component's Selected variant (which the Choosing state shows), the RouteTripDetail mockup's button, and four draft frames on the RouteTripDetail page.
 - **The pill stays as today**, on the end: on a train, the station's code then the pesos (`YL06 · ₱13`); on a jeep, the pesos. The design's "Calculated Fare" stands for those pesos.
-- **The fold says "stations" on trains:** "N more stations". Jeeps keep "N more hintuans". Today it says hintuans for both (`trip-timeline.tsx`), and the design's "7 more stops" reads "stations" in code; the glossary avoids "stop".
+- **The fold says "stations" on trains:** "N more stations". Jeeps keep "N more hintuans". Today it says hintuans for both (`trip-timeline.tsx`); the glossary avoids "stop". Changed in Figma the same day: the fold row in the Timeline component's Rest, Pressed and Selected variants, which every TimelineRouteDetail state and card example inherits.
+- **SWITCH with picks:** the picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
+- **The fold once a start or end is picked:** the rows outside the ride fold, and the ride's own rows stay open.
 
-## Still open
-
-1. **SWITCH with picks.** Proposal: the picked places stay put. A lone pick keeps its role (as in `small-fixes` 2: Antipolo → Betty Go becomes Recto → Betty Go). With both picked, they trade roles: Shaw Boulevard → Ayala becomes Ayala → Shaw Boulevard.
-2. **Where the fold sits once a start or end is picked.** Proposal: the rows outside the ride fold, and the ride's own rows stay open.
+Nothing is left open.
 
 ## Words (for `CONTEXT.md`)
 
