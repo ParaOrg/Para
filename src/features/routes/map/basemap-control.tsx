@@ -1,11 +1,13 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 
-import { BASEMAPS, applyBasemap, rememberBasemap, type Basemap } from './basemap';
+import { applyBasemap, rememberBasemap, type Basemap } from './basemap';
 import { MapControlButton } from './map-control-button';
 
 interface Props {
   map: MapLibreMap;
+  /** The designs the menu offers, in order. */
+  basemaps: readonly Basemap[];
   /** The design the map was built with. */
   initial: Basemap;
   /** What MapLibre has in the top-right corner above it; the button rests under that. */
@@ -32,7 +34,7 @@ const TOP = {
  * nothing on the map itself — `applyBasemap` does the switch and carries the
  * routes and hotspots across — so both pages get it from MapView for free.
  */
-export function BasemapControl({ map, initial, under }: Props) {
+export function BasemapControl({ map, basemaps, initial, under }: Props) {
   const [current, setCurrent] = useState<Basemap>(initial);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -101,9 +103,9 @@ export function BasemapControl({ map, initial, under }: Props) {
         <ul
           role="menu"
           data-testid="basemap-menu"
-          className="min-w-28 overflow-hidden rounded-lg bg-surface py-1 text-sm text-content-secondary shadow-lg ring-1 ring-black/10"
+          className="max-h-[calc(100dvh-8rem)] min-w-28 overflow-y-auto rounded-lg bg-surface py-1 text-sm text-content-secondary shadow-lg ring-1 ring-black/10"
         >
-          {BASEMAPS.map((b) => (
+          {basemaps.map((b) => (
             <li key={b.id} role="none">
               <button
                 type="button"

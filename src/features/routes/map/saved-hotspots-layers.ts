@@ -8,9 +8,10 @@ import { HOTSPOT_COLOUR, HOTSPOT_CONTENT, HOTSPOT_OPACITY } from './colours';
 import type { BoxMark } from './hotspots-shown';
 import { useLayerSwitch } from './layer-switch';
 import { LAYERS, applyHidden, firstLayerOfType, layOutOnce } from './layers';
+import { maskStations } from './station-mask';
 import { HOTSPOTS_FILL_LAYER } from './tap';
 import { ringToPolygon, type Ring } from '../geo/ring';
-import { hotspotRing, type HotspotKind, type Hotspot } from '../model/hotspots';
+import { hotspotRing, nameOnMap, type HotspotKind, type Hotspot } from '../model/hotspots';
 import { labelGroups } from '../model/places';
 
 /*
@@ -24,15 +25,27 @@ const FILL = HOTSPOTS_FILL_LAYER;
 const OUTLINE = 'saved-stops-outline';
 const LABEL = 'saved-stops-label';
 const HINTUAN_LABEL = LAYERS.hotspotsHintuanLabel;
+/** The scale bar's width (MapView's ScaleControl, MapLibre's default maxWidth). */
+const SCALE_PX = 100;
+/** The most ground the bar's width may cover with the names on. */
+const NAMES_WITHIN_M = 700;
+/** Metres a pixel spans at zoom 0 over Metro Manila (14.6° N), MapLibre's tiles being 512 px. */
+const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / 512;
+
 /**
- * Hotspot names show only close in. Further out a name sat over the line's
- * stretch through the hotspot. The owner's asks of
- * 2026-09-25: hintuan names from zoom 16.5 (between a view at 16, names in
- * the way, and one at 16.7, names kept); then the terminals' the same; then
- * the names lasting 12/10 as far out — gone once the map shows 1.2 times the
- * ground it did at 16.5. Two layers, one a kind, so each can be set apart.
+ * Hotspot names, terminals' and hintuans' alike, once the scale bar's width
+ * covers 700 m or less: zoom 13.40 (the owner, 2026-10-15: "at 300m show the
+ * hintuan label and terminal", then "make it 700m"). The bar steps 1, 2, 3,
+ * 5, so it never reads 700 m: it reads 500 m there, the names coming in
+ * halfway through its 500 m. Close in only, as before, but nearer the
+ * overview: from 2026-09-25 they waited for zoom 16.24, where the bar reads
+ * 50 m, so a name would not sit over the line's stretch through its hotspot;
+ * now one may, and where names meet, MapLibre keeps one. A bar's reading is
+ * the zoom's at a given latitude, so the bar's rule is a zoom for a layer
+ * here (station-labels.tsx measures it live, for markers). Two layers, one a
+ * kind, so each can be set apart.
  */
-const NAMES_FROM = 16.5 - Math.log2(1.2);
+const NAMES_FROM = Math.log2((METRES_PER_PX_AT_ZOOM_0 * SCALE_PX) / NAMES_WITHIN_M);
 
 /** A flag of the feature state a tap sets on a box: `lit`, `sibling` or `chosen`. */
 const state = (name: 'lit' | 'sibling' | 'chosen') =>
@@ -177,6 +190,7 @@ export function hotspotsData(hotspots: readonly Hotspot[]) {
   // three boxes of one place would otherwise carry three identical labels.
   // Tapping still opens a card that leads with the informal name and shows
   // the ground name beneath it, so neither is lost. Decided 2026-09-22.
+  const byId = new Map(hotspots.map((s) => [s.id, s]));
   const withArea = hotspots.filter(
     (s): s is Hotspot & { area: NonNullable<Hotspot['area']> } =>
       s.area !== null && hotspotRing(s).length >= 3,
@@ -199,7 +213,15 @@ export function hotspotsData(hotspots: readonly Hotspot[]) {
         })),
       ).map((g) => ({
         type: 'Feature' as const,
-        properties: { id: g.ids[0], ids: g.ids.join(','), kind: g.kind, name: g.name },
+        // A station's label leaves its line out (nameOnMap): "Boni Station".
+        // Grouped by the whole name first, so MRT-3's Guadalupe and the
+        // ferry's never share one label.
+        properties: {
+          id: g.ids[0],
+          ids: g.ids.join(','),
+          kind: g.kind,
+          name: nameOnMap(byId.get(g.ids[0]) ?? g),
+        },
         geometry: { type: 'Point' as const, coordinates: g.point },
       })),
     ],
@@ -394,6 +416,7 @@ export function useSavedHotspotsLayers(
   useEffect(() => {
     if (!map || map.getSource(SRC)) return;
     addSavedHotspots(map, hotspots);
+    maskStations(map, hotspots);
     laidOut.current = hotspots;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the hotspots the source is made with; later ones are the next effect's
   }, [map]);
@@ -401,7 +424,12 @@ export function useSavedHotspotsLayers(
   useEffect(() => {
     if (!map) return;
     const src = map.getSource(SRC) as GeoJSONSource | undefined;
-    if (src) layOutOnce(laidOut, hotspots, (next) => src.setData(hotspotsData(next)));
+    if (!src) return;
+    layOutOnce(laidOut, hotspots, (next) => {
+      src.setData(hotspotsData(next));
+      // The basemap's stations beside ours, hidden (station-mask.ts).
+      maskStations(map, next);
+    });
   }, [map, hotspots]);
 
   // What a tap did to each box, as feature state: lit (chosen, or under the
