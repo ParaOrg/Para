@@ -1,6 +1,6 @@
 # Small fixes on the trip card
 
-Two changes, one pull request each. Both show on the public map and in the studio, which share the trip card.
+Three changes, one pull request each. All show on the public map and in the studio, which share the trip card. They don't depend on each other.
 
 ## 1. "Kilometer" → "Distance"
 
@@ -37,3 +37,18 @@ The rule moves into one pure function in `src/features/routes/model/`, used by b
 - **The studio** gets the same behaviour: its trip card uses the same hook.
 
 **Done when:** unit tests cover the three cases and an end; the trip card's story shows it; visitor-test gains a step: pick a hintuan, SWITCH, and the Distance and fare tiles read the shorter ride.
+
+## 3. RouteTripDetail → TimelineRouteDetailCard
+
+**The ask (2026-10-15):** the owner renamed the Figma component (3778:3183) from RouteTripDetail to **TimelineRouteDetailCard**. The code takes the same name, as its card components follow the owner's Figma names.
+
+**Where:**
+
+- `git mv src/features/routes/cards/route-trip-detail.tsx src/features/routes/cards/timeline-route-detail-card.tsx`, and its stories file the same way.
+- `RouteTripDetail` → `TimelineRouteDetailCard` in the component and in `trip-card.tsx`, its one user.
+- The story title `Features/Routes/RouteTripDetail` → `Features/Routes/TimelineRouteDetailCard`.
+- Comments naming it: `livery-card.ts`, `route-end-point-bar.tsx`, `trip-timeline.tsx`, `trip-timeline.stories.tsx`, `end-titles.tsx`, `src/features/routes/model/departures.ts`, `src/design-system/foundation/tokens.css`, `fonts.css`, `fonts/README.md`, `tests/e2e/phone-test.mjs`.
+- `TripCard` keeps its name: it is the glossary's Trip, the card a direction opens as, and it wraps this one.
+- Left as they are: the dated write-ups in `docs/`.
+
+**Done when:** typecheck, lint, unit tests and `npm run build` pass; Storybook lists the card under its new name.
