@@ -70,6 +70,31 @@ export function placeBoxes<S extends Hotspot>(
 }
 
 /**
+ * Where a picked box lands the other way round: the same box when the other
+ * way passes it (a box drawn across both sides of the road serves both), else
+ * the nearest box of the same place that it passes, across the road; null when
+ * it passes none. HintuanCard's SWITCH has always moved its selection so (the
+ * owner, 2026-10-01); since 2026-10-15 a jeep's trip keeps its picked hintuan
+ * the same way over Papunta and Pabalik.
+ */
+export function boxTheOtherWay<S extends Hotspot>(
+  box: S,
+  all: readonly S[],
+  passesOther: (hotspotId: string) => boolean,
+): S | null {
+  if (passesOther(box.id)) return box;
+  const from = box.point.coordinates;
+  return (
+    placeBoxes(box, all)
+      .map((r) => r.box)
+      .filter((b) => b.id !== box.id && passesOther(b.id))
+      .sort(
+        (a, b) => haversine(a.point.coordinates, from) - haversine(b.point.coordinates, from),
+      )[0] ?? null
+  );
+}
+
+/**
  * "terminal + hintuan · 2 mini stops", "hintuan · 2 mini stops" (the owner's label,
  * kept word for word): what a place
  * is made of. A place's hintuan boxes are one hintuan to a rider; each box is

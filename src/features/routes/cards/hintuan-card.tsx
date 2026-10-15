@@ -11,13 +11,12 @@ import {
   JeepIcon,
   TerminalIcon,
 } from '@/shared/ui/route-icons';
-import { haversine } from '@/shared/utils/geo';
 
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
 import { drawnDepartures, wayWord } from '../model/departures';
 import { hotspotLabel, type HotspotKind, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { placeBoxes } from '../model/places';
+import { boxTheOtherWay, placeBoxes } from '../model/places';
 import type { Direction } from '../model/routes';
 
 interface Props {
@@ -161,14 +160,11 @@ export function HintuanCard({
       ? hotspot
       : deselected
         ? null
-        : (rows
-            .map((r) => r.box)
-            .filter((b) => b.id !== hotspot.id && passes(b.id, other))
-            .sort(
-              (a, b) =>
-                haversine(a.point.coordinates, hotspot.point.coordinates) -
-                haversine(b.point.coordinates, hotspot.point.coordinates),
-            )[0] ?? null);
+        : boxTheOtherWay(
+            hotspot,
+            rows.map((r) => r.box),
+            (id) => passes(id, other),
+          );
 
   // What the RouteCards show, for the map to light; null once the card
   // closes, so an open card showing nothing still says it is open (a list
