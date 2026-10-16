@@ -193,7 +193,7 @@ lets them go, and the card shows the whole ride.
 The map drawn under the routes: Monochrome (the default, gray), Colour
 (OpenFreeMap's Liberty in Apple Maps' light palette, since 2026-10-16) and
 Fiord (dark blue-gray, for night). The studio adds Terrain (Colour with the
-hills) and Satellite. A visitor's pick is kept on the phone.
+hills) and Satellite. A commuter's pick is kept on the phone.
 
 **Map Style card**:
 The card the layers button opens under it, at the map's top-right corner: a
