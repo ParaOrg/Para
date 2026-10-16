@@ -70,14 +70,14 @@ export function within<T>(p: Promise<T>, ms: number, none: T): Promise<T> {
 }
 
 /**
- * A visitor's gestures: MapLibre's, each carrying the input that made it
+ * A commuter's gestures: MapLibre's, each carrying the input that made it
  * (originalEvent); the app's own moves carry none (APP_MOVE, or no event
  * data at all). A drag, a zoom, a turn or a tilt, and two that none of
  * those four carry (review of the owner's Q1, 2026-10-05; MapLibre 6.7):
  * - 'movestart', for an arrow key's pan: the keys ease the map with its
  *   zoom, bearing and pitch kept (handler/keyboard.ts), so the one event
  *   that carries the key is 'movestart'. Any 'movestart' with an input is
- *   a visitor's (MapLibre's handlers, the keys, its controls' buttons); a
+ *   a commuter's (MapLibre's handlers, the keys, its controls' buttons); a
  *   resize carries none, nor do the app's moves.
  * - 'boxzoomstart', for a shift-drag's box: MapLibre zooms to it with no
  *   input (box_zoom.ts, fitScreenCoordinates), so it is noted as the box
@@ -98,7 +98,7 @@ interface Watched {
   off(type: string, listener: Listener): unknown;
 }
 
-/** What a map made with MapView's `openOn` opened framed on, and whether the visitor has moved it since. */
+/** What a map made with MapView's `openOn` opened framed on, and whether the commuter has moved it since. */
 interface Opening {
   on: Bounds | null;
   moved: boolean;
@@ -109,7 +109,7 @@ const openings = new WeakMap<object, Opening>();
  * The public map's opening (the owner's Q1, 2026-10-04): MapView makes the
  * map framed on the routes, `on` (null when it had none to frame on, and
  * opened as it always did), and calls this as soon as the map is made. From
- * then on the visitor's first drag, zoom, turn or tilt, pan by the arrow
+ * then on the commuter's first drag, zoom, turn or tilt, pan by the arrow
  * keys or box drawn to zoom to (GESTURES) is noted, so the routes' framing
  * never takes the map back from under a finger, a key or a mouse
  * (framesRoutes). The studio's map is never recorded here.
@@ -131,8 +131,8 @@ export function openedOn(map: Watched, on: Bounds | null): void {
  * map's (openedOn) opened framed already, so only if what came frames
  * otherwise — the copy kept from an earlier visit (map-file.ts,
  * openingDirections) differing from the one the network brought, or none to
- * open on — and never once the visitor has moved it: the camera ends where
- * the framing of what came puts it, or where the visitor took it.
+ * open on — and never once the commuter has moved it: the camera ends where
+ * the framing of what came puts it, or where the commuter took it.
  */
 export function framesRoutes(map: object, bounds: Bounds): boolean {
   const opening = openings.get(map);
@@ -204,7 +204,7 @@ interface Rendered {
  * comes in, well before its 'load', which waits for every basemap tile in
  * view as well: in the cheap-phone timer's first visit the routes were
  * drawn at 5.36 s and 'load' came at 9.83 s, the text over routes a
- * visitor could already tap. A map file that is empty, has failed or is
+ * commuter could already tap. A map file that is empty, has failed or is
  * still on its way draws no route, and the text goes at 'load' as before.
  * Only the text: the clock (loadClock), the failure banner (shown for an
  * 'error' before 'load', cleared at it) and the design button still go by

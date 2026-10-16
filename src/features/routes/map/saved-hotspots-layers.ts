@@ -69,7 +69,7 @@ const labelsOf = (kind: HotspotKind, hidden = '') =>
  * the same pixels, and a colour that does not vary by feature is drawn by
  * the GL program the basemap's own names compile at load. The match was a
  * program of its own, compiled by the first frame that showed a name (from
- * zoom 16.24, a visitor's pinch or a hotspot's glide): 5-50 ms of a cheap
+ * zoom 16.24, a commuter's pinch or a hotspot's glide): 5-50 ms of a cheap
  * phone's main thread then (the cheap-phone plan, step 4, 2026-10-04).
  */
 export function namePaint(kind: HotspotKind) {

@@ -24,10 +24,10 @@ export const LocationOff: Story = {
   args: { mode: 'LocationOff', 'aria-label': 'Turn on my location' },
 };
 
-/** The camera is elsewhere: a tap brings it to the visitor. */
+/** The camera is elsewhere: a tap brings it to the commuter. */
 export const TrackOwnLocation: Story = { args: { mode: 'TrackOwnLocation' } };
 
-/** The camera follows the visitor, north up: a tap turns on the compass. */
+/** The camera follows the commuter, north up: a tap turns on the compass. */
 export const TrackedLocation: Story = {
   args: { mode: 'TrackedLocation', 'aria-label': 'Turn the map the way I face' },
 };

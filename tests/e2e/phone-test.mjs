@@ -3,7 +3,7 @@
 //   npm run dev                        (in another terminal)
 //   node tests/e2e/phone-test.mjs
 //
-// Same rule as visitor-test: nothing is hard-coded about today's data. Every
+// Same rule as commuter-test: nothing is hard-coded about today's data. Every
 // tap position is computed from the map's own sources — the script reads the
 // route lines and hotspot rings out of `saved-routes` / `saved-stops`, finds a
 // stretch of line no other route comes near, a vertex two routes share, and a
@@ -222,7 +222,7 @@ await page.addInitScript(lookReaders);
  * In the page, before the app starts: the map from its making (MapView
  * hands it out as window.__mapEarly in dev, 2026-10-04) — the camera it was
  * made at, the camera at its 'load', and each move of it since, a
- * visitor's (`gesture`, one carrying the input that made it) or another.
+ * commuter's (`gesture`, one carrying the input that made it) or another.
  */
 function openingRecorder() {
   let early = null;
@@ -705,7 +705,7 @@ check(
   // MapLibre eases with its zoom, bearing and pitch kept, so only its
   // 'movestart' carries the key; and a shift-drag's box, which it zooms to
   // with no input at all. Either, made before the routes come, keeps the map
-  // where the visitor took it, as a finger does.
+  // where the commuter took it, as a finger does.
   {
     const wide = await b.newContext({ viewport: { width: 1280, height: 800 } });
     for (const input of ['an arrow key', 'a shift-drag box zoom']) {
@@ -1629,7 +1629,7 @@ const tripChecks = async () => {
         Math.abs(camAfterLetGo.lat - camBeforePick.lat) < 1e-6,
       JSON.stringify({ camBeforePick, camAfterLetGo }),
     );
-    // Closer in than 300 m on the scale bar, a pick keeps the visitor's zoom
+    // Closer in than 300 m on the scale bar, a pick keeps the commuter's zoom
     // (the owner's ask, 2026-10-13: "if it's below 300m and tapped the
     // hintuan, don't zoom out, remain where the user camera was"): with the
     // hintuan in view above the card the camera stays put; off the screen,
@@ -2766,7 +2766,7 @@ const openedDirection = async () => {
 };
 
 /**
- * Opens direction `d`'s trip on its own from a fresh page, as a visitor would:
+ * Opens direction `d`'s trip on its own from a fresh page, as a commuter would:
  * a tap on its line where nothing else runs — the vertex with the most room
  * from every other line and every box, more than a tap reaches (the box's
  * corner, 20√2 px, and half the hit line's width, at the suite's zoom). Its
@@ -4262,7 +4262,7 @@ if (!routeA) {
     // The sheet at another height: the camera takes the route in again, in the
     // map it leaves (the owner's ask, 2026-10-01) — at Max, the whole screen on
     // a phone, as at Middle; in closer above Low; and back to the overview
-    // after the visitor has moved the map. Going up, no further out than
+    // after the commuter has moved the map. Going up, no further out than
     // 5 km on the scale bar (100 px; MapLibre's 512 px tiles), the owner's
     // "for scrolling up only": a long route is cut, not shrunk.
     const capZoom = Math.log2(

@@ -12,9 +12,9 @@ import { useLocator } from './use-locator';
 
 interface Props {
   map: MapLibreMap | null;
-  /** The open card's height: the camera keeps the visitor clear of it as it moves. */
+  /** The open card's height: the camera keeps the commuter clear of it as it moves. */
   snap: Snap;
-  /** Where the visitor should sit from the map's centre, clear of the card on show (useCardCamera's clearOfOpen). */
+  /** Where the commuter should sit from the map's centre, clear of the card on show (useCardCamera's clearOfOpen). */
   offset: () => [number, number];
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
@@ -26,7 +26,7 @@ interface Props {
 }
 
 /**
- * The visitor's own position, when they ask for it, and the camera with
+ * The commuter's own position, when they ask for it, and the camera with
  * them (the owner's LocatorButton, 2026-10-01): kept clear of the card on
  * show, as a picked hintuan is. The button, and the dot on the map with its
  * moods and its gaze.
@@ -37,7 +37,15 @@ interface Props {
  * drew the same: one or two renders a second for nothing while location
  * is on. Its camera still moves at the page's turn (`cameraTurn`).
  */
-export function VisitorLocation({ map, snap, offset, docked, cameraTurn, picks, hushedAt }: Props) {
+export function CommuterLocation({
+  map,
+  snap,
+  offset,
+  docked,
+  cameraTurn,
+  picks,
+  hushedAt,
+}: Props) {
   const locator = useLocator(map, { compass: coarse, snap, offset, cameraTurn });
   // How the dot feels: glad as the location comes, a boing at a tap on the
   // button or on the dot, now and then a huff (locatorMood).

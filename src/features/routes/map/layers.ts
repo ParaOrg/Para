@@ -48,7 +48,7 @@ export const LAYERS = {
  * turns that stretch a little. On a phone-sized screenshot at DPR 2 the
  * lines' edges changed by up to 41 levels of 255 (a trip at zoom 16, 1,815
  * device pixels above its card), and a hotspot's at zoom 18.3 by up to 25, and nothing
- * else may change what a visitor sees (the owner's handoff, 2026-10-04).
+ * else may change what a commuter sees (the owner's handoff, 2026-10-04).
  * What it saved there, in vertices in the tiles on screen: at the opening
  * view, the routes 8,592 -> 2,723 (32%) and the hotspots 3,640 -> 1,598
  * (44%); a trip framed, 3,407 -> 2,959 (87%) and 4,013 -> 2,964 (74%).

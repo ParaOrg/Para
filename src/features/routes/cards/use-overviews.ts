@@ -20,7 +20,7 @@ import { directionLine, type Direction } from '../model/routes';
  * The farthest out the sheet going up takes the camera: the scale bar at
  * 5 km (the owner, 2026-10-01; 2.5 km at first, too close from Middle
  * up). Further out than that only by the
- * visitor's own hand.
+ * commuter's own hand.
  */
 const RAISED_FARTHEST_M = 5000;
 
@@ -181,7 +181,7 @@ export function useSwitchOverview(
  * zoom in when bottomsheet is low, middle and max"). Routes are fitted whole,
  * in close above Low, out above Middle — and at Max, which on a phone covers
  * the whole map, as at Middle (roomBeside); a place is brought into view at
- * its zoom. Whatever the visitor did to the map since, the
+ * its zoom. Whatever the commuter did to the map since, the
  * overview comes back (their "the camera reset to overview"). Going up, it
  * zooms out no further than RAISED_FARTHEST_M on the scale bar ("for
  * scrolling up only"); coming down, the whole route. `frame` is read as the
@@ -258,7 +258,7 @@ interface Camera {
 
 /**
  * A hotspot's RouteCard picked and let go: the camera goes back to where the
- * visitor had it before the pick's overview (the owner, 2026-10-01:
+ * commuter had it before the pick's overview (the owner, 2026-10-01:
  * "deselecting head route … should go back to original camera of the user,
  * after the overview"). `keep` as a card is picked with none picked yet — so
  * moving between cards keeps the camera from before them all — and `back`

@@ -238,7 +238,7 @@ export function useSavedRoutes<T extends Direction>(
   // while drawing: a draft already has a view the user chose. The public map
   // opens framed on them itself, from its making (MapView's `openOn`, the
   // owner's Q1, 2026-10-04): there only if what came frames otherwise, and
-  // never once the visitor has moved the map (framesRoutes).
+  // never once the commuter has moved the map (framesRoutes).
   const fittedRef = useRef(false);
   useEffect(() => {
     if (!map || fittedRef.current || drawingRef.current) return;

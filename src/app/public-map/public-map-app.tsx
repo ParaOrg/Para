@@ -1,7 +1,7 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useState } from 'react';
 
-import { VisitorLocation, useGazeHush } from '@/features/locator';
+import { CommuterLocation, useGazeHush } from '@/features/locator';
 import {
   fetchLine,
   InstallPrompt,
@@ -93,8 +93,8 @@ export function PublicMapApp() {
   // picked hintuan's ride flowing only as far as there.
   const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden, ride.startId);
 
-  // The visitor's own position, the dot and the camera with them live in
-  // VisitorLocation, so a fix, the phone's compass and the dot's moods
+  // The commuter's own position, the dot and the camera with them live in
+  // CommuterLocation, so a fix, the phone's compass and the dot's moods
   // render it alone (the cheap-phone plan, step 15, 2026-10-05). Its camera
   // still moves here, where its hook stood: after the cards' camera above,
   // which a sheet set to another height moves in the same commit
@@ -148,10 +148,10 @@ export function PublicMapApp() {
         foldCredits
       />
       {/*
-        The visitor's own position, and the camera with them, kept clear of
+        The commuter's own position, and the camera with them, kept clear of
         the card on show; the dot gazes at what was just picked.
       */}
-      <VisitorLocation
+      <CommuterLocation
         map={map}
         snap={cards.snap}
         offset={clearOfOpen}

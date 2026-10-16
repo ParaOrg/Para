@@ -32,7 +32,7 @@ a Papunta card, the other bound on a train. The layers button at the top
 right opens the Map Style card: Monochrome, Colour (Apple Maps' light
 palette) or Fiord. Each route's row on a card ends with its vehicle, and
 the map's credits start folded to their ⓘ; a tap opens them. "Where am I"
-shows the visitor as a blue dot with a heading cone, in a circle the size of
+shows the commuter as a blue dot with a heading cone, in a circle the size of
 the fix's accuracy; the position never leaves the phone. It installs
 as an app and keeps the last map it saw, so it works offline.
 
@@ -66,7 +66,7 @@ the headless checks — drawing works, saving still needs an account.
     npm run check                   # Prettier's check, ESLint, the build with its guards, then the unit checks
     npm run format                  # Prettier over the tree (.prettierrc); blame skips the format commit
                                     # once per clone: git config blame.ignoreRevsFile .git-blame-ignore-revs
-    node tests/e2e/visitor-test.mjs # and the other headless suites, see tests/e2e/README.md
+    node tests/e2e/commuter-test.mjs # and the other headless suites, see tests/e2e/README.md
     npm run check:data              # the committed map against the app's own rules
     npm run storybook               # the cards, the chooser, the panels, on their own
 
@@ -99,7 +99,7 @@ with warnings, and closed by the first run with nothing to report.
 | --- | --- |
 | `src/app/` | the two front doors, wiring only: `public-map/` (the public map's entry, its shell and status bar) and `studio/` (the editor's entry and shell) |
 | `src/features/routes/` | the core both apps draw: `model/` (routes, stops, places, timelines, rides, fares, liveries — no React, no MapLibre), `geo/` (the pass and babaan-side rules), `map/` (the map view with its basemap and layers, the route and hotspot layers and hooks), `cards/` (the cards, sheets and timelines, with their stories; `use-card-stack`, which card is up, and `use-card-camera`, the camera with them). Imported through its concern folders; it has no `index.ts` on purpose, since Node runs the publish and the unit checks against its files |
-| `src/features/locator/` | "Where am I": the visitor's dot, its button and its moods |
+| `src/features/locator/` | "Where am I": the commuter's dot, its button and its moods |
 | `src/features/published-map/` | the published map's reader (`api/fetch-index.ts` and `api/fetch-line.ts`, its shape in `schemas/`, its names and URLs in `map-file.ts`), its freshness and the installed app's updates (`pwa.ts`), and the notices |
 | `src/features/studio/` | the editor: `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions). Its `index.ts`, like the locator's and the published map's, is what the shells import |
 | `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths) |
