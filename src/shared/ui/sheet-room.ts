@@ -56,9 +56,10 @@ export function clearOfRects(map: Rect, dock: Rect | null, shows?: number): [num
 
 /**
  * The height a sheet is measured at when the camera glides to a point under
- * it: its own, or Middle when it is higher — the sheet stays put (the owner,
- * 2026-10-01), and what the camera brings in is there to see when it comes
- * down. A whole route fitted is framed at the sheet's own height (roomBeside).
+ * it: its own, or Middle when it is higher — the sheet stays put, as the
+ * owner keeps it, and what the camera brings in is there to see when it comes
+ * down. A whole route fitted is framed at the sheet's own height
+ * (roomBeside).
  */
 export function framedAt(snap: Snap): Snap {
   return aboveMiddle(snap) ? 'middle' : snap;
@@ -66,9 +67,7 @@ export function framedAt(snap: Snap): Snap {
 
 /**
  * Between a route fitted whole and the map's edges, or the sheet's: room for
- * an end's name over its circle (EndTitles), 28 tall marked or not since the
- * owner's labels of 2026-10-13 (a marked one was 32 from 2026-10-12, and the
- * top margin 4 more for it).
+ * an end's name over its circle (EndTitles), 28 tall, marked or not.
  */
 export const FIT_MARGIN_PX = 48;
 /** The least map a whole route is fitted into, the margins given up for it where the sheet leaves less. */
@@ -76,11 +75,11 @@ export const FIT_ROOM_MIN_PX = 48;
 
 /**
  * The room a sheet leaves for a whole route the camera fits, as MapLibre's
- * fit padding: beside the sheet where it floats in the corner, above it
- * where it is docked along the bottom, at its own height (the owner,
- * 2026-10-01: in close above Low, out above Middle). Where it leaves less
- * than FIT_ROOM_MIN_PX — Max, on a phone the whole screen — at Middle's
- * (`framedAt`), so the route is there to see as it comes down.
+ * fit padding: beside the sheet where it floats in the corner, above it where
+ * it is docked along the bottom, at its own height (the owner's pick: in
+ * close above Low, out above Middle). Where it leaves less than
+ * FIT_ROOM_MIN_PX — Max, which leaves only a strip of map (MAX_STRIP_PX) — at
+ * Middle's (`framedAt`), so the route is there to see as it comes down.
  */
 export function roomBeside(map: HTMLElement, dock: HTMLElement | null, snap: Snap): Room {
   if (!dock || dock.hidden) return roomFromRects(map.getBoundingClientRect(), null, 0, 0, snap);
@@ -137,13 +136,11 @@ function showsAt(sheet: HTMLElement, snap: Snap): number {
 }
 
 /**
- * The camera is about to glide to a point on the map — a hintuan picked on
- * a trip, one of its ends, another box of a place. The sheet stays at the
- * height it was left at (the owner's ask, 2026-10-01: "since the card can
- * settle anywhere, don't move the bottomsheet to the middle"; until then
- * Max came down to Middle). Returns where the point should sit
- * (clearOfDock): above the sheet at `framedAt`'s height, or beside it in the
- * corner.
+ * The camera is about to glide to a point on the map — a hintuan picked on a
+ * trip, one of its ends, another box of a place. The sheet stays at the
+ * height it was left at, the owner's pick, since the card can settle
+ * anywhere. Returns where the point should sit (clearOfDock): above the sheet
+ * at `framedAt`'s height, or beside it in the corner.
  */
 export function clearOfSheet(
   map: HTMLElement,

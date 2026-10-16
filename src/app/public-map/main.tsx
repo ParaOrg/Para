@@ -11,10 +11,10 @@ import { PublicMapApp } from './public-map-app.tsx';
  * Where to send an auth result that arrived here, or null.
  *
  * A password-reset email sent before /studio/ existed still links to /, an
- * invite links to the project's Site URL (/), and Supabase reports a refused link with `error_code` and `error_description`
- * in the address. Only the studio can finish either, so the query and fragment
- * go there untouched. This page never reads the token itself: it has no
- * Supabase client.
+ * invite links to the project's Site URL (/), and Supabase reports a refused
+ * link with `error_code` and `error_description` in the address. Only the
+ * studio can finish either, so the query and fragment go there untouched.
+ * This page never reads the token itself: it has no Supabase client.
  *
  * Deliberately narrow. A bare `code=` or `error=` could mean anything — a
  * share link carrying a route code, one day — and the studio's client uses

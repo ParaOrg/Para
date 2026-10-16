@@ -44,11 +44,10 @@ interface SheetGestures {
 
 /**
  * How a finger or a mouse moves BottomSheet: the drag on the handle or the
- * header, the pull down from the list's top at Max, and the wheel's deliberate
- * push. The sheet writes the DOM (`show`) and keeps `dragging`; this decides
- * where it goes (sheetGesture). Called after the sheet's two dock-mark
- * layout effects, so the five run, and clean up, in the order they had when
- * they were all the sheet's.
+ * header, the pull down from the list's top at Max, and the wheel's
+ * deliberate push. The sheet writes the DOM (`show`) and keeps `dragging`;
+ * this decides where it goes (sheetGesture). Called after the sheet's two
+ * dock-mark layout effects.
  */
 export function useSheetGestures({
   sheet: own,
@@ -209,10 +208,10 @@ export function useSheetGestures({
     window.addEventListener('pointercancel', cancel, on);
   };
 
-  // Focus from the keyboard below Max lands on rows that may be below
-  // the screen: the sheet rises to Max, where the list scrolls them
-  // into view (the ds-reviewer, 2026-09-30). Focus that follows a press
-  // is the press's own and leaves the sheet where it is.
+  // Focus from the keyboard below Max lands on rows that may be below the
+  // screen: the sheet rises to Max, where the list scrolls them into view.
+  // Focus that follows a press is the press's own and leaves the sheet where
+  // it is.
   const onBodyFocus = (e: ReactFocusEvent<HTMLDivElement>) => {
     const fromKeys = e.timeStamp - lastPress.current > 800 && e.target.matches(':focus-visible');
     if (snap !== 'max' && fromKeys && docked()) setSnap('max');

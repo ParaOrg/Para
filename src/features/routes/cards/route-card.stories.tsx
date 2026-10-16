@@ -31,8 +31,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Red: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
- * place in SN Pro ExtraBold 20/28, as RouteCardExample draws it (3746:1238,
- * the owner's pick of 2026-10-16).
+ * place in SN Pro ExtraBold 20/28, as RouteCardExample draws it (3746:1238).
  */
 export const Red: Story = {
   play: async ({ canvasElement }) => {
@@ -44,7 +43,7 @@ export const Red: Story = {
   },
 };
 
-/** Orange, the Card/orange tokens (Figma's Pink until 2026-10-13). */
+/** Orange, the Card/orange tokens. */
 export const Orange: Story = { args: { livery: 'orange', routeOrigin: 'SM Fairview' } };
 
 /** State=Selected, red: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
@@ -55,7 +54,10 @@ export const OrangeSelected: Story = {
   args: { state: 'selected', livery: 'orange', routeOrigin: 'SM Fairview' },
 };
 
-/** Violet (2026-09-30): white words, as Red, under Route/RouteCardInverse's shadow and Blob (yellow's, until yellow left the set on 2026-10-12). */
+/**
+ * Violet: white words, as Red, under Route/RouteCardInverse's shadow and
+ * Blob.
+ */
 export const Violet: Story = { args: { livery: 'violet', routeOrigin: 'Fairview' } };
 
 /** Selected, violet: pressed in under Route/RouteCardInverseSelected. */
@@ -63,7 +65,7 @@ export const VioletSelected: Story = {
   args: { state: 'selected', livery: 'violet', routeOrigin: 'Fairview' },
 };
 
-/** Rose (2026-09-30): as Violet. */
+/** Rose: as Violet. */
 export const Rose: Story = { args: { livery: 'rose', routeOrigin: 'Novaliches' } };
 
 /** Selected, rose: as Violet. */
@@ -71,7 +73,7 @@ export const RoseSelected: Story = {
   args: { state: 'selected', livery: 'rose', routeOrigin: 'Novaliches' },
 };
 
-/** Fuchsia (2026-09-30, Figma's Fuschia, in mist's place): as Violet. */
+/** Fuchsia (Figma's Fuschia): as Violet. */
 export const Fuchsia: Story = { args: { livery: 'fuchsia', routeOrigin: 'SM Fairview' } };
 
 /** Selected, fuchsia: as Violet. */
@@ -79,7 +81,7 @@ export const FuchsiaSelected: Story = {
   args: { state: 'selected', livery: 'fuchsia', routeOrigin: 'SM Fairview' },
 };
 
-/** Pink (4071:7014, 2026-10-13): as Violet. */
+/** Pink (4071:7014): as Violet. */
 export const Pink: Story = { args: { livery: 'pink', routeOrigin: 'Lagro' } };
 
 /** Selected, pink: as Violet. */
@@ -87,7 +89,10 @@ export const PinkSelected: Story = {
   args: { state: 'selected', livery: 'pink', routeOrigin: 'Lagro' },
 };
 
-/** LRT-1, a train route: its line's Map/Rail/LightRailWayOne colours and Content/inverse words under the Primary shadow (4074:7402, 2026-10-13), never a draw. */
+/**
+ * LRT-1, a train route: its line's Map/Rail/LightRailWayOne colours and
+ * Content/inverse words under the Primary shadow (4074:7402), never a draw.
+ */
 export const LightRailWayOne: Story = {
   args: { livery: 'light-rail-way-one', routeOrigin: 'Fernando Poe Jr.' },
 };
@@ -97,7 +102,10 @@ export const LightRailWayOneSelected: Story = {
   args: { state: 'selected', livery: 'light-rail-way-one', routeOrigin: 'Fernando Poe Jr.' },
 };
 
-/** LRT-2, a train route: its line's Map/Rail/LightRailWayTwo colours and Content/inverse words under the Primary shadow (4080:4124, 2026-10-13), never a draw. */
+/**
+ * LRT-2, a train route: its line's Map/Rail/LightRailWayTwo colours and
+ * Content/inverse words under the Primary shadow (4080:4124), never a draw.
+ */
 export const LightRailWayTwo: Story = {
   args: { livery: 'light-rail-way-two', routeOrigin: 'Fernando Poe Jr.' },
 };
@@ -107,7 +115,11 @@ export const LightRailWayTwoSelected: Story = {
   args: { state: 'selected', livery: 'light-rail-way-two', routeOrigin: 'Fernando Poe Jr.' },
 };
 
-/** MRT-3, a train route: its line's Map/Rail/MetroRailWayThree colours and Content/primary, dark, words under the Primary shadow (4080:4241, 2026-10-13), never a draw. */
+/**
+ * MRT-3, a train route: its line's Map/Rail/MetroRailWayThree colours and
+ * Content/primary, dark, words under the Primary shadow (4080:4241), never a
+ * draw.
+ */
 export const MetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', routeOrigin: 'Fernando Poe Jr.' },
 };
@@ -119,8 +131,7 @@ export const MetroRailWayThreeSelected: Story = {
 
 /**
  * At rest, a row opens its direction straight away; a tap anywhere else on
- * the card — its name, the room around its rows — selects it (the owner,
- * 2026-09-29).
+ * the card — its name, the room around its rows — selects it.
  */
 export const ARowOpens: Story = {
   args: {
@@ -202,7 +213,10 @@ export const SixWaysOut: Story = {
   },
 };
 
-/** Each row its own route's vehicle (the owner's answer of 2026-10-16, "own vehicle per row is fine"; Figma's RouteCardExample, 3746:1238, draws the Jeep on every row). */
+/**
+ * Each row its own route's vehicle: the owner keeps it so, though Figma's
+ * RouteCardExample (3746:1238) draws the Jeep on every row.
+ */
 export const MixedVehicles: Story = {
   args: {
     routeOrigin: 'Cubao',

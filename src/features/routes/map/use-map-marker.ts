@@ -35,10 +35,8 @@ interface MapMarkerOptions extends Omit<MarkerOptions, 'element'> {
 /**
  * `el` as a marker on `map` at `at`: added once per map and moved after,
  * never made anew — a marker made anew pops what is inside it a second time
- * and jumps it from the point it had (the ds-reviewer's finding,
- * 2026-10-12) — its anchor and the rest of its options its own for its life.
- * One wiring for every marker of ours, where each had it word for word
- * until 2026-10-12.
+ * and jumps it from the point it had — its anchor and the rest of its options
+ * its own for its life. One wiring for every marker of ours.
  */
 export function useMapMarker(
   map: MapLibreMap,
