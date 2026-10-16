@@ -32,9 +32,9 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  * The LocatorButton placed as ScreenLocationBehavior draws it (Figma
  * 3870:5941): at the map's right edge, 12 above the card's sheet, following
  * it down from Middle to Low; up past Middle it stays where Middle left it,
- * and the sheet covers it. With no card open it sits at the map's foot; where
- * the card floats in the corner (`@float:`), at the bottom right, clear of
- * the credit line.
+ * and the sheet covers it. With no card open it sits at the map's foot. Where
+ * the card floats in the corner (`@float:`), which the frame does not show, it
+ * sits at the bottom right, clear of the credit line.
  * BottomSheet says where its top is as `--dock-y` on the page; this layer
  * slides the same way, by the same length.
  *

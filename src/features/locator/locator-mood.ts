@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { STILL_BELOW_MPS, type Camera, type Fix } from './use-locator';
 
 /*
- * The commuter's dot has moods, neutral, happy and angry: glad as the commuter
+ * The commuter's dot has three moods, neutral, happy and angry: glad as the commuter
  * arrives or moves, a reaction to a tap, and left to itself its mood swings;
  * and neutral and happy have several faces each, so it never reads as one
  * loop. The faces are drawn in locator.css.
@@ -139,9 +139,9 @@ function inATemper({ now, taps }: Pick<Signals, 'now' | 'taps'>): boolean {
 /**
  * The mood for these signals, the strongest first: cross at a run of taps,
  * then a tap's own reaction, then glad as the commuter arrives, then glad on
- * the move. The location itself never makes it low: an old fix (a browser
- * sends none while the commuter stands still) or a rough one (common indoors)
- * would hold it low most of the time.
+ * the move. There is no low mood for the location itself: an old fix (a
+ * browser sends none while the commuter stands still) or a rough one (common
+ * indoors) is no reason for the dot to look unhappy.
  */
 export function moodAt(s: Signals): Mood {
   const { now, fix, arrivedAt } = s;

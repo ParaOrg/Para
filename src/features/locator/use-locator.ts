@@ -29,8 +29,8 @@ import type { LocatorMode } from './locator-button';
  *    turned the way the phone faces. A tap goes back to TrackedLocation's
  *    view, at its zoom, and the next to this again.
  *
- * With no compass to read (a laptop) a tap on
- * TrackedLocation brings the camera back to the commuter instead.
+ * With no compass to read (a laptop) a tap on TrackedLocation brings the
+ * camera back to the commuter instead.
  */
 
 type LocatorStatus = 'off' | 'asking' | 'on' | 'denied' | 'unavailable';

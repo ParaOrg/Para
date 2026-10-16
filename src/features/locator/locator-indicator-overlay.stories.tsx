@@ -154,9 +154,9 @@ export const AllGazes: Story = {
 
 /**
  * Every face gazing one way: a face changes every few seconds, so on a phone
- * each of these is met during a gaze. North is
- * where a face that holds its eyes up (curious) would leave the dot, were the
- * eyes not brought to the middle first.
+ * each of these is met during a gaze. North is where a face that holds its
+ * eyes up (curious) would leave the dot, were the eyes not brought to the
+ * middle first.
  */
 const facesGazing = (gazeDeg: number): Story => ({
   args: { haloPx: 0, beamDeg: null },

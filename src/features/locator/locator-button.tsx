@@ -26,13 +26,12 @@ type Props = Omit<
 
 /**
  * LocatorButton (Figma 3870:5437): a 48 px Special pill showing where the
- * camera is with the commuter —
- * a struck-through compass while there is no location (LocationOff),
- * a blue dot when it is elsewhere (TrackOwnLocation), a black arrow when it
- * follows them (TrackedLocation), a blue arrow when it also turns with the
- * phone (TracksTheMapBasedOnCompassFacing). Pressed is
- * InnerShadow/SpecialButtonPressed while touched, nothing else changing,
- * as drawn; no hover is drawn, so none.
+ * camera is with the commuter — a struck-through compass while there is no
+ * location (LocationOff), a blue dot when it is elsewhere (TrackOwnLocation),
+ * a black arrow when it follows them (TrackedLocation), a blue arrow when it
+ * also turns with the phone (TracksTheMapBasedOnCompassFacing). Pressed is
+ * InnerShadow/SpecialButtonPressed while touched, nothing else changing, as
+ * drawn; no hover is drawn, so none.
  */
 export function LocatorButton({ mode, heading = null, 'aria-label': label, ...rest }: Props) {
   return (

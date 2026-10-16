@@ -49,10 +49,10 @@ interface Props {
  * — a 24 px Brand/surface dot in white, lifted by LocatorDotShadow,
  * breathing, its wandering eyes glancing about (locator.css); a beam the
  * way they face fading out from it; and the circle the fix is good to, in
- * Map/LocatorIndicatorOverlay/surface with its border's hairline. The circle matters: GPS in Metro Manila is often
- * 20–50 m out, and a dot alone would claim a certainty the phone does not
- * have. Figma's is 240 across; here the circle is the fix's metres, the beam
- * as drawn.
+ * Map/LocatorIndicatorOverlay/surface with its border's hairline. The circle
+ * matters: GPS in Metro Manila is often 20–50 m out, and a dot alone would
+ * claim a certainty the phone does not have. Figma's is 240 across; here the
+ * circle is the fix's metres, the beam as drawn.
  */
 export function LocatorIndicatorOverlay({
   haloPx,
@@ -144,7 +144,7 @@ export function LocatorIndicatorOverlay({
 
 /**
  * The overlay at the commuter's fix, as a DOM marker, not a map layer: it
- * costs the map nothing to move (an animated layer kept MapLibre repainting
+ * costs the map nothing to move (an animated layer keeps MapLibre repainting
  * the whole map). It lies on the ground and turns with the map
  * (MapLibre's `map` alignments), as Google Maps' does: tilted, in the
  * compass view, the circle and the dot go oval with the street; and its

@@ -31,9 +31,10 @@ interface Props {
  * and the dot on the map with its moods and its gaze.
  *
  * A child of PublicMapApp, not hooks of it: a fix, a turn of the phone and the
- * dot's moods, a second apart, render this alone, not the whole page, which
- * would draw the same one or two renders a second for nothing while location
- * is on. Its camera still moves at the page's turn (`cameraTurn`).
+ * dot's moods, a second apart, render this alone. As hooks of the page they
+ * would re-render it once or twice a second, drawing the same thing, for
+ * nothing while location is on. Its camera still moves at the page's turn
+ * (`cameraTurn`).
  */
 export function CommuterLocation({
   map,

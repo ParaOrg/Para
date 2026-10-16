@@ -1,9 +1,10 @@
 /*
  * The commuter's dot on the public map (locator-indicator-overlay.tsx, which
  * imports this sheet): it breathes — a little bigger, then back — so the
- * eye finds it. A CSS animation on the dot alone, which costs the map
- * nothing, as an animated map layer does; the marker's own element is
- * MapLibre's to move, and the dot and beam's size is on the group around it. `prefers-reduced-motion` keeps it still.
+ * eye finds it. A CSS animation on the dot alone costs the map nothing,
+ * where an animated map layer keeps MapLibre repainting the whole map; the
+ * marker's own element is MapLibre's to move, and the dot and beam's size
+ * is on the group around it. `prefers-reduced-motion` keeps it still.
  */
 .locator-dot {
   animation: locator-breathe 2s ease-in-out infinite;
@@ -18,11 +19,11 @@
   }
 }
 /*
- * Its wandering eyes: they dart to a spot, hold
- * it, and dart on — right, as drawn, then left, up, down and about — and
- * blink now and then. The glances run 11 s and the blinks 5.3 s, so the two
- * drift against each other and never fall into an obvious loop. Each dart
- * is a few hundred ms (3% of the cycle), the holds the rest.
+ * Its wandering eyes: they dart to a spot, hold it, and dart on — right, as
+ * drawn, then left, up, down and about — and blink now and then. The
+ * glances run 11 s and the blinks 5.3 s, so the two drift against each
+ * other and never fall into an obvious loop. Each dart is a few hundred ms
+ * (3% of the cycle), the holds the rest.
  */
 .locator-eyes {
   animation: locator-glance 11s ease-in-out infinite;
@@ -202,12 +203,12 @@
 }
 
 /*
- * Its gaze at what was just picked (dot-gaze.ts): the
- * eyes stop wandering and turn the way to it, `--gaze-x` and `--gaze-y` from
- * the middle, then wander again. The face's eyes stay as they are, but come
- * to the middle first: a face that holds them off it (curious, up; sleepy,
- * down) would carry them past the dot's edge. One selector is enough: it
- * outranks every face's `.locator-eyes` rule above, as specific and later.
+ * Its gaze at what was just picked (dot-gaze.ts): the eyes stop wandering
+ * and turn the way to it, `--gaze-x` and `--gaze-y` from the middle, then
+ * wander again. The face's eyes stay as they are, but come to the middle
+ * first: a face that holds them off it (curious, up; sleepy, down) would
+ * carry them past the dot's edge. One selector is enough: it outranks every
+ * face's `.locator-eyes` rule above, as specific and later.
  */
 .locator-dot[data-gaze] .locator-eyes {
   animation: none;
@@ -216,10 +217,10 @@
 }
 
 /*
- * A tap on the LocatorButton: glad, a boing —
- * squashed, up with smiling eyes, landing with a wobble — or, now and then,
- * cross, a huff — puffed up, scowling, shaking it off. Each plays once a
- * tap (the dot is drawn afresh: `beat`), then it breathes again.
+ * A tap on the LocatorButton: glad, a boing — squashed, up with smiling
+ * eyes, landing with a wobble — or, now and then, cross, a huff — puffed
+ * up, scowling, shaking it off. Each plays once a tap (the dot is drawn
+ * afresh: `beat`), then it breathes again.
  */
 .locator-dot[data-face='boing'] {
   animation:
