@@ -58,8 +58,10 @@ import './end-titles.css';
  * Figma 4200:13645; the owner, 2026-10-16: "if the route is not selected or
  * not in side the start and end").
  * A start picked alone, no ride yet, leaves both its trip's ends without
- * them, lit, the start's pin the one S (the owner, 2026-10-16: "Nothing
- * yet, just the S"). A place two rides share is named by the first to reach it
+ * them, the start's pin the one S (the owner, 2026-10-16: "Nothing yet,
+ * just the S"), and on the pale with the whole line (his ask the same
+ * night: "unselected all the unselected hintuan/station or labels"; lit
+ * until then). A place two rides share is named by the first to reach it
  * (`rideEnds`), so a trip's change of ride is the earlier ride's tail, as
  * it sits under the start on the timeline; the other ride's end there keeps
  * its circle, bare.

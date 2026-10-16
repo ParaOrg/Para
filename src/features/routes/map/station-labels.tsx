@@ -62,7 +62,11 @@ function namesShow(map: MapLibreMap): boolean {
  * 60%: the owner's Label, Unselected (Figma 4200:13645, 2026-10-16: "if the
  * label is unselected it would be transparent", "if the route is not
  * selected or not in side the start and end"); from 2026-10-12 until then
- * they kept it whole, white words on the pale not reading.
+ * they kept it whole, white words on the pale not reading. A start picked
+ * alone, no ride yet, puts every other row on the pale with the whole line
+ * (the owner, 2026-10-16: "When start is only selected can you unselected
+ * all the unselected hintuan/station or labels?, and the rouline would be in
+ * pale"); until then the trip stayed lit around a lone S.
  *
  * On a train line the dots stay dots: the owner's LRTHintuanCodes (Figma
  * 4051:6426, 2026-10-12) put each station's code, GL02, in its dot's place
@@ -116,7 +120,9 @@ export function StationLabels({
    * Whether the ride between the picks is drawn (useRideTo's `ridden`), the
    * line outside it in the card's pale (useRideRest): the dots of the rows
    * outside it wear the pale too (rowsOutsideRide, the card's own rule).
-   * False, and every dot wears the line's colour.
+   * False with a start picked, no ride yet: every row but the start's is on
+   * the pale, the whole line drawn in it. False with nothing picked, and
+   * every dot wears the line's colour.
    */
   hasRide?: boolean;
 }) {
@@ -133,11 +139,14 @@ export function StationLabels({
   // Where each row sits: worked out as the trip, the hotspots or the rows
   // change, not at each move of the map.
   const stops = useMemo(() => rowStops(selected, hotspots, rows), [selected, hotspots, rows]);
-  // The rows outside the ride sit along the pale, while it is drawn.
-  const outside = useMemo(
-    () => (hasRide ? rowsOutsideRide(rows, startId, pickedId, endPicked) : null),
-    [hasRide, rows, startId, pickedId, endPicked],
-  );
+  // The rows outside the ride sit along the pale, while it is drawn; with a
+  // start and no ride, every row but the start's, the whole line pale
+  // (useLitRides).
+  const outside = useMemo(() => {
+    if (hasRide) return rowsOutsideRide(rows, startId, pickedId, endPicked);
+    if (startId !== null) return new Set(rows.filter((r) => r.id !== startId).map((r) => r.id));
+    return null;
+  }, [hasRide, rows, startId, pickedId, endPicked]);
   return (
     <>
       {stops.map((s) =>
