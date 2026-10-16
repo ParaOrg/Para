@@ -249,7 +249,7 @@ export const LetGoAndPickBack: Story = {
     await expect(canvas.getByTestId('card-count').textContent).toBe('2 routes pass here');
     await userEvent.click(canvas.getByTestId('card-flip'));
     await expect(args.onPickBox).not.toHaveBeenCalled();
-    await expect(canvas.getByTestId('card-flip').getAttribute('aria-pressed')).toBe('true');
+    await expect(canvas.getByTestId('card-flip').getAttribute('data-back')).toBe('true');
     await userEvent.click(row());
     await expect(args.onPickBox).toHaveBeenCalledWith('h2');
     await expect(selectedRow(canvasElement)?.textContent).toBe('SM Fairview Main');
@@ -276,7 +276,7 @@ export const SwitchMovesAcross: Story = {
     await userEvent.click(canvas.getByTestId('card-flip'));
     await expect(args.onPickBox).toHaveBeenCalledWith('h4');
     await expect(selectedRow(canvasElement)?.textContent).toBe('Fairview Teraccess 2');
-    await expect(canvas.getByTestId('card-flip').getAttribute('aria-pressed')).toBe('true');
+    await expect(canvas.getByTestId('card-flip').getAttribute('data-back')).toBe('true');
   },
 };
 
@@ -286,7 +286,7 @@ export const SwitchStays: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByTestId('card-flip'));
     await expect(args.onPickBox).not.toHaveBeenCalled();
-    await expect(canvas.getByTestId('card-flip').getAttribute('aria-pressed')).toBe('true');
+    await expect(canvas.getByTestId('card-flip').getAttribute('data-back')).toBe('true');
   },
 };
 
