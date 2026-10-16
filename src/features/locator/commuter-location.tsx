@@ -27,15 +27,14 @@ interface Props {
 
 /**
  * The commuter's own position, when they ask for it, and the camera with
- * them (the owner's LocatorButton, 2026-10-01): kept clear of the card on
- * show, as a picked hintuan is. The button, and the dot on the map with its
- * moods and its gaze.
+ * them, kept clear of the card on show, as a picked hintuan is. The button,
+ * and the dot on the map with its moods and its gaze.
  *
- * A child of PublicMapApp, not hooks of it (the cheap-phone plan, step 15,
- * 2026-10-05): a fix, a turn of the phone and the dot's moods, a second
- * apart, render this alone, not the whole page. The page re-rendered and
- * drew the same: one or two renders a second for nothing while location
- * is on. Its camera still moves at the page's turn (`cameraTurn`).
+ * A child of PublicMapApp, not hooks of it: a fix, a turn of the phone and the
+ * dot's moods, a second apart, render this alone. As hooks of the page they
+ * would re-render it once or twice a second, drawing the same thing, for
+ * nothing while location is on. Its camera still moves at the page's turn
+ * (`cameraTurn`).
  */
 export function CommuterLocation({
   map,

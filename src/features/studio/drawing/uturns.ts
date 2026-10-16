@@ -3,8 +3,7 @@ import { haversine, pointToSegmentM, type LngLat, type Segment } from '@/shared/
 /**
  * Where a routed line turns back on itself: pure geometry over the router's
  * segments, shown to the owner and never changed (the U-turns ringed in
- * amber). Split from snap.ts, the router's client, 2026-09-29; held by
- * tests/unit/uturns-test.mjs.
+ * amber). Held by tests/unit/uturns-test.mjs.
  */
 
 /** Two router vertices this close are the same place: one OSM node, reached twice. */

@@ -9,12 +9,11 @@ import { noop } from '@/shared/utils/noop';
 import type { LocatorMode } from './locator-button';
 
 /**
- * The commuter's own place on the map, and the camera with them: the owner's
- * LocatorButton rules (3870:5408, 2026-10-01), in "Where am I"'s place
- * (2026-09-26). Off until asked, then the browser's own permission prompt;
- * the position never leaves the phone — nothing here talks to a server, and
- * nothing stores it. Once on it stays on (the owner, 2026-10-01: no off, as
- * Google Maps has none); the button only moves the camera:
+ * The commuter's own place on the map, and the camera with them: LocatorButton's
+ * rules (Figma 3870:5408). Off until asked, then the browser's own permission
+ * prompt; the position never leaves the phone — nothing here talks to a server,
+ * and nothing stores it. Once on it stays on, as in Google Maps; the button only
+ * moves the camera:
  *
  *  - LocationOff, no location yet: a tap asks the browser for it, and its
  *    first fix brings the camera as TrackOwnLocation's tap does. Any tap
@@ -30,8 +29,8 @@ import type { LocatorMode } from './locator-button';
  *    turned the way the phone faces. A tap goes back to TrackedLocation's
  *    view, at its zoom, and the next to this again.
  *
- * With no compass to read (a laptop: the owner, 2026-10-01) a tap on
- * TrackedLocation brings the camera back to the commuter instead.
+ * With no compass to read (a laptop) a tap on TrackedLocation brings the
+ * camera back to the commuter instead.
  */
 
 type LocatorStatus = 'off' | 'asking' | 'on' | 'denied' | 'unavailable';
@@ -54,22 +53,18 @@ export interface Fix {
 export const STILL_BELOW_MPS = 0.5;
 
 /**
- * The camera's "height", as the owner reads it (2026-10-01): the map's scale
- * bar, metres per SCALE_PX on the screen (geo.ts). A tap to the commuter keeps the
- * zoom the map is at — "it must not change the camera view height" —
- * unless the bar reads more than FAR_SCALE_M, when it comes in to
- * TRACKED_SCALE_M; the compass view is COMPASS_SCALE_M. Metres across the
- * screen before (200 and 100, and 1000 and 200 ft before that), which read
- * on the bar as some 50 and 20.
+ * The camera's "height" is the map's scale bar, metres per SCALE_PX on the
+ * screen (geo.ts). A tap to the commuter keeps the zoom the map is at, so the
+ * view height does not jump, unless the bar reads more than FAR_SCALE_M, when
+ * it comes in to TRACKED_SCALE_M; the compass view is COMPASS_SCALE_M.
  */
 export const TRACKED_SCALE_M = 200;
 export const COMPASS_SCALE_M = 200;
 const FAR_SCALE_M = 2000;
 
 /**
- * The accuracy circle shows the fix's own radius, held between these (the
- * owner's, 2026-10-01; capped at 150 before): a fix indoors or off the wifi
- * can say 1 km, and a good one 3 m — a circle under the dot.
+ * The accuracy circle shows the fix's own radius, held between these: a fix
+ * indoors or off the wifi can say 1 km, and a good one 3 m — a circle under the dot.
  */
 export const ACCURACY_MIN_M = 40;
 export const ACCURACY_MAX_M = 80;
@@ -82,12 +77,10 @@ export const QUIET_MS = 10_000;
 const COMPASS_PITCH = 45;
 
 /**
- * How big the dot and its beam are drawn at `zoom`, as Google Maps' stays
- * small zoomed out (the owner's ask, 2026-10-01: "at zoomed out it's 10/10
- * so big"): Figma's full size from street level in, shrinking with each
- * zoom out to SMALLEST at city level, and no smaller, so it is still seen —
- * a fifth bigger than at first (0.45), the owner's "make it like 12/10"
- * the same day.
+ * How big the dot and its beam are drawn at `zoom`. Like Google Maps', they
+ * stay small zoomed out: Figma's full size from street level in, shrinking
+ * with each zoom out to SMALLEST at city level, and no smaller, so it is
+ * still seen.
  */
 export function indicatorScale(zoom: number): number {
   const FULL_FROM = 16;
@@ -100,7 +93,7 @@ export function indicatorScale(zoom: number): number {
 /**
  * The button's look for where the camera is, and whether there is a fix to
  * be on: none yet — not asked, refused, asking, or no fix in — is
- * LocationOff (the owner's, 2026-10-01), and a tap asks for it.
+ * LocationOff, and a tap asks for it.
  */
 export function modeFor(camera: Camera, located: boolean): LocatorMode {
   if (!located) return 'LocationOff';
@@ -244,7 +237,7 @@ export interface Locator {
    * The phone's compass has been read: TrackedLocation's tap turns the map
    * by it. Not merely a touch screen — Safari's prompt refused, Firefox, a
    * tablet with no magnetometer give none, and the map would tilt with
-   * nothing to turn by (the ds-reviewer, 2026-10-01).
+   * nothing to turn by.
    */
   compass: boolean;
   camera: Camera;
@@ -253,7 +246,7 @@ export interface Locator {
   /**
    * Asking, and the browser has said "no fix" (a timeout, or unavailable)
    * with none yet. A note beside `asking`, not a status of its own: the watch
-   * is still live and the next fix may come (review finding 11).
+   * is still live and the next fix may come.
    */
   noFix: boolean;
   /** The button: ask, or move the camera on round. */
@@ -271,8 +264,7 @@ interface Options {
   compass: boolean;
   /**
    * Where in a commit the camera moves to the commuter (commit-turn.ts): the
-   * page's turn, after the cards' camera, as when this hook was the page's
-   * own (CommuterLocation, 2026-10-05). Without it, in this hook's effect.
+   * page's turn, after the cards' camera. Without it, in this hook's effect.
    */
   cameraTurn?: Turn;
 }
@@ -321,10 +313,9 @@ export function useLocator(
       if (compass && !readRef.current) askForCompass();
       setCamera((c) => afterTap(c, readRef.current));
       if (Date.now() - heardRef.current < QUIET_MS) return;
-      // A watch gone quiet: the phone's location was off when it started, or
-      // was turned off since. Android offers to turn it on only to a new
-      // request, made in a tap, so the quiet watch makes way for one (the
-      // owner, 2026-10-13: "it doesn't show the turn on location").
+      // A quiet watch means location was off when it started or was turned off
+      // since. Android offers to turn location on only for a new request made in
+      // a tap, so this tap replaces the quiet watch with a new one.
       navigator.geolocation.clearWatch(watchRef.current);
       watchRef.current = null;
     } else {
@@ -368,9 +359,9 @@ export function useLocator(
           navigator.geolocation.clearWatch(watchRef.current ?? -1);
           watchRef.current = null;
           fixesRef.current = [];
-          // The last fix goes too: kept, the walker stood on the map where
-          // the commuter was when they took the permission back, and the
-          // next tap eased the camera there (review of 2026-10-03).
+          // The last fix goes too, so the dot does not stay where the commuter was
+          // when they took the permission back, and the next tap does not ease
+          // the camera there.
           headingRef.current = null;
           setFix(null);
           setCamera('free');
@@ -387,8 +378,7 @@ export function useLocator(
   // Any move of the camera off the commuter, however slight — a finger's, or
   // the app's for them (APP_MOVE: a hintuan picked, an end tapped), which
   // the next fix would otherwise undo — and the button says so
-  // (TrackOwnLocation: "activate it if the focus of camera is change even
-  // slight change"). The camera's own glides here carry neither.
+  // (TrackOwnLocation). The camera's own glides here carry neither.
   useEffect(() => {
     if (!map) return;
     const letGo = (e: { originalEvent?: unknown }) => {
@@ -439,7 +429,7 @@ export function useLocator(
     };
     // The card's height changed: the cards' overview starts in this same
     // commit (useHeightOverview), and the camera following the commuter
-    // takes over from it, as it did when this ran among the page's hooks.
+    // takes over from it.
     // The turn of the render this effect is from: a new one comes with each
     // render of the page, and is no reason to move the camera.
     if (cameraTurn) cameraTurn(follow);

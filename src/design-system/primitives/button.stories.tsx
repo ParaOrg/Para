@@ -68,7 +68,10 @@ export const SpecialSmall: Story = { args: { variant: 'special', size: 'small' }
 
 export const SecondarySmall: Story = { args: { variant: 'secondary', size: 'small' } };
 
-/** Primary at Small's sizes (2026-10-15, 3742:1196); the timeline's "Set as start" wears it in its card's colours (PrimarySmallOnCards). */
+/**
+ * Primary at Small's sizes (3742:1196); the timeline's "Set as start" wears it
+ * on cards (PrimarySmallOnCards).
+ */
 export const PrimarySmall: Story = { args: { variant: 'primary', size: 'small' } };
 
 /** Primary Small's Disabled (3742:1208): Primary's Rest look at the set's opacity/60. */
@@ -104,10 +107,9 @@ export const PrimarySmallStates: Story = {
 };
 
 /**
- * Primary Small on a card, in the card's colours (the owner's "card's
- * colours since it's on top of the card", 2026-10-16; 4147:11947): each
- * fill on its own card, its words the card's. Press one: it darkens to the
- * card's Timeline/surface.
+ * Primary Small on a card, in the card's colours since it sits on top of the
+ * card (4147:11947): each fill on its own card, its words the card's. Press
+ * one: it darkens to the card's Timeline/surface.
  */
 export const PrimarySmallOnCards: Story = {
   render: () => (
@@ -159,7 +161,7 @@ export const AllVariants: Story = {
 /**
  * A real specimen: the studio's card-actions row, at phone width over a
  * map-coloured box, the way CardActions lays out Edit, Extend and Delete —
- * Primary, Secondary and Error since the owner's 2026-10-13.
+ * Primary, Secondary and Error.
  */
 export const CardActionsSpecimen: Story = {
   render: () => (

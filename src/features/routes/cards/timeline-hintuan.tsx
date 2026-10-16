@@ -23,9 +23,9 @@ import type { Livery } from '../model/liveries';
  * its height (1fr), and back. `visibility` flips at the end of the fold, so
  * the row stays in sight while it closes, then leaves the words and the
  * screen reader. Folded and never opened, the row is its <li> alone: with
- * nothing in it its 0fr row is as tall as with its clipped inside, nothing
- * (2026-10-04), and it keeps these classes, so the first opening runs the
- * same transition from the same 0fr.
+ * nothing in it its 0fr row is as tall as with its clipped inside, nothing,
+ * and it keeps these classes, so the first opening runs the same transition
+ * from the same 0fr.
  */
 const ROW_SHOWN = 'visible grid-rows-[1fr] duration-gentle ease-enter';
 const ROW_FOLDED = 'invisible grid-rows-[0fr] duration-base ease-exit';
@@ -61,12 +61,10 @@ interface TimelineHintuanProps {
 /**
  * Figma's TimelineHintuan: a hintuan on the way, its dot on the rail; the
  * whole row is its button. Selected (State=Selected), its name is ExtraBold
- * (Black until 2026-10-13) and
- * the pill of its pesos sits 8 after it, 16 in from the card's edge. Its
- * name is 10 above and below, the row 44 tall, and a button under it 16
- * below the name and 10 above the next row (the owner's Timeline set,
- * 3716:1894, "new spacing changes", 2026-10-16; 8, a 40 row, from his
- * spacing of 2026-10-13, 3778:3183, and the button 8 under the name).
+ * and its pill sits 8 after it, 16 in from the card's edge. Its name is 10
+ * above and below, the row 44 tall, and a button under it 16 below the name
+ * and 10 above the next row (Timeline set, 3716:1894, over the trip frame's
+ * spacing, 3778:3183).
  */
 export function TimelineHintuan({
   id,
@@ -133,7 +131,7 @@ export function TimelineHintuan({
               {pill && <RouteTripLineDetailPill livery={livery} {...pill} />}
             </span>
           </button>
-          {/* Under the row, its own button (the owner's Choosing and Variant3,
+          {/* Under the row, its own button (Figma Choosing and Variant3,
               4137:9887 and 4148:12161): a sibling of the row's, never inside it.
               The rail runs on beside it where it runs on below the row. */}
           {action && (
