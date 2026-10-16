@@ -37,12 +37,19 @@ export function useLitRides(
   /** The direction being redrawn in the studio: no stretches over the draft. */
   hiddenDirectionId: string | null = null,
   /**
-   * A start or an end picked on the trip (useRideTo's `ridden`): the line
-   * outside the ride is drawn in the trip's pale, the chevrons flowing on
-   * over it; a ride the other way round is drawn on the other direction's
-   * line, with chevrons of its own.
+   * An end picked on the trip, after a start or not (useRideTo's `ridden`):
+   * the line outside the ride is drawn in the trip's pale, the chevrons
+   * flowing on over it; a ride the other way round is drawn on the other
+   * direction's line, with chevrons of its own.
    */
   ridden: Ridden | null = null,
+  /**
+   * The start picked on the trip (useRideTo's `startId`). With no ride drawn
+   * — a start alone, or an end the line can't take it to — the trip's ends
+   * lose their S and E, its pin the one S (the owner, 2026-10-16: "Nothing
+   * yet, just the S").
+   */
+  startId: string | null = null,
 ): Ride[] {
   // Where a lit direction passes a hintuan, the line turns orange for that
   // stretch: worked out on the full lines read — a lit direction's is asked
@@ -58,17 +65,19 @@ export function useLitRides(
   // Selected card's directions, or else a list's or a hotspot card's: chevrons
   // flowing inside each line from where the ride starts, and each end a
   // circle with its place's name and, where the route says, its hotspot.
+  const unmarkedId = startId !== null && ridden === null ? (saved.selected?.id ?? null) : null;
   const rides = useMemo(
     () =>
       saved.litDirections.map((v) => ({
         id: v.id,
         line: travelLine(v, hotspots),
         ...(ridden?.directionId === v.id ? { pale: ridden.pale } : {}),
+        ...(v.id === unmarkedId ? { isUnmarked: true } : {}),
         ...directionEnds(v),
         ...directionEndHotspots(v),
         routeCode: v.route?.routeCode ?? null,
       })),
-    [saved.litDirections, hotspots, ridden],
+    [saved.litDirections, hotspots, ridden, unmarkedId],
   );
   // A ride the other way round flows its own way, from the start to the end,
   // on the other direction's line. Its ends are the picks' pins, so it is

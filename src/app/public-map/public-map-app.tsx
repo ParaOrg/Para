@@ -86,10 +86,11 @@ export function PublicMapApp() {
     openRide,
     openTrip,
     backFromTrip,
+    pickOnTrip,
   } = useCardCamera(map, saved, hotspots, cards);
   // What the lit routes wear on the map, their ends named (useLitRides): a
   // picked hintuan's ride flowing only as far as there.
-  const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden);
+  const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden, ride.startId);
 
   // The visitor's own position, the dot and the camera with them live in
   // VisitorLocation, so a fix, the phone's compass and the dot's moods
@@ -201,7 +202,7 @@ export function PublicMapApp() {
           pickedId={ride.pickedId}
           startId={ride.startId}
           hasRide={ride.ridden !== null}
-          onPick={ride.pick}
+          onPick={pickOnTrip}
         />
       )}
       {/*
@@ -282,7 +283,7 @@ export function PublicMapApp() {
           startCode={ride.startCode}
           onSetStart={ride.setStart}
           onRemoveStart={ride.removeStart}
-          onPick={ride.pick}
+          onPick={pickOnTrip}
           onEnd={ride.toEnd}
           endPicked={ride.endPicked}
           dockRef={tripDock}

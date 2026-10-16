@@ -115,8 +115,9 @@ export function useRideTo(
 
   // A hintuan made the ride's start by Set as start (the owner's
   // TimelineRouteDetail, 2026-10-15): the ride runs from it, not from where
-  // the direction leaves, to the picked hintuan or on to the end. Kept by
-  // direction, as the end's pick is.
+  // the direction leaves, to the hintuan picked as its end; alone, it is no
+  // ride yet (his Variant3, 2026-10-16). Kept by direction, as the end's
+  // pick is.
   const [start, setStartPick] = useState<{ directionId: string; rowId: string } | null>(null);
   const liveStart = start && start.directionId === selected?.id ? start : null;
 
@@ -163,16 +164,17 @@ export function useRideTo(
   );
 
   // The ride between the picks: from the start (or where the direction
-  // leaves) to the picked hintuan (or where it goes). An end before the start
-  // runs on the other direction's line (the owner's Variant5, 2026-10-15),
-  // its picks landing on boxes that way passes.
+  // leaves) to the picked hintuan. An end before the start runs on the other
+  // direction's line (the owner's Variant5, 2026-10-15), its picks landing on
+  // boxes that way passes. A start alone is no ride yet, the trip left whole
+  // until its end is picked (his Variant3, 2026-10-16).
   const otherWay = opts.otherWay ?? null;
   const linked = opts.linkedDirectionIds;
   const span = useMemo(() => {
-    if (!selected || (!live && !liveStart)) return null;
+    if (!selected || !live) return null;
     const startId = liveStart?.rowId ?? null;
-    const endId = live?.rowId ?? null;
-    if (startId !== null && endId !== null && endsBeforeStart(selected, hotspots, startId, endId)) {
+    const endId = live.rowId;
+    if (startId !== null && endsBeforeStart(selected, hotspots, startId, endId)) {
       if (!otherWay || !linked) return null;
       const passes = (id: string) => linked(id).includes(otherWay.id);
       const ride = rideTheOtherWay(otherWay, hotspots, startId, endId, passes);
@@ -227,8 +229,8 @@ export function useRideTo(
 
   /**
    * Set as start, under the picked hintuan's row (the owner's Choosing and
-   * Variant3, 2026-10-15): it becomes the ride's start, and the ride runs
-   * from it to where the direction goes until another row is tapped.
+   * Variant3, 2026-10-15): it becomes the ride's start, standing alone until
+   * another row is tapped as the end (2026-10-16).
    */
   const setStart = useCallback(() => {
     if (!selectedId || liveRow === null) return;
@@ -268,9 +270,19 @@ export function useRideTo(
   // out, 2026-09-28), or, closer in than 300 m, at the visitor's own zoom
   // (glideFor). `offset`, never `padding`: MapLibre keeps a padding for
   // every later move, and a trip's fit or "Where am I" would land off centre
-  // ever after.
+  // ever after. An end picked after a start, with a ride between them, does
+  // not glide: the camera takes in that ride (the owner, 2026-10-16;
+  // useCardCamera's pickOnTrip). With none to take in (an end above the
+  // start on a route drawn one way only, or a box the line misses) it glides
+  // to the end as any pick does. Read as the cut changes, so letting the
+  // start go moves nothing.
+  // Kept before the glide's effect, which reads it in the same commit.
+  const isRideFramed = useRef(false);
   useEffect(() => {
-    if (!map || !cut || carried.current === cut.endHotspotId) return;
+    isRideFramed.current = liveStart !== null && span !== null;
+  });
+  useEffect(() => {
+    if (!map || !cut || carried.current === cut.endHotspotId || isRideFramed.current) return;
     const glide = glideFor(map, cut.at, onGlide.current?.() ?? [0, 0]);
     if (glide) map.easeTo({ ...glide, duration: 700 }, APP_MOVE);
   }, [map, cut]);
@@ -323,8 +335,9 @@ export function useRideTo(
       };
       if (live && liveStart) {
         // The ride back: the end lands as the start, the start as the end,
-        // each on its place's box the other way passes; one that lands
-        // nowhere is let go, and the ride runs on from or up to that end.
+        // each on its place's box the other way passes. One that lands
+        // nowhere is let go: the end alone is a ride from where the way back
+        // leaves, the start alone no ride yet.
         const backFrom = land(live.rowId);
         const backTo = land(liveStart.rowId);
         if (backFrom) setStartPick({ directionId: next.id, rowId: backFrom.id });

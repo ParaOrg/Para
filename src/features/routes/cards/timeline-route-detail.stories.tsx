@@ -245,25 +245,40 @@ export const RideChoosing: Story = {
 
 /**
  * Variant3 (4148:12161): after Set as start, Shaw Boulevard is the start,
- * × Remove as start under it, the pill pricing the ride on to Taft Avenue,
- * which keeps its E. North Avenue loses its S, and the stations before
- * Shaw Boulevard fold.
+ * × Remove as start under it, its pill its code alone. A start alone is no
+ * ride yet (the owner, 2026-10-16): its dot stands alone, the rail broken
+ * just above it and just below and running on through every other station,
+ * the fold above Taft Avenue among them; North Avenue loses its S and Taft
+ * Avenue has no E until an end is picked. Folded as Choosing was, the
+ * stations after it in that fold.
  */
 export const RideStartPicked: Story = {
-  args: { ...onMrt3, start: shaw, startCode: 'YL07', pickedPesos: '₱10' },
+  args: { ...onMrt3, start: shaw, startCode: 'YL07' },
 };
 
-/** Variant3 with the stations before the start opened: their dots alone, no rail, and their fold none either. */
-export const RideStartPickedOpened: Story = {
-  args: RideStartPicked.args,
-  play: async ({ canvasElement }) => {
-    const fold = canvasElement.querySelector<HTMLButtonElement>(
-      'button[data-testid="trip-fold"][data-part="before"]',
-    );
-    if (!fold) throw new Error('no fold before the start');
-    await userEvent.click(fold);
-    fold.blur();
-  },
+/** Variant3, opened: the rail through every station after the start. */
+export const RideStartPickedOpened: Story = { ...RideStartPicked, play: openFold };
+
+/**
+ * A start alone on the first station, Quezon Avenue: the rail broken
+ * between it and North Avenue, North Avenue's dot alone too.
+ */
+export const RideStartFirst: Story = {
+  args: { ...onMrt3, start: quezon, startCode: 'YL02' },
+  play: openFold,
+};
+
+/**
+ * A start alone on the last station, Magallanes: nothing after it to fold,
+ * the rail broken between it and Taft Avenue, Taft Avenue's dot alone too.
+ */
+export const RideStartLast: Story = {
+  args: { ...onMrt3, start: 'h10', startCode: 'YL12' },
+};
+
+/** A jeep's start alone: its S and × Remove as start, no pill, no code to say and no ride to price. */
+export const RideStartJeep: Story = {
+  args: { start: 'h2', onSetStart: fn(), onRemoveStart: fn() },
 };
 
 /** Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride Shaw Boulevard → Ayala. */

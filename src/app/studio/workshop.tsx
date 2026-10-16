@@ -112,11 +112,19 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     pickOnPlaceCard,
     openTrip,
     backFromTrip,
+    pickOnTrip,
   } = useCardCamera(map, saved, hotspots, cards);
 
   // What the lit routes wear on the map, as on the public map (useLitRides);
   // none of the orange over the direction being redrawn.
-  const rides = useLitRides(map, saved, hotspots.hotspots, draw.target.directionId, ride.ridden);
+  const rides = useLitRides(
+    map,
+    saved,
+    hotspots.hotspots,
+    draw.target.directionId,
+    ride.ridden,
+    ride.startId,
+  );
 
   // The open trip's hintuans, worked out as the trip or the hotspots change,
   // as the public map works them out (PublicMapApp): the card's rows and
@@ -236,7 +244,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           pickedId={ride.pickedId}
           startId={ride.startId}
           hasRide={ride.ridden !== null}
-          onPick={ride.pick}
+          onPick={pickOnTrip}
         />
       )}
       {/* Keyed on the pick: another hintuan pops a fresh circle. */}
@@ -284,7 +292,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           startCode={ride.startCode}
           onSetStart={ride.setStart}
           onRemoveStart={ride.removeStart}
-          onPick={ride.pick}
+          onPick={pickOnTrip}
           onEnd={ride.toEnd}
           endPicked={ride.endPicked}
           dockRef={tripDock}

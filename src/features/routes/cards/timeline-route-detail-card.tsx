@@ -20,11 +20,11 @@ export type Fare = Fares | typeof FREE;
 type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** Figma's Distance tile (Kilometer until the owner's ask of 2026-10-15): the whole ride's length, in metres; written `12.8km`. */
   metres: number;
-  /** …and the ride between the picks, which the tile shows while a start or an end is picked, as the fare tile does. */
+  /** …and the ride between the picks, which the tile shows once an end is picked, as the fare tile does. */
   pickedMetres?: number;
   /** The fare tile's pesos for the whole ride, or FREE. Omitted when unpriced, and the tile with it. */
   fare?: Fare;
-  /** …and for the ride between the picks, which the tile shows while a start or an end is picked. */
+  /** …and for the ride between the picks, which the tile shows once an end is picked. */
   pickedFare?: Fare;
   /**
    * Whether the tile shows the Discounted fare, and where a tap says so: the
@@ -91,7 +91,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
  * "Discounted fare" (2026-09-30). A first visit opens on Regular. The Distance tile follows the pick the
  * same way, from where the trip leaves to there (the owner, 2026-09-30: "it
  * should follow the picked hintuan"). Since a start can be picked too
- * (2026-10-15), both tiles read the ride from the start to the end.
+ * (2026-10-15), both tiles read the ride from the start to the end, once the
+ * end is picked: a start alone is no ride yet (2026-10-16).
  * The pesos moved off the rail into their tile with this set; a route no
  * fare rule prices has no Expected fare tile, and Distance takes the row
  * (the owner kept that default, 2026-09-29: nothing is drawn for it).
@@ -148,8 +149,9 @@ export function TimelineRouteDetailCard({
   // the same day).
   const [turns, setTurns] = useState(0);
   const othersHeading = useId();
-  // A start or an end picked: the tiles read the ride between them.
-  const hasRide = picked !== null || start !== null;
+  // An end picked: the tiles read the ride between it and the start. A start
+  // alone is no ride yet, the whole trip's shown (the owner, 2026-10-16).
+  const hasRide = picked !== null;
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
   return (
