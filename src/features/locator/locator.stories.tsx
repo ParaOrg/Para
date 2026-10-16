@@ -28,7 +28,7 @@ interface Args {
 }
 
 /**
- * The owner's 393 × 852 frame, a page as the app's root is: the sheet says
+ * Figma's 393 × 852 frame, a page as the app's root is: the sheet says
  * where its top is here. `wide`: 1280 × 800, past `@float:`, the card
  * floating in the corner.
  */

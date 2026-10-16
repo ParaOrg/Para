@@ -29,12 +29,12 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
 }
 
 /**
- * The LocatorButton where the owner put it (ScreenLocationBehavior,
- * 3870:5941, 2026-10-01): at the map's right edge, 12 above the card's
- * sheet, following it down from Middle to Low; up past Middle it stays
- * where Middle left it, and the sheet covers it. With no card open it sits
- * at the map's foot; where the card floats in the corner (`@float:`), at
- * the bottom right, clear of the credit line (the owner, 2026-10-01).
+ * The LocatorButton placed as ScreenLocationBehavior draws it (Figma
+ * 3870:5941): at the map's right edge, 12 above the card's sheet, following
+ * it down from Middle to Low; up past Middle it stays where Middle left it,
+ * and the sheet covers it. With no card open it sits at the map's foot. Where
+ * the card floats in the corner (`@float:`), which the frame does not show, it
+ * sits at the bottom right, clear of the credit line.
  * BottomSheet says where its top is as `--dock-y` on the page; this layer
  * slides the same way, by the same length.
  *
@@ -71,7 +71,7 @@ export function Locator({ locator, docked }: Props) {
       style={{ translate: `0 ${y}` }}
     >
       <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-10 @float:mb-0">
-        {/* The note's look is WhereAmI's, raw palette and all: no Figma design for it yet (the owner's to draw, 2026-10-01). */}
+        {/* No Figma design for the note yet, so it uses the raw palette. */}
         {note && (
           <p
             role="status"

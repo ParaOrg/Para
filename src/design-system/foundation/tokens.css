@@ -71,10 +71,9 @@
   --color-taupe-900: #1d1816;
   --color-taupe-950: #0c0a09;
 
-  /* Primitive: the train lines' own colours (2026-10-13), one family a line,
-     only the four steps its Map/Rail/… semantics use: 200 the pale, 600 the
-     surface, 700 the border, 800 the timeline. MRT-3's 200 and 600 brightened
-     on 2026-10-16 (the owner's, from #fae385 and #e2b709). */
+  /* Primitive: the train lines' own colours, one family a line, only the four
+     steps its Map/Rail/… semantics use: 200 the pale, 600 the surface, 700 the
+     border, 800 the timeline. */
   --color-light-rail-way-one-200: #b7f5ca;
   --color-light-rail-way-one-600: #1d7739;
   --color-light-rail-way-one-700: #12612a;
@@ -112,7 +111,7 @@
   --border-secondary: var(--color-neutral-300);
   --border-tertiary: var(--color-neutral-400);
   --border-error: var(--color-red-700);
-  --border-plain: var(--color-white); /* the hotspot names' halo on the map (2026-09-30) */
+  --border-plain: var(--color-white); /* the hotspot names' halo on the map */
 
   /* Background. Figma: Background/… */
   --surface: var(--color-white);
@@ -121,17 +120,16 @@
   --surface-quaternary: var(--color-neutral-200);
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
-  /* Black at 60%: what dims the page under a dialog laid over it, the
-     install prompt's (3732:2512, 2026-10-13). Figma keeps the 60 as the
-     variable's opacity (opacity/60); here it is in the value, since the
-     token means the see-through colour itself. */
+  /* Black at 60%: what dims the page under a dialog laid over it, the install
+     prompt's (3732:2512). Figma keeps the 60 as the variable's opacity
+     (opacity/60); here it is in the value, since the token means the
+     see-through colour itself. */
   --surface-transparent: color-mix(in srgb, var(--color-black) 60%, transparent);
 
-  /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia and pink
-     (pink came on 2026-10-13, RouteCard 4071:7014); yellow left on 2026-10-12 ("it's not
-     good on the eyes"), its variables with it. Each livery's
-     surface-pale is the rest of a lit line past a picked hintuan (the owner's, 2026-10-12;
-     red's alone, and red/700, until then). */
+  /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia
+     and pink (pink: RouteCard 4071:7014); no yellow livery, as it is not good on
+     the eyes. Each livery's surface-pale is the rest of a lit line past a picked
+     hintuan. */
   --card-red-surface: var(--color-red-800);
   --card-red-surface-pale: var(--color-red-200);
   --card-red-border-primary: var(--color-red-900);
@@ -157,8 +155,8 @@
   --card-pink-border-primary: var(--color-pink-800);
   --card-pink-timeline-surface: var(--color-pink-900);
 
-  /* Error actions — the destructive button. Figma: Error/… (2026-09-28,
-     added for the Button so its fill stopped being the one primitive). */
+  /* Error actions — the destructive button, whose fill is a semantic rather
+     than a bare primitive. Figma: Error/… */
   --error-surface: var(--color-red-700);
   --error-surface-secondary: var(--color-red-800);
 
@@ -167,47 +165,44 @@
   --brand-surface-secondary: var(--color-blue-800);
   --brand-border: var(--color-blue-800);
 
-  /* One component's own colour. Figma: Components/… (the Tooltip, 2026-09-28). */
+  /* One component's own colour. Figma: Components/… (the Tooltip). */
   --components-tooltip-surface: var(--color-neutral-900);
 
-  /* The map: its route lines and hintuans. Figma: Map/… (2026-09-29). Two
-     looks, no opacity — every line at rest, the selected one drawn over it
-     (the owner's call: see-through lines stacked and confused). */
-  --map-route-line-surface-default: var(--color-blue-300); /* blue/200 until 2026-09-30 */
+  /* The map: its route lines and hintuans. Figma: Map/… Two looks, no
+     opacity — every line at rest, the selected one drawn over it: see-through
+     lines stack and confuse. */
+  --map-route-line-surface-default: var(--color-blue-300);
   --map-route-line-surface-selected: var(--color-blue-700);
   --map-route-line-arrow-rest: var(--color-white);
   --map-route-line-arrow-inverse: var(--color-neutral-900);
-  /* A lit line where it passes a hintuan (2026-09-30; orange #FF9831 before). */
+  /* A lit line where it passes a hintuan. */
   --map-route-line-hintuan-surface-default: var(--color-green-400);
-  /* The hotspot boxes on the map: the owner's HotspotOverlayCard (3837:11308,
-     2026-09-30). Figma gives the surfaces an opacity too — Hintuan 30%, its
-     selected 60%, Terminal 25% — which only the map paints, from
-     map-colours.ts (MAP_OPACITY); here the colour alone. */
+  /* The hotspot boxes on the map: HotspotOverlayCard (3837:11308). Figma gives
+     the surfaces an opacity too — Hintuan 30%, its selected 60%, Terminal 25% —
+     which only the map paints, from map-colours.ts (MAP_OPACITY); here the
+     colour alone. */
   --map-overlay-card-hintuan-surface: var(--color-green-500);
   --map-overlay-card-hintuan-surface-selected: var(--color-green-500);
   --map-overlay-card-hintuan-content: var(--color-green-800);
   --map-overlay-card-terminal-surface: var(--color-sky-500);
   --map-overlay-card-terminal-border: var(--color-sky-800);
   --map-overlay-card-terminal-content: var(--color-sky-800);
-  /* A place's boxes as rows on its HintuanCard (3854:12690, 2026-09-30):
+  /* A place's boxes as rows on its HintuanCard (3854:12690):
      solid, white words — the card's own colours, not the map's. */
   --map-hotspots-card-hintuan-surface: var(--color-green-700);
   --map-hotspots-card-hintuan-border-primary: var(--color-green-900);
   --map-hotspots-card-terminal-surface: var(--color-sky-700);
   --map-hotspots-card-terminal-border-primary: var(--color-sky-900);
   /* The commuter's own place: LocatorIndicatorOverlay's accuracy circle and
-     heading cone, and the LocatorButton's ring (3870:5247, 2026-10-01).
-     Figma gives it 15% opacity with the colour; here the colour, and `/15`
-     where it is used. Blue/300 since the owner's third pass the same day
-     (blue/600 before). */
+     heading cone, and the LocatorButton's ring (3870:5247). Figma gives it
+     15% opacity with the colour; here the colour, and `/15` where it is
+     used. */
   --map-locator-indicator-overlay-surface: var(--color-blue-300);
-  /* Its circle's hairline, at 75%, and the beam's colour (3870:5247, the
-     owner's second and third passes, 2026-10-01; blue/800 at first). */
+  /* Its circle's hairline, at 75%, and the beam's colour (3870:5247). */
   --map-locator-indicator-overlay-border: var(--color-blue-600);
-  /* The train lines, each in its own colour (2026-10-13): LRT-1, LRT-2 and
-     MRT-3 as Figma names them, LightRailWayOne… The owner's RouteCards for
-     them (4074:7402, 4080:4124, 4080:4241) wear surface and border-primary,
-     as a livery's card does. */
+  /* The train lines, each in its own colour: LRT-1, LRT-2 and MRT-3 as Figma
+     names them, LightRailWayOne… Their RouteCards (4074:7402, 4080:4124,
+     4080:4241) wear surface and border-primary, as a livery's card does. */
   --map-rail-light-rail-way-one-surface: var(--color-light-rail-way-one-600);
   --map-rail-light-rail-way-one-surface-pale: var(--color-light-rail-way-one-200);
   --map-rail-light-rail-way-one-border-primary: var(--color-light-rail-way-one-700);
@@ -332,22 +327,21 @@
 }
 
 /*
- * Motion. Figma: the Motion collection (drafted with the owner and passed
- * "good" on 2026-09-28; the Motion page there plays each one). Tailwind
- * turns these namespaces into duration-quick, delay-tooltip, ease-enter.
+ * Motion. Figma: the Motion collection (the Motion page there plays each one).
+ * Tailwind turns these namespaces into duration-quick, delay-tooltip, ease-enter.
  * Every transition takes one duration and one ease from here, nothing in
  * between; an exit runs about two thirds of its enter (tooltip: base in,
  * quick out). Animate opacity and transform only — save a fold, which has
  * to push what is below it down: the trip card's hintuans open and close
- * their height (TimelineRouteDetailCard; the owner allowed it, 2026-09-29).
+ * their height (TimelineRouteDetailCard).
  */
 @theme {
   --transition-duration-instant: 100ms; /* press */
   --transition-duration-quick: 150ms; /* hover, colour, shadow */
   --transition-duration-base: 200ms; /* tooltips, small things appearing */
   --transition-duration-gentle: 300ms; /* cards, panels, sheets */
-  --transition-duration-sheet: 313ms; /* the bottom sheet's glide: 250 ms, then 8/10 as fast (the owner, 2026-09-30: "the motion is too fast") */
-  --transition-duration-turn: 500ms; /* the fare tile's ↻: gentle, then 6/10 as fast (the owner, 2026-09-30: "it's fast") */
+  --transition-duration-sheet: 313ms; /* the sheet's glide: 250 ms reads too fast, so 8/10 speed */
+  --transition-duration-turn: 500ms; /* the fare tile's ↻: 300 ms reads fast, so 6/10 speed */
   --transition-duration-slow: 450ms; /* big moves, full screen */
 
   --transition-delay-tooltip: 800ms; /* hover before a tooltip shows */
@@ -358,10 +352,10 @@
 }
 
 /*
- * Shadows. Figma keeps these as effect styles, not variables (2026-09-28);
- * each is named here by its style's own name — PrimaryButton/PrimaryButtonRest
- * → shadow-primary-button-rest — so the Figma panel and the class read the
- * same. Layers are listed in Figma's CSS order (its effects array, reversed).
+ * Shadows. Figma keeps these as effect styles, not variables; each is named
+ * here by its style's own name — PrimaryButton/PrimaryButtonRest →
+ * shadow-primary-button-rest — so the Figma panel and the class read the same.
+ * Layers are listed in Figma's CSS order (its effects array, reversed).
  * Special's edge is an inset hairline in Border/secondary, not a stroke, so
  * it follows the semantic. `inline` so that var() resolves where it is used.
  */
@@ -394,23 +388,22 @@
   --shadow-route-card-inverse:
     inset 0 3px 2px 0 rgb(255 255 255 / 0.4), inset 0 -3px 3px 0 rgb(0 0 0 / 0.2);
 
-  /* A bottom sheet, lifted off the map (BottomSheet/TopShadow, 3817:6007, 2026-09-30; its Figma
-   * effect style still reads BottomToolbar/TopShadow). */
+  /* A bottom sheet, lifted off the map (BottomSheet/TopShadow, 3817:6007; its Figma
+   * effect style is named BottomToolbar/TopShadow). */
   --shadow-bottom-sheet-top-shadow: 0 -3px 8px 0 rgb(43 43 43 / 0.08);
 
-  /* A hintuan's name lifted off the map: the picked one's (3847:11760, 2026-09-30) until the
-   * owner's redrawing of 2026-10-12, those along an open trip's line until his labels of
-   * 2026-10-13 (HintuanLabel, 4068:4791) drew them flat. Mirrored from Figma; nothing wears it now. */
+  /* A hintuan's name lifted off the map (3847:11760). Mirrored from Figma; nothing wears it
+   * now (HintuanLabel, 4068:4791, draws names flat). */
   --shadow-selected-hintuan-route-title: 0 2px 8px 0 rgb(0 0 0 / 0.32);
 
-  /* A card floating over the map: the Map Style card (shadow-sm, 4179:10790, 2026-10-16).
+  /* A card floating over the map: the Map Style card (shadow-sm, 4179:10790).
    * Figma's own shadow-sm, in place of Tailwind's, which nothing wore. */
   --shadow-sm: 0 3px 12px 0 rgb(43 43 43 / 0.12);
 
-  /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242, 2026-10-01). */
+  /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);
 
-  /* A RouteCard's State=Selected: pressed in, lit from the top left (2026-09-29). */
+  /* A RouteCard's State=Selected: pressed in, lit from the top left. */
   --shadow-route-card-primary-selected:
     inset 3px 3px 8px 0 rgb(12 12 12 / 0.64), inset -1px -1px 1px 0 rgb(18 18 18 / 0.24);
   --shadow-route-card-inverse-selected:

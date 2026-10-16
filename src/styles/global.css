@@ -11,9 +11,9 @@
  * looks right inside a Storybook frame too. 40rem is roughly where a floating
  * card stops covering the thing it describes.
  *
- * The redesigned route cards (the owner's frames of 2026-09-28) dock at the
- * bottom until `@float:` and only then sit in the top-left corner: he drew
- * them there at 1024 and 1536 wide, docked at 640 and 393.
+ * The route cards dock at the bottom until `@float:` and only then sit in the
+ * top-left corner: the Figma frames draw them there at 1024 and 1536 wide,
+ * docked at 640 and 393.
  */
 @theme {
   --container-wide: 40rem;
@@ -74,8 +74,7 @@ body,
 /*
  * The top-right corner holds the design button and its Map Style card
  * (BasemapControl), which hangs down the map's right edge: above the
- * LocatorButton's dock (z 5) as the button was at z-10 before it became a
- * corner control (2026-10-16), so a card is never under a button that would
+ * LocatorButton's dock (z 5), so a card is never under a button that would
  * take its taps. MapLibre's own 2 would put it under.
  */
 .maplibregl-ctrl-top-right {

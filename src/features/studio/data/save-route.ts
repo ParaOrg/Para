@@ -8,10 +8,12 @@ import { saveDirection, type SaveInput } from './routes-write';
  * A direction saved, then every hintuan's route list brought up to date
  * against its line: a hintuan's list is a fact about geometry, so a changed
  * line re-checks itself against all of them (terminal links are the owner's
- * and are left alone). Two steps, not one transaction (PLAN.md's known risk
- * #3): `onWritten` hears of the row the moment it is in, so a retry after a
- * failed link sync updates that row instead of inserting the route again
- * (review finding 13). Split from save-panel.tsx, 2026-09-29.
+ * and are left alone). `onWritten` hears of the row the moment it is in, so a
+ * retry after a failed link sync updates that row instead of inserting the
+ * route again.
+ *
+ * TODO: two steps, not one transaction; one RPC per save would make it one
+ * (PLAN.md, Known risks #3).
  */
 export async function saveRouteAndLinks(
   input: SaveInput,
