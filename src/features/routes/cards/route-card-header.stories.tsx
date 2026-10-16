@@ -4,8 +4,8 @@ import { fn } from 'storybook/test';
 import { RouteCardHeader } from './route-card-header';
 
 /**
- * The top of the route list and of a trip (Figma 3742:1049): Default, the
- * Jeep and the count, over a list; Variant2, ‹ back, over a trip. SWITCH
+ * The top of the route list and of a trip (Figma 3742:1049): Default,
+ * Routes and the count, over a list; Variant2, ‹ back, over a trip. SWITCH
  * names the way a tap leads to (switchWord; the owner, 2026-10-16): Pabalik
  * over Papunta and back, on a train the other bound. It rests disabled when
  * the other way round has nothing drawn.
@@ -38,7 +38,7 @@ type Story = StoryObj;
 // Papunta showing, so SWITCH names where a tap leads: Pabalik (the owner's ask of 2026-10-16).
 const common = { onSwitch: fn(), onClose: fn(), switchable: true, back: false, way: 'Pabalik' };
 
-/** Over the route list: the Jeep and the count. */
+/** Over the route list: Routes and the count (4192:12133, the owner's "new update" of 2026-10-16). */
 export const Default: Story = {
   render: () => <RouteCardHeader {...common} routeCount="2 Routes" />,
 };
