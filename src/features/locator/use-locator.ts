@@ -3,230 +3,21 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 
 import type { Turn } from '@/shared/hooks/commit-turn';
 import type { Snap } from '@/shared/ui/sheet-gesture';
-import { haversine, zoomForScale, type LngLat } from '@/shared/utils/geo';
-import { noop } from '@/shared/utils/noop';
 
 import type { LocatorMode } from './locator-button';
-
-/**
- * The commuter's own place on the map, and the camera with them: LocatorButton's
- * rules (Figma 3870:5408). Off until asked, then the browser's own permission
- * prompt; the position never leaves the phone — nothing here talks to a server,
- * and nothing stores it. Once on it stays on, as in Google Maps; the button only
- * moves the camera:
- *
- *  - LocationOff, no location yet: a tap asks the browser for it, and its
- *    first fix brings the camera as TrackOwnLocation's tap does. Any tap
- *    after QUIET_MS without a fix asks again, so Android can offer to turn
- *    the phone's location on.
- *  - TrackOwnLocation, the camera elsewhere — the moment it moves off the
- *    commuter at all, by a finger or by the app. A tap brings it to them at
- *    the zoom it is at; from further out than 2 km on the scale bar, in to
- *    200 m (trackedZoom).
- *  - TrackedLocation, the camera on them, north up, following each fix. A
- *    tap turns on the compass.
- *  - TracksTheMapBasedOnCompassFacing, the camera tilted, 200 m on the bar,
- *    turned the way the phone faces. A tap goes back to TrackedLocation's
- *    view, at its zoom, and the next to this again.
- *
- * With no compass to read (a laptop) a tap on TrackedLocation brings the
- * camera back to the commuter instead.
- */
-
-type LocatorStatus = 'off' | 'asking' | 'on' | 'denied' | 'unavailable';
-
-/** Where the camera is with the commuter: elsewhere, on them, on them turned with the phone. */
-export type Camera = 'free' | 'tracked' | 'compass';
-
-export interface Fix {
-  at: LngLat;
-  /** Metres, the browser's 68 % radius. */
-  accuracy: number;
-  /** Metres a second, the browser's or derived from the last fixes. */
-  speed: number;
-  /** Degrees clockwise from north, from the fixes; null until they have shown one. */
-  heading: number | null;
-  time: number;
-}
-
-/** Below this the GPS's own heading is noise: a slow shuffle, or drift while still. */
-export const STILL_BELOW_MPS = 0.5;
-
-/**
- * The camera's "height" is the map's scale bar, metres per SCALE_PX on the
- * screen (geo.ts). A tap to the commuter keeps the zoom the map is at, so the
- * view height does not jump, unless the bar reads more than FAR_SCALE_M, when
- * it comes in to TRACKED_SCALE_M; the compass view is COMPASS_SCALE_M.
- */
-export const TRACKED_SCALE_M = 200;
-export const COMPASS_SCALE_M = 200;
-const FAR_SCALE_M = 2000;
-
-/**
- * The accuracy circle shows the fix's own radius, held between these: a fix
- * indoors or off the wifi can say 1 km, and a good one 3 m — a circle under the dot.
- */
-export const ACCURACY_MIN_M = 40;
-export const ACCURACY_MAX_M = 80;
-/**
- * A watch that has given no fix for this long has gone quiet, and a tap
- * starts a new one. A phone with location on gives one about every second.
- */
-export const QUIET_MS = 10_000;
-/** How far the compass view tilts: "slightly ... diagonally", as Google's does. */
-const COMPASS_PITCH = 45;
-
-/**
- * How big the dot and its beam are drawn at `zoom`. Like Google Maps', they
- * stay small zoomed out: Figma's full size from street level in, shrinking
- * with each zoom out to SMALLEST at city level, and no smaller, so it is
- * still seen.
- */
-export function indicatorScale(zoom: number): number {
-  const FULL_FROM = 16;
-  const SMALLEST_AT = 12;
-  const SMALLEST = 0.54;
-  const t = Math.min(1, Math.max(0, (zoom - SMALLEST_AT) / (FULL_FROM - SMALLEST_AT)));
-  return SMALLEST + (1 - SMALLEST) * t;
-}
-
-/**
- * The button's look for where the camera is, and whether there is a fix to
- * be on: none yet — not asked, refused, asking, or no fix in — is
- * LocationOff, and a tap asks for it.
- */
-export function modeFor(camera: Camera, located: boolean): LocatorMode {
-  if (!located) return 'LocationOff';
-  if (camera === 'free') return 'TrackOwnLocation';
-  return camera === 'tracked' ? 'TrackedLocation' : 'TracksTheMapBasedOnCompassFacing';
-}
-
-/** Where a tap takes the camera: to the commuter; then round, tracked ⇄ compass, once the phone's compass has been read. */
-export function afterTap(camera: Camera, compass: boolean): Camera {
-  return camera === 'tracked' && compass ? 'compass' : 'tracked';
-}
-
-/**
- * The zoom a tap to the commuter keeps: the map's own, unless its scale bar
- * reads more than FAR_SCALE_M, when it comes in to TRACKED_SCALE_M.
- */
-export function trackedZoom(current: number, lat: number): number {
-  return current < zoomForScale(FAR_SCALE_M, lat) ? zoomForScale(TRACKED_SCALE_M, lat) : current;
-}
-
-/** The accuracy circle's radius for a fix this good. */
-export const circleRadius = (accuracy: number) =>
-  Math.min(ACCURACY_MAX_M, Math.max(ACCURACY_MIN_M, accuracy));
-
-/** Compass bearing from a to b, degrees clockwise from north. */
-export function bearing(a: LngLat, b: LngLat): number {
-  const r = Math.PI / 180;
-  const dLng = (b[0] - a[0]) * r;
-  const [la, lb] = [a[1] * r, b[1] * r];
-  const y = Math.sin(dLng) * Math.cos(lb);
-  const x = Math.cos(la) * Math.sin(lb) - Math.sin(la) * Math.cos(lb) * Math.cos(dLng);
-  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-}
-
-/** Degrees between two headings, the short way round. */
-export function apart(a: number, b: number): number {
-  return Math.abs(((((a - b) % 360) + 540) % 360) - 180);
-}
-
-/**
- * Speed and heading from a run of fixes, for a browser that gives neither
- * (a laptop, an emulator, many phones indoors). The last fix against the
- * newest one at least 2 s older, so two fixes a second apart do not read
- * GPS jitter as a sprint; heading only once they are further apart than
- * the jitter, else the last known heading.
- */
-export function motionFrom(
-  fixes: readonly { at: LngLat; accuracy: number; time: number }[],
-  lastHeading: number | null,
-): { speed: number; heading: number | null } {
-  const last = fixes[fixes.length - 1];
-  if (!last) return { speed: 0, heading: lastHeading };
-  let ref: (typeof fixes)[number] | null = null;
-  for (let i = fixes.length - 2; i >= 0; i--) {
-    if (last.time - fixes[i].time >= 2000) {
-      ref = fixes[i];
-      break;
-    }
-  }
-  if (!ref) return { speed: 0, heading: lastHeading };
-  const metres = haversine(ref.at, last.at);
-  const speed = metres / ((last.time - ref.time) / 1000);
-  const heading =
-    metres > Math.max(3, Math.min(ref.accuracy, last.accuracy) / 4)
-      ? bearing(ref.at, last.at)
-      : lastHeading;
-  return { speed, heading };
-}
-
-/** What a phone's orientation event says, as far as a heading goes. */
-interface Orientation {
-  alpha: number | null;
-  absolute: boolean;
-  webkitCompassHeading?: number;
-}
-
-/**
- * The way the phone's top faces, degrees clockwise from north, turned for
- * a screen held sideways: Safari's own compass heading, or an absolute
- * `alpha` (counter-clockwise from north, so turned round). Null: the
- * event has none — an `alpha` relative to wherever the phone started.
- */
-export function compassHeading(e: Orientation, screenAngle: number): number | null {
-  let h: number | null = null;
-  if (typeof e.webkitCompassHeading === 'number' && !Number.isNaN(e.webkitCompassHeading))
-    h = e.webkitCompassHeading;
-  else if (e.absolute && e.alpha !== null) h = 360 - e.alpha;
-  return h === null ? null : (((h + screenAngle) % 360) + 360) % 360;
-}
-
-/** A compass reading moves the camera only past this: the sensor shivers by a degree or two. */
-const TURN_DEG = 3;
-
-/**
- * The phone's compass heading while `on`, or null — no sensor, a laptop,
- * permission refused. Readings closer than TURN_DEG to the last are left
- * out, so the camera turning with it is not restarted sixty times a second.
- */
-function useCompass(on: boolean): number | null {
-  const [heading, setHeading] = useState<number | null>(null);
-  useEffect(() => {
-    if (!on || typeof window === 'undefined') return;
-    const absolute = 'ondeviceorientationabsolute' in window;
-    const type = absolute ? 'deviceorientationabsolute' : 'deviceorientation';
-    const read = (e: Event) => {
-      const o = e as DeviceOrientationEvent & { webkitCompassHeading?: number };
-      const h = compassHeading(
-        {
-          alpha: o.alpha,
-          absolute: absolute || o.absolute,
-          webkitCompassHeading: o.webkitCompassHeading,
-        },
-        screen.orientation?.angle ?? 0,
-      );
-      if (h !== null) setHeading((was) => (was === null || apart(was, h) >= TURN_DEG ? h : was));
-    };
-    window.addEventListener(type, read);
-    return () => {
-      window.removeEventListener(type, read);
-      setHeading(null);
-    };
-  }, [on]);
-  return heading;
-}
-
-/** Safari asks before it gives the compass, and only inside a tap. */
-function askForCompass() {
-  const ask = (
-    globalThis.DeviceOrientationEvent as unknown as
-      { requestPermission?: () => Promise<string> } | undefined
-  )?.requestPermission;
-  if (ask) void ask().catch(noop);
-}
+import { fixFrom, type Sample } from './locator-motion';
+import {
+  QUIET_MS,
+  afterTap,
+  commuterCamera,
+  modeFor,
+  trackedZoom,
+  type Camera,
+  type Fix,
+  type LocatorStatus,
+} from './locator-rules';
+import { useCameraLetGo } from './use-camera-let-go';
+import { askForCompass, useCompass } from './use-compass';
 
 export interface Locator {
   status: LocatorStatus;
@@ -269,6 +60,30 @@ interface Options {
   cameraTurn?: Turn;
 }
 
+/**
+ * The commuter's own place on the map, and the camera with them: LocatorButton's
+ * rules (Figma 3870:5408). Off until asked, then the browser's own permission
+ * prompt; the position never leaves the phone — nothing here talks to a server,
+ * and nothing stores it. Once on it stays on, as in Google Maps; the button only
+ * moves the camera:
+ *
+ *  - LocationOff, no location yet: a tap asks the browser for it, and its
+ *    first fix brings the camera as TrackOwnLocation's tap does. Any tap
+ *    after QUIET_MS without a fix asks again, so Android can offer to turn
+ *    the phone's location on.
+ *  - TrackOwnLocation, the camera elsewhere — the moment it moves off the
+ *    commuter at all, by a finger or by the app. A tap brings it to them at
+ *    the zoom it is at; from further out than 2 km on the scale bar, in to
+ *    200 m (trackedZoom).
+ *  - TrackedLocation, the camera on them, north up, following each fix. A
+ *    tap turns on the compass.
+ *  - TracksTheMapBasedOnCompassFacing, the camera tilted, 200 m on the bar,
+ *    turned the way the phone faces. A tap goes back to TrackedLocation's
+ *    view, at its zoom, and the next to this again.
+ *
+ * With no compass to read (a laptop) a tap on TrackedLocation brings the
+ * camera back to the commuter instead.
+ */
 export function useLocator(
   map: MapLibreMap | null,
   { offset, snap, compass, cameraTurn }: Options,
@@ -283,7 +98,7 @@ export function useLocator(
   const watchRef = useRef<number | null>(null);
   // When the watch last gave a fix, or was started: a tap after QUIET_MS without one asks again.
   const heardRef = useRef(0);
-  const fixesRef = useRef<{ at: LngLat; accuracy: number; time: number }[]>([]);
+  const fixesRef = useRef<Sample[]>([]);
   const headingRef = useRef<number | null>(null);
   const offsetRef = useRef(offset);
 
@@ -330,23 +145,12 @@ export function useLocator(
     heardRef.current = Date.now();
     watchRef.current = navigator.geolocation.watchPosition(
       (p) => {
-        heardRef.current = Date.now();
-        const at: LngLat = [p.coords.longitude, p.coords.latitude];
-        const time = p.timestamp || Date.now();
-        const run = [
-          ...fixesRef.current.filter((f) => time - f.time < 15_000),
-          { at, accuracy: p.coords.accuracy, time },
-        ];
-        fixesRef.current = run;
-        const derived = motionFrom(run, headingRef.current);
-        const speed =
-          p.coords.speed !== null && p.coords.speed >= 0 ? p.coords.speed : derived.speed;
-        const heading =
-          p.coords.heading !== null && !Number.isNaN(p.coords.heading) && speed >= STILL_BELOW_MPS
-            ? p.coords.heading
-            : derived.heading;
-        headingRef.current = heading;
-        setFix({ at, accuracy: p.coords.accuracy, speed, heading, time });
+        const now = Date.now();
+        heardRef.current = now;
+        const next = fixFrom(p, fixesRef.current, headingRef.current, now);
+        fixesRef.current = next.run;
+        headingRef.current = next.fix.heading;
+        setFix(next.fix);
         setNoFix(false);
         setStatus('on');
       },
@@ -375,31 +179,7 @@ export function useLocator(
     );
   }, [compass]);
 
-  // Any move of the camera off the commuter, however slight — a finger's, or
-  // the app's for them (APP_MOVE: a hintuan picked, an end tapped), which
-  // the next fix would otherwise undo — and the button says so
-  // (TrackOwnLocation). The camera's own glides here carry neither.
-  useEffect(() => {
-    if (!map) return;
-    const letGo = (e: { originalEvent?: unknown }) => {
-      if (e.originalEvent) setCamera('free');
-    };
-    const appMoved = (e: object) => {
-      if ((e as { appMove?: boolean }).appMove) setCamera('free');
-    };
-    map.on('dragstart', letGo);
-    map.on('zoomstart', letGo);
-    map.on('rotatestart', letGo);
-    map.on('pitchstart', letGo);
-    map.on('movestart', appMoved);
-    return () => {
-      map.off('dragstart', letGo);
-      map.off('zoomstart', letGo);
-      map.off('rotatestart', letGo);
-      map.off('pitchstart', letGo);
-      map.off('movestart', appMoved);
-    };
-  }, [map]);
+  useCameraLetGo(map, setCamera);
 
   // The camera on the commuter: each fix, each turn of the phone, each tap.
   // The whole view every time, not only the centre: a fix arriving mid-glide
@@ -418,13 +198,15 @@ export function useLocator(
       lastSnap.current = snap;
       trackedZoomRef.current ??= trackedZoom(map.getZoom(), fix.at[1]);
       map.easeTo({
-        center: fix.at,
-        zoom:
-          camera === 'compass' ? zoomForScale(COMPASS_SCALE_M, fix.at[1]) : trackedZoomRef.current,
-        pitch: camera === 'compass' ? COMPASS_PITCH : 0,
-        bearing: camera === 'compass' ? (turn ?? map.getBearing()) : 0,
+        ...commuterCamera({
+          camera,
+          fix,
+          turn,
+          keptZoom: trackedZoomRef.current,
+          mapBearing: map.getBearing(),
+          tapped,
+        }),
         offset: offsetRef.current(),
-        duration: tapped ? 800 : 400,
       });
     };
     // The card's height changed: the cards' overview starts in this same

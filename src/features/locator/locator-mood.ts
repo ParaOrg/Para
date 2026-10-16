@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { STILL_BELOW_MPS, type Camera, type Fix } from './use-locator';
+import { STILL_BELOW_MPS, type Camera, type Fix } from './locator-rules';
 
 /*
  * The commuter's dot has three moods, neutral, happy and angry: glad as the commuter
