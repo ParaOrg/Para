@@ -11,10 +11,10 @@ const lines = new Map<string, Promise<LineStringGeoJSON | null>>();
  * direction with no line; a failure is not kept, so the next light tries
  * again — until then the map keeps the overview, which is the same road.
  *
- * The orange stretches the file brings with the line, since the cheap-phone
- * plan's step 13 (2026-10-05), are kept under the line itself (line-pass.ts),
- * and painted only if they were worked out against the index's own hintuans;
- * a file without them is read as before.
+ * The orange stretches the file brings with the line are kept under the line
+ * itself (line-pass.ts), and painted only if they were worked out against the
+ * index's own hintuans; otherwise, and for a file without them, the map works
+ * them out itself (pass-stretches.ts, stretchesPast).
  */
 export function fetchLine(id: string): Promise<LineStringGeoJSON | null> {
   let line = lines.get(id);
