@@ -122,8 +122,8 @@ export const MAP_PAINT = {
   'Paint/daylight-building-3d': '#fdfbf8', // a building standing up from z14: near white, so its walls stay soft
   'Paint/daylight-highway': '#dde1e1', // motorways and their ramps: EDSA, the Skyway
   'Paint/daylight-highway-edge': '#cdd2d2',
-  'Paint/daylight-road': '#e1e3e7', // the avenues: trunk, primary to tertiary, and links
-  'Paint/daylight-road-edge': '#ced2d9', // a shade darker
+  'Paint/daylight-avenue': '#e1e3e7', // the avenues: trunk, primary to tertiary, and links
+  'Paint/daylight-avenue-edge': '#ced2d9', // a shade darker
   'Paint/daylight-street': '#ffffff', // streets and service roads, white
   'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
   'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims

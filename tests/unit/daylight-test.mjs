@@ -66,6 +66,14 @@ const liberty = () => ({
       paint: { 'text-color': '#666' },
     },
     {
+      id: 'highway-name-path',
+      type: 'symbol',
+      ...tiles,
+      'source-layer': 'transportation_name',
+      layout: { 'text-field': '{name}' },
+      paint: { 'text-color': 'hsl(30,23%,62%)', 'text-halo-color': '#f8f4f0' },
+    },
+    {
       id: 'poi_r1',
       type: 'symbol',
       ...tiles,
@@ -98,6 +106,8 @@ test("the big surfaces wear Apple's palette, the input untouched", () => {
   for (const [id, paint] of Object.entries(want)) {
     assert.equal(colourOf(layers.get(id)), MAP_PAINT[paint], id);
   }
+  // The homes are the ground's colour and unseen, so nothing under them is covered below z12.
+  assert.equal(layers.get('landuse_residential').paint['fill-opacity'], 0);
   // A park and grass are opaque, so its green is Apple's and not Liberty's thinned over the ground.
   assert.equal(layers.get('park').paint['fill-opacity'], 1);
   assert.equal(layers.get('landcover_grass').paint['fill-opacity'], 1);
@@ -109,8 +119,8 @@ test('roads by kind: highways, avenues and white streets, each with its edge', (
     road_motorway_casing: 'Paint/daylight-highway-edge',
     road_motorway: 'Paint/daylight-highway',
     bridge_motorway_link: 'Paint/daylight-highway',
-    road_trunk_primary_casing: 'Paint/daylight-road-edge',
-    tunnel_secondary_tertiary: 'Paint/daylight-road',
+    road_trunk_primary_casing: 'Paint/daylight-avenue-edge',
+    tunnel_secondary_tertiary: 'Paint/daylight-avenue',
     road_minor_casing: 'Paint/daylight-street-edge',
     road_minor: 'Paint/daylight-street',
   };
@@ -133,6 +143,10 @@ test('everything else is muted as before, the icons in full; road names on a whi
   assert.ok(saturation < 50, `${saturation}`);
   // The place icons in full, as Apple's are (the owner, 2026-10-16).
   assert.equal(layers.get('poi_r1').paint['icon-opacity'], undefined);
+  // A layer the palette names keeps the muting on what the palette leaves: a path's tan name.
+  const path = layers.get('highway-name-path').paint;
+  assert.match(path['text-color'], /^hsla\(/, 'the name muted');
+  assert.equal(path['text-halo-color'], MAP_PAINT['Paint/daylight-land']);
   assert.equal(
     layers.get('highway-name-major').paint['text-halo-color'],
     MAP_PAINT['Paint/casing'],

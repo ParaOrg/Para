@@ -7,7 +7,8 @@ import type {
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
-import { recolouredLayer, type Recolour } from './recolour';
+import { recolouredLayer } from './recolour';
+import type { Recolour } from './recolour';
 
 /*
  * Colour, in Apple Maps' light palette (the owner, 2026-10-16: "on the color
@@ -51,10 +52,12 @@ function mutedLayer(l: LayerSpecification): LayerSpecification {
 
 const GREEN = MAP_PAINT['Paint/daylight-green'];
 
-/** The ground and what Apple draws as ground: homes are the land's own cream. */
-const GROUND: Record<string, NonNullable<LayerSpecification['paint']>> = {
+/** Apple's colours by Liberty's layer: the ground, the green, the water, the buildings, the names' halos. */
+const BY_LAYER: Record<string, NonNullable<LayerSpecification['paint']>> = {
   background: { 'background-color': MAP_PAINT['Paint/daylight-land'] },
-  landuse_residential: { 'fill-color': MAP_PAINT['Paint/daylight-land'] },
+  // Unseen: the ground's own colour already, and opaque it covered the parks and the
+  // commercial blocks under it below z12 (the review of 2026-10-16).
+  landuse_residential: { 'fill-color': MAP_PAINT['Paint/daylight-land'], 'fill-opacity': 0 },
   // Opaque, so the green is Apple's and not Liberty's thinned over the cream.
   park: { 'fill-color': GREEN, 'fill-outline-color': GREEN, 'fill-opacity': 1 },
   park_outline: { 'line-color': GREEN },
@@ -91,8 +94,8 @@ const HIGHWAY: RoadColours = {
   edge: MAP_PAINT['Paint/daylight-highway-edge'],
 };
 const AVENUE: RoadColours = {
-  fill: MAP_PAINT['Paint/daylight-road'],
-  edge: MAP_PAINT['Paint/daylight-road-edge'],
+  fill: MAP_PAINT['Paint/daylight-avenue'],
+  edge: MAP_PAINT['Paint/daylight-avenue-edge'],
 };
 const STREET: RoadColours = {
   fill: MAP_PAINT['Paint/daylight-street'],
@@ -135,11 +138,16 @@ const COMMERCIAL: FillLayerSpecification = {
   paint: { 'fill-color': MAP_PAINT['Paint/daylight-commercial'] },
 };
 
+/** Muted first, then Apple's colours over it: what the palette does not name stays muted. */
 function daylightLayer(l: LayerSpecification): LayerSpecification {
-  const palette = GROUND[l.id] ?? roadPaint(l.id);
-  if (!palette || !('paint' in l)) return mutedLayer(l);
-  const paint = Object.fromEntries([...Object.entries(l.paint ?? {}), ...Object.entries(palette)]);
-  return { ...l, paint };
+  const muted = mutedLayer(l);
+  const palette = BY_LAYER[l.id] ?? roadPaint(l.id);
+  if (!palette || !('paint' in muted)) return muted;
+  const paint = Object.fromEntries([
+    ...Object.entries(muted.paint ?? {}),
+    ...Object.entries(palette),
+  ]);
+  return { ...muted, paint };
 }
 
 /**
