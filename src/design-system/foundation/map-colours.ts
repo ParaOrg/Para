@@ -31,8 +31,8 @@ export const MAP_COLOURS = {
   'Map/Rail/LightRailWayTwo/surface-pale': '#d0b9ff', // light-rail-way-two/200
   'Map/Rail/LightRailWayTwo/border-primary': '#382859', // light-rail-way-two/700
   'Map/Rail/LightRailWayTwo/Timeline/surface': '#372b4f', // light-rail-way-two/800
-  'Map/Rail/MetroRailWayThree/surface': '#e2b709', // metro-rail-way-three/600
-  'Map/Rail/MetroRailWayThree/surface-pale': '#fae385', // metro-rail-way-three/200
+  'Map/Rail/MetroRailWayThree/surface': '#edc319', // metro-rail-way-three/600
+  'Map/Rail/MetroRailWayThree/surface-pale': '#fff1b8', // metro-rail-way-three/200
   'Map/Rail/MetroRailWayThree/border-primary': '#ac8b0b', // metro-rail-way-three/700
   'Map/Rail/MetroRailWayThree/Timeline/surface': '#967906', // metro-rail-way-three/800
 } as const satisfies Record<`Map/${string}`, `#${string}`>;
@@ -95,10 +95,37 @@ export const CARD_PALE_COLOURS = {
 export const MAP_PAINT = {
   'Paint/casing': '#ffffff', // white: the rim under every line, circles' fill, text halos
   'Paint/hit': '#000000', // the tap area, drawn at opacity 0
-  'Paint/basemap-transit': '#3d5a73', // Gray, detailed: terminal and station names
-  'Paint/basemap-landmark': '#6b6b6b', // Gray, detailed: the other landmarks' names
-  'Paint/basemap-building': 'rgb(224, 224, 219)', // Gray, detailed: a building, a shade firmer than Positron's
+  'Paint/basemap-transit': '#3d5a73', // Monochrome: rail station names
+  'Paint/basemap-landmark': '#6b6b6b', // Monochrome: the other landmarks' names
+  'Paint/basemap-building': 'rgb(224, 224, 219)', // Monochrome: a building, a shade firmer than Positron's
   'Paint/basemap-building-edge': 'rgb(204, 204, 201)',
+  'Paint/basemap-street': '#ffffff', // Monochrome: a street from z14, and a bridge's deck
+  'Paint/basemap-street-far': 'rgb(224, 224, 224)', // Positron's own street colour, below z14
+  'Paint/basemap-street-edge': 'rgb(218, 218, 214)', // a street's edge, a shade under the buildings'
+  'Paint/basemap-bridge-edge': 'rgb(176, 176, 172)', // a bridge's or flyover's edge, firmer so it reads as above
+  'Paint/basemap-skyway-edge': 'rgb(150, 150, 146)', // three levels up and more: the Skyway's edge, firmer still
+  'Paint/basemap-tunnel': 'rgb(234, 234, 231)', // an underpass, paler than a street, under a dashed edge
+  'Paint/basemap-path': 'rgb(196, 196, 192)', // a path or footbridge, dashed
+  'Paint/basemap-house-number': '#9a9a96', // Monochrome: house numbers from z17
+  'Paint/terrain-shadow': 'rgb(96, 90, 80)', // Terrain: a slope away from the light, a warm gray
+  'Paint/terrain-highlight': '#ffffff', // a slope toward it
+  'Paint/terrain-accent': 'rgb(122, 116, 104)', // the steepest ground
+  'Paint/basemap-photo-label': '#ffffff', // Satellite, labelled: street and place names over the photo
+  'Paint/basemap-photo-halo': '#1a1a1a', // near-black, so a name reads over a bright roof
+  // Colour: Apple Maps' light palette, read off the owner's screenshot (2026-10-16).
+  'Paint/daylight-land': '#f7f3eb', // the ground, a warm cream; homes the same
+  'Paint/daylight-water': '#8edbf6', // rivers, the bay, lakes
+  'Paint/daylight-green': '#d5efbe', // parks, cemeteries, grass and woods
+  'Paint/daylight-commercial': '#fef5e4', // shops, offices and malls, a pale warm yellow
+  'Paint/daylight-building': '#efe9df', // a touch darker than the ground
+  'Paint/daylight-building-edge': '#e4ddd1',
+  'Paint/daylight-building-3d': '#fdfbf8', // a building standing up from z14: near white, so its walls stay soft
+  'Paint/daylight-highway': '#dde1e1', // motorways and their ramps: EDSA, the Skyway
+  'Paint/daylight-highway-edge': '#cdd2d2',
+  'Paint/daylight-avenue': '#e1e3e7', // the avenues: trunk, primary to tertiary, and links
+  'Paint/daylight-avenue-edge': '#ced2d9', // a shade darker
+  'Paint/daylight-street': '#ffffff', // streets and service roads, white
+  'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
   'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
   'Paint/draw-borrow': '#2563eb', // blue/600: the stretch an Extend borrows

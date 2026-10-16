@@ -11,8 +11,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import { noop } from '@/shared/utils/noop';
 
-import { DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } from './basemap';
+import { BASEMAPS, DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } from './basemap';
 import { BasemapControl } from './basemap-control';
+import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { diagnose, type Diagnosis } from './diagnose';
 import {
   OPENING_WAIT_MS,
@@ -160,6 +161,14 @@ interface Props {
    * map is made.
    */
   openOn?: () => Promise<Bounds | null>;
+  /**
+   * The designs the menu offers. The public map's are BASEMAPS; the studio
+   * adds its satellite ones (the owner, 2026-10-15). Read once, as the map is
+   * made.
+   */
+  basemaps?: readonly Basemap[];
+  /** Each design's picture on the Map Style card, by its id: BASEMAP_THUMBNAILS, and the studio's. */
+  basemapThumbnails?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -178,6 +187,8 @@ export function MapView({
   maxBounds,
   foldCredits = false,
   openOn,
+  basemaps = BASEMAPS,
+  basemapThumbnails = BASEMAP_THUMBNAILS,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -202,7 +213,7 @@ export function MapView({
   const eventsRef = useRef<string[]>([]);
   // The design chosen on this device, read once; the map is built with it so
   // a remembered choice never flashes gray first.
-  const [basemap] = useState<Basemap>(readBasemap);
+  const [basemap] = useState<Basemap>(() => readBasemap(basemaps));
   const [ready, setReady] = useState<MapLibreMap | null>(null);
 
   useEffect(() => {
@@ -221,7 +232,7 @@ export function MapView({
     let stopLift: () => void = noop;
 
     const startId = window.setTimeout(async () => {
-      // A URL for the plain designs; for "Gray, detailed" the style is fetched
+      // A URL for the plain designs; for Monochrome and Colour the style is fetched
       // and extended first, since `Map` has no transform hook of its own.
       // Beside it, the public map's framing (`openOn`): none if it fails or
       // has not come within OPENING_WAIT_MS.
@@ -431,8 +442,9 @@ export function MapView({
       {ready && !error && (
         <BasemapControl
           map={ready}
+          basemaps={basemaps}
+          thumbnails={basemapThumbnails}
           initial={basemap}
-          under={coarse ? 'attribution' : zoomButtons ? 'zoom' : 'nothing'}
         />
       )}
 

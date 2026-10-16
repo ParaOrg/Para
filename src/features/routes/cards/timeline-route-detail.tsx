@@ -9,9 +9,9 @@ import {
   CARD_SURFACE,
   CARD_TEXT,
   ROW_PRESSED,
-  TIMELINE_PILL,
   TIMELINE_SURFACE,
 } from './livery-card';
+import { RouteTripLineDetailPill } from './route-trip-line-detail-pill';
 import { TimelineStick, type TimelineStickConnection } from './timeline-stick';
 import type { Livery } from '../model/liveries';
 
@@ -35,8 +35,9 @@ export interface TimelineRouteDetailProps {
   pickedPesos?: string;
   /**
    * On a train, the picked station's code, YL06, before the pesos in its
-   * pill: "YL06 · ₱20" (the owner's answer of 2026-10-13 to the "YL06" his
-   * train frames draw there, code first). Null for a jeepney's hintuan,
+   * pill (the owner's answer of 2026-10-13 to the "YL06" his train frames
+   * draw there, code first): two halves since 2026-10-15,
+   * RouteTripLineDetailPill's Two. Null for a jeepney's hintuan,
    * the ferry's, and a station the table does not know: the pesos alone.
    */
   pickedCode?: string | null;
@@ -176,7 +177,7 @@ export function TimelineRouteDetail({
             selected={h.id === picked}
             pesos={h.id === picked ? pickedPesos : undefined}
             code={h.id === picked ? pickedCode : null}
-            pill={TIMELINE_PILL[livery]}
+            livery={livery}
             connection={!isRideCut || i <= rideEnd ? 'connected' : 'disconnected'}
             isRideEnd={i === rideEnd}
             onPick={onPick}
@@ -328,7 +329,7 @@ function TimelineHintuan({
   selected,
   pesos,
   code,
-  pill,
+  livery,
   connection,
   isRideEnd,
   onPick,
@@ -344,10 +345,9 @@ function TimelineHintuan({
   selected: boolean;
   /** The ride's pesos to here, for the pill; picked and priced only. */
   pesos?: string;
-  /** A train station's code, before the pesos in the pill; null for any other hintuan. */
+  /** A train station's code, before the pesos in the pill (RouteTripLineDetailPill); null for any other hintuan. */
   code: string | null;
-  /** TIMELINE_PILL's classes for the card's livery. */
-  pill: string;
+  livery: Livery;
   /** On the ride's rail, or after its end, its dot alone. */
   connection: TimelineStickConnection;
   /** The row the ride ends at, a picked hintuan's: the rail stops at its dot (MiddleBottom). */
@@ -388,25 +388,7 @@ function TimelineHintuan({
               >
                 {label}
               </span>
-              {pesos && (
-                <span
-                  data-testid="trip-hintuan-fare"
-                  className={
-                    'shrink-0 rounded-full px-1.5 py-0.5 text-sm/5 font-medium whitespace-nowrap ' +
-                    pill
-                  }
-                >
-                  {code ? (
-                    <>
-                      <span data-part="code">{code}</span>{' '}
-                      {/* The dot is for the eye; the spaces round it keep "YL06 ₱20" two words to a screen reader. */}
-                      <span aria-hidden>·</span> <span data-part="pesos">{pesos}</span>
-                    </>
-                  ) : (
-                    pesos
-                  )}
-                </span>
-              )}
+              {pesos && <RouteTripLineDetailPill livery={livery} code={code} pesos={pesos} />}
             </span>
           </button>
         </div>

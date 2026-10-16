@@ -123,7 +123,7 @@ const wornBy = (className: string) => {
   return colour;
 };
 
-/** The picked row, its pill and the pesos in it, and the fare and Kilometer tiles following the pick. */
+/** The picked row, its pill and the pesos in it, and the fare and Distance tiles following the pick. */
 const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await openFold(ctx);
   const { canvasElement, args } = ctx;
@@ -133,16 +133,19 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await expect(rows.length).toBe(1);
   const pill = rows[0].querySelector<HTMLElement>('[data-testid="trip-hintuan-fare"]');
   const pesos = args.pickedFare === FREE ? 'Free' : args.pickedFare?.regular;
-  // A train's station code goes before the pesos, in a part of its own.
+  // A train's station code goes before the pesos, the two halves of
+  // RouteTripLineDetailPill's Two (2026-10-15), a space between for a screen reader.
   const code = pill?.querySelector('[data-part="code"]')?.textContent ?? null;
   await expect(code).toBe(args.pickedCode ?? null);
-  await expect(pill?.textContent).toBe(code ? `${code} · ${pesos}` : pesos);
+  await expect(pill?.textContent).toBe(code ? `${code} ${pesos}` : pesos);
   await expect(within(canvasElement).getByTestId('trip-fare').textContent).toBe(pesos);
-  // The Kilometer tile follows the pick too.
+  // The Distance tile follows the pick too.
   await expect(within(canvasElement).getByTestId('trip-km').textContent).toBe(
     kmLabel(args.pickedMetres ?? args.metres),
   );
-  return { card: within(canvasElement).getByTestId('trip'), row: rows[0], pill };
+  // The white is the halves', not the Two's wrapper: the card shows between them.
+  const fill = pill?.querySelector<HTMLElement>('[data-part="pesos"]') ?? pill;
+  return { card: within(canvasElement).getByTestId('trip'), row: rows[0], pill: fill };
 };
 
 /**
@@ -177,7 +180,7 @@ const pickedOnATrain: Story['play'] = async (ctx) => {
   }
 };
 
-/** On a phone, the owner's frame (3778:3183, Variant2): Tala → Novaliches, its Kilometer and Expected fare, its ten hintuans folded. */
+/** On a phone, the owner's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected fare, its ten hintuans folded. */
 export const Folded: Story = {};
 
 /**
@@ -278,7 +281,7 @@ export const NothingToGoBackTo: Story = {
 /** The route's other way is not drawn yet: SWITCH rests disabled. */
 export const NothingTheOtherWay: Story = { args: { switchable: false } };
 
-/** A mode with no fare rule: no Expected fare tile, and Kilometer takes the row (nothing drawn for it; the owner kept this, 2026-09-29). */
+/** A mode with no fare rule: no Expected fare tile, and Distance takes the row (nothing drawn for it; the owner kept this, 2026-09-29). */
 export const Unpriced: Story = { args: { fare: undefined } };
 
 /**
@@ -375,7 +378,7 @@ export const PickedLightRailWayTwo: Story = {
 /** MRT-3, a train's trip (4080:4241, 2026-10-13): its line's colours, Content/primary, dark, words. */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
-/** Picked, MRT-3: the pill white, "YL06 · ₱20–22" in the line's Timeline/surface. */
+/** Picked, MRT-3: the pill's two white halves, YL06 and ₱20–22, in the line's Timeline/surface. */
 export const PickedMetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
   play: pickedOnATrain,

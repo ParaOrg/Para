@@ -131,7 +131,7 @@ export function TripCard({
   const sibling = otherDirection(directions, direction);
   const switchable = !!sibling && isDrawn(sibling);
   // The whole ride, measured once on its full line — the index's figure, so
-  // an overview drawn while the line is read never prices it: its Kilometer
+  // an overview drawn while the line is read never prices it: its Distance
   // and its Expected fare.
   const metres = direction.metres ?? lineLength(directionLine(direction));
   const [fareKind, setFareKind] = useFareKind();

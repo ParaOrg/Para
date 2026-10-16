@@ -1040,7 +1040,7 @@ const tripRow = async (id) => {
 };
 
 /**
- * A trip card's own parts, on whichever trip is open: its Kilometer and
+ * A trip card's own parts, on whichever trip is open: its Distance and
  * Expected fare tiles (the owner's 3778:3183), its hintuans folding into one
  * row that opens and folds again (a lone hintuan is shown as it is), and
  * SWITCH turning it round. Run where a trip opens — a lone route's tap, a row
@@ -1077,12 +1077,12 @@ const tripChecks = async () => {
   const [km, fare] = [await tile('trip-km'), await tile('trip-fare')];
   if (!want)
     skip(
-      '  its tiles: the Kilometer and Expected fare of the whole ride',
+      '  its tiles: the Distance and Expected fare of the whole ride',
       'the sums cannot be read from this server',
     );
   else
     check(
-      '  its tiles: the Kilometer and Expected fare of the whole ride',
+      '  its tiles: the Distance and Expected fare of the whole ride',
       km === want.km && fare === want.fare,
       `"${km}" / "${fare}", the sums "${want.km}" / "${want.fare}"`,
     );
@@ -1263,8 +1263,8 @@ const tripChecks = async () => {
       JSON.stringify(rails),
     );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
-    // On a train the station's code comes first, "GL04 · ₱20" (the owner,
-    // 2026-10-13): the pesos are their own part then.
+    // On a train the station's code comes first, "GL04 ₱20" (the owner,
+    // 2026-10-13): the pesos are their own half then.
     const pesosOf = async (p) =>
       (await p.locator('[data-part="pesos"]').count())
         ? (await p.locator('[data-part="pesos"]').innerText()).trim()
@@ -1290,7 +1290,10 @@ const tripChecks = async () => {
         `pill "${pillText}"; tile "${pickedTile}", the sums "${pickWant.fare}"`,
       );
     const colours = await page.evaluate(() => {
-      const pill = document.querySelector('[data-testid="trip-hintuan-fare"]');
+      // A train's pill is two halves (RouteTripLineDetailPill's Two, 2026-10-15),
+      // the card showing between them: the colours are the pesos' half's.
+      const fare = document.querySelector('[data-testid="trip-hintuan-fare"]');
+      const pill = fare?.querySelector('[data-part="pesos"]') ?? fare;
       const trip = document.querySelector('[data-testid="trip"]');
       if (!pill || !trip) return null;
       const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
@@ -1326,16 +1329,16 @@ const tripChecks = async () => {
         !!colours?.swapped,
         colours?.detail ?? 'no pill',
       );
-    // The Kilometer tile follows the pick too (the owner, 2026-09-30).
+    // The Distance tile follows the pick too (the owner, 2026-09-30).
     const pickedKm = await tile('trip-km');
     if (!pickWant)
       skip(
-        '  the Kilometer tile the ride from where the trip leaves to there',
+        '  the Distance tile the ride from where the trip leaves to there',
         'the sums cannot be read from this server',
       );
     else
       check(
-        '  the Kilometer tile the ride from where the trip leaves to there',
+        '  the Distance tile the ride from where the trip leaves to there',
         pickedKm === pickWant.km,
         `"${pickedKm}", the sums "${pickWant.km}"`,
       );

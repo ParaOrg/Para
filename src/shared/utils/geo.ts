@@ -109,7 +109,7 @@ export function zoomForScale(metres: number, lat: number): number {
   return Math.log2((metresPerPixel(lat, 0) * SCALE_PX) / metres);
 }
 
-/** `12.8km`: a length as the trip card's Kilometer tile writes it, to a tenth, no space (the owner's 3778:3183). */
+/** `12.8km`: a length as the trip card's Distance tile writes it, to a tenth, no space (the owner's 3778:3183). */
 export function kmLabel(metres: number): string {
   return (metres / 1000).toFixed(1) + 'km';
 }
