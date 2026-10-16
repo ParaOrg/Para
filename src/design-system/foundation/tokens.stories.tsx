@@ -266,7 +266,7 @@ function TokensPage() {
         />
       </Group>
 
-      <Group title="Map — the route lines and hintuans (the map paints them from mapColours.ts)">
+      <Group title="Map — the route lines and hintuans (the map paints them from map-colours.ts)">
         <Swatch
           box="bg-map-route-line-surface-default"
           token="Map/RouteLine/surface-default"

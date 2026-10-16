@@ -472,7 +472,7 @@ if (!FORCE) {
     const after = now[key].length;
     if (before > 0 && after < before * (1 - MAX_SHRINK)) {
       fail(
-        `FAIL  ${key}: ${before} → ${after} rows, more than ${MAX_SHRINK * 100}% fewer than the published file. ` +
+        `FAIL  ${key}: ${before} → ${after} rows, more than ${MAX_SHRINK * 100}% fewer than the published map. ` +
           'Not publishing. If the removal is deliberate, run with --force.',
       );
     }

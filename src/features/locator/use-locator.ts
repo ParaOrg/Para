@@ -270,7 +270,7 @@ interface Options {
   /** A phone, which may have a compass to turn the map by. */
   compass: boolean;
   /**
-   * Where in a commit the camera moves to the visitor (commitTurn.ts): the
+   * Where in a commit the camera moves to the visitor (commit-turn.ts): the
    * page's turn, after the cards' camera, as when this hook was the page's
    * own (VisitorLocation, 2026-10-05). Without it, in this hook's effect.
    */

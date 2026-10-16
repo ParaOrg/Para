@@ -1,6 +1,6 @@
 /**
  * The published map's contract, as the public map reads it (since 2026-09-29,
- * stage 7 of the clean-up; docs/review-2026-09-29.md section 8, shape A): an
+ * stage 7 of the clean-up; docs/archive/review-2026-09-29.md section 8, shape A): an
  * index, written by scripts/publish/publish-map.mjs and served as a static
  * file, holding every route, hotspot and link and each direction's
  * *overview* — its line thinned at 5 m — and a file per direction with its

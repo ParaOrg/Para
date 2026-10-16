@@ -21,7 +21,7 @@ import { getSupabase } from './supabase';
 /**
  * Readers of the live tables, for the editor. They live in studio/, apart
  * from the types in routes/model/routes.ts and routes/model/hotspots.ts, on
- * purpose: the public map imports those types but reads the published file
+ * purpose: the public map imports those types but reads the published map
  * instead (published-map/api/fetch-index.ts), and ESLint forbids the public
  * shell importing studio/. So Supabase's address can never land in a chunk
  * both pages share; check-build.mjs proves it stays out of the public
@@ -36,7 +36,7 @@ import { getSupabase } from './supabase';
  * Each returns nothing when the build has no Supabase, so the studio shows
  * its config banner rather than a load error on top of it.
  *
- * Each reads its table in pages (readAll.ts): Supabase answers at most 1,000
+ * Each reads its table in pages (read-all.ts): Supabase answers at most 1,000
  * rows a request and does not say when it cut, and the links table passes
  * 1,000 at about forty routes. The publish script pages the same way.
  */

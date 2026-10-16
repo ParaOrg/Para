@@ -17,7 +17,7 @@ import { orderLinked } from '../model/timeline';
  * colour, with its route links alongside so the tap card can list them.
  *
  * `load` decides where the hotspots come from: the public map reads the
- * published file, the editor the live tables. Pass a function defined once at
+ * published map, the editor the live tables. Pass a function defined once at
  * module level, not a new one per render, or it reloads every render.
  *
  * The editor also passes `drawing` and `hiddenHotspotId`; the public map passes
@@ -89,7 +89,7 @@ export function useSavedHotspots<S extends Hotspot>(
   }, [load]);
 
   // Once for each loader, however many times React runs the effect: twice
-  // as a page mounts in development (loadOnce.ts).
+  // as a page mounts in development (load-once.ts).
   const loadedBy = useRef<typeof load | null>(null);
   useEffect(() => {
     loadOnce(loadedBy, load, () => void reload());

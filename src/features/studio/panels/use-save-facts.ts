@@ -24,7 +24,7 @@ import type { Drawing } from '../drawing/use-drawing';
  * and the drawing: which way round it runs, whether that is the slot's way,
  * whether its ends already make a route or clash with another's, what an
  * Extend shares with its parent, the names it will get, and the timeline a
- * save would give it. Split from SavePanel.tsx, 2026-09-29.
+ * save would give it. Split from save-panel.tsx, 2026-09-29.
  */
 export function useSaveFacts({
   draw,
