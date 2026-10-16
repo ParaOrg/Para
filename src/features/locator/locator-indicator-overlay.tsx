@@ -23,7 +23,7 @@ const HALO_MAX_PX = 1600;
  * map zooms out and is gone once the dot covers it, as Google Maps' is (the
  * owner's screenshots, 2026-10-01); never past HALO_MAX_PX. 0: none.
  */
-export const haloFor = (px: number, scale = 1) =>
+const haloFor = (px: number, scale = 1) =>
   px < DOT_PX * scale ? 0 : Math.round(Math.min(HALO_MAX_PX, px));
 
 interface Props {
@@ -38,9 +38,9 @@ interface Props {
   face?: Face;
   /** Changed by each tap on the button: the dot is drawn afresh, so its reaction plays again. */
   beat?: number;
-  /** The dot is a button, to be poked: LocatorOnMap hears the tap (markerTap.ts). */
+  /** The dot is a button, to be poked: LocatorOnMap hears the tap (marker-tap.ts). */
   pokeable?: boolean;
-  /** Which way its eyes gaze, degrees clockwise from the overlay's up, at what was just picked (dotGaze.ts). Null: they wander. */
+  /** Which way its eyes gaze, degrees clockwise from the overlay's up, at what was just picked (dot-gaze.ts). Null: they wander. */
   gazeDeg?: number | null;
 }
 
@@ -170,7 +170,7 @@ export function LocatorOnMap({
   mood: Mood;
   face: Face;
   beat: number;
-  /** What it gazes at, for a while after one is picked, and when a change is no pick (dotGaze.ts). */
+  /** What it gazes at, for a while after one is picked, and when a change is no pick (dot-gaze.ts). */
   gazeAt?: readonly Subject[];
   hushedAt?: { readonly current: number };
   /** A tap on the dot (locatorMood's `poke`). */
@@ -178,7 +178,7 @@ export function LocatorOnMap({
 }) {
   const el = useMarkerElement('locator-overlay');
   // The dot answers a tap itself, and the map beneath never hears the tap
-  // (markerTap.ts): no line opens, the camera stays. A drag that starts on
+  // (marker-tap.ts): no line opens, the camera stays. A drag that starts on
   // it still pans the map: it sits mid-screen, where a finger lands to pan.
   useMapMarker(map, el, fix.at, {
     anchor: 'center',

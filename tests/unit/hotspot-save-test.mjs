@@ -1,7 +1,7 @@
 // The studio's hotspot save (src/features/studio/data/hotspots-write.ts, saveHotspot)
 // against a fake client.
 //
-//   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/stop-save-test.mjs
+//   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/hotspot-save-test.mjs
 //
 // Review of 2026-10-03, finding 4: the row goes in, then its links in
 // separate requests; when the links failed, Save again inserted the box a

@@ -23,7 +23,7 @@ interface TimelineStickDisclosureProps {
   rail: string;
 }
 
-export type TimelineStickProps = TimelineStickDotProps | TimelineStickDisclosureProps;
+type TimelineStickProps = TimelineStickDotProps | TimelineStickDisclosureProps;
 
 /**
  * Whether a Connected piece draws its rail above the dot (Figma's layer
@@ -51,7 +51,7 @@ const RAIL_BELOW = {
 
 /**
  * The rail's column, 24 wide, as tall as its row's content; the rows set
- * their own padding round it (timeline-route-detail.tsx). Bottom's stretch
+ * their own padding round it (timeline-top.tsx and its siblings). Bottom's stretch
  * above its dot is 16 tall, Figma's TimelineStick Bottom (20 before
  * 2026-10-13); a middle piece's 10, its Middle, so the dot sits by the
  * name's first line, the rest of the row's height below it (the owner's

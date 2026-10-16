@@ -1,5 +1,9 @@
 # Tonight's run (2026-10-15, overnight)
 
+Status: resolved
+
+> Done 2026-10-16: the run is over, its morning report below, and every PR in its stack is merged into `claude/release-base`. Kept as a record.
+
 The owner's calls before sleeping: **small fixes** and **ride start and end**, **one pull request per change**, stacked. Not tonight: the commuter rename, the driver app, the studio maps, train tracking.
 
 **Nothing merges and nothing goes live.** The PRs target `staging`, as the repo's feature PRs do; the owner merges them and releases `staging` to `main`, which is what Cloudflare deploys. No database and no Figma changes tonight.

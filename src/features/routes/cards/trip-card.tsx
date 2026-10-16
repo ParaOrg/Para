@@ -78,9 +78,8 @@ export function useTripLivery(
  * owner's pick, 2026-09-30: "most of the interaction of public map should
  * be in studio").
  *
- * No link to a trip either: the address followed the card (`?r=<id>`, a
- * link that opened its trip) until the owner took trip links out for now,
- * 2026-10-03.
+ * No link to a trip: the address does not follow the card (the owner took
+ * trip links out for now, 2026-10-03).
  */
 export function TripCard({
   direction,

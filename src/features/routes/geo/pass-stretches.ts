@@ -39,7 +39,7 @@ import type { Direction } from '../model/routes';
  * second of a cheap phone's main thread in the harness, 5–50 ms on a
  * phone). Now the stretches are drawn with the program of the lit line and
  * its casing, compiled before any tap (at load until 2026-10-05, by their
- * twins while the map is idle since: layerSwitch.ts), the same pixels from
+ * twins while the map is idle since: layer-switch.ts), the same pixels from
  * 15 up, and none below it:
  * the step drew nothing there either. Two things differ, neither on a
  * screen held still: zooming out across 15, the stretches go at 15 rather
@@ -68,7 +68,7 @@ export const PASS_LAYER = {
     'line-color': PASS_COLOUR,
     'line-width': litWidth(),
     'line-opacity': litOpacity(),
-    // Switched off while nothing is lit, and from the start (layerSwitch.ts): at once, never between.
+    // Switched off while nothing is lit, and from the start (layer-switch.ts): at once, never between.
     'line-layer-opacity': 0,
     'line-layer-opacity-transition': { duration: 0, delay: 0 },
   },
@@ -134,12 +134,12 @@ export function usePassStretches(
   // The stretches follow their direction: the same state, on this source,
   // once it is there; and their layer off while nothing is lit, from the
   // start. Its GL program is the lit line's, which its twin and the lit
-  // line's compile while the map is idle (layerSwitch.ts).
+  // line's compile while the map is idle (layer-switch.ts).
   const passSwitch = useLayerSwitch(map, PASS_LAYERS, hitReady);
   useLighting(map, SRC, lit, hitReady, passSwitch);
 }
 
-// Worked out in linePass.ts, which the publish runs too (the cheap-phone
+// Worked out in line-pass.ts, which the publish runs too (the cheap-phone
 // plan, step 13, 2026-10-05), and handed on from here as before.
 export { passBoxes, stretchesPast, type PassBox, type PassFeature };
 
@@ -164,7 +164,7 @@ const stretchesKept = new WeakMap<readonly PassBox[], WeakMap<Direction, readonl
  * before it changes one (geojson_source_diff.ts), and nothing here does.
  *
  * Worked out means taken from the line file when it brought them for these
- * very boxes, and walked otherwise (linePass.ts, publishedStretches; the
+ * very boxes, and walked otherwise (line-pass.ts, publishedStretches; the
  * cheap-phone plan, step 13, 2026-10-05).
  */
 export function stretchesOf(v: Direction, boxes: readonly PassBox[]): readonly PassFeature[] {
