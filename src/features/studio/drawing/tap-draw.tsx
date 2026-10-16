@@ -5,10 +5,10 @@ interface TapDrawProps {
 }
 
 /**
- * Tap | Draw (the owner's pick, 2026-10-02, after AllTrails' route builder):
- * how the next stretch is drawn. Tap follows the streets, Draw goes straight
- * from point to point. It is the freehand switch the F key flips; a stretch
- * already drawn is turned from the point bar, or with a shift-click.
+ * Tap | Draw, after AllTrails' route builder: how the next stretch is drawn.
+ * Tap follows the streets, Draw goes straight from point to point. It is the
+ * freehand switch the F key flips; a stretch already drawn is turned from the
+ * point bar, or with a shift-click.
  */
 export function TapDraw({ draw }: TapDrawProps) {
   const option = (straight: boolean, label: string, title: string) => (

@@ -39,8 +39,8 @@ interface DrawToolbarProps {
  * Three of the buttons answer to a key as well — Ctrl+Z, Enter, F — but only
  * while `keys` is true: the studio turns them off the moment a panel opens,
  * so Enter in the save form submits the form and Ctrl+Z in a field is the
- * browser's own undo. Esc is deliberately unbound (owner, 2026-09-22): cancel
- * discards the whole trace, and that should not be one stray key away.
+ * browser's own undo. Esc is deliberately unbound: cancel discards the whole
+ * trace, and that should not be one stray key away.
  */
 export function DrawToolbar({ draw, onDone, keys = true, ends = null }: DrawToolbarProps) {
   if (draw.picking) return <PickBar draw={draw} ends={ends} />;
@@ -179,8 +179,8 @@ function Toolbar({ draw, onDone, keys }: { draw: Drawing; onDone: () => void; ke
 }
 
 /**
- * A tool button, the same size under a finger as under a mouse: the owner
- * dropped the 44 px floor (2026-10-16) and the toolbar isn't drawn in Figma yet.
+ * A tool button, the same size under a finger as under a mouse: touch targets have no
+ * 44 px floor (they follow Figma), and the toolbar isn't drawn in Figma yet.
  */
 const TOOL =
   'rounded-full px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40';
