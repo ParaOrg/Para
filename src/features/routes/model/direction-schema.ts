@@ -15,7 +15,7 @@ import { lineStringSchema } from './geojson-schema';
  */
 
 /** Mirrors the `transport_mode` enum in supabase/migrations/0001_init.sql. */
-export const transportModeSchema = z.enum([
+const transportModeSchema = z.enum([
   'jeepney',
   'e_jeepney',
   'uv_express',
@@ -28,7 +28,7 @@ export const transportModeSchema = z.enum([
 ]);
 export type TransportMode = z.infer<typeof transportModeSchema>;
 
-export const confidenceSchema = z.enum(['drawn', 'verified']);
+const confidenceSchema = z.enum(['drawn', 'verified']);
 export type Confidence = z.infer<typeof confidenceSchema>;
 
 /**
@@ -36,7 +36,7 @@ export type Confidence = z.infer<typeof confidenceSchema>;
  * generated from the two end hotspots by whoever reads the rows — the studio
  * after loading (live.ts), the publish script before writing the file.
  */
-export const rawRouteSummarySchema = z.object({
+const rawRouteSummarySchema = z.object({
   id: z.string(),
   signboard: z.nullable(z.string()),
   long_name: z.nullable(z.string()),
@@ -48,9 +48,9 @@ export const rawRouteSummarySchema = z.object({
   name: z.string(),
   route_code: z.optional(z.nullable(z.string())),
 });
-export type RawRouteSummary = z.infer<typeof rawRouteSummarySchema>;
+type RawRouteSummary = z.infer<typeof rawRouteSummarySchema>;
 
-export const toRouteSummary = (raw: RawRouteSummary) => ({
+const toRouteSummary = (raw: RawRouteSummary) => ({
   id: raw.id,
   /**
    * What is painted on the windshield. Optional since 0006: the generated name
@@ -79,9 +79,8 @@ export type RouteSummary = ReturnType<typeof toRouteSummary>;
  * suites') or a select that names fewer columns reads the same as null.
  */
 const absentOrNull = (schema: z.ZodMiniString) => z.optional(z.nullable(schema));
-export const rawRouteRowSchema = z.object({
+const rawRouteRowSchema = z.object({
   id: z.string(),
-  owner_id: z.string(),
   signboard: absentOrNull(z.string()),
   route_code: absentOrNull(z.string()),
   short_name: absentOrNull(z.string()),
@@ -93,11 +92,10 @@ export const rawRouteRowSchema = z.object({
   tail_stop_id: z.string(),
   via: absentOrNull(z.string()),
 });
-export type RawRouteRow = z.infer<typeof rawRouteRowSchema>;
+type RawRouteRow = z.infer<typeof rawRouteRowSchema>;
 
-export const toRouteRow = (raw: RawRouteRow) => ({
+const toRouteRow = (raw: RawRouteRow) => ({
   id: raw.id,
-  ownerId: raw.owner_id,
   signboard: raw.signboard ?? null,
   routeCode: raw.route_code ?? null,
   shortName: raw.short_name ?? null,
@@ -125,7 +123,7 @@ export const rawDirectionSchema = z.object({
   metres: z.optional(z.nullable(z.number())),
   signboards: z.optional(z.readonly(z.array(z.string()))),
 });
-export type RawDirection = z.infer<typeof rawDirectionSchema>;
+type RawDirection = z.infer<typeof rawDirectionSchema>;
 
 /**
  * One direction as the public map needs it: its line and what its card shows.
@@ -161,11 +159,10 @@ export const toDirection = (raw: RawDirection) => ({
    */
   ...(raw.signboards === undefined ? {} : { signboards: raw.signboards }),
 });
-export const directionSchema = z.pipe(rawDirectionSchema, z.transform(toDirection));
 export type Direction = ReturnType<typeof toDirection>;
 
 /** What a line borrowed (Extend, 0008): which part of *this* line came from its parent. */
-export const borrowPartSchema = z.enum(['start', 'end']);
+const borrowPartSchema = z.enum(['start', 'end']);
 
 /**
  * The `route_variant` row as the editor lists it (live.ts DIRECTION_SELECT):
@@ -175,7 +172,6 @@ export const borrowPartSchema = z.enum(['start', 'end']);
 export const rawDirectionRowSchema = z.object({
   id: z.string(),
   route_id: z.string(),
-  owner_id: z.string(),
   direction_name: z.nullable(z.string()),
   origin_terminal: z.nullable(z.string()),
   destination_terminal: z.nullable(z.string()),
@@ -189,13 +185,12 @@ export const rawDirectionRowSchema = z.object({
   signboards: z.optional(z.nullable(z.array(z.string()))),
   route: rawRouteRowSchema,
 });
-export type RawDirectionRow = z.infer<typeof rawDirectionRowSchema>;
+type RawDirectionRow = z.infer<typeof rawDirectionRowSchema>;
 
 /** The editor's direction, before nameDirections: its route without a name. */
 export const toUnnamedDirectionRow = (raw: RawDirectionRow) => ({
   id: raw.id,
   routeId: raw.route_id,
-  ownerId: raw.owner_id,
   name: raw.direction_name,
   originTerminal: raw.origin_terminal,
   destinationTerminal: raw.destination_terminal,
@@ -216,8 +211,4 @@ export const toUnnamedDirectionRow = (raw: RawDirectionRow) => ({
   ...(raw.signboards == null ? {} : { signboards: raw.signboards }),
   route: toRouteRow(raw.route),
 });
-export const unnamedDirectionRowSchema = z.pipe(
-  rawDirectionRowSchema,
-  z.transform(toUnnamedDirectionRow),
-);
 export type UnnamedDirectionRow = ReturnType<typeof toUnnamedDirectionRow>;

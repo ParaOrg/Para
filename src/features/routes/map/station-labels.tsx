@@ -8,7 +8,7 @@ import { HintuanLabel } from './hintuan-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { rowStops, rowsOutsideRide } from '../model/ride';
+import { rowStops, rowsOutsideRide, rowsOutsideStartAlone } from '../model/ride';
 import type { Direction } from '../model/routes';
 import type { TimelineRow } from '../model/timeline';
 
@@ -144,7 +144,7 @@ export function StationLabels({
   // (useLitRides).
   const outside = useMemo(() => {
     if (hasRide) return rowsOutsideRide(rows, startId, pickedId, endPicked);
-    if (startId !== null) return new Set(rows.filter((r) => r.id !== startId).map((r) => r.id));
+    if (startId !== null) return rowsOutsideStartAlone(rows, startId);
     return null;
   }, [hasRide, rows, startId, pickedId, endPicked]);
   return (
@@ -192,7 +192,7 @@ function StationLabel({
   // The row's spot moves as the trip's full line lands over its overview
   // (rowStops runs again on the new line): moved there, not made anew (useMapMarker).
   useMapMarker(map, el, at, { anchor: 'center', onTap: () => onPick?.(rowId) });
-  // Further out, a smaller dot (hintuanPin.css), so the stations read as
+  // Further out, a smaller dot (hintuan-pin.css), so the stations read as
   // beads, not a wall; and along the rest, said for the suites, the ring's
   // colour being the dot's own class.
   useEffect(() => {
