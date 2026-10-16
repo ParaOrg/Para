@@ -161,7 +161,7 @@ export const Phone: Story = {
 };
 
 /**
- * Drawn directions, each line `km` long: the owner's two routes out of
+ * Drawn directions, each line `km` long: two routes out of
  * Tala, both through SM Fairview. Sample data.
  */
 const drawn = (
@@ -193,13 +193,12 @@ const talaRoutes = [
 ];
 
 /**
- * The public map's card (`routeCards`, the owner's ask of 2026-09-29): the
- * routes through here as his RouteCards, edge to edge — his SM Fairview
- * screenshot, Tala with its two ways out, in a colour drawn at random. The
- * map lights every route they show; a tap on a card off its rows narrows
- * that to its own; a row opens its trip straight away. No pesos on any card since his State set: the trip's
- * Expected fare carries them. The rest of the card waits for his hintuan
- * design.
+ * The public map's card (`routeCards`): the routes through here as
+ * RouteCards, edge to edge — SM Fairview's, Tala with its two ways out, in a
+ * colour drawn at random. The map lights every route they show; a tap on a
+ * card off its rows narrows that to its own; a row opens its trip straight
+ * away. No pesos on any card: the trip's Expected fare carries them. TODO: the
+ * rest of the card is not redesigned yet.
  */
 export const RouteCards: Story = {
   args: {
@@ -266,7 +265,7 @@ export const RouteCardsNothingTheOtherWay: Story = {
   },
 };
 
-/** A terminal's card, "Routes that stage here": the same RouteCards (the owner, 2026-09-29). */
+/** A terminal's card, "Routes that stage here": the same RouteCards. */
 export const RouteCardsTerminal: Story = {
   args: {
     routeCards,

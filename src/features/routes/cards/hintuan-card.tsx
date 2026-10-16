@@ -42,18 +42,16 @@ interface Props {
     /**
      * SWITCH pressed: the routes turn round, and `box`, when the other way
      * leaves from another box of the place, is the one to select. The camera
-     * stays where the commuter tapped the hintuan — no zoom, no glide (the
-     * owner, 2026-10-01: "it must remain where the camera the user clicked
-     * the hintuan").
+     * stays where the commuter tapped the hintuan — no zoom, no glide.
      */
     onSwitch?: (box: string | null) => void;
   };
   /** Another box of the place picked from its row: select it and go there. */
   onPickBox: (id: string) => void;
   /**
-   * No row Selected: the Selected one tapped again lets it go (the owner's
-   * ask, 2026-10-01), and the card shows the routes through every box of
-   * the place until a row is picked — the same one, or another.
+   * No row Selected: the Selected one tapped again lets it go, and the card
+   * shows the routes through every box of the place until a row is picked —
+   * the same one, or another.
    */
   deselected?: boolean;
   /** The Selected row tapped: let it go. */
@@ -83,9 +81,8 @@ const LETTER = { terminal: <TerminalIcon />, hintuan: <HintuanIcon /> } satisfie
 >;
 
 /**
- * A place and every box of it — the owner's HintuanCard (3854:12690,
- * 2026-09-30), the public map's card for a hotspot since that day, in place
- * of one card per box with its siblings as chips.
+ * A place and every box of it — Figma's HintuanCard (3854:12690), the public
+ * map's card for a hotspot.
  *
  * Under the place's name, a HotspotSelectionBar per box: terminals first, in
  * sky, then the hintuans, in green, each in the order drawn, and boxes of one
@@ -93,20 +90,19 @@ const LETTER = { terminal: <TerminalIcon />, hintuan: <HintuanIcon /> } satisfie
  * pressed in; a tap on another row picks it, and the map goes there, the
  * card staying at its height (the caller's `onPickBox`). A tap on the
  * Selected row lets it go: no row Selected, and the routes below are the
- * whole place's until a row is picked again (`deselected`, the owner's ask
- * of 2026-10-01).
+ * whole place's until a row is picked again (`deselected`).
  *
  * Under the rows, the routes that stop at the Selected box — only there:
  * Lagro 1, on the way to SM Fairview, lists Tala → SM Fairview and
- * → Novaliches; Lagro 2, across the road, their way back (the owner's
- * example). The HintuanCardRouteCounter (3851:12206) sits across the join,
- * with SWITCH: the other way round, at this box when it is passed both ways,
- * else at the nearest box of the place that is — the selection moves there.
- * With no box passed the other way, SWITCH rests disabled; with no route at
- * all, the counter is left out.
+ * → Novaliches; Lagro 2, across the road, their way back. The
+ * HintuanCardRouteCounter (3851:12206) sits across the join, with SWITCH: the
+ * other way round, at this box when it is passed both ways, else at the
+ * nearest box of the place that is — the selection moves there. With no box
+ * passed the other way, SWITCH rests disabled; with no route at all, the
+ * counter is left out.
  *
- * ⓘ opens the hintuan's description, a card the owner has yet to design: it
- * rests disabled until then (his call, 2026-09-30).
+ * ⓘ rests disabled. TODO: it should open the hintuan's description, a card
+ * that is not designed yet.
  */
 export function HintuanCard({
   hotspot,
@@ -168,7 +164,7 @@ export function HintuanCard({
 
   // What the RouteCards show, for the map to light; null once the card
   // closes, so an open card showing nothing still says it is open (a list
-  // kept behind it must not light its own: review of 2026-10-03). Told
+  // kept behind it must not light its own). Told
   // before the first paint, so that list's routes do not flash lit for a
   // frame. Told only when that changes: the caller's function is read from
   // a ref, so one made afresh each render cannot set the lights going in a loop.
@@ -184,10 +180,8 @@ export function HintuanCard({
     return () => tell(null);
   }, [shownKey]);
 
-  // Figma's "2 routes passes here" (the owner's of 2026-10-01; "… through"
-  // before), its verb agreeing with the count. It counts the head routes,
-  // a card each, not their tails (the owner, 2026-10-01: "we're counting the
-  // head route only not tails").
+  // Figma's "2 routes passes here", its verb agreeing with the count. It
+  // counts the head routes, a card each, not their tails.
   const heads = drawnDepartures(routes, back).length;
   const count = `${heads} ${heads === 1 ? 'route passes' : 'routes pass'} here`;
 
@@ -247,9 +241,8 @@ export function HintuanCard({
                 data-testid="card-box"
                 data-box={box.id}
                 data-kind={box.kind}
-                // A toggle since the owner's ask of 2026-10-01: the Selected
-                // row is pressed, a tap on it lets it go, and a tap on any
-                // row picks that one.
+                // A toggle: the Selected row is pressed, a tap on it lets it
+                // go, and a tap on any row picks that one.
                 aria-pressed={selected}
                 onClick={() => {
                   if (!selected) onPickBox(box.id);
@@ -282,7 +275,7 @@ export function HintuanCard({
 
       {shown.length > 0 && (
         // The first RouteCard makes room at its top for the counter: 36 over
-        // its title's own 8 (3854:12526, 2026-10-01).
+        // its title's own 8 (Figma 3854:12526).
         <div className="relative [&>:first-child]:pt-9">
           <RouteCardStack
             routes={routes}
@@ -292,7 +285,8 @@ export function HintuanCard({
             onRoute={onSelectDirection}
             testId="card"
           />
-          {/* HintuanCardRouteCounter (3851:12206, 2026-10-01), across the join of the rows and the cards, 24 in. */}
+          {/* HintuanCardRouteCounter (3851:12206), across the join of the rows and
+              the cards, 24 in. */}
           <div className="absolute inset-x-0 -top-6 z-10 px-6">
             <div className="flex w-full items-center gap-2 rounded-full bg-surface py-3 pr-3 pl-4">
               <div className="flex min-w-0 flex-1 items-center gap-1 text-content-primary">

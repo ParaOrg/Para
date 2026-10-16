@@ -16,7 +16,7 @@ type Props = {
   /**
    * The word on SWITCH, switchWord's for the directions on show: the way a
    * tap leads to, Pabalik over Papunta and back again, or a train's other
-   * bound (the owner's ask of 2026-10-16). Its name is the word on it, so
+   * bound. Its name is the word on it, so
    * "tap Pabalik" finds it by voice too.
    */
   way: string;
@@ -26,7 +26,7 @@ type Props = {
       /**
        * Figma's Default, over the route list: Routes and its count, `2
        * Routes`, `1 Route` — or, with no route under the tap, its hotspots',
-       * `2 Hotspots` (the owner, 2026-09-29).
+       * `2 Hotspots`.
        */
       routeCount: string;
       onBackToList?: never;
@@ -45,17 +45,16 @@ type Props = {
 );
 
 /**
- * The top of the route list and of a trip — the owner's RouteCardHeader
- * (Figma 3742:1049, 2026-09-28): on the left Routes (the Jeep until the
- * owner's "new update" of 2026-10-16) and the count in SN Pro
- * Bold (Default) or ‹ (Variant2, the trip's, 2026-09-29); on the right
+ * The top of the route list and of a trip — Figma's RouteCardHeader
+ * (3742:1049): on the left Routes and the count in SN Pro
+ * Bold (Default) or ‹ (Variant2, the trip's); on the right
  * SWITCH (Button, Special) and ✕ (IconButton), on Background/surface. SWITCH
  * answers to `chooser-flip` over the list and `card-switch` over a trip, as
  * the suites have known each since before the redesign.
  *
- * On a phone it sits flush under the dock's HandleNotch (the owner's
- * BottomSheetConfiguration, 3815:5637, 2026-09-30); from `@float:` the notch
- * is gone and 12 stand above it, as before.
+ * On a phone it sits flush under the dock's HandleNotch (Figma's
+ * BottomSheetConfiguration, 3815:5637); from `@float:` the notch is gone and
+ * 12 stand above it.
  *
  * The tooltips hang below their buttons: above, they would leave the card
  * at the top of the screen.
@@ -70,13 +69,12 @@ export function RouteCardHeader({
   onClose,
 }: Props) {
   // 12 below, over the list and over a trip alike: the card follows it
-  // straight away (3742:1049 and 3778:3183, the owner's of 2026-10-01; 16
-  // over the list and 8 over a trip before).
+  // straight away (Figma 3742:1049 and 3778:3183).
   return (
     <div className="flex w-full items-center gap-2 bg-surface px-3 pt-0 pb-3 @float:pt-3">
       {routeCount !== undefined ? (
         <div className="flex min-w-0 flex-1 items-center gap-2 text-content-primary">
-          {/* Figma's Routes at 28 (4192:12133, the owner's "new update" of 2026-10-16; the side-on Jeep at 24 before). */}
+          {/* Figma's Routes at 28 (4192:12133). */}
           <span aria-hidden className="size-7 shrink-0 *:size-full">
             <RoutesIcon />
           </span>

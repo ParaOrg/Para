@@ -5,27 +5,23 @@ import blobPrimary from './route-card-blob-primary.svg';
 import type { Livery } from '../model/liveries';
 
 /**
- * How a livery paints a card — the owner's RouteCard set (Figma 3665:2265,
- * 2026-09-28) — for the list's cards and a trip's card alike (TimelineRouteDetailCard,
- * 2026-09-29), so a trip opens in the colours of the card it was picked from.
+ * How a livery paints a card — Figma's RouteCard set (3665:2265) — for the
+ * list's cards and a trip's card alike (TimelineRouteDetailCard), so a trip
+ * opens in the colours of the card it was picked from.
  *
  * Red and orange write in Content/inverse under Route/RouteCardPrimary.
- * Violet, rose and fuchsia (2026-09-30), and pink (4071:7014, 2026-10-13),
- * write the same white words under Route/RouteCardInverse, its Blob
- * brighter and softened 2px more — the yellow card's shadow and Blob, drawn
- * for its dark words (Content/primary; his yellow trip frames, 3762:3546,
- * wore the red card's, and the card's own were used here so the card and
- * the trip it opens matched). Mist, dark
- * words like yellow's, left the set on 2026-09-30; yellow itself on
- * 2026-10-12 ("it's not good on the eyes").
+ * Violet, rose, fuchsia and pink (4071:7014) write the same white words under
+ * Route/RouteCardInverse, its Blob brighter and softened 2px more. The Inverse
+ * shadow and Blob were drawn for dark words (Content/primary); the card's own
+ * are used for the trip too, so the card and the trip it opens match.
  *
- * A train route wears its line's colours (the owner's RouteCards for them,
- * 4074:7402 LRT-1, 4080:4124 LRT-2, 4080:4241 MRT-3, 2026-10-13):
+ * A train route wears its line's colours (Figma's RouteCards for them,
+ * 4074:7402 LRT-1, 4080:4124 LRT-2, 4080:4241 MRT-3):
  * Map/Rail/<line>/surface and border-primary, the rail and the pressed rows
  * in its Timeline/surface, all three under Route/RouteCardPrimary and the
  * Primary Blob. LRT-1 and LRT-2 write in Content/inverse; MRT-3, on its
- * yellow, in Content/primary — dark words again, but under the Primary
- * shadow and Blob his frame draws, not the Inverse ones yellow wore.
+ * yellow, in Content/primary — dark words, but under the Primary shadow and
+ * Blob its frame draws, not the Inverse ones.
  */
 
 export const CARD_SURFACE = {
@@ -45,12 +41,10 @@ export const CARD_SURFACE = {
 
 /**
  * The rest of a lit line past a picked hintuan, and the dots along it:
- * Figma's Card/<livery>/surface-pale (the owner's asks, 2026-10-12: "the
- * remaining line should be surface-pale of the selected colour", then,
- * with a screenshot, its circles too — "the circle is still the color of
- * routeline instead of pale color of routeline"). The line is painted from
- * the same tokens in hex (map-colours.ts, useRideRest); these ring the
- * dots, DOM markers (StationLabels).
+ * Figma's Card/<livery>/surface-pale, the circles included, not the route
+ * line's own colour. The line is painted from the same tokens in hex
+ * (map-colours.ts, useRideRest); these ring the dots, DOM markers
+ * (StationLabels).
  */
 export const CARD_SURFACE_PALE = {
   red: 'bg-card-red-surface-pale',
@@ -89,7 +83,7 @@ export const CARD_SHADOW = {
   'metro-rail-way-three': 'shadow-route-card-primary',
 } satisfies Record<Livery, string>;
 
-// A RouteCard's State=Selected (2026-09-29): pressed in, and nothing else
+// A RouteCard's State=Selected: pressed in, and nothing else
 // changes — the fill, the words, the Blob stay the Rest card's.
 export const CARD_SHADOW_SELECTED = {
   red: 'shadow-route-card-primary-selected',
@@ -150,9 +144,8 @@ export const TIMELINE_SURFACE = {
  * A row Pressed, while the finger is down on it: the whole row in the card's
  * Card/<livery>/Timeline/surface — a RouteCard's row (RouteEndPointBar,
  * 3848:11928) and every row of the trip's timeline, where the rail runs into
- * it and only the dot's white shows (Timeline, 3716:1894; both the owner's,
- * 2026-10-01). The phone's own tap highlight is off, so the colour under the
- * finger is the token's.
+ * it and only the dot's white shows (Timeline, 3716:1894). The phone's own
+ * tap highlight is off, so the colour under the finger is the token's.
  */
 export const ROW_PRESSED = {
   red: 'active:bg-card-red-timeline-surface [-webkit-tap-highlight-color:transparent]',
@@ -170,16 +163,15 @@ export const ROW_PRESSED = {
 } satisfies Record<Livery, string>;
 
 /**
- * A picked hintuan's pill, with the pesos to it (the owner's Timeline
+ * A picked hintuan's pill, with the pesos to it (Figma's Timeline
  * State=Selected, 3769:2847): the card's own colour on Content/inverse, the
- * words being white on every livery (on Content/primary where they were
- * dark: his yellow card, 3785:4462, until yellow left on 2026-10-12).
- * Orange follows red: he drew no orange trip; nor violet, rose, fuchsia and pink.
+ * words being white on every livery. Orange, violet, rose, fuchsia and pink
+ * follow red.
  * A train's pill is white too, on every line, its words in the line's
- * Timeline/surface, not its surface: his three train frames draw it so,
- * MRT-3's dark words included (2026-10-13). The ride's E (RideMark) wears
- * it too, its disc in the pill's words' colour on the same white (the
- * owner's RouteSigns, 2026-10-16): a pill restyled restyles the E.
+ * Timeline/surface, not its surface: Figma's three train frames draw it so,
+ * MRT-3's dark words included. The ride's E (RideMark) wears it too, its disc
+ * in the pill's words' colour on the same white (Figma's RouteSigns): a pill
+ * restyled restyles the E.
  */
 export const TIMELINE_PILL = {
   red: 'bg-content-inverse text-card-red-surface',
@@ -195,9 +187,9 @@ export const TIMELINE_PILL = {
 
 /**
  * Set as start and × Remove as start, on the card they sit on: Button's
- * Primary filled with the card's colours (the owner's "card's colours since
- * it's on top of the card", 2026-10-16; his instance, 4147:11947, fills
- * with Card/red/surface), a train's in its line's.
+ * Primary filled with the card's colours, since it sits on top of the card
+ * (Figma's instance, 4147:11947, fills with Card/red/surface), a train's in
+ * its line's.
  */
 export const BUTTON_FILL = {
   red: 'card-red',

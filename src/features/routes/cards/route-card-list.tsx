@@ -33,30 +33,25 @@ interface Props {
 }
 
 /**
- * Everything under a tap that hit more than one thing — the owner's
- * RouteCardExample (Figma 3746:1237 and its layouts, 3750:1911, 2026-09-28):
- * RouteCardHeader over a RouteCard per place the routes leave from
- * (RouteCardStack: each in its own livery, its drawn ways out). The
- * grouping is today's (departures): one way round at a time, SWITCH flips
- * them all, and the count is of cards — "1 Route" for Tala with its two ways
- * out, as his frame has it. The map lights every direction listed, the way
- * round it is showing them; a tap on a card off its rows narrows that to the
- * card's, and a second tap, SWITCH, a map tap or closing let it go. A row
- * opens its trip straight away and picks no card, and the trip's ‹ comes
- * back to every card at rest (the owner, 2026-09-29).
+ * Everything under a tap that hit more than one thing — Figma's
+ * RouteCardExample (3746:1237 and its layouts, 3750:1911): RouteCardHeader over
+ * a RouteCard per place the routes leave from (RouteCardStack: each in its own
+ * livery, its drawn ways out). The grouping is departures': one way round at a
+ * time, SWITCH flips them all, and the count is of cards — "1 Route" for Tala
+ * with its two ways out, as Figma's frame has it. The map lights every
+ * direction listed, the way round it is showing them; a tap on a card off its
+ * rows narrows that to the card's, and a second tap, SWITCH, a map tap or
+ * closing let it go. A row opens its trip straight away and picks no card, and
+ * the trip's ‹ comes back to every card at rest.
  *
- * Only drawn directions are listed: the owner dropped "not mapped yet"
- * (2026-09-28), and a row that opens nothing is no row. SWITCH rests
- * disabled when the other way round has nothing drawn.
+ * Only drawn directions are listed: a row that opens nothing is no row. SWITCH
+ * rests disabled when the other way round has nothing drawn.
  *
- * The hotspots under the tap come first, as they did in the Chooser this
- * list replaced on both maps (the owner, 2026-09-29: "replace the chooser
- * with routeStackCard list since they are the same UI"): a box is small and
- * deliberate (2026-09-22). They are the Chooser's rows until his hintuan
- * design, a row a box, and the count stays the routes'; only with no route
- * to count does it count the hotspots, "2 Hotspots", as a rider counts them
- * (hotspotCount): both boxes of one hintuan, either side of the road, are
- * "1 Hotspot" over two rows. All three his picks, the same day.
+ * The hotspots under the tap come first: a box is small and deliberate. They
+ * are plain rows, a row a box, and the count stays the routes'; only with no
+ * route to count does it count the hotspots, "2 Hotspots", as a rider counts
+ * them (hotspotCount): both boxes of one hintuan, either side of the road, are
+ * "1 Hotspot" over two rows.
  *
  * It sits where BottomSheet puts it, as the trip card does.
  */
