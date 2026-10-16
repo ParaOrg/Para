@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Map as MapLibreMap } from 'maplibre-gl';
+import { AttributionControl, Map as MapLibreMap, NavigationControl } from 'maplibre-gl';
 import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
@@ -8,7 +8,14 @@ import { BASEMAPS } from './basemap';
 import { BasemapControl } from './basemap-control';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 
-type HostedProps = Omit<ComponentProps<typeof BasemapControl>, 'map'>;
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+/** What MapLibre puts in the top-right corner before the button, as MapView does. */
+type Above = 'nothing' | 'attribution' | 'zoom';
+
+interface HostedProps extends Omit<ComponentProps<typeof BasemapControl>, 'map'> {
+  above: Above;
+}
 
 /**
  * The control needs a map to switch, but opening its card draws nothing on
@@ -16,7 +23,7 @@ type HostedProps = Omit<ComponentProps<typeof BasemapControl>, 'map'>;
  * fetches no tiles. Picking another design would fetch that design's style,
  * so the stories only open, close and keep the current one.
  */
-function OnAnEmptyMap(props: HostedProps) {
+function OnAnEmptyMap({ above, ...props }: HostedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
 
@@ -27,16 +34,28 @@ function OnAnEmptyMap(props: HostedProps) {
       style: { version: 8, sources: {}, layers: [] },
       attributionControl: false,
     });
+    // A phone's credits, open as MapView's are until the first drag; or a mouse's +, − and compass.
+    if (above === 'attribution') {
+      created.addControl(
+        new AttributionControl({
+          compact: true,
+          customAttribution:
+            'OpenFreeMap © OpenMapTiles Data from OpenStreetMap · Route data © ParaPo contributors, ODbL · © OpenStreetMap contributors · OpenFreeMap · OSRM',
+        }),
+        'top-right',
+      );
+    }
+    if (above === 'zoom') created.addControl(new NavigationControl(), 'top-right');
     setMap(created);
     return () => {
       setMap(null);
       created.remove();
     };
-  }, []);
+  }, [above]);
 
   return (
     <>
-      <div ref={containerRef} aria-hidden className="absolute inset-0" />
+      <div ref={containerRef} className="absolute inset-0" />
       {map && <BasemapControl {...props} map={map} />}
     </>
   );
@@ -58,7 +77,7 @@ const meta = {
     basemaps: BASEMAPS,
     thumbnails: BASEMAP_THUMBNAILS,
     initial: BASEMAPS[0],
-    under: 'nothing',
+    above: 'nothing',
   },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
@@ -224,8 +243,36 @@ export const SameDesignAgain: Story = {
   },
 };
 
-/** On a phone the attribution moves to the top; the button rests under it. */
-export const UnderAttribution: Story = { args: { under: 'attribution' } };
+/**
+ * On a phone the credits move to the top, open three lines tall: the button
+ * is stacked under them by MapLibre at their real height, never on them.
+ */
+export const UnderAttribution: Story = {
+  args: { above: 'attribution' },
+  play: async ({ canvasElement }) => {
+    const button = await within(canvasElement).findByRole('button', { name: 'Map design' });
+    // Read once the map has made its controls, as it does after the first render.
+    await waitFor(() => {
+      const credits = canvasElement.querySelector('.maplibregl-ctrl-attrib');
+      expect(credits).not.toBeNull();
+      expect(button.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        credits?.getBoundingClientRect().bottom ?? Infinity,
+      );
+    });
+  },
+};
 
 /** A mouse in the studio: MapLibre's +, − and compass above it. */
-export const UnderZoom: Story = { args: { under: 'zoom' } };
+export const UnderZoom: Story = {
+  args: { above: 'zoom' },
+  play: async ({ canvasElement }) => {
+    const button = await within(canvasElement).findByRole('button', { name: 'Map design' });
+    await waitFor(() => {
+      const zoom = canvasElement.querySelector('.maplibregl-ctrl-group');
+      expect(zoom).not.toBeNull();
+      expect(button.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        zoom?.getBoundingClientRect().bottom ?? Infinity,
+      );
+    });
+  },
+};

@@ -445,7 +445,6 @@ export function MapView({
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
           initial={basemap}
-          under={coarse ? 'attribution' : zoomButtons ? 'zoom' : 'nothing'}
         />
       )}
 

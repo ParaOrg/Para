@@ -1,5 +1,6 @@
-import type { MapLibreMap } from 'maplibre-gl';
+import type { IControl, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { applyBasemap, rememberBasemap, type Basemap } from './basemap';
 import { MapStyle } from './map-style';
@@ -12,17 +13,7 @@ interface BasemapControlProps {
   thumbnails: Readonly<Record<string, string>>;
   /** The design the map was built with. */
   initial: Basemap;
-  /** What MapLibre has in the top-right corner above it; the button rests under that. */
-  under: Above;
 }
-
-/**
- * What can sit above the button: the attribution on a phone (it moves to the
- * top there), MapLibre's +, − and compass for a mouse in the studio, or, for
- * a mouse on the public map, nothing since the owner took those off
- * (2026-09-29) — then the button takes the corner itself.
- */
-type Above = 'attribution' | 'zoom' | 'nothing';
 
 /** Closing is the card on its way out, still drawn while its leaving plays. */
 type CardState = 'closed' | 'open' | 'closing';
@@ -35,13 +26,34 @@ type CardState = 'closed' | 'open' | 'closing';
 const afterClose = (): CardState =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'closed' : 'closing';
 
-// Below the status bar on an installed iPhone: the map's own corner controls
-// already sit inside the safe area (styles/index.css), and these follow them.
-const TOP = {
-  attribution: 'top-[calc(3rem+env(safe-area-inset-top))]',
-  zoom: 'top-[calc(7.5rem+env(safe-area-inset-top))]',
-  nothing: 'top-[calc(0.625rem+env(safe-area-inset-top))]',
-} satisfies Record<Above, string>;
+/**
+ * The button as one of MapLibre's own top-right controls, so MapLibre stacks
+ * it under whatever is above it there, at its real height: the credits on a
+ * phone, open three lines tall until the first drag folds them (the owner,
+ * 2026-10-16: the button sat on them at a guessed 3rem), MapLibre's +, − and
+ * compass for a mouse in the studio, or nothing on the public map's
+ * desktop, where it takes the corner. The corner keeps inside the safe area
+ * itself (global.css). React draws into it, as the hintuan pins do into
+ * their markers.
+ */
+function useTopRightControl(map: MapLibreMap): HTMLElement {
+  const [element] = useState(() => {
+    const div = document.createElement('div');
+    // Placed as MapLibre places a .maplibregl-ctrl in the corner, without
+    // the class: its button rules (a grey hover) would paint over ours.
+    div.className = 'pointer-events-auto float-right clear-both mt-2.5 mr-2.5';
+    return div;
+  });
+  useEffect(() => {
+    const control: IControl = { onAdd: () => element, onRemove: () => element.remove() };
+    map.addControl(control, 'top-right');
+    return () => {
+      // Gone with the map already, when the map goes first.
+      if (map.hasControl(control)) map.removeControl(control);
+    };
+  }, [map, element]);
+  return element;
+}
 
 /**
  * The owner's "MayLayers or Theme" button (4176:10679, 2026-10-16) at the
@@ -50,7 +62,8 @@ const TOP = {
  * carries the routes and hotspots across — so both pages get it from
  * MapView for free.
  */
-export function BasemapControl({ map, basemaps, thumbnails, initial, under }: BasemapControlProps) {
+export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapControlProps) {
+  const corner = useTopRightControl(map);
   const [current, setCurrent] = useState<Basemap>(initial);
   const [card, setCard] = useState<CardState>('closed');
   const isOpen = card === 'open';
@@ -97,11 +110,8 @@ export function BasemapControl({ map, basemaps, thumbnails, initial, under }: Ba
     applyBasemap(map, b);
   };
 
-  return (
-    <div
-      ref={rootRef}
-      className={`absolute right-[calc(0.625rem+env(safe-area-inset-right))] z-10 flex flex-col items-end gap-2 ${TOP[under]}`}
-    >
+  return createPortal(
+    <div ref={rootRef} className="flex flex-col items-end gap-2">
       <button
         ref={buttonRef}
         type="button"
@@ -116,7 +126,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial, under }: Ba
           'outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand-surface'
         }
       >
-        <MapLayersIcon />
+        <MapTypeIcon />
         {/* Figma's shadow lies over what the button holds, as on the LocatorButton. */}
         <span
           aria-hidden
@@ -134,18 +144,22 @@ export function BasemapControl({ map, basemaps, thumbnails, initial, under }: Ba
           onClosed={() => setCard('closed')}
         />
       )}
-    </div>
+    </div>,
+    corner,
   );
 }
 
-/** Figma's `map-layers` (3751:1922): a folded map, 28 px in 10 around, in currentColor. */
-function MapLayersIcon() {
+/**
+ * Figma's `map-type` (3751:1922, redrawn by the owner on 2026-10-16 a size
+ * smaller inside its 24 box): a folded map, 28 px in 10 around, in currentColor.
+ */
+function MapTypeIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className="size-7">
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M7.25 3.13465C7.25 2.80712 7.25 2.64335 7.13415 2.55327C7.1208 2.54289 7.10282 2.53138 7.08779 2.52362C6.95744 2.45621 6.81999 2.5197 6.54509 2.64666C6.08426 2.85949 5.55431 3.16692 4.90724 3.54231L3.6187 4.28979C3.15063 4.5613 2.75247 4.79225 2.44084 5.01728C2.10848 5.25727 1.82705 5.52278 1.61998 5.88626C1.4134 6.24887 1.32728 6.62751 1.28746 7.03781C1.24997 7.42418 1.24999 7.89052 1.25 8.44168V16.6807C1.24999 17.4098 1.24998 18.0127 1.29639 18.4842C1.34327 18.9603 1.44676 19.4386 1.75833 19.8251C2.09802 20.2466 2.57688 20.5331 3.11024 20.6283C3.60335 20.7163 4.0707 20.5683 4.5015 20.3738C4.92742 20.1816 5.49919 19.8499 6.11822 19.4907C6.40134 19.3265 6.6546 19.1796 6.89091 19.0575C7.07195 18.9639 7.16247 18.9172 7.20624 18.8453C7.25 18.7734 7.25 18.6788 7.25 18.4897V3.13465ZM8.75 18.361C8.75 18.5636 8.75 18.6649 8.7977 18.7391C8.84539 18.8132 8.94451 18.8584 9.14275 18.9487C9.36402 19.0495 9.6448 19.1875 10.0237 19.3759L13.8376 21.2723C14.0293 21.3677 14.25 21.2283 14.25 21.0141V5.25707C14.25 5.07622 14.25 4.9858 14.205 4.9132C14.16 4.8406 14.0791 4.80034 13.9171 4.71982L11.1426 3.34023C10.4737 3.00758 9.92553 2.73506 9.45232 2.55248C9.16027 2.4398 9.01425 2.38346 8.88544 2.46797C8.88226 2.47006 8.87831 2.47277 8.87522 2.47498C8.75 2.56474 8.75 2.73373 8.75 3.07172V18.361ZM15.9214 5.34585C15.8268 5.34585 15.75 5.42239 15.75 5.51692V21.6531C15.75 21.7136 15.799 21.7627 15.8595 21.7627H18.0529C18.9506 21.7627 19.7008 21.7627 20.2966 21.6808C20.9275 21.5942 21.4955 21.4033 21.9503 20.9384C22.4028 20.4759 22.5866 19.902 22.6704 19.2652C22.7501 18.6594 22.75 17.8955 22.75 16.9756V10.1329C22.75 9.21296 22.7501 8.44909 22.6704 7.84335C22.5866 7.20648 22.4028 6.63259 21.9503 6.17006C21.4955 5.70525 20.9275 5.51436 20.2966 5.42767C19.7008 5.34579 18.9506 5.34582 18.0529 5.34585H15.9214Z"
+        d="M7.80233 4.08155C7.80233 3.7921 7.80233 3.64738 7.69995 3.56777C7.68815 3.5586 7.67226 3.54842 7.65898 3.54157C7.54378 3.482 7.42232 3.5381 7.17938 3.6503C6.77214 3.83838 6.30381 4.11006 5.73198 4.4418L4.59327 5.10237C4.17963 5.34231 3.82776 5.5464 3.55237 5.74527C3.25866 5.95735 3.00995 6.19199 2.82696 6.5132C2.6444 6.83365 2.56829 7.16826 2.5331 7.53085C2.49997 7.87229 2.49999 8.28441 2.5 8.77148V16.0525C2.49999 16.6968 2.49998 17.2296 2.541 17.6463C2.58242 18.067 2.67388 18.4897 2.94922 18.8313C3.24941 19.2038 3.67259 19.4569 4.14393 19.5411C4.5797 19.6188 4.99271 19.4881 5.37342 19.3162C5.74981 19.1463 6.2551 18.8532 6.80215 18.5358C7.05235 18.3907 7.27616 18.2608 7.48499 18.1529C7.64498 18.0702 7.72497 18.0289 7.76365 17.9654C7.80233 17.9019 7.80233 17.8183 7.80233 17.6512V4.08155ZM9.12791 17.5374C9.12791 17.7165 9.12791 17.806 9.17006 17.8716C9.21221 17.937 9.2998 17.977 9.47499 18.0568C9.67053 18.1459 9.91866 18.2678 10.2535 18.4343L13.6239 20.1102C13.7933 20.1945 13.9884 20.0713 13.9884 19.882V5.95717C13.9884 5.79735 13.9884 5.71745 13.9486 5.65329C13.9088 5.58913 13.8373 5.55355 13.6942 5.4824L11.2423 4.26322C10.6512 3.96925 10.1667 3.72842 9.74856 3.56707C9.49047 3.46749 9.36143 3.4177 9.2476 3.49239C9.24479 3.49424 9.2413 3.49663 9.23857 3.49858C9.12791 3.57791 9.12791 3.72725 9.12791 4.02593V17.5374ZM15.4654 6.03563C15.3818 6.03563 15.314 6.10327 15.314 6.18681V20.4467C15.314 20.5002 15.3573 20.5436 15.4107 20.5436H17.3491C18.1424 20.5436 18.8054 20.5436 19.3319 20.4712C19.8894 20.3947 20.3914 20.226 20.7933 19.8151C21.1932 19.4064 21.3556 18.8992 21.4297 18.3365C21.5001 17.8011 21.5 17.126 21.5 16.3131V10.2661C21.5 9.45308 21.5001 8.77803 21.4297 8.24272C21.3556 7.67991 21.1932 7.17275 20.7933 6.764C20.3914 6.35324 19.8894 6.18455 19.3319 6.10794C18.8054 6.03558 18.1424 6.0356 17.3491 6.03563H15.4654Z"
       />
     </svg>
   );
