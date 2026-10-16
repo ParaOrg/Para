@@ -220,7 +220,7 @@ export const OtherRoutes: Story = {
   },
 };
 
-/** A train: priced by its stations, not its metres, in its line's colours; the picked station's code in its pill. */
+/** A train: priced by its stations, not its metres, in its line's colours; its line and bound at the top (LRT-1 Southbound); the picked station's code in its pill. */
 export const Train: Story = {
   args: {
     direction: direction('lrt1', 'Fernando Poe Jr.', 'Baclaran', {
@@ -241,6 +241,19 @@ export const Train: Story = {
   },
   // Carriedo picked: the stations before it on the ride, EDSA the one after
   // it, shown as it is, so nothing folds.
+};
+
+/** MRT-3 Northbound: its header's words black on the white halves, not its yellow (the owner, 2026-10-16). */
+export const TrainMrt3: Story = {
+  args: {
+    direction: direction('mrt3', 'Taft Avenue', 'North Avenue', {
+      mode: 'mrt',
+      routeCode: 'MRT-3',
+    }),
+    directions: [],
+    timeline: timelineOf('Taft Avenue', 'North Avenue', ['Magallanes', 'Ayala', 'Cubao']),
+    livery: 'metro-rail-way-three',
+  },
 };
 
 /** The ferry: free, with the line's own words under the tiles. */

@@ -112,7 +112,8 @@ const meta = {
     routeDirection: 'Novaliches',
     switchable: true,
     back: false,
-    way: 'Papunta',
+    // Papunta showing: SWITCH names the way a tap leads (the owner's ask of 2026-10-16).
+    way: 'Pabalik',
     onSwitch: fn(),
     onBackToList: fn(),
     onClose: fn(),
@@ -286,6 +287,7 @@ export const TheWayBack: Story = {
     hintuans: [...talaToNovaliches].reverse(),
     routeDirection: 'Tala',
     back: true,
+    way: 'Papunta',
   },
 };
 
