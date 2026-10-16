@@ -14,10 +14,10 @@ import { StationLabels } from '@/features/routes/map/station-labels';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
-import { hotspotRing, type HotspotRow } from '@/features/routes/model/hotspots';
+import { hotspotRing } from '@/features/routes/model/hotspots';
 import { hotspotCount } from '@/features/routes/model/places';
 import { routeTimeline } from '@/features/routes/model/ride';
-import { isDrawn, directionLine, type DirectionRow } from '@/features/routes/model/routes';
+import { isDrawn, directionLine } from '@/features/routes/model/routes';
 import {
   lineOf,
   listDirections,
@@ -37,10 +37,11 @@ import {
   STUDIO_BASEMAPS,
   STUDIO_BASEMAP_THUMBNAILS,
   TripCardExtras,
-  type SaveToast,
   type usePasswordRecovery,
+  useAuthFlow,
   useDrawing,
   useFollow,
+  useSaveFlow,
   useSaveTarget,
   useDeleteActions,
 } from '@/features/studio';
@@ -61,20 +62,16 @@ interface WorkshopProps {
  */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
-  const [signingIn, setSigningIn] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [hotspotMenu, setHotspotMenu] = useState(false);
-  // One toast at a time, the newest: a save's, or a problem. A rejected reset
-  // link (expired, already used) is the first one: just a notice, since the
-  // user is plainly signed out and can ask for another. The link is read once,
-  // on arrival, so its error is known before this mounts and never comes later.
-  const [toast, setToast] = useState<SaveToast | null>(() =>
-    recovery.error ? { kind: 'notice', text: `Reset link problem: ${recovery.error}` } : null,
-  );
-  const setNotice = (text: string | null) =>
-    setToast(text === null ? null : { kind: 'notice', text });
-  const justSaved = toast?.kind === 'route' ? toast.v : null;
+  // Sign-in, the password change and a reset link's (useAuthFlow).
+  const {
+    isSignedIn,
+    isSigningIn,
+    setIsSigningIn,
+    isChangingPassword,
+    setIsChangingPassword,
+    isResetting,
+  } = useAuthFlow(session, recovery);
 
   // A right-click on a saved line while drawing: decided below, once the
   // saved lines and hotspots are loaded (onFollow).
@@ -92,6 +89,15 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     // While a trip is open, the map lights only the trip, as on the public map.
     muted: !!saved.selected,
   });
+  // The save panels and the toast, one at a time, the newest: a save's, or a
+  // problem (useSaveFlow).
+  const { isSaving, setIsSaving, toast, setToast, setNotice, justSaved, onSaved, onSavedHotspot } =
+    useSaveFlow({
+      recoveryError: recovery.error,
+      cancelDrawing: draw.cancel,
+      reloadRoutes: saved.reload,
+      reloadHotspots: hotspots.reload,
+    });
   // The route list, a hotspot's card and the trip opened from either, as on
   // the public map (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
@@ -150,21 +156,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     [saved.directions],
   );
 
-  const signedIn = !!session;
   // Every editor edits every route and hotspot (migration 0015, the owner's
   // ask of 2026-10-14). There is no sign-up, so a session is an editor's; the
   // database refuses anyone else's writes whatever this shows.
-  const canEdit = signedIn;
-
-  // Signed in from the dialog Done opened: the dialog hides itself on the
-  // session, so its flag is cleared here, during render — left set, it kept
-  // the drawing keys (Ctrl+Z, Enter, F) off for the rest of the visit
-  // (finding 9).
-  if (signedIn && signingIn) setSigningIn(false);
-
-  // Back from a valid reset link or an invite: the link gave us a session, now
-  // set the password.
-  const resetting = recovery.recovering && signedIn;
+  const canEdit = isSignedIn;
 
   // What the save panel saves into, and where the drawing is headed.
   const target = useSaveTarget(draw, saved.directions, hotspots.hotspots);
@@ -179,34 +174,14 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   });
 
   const onDone = () => {
-    if (!signedIn) setSigningIn(true);
-    else setSaving(true);
+    if (!isSignedIn) setIsSigningIn(true);
+    else setIsSaving(true);
   };
 
   // The hotspot being edited, when the area trace came from a saved one.
   const editingHotspot = draw.area?.hotspotId
     ? (hotspots.hotspots.find((s) => s.id === draw.area?.hotspotId) ?? null)
     : null;
-
-  const onSaved = (v: DirectionRow) => {
-    setSaving(false);
-    draw.cancel();
-    void saved.reload();
-    // A moved line may have entered or left a hintuan; its links were re-synced.
-    void hotspots.reload();
-    setToast({ kind: 'route', v });
-  };
-
-  const onSavedHotspot = (s: HotspotRow) => {
-    setSaving(false);
-    draw.cancel();
-    void hotspots.reload();
-    // The directions too: their names are generated from the hotspots at
-    // their ends when they load, so a renamed end left every card, the list
-    // and the pill on the old name until the next route save (finding 8).
-    void saved.reload();
-    setToast({ kind: 'hotspot', s });
-  };
 
   const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
 
@@ -215,8 +190,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   // Delete on the trip's card and the hotspot's: signed out, it asks for sign-in.
   const { onDelete, onDeleteHotspot } = useDeleteActions({
-    signedIn,
-    onSignInNeeded: () => setSigningIn(true),
+    signedIn: isSignedIn,
+    onSignInNeeded: () => setIsSigningIn(true),
     saved,
     hotspots,
     setNotice,
@@ -416,9 +391,9 @@ export function Workshop({ session, recovery }: WorkshopProps) {
         <AccountPill
           routes={routeCount}
           hotspots={hotspots.hotspots.length > 0 ? hotspotCount(hotspots.hotspots) : 0}
-          email={signedIn ? (session.user.email ?? '') : null}
-          onSignIn={() => setSigningIn(true)}
-          onPassword={() => setChangingPassword(true)}
+          email={session ? (session.user.email ?? '') : null}
+          onSignIn={() => setIsSigningIn(true)}
+          onPassword={() => setIsChangingPassword(true)}
           onSignOut={() => void getSupabase()?.auth.signOut()}
         />
       )}
@@ -438,7 +413,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
         <DrawToolbar
           draw={draw}
           onDone={onDone}
-          keys={!saving && !signingIn && !changingPassword && !resetting}
+          keys={!isSaving && !isSigningIn && !isChangingPassword && !isResetting}
           ends={extendEnds}
         />
       ) : choosing ? null : (
@@ -458,16 +433,18 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       )}
 
       <AuthDialogs
-        signingIn={signingIn && !signedIn}
-        onSignInDismiss={() => setSigningIn(false)}
-        resetting={resetting}
+        signingIn={isSigningIn && !isSignedIn}
+        onSignInDismiss={() => setIsSigningIn(false)}
+        resetting={isResetting}
         isInvite={recovery.isInvite}
         onResetDone={recovery.done}
-        changingPasswordFor={changingPassword && !resetting ? (session?.user.email ?? null) : null}
-        onPasswordDone={() => setChangingPassword(false)}
+        changingPasswordFor={
+          isChangingPassword && !isResetting ? (session?.user.email ?? null) : null
+        }
+        onPasswordDone={() => setIsChangingPassword(false)}
       />
 
-      {saving && draw.drawing && draw.area && (
+      {isSaving && draw.drawing && draw.area && (
         <HotspotPanel
           draw={draw}
           existing={editingHotspot}
@@ -475,14 +452,14 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           directions={saved.directions}
           hotspots={hotspots.hotspots}
           onSaved={onSavedHotspot}
-          onCancel={() => setSaving(false)}
+          onCancel={() => setIsSaving(false)}
           // A row written before its links failed becomes the outline's own
           // (adoptHotspot): ✕, Done and Save again, or a reload, update it.
           onWritten={draw.adoptHotspot}
         />
       )}
 
-      {saving && draw.drawing && !draw.area && (
+      {isSaving && draw.drawing && !draw.area && (
         <SavePanel
           draw={draw}
           existing={editing}
@@ -491,7 +468,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           hotspots={hotspots.hotspots}
           directions={saved.directions}
           onSaved={onSaved}
-          onCancel={() => setSaving(false)}
+          onCancel={() => setIsSaving(false)}
         />
       )}
     </div>
