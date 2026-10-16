@@ -6,7 +6,7 @@ import type { Livery } from '../model/liveries';
 import type { RailLine } from '../model/routes';
 import type { Vehicle } from '../model/vehicles';
 
-export interface RouteTripDetailHeaderProps {
+interface RouteTripDetailHeaderProps {
   vehicle: Vehicle;
   /**
    * The way that is showing (wayWord): Papunta or Pabalik, or a train's

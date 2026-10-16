@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type ToastTone = 'plain' | 'alert';
+type ToastTone = 'plain' | 'alert';
 
 const TONE = {
   plain: { box: 'bg-neutral-900', dismiss: 'text-neutral-400 hover:text-white' },

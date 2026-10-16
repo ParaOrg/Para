@@ -34,7 +34,7 @@ import type { LocatorMode } from './locator-button';
  * TrackedLocation brings the camera back to the visitor instead.
  */
 
-export type LocatorStatus = 'off' | 'asking' | 'on' | 'denied' | 'unavailable';
+type LocatorStatus = 'off' | 'asking' | 'on' | 'denied' | 'unavailable';
 
 /** Where the camera is with the visitor: elsewhere, on them, on them turned with the phone. */
 export type Camera = 'free' | 'tracked' | 'compass';
@@ -64,7 +64,7 @@ export const STILL_BELOW_MPS = 0.5;
  */
 export const TRACKED_SCALE_M = 200;
 export const COMPASS_SCALE_M = 200;
-export const FAR_SCALE_M = 2000;
+const FAR_SCALE_M = 2000;
 
 /**
  * The accuracy circle shows the fix's own radius, held between these (the
@@ -79,7 +79,7 @@ export const ACCURACY_MAX_M = 80;
  */
 export const QUIET_MS = 10_000;
 /** How far the compass view tilts: "slightly ... diagonally", as Google's does. */
-export const COMPASS_PITCH = 45;
+const COMPASS_PITCH = 45;
 
 /**
  * How big the dot and its beam are drawn at `zoom`, as Google Maps' stays
@@ -171,7 +171,7 @@ export function motionFrom(
 }
 
 /** What a phone's orientation event says, as far as a heading goes. */
-export interface Orientation {
+interface Orientation {
   alpha: number | null;
   absolute: boolean;
   webkitCompassHeading?: number;

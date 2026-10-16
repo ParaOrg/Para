@@ -25,7 +25,7 @@ import { requireSupabase } from './supabase';
 
 const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
 
-export interface SaveHotspotInput {
+interface SaveHotspotInput {
   hotspotId: string | null;
   kind: HotspotKind;
   /** What is written on the ground. Required. */
@@ -169,9 +169,9 @@ export async function deleteHotspot(hotspot: HotspotRow): Promise<void> {
   if (!data?.length) throw new Error(NOTHING_CHANGED);
 }
 
-/** What a write that matched no row says: the session ended, or the row is not this account's. */
+/** What a write that matched no row says: the session ended, or the row is gone. */
 export const NOTHING_CHANGED =
-  'Nothing was changed: the session may have ended, or this is not yours to change. Sign in again and retry.';
+  'Nothing was changed: the session may have ended, or someone else already changed it. Sign in again and retry.';
 
 /**
  * Keep every hintuan's list honest after a direction is saved: link it to each

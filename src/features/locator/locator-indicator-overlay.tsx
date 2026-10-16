@@ -23,7 +23,7 @@ const HALO_MAX_PX = 1600;
  * map zooms out and is gone once the dot covers it, as Google Maps' is (the
  * owner's screenshots, 2026-10-01); never past HALO_MAX_PX. 0: none.
  */
-export const haloFor = (px: number, scale = 1) =>
+const haloFor = (px: number, scale = 1) =>
   px < DOT_PX * scale ? 0 : Math.round(Math.min(HALO_MAX_PX, px));
 
 interface Props {

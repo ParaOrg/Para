@@ -43,7 +43,7 @@ interface ExportedDirection {
   line: LngLat[] | null;
 }
 
-export interface RouteExport {
+interface RouteExport {
   exportedAt: string;
   route: {
     id: string;
