@@ -205,9 +205,11 @@ test('an end alone carries Set as start; with no start the origin keeps its S', 
 
 // The owner's Variant3 of 2026-10-16 (4148:12161): a start alone is no ride
 // yet. Its dot stands alone, the rail broken just above it and just below
-// and running on through every other row, the fold of the rows after it
-// among them; the destination has no E, and its pill holds its code alone.
-test('a start alone (Variant3): its dot alone, the rail on either side and through the fold, no E, its code alone', () => {
+// and running on along the rows above it; the fold of the rows after it,
+// closed, sits next to it with no rail (his "when close it should
+// disconnect the disclosure", 4194:12562), the destination's dot alone. The
+// destination has no E, and its pill holds its code alone.
+test('a start alone (Variant3): its dot alone, the rail above it, its closed fold and the destination without, no E, its code alone', () => {
   const html = render(10, {
     livery: 'metro-rail-way-three',
     start: 'h3',
@@ -225,7 +227,7 @@ test('a start alone (Variant3): its dot alone, the rail on either side and throu
   assert.match(html, /data-testid="trip-fold"/);
   const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
   // The origin, h0 to h2 (h2 the rail's end above S), S alone, its button's
-  // stick, the fold of h4 to h9 with the rail through it, the destination.
+  // stick, the closed fold of h4 to h9 by it and the destination, no rail.
   assert.deepEqual(pieces, [
     'below',
     'through',
@@ -233,8 +235,8 @@ test('a start alone (Variant3): its dot alone, the rail on either side and throu
     'above',
     'disconnected',
     'disconnected',
-    'connected',
-    'above',
+    'disconnected',
+    'disconnected',
   ]);
   const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
   assert.deepEqual(marks, ['start'], 'the S on its row, no E anywhere');
@@ -246,14 +248,9 @@ test('a start alone (Variant3): its dot alone, the rail on either side and throu
 test('a start alone on the first hintuan stands apart from the origin, on the last from the destination', () => {
   const pieces = (html) => [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
   const first = render(10, { start: 'h0', onRemoveStart() {} });
-  // The origin, S alone, its button's stick, the fold of h1 to h9, the destination.
-  assert.deepEqual(pieces(first), [
-    'disconnected',
-    'disconnected',
-    'disconnected',
-    'connected',
-    'above',
-  ]);
+  // The origin, S alone, its button's stick, the closed fold of h1 to h9 by
+  // it, the destination: every dot alone.
+  assert.deepEqual(pieces(first), Array(5).fill('disconnected'));
   const last = render(10, { start: 'h9', onRemoveStart() {} });
   // Nothing after it to fold: the origin, h0 to h8, S alone, its stick, the destination.
   assert.deepEqual(pieces(last), [
@@ -286,23 +283,43 @@ test('a jeep’s start has no pill; a train’s ride with no fare has its start�
 // The owner, 2026-10-16: "can you still connect those dots, since it might
 // see the users as broken" (his Variant5, 4151:13619): the rail runs along
 // the rows outside the ride too, broken just above the ride and just below.
-test('a start and an end: the rail broken where the ride starts and ends, running on outside it and through both folds', () => {
+// A fold's row by the ride has none (his "when close it should disconnect
+// the disclosure", 4194:12702): both folds closed, the origin and the
+// destination are their dots alone.
+test('a start and an end, both folds closed: the rail along the ride alone, the folds and the ends beyond them without', () => {
   const html = render(10, { start: 'h3', picked: 'h6', onRemoveStart() {} });
   const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
-  // The origin, the fold of the three before the ride (folded, they draw
-  // nothing yet), S (rail below) and the rail on beside its × Remove as
-  // start, two through, E (rail above), the fold of the three after it, and
-  // the destination.
+  // The origin alone, the closed fold of the three before the ride (folded,
+  // they draw nothing yet), S (rail below) and the rail on beside its
+  // × Remove as start, two through, E (rail above), the closed fold of the
+  // three after it, and the destination alone.
+  assert.deepEqual(pieces, [
+    'disconnected',
+    'disconnected',
+    'below',
+    'connected',
+    'through',
+    'through',
+    'above',
+    'disconnected',
+    'disconnected',
+  ]);
+});
+
+// 4194:12562: an end alone, the rows after it folded: the "N more" row has
+// no rail beside it, and the destination's dot stands alone.
+test('an end alone, its fold closed (4194:12562): the rail stops at the E, the fold and the destination without', () => {
+  const html = render(10, { picked: 'h6', onSetStart() {} });
+  const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
+  // The origin, h0 to h5, E (rail above) and no rail beside Set as start,
+  // the closed fold, the destination alone.
   assert.deepEqual(pieces, [
     'below',
-    'connected',
-    'below',
-    'connected',
-    'through',
-    'through',
+    ...Array(6).fill('through'),
     'above',
-    'connected',
-    'above',
+    'disconnected',
+    'disconnected',
+    'disconnected',
   ]);
 });
 
@@ -314,21 +331,21 @@ test('an end above the start (Variant5): the open rows run from the E down to th
     ['h2', 'h3', 'h4', 'h5', 'h6'],
   );
   const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
-  // The origin and the fold of the two rows before the ride, the rail
-  // through them; E (rail below), three through, S (rail above) and no rail
-  // beside its × Remove as start; the fold of the three after it and the
-  // destination, the rail through them.
+  // The origin alone and the closed fold of the two rows before the ride,
+  // no rail; E (rail below), three through, S (rail above) and no rail
+  // beside its × Remove as start; the closed fold of the three after it and
+  // the destination alone.
   assert.deepEqual(pieces, [
-    'below',
-    'connected',
+    'disconnected',
+    'disconnected',
     'below',
     'through',
     'through',
     'through',
     'above',
     'disconnected',
-    'connected',
-    'above',
+    'disconnected',
+    'disconnected',
   ]);
   const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
   assert.deepEqual(marks, ['end', 'start']);
@@ -339,12 +356,12 @@ test('an end above the start (Variant5): the open rows run from the E down to th
 test('the destination picked with the start kept: its E, the ride from the S to it, the rows above folded', () => {
   const html = render(10, { start: 'h4', endPicked: 'to', onRemoveStart() {} });
   const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
-  // The origin and the fold of the four above the ride, the rail through
-  // them; S (rail below) and beside its × Remove as start, five through,
+  // The origin alone and the closed fold of the four above the ride, no
+  // rail; S (rail below) and beside its × Remove as start, five through,
   // the destination.
   assert.deepEqual(pieces, [
-    'below',
-    'connected',
+    'disconnected',
+    'disconnected',
     'below',
     'connected',
     'through',
@@ -365,7 +382,8 @@ test('the origin picked with the start kept: its E, the ride back from the S to 
   const html = render(10, { start: 'h4', endPicked: 'from', onRemoveStart() {} });
   const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
   // The origin, four through, S (rail above) and no rail beside its
-  // × Remove as start, the fold of the five after it, the destination.
+  // × Remove as start, the closed fold of the five after it and the
+  // destination alone.
   assert.deepEqual(pieces, [
     'below',
     'through',
@@ -374,8 +392,8 @@ test('the origin picked with the start kept: its E, the ride back from the S to 
     'through',
     'above',
     'disconnected',
-    'connected',
-    'above',
+    'disconnected',
+    'disconnected',
   ]);
   const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
   assert.deepEqual(marks, ['end', 'start'], 'the E on the origin, the S below it');

@@ -1236,34 +1236,63 @@ const tripChecks = async () => {
     );
     // The rail runs along the ride from the origin to the picked row, which
     // ends it (MiddleBottom), and breaks there, running on again along the
-    // rows after it, through their fold to the destination (the owner,
-    // 2026-10-16: "can you still connect those dots"; his Variant5).
-    const rails = await card().evaluate((c) => {
-      const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
-      const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
-      const at = rows.findIndex((r) => r.getAttribute('data-state') === 'selected');
-      return {
-        origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
-        before: rows.slice(0, at).map(railOf).filter(Boolean),
-        picked: railOf(rows[at]),
-        afterCount: rows.length - at - 1,
-        after: rows
-          .slice(at + 1)
-          .map(railOf)
-          .filter(Boolean),
-        fold: railOf(c.querySelector('[data-testid="trip-fold"]')?.parentElement),
-        destination: railOf(c.querySelector('[data-testid="trip-destination"]')),
-      };
-    });
-    check(
-      '  the rail runs from the origin to the pick and breaks there, on again after it to the destination',
-      rails.origin === 'below' &&
+    // rows after it (the owner, 2026-10-16: "can you still connect those
+    // dots"; his Variant5). Their fold's row is next to the pick when it is
+    // closed, and carries no rail then, the destination its dot alone
+    // ("when close it should disconnect the disclosure", 4194:12562); open,
+    // it sits between the rows after the pick and the destination, the rail
+    // through it (4189:11483). Read one way, the fold turned, and read again.
+    const railsNow = () =>
+      card().evaluate((c) => {
+        const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
+        const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
+        const at = rows.findIndex((r) => r.getAttribute('data-state') === 'selected');
+        const fold = c.querySelector('[data-testid="trip-fold"]');
+        return {
+          origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
+          before: rows.slice(0, at).map(railOf).filter(Boolean),
+          picked: railOf(rows[at]),
+          afterCount: rows.length - at - 1,
+          after: rows
+            .slice(at + 1)
+            .filter((r) => r.classList.contains('visible'))
+            .map(railOf)
+            .filter(Boolean),
+          isFoldOpen: fold ? fold.getAttribute('aria-expanded') === 'true' : null,
+          fold: railOf(fold?.parentElement),
+          destination: railOf(c.querySelector('[data-testid="trip-destination"]')),
+        };
+      });
+    const isRailRight = (rails) => {
+      const isShut = rails.isFoldOpen === false;
+      return (
+        rails.origin === 'below' &&
         rails.before.every((r) => r === 'through') &&
         rails.picked === 'above' &&
         rails.after.every((r, i) => r === (i === 0 ? 'below' : 'through')) &&
-        (rails.fold === null || rails.fold === 'connected') &&
-        rails.destination === (rails.afterCount > 0 ? 'above' : 'disconnected'),
-      JSON.stringify(rails),
+        rails.fold === (rails.isFoldOpen === null ? null : isShut ? 'disconnected' : 'connected') &&
+        rails.destination === (rails.afterCount > 0 && !isShut ? 'above' : 'disconnected')
+      );
+    };
+    const railsFirst = await railsNow();
+    const afterFold = card().locator('[data-testid="trip-fold"][data-part="after"]');
+    let railsTurned = null;
+    if (railsFirst.isFoldOpen !== null) {
+      const turn = async (isOpen) => {
+        await afterFold.scrollIntoViewIfNeeded();
+        await buttonTap(
+          afterFold,
+          async () => (await afterFold.getAttribute('aria-expanded')) === String(isOpen),
+        );
+      };
+      await turn(!railsFirst.isFoldOpen);
+      railsTurned = await railsNow();
+      await turn(railsFirst.isFoldOpen);
+    }
+    check(
+      '  the rail runs from the origin to the pick and breaks there, on again after it, the fold by it without when closed',
+      isRailRight(railsFirst) && (railsTurned === null || isRailRight(railsTurned)),
+      JSON.stringify({ railsFirst, railsTurned }),
     );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
     // On a train the station's code comes first, "GL04 ₱20" (the owner,

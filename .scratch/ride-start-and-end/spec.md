@@ -30,7 +30,16 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 | **MiddleBottom**, Connected | yes | none | The row the ride ends at, mid-list |
 | Any piece, **Disconnected** | none | none | A row on its own, with no rail: a start alone |
 
-**The rule (the owner, 2026-10-16): the rail breaks where the ride starts and where it ends, and runs on along the rows outside it**, as the Figma states draw it (Choosing, Variant3, Variant4, Variant5): "can you still connect those dots, since it might see the users as broken it doesnt flow to the eyes". The row just above a break is MiddleBottom (the origin, Top, Disconnected), the row just below it MiddleTop (the destination, Bottom, Disconnected); a fold's row runs the rail of the rows it folds. From 2026-10-15 to then, the rail ran only along the ride and the rows outside were their dots alone.
+**The rule (the owner, 2026-10-16): the rail breaks where the ride starts and where it ends, and runs on along the rows outside it**, as the Figma states draw it (Choosing, Variant3, Variant4, Variant5): "can you still connect those dots, since it might see the users as broken it doesnt flow to the eyes". The row just above a break is MiddleBottom (the origin, Top, Disconnected), the row just below it MiddleTop (the destination, Bottom, Disconnected). From 2026-10-15 to then, the rail ran only along the ride and the rows outside were their dots alone.
+
+**A fold's row next to the ride carries no rail, open or closed** (the owner, 2026-10-16: "when close it should disconnect the disclosure", 4194:12562, 4194:12702, 4189:11483): its TimelineStick Disclosure is left unfilled. Until then a fold's row always ran the rail of the rows it folds.
+
+- The `before` fold's row always sits just above the ride's first row. Open, the last row it folds is MiddleBottom; closed, the origin has nothing to join below and is its dot alone.
+- The `after` fold's row sits just above the destination. Closed, it is right after the ride's last row: no rail, and the destination is its dot alone (Recto in 4194:12562). Open, it sits between the last row it folds and the destination, both after the ride, and the rail runs through it (4189:11483, 4194:12702).
+- The `all` fold, nothing picked, is inside the ride and carries the rail (Variant6, 4157:7737).
+- A start alone is a ride of its one row: its `after` fold, closed, sits next to it, so that fold's row has no rail and the destination's dot is alone. An end row kept with a start follows the same rule.
+
+The rule is `timelineRail` (`src/features/routes/cards/timeline-rail.ts`): two things next to each other on the card are joined when both are on the same side of the ride, and a fold's row whose neighbours are on different sides has no side. A row folded away wears the rail it wears open, so it closes as it was drawn.
 
 ## How it works, as read from the design
 
@@ -84,6 +93,6 @@ Nothing is left open.
 
 ## Done when
 
-- Unit tests: a ride between two picks (metres, a jeep's fare and a train's); an end before the start ridden back, the S and E where they were picked and the chevrons from S to E (2026-10-16); a jeep's SWITCH by other streets landing out of order; the rail broken at the ride's ends and running on outside it; and what Northbound / Southbound and Papunta / Pabalik do to the picks.
+- Unit tests: a ride between two picks (metres, a jeep's fare and a train's); an end before the start ridden back, the S and E where they were picked and the chevrons from S to E (2026-10-16); a jeep's SWITCH by other streets landing out of order; the rail broken at the ride's ends and running on outside it, with no rail beside a fold's row by the ride, open or closed (`timeline-rail-test`); and what Northbound / Southbound and Papunta / Pabalik do to the picks.
 - A story for each Figma state.
 - A headless check on the public map: pick a start and an end, and the Distance and fare tiles and the map's S and E agree.
