@@ -1,5 +1,5 @@
 /**
- * How BottomSheet's handle and drags decide, on a phone: every card's. It
+ * How BottomSheet's handle and drags decide on a phone, for every card. It
  * also measures the status bar Max stands clear of (measureSafeTop). The
  * listeners that act on these are useSheetGestures'.
  */
@@ -48,7 +48,7 @@ export function swallowTheTapsClick(x: number, y: number) {
  * Middle, about half the screen, where a trip opens (3813:3755, 3815:4040);
  * Max, the whole screen, the header at the top and the rest scrolling under
  * it (3815:4306). Between Middle and Max there is no magnet, the owner's
- * pick: a sheet let go there stays, a number — the share of the map it shows,
+ * pick: a sheet let go there stays, a number — the share of Max it shows,
  * over Middle's and under 1.
  */
 export type Snap = 'low' | 'middle' | 'max' | number;
@@ -71,46 +71,50 @@ export function snapAfterTap(snap: Snap): Snap {
 }
 
 /**
- * A flick faster than this, in pixels a millisecond, goes to the end its way.
- * Lower speeds were too sensitive: even a gentle scroll up did not stay on
- * Middle. With the speed read over the last moves only, a gentle swipe
- * settles on the nearest height.
+ * A flick faster than this, in pixels a millisecond, goes to the end its way:
+ * 0.5 ÷ 0.4, the owner's pick from trying it. At 0.5 even a gentle scroll up
+ * did not stay on Middle, and the owner keeps 4/10 of that sensitivity. With
+ * the speed read over the last moves only, a gentle swipe settles on the
+ * nearest height.
  */
 const FLICK = 1.25;
 
 /** How far back the speed at release is read: only the finger's last moves count. */
 const RECENT_MS = 100;
 
-/** Middle shows this much of the map. */
+/** Middle shows this much of the map: 45%, the owner's pick over the 55% the frames draw. */
 const MIDDLE = 0.45;
 
 /**
- * What Low shows, the same for every card, the owner's rule (Figma 3817:6007,
- * 3869:5195): the notch, the header and the top of the first card, down past
- * its title — cut to one line there (`sheet-low:`).
+ * What Low shows, the same for every card, the owner's rule (Figma 3817:6007;
+ * 129 as 3869:5195 draws it): the notch, the header and the top of the first
+ * card, down past its title — cut to one line there (`sheet-low:`).
  */
 export const LOW_PX = 129;
 
 /**
  * What Max leaves of the map at the top, as Google Maps does: the status
  * bar's height, where the page runs behind it, and this strip under it, so
- * the commuter keeps their place.
+ * the commuter keeps their place: the owner's pick.
  */
 export const MAX_STRIP_PX = 24;
 const MAX_GAP_CSS = `calc(env(safe-area-inset-top) + ${MAX_STRIP_PX}px)`;
 
-/** The status bar's height as the page reads it (BottomSheet measures it): 0 where the page runs under it. */
+/**
+ * The status bar's height as the page reads it (BottomSheet measures it): 0
+ * where the page does not run behind it.
+ */
 let safeTop = 0;
 function setSafeTop(px: number) {
   safeTop = Math.max(0, Math.round(px));
 }
 
-/**
- * The status bar's height as the page reads it, once: what Max leaves above
- * it besides its strip of map (sheetGesture). 0 where the page runs under it.
- */
+/** Whether measureSafeTop has read it: once a page. */
 let safeTopRead = false;
-/** Reads the status bar's height once, so Max can stand clear of it. */
+/**
+ * Reads the status bar's height, what Max leaves above its strip of map. 0
+ * where the page does not run behind the bar.
+ */
 export function measureSafeTop() {
   if (safeTopRead || typeof document === 'undefined') return;
   safeTopRead = true;
@@ -197,9 +201,9 @@ const MAX_PULL_PX = 64;
  * direction: up, to Max, from Low or Middle alike; down, to Low, from Max or
  * Middle alike — and down from Low, it closes. Let go slowly between Middle
  * and Max, it stays where it is (the owner's pick), unless near enough either
- * end to be drawn in — up near the map's top, to Max. Below Middle it settles
- * on Middle or Low, the nearer, or closes when less than half of Low still
- * shows.
+ * end to be drawn in — up near the map's top, to Max. Below Middle it
+ * settles on Middle or Low, the nearer, or closes when less than half of Low
+ * still shows.
  */
 export function snapFor(
   shown: number,

@@ -35,7 +35,7 @@ const JOIN_M = 0.01;
  * (25 m) away. After a freehand segment, which does end on the click, the
  * road's first vertex would be lost, and the saved line, its metres, its
  * hotspot order and the published line would cut that corner, while the map,
- * which draws segment by segment, showed it whole.
+ * which draws segment by segment, shows it whole.
  */
 export function joinSegments(segments: Segment[]): LngLat[] {
   const out: LngLat[] = [];
@@ -50,9 +50,9 @@ export function joinSegments(segments: Segment[]): LngLat[] {
 
 /**
  * Six decimals, about 0.1 m: what a save keeps of a coordinate. The router
- * and the mouse give 15 or more, and those digits measured half of every row.
- * The publish script rounds the same way, so a published point is the saved
- * one.
+ * and the mouse give 15 or more, and those digits measured half of every
+ * row. The publish script rounds the same way, so a published point is the
+ * saved one.
  */
 export const round6 = (n: number): number => Math.round(n * 1e6) / 1e6;
 
@@ -68,7 +68,8 @@ function toRad(deg: number) {
 /**
  * Metres in a degree of latitude — and of longitude, times the cosine of the
  * latitude — on the sphere `haversine` measures on: 111,194.9. The one
- * figure every flat patch and padded box uses.
+ * figure every flat patch and padded box uses, so they agree: figures from
+ * 110,574 to 111,320 differ by up to 0.7%.
  */
 export const M_PER_DEG = toRad(1) * EARTH_RADIUS_M;
 
@@ -108,7 +109,10 @@ export function zoomForScale(metres: number, lat: number): number {
   return Math.log2((metresPerPixel(lat, 0) * SCALE_PX) / metres);
 }
 
-/** `12.8km`: a length as the trip card's Distance tile writes it, to a tenth, no space (Figma 3778:3183). */
+/**
+ * `12.8km`: a length as the trip card's Distance tile writes it, to a tenth,
+ * no space (Figma 3778:3183).
+ */
 export function kmLabel(metres: number): string {
   return (metres / 1000).toFixed(1) + 'km';
 }

@@ -44,9 +44,8 @@ interface Props {
    * What it is on a wide screen, where it stops being a sheet: the route
    * list's, a trip's and a place's (the public map's HintuanCard) panel in
    * the top-left corner from `@float:` (`corner`, the default), or the card
-   * the studio's hotspot and route cards float as, 16 in, from `@wide:`
-   * (`card`). What it holds reads which with `sheet-floating:` and
-   * `sheet-low:` (index.css).
+   * the studio's hotspot card floats as, 16 in, from `@wide:` (`card`). What it
+   * holds reads which with `sheet-floating:` and `sheet-low:` (global.css).
    */
   floats?: 'corner' | 'card';
   /**
@@ -79,25 +78,27 @@ const FLOATS_AT = {
 
 /**
  * Every card on the map is this one sheet, by the owner's rule: the route
- * list, a trip's card, a hotspot's card and the studio's route card alike.
- * Only what it floats as on a wide screen differs (`floats`): the list and a
- * trip flush in the top-left corner, 384 wide (Figma 3750:1911), the body
- * scrolling under the header with no scrollbar drawn, the owner's pick.
+ * list, a trip's card, a place's card (HintuanCard) and the studio's hotspot
+ * card alike. Only what it floats as on a wide screen differs (`floats`): the
+ * list, a trip and a place flush in the top-left corner, 384 wide (Figma
+ * 3750:1911), the body scrolling under the header with no scrollbar drawn,
+ * the owner's pick.
  *
  * On a phone it is BottomSheetConfiguration (Figma 3815:5637), square along
  * the top: a HandleNotch over the header, and three heights (sheetGesture) —
  * Low, the header and the top of the first card, a tap on it raising the
- * sheet; Middle, where it opens; Max, the whole map, clear of a phone's
- * notch. It is always the whole map tall and slides (`--sheet-y`), so moving
- * between heights is one smooth `translate`: a drag on the handle or the
- * header follows the finger and, let go slowly, glides to the nearest height;
- * flicked, it goes to the end its way, Max or Low, as Google's and Apple's
- * maps do; flicked down from Low, it closes. Below Max the body does not
- * scroll: a swipe on it moves the sheet; at Max it scrolls, and a pull down
- * from its top takes hold of the sheet — to Middle held slowly, to Low
- * flicked. A tap on the handle goes round, Low → Middle → Max. Between Middle
- * and Max it stays where it is let go, the owner's pick (sheetGesture's
- * snapFor), its body still.
+ * sheet; Middle, where it opens; Max, which leaves only a strip of map
+ * (MAX_STRIP_PX), clear of a phone's notch. It is always the whole map tall
+ * and slides (`--sheet-y`), so moving between heights is one smooth
+ * `translate`: a drag on the handle or the header follows the finger and, let
+ * go slowly, glides to the nearest height; flicked, it goes to the end its
+ * way, Max or Low, as the owner asked, like Google's and Apple's maps;
+ * flicked down from Low, it closes. Below Max the body does not scroll: a
+ * swipe on it moves the sheet, the owner's pick; at Max it scrolls, and a
+ * pull down from its top takes hold of the sheet, as a drag does: let go
+ * slowly, it stays where it is; flicked, to Low. A tap on the handle goes
+ * round, Low → Middle → Max. Between Middle and Max it stays where it is let
+ * go, the owner's pick (sheetGesture's snapFor), its body still.
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
  * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse

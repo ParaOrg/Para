@@ -29,7 +29,7 @@ export function JeepIcon() {
   );
 }
 
-/** ✕, the close of a card's header. */
+/** ✕: a card's close, and Remove as start on a trip's row. */
 export function CloseIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -38,7 +38,7 @@ export function CloseIcon() {
   );
 }
 
-/** ‹, back to the list. */
+/** ‹, back to the card behind. */
 export function ChevronLeftIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -121,8 +121,8 @@ export function InformationIcon() {
 
 /**
  * Figma's Start and End (4055:6468 and 4055:6446): a disc with the letter cut
- * out, drawn at the size its box gives it (20 in the map's labels, 24 in a
- * station's disc) — S before the name of where a ride starts, E before where
+ * out, 24 wherever it is drawn (the map's labels, a station's disc, a trip's
+ * rows) — S before the name of where a ride starts, E before where
  * it goes, and before the picked hintuan's, where the ride now ends.
  */
 export function StartIcon() {
@@ -168,9 +168,10 @@ export function RoutesIcon() {
  * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
  * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156) and Ferry
  * (4189:11183). They live in one sprite the page fetches, not as paths in its
- * JS (inline, they took the public page over its 400 kB), so Figma's paths
- * keep their full precision. Its file is hashed, and the offline precache
- * holds it. Each draws in currentColor; the opacity is the caller's.
+ * JS, the owner's pick (inline, they took the public page over its 400 kB),
+ * so Figma's paths keep their full precision. Its file is hashed, and the
+ * offline precache holds it. Each draws in currentColor; the opacity is the
+ * caller's.
  */
 type SpriteId = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry';
 

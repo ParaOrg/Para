@@ -44,10 +44,10 @@ interface SheetGestures {
 
 /**
  * How a finger or a mouse moves BottomSheet: the drag on the handle or the
- * header, the pull down from the list's top at Max, and the wheel's deliberate
- * push. The sheet writes the DOM (`show`) and keeps `dragging`; this decides
- * where it goes (sheetGesture). Called after the sheet's two dock-mark
- * layout effects: the five run, and clean up, in that order.
+ * header, the pull down from the list's top at Max, and the wheel's
+ * deliberate push. The sheet writes the DOM (`show`) and keeps `dragging`;
+ * this decides where it goes (sheetGesture). Called after the sheet's two
+ * dock-mark layout effects.
  */
 export function useSheetGestures({
   sheet: own,

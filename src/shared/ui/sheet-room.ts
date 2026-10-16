@@ -78,8 +78,8 @@ export const FIT_ROOM_MIN_PX = 48;
  * fit padding: beside the sheet where it floats in the corner, above it where
  * it is docked along the bottom, at its own height (the owner's pick: in
  * close above Low, out above Middle). Where it leaves less than
- * FIT_ROOM_MIN_PX — Max, on a phone the whole screen — at Middle's
- * (`framedAt`), so the route is there to see as it comes down.
+ * FIT_ROOM_MIN_PX — Max, which leaves only a strip of map (MAX_STRIP_PX) — at
+ * Middle's (`framedAt`), so the route is there to see as it comes down.
  */
 export function roomBeside(map: HTMLElement, dock: HTMLElement | null, snap: Snap): Room {
   if (!dock || dock.hidden) return roomFromRects(map.getBoundingClientRect(), null, 0, 0, snap);
