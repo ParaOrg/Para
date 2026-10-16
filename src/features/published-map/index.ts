@@ -9,9 +9,10 @@ export {
   openingDirections,
 } from './api/fetch-index';
 export { fetchLine } from './api/fetch-line';
-export { MAP_FILE_TOO_NEW } from './map-file';
-export { installApp, listenForInstallOffer, useInstallOffer } from './install-offer';
+export { listenForInstallOffer } from './install-offer';
 export { InstallPrompt } from './install-prompt';
+export { loadProblems } from './load-problems';
 export { Notices } from './notices';
 export { registerServiceWorker, reloadForNewerApp, reloadToUpdate, useNeedRefresh } from './pwa';
 export { useMapAge, useOffline } from './status';
+export { useInstallPrompt } from './use-install-prompt';

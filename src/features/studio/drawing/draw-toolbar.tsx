@@ -128,7 +128,7 @@ function Toolbar({ draw, onDone, keys }: { draw: Drawing; onDone: () => void; ke
   const canDone = points >= minPoints && !waiting;
   // A phone has no hover for a title, no right-click and no shift key: it is
   // told what a finger does, asked before ✕ throws the drawing away, and
-  // gets the point bar (PointBar.tsx) for what the mouse's clicks do.
+  // gets the point bar (point-bar.tsx) for what the mouse's clicks do.
   const finger = coarsePointer();
   const [confirming, setConfirming] = useState(false);
   const [uTurnHelp, setUTurnHelp] = useState(false);

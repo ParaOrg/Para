@@ -59,8 +59,8 @@ export function HotspotPanel({
   const [name, setName] = useState(existing?.name ?? '');
   const [informal, setInformal] = useState(existing?.informal ?? '');
   // Also called and Note are off the form for now; a box that has them keeps them.
-  const [aliasText] = useState(existing?.aliases?.join(', ') ?? '');
-  const [note] = useState(existing?.note ?? '');
+  const aliasText = existing?.aliases?.join(', ') ?? '';
+  const note = existing?.note ?? '';
 
   // The informal names already in use, offered as suggestions so a second box
   // for the same place joins the group instead of starting "SM  Fairview".

@@ -11,7 +11,7 @@ import { saveDirection, type SaveInput } from './routes-write';
  * and are left alone). Two steps, not one transaction (PLAN.md's known risk
  * #3): `onWritten` hears of the row the moment it is in, so a retry after a
  * failed link sync updates that row instead of inserting the route again
- * (review finding 13). Split from SavePanel.tsx, 2026-09-29.
+ * (review finding 13). Split from save-panel.tsx, 2026-09-29.
  */
 export async function saveRouteAndLinks(
   input: SaveInput,

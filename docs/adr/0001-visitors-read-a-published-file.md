@@ -5,6 +5,8 @@ date: 2026-09-22
 
 # Visitors read a published file, never the database
 
+> Amended 2026-10-07: the one `map.json` became the published map, an index and line files. See [the amendment](#amendment-2026-10-07).
+
 The public map at `/` reads one static file, `public/data/map.json`, rebuilt
 from the studio's tables by a nightly workflow (and by hand on demand) and
 committed to `main`. Visitors never call the database. We chose this over a
