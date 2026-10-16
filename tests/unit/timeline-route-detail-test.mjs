@@ -128,8 +128,9 @@ test('a lone hintuan is drawn as it is: shown, its button, nothing to fold and n
 });
 
 // The owner's answer of 2026-10-13 to the "YL06" his train frames draw in
-// the pill: the station's code before the pesos, on a train only.
-test("a train's picked station: its code, then the pesos, in the one pill", () => {
+// the pill: the station's code before the pesos, on a train only. Since
+// 2026-10-15 they are two halves (RouteTripLineDetailPill's Two), the dot gone.
+test("a train's picked station: its code, then the pesos, two halves of the pill", () => {
   const html = render(1, {
     livery: 'metro-rail-way-three',
     picked: 'h0',
@@ -139,7 +140,7 @@ test("a train's picked station: its code, then the pesos, in the one pill", () =
   const [row] = rows(html);
   assert.match(
     row.inside,
-    /data-testid="trip-hintuan-fare"[^>]*><span data-part="code">YL06<\/span> <span aria-hidden="true">·<\/span> <span data-part="pesos">₱20<\/span><\/span>/,
+    /data-testid="trip-hintuan-fare"[^>]*><span data-part="code"[^>]*>YL06<\/span> <span data-part="pesos"[^>]*>₱20<\/span><\/span>/,
   );
   // A station the table does not know: the pesos alone, as a jeepney's.
   const alone = rows(render(1, { picked: 'h0', pickedPesos: '₱20', pickedCode: null }))[0];
