@@ -31,9 +31,9 @@ export const TRADITIONAL: FareRule[] = [
     perKm: 180,
     source: 'LTFRB fare guide of 8 Oct 2023',
   },
-  // The official guide, effective 2026-09-28; fares-test holds its whole
-  // table and every row reproduces. The guide prints the discount rule
-  // unrounded (11.20 + 1.60); its rows round.
+  // LTFRB's PUJ General Fare Guide, effective 2026-09-28; fares-test holds
+  // its whole table and every row reproduces. The guide prints the discount
+  // rule unrounded (11.20 + 1.60); its rows round.
   {
     from: '2026-09-28',
     minimum: 1400,
@@ -108,12 +108,14 @@ export function pesoRange(low: number, high: number): string {
 
 /**
  * One ride of `metres` by `mode`, as the cards write pesos — `₱14`, `₱24–26`
- * — or nothing when no fare rule prices the mode. A range, the part km
- * counted down and up (fareFor), in whole pesos (pesoRange), a range on the
- * discounted fare too, because the range helps a commuter (the owner's call).
- * The trip card's Expected fare, over its whole ride (Figma 3778:3183). The
- * only pesos on the public map: the RouteCards carry none. The studio keeps
- * its own fare details, under the trip card (RouteFacts).
+ * — or nothing when no fare rule prices the mode. A range (the part km
+ * counted down and up, fareFor) in whole pesos (pesoRange), on the discounted
+ * fare too, because the range helps a commuter (the owner's call). The trip
+ * card's Expected fare over its whole ride, and its pill's over a picked one
+ * (Figma's TimelineRouteDetailCard, 3778:3183); a train's are railFares'. The
+ * trip card is the only place the public map shows pesos: the owner's
+ * RouteCard State set has none. The studio keeps its own fare details, under
+ * the trip card (RouteFacts).
  */
 export function rideFare(
   mode: TransportMode | undefined,

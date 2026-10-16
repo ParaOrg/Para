@@ -2,30 +2,33 @@ import { RAIL_LINES, type RailLine } from './routes';
 
 /**
  * The route cards' colours — the jeepney liveries of Figma's RouteCard set
- * (3665:2265): red, orange, violet, rose, fuchsia and pink (4071:7014). The
- * rule: shown at random, but kept for the whole visit, the same in the list
- * and on the trip's own card, and two cards side by side never alike.
+ * (3665:2265): red, orange, violet, rose, fuchsia and pink (Card/pink,
+ * 4071:7014). The owner's rule: shown at random, but kept for the whole
+ * visit, the same in the list and on the trip's own card, and two cards side
+ * by side never alike.
  *
  * A colour belongs to a route: a card wears the colour of the route its first
  * row belongs to, so a route reads in one colour whichever way round the list
  * shows it, Papunta or Pabalik. Colours do not change at random (the owner's
- * call): one is added only when the Papunta or Pabalik list has an additional
- * route. Tala's card lists Tala → SM Fairview and Tala → Novaliches in the
- * first row's route's colour; the way back makes Novaliches → Tala a card of
- * its own, which draws a colour of its own and keeps it. The list a trip's ‹
- * opens leads with the trip's own route (sharingAnEnd), so the card it lists
- * the trip on wears the trip's colour. The colour is not the place's: the way
- * back renames the place, which would draw the cards anew. Once open, a
- * trip's card keeps its colour until it closes, even SWITCHed to leave from
- * another place: turned round, it is the same card (`useTripLivery` in
- * trip-card.tsx, since its line wears the colour too).
+ * call): a route keeps its colour, and one is drawn only for a route new to
+ * the visit (one the Papunta or Pabalik list adds) or, once, to settle a
+ * clash (liveriesFor). Tala's card lists Tala → SM Fairview and Tala →
+ * Novaliches in the first row's route's colour; the way back makes Novaliches
+ * → Tala a card of its own, which draws a colour of its own and keeps it. The
+ * list a trip's ‹ opens leads with the trip's own route (sharingAnEnd), so
+ * the card it lists the trip on wears the trip's colour. The colour is not
+ * the place's: the way back renames the place, which would draw the cards
+ * anew. Once open, a trip's card keeps its colour until it closes, even
+ * SWITCHed to leave from another place: turned round, it is the same card
+ * (the owner's call; `useTripLivery` in trip-card.tsx, since its line wears
+ * the colour too).
  */
 export const JEEPNEY_LIVERIES = ['red', 'orange', 'violet', 'rose', 'fuchsia', 'pink'] as const;
 type JeepneyLivery = (typeof JEEPNEY_LIVERIES)[number];
 
 /**
- * A train route's colour is its line's, never drawn (Figma's RouteCards for
- * them, 4074:7402 LRT-1, 4080:4124 LRT-2, 4080:4241 MRT-3): Figma's
+ * A train route's colour is its line's, never drawn (the owner's RouteCards
+ * for them, 4074:7402 LRT-1, 4080:4124 LRT-2, 4080:4241 MRT-3): Figma's
  * Map/Rail/LightRailWayOne, LightRailWayTwo and MetroRailWayThree, by the
  * line its routeCode names.
  */

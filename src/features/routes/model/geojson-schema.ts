@@ -6,8 +6,7 @@ import type { LngLat } from '@/shared/utils/geo';
  * The GeoJSON the rows carry: a point for a hotspot, a polygon for its box, a
  * line string for a direction's line. Each schema validates what enters the
  * app (the published index and its line files, the studio's rows) and is the
- * one definition of the type. A coordinate is [lng, lat], shared/utils/geo's
- * LngLat.
+ * one definition of the type. A coordinate is [lng, lat] (LngLat).
  *
  * zod/mini, the tree-shakeable API, throughout the schemas: the classic one
  * weighed 24 kB gzipped on the public page (check-build.mjs's zod ceiling),

@@ -1,6 +1,5 @@
 /**
- * A signboard as an SVG file (uploaded per direction), made safe to keep and to
- * serve.
+ * A direction's signboard as an SVG file, made safe to keep and to serve.
  *
  * An SVG is a document, not only a picture: it can carry scripts, handlers
  * and links out. Shown as an <img> none of that runs, but a board is also a
@@ -127,7 +126,7 @@ const isHref = (n: string) => n === 'href' || n.endsWith(':href');
 /**
  * Written back from what was read (decodeReferences), every `&` escaped: what
  * the browser reads is what was tested, and a bare `&` — "TALA & FAIRVIEW"
- * typed in a text — no longer leaves a file no XML reader opens.
+ * typed in a text — never leaves a file no XML reader opens.
  */
 const escapeValue = (v: string) =>
   v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');

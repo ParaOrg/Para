@@ -101,9 +101,9 @@ const DASH = '–';
 /**
  * `Tala – SM Fairview`, or `Tala – Novaliches via Zabarte`.
  *
- * R1–R4. Nothing stores this: it is generated wherever a name is shown, from
- * the two hotspots' current names, so renaming a hotspot renames every route
- * through it and no copy can fall behind.
+ * The naming rules R1–R4 (PLAN.md). Nothing stores this: it is generated
+ * wherever a name is shown, from the two hotspots' current names, so renaming
+ * a hotspot renames every route through it and no copy can fall behind.
  */
 export function routeName(head: string, tail: string, via?: string | null): string {
   const base = `${head} ${DASH} ${tail}`;
@@ -115,7 +115,7 @@ export function routeName(head: string, tail: string, via?: string | null): stri
  * is going. Generated too: a direction is only which way round the route is
  * ridden, so it has nothing of its own to name. Both ends are said, because
  * "to Tala" beside the route name "Tala – SM Fairview" read as not reversed
- * at all on a return trip.
+ * at all on a return trip (the owner's finding).
  */
 export function directionName(head: string, tail: string, reversed: boolean): string {
   return reversed ? `${tail} → ${head}` : `${head} → ${tail}`;
@@ -159,8 +159,7 @@ interface Unnamed {
  * stores them (R1), so a renamed hotspot shows its new name on the next load
  * or the next publish, and no copy can fall behind. The name read is the
  * hotspot's informal one when it has one (hotspotLabel, 0007): a route is
- * `Tala – SM Fairview`, never `Tala Jeepney Terminal – SM Fairview Terminal
- * A`.
+ * `Tala – SM Fairview`, never `Tala Jeepney Terminal – SM Fairview Terminal A`.
  *
  * A route whose ends cannot be found falls back to its signboard: the foreign
  * keys make that impossible from the database, so it only means an old file.
