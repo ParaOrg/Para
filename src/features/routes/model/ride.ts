@@ -1,7 +1,7 @@
 import { haversine, lineLength, type LngLat } from '@/shared/utils/geo';
 
 import { hotspotRing, type Hotspot } from './hotspots';
-import { boxTheOtherWay, placeKey } from './places';
+import { placeKey } from './places';
 import { servedBy, directionLine, type Direction } from './routes';
 import { drawnFromTheEnd, timelineFor, type Timeline, type TimelineRow } from './timeline';
 import { passStretches } from '../geo/pass';
@@ -137,8 +137,7 @@ export interface RideSpan {
  *
  * Null when nothing is picked, when the line misses a picked row's box (that
  * row is shown picked with nothing to price, as before), or when the end
- * comes before the start. That ride runs the other way round
- * (rideTheOtherWay).
+ * comes before the start (endsBeforeStart: useRideTo swaps the two first).
  */
 export function rideSpan(
   v: Direction,
@@ -167,10 +166,12 @@ export function rideSpan(
 }
 
 /**
- * Whether the end row comes before the start row on `v`: the owner's
- * Variant5 (2026-10-15), Quezon Avenue tapped above a start at Shaw
- * Boulevard. Read along the line, where each row's dot sits; false when the
- * line misses either.
+ * Whether the end row comes before the start row on `v`, read along the
+ * line, where each row's dot sits; false when the line misses either. A row
+ * tapped before the start becomes the start, the start the end, so the ride
+ * follows the trip's own arrows (the owner, 2026-10-16: "it should follow
+ * the arrow … so users can study the route, fare without changing to
+ * southbound and north bound"; useRideTo's pick).
  */
 export function endsBeforeStart(
   v: Direction,
@@ -184,39 +185,9 @@ export function endsBeforeStart(
 }
 
 /**
- * An end picked before the start, ridden the other way round (the owner,
- * 2026-10-15): the card stays as it is, and the ride runs on `other`, the
- * route's other direction, from the start's place to the end's. Each pick
- * lands on a box `other` passes by the rule a jeep's SWITCH carries a pick by
- * (boxTheOtherWay): the same box, else the nearest box of its place. A
- * train's stations are one box both ways, so they land on themselves.
- *
- * Null when `other` passes no box of either place, or its line doesn't take
- * the start before the end: there is no ride to price, and the row is
- * shown picked with no pill.
- */
-export function rideTheOtherWay<S extends Hotspot>(
-  other: Direction,
-  hotspots: readonly S[],
-  startId: string,
-  endId: string,
-  passesOther: (hotspotId: string) => boolean,
-): (RideSpan & { startHotspotId: string; endHotspotId: string }) | null {
-  const landOn = (id: string) => {
-    const box = hotspots.find((s) => s.id === id);
-    return box ? boxTheOtherWay(box, hotspots, passesOther) : null;
-  };
-  const start = landOn(startId);
-  const end = landOn(endId);
-  if (!start || !end) return null;
-  const span = rideSpan(other, hotspots, start.id, end.id);
-  return span && { ...span, startHotspotId: start.id, endHotspotId: end.id };
-}
-
-/**
  * The rows of a trip's timeline outside its ride: before the start and
- * after the end, or, with the end before the start (Variant5), outside the
- * stretch between the two rows. A null start is the origin; with no end,
+ * after the end, outside the stretch between the two rows whichever is
+ * above. A null start is the origin; with no end,
  * no ride, and nothing outside it. The card folds these rows and draws them
  * with no rail, and the map's dots along them wear the pale (the owner's
  * rule of 2026-10-15: "the rail runs only along the ride").
@@ -233,13 +204,14 @@ export function rowsOutsideRide(
 
 /**
  * Where a picked ride lies on a trip's timeline: its first row and its last,
- * whichever of the start and the end is above (an end picked above the start
- * is ridden the other way round). -1 is the origin, a start left there. Null
- * with no end picked — nothing, or a start alone, no ride yet until its end
- * is picked (the owner, 2026-10-16: his Variant3's S stands alone, "so user
- * don't get confused on the context") — or with a pick that is no row of
- * these (another trip's, a moment before it goes): the whole ride. The one
- * rule the card's rail and folds read (rowsOutsideRide).
+ * whichever of the start and the end is above (a row tapped above the start
+ * becomes the start where the line reaches both, useRideTo's pick; a row
+ * the line misses stays the end, above it). -1 is the origin, a start left
+ * there. Null with no end picked — nothing, or a start alone, no ride yet
+ * until its end is picked (the owner, 2026-10-16: his Variant3's S stands
+ * alone, "so user don't get confused on the context") — or with a pick that
+ * is no row of these (another trip's, a moment before it goes): the whole
+ * ride. The one rule the card's rail and folds read (rowsOutsideRide).
  */
 export function rideRows(
   rows: readonly { id: string }[],

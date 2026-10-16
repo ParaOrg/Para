@@ -1,9 +1,9 @@
 // A ride between two picks (src/features/routes/model/ride.ts: rideSpan,
-// endsBeforeStart, rideTheOtherWay, rowsOutsideRide): the owner's
-// TimelineRouteDetail of 2026-10-15 (Figma 4137:9886). A start and an end
-// picked on a trip price and draw the ride between them; an end picked before
-// the start is ridden the other way round, on the route's other direction,
-// the card left as it is (Variant5); the rows outside the ride fold and lose
+// endsBeforeStart, rowsOutsideRide): the owner's TimelineRouteDetail of
+// 2026-10-15 (Figma 4137:9886). A start and an end picked on a trip price and
+// draw the ride between them; a row picked before the start is known, so it
+// becomes the start and the ride follows the trip's own arrows (the owner,
+// 2026-10-16; useRideTo swaps them); the rows outside the ride fold and lose
 // the rail.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/ride-between-test.mjs
@@ -13,7 +13,6 @@ import { fileURLToPath } from 'node:url';
 import {
   endsBeforeStart,
   rideSpan,
-  rideTheOtherWay,
   routeTimeline,
   rowsOutsideRide,
 } from '../../src/features/routes/model/ride.ts';
@@ -69,7 +68,6 @@ const direction = (id, coordinates, reversed = false) => ({
   shape: { type: 'LineString', coordinates },
 });
 const there = direction('there', LINE);
-const back = direction('back', [...LINE].reverse(), true);
 const KM = 3339.6 / 3; // one 0.01° step at the equator, in metres
 const near = (a, b, tolerance = 30) => Math.abs(a - b) < tolerance;
 
@@ -110,38 +108,6 @@ test('nothing picked, a pick the line misses, or an end before the start: no rid
   assert.equal(endsBeforeStart(there, [...HOTSPOTS, off], 'c', 'off'), false);
 });
 
-test('an end before the start is ridden the other way round, on the other direction’s line', () => {
-  const passesAll = () => true;
-  const span = rideTheOtherWay(back, HOTSPOTS, 'c', 'a', passesAll);
-  assert.equal(span.startHotspotId, 'c');
-  assert.equal(span.endHotspotId, 'a');
-  assert.ok(near(span.metres, 2 * KM), `${span.metres}`);
-  assert.ok(span.ridden[0][0] > span.ridden.at(-1)[0], 'from Camarin back to Amparo');
-});
-
-test('…landing on its place’s box across the road where the other way misses this one (a jeep)', () => {
-  // The way back passes Camarin across the road, not the box picked on the way there.
-  const across = box('c2', 0.0301, 'Camarin', 0.0003);
-  const hotspots = [...HOTSPOTS, across];
-  const passes = (id) => id !== 'c';
-  const backLine = [
-    [0.05, 0],
-    [0.04, 0],
-    [0.0301, 0.0003],
-    [0.02, 0],
-    [0.01, 0],
-    [0, 0],
-  ];
-  const span = rideTheOtherWay(direction('back', backLine, true), hotspots, 'c', 'a', passes);
-  assert.equal(span.startHotspotId, 'c2');
-  assert.equal(span.endHotspotId, 'a');
-});
-
-test('…and no ride to price when the other way passes no box of one of the places', () => {
-  const passes = (id) => id !== 'c';
-  assert.equal(rideTheOtherWay(back, HOTSPOTS, 'c', 'a', passes), null);
-});
-
 test('the rows outside the ride: before the start and after the end, whichever way round they were picked', () => {
   const rows = ['a', 'b', 'c', 'd'].map((id) => ({ id }));
   const outside = (start, end) => [...rowsOutsideRide(rows, start, end)].sort();
@@ -149,7 +115,7 @@ test('the rows outside the ride: before the start and after the end, whichever w
   assert.deepEqual(outside(null, 'b'), ['c', 'd']);
   assert.deepEqual(outside('b', null), [], 'a start alone is no ride yet (the owner, 2026-10-16)');
   assert.deepEqual(outside('b', 'c'), ['a', 'd']);
-  assert.deepEqual(outside('c', 'a'), ['d'], 'Variant5: the stretch from E down to S is the ride');
+  assert.deepEqual(outside('c', 'a'), ['d'], 'either way round, the stretch between the two');
   assert.deepEqual(outside('gone', 'c'), [], 'a pick no row of these holds');
 });
 
@@ -157,12 +123,11 @@ test('the rows outside the ride: before the start and after the end, whichever w
 const published = () =>
   readPublished(fileURLToPath(new URL('../../public/data/index.v4.json', import.meta.url))).file;
 
-test('the owner’s example on the committed map: MRT-3 Southbound, Shaw Boulevard to Ayala, and back up to Quezon Avenue', () => {
+test('the owner’s example on the committed map: MRT-3 Southbound, Shaw Boulevard to Ayala; Quezon Avenue comes before Shaw Boulevard', () => {
   const m = published();
   const mrt = m.directions.filter((v) => v.route?.routeCode === 'MRT-3');
   const south = mrt.find((v) => !v.reversed);
-  const north = mrt.find((v) => v.reversed);
-  assert.ok(south && north, 'MRT-3 runs both ways');
+  assert.ok(south, 'MRT-3 runs Southbound');
   const along = (v) =>
     m.links
       .filter((l) => l.directionId === v.id)
@@ -183,11 +148,12 @@ test('the owner’s example on the committed map: MRT-3 Southbound, Shaw Bouleva
     railFares('MRT-3', 'Shaw Boulevard', 'Ayala'),
   );
 
-  // Variant5: start at Shaw Boulevard, Quezon Avenue tapped, above it on the card.
+  // Start at Shaw Boulevard, Quezon Avenue tapped above it: Quezon Avenue
+  // becomes the start, and the ride Quezon Avenue → Shaw Boulevard stays
+  // Southbound, on this line (the owner, 2026-10-16).
   assert.equal(endsBeforeStart(south, m.hotspots, shaw.id, quezon.id), true);
-  const linked = new Set(m.links.filter((l) => l.directionId === north.id).map((l) => l.hotspotId));
-  const up = rideTheOtherWay(north, m.hotspots, shaw.id, quezon.id, (id) => linked.has(id));
-  assert.ok(up, 'Shaw Boulevard → Quezon Avenue rides Northbound');
-  assert.ok(up.metres > 3000 && up.metres < 12000, `${Math.round(up.metres)} m`);
-  assert.ok(railFares('MRT-3', 'Shaw Boulevard', 'Quezon Avenue'), 'priced by the station pair');
+  const down = rideSpan(south, m.hotspots, quezon.id, shaw.id);
+  assert.ok(down, 'Quezon Avenue → Shaw Boulevard rides Southbound');
+  assert.ok(down.metres > 3000 && down.metres < 12000, `${Math.round(down.metres)} m`);
+  assert.ok(railFares('MRT-3', 'Quezon Avenue', 'Shaw Boulevard'), 'priced by the station pair');
 });

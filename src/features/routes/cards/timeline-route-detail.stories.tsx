@@ -294,20 +294,14 @@ export const RideStartAndEnd: Story = {
 };
 
 /**
- * Variant5 (4151:13619): start at Shaw Boulevard, Quezon Avenue tapped, a
- * station before it. The card stays as it is (the owner, 2026-10-15): E at
- * Quezon Avenue above S at Shaw Boulevard, the rail between them. The map
- * serves the ride on the Northbound line.
+ * An end above the start that stays the end: a row whose box the line
+ * misses, so it has no place on the line to come before the start, and
+ * useRideTo keeps it the end (a row before the start becomes the start only
+ * where the line reaches both, 2026-10-16). E above S, the rail between them,
+ * and no ride to price: no pill.
  */
-export const RideEndBeforeStart: Story = {
-  args: {
-    ...onMrt3,
-    start: shaw,
-    startCode: 'YL07',
-    picked: quezon,
-    pickedCode: 'YL02',
-    pickedPesos: '₱10',
-  },
+export const RideEndAboveStartUnpriced: Story = {
+  args: { ...onMrt3, start: shaw, startCode: 'YL07', picked: quezon, pickedCode: 'YL02' },
 };
 
 /** A jeep's ride between two hintuans: the pesos alone in the pill, the same buttons. */

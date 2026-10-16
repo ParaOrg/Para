@@ -18,7 +18,7 @@ import {
 import { TILE_BUFFER, useLayerReady } from './layers';
 import { litWidthAt } from './line-style';
 import type { LineLook } from './livery-line';
-import { OTHER_WAY_LAYER, REST_LAYER, restDrawn } from './ride-rest';
+import { REST_LAYER, restDrawn } from './ride-rest';
 import { ROUTES_HIT_LAYER } from './tap';
 
 /**
@@ -66,14 +66,12 @@ const SAME_END_M = 150;
  * One lit ride: its direction, its line in travel order, and the places it
  * runs from and to; and `pale`, the way not ridden when an end is picked on
  * its trip, after a start or not (useRideTo's ridden): before the start and
- * after the end, or the whole line when the ride runs the other way round. useRideRest
- * draws it in the card's pale, and an end circle on it wears the pale too
- * and loses its S or E (EndTitles), the picks' pins carrying them. The
- * chevrons flow on along the pale, white on it as on the line (the owner's
- * ask, 2026-10-13: "continue the arrow into the pale lines", and of two
- * colours tried, "I love the white"); they stopped at the pick from
- * 2026-10-02 until then. `rest`, after the end alone, until the ride's start
- * could be picked (2026-10-15). `isUnmarked`: a start picked on its trip
+ * after the end. useRideRest draws it in the card's pale, and an end circle
+ * on it wears the pale too and loses its S or E (EndTitles), the picks' pins
+ * carrying them. The chevrons flow on along the pale, white on it as on the
+ * line (the owner's ask, 2026-10-13: "continue the arrow into the pale
+ * lines", and of two colours tried, "I love the white"); they stopped at the
+ * pick from 2026-10-02 until then. `isUnmarked`: a start picked on its trip
  * with no ride drawn, alone or with an end the line can't take it to: both
  * its ends lose their S and E, lit, the start's pin carrying the S (the
  * owner, 2026-10-16: "Nothing yet, just the S").
@@ -223,12 +221,6 @@ export function useRideColours(map: MapLibreMap | null, look: LineLook) {
     if (!map || !restReady) return;
     map.setPaintProperty(REST_LAYER, 'line-color', look.pale);
   }, [map, look.pale, restReady]);
-  // A ride the other way round wears the lit line's own colour (ride-rest.ts).
-  const otherWayReady = useLayerReady(map, OTHER_WAY_LAYER);
-  useEffect(() => {
-    if (!map || !otherWayReady) return;
-    map.setPaintProperty(OTHER_WAY_LAYER, 'line-color', look.line);
-  }, [map, look.line, otherWayReady]);
 }
 
 /**
