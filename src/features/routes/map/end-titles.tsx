@@ -11,7 +11,7 @@ import {
 } from './route-line-endings-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
-import { TimelineDot } from '../cards/trip-timeline';
+import { TimelineDot } from '../cards/timeline-route-detail';
 import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { isRailLine } from '../model/routes';
@@ -68,7 +68,7 @@ import './end-titles.css';
  * never takes one, as the picked hintuan's does not.
  *
  * Given `onTrip`, a Tail Route that one lit ride alone goes to opens that
- * ride's trip instead (the owner's ask, 2026-10-01): its RouteTripDetail,
+ * ride's trip instead (the owner's ask, 2026-10-01): its TimelineRouteDetailCard,
  * its line lit, as the card's row of the same arrow does. Where two rides
  * go, the place's own card lists both, so the tap opens that. How a
  * focused or pressed pill looks is the owner's to design; until then it is
@@ -133,7 +133,7 @@ export function EndTitles({
   );
 }
 
-/** The circle across: TimelineDot at rest (trip-timeline.tsx), its centre on the point. */
+/** The circle across: TimelineDot at rest (timeline-route-detail.tsx), its centre on the point. */
 const DOT_PX = 24;
 
 /** What a pill's button says before the name: which end, as its icon shows it. */

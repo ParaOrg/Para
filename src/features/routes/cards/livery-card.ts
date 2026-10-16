@@ -4,7 +4,7 @@ import type { Livery } from '../model/liveries';
 
 /**
  * How a livery paints a card — the owner's RouteCard set (Figma 3665:2265,
- * 2026-09-28) — for the list's cards and a trip's card alike (RouteTripDetail,
+ * 2026-09-28) — for the list's cards and a trip's card alike (TimelineRouteDetailCard,
  * 2026-09-29), so a trip opens in the colours of the card it was picked from.
  *
  * Red and orange write in Content/inverse under Route/RouteCardPrimary.
