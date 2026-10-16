@@ -81,8 +81,9 @@ export const Open: Story = {
     const monochrome = within(card).getByRole('button', { name: 'Monochrome' });
     await expect(monochrome).toHaveAttribute('aria-pressed', 'true');
     await expect(monochrome).toHaveFocus();
+    // The other two designs; ✕ is no toggle, so it has no pressed state at all.
     await expect(within(card).getAllByRole('button', { pressed: false })).toHaveLength(
-      BASEMAPS.length - 1 + 1, // the other two designs, and ✕
+      BASEMAPS.length - 1,
     );
   },
 };
@@ -101,14 +102,18 @@ export const FiordChosen: Story = {
   },
 };
 
-/** Tab goes round inside the card: from ✕, the last, back to the first design. */
+/** Tab goes round inside the card: ✕ is its first button and Fiord its last, so each wraps to the other. */
 export const TabStaysInside: Story = {
   play: async ({ canvasElement }) => {
     const card = await openCard(canvasElement);
+    const close = within(card).getByRole('button', { name: 'Close' });
+    const fiord = within(card).getByRole('button', { name: 'Fiord' });
     await userEvent.tab({ shift: true });
-    await expect(within(card).getByRole('button', { name: 'Close' })).toHaveFocus();
+    await expect(close).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(fiord).toHaveFocus();
     await userEvent.tab();
-    await expect(within(card).getByRole('button', { name: 'Monochrome' })).toHaveFocus();
+    await expect(close).toHaveFocus();
   },
 };
 

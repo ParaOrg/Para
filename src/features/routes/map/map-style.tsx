@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { CloseIcon } from '@/shared/ui/route-icons';
@@ -29,6 +29,8 @@ interface MapStyleProps {
  */
 export function MapStyle({ basemaps, selectedId, thumbnails, onSelect, onClose }: MapStyleProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  // An id of its own, so two cards on one page (a docs page of every story) name themselves.
+  const titleId = useId();
 
   useEffect(() => {
     const card = cardRef.current;
@@ -56,17 +58,20 @@ export function MapStyle({ basemaps, selectedId, thumbnails, onSelect, onClose }
       ref={cardRef}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="map-style-title"
+      aria-labelledby={titleId}
       data-testid="basemap-menu"
       className="flex max-h-[calc(100dvh-8rem)] flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-4 font-sn-pro shadow-sm"
     >
       <div className="flex items-center">
         <h2
-          id="map-style-title"
+          id={titleId}
           className="min-w-0 flex-1 text-lg leading-7 font-extrabold text-content-primary"
         >
           Map Style
         </h2>
+        {/* Figma's Small, 32 px: under CLAUDE.md's 44 px touch target, kept as drawn by the
+            owner's choice (2026-10-16), the card's one exception; Escape and a tap outside
+            close it too. */}
         <IconButton
           icon={<CloseIcon />}
           label="Close"
