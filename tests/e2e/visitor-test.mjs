@@ -1548,7 +1548,11 @@ if (PART === 1) {
           'none shown';
         check(
           '  the names outside the ride at 60%, the stations past the hintuan and the end where the trip goes; the ones inside it whole',
-          paled.every((s) => s.fade === null || s.fade === '0.6') &&
+          // At least one name read outside the ride and one end each way, so a name that stops showing fails it.
+          paled.some((s) => s.fade !== null) &&
+            endsPicked.paledFades.length > 0 &&
+            endsPicked.fades.length > 0 &&
+            paled.every((s) => s.fade === null || s.fade === '0.6') &&
             before.every((s) => s.fade === null || s.fade === '1') &&
             endsPicked.paledFades.every((o) => o === '0.6') &&
             endsPicked.fades.every((o) => o === '1'),
