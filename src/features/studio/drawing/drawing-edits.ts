@@ -10,7 +10,7 @@ import { straightSegment } from './snap';
  * file. Every function splices the very point objects it was given, never
  * copies: the join point and a right-click's join are held by identity
  * (joinRef, connectedRef in use-drawing.ts), and `indexOf` must keep finding
- * them (split 2026-10-14, the big-file wave).
+ * them.
  */
 
 export interface Edit {

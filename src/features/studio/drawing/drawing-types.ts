@@ -10,8 +10,7 @@ import type { LineSpot } from './borrow';
  * borrows from a saved line. A leaf on purpose, with no React and no hook:
  * the drawing's siblings (draft, gap-resolver, draw-layers, use-draw-events)
  * read these and useDrawing reads them, so a cycle of type imports through
- * the hook ends here (split 2026-10-14, the big-file wave). `Drawing`, the
- * hook's return type, stays in use-drawing.ts.
+ * the hook ends here. `Drawing`, the hook's return type, stays in use-drawing.ts.
  */
 
 /** What a save will write to: an existing direction, a new direction on an existing route, or (both null) a new route. */

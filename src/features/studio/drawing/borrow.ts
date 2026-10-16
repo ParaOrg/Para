@@ -15,7 +15,7 @@ import {
  * kilometres are never redrawn.
  *
  * The borrowed part is **copied**, point for point, into the new drawing
- * (option A, decided 2026-09-25): the new line owns its full geometry, and the
+ * (not shared by reference): the new line owns its full geometry, and the
  * save only remembers which line it borrowed from, which part, and how far.
  * That record is what later lets the studio say "Tala – SM Fairview changed;
  * Tala – Novaliches borrowed it. Update it too?"
@@ -42,10 +42,10 @@ export function nearestSpot(segments: Segment[], p: LngLat): (LineSpot & { off: 
   });
   if (!best) return null;
   const b = best as LineSpot & { off: number };
-  // Measured on the line as joinSegments makes it: since 2026-10-03 a join
-  // that is not one point keeps the hop between them (a freehand stretch
-  // ending on the click, the road starting where the router put it), and
-  // two lengths added apart left that hop out.
+  // Measured on the line as joinSegments makes it: a join that is not one point
+  // keeps the hop between them (a freehand stretch ending on the click, the
+  // road starting where the router put it), and two lengths added apart would
+  // leave that hop out.
   const within = [...segments[b.seg].coordinates.slice(0, b.edge + 1), b.point];
   b.metres = lineLength(
     joinSegments([

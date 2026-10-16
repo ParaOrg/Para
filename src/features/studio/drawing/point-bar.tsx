@@ -8,8 +8,8 @@ import type { Drawing } from './use-drawing';
  */
 
 const BAR = 'rounded-2xl bg-white p-1.5 text-sm shadow-lg ring-1 ring-black/10';
-// Sized by padding, the same under a finger as under a mouse: the owner
-// dropped the 44 px floor (2026-10-16) and the point bar isn't drawn in Figma.
+// Sized by padding, the same under a finger as under a mouse: touch targets have no size
+// floor, and the point bar isn't drawn in Figma.
 const BUTTON =
   'rounded-xl px-3 py-2 text-sm text-neutral-800 ring-1 ring-neutral-200 hover:bg-neutral-50 disabled:opacity-40';
 

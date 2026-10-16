@@ -93,7 +93,7 @@ interface OsrmLeg {
  * - `continue_straight=false`: the route may turn back at a middle point. That
  *   can be a click a little past a corner, or a jeepney that really turns
  *   there; only the owner knows which, so it is kept as the router drew it
- *   and shown (findUTurns), never changed (owner's decision, 2026-09-15).
+ *   and shown (findUTurns), never changed.
  * - `steps`: geometry and street names per gap, so `overview` is off.
  */
 async function route(points: LngLat[], signal?: AbortSignal): Promise<Segment[]> {
