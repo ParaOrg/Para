@@ -119,7 +119,7 @@ function buildSize() {
   }
   const built = statSync(join(dist, '.vite', 'manifest.json')).mtime.toISOString();
   const lines = [
-    `- **Build size against its budget (gzipped unless noted):** read from \`${relative(root, dist)}/\`, built ${built}`,
+    `- **Build size against its budget (gzipped unless noted):** read from \`${dist}\`, built ${built}`,
   ];
   const sized = (label, files, maxKb) => {
     if (files.length === 0) {

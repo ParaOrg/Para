@@ -89,7 +89,7 @@ export function assertKnownLayers(srcDir) {
   );
   if (unknown.length > 0) {
     throw new Error(
-      `src/${unknown.join(', src/')} is not a layer the architecture page knows: add it to LAYERS and unitOf() in scripts/docs/architecture.mjs`,
+      `src/${unknown.join(', src/')} is not a layer the architecture page knows: add it to LAYERS and unitOf() in scripts/docs/architecture.mjs, or to NON_CODE_FOLDERS if it holds no source`,
     );
   }
 }
@@ -292,5 +292,3 @@ function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
-
-export { parseCssImports, parseExports, parseImports };

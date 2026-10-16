@@ -159,6 +159,94 @@ test('comments are blanked and code lines are kept', () => {
   assert.equal(withoutComments(text).length, text.length);
 });
 
+test('a regex inside a template substitution does not lose the scanner its place (route-export.ts)', () => {
+  const text = [
+    'function csvField(value: string): string {',
+    '  return /[",\\r\\n]/.test(value) ? `"${value.replace(/"/g, \'""\')}"` : value;',
+    '}',
+    "import { later } from './later';",
+    "const x = import('./lazy');",
+  ].join('\n');
+  assert.deepEqual(parseImports(text), [
+    { specifier: './later', isDynamic: false },
+    { specifier: './lazy', isDynamic: true },
+  ]);
+});
+
+test('code inside a template substitution is read: comments, nested templates, regexes and imports', () => {
+  const text = [
+    'const a = `${ /* } ` */ b }`;',
+    'const c = `x ${`y ${z} // not a comment`} ${/`/.test(w)}`;',
+    "const d = `${import('./inside')}`;",
+    "import { after } from './after';",
+  ].join('\n');
+  assert.deepEqual(parseImports(text), [
+    { specifier: './inside', isDynamic: true },
+    { specifier: './after', isDynamic: false },
+  ]);
+});
+
+test('a regex holding a backtick after => or a comparison does not open a template', () => {
+  const text = "const f = (s) => /`/.test(s);\nimport { next } from './next';";
+  assert.deepEqual(parseImports(text), [{ specifier: './next', isDynamic: false }]);
+});
+
+test('TSX: attributes in braces, text around braces and an apostrophe in text do not hide an import', () => {
+  const cases = [
+    "const a = <Foo a={b} />;\nimport { one } from './one';",
+    "const a = <p>{a}/{b} text</p>;\nimport { two } from './two';",
+    "const a = <p>Don't stop</p>;\nimport { three } from './three';",
+    "const a = <p it's=\"x\">{`t ${u}`}</p>;\nimport { four } from './four';",
+  ];
+  for (const text of cases) {
+    const found = parseImports(text).map((i) => i.specifier);
+    assert.equal(found.length, 1, text);
+    assert.match(found[0], /^\.\/(one|two|three|four)$/, text);
+  }
+});
+
+test('rare import forms: a template specifier, a type import(), a method called import, a binding named from', () => {
+  assert.deepEqual(parseImports('const m = import(`./tpl`);'), [
+    { specifier: './tpl', isDynamic: true },
+  ]);
+  assert.deepEqual(parseImports("type M = import('./x').T;\ntype N = typeof import('./y');"), [
+    { specifier: './x', isDynamic: false },
+    { specifier: './y', isDynamic: false },
+  ]);
+  assert.deepEqual(parseImports("import('./z').then((m) => m.run());"), [
+    { specifier: './z', isDynamic: true },
+  ]);
+  assert.deepEqual(parseImports("loader.import('y');"), []);
+  assert.deepEqual(parseImports("import { from } from 'x';\nimport from from 'y';"), [
+    { specifier: 'x', isDynamic: false },
+    { specifier: 'y', isDynamic: false },
+  ]);
+});
+
+test('exports: several declarators, modifiers, const enum, and nothing from inside a declared module', () => {
+  const text = [
+    'export const a = 1, b = [2, 3], c = { d: 4 };',
+    'export declare function declared(): void;',
+    'export abstract class Base {}',
+    'export const enum Mode { A }',
+    'export async function load() {}',
+    "declare module 'x' { export const hidden: number; }",
+    'export interface Shape {}',
+    'export type Alias = string;',
+  ].join('\n');
+  assert.deepEqual(parseExports(text), [
+    'a',
+    'b',
+    'c',
+    'declared',
+    'Base',
+    'Mode',
+    'load',
+    'Shape',
+    'Alias',
+  ]);
+});
+
 test('a folder under src/ that is no known layer throws, so it cannot be dropped silently', () => {
   const src = mkdtempSync(join(tmpdir(), 'architecture-test-'));
   try {
