@@ -24,11 +24,9 @@ const out: DirectionRow = {
   shape: line,
   reversed: false,
   confidence: 'drawn',
-  ownerId: 'sample-owner',
   updatedAt: '2026-09-21T00:00:00Z',
   route: {
     id: 'sample-route',
-    ownerId: 'sample-owner',
     signboard: null,
     routeCode: null,
     shortName: null,
@@ -54,7 +52,6 @@ const back: DirectionRow = {
 
 const hotspot = (id: string, name: string, coordinates: [number, number]): HotspotRow => ({
   id,
-  ownerId: 'sample-owner',
   name,
   informal: null,
   aliases: [],
