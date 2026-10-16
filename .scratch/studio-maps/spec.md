@@ -60,7 +60,7 @@ For routes and hintuans alike.
 
 **Public:**
 
-- The published files, read the same way commuters read them: exactly what commuters see. Read-only.
+- The published map, read the same way commuters read them: exactly what commuters see. Read-only.
 - **Take down.**
 - A **"waiting for tonight's publish" list** of what was approved since the last publish. Without it, the map looks unchanged after an approval and it seems to have failed.
 
@@ -88,7 +88,7 @@ A route can be approved but only drawn. **Later:** a "Verified by drivers" badge
 
 - The nightly publish (`scripts/publish/publish-map.mjs`) reads **approved versions only**.
 - Its guard refuses a file that lost more than 30% of a table's rows (ADR 0001). Taking down routes on purpose must not trip it; how is decided while building.
-- No tracking data in any published file (see `driver-app`, Privacy).
+- No tracking data in the published map (see `driver-app`, Privacy).
 - **Undoing a publish:** git keeps every published version.
 
 ## The hard part

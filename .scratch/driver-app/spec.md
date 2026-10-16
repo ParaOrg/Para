@@ -111,7 +111,7 @@ Supabase's free plan: 500 MB of database and 1 GB of file storage (checked 2026-
 
 - **A driver's locations are personal data** (Data Privacy Act of 2012). A consent screen at first open says what it's for, who sees it (the owner and the editors only), how long it's kept, and that the driver can ask for deletion.
 - **Who reads ikots:** editors only, in the studio. The upload function only writes.
-- **Never public.** The repo is public, and the nightly publish commits to it. A check proves that no tracking data lands in any published file.
+- **Never public.** The repo is public, and the nightly publish commits to it. A check proves that no tracking data lands in the published map.
 - **Backups.** As far as known, the free plan has no backups you can restore from, and an ikot can't be driven again. Raw files get a private backup; where is decided in the database step. If that needs a new service, ask first.
 
 ## The real risk: a web page records only while it's on screen

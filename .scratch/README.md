@@ -29,7 +29,7 @@ Five projects for now and one for later, planned with the owner on 2026-10-15. *
 - **`.claude/CLAUDE.md`:**
   - `driver` joins `locator`, `published-map` and `studio` as a leaf feature: it may import `routes`, never the others, and the public page never loads it.
   - The driver feature calls one database function (the upload). Today only `features/studio/data/` may reach Supabase.
-  - The studio's Public map reads the published files, whose reader lives in `features/published-map`. It moves to `shared/`.
+  - The studio's Public map reads the published map, whose reader lives in `features/published-map`. It moves to `shared/`.
 
 ## Adding to the plan
 
