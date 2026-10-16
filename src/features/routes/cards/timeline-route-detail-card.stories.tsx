@@ -586,7 +586,10 @@ export const EndRowKeepsStart: Story = {
  * users"): Amparo is the end, above Bistek, the start, and the ride runs
  * back between them. The rail breaks just above Amparo and just below
  * Bistek, running on along the rows outside the ride ("can you still connect
- * those dots"). The keyboard's focus stays on Amparo.
+ * those dots"). The keyboard's focus stays on Amparo; then the hintuans
+ * above the ride are opened, the rail running along them and stopping at
+ * Pangarap, View less just above Amparo with none beside it (the owner,
+ * 2026-10-16: "when close it should disconnect the disclosure", 4194:12702).
  */
 export const EndAboveStart: Story = {
   args: {
@@ -608,13 +611,16 @@ export const EndAboveStart: Story = {
     await expect(document.activeElement).toBe(
       row('h3')?.querySelector('[data-testid="trip-hintuan-pick"]'),
     );
-    // The hintuans above the ride opened: the rail through them and through
-    // View less, up to the break above Amparo.
+    // The hintuans above the ride opened: the rail along them, ending at
+    // Pangarap (MiddleBottom); View less, just above Amparo, has none.
     const before = await canvas.findByRole('button', { name: /3 more hintuans/ });
     await expect(before.dataset.part).toBe('before');
     await userEvent.click(before);
-    await expect(railOf('h2')).toBe('through');
-    await expect(before.querySelector('[data-rail]')?.getAttribute('data-rail')).toBe('connected');
+    await expect(railOf('h1')).toBe('through');
+    await expect(railOf('h2')).toBe('above');
+    await expect(before.querySelector('[data-rail]')?.getAttribute('data-rail')).toBe(
+      'disconnected',
+    );
   },
 };
 
