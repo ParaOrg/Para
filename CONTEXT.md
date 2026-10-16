@@ -137,17 +137,17 @@ The one person who runs ParaPo and edits its data.
 Anyone on the editor list, allowed to write. Today the owner alone.
 _Avoid_: admin, user
 
-**Visitor**:
+**Commuter**:
 Anyone who opens the public map. Asks nothing of anyone: no account, no
 permission, no tracking.
-_Avoid_: user, commuter (a visitor may be a driver or a dispatcher)
+_Avoid_: user, visitor
 
 **Studio**:
 The editor at `/studio/`: the map plus every drawing and saving tool.
 _Avoid_: admin, dashboard, editor (that is a person)
 
 **Public map**:
-The map at `/`, read by visitors from the published file.
+The map at `/`, read by commuters from the published file.
 _Avoid_: visitor map, commuter map, the site
 
 **Trip**:
@@ -162,7 +162,7 @@ means the return direction
 
 **Published map**:
 The set of files the public map reads, rebuilt nightly from the studio's
-data: the index, one line file per direction, and the signboards. Visitors
+data: the index, one line file per direction, and the signboards. Commuters
 never read the database.
 _Avoid_: export, snapshot, API, published file (the word from when it was one
 file)

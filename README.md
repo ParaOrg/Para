@@ -25,7 +25,7 @@ lit, all published from the live tables and committed here, and draws every dire
 hintuans, where people board), and where a direction passes a hintuan its
 line turns orange for that stretch. A tap on a line or a box opens a card; a
 tap where several things meet opens a chooser. "Where am I" shows the
-visitor as a small walking figure, flying at jeep speed, over a halo the
+commuter as a small walking figure, flying at jeep speed, over a halo the
 size of the fix's accuracy; the position never leaves the phone. It installs
 as an app and keeps the last file it saw, so it works offline.
 
@@ -90,7 +90,7 @@ with warnings, and closed by the first run with nothing to report.
 | --- | --- |
 | `src/app/` | the two front doors, wiring only: `public-map/` (the public map's entry, its shell and status bar) and `studio/` (the editor's entry and shell) |
 | `src/features/routes/` | the core both apps draw: `model/` (routes, stops, places, timelines, rides, fares, liveries — no React, no MapLibre), `geo/` (the pass and babaan-side rules), `map/` (the map view with its basemap and layers, the route and hotspot layers and hooks), `cards/` (the cards, sheets and timelines, with their stories; `use-card-stack`, which card is up, and `use-card-camera`, the camera with them). Imported through its concern folders; it has no `index.ts` on purpose, since Node runs the publish and the unit checks against its files |
-| `src/features/locator/` | "Where am I": the visitor's dot, its button and its moods |
+| `src/features/locator/` | "Where am I": the commuter's dot, its button and its moods |
 | `src/features/published-map/` | the published map's reader (`map-file.ts`), its freshness and the installed app's updates (`pwa.ts`), and the notices |
 | `src/features/studio/` | the editor: `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions). Its `index.ts`, like the locator's and the published map's, is what the shells import |
 | `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths) |

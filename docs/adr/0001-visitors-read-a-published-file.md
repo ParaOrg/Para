@@ -30,3 +30,9 @@ The one file became a set, the published map: `index.v4.json`, a line file
 per direction under `lines/`, and the signboards. `map.json` is still written
 for installed apps that have not updated. The decision stands: visitors read
 static files, never the database.
+
+## Amendment, 2026-10-16
+
+The owner named the person on the public map a commuter (2026-10-15), so
+"visitor" in this record now reads "commuter". The body and the file name stay
+as written, since links point to them.
