@@ -62,8 +62,8 @@ export const Default: Story = {
 };
 
 /**
- * Unselected (4200:13645, 2026-10-16): Default at 60%, a hintuan outside
- * the ride (the owner: "if the label is unselected it would be transparent").
+ * Unselected (4200:13645): Default at 60%, a hintuan outside the ride (the
+ * owner's call).
  */
 export const Unselected: Story = {
   args: { variant: 'unselected' },
@@ -113,8 +113,8 @@ export const CodeSignEnd: Story = {
 
 /**
  * Start: a ride's picked start, End's shape with Start's circled S in Head
- * Route's green, whatever the line (3848:12135; the owner's "This would be
- * the start pill not the yellow", 2026-10-16).
+ * Route's green, whatever the line (3848:12135; the owner's call: the start
+ * pill, not the yellow).
  */
 export const Start: Story = {
   args: { variant: 'start' },
@@ -192,9 +192,9 @@ export const CodeSignEndLightRailWayTwo: Story = {
   args: { variant: 'end', codeSign: 'PL05', livery: 'light-rail-way-two' },
 };
 /**
- * MRT-3 (2026-10-13): its yellow pill and disc, the words and the E
- * near-black (Map/RouteLine/Arrow/Inverse, as its chevrons), and the code
- * black on white (Content/primary, the owner's ask of 2026-10-16).
+ * MRT-3: its yellow pill and disc, the words and the E near-black
+ * (Map/RouteLine/Arrow/Inverse, as its chevrons), and the code black on white
+ * (Content/primary, the owner's call).
  */
 export const CodeSignEndMetroRailWayThree: Story = {
   args: { variant: 'end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
