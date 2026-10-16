@@ -101,14 +101,13 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // The route list, a hotspot's card and the trip opened from either, as on
   // the public map (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
-  // The camera with the cards, as on the public map (useCardCamera), the
-  // owner's ask of 2026-09-30: "most of the interaction of public map should
-  // be in studio". A hintuan picked on the trip card, the camera gliding
-  // there clear of the card and a circle popping up on it, the route left
-  // whole, the card staying at its height; a trip opened on its whole route,
-  // a RouteCard picked, SWITCH and the sheet settled at another height, each
-  // framed beside the card; and the camera from before a hotspot's RouteCard
-  // was picked, back as it is let go.
+  // The camera with the cards, as on the public map (useCardCamera), so the
+  // studio has the public map's interaction. A hintuan picked on the trip
+  // card, the camera gliding there clear of the card and a circle popping up
+  // on it, the route left whole, the card staying at its height; a trip
+  // opened on its whole route, a RouteCard picked, SWITCH and the sheet
+  // settled at another height, each framed beside the card; and the camera
+  // from before a hotspot's RouteCard was picked, back as it is let go.
   const {
     root,
     tripDock,
@@ -142,15 +141,15 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   const timeline = useTripTimeline(saved.selected, hotspots);
 
   // The pill counts routes, not directions: a route is two rows, one of them
-  // perhaps an empty slot, and five routes once read "10 routes" (finding 7).
+  // perhaps an empty slot, so counting rows would read five routes as "10 routes".
   const routeCount = useMemo(
     () => new Set(saved.directions.map((v) => v.routeId)).size,
     [saved.directions],
   );
 
-  // Every editor edits every route and hotspot (migration 0015, the owner's
-  // ask of 2026-10-14). There is no sign-up, so a session is an editor's; the
-  // database refuses anyone else's writes whatever this shows.
+  // Every editor edits every route and hotspot (migration 0015). There is no
+  // sign-up, so a session is an editor's; the database refuses anyone else's
+  // writes whatever this shows.
   const canEdit = isSignedIn;
 
   // What the save panel saves into, and where the drawing is headed.
@@ -207,7 +206,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
       {/* Each lit ride's ends, named over their circles. */}
       {map && !draw.drawing && <EndTitles map={map} rides={rides} livery={litLivery} />}
-      {/* The open trip's hintuans along its line, a train's stations and a jeepney's alike, named (RouteLineLabel). */}
+      {/*
+        The open trip's hintuans along its line, a train's stations and a
+        jeepney's alike, named (RouteLineLabel).
+      */}
       {map && !draw.drawing && saved.selected && tripLivery && timeline && (
         <StationLabels
           map={map}
@@ -246,9 +248,9 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       )}
 
       {/*
-        The tapped direction as the public map's trip card (the owner's pick,
-        2026-09-30), the editor's facts and its Edit, Extend and Delete under
-        its tiles. Keyed on the route, as there: SWITCH keeps its colour.
+        The tapped direction as the public map's trip card, the editor's facts
+        and its Edit, Extend and Delete under its tiles. Keyed on the route,
+        unlike the public map's: SWITCH keeps the card and its colour.
       */}
       {!draw.drawing && saved.selected && tripLivery && timeline && (
         <TripCard
@@ -360,8 +362,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
       {/*
         Several saved things under one click: the same list the public map
-        has — the owner's "Studio too", 2026-09-29, knowing it lists only what
-        is drawn — kept hidden behind the trip picked from it.
+        has, kept hidden behind the trip picked from it. It lists only what is
+        drawn, and the owner keeps it so.
       */}
       {!draw.drawing && choosing && (
         <RouteCardList
@@ -413,7 +415,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           Drawing needs no account; saving does, and asks for it at Done. Not
           while the route list is open, as the account pill is not: under
           1024 px wide the list docks along the bottom, and these would stand
-          on its corner (the owner, 2026-09-29).
+          on its corner.
         */
         <NewButtons
           ready={!!map}
