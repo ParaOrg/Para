@@ -1,6 +1,7 @@
 /**
  * The icons the route cards use, drawn as in the owner's Figma file
- * (2026-09-28): the Jeep beside the route count, Close in the header,
+ * (2026-09-28): the Jeep beside a hintuan card's count (and beside the
+ * route list's until Routes took its place, 2026-10-16), Close in the header,
  * circle-arrow-right before each place a card goes to; and the trip card's
  * (2026-09-29): ‹ (chevron-left) back to the list, and the chevron down on
  * the row that folds its hintuans, turned to point up when they are open —
@@ -159,7 +160,8 @@ export function RoutesIcon() {
 }
 
 /**
- * The vehicles at the top of a trip's card (RouteTripDetailHeader), Figma's
+ * The vehicles at the top of a trip's card (RouteTripDetailHeader) and at
+ * the end of each route's row (RouteEndPointBar, 2026-10-16), Figma's
  * own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
  * JeepneyIcon, not the side-on Jeep above), EJeep (4188:11168), Bus
  * (4188:11156) and Ferry (4189:11183), 2026-10-16. They live in one sprite the
@@ -169,32 +171,36 @@ export function RoutesIcon() {
  * offline precache holds it. Each draws in currentColor; the opacity is the
  * caller's.
  */
-type Vehicle = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry';
+type SpriteId = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry';
 
-function VehicleIcon({ vehicle }: { vehicle: Vehicle }) {
+interface SpriteIconProps {
+  id: SpriteId;
+}
+
+function SpriteIcon({ id }: SpriteIconProps) {
   return (
     <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden>
-      <use href={`${vehicleSprite}#${vehicle}`} />
+      <use href={`${vehicleSprite}#${id}`} />
     </svg>
   );
 }
 
 export function TrainIcon() {
-  return <VehicleIcon vehicle="train" />;
+  return <SpriteIcon id="train" />;
 }
 
 export function JeepneyIcon() {
-  return <VehicleIcon vehicle="jeepney" />;
+  return <SpriteIcon id="jeepney" />;
 }
 
 export function EJeepIcon() {
-  return <VehicleIcon vehicle="e-jeep" />;
+  return <SpriteIcon id="e-jeep" />;
 }
 
 export function BusIcon() {
-  return <VehicleIcon vehicle="bus" />;
+  return <SpriteIcon id="bus" />;
 }
 
 export function FerryIcon() {
-  return <VehicleIcon vehicle="ferry" />;
+  return <SpriteIcon id="ferry" />;
 }

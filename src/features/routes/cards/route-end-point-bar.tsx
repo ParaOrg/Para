@@ -20,8 +20,8 @@ type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children'> & {
    * The row's route's vehicle, drawn at its right end (Figma's Jeep,
    * 4197:13125–13128, the owner's "new update" of 2026-10-16). Figma draws
    * only the Jeep; each row's own route's vehicle, as a trip's header names
-   * it (vehicleOf), is Claude's call of the same day. Null, a mode with no
-   * drawing: none.
+   * it (vehicleOf), is the owner's answer of the same day ("own vehicle per
+   * row is fine"). Null, a mode with no drawing: none.
    */
   vehicle: Vehicle | null;
 };

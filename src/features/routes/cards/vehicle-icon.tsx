@@ -4,6 +4,10 @@ import { BusIcon, EJeepIcon, FerryIcon, JeepneyIcon, TrainIcon } from '@/shared/
 
 import type { Vehicle } from '../model/vehicles';
 
+interface VehicleIconProps {
+  vehicle: Vehicle;
+}
+
 const ICON = {
   'LRT-1': TrainIcon,
   'LRT-2': TrainIcon,
@@ -20,7 +24,7 @@ const ICON = {
  * each route's row (RouteEndPointBar). The size and the opacity are the
  * caller's.
  */
-export function VehicleIcon({ vehicle }: { vehicle: Vehicle }) {
+export function VehicleIcon({ vehicle }: VehicleIconProps) {
   const Icon = ICON[vehicle];
   return <Icon />;
 }

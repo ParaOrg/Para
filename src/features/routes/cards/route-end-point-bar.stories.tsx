@@ -3,7 +3,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteEndPointBar } from './route-end-point-bar';
-import type { Vehicle } from '../model/vehicles';
+import { VEHICLES } from '../model/vehicles';
 
 /**
  * The owner's .RouteEndPointBar (3848:11928): RouteTripDetail (on the sheet's
@@ -25,8 +25,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const VEHICLES: readonly Vehicle[] = ['Jeepney', 'E-Jeep', 'Bus', 'LRT-1', 'MRT-3', 'Ferry'];
 
 /** RouteTripDetail at Rest, a trip's "Other routes" row: rounded, its Jeep at 75; a tap calls onClick. */
 export const OnSurface: Story = {
@@ -58,7 +56,7 @@ export const OnRedPressed: Story = {
   args: { on: 'red', className: 'bg-card-red-timeline-surface' },
 };
 
-/** Each row its own route's vehicle (Claude's call of 2026-10-16: Figma draws the Jeep alone), on both grounds. */
+/** Every vehicle, each row its own route's (the owner's answer of 2026-10-16: "own vehicle per row is fine"; Figma draws the Jeep alone), on both grounds. */
 export const EveryVehicle: Story = {
   render: (args) => (
     <div className="flex w-96 flex-col gap-3">

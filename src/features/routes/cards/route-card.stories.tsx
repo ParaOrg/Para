@@ -190,7 +190,7 @@ export const SixWaysOut: Story = {
   },
 };
 
-/** Each row its own route's vehicle (Claude's call of 2026-10-16; Figma's RouteCardExample, 3746:1238, draws the Jeep on every row). */
+/** Each row its own route's vehicle (the owner's answer of 2026-10-16, "own vehicle per row is fine"; Figma's RouteCardExample, 3746:1238, draws the Jeep on every row). */
 export const MixedVehicles: Story = {
   args: {
     routeOrigin: 'Cubao',
