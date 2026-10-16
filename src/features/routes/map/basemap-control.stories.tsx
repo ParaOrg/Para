@@ -13,16 +13,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 /** What MapLibre puts in the top-right corner before the button, as MapView does. */
 type Above = 'nothing' | 'attribution' | 'attribution-folded' | 'zoom';
 
-/**
- * Where the button is: one of the map's top-right controls (the studio's),
- * or a place of the page's low on the map (the public map's, above the
- * LocatorButton since 2026-10-16).
- */
-type Place = 'corner' | 'foot';
-
-interface HostedProps extends Omit<ComponentProps<typeof BasemapControl>, 'map' | 'container'> {
+interface HostedProps extends Omit<ComponentProps<typeof BasemapControl>, 'map'> {
   above: Above;
-  place: Place;
 }
 
 /**
@@ -31,10 +23,9 @@ interface HostedProps extends Omit<ComponentProps<typeof BasemapControl>, 'map' 
  * fetches no tiles. Picking another design would fetch that design's style,
  * so the stories only open, close and keep the current one.
  */
-function OnAnEmptyMap({ above, place, ...props }: HostedProps) {
+function OnAnEmptyMap({ above, ...props }: HostedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
-  const [foot, setFoot] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -73,10 +64,7 @@ function OnAnEmptyMap({ above, place, ...props }: HostedProps) {
     <>
       {/* Sized as MapView sizes it: MapLibre makes the container `position: relative`. */}
       <div ref={containerRef} className="h-full w-full" />
-      {/* Where the public map's LocatorButton column starts on a phone with no card: 12 in, 12 up. */}
-      {place === 'foot' && <div ref={setFoot} className="absolute right-3 bottom-3" />}
-      {map && place === 'corner' && <BasemapControl {...props} map={map} />}
-      {map && foot && <BasemapControl {...props} map={map} container={foot} />}
+      {map && <BasemapControl {...props} map={map} />}
     </>
   );
 }
@@ -98,7 +86,6 @@ const meta = {
     thumbnails: BASEMAP_THUMBNAILS,
     initial: BASEMAPS[0],
     above: 'nothing',
-    place: 'corner',
   },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
@@ -111,7 +98,7 @@ const openCard = async (canvasElement: HTMLElement) => {
   return canvas.getByRole('dialog', { name: 'Map Style' });
 };
 
-/** Nothing above it in the corner, as on the public map's desktop until 2026-10-16. Closed. */
+/** A mouse on the public map: nothing above it, so it takes the corner. Closed. */
 export const Closed: Story = {};
 
 /** Open: the three designs, the current one ringed and holding the keyboard. */
@@ -265,9 +252,8 @@ export const SameDesignAgain: Story = {
 };
 
 /**
- * On a phone the credits move to the top, open three lines tall once ⓘ opens
- * them: the button is stacked under them by MapLibre at their real height,
- * never on them.
+ * On a phone the credits move to the top, open three lines tall: the button
+ * is stacked under them by MapLibre at their real height, never on them.
  */
 export const UnderAttribution: Story = {
   args: { above: 'attribution' },
@@ -330,70 +316,4 @@ export const UnderZoom: Story = {
       );
     });
   },
-};
-
-/** Its pop over (map-style.css): scaled, the card measures smaller. */
-const settled = (card: HTMLElement) => Promise.all(card.getAnimations().map((a) => a.finished));
-
-/**
- * Low on the map, as the public map has it above the LocatorButton since
- * 2026-10-16: the card opens up, 8 over the button, their right edges in
- * line, popping out of its bottom right corner, the one nearest the button.
- */
-export const OpensUp: Story = {
-  args: { place: 'foot' },
-  play: async ({ canvasElement }) => {
-    const card = await openCard(canvasElement);
-    const button = within(canvasElement).getByRole('button', { name: 'Map design' });
-    await expect(card).toHaveAttribute('data-opens', 'up');
-    // Its bottom right, in px: the card's own width and height.
-    const [originX, originY] = getComputedStyle(card).transformOrigin.split(' ').map(parseFloat);
-    await expect(Math.abs(originX - card.offsetWidth)).toBeLessThan(1);
-    await expect(Math.abs(originY - card.offsetHeight)).toBeLessThan(1);
-    await settled(card);
-    const c = card.getBoundingClientRect();
-    const b = button.getBoundingClientRect();
-    await expect(b.top - c.bottom).toBeCloseTo(8, 0);
-    await expect(c.right).toBeCloseTo(b.right, 0);
-  },
-};
-
-/**
- * On a map too short for the whole card above the button: it stops 10 short
- * of the map's top, which the page clips, and scrolls.
- */
-export const OpensUpOnAShortMap: Story = {
-  args: { place: 'foot' },
-  decorators: [
-    (Story) => (
-      <div className="relative h-[240px] w-full">
-        <Story />
-      </div>
-    ),
-  ],
-  play: async ({ canvasElement }) => {
-    const card = await openCard(canvasElement);
-    await settled(card);
-    const mapTop = canvasElement.querySelector('.maplibregl-map')?.getBoundingClientRect().top;
-    await expect(card.getBoundingClientRect().top - (mapTop ?? Infinity)).toBeCloseTo(10, 0);
-    await expect(card.scrollHeight).toBeGreaterThan(card.clientHeight);
-  },
-};
-
-/** ✕ closes the card that opened up, and the keyboard goes back to the button. */
-export const OpensUpCloseButtonCloses: Story = {
-  args: { place: 'foot' },
-  play: CloseButtonCloses.play,
-};
-
-/** Escape closes the card that opened up, and the keyboard goes back to the button. */
-export const OpensUpEscapeCloses: Story = {
-  args: { place: 'foot' },
-  play: EscapeCloses.play,
-};
-
-/** A tap anywhere else closes the card that opened up. */
-export const OpensUpTapOutsideCloses: Story = {
-  args: { place: 'foot' },
-  play: TapOutsideCloses.play,
 };

@@ -68,7 +68,7 @@ prewarm();
  * polygons we paint on top carry all the colour on the screen. It serves the
  * same `/planet` tiles, sprite and fonts as Liberty from half the layers, so
  * the switch costs no cached tile and draws a little cheaper. A viewer can
- * pick another design from the design button (BasemapControl, basemap.ts);
+ * pick another design from the control at the top right (shared/basemap.ts);
  * this is the one the map starts with when nothing has been chosen.
  */
 export const STYLE_URL = DEFAULT_BASEMAP.url;
@@ -169,15 +169,6 @@ interface Props {
   basemaps?: readonly Basemap[];
   /** Each design's picture on the Map Style card, by its id: BASEMAP_THUMBNAILS, and the studio's. */
   basemapThumbnails?: Readonly<Record<string, string>>;
-  /**
-   * Where the design button goes (BasemapControl's `container`): an element
-   * of the page's, low on the map, the card opening up from it — the public
-   * map's, above the LocatorButton (the owner, 2026-10-16) — or null while
-   * that element is not drawn yet, and no button until it is. Left out, the
-   * button is one of the map's own top-right controls, its card opening down
-   * (the studio).
-   */
-  basemapSlot?: HTMLElement | null;
 }
 
 /**
@@ -198,7 +189,6 @@ export function MapView({
   openOn,
   basemaps = BASEMAPS,
   basemapThumbnails = BASEMAP_THUMBNAILS,
-  basemapSlot,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -449,13 +439,12 @@ export function MapView({
         <div ref={containerRef} className="h-full w-full" />
       </div>
 
-      {ready && !error && basemapSlot !== null && (
+      {ready && !error && (
         <BasemapControl
           map={ready}
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
           initial={basemap}
-          container={basemapSlot}
         />
       )}
 

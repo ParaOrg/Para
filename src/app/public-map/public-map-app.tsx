@@ -58,9 +58,6 @@ const openOnRoutes = () =>
  */
 export function PublicMapApp() {
   const [map, setMap] = useState<MapLibreMap | null>(null);
-  // The design button's place above the LocatorButton, for MapView to draw
-  // the button in once the map is up (VisitorLocation, below).
-  const [designSlot, setDesignSlot] = useState<HTMLDivElement | null>(null);
   // One index, fetched once, shared by both hooks; a direction's full line
   // read as it is lit (mapFile.ts).
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
@@ -159,7 +156,6 @@ export function PublicMapApp() {
       */}
       <MapView
         onReady={setMap}
-        basemapSlot={designSlot}
         zoomButtons={false}
         maxBounds={METRO_MANILA}
         openOn={openOnRoutes}
@@ -185,15 +181,7 @@ export function PublicMapApp() {
           litDirections: saved.litDirections,
         }}
         hushedAt={hushedAt}
-      >
-        {/*
-          The map's design button, above the LocatorButton, 16 apart, and
-          sliding with it: the owner's "Can you move the map layers on top of
-          the whereiamlocation button? Maybe 16px gap" (2026-10-16). It was at
-          the top right under the credits until then. MapView draws it here.
-        */}
-        <div ref={setDesignSlot} />
-      </VisitorLocation>
+      />
       {/* Each lit ride's ends, named over their circles; with no trip open, a tail opens its ride's. */}
       {map && (
         <EndTitles
