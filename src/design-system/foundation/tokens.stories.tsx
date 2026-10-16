@@ -266,7 +266,7 @@ function TokensPage() {
         />
       </Group>
 
-      <Group title="Map — the route lines and hintuans (the map paints them from mapColours.ts)">
+      <Group title="Map — the route lines and hintuans (the map paints them from map-colours.ts)">
         <Swatch
           box="bg-map-route-line-surface-default"
           token="Map/RouteLine/surface-default"
@@ -490,13 +490,9 @@ function TokensPage() {
         />
       </Group>
 
-      <Group title="Type — the two families">
+      <Group title="Type — SN Pro">
         <div className="w-full rounded-lg border border-border-primary bg-surface p-4">
-          <p className="font-cubao text-2xl text-content-primary">
-            Cubao Free — PARA PO · BUTTON · SM FAIRVIEW
-          </p>
-          <p className="mt-1 font-mono text-[11px] text-content-quaternary">font-cubao</p>
-          <p className="mt-3 font-sn-pro text-lg text-content-primary">
+          <p className="font-sn-pro text-lg text-content-primary">
             SN Pro Regular — Tala to SM Fairview, ₱14 the first 4 km
           </p>
           <p className="font-sn-pro text-lg font-medium text-content-primary">

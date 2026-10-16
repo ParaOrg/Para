@@ -59,7 +59,7 @@ export interface PassFeature {
 }
 
 /** What a line file carries of its orange stretches: each stretch's points, and what they were worked out against. */
-export interface LinePass {
+interface LinePass {
   pass: LngLat[][];
   passKey: string;
 }

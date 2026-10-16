@@ -5,6 +5,7 @@
 export { AuthDialogs } from './auth/auth-dialogs';
 export { SignIn } from './auth/sign-in';
 export { skipSignInForTests } from './auth/test-bypass';
+export { useAuthFlow } from './auth/use-auth-flow';
 export { usePasswordRecovery } from './auth/use-password-recovery';
 export { useSession } from './auth/use-session';
 export { lineOf, listDirections, loadHotspotsFromSupabase } from './data/live';
@@ -20,7 +21,8 @@ export { HotspotPanel } from './panels/hotspot-panel';
 export { NewButtons } from './panels/new-buttons';
 export { returnTripLeft } from './panels/return-trip';
 export { SavePanel } from './panels/save-panel';
-export { SaveToasts, type SaveToast } from './panels/save-toasts';
+export { SaveToasts } from './panels/save-toasts';
 export { TripCardExtras } from './panels/trip-card-extras';
 export { useDeleteActions } from './panels/use-delete-actions';
+export { useSaveFlow } from './panels/use-save-flow';
 export { useSaveTarget } from './panels/use-save-target';

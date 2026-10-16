@@ -3,7 +3,7 @@ import type { HotspotKind } from '../drawing/drawing-types';
 /**
  * The studio's two ways to start, at the bottom right: + New Route, and +
  * New hotspot with its menu — a terminal or a hintuan. Disabled until the
- * map is there to draw on. Split from StudioApp.tsx, 2026-09-29; the menu's
+ * map is there to draw on. Split from studio-app.tsx, 2026-09-29; the menu's
  * open state stays the workshop's, which keeps it while these buttons are
  * away (a drawing, the list).
  */

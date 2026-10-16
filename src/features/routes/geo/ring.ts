@@ -176,7 +176,7 @@ export function entryDistance(line: LngLat[], ring: Ring): number {
  * (zero-area) ring so a bad trace still gets a usable label point.
  *
  * The shoelace sums are taken from the ring's first corner, not from 0°, and
- * the corner added back at the end, as signedArea2 in rightOfLine.ts does.
+ * the corner added back at the end, as signedArea2 in right-of-line.ts does.
  * From 0° every term is about 121 × 14.7 while a box's area is about 1e-8,
  * so the sums cancelled away the digits that mattered: a 10 m box at Manila
  * had its centroid some 60 m off, and 23 of the 102 published hotspots had
