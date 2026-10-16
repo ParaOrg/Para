@@ -1862,6 +1862,12 @@ const tripChecks = async () => {
   } else {
     const before = await tripLabel();
     const colour = await trip().first().getAttribute('data-livery');
+    const pickedBefore = picked
+      ? await card()
+          .locator('[data-testid="trip-hintuan"][data-state="selected"]')
+          .first()
+          .getAttribute('data-hintuan')
+      : null;
     await buttonTap(sw, async () => (await tripLabel()) !== before);
     const after = await tripLabel();
     const same = (s) => s.split(' → ').sort().join(' | ');
@@ -1874,23 +1880,49 @@ const tripChecks = async () => {
     const now = await trip().first().getAttribute('data-livery');
     check('  and keeps its colour', !!colour && now === colour, `${colour} → ${now}`);
     if (picked) {
-      // Another direction is another ride: the pick does not come with it.
+      // The pick and SWITCH (the owner, 2026-10-15: "trains reset, jeeps
+      // keep"): on a jeep it comes along, landing where HintuanCard's SWITCH
+      // would (boxTheOtherWay, by the published links); on a train it goes.
+      const want = await page.evaluate(async (pickedId) => {
+        try {
+          const [{ fetchIndex }, { boxTheOtherWay }, { railLineOf }] = await Promise.all([
+            import('/src/features/published-map/api/fetch-index.ts'),
+            import('/src/features/routes/model/places.ts'),
+            import('/src/features/routes/model/routes.ts'),
+          ]);
+          const [nowId] = (await window.__lit('saved-routes')) ?? [];
+          const m = await fetchIndex();
+          const now = m.directions.find((d) => d.id === nowId);
+          const box = m.hotspots.find((s) => s.id === pickedId);
+          if (!now || !box) return null;
+          if (railLineOf(now)) return { train: true, landing: null };
+          const passes = (id) => m.links.some((l) => l.hotspotId === id && l.directionId === nowId);
+          return { train: false, landing: boxTheOtherWay(box, m.hotspots, passes)?.id ?? null };
+        } catch {
+          return null;
+        }
+      }, pickedBefore);
       const pins = await page.evaluate(
         () => document.querySelectorAll('[data-testid="hintuan-pin"]').length,
       );
-      const still = await card()
+      const selected = await card()
         .locator('[data-testid="trip-hintuan"][data-state="selected"]')
-        .count();
+        .evaluateAll((els) => els.map((e) => e.dataset.hintuan));
       check(
-        '  and lets the picked hintuan go',
-        pins === 0 && still === 0,
-        `${still} Selected, ${pins} circle(s)`,
+        want?.train
+          ? '  and, on a train, lets the picked hintuan go'
+          : '  and, on a jeep, keeps the picked hintuan, on a box the other way passes',
+        want !== null &&
+          (want.landing === null
+            ? selected.length === 0 && pins === 0
+            : selected.length === 1 && selected[0] === want.landing && pins === 1),
+        `${JSON.stringify(want)}; ${JSON.stringify(selected)} Selected, ${pins} circle(s)`,
       );
-      picked = false;
+      picked = selected.length > 0;
     }
   }
   // A hintuan picked on the trip as it is left, for the caller's ✕ or ‹ to
-  // let go: SWITCH has let the checked one go.
+  // let go: SWITCH may have let the checked one go.
   if (!picked && (await rows.count()) > 0) {
     if ((await fold.count()) > 0 && (await fold.first().getAttribute('aria-expanded')) !== 'true') {
       await buttonTap(

@@ -5,9 +5,10 @@ import { zoomForScale, type LngLat } from '@/shared/utils/geo';
 
 import { APP_MOVE } from './map-view';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
 import { rideCut, travelLine } from '../model/ride';
-import { isRailLine, type Direction } from '../model/routes';
+import { isRailLine, railLineOf, type Direction } from '../model/routes';
 
 /** How close a picked hintuan is brought in: the scale bar reading this. */
 const PICKED_SCALE_M = 500;
@@ -77,8 +78,8 @@ export function useRideTo(
   } = {},
 ) {
   // Which direction the pick was made on: a pick belongs to its ride, so the
-  // first render of another one — SWITCH, a new trip — never cuts its line
-  // at the old row.
+  // first render of another one — a new trip, a train's SWITCH — never cuts
+  // its line at the old row. A jeep's SWITCH carries it over (carryTo).
   const [picked, setPicked] = useState<{ directionId: string; rowId: string } | null>(null);
   const live = picked && picked.directionId === selected?.id ? picked : null;
 
@@ -100,16 +101,23 @@ export function useRideTo(
 
   // A different direction is a different ride, and so is the same one opened
   // again: start it whole. The picks are let go in the render that opens it
-  // (the previous id kept to tell), the camera kept for a second tap after.
+  // (the previous id kept to tell), the camera kept for a second tap after —
+  // all but one carried over a jeep's SWITCH, which already names the
+  // direction it belongs to (carryTo).
   const [rideId, setRideId] = useState(selected?.id);
   if (rideId !== selected?.id) {
     setRideId(selected?.id);
-    setPicked(null);
-    setAtEnd(null);
+    setPicked((p) => (p?.directionId === selected?.id ? p : null));
+    setAtEnd((e) => (e?.directionId === selected?.id ? e : null));
   }
   useEffect(() => {
     before.current = null;
   }, [selected?.id]);
+
+  // The hintuan a jeep's SWITCH carried over: the camera frames the whole ride
+  // as SWITCH does (useSwitchOverview) and never glides in to it. A row picked
+  // after lets it go.
+  const carried = useRef<string | null>(null);
 
   // Called as a glide starts, so a fresh function each render moves nothing.
   // Kept before the glide's effect below, which reads it in the same commit.
@@ -147,6 +155,7 @@ export function useRideTo(
   const pick = useCallback(
     (id: string | null) => {
       setAtEnd(null);
+      carried.current = null;
       if (id !== null && selectedId && liveRow === id) goBack();
       else if (id !== null && selectedId) remember();
       else if (id === null) before.current = null;
@@ -167,6 +176,7 @@ export function useRideTo(
   const toEnd = useCallback(
     (end: 'from' | 'to') => {
       setPicked(null);
+      carried.current = null;
       const on = endPicked !== end;
       setAtEnd(on && selectedId ? { directionId: selectedId, end } : null);
       if (!on) return goBack();
@@ -188,7 +198,7 @@ export function useRideTo(
   // every later move, and a trip's fit or "Where am I" would land off centre
   // ever after.
   useEffect(() => {
-    if (!map || !cut) return;
+    if (!map || !cut || carried.current === cut.endHotspotId) return;
     const glide = glideFor(map, cut.at, onGlide.current?.() ?? [0, 0]);
     if (glide) map.easeTo({ ...glide, duration: 700 }, APP_MOVE);
   }, [map, cut]);
@@ -201,6 +211,32 @@ export function useRideTo(
     () =>
       cut && selectedId ? { directionId: selectedId, line: cut.ridden, rest: cut.rest } : null,
     [cut, selectedId],
+  );
+
+  /**
+   * SWITCH on a jeep's trip, just before it turns: the pick goes with it to
+   * `next` (the owner's ask, 2026-10-15: Antipolo → Betty Go becomes Recto →
+   * Betty Go). A hintuan lands where HintuanCard's SWITCH puts it
+   * (boxTheOtherWay): the same box when `next` passes it, else the nearest
+   * box of its place that `next` passes; with none, the ride turns whole. A
+   * picked end follows its place: where the trip went is where the way back
+   * leaves. On a train SWITCH lets the picks go, as before (the owner, the
+   * same day: "trains reset, jeeps keep").
+   */
+  const carryTo = useCallback(
+    (next: Direction, passesNext: (hotspotId: string) => boolean) => {
+      if (railLineOf(next)) return;
+      if (live) {
+        const box = hotspots.find((s) => s.id === live.rowId);
+        const landed = box ? boxTheOtherWay(box, hotspots, passesNext) : null;
+        if (!landed) return;
+        carried.current = landed.id;
+        setPicked({ directionId: next.id, rowId: landed.id });
+      } else if (endPicked) {
+        setAtEnd({ directionId: next.id, end: endPicked === 'to' ? 'from' : 'to' });
+      }
+    },
+    [live, hotspots, endPicked],
   );
 
   return {
@@ -233,5 +269,6 @@ export function useRideTo(
     /** The end picked from its row (`toEnd`), or null. */
     endPicked,
     toEnd,
+    carryTo,
   };
 }
