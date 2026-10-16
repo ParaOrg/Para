@@ -11,7 +11,7 @@ import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 /** What MapLibre puts in the top-right corner before the button, as MapView does. */
-type Above = 'nothing' | 'attribution' | 'zoom';
+type Above = 'nothing' | 'attribution' | 'attribution-folded' | 'zoom';
 
 interface HostedProps extends Omit<ComponentProps<typeof BasemapControl>, 'map'> {
   above: Above;
@@ -35,7 +35,7 @@ function OnAnEmptyMap({ above, ...props }: HostedProps) {
       attributionControl: false,
     });
     // A phone's credits, open as MapView's are until the first drag; or a mouse's +, − and compass.
-    if (above === 'attribution') {
+    if (above === 'attribution' || above === 'attribution-folded') {
       created.addControl(
         new AttributionControl({
           compact: true,
@@ -44,6 +44,13 @@ function OnAnEmptyMap({ above, ...props }: HostedProps) {
         }),
         'top-right',
       );
+    }
+    // Folded to its ⓘ, as MapLibre folds it at a first drag and the studio from the start (MapView).
+    if (above === 'attribution-folded') {
+      created
+        .getContainer()
+        .querySelector('.maplibregl-compact')
+        ?.classList.remove('maplibregl-compact-show');
     }
     if (above === 'zoom') created.addControl(new NavigationControl(), 'top-right');
     setMap(created);
@@ -55,7 +62,8 @@ function OnAnEmptyMap({ above, ...props }: HostedProps) {
 
   return (
     <>
-      <div ref={containerRef} className="absolute inset-0" />
+      {/* Sized as MapView sizes it: MapLibre makes the container `position: relative`. */}
+      <div ref={containerRef} className="h-full w-full" />
       {map && <BasemapControl {...props} map={map} />}
     </>
   );
@@ -259,6 +267,39 @@ export const UnderAttribution: Story = {
         credits?.getBoundingClientRect().bottom ?? Infinity,
       );
     });
+  },
+};
+
+/** After a first drag, or in the studio: the credits folded to their ⓘ, the button under it. */
+export const UnderFoldedAttribution: Story = {
+  args: { above: 'attribution-folded' },
+  play: async ({ canvasElement }) => {
+    const button = await within(canvasElement).findByRole('button', { name: 'Map design' });
+    await waitFor(() => {
+      const credits = canvasElement.querySelector('.maplibregl-ctrl-attrib');
+      expect(credits).not.toHaveClass('maplibregl-compact-show');
+      expect(button.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        credits?.getBoundingClientRect().bottom ?? Infinity,
+      );
+    });
+  },
+};
+
+/**
+ * Open under the open credits on a phone, the lowest the card starts: it
+ * ends inside the map, its foot clear of the map's edge, which clips.
+ */
+export const OpenUnderAttribution: Story = {
+  args: { above: 'attribution' },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.maplibregl-ctrl-attrib')).not.toBeNull(),
+    );
+    const card = await openCard(canvasElement);
+    const mapFoot = canvasElement.querySelector('.maplibregl-map')?.getBoundingClientRect().bottom;
+    await waitFor(() =>
+      expect(card.getBoundingClientRect().bottom).toBeLessThanOrEqual(mapFoot ?? -Infinity),
+    );
   },
 };
 

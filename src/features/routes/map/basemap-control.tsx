@@ -15,6 +15,10 @@ interface BasemapControlProps {
   initial: Basemap;
 }
 
+/** Between the button and the card (gap-2), and kept clear under the card, as the corner's margin. */
+const CARD_GAP_PX = 8;
+const CARD_FOOT_PX = 10;
+
 /** Closing is the card on its way out, still drawn while its leaving plays. */
 type CardState = 'closed' | 'open' | 'closing';
 
@@ -66,6 +70,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
   const corner = useTopRightControl(map);
   const [current, setCurrent] = useState<Basemap>(initial);
   const [card, setCard] = useState<CardState>('closed');
+  const [cardRoom, setCardRoom] = useState<number | undefined>(undefined);
   const isOpen = card === 'open';
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -74,6 +79,16 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
   const close = () => {
     setCard(afterClose());
     buttonRef.current?.focus();
+  };
+
+  // The card may grow down to the map's foot and no further: the map clips
+  // what is past it (MapLibre's overflow), and the button sits as low as the
+  // corner stacks it, under the open credits on a phone. Read as it opens.
+  const open = () => {
+    const button = buttonRef.current?.getBoundingClientRect();
+    const mapFoot = map.getContainer().getBoundingClientRect().bottom;
+    setCardRoom(button ? mapFoot - button.bottom - CARD_GAP_PX - CARD_FOOT_PX : undefined);
+    setCard('open');
   };
 
   // A tap anywhere else closes the card, as a tap on the map closes a card.
@@ -115,7 +130,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => (isOpen ? close() : setCard('open'))}
+        onClick={() => (isOpen ? close() : open())}
         aria-label="Map design"
         aria-expanded={isOpen}
         aria-haspopup="dialog"
@@ -138,6 +153,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
           basemaps={basemaps}
           selectedId={current.id}
           thumbnails={thumbnails}
+          maxHeight={cardRoom}
           onSelect={handleSelect}
           isClosing={card === 'closing'}
           onClose={close}

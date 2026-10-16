@@ -14,6 +14,8 @@ interface MapStyleProps {
   selectedId: string;
   /** Each design's picture, by its id; a design without one shows a plain tile. */
   thumbnails: Readonly<Record<string, string>>;
+  /** How tall it may grow, in px: the room below the button, measured as it opens. Scrolls past it. */
+  maxHeight?: number;
   /** Leaving: it shrinks back into the button, and takes no taps or keys meanwhile. */
   isClosing?: boolean;
   onSelect: (basemap: Basemap) => void;
@@ -38,6 +40,7 @@ export function MapStyle({
   basemaps,
   selectedId,
   thumbnails,
+  maxHeight,
   isClosing = false,
   onSelect,
   onClose,
@@ -97,6 +100,8 @@ export function MapStyle({
       data-testid="basemap-menu"
       data-closing={isClosing || undefined}
       inert={isClosing}
+      // Measured at runtime (CLAUDE.md's one use for `style`); the class is the cap without it.
+      style={maxHeight === undefined ? undefined : { maxHeight }}
       className="map-style flex max-h-[calc(100dvh-8rem)] flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-4 font-sn-pro shadow-sm"
     >
       <div className="flex items-center">
