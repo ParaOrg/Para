@@ -5,7 +5,7 @@ import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
  * wide it is at every zoom.
  *
  * The line's own colours are the owner's Map/… tokens since 2026-09-29
- * (mapColours.ts); the stretches' too since 2026-09-30,
+ * (map-colours.ts); the stretches' too since 2026-09-30,
  * Map/RouteLine/Hintuan/surface-default — green, where it was an orange
  * sent as hex.
  */

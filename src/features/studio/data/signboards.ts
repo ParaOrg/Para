@@ -8,7 +8,7 @@ import { getSupabase, supabaseConfig } from './supabase';
  * each, and the direction's `signboards` column listing them in order. The
  * publish copies them beside the map (scripts/publish/publish-map.mjs).
  *
- * Each file is cleaned before it is sent (signboardSvg.ts): what reaches the
+ * Each file is cleaned before it is sent (signboard-svg.ts): what reaches the
  * bucket is drawing only. Order of writes, so nothing is left pointing at a
  * missing file: an upload sends the file and then lists it; a removal
  * unlists it and then deletes the file, and a file left behind by a delete

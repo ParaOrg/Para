@@ -4,7 +4,7 @@ import type { Drawing } from './use-drawing';
  * What a finger has instead of a right-click and a shift-click: the bar of a
  * point it tapped, the Put back after that bar's Delete, and the offer to
  * follow a saved line a tap landed on. Each shows only after a touch (see
- * useDrawEvents.ts); a mouse keeps its clicks and never sees them.
+ * use-draw-events.ts); a mouse keeps its clicks and never sees them.
  */
 
 const BAR = 'rounded-2xl bg-white p-1.5 text-sm shadow-lg ring-1 ring-black/10';

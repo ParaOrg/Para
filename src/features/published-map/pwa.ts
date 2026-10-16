@@ -48,7 +48,7 @@ export function registerServiceWorker(): void {
  * no routes. Once the worker controls the page, ask for those few small files
  * again: a conditional request each, answered 304, and this time the worker
  * stores them. So too the basemap tiles the map asked for until then, the
- * first screen's, which the browser's own cache answers (tilesAsked.ts): since
+ * first screen's, which the browser's own cache answers (tiles-asked.ts): since
  * the map opens on its routes they all come before the worker takes over
  * (2026-10-06). Glyphs, and tiles further afield, are left to normal use. From
  * the second visit on the page's own requests go through the worker, so this
