@@ -44,16 +44,16 @@ interface Props {
    * What it is on a wide screen, where it stops being a sheet: the route
    * list's, a trip's and a place's (the public map's HintuanCard) panel in
    * the top-left corner from `@float:` (`corner`, the default), or the card
-   * the studio's hotspot and route cards have always floated as, 16 in, from
-   * `@wide:` (`card`). What it holds
-   * reads which with `sheet-floating:` and `sheet-low:` (index.css).
+   * the studio's hotspot and route cards float as, 16 in, from `@wide:`
+   * (`card`). What it holds reads which with `sheet-floating:` and
+   * `sheet-low:` (index.css).
    */
   floats?: 'corner' | 'card';
   /**
    * The height, when the caller keeps it: sheets that stand in for one
    * another — the route list, a hotspot's card and the trip opened from
-   * them — share one, so ‹ and a pick keep Low, Middle or Max as they were
-   * (the owner's ask of 2026-09-30). Without it, the sheet keeps its own.
+   * them — share one, so ‹ and a pick keep Low, Middle or Max as they were.
+   * Without it, the sheet keeps its own.
    */
   height?: SheetHeight;
   children: ReactNode;
@@ -78,33 +78,31 @@ const FLOATS_AT = {
 };
 
 /**
- * Every card on the map is this one sheet (the owner's ask of 2026-09-30:
- * "make it a universal rule as component"): the route list, a trip's card, a
- * hotspot's card and the studio's route card alike. Only what it floats as
- * on a wide screen differs (`floats`): the list and a trip flush in the
- * top-left corner, 384 wide (his 3750:1911, 2026-09-29), the body scrolling
- * under the header with no scrollbar drawn (his ask, 2026-09-28).
+ * Every card on the map is this one sheet: the route list, a trip's card, a
+ * hotspot's card and the studio's route card alike. Only what it floats as on
+ * a wide screen differs (`floats`): the list and a trip flush in the top-left
+ * corner, 384 wide (Figma 3750:1911), the body scrolling under the header
+ * with no scrollbar drawn.
  *
- * On a phone it is his BottomSheetConfiguration (3815:5637, 2026-09-30),
- * square along the top: a HandleNotch over the header, and three heights
- * (sheetGesture) — Low, the header and the top of the first card, a tap on
- * it raising the sheet; Middle, where it opens; Max, the whole map, clear of
- * a phone's notch. It is always the whole map tall and slides (`--sheet-y`),
- * so moving between heights is one smooth `translate` ("motion ... so it
- * becomes fluid"): a drag on the handle or the header follows the finger
- * and, let go slowly, glides to the nearest height; flicked, it goes to the
- * end its way, Max or Low, as Google's and Apple's maps do (the owner's ask,
- * 2026-09-30); flicked down from Low, it closes. Below Max the body does
- * not scroll: a swipe on it moves the sheet ("when I scroll up in middle, it
- * should go into max"); at Max it scrolls, and a pull down from its top
- * takes hold of the sheet — to Middle held slowly, to Low flicked. A tap on
- * the handle goes round, Low → Middle → Max. Between Middle and Max it
- * stays where it is let go (sheetGesture's snapFor), its body still.
+ * On a phone it is BottomSheetConfiguration (Figma 3815:5637), square along
+ * the top: a HandleNotch over the header, and three heights (sheetGesture) —
+ * Low, the header and the top of the first card, a tap on it raising the
+ * sheet; Middle, where it opens; Max, the whole map, clear of a phone's
+ * notch. It is always the whole map tall and slides (`--sheet-y`), so moving
+ * between heights is one smooth `translate`: a drag on the handle or the
+ * header follows the finger and, let go slowly, glides to the nearest height;
+ * flicked, it goes to the end its way, Max or Low, as Google's and Apple's
+ * maps do; flicked down from Low, it closes. Below Max the body does not
+ * scroll: a swipe on it moves the sheet; at Max it scrolls, and a pull down
+ * from its top takes hold of the sheet — to Middle held slowly, to Low
+ * flicked. A tap on the handle goes round, Low → Middle → Max. Between Middle
+ * and Max it stays where it is let go (sheetGesture's snapFor), its body
+ * still.
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
- * measures the status bar; use-sheet-gestures.ts binds the finger, the
- * mouse and the wheel; sheet-header.tsx is the header with ✕ a card may
- * bring; sheet-room.ts is the room the sheet leaves the camera.
+ * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse
+ * and the wheel; sheet-header.tsx is the header with ✕ a card may bring;
+ * sheet-room.ts is the room the sheet leaves the camera.
  */
 export function BottomSheet({
   label,
@@ -128,8 +126,8 @@ export function BottomSheet({
   // straight onto the sheet move by move rather than rendered.
   const [dragging, setDragging] = useState(false);
   // Where it first stands, drawn with it: a card opening over another (a
-  // place's name tapped) is new, and without this it showed at Max for a
-  // moment and glided down to its height. Never changed after, so React
+  // place's name tapped) is new, and without this it would show at Max for a
+  // moment and glide down to its height. Never changed after, so React
   // leaves the drag's and the glide's --sheet-y alone.
   measureSafeTop();
   const [opensAt] = useState(() => ({ '--sheet-y': slide(snap) }) as CSSProperties);
@@ -139,8 +137,8 @@ export function BottomSheet({
   /**
    * Where the sheet slides to. The page's `[data-dock-host]` hears it too, as
    * `--dock-y`, while this is the sheet on show: what sits on the map above
-   * the sheet follows it (the owner's ScreenLocationBehavior, 3870:5941,
-   * 2026-10-01). The same length, so both glide alike.
+   * the sheet follows it (ScreenLocationBehavior, Figma 3870:5941). The same
+   * length, so both glide alike.
    */
   function at(y: string) {
     const sheet = own.current;
@@ -163,9 +161,9 @@ export function BottomSheet({
     markedRef.current = mark;
   }, [snap, dragging, hidden]);
   // A flick that closes the sheet unmounts it mid-drag, before the effect
-  // above runs with the drag over, and the page kept the attribute: the
-  // LocatorButton stopped gliding for good (review of 2026-10-03). The host
-  // is held from the mount, as the sheet is gone from it by the cleanup.
+  // above runs with the drag over, and the page would keep the attribute: the
+  // LocatorButton would stop gliding for good. The host is held from the
+  // mount, as the sheet is gone from it by the cleanup.
   useLayoutEffect(() => {
     const host = own.current?.closest('[data-dock-host]');
     return () => {
@@ -233,7 +231,7 @@ export function BottomSheet({
         aria-label={HANDLE_LABEL[snapName(snap)]}
         title={HANDLE_LABEL[snapName(snap)]}
         onClick={() => setSnap(snapAfterTap(snap))}
-        // The owner's HandleNotch: 8 above the bar, 4 below (3742:1049, 2026-10-01).
+        // HandleNotch: 8 above the bar, 4 below (Figma 3742:1049).
         className="flex w-full shrink-0 touch-none justify-center pt-2 pb-1 sheet-floating:hidden"
       >
         <span aria-hidden className="h-1.5 w-12 rounded-full bg-surface-quaternary" />
@@ -264,7 +262,7 @@ export function BottomSheet({
 
 /**
  * What a screen reader hears on the handle: the height the sheet is at, and
- * what Enter does (the ds-reviewer's finding, 2026-09-30).
+ * what Enter does.
  */
 const HANDLE_LABEL = {
   low: 'Sheet lowered. Raise to half the screen',

@@ -1,18 +1,17 @@
 /**
- * The icons the route cards use, drawn as in the owner's Figma file
- * (2026-09-28): the Jeep beside a hintuan card's count (and beside the
- * route list's until Routes took its place, 2026-10-16), Close in the header,
- * circle-arrow-right before each place a card goes to; and the trip card's
- * (2026-09-29): ‹ (chevron-left) back to the list, and the chevron down on
- * the row that folds its hintuans, turned to point up when they are open —
- * the same drawing as Figma's chevron-up, so one icon serves both.
- * Each is Figma's own path, filled with currentColor so it takes the text
- * colour of wherever it sits — the file draws them in Content/primary or
- * Content/inverse, never a colour of their own.
+ * The icons the route cards use, drawn as in Figma: the Jeep beside a hintuan
+ * card's count, Close in the header, circle-arrow-right before each place a
+ * card goes to; and the trip card's: ‹ (chevron-left) back to the list, and
+ * the chevron down on the row that folds its hintuans, turned to point up
+ * when they are open — the same drawing as Figma's chevron-up, so one icon
+ * serves both. Each is Figma's own path, filled with currentColor so it takes
+ * the text colour of wherever it sits — the file draws them in
+ * Content/primary or Content/inverse, never a colour of their own.
  */
 
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
 
+/** The side-on jeep, beside a hintuan card's count. */
 export function JeepIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -30,6 +29,7 @@ export function JeepIcon() {
   );
 }
 
+/** ✕, the close of a card's header. */
 export function CloseIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -38,6 +38,7 @@ export function CloseIcon() {
   );
 }
 
+/** ‹, back to the list. */
 export function ChevronLeftIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -46,6 +47,7 @@ export function ChevronLeftIcon() {
   );
 }
 
+/** The chevron on the row that folds a trip's hintuans; turned up when they are open. */
 export function ChevronDownIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -54,6 +56,7 @@ export function ChevronDownIcon() {
   );
 }
 
+/** The arrow before each place a card goes to. */
 export function CircleArrowRightIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -74,9 +77,9 @@ export function ReloadIcon() {
 }
 
 /**
- * Figma's Terminal and Hintuan (the owner's HotspotSelectionBar, 3854:12690,
- * 2026-09-30), 20 across: a disc with the letter cut out, before each box's
- * name on a HintuanCard — T for a terminal, H for a hintuan.
+ * Figma's Terminal and Hintuan (HotspotSelectionBar, 3854:12690), 20 across:
+ * a disc with the letter cut out, before each box's name on a HintuanCard — T
+ * for a terminal, H for a hintuan.
  */
 export function TerminalIcon() {
   return (
@@ -90,6 +93,7 @@ export function TerminalIcon() {
   );
 }
 
+/** The H disc before a hintuan's name on a HintuanCard (TerminalIcon's pair). */
 export function HintuanIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -116,11 +120,10 @@ export function InformationIcon() {
 }
 
 /**
- * Figma's Start and End (4055:6468 and 4055:6446, 2026-10-12): a disc with
- * the letter cut out, drawn at the size its box gives it (20 in the map's
- * labels, 24 in a station's disc, 2026-10-13) — S before the name of where
- * a ride starts, E before where it goes, and before the picked hintuan's,
- * where the ride now ends.
+ * Figma's Start and End (4055:6468 and 4055:6446): a disc with the letter cut
+ * out, drawn at the size its box gives it (20 in the map's labels, 24 in a
+ * station's disc) — S before the name of where a ride starts, E before where
+ * it goes, and before the picked hintuan's, where the ride now ends.
  */
 export function StartIcon() {
   return (
@@ -134,6 +137,7 @@ export function StartIcon() {
   );
 }
 
+/** The E disc before where a ride ends (StartIcon's pair). */
 export function EndIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -147,9 +151,8 @@ export function EndIcon() {
 }
 
 /**
- * Figma's Routes (4192:12133, the owner's "new update" of 2026-10-16), 24
- * across, drawn at 28: before the count over the route list ("2 Routes"),
- * where the side-on Jeep stood.
+ * Figma's Routes (4192:12133), 24 across, drawn at 28: before the count over
+ * the route list ("2 Routes").
  */
 export function RoutesIcon() {
   return (
@@ -160,16 +163,14 @@ export function RoutesIcon() {
 }
 
 /**
- * The vehicles at the top of a trip's card (RouteTripDetailHeader) and at
- * the end of each route's row (RouteEndPointBar, 2026-10-16), Figma's
- * own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
- * JeepneyIcon, not the side-on Jeep above), EJeep (4188:11168), Bus
- * (4188:11156) and Ferry (4189:11183), 2026-10-16. They live in one sprite the
- * page fetches, not as paths in its JS (the owner's "trim the icons with a
- * sprite", the same day: inline, they took the public page over its 400 kB),
- * so Figma's paths keep their full precision. Its file is hashed, and the
- * offline precache holds it. Each draws in currentColor; the opacity is the
- * caller's.
+ * The vehicles at the top of a trip's card (RouteTripDetailHeader) and at the
+ * end of each route's row (RouteEndPointBar), Figma's own drawings at 32
+ * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
+ * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156) and Ferry
+ * (4189:11183). They live in one sprite the page fetches, not as paths in its
+ * JS (inline, they took the public page over its 400 kB), so Figma's paths
+ * keep their full precision. Its file is hashed, and the offline precache
+ * holds it. Each draws in currentColor; the opacity is the caller's.
  */
 type SpriteId = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry';
 
@@ -185,22 +186,27 @@ function SpriteIcon({ id }: SpriteIconProps) {
   );
 }
 
+/** The train, from the vehicle sprite. */
 export function TrainIcon() {
   return <SpriteIcon id="train" />;
 }
 
+/** The jeepney, from the vehicle sprite. */
 export function JeepneyIcon() {
   return <SpriteIcon id="jeepney" />;
 }
 
+/** The e-jeep, from the vehicle sprite. */
 export function EJeepIcon() {
   return <SpriteIcon id="e-jeep" />;
 }
 
+/** The bus, from the vehicle sprite. */
 export function BusIcon() {
   return <SpriteIcon id="bus" />;
 }
 
+/** The ferry, from the vehicle sprite. */
 export function FerryIcon() {
   return <SpriteIcon id="ferry" />;
 }
