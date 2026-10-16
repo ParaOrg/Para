@@ -27,10 +27,10 @@ export const MODES: { value: TransportMode; label: string }[] = [
 ];
 
 /**
- * The train lines (0011, the owner's ask of 2026-10-02): LRT-1, LRT-2 and
- * MRT-3, each a route whose `routeCode` names its line. A train runs on its
- * own track and stops only at its own stations, so everything that asks
- * which hintuans a line passes asks `servedBy` too.
+ * The train lines (0011): LRT-1, LRT-2 and MRT-3, each a route whose
+ * `routeCode` names its line. A train runs on its own track and stops only at
+ * its own stations, so everything that asks which hintuans a line passes asks
+ * `servedBy` too.
  */
 const RAIL_MODES: readonly TransportMode[] = ['lrt', 'mrt'];
 
@@ -50,9 +50,9 @@ export const isRail = (mode: TransportMode | null | undefined): boolean =>
   !!mode && RAIL_MODES.includes(mode);
 
 /**
- * The ferry lines (0012, the owner's ask of 2026-10-03): the Pasig River
- * Ferry, PRFS. A ferry runs on the river as a train on its track, stopping
- * only at its own stations, so it is a line as a train is.
+ * The ferry lines (0012): the Pasig River Ferry, PRFS. A ferry runs on the
+ * river as a train on its track, stopping only at its own stations, so it is
+ * a line as a train is.
  */
 export const FERRY_MODES: readonly TransportMode[] = ['ferry'];
 export const FERRY_LINES = ['PRFS'] as const;
@@ -68,9 +68,9 @@ export const isFerry = (mode: TransportMode | null | undefined): boolean =>
   !!mode && FERRY_MODES.includes(mode);
 
 /**
- * A line's own words under its trip's tiles, fixed: never a live status (the
- * owner's rule, nothing may look like live tracking). The ferry stops for
- * weather, holidays and repairs often, and MMDA says when.
+ * A line's own words under its trip's tiles, fixed: never a live status,
+ * since nothing may look like live tracking (the owner's rule). The ferry
+ * stops for weather, holidays and repairs often, and MMDA says when.
  */
 export const LINE_NOTES: Readonly<Record<string, string>> = {
   PRFS: 'Mon–Sat, daytime · Suspended in bad weather: check MMDA',
@@ -86,9 +86,8 @@ export interface ServedRoute {
  * Whether a direction of this route stops at this hintuan, beyond passing
  * within reach of its box. A line — a train, the ferry — stops only at its
  * own stations; a jeep at every hintuan that is not a station — the owner's
- * default of 2026-10-02, open to change. A line with none named stops
- * nowhere, so it can never pick up the jeep hintuans under its track or
- * along its river.
+ * default, open to change. A line with none named stops nowhere, so it can
+ * never pick up the jeep hintuans under its track or along its river.
  */
 export function servedBy(hotspot: { line?: string | null }, route: ServedRoute): boolean {
   const line = hotspot.line ?? null;
@@ -102,9 +101,9 @@ const DASH = '–';
 /**
  * `Tala – SM Fairview`, or `Tala – Novaliches via Zabarte`.
  *
- * R1–R4, decided 2026-09-21. Nothing stores this: it is generated wherever a
- * name is shown, from the two hotspots' current names, so renaming a hotspot
- * renames every route through it and no copy can fall behind.
+ * R1–R4. Nothing stores this: it is generated wherever a name is shown, from
+ * the two hotspots' current names, so renaming a hotspot renames every route
+ * through it and no copy can fall behind.
  */
 export function routeName(head: string, tail: string, via?: string | null): string {
   const base = `${head} ${DASH} ${tail}`;
@@ -112,11 +111,11 @@ export function routeName(head: string, tail: string, via?: string | null): stri
 }
 
 /**
- * `SM Fairview → Tala` — a direction named from where it leaves to where it is
- * going. Generated too: a direction is only which way round the route is
+ * `SM Fairview → Tala` — a direction named from where it leaves to where it
+ * is going. Generated too: a direction is only which way round the route is
  * ridden, so it has nothing of its own to name. Both ends are said, because
  * "to Tala" beside the route name "Tala – SM Fairview" read as not reversed
- * at all (the owner, on his first return trip, 2026-09-22).
+ * at all on a return trip.
  */
 export function directionName(head: string, tail: string, reversed: boolean): string {
   return reversed ? `${tail} → ${head}` : `${head} → ${tail}`;
@@ -157,10 +156,11 @@ interface Unnamed {
 
 /**
  * Fill in the generated names from the hotspots at each route's ends. Nothing
- * stores them (R1, 2026-09-21), so a renamed hotspot shows its new name on the
- * next load or the next publish, and no copy can fall behind. The name read is
- * the hotspot's informal one when it has one (hotspotLabel, 0007): a route is
- * `Tala – SM Fairview`, never `Tala Jeepney Terminal – SM Fairview Terminal A`.
+ * stores them (R1), so a renamed hotspot shows its new name on the next load
+ * or the next publish, and no copy can fall behind. The name read is the
+ * hotspot's informal one when it has one (hotspotLabel, 0007): a route is
+ * `Tala – SM Fairview`, never `Tala Jeepney Terminal – SM Fairview Terminal
+ * A`.
  *
  * A route whose ends cannot be found falls back to its signboard: the foreign
  * keys make that impossible from the database, so it only means an old file.

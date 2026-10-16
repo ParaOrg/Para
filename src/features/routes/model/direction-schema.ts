@@ -7,11 +7,10 @@ import { lineStringSchema } from './geojson-schema';
  * reader parses with these, its overview standing in for the line) and from
  * the studio's live reads. The file and the database say `route_id`,
  * `direction_name` and `head_stop_id`; the app says routeId, name and
- * headHotspotId (CONTEXT.md; ticket 07 of the restructure follow-ups,
- * 2026-10-07). The raw schemas describe what comes in, the `to…` functions
- * translate, and the schemas the app parses with are the two piped. The
- * types the app uses derive from them; routes.ts re-exports them beside the
- * functions.
+ * headHotspotId (CONTEXT.md). The raw schemas describe what comes in, the
+ * `to…` functions translate, and the schemas the app parses with are the two
+ * piped. The types the app uses derive from them; routes.ts re-exports them
+ * beside the functions.
  */
 
 /** Mirrors the `transport_mode` enum in supabase/migrations/0001_init.sql. */
@@ -53,10 +52,10 @@ type RawRouteSummary = z.infer<typeof rawRouteSummarySchema>;
 const toRouteSummary = (raw: RawRouteSummary) => ({
   id: raw.id,
   /**
-   * What is painted on the windshield. Optional since 0006: the generated name
-   * took over the job of making a route recognisable, which leaves the
-   * signboard as the observed fact it really is — filled in when the owner is
-   * sure of it, rather than invented at save time.
+   * What is painted on the windshield. Optional (0006): the generated name
+   * makes a route recognisable, which leaves the signboard as the observed
+   * fact it really is — filled in when the editor is sure of it, rather than
+   * invented at save time.
    */
   signboard: raw.signboard,
   longName: raw.long_name,
@@ -153,9 +152,9 @@ export const toDirection = (raw: RawDirection) => ({
    */
   ...(raw.metres === undefined ? {} : { metres: raw.metres }),
   /**
-   * Its signboards as pictures, in order (0010, the owner's ask of
-   * 2026-10-01): file names — in the studio's bucket for the editor, beside
-   * the map (/data/signboards/) for the public. Absent when it has none.
+   * Its signboards as pictures, in order (0010): file names — in the studio's
+   * bucket for the editor, beside the map (/data/signboards/) for the public.
+   * Absent when it has none.
    */
   ...(raw.signboards === undefined ? {} : { signboards: raw.signboards }),
 });
