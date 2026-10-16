@@ -155,7 +155,7 @@ export const Unselected: Story = {
   },
 };
 
-/** Default: a ride's own tail past a picked hintuan, the name alone in the line's colour. */
+/** Default: the name alone in the line's colour, for an unmarked end inside the ride. */
 export const Default: Story = {
   args: { variant: 'default' },
   play: async ({ canvasElement }) => {
@@ -263,6 +263,16 @@ export const DefaultIgnoresCode: Story = {
   args: { variant: 'default', codeSign: 'YL06' },
   play: async ({ canvasElement }) => {
     await expect(pillOf(canvasElement).querySelector('[data-part="code"]')).toBeNull();
+  },
+};
+
+/** A train station's end outside the ride: Unselected, the code left out with the icon, as Default does. */
+export const UnselectedIgnoresCode: Story = {
+  args: { variant: 'unselected', codeSign: 'YL06' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expect(pill.querySelector('[data-part="code"]')).toBeNull();
+    await expect(getComputedStyle(pill).opacity).toBe('0.6');
   },
 };
 

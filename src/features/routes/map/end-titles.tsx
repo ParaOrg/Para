@@ -50,11 +50,11 @@ import './end-titles.css';
  * applicable to these RouteLine" (2026-10-13), a list's in the selected
  * blue too: they kept plain names from 2026-10-02 ("there are too many").
  * A ride a picked hintuan stops short ends there, End's E before the
- * hintuan's name (HintuanPin), so its own tail keeps its name without one,
- * the label's Default in the line's colour (the owner's ask, 2026-10-02);
- * a ride started at a picked hintuan, Start's S on its pin, leaves its
- * head the same way (2026-10-15). Either is an end on the pale (`paled`),
- * its pill at 60%, as the names along the pale are (the Label's Unselected,
+ * hintuan's name (HintuanPin), so its own tail keeps its name without one
+ * (the owner's ask, 2026-10-02); a ride started at a picked hintuan,
+ * Start's S on its pin, leaves its head the same way (2026-10-15). Either
+ * is an end on the pale (`paled`), so it wears the label's Unselected, its
+ * pill at 60%, as the names along the pale are (the Label's Unselected,
  * Figma 4200:13645; the owner, 2026-10-16: "if the route is not selected or
  * not in side the start and end").
  * A start picked alone, no ride yet, leaves both its trip's ends without
@@ -182,7 +182,7 @@ function EndTitle({
   named: boolean;
   /** Where the ride starts (Head Route), or where it goes (Tail Route). */
   head: boolean;
-  /** Start's S or End's E before the name: a Head or a Tail Route; else Default. */
+  /** Start's S or End's E before the name: a Head or a Tail Route; else Default, or Unselected when `paled`. */
   marked: boolean;
   /** Which it wears when marked: the S, or the E (rideEnds' `mark`). */
   mark: 'start' | 'end';
