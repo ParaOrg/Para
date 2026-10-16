@@ -20,7 +20,7 @@
 //                           a quarter of the points, invisible at the zooms
 //                           the whole map is seen at — and its length in
 //                           metres, measured on the full line, so a trip's
-//                           Kilometer and fare never read an overview. The
+//                           Distance and fare never read an overview. The
 //                           map draws from it. Without any line
 //                           (withoutLines.mjs): an app installed before
 //                           servedBy would draw a jeep stopping at a station.

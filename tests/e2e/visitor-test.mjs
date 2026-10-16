@@ -1466,10 +1466,10 @@ if (PART === 1) {
             (!want || want.fare == null || (pill === want.fare && fareTile === want.fare)),
           `pill "${pill}"; tile "${fareTile}"${want ? `, the sums "${want.fare}"` : ''}`,
         );
-        // The Kilometer tile follows the pick too (the owner, 2026-09-30).
+        // The Distance tile follows the pick too (the owner, 2026-09-30).
         const kmPicked = (await cardEl.locator('[data-testid="trip-km"]').innerText()).trim();
         check(
-          '  the Kilometer tile the ride from the start to there',
+          '  the Distance tile the ride from the start to there',
           want ? kmPicked === want.km : kmPicked !== '',
           `"${kmPicked}"${want ? `, the sums "${want.km}"` : ''}; the whole ride ${kmBefore}`,
         );
@@ -1556,7 +1556,7 @@ if (PART === 1) {
         }));
         const kmAfter = await cardEl.locator('[data-testid="trip-km"]').innerText();
         check(
-          '  a second tap lets it go, its circle and the pale rest too, no dot along it, the Kilometer tile the whole ride again',
+          '  a second tap lets it go, its circle and the pale rest too, no dot along it, the Distance tile the whole ride again',
           (await row.getAttribute('data-state')) === 'rest' &&
             letGo.pins === 0 &&
             letGo.rest === 0 &&
