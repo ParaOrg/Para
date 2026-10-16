@@ -52,6 +52,13 @@ export interface TimelineRouteDetailProps {
   endPicked: 'from' | 'to' | null;
   /** Figma's Route on TimelineBottomEndRoute: the place the trip goes to. */
   routeDirection: string;
+  /**
+   * A train's trip: its fold reads "N more stations" (the owner's ask of
+   * 2026-10-15, Figma's fold reading "stations" since; "stops" before, a word
+   * the glossary keeps off hintuans). A jeep's, and the ferry's, read "N more
+   * hintuans".
+   */
+  isTrain?: boolean;
 }
 
 /**
@@ -116,6 +123,7 @@ export function TimelineRouteDetail({
   onEnd,
   endPicked,
   routeDirection,
+  isTrain = false,
 }: TimelineRouteDetailProps) {
   const [open, setOpen] = useState(false);
   // Whether the fold has ever been opened on this card: until then its rows
@@ -190,6 +198,7 @@ export function TimelineRouteDetail({
             open={open}
             count={hintuans.length}
             connection={isRideCut ? 'disconnected' : 'connected'}
+            isTrain={isTrain}
             onToggle={() => {
               setOpen((o) => !o);
               // The first tap opens it (it starts folded): from then on, drawn.
@@ -404,6 +413,7 @@ function TimelineDisclosure({
   open,
   count,
   connection,
+  isTrain,
   onToggle,
 }: {
   rail: string;
@@ -413,6 +423,8 @@ function TimelineDisclosure({
   count: number;
   /** Disconnected once a picked hintuan ends the ride above it. */
   connection: TimelineStickConnection;
+  /** "N more stations" on a train, "N more hintuans" else. */
+  isTrain: boolean;
   onToggle: () => void;
 }) {
   return (
@@ -436,7 +448,7 @@ function TimelineDisclosure({
           >
             <ChevronDownIcon />
           </span>
-          {open ? 'View less' : `${count} more hintuans`}
+          {open ? 'View less' : `${count} more ${isTrain ? 'stations' : 'hintuans'}`}
         </span>
       </button>
     </li>
