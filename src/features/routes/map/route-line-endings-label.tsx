@@ -2,14 +2,23 @@ import type { ReactNode } from 'react';
 
 import { EndIcon, StartIcon } from '@/shared/ui/route-icons';
 
-import { LINE_FILL, LINE_SURFACE, LINE_TEXT, LINE_WORDS } from './livery-line';
+import {
+  HEAD_ROUTE,
+  LINE_FILL,
+  LINE_SURFACE,
+  LINE_TEXT,
+  LINE_WORDS,
+  type LabelLook,
+} from './livery-line';
 import type { Livery } from '../model/liveries';
 
 /**
  * Figma's Variant: Head Route, where a ride starts; Tail Route, where it
- * goes; and Default, an end named with neither (see below).
+ * goes; and Default, an end named with neither (see below). Unselected,
+ * Default at 60%, an end outside the ride, as the Label's Unselected
+ * (4200:13645, 2026-10-16).
  */
-export type RouteLineEndingsLabelVariant = 'head' | 'tail' | 'default';
+export type RouteLineEndingsLabelVariant = 'head' | 'tail' | 'default' | 'unselected';
 
 interface RouteLineEndingsLabelProps {
   variant: RouteLineEndingsLabelVariant;
@@ -65,11 +74,11 @@ export function RouteLineEndingsLabel({
 }: RouteLineEndingsLabelProps) {
   const look = LOOK[variant];
   const colour = livery ?? 'selected';
-  const worn =
+  const worn: LabelLook =
     look.wears === 'start'
-      ? START
+      ? HEAD_ROUTE
       : {
-          pill: LINE_SURFACE[colour],
+          surface: LINE_SURFACE[colour],
           pointer: LINE_FILL[colour],
           code: LINE_TEXT[colour],
           words: LINE_WORDS[colour],
@@ -80,16 +89,17 @@ export function RouteLineEndingsLabel({
     <span
       data-part="name"
       className={
-        'relative flex max-w-full min-w-0 items-center gap-1 rounded-full py-1 font-sn-pro text-sm/5 font-medium whitespace-nowrap ' +
+        'relative flex max-w-full min-w-0 items-center gap-1 rounded-full font-sn-pro text-sm/5 font-medium whitespace-nowrap ' +
         worn.words +
         ' ' +
-        look.padding +
+        (code ? CODE_PADDING : look.padding) +
         ' ' +
-        worn.pill
+        worn.surface +
+        (variant === 'unselected' ? ' opacity-60' : '')
       }
     >
       {Icon && !code && (
-        <span aria-hidden data-part={look.icon} className="size-5 shrink-0 *:size-full">
+        <span aria-hidden data-part={look.icon} className="size-6 shrink-0 *:size-full">
           <Icon />
         </span>
       )}
@@ -97,9 +107,9 @@ export function RouteLineEndingsLabel({
         <span
           aria-hidden
           data-part={look.icon}
-          className={'absolute top-0 right-full mr-1 flex rounded-full p-1 ' + worn.pill}
+          className={'absolute top-0 right-full mr-1 flex rounded-full p-0.5 ' + worn.surface}
         >
-          <span className="size-5 *:size-full">
+          <span className="size-6 *:size-full">
             <Icon />
           </span>
         </span>
@@ -133,15 +143,17 @@ export function RouteLineEndingsLabel({
 }
 
 /**
- * What each variant is (3848:12135): its padding — 4 before an icon, 8
- * after the name; 8 each side for the name alone — what it wears, Start's
- * green or the line's colour, its icon, and the word a screen reader hears
+ * What each variant is (3848:12135, respaced 2026-10-16): its padding — 2
+ * round a 24 icon and 8 after the name, so the pill stays 28 tall; 8 each
+ * side and 4 above and below the name alone — what it wears, Start's green
+ * or the line's colour, its icon, and the word a screen reader hears
  * before the name.
  */
 const LOOK = {
-  head: { padding: 'pr-2 pl-1', wears: 'start', icon: 'start', word: 'Start, ' },
-  tail: { padding: 'pr-2 pl-1', wears: 'line', icon: 'end', word: 'End, ' },
-  default: { padding: 'px-2', wears: 'line', icon: null, word: null },
+  head: { padding: 'py-0.5 pr-2 pl-0.5', wears: 'start', icon: 'start', word: 'Start, ' },
+  tail: { padding: 'py-0.5 pr-2 pl-0.5', wears: 'line', icon: 'end', word: 'End, ' },
+  default: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null },
+  unselected: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null },
 } as const satisfies Record<
   RouteLineEndingsLabelVariant,
   {
@@ -155,10 +167,5 @@ const LOOK = {
 /** Figma's Start and End, by the part each is. */
 const ICON = { start: StartIcon, end: EndIcon } satisfies Record<'start' | 'end', () => ReactNode>;
 
-/** Head Route's own colour, whatever the line wears. */
-const START = {
-  pill: 'bg-map-hotspots-card-hintuan-surface',
-  pointer: 'fill-map-hotspots-card-hintuan-surface',
-  code: 'text-map-hotspots-card-hintuan-surface',
-  words: 'text-content-inverse',
-};
+/** CodeSign's pill, its icon in the disc beside it: 4 before the code's chip, 8 after the name, 4 above and below. */
+const CODE_PADDING = 'py-1 pr-2 pl-1';

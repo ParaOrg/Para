@@ -55,6 +55,7 @@ The rule is `timelineRail` (`src/features/routes/cards/timeline-rail.ts`): two t
 - **With a start picked,** tapping a row after it sets the end (Variant4).
 - **The tiles:** Distance and fare read from the start to the end.
 - **The map:** the stretch from start to end is drawn as the ride; the line on either side of it is pale, as after a picked end today. The S and E markers on the map move with the picks.
+- **A start alone on the map** (the owner, 2026-10-16, that night: "When start is only selected can you unselected all the unselected hintuan/station or labels?, and the rouline would be in pale"): the whole line in the pale, every other dot and both of the trip's ends on it, their names the Label's Unselected, at 60%; the S alone stands out. Until then the trip stayed lit around a lone S. Once an end is picked, the ride is lit and the rest pale, as before.
 - **Fares need no new data.** Jeeps price by the metres between the two picks (`fareFor` in `src/features/routes/model/fares.ts`). Trains price by the station pair: `railFare` (`src/features/routes/model/rail-fares.ts`) already takes any two stations, from LRMC's and LRTA's full matrices and MRT-3's count of stations.
 - **Jeeps and trains alike:** the design's example is a train, and it is read as the same for jeep hintuans.
 - **The studio** gets it too, since it shares the card.
