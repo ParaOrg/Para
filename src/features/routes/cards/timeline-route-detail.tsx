@@ -413,7 +413,9 @@ export function TimelineDot({ rail, selected = false, isTucked = true }: Timelin
  * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
  * ExtraBold 20/28 (the owner's TimelineRouteDetailCard of 2026-10-13, 3778:3183;
  * Black 24/32 until then); the whole row is its button. Picked, its dot is
- * TimelineDot's Selected one.
+ * TimelineDot's Selected one. Its name is 12 above the first row (the
+ * owner's Timeline set, 3716:1894, "new spacing changes", 2026-10-16; 8
+ * from 2026-10-13).
  */
 function TimelineTop({
   livery,
@@ -454,7 +456,7 @@ function TimelineTop({
           rail={rail}
           dot={<TimelineDot rail={rail} selected={selected} />}
         />
-        <span className="flex min-w-0 flex-1 items-start gap-1 pb-2 pl-2">
+        <span className="flex min-w-0 flex-1 items-start gap-1 pb-3 pl-2">
           {mark && <RideMark mark={mark} livery={livery} />}
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span
@@ -564,7 +566,11 @@ function rowRole(row: {
  * Figma's TimelineHintuan: a hintuan on the way, its dot on the rail; the
  * whole row is its button. Selected (State=Selected), its name is ExtraBold
  * (Black until 2026-10-13) and
- * the pill of its pesos sits 8 after it, 16 in from the card's edge.
+ * the pill of its pesos sits 8 after it, 16 in from the card's edge. Its
+ * name is 10 above and below, the row 44 tall, and a button under it 16
+ * below the name and 10 above the next row (the owner's Timeline set,
+ * 3716:1894, "new spacing changes", 2026-10-16; 8, a 40 row, from his
+ * spacing of 2026-10-13, 3778:3183, and the button 8 under the name).
  */
 function TimelineHintuan({
   id,
@@ -642,7 +648,7 @@ function TimelineHintuan({
             {mark && <RideMark mark={mark} livery={livery} isSmall />}
             <span
               className={
-                'flex min-w-0 flex-1 items-center gap-2 py-2 ' + (mark ? 'pl-1.5' : 'pl-3')
+                'flex min-w-0 flex-1 items-center gap-2 py-2.5 ' + (mark ? 'pl-1.5' : 'pl-3')
               }
             >
               <span
@@ -671,7 +677,7 @@ function TimelineHintuan({
                 }
                 rail={rail}
               />
-              <span className="pb-2 pl-3">
+              <span className="pt-1.5 pb-2.5 pl-3">
                 <Button
                   variant="primary"
                   size="small"
@@ -698,6 +704,9 @@ function TimelineHintuan({
  * of the ride (the owner's Variant5, 4151:13619); next to the ride its
  * stretch is left unfilled, as his TimelineStick in 4194:12702 is (the
  * owner, 2026-10-16: "when close it should disconnect the disclosure").
+ * Its words are 10 above and below, the row 40 tall, the chevron 6 before
+ * them (the owner's Timeline set, 3716:1894, "new spacing changes",
+ * 2026-10-16; 8 and 8 until then).
  */
 function TimelineDisclosure({
   part,
@@ -734,7 +743,7 @@ function TimelineDisclosure({
         className={'flex w-full items-start px-4 text-left ' + pressed}
       >
         <TimelineStick variant="disclosure" connection={connection} rail={rail} />
-        <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3 text-sm/5 font-normal whitespace-nowrap">
+        <span className="flex min-w-0 flex-1 items-center gap-1.5 py-2.5 pl-3 text-sm/5 font-normal whitespace-nowrap">
           {/* One chevron, turned: Figma's chevron-down, and its chevron-up opened. */}
           <span
             aria-hidden
@@ -835,8 +844,10 @@ function EndRowPill({ livery, pill }: { livery: Livery; pill: RouteTripLineDetai
  * from the destination to a picked end. For the eye: a hintuan's row says
  * "start" or "end" after its name, and the ends' rows are where a ride
  * leaves and goes, as before. 24 across, as RouteSigns is, 12 after the
- * rail and 6 before the name: `isSmall`, on a hintuan's 16/24 line, 8
- * down as the name's padding is; beside the ends' 20/28, centred on it.
+ * rail: `isSmall`, on a hintuan's 16/24 line, 6 before the name and 10
+ * down as the name's padding is; beside the ends' 20/28, 8 before it and
+ * centred on it (the owner's Timeline set, 3716:1894, "new spacing
+ * changes", 2026-10-16; 6 and 8 down until then).
  */
 function RideMark({
   mark,
@@ -853,7 +864,7 @@ function RideMark({
       data-part={mark}
       className={
         'flex shrink-0 rounded-full *:size-6 ' +
-        (isSmall ? 'mt-2 ml-3 ' : 'my-0.5 mr-0.5 ml-1 ') +
+        (isSmall ? 'mt-2.5 ml-3 ' : 'my-0.5 mr-1 ml-1 ') +
         (mark === 'start' ? START_MARK : TIMELINE_PILL[livery])
       }
     >
