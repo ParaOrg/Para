@@ -25,7 +25,7 @@ import { requireSupabase } from './supabase';
 
 const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
 
-export interface SaveHotspotInput {
+interface SaveHotspotInput {
   hotspotId: string | null;
   kind: HotspotKind;
   /** What is written on the ground. Required. */
@@ -46,7 +46,7 @@ export interface SaveHotspotInput {
  * Create or update a hotspot and replace its route links. Writes require a
  * signed-in editor who owns the rows; RLS enforces it on both tables.
  *
- * Two steps, not one transaction, as a direction's save is (saveRoute.ts):
+ * Two steps, not one transaction, as a direction's save is (save-route.ts):
  * `onWritten` hears of the row the moment it is in, so a retry after the
  * links failed updates that row instead of inserting a second box on the
  * same ground (review of 2026-10-03, finding 4).
@@ -169,9 +169,9 @@ export async function deleteHotspot(hotspot: HotspotRow): Promise<void> {
   if (!data?.length) throw new Error(NOTHING_CHANGED);
 }
 
-/** What a write that matched no row says: the session ended, or the row is not this account's. */
+/** What a write that matched no row says: the session ended, or the row is gone. */
 export const NOTHING_CHANGED =
-  'Nothing was changed: the session may have ended, or this is not yours to change. Sign in again and retry.';
+  'Nothing was changed: the session may have ended, or someone else already changed it. Sign in again and retry.';
 
 /**
  * Keep every hintuan's list honest after a direction is saved: link it to each
@@ -180,7 +180,7 @@ export const NOTHING_CHANGED =
  */
 export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
-  // Paged, as every table read is (readAll.ts): past 1,000 hintuans one
+  // Paged, as every table read is (read-all.ts): past 1,000 hintuans one
   // request would silently see a subset (review finding 4).
   const [hintuans, linked] = await Promise.all([
     readAll<HotspotRow>((from, to) =>
