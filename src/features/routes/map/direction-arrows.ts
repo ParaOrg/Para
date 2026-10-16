@@ -64,21 +64,25 @@ const SAME_END_M = 150;
 
 /**
  * One lit ride: its direction, its line in travel order, and the places it
- * runs from and to; and `pale`, the way not ridden when a start or an end is
- * picked on its trip (useRideTo's ridden): before the start and after the
- * end, or the whole line when the ride runs the other way round. useRideRest
+ * runs from and to; and `pale`, the way not ridden when an end is picked on
+ * its trip, after a start or not (useRideTo's ridden): before the start and
+ * after the end, or the whole line when the ride runs the other way round. useRideRest
  * draws it in the card's pale, and an end circle on it wears the pale too
  * and loses its S or E (EndTitles), the picks' pins carrying them. The
  * chevrons flow on along the pale, white on it as on the line (the owner's
  * ask, 2026-10-13: "continue the arrow into the pale lines", and of two
  * colours tried, "I love the white"); they stopped at the pick from
  * 2026-10-02 until then. `rest`, after the end alone, until the ride's start
- * could be picked (2026-10-15).
+ * could be picked (2026-10-15). `isUnmarked`: a start picked on its trip
+ * with no ride drawn, alone or with an end the line can't take it to: both
+ * its ends lose their S and E, lit, the start's pin carrying the S (the
+ * owner, 2026-10-16: "Nothing yet, just the S").
  */
 export interface Ride {
   id?: string;
   line: readonly LngLat[];
   pale?: readonly (readonly LngLat[])[];
+  isUnmarked?: boolean;
   from: string;
   to: string;
   fromHotspot?: string | null;
@@ -92,9 +96,10 @@ export interface Ride {
  * place that carries the name, its hotspot, when the ride says which, and
  * the directions of every lit ride that ends there, this way round
  * (`rides`, on the named one only: the rest are empty); `of`, the ride's own
- * direction, when it has an id; and `paled`, where the ride picked on its
- * trip starts after it or ends before it, the line there drawn in the card's
- * pale.
+ * direction, when it has an id; `paled`, where the ride picked on its trip
+ * starts after it or ends before it, the line there drawn in the card's
+ * pale; and `isMarked`, whether it wears its S or E: not on the pale, nor on
+ * a trip whose start is picked with no ride drawn (Ride's `isUnmarked`).
  */
 export interface RideEnd {
   end: 'from' | 'to';
@@ -105,6 +110,7 @@ export interface RideEnd {
   rides: string[];
   of: string | null;
   paled: boolean;
+  isMarked: boolean;
 }
 
 /**
@@ -128,6 +134,9 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           ? named.find((n) => n.name === name && haversine(n.at, at) < SAME_END_M)
           : undefined;
         if (same && same.end === end && r.id) same.rides.push(r.id);
+        const paled = (r.pale ?? []).some(
+          (l) => restDrawn(l) && samePoint(end === 'from' ? l[0] : l[l.length - 1], at),
+        );
         const e: RideEnd = {
           end,
           name,
@@ -136,9 +145,8 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           hotspotId,
           rides: !same && r.id ? [r.id] : [],
           of: r.id ?? null,
-          paled: (r.pale ?? []).some(
-            (l) => restDrawn(l) && samePoint(end === 'from' ? l[0] : l[l.length - 1], at),
-          ),
+          paled,
+          isMarked: !paled && !r.isUnmarked,
         };
         if (e.named) named.push(e);
         return e;

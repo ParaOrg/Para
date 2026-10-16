@@ -69,20 +69,23 @@ export type Framed = { lines: readonly (readonly LngLat[])[] } | { at: LngLat } 
 
 /**
  * What the card on show frames as the sheet settles at another height
- * (useHeightOverview): an open trip, its route; a place's card, the routes
- * of the RouteCard picked on it, else the place; the route list, the picked
- * card's routes, else what it lights (`lit`); nothing open, nothing. `picked`
- * is the picked card's directions, null with no card picked.
+ * (useHeightOverview): an open trip, its route, or the ride picked on it
+ * from a start to an end (`ride`; the owner's ask, 2026-10-16, to take in
+ * "the overview of new start and end"); a place's card, the routes of the
+ * RouteCard picked on it, else the place; the route list, the picked card's
+ * routes, else what it lights (`lit`); nothing open, nothing. `picked` is
+ * the picked card's directions, null with no card picked.
  */
 export function framedBy(
   trip: Direction | null,
+  ride: readonly LngLat[] | null,
   placeAt: LngLat | null,
   choosing: boolean,
   picked: readonly Direction[] | null,
   lit: readonly Direction[],
 ): Framed {
   const card = picked && { lines: picked.map(directionLine) };
-  if (trip) return { lines: [directionLine(trip)] };
+  if (trip) return { lines: [ride ?? directionLine(trip)] };
   if (placeAt) return card ?? { at: placeAt };
   if (choosing) return card ?? { lines: lit.map(directionLine) };
   return null;

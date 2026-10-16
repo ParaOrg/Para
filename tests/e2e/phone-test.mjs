@@ -1738,13 +1738,68 @@ const tripChecks = async () => {
           setStart,
           async () => (await startRow.locator('[data-part="start"]').count()) === 1,
         );
+        // A start alone is no ride yet (the owner's Variant3, 2026-10-16:
+        // "Nothing yet, just the S"): the tiles the whole trip's, nothing pale
+        // on the map, its circle there and the one S, the route's own ends
+        // named without theirs, and no E on the card until an end is picked.
+        const alone = await page.evaluate(async () => ({
+          pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+          rest: ((await window.__src('ride-rest'))?.features ?? []).length,
+          ends: document.querySelectorAll('[data-testid="trip"] [data-part="end"]').length,
+          titleMarks: document.querySelectorAll(
+            '[data-testid="end-title"] [data-part="start"] svg, [data-testid="end-title"] [data-part="end"] svg',
+          ).length,
+        }));
+        const aloneKm = await tile('trip-km');
+        check(
+          '  a start alone is no ride yet: its circle, the tiles the whole trip, nothing pale, no E, the ends unmarked',
+          alone.pins === 1 &&
+            alone.rest === 0 &&
+            alone.ends === 0 &&
+            alone.titleMarks === 0 &&
+            aloneKm === km,
+          `${alone.pins} circle(s), ${alone.rest} pale stretch(es), ${alone.ends} E; ${alone.titleMarks} S or E on the route's ends; Distance "${aloneKm}", the whole "${km}"`,
+        );
+        // Then the end with the sheet at Max: the sheet comes down to Middle and
+        // the camera takes in the ride from the start to the end (the owner,
+        // 2026-10-16), where a hintuan picked alone at Max leaves it at Max.
+        await buttonTap(handle(), async () => (await sheetState()) === 'max');
+        const wasMax = (await sheetState()) === 'max';
         const endPick = endRow.locator('button[data-testid="trip-hintuan-pick"]');
         await endPick.scrollIntoViewIfNeeded();
         await buttonTap(endPick, () => isSelected(endRow));
-        await page.waitForTimeout(200);
+        await page.waitForTimeout(900);
         await page
           .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
           .catch(() => {});
+        const settled = await sheetState();
+        const inView = await page.evaluate(() => {
+          const c = window.__map.getCanvas().getBoundingClientRect();
+          const sheetTop = document
+            .querySelector('[data-testid="card"]')
+            .getBoundingClientRect().top;
+          const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')].map((p) =>
+            p.getBoundingClientRect(),
+          );
+          return {
+            pins: pins.length,
+            clear: pins.every(
+              (r) =>
+                r.top >= c.top && r.bottom <= sheetTop && r.left >= c.left && r.right <= c.right,
+            ),
+          };
+        });
+        if (!wasMax)
+          skip(
+            '  the end picked after a start: the sheet to Middle, the ride taken in above it',
+            `the card would not rise to Max: data-snap=${settled}`,
+          );
+        else
+          check(
+            '  the end picked after a start: the sheet to Middle, the ride taken in above it',
+            settled === 'middle' && inView.pins === 2 && inView.clear,
+            `data-snap=${settled}; ${inView.pins} circle(s), ${inView.clear ? 'both' : 'not both'} clear of the sheet`,
+          );
         const rideKm = await tile('trip-km');
         const rideFareShown = await tile('trip-fare');
         const marks = await card().evaluate((c) => ({
@@ -1801,6 +1856,53 @@ const tripChecks = async () => {
             onMap.end < 3,
           `${JSON.stringify(marks)}; Distance "${rideKm}", the sums "${rideWant?.km}"; fare "${rideFareShown}", the sums "${rideWant?.fare}"; ${onMap.pins} circle(s), S ${onMap.start?.toFixed(1)} px off, E ${onMap.end?.toFixed(1)} px off`,
         );
+        // Another end picked with the sheet already at Middle: the sheet stays,
+        // and the camera takes in the new ride, though the map was moved away.
+        // Then the first end again, for what follows.
+        const nextIndex = endIndex - 1 > startIndex ? endIndex - 1 : endIndex + 1;
+        if (nextIndex >= count || (await sheetState()) !== 'middle') {
+          skip(
+            '  another end picked at Middle: the sheet stays, the new ride taken in above it',
+            `no other row after the start, or the sheet not at Middle: data-snap=${await sheetState()}`,
+          );
+        } else {
+          const nextRow = rows.nth(nextIndex);
+          await page.evaluate(() => {
+            const c = window.__map.getCenter();
+            window.__map.jumpTo({ center: [c.lng + 0.3, c.lat + 0.3] });
+          });
+          const nextPick = nextRow.locator('button[data-testid="trip-hintuan-pick"]');
+          await nextPick.scrollIntoViewIfNeeded();
+          await buttonTap(nextPick, () => isSelected(nextRow));
+          await page.waitForTimeout(900);
+          await page
+            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+            .catch(() => {});
+          const again = await page.evaluate(() => {
+            const c = window.__map.getCanvas().getBoundingClientRect();
+            const sheetTop = document
+              .querySelector('[data-testid="card"]')
+              .getBoundingClientRect().top;
+            const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')].map((p) =>
+              p.getBoundingClientRect(),
+            );
+            return {
+              pins: pins.length,
+              clear: pins.every(
+                (r) =>
+                  r.top >= c.top && r.bottom <= sheetTop && r.left >= c.left && r.right <= c.right,
+              ),
+            };
+          });
+          const stayed = await sheetState();
+          check(
+            '  another end picked at Middle: the sheet stays, the new ride taken in above it',
+            stayed === 'middle' && again.pins === 2 && again.clear,
+            `data-snap=${stayed}; ${again.pins} circle(s), ${again.clear ? 'both' : 'not both'} clear of the sheet`,
+          );
+          await endPick.scrollIntoViewIfNeeded();
+          await buttonTap(endPick, () => isSelected(endRow));
+        }
         const removeStart = card().getByRole('button', { name: 'Remove as start' });
         await removeStart.scrollIntoViewIfNeeded();
         await buttonTap(removeStart, async () => !(await isSelected(startRow)));

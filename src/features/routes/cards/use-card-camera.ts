@@ -12,6 +12,7 @@ import {
   useCardOverview,
   useHeightOverview,
   useListOverview,
+  useRideOverview,
   useSwitchOverview,
   useTripOverview,
 } from './use-overviews';
@@ -123,14 +124,24 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const [switches, setSwitches] = useState(0);
   const switched = () => setSwitches((n) => n + 1);
   useSwitchOverview(cam, saved.litDirections, switches, openSheet, cards.snap);
+  // A ride from a start to an end (the owner, 2026-10-16): what the camera
+  // takes in once the end is picked (pickOnTrip), and what the trip frames
+  // as the sheet settles, in place of its whole route. On the other way
+  // round (Variant5) it is the ride drawn on that line.
+  const ridden = ride.startId !== null ? ride.ridden : null;
+  const rideLine = ridden && (ridden.otherWay?.line ?? ridden.line);
+  const [endPicks, setEndPicks] = useState(0);
+  useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
   // The sheet settled at another height: what the card on show frames, again,
-  // in the map it leaves — a trip's route, a picked card's routes or what the
-  // list lights, a hotspot's place (framedBy).
+  // in the map it leaves — a trip's route, or its ride from a start to an
+  // end; a picked card's routes or what the list lights, a hotspot's place
+  // (framedBy).
   const framed = (): Framed => {
     const ids = saved.highlight && new Set(saved.highlight.ids);
     const picked = ids && saved.directions.filter((v) => ids.has(v.id));
     return framedBy(
       saved.selected,
+      rideLine,
       hotspots.selected?.point.coordinates ?? null,
       cards.choosing,
       picked,
@@ -164,6 +175,21 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
           beforeTrip.back();
         }
       : null,
+
+    /**
+     * A row picked on the trip, or its dot on the map (useRideTo's pick). An
+     * end picked after a start takes the sheet to Middle and the camera in to
+     * the ride between them (the owner's ask, 2026-10-16): as the sheet
+     * settles there, or at once when it is already there.
+     */
+    pickOnTrip: (id: string | null) => {
+      const isNewEnd =
+        id !== null && ride.startId !== null && id !== ride.startId && id !== ride.pickedId;
+      ride.pick(id);
+      if (!isNewEnd) return;
+      if (cards.height.snap === 'middle') setEndPicks((n) => n + 1);
+      else cards.height.onSnap('middle');
+    },
 
     /**
      * SWITCH on a trip: the other way round, and the camera with it. On a
