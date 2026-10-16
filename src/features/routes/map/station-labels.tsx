@@ -38,25 +38,26 @@ function namesShow(map: MapLibreMap): boolean {
 /**
  * The selected direction's hintuans along its line, a dot at each with its
  * name beside it: a train's or the ferry's stations and a jeepney's hintuans
- * alike (the owner's call). One dot per row of the trip card's timeline
- * (`rows`, its `between`), on the line at the middle of the stretch past the
- * row's box, where the picked circle pops (rowStops), so a pick replaces the
- * dot in its spot. Each is Figma's HintuanLabel, Hintuan (4068:4791): the
+ * alike. One dot per row of the trip card's timeline (`rows`, its `between`),
+ * on the line at the middle of the stretch past the row's box, where the
+ * picked circle pops (rowStops; the owner's call), so a pick replaces the dot
+ * in its spot. Each is Figma's HintuanLabel, Hintuan (4068:4791): the
  * timeline's own TimelineDot at rest and beside it the name, the Label's
  * Default, in the line's colour, SN Pro 14/20, drawn flat. The dot is ringed
  * in the lit line's colour, the card's surface, so the dot and its name are
- * one colour (the owner's call). Past a picked hintuan the line is drawn in
- * the card's surface-pale (useRideRest), and the dots along that rest ring in
- * the same pale — the rows after the picked one, and, since a ride's start
- * can be picked, the rows before it, while the ride is drawn (`hasRide`; the
- * owner's call). Their names keep the card's surface, the whole label at 60%:
- * the Label's Unselected (Figma 4200:13645; the owner's call). A start picked
- * alone, no ride yet, puts every other row on the pale with the whole line
- * (the owner's call).
+ * one colour. Past a picked hintuan the line is drawn in the card's
+ * surface-pale (useRideRest), and the dots along that rest ring in the same
+ * pale — the rows after the picked one, and, since a ride's start can be
+ * picked, the rows before it, while the ride is drawn (`hasRide`). Their
+ * names keep the card's surface, the whole label at 60%: the Label's
+ * Unselected (Figma 4200:13645). A start picked alone, no ride yet, puts
+ * every other row on the pale with the whole line. All of these are the
+ * owner's calls.
  *
- * On a train line the dots stay dots: the picked station's code, GL02, is on
- * its pin (HintuanPin), and the rest are circles, as a jeepney's hintuans are
- * (the owner's call).
+ * On a train line the dots stay dots, not Figma's LRTHintuanCodes
+ * (4051:6426), each station's code in its dot's place: the picked station's
+ * code, GL02, is on its pin (HintuanPin), and the rest are circles, as a
+ * jeepney's hintuans are (the owner's call).
  *
  * The two ends are left to their end titles (EndTitles): the rows leave them
  * out. A picked row, the start's as the end's, is left to its HintuanPin.

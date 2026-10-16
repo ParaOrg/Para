@@ -21,7 +21,7 @@ import './end-titles.css';
 /**
  * Each lit ride's ends: a circle at each, and over the named ones Figma's
  * RouteLineEndingsLabels (3848:12135), a pill over the circle, its pointer at
- * the circle, in place of the plain name the map wrote beside it.
+ * the circle.
  *
  * The circle is the hintuan's own — the card timeline's TimelineDot, as the
  * dots along the line (StationLabels) and the picked hintuan's circle
@@ -34,9 +34,10 @@ import './end-titles.css';
  * the pills show at every zoom.
  *
  * Each name says which end it is: a Head Route, Start's green with its
- * circled S, where a ride starts; a Tail Route, End's circled E in the
- * line's colour, where it goes; white words on both, and the pointer the
- * same (RouteLineEndingsLabel). They read as the RouteCard does: where a ride
+ * circled S, where a ride starts; a Tail Route, End's circled E in the line's
+ * colour, where it goes; white words on both (a Tail Route's near-black on
+ * MRT-3's yellow, LINE_WORDS), and the pointer the same
+ * (RouteLineEndingsLabel). They read as the RouteCard does: where a ride
  * starts, the top of its timeline, is the card's title; where it goes is one
  * of the card's rows. Every lit line's ends are marked, a list's in the
  * selected blue too (the owner's call). A ride a picked hintuan stops short
@@ -54,21 +55,21 @@ import './end-titles.css';
  *
  * DOM markers, like the picked hintuan's circle (HintuanPin), 256 across at
  * most, as the pin's label is. Each place is named once (`rideEnds`). A list
- * of twenty routes is forty of these, to be counted like the dots along a
- * trip.
+ * of twenty routes is forty of these. TODO: count them in the cheap-phone
+ * timer, with the dots along a trip (StationLabels).
  *
  * Given `onPick`, a pill whose ride says which hotspot it ends at is a
- * button: a tap opens that place, and the map beneath never hears it
- * (marker-tap.ts). Without one, or a hotspot, it takes no taps, and a tap on
- * it reaches the line or the box beneath; the circle never takes one, as the
- * picked hintuan's does not.
+ * button: a tap opens that place (the owner's call), and the map beneath
+ * never hears it (marker-tap.ts). Without one, or a hotspot, it takes no
+ * taps, and a tap on it reaches the line or the box beneath; the circle never
+ * takes one, as the picked hintuan's does not.
  *
  * Given `onTrip`, a Tail Route that one lit ride alone goes to opens that
- * ride's trip instead: its TimelineRouteDetailCard, its line lit, as the
- * card's row of the same arrow does. Where two rides go, the place's own card
- * lists both, so the tap opens that. TODO: how a focused or pressed pill
- * looks is the owner's to design; until then it is the browser's own focus
- * ring.
+ * ride's trip instead (the owner's call): its TimelineRouteDetailCard, its
+ * line lit, as the card's row of the same arrow does. Where two rides go, the
+ * place's own card lists both, so the tap opens that. TODO: how a focused or
+ * pressed pill looks is the owner's to design; until then it is the browser's
+ * own focus ring.
  */
 export function EndTitles({
   map,

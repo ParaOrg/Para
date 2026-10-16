@@ -81,8 +81,8 @@ export const CodeSign: Story = {
 
 /**
  * HintuanStart: a ride's picked start, its dot filled, Start's S before its
- * name on Head Route's green. Figma draws no HintuanStart:
- * HintuanEnd's shape in RouteLineEndingsLabels' start.
+ * name on Head Route's green. Figma draws no HintuanStart: HintuanEnd's shape
+ * in RouteLineEndingsLabels' start.
  */
 export const HintuanStart: Story = {
   args: { variant: 'hintuan-start' },

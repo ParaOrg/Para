@@ -232,8 +232,8 @@ export const HeadRouteCodeSignLightRailWayTwo: Story = {
 };
 
 /**
- * Tail Route's CodeSign on MRT-3: the yellow pill, the code black on its
- * white chip (Content/primary: the owner's call, the text only).
+ * Tail Route's CodeSign on MRT-3: the yellow pill and the white chip kept,
+ * the code's text alone black (Content/primary, the owner's call).
  */
 export const TailRouteCodeSignMetroRailWayThree: Story = {
   args: { variant: 'tail', codeSign: 'YL05', livery: 'metro-rail-way-three' },

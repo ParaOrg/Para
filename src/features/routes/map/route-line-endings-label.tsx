@@ -47,9 +47,10 @@ interface RouteLineEndingsLabelProps {
  *
  * At a train station, CodeSign (the owner's addition to Figma, 4073:7215 and
  * 4073:7220): the S or E in a 28 disc of its own, 4 left of the pill, and in
- * the pill the station's code in a white chip, its words the pill's colour,
- * before the name. The pointer stays at the pill's middle, as Figma has it,
- * so the pill is what stands over the circle and the disc hangs beside it.
+ * the pill the station's code in a white chip, its words the pill's colour
+ * (MRT-3's black, Content/primary: LINE_TEXT, the owner's call), before the
+ * name. The pointer stays at the pill's middle, as Figma has it, so the pill
+ * is what stands over the circle and the disc hangs beside it.
  *
  * Default is the name alone in the line's colour, which Figma's set does
  * not draw. Unselected is Default at 60%, the Label's Unselected (4200:13645):

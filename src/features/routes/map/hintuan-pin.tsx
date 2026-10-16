@@ -35,30 +35,30 @@ interface Props {
 
 /**
  * The picked hintuan on the map: a circle that pops up where it is, the route
- * left whole (the owner's call): the route is not cut, a circle pops up when
- * that hintuan is selected. It is the timeline's own TimelineDot, Selected,
- * ringed in the lit line's colour, the card's surface (the owner's call:
- * match the line), so the map and the card point at the same place the same
- * way, and the circle is one colour with the line it sits on and the dots
- * before it (StationLabels; past it, the line and its dots are the card's
- * pale, useRideRest).
+ * left whole, not cut there (the owner's call). It is the timeline's own
+ * TimelineDot, Selected, ringed in the lit line's colour, the card's surface
+ * (the owner's call: match the line), so the map and the card point at the
+ * same place the same way, and the circle is one colour with the line it sits
+ * on and the dots before it (StationLabels; past it, the line and its dots
+ * are the card's pale, useRideRest).
  *
- * A DOM marker, like the commuter's own (LocatorIndicatorOverlay): the pop
- * is a CSS animation that costs the map nothing, and it takes no taps, so
- * a tap on it reaches the line or the box beneath. The caller keys it on the pick, so another hintuan pops a
- * fresh circle.
+ * A DOM marker, like the commuter's own (LocatorIndicatorOverlay): the pop is
+ * a CSS animation that costs the map nothing, and it takes no taps, so a tap
+ * on it reaches the line or the box beneath. The caller keys it on the pick,
+ * so another hintuan pops a fresh circle.
  *
  * Beside it, its name: Figma's HintuanLabel, HintuanEnd (4068:4791), End's E
- * before the name in the line's colour, 10 right of the circle and centred on
+ * before the name in the line's colour, 8 right of the circle and centred on
  * it; on a train line, CodeSignEnd, the station's code — GL02, PL08, YL13 —
  * in a white chip before the name and the E in a disc of its own. The code
  * shows on the picked station's label alone; the other stations keep their
- * dots (StationLabels; the owner's call). Picked, the hintuan is where the
- * ride ends, the line on from here in the card's pale (useLitRides) and the
- * route's own tail keeps its name without an E (EndTitles). Given `onPick`,
- * the name is a button: it lets the pick go, the camera back (the owner's
- * call); the circle still takes no taps. The code is only on the map, so the
- * name's button says it too.
+ * dots, where Figma's LRTHintuanCodes (4051:6426) draws codes (StationLabels;
+ * the owner's call). Picked as the end, the hintuan is where the ride ends,
+ * the line on from here in the card's pale (useLitRides) and the route's own
+ * tail keeps its name without an E (EndTitles). Given `onPick`, the name is a
+ * button: it lets the pick go, the camera back (the owner's call); the circle
+ * still takes no taps. The code is only on the map, so the name's button says
+ * it too.
  */
 export function HintuanPin({ map, at, label, code, livery, onPick, marks = 'end' }: Props) {
   const el = useMarkerElement('hintuan-pin', 'hintuan-pin');
@@ -77,8 +77,7 @@ export function HintuanPin({ map, at, label, code, livery, onPick, marks = 'end'
       name={label ?? null}
       livery={livery}
       codeSign={code}
-      // Says what the tap does: it lets the pick go, and opens no routes
-      // there.
+      // Says what the tap does: it lets the pick go, opening no routes there.
       nameButtonLabel={
         onPick
           ? `${marks === 'start' ? 'Start' : 'End'}, ${code ? `${code} ` : ''}${label}: let it go`
