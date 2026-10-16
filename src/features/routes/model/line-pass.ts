@@ -1,9 +1,9 @@
 import { bboxOf, bboxesOverlap, type BBox, type LngLat } from '@/shared/utils/geo';
 
-import { passBounds, passStretches } from './pass';
-import type { Ring } from './ring';
-import { hotspotRing, type Hotspot } from '../model/hotspots';
-import { servedBy, directionLine, type Direction } from '../model/routes';
+import { hotspotRing, type Hotspot } from './hotspots';
+import { servedBy, directionLine, type Direction } from './routes';
+import { passBounds, passStretches } from '../geo/pass';
+import type { Ring } from '../geo/ring';
 
 /*
  * The orange stretches as a direction's line file carries them (the

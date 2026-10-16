@@ -98,8 +98,8 @@ export interface Picks {
  * The public map's subjects, first wins (useDotGaze): a hintuan on the trip
  * card, a place, a trip, a card, or the routes a tap on the map lists —
  * keyed by route, not direction, so SWITCH is no pick. A route is gazed at
- * where it comes nearest the visitor at `from` (their fix). Built where the
- * dot is (VisitorLocation) since 2026-10-05, word for word as PublicMapApp
+ * where it comes nearest the commuter at `from` (their fix). Built where the
+ * dot is (CommuterLocation) since 2026-10-05, word for word as PublicMapApp
  * built them.
  */
 export function gazeSubjects(p: Picks, from: LngLat | null): Subject[] {

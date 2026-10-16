@@ -220,7 +220,7 @@ export default defineConfig({
       // The page registers the worker itself (src/features/published-map/pwa.ts), so the
       // plugin writes no registration script — and none into /studio/.
       injectRegister: false,
-      // A new version waits until the visitor taps "Reload": a silent reload
+      // A new version waits until the commuter taps "Reload": a silent reload
       // mid-ride would throw away the selected route.
       registerType: 'prompt',
       // Off under `npm run dev`, so the headless checks never meet a worker.
@@ -456,7 +456,7 @@ export default defineConfig({
           {
             // Tiles: places already viewed work offline. The vector source
             // stops at zoom 14, where a central-Manila tile is ~450 kB stored,
-            // and Metro Manila is about 110 such tiles: a normal visitor keeps
+            // and Metro Manila is about 110 such tiles: a normal commuter keeps
             // 30–100 MB, and 1,000 entries is a ceiling only a cross-country
             // pan reaches. When the quota is hit, this cache is the first to go.
             urlPattern: ({ url }) =>
@@ -507,7 +507,7 @@ export default defineConfig({
       // shared code. As one chunk (348 kB gzipped) any change to
       // src/features, src/shared or src/design-system gave it a new name, and every
       // returning phone fetched MapLibre and React again with it: 306 kB
-      // of a deploy's 363 kB, over a link the visitor's index and tiles
+      // of a deploy's 363 kB, over a link the commuter's index and tiles
       // want too. Now such a deploy is the 56 kB of our own code. React's
       // chunk keeps its name until React is upgraded: it is CommonJS, kept
       // whole. MapLibre's two keep theirs until it is upgraded, or until

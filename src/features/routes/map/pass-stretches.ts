@@ -1,19 +1,19 @@
 import type { GeoJSONSource, LineLayerSpecification, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useMemo, useRef } from 'react';
 
+import { useLayerSwitch } from './layer-switch';
+import { applyHidden, useLayerReady } from './layers';
+import { PASS_COLOUR, litWidth } from './line-style';
+import { litOpacity, useLighting } from './saved-routes-layers';
+import { ROUTES_HIT_LAYER } from './tap';
+import type { Hotspot } from '../model/hotspots';
 import {
   passBoxes,
   publishedStretches,
   stretchesPast,
   type PassBox,
   type PassFeature,
-} from './line-pass';
-import { useLayerSwitch } from '../map/layer-switch';
-import { applyHidden, useLayerReady } from '../map/layers';
-import { PASS_COLOUR, litWidth } from '../map/line-style';
-import { litOpacity, useLighting } from '../map/saved-routes-layers';
-import { ROUTES_HIT_LAYER } from '../map/tap';
-import type { Hotspot } from '../model/hotspots';
+} from '../model/line-pass';
 import type { Direction } from '../model/routes';
 
 /**

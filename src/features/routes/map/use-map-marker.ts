@@ -9,7 +9,7 @@ import { tapsOnItsButton } from './marker-tap';
  * A DOM marker's element, made once: the box MapLibre moves, with the test
  * id the suites read and the class its sheet styles; what the marker's
  * component portals into (HintuanPin, StationLabels, EndTitles, the
- * visitor's own dot).
+ * commuter's own dot).
  */
 export function useMarkerElement(testid: string, className = ''): HTMLDivElement {
   const [el] = useState(() => {

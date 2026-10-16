@@ -34,7 +34,7 @@ what is actually there.
 
 ## What to check, in priority order
 
-**1. Colour goes through the semantic tokens.** New and restyled visitor UI
+**1. Colour goes through the semantic tokens.** New and restyled commuter UI
 speaks `src/design-system/foundation/tokens.css`: `text-content-primary`, `bg-surface`,
 `border-border-primary`, `bg-card-red-surface`… Findings: any hex colour;
 any raw Tailwind colour class (`text-neutral-900`, `bg-red-100`) in a

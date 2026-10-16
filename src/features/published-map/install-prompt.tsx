@@ -12,7 +12,7 @@ interface InstallPromptProps {
 }
 
 /**
- * The owner's welcome to a visitor who has not installed Para Po (Figma
+ * The owner's welcome to a commuter who has not installed Para Po (Figma
  * 3732:2512, 2026-10-13): the page dimmed in Background/surface-transparent,
  * and over it, 16 in from the sides and centred, a card at most 384 wide —
  * its picture, then "Welcome to Para Po", a line under it, and two buttons

@@ -916,7 +916,7 @@ check(
 );
 await waitFor(async () => (await page.getByTestId('trip-signboard').count()) === 1);
 check(
-  '  the card above shows it as visitors will',
+  '  the card above shows it as commuters will',
   (await page.getByTestId('trip-signboard').count()) === 1 &&
     /\/storage\/v1\/object\/public\/signboards\//.test(
       (await page.getByTestId('trip-signboard').getAttribute('src')) ?? '',

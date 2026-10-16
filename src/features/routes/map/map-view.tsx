@@ -74,7 +74,7 @@ prewarm();
 export const STYLE_URL = DEFAULT_BASEMAP.url;
 
 /**
- * Passed as the event data of a camera move the app makes on the visitor's
+ * Passed as the event data of a camera move the app makes on the commuter's
  * behalf — to a hintuan picked, an end tapped, a trip's whole route as it
  * opens — so whatever is steering the camera can tell it from a gesture and
  * from its own moves. "Where am I" lets go on it: it once undid those moves with the next
@@ -263,7 +263,7 @@ export function MapView({
           // owner's Q1, 2026-10-04): MapLibre fits these bounds as the map is
           // made, with no animation, on the same size and limits a fit made
           // later would meet, so the camera is the one the routes' own fit
-          // put it at after 'load' (useSavedRoutes; visitor-test and
+          // put it at after 'load' (useSavedRoutes; commuter-test and
           // phone-test hold it to cameraForBounds of the map file's routes).
           ...(framing ? { bounds: framing, fitBoundsOptions: ROUTES_FRAMING } : {}),
           // The public map notes the tiles it asks for, changing none, so the
@@ -290,7 +290,7 @@ export function MapView({
         (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
 
       // The public map (the owner's Q1, 2026-10-04): what it opened framed
-      // on, and the visitor's gestures from now on, for the routes' own fit
+      // on, and the commuter's gestures from now on, for the routes' own fit
       // to leave a map they have moved alone (framing.ts). And the map is
       // handed over as soon as its style is in, for the routes to go on it
       // then, not after every basemap tile in view has come and been read
@@ -355,7 +355,7 @@ export function MapView({
         // Dev builds expose the map so the headless suites (tests/e2e/) can read real
         // screen positions from the drawn geometry instead of guessing. So does
         // the production build scripts/research/phone-speed.mjs makes for itself
-        // with VITE_EXPOSE_MAP=1, to time a cheap phone on the code visitors get
+        // with VITE_EXPOSE_MAP=1, to time a cheap phone on the code commuters get
         // (2026-10-04); `npm run build` never sets it, and check-build.mjs fails
         // a build that carries the map out. With it, the GL programs compiled
         // so far by MapLibre's own key: painter.cache is MapLibre's inside, so

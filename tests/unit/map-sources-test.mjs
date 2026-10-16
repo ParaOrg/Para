@@ -31,10 +31,10 @@ import {
 import { directionLine, isRailLine } from '../../src/features/routes/model/routes.ts';
 import { hotspotRing, nameOnMap } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
-import { addPassStretches } from '../../src/features/routes/geo/pass-stretches.ts';
+import { addPassStretches } from '../../src/features/routes/map/pass-stretches.ts';
 import { addDirectionArrows } from '../../src/features/routes/map/direction-arrows.ts';
 import { addRideRest } from '../../src/features/routes/map/ride-rest.ts';
-import { addBabaanSides } from '../../src/features/routes/geo/babaan-sides.ts';
+import { addBabaanSides } from '../../src/features/routes/map/babaan-sides.ts';
 import { INSET_PX, chevronAt } from '../../src/features/routes/map/chevrons.ts';
 import { litWidthAt } from '../../src/features/routes/map/line-style.ts';
 
@@ -148,7 +148,7 @@ test('the chevrons carry 32 px past each tile edge; the lines, the boxes and the
   assert.equal(TILE_BUFFER, 32);
   for (const id of BUFFERED) assert.equal(sources.get(id)?.buffer, TILE_BUFFER, id);
   // A cut at 32 px moved the lines' and the boxes' edges by up to 41 levels
-  // of 255 on a phone's screen; nothing may change what a visitor sees.
+  // of 255 on a phone's screen; nothing may change what a commuter sees.
   for (const id of DEFAULT_BUFFER)
     assert.equal(sources.get(id)?.buffer, undefined, `${id} keeps MapLibre's buffer`);
   assert.deepEqual(

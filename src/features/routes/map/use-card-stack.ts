@@ -5,12 +5,12 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 import { clearOfSheet } from '@/shared/ui/sheet-room';
 
-import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from './card-stack';
-import { useTripLivery } from './trip-card';
-import { useRideColours } from '../map/direction-arrows';
-import { LIT_LINE, LIVERY_LINE, type LineLook } from '../map/livery-line';
-import { useLitLineColour } from '../map/saved-routes-layers';
-import type { Highlight } from '../map/use-saved-routes';
+import { useRideColours } from './direction-arrows';
+import { LIT_LINE, LIVERY_LINE, type LineLook } from './livery-line';
+import { useLitLineColour } from './saved-routes-layers';
+import type { Highlight } from './use-saved-routes';
+import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from '../cards/card-stack';
+import { useTripLivery } from '../cards/trip-card';
 import { drawnDepartures, sharingAnEnd } from '../model/departures';
 import { cardLiveries, type Livery } from '../model/liveries';
 import { railLineOf, type Direction } from '../model/routes';

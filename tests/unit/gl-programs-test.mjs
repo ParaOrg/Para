@@ -3,7 +3,7 @@
 // 5-50 ms, and the harness's (SwiftShader's) for up to a second and more, so
 // the layers a tap lights are painted to share the programs the map compiles
 // at load. These checks read the layers as MapLibre would, from the style
-// spec; the suites (phone-test, visitor-test) and the cheap-phone timer read
+// spec; the suites (phone-test, commuter-test) and the cheap-phone timer read
 // the programs the map really compiles, by their keys.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/gl-programs-test.mjs
@@ -16,7 +16,7 @@ import {
   featureFilter,
   latest,
 } from '@maplibre/maplibre-gl-style-spec';
-import { PASS_LAYER } from '../../src/features/routes/geo/pass-stretches.ts';
+import { PASS_LAYER } from '../../src/features/routes/map/pass-stretches.ts';
 import { RIDE_REST_LAYER } from '../../src/features/routes/map/ride-rest.ts';
 import {
   WARM_SOURCE,
