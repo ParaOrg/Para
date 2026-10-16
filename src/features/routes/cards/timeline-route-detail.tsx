@@ -19,6 +19,7 @@ import {
   type RouteTripLineDetailPillContent,
 } from './route-trip-line-detail-pill';
 import { timelineFolds, type FoldPart } from './timeline-folds';
+import { timelineRail, type RailReach } from './timeline-rail';
 import {
   TimelineStick,
   type TimelineStickConnection,
@@ -123,7 +124,10 @@ export interface TimelineRouteDetailProps {
  * above the break, MiddleTop just below), running on along the rows before
  * the ride and after it (the owner's Variant5, 4151:13619, 2026-10-16: "can
  * you still connect those dots"; from 2026-10-15 they were their dots alone),
- * the map leaving pale everything outside the ride. A start alone is no ride
+ * the map leaving pale everything outside the ride. A fold's row next to the
+ * ride carries no rail, open or closed (his "when close it should disconnect
+ * the disclosure", 4194:12562 and 4194:12702), so a fold shut by the ride
+ * leaves the end beyond it its dot alone. A start alone is no ride
  * yet: its dot stands alone, the rail broken round it, and the map and the
  * tiles stay the whole trip's until an end is picked (his Variant3,
  * 2026-10-16).
@@ -239,41 +243,31 @@ export function TimelineRouteDetail({
       ?.focus();
   });
   const rail = TIMELINE_SURFACE[livery];
-  // The rail runs along the ride, from its first row to its last, and along
-  // the rows before it and after it, broken where the ride starts and where
-  // it ends (the owner, 2026-10-16: "can you still connect those dots, since
-  // it might see the users as broken", his Variant5, 4151:13619; from
-  // 2026-10-15 those rows were their dots alone). The origin is -1, the
-  // destination the row count (rideRows). No pick, it runs end to end. A
-  // start alone is no ride yet (his Variant3, 2026-10-16: "it must originally
-  // make the connection disconnected … so user don't get confused on the
-  // context"): a ride of its one row, its dot alone, until an end is picked.
+  // The rail runs along the ride and along the rows before it and after it,
+  // broken where the ride starts and where it ends, and a fold's row next to
+  // the ride carries none (timelineRail). The origin is -1, the destination
+  // the row count (rideRows). No pick, it runs end to end. A start alone is
+  // no ride yet (his Variant3, 2026-10-16: "it must originally make the
+  // connection disconnected … so user don't get confused on the context"):
+  // a ride of its one row, its dot alone, until an end is picked.
   const isStartAlone = start !== null && picked === null && endPicked === null;
   const lone = isStartAlone ? hintuans.findIndex((h) => h.id === start) : -1;
-  const { first, last } =
+  const ride =
     rideRows(hintuans, start, picked, endPicked) ??
     (lone >= 0 ? { first: lone, last: lone } : { first: -1, last: hintuans.length });
-  const sideOf = (i: number): 'before' | 'ride' | 'after' => {
-    if (i < first) return 'before';
-    if (i > last) return 'after';
-    return 'ride';
-  };
-  // A fold's row sits after its last row, and every row of a fold is on one
-  // side of the ride: the rail runs on from that row into it, and from it on
-  // to the row after it where that row is on the same side.
-  const isFoldEnd = (i: number) => {
-    const id = i < 0 ? undefined : hintuans.at(i)?.id;
-    return id !== undefined && foldOf.get(id)?.rowIds.at(-1) === id;
-  };
-  /** Whether the rail runs on below row `i` (-1 the origin) to what comes after it. */
-  const hasRailBelow = (i: number) => isFoldEnd(i) || sideOf(i) === sideOf(i + 1);
+  const railOf = timelineRail(
+    hintuans.map((h) => h.id),
+    ride,
+    folds,
+    isOpen,
+  );
+  /** Whether a row is the last of its fold: the fold's row sits after it. */
+  const isFoldEnd = (id: string) => foldOf.get(id)?.rowIds.at(-1) === id;
   // An end of the trip picked as the ride's end, with a start: its pill, as
   // a hintuan end's, its station's code and the ride's pesos (the owner,
   // 2026-10-16: "the end should have both price and codesign").
   const endRowPill: RouteTripLineDetailPillContent | null =
     start !== null && pickedPesos ? { code: pickedCode, pesos: pickedPesos } : null;
-  /** Whether the rail reaches row `i` (the row count the destination) from what comes before it. */
-  const hasRailAbove = (i: number) => sideOf(i - 1) === sideOf(i);
   // Every row's Pressed: the rail's colour, while the finger is down.
   const pressed = ROW_PRESSED[livery];
 
@@ -305,7 +299,7 @@ export function TimelineRouteDetail({
           routeOrigin={routeOrigin}
           mark={originMark(start, endPicked)}
           pill={endPicked === 'from' ? endRowPill : null}
-          connection={hasRailBelow(-1) ? 'connected' : 'disconnected'}
+          connection={railOf.originHasBelow ? 'connected' : 'disconnected'}
           selected={endPicked === 'from'}
           onTap={() => onEnd('from')}
         />
@@ -314,7 +308,7 @@ export function TimelineRouteDetail({
           const isEnd = h.id === picked;
           const fold = foldOf.get(h.id);
           const shown = isShown(h.id);
-          const { connection, piece } = railPiece(hasRailAbove(i), hasRailBelow(i));
+          const { connection, piece } = railPiece(railOf.rows[i]);
           const { mark, pill, action } = rowRole({
             isStart,
             isEnd,
@@ -343,12 +337,13 @@ export function TimelineRouteDetail({
                 action={action}
                 onPick={onPick}
               />
-              {fold && isFoldEnd(i) && (
+              {fold && isFoldEnd(h.id) && (
                 <TimelineDisclosure
                   part={fold.part}
                   rail={rail}
                   pressed={pressed}
                   open={isOpen(fold.part)}
+                  connection={railOf.foldHasRail(fold.part) ? 'connected' : 'disconnected'}
                   count={fold.rowIds.length}
                   isTrain={isTrain}
                   onToggle={() => toggle(fold.part)}
@@ -364,7 +359,7 @@ export function TimelineRouteDetail({
           routeDirection={routeDirection}
           isEnd={picked === null && (start === null || endPicked === 'to')}
           pill={endPicked === 'to' ? endRowPill : null}
-          connection={hasRailAbove(hintuans.length) ? 'connected' : 'disconnected'}
+          connection={railOf.destinationHasAbove ? 'connected' : 'disconnected'}
           selected={endPicked === 'to'}
           onTap={() => onEnd('to')}
         />
@@ -448,7 +443,7 @@ function TimelineTop({
   mark: 'start' | 'end' | null;
   /** As the ride's end, its pill after its name; else null. */
   pill: RouteTripLineDetailPillContent | null;
-  /** Disconnected where a ride, or a start alone, starts at the first hintuan: the rail breaks under it. */
+  /** Disconnected where a ride, or a start alone, starts at the first hintuan, or a fold's row by the ride is next: the rail breaks under it. */
   connection: TimelineStickConnection;
   selected: boolean;
   onTap: () => void;
@@ -511,13 +506,13 @@ const ROW_FOLDED = 'invisible grid-rows-[0fr] duration-base ease-exit';
  * A hintuan row's piece of the rail, from whether the rail runs on above its
  * dot and below it: a row the rail neither reaches nor leaves is its dot alone.
  */
-function railPiece(
-  hasRailAbove: boolean,
-  hasRailBelow: boolean,
-): { connection: TimelineStickConnection; piece: TimelineStickVariant } {
-  if (hasRailAbove && hasRailBelow) return { connection: 'connected', piece: 'middle' };
-  if (hasRailBelow) return { connection: 'connected', piece: 'middleTop' };
-  if (hasRailAbove) return { connection: 'connected', piece: 'middleBottom' };
+function railPiece({ hasAbove, hasBelow }: RailReach): {
+  connection: TimelineStickConnection;
+  piece: TimelineStickVariant;
+} {
+  if (hasAbove && hasBelow) return { connection: 'connected', piece: 'middle' };
+  if (hasBelow) return { connection: 'connected', piece: 'middleTop' };
+  if (hasAbove) return { connection: 'connected', piece: 'middleBottom' };
   return { connection: 'disconnected', piece: 'middle' };
 }
 
@@ -707,14 +702,17 @@ function TimelineHintuan({
 
 /**
  * Figma's TimelineDisclosure: the hintuans folded into one row, or, opened,
- * the row that folds them. The rail runs through it: its rows are all on one
- * side of the ride, the rail along them (the owner's Variant5, 4151:13619).
+ * the row that folds them. The rail runs through it between rows on one side
+ * of the ride (the owner's Variant5, 4151:13619); next to the ride its
+ * stretch is left unfilled, as his TimelineStick in 4194:12702 is (the
+ * owner, 2026-10-16: "when close it should disconnect the disclosure").
  */
 function TimelineDisclosure({
   part,
   rail,
   pressed,
   open,
+  connection,
   count,
   isTrain,
   onToggle,
@@ -725,6 +723,8 @@ function TimelineDisclosure({
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
   open: boolean;
+  /** Disconnected next to the ride, open or closed (timelineRail): no rail beside it. */
+  connection: TimelineStickConnection;
   count: number;
   /** "N more stations" on a train, "N more hintuans" else. */
   isTrain: boolean;
@@ -741,7 +741,7 @@ function TimelineDisclosure({
         onClick={onToggle}
         className={'flex w-full items-start px-4 text-left ' + pressed}
       >
-        <TimelineStick variant="disclosure" rail={rail} />
+        <TimelineStick variant="disclosure" connection={connection} rail={rail} />
         <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3 text-sm/5 font-normal whitespace-nowrap">
           {/* One chevron, turned: Figma's chevron-down, and its chevron-up opened. */}
           <span
@@ -786,7 +786,7 @@ function TimelineBottomEndRoute({
   isEnd: boolean;
   /** As the ride's end, its pill after its name; else null. */
   pill: RouteTripLineDetailPillContent | null;
-  /** Disconnected where a ride, or a start alone, ends at the last hintuan: the rail breaks above it. */
+  /** Disconnected where a ride, or a start alone, ends at the last hintuan, or a closed fold's row by the ride is just above: the rail breaks above it. */
   connection: TimelineStickConnection;
   selected: boolean;
   onTap: () => void;
