@@ -13,9 +13,8 @@ import {
 } from '@/shared/ui/route-icons';
 import { haversine } from '@/shared/utils/geo';
 
-import { wayWord } from './route-card-header';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { drawnDepartures } from '../model/departures';
+import { drawnDepartures, wayWord } from '../model/departures';
 import { hotspotLabel, type HotspotKind, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { placeBoxes } from '../model/places';
@@ -150,7 +149,8 @@ export function HintuanCard({
   const there = drawnDepartures(routes, false).length > 0;
   const backToo = drawnDepartures(routes, true).length > 0;
   const back = there && backToo ? flipped : backToo;
-  const shown = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v.id));
+  const showing = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v));
+  const shown = showing.map((v) => v.id);
 
   // The other way round: here, when these routes run both ways; else the
   // nearest box of the place that is passed that way — none with no row
@@ -313,7 +313,7 @@ export function HintuanCard({
               <Button
                 variant="special"
                 size="small"
-                label={wayWord(back)}
+                label={wayWord(back, showing)}
                 data-testid="card-flip"
                 aria-pressed={back}
                 disabled={!switchTo}

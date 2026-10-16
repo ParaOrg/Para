@@ -97,6 +97,7 @@ const meta = {
     routeDirection: 'Novaliches',
     switchable: true,
     back: false,
+    way: 'Papunta',
     onSwitch: fn(),
     onBackToList: fn(),
     onClose: fn(),
