@@ -25,18 +25,15 @@ import type { Timeline } from '../model/timeline';
 import { vehicleOf } from '../model/vehicles';
 
 /**
- * The trip's colour, one owner for it (the review's 6.6): decided as the trip
- * opens — the RouteCard's it was picked from, in the list or a hotspot's card,
- * while that card stands behind it (a card of several routes wears its
- * first row's, liveries.ts), else its route's for the visit (drawn when
- * first met, kept after; its place's until the owner's ask of 2026-10-12;
- * a train's, its line's, never drawn, since 2026-10-13) —
- * and kept until
- * it closes, through SWITCH and even when a tap on
- * its own line closes the list behind it: a card never changes colour while
- * it is open (the owner, 2026-09-29). Its line wears it too, so the page
- * reads it, not the card. Settled while rendering, as derived state is, so
- * the card never shows a frame in the wrong colour.
+ * The trip's colour, one owner for it: decided as the trip opens — the
+ * RouteCard's it was picked from, in the list or a hotspot's card, while that
+ * card stands behind it (a card of several routes wears its first row's,
+ * liveries.ts), else its route's for the visit (drawn when first met, kept
+ * after; a train's is its line's, never drawn) — and kept until it closes,
+ * through SWITCH and even when a tap on its own line closes the list behind it:
+ * a card never changes colour while it is open. Its line wears it too, so the
+ * page reads it, not the card. Settled while rendering, as derived state is,
+ * so the card never shows a frame in the wrong colour.
  */
 export function useTripLivery(
   open: Direction | null,
@@ -57,29 +54,21 @@ export function useTripLivery(
 }
 
 /**
- * The chosen direction as the owner's trip card (TimelineRouteDetailCard,
- * 2026-09-29), from what the map file knows: its ends as the list names
- * them, the whole ride's length and pesos, the hintuans on the way, and its
- * colour — the one its RouteCard wore, when it was picked from one, in the
- * list or in a hotspot's card; its route's, kept for the visit, when not. SWITCH turns it round, what
+ * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from
+ * what the map file knows: its ends as the list names them, the whole ride's
+ * length and pesos, the hintuans on the way, and its colour — the one its
+ * RouteCard wore, when it was picked from one, in the list or in a hotspot's
+ * card; its route's, kept for the visit, when not. SWITCH turns it round, what
  * it was picked from staying behind it, and the card keeps the colour it
- * opened in: turned round, it is still the same card (the owner, 2026-09-29).
+ * opened in: turned round, it is still the same card.
  *
- * Share, the length, the mode and the status went with the old card: the
- * owner dropped them for now, to design later (2026-09-28). The ride-to
- * preview went too, and came back as his picked hintuan (2026-09-29): its
- * pill prices the ride from the trip's start to there, as the tile prices
- * the whole.
- * So did the old card's fare details — the students/seniors/PWDs price, the
- * fare rule line, the route's fareNote, the estimate's source line and the
- * "old ₱13" grace warning (fare.previous): his frames carry only the pesos,
- * and he dropped them all on 2026-09-29. The studio shows them under the
- * tiles (`extras`): the same card, with what an editor needs below it (the
- * owner's pick, 2026-09-30: "most of the interaction of public map should
- * be in studio").
+ * A picked hintuan's pill prices the ride from the trip's start to there, as
+ * the tile prices the whole. The card carries only the pesos: no students/
+ * seniors/PWDs price, fare rule line, route fareNote, estimate source line or
+ * "old ₱13" grace warning (fare.previous). The studio shows them under the
+ * tiles (`extras`): the same card, with what an editor needs below it.
  *
- * No link to a trip: the address does not follow the card (the owner took
- * trip links out for now, 2026-10-03).
+ * No link to a trip: the address does not follow the card.
  */
 export function TripCard({
   direction,
@@ -231,9 +220,8 @@ function fareFor(direction: Direction, metres: number, timeline: Timeline): Fare
  * The fare of the ride between the picks: a jeep's by the metres between
  * them, a train's by the two stations (railFares takes any pair, whichever
  * way round), the ferry's free. A start left at the origin is that end of
- * the timeline, and an end row picked with a start (`endPicked`, the owner's
- * "keep the start", 2026-10-16) is its own end. No end picked, no ride to
- * price: a start alone is no ride yet (the owner's Variant3, 2026-10-16).
+ * the timeline, and an end row picked with a start (`endPicked`) is its own end. No end
+ * picked, no ride to price: a start alone is no ride yet.
  */
 function pickedFareFor(
   direction: Direction,
@@ -243,7 +231,7 @@ function pickedFareFor(
   picked: string | null,
   endPicked: 'from' | 'to' | null,
 ): Fare | undefined {
-  // A start alone is no ride yet: nothing to price until its end is picked (the owner, 2026-10-16).
+  // A start alone is no ride yet: nothing to price until its end is picked.
   const isEndRow = start !== null && endPicked !== null;
   if (picked === null && !isEndRow) return undefined;
   if (isFerry(direction.route?.mode)) return FREE;

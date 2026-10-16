@@ -15,9 +15,8 @@ interface Props {
 /**
  * Routes one way round, grouped by the place they leave from — Tala, then
  * → SM Fairview and → Novaliches: the studio's hotspot card shows the routes
- * through its box so (the owner's ask, 2026-09-26: one shape for "the routes
- * here", wherever it is asked). Everywhere else they are his RouteCards
- * since 2026-09-29. A row still a slot says so and opens nothing, which
+ * through its box so, one shape for "the routes here". Everywhere else they
+ * are RouteCards. A row still a slot says so and opens nothing, which
  * keeps the returns still to draw in sight in the studio. Full-bleed rows: a
  * whole row is the target, not the words inside it.
  */

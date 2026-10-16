@@ -20,8 +20,7 @@ const ICON = {
 
 /**
  * A vehicle's drawing from the sprite, in currentColor: a trip's header
- * (RouteTripDetailHeader) and, since the owner's "new update" of 2026-10-16,
- * each route's row (RouteEndPointBar). The size and the opacity are the
+ * (RouteTripDetailHeader) and each route's row (RouteEndPointBar). The size and the opacity are the
  * caller's.
  */
 export function VehicleIcon({ vehicle }: VehicleIconProps) {

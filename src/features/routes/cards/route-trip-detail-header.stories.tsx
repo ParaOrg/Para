@@ -42,7 +42,7 @@ export const Lrt2Eastbound: Story = {
   args: { vehicle: 'LRT-2', way: 'Eastbound', livery: 'light-rail-way-two' },
 };
 
-/** MRT-3's words are Content/primary, its yellow unreadable on white, and so is its Train on the yellow card (the owner, 2026-10-16). */
+/** MRT-3's words are Content/primary, its yellow unreadable on white, and so is its Train on the yellow card. */
 export const Mrt3Northbound: Story = {
   args: { vehicle: 'MRT-3', way: 'Northbound', livery: 'metro-rail-way-three' },
 };
@@ -51,10 +51,10 @@ export const Mrt3Southbound: Story = {
   args: { vehicle: 'MRT-3', way: 'Southbound', livery: 'metro-rail-way-three' },
 };
 
-/** A train on a jeep-coloured card, opened from a hotspot's card: its words keep the line's colour (the owner's answer of 2026-10-16). */
+/** A train on a jeep-coloured card, opened from a hotspot's card: its words keep the line's colour. */
 export const TrainOnAJeepCard: Story = { args: { livery: 'red' } };
 
-/** An end the line's table does not know: no bound, the line's code alone, rounded both ends (the owner's answer of 2026-10-16: "show the line alone"). */
+/** An end the line's table does not know: no bound, the line's code alone, rounded both ends. */
 export const NoBound: Story = { args: { way: null } };
 
 /** A jeep's trip (Variant2, 4181:10845): the Jeepney and the way showing, in its card's colour. */

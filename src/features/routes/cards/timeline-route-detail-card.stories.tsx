@@ -7,7 +7,7 @@ import { kmLabel } from '@/shared/utils/geo';
 
 import { FREE, TimelineRouteDetailCard } from './timeline-route-detail-card';
 
-/** Sample data only: the places of the owner's frames (3762:3546), not the real map. */
+/** Sample data only: the places of Figma's frames (3762:3546), not the real map. */
 const hintuans = (...labels: string[]) => labels.map((label, i) => ({ id: 'h' + i, label }));
 const talaToNovaliches = hintuans(
   'Barracks',
@@ -35,8 +35,7 @@ const openFold: Story['play'] = async ({ canvasElement }) => {
  * Keeps the picks as the public map does (useRideTo): a row picks its
  * hintuan, or an end, and again lets it go; Set as start makes the picked
  * hintuan the start, and × Remove as start, or its row again, lets the
- * start go; an end row is the ride's end, the start kept (the owner,
- * 2026-10-16: "keep the start").
+ * start go; an end row is the ride's end, the start kept.
  */
 function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
   const [picked, setPicked] = useState(props.picked);
@@ -102,9 +101,9 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
-    // Violet since yellow left the set (2026-10-12); his frames (3762:3546) were drawn yellow.
+    // Violet, where Figma's frames (3762:3546) are drawn yellow.
     livery: 'violet',
-    // 12.8 km, as the owner's frame has it; its pesos on today's rule.
+    // 12.8 km, as Figma's frame has it; its pesos on today's rule.
     metres: 12_800,
     fare: { regular: '₱30–32', discounted: '₱24–26' },
     routeOrigin: 'Tala',
@@ -112,7 +111,7 @@ const meta = {
     routeDirection: 'Novaliches',
     switchable: true,
     back: false,
-    // Papunta showing: SWITCH names the way a tap leads (the owner's ask of 2026-10-16).
+    // Papunta showing: SWITCH names the way a tap leads.
     way: 'Pabalik',
     onSwitch: fn(),
     onBackToList: fn(),
@@ -151,7 +150,7 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   const pill = rows[0].querySelector<HTMLElement>('[data-testid="trip-hintuan-fare"]');
   const pesos = args.pickedFare === FREE ? 'Free' : args.pickedFare?.regular;
   // A train's station code goes before the pesos, the two halves of
-  // RouteTripLineDetailPill's Two (2026-10-15), a space between for a screen reader.
+  // RouteTripLineDetailPill's Two, a space between for a screen reader.
   const code = pill?.querySelector('[data-part="code"]')?.textContent ?? null;
   await expect(code).toBe(args.pickedCode ?? null);
   await expect(pill?.textContent).toBe(code ? `${code} ${pesos}` : pesos);
@@ -180,7 +179,7 @@ const pickedAsDrawn: Story['play'] = async (ctx) => {
 };
 
 /**
- * A train's pick, as the owner's train frames draw it (2026-10-13): the
+ * A train's pick, as Figma's train frames draw it: the
  * pill white on every line, MRT-3's dark-worded card too, and its pesos in
  * the line's Timeline/surface, the rail's colour, not the card's.
  */
@@ -197,11 +196,11 @@ const pickedOnATrain: Story['play'] = async (ctx) => {
   }
 };
 
-/** On a phone, the owner's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected fare, its ten hintuans folded. */
+/** On a phone, Figma's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected fare, its ten hintuans folded. */
 export const Folded: Story = {};
 
 /**
- * The ferry (the owner's picks, 2026-10-03): Free in the fare tile, with no
+ * The ferry: Free in the fare tile, with no
  * Regular or Discounted to turn, and its fixed note under the tiles.
  */
 export const Ferry: Story = {
@@ -240,7 +239,7 @@ export const FerryPicked: Story = {
 /** Opened: every hintuan alike — SM Fairview among them — then View less. */
 export const Opened: Story = { play: openFold };
 
-/** The owner's other frame: Tala → SM Fairview, six hintuans, opened. */
+/** Figma's other frame: Tala → SM Fairview, six hintuans, opened. */
 export const ToSMFairview: Story = {
   args: { hintuans: talaToFairview, routeDirection: 'SM Fairview' },
   play: openFold,
@@ -271,16 +270,16 @@ export const NoHintuan: Story = {
 /** In red, the Timeline set's own colour, with Content/inverse words. */
 export const Red: Story = { args: { livery: 'red' } };
 
-/** Orange (Figma's Pink until 2026-10-13). */
+/** Orange. */
 export const Orange: Story = { args: { livery: 'orange' } };
 
 /** Fuchsia, with Content/inverse words, like red. */
 export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
 
-/** Pink (4071:7014, 2026-10-13), with Content/inverse words, like fuchsia. */
+/** Pink (4071:7014), with Content/inverse words, like fuchsia. */
 export const Pink: Story = { args: { livery: 'pink' } };
 
-/** SWITCHed: the way back, so SWITCH reads Papunta, the way a tap leads (the owner, 2026-10-16). */
+/** SWITCHed: the way back, so SWITCH reads Papunta, the way a tap leads. */
 export const TheWayBack: Story = {
   args: {
     routeOrigin: 'Novaliches',
@@ -299,11 +298,11 @@ export const NothingToGoBackTo: Story = {
 /** The route's other way is not drawn yet: SWITCH rests disabled. */
 export const NothingTheOtherWay: Story = { args: { switchable: false } };
 
-/** A mode with no fare rule: no Expected fare tile, and Distance takes the row (nothing drawn for it; the owner kept this, 2026-09-29). */
+/** A mode with no fare rule: no Expected fare tile, and Distance takes the row (nothing is drawn for it). */
 export const Unpriced: Story = { args: { fare: undefined } };
 
 /**
- * The fare tile turns (3778:3183, redrawn 2026-09-30): a tap shows the
+ * The fare tile turns (3778:3183): a tap shows the
  * discounted fare, ↻ turning once; another, the regular again.
  */
 export const FareTurns: Story = {
@@ -342,22 +341,22 @@ export const LongNames: Story = {
 /** From 1024 wide, in the top-left corner where the list sits. */
 export const Floating: Story = { parameters: { frame: 'wide' } };
 
-/** In the corner and opened: the owner's Tala → Novaliches is taller than 640, so the rail scrolls. */
+/** In the corner and opened: Tala → Novaliches is taller than 640, so the rail scrolls. */
 export const FloatingOpened: Story = { parameters: { frame: 'wide' }, play: openFold };
 
-/** The owner's 640 frame: still docked, as wide as the screen. */
+/** Figma's 640 frame: still docked, as wide as the screen. */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /**
- * A hintuan picked, red — the Timeline set's Selected row on the owner's
- * card (3769:2895), recoloured 2026-09-30 (3778:3183): Amparo's dot a white
- * ring round the rail's red, no longer green, its name ExtraBold, and
+ * A hintuan picked, red — the Timeline set's Selected row on Figma's
+ * card (3769:2895, 3778:3183): Amparo's dot a white
+ * ring round the rail's red, its name ExtraBold, and
  * a white pill with the pesos from Tala to there in the card's red. Opened,
  * since the fold keeps it.
  */
 export const PickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: pickedAsDrawn };
 
-/** Orange, as red: he drew no orange trip. */
+/** Orange, as red. */
 export const PickedOrange: Story = {
   args: { livery: 'orange', picked: 'h3' },
   play: pickedAsDrawn,
@@ -375,7 +374,7 @@ export const PickedPink: Story = {
   play: pickedAsDrawn,
 };
 
-/** LRT-1, a train's trip (4074:7402, 2026-10-13): its line's colours, Content/inverse words. */
+/** LRT-1, a train's trip (4074:7402): its line's colours, Content/inverse words. */
 export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
 
 /** Picked, LRT-1: the pill white, the station's code and its pesos in the line's Timeline/surface. */
@@ -384,7 +383,7 @@ export const PickedLightRailWayOne: Story = {
   play: pickedOnATrain,
 };
 
-/** LRT-2, a train's trip (4080:4124, 2026-10-13): its line's colours, Content/inverse words. */
+/** LRT-2, a train's trip (4080:4124): its line's colours, Content/inverse words. */
 export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
 
 /** Picked, LRT-2: the pill white, the station's code and its pesos in the line's Timeline/surface. */
@@ -393,7 +392,7 @@ export const PickedLightRailWayTwo: Story = {
   play: pickedOnATrain,
 };
 
-/** MRT-3, a train's trip (4080:4241, 2026-10-13): its line's colours, Content/primary, dark, words. */
+/** MRT-3, a train's trip (4080:4241): its line's colours, Content/primary, dark, words. */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
 /** Picked, MRT-3: the pill's two white halves, YL06 and ₱20–22, in the line's Timeline/surface. */
@@ -413,7 +412,7 @@ export const PickAndLetGo: Story = {
     await expect(args.onPick).toHaveBeenCalledWith('h3');
     await expect(canvas.getByTestId('trip-hintuan-fare').textContent).toBe('₱20–22');
     await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱20–22');
-    // Turned to Discounted, the pill follows the tile (the owner, 2026-09-30).
+    // Turned to Discounted, the pill follows the tile.
     await userEvent.click(canvas.getByTestId('trip-fare-turn'));
     await expect(canvas.getByTestId('trip-hintuan-fare').textContent).toBe('₱16–18');
     await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱16–18');
@@ -424,8 +423,7 @@ export const PickAndLetGo: Story = {
 };
 
 /**
- * The ends are buttons too, and picked like a hintuan (the owner's asks,
- * 2026-09-29): Tala picks itself, its dot the Selected one, lets Amparo go and says
+ * The ends are buttons too, and picked like a hintuan: Tala picks itself, its dot the Selected one, lets Amparo go and says
  * which end to show; a second tap lets it go. Novaliches the same. One at a
  * time: each lets the others go.
  */
@@ -446,8 +444,8 @@ export const EndsShowTheWhole: Story = {
     await expect(destination()).toBe('rest');
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
     await expect(origin()).toBe('rest');
-    // Amparo let go by Tala folds the list back as it was (the owner,
-    // 2026-10-16: "fold back"): opened again to pick Amparo.
+    // Amparo let go by Tala folds the list back as it was:
+    // opened again to pick Amparo.
     await userEvent.click(canvas.getByRole('button', { name: /more hintuans/ }));
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
@@ -478,7 +476,7 @@ export const OriginPicked: Story = { args: { livery: 'red', endPicked: 'from' } 
 export const DestinationPicked: Story = { args: { livery: 'red', endPicked: 'to' } };
 
 /**
- * A pick is in the ride, so it never folds away (2026-10-15): View less
+ * A pick is in the ride, so it never folds away: View less
  * folds only the rows after it, and opened again they are back, the pick
  * still there, pill and all.
  */
@@ -499,10 +497,10 @@ export const PickWithTheRestFolded: Story = {
 };
 
 /**
- * Set as start (the owner's TimelineRouteDetail, 2026-10-15): Amparo picked,
+ * Set as start: Amparo picked,
  * then made the start, S before it and × Remove as start under it, the
- * tiles still the whole trip's — a start alone is no ride yet (his Variant3,
- * 2026-10-16); Bistek tapped is the end, and the tiles read the ride
+ * tiles still the whole trip's — a start alone is no ride yet (Figma
+ * Variant3); Bistek tapped is the end, and the tiles read the ride
  * between them. × Remove as start lets the start go, the keyboard's focus
  * kept on Amparo's row.
  */
@@ -537,8 +535,7 @@ export const StartAndEnd: Story = {
 /**
  * A ride from Amparo to Bistek, the rows outside it folded, and Bistek
  * tapped again: the end let go, Amparo a start alone. The rows after a start
- * alone fold back as they were, Bistek among them (the owner, 2026-10-16:
- * "fold back"), and the keyboard's focus goes to the fold that now holds it.
+ * alone fold back as they were, Bistek among them, and the keyboard's focus goes to the fold that now holds it.
  */
 export const LetTheEndGo: Story = {
   args: {
@@ -560,8 +557,7 @@ export const LetTheEndGo: Story = {
 };
 
 /**
- * Amparo the start, then the destination's row tapped (the owner,
- * 2026-10-16: "keep the start"): the ride from Amparo to Novaliches, its E
+ * Amparo the start, then the destination's row tapped: the ride from Amparo to Novaliches, its E
  * on the destination, Amparo's S kept, the tiles the ride's.
  */
 export const EndRowKeepsStart: Story = {
@@ -583,15 +579,12 @@ export const EndRowKeepsStart: Story = {
 };
 
 /**
- * A row above the start tapped, his Variant5 (4151:13619; the owner,
- * 2026-10-16: "reverse the arrow, dont' switch please, it's confusing for
- * users"): Amparo is the end, above Bistek, the start, and the ride runs
- * back between them. The rail breaks just above Amparo and just below
- * Bistek, running on along the rows outside the ride ("can you still connect
- * those dots"). The keyboard's focus stays on Amparo; then the hintuans
+ * A row above the start tapped, Figma's Variant5 (4151:13619): Amparo is
+ * the end, above Bistek, the start, and the ride runs back between them. The
+ * rail breaks just above Amparo and just below Bistek, running on along the
+ * rows outside the ride. The keyboard's focus stays on Amparo; then the hintuans
  * above the ride are opened, the rail running along them and stopping at
- * Pangarap, View less just above Amparo with none beside it (the owner,
- * 2026-10-16: "when close it should disconnect the disclosure", 4194:12702).
+ * Pangarap, View less just above Amparo with none beside it (Figma 4194:12702).
  */
 export const EndAboveStart: Story = {
   args: {
@@ -669,7 +662,7 @@ export const LongNamesPicked: Story = {
 };
 
 /**
- * The owner's BottomSheetConfiguration (3815:5637, 2026-09-30), on a phone:
+ * Figma's BottomSheetConfiguration (3815:5637), on a phone:
  * the stories above open at Middle; a tap on the HandleNotch goes round.
  */
 const tapHandle = async (canvasElement: HTMLElement, times: number) => {
@@ -697,8 +690,7 @@ export const SheetLow: Story = {
 };
 
 /**
- * An origin too long for one line on a phone at 20/28 (the origin's size
- * since 2026-10-13; LongNames' fits on one now).
+ * An origin too long for one line on a phone at 20/28 (LongNames' fits on one).
  */
 const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
@@ -722,8 +714,7 @@ export const SheetMiddleLongName: Story = {
 };
 
 /**
- * "Other routes" under the tiles (the owner's TimelineRouteDetailCard, 3778:3183,
- * 2026-10-01): the other routes out of where the trip starts, each by where
+ * "Other routes" under the tiles (Figma 3778:3183): the other routes out of where the trip starts, each by where
  * it goes; a tap opens that route's trip in this one's place. With none,
  * as in every story above, the section is not there.
  */
@@ -753,9 +744,7 @@ const board = (top: string, under: string) =>
 
 /**
  * Figma's Signboard (3919:11355): the direction's boards between the card
- * and the tiles, in their own white strip (the owner's TimelineRouteDetailCard of
- * 2026-10-12, 4051:5528; right under the header by his first redrawing that
- * day, under the tiles with a heading until then), 40 tall, 8 apart, 16
+ * and the tiles, in their own white strip (Figma 4051:5528), 40 tall, 8 apart, 16
  * under the card and 16 over the tiles.
  */
 export const Signboards: Story = {
