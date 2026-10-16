@@ -33,11 +33,11 @@ const afterClose = (): CardState =>
 /**
  * The button as one of MapLibre's own top-right controls, so MapLibre stacks
  * it under whatever is above it there, at its real height: the credits on a
- * phone, open three lines tall until the first drag folds them, MapLibre's
- * +, − and compass for a mouse in the studio, or nothing on the public map's
- * desktop, where it takes the corner. The corner keeps inside the safe area
- * itself (global.css). React draws into it, as the hintuan pins do into
- * their markers.
+ * phone, three lines tall once ⓘ opens them, until a drag folds them,
+ * MapLibre's +, − and compass for a mouse in the studio, or nothing on the
+ * public map's desktop, where it takes the corner. The corner keeps inside
+ * the safe area itself (global.css). React draws into it, as the hintuan pins
+ * do into their markers.
  */
 function useTopRightControl(map: MapLibreMap): HTMLElement {
   const [element] = useState(() => {
@@ -60,10 +60,9 @@ function useTopRightControl(map: MapLibreMap): HTMLElement {
 
 /**
  * The "MayLayers or Theme" button (Figma 4176:10679) at the top right, and
- * under it the Map Style card (MapStyle) for the designs. It
- * draws nothing on the map itself — `applyBasemap` does the switch and
- * carries the routes and hotspots across — so both pages get it from
- * MapView for free.
+ * under it the Map Style card (MapStyle) for the designs. It draws nothing on
+ * the map itself — `applyBasemap` does the switch and carries the routes and
+ * hotspots across — so both pages get it from MapView for free.
  */
 export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapControlProps) {
   const corner = useTopRightControl(map);

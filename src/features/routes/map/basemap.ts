@@ -14,9 +14,9 @@ import { terrainStyle } from './terrain';
 
 /**
  * The basemap designs a commuter can choose between: Monochrome, Colour and
- * Fiord. All of them are OpenFreeMap
- * styles over the same `/planet` tiles, sprite and glyph endpoint, so a switch
- * fetches one small style file and nothing a phone has cached is wasted.
+ * Fiord. All of them are OpenFreeMap styles over the same `/planet` tiles,
+ * sprite and glyph endpoint, so a switch fetches one small style file and
+ * nothing a phone has cached is wasted.
  *
  * Monochrome is the default: Positron, as detailed as its tiles allow and
  * still only grays, so the routes and hotspots painted on top carry all the

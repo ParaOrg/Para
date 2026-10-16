@@ -27,11 +27,11 @@ import { recolouredStyle, type Recolour } from './recolour';
  * stops and its busway would stand beside ParaPo's own hotspots and routes as
  * if they were ours. Rail stations stay, by their names alone, with no logo.
  *
- * Roads. Every road in the tiles says whether it is a bridge or a
- * tunnel and its level, 1 to 5 up and -1 and -2 down (the Skyway is 2 to 4
- * over EDSA, decoded at Magallanes). Positron reads that for the motorways
- * only: a flyover is drawn as one more street, and an underpass on top of the
- * road above it. Here the roads on the ground are drawn without either; the
+ * Roads. Every road in the tiles says whether it is a bridge or a tunnel and
+ * its level, 1 to 5 up and -1 and -2 down (the Skyway is 2 to 4 over EDSA,
+ * decoded at Magallanes). Positron reads that for the motorways only: a
+ * flyover is drawn as one more street, and an underpass on top of the road
+ * above it. Here the roads on the ground are drawn without either; the
  * underpasses go under everything, dashed; the bridges go over, one pair of
  * layers a level so the higher crosses the lower, edged firmer the higher
  * they are. The busway is left out, as Positron leaves it.

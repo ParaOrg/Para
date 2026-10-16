@@ -29,7 +29,7 @@ interface MapStyleProps {
  * each design, its name under it, the one shown ringed in Brand/surface (the
  * frame draws no ring). Three a row, so the studio's five wrap onto a second.
  * A pick switches the map behind and moves the ring; the card stays until ✕,
- * Escape or a tap outside, so the commuter sees what they picked.
+ * Escape or a tap outside, so whoever picked sees it.
  *
  * It holds the keyboard while open, as a dialog does (CLAUDE.md): it opens
  * on the design shown, and Tab goes round inside it. It pops in and out

@@ -5,13 +5,15 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { Elevation } from './basemap';
 
 /*
- * Terrain: a style with the ground's shape on it — its slopes shaded, and the map raised in 3D when it
- * is tilted. Metro Manila is flat; the shading tells from Marikina east, up
- * into Antipolo, San Mateo and Montalban, where routes climb.
+ * Terrain: a style with the ground's shape on it — its slopes shaded, and the
+ * map raised in 3D when it is tilted. Metro Manila is flat; the shading tells
+ * from Marikina east, up into Antipolo, San Mateo and Montalban, where routes
+ * climb.
  *
- * Terrain is the studio's only, so the elevation's host is the studio's to name (features/studio); this draws any Terrarium
- * tiles. Its tiles are not kept offline: without a signal the map is drawn
- * flat and unshaded, as the style under it.
+ * Terrain is the studio's only, so the elevation's host is the studio's to
+ * name (features/studio); this draws any Terrarium tiles. Its tiles are not
+ * kept offline: without a signal the map is drawn flat and unshaded, as the
+ * style under it.
  *
  * MapLibre asks for two sources of the same tiles, one to shade and one to
  * raise, or draws both worse; the browser fetches each tile once.
