@@ -30,16 +30,28 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 | **MiddleBottom**, Connected | yes | none | The row the ride ends at, mid-list |
 | Any piece, **Disconnected** | none | none | A row on its own, with no rail: a start alone |
 
-**The rule (the owner, 2026-10-16): the rail breaks where the ride starts and where it ends, and runs on along the rows outside it**, as the Figma states draw it (Choosing, Variant3, Variant4, Variant5): "can you still connect those dots, since it might see the users as broken it doesnt flow to the eyes". The row just above a break is MiddleBottom (the origin, Top, Disconnected), the row just below it MiddleTop (the destination, Bottom, Disconnected); a fold's row runs the rail of the rows it folds. From 2026-10-15 to then, the rail ran only along the ride and the rows outside were their dots alone.
+**The rule (the owner, 2026-10-16): the rail breaks where the ride starts and where it ends, and runs on along the rows outside it**, as the Figma states draw it (Choosing, Variant3, Variant4, Variant5): "can you still connect those dots, since it might see the users as broken it doesnt flow to the eyes". The row just above a break is MiddleBottom (the origin, Top, Disconnected), the row just below it MiddleTop (the destination, Bottom, Disconnected). From 2026-10-15 to then, the rail ran only along the ride and the rows outside were their dots alone.
+
+**A fold's row next to the ride carries no rail, open or closed** (the owner, 2026-10-16: "when close it should disconnect the disclosure", 4194:12562, 4194:12702, 4189:11483): its TimelineStick Disclosure is left unfilled. Until then a fold's row always ran the rail of the rows it folds. Claude read his frames as "next to the ride", not "every closed fold" (which would take the rail off Variant6's folded trip and leave it on the opened fold above the S in 4194:12702), and he confirmed it the same day: "yes that reading is right".
+
+- The `before` fold's row always sits just above the ride's first row. Open, the last row it folds is MiddleBottom; closed, the origin has nothing to join below and is its dot alone.
+- The `after` fold's row sits just above the destination. Closed, it is right after the ride's last row: no rail, and the destination is its dot alone (Recto in 4194:12562). Open, it sits between the last row it folds and the destination, both after the ride, and the rail runs through it (4189:11483, 4194:12702).
+- The `all` fold, nothing picked, is inside the ride and carries the rail (Variant6, 4157:7737).
+- A start alone is a ride of its one row: its `after` fold, closed, sits next to it, so that fold's row has no rail and the destination's dot is alone. An end row kept with a start follows the same rule.
+
+The rule is `timelineRail` (`src/features/routes/cards/timeline-rail.ts`): two things next to each other on the card are joined when both are on the same side of the ride, and a fold's row whose neighbours are on different sides has no side. A row folded away wears the rail it wears open, so it closes as it was drawn.
+
+**The rows' spacing** (the owner's Timeline set, 3716:1894, "new spacing changes", 2026-10-16): a hintuan's name and a fold's words 10 above and below (rows 44 and 40 tall), the origin's name 12 above the first row, Set as start and × Remove as start 16 under the name, the dot 10 below a row's top. It puts back 10 where his RouteTripDetail of 2026-10-13 (3778:3183) had 8; asked, he said: "yes 10 is right".
 
 ## How it works, as read from the design
 
 - **Tap a row:** it becomes the end, and the ride runs from the start to there, as today.
 - **Set as start:** that row becomes the start instead. Until another row is tapped, the ride runs from it to where the direction goes. Variant3 marks no row E; read as Taft Avenue keeping its E, as today.
 - **Remove as start:** the start goes back to where the direction leaves.
-- **An end row tapped with a start keeps the start** (the owner, 2026-10-16: "keep the start"; until then it let the start go): that end is the ride's end. The destination: the ride from the S on to it, its E there. The origin: the ride back from the S to it, as an end above the start, its E there and the arrows from S to E. With no start, an end row is the whole ride, as before. A jeep's SWITCH swaps a start and the destination as it swaps a start and an end. A start ridden back to the origin rode the way back's own way, so it stays the start and the way back's destination is its end (Claude's call, 2026-10-16, the owner's to confirm: a swap would start the way back at its own destination, which no start can).
+- **An end row tapped with a start keeps the start** (the owner, 2026-10-16: "keep the start"; until then it let the start go): that end is the ride's end. The destination: the ride from the S on to it, its E there. The origin: the ride back from the S to it, as an end above the start, its E there and the arrows from S to E. With no start, an end row is the whole ride, as before. A jeep's SWITCH swaps a start and the destination as it swaps a start and an end. A start ridden back to the origin rode the way back's own way, so it stays the start and the way back's destination is its end (Claude's call, 2026-10-16, the owner's "ok as is" the same day: a swap would start the way back at its own destination, which no start can).
 - **Letting a pick go folds back** (the owner, 2026-10-16: "fold back"): the folds return to how they were before the pick; the rows it folds back stay drawn, closing in view, and a row folded away under the keyboard's focus hands it to its fold. From 2026-10-15 a let-go opened the whole list.
 - **The ferry** keeps its picks over SWITCH and swaps them, as a jeep does (the owner, 2026-10-16: "ferry ok").
+- **Screen readers:** a hintuan's row says ", start" or ", end" after its name; the origin's and the destination's rows don't, the ends reading as before (the owner, 2026-10-16: "fine as is").
 - **With a start picked,** tapping a row after it sets the end (Variant4).
 - **The tiles:** Distance and fare read from the start to the end.
 - **The map:** the stretch from start to end is drawn as the ride; the line on either side of it is pale, as after a picked end today. The S and E markers on the map move with the picks.
@@ -83,6 +95,6 @@ Nothing is left open.
 
 ## Done when
 
-- Unit tests: a ride between two picks (metres, a jeep's fare and a train's); an end before the start ridden back, the S and E where they were picked and the chevrons from S to E (2026-10-16); a jeep's SWITCH by other streets landing out of order; the rail broken at the ride's ends and running on outside it; and what Northbound / Southbound and Papunta / Pabalik do to the picks.
+- Unit tests: a ride between two picks (metres, a jeep's fare and a train's); an end before the start ridden back, the S and E where they were picked and the chevrons from S to E (2026-10-16); a jeep's SWITCH by other streets landing out of order; the rail broken at the ride's ends and running on outside it, with no rail beside a fold's row by the ride, open or closed (`timeline-rail-test`); and what Northbound / Southbound and Papunta / Pabalik do to the picks.
 - A story for each Figma state.
 - A headless check on the public map: pick a start and an end, and the Distance and fare tiles and the map's S and E agree.

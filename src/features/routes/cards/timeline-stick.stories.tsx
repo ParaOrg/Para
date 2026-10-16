@@ -127,7 +127,7 @@ export const BottomDisconnected: Story = {
   ),
 };
 
-/** Disclosure, Connected (3716:1757): the fold row, the rail alone. */
+/** Disclosure, Connected (3716:1757): a fold's row between rows on one side of the ride, the rail alone. */
 export const DisclosureConnected: Story = {
   render: () => (
     <Row height="row">
@@ -139,7 +139,9 @@ export const DisclosureConnected: Story = {
 /**
  * Disclosure, Disconnected (4137:10175): nothing drawn — beside the button
  * under a row the rail breaks after (× Remove as start under an S at the
- * ride's foot). A fold's row always runs its rows' rail.
+ * ride's foot), and beside a fold's row next to the ride, open or closed
+ * (the owner, 2026-10-16: "when close it should disconnect the disclosure";
+ * 4194:13004 in 4194:12702).
  */
 export const DisclosureDisconnected: Story = {
   render: () => (

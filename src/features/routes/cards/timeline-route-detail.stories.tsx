@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { TimelineRouteDetail } from './timeline-route-detail';
 import { LIVERIES } from '../model/liveries';
@@ -97,7 +97,12 @@ export const Pink: Story = { args: { livery: 'pink' } };
  */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: openFold };
 
-/** A hintuan picked, the rows after it folded away: the ride's own rows stay open. */
+/**
+ * A hintuan picked, the rows after it folded away: the ride's own rows stay
+ * open. The fold's row, next to the pick, has no rail beside it, and the
+ * destination's dot stands alone (the owner, 2026-10-16: "when close it
+ * should disconnect the disclosure", 4194:12562).
+ */
 export const HintuanPickedFolded: Story = { args: { picked: 'h3' } };
 
 /** The last hintuan picked: the rail runs to it, nothing after it to fold, and only the destination is left without a rail. */
@@ -247,16 +252,20 @@ export const RideChoosing: Story = {
  * Variant3 (4148:12161): after Set as start, Shaw Boulevard is the start,
  * × Remove as start under it, its pill its code alone. A start alone is no
  * ride yet (the owner, 2026-10-16): its dot stands alone, the rail broken
- * just above it and just below and running on through every other station,
- * the fold above Taft Avenue among them; North Avenue loses its S and Taft
- * Avenue has no E until an end is picked. Folded as Choosing was, the
- * stations after it in that fold.
+ * just above it and just below and running on along the stations above it;
+ * the closed fold next to it has no rail, and Taft Avenue's dot stands
+ * alone (his "when close it should disconnect the disclosure", 4194:12562).
+ * North Avenue loses its S and Taft Avenue has no E until an end is picked.
+ * Folded as Choosing was, the stations after it in that fold.
  */
 export const RideStartPicked: Story = {
   args: { ...onMrt3, start: shaw, startCode: 'YL07' },
 };
 
-/** Variant3, opened: the rail through every station after the start. */
+/**
+ * Variant3, opened: the rail from Boni, the first station after the start
+ * (MiddleTop), through View less to Taft Avenue (4189:11483 draws it so).
+ */
 export const RideStartPickedOpened: Story = { ...RideStartPicked, play: openFold };
 
 /**
@@ -301,8 +310,9 @@ export const RideStartAndEnd: Story = {
 
 /**
  * Variant4, the stations above the ride opened: the rail runs from North
- * Avenue through them and through View less, and breaks just above Shaw
- * Boulevard.
+ * Avenue through them to Ortigas (MiddleBottom); View less, just above Shaw
+ * Boulevard, has none beside it (the owner's 4194:12702, 2026-10-16: "when
+ * close it should disconnect the disclosure").
  */
 export const RideStartAndEndOpened: Story = { ...RideStartAndEnd, play: openFold };
 
@@ -363,4 +373,97 @@ export const RideStartToOrigin: Story = {
 /** A jeep's ride between two hintuans: the pesos alone in the pill, the same buttons. */
 export const RideStartAndEndJeep: Story = {
   args: { start: 'h2', picked: 'h6', pickedPesos: '₱14', onSetStart: fn(), onRemoveStart: fn() },
+};
+
+/**
+ * The owner's frames for "when close it should disconnect the disclosure"
+ * (2026-10-16), on his example: LRT-2 from Antipolo to Recto, in the red his
+ * frames draw it in, YL60 for every pick as they write it.
+ */
+const lrt2 = hintuans(
+  'Marikina-Pasig',
+  'Santolan',
+  'Katipunan',
+  'Anonas',
+  'Betty Go - Belmonte',
+  'Gilmore',
+  'J. Ruiz',
+  'V. Mapa',
+  'Pureza',
+  'Legarda',
+);
+const [katipunan, jRuiz, vMapa] = ['h2', 'h6', 'h7'];
+const onLrt2 = {
+  livery: 'red',
+  routeOrigin: 'Antipolo',
+  hintuans: lrt2,
+  routeDirection: 'Recto',
+  isTrain: true,
+  pickedCode: 'YL60',
+  pickedPesos: '₱13-24',
+  onSetStart: fn(),
+  onRemoveStart: fn(),
+} as const;
+
+/** Every fold on the card opened, top first, as a rider's taps would. */
+const openFolds: Story['play'] = async ({ canvasElement }) => {
+  for (const fold of within(canvasElement).getAllByRole('button', {
+    name: /more (hintuans|stations)/,
+  })) {
+    await userEvent.click(fold);
+    fold.blur();
+  }
+};
+
+/** The rail a row of the card wears (TimelineStick's `data-rail`), by a selector. */
+const railAt = (canvasElement: HTMLElement, selector: string) =>
+  canvasElement.querySelector(selector)?.querySelector('[data-rail]')?.getAttribute('data-rail');
+
+/**
+ * 4194:12562: an end alone at V. Mapa, the two stations after it folded.
+ * "2 more stations" sits next to the E with no rail beside it, and Recto's
+ * dot stands alone.
+ */
+export const RideEndFoldClosed: Story = {
+  args: { ...onLrt2, picked: vMapa },
+  play: async ({ canvasElement }) => {
+    await expect(railAt(canvasElement, '[data-testid="trip-fold"]')).toBe('disconnected');
+    await expect(railAt(canvasElement, '[data-testid="trip-destination"]')).toBe('disconnected');
+  },
+};
+
+/**
+ * 4189:11483: the same, the fold opened: the rail runs again from Pureza
+ * through Legarda and View less to Recto.
+ */
+export const RideEndFoldOpened: Story = {
+  args: { ...onLrt2, picked: vMapa },
+  play: async (context) => {
+    await openFolds(context);
+    const { canvasElement } = context;
+    await expect(railAt(canvasElement, '[data-hintuan="h8"]')).toBe('below');
+    await expect(railAt(canvasElement, '[data-testid="trip-fold"]')).toBe('connected');
+    await expect(railAt(canvasElement, '[data-testid="trip-destination"]')).toBe('above');
+  },
+};
+
+/**
+ * 4194:12702: S Katipunan, E J. Ruiz, both folds opened. The rail runs
+ * Antipolo → Marikina-Pasig → Santolan and stops there (MiddleBottom);
+ * View less just above the S has none beside it. The ride runs from
+ * Katipunan to J. Ruiz; after it, V. Mapa starts the rail again
+ * (MiddleTop), on through Legarda and View less to Recto.
+ */
+export const RideStartAndEndFoldsOpened: Story = {
+  args: { ...onLrt2, start: katipunan, startCode: 'YL60', picked: jRuiz },
+  play: async (context) => {
+    await openFolds(context);
+    const { canvasElement } = context;
+    await expect(railAt(canvasElement, '[data-hintuan="h1"]')).toBe('above');
+    await expect(railAt(canvasElement, '[data-part="before"]')).toBe('disconnected');
+    await expect(railAt(canvasElement, '[data-hintuan="h2"]')).toBe('below');
+    await expect(railAt(canvasElement, '[data-hintuan="h7"]')).toBe('below');
+    await expect(railAt(canvasElement, '[data-part="after"]')).toBe('connected');
+    await expect(railAt(canvasElement, '[data-testid="trip-destination"]')).toBe('above');
+  },
 };
