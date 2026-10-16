@@ -1,9 +1,11 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, type AnimationEvent } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import type { Basemap } from './basemap';
+
+import './map-style.css';
 
 interface MapStyleProps {
   /** The designs offered, in order: three on the public map, five in the studio. */
@@ -12,8 +14,12 @@ interface MapStyleProps {
   selectedId: string;
   /** Each design's picture, by its id; a design without one shows a plain tile. */
   thumbnails: Readonly<Record<string, string>>;
+  /** Leaving: it shrinks back into the button, and takes no taps or keys meanwhile. */
+  isClosing?: boolean;
   onSelect: (basemap: Basemap) => void;
   onClose: () => void;
+  /** Its leaving is over: the control can let it go. */
+  onClosed?: () => void;
 }
 
 /**
@@ -25,12 +31,26 @@ interface MapStyleProps {
  * until ✕, Escape or a tap outside, so the viewer sees what they picked.
  *
  * It holds the keyboard while open, as a dialog does (CLAUDE.md): it opens
- * on the design shown, and Tab goes round inside it.
+ * on the design shown, and Tab goes round inside it. It pops in and out
+ * like the hintuan pins (map-style.css).
  */
-export function MapStyle({ basemaps, selectedId, thumbnails, onSelect, onClose }: MapStyleProps) {
+export function MapStyle({
+  basemaps,
+  selectedId,
+  thumbnails,
+  isClosing = false,
+  onSelect,
+  onClose,
+  onClosed,
+}: MapStyleProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   // An id of its own, so two cards on one page (a docs page of every story) name themselves.
   const titleId = useId();
+
+  // Its own leaving only: a tooltip or a picture inside has none, but one could.
+  const handleAnimationEnd = (e: AnimationEvent<HTMLDivElement>) => {
+    if (isClosing && e.target === e.currentTarget) onClosed?.();
+  };
 
   useEffect(() => {
     const card = cardRef.current;
@@ -60,7 +80,10 @@ export function MapStyle({ basemaps, selectedId, thumbnails, onSelect, onClose }
       aria-modal="true"
       aria-labelledby={titleId}
       data-testid="basemap-menu"
-      className="flex max-h-[calc(100dvh-8rem)] flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-4 font-sn-pro shadow-sm"
+      data-closing={isClosing || undefined}
+      inert={isClosing}
+      onAnimationEnd={handleAnimationEnd}
+      className="map-style flex max-h-[calc(100dvh-8rem)] flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-4 font-sn-pro shadow-sm"
     >
       <div className="flex items-center">
         <h2

@@ -23,6 +23,18 @@ interface BasemapControlProps {
  * (2026-09-29) — then the button takes the corner itself.
  */
 type Above = 'attribution' | 'zoom' | 'nothing';
+
+/** Closing is the card on its way out, still drawn while its leaving plays. */
+type CardState = 'closed' | 'open' | 'closing';
+
+/**
+ * Where a close goes: the card plays its leaving (map-style.css) before it
+ * goes, unless the device asks for no motion; then at once, as there is no
+ * animation to wait for.
+ */
+const afterClose = (): CardState =>
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'closed' : 'closing';
+
 // Below the status bar on an installed iPhone: the map's own corner controls
 // already sit inside the safe area (styles/index.css), and these follow them.
 const TOP = {
@@ -40,13 +52,14 @@ const TOP = {
  */
 export function BasemapControl({ map, basemaps, thumbnails, initial, under }: BasemapControlProps) {
   const [current, setCurrent] = useState<Basemap>(initial);
-  const [isOpen, setIsOpen] = useState(false);
+  const [card, setCard] = useState<CardState>('closed');
+  const isOpen = card === 'open';
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // The keyboard goes back where it was: on the button that opened the card.
   const close = () => {
-    setIsOpen(false);
+    setCard(afterClose());
     buttonRef.current?.focus();
   };
 
@@ -56,7 +69,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial, under }: Ba
     if (!isOpen) return;
     const handlePointerDown = (e: PointerEvent) => {
       if (e.target instanceof Node && rootRef.current?.contains(e.target)) return;
-      setIsOpen(false);
+      setCard(afterClose());
     };
     window.addEventListener('pointerdown', handlePointerDown);
     return () => window.removeEventListener('pointerdown', handlePointerDown);
@@ -70,7 +83,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial, under }: Ba
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       e.stopPropagation();
-      setIsOpen(false);
+      setCard(afterClose());
       buttonRef.current?.focus();
     };
     window.addEventListener('keydown', handleKeyDown, true);
@@ -92,7 +105,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial, under }: Ba
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => (isOpen ? close() : setIsOpen(true))}
+        onClick={() => (isOpen ? close() : setCard('open'))}
         aria-label="Map design"
         aria-expanded={isOpen}
         aria-haspopup="dialog"
@@ -110,13 +123,15 @@ export function BasemapControl({ map, basemaps, thumbnails, initial, under }: Ba
           className="pointer-events-none absolute inset-0 rounded-full shadow-special-button-rest group-active:shadow-special-button-pressed"
         />
       </button>
-      {isOpen && (
+      {card !== 'closed' && (
         <MapStyle
           basemaps={basemaps}
           selectedId={current.id}
           thumbnails={thumbnails}
           onSelect={handleSelect}
+          isClosing={card === 'closing'}
           onClose={close}
+          onClosed={() => setCard('closed')}
         />
       )}
     </div>

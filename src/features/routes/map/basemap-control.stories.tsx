@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Map as MapLibreMap } from 'maplibre-gl';
 import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { BASEMAPS } from './basemap';
 import { BasemapControl } from './basemap-control';
@@ -123,8 +123,39 @@ export const CloseButtonCloses: Story = {
     const card = await openCard(canvasElement);
     await userEvent.click(within(card).getByRole('button', { name: 'Close' }));
     const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('dialog')).toBeNull();
+    // Gone once its leaving has played (map-style.css).
+    await waitFor(() => expect(canvas.queryByRole('dialog')).toBeNull());
     await expect(canvas.getByRole('button', { name: 'Map design' })).toHaveFocus();
+  },
+};
+
+/** ✕ starts its leaving: still drawn a moment, taking no taps, then gone. */
+export const LeavesThenGoes: Story = {
+  play: async ({ canvasElement }) => {
+    const card = await openCard(canvasElement);
+    await userEvent.click(within(card).getByRole('button', { name: 'Close' }));
+    const leaving = canvasElement.querySelector('[data-testid="basemap-menu"]');
+    await expect(leaving).toHaveAttribute('data-closing');
+    await expect(leaving).toHaveAttribute('inert');
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-testid="basemap-menu"]')).toBeNull(),
+    );
+  },
+};
+
+/** The button tapped again while the card leaves: it comes back, open. */
+export const ReopenWhileLeaving: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = await openCard(canvasElement);
+    await userEvent.click(within(card).getByRole('button', { name: 'Close' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
+    const again = canvas.getByRole('dialog', { name: 'Map Style' });
+    await expect(again).not.toHaveAttribute('data-closing');
+    await expect(canvas.getByRole('button', { name: 'Map design' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
   },
 };
 
@@ -134,7 +165,8 @@ export const EscapeCloses: Story = {
     await openCard(canvasElement);
     await userEvent.keyboard('{Escape}');
     const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('dialog')).toBeNull();
+    // Gone once its leaving has played (map-style.css).
+    await waitFor(() => expect(canvas.queryByRole('dialog')).toBeNull());
     const button = canvas.getByRole('button', { name: 'Map design' });
     await expect(button).toHaveAttribute('aria-expanded', 'false');
     await expect(button).toHaveFocus();
@@ -146,7 +178,7 @@ export const TapOutsideCloses: Story = {
   play: async ({ canvasElement }) => {
     await openCard(canvasElement);
     await userEvent.click(canvasElement.ownerDocument.body);
-    await expect(within(canvasElement).queryByRole('dialog')).toBeNull();
+    await waitFor(() => expect(within(canvasElement).queryByRole('dialog')).toBeNull());
   },
 };
 
