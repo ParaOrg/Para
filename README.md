@@ -16,7 +16,7 @@ Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
   app, the plan and the owner use: [CONTEXT.md](CONTEXT.md). Decisions and
   research: [docs/](docs/).
 
-## Two pages, one file
+## Two pages, one published map
 
 **`/` is the public map.** It never asks the database: it reads the published
 map, `public/data/index.v4.json` — every route and hotspot, the train lines
@@ -24,10 +24,16 @@ and the ferry with their stations, each line as an overview — and a direction'
 lit, all published from the live tables and committed here, and draws every direction of every route, the hotspots (terminals and
 hintuans, where people board), and where a direction passes a hintuan its
 line turns orange for that stretch. A tap on a line or a box opens a card; a
-tap where several things meet opens a chooser. "Where am I" shows the
+tap where several things meet opens a chooser. On a trip, any hintuan (on a
+train, any station) can be the ride's start or its end: Set as start under a
+row, a tap for the end, and the Distance and fare tiles read the ride between
+them. SWITCH turns the card to the other direction, and names it: Pabalik on
+a Papunta card, the other bound on a train. The layers button at the top
+right opens the Map Style card: Monochrome, Colour (Apple Maps' light
+palette) or Fiord. "Where am I" shows the
 visitor as a small walking figure, flying at jeep speed, over a halo the
 size of the fix's accuracy; the position never leaves the phone. It installs
-as an app and keeps the last file it saw, so it works offline.
+as an app and keeps the last map it saw, so it works offline.
 
 **`/studio/` is the editor**, for the owner and the accounts on the editor
 list. It reads the live tables, draws lines snapped to the road with OSRM,
@@ -56,28 +62,30 @@ The editor needs the project's address and publishable key in `.env.local`
 nothing. `/studio/?e2e=1` skips the sign-in door in development builds, for
 the headless checks — drawing works, saving still needs an account.
 
-    npm run check                   # formatting, build with its guards, then the unit checks
+    npm run check                   # Prettier's check, ESLint, the build with its guards, then the unit checks
     npm run format                  # Prettier over the tree (.prettierrc); blame skips the format commit
                                     # once per clone: git config blame.ignoreRevsFile .git-blame-ignore-revs
     node tests/e2e/visitor-test.mjs # and the other headless suites, see tests/e2e/README.md
     npm run check:data              # the committed map against the app's own rules
     npm run storybook               # the cards, the chooser, the panels, on their own
 
-**Every push runs on GitHub** (`.github/workflows/ci.yml`): the build, the
-unit checks, and the headless suites against the dev server — the public map
-on a laptop and on a phone, the installable app, the map with 5,000
-directions, and the editor's drawing tools. A red check means the push
-broke something; the failing suite's screenshots are the run's artifact.
+**CI runs on GitHub** (`.github/workflows/ci.yml`): the build, the unit
+checks, and the headless suites against the dev server, each suite its own
+job. A pull request runs only the suites its files can reach (docs alone run
+none), and the drawing suites, which lean on the public OSRM router, run only
+on pushes to `main` and `staging`, nightly and on "Run workflow". A red check
+means the change broke something; the failing suite's screenshots are the
+run's artifact. Details in `tests/e2e/README.md`.
 
 ## Publishing the map
 
-The file is published from `main`, every night at 04:00 Manila and on "Run
+The map is published from `main`, every night at 04:00 Manila and on "Run
 workflow" (`.github/workflows/publish-map.yml`). `scripts/publish/publish-map.mjs`
 reads the public tables, keeps each line within half a metre of what was
 drawn and rounds to 6 decimals — the app's own rules, imported from `src/`
 — refuses a map that suddenly shrank, and writes the same bytes for the
 same data, so a quiet night commits nothing.
-`scripts/checks/check-map-data.mjs` then reads the file back against the app's own
+`scripts/checks/check-map-data.mjs` then reads it back against the app's own
 rules: a link to a hotspot that is not there stops the publish; a line that
 ends far from its terminal, or a hintuan it passes without being linked to,
 goes out with the map and is written up. One issue, **"The map needs a
@@ -91,7 +99,7 @@ with warnings, and closed by the first run with nothing to report.
 | `src/app/` | the two front doors, wiring only: `public-map/` (the public map's entry, its shell and status bar) and `studio/` (the editor's entry and shell) |
 | `src/features/routes/` | the core both apps draw: `model/` (routes, stops, places, timelines, rides, fares, liveries — no React, no MapLibre), `geo/` (the pass and babaan-side rules), `map/` (the map view with its basemap and layers, the route and hotspot layers and hooks), `cards/` (the cards, sheets and timelines, with their stories; `use-card-stack`, which card is up, and `use-card-camera`, the camera with them). Imported through its concern folders; it has no `index.ts` on purpose, since Node runs the publish and the unit checks against its files |
 | `src/features/locator/` | "Where am I": the visitor's dot, its button and its moods |
-| `src/features/published-map/` | the published map's reader (`map-file.ts`), its freshness and the installed app's updates (`pwa.ts`), and the notices |
+| `src/features/published-map/` | the published map's reader (`api/fetch-index.ts` and `api/fetch-line.ts`, its shape in `schemas/`, its names and URLs in `map-file.ts`), its freshness and the installed app's updates (`pwa.ts`), and the notices |
 | `src/features/studio/` | the editor: `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions). Its `index.ts`, like the locator's and the published map's, is what the shells import |
 | `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths) |
 | `src/styles/` | `global.css`, the one stylesheet: Tailwind, then the design system's tokens and fonts |
@@ -124,5 +132,5 @@ The route lines follow OpenStreetMap's road network (snapped with OSRM), so
 the data is a derivative of OpenStreetMap, © OpenStreetMap contributors, also
 under the ODbL. The map tiles come from OpenFreeMap, built from the same data.
 
-Every published version of the map file is kept in this repository's history,
+Every published version of the map is kept in this repository's history,
 so what is published stays public.
