@@ -112,6 +112,19 @@ export const MAP_PAINT = {
   'Paint/terrain-accent': 'rgb(122, 116, 104)', // the steepest ground
   'Paint/basemap-photo-label': '#ffffff', // Satellite, labelled: street and place names over the photo
   'Paint/basemap-photo-halo': '#1a1a1a', // near-black, so a name reads over a bright roof
+  // Colour: Apple Maps' light palette, read off the owner's screenshot (2026-10-16).
+  'Paint/daylight-land': '#f7f3eb', // the ground, a warm cream; homes the same
+  'Paint/daylight-water': '#8edbf6', // rivers, the bay, lakes
+  'Paint/daylight-green': '#d5efbe', // parks, cemeteries, grass and woods
+  'Paint/daylight-commercial': '#fef5e4', // shops, offices and malls, a pale warm yellow
+  'Paint/daylight-building': '#efe9df', // a touch darker than the ground
+  'Paint/daylight-building-edge': '#e4ddd1',
+  'Paint/daylight-highway': '#dde1e1', // motorways and their ramps: EDSA, the Skyway
+  'Paint/daylight-highway-edge': '#cdd2d2',
+  'Paint/daylight-road': '#e1e3e7', // the avenues: trunk, primary to tertiary, and links
+  'Paint/daylight-road-edge': '#ced2d9', // a shade darker
+  'Paint/daylight-street': '#ffffff', // streets and service roads, white
+  'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
   'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
   'Paint/draw-borrow': '#2563eb', // blue/600: the stretch an Extend borrows
