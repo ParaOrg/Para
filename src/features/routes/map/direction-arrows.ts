@@ -54,7 +54,8 @@ import { ROUTES_HIT_LAYER } from './tap';
  * zoom — crisp at every size, where a picture scaled from 5 px to 13 px
  * would blur or shimmer. The line handed in is already in travel order
  * (`travelLine`), so chevron number one leaves the terminal the title names,
- * whichever end it was drawn from.
+ * whichever end it was drawn from; a ride picked backwards turns it round
+ * (flowLines).
  */
 
 const SRC = 'direction-arrows';
@@ -65,21 +66,26 @@ const SAME_END_M = 150;
 /**
  * One lit ride: its direction, its line in travel order, and the places it
  * runs from and to; and `pale`, the way not ridden when an end is picked on
- * its trip, after a start or not (useRideTo's ridden): before the start and
- * after the end. useRideRest draws it in the card's pale, and an end circle
+ * its trip, after a start or not (useRideTo's ridden): the line on either
+ * side of the ride. useRideRest draws it in the card's pale, and an end circle
  * on it wears the pale too and loses its S or E (EndTitles), the picks' pins
  * carrying them. The chevrons flow on along the pale, white on it as on the
  * line (the owner's ask, 2026-10-13: "continue the arrow into the pale
  * lines", and of two colours tried, "I love the white"); they stopped at the
- * pick from 2026-10-02 until then. `isUnmarked`: a start picked on its trip
- * with no ride drawn, alone or with an end the line can't take it to: both
- * its ends lose their S and E, lit, the start's pin carrying the S (the
- * owner, 2026-10-16: "Nothing yet, just the S").
+ * pick from 2026-10-02 until then. `isBackwards`: an end picked above the
+ * start, ridden back along the line, and the chevrons along the whole of it
+ * flow from the S to the E, the line itself still in travel order for its
+ * ends (the owner, 2026-10-16: "the arrow in route line change the flow …
+ * in accordance with start and endpoint selected"). `isUnmarked`: a start
+ * picked on its trip with no ride drawn, alone or with an end the line can't
+ * take it to: both its ends lose their S and E, lit, the start's pin
+ * carrying the S (the owner, 2026-10-16: "Nothing yet, just the S").
  */
 export interface Ride {
   id?: string;
   line: readonly LngLat[];
   pale?: readonly (readonly LngLat[])[];
+  isBackwards?: boolean;
   isUnmarked?: boolean;
   from: string;
   to: string;
@@ -150,6 +156,15 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
         return e;
       }),
     );
+}
+
+/**
+ * The line each lit ride's chevrons flow along: the whole of it, on past a
+ * picked hintuan too, and turned round for a ride picked backwards (Ride's
+ * `isBackwards`), so they flow from its S to its E.
+ */
+export function flowLines(rides: readonly Ride[]): (readonly LngLat[])[] {
+  return rides.map((r) => (r.isBackwards ? [...r.line].reverse() : r.line));
 }
 
 /** Whether two points are one: a pale stretch starting or ending where the line does. */
@@ -307,8 +322,7 @@ export function onAMove(held: View | null, drawnAt: number, now: View): 'hold' |
  * unchanged (a memo), or the flow restarts.
  */
 export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride[]): void {
-  // The whole line, on past a picked hintuan too (Ride, above).
-  const lines = useMemo(() => rides.map((r) => r.line), [rides]);
+  const lines = useMemo(() => flowLines(rides), [rides]);
   const hitReady = useLayerReady(map, ROUTES_HIT_LAYER);
   useEffect(() => {
     // Over the lit line and its orange stretches, under the hit area and the

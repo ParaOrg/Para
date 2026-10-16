@@ -50,14 +50,6 @@ function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
       onPick={(id) => {
         props.onPick(id);
         if (id === start) return setStart(null);
-        // A row above the start becomes the start, the start the end, as
-        // useRideTo does (the owner, 2026-10-16: "it should follow the arrow").
-        const at = (row: string | null) => props.hintuans.findIndex((h) => h.id === row);
-        if (start !== null && at(id) < at(start)) {
-          setAtEnd(null);
-          setPicked(start);
-          return setStart(id);
-        }
         setAtEnd(null);
         setPicked((cur) => (cur === id ? null : id));
       }}
@@ -564,12 +556,14 @@ export const LetTheEndGo: Story = {
 };
 
 /**
- * A row above the start tapped (the owner, 2026-10-16: "it should follow the
- * arrow … without changing to southbound and north bound"): Amparo becomes
- * the start, and Bistek, the start a moment before, the end; the ride runs
- * the trip's own way between them, and the keyboard's focus stays on Amparo.
+ * A row above the start tapped, his Variant5 (4151:13619; the owner,
+ * 2026-10-16: "reverse the arrow, dont' switch please, it's confusing for
+ * users"): Amparo is the end, above Bistek, the start, and the ride runs
+ * back between them. The rail breaks just above Amparo and just below
+ * Bistek, running on along the rows outside the ride ("can you still connect
+ * those dots"). The keyboard's focus stays on Amparo.
  */
-export const StartMovesUp: Story = {
+export const EndAboveStart: Story = {
   args: {
     start: 'h7',
     pickedMetres: 4_200,
@@ -580,12 +574,22 @@ export const StartMovesUp: Story = {
     const row = (id: string) =>
       canvasElement.querySelector(`[data-testid="trip-hintuan"][data-hintuan="${id}"]`);
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
-    await expect(row('h3')?.querySelector('[data-part="start"]')).toBeTruthy();
-    await expect(row('h7')?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(row('h3')?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(row('h7')?.querySelector('[data-part="start"]')).toBeTruthy();
     await expect(canvas.getByTestId('trip-km').textContent).toBe(kmLabel(4_200));
+    const railOf = (id: string) => row(id)?.querySelector('[data-rail]')?.getAttribute('data-rail');
+    await expect(railOf('h3')).toBe('below');
+    await expect(railOf('h7')).toBe('above');
     await expect(document.activeElement).toBe(
       row('h3')?.querySelector('[data-testid="trip-hintuan-pick"]'),
     );
+    // The hintuans above the ride opened: the rail through them and through
+    // View less, up to the break above Amparo.
+    const before = await canvas.findByRole('button', { name: /3 more hintuans/ });
+    await expect(before.dataset.part).toBe('before');
+    await userEvent.click(before);
+    await expect(railOf('h2')).toBe('through');
+    await expect(before.querySelector('[data-rail]')?.getAttribute('data-rail')).toBe('connected');
   },
 };
 

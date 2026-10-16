@@ -89,11 +89,11 @@ export const Pink: Story = { args: { livery: 'pink' } };
 /**
  * A hintuan picked: its dot a white ring round the rail's colour, End's E
  * before its name, now ExtraBold, its pill with the pesos to there, and Set
- * as start under it when there is a button for it. The rail runs only along
- * the ride (the owner, 2026-10-15): from the origin down to it, ending
- * there (MiddleBottom); the rows after it, the fold's and the destination's,
- * are their dots alone (Disconnected), the destination without its E.
- * The fold after it opened.
+ * as start under it when there is a button for it. The rail runs from the
+ * origin down to it, ending there (MiddleBottom), and on again along the
+ * rows after it, through the fold to the destination, without its E (the
+ * owner's Variant5, 4151:13619, 2026-10-16: "can you still connect those
+ * dots"). The fold after it opened.
  */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: openFold };
 
@@ -281,7 +281,10 @@ export const RideStartJeep: Story = {
   args: { start: 'h2', onSetStart: fn(), onRemoveStart: fn() },
 };
 
-/** Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride Shaw Boulevard → Ayala. */
+/**
+ * Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride
+ * Shaw Boulevard → Ayala, the rail broken just above it and just below it.
+ */
 export const RideStartAndEnd: Story = {
   args: {
     ...onMrt3,
@@ -294,14 +297,29 @@ export const RideStartAndEnd: Story = {
 };
 
 /**
- * An end above the start that stays the end: a row whose box the line
- * misses, so it has no place on the line to come before the start, and
- * useRideTo keeps it the end (a row before the start becomes the start only
- * where the line reaches both, 2026-10-16). E above S, the rail between them,
- * and no ride to price: no pill.
+ * Variant4, the stations above the ride opened: the rail runs from North
+ * Avenue through them and through View less, and breaks just above Shaw
+ * Boulevard.
  */
-export const RideEndAboveStartUnpriced: Story = {
-  args: { ...onMrt3, start: shaw, startCode: 'YL07', picked: quezon, pickedCode: 'YL02' },
+export const RideStartAndEndOpened: Story = { ...RideStartAndEnd, play: openFold };
+
+/**
+ * Variant5 (4151:13619): Shaw Boulevard the start, then Quezon Avenue tapped
+ * above it, the end: E above S, both pills, the ride between them ridden back
+ * along the line (the owner, 2026-10-16: "reverse the arrow, dont' switch
+ * please"; that morning the row tapped became the start). The rail breaks
+ * just above Quezon Avenue and just below Shaw Boulevard, under its × Remove
+ * as start.
+ */
+export const RideEndAboveStart: Story = {
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    picked: quezon,
+    pickedCode: 'YL02',
+    pickedPesos: '₱13',
+  },
 };
 
 /** A jeep's ride between two hintuans: the pesos alone in the pill, the same buttons. */

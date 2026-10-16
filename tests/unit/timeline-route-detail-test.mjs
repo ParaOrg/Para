@@ -256,31 +256,52 @@ test('a jeep’s start alone has no pill; a train’s ride with no fare has none
   assert.doesNotMatch(unpriced, /trip-hintuan-fare/, 'a ride with no fare: no code alone either');
 });
 
-// A row the line misses has no place on it before the start, so it stays the
-// end when tapped above it (useRideTo swaps only where the line reaches
-// both): the card draws E above S, the rail between them.
-test('an end above the start (a row the line misses): the rail and the open rows run from the E down to the S', () => {
-  const html = render(10, { start: 'h6', picked: 'h2' });
+// The owner, 2026-10-16: "can you still connect those dots, since it might
+// see the users as broken" (his Variant5, 4151:13619): the rail runs along
+// the rows outside the ride too, broken just above the ride and just below.
+test('a start and an end: the rail broken where the ride starts and ends, running on outside it and through both folds', () => {
+  const html = render(10, { start: 'h3', picked: 'h6', onRemoveStart() {} });
+  const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
+  // The origin, the fold of the three before the ride (folded, they draw
+  // nothing yet), S (rail below) and the rail on beside its × Remove as
+  // start, two through, E (rail above), the fold of the three after it, and
+  // the destination.
+  assert.deepEqual(pieces, [
+    'below',
+    'connected',
+    'below',
+    'connected',
+    'through',
+    'through',
+    'above',
+    'connected',
+    'above',
+  ]);
+});
+
+test('an end above the start (Variant5): the open rows run from the E down to the S, the rail broken just above the E and just below the S', () => {
+  const html = render(10, { start: 'h6', picked: 'h2', onRemoveStart() {} });
   const r = rows(html);
   assert.deepEqual(
     r.filter((x) => x.cls === SHOWN).map((x) => x.id),
     ['h2', 'h3', 'h4', 'h5', 'h6'],
   );
   const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
-  // The origin and the fold of the two rows before the ride (folded, they
-  // draw nothing yet), then E (rail below), three through, S (rail above),
-  // and the fold of the three after it, and the destination: no rail
-  // outside the ride.
+  // The origin and the fold of the two rows before the ride, the rail
+  // through them; E (rail below), three through, S (rail above) and no rail
+  // beside its × Remove as start; the fold of the three after it and the
+  // destination, the rail through them.
   assert.deepEqual(pieces, [
-    'disconnected',
-    'disconnected',
+    'below',
+    'connected',
     'below',
     'through',
     'through',
     'through',
     'above',
     'disconnected',
-    'disconnected',
+    'connected',
+    'above',
   ]);
   const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
   assert.deepEqual(marks, ['end', 'start']);

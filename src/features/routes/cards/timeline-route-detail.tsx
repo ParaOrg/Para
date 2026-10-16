@@ -118,13 +118,15 @@ export interface TimelineRouteDetailProps {
  * The rows are the owner's Timeline set (3716:1894) — TimelineStick for the
  * rail, TimelineDot for the hotspots — drawn in red there; each livery takes
  * its own Card/<livery>/Timeline/surface.
- * The rail runs only along the ride (the owner, 2026-10-15): end to end
- * with nothing picked; to a picked hintuan, where it stops (TimelineStick
- * MiddleBottom), the rows after it their dots alone (Disconnected), as the
- * map leaves pale everything outside the ride. A start alone is no ride yet:
- * its dot stands alone, the rail running on through every other row, and
- * the map and the tiles stay the whole trip's until an end is picked (his
- * Variant3, 2026-10-16).
+ * The rail runs end to end with nothing picked. A ride picked, it breaks
+ * where the ride starts and where it ends (TimelineStick MiddleBottom just
+ * above the break, MiddleTop just below), running on along the rows before
+ * the ride and after it (the owner's Variant5, 4151:13619, 2026-10-16: "can
+ * you still connect those dots"; from 2026-10-15 they were their dots alone),
+ * the map leaving pale everything outside the ride. A start alone is no ride
+ * yet: its dot stands alone, the rail broken round it, and the map and the
+ * tiles stay the whole trip's until an end is picked (his Variant3,
+ * 2026-10-16).
  *
  * A hintuan's row picks it (his Timeline State=Selected, 3769:2847,
  * 2026-09-29): its dot turns to a white ring round a centre in the card's
@@ -211,26 +213,35 @@ export function TimelineRouteDetail({
     return !fold || isOpen(fold.part);
   };
   const rail = TIMELINE_SURFACE[livery];
-  // The rail runs only along the ride (the owner, 2026-10-15): from its
-  // first row to its last. The origin is -1, the destination the row count
-  // (rideRows). No pick, it runs end to end.
-  const { first, last } = rideRows(hintuans, start, picked) ?? {
-    first: -1,
-    last: hintuans.length,
-  };
-  // A start alone is no ride yet (the owner's Variant3, 2026-10-16: "it must
-  // originally make the connection disconnected … so user don't get confused
-  // on the context"): its dot stands alone, the rail broken just above it and
-  // just below, and running on through every other row until an end is
-  // picked, which connects the two (Variant4).
+  // The rail runs along the ride, from its first row to its last, and along
+  // the rows before it and after it, broken where the ride starts and where
+  // it ends (the owner, 2026-10-16: "can you still connect those dots, since
+  // it might see the users as broken", his Variant5, 4151:13619; from
+  // 2026-10-15 those rows were their dots alone). The origin is -1, the
+  // destination the row count (rideRows). No pick, it runs end to end. A
+  // start alone is no ride yet (his Variant3, 2026-10-16: "it must originally
+  // make the connection disconnected … so user don't get confused on the
+  // context"): a ride of its one row, its dot alone, until an end is picked.
   const lone = picked === null && start !== null ? hintuans.findIndex((h) => h.id === start) : -1;
-  const isLone = (i: number) => lone >= 0 && i === lone;
-  const isOnRide = (i: number) => i >= first && i <= last && !isLone(i);
-  const pieceAt = (i: number): TimelineStickVariant => {
-    if (i === first || isLone(i - 1)) return 'middleTop';
-    if (i === last || isLone(i + 1)) return 'middleBottom';
-    return 'middle';
+  const { first, last } =
+    rideRows(hintuans, start, picked) ??
+    (lone >= 0 ? { first: lone, last: lone } : { first: -1, last: hintuans.length });
+  const sideOf = (i: number): 'before' | 'ride' | 'after' => {
+    if (i < first) return 'before';
+    if (i > last) return 'after';
+    return 'ride';
   };
+  // A fold's row sits after its last row, and every row of a fold is on one
+  // side of the ride: the rail runs on from that row into it, and from it on
+  // to the row after it where that row is on the same side.
+  const isFoldEnd = (i: number) => {
+    const id = i < 0 ? undefined : hintuans.at(i)?.id;
+    return id !== undefined && foldOf.get(id)?.rowIds.at(-1) === id;
+  };
+  /** Whether the rail runs on below row `i` (-1 the origin) to what comes after it. */
+  const hasRailBelow = (i: number) => isFoldEnd(i) || sideOf(i) === sideOf(i + 1);
+  /** Whether the rail reaches row `i` (the row count the destination) from what comes before it. */
+  const hasRailAbove = (i: number) => sideOf(i - 1) === sideOf(i);
   // Every row's Pressed: the rail's colour, while the finger is down.
   const pressed = ROW_PRESSED[livery];
 
@@ -261,7 +272,7 @@ export function TimelineRouteDetail({
           pressed={pressed}
           routeOrigin={routeOrigin}
           isStart={start === null}
-          connection={first === -1 && !isLone(0) ? 'connected' : 'disconnected'}
+          connection={hasRailBelow(-1) ? 'connected' : 'disconnected'}
           selected={endPicked === 'from'}
           onTap={() => onEnd('from')}
         />
@@ -270,6 +281,7 @@ export function TimelineRouteDetail({
           const isEnd = h.id === picked;
           const fold = foldOf.get(h.id);
           const shown = isShown(h.id);
+          const { connection, piece } = railPiece(hasRailAbove(i), hasRailBelow(i));
           const { mark, pill, action } = rowRole({
             isStart,
             isEnd,
@@ -294,12 +306,12 @@ export function TimelineRouteDetail({
                 mark={mark}
                 pill={pill}
                 livery={livery}
-                connection={isOnRide(i) ? 'connected' : 'disconnected'}
-                piece={pieceAt(i)}
+                connection={connection}
+                piece={piece}
                 action={action}
                 onPick={onPick}
               />
-              {fold && fold.rowIds[fold.rowIds.length - 1] === h.id && (
+              {fold && isFoldEnd(i) && (
                 <TimelineDisclosure
                   part={fold.part}
                   rail={rail}
@@ -307,10 +319,6 @@ export function TimelineRouteDetail({
                   open={isOpen(fold.part)}
                   count={fold.rowIds.length}
                   isTrain={isTrain}
-                  // The rail runs through a fold whose rows it runs along: every
-                  // row with nothing picked, the rows after a start alone (his
-                  // Variant3); the rows outside a ride fold with no rail.
-                  connection={isOnRide(i) ? 'connected' : 'disconnected'}
                   onToggle={() => toggle(fold.part)}
                 />
               )}
@@ -323,9 +331,7 @@ export function TimelineRouteDetail({
           pressed={pressed}
           routeDirection={routeDirection}
           isEnd={picked === null && start === null}
-          connection={
-            last === hintuans.length && !isLone(hintuans.length - 1) ? 'connected' : 'disconnected'
-          }
+          connection={hasRailAbove(hintuans.length) ? 'connected' : 'disconnected'}
           selected={endPicked === 'to'}
           onTap={() => onEnd('to')}
         />
@@ -406,7 +412,7 @@ function TimelineTop({
   routeOrigin: string;
   /** Where the ride starts, Start's S before its name: no start picked further on. */
   isStart: boolean;
-  /** Disconnected once a start picked further on leaves it outside the ride, or a start alone on the first hintuan stands apart from it. */
+  /** Disconnected where a ride, or a start alone, starts at the first hintuan: the rail breaks under it. */
   connection: TimelineStickConnection;
   selected: boolean;
   onTap: () => void;
@@ -453,6 +459,20 @@ function TimelineTop({
  */
 const ROW_SHOWN = 'visible grid-rows-[1fr] duration-gentle ease-enter';
 const ROW_FOLDED = 'invisible grid-rows-[0fr] duration-base ease-exit';
+
+/**
+ * A hintuan row's piece of the rail, from whether the rail runs on above its
+ * dot and below it: a row the rail neither reaches nor leaves is its dot alone.
+ */
+function railPiece(
+  hasRailAbove: boolean,
+  hasRailBelow: boolean,
+): { connection: TimelineStickConnection; piece: TimelineStickVariant } {
+  if (hasRailAbove && hasRailBelow) return { connection: 'connected', piece: 'middle' };
+  if (hasRailBelow) return { connection: 'connected', piece: 'middleTop' };
+  if (hasRailAbove) return { connection: 'connected', piece: 'middleBottom' };
+  return { connection: 'disconnected', piece: 'middle' };
+}
 
 /** A row's part in the ride: its S or E, its pill, and the button under it. */
 interface RowRole {
@@ -541,12 +561,12 @@ function TimelineHintuan({
   /** What its pill says (rowRole); null, no pill. */
   pill: RouteTripLineDetailPillContent | null;
   livery: Livery;
-  /** On the ride's rail, or outside it, its dot alone; a start alone is its dot alone too. */
+  /** On the rail, or its dot alone: a start alone (railPiece). */
   connection: TimelineStickConnection;
   /**
-   * Its piece of the rail: MiddleTop where the ride starts, MiddleBottom
-   * where it ends, Middle between; just below a start alone MiddleTop, and
-   * just above it MiddleBottom, the rail broken round it.
+   * Its piece of the rail (railPiece): MiddleTop where the rail starts again
+   * after a break, MiddleBottom where it breaks, Middle between. It breaks
+   * where a ride starts and where it ends, and round a start alone.
    */
   piece: TimelineStickVariant;
   /** The ride's start (S) or end (E), before its name; null for any other row. */
@@ -606,7 +626,7 @@ function TimelineHintuan({
           </button>
           {/* Under the row, its own button (the owner's Choosing and Variant3,
               4137:9887 and 4148:12161): a sibling of the row's, never inside it.
-              The rail runs on beside it where the ride does, past a start. */}
+              The rail runs on beside it where it runs on below the row. */}
           {action && (
             <div className="flex px-4">
               <TimelineStick
@@ -639,7 +659,11 @@ function TimelineHintuan({
   );
 }
 
-/** Figma's TimelineDisclosure: the hintuans folded into one row, or, opened, the row that folds them. */
+/**
+ * Figma's TimelineDisclosure: the hintuans folded into one row, or, opened,
+ * the row that folds them. The rail runs through it: its rows are all on one
+ * side of the ride, the rail along them (the owner's Variant5, 4151:13619).
+ */
 function TimelineDisclosure({
   part,
   rail,
@@ -647,7 +671,6 @@ function TimelineDisclosure({
   open,
   count,
   isTrain,
-  connection,
   onToggle,
 }: {
   /** Which rows it folds: every hintuan, or those before or after a picked ride (timelineFolds). */
@@ -659,8 +682,6 @@ function TimelineDisclosure({
   count: number;
   /** "N more stations" on a train, "N more hintuans" else. */
   isTrain: boolean;
-  /** Disconnected once its rows are outside a picked ride; connected while the rail runs along them. */
-  connection: TimelineStickConnection;
   onToggle: () => void;
 }) {
   const foldWord = isTrain ? 'stations' : 'hintuans';
@@ -674,7 +695,7 @@ function TimelineDisclosure({
         onClick={onToggle}
         className={'flex w-full items-start px-4 text-left ' + pressed}
       >
-        <TimelineStick variant="disclosure" connection={connection} rail={rail} />
+        <TimelineStick variant="disclosure" rail={rail} />
         <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3 text-sm/5 font-normal whitespace-nowrap">
           {/* One chevron, turned: Figma's chevron-down, and its chevron-up opened. */}
           <span
@@ -716,7 +737,7 @@ function TimelineBottomEndRoute({
   routeDirection: string;
   /** Where the ride ends, End's E before its name: no hintuan picked as the end, and no start alone (Variant3). */
   isEnd: boolean;
-  /** Disconnected once a picked hintuan ends the ride before it, or a start alone on the last hintuan stands apart from it. */
+  /** Disconnected where a ride, or a start alone, ends at the last hintuan: the rail breaks above it. */
   connection: TimelineStickConnection;
   selected: boolean;
   onTap: () => void;
