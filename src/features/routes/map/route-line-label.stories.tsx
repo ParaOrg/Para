@@ -57,17 +57,35 @@ export const Default: Story = {
     await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
     await expect(canvasElement.querySelector('.sr-only')).toBeNull();
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('1');
   },
 };
 
-/** End (4068:4865): End's circled E, 20 across, before the name. */
+/**
+ * Unselected (4200:13645, 2026-10-16): Default at 60%, a hintuan outside
+ * the ride (the owner: "if the label is unselected it would be transparent").
+ */
+export const Unselected: Story = {
+  args: { variant: 'unselected' },
+  play: async ({ canvasElement }) => {
+    const pill = partOf(canvasElement, 'name');
+    await expectFigmaType(pill);
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('0.6');
+    await expect(canvasElement.querySelector('.sr-only')).toBeNull();
+  },
+};
+
+/** End (4068:4865): End's circled E, 24 across, 2 in from the pill's edge, before the name. */
 export const End: Story = {
   args: { variant: 'end' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     await expectFigmaType(pill);
     await expect(pill.contains(partOf(canvasElement, 'end'))).toBe(true);
-    await expect(partOf(canvasElement, 'end').getBoundingClientRect().width).toBe(20);
+    const icon = partOf(canvasElement, 'end').getBoundingClientRect();
+    await expect(icon.width).toBe(24);
+    await expect(icon.left - pill.getBoundingClientRect().left).toBe(2);
     await expect(pill.querySelector('.sr-only')?.textContent).toBe('End, ');
   },
 };
@@ -94,31 +112,55 @@ export const CodeSignEnd: Story = {
 };
 
 /**
- * Start (2026-10-15): a ride's picked start, End's look with Start's
- * circled S. Figma draws no Start Label yet: this is the stand-in until the
- * owner draws one.
+ * Start: a ride's picked start, End's shape with Start's circled S in Head
+ * Route's green, whatever the line (3848:12135; the owner's "This would be
+ * the start pill not the yellow", 2026-10-16).
  */
 export const Start: Story = {
   args: { variant: 'start' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     await expectFigmaType(pill);
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    );
+    await expect(getComputedStyle(pill).color).toBe(wornBy('text-content-inverse', 'color'));
     await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(true);
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
     await expect(pill.querySelector('.sr-only')?.textContent).toBe('Start, ');
   },
 };
 
-/** CodeSignStart: a picked start station, the S in a disc of its own, as CodeSignEnd's E. A stand-in, as Start is. */
+/** CodeSignStart: a picked start station, the S in a green disc of its own, the code green on white. */
 export const CodeSignStart: Story = {
   args: { variant: 'start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     const disc = partOf(canvasElement, 'start');
+    const green = wornBy('bg-map-hotspots-card-hintuan-surface');
     await expect(pill.contains(disc)).toBe(false);
     await expect(disc.getBoundingClientRect().width).toBe(28);
+    await expect(getComputedStyle(disc).backgroundColor).toBe(green);
     await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
+    await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(green);
   },
+};
+
+/** Start on MRT-3's yellow line: green, never the line's yellow. */
+export const CodeSignStartMetroRailWayThree: Story = {
+  args: { variant: 'start', codeSign: 'YL07', livery: 'metro-rail-way-three' },
+  play: async ({ canvasElement }) => {
+    await expect(getComputedStyle(partOf(canvasElement, 'name')).backgroundColor).toBe(
+      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    );
+  },
+};
+export const StartRed: Story = { args: { variant: 'start', livery: 'red' } };
+export const CodeSignStartLightRailWayOne: Story = {
+  args: { variant: 'start', codeSign: 'GL05', livery: 'light-rail-way-one' },
+};
+export const CodeSignStartLightRailWayTwo: Story = {
+  args: { variant: 'start', codeSign: 'PL05', livery: 'light-rail-way-two' },
 };
 
 /** A code given to Default draws nothing: Figma shows a station's code once it is picked. */
@@ -152,7 +194,7 @@ export const CodeSignEndLightRailWayTwo: Story = {
 /**
  * MRT-3 (2026-10-13): its yellow pill and disc, the words and the E
  * near-black (Map/RouteLine/Arrow/Inverse, as its chevrons), and the code
- * in the line's Timeline/surface on white, as its trip card's pill has it.
+ * black on white (Content/primary, the owner's ask of 2026-10-16).
  */
 export const CodeSignEndMetroRailWayThree: Story = {
   args: { variant: 'end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
@@ -165,7 +207,7 @@ export const CodeSignEndMetroRailWayThree: Story = {
     await expect(getComputedStyle(partOf(canvasElement, 'words')).color).toBe(dark);
     await expect(getComputedStyle(partOf(canvasElement, 'end')).color).toBe(dark);
     await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(
-      wornBy('text-map-rail-metro-rail-way-three-timeline-surface', 'color'),
+      wornBy('text-content-primary', 'color'),
     );
   },
 };

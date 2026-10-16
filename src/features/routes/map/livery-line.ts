@@ -116,7 +116,9 @@ export const LINE_SURFACE = {
  * Words in the line's colour, on white: a station's sign code (RouteLineLabel's
  * CodeSignEnd, RouteLineEndingsLabel's CodeSign). A train's are its line's
  * Timeline/surface, as the white pill on its trip card has them (the owner's
- * train frames, 2026-10-13): MRT-3's yellow would not read on white.
+ * train frames, 2026-10-13) — but MRT-3's are Content/primary, black: its
+ * yellow did not read on white (the owner's "I want to make it color black
+ * the text only", 2026-10-16).
  */
 export const LINE_TEXT = {
   red: 'text-card-red-surface',
@@ -127,7 +129,7 @@ export const LINE_TEXT = {
   pink: 'text-card-pink-surface',
   'light-rail-way-one': 'text-map-rail-light-rail-way-one-timeline-surface',
   'light-rail-way-two': 'text-map-rail-light-rail-way-two-timeline-surface',
-  'metro-rail-way-three': 'text-map-rail-metro-rail-way-three-timeline-surface',
+  'metro-rail-way-three': 'text-content-primary',
   selected: 'text-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -162,3 +164,26 @@ export const LINE_WORDS = {
   'metro-rail-way-three': 'text-map-route-line-arrow-inverse',
   selected: 'text-content-inverse',
 } satisfies Record<LineColour, string>;
+
+/** What a label on the map wears: its fill, its pointer, a station code's words on white, its own words. */
+export interface LabelLook {
+  surface: string;
+  pointer: string;
+  code: string;
+  words: string;
+}
+
+/**
+ * Figma's Head Route (RouteLineEndingsLabels, 3848:12135): a ride's start
+ * wears Map/HotspotsCard/Hintuan/surface, the green, whatever the line —
+ * the pill and pointer green, the words white, a station's code green on
+ * its white chip. RouteLineEndingsLabel's Head Route and RouteLineLabel's
+ * Start, a picked start (the owner's "This would be the start pill not the
+ * yellow", 2026-10-16).
+ */
+export const HEAD_ROUTE: LabelLook = {
+  surface: 'bg-map-hotspots-card-hintuan-surface',
+  pointer: 'fill-map-hotspots-card-hintuan-surface',
+  code: 'text-map-hotspots-card-hintuan-surface',
+  words: 'text-content-inverse',
+};

@@ -61,7 +61,7 @@ const expectFigmaType = async (pill: HTMLElement) => {
   await expect(pill.getBoundingClientRect().height).toBe(28);
 };
 
-/** Head Route (3848:12136): Start's circled S, 20 across, before the name, all in the hintuan's green. */
+/** Head Route (3848:12136): Start's circled S, 24 across, 2 in from the pill's edge, before the name, all in the hintuan's green. */
 export const HeadRoute: Story = {
   args: { variant: 'head' },
   play: async ({ canvasElement }) => {
@@ -73,7 +73,9 @@ export const HeadRoute: Story = {
       wornBy('bg-map-hotspots-card-hintuan-surface'),
     );
     await expect(knobbFill(pill)).toBe(getComputedStyle(pill).backgroundColor);
-    await expect(pill.querySelector('[data-part="start"]')?.getBoundingClientRect().width).toBe(20);
+    const icon = pill.querySelector('[data-part="start"]')?.getBoundingClientRect();
+    await expect(icon?.width).toBe(24);
+    await expect(icon && icon.left - pill.getBoundingClientRect().left).toBe(2);
   },
 };
 
@@ -138,7 +140,22 @@ export const TailRouteMetroRailWayThree: Story = {
   },
 };
 
-/** Default: a ride's own tail past a picked hintuan, the name alone in the line's colour. */
+/**
+ * Unselected: a trip's end outside the ride, Default at 60%, the pointer
+ * with it (the Label's Unselected, 4200:13645, 2026-10-16).
+ */
+export const Unselected: Story = {
+  args: { variant: 'unselected' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expectFigmaType(pill);
+    await expect(iconOf(pill)).toBe('none');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(pill).opacity).toBe('0.6');
+  },
+};
+
+/** Default: the name alone in the line's colour, for an unmarked end inside the ride. */
 export const Default: Story = {
   args: { variant: 'default' },
   play: async ({ canvasElement }) => {
@@ -190,6 +207,52 @@ export const TailRouteCodeSign: Story = {
   },
 };
 
+/**
+ * Head Route on MRT-3's yellow line: green all the same, its code green on
+ * white (the owner's "This would be the start pill not the yellow",
+ * 2026-10-16).
+ */
+export const HeadRouteCodeSignMetroRailWayThree: Story = {
+  args: { variant: 'head', codeSign: 'YL07', livery: 'metro-rail-way-three' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    const green = wornBy('bg-map-hotspots-card-hintuan-surface');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(green);
+    const code = pill.querySelector<HTMLElement>('[data-part="code"]');
+    await expect(code && getComputedStyle(code).color).toBe(green);
+  },
+};
+
+/** Head Route on each train line and a jeep's red. */
+export const HeadRouteRed: Story = { args: { variant: 'head', livery: 'red' } };
+export const HeadRouteCodeSignLightRailWayOne: Story = {
+  args: { variant: 'head', codeSign: 'GL05', livery: 'light-rail-way-one' },
+};
+export const HeadRouteCodeSignLightRailWayTwo: Story = {
+  args: { variant: 'head', codeSign: 'PL05', livery: 'light-rail-way-two' },
+};
+
+/**
+ * Tail Route's CodeSign on MRT-3: the yellow pill, the code black on its
+ * white chip (Content/primary: the owner's "I want to make it color black
+ * the text only", 2026-10-16).
+ */
+export const TailRouteCodeSignMetroRailWayThree: Story = {
+  args: { variant: 'tail', codeSign: 'YL05', livery: 'metro-rail-way-three' },
+  play: async ({ canvasElement }) => {
+    const code = pillOf(canvasElement).querySelector<HTMLElement>('[data-part="code"]');
+    await expect(code && getComputedStyle(code).color).toBe(
+      wornBy('text-content-primary', 'color'),
+    );
+  },
+};
+export const TailRouteCodeSignLightRailWayOne: Story = {
+  args: { variant: 'tail', codeSign: 'GL05', livery: 'light-rail-way-one' },
+};
+export const TailRouteCodeSignLightRailWayTwo: Story = {
+  args: { variant: 'tail', codeSign: 'PL05', livery: 'light-rail-way-two' },
+};
+
 /** Tail Route's CodeSign on a list's lines: the selected blue. */
 export const TailRouteCodeSignSelectedBlue: Story = {
   args: { variant: 'tail', codeSign: 'PL08', livery: null },
@@ -203,6 +266,16 @@ export const DefaultIgnoresCode: Story = {
   },
 };
 
+/** A train station's end outside the ride: Unselected, the code left out with the icon, as Default does. */
+export const UnselectedIgnoresCode: Story = {
+  args: { variant: 'unselected', codeSign: 'YL06' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expect(pill.querySelector('[data-part="code"]')).toBeNull();
+    await expect(getComputedStyle(pill).opacity).toBe('0.6');
+  },
+};
+
 /** A name longer than the marker: cut short with an ellipsis, the icon whole. */
 export const LongName: Story = {
   args: { variant: 'tail', name: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },
@@ -212,7 +285,7 @@ export const LongName: Story = {
     const words = pill.querySelector('[data-part="words"]');
     await expect(words).not.toBeNull();
     await expect(words?.scrollWidth).toBeGreaterThan(words?.clientWidth ?? 0);
-    await expect(pill.querySelector('[data-part="end"]')?.getBoundingClientRect().width).toBe(20);
+    await expect(pill.querySelector('[data-part="end"]')?.getBoundingClientRect().width).toBe(24);
   },
 };
 

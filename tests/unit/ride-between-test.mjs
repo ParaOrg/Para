@@ -15,6 +15,7 @@ import {
   rideToEnd,
   routeTimeline,
   rowsOutsideRide,
+  rowsOutsideStartAlone,
 } from '../../src/features/routes/model/ride.ts';
 import { railFares } from '../../src/features/routes/model/rail-fares.ts';
 import { lineLength } from '../../src/shared/utils/geo.ts';
@@ -159,6 +160,17 @@ test('the rows outside the ride: before the start and after the end, whichever w
 /** The committed map, every line in full: the index and its lines/ (check-map-data.mjs). */
 const published = () =>
   readPublished(fileURLToPath(new URL('../../public/data/index.v4.json', import.meta.url))).file;
+
+test('a start alone: every row but the start’s is outside, the whole trip on the pale', () => {
+  const rows = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+  assert.deepEqual([...rowsOutsideStartAlone(rows, 'b')].sort(), ['a', 'c', 'd']);
+  assert.deepEqual([...rowsOutsideStartAlone(rows, 'a')].sort(), ['b', 'c', 'd']);
+  assert.equal(
+    rowsOutsideRide(rows, 'b', null).size,
+    0,
+    'the card folds nothing until an end is picked',
+  );
+});
 
 test('the owner’s example on the committed map: MRT-3 Southbound, Shaw Boulevard to Ayala; Quezon Avenue comes before Shaw Boulevard', () => {
   const m = published();
