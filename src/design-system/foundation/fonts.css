@@ -1,16 +1,14 @@
 /*
  * PalimosPoDesignSystem type: SN Pro, the family the Figma variables name
- * (font/family/SNPRO), from the owner's files of 2026-09-28. Only the faces
- * designs use are wired — SN Pro 400–700, its ExtraBold 800 (a trip's origin
- * and its picked hintuan, the owner's TimelineRouteDetailCard of 2026-10-13)
- * and its Black 900 (the route cards' titles, 2026-09-28) — as woff2 subset
- * to Latin (fonts/subset.sh: 107 kB for all six, from 290 kB, on
- * 2026-09-29). The full sets and italics sit beside them in fonts/, unwired
- * until a design asks, and so do Cubao Free's .otf sources (dropped from the
- * app on 2026-10-16: "Drop Cubao, keep SN Pro"). `swap` because the app is a
- * map first: text in a fallback beats text held back. The worker precaches
- * them, so offline text keeps its face; check-build.mjs holds them under
- * 135 kB together.
+ * (font/family/SNPRO). Only the faces designs use are wired — SN Pro 400–700,
+ * its ExtraBold 800 (the RouteCards' titles, a trip's origin and its picked
+ * hintuan, the Map Style card's title) and its Black 900 (the install
+ * prompt's and the HintuanCard's titles) — as woff2 subset to Latin
+ * (fonts/subset.sh: 107 kB for all six, from 290 kB). The full sets and
+ * italics sit beside them in fonts/, unwired until a design asks, and so do
+ * Cubao Free's .otf sources. `swap` because the app is a map first: text in a
+ * fallback beats text held back. The worker precaches them, so offline text
+ * keeps its face; check-build.mjs holds them under 135 kB together.
  */
 
 @font-face {
