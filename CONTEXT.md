@@ -21,7 +21,9 @@ _Avoid_: variant, leg; trip (a direction is a trip only while its card is open �
 
 **Outbound** / **Return**:
 The direction from head to tail (papunta), and the direction from tail to
-head (balikan). Both are just directions; neither is the "real" one.
+head (balikan). Both are just directions; neither is the "real" one. On a
+train line a direction is called by its bound: Northbound or Southbound on
+LRT-1 and MRT-3, Eastbound or Westbound on LRT-2.
 _Avoid_: forward/backward, inbound (meaningless here)
 
 **Slot**:
@@ -45,6 +47,12 @@ roads — `Tala – Novaliches via Zabarte`. Absent unless needed.
 The drawn geometry of one direction: the road it follows, snapped to the
 street network.
 _Avoid_: shape, path, geometry (implementation words)
+
+**Extension**:
+A new route that borrows an existing direction's line and adds road at one
+end — `Tala – SM Fairview` becomes `Tala – Novaliches`. Its own route, grouped
+by the end it shares. Drawn with the studio's Extend (built 2026-09-25).
+_Avoid_: variant, branch
 
 **Signboard**:
 The short informal wording a jeep is called out by — `TALA – SM FAIRVIEW` —
@@ -128,13 +136,24 @@ lit direction is drawn as its ride: its arrows, its ends named, the stretch
 between the picks.
 _Avoid_: journey, leg, run; trip (that is the card a ride is shown on)
 
+**Start** / **End** (of a ride):
+Where a ride starts and where it ends, marked S and E on the trip and on the
+map. Until a rider picks them, where the direction leaves and where it goes.
+A row tapped on the trip becomes the end; Set as start under it makes it the
+start, and × Remove as start puts the start back where the direction leaves.
+A start alone is no ride yet: the tiles and the map stay the whole trip's
+until an end is picked.
+_Avoid_: head/tail (those are the route's), origin/destination
+
 ### People and surfaces
 
 **Owner**:
 The one person who runs ParaPo and edits its data.
 
 **Editor**:
-Anyone on the editor list, allowed to write. Today the owner alone.
+Anyone on the editor list, allowed to write. Since migration 0015
+(2026-10-14) every editor edits every route and hotspot, not only their own;
+a row still records who made it. The owner added two editors that day.
 _Avoid_: admin, user
 
 **Commuter**:
@@ -147,7 +166,7 @@ The editor at `/studio/`: the map plus every drawing and saving tool.
 _Avoid_: admin, dashboard, editor (that is a person)
 
 **Public map**:
-The map at `/`, read by commuters from the published file.
+The map at `/`, read by commuters from the published map.
 _Avoid_: visitor map, commuter map, the site
 
 **Trip**:
@@ -159,6 +178,27 @@ the trip price the ride between them.
 _Avoid_: ride (that is what the trip shows), selected route, variant; and
 never for a direction that is not open — the studio's "Draw the return trip"
 means the return direction
+
+**SWITCH**:
+The button that turns a trip, a route list or a hintuan's card to the
+route's other direction. It names the way a tap leads to: Pabalik on a
+Papunta card, Papunta on a Pabalik card, and on a train the other bound
+(Southbound on a Northbound card). A list with jeeps and trains together, and
+the ferry, keep Papunta and Pabalik. Not a toggle. On a jeep or the ferry it
+keeps a picked start and end, each found on the other direction: the same
+hintuan, else the nearest box of the same place, else let go. On a train it
+lets them go, and the card shows the whole ride.
+
+**Map design**:
+The map drawn under the routes: Monochrome (the default, gray), Colour
+(OpenFreeMap's Liberty in Apple Maps' light palette, since 2026-10-16) and
+Fiord (dark blue-gray, for night). The studio adds Terrain (Colour with the
+hills) and Satellite. A commuter's pick is kept on the phone.
+
+**Map Style card**:
+The card the layers button opens under it, at the map's top-right corner: a
+picture of each map design with its name, the one shown ringed. A pick
+switches the map behind it; ✕, Escape or a tap outside closes it.
 
 **Published map**:
 The set of files the public map reads, rebuilt nightly from the studio's
@@ -181,12 +221,6 @@ One direction's full line, read when the direction is lit or opened.
 A direction that ends early at a hotspot its parent already passes — "Tala to
 Malaria only" — with no line of its own, only a window onto the parent's.
 _Avoid_: sub-route, partial route
-
-**Extension**:
-A new route that borrows an existing direction's line and adds road at one
-end — `Tala – SM Fairview` becomes `Tala – Novaliches`. Its own route, grouped
-by the end it shares.
-_Avoid_: variant, branch
 
 **Shortcut**:
 A stretch of road a jeep sometimes takes instead of its usual stretch,

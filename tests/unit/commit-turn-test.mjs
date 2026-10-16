@@ -2,7 +2,7 @@
 // (src/shared/hooks/commit-turn.ts), and the visitor's camera that needs it
 // (use-locator.ts's `cameraTurn`, visitor-location.tsx; the cheap-phone plan,
 // step 15, 2026-10-05). React runs a component's effects after all of its
-// children's, so the locator's hooks, moved from CommuterApp into a child of
+// children's, so the locator's hooks, moved from PublicMapApp into a child of
 // it, would move the camera before the cards' camera of the same commit and
 // not after: the sheet set to another height while the camera follows the
 // visitor would end on the card's overview, not on the visitor.
@@ -198,7 +198,7 @@ function standInGps() {
  * The page and its cards' camera — the sheet's height moving it to the
  * card's overview, as useHeightOverview does, with APP_MOVE — and the
  * locator: `layout` 'page', its hook among the page's after the cards'
- * (CommuterApp before 2026-10-05); 'child', in a child given the page's turn
+ * (PublicMapApp before 2026-10-05); 'child', in a child given the page's turn
  * (VisitorLocation); 'child-unturned', in a child without it.
  */
 async function sheetWhileFollowing(layout) {
