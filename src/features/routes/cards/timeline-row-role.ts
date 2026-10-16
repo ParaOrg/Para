@@ -31,8 +31,8 @@ export interface RowRoleInput {
  * Remove as start under it; the end's its E, and Set as start under it while
  * no start is picked (Choosing); any other row, nothing. The start's pill says
  * its station's code alone, and the end's its code and the ride's pesos: a
- * jeep's start, with no code, has none, and a ride with no fare no pill on its
- * end.
+ * jeep's start, with no code, has none, and a ride with no fare no pill on
+ * its end.
  */
 export function rowRole(row: RowRoleInput): RowRole {
   const priced = (code: string | null) =>

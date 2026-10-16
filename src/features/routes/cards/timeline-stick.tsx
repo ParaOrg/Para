@@ -28,8 +28,8 @@ type TimelineStickProps = TimelineStickDotProps | TimelineStickDisclosureProps;
 /**
  * Whether a Connected piece draws its rail above the dot (Figma's layer
  * "Frame 71") and below it ("Frame 72"). MiddleTop and MiddleBottom are the
- * pieces for a ride that starts or ends mid-list. Top
- * has no stretch above and Bottom none below, so theirs are never drawn.
+ * pieces for a ride that starts or ends mid-list. Top has no stretch above and
+ * Bottom none below, so theirs are never drawn.
  */
 const RAIL_ABOVE = {
   top: false,
@@ -66,10 +66,10 @@ const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
  *
  * The rail breaks where a ride starts and where it ends, as Figma's set's
  * states draw it (Variant5, 4151:13619), the rows outside the ride staying
- * connected to one another: the row just above a break
- * wears MiddleBottom (Top at the origin, Disconnected), the row just below
- * it MiddleTop (Bottom at the destination, Disconnected), the rows between
- * Middle. A start alone is a break above and below it, its dot alone.
+ * connected to one another: the row just above a break wears MiddleBottom (Top
+ * at the origin, Disconnected), the row just below it MiddleTop (Bottom at the
+ * destination, Disconnected), the rows between Middle. A start alone is a break
+ * above and below it, its dot alone.
  */
 export function TimelineStick(props: TimelineStickProps) {
   const isConnected = (props.connection ?? 'connected') === 'connected';

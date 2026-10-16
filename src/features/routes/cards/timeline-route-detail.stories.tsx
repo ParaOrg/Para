@@ -249,12 +249,11 @@ export const RideChoosing: Story = {
 /**
  * Variant3 (4148:12161): after Set as start, Shaw Boulevard is the start,
  * × Remove as start under it, its pill its code alone. A start alone is no
- * ride yet: its dot stands alone, the rail broken
- * just above it and just below and running on along the stations above it;
- * the closed fold next to it has no rail, and Taft Avenue's dot stands
- * alone (4194:12562).
- * North Avenue loses its S and Taft Avenue has no E until an end is picked.
- * Folded as Choosing was, the stations after it in that fold.
+ * ride yet: its dot stands alone, the rail broken just above it and just
+ * below and running on along the stations above it; the closed fold next to it
+ * has no rail, and Taft Avenue's dot stands alone (4194:12562). North Avenue
+ * loses its S and Taft Avenue has no E until an end is picked. Folded as
+ * Choosing was, the stations after it in that fold.
  */
 export const RideStartPicked: Story = {
   args: { ...onMrt3, start: shaw, startCode: 'YL07' },
@@ -314,10 +313,9 @@ export const RideStartAndEndOpened: Story = { ...RideStartAndEnd, play: openFold
 /**
  * Variant5 (4151:13619): Shaw Boulevard the start, then Quezon Avenue tapped
  * above it, the end: E above S, the S's pill its code, the E's its code and
- * the pesos, the ride between them ridden back
- * along the line (the row tapped becomes the end, not the new start). The rail breaks
- * just above Quezon Avenue and just below Shaw Boulevard, under its × Remove
- * as start.
+ * the pesos, the ride between them ridden back along the line (the row tapped
+ * becomes the end, not the new start). The rail breaks just above Quezon
+ * Avenue and just below Shaw Boulevard, under its × Remove as start.
  */
 export const RideEndAboveStart: Story = {
   args: {
@@ -331,8 +329,9 @@ export const RideEndAboveStart: Story = {
 };
 
 /**
- * Shaw Boulevard the start, then Taft Avenue's row tapped: the ride from Shaw Boulevard on to it, its
- * E on Taft Avenue with its pill, YL13 and the pesos, the stations above folded.
+ * Shaw Boulevard the start, then Taft Avenue's row tapped: the ride from Shaw
+ * Boulevard on to it, its E on Taft Avenue with its pill, YL13 and the pesos,
+ * the stations above folded.
  */
 export const RideStartToDestination: Story = {
   args: {

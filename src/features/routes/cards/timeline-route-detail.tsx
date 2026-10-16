@@ -41,9 +41,10 @@ export interface TimelineRouteDetailProps {
   /** A hintuan's row was tapped: pick it, or, picked, let it go. */
   onPick: (id: string) => void;
   /**
-   * The pesos of the ride between the picks, for the pills on the end's row
-   * and the start's (Variant4 draws both): the fare the tile under the
-   * card shows, Regular or Discounted. Omitted when unpriced, and no pill.
+   * The pesos of the ride between the picks, for the end's pill (the start's
+   * says its code alone, though Variant4 draws the pesos on both): the fare
+   * the tile under the card shows, Regular or Discounted. Omitted when
+   * unpriced, and no pill.
    */
   pickedPesos?: string;
   /**
@@ -100,10 +101,10 @@ export interface TimelineRouteDetailProps {
  * The rail runs end to end with nothing picked. A ride picked, it breaks
  * where the ride starts and where it ends (TimelineStick MiddleBottom just
  * above the break, MiddleTop just below), running on along the rows before
- * the ride and after it (Figma 4151:13619), the map leaving pale everything
+ * the ride and after it (Figma Variant5, 4151:13619), the map leaving pale everything
  * outside the ride. A fold's row next to the ride carries no rail, open or
  * closed (Figma 4194:12562 and 4194:12702), so a fold shut by the ride leaves
- * the end beyond it its dot alone. A start alone is no ride yet: its dot
+ * the destination beyond it its dot alone. A start alone is no ride yet: its dot
  * stands alone, the rail broken round it, and the map and the tiles stay the
  * whole trip's until an end is picked (Variant3).
  *
@@ -152,7 +153,7 @@ export function TimelineRouteDetail({
   // broken where the ride starts and where it ends, and a fold's row next to
   // the ride carries none (timelineRail). The origin is -1, the destination
   // the row count (rideRows). No pick, it runs end to end. A start alone is
-  // no ride yet, so the commuter is not misled about the context: a ride of
+  // no ride yet, so it does not read as a ride: a ride of
   // its one row, its dot alone, until an end is picked.
   const isStartAlone = start !== null && picked === null && endPicked === null;
   const lone = isStartAlone ? hintuans.findIndex((h) => h.id === start) : -1;
@@ -262,10 +263,10 @@ export function TimelineRouteDetail({
         />
       </ol>
       {/* The rows' names are set in SN Pro Medium, a face nothing else on a
-          card may use (no "Other routes", no signboards). Drawn hidden, the folded rows asked for
-          it as the card opened; undrawn, they would ask only as they open,
-          and show their names in a stand-in font until it came
-          (font-display: swap). One hidden name asks for it as they did. */}
+          card may use (no "Other routes", no signboards). Folded rows are not
+          drawn until their fold first opens, so they would ask for the face
+          only then and show their names in a stand-in font until it came
+          (font-display: swap). One hidden name asks for it as the card opens. */}
       {!everOpened && folds.some((f) => !isOpen(f.part)) && (
         <span aria-hidden className="pointer-events-none invisible absolute font-medium">
           {hintuans[0]?.label}

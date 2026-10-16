@@ -60,10 +60,11 @@ interface TimelineHintuanProps {
 
 /**
  * Figma's TimelineHintuan: a hintuan on the way, its dot on the rail; the
- * whole row is its button. Selected (State=Selected), its name is ExtraBold and
- * the pill of its pesos sits 8 after it, 16 in from the card's edge. Its
- * name is 10 above and below, the row 44 tall, and a button under it 16
- * below the name and 10 above the next row (Timeline set, 3716:1894).
+ * whole row is its button. Selected (State=Selected), its name is ExtraBold
+ * and its pill sits 8 after it, 16 in from the card's edge. Its name is 10
+ * above and below, the row 44 tall, and a button under it 16 below the name
+ * and 10 above the next row (Timeline set, 3716:1894, over the trip frame's
+ * spacing, 3778:3183).
  */
 export function TimelineHintuan({
   id,

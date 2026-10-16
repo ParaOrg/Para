@@ -53,8 +53,9 @@ export function TimelineBottomEndRoute({
         />
         <span className={'flex min-w-0 flex-1 items-start gap-1 pt-3 ' + (isEnd ? 'pl-2' : 'pl-3')}>
           {isEnd && <RideMark mark="end" livery={livery} />}
-          {/* Bold, Figma's text-xl/bold, as the trip frame draws it. The Timeline
-              set (3716:1894) draws it Medium, ExtraBold picked. */}
+          {/* Bold, Figma's text-xl/bold, as the trip frame (3778:3183) draws it.
+              The Timeline set (3716:1894) draws it Medium, ExtraBold picked;
+              the trip frame's Bold is kept. */}
           <span className="min-w-0 flex-1 text-xl/7 font-bold">{routeDirection}</span>
           {pill && <EndRowPill livery={livery} pill={pill} />}
         </span>

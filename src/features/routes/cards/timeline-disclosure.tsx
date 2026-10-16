@@ -21,9 +21,10 @@ interface TimelineDisclosureProps {
 /**
  * Figma's TimelineDisclosure: the hintuans folded into one row, or, opened,
  * the row that folds them. The rail runs through it between rows on one side
- * of the ride (Figma 4151:13619); next to the ride its stretch is left
- * unfilled, as TimelineStick in 4194:12702 is. Its words are 10 above and
- * below, the row 40 tall, the chevron 6 before them (Timeline set, 3716:1894).
+ * of the ride (Figma Variant5, 4151:13619); next to the ride its stretch is
+ * left unfilled, as TimelineStick in 4194:12702 is. Its words are 10 above
+ * and below, the row 40 tall, the chevron 6 before them (Timeline set,
+ * 3716:1894).
  */
 export function TimelineDisclosure({
   part,

@@ -29,8 +29,8 @@ export function useTimelineFolds(
   // and after, each its own fold (timelineFolds). Nothing folds under the
   // finger as a pick is made: picked from the open list, both stay open, and
   // Set as start keeps them as they were. When the pick is let go, they fold
-  // back as they were before it, so the row just used folds away again
-  // instead of leaving the whole list open.
+  // back as they were before it: a row folded away before the pick folds away
+  // again, rather than the whole list opening.
   const hasPick = start !== null || picked !== null;
   const [hadPick, setHadPick] = useState(hasPick);
   const [openParts, setOpenParts] = useState({ before: false, after: false });

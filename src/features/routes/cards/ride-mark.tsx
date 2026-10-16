@@ -16,8 +16,8 @@ interface RideMarkProps {
 /**
  * Where the ride starts and ends, before a row's name, Figma's RouteSigns
  * (4148:12449): Start's circled S and End's circled E, each a disc on a white
- * ring, the letter in white, so the disc and the letter do not show the card
- * through. The S's disc is green, as the map's Head Route wears it; the E's
+ * ring, the letter cut out in white, so the card does not show through it.
+ * The S's disc is green, as the map's Head Route wears it; the E's
  * the card's colour, the pill's (TIMELINE_PILL: a train's line's
  * Timeline/surface). They move with the picks: the S from the origin to a
  * start picked further on, the E from the destination to a picked end. For the
