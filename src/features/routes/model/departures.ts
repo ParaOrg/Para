@@ -10,7 +10,7 @@ import {
 /*
  * Choosing among directions: a route's two, those under a tap grouped by
  * where each leaves, the one a tap opens, the other way round, and those
- * sharing an end. Split from routes.ts, 2026-09-29.
+ * sharing an end.
  */
 
 /** One route with its directions, for a sheet that lists routes, not directions. */
@@ -39,10 +39,10 @@ export interface Departures<V extends Direction> {
 
 /**
  * The routes under a tap one way round — outbound, or with `back` the way
- * back — gathered by the place each leaves from, in the order met. Tala →
- * SM Fairview and Tala → Novaliches read as Tala, then its two ends; the way
- * back reads SM Fairview, then Tala, and Novaliches, then Tala. The owner's
- * layout of 2026-09-25. A direction still a slot is listed, marked undrawn.
+ * back — gathered by the place each leaves from, in the order met. Tala → SM
+ * Fairview and Tala → Novaliches read as Tala, then its two ends; the way
+ * back reads SM Fairview, then Tala, and Novaliches, then Tala. A direction
+ * still a slot is listed, marked undrawn.
  */
 export function departures<V extends Direction>(
   directions: readonly V[],
@@ -63,8 +63,7 @@ export function departures<V extends Direction>(
 
 /**
  * `departures`, the drawn directions only, and no place left with none: what
- * the owner's route cards list, since he dropped "not mapped yet" from them
- * (2026-09-28) — a row that opens nothing is no row.
+ * the route cards list: a row that opens nothing is no row.
  */
 export function drawnDepartures<V extends Direction>(
   directions: readonly V[],
@@ -76,10 +75,9 @@ export function drawnDepartures<V extends Direction>(
 }
 
 /**
- * The direction a route opens with when it is picked as a whole: the
- * outbound when it has a line, else the return — predictable, and ⇄ is one
- * tap away. Decided with the owner 2026-09-22. Null only for a route with
- * nothing drawn, which no tap can reach.
+ * The direction a route opens with when it is picked as a whole: the outbound
+ * when it has a line, else the return — predictable, and ⇄ is one tap away.
+ * Null only for a route with nothing drawn, which no tap can reach.
  */
 export function directionToOpen<V extends Direction>(directions: readonly V[]): V | null {
   return (
@@ -102,13 +100,12 @@ export function otherDirection<V extends Direction>(all: readonly V[], of: V): V
 /**
  * Every direction of the routes sharing an end with `of`'s — the same head or
  * the same tail — its own route's first: PLAN.md's fan, an extension being
- * "grouped by the end it shares" (decided 2026-09-21; no screen groups them
- * that way yet but this), Tala – SM Fairview beside Tala – Novaliches. A
- * route that only starts where this one ends is not among them: that is a
- * change of jeep, not another way. An old file's route may carry no ends; it
- * then shares none. The trip's own route leads, so the card its ‹ lists it
- * on leads with it and wears its colour (liveries.ts: a card wears its first
- * row's route's; the owner's ask of 2026-10-12, that colours stop changing).
+ * "grouped by the end it shares": Tala – SM Fairview beside Tala –
+ * Novaliches. A route that only starts where this one ends is not among them:
+ * that is a change of jeep, not another way. An old file's route may carry no
+ * ends; it then shares none. The trip's own route leads, so the card its ‹
+ * lists it on leads with it and wears its colour (liveries.ts: a card wears
+ * its first row's route's, so the colour does not change).
  */
 export function sharingAnEnd<V extends Direction>(all: readonly V[], of: V): V[] {
   const { headHotspotId: head, tailHotspotId: tail } = of.route;
@@ -122,12 +119,12 @@ export function sharingAnEnd<V extends Direction>(all: readonly V[], of: V): V[]
 }
 
 /**
- * The other routes out of where `of` starts — the owner's "Other routes"
- * under a trip (TimelineRouteDetailCard, 3778:3183, 2026-10-01): on Tala →
- * Novaliches, Tala → SM Fairview, and another route making the same trip,
- * if there is one. One direction each, drawn, leaving from the same hotspot
- * as `of` does; its own route's way back is SWITCH, not another route. An
- * old file's route may carry no ends; it then has none.
+ * The other routes out of where `of` starts — the "Other routes" under a trip
+ * (TimelineRouteDetailCard, Figma 3778:3183): on Tala → Novaliches, Tala → SM
+ * Fairview, and another route making the same trip, if there is one. One
+ * direction each, drawn, leaving from the same hotspot as `of` does; its own
+ * route's way back is SWITCH, not another route. An old file's route may
+ * carry no ends; it then has none.
  */
 export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): V[] {
   const start = directionEndHotspots(of).fromHotspot;
@@ -139,15 +136,14 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
 
 /**
  * The word for the way that is showing — Papunta, there; Pabalik, the way
- * back — which a trip's RouteTripDetailHeader says beside its vehicle. It was
- * SWITCH's word from the owner's ask of 2026-10-01 ("instead of switch on the
- * word") until 2026-10-16, when SWITCH took the other way's (switchWord).
+ * back — which a trip's RouteTripDetailHeader says beside its vehicle. SWITCH
+ * says the other way's word (switchWord).
  *
  * On a train it is the bound the riders and the operators say, Northbound or
- * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's ask of
- * 2026-10-15). One word fits every direction on show: a list with jeeps and
- * trains, or two lines bound different ways, keeps Papunta and Pabalik, and so
- * does the ferry, which has no bound.
+ * Southbound, Eastbound or Westbound on LRT-2 (railBound). One word fits
+ * every direction on show: a list with jeeps and trains, or two lines bound
+ * different ways, keeps Papunta and Pabalik, and so does the ferry, which has
+ * no bound.
  */
 export function wayWord(back: boolean, showing: readonly Direction[]): string {
   const bounds = new Set(showing.map(railBound));
@@ -157,11 +153,11 @@ export function wayWord(back: boolean, showing: readonly Direction[]): string {
 }
 
 /**
- * The word on SWITCH: the way a tap leads to, not the way showing (the owner's
- * ask of 2026-10-16: on a Papunta card SWITCH reads Pabalik, on a Pabalik one
- * Papunta, "so right context for users"), the showing way's word being the
- * header's (wayWord). On a train it is the other bound, Southbound on a
- * Northbound card, by the same one-word-fits-all rule as wayWord's.
+ * The word on SWITCH: the way a tap leads to, not the way showing: on a
+ * Papunta card SWITCH reads Pabalik, on a Pabalik one Papunta, so a commuter
+ * reads where a tap leads. The showing way's word is the header's (wayWord).
+ * On a train it is the other bound, Southbound on a Northbound card, by the
+ * same one-word-fits-all rule as wayWord's.
  */
 export function switchWord(back: boolean, showing: readonly Direction[]): string {
   const bounds = new Set(showing.map(railBound));

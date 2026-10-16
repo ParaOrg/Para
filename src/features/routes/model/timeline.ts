@@ -8,7 +8,7 @@ import type { Ring } from '../geo/ring';
 
 /*
  * A direction as a string of places: the hintuans its line passes, in order,
- * and the timeline its card reads. Split from hotspots.ts, 2026-09-29.
+ * and the timeline its card reads.
  */
 
 /**
@@ -36,7 +36,7 @@ export function hintuansAlong<S extends Hotspot>(
  * Whether hintuansAlong lists this hotspot for this route, wherever the line
  * runs: a hintuan with a box, at which the route stops (`servedBy`). Split
  * out with passedAt and inPassingOrder for the babaan sides, which ask it of
- * only the boxes their line cuts (the cheap-phone plan, step 8, 2026-10-04).
+ * only the boxes their line cuts.
  */
 export function listedAlong(hotspot: Hotspot, route: ServedRoute): boolean {
   return hotspot.kind === 'hintuan' && !!hotspot.area && servedBy(hotspot, route);
@@ -53,9 +53,9 @@ export function passedAt(
   hotspot: Hotspot,
 ): { index: number; at: number } | null {
   const index = passIndex(line, ring);
-  // Two boxes met on one segment, a snapped road's 20–30 m, tied and kept
-  // in the order the hotspots were read (review of 2026-10-03): the one
-  // whose middle is further along that segment is reached later.
+  // Two boxes met on one segment, a snapped road's 20–30 m, tied and kept in
+  // the order the hotspots were read: the one whose middle is further along
+  // that segment is reached later.
   return index >= 0
     ? {
         index,
@@ -72,11 +72,11 @@ export const inPassingOrder = (
 ): number => a.index - b.index || a.at - b.at;
 
 /**
- * The hotspots a direction is linked to, in the order its line reaches
- * them: by `sequence`, and two on one segment (the same sequence) by
- * how far along the line their middles are — the card's timeline, as
- * hintuansAlong orders the save panel's (review of 2026-10-03). `line` may
- * be the overview: a position along it is, an index into it is not.
+ * The hotspots a direction is linked to, in the order its line reaches them:
+ * by `sequence`, and two on one segment (the same sequence) by how far along
+ * the line their middles are — the card's timeline, as hintuansAlong orders
+ * the save panel's. `line` may be the overview: a position along it is, an
+ * index into it is not.
  */
 export function orderLinked<S extends Hotspot>(
   linked: readonly { hotspot: S; sequence: number }[],
@@ -109,16 +109,15 @@ export interface Timeline {
 }
 
 /**
- * The timeline of a direction with these ends. `along` is the hintuans in
- * the order the line reaches them. A row is a hintuan, named by its hotspot
- * name: the boxes of one place passed one after another — a mini hotspot on
- * each side of the road, or the several of SM Fairview — are one row, and a
- * box's own ground name is for the hotspot card, not the route. The ends'
- * places are left out of the middle: the rider is already getting off
- * there. The owner's model of 2026-09-28, replacing "SM Fairview – Main
- * Babaan" rows. When the line was drawn from the far end (the save panel
- * allows it with a warning) and `lineStart` says so, the middle is turned
- * round to read in travel order. The row keeps the first box's id.
+ * The timeline of a direction with these ends. `along` is the hintuans in the
+ * order the line reaches them. A row is a hintuan, named by its hotspot name:
+ * the boxes of one place passed one after another — a mini hotspot on each
+ * side of the road, or the several of SM Fairview — are one row, and a box's
+ * own ground name is for the hotspot card, not the route. The ends' places
+ * are left out of the middle: the rider is already getting off there. When
+ * the line was drawn from the far end (the save panel allows it with a
+ * warning) and `lineStart` says so, the middle is turned round to read in
+ * travel order. The row keeps the first box's id.
  */
 export function timelineFor(
   head: Hotspot | null | undefined,
@@ -142,10 +141,10 @@ export function timelineFor(
 /**
  * Whether a line that starts at `lineStart` was drawn from the far end of its
  * ride: its first point nearer where the ride goes than where it leaves. The
- * stored points run whichever way the owner drew them, and the save panel
+ * stored points run whichever way the editor drew them, and the save panel
  * lets a return be drawn from the far end with only a warning, so the ends
- * decide, not the drawing. The one travel-order rule (the review's 6.5): the
- * timeline's middle, the ride-to cut and the arrows' line all turn on it.
+ * decide, not the drawing. The one travel-order rule: the timeline's middle,
+ * the ride-to cut and the arrows' line all turn on it.
  */
 export function drawnFromTheEnd(lineStart: LngLat, from: Hotspot, to: Hotspot): boolean {
   return haversine(lineStart, to.point.coordinates) < haversine(lineStart, from.point.coordinates);

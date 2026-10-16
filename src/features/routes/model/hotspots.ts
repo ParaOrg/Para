@@ -2,9 +2,8 @@ import type { Hotspot } from './hotspot-schema';
 import { polygonToRing, type Ring } from '../geo/ring';
 
 /**
- * The rows' shapes are hotspot-schema.ts's (Zod, since ticket 08 of the
- * restructure follow-ups, 2026-10-07); the types derive from them and are
- * re-exported here, beside the rules, so the model keeps one door.
+ * The rows' shapes are hotspot-schema.ts's (Zod); the types derive from them
+ * and are re-exported here, beside the rules, so the model keeps one door.
  */
 export type { Hotspot, HotspotKind, HotspotLink, HotspotRow } from './hotspot-schema';
 export type { PointGeoJSON, PolygonGeoJSON } from './geojson-schema';
@@ -26,11 +25,10 @@ export function hotspotLabel(s: Pick<Hotspot, 'name' | 'informal'>): string {
 
 /**
  * The name a hotspot's label on the map shows: a station's without its line
- * in front, "MRT-3 Boni Station" → "Boni Station" (the owner, 2026-10-15:
- * "remove the mrt 3 or the railway or route title before the name of the
- * stops"); the line drawn through it in its colour says which line already.
- * Every other name as it is, and a station's too when it does not start with
- * its line. The saved name keeps the line: cards and searches read it whole.
+ * in front, "MRT-3 Boni Station" → "Boni Station"; the line drawn through it
+ * in its colour says which line already. Every other name as it is, and a
+ * station's too when it does not start with its line. The saved name keeps
+ * the line: cards and searches read it whole.
  */
 export function nameOnMap(s: Pick<Hotspot, 'name' | 'line'>): string {
   const name = normaliseName(s.name);
