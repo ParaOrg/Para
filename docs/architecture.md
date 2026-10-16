@@ -150,11 +150,11 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/published-map`
 
-`fetchIndex`, `loadDirectionsFromFile`, `loadHotspotsFromFile`, `openingDirections`, `fetchLine`, `MAP_FILE_TOO_NEW`, `installApp`, `listenForInstallOffer`, `useInstallOffer`, `InstallPrompt`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`
+`fetchIndex`, `loadDirectionsFromFile`, `loadHotspotsFromFile`, `openingDirections`, `fetchLine`, `listenForInstallOffer`, `InstallPrompt`, `loadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
 
 ### `features/studio`
 
-`AuthDialogs`, `SignIn`, `skipSignInForTests`, `usePasswordRecovery`, `useSession`, `lineOf`, `listDirections`, `loadHotspotsFromSupabase`, `signboardUrl`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `CardActions`, `HotspotPanel`, `NewButtons`, `returnTripLeft`, `SavePanel`, `SaveToasts`, `SaveToast`, `TripCardExtras`, `useDeleteActions`, `useSaveTarget`
+`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `lineOf`, `listDirections`, `loadHotspotsFromSupabase`, `signboardUrl`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `CardActions`, `HotspotPanel`, `NewButtons`, `returnTripLeft`, `SavePanel`, `SaveToasts`, `TripCardExtras`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`
 
 ## Entry points
 
