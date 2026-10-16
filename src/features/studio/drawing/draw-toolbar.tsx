@@ -6,10 +6,10 @@ import { PickBar } from './pick-bar';
 import { FollowChip, PointBar, PutBack } from './point-bar';
 import { TapDraw } from './tap-draw';
 import {
-  whyNotDone,
   drawHint,
   formatDistance,
   uTurnWarning,
+  whyNotDone,
   type ExtendEnds,
 } from './toolbar-text';
 import { useDrawKeys } from './use-draw-keys';
