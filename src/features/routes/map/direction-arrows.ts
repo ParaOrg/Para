@@ -326,7 +326,7 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
   const lines = useMemo(() => flowLines(rides), [rides]);
   const hitReady = useLayerReady(map, ROUTES_HIT_LAYER);
   useEffect(() => {
-    // Over the lit line and its orange stretches, under the hit area and the
+    // Over the lit line and its green stretches, under the hit area and the
     // basemap's labels: the line hook's layers must be there first, and are,
     // since it is called before this one on both surfaces. The ends' circles
     // and names are DOM markers (EndTitles), on top of everything, so a
