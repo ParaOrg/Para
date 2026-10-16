@@ -53,7 +53,10 @@ const RAIL_BELOW = {
  * The rail's column, 24 wide, as tall as its row's content; the rows set
  * their own padding round it (timeline-route-detail.tsx). Bottom's stretch
  * above its dot is 16 tall, Figma's TimelineStick Bottom (20 before
- * 2026-10-13).
+ * 2026-10-13); a middle piece's 10, its Middle, so the dot sits by the
+ * name's first line, the rest of the row's height below it (the owner's
+ * Timeline set, 3716:1894, "new spacing changes", 2026-10-16; the dot was
+ * centred on the row until then).
  */
 const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
 
@@ -88,7 +91,7 @@ export function TimelineStick(props: TimelineStickProps) {
     <span aria-hidden data-rail={railState(above, below)} className={STICK}>
       {props.variant === 'bottom' && <span className={'-mb-0.5 h-4 w-2 shrink-0 ' + above} />}
       {props.variant !== 'top' && props.variant !== 'bottom' && (
-        <span className={'-mb-0.5 min-h-px w-2 flex-1 ' + above} />
+        <span className={'-mb-0.5 h-2.5 w-2 shrink-0 ' + above} />
       )}
       {props.dot}
       {props.variant !== 'bottom' && <span className={'min-h-px w-2 flex-1 ' + below} />}
