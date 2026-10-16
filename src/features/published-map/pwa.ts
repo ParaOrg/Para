@@ -49,8 +49,8 @@ export function registerServiceWorker(): void {
  * again: a conditional request each, answered 304, and this time the worker
  * stores them. So too the basemap tiles the map asked for until then, the
  * first screen's, which the browser's own cache answers (tiles-asked.ts): since
- * the map opens on its routes they all come before the worker takes over
- * (2026-10-06). Glyphs, and tiles further afield, are left to normal use. From
+ * the map opens on its routes they all come before the worker takes over.
+ * Glyphs, and tiles further afield, are left to normal use. From
  * the second visit on the page's own requests go through the worker, so this
  * is not run again.
  */
@@ -110,7 +110,7 @@ export function reloadToUpdate(): void {
  * Reload into the newest app there is, for a map file this one is too old to
  * read. A plain reload cannot: with `registerType: 'prompt'` the old worker
  * keeps control and serves the same old shell from its precache, and the
- * banner came straight back (review finding 5). A worker already waiting is
+ * banner would come straight back. A worker already waiting is
  * swapped in; otherwise the worker is asked to check, given a few seconds to
  * install what it finds, and swapped in if it did. Reload either way.
  */

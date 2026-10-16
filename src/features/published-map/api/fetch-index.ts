@@ -30,7 +30,7 @@ let settled: { file: Index | null } | null = null;
 
 /**
  * index.html's request, taken once: the first load reads it, and a load
- * after a failed one asks the network itself, as every load did before.
+ * after a failed one asks the network itself.
  * Null on a page without one (the studio's, a test's).
  */
 function takeEarly(): EarlyMapFile | null {
@@ -44,8 +44,8 @@ function takeEarly(): EarlyMapFile | null {
 /**
  * The network's answer for the map file, and how to read it as JSON:
  * index.html's when it made one, else asked here. A request of index.html's
- * that failed (no network as the page was read) is asked again here, as the
- * page always did, so what follows is today's either way.
+ * that failed (no network as the page was read) is asked again here, so what
+ * follows is the same either way.
  */
 function ask(): Promise<{ res: Response; json: () => Promise<unknown> }> {
   const own = () =>
@@ -97,8 +97,7 @@ function parseIndex(raw: unknown, url: string, schema: number): Index {
 /**
  * The copy the worker kept of the index itself, else the newest older one.
  * The worker falls back to its copy only when the network fails outright: a
- * server's 500 is an answer, and came to the page as one (review of
- * 2026-10-03, finding 16).
+ * server's 500 is an answer, and comes to the page as one.
  */
 async function storedCopy(): Promise<Index | null> {
   return (
@@ -176,18 +175,17 @@ export function fetchIndex(): Promise<Index> {
 }
 
 /**
- * The directions the public map opens framed on (the owner's Q1,
- * 2026-10-04; MapView's `openOn`), asked as the map is about to be made:
+ * The directions the public map opens framed on (MapView's `openOn`), asked as the map is about to be made:
  * the index's, when its load has ended by then; the copy the worker kept on
  * an earlier visit when it has not (storedCopy, read only then: it costs a
  * parse of the whole file), unless the file comes while it is read; and
  * with no copy kept, the file once it comes. MapView waits for it no more
- * than a second (OPENING_WAIT_MS), and opens as it always did without it,
- * the routes framed as they come; as it does after a load that failed.
+ * than a second (OPENING_WAIT_MS), and opens without it, the routes framed
+ * as they come, as it does after a load that failed.
  * Without that wait a visit with no worker — a first one whose script beat
- * the file, a second one before the worker was installed — opened at zoom
- * 11 while the file was asked again (a 304, a round trip), and fetched that
- * view's tiles only to throw them away. When the copy kept and the file
+ * the file, a second one before the worker was installed — would open at
+ * zoom 11 while the file was asked again (a 304, a round trip), and fetch
+ * that view's tiles only to throw them away. When the copy kept and the file
  * then brought differ, the routes' own fit takes the camera on to the
  * file's framing, unless the commuter has moved the map by then (framing.ts,
  * framesRoutes).

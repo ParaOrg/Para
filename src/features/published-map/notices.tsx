@@ -6,8 +6,7 @@ import { shortDate } from './status';
 /**
  * What the public map says about itself, over the map: a load that failed
  * (or a map published for a newer app), how old the map is when it came
- * from the phone's store, and a new version waiting. Split from
- * public-map-app.tsx, 2026-09-29.
+ * from the phone's store, and a new version waiting.
  */
 export function Notices({
   loadFailed,
@@ -66,8 +65,7 @@ export function Notices({
       {/*
         Honesty about age. With no signal, or a network too slow to answer in
         time, the map is whatever the phone kept, and the date comes from inside
-        the file itself, so it is exact. Where the count pill was until the
-        owner took it off (2026-09-29): bottom left above the scale on a phone
+        the file itself, so it is exact. It sits bottom left above the scale on a phone
         (the credit line opens across the top there), top left on a wide map.
       */}
       {(offline || age.stale) && (
@@ -82,8 +80,8 @@ export function Notices({
 
       {/*
         A new version never applies itself: a reload mid-ride would drop the
-        selected route. The owner's Primary button, 24 below the top, centred
-        (3732:2512, 2026-09-30), in place of the old black pill.
+        selected route. A Primary button, 24 below the top, centred (Figma
+        3732:2512).
       */}
       {needRefresh && (
         <div className="pointer-events-none absolute top-[calc(1.5rem+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 *:pointer-events-auto">
