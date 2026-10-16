@@ -24,11 +24,9 @@ interface TimelineTopProps {
 
 /**
  * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
- * ExtraBold 20/28 (the owner's TimelineRouteDetailCard of 2026-10-13, 3778:3183;
- * Black 24/32 until then); the whole row is its button. Picked, its dot is
- * TimelineDot's Selected one. Its name is 12 above the first row (the
- * owner's Timeline set, 3716:1894, "new spacing changes", 2026-10-16; 8
- * from 2026-10-13).
+ * ExtraBold 20/28 (3778:3183); the whole row is its button. Picked, its dot is
+ * TimelineDot's Selected one. Its name is 12 above the first row (Timeline
+ * set, 3716:1894).
  */
 export function TimelineTop({
   livery,
