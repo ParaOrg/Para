@@ -1,6 +1,6 @@
 import { RouteLineLabel, type RouteLineLabelVariant } from './route-line-label';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
-import { TimelineDot } from '../cards/timeline-route-detail';
+import { TimelineDot } from '../cards/timeline-dot';
 import type { Livery } from '../model/liveries';
 
 import './hintuan-label.css';
@@ -11,7 +11,7 @@ import './hintuan-label.css';
  * HintuanStart, a picked start, is HintuanEnd with Start's S on Head
  * Route's green (2026-10-15, green 2026-10-16): Figma draws no start yet.
  */
-export type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';
+type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';
 
 /** The Label each look of the hintuan wears beside its dot. */
 const LABEL_VARIANT = {

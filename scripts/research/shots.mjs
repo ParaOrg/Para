@@ -3,7 +3,7 @@
 //   npm run dev                                  (in another terminal, on :5173)
 //   node scripts/research/shots.mjs [outDir]     (default ./research-shots)
 //
-// Reads today's published file for a route and a hintuan to open, so nothing
+// Reads today's published map for a route and a hintuan to open, so nothing
 // here is hard-coded about the data. Each screen waits real time for tiles.
 // Uses window.__map, which only development builds expose.
 import { chromium } from 'playwright';

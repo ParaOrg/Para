@@ -21,7 +21,7 @@ import { getSupabase } from './supabase';
 /**
  * Readers of the live tables, for the editor. They live in studio/, apart
  * from the types in routes/model/routes.ts and routes/model/hotspots.ts, on
- * purpose: the public map imports those types but reads the published file
+ * purpose: the public map imports those types but reads the published map
  * instead (published-map/api/fetch-index.ts), and ESLint forbids the public
  * shell importing studio/. So Supabase's address can never land in a chunk
  * both pages share; check-build.mjs proves it stays out of the public
@@ -36,7 +36,7 @@ import { getSupabase } from './supabase';
  * Each returns nothing when the build has no Supabase, so the studio shows
  * its config banner rather than a load error on top of it.
  *
- * Each reads its table in pages (readAll.ts): Supabase answers at most 1,000
+ * Each reads its table in pages (read-all.ts): Supabase answers at most 1,000
  * rows a request and does not say when it cut, and the links table passes
  * 1,000 at about forty routes. The publish script pages the same way.
  */
@@ -61,10 +61,7 @@ import { getSupabase } from './supabase';
 // `signboards` (0010, 2026-10-01): a few file names, for the trip card's
 // Signboard and the editor's own (SignboardEditor).
 export const DIRECTION_SELECT =
-  'id, route_id, owner_id, direction_name, origin_terminal, destination_terminal, overview, reversed, confidence, updated_at, borrowed_from, borrowed_part, borrowed_m, signboards, route:route(*)';
-/** The list as it was before 0009, for a database it has not reached yet. */
-const DIRECTION_SELECT_BEFORE_0009 = DIRECTION_SELECT.replace('overview', 'shape');
-
+  'id, route_id, direction_name, origin_terminal, destination_terminal, overview, reversed, confidence, updated_at, borrowed_from, borrowed_part, borrowed_m, signboards, route:route(*)';
 /** The rest of a direction: its drawing, and its full line. */
 const DRAWING_SELECT = 'control_points, segments, shape';
 
@@ -102,9 +99,6 @@ export function unnamedFromListed(
   return toUnnamedDirectionRow({ ...rest, shape: line ?? overview ?? shape ?? null });
 }
 
-/** Postgres's words for `overview` on a database 0009 has not reached (42703; readAll keeps the message). */
-const NO_OVERVIEW = /\boverview\b.*does not exist/;
-
 /**
  * Every saved direction of every route, with the generated names filled in
  * from the hotspots at each route's ends. Public: RLS allows anyone to read.
@@ -125,13 +119,7 @@ export async function listDirections(): Promise<DirectionRow[]> {
         .range(from, to)
         .then((r) => r as unknown as Page<unknown>),
     );
-  const [listedRaw, hotspots] = await Promise.all([
-    list(DIRECTION_SELECT).catch((e: unknown) => {
-      if (!(e instanceof Error && NO_OVERVIEW.test(e.message))) throw e;
-      return list(DIRECTION_SELECT_BEFORE_0009);
-    }),
-    listHotspots(),
-  ]);
+  const [listedRaw, hotspots] = await Promise.all([list(DIRECTION_SELECT), listHotspots()]);
   const listed: ListedRow[] = parsed(listedRowSchema, listedRaw, 'direction');
   // A drawn row saved before 0009 and not backfilled has no overview yet: its
   // full line stands in, read for those rows alone.

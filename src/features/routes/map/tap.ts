@@ -43,7 +43,7 @@ export function tapBox(
 
 /**
  * Binds a layer's mouseenter and mouseleave, the hand the cursor turns into
- * over a line or a box (routeTaps.ts, hotspotTaps.ts), only where a pointer can
+ * over a line or a box (route-taps.ts, hotspot-taps.ts), only where a pointer can
  * hover. MapLibre answers such a pair with a query of the rendered features
  * on every mousemove, and a finger's tap raises one before its click, so a
  * phone paid four queries a tap for a cursor it never shows (the cheap-phone
@@ -106,7 +106,7 @@ function idsInOrder(features: IdFeature[], key: 'id' | 'routeId' = 'id'): string
 }
 
 /** What one tap landed on: every direction, every route those belong to, and every hotspot in its box. */
-export interface TapTargets {
+interface TapTargets {
   routeIds: string[];
   routeKeys: string[];
   hotspotIds: string[];
@@ -180,7 +180,7 @@ function queryTargets(
  * several of one kind — routes sharing a road, or hotspots side by side —
  * which light up and go to the sheet.
  */
-export type TapOutcome =
+type TapOutcome =
   | { kind: 'none' }
   | { kind: 'route'; routeIds: string[] }
   | { kind: 'hotspot'; hotspotId: string }

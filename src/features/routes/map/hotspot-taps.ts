@@ -6,7 +6,7 @@ import type { Hotspot } from '../model/hotspots';
 
 /*
  * A tap on the saved hotspots: what it opens, lists or lets go. Split from
- * useSavedHotspots.ts, 2026-09-29.
+ * use-saved-hotspots.ts, 2026-09-29.
  */
 
 const FILL = HOTSPOTS_FILL_LAYER;
@@ -62,7 +62,7 @@ export function useHotspotTaps<S extends Hotspot>(
 
     map.on('click', onMapClick);
     // The hand over a box only where a pointer can hover, and from when one
-    // can, as over a line (routeTaps.ts; bindHover, 2026-10-04 and
+    // can, as over a line (route-taps.ts; bindHover, 2026-10-04 and
     // 2026-10-05).
     const unhover = bindHover(map, FILL, enter, leave);
     return () => {

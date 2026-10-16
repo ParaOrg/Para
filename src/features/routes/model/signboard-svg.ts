@@ -78,7 +78,7 @@ const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', a
  * which is refused, so it stays as written and is escaped as text. A
  * reference to a character XML forbids becomes U+FFFD.
  */
-export function decodeReferences(s: string): string {
+function decodeReferences(s: string): string {
   return s.replace(
     /&(?:#(\d+)|#x([\da-f]+)|([a-z]+));/gi,
     (whole, dec: string, hex: string, name: string) => {
