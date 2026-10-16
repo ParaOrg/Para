@@ -7,21 +7,18 @@ import { APP_MOVE } from './map-view';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
-import { endsBeforeStart, rideCut, rideSpan, rideTheOtherWay, travelLine } from '../model/ride';
+import { endsBeforeStart, rideCut, rideSpan, travelLine } from '../model/ride';
 import { isRailLine, railLineOf, type Direction } from '../model/routes';
 
 /**
  * The ride between the picks as the map draws it (useLitRides): `line`, the
  * ride on the trip's own line, and `pale`, the stretches before the start and
- * after the end, in the card's pale; or, an end picked before the start,
- * the trip's whole line pale and the ride on the other direction's line
- * (`otherWay`).
+ * after the end, in the card's pale.
  */
 export interface Ridden {
   directionId: string;
   line: readonly LngLat[];
   pale: readonly (readonly LngLat[])[];
-  otherWay: { directionId: string; line: readonly LngLat[] } | null;
 }
 
 /** How close a picked hintuan is brought in: the scale bar reading this. */
@@ -89,14 +86,6 @@ export function useRideTo(
      * map's centre, in pixels — clear of a card over the map (clearOfSheet).
      */
     onGlide?: () => [number, number];
-    /**
-     * The route's other direction, for an end picked before the start: that
-     * ride runs on it, the card left as it is (rideTheOtherWay; the owner,
-     * 2026-10-15). Null for a route drawn one way only.
-     */
-    otherWay?: Direction | null;
-    /** The directions that pass a hotspot (its links): where a pick lands on the other way. */
-    linkedDirectionIds?: (hotspotId: string) => readonly string[];
   } = {},
 ) {
   // Which direction the pick was made on: a pick belongs to its ride, so the
@@ -164,25 +153,14 @@ export function useRideTo(
   );
 
   // The ride between the picks: from the start (or where the direction
-  // leaves) to the picked hintuan. An end before the start runs on the other
-  // direction's line (the owner's Variant5, 2026-10-15), its picks landing on
-  // boxes that way passes. A start alone is no ride yet, the trip left whole
-  // until its end is picked (his Variant3, 2026-10-16).
-  const otherWay = opts.otherWay ?? null;
-  const linked = opts.linkedDirectionIds;
-  const span = useMemo(() => {
-    if (!selected || !live) return null;
-    const startId = liveStart?.rowId ?? null;
-    const endId = live.rowId;
-    if (startId !== null && endsBeforeStart(selected, hotspots, startId, endId)) {
-      if (!otherWay || !linked) return null;
-      const passes = (id: string) => linked(id).includes(otherWay.id);
-      const ride = rideTheOtherWay(otherWay, hotspots, startId, endId, passes);
-      return ride && { ...ride, otherWayId: otherWay.id };
-    }
-    const ride = rideSpan(selected, hotspots, startId, endId);
-    return ride && { ...ride, otherWayId: null };
-  }, [selected, hotspots, live, liveStart, otherWay, linked]);
+  // leaves) to the picked hintuan, along the trip's own arrows: a row tapped
+  // before the start becomes the start (pick). A start alone is no ride yet,
+  // the trip left whole until its end is picked (his Variant3, 2026-10-16).
+  const span = useMemo(
+    () =>
+      selected && live ? rideSpan(selected, hotspots, liveStart?.rowId ?? null, live.rowId) : null,
+    [selected, hotspots, live, liveStart],
+  );
 
   /** Keeps the camera as the first pick is made; a later pick keeps the first one's. */
   const remember = useCallback(() => {
@@ -213,6 +191,24 @@ export function useRideTo(
         setStartPick(null);
         return;
       }
+      // A row before the start becomes the start, and the start the end: the
+      // ride follows the trip's own arrows from there (the owner, 2026-10-16:
+      // "it should follow the arrow … so users can study the route, fare
+      // without changing to southbound and north bound"; until then it was
+      // ridden the other way, on the other direction's line).
+      if (
+        id !== null &&
+        selected &&
+        startRow !== null &&
+        endsBeforeStart(selected, hotspots, startRow, id)
+      ) {
+        setAtEnd(null);
+        carried.current = null;
+        remember();
+        setStartPick({ directionId: selected.id, rowId: id });
+        setPicked({ directionId: selected.id, rowId: startRow });
+        return;
+      }
       setAtEnd(null);
       carried.current = null;
       if (id !== null && selectedId && liveRow === id) goBack();
@@ -224,7 +220,7 @@ export function useRideTo(
           : { directionId: selectedId, rowId: id },
       );
     },
-    [selectedId, liveRow, startRow, remember, goBack],
+    [selected, selectedId, hotspots, liveRow, startRow, remember, goBack],
   );
 
   /**
@@ -272,9 +268,8 @@ export function useRideTo(
   // every later move, and a trip's fit or "Where am I" would land off centre
   // ever after. An end picked after a start, with a ride between them, does
   // not glide: the camera takes in that ride (the owner, 2026-10-16;
-  // useCardCamera's pickOnTrip). With none to take in (an end above the
-  // start on a route drawn one way only, or a box the line misses) it glides
-  // to the end as any pick does. Read as the cut changes, so letting the
+  // useCardCamera's pickOnTrip). With none to take in (a box the line
+  // misses) it glides to the end as any pick does. Read as the cut changes, so letting the
   // start go moves nothing.
   // Kept before the glide's effect, which reads it in the same commit.
   const isRideFramed = useRef(false);
@@ -295,23 +290,12 @@ export function useRideTo(
   // Kept one object while the span is, so the lit rides are not made anew each render.
   const ridden = useMemo((): Ridden | null => {
     if (!span || !selected) return null;
-    // The other way round, the trip's own line is all pale and the ride is
-    // drawn on the other direction's.
-    if (span.otherWayId !== null) {
-      return {
-        directionId: selected.id,
-        line: [],
-        pale: [travelLine(selected, hotspots)],
-        otherWay: { directionId: span.otherWayId, line: span.ridden },
-      };
-    }
     return {
       directionId: selected.id,
       line: span.ridden,
       pale: [span.before, span.rest].filter((l) => l.length > 1),
-      otherWay: null,
     };
-  }, [span, selected, hotspots]);
+  }, [span, selected]);
 
   /**
    * SWITCH on a jeep's trip, just before it turns: the pick goes with it to
@@ -338,8 +322,13 @@ export function useRideTo(
         // each on its place's box the other way passes. One that lands
         // nowhere is let go: the end alone is a ride from where the way back
         // leaves, the start alone no ride yet.
-        const backFrom = land(live.rowId);
-        const backTo = land(liveStart.rowId);
+        let backFrom = land(live.rowId);
+        let backTo = land(liveStart.rowId);
+        // Landed across the road out of order: the first is the start, so the
+        // ride back still follows the arrows (pick, the owner, 2026-10-16).
+        if (backFrom && backTo && endsBeforeStart(next, hotspots, backFrom.id, backTo.id)) {
+          [backFrom, backTo] = [backTo, backFrom];
+        }
         if (backFrom) setStartPick({ directionId: next.id, rowId: backFrom.id });
         if (backTo) {
           carried.current = backTo.id;
@@ -365,7 +354,7 @@ export function useRideTo(
 
   return {
     /** The ride between the picks, how far it runs; null with no ride to price. */
-    rideTo: span ? { metres: span.metres, isOtherWay: span.otherWayId !== null } : null,
+    rideTo: span ? { metres: span.metres } : null,
     /** The row picked, cut or not: a row whose box the line misses is still shown picked, with nothing to price. */
     pickedId: live?.rowId ?? null,
     /**

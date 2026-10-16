@@ -212,8 +212,7 @@ function fareFor(direction: Direction, metres: number, timeline: Timeline): Fare
 /**
  * The fare of the ride between the picks: a jeep's by the metres between
  * them, a train's by the two stations (railFares takes any pair, whichever
- * way round: an end before the start is ridden the other way), the ferry's
- * free. A start left at the origin is that end of the timeline. No end
+ * way round), the ferry's free. A start left at the origin is that end of the timeline. No end
  * picked, no ride to price: a start alone is no ride yet (the owner's
  * Variant3, 2026-10-16).
  */

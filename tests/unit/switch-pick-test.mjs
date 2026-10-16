@@ -259,7 +259,7 @@ test('a train’s SWITCH lets the start go with the end', async () => {
 });
 
 // The ride itself, on lines: from the start to the end, the line outside it
-// pale; an end above the start ridden on the other direction's line.
+// pale; a row above the start made the start (the owner, 2026-10-16).
 const pt = (lng) => ({ type: 'Point', coordinates: [lng, 0] });
 const ringAt = (lng, r = 0.0002) => ({
   type: 'Polygon',
@@ -302,22 +302,18 @@ const withLine = (id, coordinates, reversed) => ({
   route: { name: 'Head – Tail', routeCode: null, headHotspotId: 'head', tailHotspotId: 'tail' },
 });
 const out1 = withLine('out', LINE, false);
-const in1 = withLine('in', [...LINE].reverse(), true);
 
-/** Mounts the hook on `selected`, the other way and every hotspot passed both ways. */
+/** Mounts the hook on `selected`, on its line through Amparo, Bestlink and Camarin. */
 async function mountLined(selected) {
   const out = {};
-  const linked = () => ['out', 'in'];
   function Probe(props) {
-    out.ride = useRideTo(null, props.selected, lined, {
-      otherWay: props.selected.id === 'out' ? in1 : out1,
-      linkedDirectionIds: linked,
-    });
+    out.ride = useRideTo(null, props.selected, lined);
     return null;
   }
   const root = createRoot({ ...container });
-  await act(async () => root.render(h(Probe, { selected })));
-  return { out, root };
+  const show = (next) => act(async () => root.render(h(Probe, { selected: next })));
+  await show(selected);
+  return { out, root, show };
 }
 
 test('a start and an end: the ride between them, the line on either side pale', async () => {
@@ -326,9 +322,7 @@ test('a start and an end: the ride between them, the line on either side pale', 
   await act(async () => out.ride.setStart());
   await act(async () => out.ride.pick('c'));
   assert.equal(out.ride.ridden.directionId, 'out');
-  assert.equal(out.ride.ridden.otherWay, null);
   assert.equal(out.ride.ridden.pale.length, 2, 'before the start and after the end');
-  assert.equal(out.ride.rideTo.isOtherWay, false);
   assert.ok(Math.abs(out.ride.rideTo.metres - 2226) < 40, `${out.ride.rideTo.metres}`);
   assert.deepEqual(out.ride.startPinAt, out.ride.ridden.line[0]);
   assert.deepEqual(out.ride.pinAt, out.ride.ridden.line.at(-1));
@@ -348,18 +342,61 @@ test('a start alone is no ride yet: the trip whole, nothing pale, its circle whe
   root.unmount();
 });
 
-test('an end above the start: ridden on the other direction’s line, the trip’s own all pale', async () => {
+test('a row above the start becomes the start, the start the end: the ride follows the trip’s arrows', async () => {
+  // The owner, 2026-10-16: "it should follow the arrow … so users can study
+  // the route, fare without changing to southbound and north bound".
   const { out, root } = await mountLined(out1);
   await act(async () => out.ride.pick('c'));
   await act(async () => out.ride.setStart());
   await act(async () => out.ride.pick('a'));
-  assert.equal(out.ride.startId, 'c', 'the card stays as it is: Camarin is still the start');
-  assert.equal(out.ride.pickedId, 'a');
-  assert.equal(out.ride.rideTo.isOtherWay, true);
-  assert.equal(out.ride.ridden.directionId, 'out', 'drawn against the trip on show');
-  assert.equal(out.ride.ridden.otherWay.directionId, 'in');
-  assert.equal(out.ride.ridden.pale.length, 1, 'the trip’s whole line');
-  const ride = out.ride.ridden.otherWay.line;
-  assert.ok(ride[0][0] > ride.at(-1)[0], 'from Camarin back to Amparo');
+  assert.equal(out.ride.startId, 'a', 'Amparo, tapped above Camarin, is the start');
+  assert.equal(out.ride.pickedId, 'c', 'and Camarin the end');
+  assert.equal(out.ride.ridden.directionId, 'out', 'on the trip’s own line');
+  const ride = out.ride.ridden.line;
+  assert.ok(ride[0][0] < ride.at(-1)[0], 'from Amparo on to Camarin, the way the trip runs');
+  assert.ok(Math.abs(out.ride.rideTo.metres - 2226) < 40, `${out.ride.rideTo.metres}`);
+  // With an end already picked, Bestlink the start and Camarin the end:
+  // Amparo tapped is the start, and Bestlink the end, as any tap picks the
+  // ride's other end.
+  await act(async () => out.ride.removeStart());
+  await act(async () => out.ride.pick('b'));
+  await act(async () => out.ride.setStart());
+  await act(async () => out.ride.pick('c'));
+  assert.deepEqual([out.ride.startId, out.ride.pickedId], ['b', 'c']);
+  await act(async () => out.ride.pick('a'));
+  assert.deepEqual([out.ride.startId, out.ride.pickedId], ['a', 'b']);
+  root.unmount();
+});
+
+test('a jeep’s SWITCH back by other streets, reaching the start’s place first: it stays the start, the ride following the arrows', async () => {
+  // The way back loops round and reaches Amparo before Bestlink, the
+  // opposite of the swap's order (the owner, 2026-10-16: the ride follows
+  // the trip's arrows).
+  const loop = withLine(
+    'in',
+    [
+      [0.04, 0],
+      [0.04, 0.01],
+      [0.01, 0.01],
+      [0.01, 0],
+      [0.02, 0],
+      [0.02, -0.01],
+      [0, -0.01],
+      [0, 0],
+    ],
+    true,
+  );
+  const { out, root, show } = await mountLined(out1);
+  await act(async () => out.ride.pick('a'));
+  await act(async () => out.ride.setStart());
+  await act(async () => out.ride.pick('b'));
+  await act(async () => out.ride.carryTo(loop, () => true));
+  await show(loop);
+  assert.deepEqual(
+    [out.ride.startId, out.ride.pickedId],
+    ['a', 'b'],
+    'Amparo, reached first, starts',
+  );
+  assert.ok(out.ride.ridden, 'a ride along the way back, priced');
   root.unmount();
 });

@@ -205,10 +205,8 @@ export function TimelineRouteDetail({
   };
   const rail = TIMELINE_SURFACE[livery];
   // The rail runs only along the ride (the owner, 2026-10-15): from its
-  // first row to its last, whichever of the start and the end is above (an
-  // end picked above the start, Variant5, is ridden the other way round).
-  // The origin is -1, the destination the row count (rideRows). No pick, it
-  // runs end to end.
+  // first row to its last. The origin is -1, the destination the row count
+  // (rideRows). No pick, it runs end to end.
   const { first, last } = rideRows(hintuans, start, picked) ?? {
     first: -1,
     last: hintuans.length,

@@ -18,7 +18,6 @@ import {
 } from './use-overviews';
 import { useRideTo } from '../map/ride-to';
 import type { Highlight } from '../map/use-saved-routes';
-import { otherDirection } from '../model/departures';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';
@@ -85,12 +84,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const tripDock = useRef<HTMLDivElement>(null);
   // The HintuanCard's, for a picked box to land clear of it.
   const hotspotDock = useRef<HTMLDivElement>(null);
-  // An end picked before the start rides the route's other direction (the owner, 2026-10-15).
-  const otherWay = saved.selected ? otherDirection(saved.directions, saved.selected) : null;
   const ride = useRideTo(map, saved.selected, hotspots.hotspots, {
     onGlide: () => cards.clearOf(tripDock)(),
-    otherWay,
-    linkedDirectionIds: hotspots.linkedDirectionIds,
   });
   useTripOverview(cam, saved.selected, tripDock, cards.snap);
   // The page, and the card's sheet on show in it, for what the camera keeps clear of.
@@ -126,10 +121,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   useSwitchOverview(cam, saved.litDirections, switches, openSheet, cards.snap);
   // A ride from a start to an end (the owner, 2026-10-16): what the camera
   // takes in once the end is picked (pickOnTrip), and what the trip frames
-  // as the sheet settles, in place of its whole route. On the other way
-  // round (Variant5) it is the ride drawn on that line.
-  const ridden = ride.startId !== null ? ride.ridden : null;
-  const rideLine = ridden && (ridden.otherWay?.line ?? ridden.line);
+  // as the sheet settles, in place of its whole route.
+  const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
   const [endPicks, setEndPicks] = useState(0);
   useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
   // The sheet settled at another height: what the card on show frames, again,

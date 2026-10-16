@@ -39,8 +39,7 @@ export function useLitRides(
   /**
    * An end picked on the trip, after a start or not (useRideTo's `ridden`):
    * the line outside the ride is drawn in the trip's pale, the chevrons
-   * flowing on over it; a ride the other way round is drawn on the other
-   * direction's line, with chevrons of its own.
+   * flowing on over it.
    */
   ridden: Ridden | null = null,
   /**
@@ -79,23 +78,12 @@ export function useLitRides(
       })),
     [saved.litDirections, hotspots, ridden, unmarkedId],
   );
-  // A ride the other way round flows its own way, from the start to the end,
-  // on the other direction's line. Its ends are the picks' pins, so it is
-  // the chevrons' alone, not a ride whose ends EndTitles names.
-  const otherWay = ridden?.otherWay ?? null;
-  const flowing = useMemo(
-    () =>
-      otherWay
-        ? [...rides, { id: otherWay.directionId, line: otherWay.line, from: '', to: '' }]
-        : rides,
-    [rides, otherWay],
-  );
-  useDirectionArrows(map, flowing);
+  useDirectionArrows(map, rides);
   // Outside the ride, the trip's line in its card's pale (the owner's asks,
   // 2026-10-12: "the remaining line should be surface-pale of the selected
   // colour", and 2026-10-15, before a picked start too), over the lit line
   // and under the chevrons; nothing while nothing is picked.
-  useRideRest(map, ridden?.pale ?? NOTHING_PALE, otherWay?.line ?? null);
+  useRideRest(map, ridden?.pale ?? NOTHING_PALE);
   // The chosen direction's side of each hintuan it cuts across: its right.
   useBabaanSides(map, saved.selected, hotspots);
   return rides;
