@@ -12,8 +12,7 @@ import type { Hotspot } from '../model/hotspots';
 
 /*
  * The basemap's own rail station names, hidden where ParaPo has the station
- * (the owner, 2026-10-15: "hide the map's rail station names where we have
- * hotspots also"): Monochrome drew "Anonas" a block from ParaPo's "Anonas
+ * (the owner's call): Monochrome drew "Anonas" a block from ParaPo's "Anonas
  * Station", and Colour draws its own the same way. A station of ours is a
  * hotspot with a `line`; the basemap's are its `poi` points of class
  * `railway`. One within NEAR_M of one of ours is not drawn; the rest, the

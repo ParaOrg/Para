@@ -16,7 +16,7 @@ import type { Livery } from '../model/liveries';
  * Figma's Variant: Head Route, where a ride starts; Tail Route, where it
  * goes; and Default, an end named with neither (see below). Unselected,
  * Default at 60%, an end outside the ride, as the Label's Unselected
- * (4200:13645, 2026-10-16).
+ * (4200:13645).
  */
 export type RouteLineEndingsLabelVariant = 'head' | 'tail' | 'default' | 'unselected';
 
@@ -38,22 +38,18 @@ interface RouteLineEndingsLabelProps {
 }
 
 /**
- * A ride's end named over its circle, the owner's RouteLineEndingsLabels
- * (Figma 3848:12135, redrawn 2026-10-13): a pill in SN Pro Medium 14/20, 28
- * tall, and under it Figma's `knobb`, the pointer at the circle. Head Route
- * leads with Start's circled S in Map/HotspotsCard/Hintuan/surface, the
- * green; Tail Route with End's circled E in the line's colour (his "must be
- * the color of routeline instead of blue", 2026-10-13: the brand's blue
- * until then). Both apply to every lit line, a list's blue ones too (his
- * "the rules for RouteLineEndingsLabel must be applicable to these
- * RouteLine", the same day).
+ * A ride's end named over its circle, Figma's RouteLineEndingsLabels
+ * (3848:12135): a pill in SN Pro Medium 14/20, 28 tall, and under it Figma's
+ * `knobb`, the pointer at the circle. Head Route leads with Start's circled S
+ * in Map/HotspotsCard/Hintuan/surface, the green; Tail Route with End's
+ * circled E in the line's colour, not the brand's blue (the owner's call).
+ * Both apply to every lit line, a list's blue ones too (the owner's call).
  *
- * At a train station, CodeSign (his addition of 2026-10-13, 4073:7215 and
- * 4073:7220): the S or E in a 28 disc of its own, 4 left of the pill, and
- * in the pill the station's code in a white chip, its words the pill's
- * colour, before the name. The pointer stays at the pill's middle, as
- * Figma has it, so the pill is what stands over the circle and the disc
- * hangs beside it.
+ * At a train station, CodeSign (the owner's addition to Figma, 4073:7215 and
+ * 4073:7220): the S or E in a 28 disc of its own, 4 left of the pill, and in
+ * the pill the station's code in a white chip, its words the pill's colour,
+ * before the name. The pointer stays at the pill's middle, as Figma has it,
+ * so the pill is what stands over the circle and the disc hangs beside it.
  *
  * Default is the name alone in the line's colour, which Figma's set does
  * not draw. Unselected is Default at 60%, the Label's Unselected (4200:13645):
@@ -144,11 +140,10 @@ export function RouteLineEndingsLabel({
 }
 
 /**
- * What each variant is (3848:12135, respaced 2026-10-16): its padding — 2
- * round a 24 icon and 8 after the name, so the pill stays 28 tall; 8 each
- * side and 4 above and below the name alone — what it wears, Start's green
- * or the line's colour, its icon, the word a screen reader hears before
- * the name, and its fade.
+ * What each variant is (3848:12135): its padding — 2 round a 24 icon and 8
+ * after the name, so the pill stays 28 tall; 8 each side and 4 above and
+ * below the name alone — what it wears, Start's green or the line's colour,
+ * its icon, the word a screen reader hears before the name, and its fade.
  */
 const LOOK = {
   head: {

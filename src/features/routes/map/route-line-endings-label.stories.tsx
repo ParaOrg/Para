@@ -126,7 +126,7 @@ export const TailRouteLightRailWayOne: Story = {
 export const TailRouteLightRailWayTwo: Story = {
   args: { variant: 'tail', livery: 'light-rail-way-two' },
 };
-/** MRT-3 (2026-10-13): the yellow pill and pointer, its words and E near-black (Map/RouteLine/Arrow/Inverse). */
+/** MRT-3: the yellow pill and pointer, its words and E near-black (Map/RouteLine/Arrow/Inverse). */
 export const TailRouteMetroRailWayThree: Story = {
   args: { variant: 'tail', livery: 'metro-rail-way-three' },
   play: async ({ canvasElement }) => {
@@ -142,7 +142,7 @@ export const TailRouteMetroRailWayThree: Story = {
 
 /**
  * Unselected: a trip's end outside the ride, Default at 60%, the pointer
- * with it (the Label's Unselected, 4200:13645, 2026-10-16).
+ * with it (the Label's Unselected, 4200:13645).
  */
 export const Unselected: Story = {
   args: { variant: 'unselected' },
@@ -209,8 +209,7 @@ export const TailRouteCodeSign: Story = {
 
 /**
  * Head Route on MRT-3's yellow line: green all the same, its code green on
- * white (the owner's "This would be the start pill not the yellow",
- * 2026-10-16).
+ * white (the owner's call: the start pill, not the yellow).
  */
 export const HeadRouteCodeSignMetroRailWayThree: Story = {
   args: { variant: 'head', codeSign: 'YL07', livery: 'metro-rail-way-three' },
@@ -234,8 +233,7 @@ export const HeadRouteCodeSignLightRailWayTwo: Story = {
 
 /**
  * Tail Route's CodeSign on MRT-3: the yellow pill, the code black on its
- * white chip (Content/primary: the owner's "I want to make it color black
- * the text only", 2026-10-16).
+ * white chip (Content/primary: the owner's call, the text only).
  */
 export const TailRouteCodeSignMetroRailWayThree: Story = {
   args: { variant: 'tail', codeSign: 'YL05', livery: 'metro-rail-way-three' },

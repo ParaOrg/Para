@@ -40,7 +40,7 @@ const dotOf = (root: HTMLElement): HTMLElement => {
 const settled = (root: HTMLElement) =>
   Promise.all(root.getAnimations({ subtree: true }).map((animation) => animation.finished));
 
-/** The label 8 right of the dot (Figma's spacing/2, 2026-10-16) and centred on it. */
+/** The label 8 right of the dot (Figma's spacing/2) and centred on it. */
 const expectBesideTheDot = async (root: HTMLElement) => {
   const dot = dotOf(root).getBoundingClientRect();
   const label = partOf(root, 'label').getBoundingClientRect();
@@ -81,7 +81,7 @@ export const CodeSign: Story = {
 
 /**
  * HintuanStart: a ride's picked start, its dot filled, Start's S before its
- * name on Head Route's green (2026-10-16). Figma draws no HintuanStart:
+ * name on Head Route's green. Figma draws no HintuanStart:
  * HintuanEnd's shape in RouteLineEndingsLabels' start.
  */
 export const HintuanStart: Story = {
@@ -104,7 +104,7 @@ export const CodeSignStart: Story = {
 
 /**
  * Outside the ride: the dot rings in the card's pale, the name the Label's
- * Unselected, the line's colour at 60% (4200:13645, 2026-10-16).
+ * Unselected, the line's colour at 60% (4200:13645).
  */
 export const Paled: Story = {
   args: { variant: 'hintuan', isPaled: true },
@@ -170,18 +170,18 @@ export const MetroRailWayThree: Story = {
   args: { variant: 'hintuan-end', livery: 'metro-rail-way-three' },
 };
 
-/** A picked start on MRT-3: the dot the line's yellow, the label green (2026-10-16). */
+/** A picked start on MRT-3: the dot the line's yellow, the label green. */
 export const MetroRailWayThreeStart: Story = {
   args: { variant: 'hintuan-start', codeSign: 'YL07', livery: 'metro-rail-way-three' },
 };
 
-/** A picked MRT-3 station: the code black on white (2026-10-16). */
+/** A picked MRT-3 station: the code black on white. */
 export const MetroRailWayThreeCodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
 };
 export const RedStart: Story = { args: { variant: 'hintuan-start', livery: 'red' } };
 
-/** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it (2026-10-13). */
+/** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it. */
 export const MetroRailWayThreeHintuan: Story = {
   args: { variant: 'hintuan', livery: 'metro-rail-way-three' },
 };
