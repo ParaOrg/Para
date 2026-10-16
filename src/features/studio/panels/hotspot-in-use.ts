@@ -15,8 +15,7 @@ export function routesEndingAt(hotspot: HotspotRow, directions: readonly Directi
 /**
  * Why the hotspot cannot be deleted, in the words the notice shows, or null
  * when nothing ends there. A route's end cannot go while the route names it:
- * the database refuses (0006's foreign keys), and its refusal was the notice
- * (finding 15).
+ * the database refuses (0006's foreign keys), so this check gives the notice instead of the database's refusal.
  */
 export function endsRefusal(
   hotspot: HotspotRow,

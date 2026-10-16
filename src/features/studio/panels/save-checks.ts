@@ -3,8 +3,7 @@ import { ENDS_TAKEN } from '../data/routes-write';
 
 /**
  * Why the save panel refuses a save, before it writes anything: pure, so
- * tests/unit/save-checks-test.mjs can hold the sentences and their order
- * (split from save-panel.tsx, 2026-10-14).
+ * tests/unit/save-checks-test.mjs can hold the sentences and their order.
  */
 
 /** What the refusals read from the form. */

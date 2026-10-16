@@ -24,8 +24,7 @@ export function useHotspotSave({ onSaved, onWritten }: UseHotspotSaveOptions) {
   // The row as a save wrote it, when its links failed after: the retry
   // updates it rather than inserting the box again (SavePanel's `written`).
   // The studio keeps it in the outline itself (onWritten, adoptHotspot), so ✕
-  // and a reload keep it too (review of 2026-10-03); here otherwise, as in
-  // the stories.
+  // and a reload keep it too; here otherwise, as in the stories.
   const [writtenId, setOwnWritten] = useState<string | null>(null);
   const setWrittenId = (id: string) => {
     setOwnWritten(id);
