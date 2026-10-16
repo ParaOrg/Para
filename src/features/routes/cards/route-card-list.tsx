@@ -2,7 +2,7 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { RouteCardHeader } from './route-card-header';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { drawnDepartures, wayWord } from '../model/departures';
+import { drawnDepartures, switchWord } from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { hotspotCount } from '../model/places';
@@ -94,7 +94,7 @@ export function RouteCardList({
           onSwitch={onFlip}
           switchable={switchable}
           back={back}
-          way={wayWord(
+          way={switchWord(
             back,
             places.flatMap((p) => p.directions.map((d) => d.v)),
           )}

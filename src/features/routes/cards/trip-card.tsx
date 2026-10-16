@@ -3,11 +3,13 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
+import { RouteTripDetailHeader } from './route-trip-detail-header';
 import { FREE, TimelineRouteDetailCard, type Fare, type Fares } from './timeline-route-detail-card';
 import { useFareKind } from './use-fare-kind';
-import { otherDirection, otherRoutesFrom, wayWord } from '../model/departures';
+import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { cardLiveries, type Livery } from '../model/liveries';
+import { railBound } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -20,6 +22,7 @@ import {
   type Direction,
 } from '../model/routes';
 import type { Timeline } from '../model/timeline';
+import { vehicleOf } from '../model/vehicles';
 
 /**
  * The trip's colour, one owner for it (the review's 6.6): decided as the trip
@@ -140,6 +143,8 @@ export function TripCard({
   extras?: ReactNode;
 }) {
   const { from, to } = directionEnds(direction);
+  const line = railLineOf(direction);
+  const vehicle = vehicleOf(direction);
   const sibling = otherDirection(directions, direction);
   const switchable = !!sibling && isDrawn(sibling);
   // The whole ride, measured once on its full line — the index's figure, so
@@ -171,10 +176,20 @@ export function TripCard({
       dockRef={dockRef}
       height={height}
       routeDirection={to}
-      isTrain={railLineOf(direction) !== null}
+      isTrain={line !== null}
+      header={
+        vehicle && (
+          <RouteTripDetailHeader
+            vehicle={vehicle}
+            // A train's bound alone: with none, its line alone, never Papunta.
+            way={line ? railBound(direction) : wayWord(direction.reversed, [direction])}
+            livery={livery}
+          />
+        )
+      }
       switchable={switchable}
       back={direction.reversed}
-      way={wayWord(direction.reversed, [direction])}
+      way={switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
       }}
