@@ -14,7 +14,7 @@ import {
  */
 
 /** One route with its directions, for a sheet that lists routes, not directions. */
-export interface RouteGroup<V extends Direction> {
+interface RouteGroup<V extends Direction> {
   routeId: string;
   route: RouteSummary;
   directions: V[];
