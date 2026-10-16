@@ -19,7 +19,7 @@ const meta = {
     livery: 'red',
     state: 'rest',
     routeOrigin: 'Novaliches (Bayan)',
-    endPoints: [{ id: 'a', routeDirection: 'Tala' }],
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' }],
     onSelect: fn(),
     onPick: fn(),
     testId: 'chooser',
@@ -114,8 +114,8 @@ export const ARowOpens: Story = {
   args: {
     routeOrigin: 'Tala',
     endPoints: [
-      { id: 'a', routeDirection: 'SM Fairview' },
-      { id: 'b', routeDirection: 'Novaliches (Bayan)' },
+      { id: 'a', routeDirection: 'SM Fairview', vehicle: 'Jeepney' },
+      { id: 'b', routeDirection: 'Novaliches (Bayan)', vehicle: 'Jeepney' },
     ],
   },
   play: async ({ args, canvasElement }) => {
@@ -171,8 +171,8 @@ export const SeveralWaysOut: Story = {
   args: {
     routeOrigin: 'Tala',
     endPoints: [
-      { id: 'a', routeDirection: 'SM Fairview' },
-      { id: 'b', routeDirection: 'Novaliches (Bayan)' },
+      { id: 'a', routeDirection: 'SM Fairview', vehicle: 'Jeepney' },
+      { id: 'b', routeDirection: 'Novaliches (Bayan)', vehicle: 'Jeepney' },
     ],
   },
 };
@@ -185,7 +185,20 @@ export const SixWaysOut: Story = {
     endPoints: ['Tala', 'Novaliches (Bayan)', 'Quiapo', 'Cubao', 'Lagro', 'Fatima'].map((p, i) => ({
       id: String(i),
       routeDirection: p,
+      vehicle: 'Jeepney',
     })),
+  },
+};
+
+/** Each row its own route's vehicle (the owner's answer of 2026-10-16, "own vehicle per row is fine"; Figma's RouteCardExample, 3746:1238, draws the Jeep on every row). */
+export const MixedVehicles: Story = {
+  args: {
+    routeOrigin: 'Cubao',
+    endPoints: [
+      { id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' },
+      { id: 'b', routeDirection: 'Taft Avenue', vehicle: 'MRT-3' },
+      { id: 'c', routeDirection: 'Antipolo', vehicle: 'LRT-2' },
+    ],
   },
 };
 
@@ -194,6 +207,6 @@ export const LongName: Story = {
   args: {
     livery: 'orange',
     routeOrigin: 'Fairview Teraccess Transport Terminal',
-    endPoints: [{ id: 'a', routeDirection: 'Novaliches (Bayan) via Zabarte' }],
+    endPoints: [{ id: 'a', routeDirection: 'Novaliches (Bayan) via Zabarte', vehicle: 'Jeepney' }],
   },
 };

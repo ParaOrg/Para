@@ -8,6 +8,7 @@ import {
 } from './livery-card';
 import { RouteEndPointBar } from './route-end-point-bar';
 import type { Livery } from '../model/liveries';
+import type { Vehicle } from '../model/vehicles';
 
 /**
  * A place and the routes that leave it, in a jeepney's livery — the owner's
@@ -38,6 +39,8 @@ export interface EndPoint {
   id: string;
   /** Figma's routeDirection: the place this direction goes to. */
   routeDirection: string;
+  /** What the direction rides, drawn at the row's end (RouteEndPointBar). */
+  vehicle: Vehicle | null;
 }
 
 interface Props {
@@ -110,6 +113,7 @@ export function RouteCard({
             <RouteEndPointBar
               routeDirection={e.routeDirection}
               on={livery}
+              vehicle={e.vehicle}
               data-testid={`${testId}-item`}
               data-direction={e.id}
               onClick={() => onPick(e.id)}
