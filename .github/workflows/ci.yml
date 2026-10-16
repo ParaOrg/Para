@@ -120,6 +120,10 @@ jobs:
       # ESLint: the rules the standards name are errors (eslint.config.js).
       - name: Lint
         run: npm run lint
+      # docs/architecture.md is generated from src/: a change to the structure
+      # that did not regenerate it fails here (`npm run docs:architecture`).
+      - name: Architecture page
+        run: npm run docs:architecture:check
       # Import boundaries, no editor code on /, the installable app's files.
       - name: Build, with the boundary and build checks
         run: npm run build
