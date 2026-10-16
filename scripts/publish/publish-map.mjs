@@ -1,4 +1,4 @@
-// Publishes the public map as files, so visitors never ask the database.
+// Publishes the public map as files, so commuters never ask the database.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/publish-map.mjs
 //                                                   writes public/data/
@@ -329,7 +329,7 @@ if (!FORCE) {
 
 // Names are generated from the hotspots at each route's ends and never stored
 // (PLAN.md, "Naming and creating a route", 2026-09-21). The file carries the
-// generated strings so visitors need no join; a renamed hotspot shows on the
+// generated strings so commuters need no join; a renamed hotspot shows on the
 // next publish: routeName and directionName, from a hotspot's hotspotLabel — its
 // informal name, what people say, or the name on the ground (0007).
 const hotspotName = new Map(hotspotRows.map((s) => [s.id, hotspotLabel(s)]));

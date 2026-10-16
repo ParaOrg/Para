@@ -17,7 +17,7 @@ export const DRAG_PX = 24;
  * with the old rows and the RouteCards alike). Caught at the capture phase on
  * the document, before MapLibre or React sees it, and only where the finger
  * lifted: a tap on the sheet's ✕ right after lands elsewhere, and is one the
- * visitor meant. Forgotten when the next gesture starts, if none came — not
+ * commuter meant. Forgotten when the next gesture starts, if none came — not
  * after a set time: on a busy page the click came a second after the finger
  * lifted, long after the 300 ms this once waited, and landed on the RouteCard
  * the sheet had pulled up under it (a phone-sized page slowed 20×, and the
@@ -100,7 +100,7 @@ export const LOW_PX = 129;
 /**
  * What Max leaves of the map at the top, as Google Maps does: the status
  * bar's height, where the page runs behind it, and this strip under it, so
- * the visitor keeps their place (the owner's asks, 2026-10-02).
+ * the commuter keeps their place (the owner's asks, 2026-10-02).
  */
 export const MAX_STRIP_PX = 24;
 const MAX_GAP_CSS = `calc(env(safe-area-inset-top) + ${MAX_STRIP_PX}px)`;

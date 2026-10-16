@@ -19,7 +19,7 @@
 // (TracksTheMapBasedOnCompassFacing), and turns with it; the next puts north
 // up again, and the next tilts again; an app camera move lets go; a route
 // tapped draws the dot's gaze, and the card it opened set to another height
-// while the camera follows keeps the camera on the visitor; a browser
+// while the camera follows keeps the camera on the commuter; a browser
 // that refuses says so; a GPS with no fix says so without a second watch;
 // with no compass read, TrackedLocation's tap only comes back;
 // and with a mouse there is no compass, the button sitting bottom right.
@@ -105,7 +105,7 @@ const face = (page, heading) =>
     );
   }, heading);
 
-// ---------------------------------------------------------- a granted visitor, on a phone
+// ---------------------------------------------------------- a granted commuter, on a phone
 if (VIDEO) mkdirSync(VIDEO, { recursive: true });
 const ctx = await b.newContext({
   viewport: { width: 390, height: 844 },
@@ -262,7 +262,7 @@ check(
   `face ${await dotFace()}, ${beforePoke.mode} → ${await mode()}, zoom ${beforePoke.cam.zoom.toFixed(2)} → ${afterPoke.zoom.toFixed(2)}`,
 );
 
-// The visitor drags the map: it lets go. A tap comes back.
+// The commuter drags the map: it lets go. A tap comes back.
 const dotBox = await overlay(page).locator('button.locator-dot').boundingBox();
 const from = { x: dotBox.x + dotBox.width / 2, y: dotBox.y + dotBox.height / 2 };
 await page.mouse.move(from.x, from.y);
@@ -270,7 +270,7 @@ await page.mouse.down();
 await page.mouse.move(from.x - 75, from.y - 100, { steps: 8 });
 await page.mouse.up();
 await page.waitForTimeout(400);
-// The drag starts on the visitor's dot, mid-screen: it pans all the same.
+// The drag starts on the commuter's dot, mid-screen: it pans all the same.
 check(
   'dragging the map, from the dot itself, lets go: TrackOwnLocation',
   (await mode()) === 'TrackOwnLocation',
@@ -331,7 +331,7 @@ check(
   `${await mode()}, ${(await centred(page, p)).toFixed(1)} px off`,
 );
 check(
-  "  at the zoom it was at, under 2 km on the scale bar: the height is the visitor's",
+  "  at the zoom it was at, under 2 km on the scale bar: the height is the commuter's",
   Math.abs((await camera(page)).zoom - 16) < 0.05,
   `zoom ${(await camera(page)).zoom.toFixed(2)}`,
 );
@@ -402,7 +402,7 @@ check(
   `${await mode()}`,
 );
 
-// The app moves the camera for the visitor (a hintuan picked, an end tapped:
+// The app moves the camera for the commuter (a hintuan picked, an end tapped:
 // features/routes/map/map-view.tsx APP_MOVE). That lets go too, or the next fix undoes it.
 const away = north(p, 400);
 await page.evaluate(
@@ -510,18 +510,18 @@ if (!onLine) {
   );
 
   // The card that tap opened set to another height while the camera follows
-  // the visitor: the card's overview starts (useHeightOverview) and the
-  // camera following the visitor takes over in the same commit, as it did
+  // the commuter: the card's overview starts (useHeightOverview) and the
+  // camera following the commuter takes over in the same commit, as it did
   // when the locator's hooks were CommuterApp's own, after the cards'. Since
-  // they moved into VisitorLocation, which React runs before the page's own
+  // they moved into CommuterLocation, which React runs before the page's own
   // effects, its camera waits for the page's turn (commit-turn.ts; the
-  // cheap-phone plan, step 15, 2026-10-05). It stays on the visitor, at the
+  // cheap-phone plan, step 15, 2026-10-05). It stays on the commuter, at the
   // zoom it followed at.
   // A list where routes share the road, or a trip's card: either has a handle.
   const handle = page.locator('button[data-testid="dock-handle"]:visible').first();
   if (!(await handle.count())) {
     check(
-      'a card set to another height while the camera follows: it stays on the visitor',
+      'a card set to another height while the camera follows: it stays on the commuter',
       false,
       'no card open after the route tap',
     );
@@ -536,12 +536,12 @@ if (!onLine) {
     const now = await camera(page);
     const is = await onScreen(page, p);
     check(
-      "a card set to another height while the camera follows: it stays on the visitor, at its zoom, the card's overview overtaken",
+      "a card set to another height while the camera follows: it stays on the commuter, at its zoom, the card's overview overtaken",
       Math.abs(now.zoom - following.zoom) < 0.05 &&
         Math.abs(is.x - is.w / 2) < 4 &&
         is.y > 0 &&
         is.y < is.h,
-      `zoom ${following.zoom.toFixed(2)} → ${now.zoom.toFixed(2)}, the visitor at ${is.x.toFixed(0)},${is.y.toFixed(0)} (was ${was.x.toFixed(0)},${was.y.toFixed(0)})`,
+      `zoom ${following.zoom.toFixed(2)} → ${now.zoom.toFixed(2)}, the commuter at ${is.x.toFixed(0)},${is.y.toFixed(0)} (was ${was.x.toFixed(0)},${was.y.toFixed(0)})`,
     );
   }
 }
@@ -658,7 +658,7 @@ await ctx3.close();
 
 // ---------------------------------------------------------- permission taken back
 // A fix, then the permission revoked: the watch answers PERMISSION_DENIED.
-// The overlay goes with the fix; kept, it stood where the visitor was, and
+// The overlay goes with the fix; kept, it stood where the commuter was, and
 // the next tap eased the camera there (review of 2026-10-03, finding 9).
 const ctx5 = await b.newContext({
   viewport: { width: 390, height: 844 },
@@ -742,7 +742,7 @@ await where4.click();
 await until(async () => (await where4.getAttribute('data-mode')) === 'TrackedLocation', 8000);
 await page4.waitForTimeout(1000);
 check(
-  '  a tap comes to the visitor: TrackedLocation',
+  '  a tap comes to the commuter: TrackedLocation',
   (await where4.getAttribute('data-mode')) === 'TrackedLocation',
 );
 check(

@@ -43,7 +43,7 @@ import type {
  * the service worker, each range clear of the one before, the longest task
  * 277-296 -> 491-550 ms and the page settled 1.7-1.8 s later; against a
  * list tap's 1,453 -> 170 ms and a trip tap's 718 -> 256. On a phone, one
- * first-use program, 5-50 ms, while the visitor looks at the map. Keeping
+ * first-use program, 5-50 ms, while the commuter looks at the map. Keeping
  * it is the owner's call (asked 2026-10-05); without it (warmSoon's
  * callers, directionArrows.ts and layerSwitch.ts), the first tap compiles
  * the programs again.

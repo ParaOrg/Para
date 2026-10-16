@@ -148,7 +148,7 @@ test('the chevrons carry 32 px past each tile edge; the lines, the boxes and the
   assert.equal(TILE_BUFFER, 32);
   for (const id of BUFFERED) assert.equal(sources.get(id)?.buffer, TILE_BUFFER, id);
   // A cut at 32 px moved the lines' and the boxes' edges by up to 41 levels
-  // of 255 on a phone's screen; nothing may change what a visitor sees.
+  // of 255 on a phone's screen; nothing may change what a commuter sees.
   for (const id of DEFAULT_BUFFER)
     assert.equal(sources.get(id)?.buffer, undefined, `${id} keeps MapLibre's buffer`);
   assert.deepEqual(

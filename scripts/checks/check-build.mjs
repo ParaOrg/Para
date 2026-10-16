@@ -12,12 +12,12 @@
 //      router.project-osrm.org   the route snapper
 //      parapo.draft              the drawing-draft key
 //      Sign in to save, Forgot password?, + New Route, Draw the return trip
-//      .supabase.co              the database's address: visitors read the
+//      .supabase.co              the database's address: commuters read the
 //                                published file and never call it
 //
 // 3. No Supabase client: since step 5 the public page reads the published
 //    file (/data/index.v4.json and the lines; the index since 2026-09-29), so
-//    no module from @supabase may reach it — 54 kB gzipped a visitor does not
+//    no module from @supabase may reach it — 54 kB gzipped a commuter does not
 //    download (the shared chunk went 375 → 321 kB), and a database the public
 //    never touches. The live-table readers live in src/features/studio/data/live.ts, which
 //    ESLint (import-x/no-restricted-paths) keeps out of the public shell and its features by

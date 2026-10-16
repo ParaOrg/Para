@@ -17,7 +17,7 @@ export function useDialogFocus(ref: RefObject<HTMLElement | null>, hidden: boole
     if (!el.contains(document.activeElement)) el.focus({ preventScroll: true });
     return () => {
       // Only when the focus is still ours to give back: a tap elsewhere
-      // already moved it where the visitor wanted it.
+      // already moved it where the commuter wanted it.
       const now = document.activeElement;
       if ((now === null || now === document.body || el.contains(now)) && before?.isConnected)
         before.focus({ preventScroll: true });

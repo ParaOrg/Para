@@ -9,7 +9,7 @@ import { noop } from '@/shared/utils/noop';
 import type { LocatorMode } from './locator-button';
 
 /**
- * The visitor's own place on the map, and the camera with them: the owner's
+ * The commuter's own place on the map, and the camera with them: the owner's
  * LocatorButton rules (3870:5408, 2026-10-01), in "Where am I"'s place
  * (2026-09-26). Off until asked, then the browser's own permission prompt;
  * the position never leaves the phone — nothing here talks to a server, and
@@ -21,7 +21,7 @@ import type { LocatorMode } from './locator-button';
  *    after QUIET_MS without a fix asks again, so Android can offer to turn
  *    the phone's location on.
  *  - TrackOwnLocation, the camera elsewhere — the moment it moves off the
- *    visitor at all, by a finger or by the app. A tap brings it to them at
+ *    commuter at all, by a finger or by the app. A tap brings it to them at
  *    the zoom it is at; from further out than 2 km on the scale bar, in to
  *    200 m (trackedZoom).
  *  - TrackedLocation, the camera on them, north up, following each fix. A
@@ -31,12 +31,12 @@ import type { LocatorMode } from './locator-button';
  *    view, at its zoom, and the next to this again.
  *
  * With no compass to read (a laptop: the owner, 2026-10-01) a tap on
- * TrackedLocation brings the camera back to the visitor instead.
+ * TrackedLocation brings the camera back to the commuter instead.
  */
 
 export type LocatorStatus = 'off' | 'asking' | 'on' | 'denied' | 'unavailable';
 
-/** Where the camera is with the visitor: elsewhere, on them, on them turned with the phone. */
+/** Where the camera is with the commuter: elsewhere, on them, on them turned with the phone. */
 export type Camera = 'free' | 'tracked' | 'compass';
 
 export interface Fix {
@@ -55,7 +55,7 @@ export const STILL_BELOW_MPS = 0.5;
 
 /**
  * The camera's "height", as the owner reads it (2026-10-01): the map's scale
- * bar, metres per SCALE_PX on the screen (geo.ts). A tap to the visitor keeps the
+ * bar, metres per SCALE_PX on the screen (geo.ts). A tap to the commuter keeps the
  * zoom the map is at — "it must not change the camera view height" —
  * unless the bar reads more than FAR_SCALE_M, when it comes in to
  * TRACKED_SCALE_M; the compass view is COMPASS_SCALE_M. Metres across the
@@ -108,13 +108,13 @@ export function modeFor(camera: Camera, located: boolean): LocatorMode {
   return camera === 'tracked' ? 'TrackedLocation' : 'TracksTheMapBasedOnCompassFacing';
 }
 
-/** Where a tap takes the camera: to the visitor; then round, tracked ⇄ compass, once the phone's compass has been read. */
+/** Where a tap takes the camera: to the commuter; then round, tracked ⇄ compass, once the phone's compass has been read. */
 export function afterTap(camera: Camera, compass: boolean): Camera {
   return camera === 'tracked' && compass ? 'compass' : 'tracked';
 }
 
 /**
- * The zoom a tap to the visitor keeps: the map's own, unless its scale bar
+ * The zoom a tap to the commuter keeps: the map's own, unless its scale bar
  * reads more than FAR_SCALE_M, when it comes in to TRACKED_SCALE_M.
  */
 export function trackedZoom(current: number, lat: number): number {
@@ -238,7 +238,7 @@ function askForCompass() {
 export interface Locator {
   status: LocatorStatus;
   fix: Fix | null;
-  /** The way the visitor faces: the phone's compass, else the way the fixes go. Null: unknown. */
+  /** The way the commuter faces: the phone's compass, else the way the fixes go. Null: unknown. */
   heading: number | null;
   /**
    * The phone's compass has been read: TrackedLocation's tap turns the map
@@ -263,16 +263,16 @@ export interface Locator {
 }
 
 interface Options {
-  /** Where the visitor should sit from the map's centre, clear of an open card (clearOfSheet). */
+  /** Where the commuter should sit from the map's centre, clear of an open card (clearOfSheet). */
   offset: () => [number, number];
-  /** The open card's height: the camera keeps the visitor clear of it as it moves. */
+  /** The open card's height: the camera keeps the commuter clear of it as it moves. */
   snap: Snap;
   /** A phone, which may have a compass to turn the map by. */
   compass: boolean;
   /**
-   * Where in a commit the camera moves to the visitor (commitTurn.ts): the
+   * Where in a commit the camera moves to the commuter (commitTurn.ts): the
    * page's turn, after the cards' camera, as when this hook was the page's
-   * own (VisitorLocation, 2026-10-05). Without it, in this hook's effect.
+   * own (CommuterLocation, 2026-10-05). Without it, in this hook's effect.
    */
   cameraTurn?: Turn;
 }
@@ -300,7 +300,7 @@ export function useLocator(
   const read = phone !== null;
   const readRef = useRef(read);
 
-  // TrackedLocation's zoom, chosen as the camera comes to the visitor from
+  // TrackedLocation's zoom, chosen as the camera comes to the commuter from
   // elsewhere (trackedZoom) and kept through the compass view and back.
   // Null: to be chosen at the next fix.
   const trackedZoomRef = useRef<number | null>(null);
@@ -369,7 +369,7 @@ export function useLocator(
           watchRef.current = null;
           fixesRef.current = [];
           // The last fix goes too: kept, the walker stood on the map where
-          // the visitor was when they took the permission back, and the
+          // the commuter was when they took the permission back, and the
           // next tap eased the camera there (review of 2026-10-03).
           headingRef.current = null;
           setFix(null);
@@ -384,7 +384,7 @@ export function useLocator(
     );
   }, [compass]);
 
-  // Any move of the camera off the visitor, however slight — a finger's, or
+  // Any move of the camera off the commuter, however slight — a finger's, or
   // the app's for them (APP_MOVE: a hintuan picked, an end tapped), which
   // the next fix would otherwise undo — and the button says so
   // (TrackOwnLocation: "activate it if the focus of camera is change even
@@ -411,13 +411,13 @@ export function useLocator(
     };
   }, [map]);
 
-  // The camera on the visitor: each fix, each turn of the phone, each tap.
+  // The camera on the commuter: each fix, each turn of the phone, each tap.
   // The whole view every time, not only the centre: a fix arriving mid-glide
   // would otherwise hotspot the zoom halfway. A finger zooming lets go first,
   // so the zoom is the one the tap chose.
   const lastTaps = useRef(taps);
   // The heading turns only the compass view: north stays up otherwise. And
-  // the card's height: the visitor stays clear of it as it moves.
+  // the card's height: the commuter stays clear of it as it moves.
   const turn = camera === 'compass' ? heading : null;
   const lastSnap = useRef(snap);
   useEffect(() => {
@@ -438,7 +438,7 @@ export function useLocator(
       });
     };
     // The card's height changed: the cards' overview starts in this same
-    // commit (useHeightOverview), and the camera following the visitor
+    // commit (useHeightOverview), and the camera following the commuter
     // takes over from it, as it did when this ran among the page's hooks.
     // The turn of the render this effect is from: a new one comes with each
     // render of the page, and is no reason to move the camera.

@@ -96,10 +96,10 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   useListOverview(cam, saved.candidates, saved.litDirections, openSheet, cards.snap);
   // A RouteCard picked, in the list or a hotspot's card: its routes whole.
   useCardOverview(cam, saved.highlight, saved.directions, openSheet, cards.snap);
-  // …and on a hotspot's card, let go, the camera the visitor had before it.
+  // …and on a hotspot's card, let go, the camera the commuter had before it.
   const before = useCameraBefore(cam);
   // A trip opened from a card — a list's, a hotspot's, a tail's name — and
-  // its ‹: the camera the visitor had as they tapped, back with the card
+  // its ‹: the camera the commuter had as they tapped, back with the card
   // (the owner's ask, 2026-10-02: a hintuan's card, zoomed in, a RouteCard's
   // row, ‹, and in again where they were). A hotspot's card picked first
   // comes back at rest, so the camera from before that pick. One trip
@@ -156,7 +156,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     openSheet,
     switched,
 
-    /** Where the visitor's own position sits as the camera follows it: clear of the card on show. */
+    /** Where the commuter's own position sits as the camera follows it: clear of the card on show. */
     clearOfOpen: (): [number, number] =>
       map ? clearOfSheet(map.getContainer(), openSheet(), cards.snap) : [0, 0],
 

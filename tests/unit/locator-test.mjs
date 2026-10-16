@@ -40,13 +40,13 @@ test('the button: LocationOff with no fix, TrackOwnLocation until the camera is 
   assert.equal(modeFor('compass', true), 'TracksTheMapBasedOnCompassFacing');
 });
 
-test('a tap: to the visitor, then round tracked ⇄ compass on a phone', () => {
+test('a tap: to the commuter, then round tracked ⇄ compass on a phone', () => {
   assert.equal(afterTap('free', true), 'tracked');
   assert.equal(afterTap('tracked', true), 'compass');
   assert.equal(afterTap('compass', true), 'tracked');
 });
 
-test('a tap with no compass (a laptop) stays tracked: it only comes back to the visitor', () => {
+test('a tap with no compass (a laptop) stays tracked: it only comes back to the commuter', () => {
   assert.equal(afterTap('free', false), 'tracked');
   assert.equal(afterTap('tracked', false), 'tracked');
 });
@@ -103,7 +103,7 @@ test('motion: nothing to go on is standing still, keeping the last heading', () 
 });
 
 test('motion: fixes under 2 s apart are not read as a sprint', () => {
-  // 50 m in a second would be 180 km/h: GPS jitter, not the visitor.
+  // 50 m in a second would be 180 km/h: GPS jitter, not the commuter.
   assert.deepEqual(motionFrom([fix(at(0), 0), fix(at(0, 50), 1000)], 90), {
     speed: 0,
     heading: 90,
@@ -146,10 +146,10 @@ test('the dot and cone: full size from street level, smaller zoomed out, never u
     assert.ok(indicatorScale(z) <= indicatorScale(z + 0.5), `grows with zoom at ${z}`);
 });
 
-test("a tap to the visitor keeps the map's zoom, unless it is further out than 2 km", () => {
+test("a tap to the commuter keeps the map's zoom, unless it is further out than 2 km", () => {
   const far = zoomForScale(2000, 14.7);
   const street = zoomForScale(200, 14.7);
-  // The scale bar at 2 km or under: the visitor's height stays.
+  // The scale bar at 2 km or under: the commuter's height stays.
   assert.equal(trackedZoom(16, 14.7), 16);
   assert.equal(trackedZoom(far, 14.7), far);
   assert.equal(trackedZoom(19, 14.7), 19);

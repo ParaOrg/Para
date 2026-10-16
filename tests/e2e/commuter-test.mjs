@@ -262,7 +262,7 @@ await page.waitForTimeout(1200);
   );
 }
 
-// 1. No editor chrome on the visitor page.
+// 1. No editor chrome on the commuter page.
 check(
   'no + New Route button',
   (await page.getByRole('button', { name: '+ New Route' }).count()) === 0,
@@ -513,7 +513,7 @@ for (const [i, p] of snapshot.polys.entries()) {
     JSON.stringify(own),
   );
   check(
-    '  no Edit/Delete for a visitor',
+    '  no Edit/Delete for a commuter',
     // The studio's buttons read "Edit route", "Edit terminal", "Edit hintuan" and "Delete".
     (await page
       .locator('[data-testid="card"]')
@@ -588,7 +588,7 @@ for (const [i, p] of snapshot.polys.entries()) {
       Math.abs(a.lat - b.lat) < 1e-6;
     const settled = () =>
       page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 4000 }).catch(() => {});
-    // Where the visitor had the camera as the card opened, before any pick:
+    // Where the commuter had the camera as the card opened, before any pick:
     // where the trip's ‹ brings it back (the owner, 2026-10-02).
     await settled();
     const camHome = await view();
@@ -649,7 +649,7 @@ for (const [i, p] of snapshot.polys.entries()) {
           .count()) === 0 && sameIds(relit, shownIds),
         `${relit.length} lit of ${shownIds.length}`,
       );
-      // …and the camera comes back in to where the visitor had it before
+      // …and the camera comes back in to where the commuter had it before
       // the pick, out of the trip's overview (the owner's ask, 2026-10-02).
       await page.waitForTimeout(400);
       await settled();
@@ -677,7 +677,7 @@ for (const [i, p] of snapshot.polys.entries()) {
         JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
       );
       // Picked, a second tap lets it go — and the camera, after the pick's
-      // overview, goes back to where the visitor had it (the owner, 2026-10-01).
+      // overview, goes back to where the commuter had it (the owner, 2026-10-01).
       const camBefore = await view();
       await name.click();
       await page.waitForTimeout(250);
@@ -702,7 +702,7 @@ for (const [i, p] of snapshot.polys.entries()) {
           Math.abs(camAfter.lat - camBefore.lat) < 1e-6,
         JSON.stringify({ camBefore, camAfter }),
       );
-      // ⇄ turns the routes round and leaves the camera where the visitor tapped
+      // ⇄ turns the routes round and leaves the camera where the commuter tapped
       // the hintuan: no zoom, no glide, even onto another box of the place (the
       // owner, 2026-10-01). Pressed twice, so the card is the way round it was;
       // last, as it may leave another box of the place the one Selected.

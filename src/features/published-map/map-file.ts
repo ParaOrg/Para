@@ -6,7 +6,7 @@
  * *overview* — its line thinned at 5 m — and a file per direction with its
  * full line, thinned to within half a metre, read when the direction is lit
  * or opened. At a thousand directions the index is a fifth of the one file
- * it replaces, and the map draws from it at once. Visitors never ask the
+ * it replaces, and the map draws from it at once. Commuters never ask the
  * database; the studio keeps reading the live tables.
  *
  * This file holds the names: where the index and the lines are, what shape

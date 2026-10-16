@@ -61,7 +61,7 @@ test('on the routes, the point nearest the dot, between their points too', () =>
 });
 
 // ------------------------------------------------- what the public map gazes at
-// gazeSubjects (2026-10-05): the subjects VisitorLocation hands the dot,
+// gazeSubjects (2026-10-05): the subjects CommuterLocation hands the dot,
 // built as CommuterApp built them before the locator moved off it (the
 // cheap-phone plan, step 15) — that code, word for word but for its names,
 // is `before` here.

@@ -70,7 +70,7 @@ const openFold = async (p) => {
 };
 
 /**
- * Open the route's trip as a visitor does, by a tap on its line (trip links,
+ * Open the route's trip as a commuter does, by a tap on its line (trip links,
  * ?r=<id>, went on 2026-10-03): centred on a point a third of the way along
  * it. Where routes share that road this opens the list; its first row then.
  */

@@ -46,7 +46,7 @@ interface Props {
 
 /**
  * The owner's LocatorIndicatorOverlay (3870:5247, 2026-10-01, its second
- * pass the same day): the visitor on the map, in the walking figure's place
+ * pass the same day): the commuter on the map, in the walking figure's place
  * — a 24 px Brand/surface dot in white, lifted by LocatorDotShadow,
  * breathing, its wandering eyes glancing about (locator.css); a beam the
  * way they face fading out from it; and the circle the fix is good to, in
@@ -146,7 +146,7 @@ export function LocatorIndicatorOverlay({
 }
 
 /**
- * The overlay at the visitor's fix, as a DOM marker, not a map layer: it
+ * The overlay at the commuter's fix, as a DOM marker, not a map layer: it
  * costs the map nothing to move (an animated layer kept MapLibre repainting
  * the whole map, 2026-09-25). It lies on the ground and turns with the map
  * (MapLibre's `map` alignments), as Google Maps' does: tilted, in the

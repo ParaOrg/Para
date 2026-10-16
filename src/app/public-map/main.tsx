@@ -39,7 +39,7 @@ const forwardTo = studioAddressForAuthResult();
 if (forwardTo) {
   window.location.replace(forwardTo);
 } else {
-  // No Supabase client here: visitors read the published map file
+  // No Supabase client here: commuters read the published map file
   // (src/commuter/mapFile.ts) and never talk to the database. That keeps
   // supabase-js out of this page's bundle, which scripts/checks/check-build.mjs proves.
   registerServiceWorker();
