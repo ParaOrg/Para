@@ -83,9 +83,9 @@ const RESTING_FILTER = {
  * Selected card's directions, or else every direction a list or a hotspot's
  * card shows — are drawn again on top in Map/RouteLine/surface-selected,
  * thicker; on the public map a picked card's, or an open trip's, wear that
- * card's Card/<livery>/surface instead (useLitLineColour). See-through lines
- * stacked on a shared road read as one muddle, so nothing fades (the owner's
- * call): a direction is either at rest or lit.
+ * card's Card/<livery>/surface instead (useLitLineColour, the owner's call).
+ * See-through lines stacked on a shared road read as one muddle, so nothing
+ * fades (the owner's call): a direction is either at rest or lit.
  *
  * What a tap lights is kept as MapLibre feature state (`setFeatureState`)
  * rather than as a filter or a paint expression naming ids. The paint
@@ -324,7 +324,7 @@ export function addSavedRoutes(
  * 'load'; and the tiles are read only once they are all in, under 1 ms on an
  * empty source's and 1.6-6.6 ms at 4x CPU, once, for the opening view's 80
  * routes (measured for the timer). Read by MapView's "Loading map…"
- * (framing.ts, loadingLifts).
+ * (framing.ts, loadingLifts; the owner's call).
  */
 export function routesDrawn(
   map: Pick<MapLibreMap, 'getSource' | 'getLayer' | 'isSourceLoaded' | 'querySourceFeatures'>,

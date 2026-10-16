@@ -13,7 +13,8 @@ import { directionLine, type LineStringGeoJSON, type Direction } from '../model/
 /**
  * The RouteCard picked in a list of them — the route list's, or a hotspot's
  * card's (`where`) — by its place, the directions its rows list, and the
- * colour it wears: what the map lights while no trip is open, and in what.
+ * colour it wears: what the map lights while no trip is open, and in what
+ * (the owner's call).
  */
 /**
  * From this zoom a pixel is a couple of metres, and an overview's corners
@@ -44,8 +45,8 @@ export interface Highlight {
  * Both pass `loadLine`: their lists carry each direction's overview (the
  * public map's file, map-file.ts; the editor's tables, 0009), and a
  * direction's full line is read when it is lit or chosen, or on screen at
- * street zoom (the public map's loadLine; the editor's lineOf, live.ts).
- * From then on `directions` carries that line in its `shape` — so the orange
+ * street zoom (the public map's loadLine; the editor's lineOf, live.ts). From
+ * then on `directions` carries that line in its `shape` — so the green
  * stretches, the chevrons, the ride-cut and the babaan sides all work on the
  * line itself — and the map draws it in place of the overview. The editor
  * still reads a line itself for what it opens to edit (live.ts, linesOf).
@@ -173,7 +174,7 @@ export function useSavedRoutes<T extends Direction>(
   // (perFrame): a list's six lines would be six renders of the whole app,
   // each working out every lit line's stretches, rides and chevrons again.
   // Made once: setLines never changes. A reload drops what has not been
-  // handed on, as setting no lines did to what had.
+  // handed on, as `setLines(new Map())` does to what has.
   const arrivals = useRef<PerFrame<string, LineStringGeoJSON> | null>(null);
   arrivals.current ??= perFrame((batch) =>
     setLines((m) => {
@@ -233,9 +234,9 @@ export function useSavedRoutes<T extends Direction>(
 
   // Open on the routes, not on a fixed centre. Once, on first load, and never
   // while drawing: a draft already has a view the user chose. The public map
-  // opens framed on them itself, from its making (MapView's `openOn`): there
-  // only if what came frames otherwise, and never once the commuter has moved
-  // the map (framesRoutes).
+  // opens framed on them itself, from its making (MapView's `openOn`, the
+  // owner's call): there only if what came frames otherwise, and never once
+  // the commuter has moved the map (framesRoutes).
   const fittedRef = useRef(false);
   useEffect(() => {
     if (!map || fittedRef.current || drawingRef.current) return;

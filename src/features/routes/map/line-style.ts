@@ -78,7 +78,7 @@ function lit(extra: number): Stops {
   return [at(Z0, LIT_BOOST), at(BOOST_FULL_TO, LIT_BOOST), at(BOOST_GONE_AT, 1), at(Z1, 1)];
 }
 
-/** The lit direction's width, `extra` pixels wider, as the layers take it: the line, its casing, its orange. */
+/** The lit direction's width, `extra` pixels wider, as the layers take it: the line, its casing, its green stretches. */
 export function litWidth(extra = 0) {
   return curve(lit(extra));
 }

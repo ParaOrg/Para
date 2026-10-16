@@ -174,7 +174,7 @@ export interface LabelLook {
  * pill and pointer green, the words white, a station's code green on its
  * white chip. RouteLineEndingsLabel's Head Route and RouteLineLabel's Start,
  * a picked start (the owner's call: the green start pill, not the line's
- * yellow).
+ * colour).
  */
 export const HEAD_ROUTE: LabelLook = {
   surface: 'bg-map-hotspots-card-hintuan-surface',

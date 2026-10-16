@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 
 /**
  * The layer ids one file paints and another places its own layers against.
- * The map's layer order is a contract between hooks — the orange stretches
- * go under the routes' hit area, the babaan sides and the hotspots under the
+ * The map's layer order is a contract between hooks — the green stretches go
+ * under the routes' hit area, the babaan sides and the hotspots under the
  * routes' casing, the rest of a ride right above the lit line — and these
  * names are its terms; the headless suites read the same strings, so they
  * never change. A layer only its own file uses stays named there.
@@ -48,22 +48,21 @@ export const LAYERS = {
  * 25, and nothing else may change what a commuter sees (the owner's call).
  * What 32 px saved there, in vertices in the tiles on screen: at the opening
  * view, the routes 8,592 -> 2,723 (32%) and the hotspots 3,640 -> 1,598
- * (44%); a trip framed, 3,407 -> 2,959 (87%) and 4,013 -> 2,964 (74%).
- * And in opening the suites' maps of 5,000 directions and 510 hotspots, the
- * main thread's long tasks, at 32 px and at 128 (on the dev server in this
+ * (44%); a trip framed, 3,407 -> 2,959 (87%) and 4,013 -> 2,964 (74%). And in
+ * opening the suites' maps of 5,000 directions and 510 hotspots, the main
+ * thread's long tasks, at 32 px and at 128 (on the dev server in this
  * sandbox, runs taken in turn): scale-test 4.4 s and 5.55, medians of 16 runs
  * each, over its 5 s budget in 3 and in 12; studio-scale-test 9.9 s and
  * 13.35, 4 runs each, over its 10 s in 2 and in 4. With the lit layers
  * starting off (layer-switch.ts) and the studio reading its list once as it
  * opens (load-once.ts), both at 128: scale-test 4.45-4.55 s, over 5 s in 2 of
- * 20 runs; studio-scale-test 7.5 s, in none of 4. scale-test's "the map's
- * 'load' within 5 s" still failed when the routes went on before the map's
- * first frame, 'load' waiting for them: 5.3-6.3 s at 128, within the owner's
- * budget for it, 7 s. Whether 32 px is worth edges moved by a fraction of a
- * pixel is the owner's call.
- * Not the place wash's either: its dashes start counting where its ring was
- * cut. map-sources-test holds each source to its buffer, and every layer
- * drawn from these two to it, at every zoom.
+ * 20 runs; studio-scale-test 7.5 s, in none of 4. With the routes on before
+ * the map's first frame, 'load' waiting for them, scale-test's 'load' came at
+ * 5.3-6.3 s at 128: within the owner's budget for it, 7 s. Open question for
+ * the owner: whether 32 px is worth edges moved by a fraction of a pixel. Not
+ * the place wash's either: its dashes start counting where its ring was cut.
+ * map-sources-test holds each source to its buffer, and every layer drawn
+ * from each to it, at every zoom.
  */
 export const TILE_BUFFER = 32;
 
