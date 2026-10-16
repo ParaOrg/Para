@@ -13,18 +13,18 @@
       fails silently. The studio's page, which opens on its sign-in, has none.
     -->
     <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
-    <!-- The brand maroon, measured from the logo; the manifest in vite.config.ts carries the same. Once the map is up, the map's own colour (statusBar.ts). -->
+    <!-- The brand maroon, measured from the logo; the manifest in vite.config.ts carries the same. Once the map is up, the map's own colour (status-bar.ts). -->
     <meta name="theme-color" content="#8a595a" />
     <link rel="icon" type="image/png" href="/icons/favicon.png" />
     <!-- iOS installs by hand (Share → Add to Home Screen) and reads this, not the manifest's icons. -->
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <!-- Opened from an iPhone's Home Screen, the map runs behind the status bar (statusBar.ts). -->
+    <!-- Opened from an iPhone's Home Screen, the map runs behind the status bar (status-bar.ts). -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   </head>
   <body>
     <!--
-      The map's own "Loading map…" (MapView.tsx), drawn by the page itself, so the first thing
+      The map's own "Loading map…" (map-view.tsx), drawn by the page itself, so the first thing
       painted is the map's gray and not a white page while the app's script downloads (the
       owner's Q4, 2026-10-04): 355 kB on the wire then, about 3.3 s of a slow phone network, and
       385 kB since the cheap-phone plan's step 14 (2026-10-05). React empties

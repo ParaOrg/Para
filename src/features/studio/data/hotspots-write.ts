@@ -46,7 +46,7 @@ interface SaveHotspotInput {
  * Create or update a hotspot and replace its route links. Writes require a
  * signed-in editor who owns the rows; RLS enforces it on both tables.
  *
- * Two steps, not one transaction, as a direction's save is (saveRoute.ts):
+ * Two steps, not one transaction, as a direction's save is (save-route.ts):
  * `onWritten` hears of the row the moment it is in, so a retry after the
  * links failed updates that row instead of inserting a second box on the
  * same ground (review of 2026-10-03, finding 4).
@@ -180,7 +180,7 @@ export const NOTHING_CHANGED =
  */
 export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
-  // Paged, as every table read is (readAll.ts): past 1,000 hintuans one
+  // Paged, as every table read is (read-all.ts): past 1,000 hintuans one
   // request would silently see a subset (review finding 4).
   const [hintuans, linked] = await Promise.all([
     readAll<HotspotRow>((from, to) =>

@@ -35,13 +35,13 @@ type RawHotspot = z.infer<typeof rawHotspotSchema>;
 /** The app's hotspot from a row: the same facts, the glossary's names. */
 export const toHotspot = (raw: RawHotspot) => ({
   id: raw.id,
-  /** The ground name: what is written on the ground, "SM Fairview Terminal B". */
+  /** The name: what is written on the ground, "SM Fairview Terminal B". */
   name: raw.name,
   /**
-   * The hotspot name: what people say, "SM Fairview". Optional; `hotspotLabel`
-   * falls back to the ground name. The route name reads this (R1), and
-   * boxes that share it are one hotspot to a commuter, whatever is written on
-   * each — a terminal and two hintuans under one hotspot name. 0007; the
+   * The informal name: what people say, "SM Fairview". Optional; `hotspotLabel`
+   * falls back to the name. The route name reads this (R1), and
+   * boxes that share it are one place to a commuter, whatever is written on
+   * each — a terminal and two hintuans under one informal name. 0007; the
    * owner's two words for the two names, 2026-09-26.
    */
   informal: raw.informal,

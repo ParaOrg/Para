@@ -23,7 +23,7 @@ import { ROUTES_HIT_LAYER } from './tap';
 
 /**
  * Which way the jeep goes, drawn on the lit directions only; each end of
- * each is circled and named by EndTitles.tsx (the owner's asks of
+ * each is circled and named by end-titles.tsx (the owner's asks of
  * 2026-09-25; the circles were a layer of this hook's until his ask of
  * 2026-10-12 made them the hintuan's own dot).
  *
@@ -126,7 +126,7 @@ interface RideEnd {
 /**
  * Where each lit ride starts and finishes, each place named once: two ends
  * of one name closer than SAME_END_M are one place (Tala, where two rides
- * start). EndTitles.tsx circles every end and names the named ones; the
+ * start). end-titles.tsx circles every end and names the named ones; the
  * end of a ride whose rest is drawn (`paled`) wears the rest's pale.
  */
 export function rideEnds(rides: readonly Ride[]): RideEnd[] {
@@ -229,7 +229,7 @@ function stillPlease(): boolean {
 /**
  * The chevrons' colour and the rest of the line past a picked hintuan: the
  * selected blue's white chevrons unless the public map says otherwise — a
- * picked card's or an open trip's (liveryLine.ts) — and the rest in the
+ * picked card's or an open trip's (livery-line.ts) — and the rest in the
  * card's pale (the owner's ask, 2026-10-12: the remaining line should be
  * surface-pale of the selected colour). The end circles wear the line's
  * colour by their own classes (EndTitles), nothing to paint since they left
@@ -405,7 +405,7 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
     // A camera call made while another moves the map hotspots that one, which
     // says 'moveend', and says 'movestart' at once for its own (MapLibre's
     // easeTo: _stop, then _prepareEase): the compass camera eases at every
-    // turn of the phone of 3° or more (useLocator.ts), thirty times for a
+    // turn of the phone of 3° or more (use-locator.ts), thirty times for a
     // quarter turn made in a second. So the draw back to the view waits for
     // the next frame, and is dropped if a move starts first; and a move that
     // starts inside what is held, at its zoom, draws nothing. Back to back,
