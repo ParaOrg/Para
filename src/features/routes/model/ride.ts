@@ -54,7 +54,7 @@ function pointAt(line: readonly LngLat[], metres: number): { point: LngLat; inde
 }
 
 /** One get-off circle of the ride-to preview: a mini hotspot, the middle of its orange stretch, and how far in that is. */
-export interface RideDot {
+interface RideDot {
   hotspotId: string;
   at: LngLat;
   metres: number;
@@ -112,8 +112,165 @@ export function rideCut(
   };
 }
 
+/**
+ * A ride between two picks on a trip, the owner's TimelineRouteDetail of
+ * 2026-10-15 (Figma 4137:9886): `ridden` from the start to the end, `before`
+ * from where the direction leaves to the ride, and `rest` from the ride on
+ * to where it goes. The map draws `before` and `rest` in the card's pale
+ * (useRideRest). `metres` is the ride's own length, for the Distance tile
+ * and a jeep's fare; `from` and `at` are where it starts and ends.
+ * `isBackwards`: the end comes before the start on the line, and `ridden`
+ * runs back along it, from the start to the end.
+ */
+interface RideSpan {
+  before: LngLat[];
+  ridden: LngLat[];
+  rest: LngLat[];
+  metres: number;
+  from: LngLat;
+  at: LngLat;
+  isBackwards: boolean;
+}
+
+/**
+ * The ride on `v` from the start row to the end row. A null start is where
+ * the direction leaves, and a null end is where it goes. Each pick sits where
+ * its row's dot does, at the middle of the stretch past its place's last box
+ * (rideCut's `at`, rowStops), so the S and E on the map sit on the dots. An
+ * end before the start is ridden back along the trip's own line, the S and
+ * the E left where they were picked (the owner, 2026-10-16: "reverse the
+ * arrow, dont' switch please, it's confusing for users"; that morning a row
+ * tapped above the start became the start, and the day before, the ride ran
+ * on the other direction's line).
+ *
+ * Null when nothing is picked, or when the line misses a picked row's box
+ * (that row is shown picked with nothing to price, as before).
+ */
+export function rideSpan(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  startId: string | null,
+  endId: string | null,
+): RideSpan | null {
+  if (startId === null && endId === null) return null;
+  const line = travelLine(v, hotspots);
+  if (line.length < 2) return null;
+  const start = startId === null ? 0 : rideCut(v, hotspots, startId)?.metres;
+  const end = endId === null ? lineLength(line) : rideCut(v, hotspots, endId)?.metres;
+  if (start === undefined || end === undefined) return null;
+  return spanAlong(line, start, end);
+}
+
+/**
+ * The ride on `v` from the start row to one of the trip's own ends, picked
+ * from its row with the start kept (the owner, 2026-10-16: "keep the
+ * start"; until then an end row let the start go): on to where it goes, or
+ * back to where it leaves, ridden back along the line as any end above the
+ * start is. Null when the line misses the start's box.
+ */
+export function rideToEnd(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  startId: string,
+  end: 'from' | 'to',
+): RideSpan | null {
+  const line = travelLine(v, hotspots);
+  if (line.length < 2) return null;
+  const start = rideCut(v, hotspots, startId)?.metres;
+  if (start === undefined) return null;
+  return spanAlong(line, start, end === 'from' ? 0 : lineLength(line));
+}
+
+/**
+ * The ride along `line` from `start` metres in to `end`, back along it when
+ * the end comes first; null for a ride of under a metre.
+ */
+function spanAlong(line: readonly LngLat[], start: number, end: number): RideSpan | null {
+  if (Math.abs(end - start) < 1) return null;
+  const s = pointAt(line, start);
+  const e = pointAt(line, end);
+  const isBackwards = end < start;
+  // The pick the line reaches first and the one it reaches last, whichever
+  // is the start: the pale runs up to the one and on from the other.
+  const [upper, lower] = isBackwards ? [e, s] : [s, e];
+  const [first, last] = isBackwards ? [end, start] : [start, end];
+  const between = [upper.point, ...line.slice(upper.index + 1, lower.index + 1), lower.point];
+  // Nothing to pale before the origin or after the destination: an empty
+  // line, not a point or a sliver the float sums leave.
+  return {
+    before: first < 1 ? [] : [...line.slice(0, upper.index + 1), upper.point],
+    ridden: isBackwards ? between.reverse() : between,
+    rest: lineLength(line) - last < 1 ? [] : [lower.point, ...line.slice(lower.index + 1)],
+    metres: Math.abs(end - start),
+    from: s.point,
+    at: e.point,
+    isBackwards,
+  };
+}
+
+/**
+ * The rows of a trip's timeline outside its ride: outside the stretch
+ * between the start's row and the end's, whichever is above. A null start is
+ * the origin; with no end, no ride, and nothing outside it. The card folds
+ * these rows, its rail broken where the ride starts and ends (the owner,
+ * 2026-10-16: "can you still connect those dots"; dots alone from
+ * 2026-10-15), and the map's dots along them wear the pale.
+ */
+export function rowsOutsideRide(
+  rows: readonly { id: string }[],
+  startId: string | null,
+  endId: string | null,
+  endRow: 'from' | 'to' | null = null,
+): Set<string> {
+  const ride = rideRows(rows, startId, endId, endRow);
+  if (!ride) return new Set();
+  return new Set(rows.filter((_, i) => i < ride.first || i > ride.last).map((r) => r.id));
+}
+
+/**
+ * The rows of a trip's timeline outside a start picked alone: every row but
+ * the start's. With no end there is no ride yet, so the whole trip is drawn
+ * on the pale and only the start stands out.
+ */
+export function rowsOutsideStartAlone(
+  rows: readonly { id: string }[],
+  startId: string,
+): Set<string> {
+  return new Set(rows.filter((r) => r.id !== startId).map((r) => r.id));
+}
+
+/**
+ * Where a picked ride lies on a trip's timeline: its first row and its last,
+ * whichever of the start and the end is above (an end tapped above the
+ * start stays the end, ridden back along the line: rideSpan). -1 is the
+ * origin, a start left there. Null with no end picked — nothing, or a start
+ * alone, no ride yet until its end is picked (the owner, 2026-10-16: his
+ * Variant3's S stands alone, "so user don't get confused on the context") —
+ * or with a pick that is no row of these (another trip's, a moment before it
+ * goes): the whole ride. `endRow`, an end row picked with the start kept
+ * (rideToEnd): the ride from the start's row to the destination, the row
+ * count, or back to the origin, -1. The one rule the card's rail and folds
+ * read (rowsOutsideRide).
+ */
+export function rideRows(
+  rows: readonly { id: string }[],
+  startId: string | null,
+  endId: string | null,
+  endRow: 'from' | 'to' | null = null,
+): { first: number; last: number } | null {
+  const startAt = startId === null ? -1 : rows.findIndex((r) => r.id === startId);
+  if (startId !== null && startAt < 0) return null;
+  if (endId === null) {
+    if (endRow === null || startId === null) return null;
+    return endRow === 'to' ? { first: startAt, last: rows.length } : { first: -1, last: startAt };
+  }
+  const endAt = rows.findIndex((r) => r.id === endId);
+  if (endAt < 0) return null;
+  return startAt <= endAt ? { first: startAt, last: endAt } : { first: endAt, last: startAt };
+}
+
 /** One row of a trip's timeline placed on the map: its dot's spot, and its name. */
-export interface RowStop {
+interface RowStop {
   id: string;
   label: string;
   at: LngLat;

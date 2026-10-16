@@ -146,9 +146,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Opens the fold, as a rider's tap would — and lets go of it, since a tap draws no focus ring. */
+/**
+ * Opens the fold, as a rider's tap would — and lets go of it, since a tap
+ * draws no focus ring. A train's says "N more stations".
+ */
 const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more hintuans/ });
+  const fold = within(canvasElement).getByRole('button', { name: /more (hintuans|stations)/ });
   await userEvent.click(fold);
   fold.blur();
 };
@@ -217,7 +220,7 @@ export const OtherRoutes: Story = {
   },
 };
 
-/** A train: priced by its stations, not its metres, in its line's colours; the picked station's code in its pill. */
+/** A train: priced by its stations, not its metres, in its line's colours; its line and bound at the top (LRT-1 Southbound); the picked station's code in its pill. */
 export const Train: Story = {
   args: {
     direction: direction('lrt1', 'Fernando Poe Jr.', 'Baclaran', {
@@ -236,7 +239,39 @@ export const Train: Story = {
     pickedCode: 'CAR',
     height: { snap: 'max', onSnap: fn() },
   },
-  play: openFold,
+  // Carriedo picked: the stations before it on the ride, EDSA the one after
+  // it, shown as it is, so nothing folds.
+};
+
+/** MRT-3 Northbound: its header's words black on the white halves, not its yellow (the owner, 2026-10-16). */
+export const TrainMrt3: Story = {
+  args: {
+    direction: direction('mrt3', 'Taft Avenue', 'North Avenue', {
+      mode: 'mrt',
+      routeCode: 'MRT-3',
+    }),
+    directions: [],
+    timeline: timelineOf('Taft Avenue', 'North Avenue', ['Magallanes', 'Ayala', 'Cubao']),
+    livery: 'metro-rail-way-three',
+  },
+};
+
+/**
+ * A train whose end the line's table does not know: no bound, so the header
+ * shows the line alone (the owner's answer of 2026-10-16), and SWITCH falls
+ * back to Pabalik and Papunta, as over a mixed list (switchWord). What SWITCH
+ * says here is Claude's call of 2026-10-16, for the owner to say.
+ */
+export const TrainNoBound: Story = {
+  args: {
+    direction: direction('lrt1x', 'Fernando Poe Jr.', 'Nowhere', {
+      mode: 'lrt',
+      routeCode: 'LRT-1',
+    }),
+    directions: [],
+    timeline: timelineOf('Fernando Poe Jr.', 'Nowhere', ['Balintawak', 'Monumento']),
+    livery: 'light-rail-way-one',
+  },
 };
 
 /** The ferry: free, with the line's own words under the tiles. */

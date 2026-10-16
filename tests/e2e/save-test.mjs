@@ -4,9 +4,9 @@
 //   node tests/e2e/save-test.mjs         # against http://localhost:5173
 //
 // The other suites run signed out, so until 2026-09-29 nothing in
-// routes-write.ts or hotspots-write.ts ran under a check (docs/review-2026-09-29.md,
+// routes-write.ts or hotspots-write.ts ran under a check (docs/archive/review-2026-09-29.md,
 // section 4). This one grew from the stand-in the review drove them with
-// (studio-standin.mjs): the tables are today's published map plus 500 hintuans far
+// (tests/unit/fixtures/fake-supabase.mjs): the tables are today's published map plus 500 hintuans far
 // off the map, held in memory and answered the way PostgREST answers — the
 // filters the studio sends, its unique indexes (409, code 23505), its foreign
 // keys and cascades — and a stored session is faked so ✓ Done opens the save
@@ -74,7 +74,7 @@ const tables = {
     origin_terminal: null,
     destination_terminal: null,
     shape: v.shape,
-    // 0009's overview: the published file's line is thinned already, and serves.
+    // 0009's overview: the published map's line is thinned already, and serves.
     overview: v.shape,
     control_points: v.shape ? [v.shape.coordinates[0], v.shape.coordinates.at(-1)] : [],
     segments: v.shape ? [{ snap: 'snapped', coordinates: v.shape.coordinates, streets: [] }] : [],
@@ -1426,13 +1426,17 @@ check(
   '  and covers neither New button',
   !overlap(toastAt, newRoute) && !overlap(toastAt, newHotspot),
 );
-const tooSmall = await phone.evaluate(
+// The owner dropped the 44 px floor (2026-10-16): the toast's buttons are
+// sized by their padding and text, the same under a finger as under a mouse.
+const floored = await phone.evaluate(
   () =>
     [...document.querySelectorAll('[data-testid=toast] button')]
-      .map((e) => e.getBoundingClientRect())
-      .filter((r) => r.height < 44).length,
+      .map((e) => getComputedStyle(e))
+      .filter(
+        (c) => !['auto', '0px'].includes(c.minHeight) || !['auto', '0px'].includes(c.minWidth),
+      ).length,
 );
-check('  its buttons are finger-sized', tooSmall === 0, `${tooSmall} under 44 px`);
+check('  its buttons have no size floor for a finger', floored === 0, `${floored} floored`);
 check(
   'phone: nothing scrolls sideways',
   await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth),

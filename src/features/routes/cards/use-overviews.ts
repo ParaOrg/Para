@@ -22,7 +22,7 @@ import { directionLine, type Direction } from '../model/routes';
  * up). Further out than that only by the
  * visitor's own hand.
  */
-export const RAISED_FARTHEST_M = 5000;
+const RAISED_FARTHEST_M = 5000;
 
 /**
  * The camera takes in these lines whole, zooming in or out, clear of the
@@ -216,6 +216,37 @@ export function useHeightOverview(
         APP_MOVE,
       );
   }, [map, snap]);
+}
+
+/**
+ * An end picked after a start, the sheet already at Middle (the owner's ask,
+ * 2026-10-16: "after choosing the end, the bottomsheet would go to middle
+ * position and rearrange the camera to the overview of new start and end"):
+ * the camera takes in the ride from the start to the end, clear of the
+ * sheet. Below or above Middle the sheet moves there first and
+ * useHeightOverview frames the ride as it settles. `picks` counts those
+ * ends; the ride is read in the render the pick makes, and with none there
+ * (an end the line can't take the ride to) the camera stays, the pick's own
+ * glide taking it there (useRideTo).
+ */
+export function useRideOverview(
+  map: MapLibreMap | null,
+  ride: readonly (readonly LngLat[])[] | null,
+  picks: number,
+  dock: () => HTMLElement | null,
+  snap: Snap,
+): void {
+  const rideRef = useRef(ride);
+  // Kept current as each render commits, ahead of the effect below.
+  useLayoutEffect(() => {
+    rideRef.current = ride;
+  });
+  useEffect(() => {
+    const lines = rideRef.current;
+    if (!map || picks === 0 || !lines) return;
+    overview(map, lines, dock(), snap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only as an end is picked (see above): the count says when
+  }, [map, picks]);
 }
 
 interface Camera {

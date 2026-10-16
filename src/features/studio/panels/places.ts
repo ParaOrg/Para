@@ -6,7 +6,7 @@ import { haversine, type LngLat } from '@/shared/utils/geo';
 /**
  * The places a route can end at, for the save panel's two pickers, and the
  * panel's first guess at its ends: pure, so tests/unit/places-test.mjs can
- * hold them (split from SavePanel.tsx, 2026-09-29; the guess from
+ * hold them (split from save-panel.tsx, 2026-09-29; the guess from
  * save-panel.tsx, 2026-10-14).
  */
 
@@ -73,7 +73,7 @@ export function boxFor(place: Place, to: LngLat | undefined): string {
  * a place has one terminal (H4). The database refuses the second one
  * (0014_terminal_place_unique.sql); this says so before the save, in the
  * form, without a round trip. The place is read as hotspotLabel reads it, so a
- * box whose informal name is left blank joins the place its ground name
+ * box whose informal name is left blank joins the place its name
  * says — before 2026-10-03 two terminals both named "Tala" with nothing
  * informal slipped past the index, which only looked at the informal name.
  */

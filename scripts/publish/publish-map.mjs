@@ -3,7 +3,7 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/publish-map.mjs
 //                                                   writes public/data/
 //
-// Five things (shape A of docs/review-2026-09-29.md, section 8, stage 7 of the
+// Five things (shape A of docs/archive/review-2026-09-29.md, section 8, stage 7 of the
 // clean-up; since 2026-09-29; the train lines' shape and the ferry's since
 // 2026-10-03):
 //   data/index.v4.json      schema 4, what the app reads (MAP_FILE_URL): the
@@ -20,7 +20,7 @@
 //                           a quarter of the points, invisible at the zooms
 //                           the whole map is seen at — and its length in
 //                           metres, measured on the full line, so a trip's
-//                           Kilometer and fare never read an overview. The
+//                           Distance and fare never read an overview. The
 //                           map draws from it. Without any line
 //                           (withoutLines.mjs): an app installed before
 //                           servedBy would draw a jeep stopping at a station.
@@ -472,7 +472,7 @@ if (!FORCE) {
     const after = now[key].length;
     if (before > 0 && after < before * (1 - MAX_SHRINK)) {
       fail(
-        `FAIL  ${key}: ${before} → ${after} rows, more than ${MAX_SHRINK * 100}% fewer than the published file. ` +
+        `FAIL  ${key}: ${before} → ${after} rows, more than ${MAX_SHRINK * 100}% fewer than the published map. ` +
           'Not publishing. If the removal is deliberate, run with --force.',
       );
     }

@@ -3,11 +3,13 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
-import { FREE, RouteTripDetail, type Fare, type Fares } from './route-trip-detail';
+import { RouteTripDetailHeader } from './route-trip-detail-header';
+import { FREE, TimelineRouteDetailCard, type Fare, type Fares } from './timeline-route-detail-card';
 import { useFareKind } from './use-fare-kind';
-import { otherDirection, otherRoutesFrom } from '../model/departures';
+import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { cardLiveries, type Livery } from '../model/liveries';
+import { railBound } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -20,6 +22,7 @@ import {
   type Direction,
 } from '../model/routes';
 import type { Timeline } from '../model/timeline';
+import { vehicleOf } from '../model/vehicles';
 
 /**
  * The trip's colour, one owner for it (the review's 6.6): decided as the trip
@@ -54,7 +57,7 @@ export function useTripLivery(
 }
 
 /**
- * The chosen direction as the owner's trip card (RouteTripDetail,
+ * The chosen direction as the owner's trip card (TimelineRouteDetailCard,
  * 2026-09-29), from what the map file knows: its ends as the list names
  * them, the whole ride's length and pesos, the hintuans on the way, and its
  * colour — the one its RouteCard wore, when it was picked from one, in the
@@ -75,9 +78,8 @@ export function useTripLivery(
  * owner's pick, 2026-09-30: "most of the interaction of public map should
  * be in studio").
  *
- * No link to a trip either: the address followed the card (`?r=<id>`, a
- * link that opened its trip) until the owner took trip links out for now,
- * 2026-10-03.
+ * No link to a trip: the address does not follow the card (the owner took
+ * trip links out for now, 2026-10-03).
  */
 export function TripCard({
   direction,
@@ -90,6 +92,10 @@ export function TripCard({
   picked,
   pickedMetres,
   pickedCode,
+  start = null,
+  startCode = null,
+  onSetStart,
+  onRemoveStart,
   onPick,
   onEnd,
   endPicked,
@@ -107,13 +113,21 @@ export function TripCard({
   onBackToList: (() => void) | null;
   onSwitch: (sibling: Direction) => void;
   onClose: () => void;
-  /** The hintuan picked on the timeline (useRideTo), and how far the ride to it runs, when its line reaches it. */
+  /** The hintuan picked on the timeline (useRideTo), the ride's end, and how far the ride between the picks runs, when the line reaches them. */
   picked: string | null;
   pickedMetres: number | undefined;
   /** On a train, the picked station's sign code for its pill (useRideTo's `pickedCode`, the map's label's too); else null. */
   pickedCode: string | null;
+  /** The hintuan made the ride's start (useRideTo's `startId`), or null: the ride leaves from the origin. */
+  start?: string | null;
+  /** On a train, the start station's sign code (useRideTo's `startCode`); else null. */
+  startCode?: string | null;
+  /** Set as start, under the picked hintuan's row (useRideTo's `setStart`). */
+  onSetStart?: () => void;
+  /** × Remove as start, under the start's row (useRideTo's `removeStart`). */
+  onRemoveStart?: () => void;
   onPick: (id: string) => void;
-  /** The origin's or the destination's row: the whole ride, and that end on the map. */
+  /** The origin's or the destination's row: that end on the map, the whole ride, or with a start the ride's end. */
   onEnd: (end: 'from' | 'to') => void;
   /** The end picked from its row (useRideTo's `endPicked`), or null. */
   endPicked: 'from' | 'to' | null;
@@ -128,16 +142,18 @@ export function TripCard({
   extras?: ReactNode;
 }) {
   const { from, to } = directionEnds(direction);
+  const line = railLineOf(direction);
+  const vehicle = vehicleOf(direction);
   const sibling = otherDirection(directions, direction);
   const switchable = !!sibling && isDrawn(sibling);
   // The whole ride, measured once on its full line — the index's figure, so
-  // an overview drawn while the line is read never prices it: its Kilometer
+  // an overview drawn while the line is read never prices it: its Distance
   // and its Expected fare.
   const metres = direction.metres ?? lineLength(directionLine(direction));
   const [fareKind, setFareKind] = useFareKind();
   const others = onOtherRoute ? otherRoutesFrom(directions, direction) : [];
   return (
-    <RouteTripDetail
+    <TimelineRouteDetailCard
       livery={livery}
       metres={metres}
       pickedMetres={pickedMetres}
@@ -147,7 +163,11 @@ export function TripCard({
       routeOrigin={from}
       hintuans={timeline.between}
       picked={picked}
-      pickedFare={pickedFareFor(direction, pickedMetres, timeline, picked)}
+      start={start}
+      startCode={startCode}
+      onSetStart={onSetStart}
+      onRemoveStart={onRemoveStart}
+      pickedFare={pickedFareFor(direction, pickedMetres, timeline, start, picked, endPicked)}
       pickedCode={pickedCode}
       onPick={onPick}
       onEnd={onEnd}
@@ -155,8 +175,20 @@ export function TripCard({
       dockRef={dockRef}
       height={height}
       routeDirection={to}
+      isTrain={line !== null}
+      header={
+        vehicle && (
+          <RouteTripDetailHeader
+            vehicle={vehicle}
+            // A train's bound alone: with none, its line alone, never Papunta.
+            way={line ? railBound(direction) : wayWord(direction.reversed, [direction])}
+            livery={livery}
+          />
+        )
+      }
       switchable={switchable}
       back={direction.reversed}
+      way={switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
       }}
@@ -164,14 +196,18 @@ export function TripCard({
       onClose={onClose}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
-      otherRoutes={others.map((v) => ({ id: v.id, to: directionEnds(v).to }))}
+      otherRoutes={others.map((v) => ({
+        id: v.id,
+        to: directionEnds(v).to,
+        vehicle: vehicleOf(v),
+      }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);
         if (v) onOtherRoute?.(v);
       }}
     >
       {extras}
-    </RouteTripDetail>
+    </TimelineRouteDetailCard>
   );
 }
 
@@ -191,17 +227,32 @@ function fareFor(direction: Direction, metres: number, timeline: Timeline): Fare
   return faresFor(direction.route?.mode, metres);
 }
 
-/** The fare to the picked hintuan: a jeep's by the metres to it, a train's to that station, the ferry's free. */
+/**
+ * The fare of the ride between the picks: a jeep's by the metres between
+ * them, a train's by the two stations (railFares takes any pair, whichever
+ * way round), the ferry's free. A start left at the origin is that end of
+ * the timeline, and an end row picked with a start (`endPicked`, the owner's
+ * "keep the start", 2026-10-16) is its own end. No end picked, no ride to
+ * price: a start alone is no ride yet (the owner's Variant3, 2026-10-16).
+ */
 function pickedFareFor(
   direction: Direction,
   pickedMetres: number | undefined,
   timeline: Timeline,
+  start: string | null,
   picked: string | null,
+  endPicked: 'from' | 'to' | null,
 ): Fare | undefined {
-  if (isFerry(direction.route?.mode)) return picked ? FREE : undefined;
+  // A start alone is no ride yet: nothing to price until its end is picked (the owner, 2026-10-16).
+  const isEndRow = start !== null && endPicked !== null;
+  if (picked === null && !isEndRow) return undefined;
+  if (isFerry(direction.route?.mode)) return FREE;
   if (isRail(direction.route?.mode)) {
-    const row = picked ? timeline.between.find((r) => r.id === picked) : undefined;
-    return row ? railFares(direction.route.routeCode, timeline.from?.label, row.label) : undefined;
+    const labelOf = (id: string | null, end: Timeline['from']) =>
+      id === null ? end?.label : timeline.between.find((r) => r.id === id)?.label;
+    const from = labelOf(start, timeline.from);
+    const to = labelOf(picked, endPicked === 'from' ? timeline.from : timeline.to);
+    return railFares(direction.route.routeCode, from, to);
   }
   return pickedMetres === undefined ? undefined : faresFor(direction.route?.mode, pickedMetres);
 }

@@ -1,3 +1,4 @@
+import { otherBound, railBound } from './rail-codes';
 import {
   directionEndHotspots,
   directionEnds,
@@ -13,7 +14,7 @@ import {
  */
 
 /** One route with its directions, for a sheet that lists routes, not directions. */
-export interface RouteGroup<V extends Direction> {
+interface RouteGroup<V extends Direction> {
   routeId: string;
   route: RouteSummary;
   directions: V[];
@@ -122,7 +123,7 @@ export function sharingAnEnd<V extends Direction>(all: readonly V[], of: V): V[]
 
 /**
  * The other routes out of where `of` starts — the owner's "Other routes"
- * under a trip (RouteTripDetail, 3778:3183, 2026-10-01): on Tala →
+ * under a trip (TimelineRouteDetailCard, 3778:3183, 2026-10-01): on Tala →
  * Novaliches, Tala → SM Fairview, and another route making the same trip,
  * if there is one. One direction each, drawn, leaving from the same hotspot
  * as `of` does; its own route's way back is SWITCH, not another route. An
@@ -134,4 +135,37 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
   return all.filter(
     (v) => v.routeId !== of.routeId && isDrawn(v) && directionEndHotspots(v).fromHotspot === start,
   );
+}
+
+/**
+ * The word for the way that is showing — Papunta, there; Pabalik, the way
+ * back — which a trip's RouteTripDetailHeader says beside its vehicle. It was
+ * SWITCH's word from the owner's ask of 2026-10-01 ("instead of switch on the
+ * word") until 2026-10-16, when SWITCH took the other way's (switchWord).
+ *
+ * On a train it is the bound the riders and the operators say, Northbound or
+ * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's ask of
+ * 2026-10-15). One word fits every direction on show: a list with jeeps and
+ * trains, or two lines bound different ways, keeps Papunta and Pabalik, and so
+ * does the ferry, which has no bound.
+ */
+export function wayWord(back: boolean, showing: readonly Direction[]): string {
+  const bounds = new Set(showing.map(railBound));
+  const [bound] = bounds;
+  if (bounds.size === 1 && bound) return bound;
+  return back ? 'Pabalik' : 'Papunta';
+}
+
+/**
+ * The word on SWITCH: the way a tap leads to, not the way showing (the owner's
+ * ask of 2026-10-16: on a Papunta card SWITCH reads Pabalik, on a Pabalik one
+ * Papunta, "so right context for users"), the showing way's word being the
+ * header's (wayWord). On a train it is the other bound, Southbound on a
+ * Northbound card, by the same one-word-fits-all rule as wayWord's.
+ */
+export function switchWord(back: boolean, showing: readonly Direction[]): string {
+  const bounds = new Set(showing.map(railBound));
+  const [bound] = bounds;
+  if (bounds.size === 1 && bound) return otherBound(bound);
+  return back ? 'Papunta' : 'Pabalik';
 }

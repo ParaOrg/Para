@@ -29,8 +29,8 @@ export type Face =
   | 'huff';
 
 /** Taps on the LocatorButton this close together, three of them, make it cross. */
-export const ANGRY_TAPS = 3;
-export const ANGRY_WITHIN_MS = 2000;
+const ANGRY_TAPS = 3;
+const ANGRY_WITHIN_MS = 2000;
 /** …and it stays cross this long after the third. */
 export const ANGRY_FOR_MS = 3000;
 /**
@@ -50,7 +50,7 @@ export function reactionTo(count: number, roll: number): 'happy' | 'angry' {
 /** Happy this long when the location first comes, or the camera arrives on the visitor. */
 export const HAPPY_FOR_MS = 3000;
 /** Happy on the move from walking pace up, in metres a second. */
-export const MOVING_FROM_MPS = 1;
+const MOVING_FROM_MPS = 1;
 /** Sleepy, a neutral face, after standing still this long. */
 export const SLEEPY_AFTER_MS = 60_000;
 
@@ -114,7 +114,7 @@ export const MOOD_OF: Record<Face, Mood> = {
 const HAPPY_EVERY_MS = 2500;
 const HAPPY: readonly Face[] = ['smile', 'hop', 'squee', 'wink-smile'];
 
-export interface Signals {
+interface Signals {
   now: number;
   fix: Pick<Fix, 'accuracy' | 'speed' | 'time'> | null;
   /** When the location first came, or the camera last arrived on the visitor. */
@@ -126,11 +126,11 @@ export interface Signals {
 }
 
 /** Whether a tap's reaction is showing at `now`. */
-export const reacting = ({ now, reaction }: Pick<Signals, 'now' | 'reaction'>): boolean =>
+const reacting = ({ now, reaction }: Pick<Signals, 'now' | 'reaction'>): boolean =>
   !!reaction && now >= reaction.at && now - reaction.at < REACT_FOR_MS;
 
 /** Whether a run of ANGRY_TAPS quick taps has the dot cross at `now`. */
-export function inATemper({ now, taps }: Pick<Signals, 'now' | 'taps'>): boolean {
+function inATemper({ now, taps }: Pick<Signals, 'now' | 'taps'>): boolean {
   for (let i = ANGRY_TAPS - 1; i < taps.length; i++) {
     const third = taps[i];
     if (

@@ -2,13 +2,13 @@ import type { LayerSpecification, StyleSpecification } from 'maplibre-gl';
 
 /*
  * Changing every colour a style draws by one rule: Colour's muting
- * (muted.ts) and Monochrome's cool gray (monochrome.ts). A rule takes each
+ * (daylight.ts) and Monochrome's cool gray (monochrome.ts). A rule takes each
  * colour as hue, saturation and lightness and gives back its replacement, so
  * the colours drawn stay the style's own (or map-colours.ts's), moved, and no
  * colour is written here.
  */
 
-export interface Hsla {
+interface Hsla {
   /** 0 to 360. */
   hue: number;
   /** 0 to 100. */

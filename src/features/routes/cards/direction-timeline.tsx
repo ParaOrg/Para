@@ -1,5 +1,10 @@
 import type { Timeline, TimelineRow } from '../model/timeline';
 
+/** "Passes through 3 hintuans" — the one wording the card and the save panel share. */
+export function passesThrough(n: number): string {
+  return `Passes through ${n} ${n === 1 ? 'hintuan' : 'hintuans'}`;
+}
+
 /**
  * A direction as a line of hotspots, the way a train app shows a line: where it
  * leaves from at the top, every hintuan it passes in order, where it is going
@@ -12,11 +17,6 @@ import type { Timeline, TimelineRow } from '../model/timeline';
  * show it on (the save panel). `pickedId` is the row ridden to: it reads as
  * the end for now, and every row past it fades.
  */
-/** "Passes through 3 hintuans" — the one wording the card and the save panel share. */
-export function passesThrough(n: number): string {
-  return `Passes through ${n} ${n === 1 ? 'hintuan' : 'hintuans'}`;
-}
-
 export function DirectionTimeline({
   timeline,
   onPick,

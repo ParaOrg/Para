@@ -11,14 +11,12 @@ import {
   JeepIcon,
   TerminalIcon,
 } from '@/shared/ui/route-icons';
-import { haversine } from '@/shared/utils/geo';
 
-import { wayWord } from './route-card-header';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { drawnDepartures } from '../model/departures';
+import { drawnDepartures, switchWord } from '../model/departures';
 import { hotspotLabel, type HotspotKind, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { placeBoxes } from '../model/places';
+import { boxTheOtherWay, placeBoxes } from '../model/places';
 import type { Direction } from '../model/routes';
 
 interface Props {
@@ -150,7 +148,8 @@ export function HintuanCard({
   const there = drawnDepartures(routes, false).length > 0;
   const backToo = drawnDepartures(routes, true).length > 0;
   const back = there && backToo ? flipped : backToo;
-  const shown = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v.id));
+  const showing = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v));
+  const shown = showing.map((v) => v.id);
 
   // The other way round: here, when these routes run both ways; else the
   // nearest box of the place that is passed that way — none with no row
@@ -161,14 +160,11 @@ export function HintuanCard({
       ? hotspot
       : deselected
         ? null
-        : (rows
-            .map((r) => r.box)
-            .filter((b) => b.id !== hotspot.id && passes(b.id, other))
-            .sort(
-              (a, b) =>
-                haversine(a.point.coordinates, hotspot.point.coordinates) -
-                haversine(b.point.coordinates, hotspot.point.coordinates),
-            )[0] ?? null);
+        : boxTheOtherWay(
+            hotspot,
+            rows.map((r) => r.box),
+            (id) => passes(id, other),
+          );
 
   // What the RouteCards show, for the map to light; null once the card
   // closes, so an open card showing nothing still says it is open (a list
@@ -313,9 +309,9 @@ export function HintuanCard({
               <Button
                 variant="special"
                 size="small"
-                label={wayWord(back)}
+                label={switchWord(back, showing)}
                 data-testid="card-flip"
-                aria-pressed={back}
+                data-back={back}
                 disabled={!switchTo}
                 onClick={() => {
                   if (!switchTo) return;

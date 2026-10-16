@@ -8,7 +8,7 @@ import type { Drawing } from '../drawing/use-drawing';
  * runs along, the U-turns ringed on the map, a return trip drawn from the
  * wrong end, what an Extend shares with its parent, ends that already make
  * a route, and no hotspots at all to end at. Each says and never blocks;
- * the `save-*` test ids are the suites' (split from SavePanel.tsx,
+ * the `save-*` test ids are the suites' (split from save-panel.tsx,
  * 2026-09-29).
  */
 export function SaveNotices({

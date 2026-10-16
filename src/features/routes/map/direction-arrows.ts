@@ -23,7 +23,7 @@ import { ROUTES_HIT_LAYER } from './tap';
 
 /**
  * Which way the jeep goes, drawn on the lit directions only; each end of
- * each is circled and named by EndTitles.tsx (the owner's asks of
+ * each is circled and named by end-titles.tsx (the owner's asks of
  * 2026-09-25; the circles were a layer of this hook's until his ask of
  * 2026-10-12 made them the hintuan's own dot).
  *
@@ -54,7 +54,8 @@ import { ROUTES_HIT_LAYER } from './tap';
  * zoom — crisp at every size, where a picture scaled from 5 px to 13 px
  * would blur or shimmer. The line handed in is already in travel order
  * (`travelLine`), so chevron number one leaves the terminal the title names,
- * whichever end it was drawn from.
+ * whichever end it was drawn from; a ride picked backwards turns it round
+ * (flowLines).
  */
 
 const SRC = 'direction-arrows';
@@ -64,20 +65,30 @@ const SAME_END_M = 150;
 
 /**
  * One lit ride: its direction, its line in travel order, and the places it
- * runs from and to; `flow`, the stretch to a picked hintuan, where the ride
- * now ends (the owner's ask, 2026-10-02; HintuanLabel's HintuanEnd) — the
- * line and its ends staying whole; and `rest`, the way on from there to the
- * end (useRideTo's ridden), which useRideRest draws in the card's pale and
- * whose end circle wears it too. The chevrons flow on along the rest, white
- * on the pale as on the line (the owner's ask, 2026-10-13: "continue the
- * arrow into the pale lines", and of two colours tried, "I love the
- * white"); they stopped at the pick from 2026-10-02 until then.
+ * runs from and to; and `pale`, the way not ridden when an end is picked on
+ * its trip, after a start or not (useRideTo's ridden): the line on either
+ * side of the ride. useRideRest draws it in the card's pale, and an end circle
+ * on it wears the pale too and loses its S or E (EndTitles), the picks' pins
+ * carrying them. The chevrons flow on along the pale, white on it as on the
+ * line (the owner's ask, 2026-10-13: "continue the arrow into the pale
+ * lines", and of two colours tried, "I love the white"); they stopped at the
+ * pick from 2026-10-02 until then. `isBackwards`: an end picked above the
+ * start, ridden back along the line, and the chevrons along the whole of it
+ * flow from the S to the E, the line itself still in travel order for its
+ * ends (the owner, 2026-10-16: "the arrow in route line change the flow …
+ * in accordance with start and endpoint selected"). `isUnmarked`: a start
+ * picked on its trip with no ride drawn, alone or with an end the line can't
+ * take it to: both its ends lose their S and E, the start's pin carrying the
+ * S (the owner, 2026-10-16: "Nothing yet, just the S"); its `pale` is then
+ * the whole line, the ends on it (useLitRides; his ask the same night, "the
+ * rouline would be in pale").
  */
 export interface Ride {
   id?: string;
   line: readonly LngLat[];
-  flow?: readonly LngLat[];
-  rest?: readonly LngLat[];
+  pale?: readonly (readonly LngLat[])[];
+  isBackwards?: boolean;
+  isUnmarked?: boolean;
   from: string;
   to: string;
   fromHotspot?: string | null;
@@ -91,10 +102,15 @@ export interface Ride {
  * place that carries the name, its hotspot, when the ride says which, and
  * the directions of every lit ride that ends there, this way round
  * (`rides`, on the named one only: the rest are empty); `of`, the ride's own
- * direction, when it has an id; and `paled`, where it is the end of a ride
- * past a picked hintuan, along the rest drawn in the card's pale.
+ * direction, when it has an id; `paled`, where the ride picked on its trip
+ * starts after it or ends before it, the line there drawn in the card's
+ * pale; and `isMarked`, whether it wears its S or E: not on the pale, nor on
+ * a trip whose start is picked with no ride drawn (Ride's `isUnmarked`).
+ * `mark`, which of the two it wears: the origin's S and the destination's
+ * E, turned round on a ride picked backwards, whose E an origin picked from
+ * its row is (the owner, 2026-10-16: "keep the start").
  */
-export interface RideEnd {
+interface RideEnd {
   end: 'from' | 'to';
   name: string;
   named: boolean;
@@ -103,12 +119,14 @@ export interface RideEnd {
   rides: string[];
   of: string | null;
   paled: boolean;
+  isMarked: boolean;
+  mark: 'start' | 'end';
 }
 
 /**
  * Where each lit ride starts and finishes, each place named once: two ends
  * of one name closer than SAME_END_M are one place (Tala, where two rides
- * start). EndTitles.tsx circles every end and names the named ones; the
+ * start). end-titles.tsx circles every end and names the named ones; the
  * end of a ride whose rest is drawn (`paled`) wears the rest's pale.
  */
 export function rideEnds(rides: readonly Ride[]): RideEnd[] {
@@ -126,6 +144,9 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           ? named.find((n) => n.name === name && haversine(n.at, at) < SAME_END_M)
           : undefined;
         if (same && same.end === end && r.id) same.rides.push(r.id);
+        const paled = (r.pale ?? []).some(
+          (l) => restDrawn(l) && samePoint(end === 'from' ? l[0] : l[l.length - 1], at),
+        );
         const e: RideEnd = {
           end,
           name,
@@ -134,12 +155,34 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           hotspotId,
           rides: !same && r.id ? [r.id] : [],
           of: r.id ?? null,
-          paled: end === 'to' && restDrawn(r.rest ?? null),
+          paled,
+          isMarked: !paled && !r.isUnmarked,
+          mark: markOf(end, r.isBackwards ?? false),
         };
         if (e.named) named.push(e);
         return e;
       }),
     );
+}
+
+/** Which mark an end wears: the origin's S and the destination's E, the other way round on a ride picked backwards. */
+function markOf(end: 'from' | 'to', isBackwards: boolean): 'start' | 'end' {
+  if (isBackwards) return end === 'from' ? 'end' : 'start';
+  return end === 'from' ? 'start' : 'end';
+}
+
+/**
+ * The line each lit ride's chevrons flow along: the whole of it, on past a
+ * picked hintuan too, and turned round for a ride picked backwards (Ride's
+ * `isBackwards`), so they flow from its S to its E.
+ */
+export function flowLines(rides: readonly Ride[]): (readonly LngLat[])[] {
+  return rides.map((r) => (r.isBackwards ? [...r.line].reverse() : r.line));
+}
+
+/** Whether two points are one: a pale stretch starting or ending where the line does. */
+function samePoint(a: LngLat, b: LngLat): boolean {
+  return a[0] === b[0] && a[1] === b[1];
 }
 
 /**
@@ -186,7 +229,7 @@ function stillPlease(): boolean {
 /**
  * The chevrons' colour and the rest of the line past a picked hintuan: the
  * selected blue's white chevrons unless the public map says otherwise — a
- * picked card's or an open trip's (liveryLine.ts) — and the rest in the
+ * picked card's or an open trip's (livery-line.ts) — and the rest in the
  * card's pale (the owner's ask, 2026-10-12: the remaining line should be
  * surface-pale of the selected colour). The end circles wear the line's
  * colour by their own classes (EndTitles), nothing to paint since they left
@@ -292,8 +335,7 @@ export function onAMove(held: View | null, drawnAt: number, now: View): 'hold' |
  * unchanged (a memo), or the flow restarts.
  */
 export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride[]): void {
-  // The whole line, on past a picked hintuan too (Ride, above).
-  const lines = useMemo(() => rides.map((r) => r.line), [rides]);
+  const lines = useMemo(() => flowLines(rides), [rides]);
   const hitReady = useLayerReady(map, ROUTES_HIT_LAYER);
   useEffect(() => {
     // Over the lit line and its orange stretches, under the hit area and the
@@ -363,7 +405,7 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
     // A camera call made while another moves the map hotspots that one, which
     // says 'moveend', and says 'movestart' at once for its own (MapLibre's
     // easeTo: _stop, then _prepareEase): the compass camera eases at every
-    // turn of the phone of 3° or more (useLocator.ts), thirty times for a
+    // turn of the phone of 3° or more (use-locator.ts), thirty times for a
     // quarter turn made in a second. So the draw back to the view waits for
     // the next frame, and is dropped if a move starts first; and a move that
     // starts inside what is held, at its zoom, draws nothing. Back to back,

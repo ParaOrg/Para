@@ -11,11 +11,12 @@ import {
 } from '@/shared/utils/geo';
 
 import { readDraft, restoredState, useDraftSaving } from './draft';
-import { useDrawLayers, useDrawRendering } from './draw-layers';
+import { useDrawLayers } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
 import type { AreaTarget, Borrow, HotspotKind, Picking, Target } from './drawing-types';
 import { useGapResolver } from './gap-resolver';
 import { useDrawEvents } from './use-draw-events';
+import { useDrawRendering } from './use-draw-rendering';
 import { useLineBorrowing } from './use-line-borrowing';
 import { usePointBar } from './use-point-bar';
 import { findUTurns } from './uturns';

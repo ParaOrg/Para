@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type ToastTone = 'plain' | 'alert';
+type ToastTone = 'plain' | 'alert';
 
 const TONE = {
   plain: { box: 'bg-neutral-900', dismiss: 'text-neutral-400 hover:text-white' },
@@ -40,12 +40,7 @@ export function Toast({
     >
       <span className="max-sm:min-w-0 max-sm:flex-1">{children}</span>
       {action}
-      <button
-        type="button"
-        onClick={onDismiss}
-        aria-label="Dismiss"
-        className={'pointer-coarse:min-h-11 pointer-coarse:min-w-11 ' + (TONE[tone].dismiss ?? '')}
-      >
+      <button type="button" onClick={onDismiss} aria-label="Dismiss" className={TONE[tone].dismiss}>
         ✕
       </button>
     </div>

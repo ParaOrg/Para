@@ -83,8 +83,11 @@ export function restDrawn(rest: readonly LngLat[] | null): rest is readonly LngL
   return !!rest && rest.length > 1;
 }
 
-/** Draws `rest`, the line from the picked hintuan to the end (useRideTo's `ridden.rest`); nothing for null. */
-export function useRideRest(map: MapLibreMap | null, rest: LngLat[] | null): void {
+/**
+ * Draws `pale`, the way not ridden on either side of the picks (useRideTo's
+ * `ridden.pale`), as one feature. Nothing for empty.
+ */
+export function useRideRest(map: MapLibreMap | null, pale: readonly (readonly LngLat[])[]): void {
   // Over the lit line: this waits for the line hook's layers (useLayerReady),
   // whichever hook the page calls first.
   const litReady = useLayerReady(map, LAYERS.routesLit);
@@ -96,17 +99,19 @@ export function useRideRest(map: MapLibreMap | null, rest: LngLat[] | null): voi
   useEffect(() => {
     const src = map?.getSource<GeoJSONSource>(SRC);
     if (!src) return;
+    const drawn = pale.filter(restDrawn);
     src.setData({
       type: 'FeatureCollection',
-      features: restDrawn(rest)
-        ? [
-            {
-              type: 'Feature',
-              properties: {},
-              geometry: { type: 'LineString', coordinates: rest },
-            },
-          ]
-        : [],
+      features:
+        drawn.length > 0
+          ? [
+              {
+                type: 'Feature',
+                properties: {},
+                geometry: { type: 'MultiLineString', coordinates: drawn.map((l) => [...l]) },
+              },
+            ]
+          : [],
     });
-  }, [map, rest, litReady]);
+  }, [map, pale, litReady]);
 }

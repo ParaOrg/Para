@@ -112,6 +112,8 @@ const links: Record<string, string[]> = {
 /**
  * Picks another box as the public map does: that row Selected, the Selected
  * RouteCard let go. The Selected row tapped lets it go, as the map does too.
+ * SWITCH selects the box the other way leaves from, as the map does with no
+ * glide (public-map-app's onSwitch), not through onPickBox.
  */
 function Picking(props: ComponentProps<typeof HintuanCard>) {
   const [hotspot, setHotspot] = useState(props.hotspot);
@@ -133,6 +135,10 @@ function Picking(props: ComponentProps<typeof HintuanCard>) {
         onSelect: (p) => {
           props.routeCards.onSelect(p);
           setSelected(p?.from ?? null);
+        },
+        onSwitch: (box) => {
+          props.routeCards.onSwitch?.(box);
+          if (box) setHotspot(hotspots.find((s) => s.id === box) ?? hotspot);
         },
       }}
       onPickBox={(id) => {
@@ -171,7 +177,7 @@ const meta = {
     linkedDirectionIds: (id: string) => links[id] ?? [],
     directions: [fvOut, fvIn, nvOut, nvIn],
     onSelectDirection: fn(),
-    routeCards: { selected: null, onSelect: fn(), onShown: fn() },
+    routeCards: { selected: null, onSelect: fn(), onShown: fn(), onSwitch: fn() },
     onPickBox: fn(),
     onClose: fn(),
   },
@@ -231,7 +237,9 @@ export const PickARow: Story = {
  * The Selected row tapped again lets it go: no row Selected, and the routes
  * through every box of the place — SM Fairview Main's one becomes the
  * place's two each way, SWITCH turning them round where they stand; a tap
- * on the row picks it back (the owner's ask, 2026-10-01).
+ * on the row picks it back (the owner's ask, 2026-10-01). The counter counts
+ * head routes, a card each (the owner, 2026-10-01): one there, Tala's to
+ * both ends, and two back.
  */
 export const LetGoAndPickBack: Story = {
   args: { hotspot: main, onDeselect: fn() },
@@ -246,10 +254,12 @@ export const LetGoAndPickBack: Story = {
     await userEvent.click(row());
     await expect(args.onDeselect).toHaveBeenCalledOnce();
     await expect(selectedRow(canvasElement)).toBeUndefined();
-    await expect(canvas.getByTestId('card-count').textContent).toBe('2 routes pass here');
+    await expect(args.routeCards.onShown).toHaveBeenLastCalledWith(['fv-out', 'nv-out']);
+    await expect(canvas.getByTestId('card-count').textContent).toBe('1 route passes here');
     await userEvent.click(canvas.getByTestId('card-flip'));
+    await expect(canvas.getByTestId('card-count').textContent).toBe('2 routes pass here');
     await expect(args.onPickBox).not.toHaveBeenCalled();
-    await expect(canvas.getByTestId('card-flip').getAttribute('aria-pressed')).toBe('true');
+    await expect(canvas.getByTestId('card-flip').getAttribute('data-back')).toBe('true');
     await userEvent.click(row());
     await expect(args.onPickBox).toHaveBeenCalledWith('h2');
     await expect(selectedRow(canvasElement)?.textContent).toBe('SM Fairview Main');
@@ -267,16 +277,19 @@ export const LetGoPhone: Story = {
 
 /**
  * SWITCH at a box passed one way only: the other way round, at the nearest
- * box of the place passed that way — across the road, Fairview Teraccess 2.
+ * box of the place passed that way — across the road, Fairview Teraccess 2,
+ * selected where the camera stands: onSwitch, not onPickBox's glide (the
+ * owner, 2026-10-01).
  */
 export const SwitchMovesAcross: Story = {
   args: { hotspot: teraccess1 },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByTestId('card-flip'));
-    await expect(args.onPickBox).toHaveBeenCalledWith('h4');
+    await expect(args.routeCards.onSwitch).toHaveBeenCalledWith('h4');
+    await expect(args.onPickBox).not.toHaveBeenCalled();
     await expect(selectedRow(canvasElement)?.textContent).toBe('Fairview Teraccess 2');
-    await expect(canvas.getByTestId('card-flip').getAttribute('aria-pressed')).toBe('true');
+    await expect(canvas.getByTestId('card-flip').getAttribute('data-back')).toBe('true');
   },
 };
 
@@ -286,7 +299,7 @@ export const SwitchStays: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByTestId('card-flip'));
     await expect(args.onPickBox).not.toHaveBeenCalled();
-    await expect(canvas.getByTestId('card-flip').getAttribute('aria-pressed')).toBe('true');
+    await expect(canvas.getByTestId('card-flip').getAttribute('data-back')).toBe('true');
   },
 };
 

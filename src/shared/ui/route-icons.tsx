@@ -1,6 +1,7 @@
 /**
  * The icons the route cards use, drawn as in the owner's Figma file
- * (2026-09-28): the Jeep beside the route count, Close in the header,
+ * (2026-09-28): the Jeep beside a hintuan card's count (and beside the
+ * route list's until Routes took its place, 2026-10-16), Close in the header,
  * circle-arrow-right before each place a card goes to; and the trip card's
  * (2026-09-29): ‹ (chevron-left) back to the list, and the chevron down on
  * the row that folds its hintuans, turned to point up when they are open —
@@ -9,6 +10,8 @@
  * colour of wherever it sits — the file draws them in Content/primary or
  * Content/inverse, never a colour of their own.
  */
+
+import vehicleSprite from './vehicle-icons.svg?url&no-inline';
 
 export function JeepIcon() {
   return (
@@ -141,4 +144,63 @@ export function EndIcon() {
       />
     </svg>
   );
+}
+
+/**
+ * Figma's Routes (4192:12133, the owner's "new update" of 2026-10-16), 24
+ * across, drawn at 28: before the count over the route list ("2 Routes"),
+ * where the side-on Jeep stood.
+ */
+export function RoutesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.5419 1.8223C18.5923 1.81312 18.786 1.81066 18.8409 1.81175C19.711 1.83453 20.5356 2.20509 21.1302 2.84056C21.6971 3.43444 22.014 4.32444 21.9775 5.13779C21.8488 7.99625 18.4108 9.31515 16.4347 7.19275C15.8696 7.44692 15.2412 8.02139 14.8818 8.5153C14.2602 9.36964 13.9074 10.3703 14.0677 11.4344C14.2658 12.7503 15.1434 13.7376 16.2148 14.4536C16.5723 14.6926 16.9695 14.9077 17.3363 15.1333C17.5959 15.2941 17.8478 15.4667 18.0917 15.6506C19.0495 15.2772 19.9183 15.2838 20.8381 15.7735C21.5777 16.1704 22.1291 16.845 22.371 17.6487C22.6076 18.4459 22.5163 19.3044 22.1171 20.0339C21.6987 20.7918 20.994 21.3506 20.1606 21.5852C19.4043 21.7998 18.5256 21.6893 17.8404 21.3053C17.1018 20.8987 16.5551 20.2154 16.3205 19.4058C16.0853 18.5679 16.1955 17.7344 16.6204 16.9778C16.1973 16.6425 15.8272 16.4266 15.3825 16.1359C14.5692 15.6041 13.9158 15.0115 13.3639 14.2066C13.3195 14.147 13.2908 14.1019 13.2519 14.0389C13.2002 14.1629 13.1126 14.3343 13.0512 14.4554C12.2269 16.0765 10.8011 17.29 9.17219 18.0587C8.6567 18.3019 8.155 18.4782 7.61644 18.6547C7.74749 19.6935 7.41286 20.6563 6.64354 21.3708C6.03804 21.9332 5.23078 22.2267 4.40547 22.1845C2.73046 22.1154 1.42514 20.6197 1.50334 18.9568C1.54653 18.1303 1.91558 17.3547 2.52961 16.7996C3.13514 16.26 3.92952 15.9817 4.73945 16.0254C5.55911 16.0771 6.3246 16.4525 6.86725 17.069C7.4633 16.9137 8.04001 16.692 8.58652 16.4079C10.4424 15.4531 11.8035 13.796 12.1349 11.7084C12.1997 11.3003 12.1924 10.982 12.226 10.5866C12.2573 10.2024 12.3321 9.82295 12.4493 9.45567C12.9685 7.81022 14.1209 6.43886 15.6523 5.64401C15.6355 5.55886 15.623 5.47294 15.6148 5.38655C15.4378 3.55315 16.7041 1.99692 18.5419 1.8223ZM18.7924 6.61161C19.6496 6.61227 20.3452 5.91833 20.3466 5.06119C20.3478 4.20404 19.6545 3.5079 18.7973 3.50583C17.9392 3.50376 17.2421 4.19812 17.2407 5.05625C17.2393 5.91439 17.9342 6.61096 18.7924 6.61161ZM19.4486 20.0565C20.2917 20.0087 20.9369 19.2872 20.8906 18.444C20.8444 17.6008 20.124 16.9543 19.2808 16.999C18.4353 17.0438 17.7868 17.7665 17.8331 18.6119C17.8795 19.4572 18.6033 20.1045 19.4486 20.0565ZM4.72932 20.5377C5.52213 20.453 6.0959 19.7412 6.01051 18.9485C5.92512 18.1557 5.21295 17.5825 4.42026 17.6685C3.62842 17.7545 3.05595 18.4657 3.14123 19.2575C3.22653 20.0495 3.93736 20.6225 4.72932 20.5377Z" />
+    </svg>
+  );
+}
+
+/**
+ * The vehicles at the top of a trip's card (RouteTripDetailHeader) and at
+ * the end of each route's row (RouteEndPointBar, 2026-10-16), Figma's
+ * own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
+ * JeepneyIcon, not the side-on Jeep above), EJeep (4188:11168), Bus
+ * (4188:11156) and Ferry (4189:11183), 2026-10-16. They live in one sprite the
+ * page fetches, not as paths in its JS (the owner's "trim the icons with a
+ * sprite", the same day: inline, they took the public page over its 400 kB),
+ * so Figma's paths keep their full precision. Its file is hashed, and the
+ * offline precache holds it. Each draws in currentColor; the opacity is the
+ * caller's.
+ */
+type SpriteId = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry';
+
+interface SpriteIconProps {
+  id: SpriteId;
+}
+
+function SpriteIcon({ id }: SpriteIconProps) {
+  return (
+    <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden>
+      <use href={`${vehicleSprite}#${id}`} />
+    </svg>
+  );
+}
+
+export function TrainIcon() {
+  return <SpriteIcon id="train" />;
+}
+
+export function JeepneyIcon() {
+  return <SpriteIcon id="jeepney" />;
+}
+
+export function EJeepIcon() {
+  return <SpriteIcon id="e-jeep" />;
+}
+
+export function BusIcon() {
+  return <SpriteIcon id="bus" />;
+}
+
+export function FerryIcon() {
+  return <SpriteIcon id="ferry" />;
 }

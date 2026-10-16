@@ -207,7 +207,7 @@ await page.waitForTimeout(1200);
 
 // 0. The map is made framed on the routes (the owner's Q1, 2026-10-04):
 // where their fit put it after the map's 'load' until then — the box round
-// every overview in the published file, 100 px clear of the edges, zoom 13
+// every overview in the published map, 100 px clear of the edges, zoom 13
 // at most — and the fit no longer moves it. phone-test holds the same at a
 // phone's size, and a finger moving the map before the routes come.
 {
@@ -1391,8 +1391,8 @@ if (PART === 1) {
         await page
           .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
           .catch(() => {});
-        // On a train the station's code comes first, "GL04 · ₱20" (the
-        // owner, 2026-10-13): the pesos are their own part then.
+        // On a train the station's code comes first, "GL04 ₱20" (the
+        // owner, 2026-10-13): the pesos are their own half then.
         const fare = row.locator('[data-testid="trip-hintuan-fare"]');
         const pesos = fare.locator('[data-part="pesos"]');
         const pill = (await fare.count())
@@ -1420,7 +1420,9 @@ if (PART === 1) {
           probe.remove();
           return {
             lit: (await window.__lit('saved-routes')) ?? [],
-            rest: ((await window.__src('ride-rest'))?.features ?? []).map(
+            // The pale stretches, one line each: the source holds them as one
+            // MultiLineString (useRideRest).
+            rest: ((await window.__src('ride-rest'))?.features ?? []).flatMap(
               (f) => f.geometry.coordinates,
             ),
             restColour: m.getLayer('ride-rest-line')
@@ -1431,6 +1433,10 @@ if (PART === 1) {
               paled: e.hasAttribute('data-paled'),
               ring: getComputedStyle(e.querySelector('.station-label-tap > span:first-child'))
                 .backgroundColor,
+              // The name's opacity, 0.6 outside the ride (Label's Unselected); null, the dot alone.
+              fade: e.querySelector('[data-part="label"]')
+                ? getComputedStyle(e.querySelector('[data-part="label"]')).opacity
+                : null,
             })),
             // The line's colour is the card's surface (livery-line.ts): the card's own background.
             line: trip ? getComputedStyle(trip).backgroundColor : null,
@@ -1466,10 +1472,10 @@ if (PART === 1) {
             (!want || want.fare == null || (pill === want.fare && fareTile === want.fare)),
           `pill "${pill}"; tile "${fareTile}"${want ? `, the sums "${want.fare}"` : ''}`,
         );
-        // The Kilometer tile follows the pick too (the owner, 2026-09-30).
+        // The Distance tile follows the pick too (the owner, 2026-09-30).
         const kmPicked = (await cardEl.locator('[data-testid="trip-km"]').innerText()).trim();
         check(
-          '  the Kilometer tile the ride from the start to there',
+          '  the Distance tile the ride from the start to there',
           want ? kmPicked === want.km : kmPicked !== '',
           `"${kmPicked}"${want ? `, the sums "${want.km}"` : ''}; the whole ride ${kmBefore}`,
         );
@@ -1535,6 +1541,23 @@ if (PART === 1) {
             endsPicked.rings[0] === seen.line,
           `${endsPicked.circles} circle(s): paled ${endsPicked.paledRings.join(', ') || 'none'} (the pale ${seen.pale}), the rest ringed ${endsPicked.rings.join(', ') || 'none'} (the line ${seen.line})`,
         );
+        // Their names too: outside the ride the Label's Unselected, at 60%,
+        // inside it whole (Figma 4200:13645, the owner's ask of 2026-10-16).
+        const fades = (names) =>
+          [...new Set(names.filter((s) => s.fade !== null).map((s) => s.fade))].join(', ') ||
+          'none shown';
+        check(
+          '  the names outside the ride at 60%, the stations past the hintuan and the end where the trip goes; the ones inside it whole',
+          // At least one name read outside the ride and one end each way, so a name that stops showing fails it.
+          paled.some((s) => s.fade !== null) &&
+            endsPicked.paledFades.length > 0 &&
+            endsPicked.fades.length > 0 &&
+            paled.every((s) => s.fade === null || s.fade === '0.6') &&
+            before.every((s) => s.fade === null || s.fade === '1') &&
+            endsPicked.paledFades.every((o) => o === '0.6') &&
+            endsPicked.fades.every((o) => o === '1'),
+          `stations: ${fades(paled)} past the hintuan, ${fades(before)} before it; ends: ${endsPicked.paledFades.join(', ') || 'none shown'} outside the ride, ${endsPicked.fades.join(', ') || 'none shown'} inside it`,
+        );
         if (want) {
           check(
             '  the camera glides it right of the card in the corner, no padding left',
@@ -1556,7 +1579,7 @@ if (PART === 1) {
         }));
         const kmAfter = await cardEl.locator('[data-testid="trip-km"]').innerText();
         check(
-          '  a second tap lets it go, its circle and the pale rest too, no dot along it, the Kilometer tile the whole ride again',
+          '  a second tap lets it go, its circle and the pale rest too, no dot along it, the Distance tile the whole ride again',
           (await row.getAttribute('data-state')) === 'rest' &&
             letGo.pins === 0 &&
             letGo.rest === 0 &&
@@ -1657,7 +1680,7 @@ if (PART === 1) {
 const lsCount = await page.evaluate(() => Object.keys(localStorage).length);
 check('localStorage stays empty', lsCount === 0, lsCount ? `${lsCount} key(s)` : '');
 check('no request to router.project-osrm.org', !osrmHit);
-// Since step 5 the public map is one published file; the database is never asked.
+// Since step 5 the public map is one published map; the database is never asked.
 check('no request to the database (*.supabase.co)', !supabaseHit);
 check(
   'the map came from /data/index.v4.json, fetched once and served',

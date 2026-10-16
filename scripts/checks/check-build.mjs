@@ -13,7 +13,7 @@
 //      parapo.draft              the drawing-draft key
 //      Sign in to save, Forgot password?, + New Route, Draw the return trip
 //      .supabase.co              the database's address: visitors read the
-//                                published file and never call it
+//                                published map and never call it
 //
 // 3. No Supabase client: since step 5 the public page reads the published
 //    file (/data/index.v4.json and the lines; the index since 2026-09-29), so
@@ -41,9 +41,9 @@
 //    2026-10-13), and what both pages share — MapLibre, React and the
 //    shared code — is under 400 kB gzipped, so neither creeps back
 //    unnoticed. The fonts are precached. Since the cheap-phone plan's steps
-//    12 and 14 (2026-10-05) that is four chunks, named in vite.config.ts,
-//    each with a ceiling of its own: `maplibre`, `maplibre-gl-shared` and
-//    `react` hold only their packages and import none of our code, and
+//    12 and 14 (2026-10-05) that is five chunks (`zod` since), named in vite.config.ts,
+//    each with a ceiling of its own: `maplibre`, `maplibre-gl-shared`,
+//    `react` and `zod` hold only their packages and import none of our code, and
 //    `shared` holds our code; one in the wrong group is too heavy for its
 //    ceiling. So a deploy of ours leaves React's name alone, and
 //    MapLibre's two unless it starts or stops importing one of MapLibre's
@@ -383,6 +383,17 @@ if (existsSync(swPath)) {
     `precache holds the ${fonts.length} font files`,
     fonts.length > 0 && fonts.every((f) => precached.includes(f)),
     fonts.filter((f) => !precached.includes(f)).join(', '),
+  );
+  // The vehicles' sprite, fetched by the trip's header rather than inlined in
+  // the JS (the owner's "trim the icons with a sprite", 2026-10-16): offline,
+  // the header still draws its vehicle.
+  const sprites = readdirSync(join(dist, 'assets'))
+    .filter((f) => /^vehicle-icons-.*\.svg$/.test(f))
+    .map((f) => `assets/${f}`);
+  check(
+    "precache holds the vehicles' sprite",
+    sprites.length === 1 && precached.includes(sprites[0]),
+    sprites.join(', ') || 'no vehicle-icons-*.svg in assets/',
   );
   check(
     'precache holds the three icons',
