@@ -26,7 +26,7 @@ import { RAIL_LINES, type RailLine } from './routes';
  * `useTripLivery` in trip-card.tsx, since its line wears the colour too).
  */
 export const JEEPNEY_LIVERIES = ['red', 'orange', 'violet', 'rose', 'fuchsia', 'pink'] as const;
-export type JeepneyLivery = (typeof JEEPNEY_LIVERIES)[number];
+type JeepneyLivery = (typeof JEEPNEY_LIVERIES)[number];
 
 /**
  * A train route's colour is its line's, never drawn (the owner's RouteCards
@@ -34,12 +34,12 @@ export type JeepneyLivery = (typeof JEEPNEY_LIVERIES)[number];
  * Figma's Map/Rail/LightRailWayOne, LightRailWayTwo and MetroRailWayThree,
  * by the line its routeCode names.
  */
-export const RAIL_LIVERY = {
+const RAIL_LIVERY = {
   'LRT-1': 'light-rail-way-one',
   'LRT-2': 'light-rail-way-two',
   'MRT-3': 'metro-rail-way-three',
 } as const satisfies Record<RailLine, string>;
-export type RailLivery = (typeof RAIL_LIVERY)[RailLine];
+type RailLivery = (typeof RAIL_LIVERY)[RailLine];
 
 /** Every colour a card may wear: a jeepney's drawn livery, or a train line's own. */
 export const LIVERIES = [...JEEPNEY_LIVERIES, ...RAIL_LINES.map((l) => RAIL_LIVERY[l])] as const;

@@ -76,7 +76,7 @@ function ask(): Promise<{ res: Response; json: () => Promise<unknown> }> {
  * message, MAP_FILE_TOO_NEW), another shape than asked for, and a row the
  * schema cannot read.
  */
-export function parseIndex(raw: unknown, url: string, schema: number): Index {
+function parseIndex(raw: unknown, url: string, schema: number): Index {
   const outline = indexOutlineSchema.safeParse(raw);
   if (!outline.success) throw new Error(`${url} is not a published map`);
   const { schema: shape } = outline.data;

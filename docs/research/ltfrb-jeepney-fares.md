@@ -2,6 +2,8 @@
 
 Researched 26 September 2026. Fares change often. Check the history section before relying on any number here.
 
+> Read 2026-10-16: written two days before the fare changed. "Today" and "in force" below mean 26 September 2026. Since 28 September 2026 the new traditional fare (₱14.00 for the first 4 km, ₱2.00 a km after) is in force, and the app switches to it by date (`src/features/routes/model/fares.ts`, checked by `tests/unit/fares-test.mjs`). "The published file" below is now the published map, an index and line files.
+
 **Source labels used below:**
 
 - **Primary**: LTFRB's own fare guides, the laws themselves, or PNA (the government news agency).
@@ -33,7 +35,7 @@ Four (4) kilometers = P 11.20 / Succeeding kilometers = Additional P 1.60
 per kilometer" — 80% of the regular rule; the table's own rows round to
 ₱0.25, first 4 km **₱11.25**), and repeats hotline 1342 and the MC 2017-024
 everyday-discount note. §1.1's formula reproduces **all 50 printed rows
-exactly**, both columns; `scripts/fares-test.mjs` carries the table. The
+exactly**, both columns; `tests/unit/fares-test.mjs` carries the table. The
 modern-PUJ guide is still unread (₱2.30/₱2.40 unsettled) and parked: the
 owner scoped fares to traditional jeeps (28 Sep 2026).
 
