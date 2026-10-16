@@ -53,7 +53,10 @@ const RAIL_BELOW = {
  * The rail's column, 24 wide, as tall as its row's content; the rows set
  * their own padding round it (timeline-route-detail.tsx). Bottom's stretch
  * above its dot is 16 tall, Figma's TimelineStick Bottom (20 before
- * 2026-10-13).
+ * 2026-10-13); a middle piece's 10, its Middle, so the dot sits by the
+ * name's first line, the rest of the row's height below it (the owner's
+ * Timeline set, 3716:1894, "new spacing changes", 2026-10-16; the dot was
+ * centred on the row until then).
  */
 const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
 
@@ -63,12 +66,13 @@ const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
  * its size with no fill, so a dot sits where it would on the rail and the
  * rows line up whichever piece they wear.
  *
- * The rail runs only along the ride (the owner, 2026-10-15): the row it
- * starts at wears MiddleTop (Top at the origin), the row it ends at
- * MiddleBottom (Bottom at the destination), the rows between Middle, and
- * every row outside it Disconnected, its dot alone. Some of his set's
- * states still break the rail at the ride's ends and keep a rail of their
- * own outside it; the rule stands over them.
+ * The rail breaks where a ride starts and where it ends, as his set's
+ * states draw it (the owner's Variant5, 4151:13619; his "can you still
+ * connect those dots", 2026-10-16, after a day of the rows outside the ride
+ * standing Disconnected, their dots alone): the row just above a break
+ * wears MiddleBottom (Top at the origin, Disconnected), the row just below
+ * it MiddleTop (Bottom at the destination, Disconnected), the rows between
+ * Middle. A start alone is a break above and below it, its dot alone.
  */
 export function TimelineStick(props: TimelineStickProps) {
   const isConnected = (props.connection ?? 'connected') === 'connected';
@@ -87,7 +91,7 @@ export function TimelineStick(props: TimelineStickProps) {
     <span aria-hidden data-rail={railState(above, below)} className={STICK}>
       {props.variant === 'bottom' && <span className={'-mb-0.5 h-4 w-2 shrink-0 ' + above} />}
       {props.variant !== 'top' && props.variant !== 'bottom' && (
-        <span className={'-mb-0.5 min-h-px w-2 flex-1 ' + above} />
+        <span className={'-mb-0.5 h-2.5 w-2 shrink-0 ' + above} />
       )}
       {props.dot}
       {props.variant !== 'bottom' && <span className={'min-h-px w-2 flex-1 ' + below} />}

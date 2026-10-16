@@ -113,11 +113,20 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     pickOnPlaceCard,
     openTrip,
     backFromTrip,
+    pickOnTrip,
+    endOnTrip,
   } = useCardCamera(map, saved, hotspots, cards);
 
   // What the lit routes wear on the map, as on the public map (useLitRides);
   // none of the orange over the direction being redrawn.
-  const rides = useLitRides(map, saved, hotspots.hotspots, draw.target.directionId, ride.ridden);
+  const rides = useLitRides(
+    map,
+    saved,
+    hotspots.hotspots,
+    draw.target.directionId,
+    ride.ridden,
+    ride.startId,
+  );
 
   // The open trip's hintuans, worked out as the trip or the hotspots change,
   // as the public map works them out (PublicMapApp): the card's rows and
@@ -240,8 +249,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           rows={timeline.between}
           livery={tripLivery}
           pickedId={ride.pickedId}
-          rest={ride.ridden?.rest ?? null}
-          onPick={ride.pick}
+          startId={ride.startId}
+          endPicked={ride.endPicked}
+          hasRide={ride.ridden !== null}
+          onPick={pickOnTrip}
         />
       )}
       {/* Keyed on the pick: another hintuan pops a fresh circle. */}
@@ -253,6 +264,17 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           label={ride.pickedLabel}
           code={ride.pickedCode}
           livery={tripLivery}
+        />
+      )}
+      {map && !draw.drawing && ride.startPinAt && tripLivery && (
+        <HintuanPin
+          key={`start:${ride.startId}`}
+          map={map}
+          at={ride.startPinAt}
+          label={ride.startLabel}
+          code={ride.startCode}
+          livery={tripLivery}
+          marks="start"
         />
       )}
 
@@ -274,8 +296,12 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           picked={ride.pickedId}
           pickedMetres={saved.fullIds.has(saved.selected.id) ? ride.rideTo?.metres : undefined}
           pickedCode={ride.pickedCode}
-          onPick={ride.pick}
-          onEnd={ride.toEnd}
+          start={ride.startId}
+          startCode={ride.startCode}
+          onSetStart={ride.setStart}
+          onRemoveStart={ride.removeStart}
+          onPick={pickOnTrip}
+          onEnd={endOnTrip}
           endPicked={ride.endPicked}
           dockRef={tripDock}
           height={height}

@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { TimelineRouteDetail } from './timeline-route-detail';
 import { LIVERIES } from '../model/liveries';
 
 /**
  * A trip's card on its own, as TimelineRouteDetailCard insets it: one story a state,
- * and the pick in each livery. Long names, the pick kept while folded, and
- * the taps are TimelineRouteDetailCard's stories. Sample data only: the places of
+ * and the pick in each livery. Long names, the rows after a pick folding,
+ * and the taps, Set as start's among them, are TimelineRouteDetailCard's
+ * stories. Sample data only: the places of
  * the owner's frames (3762:3546), not the real map.
  */
 const hintuans = (...labels: string[]) => labels.map((label, i) => ({ id: 'h' + i, label }));
@@ -86,19 +87,26 @@ export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
 export const Pink: Story = { args: { livery: 'pink' } };
 
 /**
- * A hintuan picked: its dot a white ring round the rail's colour, its name
- * ExtraBold, its pill with the pesos to there. The rail runs only along the
- * ride (the owner, 2026-10-15): from the origin down to it, ending there
- * (MiddleBottom); the rows after it, the fold's and the destination's, are
- * their dots alone (Disconnected). Opened, since the fold keeps it.
+ * A hintuan picked: its dot a white ring round the rail's colour, End's E
+ * before its name, now ExtraBold, its pill with the pesos to there, and Set
+ * as start under it when there is a button for it. The rail runs from the
+ * origin down to it, ending there (MiddleBottom), and on again along the
+ * rows after it, through the fold to the destination, without its E (the
+ * owner's Variant5, 4151:13619, 2026-10-16: "can you still connect those
+ * dots"). The fold after it opened.
  */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: openFold };
 
-/** A hintuan picked and folded away: the rail leaves the origin into the fold, which has none. */
+/**
+ * A hintuan picked, the rows after it folded away: the ride's own rows stay
+ * open. The fold's row, next to the pick, has no rail beside it, and the
+ * destination's dot stands alone (the owner, 2026-10-16: "when close it
+ * should disconnect the disclosure", 4194:12562).
+ */
 export const HintuanPickedFolded: Story = { args: { picked: 'h3' } };
 
-/** The last hintuan picked: the rail runs to it, and only the destination is left without one. */
-export const LastHintuanPicked: Story = { args: { picked: 'h9' }, play: openFold };
+/** The last hintuan picked: the rail runs to it, nothing after it to fold, and only the destination is left without a rail. */
+export const LastHintuanPicked: Story = { args: { picked: 'h9' } };
 
 /** Picked, red: the pill in the card's own colours, swapped. */
 export const HintuanPickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: openFold };
@@ -194,4 +202,268 @@ export const RowPressed: Story = {
       ))}
     </div>
   ),
+};
+
+/**
+ * The owner's TimelineRouteDetail (Figma 4137:9886, 2026-10-15), on his
+ * example: MRT-3 Southbound, North Avenue to Taft Avenue. Station names and
+ * codes as the line's tables have them (rail-codes.ts); his frames write
+ * YL60 for every pick.
+ */
+const mrt3 = hintuans(
+  'Quezon Avenue',
+  'GMA Kamuning',
+  'Araneta Center-Cubao',
+  'Santolan-Annapolis',
+  'Ortigas',
+  'Shaw Boulevard',
+  'Boni',
+  'Guadalupe',
+  'Buendia',
+  'Ayala',
+  'Magallanes',
+);
+const [quezon, shaw, ayala] = ['h0', 'h5', 'h9'];
+const onMrt3 = {
+  livery: 'metro-rail-way-three',
+  routeOrigin: 'North Avenue',
+  hintuans: mrt3,
+  routeDirection: 'Taft Avenue',
+  isTrain: true,
+  onSetStart: fn(),
+  onRemoveStart: fn(),
+} as const;
+
+/** Variant6 (4157:7737): folded, S at North Avenue and E at Taft Avenue. */
+export const RideFolded: Story = { args: onMrt3 };
+
+/** Rest (4137:9884): opened, nothing picked; the rail end to end. */
+export const RideRest: Story = { args: onMrt3, play: openFold };
+
+/**
+ * Choosing (4137:9887): Shaw Boulevard tapped is the end, E and its pill,
+ * Set as start under it; the stations after it folded.
+ */
+export const RideChoosing: Story = {
+  args: { ...onMrt3, picked: shaw, pickedCode: 'YL07', pickedPesos: '₱10' },
+};
+
+/**
+ * Variant3 (4148:12161): after Set as start, Shaw Boulevard is the start,
+ * × Remove as start under it, its pill its code alone. A start alone is no
+ * ride yet (the owner, 2026-10-16): its dot stands alone, the rail broken
+ * just above it and just below and running on along the stations above it;
+ * the closed fold next to it has no rail, and Taft Avenue's dot stands
+ * alone (his "when close it should disconnect the disclosure", 4194:12562).
+ * North Avenue loses its S and Taft Avenue has no E until an end is picked.
+ * Folded as Choosing was, the stations after it in that fold.
+ */
+export const RideStartPicked: Story = {
+  args: { ...onMrt3, start: shaw, startCode: 'YL07' },
+};
+
+/**
+ * Variant3, opened: the rail from Boni, the first station after the start
+ * (MiddleTop), through View less to Taft Avenue (4189:11483 draws it so).
+ */
+export const RideStartPickedOpened: Story = { ...RideStartPicked, play: openFold };
+
+/**
+ * A start alone on the first station, Quezon Avenue: the rail broken
+ * between it and North Avenue, North Avenue's dot alone too.
+ */
+export const RideStartFirst: Story = {
+  args: { ...onMrt3, start: quezon, startCode: 'YL02' },
+  play: openFold,
+};
+
+/**
+ * A start alone on the last station, Magallanes: nothing after it to fold,
+ * the rail broken between it and Taft Avenue, Taft Avenue's dot alone too.
+ */
+export const RideStartLast: Story = {
+  args: { ...onMrt3, start: 'h10', startCode: 'YL12' },
+};
+
+/** A jeep's start alone: its S and × Remove as start, no pill, no code to say and no ride to price. */
+export const RideStartJeep: Story = {
+  args: { start: 'h2', onSetStart: fn(), onRemoveStart: fn() },
+};
+
+/**
+ * Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride
+ * Shaw Boulevard → Ayala, the rail broken just above it and just below it.
+ * The S's pill its code alone, the E's its code and the ride's pesos (the
+ * owner, 2026-10-16: "Pill on start is only the codesign of that station, no
+ * price / the end should have both price and codesign").
+ */
+export const RideStartAndEnd: Story = {
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    picked: ayala,
+    pickedCode: 'YL11',
+    pickedPesos: '₱8',
+  },
+};
+
+/**
+ * Variant4, the stations above the ride opened: the rail runs from North
+ * Avenue through them to Ortigas (MiddleBottom); View less, just above Shaw
+ * Boulevard, has none beside it (the owner's 4194:12702, 2026-10-16: "when
+ * close it should disconnect the disclosure").
+ */
+export const RideStartAndEndOpened: Story = { ...RideStartAndEnd, play: openFold };
+
+/**
+ * Variant5 (4151:13619): Shaw Boulevard the start, then Quezon Avenue tapped
+ * above it, the end: E above S, the S's pill its code, the E's its code and
+ * the pesos, the ride between them ridden back
+ * along the line (the owner, 2026-10-16: "reverse the arrow, dont' switch
+ * please"; that morning the row tapped became the start). The rail breaks
+ * just above Quezon Avenue and just below Shaw Boulevard, under its × Remove
+ * as start.
+ */
+export const RideEndAboveStart: Story = {
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    picked: quezon,
+    pickedCode: 'YL02',
+    pickedPesos: '₱13',
+  },
+};
+
+/**
+ * Shaw Boulevard the start, then Taft Avenue's row tapped (the owner,
+ * 2026-10-16: "keep the start"): the ride from Shaw Boulevard on to it, its
+ * E on Taft Avenue with its pill, YL13 and the pesos ("the end should have
+ * both price and codesign"), the stations above folded.
+ */
+export const RideStartToDestination: Story = {
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    endPicked: 'to',
+    pickedCode: 'YL13',
+    pickedPesos: '₱13',
+  },
+};
+
+/**
+ * Shaw Boulevard the start, then North Avenue's row tapped: the ride back
+ * from Shaw Boulevard to it, as an end above the start, its E on North
+ * Avenue with its pill, YL01 and the pesos, the stations after the start
+ * folded.
+ */
+export const RideStartToOrigin: Story = {
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    endPicked: 'from',
+    pickedCode: 'YL01',
+    pickedPesos: '₱13',
+  },
+};
+
+/** A jeep's ride between two hintuans: the pesos alone in the pill, the same buttons. */
+export const RideStartAndEndJeep: Story = {
+  args: { start: 'h2', picked: 'h6', pickedPesos: '₱14', onSetStart: fn(), onRemoveStart: fn() },
+};
+
+/**
+ * The owner's frames for "when close it should disconnect the disclosure"
+ * (2026-10-16), on his example: LRT-2 from Antipolo to Recto, in the red his
+ * frames draw it in, YL60 for every pick as they write it.
+ */
+const lrt2 = hintuans(
+  'Marikina-Pasig',
+  'Santolan',
+  'Katipunan',
+  'Anonas',
+  'Betty Go - Belmonte',
+  'Gilmore',
+  'J. Ruiz',
+  'V. Mapa',
+  'Pureza',
+  'Legarda',
+);
+const [katipunan, jRuiz, vMapa] = ['h2', 'h6', 'h7'];
+const onLrt2 = {
+  livery: 'red',
+  routeOrigin: 'Antipolo',
+  hintuans: lrt2,
+  routeDirection: 'Recto',
+  isTrain: true,
+  pickedCode: 'YL60',
+  pickedPesos: '₱13-24',
+  onSetStart: fn(),
+  onRemoveStart: fn(),
+} as const;
+
+/** Every fold on the card opened, top first, as a rider's taps would. */
+const openFolds: Story['play'] = async ({ canvasElement }) => {
+  for (const fold of within(canvasElement).getAllByRole('button', {
+    name: /more (hintuans|stations)/,
+  })) {
+    await userEvent.click(fold);
+    fold.blur();
+  }
+};
+
+/** The rail a row of the card wears (TimelineStick's `data-rail`), by a selector. */
+const railAt = (canvasElement: HTMLElement, selector: string) =>
+  canvasElement.querySelector(selector)?.querySelector('[data-rail]')?.getAttribute('data-rail');
+
+/**
+ * 4194:12562: an end alone at V. Mapa, the two stations after it folded.
+ * "2 more stations" sits next to the E with no rail beside it, and Recto's
+ * dot stands alone.
+ */
+export const RideEndFoldClosed: Story = {
+  args: { ...onLrt2, picked: vMapa },
+  play: async ({ canvasElement }) => {
+    await expect(railAt(canvasElement, '[data-testid="trip-fold"]')).toBe('disconnected');
+    await expect(railAt(canvasElement, '[data-testid="trip-destination"]')).toBe('disconnected');
+  },
+};
+
+/**
+ * 4189:11483: the same, the fold opened: the rail runs again from Pureza
+ * through Legarda and View less to Recto.
+ */
+export const RideEndFoldOpened: Story = {
+  args: { ...onLrt2, picked: vMapa },
+  play: async (context) => {
+    await openFolds(context);
+    const { canvasElement } = context;
+    await expect(railAt(canvasElement, '[data-hintuan="h8"]')).toBe('below');
+    await expect(railAt(canvasElement, '[data-testid="trip-fold"]')).toBe('connected');
+    await expect(railAt(canvasElement, '[data-testid="trip-destination"]')).toBe('above');
+  },
+};
+
+/**
+ * 4194:12702: S Katipunan, E J. Ruiz, both folds opened. The rail runs
+ * Antipolo → Marikina-Pasig → Santolan and stops there (MiddleBottom);
+ * View less just above the S has none beside it. The ride runs from
+ * Katipunan to J. Ruiz; after it, V. Mapa starts the rail again
+ * (MiddleTop), on through Legarda and View less to Recto.
+ */
+export const RideStartAndEndFoldsOpened: Story = {
+  args: { ...onLrt2, start: katipunan, startCode: 'YL60', picked: jRuiz },
+  play: async (context) => {
+    await openFolds(context);
+    const { canvasElement } = context;
+    await expect(railAt(canvasElement, '[data-hintuan="h1"]')).toBe('above');
+    await expect(railAt(canvasElement, '[data-part="before"]')).toBe('disconnected');
+    await expect(railAt(canvasElement, '[data-hintuan="h2"]')).toBe('below');
+    await expect(railAt(canvasElement, '[data-hintuan="h7"]')).toBe('below');
+    await expect(railAt(canvasElement, '[data-part="after"]')).toBe('connected');
+    await expect(railAt(canvasElement, '[data-testid="trip-destination"]')).toBe('above');
+  },
 };

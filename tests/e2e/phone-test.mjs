@@ -1234,34 +1234,65 @@ const tripChecks = async () => {
         (await pickButton.getAttribute('aria-pressed')) === 'true',
       `${selectedRows} Selected, weight ${weight}`,
     );
-    // The rail runs only along the ride (the owner, 2026-10-15): from the
-    // origin to the picked row, which ends it (MiddleBottom); the rows after
-    // it, the fold's and the destination's, their dots alone.
-    const rails = await card().evaluate((c) => {
-      const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
-      const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
-      const at = rows.findIndex((r) => r.getAttribute('data-state') === 'selected');
-      return {
-        origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
-        before: rows.slice(0, at).map(railOf).filter(Boolean),
-        picked: railOf(rows[at]),
-        after: rows
-          .slice(at + 1)
-          .map(railOf)
-          .filter(Boolean),
-        fold: railOf(c.querySelector('[data-testid="trip-fold"]')?.parentElement),
-        destination: railOf(c.querySelector('[data-testid="trip-destination"]')),
-      };
-    });
-    check(
-      '  the rail runs from the origin to the pick and stops there; the rows after it have none',
-      rails.origin === 'below' &&
+    // The rail runs along the ride from the origin to the picked row, which
+    // ends it (MiddleBottom), and breaks there, running on again along the
+    // rows after it (the owner, 2026-10-16: "can you still connect those
+    // dots"; his Variant5). Their fold's row is next to the pick when it is
+    // closed, and carries no rail then, the destination its dot alone
+    // ("when close it should disconnect the disclosure", 4194:12562); open,
+    // it sits between the rows after the pick and the destination, the rail
+    // through it (4189:11483). Read one way, the fold turned, and read again.
+    const railsNow = () =>
+      card().evaluate((c) => {
+        const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
+        const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
+        const at = rows.findIndex((r) => r.getAttribute('data-state') === 'selected');
+        const fold = c.querySelector('[data-testid="trip-fold"]');
+        return {
+          origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
+          before: rows.slice(0, at).map(railOf).filter(Boolean),
+          picked: railOf(rows[at]),
+          afterCount: rows.length - at - 1,
+          after: rows
+            .slice(at + 1)
+            .filter((r) => r.classList.contains('visible'))
+            .map(railOf)
+            .filter(Boolean),
+          isFoldOpen: fold ? fold.getAttribute('aria-expanded') === 'true' : null,
+          fold: railOf(fold?.parentElement),
+          destination: railOf(c.querySelector('[data-testid="trip-destination"]')),
+        };
+      });
+    const isRailRight = (rails) => {
+      const isShut = rails.isFoldOpen === false;
+      return (
+        rails.origin === 'below' &&
         rails.before.every((r) => r === 'through') &&
         rails.picked === 'above' &&
-        rails.after.every((r) => r === 'disconnected') &&
-        (rails.fold === null || rails.fold === 'disconnected') &&
-        rails.destination === 'disconnected',
-      JSON.stringify(rails),
+        rails.after.every((r, i) => r === (i === 0 ? 'below' : 'through')) &&
+        rails.fold === (rails.isFoldOpen === null ? null : isShut ? 'disconnected' : 'connected') &&
+        rails.destination === (rails.afterCount > 0 && !isShut ? 'above' : 'disconnected')
+      );
+    };
+    const railsFirst = await railsNow();
+    const afterFold = card().locator('[data-testid="trip-fold"][data-part="after"]');
+    let railsTurned = null;
+    if (railsFirst.isFoldOpen !== null) {
+      const turn = async (isOpen) => {
+        await afterFold.scrollIntoViewIfNeeded();
+        await buttonTap(
+          afterFold,
+          async () => (await afterFold.getAttribute('aria-expanded')) === String(isOpen),
+        );
+      };
+      await turn(!railsFirst.isFoldOpen);
+      railsTurned = await railsNow();
+      await turn(railsFirst.isFoldOpen);
+    }
+    check(
+      '  the rail runs from the origin to the pick and breaks there, on again after it, the fold by it without when closed',
+      isRailRight(railsFirst) && (railsTurned === null || isRailRight(railsTurned)),
+      JSON.stringify({ railsFirst, railsTurned }),
     );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
     // On a train the station's code comes first, "GL04 ₱20" (the owner,
@@ -1676,6 +1707,446 @@ const tripChecks = async () => {
         (await tile('trip-km')) === km,
       `${letGo.pins} circle(s), ${letGo.paled} dot(s) along a rest, ${letGo.lit.length} lit; tiles "${await tile('trip-km')}", "${await tile('trip-fare')}", the whole "${km}", "${fare}"`,
     );
+    // A ride's start and end (the owner's TimelineRouteDetail, 2026-10-15):
+    // Set as start under a picked row makes it the start, S before it; a row
+    // after it tapped is the end, E before it. The Distance tile reads the
+    // ride between them, the app's own sums over rideSpan on the published
+    // line, and so does the fare tile on a jeep; on the map, the start's
+    // circle and the end's sit where the ride starts and ends, the line
+    // before and after it pale. × Remove as start, then a second tap on the
+    // end, let both go.
+    {
+      const count = await rows.count();
+      const startIndex = Math.floor((count - 1) / 3);
+      const endIndex = Math.min(count - 1, startIndex + Math.max(1, Math.floor(count / 3)));
+      if (count < 2 || endIndex <= startIndex) {
+        skip(
+          '  Set as start, then an end: the tiles and the map read the ride between them',
+          'fewer than two hintuans',
+        );
+      } else {
+        const startRow = rows.nth(startIndex);
+        const endRow = rows.nth(endIndex);
+        const ids = [
+          await startRow.getAttribute('data-hintuan'),
+          await endRow.getAttribute('data-hintuan'),
+        ];
+        // The app's own sums over rideSpan on the published line, from a start
+        // row to an end row of this trip.
+        const rideOf = (startId, endId) =>
+          page.evaluate(
+            async ([id, startId, endId]) => {
+              try {
+                const [{ rideFare }, { rideSpan }, { kmLabel }] = await Promise.all([
+                  import('/src/features/routes/model/fares.ts'),
+                  import('/src/features/routes/model/ride.ts'),
+                  import('/src/shared/utils/geo.ts'),
+                ]);
+                const { fetchIndex } =
+                  await import('/src/features/published-map/api/fetch-index.ts');
+                const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+                const m = await fetchIndex();
+                const found = m.directions.find((x) => x.id === id);
+                const v = found && { ...found, shape: (await fetchLine(id)) ?? found.shape };
+                const span = v && rideSpan(v, m.hotspots, startId, endId);
+                return span
+                  ? {
+                      km: kmLabel(span.metres),
+                      fare: rideFare(v.route?.mode, span.metres) ?? null,
+                      from: span.from,
+                      at: span.at,
+                    }
+                  : null;
+              } catch {
+                return null;
+              }
+            },
+            [tripId, startId, endId],
+          );
+        const rideWant = await rideOf(...ids);
+        const isSelected = async (r) => (await r.getAttribute('data-state')) === 'selected';
+        const startPick = startRow.locator('button[data-testid="trip-hintuan-pick"]');
+        await startPick.scrollIntoViewIfNeeded();
+        await buttonTap(startPick, () => isSelected(startRow));
+        const setStart = card().getByRole('button', { name: 'Set as start' });
+        await setStart.scrollIntoViewIfNeeded();
+        await buttonTap(
+          setStart,
+          async () => (await startRow.locator('[data-part="start"]').count()) === 1,
+        );
+        // A start alone is no ride yet (the owner's Variant3, 2026-10-16:
+        // "Nothing yet, just the S"): the tiles the whole trip's, nothing pale
+        // on the map, its circle there and the one S, the route's own ends
+        // named without theirs, and no E on the card until an end is picked.
+        const alone = await page.evaluate(async () => ({
+          pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+          rest: ((await window.__src('ride-rest'))?.features ?? []).length,
+          ends: document.querySelectorAll('[data-testid="trip"] [data-part="end"]').length,
+          titleMarks: document.querySelectorAll(
+            '[data-testid="end-title"] [data-part="start"] svg, [data-testid="end-title"] [data-part="end"] svg',
+          ).length,
+        }));
+        const aloneKm = await tile('trip-km');
+        check(
+          '  a start alone is no ride yet: its circle, the tiles the whole trip, nothing pale, no E, the ends unmarked',
+          alone.pins === 1 &&
+            alone.rest === 0 &&
+            alone.ends === 0 &&
+            alone.titleMarks === 0 &&
+            aloneKm === km,
+          `${alone.pins} circle(s), ${alone.rest} pale stretch(es), ${alone.ends} E; ${alone.titleMarks} S or E on the route's ends; Distance "${aloneKm}", the whole "${km}"`,
+        );
+        // Then the end with the sheet at Max: the sheet comes down to Middle and
+        // the camera takes in the ride from the start to the end (the owner,
+        // 2026-10-16), where a hintuan picked alone at Max leaves it at Max.
+        await buttonTap(handle(), async () => (await sheetState()) === 'max');
+        const wasMax = (await sheetState()) === 'max';
+        const endPick = endRow.locator('button[data-testid="trip-hintuan-pick"]');
+        await endPick.scrollIntoViewIfNeeded();
+        await buttonTap(endPick, () => isSelected(endRow));
+        await page.waitForTimeout(900);
+        await page
+          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+          .catch(() => {});
+        const settled = await sheetState();
+        const inView = await page.evaluate(() => {
+          const c = window.__map.getCanvas().getBoundingClientRect();
+          const sheetTop = document
+            .querySelector('[data-testid="card"]')
+            .getBoundingClientRect().top;
+          const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')].map((p) =>
+            p.getBoundingClientRect(),
+          );
+          return {
+            pins: pins.length,
+            clear: pins.every(
+              (r) =>
+                r.top >= c.top && r.bottom <= sheetTop && r.left >= c.left && r.right <= c.right,
+            ),
+          };
+        });
+        if (!wasMax)
+          skip(
+            '  the end picked after a start: the sheet to Middle, the ride taken in above it',
+            `the card would not rise to Max: data-snap=${settled}`,
+          );
+        else
+          check(
+            '  the end picked after a start: the sheet to Middle, the ride taken in above it',
+            settled === 'middle' && inView.pins === 2 && inView.clear,
+            `data-snap=${settled}; ${inView.pins} circle(s), ${inView.clear ? 'both' : 'not both'} clear of the sheet`,
+          );
+        const rideKm = await tile('trip-km');
+        const rideFareShown = await tile('trip-fare');
+        const marks = await card().evaluate((c) => ({
+          origin: !!c.querySelector('[data-testid="trip-origin"] [data-part="start"]'),
+          destination: !!c.querySelector('[data-testid="trip-destination"] [data-part="end"]'),
+          rows: [
+            ...c.querySelectorAll(
+              '[data-testid="trip-hintuan"] [data-part="start"], [data-testid="trip-hintuan"] [data-part="end"]',
+            ),
+          ].map(
+            (e) => `${e.closest('[data-testid="trip-hintuan"]').dataset.hintuan}:${e.dataset.part}`,
+          ),
+        }));
+        const onMap = await page.evaluate(
+          ([from, at]) => {
+            const m = window.__map;
+            const c = m.getCanvas().getBoundingClientRect();
+            const offOf = (el, lngLat) => {
+              if (!el || !lngLat) return null;
+              const r = el.getBoundingClientRect();
+              const q = m.project(lngLat);
+              return Math.hypot(
+                r.left + r.width / 2 - (c.left + q.x),
+                r.top + r.height / 2 - (c.top + q.y),
+              );
+            };
+            return {
+              pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+              start: offOf(
+                document.querySelector('[data-testid="hintuan-pin"][data-marks="start"]'),
+                from,
+              ),
+              end: offOf(
+                document.querySelector('[data-testid="hintuan-pin"][data-marks="end"]'),
+                at,
+              ),
+            };
+          },
+          [rideWant?.from ?? null, rideWant?.at ?? null],
+        );
+        const fareOk = !rideWant || rideWant.fare == null || rideFareShown === rideWant.fare;
+        check(
+          '  Set as start, then an end: S and E on their rows, the tiles and the map read the ride between them',
+          !!rideWant &&
+            !marks.origin &&
+            !marks.destination &&
+            marks.rows.join() === `${ids[0]}:start,${ids[1]}:end` &&
+            rideKm === rideWant.km &&
+            fareOk &&
+            onMap.pins === 2 &&
+            onMap.start !== null &&
+            onMap.start < 3 &&
+            onMap.end !== null &&
+            onMap.end < 3,
+          `${JSON.stringify(marks)}; Distance "${rideKm}", the sums "${rideWant?.km}"; fare "${rideFareShown}", the sums "${rideWant?.fare}"; ${onMap.pins} circle(s), S ${onMap.start?.toFixed(1)} px off, E ${onMap.end?.toFixed(1)} px off`,
+        );
+        // The start's pill its station's code alone, no price; the end's its
+        // code and the ride's pesos (the owner, 2026-10-16: "Pill on start is
+        // only the codesign of that station, no price / the end should have
+        // both price and codesign").
+        const pesosIn = async (where) => {
+          const pill = where.locator('[data-testid="trip-hintuan-fare"]').first();
+          if (!(await pill.count())) return null;
+          const half = pill.locator('[data-part="pesos"]');
+          if (await half.count()) return (await half.innerText()).trim();
+          return (await pill.getAttribute('data-part')) === 'code'
+            ? null
+            : (await pill.innerText()).trim();
+        };
+        const startPesos = await pesosIn(startRow);
+        const endPesos = await pesosIn(endRow);
+        check(
+          "  the start's pill has no price, the end's the ride's pesos",
+          startPesos === null &&
+            (endPesos === null ? rideWant?.fare == null : endPesos === rideFareShown),
+          `start's ${startPesos ?? 'none'}; end's ${endPesos ?? 'none'}; the fare tile ${rideFareShown}`,
+        );
+        // Another end picked with the sheet already at Middle: the sheet stays,
+        // and the camera takes in the new ride, though the map was moved away.
+        // Then the first end again, for what follows.
+        const nextIndex = endIndex - 1 > startIndex ? endIndex - 1 : endIndex + 1;
+        if (nextIndex >= count || (await sheetState()) !== 'middle') {
+          skip(
+            '  another end picked at Middle: the sheet stays, the new ride taken in above it',
+            `no other row after the start, or the sheet not at Middle: data-snap=${await sheetState()}`,
+          );
+        } else {
+          const nextRow = rows.nth(nextIndex);
+          await page.evaluate(() => {
+            const c = window.__map.getCenter();
+            window.__map.jumpTo({ center: [c.lng + 0.3, c.lat + 0.3] });
+          });
+          const nextPick = nextRow.locator('button[data-testid="trip-hintuan-pick"]');
+          await nextPick.scrollIntoViewIfNeeded();
+          await buttonTap(nextPick, () => isSelected(nextRow));
+          await page.waitForTimeout(900);
+          await page
+            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+            .catch(() => {});
+          const again = await page.evaluate(() => {
+            const c = window.__map.getCanvas().getBoundingClientRect();
+            const sheetTop = document
+              .querySelector('[data-testid="card"]')
+              .getBoundingClientRect().top;
+            const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')].map((p) =>
+              p.getBoundingClientRect(),
+            );
+            return {
+              pins: pins.length,
+              clear: pins.every(
+                (r) =>
+                  r.top >= c.top && r.bottom <= sheetTop && r.left >= c.left && r.right <= c.right,
+              ),
+            };
+          });
+          const stayed = await sheetState();
+          check(
+            '  another end picked at Middle: the sheet stays, the new ride taken in above it',
+            stayed === 'middle' && again.pins === 2 && again.clear,
+            `data-snap=${stayed}; ${again.pins} circle(s), ${again.clear ? 'both' : 'not both'} clear of the sheet`,
+          );
+          await endPick.scrollIntoViewIfNeeded();
+          await buttonTap(endPick, () => isSelected(endRow));
+        }
+        const removeStart = card().getByRole('button', { name: 'Remove as start' });
+        await removeStart.scrollIntoViewIfNeeded();
+        await buttonTap(removeStart, async () => !(await isSelected(startRow)));
+        await endPick.scrollIntoViewIfNeeded();
+        await buttonTap(endPick, async () => !(await isSelected(endRow)));
+        check(
+          '  × Remove as start, then the end tapped again: the whole ride again',
+          (await tile('trip-km')) === km &&
+            (await page.evaluate(
+              () => document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+            )) === 0,
+          `Distance "${await tile('trip-km')}", the whole "${km}"`,
+        );
+        // A row above the start stays the end, the ride run back along the
+        // trip's own line, its arrows flowing from the S to the E (the owner,
+        // 2026-10-16: "reverse the arrow, dont' switch please"; his Variant5).
+        // The later row is made the start, and the earlier one tapped: the
+        // ride is the one the check above read, turned round.
+        const BACK =
+          '  a row above the start: the end, above it; the ride back on this line, its arrows S to E';
+        if (!rideWant) {
+          skip(BACK, 'no ride between the two rows on the published line');
+        } else {
+          await endPick.scrollIntoViewIfNeeded();
+          await buttonTap(endPick, () => isSelected(endRow));
+          const setStartAgain = card().getByRole('button', { name: 'Set as start' });
+          await setStartAgain.scrollIntoViewIfNeeded();
+          await buttonTap(
+            setStartAgain,
+            async () => (await endRow.locator('[data-part="start"]').count()) === 1,
+          );
+          await startPick.scrollIntoViewIfNeeded();
+          await buttonTap(
+            startPick,
+            async () => (await startRow.locator('[data-part="end"]').count()) === 1,
+          );
+          await page.waitForTimeout(900);
+          await page
+            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+            .catch(() => {});
+          const backMarks = await card().evaluate((c) =>
+            [
+              ...c.querySelectorAll(
+                '[data-testid="trip-hintuan"] [data-part="start"], [data-testid="trip-hintuan"] [data-part="end"]',
+              ),
+            ].map(
+              (e) =>
+                `${e.closest('[data-testid="trip-hintuan"]').dataset.hintuan}:${e.dataset.part}`,
+            ),
+          );
+          const railOf = (row) => row.locator('[data-rail]').first().getAttribute('data-rail');
+          const backRails = [await railOf(startRow), await railOf(endRow)];
+          const backKm = await tile('trip-km');
+          const back = await page.evaluate(
+            async ([s, e]) => {
+              const m = window.__map;
+              const c = m.getCanvas().getBoundingClientRect();
+              const offOf = (el, lngLat) => {
+                if (!el) return null;
+                const r = el.getBoundingClientRect();
+                const q = m.project(lngLat);
+                return Math.hypot(
+                  r.left + r.width / 2 - (c.left + q.x),
+                  r.top + r.height / 2 - (c.top + q.y),
+                );
+              };
+              // The chevrons between the two pins: each points from its inner
+              // tip (the ring's fourth corner) to its tip (the first), which
+              // way along the ride from the S to the E (chevrons.ts).
+              const [ex, ey] = [e[0] - s[0], e[1] - s[1]];
+              const len2 = ex * ex + ey * ey;
+              const chevrons = ((await window.__src('direction-arrows'))?.features ?? []).filter(
+                (f) => {
+                  const ring = f.geometry.coordinates[0];
+                  const t = ((ring[0][0] - s[0]) * ex + (ring[0][1] - s[1]) * ey) / len2;
+                  return t > 0.1 && t < 0.9;
+                },
+              );
+              const toE = chevrons.filter((f) => {
+                const ring = f.geometry.coordinates[0];
+                return (ring[0][0] - ring[3][0]) * ex + (ring[0][1] - ring[3][1]) * ey > 0;
+              }).length;
+              return {
+                start: offOf(
+                  document.querySelector('[data-testid="hintuan-pin"][data-marks="start"]'),
+                  s,
+                ),
+                end: offOf(
+                  document.querySelector('[data-testid="hintuan-pin"][data-marks="end"]'),
+                  e,
+                ),
+                chevrons: chevrons.length,
+                toE,
+              };
+            },
+            [rideWant.at, rideWant.from],
+          );
+          check(
+            BACK,
+            backMarks.join() === `${ids[0]}:end,${ids[1]}:start` &&
+              backRails.join() === 'below,above' &&
+              backKm === rideWant.km &&
+              back.start !== null &&
+              back.start < 3 &&
+              back.end !== null &&
+              back.end < 3 &&
+              back.chevrons > 0 &&
+              back.toE >= 0.8 * back.chevrons,
+            `${backMarks.join()}; rails ${backRails.join()}; Distance "${backKm}", the sums "${rideWant.km}"; S ${back.start?.toFixed(1)} px off, E ${back.end?.toFixed(1)} px off; ${back.toE} of ${back.chevrons} chevron(s) between them toward the E`,
+          );
+          // Let both go again, for what follows: × Remove as start, then the end.
+          const removeBack = card().getByRole('button', { name: 'Remove as start' });
+          await removeBack.scrollIntoViewIfNeeded();
+          await buttonTap(removeBack, async () => !(await isSelected(endRow)));
+          await startPick.scrollIntoViewIfNeeded();
+          await buttonTap(startPick, async () => !(await isSelected(startRow)));
+          // The destination's row tapped with a start set keeps the start
+          // (the owner, 2026-10-16: "keep the start"; until then it let the
+          // start go): the ride on to it, its E there, on the card and on the
+          // map, the tiles the ride's.
+          const KEEP =
+            "  the destination's row with a start: the start kept, the ride on to it, its E and pill there";
+          const toDestination = await rideOf(ids[1], null);
+          await endPick.scrollIntoViewIfNeeded();
+          await buttonTap(endPick, () => isSelected(endRow));
+          const setStartLater = card().getByRole('button', { name: 'Set as start' });
+          await setStartLater.scrollIntoViewIfNeeded();
+          await buttonTap(
+            setStartLater,
+            async () => (await endRow.locator('[data-part="start"]').count()) === 1,
+          );
+          const destination = card().locator('[data-testid="trip-destination"]');
+          const destinationPick = destination.locator('button').first();
+          await destinationPick.scrollIntoViewIfNeeded();
+          await buttonTap(
+            destinationPick,
+            async () => (await destination.getAttribute('data-state')) === 'selected',
+          );
+          await page.waitForTimeout(900);
+          await page
+            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+            .catch(() => {});
+          const kept = await page.evaluate(() => ({
+            card: [
+              ...document.querySelectorAll(
+                '[data-testid="trip"] [data-part="start"], [data-testid="trip"] [data-part="end"]',
+              ),
+            ].map(
+              (e) =>
+                `${e.closest('[data-hintuan]')?.getAttribute('data-hintuan') ?? e.closest('li')?.dataset.testid}:${e.dataset.part}`,
+            ),
+            map: [
+              ...document.querySelectorAll(
+                '[data-testid="end-title"] [data-part="start"] svg, [data-testid="end-title"] [data-part="end"] svg',
+              ),
+            ].map(
+              (svg) =>
+                `${svg.closest('[data-testid="end-title"]').dataset.end}:${svg.closest('[data-part]').dataset.part}`,
+            ),
+          }));
+          const keptKm = await tile('trip-km');
+          const keptFare = await tile('trip-fare');
+          const keptPill = await pesosIn(destination);
+          if (!toDestination)
+            skip(KEEP, 'no ride from the start to the destination on the published line');
+          else
+            check(
+              KEEP,
+              kept.card.join() === `${ids[1]}:start,trip-destination:end` &&
+                kept.map.join() === 'tail:end' &&
+                keptKm === toDestination.km &&
+                (toDestination.fare == null ||
+                  (keptFare === toDestination.fare && keptPill === toDestination.fare)),
+              `card ${kept.card.join()}; map ${kept.map.join()}; Distance "${keptKm}", the sums "${toDestination.km}"; fare "${keptFare}", its pill "${keptPill}", the sums "${toDestination.fare}"`,
+            );
+          // Let it go again: the destination's row, then × Remove as start.
+          await destinationPick.scrollIntoViewIfNeeded();
+          await buttonTap(
+            destinationPick,
+            async () => (await destination.getAttribute('data-state')) !== 'selected',
+          );
+          const removeKept = card().getByRole('button', { name: 'Remove as start' });
+          await removeKept.scrollIntoViewIfNeeded();
+          await buttonTap(removeKept, async () => !(await isSelected(endRow)));
+        }
+      }
+    }
     // At Max the card stays at Max (the owner's ask, 2026-10-01: "since the
     // card can settle anywhere, don't move the bottomsheet to the middle"),
     // the hintuan landing above where Middle would be, there to see when the

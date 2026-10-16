@@ -239,7 +239,8 @@ export const Train: Story = {
     pickedCode: 'CAR',
     height: { snap: 'max', onSnap: fn() },
   },
-  play: openFold,
+  // Carriedo picked: the stations before it on the ride, EDSA the one after
+  // it, shown as it is, so nothing folds.
 };
 
 /** The ferry: free, with the line's own words under the tiles. */
