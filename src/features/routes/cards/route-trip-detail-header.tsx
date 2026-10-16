@@ -76,9 +76,10 @@ const HALF = 'bg-content-inverse px-3.5 py-0.5 text-lg/7 font-bold whitespace-no
  *
  * The icon takes the card's words colour, CARD_TEXT, from the card it sits
  * on: Content/inverse, and Content/primary on MRT-3's yellow (the owner's
- * ask of 2026-10-16), at Figma's 65%. Figma draws the jeep, bus and e-jeep
- * in a grey of their own at full strength; the train's and the ferry's rule
- * for all is Claude's call of 2026-10-16.
+ * ask of 2026-10-16), every vehicle at 70 (Figma's --opacity/70, the owner's
+ * "new update again for opacity" of 2026-10-16; 65 before). Figma's frame
+ * draws the Train in Content/primary; the owner keeps it as the others ("keep
+ * the train white like the others", the same day).
  *
  * The icon is decorative; the halves read "LRT-1, Northbound", the comma
  * there for the pause the gap draws.
@@ -91,7 +92,7 @@ export function RouteTripDetailHeader({ vehicle, way, livery }: RouteTripDetailH
       data-testid="trip-detail-header"
       className="flex w-full items-center gap-2 pt-4 pr-4 pb-2 pl-3 font-sn-pro"
     >
-      <span aria-hidden className="size-8 shrink-0 opacity-65 *:size-full">
+      <span aria-hidden className="size-8 shrink-0 opacity-70 *:size-full">
         <Icon />
       </span>
       <p className={'flex min-w-0 gap-0.5 ' + words}>
