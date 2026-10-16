@@ -34,7 +34,7 @@ export const TightFix: Story = { args: { haloPx: 12, beamDeg: 300 } };
 export const ZoomedOut: Story = { args: { haloPx: 0, beamDeg: 30, scale: 0.54 } };
 
 /*
- * Its moods and faces (locatorMood.ts, the owner's ask of 2026-10-01): every
+ * Its moods and faces (locator-mood.ts, the owner's ask of 2026-10-01): every
  * face it can wear, side by side, for the owner to look over; each a story too.
  */
 const face = (mood: Mood, f: Face): Story => ({
@@ -101,7 +101,7 @@ export const AllFaces: Story = {
 };
 
 /*
- * Its gaze at what was just picked (dotGaze.ts, the owner's ask of
+ * Its gaze at what was just picked (dot-gaze.ts, the owner's ask of
  * 2026-10-01): for three seconds after a route or a hintuan is picked, the
  * eyes turn the way to it, on the screen or off it; the face stays. A gaze is
  * a heading, degrees clockwise from north, as the beam's is.
