@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactNode } from 'react';
 
 import { TIMELINE_SURFACE } from './livery-card';
-import { TimelineDot } from './timeline-route-detail';
+import { TimelineDot } from './timeline-dot';
 import { TimelineStick } from './timeline-stick';
 
 /**
