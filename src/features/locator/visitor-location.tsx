@@ -19,7 +19,7 @@ interface Props {
   offset: () => [number, number];
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
-  /** The page's turn for the camera (commitTurn.ts): after the cards' camera. */
+  /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
   cameraTurn: Turn;
   /** What was just picked, for the dot to gaze at; and when ‹ or ✕ last went back (useGazeHush). */
   picks: Picks;
@@ -34,7 +34,7 @@ interface Props {
  * show, as a picked hintuan is. The button, and the dot on the map with its
  * moods and its gaze.
  *
- * A child of CommuterApp, not hooks of it (the cheap-phone plan, step 15,
+ * A child of PublicMapApp, not hooks of it (the cheap-phone plan, step 15,
  * 2026-10-05): a fix, a turn of the phone and the dot's moods, a second
  * apart, render this alone, not the whole page. The page re-rendered and
  * drew the same: one or two renders a second for nothing while location
@@ -54,7 +54,7 @@ export function VisitorLocation({
   // How the dot feels: glad as the location comes, a boing at a tap on the
   // button or on the dot, now and then a huff (locatorMood).
   const { mood, face, beat, poke } = useLocatorMood(locator);
-  // …and its gaze: at what was just picked, for three seconds (dotGaze.ts);
+  // …and its gaze: at what was just picked, for three seconds (dot-gaze.ts);
   // ‹ and ✕ are hushed, so going back picks nothing.
   const gazeAt = gazeSubjects(picks, locator.fix?.at ?? null);
   return (

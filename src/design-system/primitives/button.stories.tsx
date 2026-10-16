@@ -48,7 +48,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The jeepney pill: Cubao Free on the quiet surface, lit from above with a
+ * The jeepney pill: SN Pro Bold on the quiet surface, lit from above with a
  * hairline edge. Hover deepens the glow; press sinks it. The three shadows
  * sit side by side on Foundation/Tokens.
  */

@@ -55,14 +55,14 @@ setWorkerUrl(maplibreWorkerUrl);
  * it starts, so it must come after setWorkerUrl; the map takes it when it is
  * made. It lives as long as the page, as it always did once a map had been
  * made: MapLibre's global dispatcher holds it. On the studio's sign-in, and
- * on an auth result passed on from / (commuter/main.tsx), it starts for
+ * on an auth result passed on from / (app/public-map/main.tsx), it starts for
  * nothing.
  */
 prewarm();
 
 /**
  * OpenFreeMap: OSM-derived vector tiles, no API key, no usage limits. Exported
- * for the offline cache warm-up (commuter/pwa.ts).
+ * for the offline cache warm-up (features/published-map/pwa.ts).
  *
  * Positron, not Liberty: a desaturated basemap, so the route lines and hotspot
  * polygons we paint on top carry all the colour on the screen. It serves the
@@ -277,7 +277,7 @@ export function MapView({
           // phone-test hold it to cameraForBounds of the map file's routes).
           ...(framing ? { bounds: framing, fitBoundsOptions: ROUTES_FRAMING } : {}),
           // The public map notes the tiles it asks for, changing none, so the
-          // service worker can keep a first visit's (tilesAsked.ts). The
+          // service worker can keep a first visit's (tiles-asked.ts). The
           // studio has no worker and notes nothing.
           ...(openOn ? { transformRequest: noteTile } : {}),
         });

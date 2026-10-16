@@ -21,7 +21,7 @@
 }
 
 /*
- * BottomSheet (src/shared/cards/BottomSheet.tsx) stops being a sheet once
+ * BottomSheet (src/shared/ui/bottom-sheet.tsx) stops being a sheet once
  * the map is wide enough for what it floats as: its `corner` kind at
  * --container-float, its `card` kind at --container-wide (the widths are
  * written out: a container query cannot read a variable). `sheet-floating:`

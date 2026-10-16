@@ -16,7 +16,6 @@ function hotspot(
 ): HotspotRow {
   return {
     id,
-    ownerId: 'sample-owner',
     name,
     informal,
     aliases: [],

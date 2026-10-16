@@ -9,7 +9,7 @@ import { isDrawn, directionLine, type Direction } from '../model/routes';
  * hotspot's card, the trip opened from either — and what each does to the
  * others: the decisions, as plain functions both apps call, so the rules are
  * written once and tested (tests/unit/card-stack-test.mjs). Split from
- * CommuterApp and StudioApp, which each had them inline (2026-10-01).
+ * PublicMapApp and StudioApp, which each had them inline (2026-10-01).
  */
 
 /** Several things under one tap — routes, hotspots or both: the route list asks which. */

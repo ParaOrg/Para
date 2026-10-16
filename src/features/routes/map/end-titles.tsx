@@ -11,7 +11,7 @@ import {
 } from './route-line-endings-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
-import { TimelineDot } from '../cards/timeline-route-detail';
+import { TimelineDot } from '../cards/timeline-dot';
 import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { isRailLine } from '../model/routes';
@@ -50,11 +50,11 @@ import './end-titles.css';
  * applicable to these RouteLine" (2026-10-13), a list's in the selected
  * blue too: they kept plain names from 2026-10-02 ("there are too many").
  * A ride a picked hintuan stops short ends there, End's E before the
- * hintuan's name (HintuanPin), so its own tail keeps its name without one,
- * the label's Default in the line's colour (the owner's ask, 2026-10-02);
- * a ride started at a picked hintuan, Start's S on its pin, leaves its
- * head the same way (2026-10-15). Either is an end on the pale (`paled`),
- * its pill at 60%, as the names along the pale are (the Label's Unselected,
+ * hintuan's name (HintuanPin), so its own tail keeps its name without one
+ * (the owner's ask, 2026-10-02); a ride started at a picked hintuan,
+ * Start's S on its pin, leaves its head the same way (2026-10-15). Either
+ * is an end on the pale (`paled`), so it wears the label's Unselected, its
+ * pill at 60%, as the names along the pale are (the Label's Unselected,
  * Figma 4200:13645; the owner, 2026-10-16: "if the route is not selected or
  * not in side the start and end").
  * A start picked alone, no ride yet, leaves both its trip's ends without
@@ -73,7 +73,7 @@ import './end-titles.css';
  *
  * Given `onPick`, a pill whose ride says which hotspot it ends at is a
  * button: a tap opens that place (the owner's ask, 2026-10-01), and the map
- * beneath never hears it (markerTap.ts). Without one, or a hotspot, it takes
+ * beneath never hears it (marker-tap.ts). Without one, or a hotspot, it takes
  * no taps, and a tap on it reaches the line or the box beneath; the circle
  * never takes one, as the picked hintuan's does not.
  *
@@ -141,7 +141,7 @@ export function EndTitles({
   );
 }
 
-/** The circle across: TimelineDot at rest (timeline-route-detail.tsx), its centre on the point. */
+/** The circle across: TimelineDot at rest (timeline-dot.tsx), its centre on the point. */
 const DOT_PX = 24;
 
 /** What a pill's button says before the name: which end, as its icon shows it. */
@@ -182,7 +182,7 @@ function EndTitle({
   named: boolean;
   /** Where the ride starts (Head Route), or where it goes (Tail Route). */
   head: boolean;
-  /** Start's S or End's E before the name: a Head or a Tail Route; else Default. */
+  /** Start's S or End's E before the name: a Head or a Tail Route; else Default, or Unselected when `paled`. */
   marked: boolean;
   /** Which it wears when marked: the S, or the E (rideEnds' `mark`). */
   mark: 'start' | 'end';
