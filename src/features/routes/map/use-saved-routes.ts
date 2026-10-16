@@ -34,7 +34,7 @@ export interface Highlight {
  * ParaPo: no sign-in, no editor, just the map with what has been recorded.
  *
  * `load` decides where the directions come from: the public map reads the
- * published file (summaries, simplified lines), the editor the live tables
+ * published map (summaries, simplified lines), the editor the live tables
  * (their overviews, 0009, and what a save needs). Pass a function defined
  * once at module level, not a new one per render, or it reloads every
  * render.

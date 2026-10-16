@@ -13,7 +13,7 @@
 //      parapo.draft              the drawing-draft key
 //      Sign in to save, Forgot password?, + New Route, Draw the return trip
 //      .supabase.co              the database's address: visitors read the
-//                                published file and never call it
+//                                published map and never call it
 //
 // 3. No Supabase client: since step 5 the public page reads the published
 //    file (/data/index.v4.json and the lines; the index since 2026-09-29), so

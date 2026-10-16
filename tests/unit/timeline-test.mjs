@@ -321,7 +321,7 @@ test('the committed map: every trip-card row has its dot, in order, where its pi
 });
 
 // The routes a trip's ‹ lists when it was opened on its own (src/features/routes/model/departures.ts, sharingAnEnd).
-/** A route's two directions, head to tail and back: sample data, shaped like the published file. */
+/** A route's two directions, head to tail and back: sample data, shaped like the published map. */
 const both = (id, head, tail) =>
   [false, true].map((reversed) => ({
     id: id + (reversed ? '-back' : ''),

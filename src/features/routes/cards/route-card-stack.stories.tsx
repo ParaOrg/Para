@@ -7,7 +7,7 @@ import { RouteCardStack } from './route-card-stack';
 import type { Direction } from '../model/routes';
 
 /**
- * Sample data only, shaped like the published file: the owner's two routes
+ * Sample data only, shaped like the published map: the owner's two routes
  * out of Tala, each line `km` long straight north. Not the real map.
  */
 function direction(

@@ -74,7 +74,7 @@ const tables = {
     origin_terminal: null,
     destination_terminal: null,
     shape: v.shape,
-    // 0009's overview: the published file's line is thinned already, and serves.
+    // 0009's overview: the published map's line is thinned already, and serves.
     overview: v.shape,
     control_points: v.shape ? [v.shape.coordinates[0], v.shape.coordinates.at(-1)] : [],
     segments: v.shape ? [{ snap: 'snapped', coordinates: v.shape.coordinates, streets: [] }] : [],

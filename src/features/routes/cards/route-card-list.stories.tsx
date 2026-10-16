@@ -7,7 +7,7 @@ import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
 import type { Direction } from '../model/routes';
 
-/** Sample data only, shaped like the published file. Not the real map. */
+/** Sample data only, shaped like the published map. Not the real map. */
 function route(id: string, name: string): Direction['route'] {
   return {
     id,

@@ -17,7 +17,7 @@ import { orderLinked } from '../model/timeline';
  * colour, with its route links alongside so the tap card can list them.
  *
  * `load` decides where the hotspots come from: the public map reads the
- * published file, the editor the live tables. Pass a function defined once at
+ * published map, the editor the live tables. Pass a function defined once at
  * module level, not a new one per render, or it reloads every render.
  *
  * The editor also passes `drawing` and `hiddenHotspotId`; the public map passes
