@@ -63,12 +63,13 @@ const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
  * its size with no fill, so a dot sits where it would on the rail and the
  * rows line up whichever piece they wear.
  *
- * The rail runs only along the ride (the owner, 2026-10-15): the row it
- * starts at wears MiddleTop (Top at the origin), the row it ends at
- * MiddleBottom (Bottom at the destination), the rows between Middle, and
- * every row outside it Disconnected, its dot alone. Some of his set's
- * states still break the rail at the ride's ends and keep a rail of their
- * own outside it; the rule stands over them.
+ * The rail breaks where a ride starts and where it ends, as his set's
+ * states draw it (the owner's Variant5, 4151:13619; his "can you still
+ * connect those dots", 2026-10-16, after a day of the rows outside the ride
+ * standing Disconnected, their dots alone): the row just above a break
+ * wears MiddleBottom (Top at the origin, Disconnected), the row just below
+ * it MiddleTop (Bottom at the destination, Disconnected), the rows between
+ * Middle. A start alone is a break above and below it, its dot alone.
  */
 export function TimelineStick(props: TimelineStickProps) {
   const isConnected = (props.connection ?? 'connected') === 'connected';

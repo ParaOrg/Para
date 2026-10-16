@@ -7,18 +7,20 @@ import { APP_MOVE } from './map-view';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
-import { endsBeforeStart, rideCut, rideSpan, travelLine } from '../model/ride';
+import { rideCut, rideSpan, travelLine } from '../model/ride';
 import { isRailLine, railLineOf, type Direction } from '../model/routes';
 
 /**
  * The ride between the picks as the map draws it (useLitRides): `line`, the
- * ride on the trip's own line, and `pale`, the stretches before the start and
- * after the end, in the card's pale.
+ * ride on the trip's own line from the start to the end, and `pale`, the
+ * stretches outside it, in the card's pale. `isBackwards`: the end comes
+ * before the start, and the chevrons flow from the S to the E (rideSpan).
  */
 export interface Ridden {
   directionId: string;
   line: readonly LngLat[];
   pale: readonly (readonly LngLat[])[];
+  isBackwards: boolean;
 }
 
 /** How close a picked hintuan is brought in: the scale bar reading this. */
@@ -153,9 +155,9 @@ export function useRideTo(
   );
 
   // The ride between the picks: from the start (or where the direction
-  // leaves) to the picked hintuan, along the trip's own arrows: a row tapped
-  // before the start becomes the start (pick). A start alone is no ride yet,
-  // the trip left whole until its end is picked (his Variant3, 2026-10-16).
+  // leaves) to the picked hintuan, on the trip's own line, back along it for
+  // an end above the start (rideSpan). A start alone is no ride yet, the trip
+  // left whole until its end is picked (his Variant3, 2026-10-16).
   const span = useMemo(
     () =>
       selected && live ? rideSpan(selected, hotspots, liveStart?.rowId ?? null, live.rowId) : null,
@@ -191,24 +193,6 @@ export function useRideTo(
         setStartPick(null);
         return;
       }
-      // A row before the start becomes the start, and the start the end: the
-      // ride follows the trip's own arrows from there (the owner, 2026-10-16:
-      // "it should follow the arrow … so users can study the route, fare
-      // without changing to southbound and north bound"; until then it was
-      // ridden the other way, on the other direction's line).
-      if (
-        id !== null &&
-        selected &&
-        startRow !== null &&
-        endsBeforeStart(selected, hotspots, startRow, id)
-      ) {
-        setAtEnd(null);
-        carried.current = null;
-        remember();
-        setStartPick({ directionId: selected.id, rowId: id });
-        setPicked({ directionId: selected.id, rowId: startRow });
-        return;
-      }
       setAtEnd(null);
       carried.current = null;
       if (id !== null && selectedId && liveRow === id) goBack();
@@ -220,7 +204,7 @@ export function useRideTo(
           : { directionId: selectedId, rowId: id },
       );
     },
-    [selected, selectedId, hotspots, liveRow, startRow, remember, goBack],
+    [selectedId, liveRow, startRow, remember, goBack],
   );
 
   /**
@@ -294,6 +278,7 @@ export function useRideTo(
       directionId: selected.id,
       line: span.ridden,
       pale: [span.before, span.rest].filter((l) => l.length > 1),
+      isBackwards: span.isBackwards,
     };
   }, [span, selected]);
 
@@ -322,13 +307,8 @@ export function useRideTo(
         // each on its place's box the other way passes. One that lands
         // nowhere is let go: the end alone is a ride from where the way back
         // leaves, the start alone no ride yet.
-        let backFrom = land(live.rowId);
-        let backTo = land(liveStart.rowId);
-        // Landed across the road out of order: the first is the start, so the
-        // ride back still follows the arrows (pick, the owner, 2026-10-16).
-        if (backFrom && backTo && endsBeforeStart(next, hotspots, backFrom.id, backTo.id)) {
-          [backFrom, backTo] = [backTo, backFrom];
-        }
+        const backFrom = land(live.rowId);
+        const backTo = land(liveStart.rowId);
         if (backFrom) setStartPick({ directionId: next.id, rowId: backFrom.id });
         if (backTo) {
           carried.current = backTo.id;

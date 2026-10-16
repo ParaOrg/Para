@@ -8,8 +8,10 @@ import { TimelineStick } from './timeline-stick';
 /**
  * The owner's TimelineStick set (3716:1759): every piece, Connected and
  * Disconnected, in red, the set's own colour, each in a row as tall as
- * Figma draws it (40; Top 62, Bottom 38). The rows outside the ride wear
- * Disconnected (the owner, 2026-10-15).
+ * Figma draws it (40; Top 62, Bottom 38). The rail breaks where a ride
+ * starts and where it ends, and a start alone wears Disconnected (the owner,
+ * 2026-10-16: "can you still connect those dots"; from 2026-10-15 every row
+ * outside the ride wore it).
  */
 const rail = TIMELINE_SURFACE.red;
 const dot = <TimelineDot rail={rail} />;
@@ -80,7 +82,7 @@ export const MiddleConnected: Story = {
   ),
 };
 
-/** Middle, Disconnected (4124:9096): a hintuan outside the ride, its dot alone. */
+/** Middle, Disconnected (4124:9096): a start alone, its dot alone. */
 export const MiddleDisconnected: Story = {
   render: () => (
     <Row height="row">
@@ -134,7 +136,11 @@ export const DisclosureConnected: Story = {
   ),
 };
 
-/** Disclosure, Disconnected (4137:10175): the fold row after the ride, nothing drawn. */
+/**
+ * Disclosure, Disconnected (4137:10175): nothing drawn — beside the button
+ * under a row the rail breaks after (× Remove as start under an S at the
+ * ride's foot). A fold's row always runs its rows' rail.
+ */
 export const DisclosureDisconnected: Story = {
   render: () => (
     <Row height="row">

@@ -1234,9 +1234,10 @@ const tripChecks = async () => {
         (await pickButton.getAttribute('aria-pressed')) === 'true',
       `${selectedRows} Selected, weight ${weight}`,
     );
-    // The rail runs only along the ride (the owner, 2026-10-15): from the
-    // origin to the picked row, which ends it (MiddleBottom); the rows after
-    // it, the fold's and the destination's, their dots alone.
+    // The rail runs along the ride from the origin to the picked row, which
+    // ends it (MiddleBottom), and breaks there, running on again along the
+    // rows after it, through their fold to the destination (the owner,
+    // 2026-10-16: "can you still connect those dots"; his Variant5).
     const rails = await card().evaluate((c) => {
       const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
       const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
@@ -1245,6 +1246,7 @@ const tripChecks = async () => {
         origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
         before: rows.slice(0, at).map(railOf).filter(Boolean),
         picked: railOf(rows[at]),
+        afterCount: rows.length - at - 1,
         after: rows
           .slice(at + 1)
           .map(railOf)
@@ -1254,13 +1256,13 @@ const tripChecks = async () => {
       };
     });
     check(
-      '  the rail runs from the origin to the pick and stops there; the rows after it have none',
+      '  the rail runs from the origin to the pick and breaks there, on again after it to the destination',
       rails.origin === 'below' &&
         rails.before.every((r) => r === 'through') &&
         rails.picked === 'above' &&
-        rails.after.every((r) => r === 'disconnected') &&
-        (rails.fold === null || rails.fold === 'disconnected') &&
-        rails.destination === 'disconnected',
+        rails.after.every((r, i) => r === (i === 0 ? 'below' : 'through')) &&
+        (rails.fold === null || rails.fold === 'connected') &&
+        rails.destination === (rails.afterCount > 0 ? 'above' : 'disconnected'),
       JSON.stringify(rails),
     );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
@@ -1921,17 +1923,15 @@ const tripChecks = async () => {
             )) === 0,
           `Distance "${await tile('trip-km')}", the whole "${km}"`,
         );
-        // A row before the start becomes the start, and the start the end: the
-        // ride follows the trip's own arrows, on its own line (the owner,
-        // 2026-10-16: "it should follow the arrow … without changing to
-        // southbound and north bound").
+        // A row above the start stays the end, the ride run back along the
+        // trip's own line, its arrows flowing from the S to the E (the owner,
+        // 2026-10-16: "reverse the arrow, dont' switch please"; his Variant5).
         // The later row is made the start, and the earlier one tapped: the
-        // ride is the one the check above read, from the earlier to the later.
+        // ride is the one the check above read, turned round.
+        const BACK =
+          '  a row above the start: the end, above it; the ride back on this line, its arrows S to E';
         if (!rideWant) {
-          skip(
-            '  a row before the start: it becomes the start, the start the end, the ride on this line',
-            'no ride between the two rows on the published line',
-          );
+          skip(BACK, 'no ride between the two rows on the published line');
         } else {
           await endPick.scrollIntoViewIfNeeded();
           await buttonTap(endPick, () => isSelected(endRow));
@@ -1944,13 +1944,13 @@ const tripChecks = async () => {
           await startPick.scrollIntoViewIfNeeded();
           await buttonTap(
             startPick,
-            async () => (await startRow.locator('[data-part="start"]').count()) === 1,
+            async () => (await startRow.locator('[data-part="end"]').count()) === 1,
           );
           await page.waitForTimeout(900);
           await page
             .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
             .catch(() => {});
-          const swapped = await card().evaluate((c) =>
+          const backMarks = await card().evaluate((c) =>
             [
               ...c.querySelectorAll(
                 '[data-testid="trip-hintuan"] [data-part="start"], [data-testid="trip-hintuan"] [data-part="end"]',
@@ -1960,9 +1960,11 @@ const tripChecks = async () => {
                 `${e.closest('[data-testid="trip-hintuan"]').dataset.hintuan}:${e.dataset.part}`,
             ),
           );
-          const swapKm = await tile('trip-km');
-          const swapOnMap = await page.evaluate(
-            ([from, at]) => {
+          const railOf = (row) => row.locator('[data-rail]').first().getAttribute('data-rail');
+          const backRails = [await railOf(startRow), await railOf(endRow)];
+          const backKm = await tile('trip-km');
+          const back = await page.evaluate(
+            async ([s, e]) => {
               const m = window.__map;
               const c = m.getCanvas().getBoundingClientRect();
               const offOf = (el, lngLat) => {
@@ -1974,35 +1976,56 @@ const tripChecks = async () => {
                   r.top + r.height / 2 - (c.top + q.y),
                 );
               };
+              // The chevrons between the two pins: each points from its inner
+              // tip (the ring's fourth corner) to its tip (the first), which
+              // way along the ride from the S to the E (chevrons.ts).
+              const [ex, ey] = [e[0] - s[0], e[1] - s[1]];
+              const len2 = ex * ex + ey * ey;
+              const chevrons = ((await window.__src('direction-arrows'))?.features ?? []).filter(
+                (f) => {
+                  const ring = f.geometry.coordinates[0];
+                  const t = ((ring[0][0] - s[0]) * ex + (ring[0][1] - s[1]) * ey) / len2;
+                  return t > 0.1 && t < 0.9;
+                },
+              );
+              const toE = chevrons.filter((f) => {
+                const ring = f.geometry.coordinates[0];
+                return (ring[0][0] - ring[3][0]) * ex + (ring[0][1] - ring[3][1]) * ey > 0;
+              }).length;
               return {
                 start: offOf(
                   document.querySelector('[data-testid="hintuan-pin"][data-marks="start"]'),
-                  from,
+                  s,
                 ),
                 end: offOf(
                   document.querySelector('[data-testid="hintuan-pin"][data-marks="end"]'),
-                  at,
+                  e,
                 ),
+                chevrons: chevrons.length,
+                toE,
               };
             },
-            [rideWant.from, rideWant.at],
+            [rideWant.at, rideWant.from],
           );
           check(
-            '  a row before the start: it becomes the start, the start the end, the ride on this line',
-            swapped.join() === `${ids[0]}:start,${ids[1]}:end` &&
-              swapKm === rideWant.km &&
-              swapOnMap.start !== null &&
-              swapOnMap.start < 3 &&
-              swapOnMap.end !== null &&
-              swapOnMap.end < 3,
-            `${swapped.join()}; Distance "${swapKm}", the sums "${rideWant.km}"; S ${swapOnMap.start?.toFixed(1)} px off, E ${swapOnMap.end?.toFixed(1)} px off`,
+            BACK,
+            backMarks.join() === `${ids[0]}:end,${ids[1]}:start` &&
+              backRails.join() === 'below,above' &&
+              backKm === rideWant.km &&
+              back.start !== null &&
+              back.start < 3 &&
+              back.end !== null &&
+              back.end < 3 &&
+              back.chevrons > 0 &&
+              back.toE >= 0.8 * back.chevrons,
+            `${backMarks.join()}; rails ${backRails.join()}; Distance "${backKm}", the sums "${rideWant.km}"; S ${back.start?.toFixed(1)} px off, E ${back.end?.toFixed(1)} px off; ${back.toE} of ${back.chevrons} chevron(s) between them toward the E`,
           );
           // Let both go again, for what follows: × Remove as start, then the end.
-          const removeSwapped = card().getByRole('button', { name: 'Remove as start' });
-          await removeSwapped.scrollIntoViewIfNeeded();
-          await buttonTap(removeSwapped, async () => !(await isSelected(startRow)));
-          await endPick.scrollIntoViewIfNeeded();
-          await buttonTap(endPick, async () => !(await isSelected(endRow)));
+          const removeBack = card().getByRole('button', { name: 'Remove as start' });
+          await removeBack.scrollIntoViewIfNeeded();
+          await buttonTap(removeBack, async () => !(await isSelected(endRow)));
+          await startPick.scrollIntoViewIfNeeded();
+          await buttonTap(startPick, async () => !(await isSelected(startRow)));
         }
       }
     }
