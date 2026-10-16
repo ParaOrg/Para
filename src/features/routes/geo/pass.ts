@@ -105,8 +105,8 @@ export function passStretches(
   // Only segments near the box's bounds are worth sampling, and only a vertex
   // inside them is worth measuring: the ring distance is the cost here, and
   // on a big map almost every vertex of almost every line is nowhere near
-  // this box (1,000 directions and 500 hotspots took 142 s to open without
-  // this check).
+  // this box (measured with no bounds check here or in the callers'
+  // boxesReached: 1,000 directions and 500 hotspots took 142 s to open).
   const bounds = passBounds(ring, withinM, stepM);
   const [w, s, e, n] = bounds;
   const nearBox = (a: LngLat, b: LngLat) =>
@@ -121,9 +121,9 @@ export function passStretches(
   // so the stretch ends where the box does and not at the vertex before.
   // `last` is the sample before this one: a stretch that is one point — a
   // line that only comes near at a vertex, its end most often — is drawn from
-  // the sample before it, or to the one after, a metre's stub. Dropped,
-  // passIndex would list the hintuan while the map painted nothing, and
-  // rideCut would find no stretch to end the ride at.
+  // the sample before it, or to the one after, a metre's stub. Were it
+  // dropped, passIndex would list the hintuan, the map would paint nothing,
+  // and rideCut would find no stretch to end the ride at.
   const st: {
     cur: LngLat[] | null;
     pending: LngLat | null;

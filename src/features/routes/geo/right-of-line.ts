@@ -42,9 +42,9 @@ export function rightOfLine(ring: Ring, line: readonly LngLat[]): Ring | null {
   // zero-length step, which carries nothing, and the tail in the box would
   // cut nothing. Found by walking the line from each end, and the line copied
   // only when a carry is added: a copy and a reversed copy of it for every
-  // box it is asked about would be most of a trip's babaan sides. A line
-  // whose every point is its last has no point before either end, and carries
-  // neither.
+  // box it is asked about were most of the time a trip's babaan sides took
+  // (measured). A line whose every point is its last has no point before
+  // either end, and carries neither.
   const same = (p: LngLat, q: LngLat) => p[0] === q[0] && p[1] === q[1];
   const first = line[0];
   const last = line[line.length - 1];
