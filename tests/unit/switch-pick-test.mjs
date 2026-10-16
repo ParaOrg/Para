@@ -221,7 +221,7 @@ test('a jeep’s SWITCH with a start and an end swaps them: the ride back, each 
   root.unmount();
 });
 
-test('…and a pick the other way passes no box of is let go: the ride runs up to that end', async () => {
+test('…and a pick the other way passes no box of is let go: the start alone stays, no ride yet', async () => {
   const { out, show, root } = await mount(there, hotspots);
   await act(async () => out.ride.pick(lagro1.id));
   await act(async () => out.ride.setStart());
@@ -332,6 +332,19 @@ test('a start and an end: the ride between them, the line on either side pale', 
   assert.ok(Math.abs(out.ride.rideTo.metres - 2226) < 40, `${out.ride.rideTo.metres}`);
   assert.deepEqual(out.ride.startPinAt, out.ride.ridden.line[0]);
   assert.deepEqual(out.ride.pinAt, out.ride.ridden.line.at(-1));
+  root.unmount();
+});
+
+test('a start alone is no ride yet: the trip whole, nothing pale, its circle where the line passes it', async () => {
+  const { out, root } = await mountLined(out1);
+  await act(async () => out.ride.pick('b'));
+  await act(async () => out.ride.setStart());
+  assert.equal(out.ride.startId, 'b');
+  assert.equal(out.ride.rideTo, null, 'the tiles the whole trip’s (the owner, 2026-10-16)');
+  assert.equal(out.ride.ridden, null, 'the map’s line whole, nothing pale');
+  assert.ok(out.ride.startPinAt, 'its circle on the map');
+  await act(async () => out.ride.pick('c'));
+  assert.ok(out.ride.ridden, 'an end picked: the ride, Variant4');
   root.unmount();
 });
 

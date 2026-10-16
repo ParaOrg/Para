@@ -146,9 +146,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Opens the fold, as a rider's tap would — and lets go of it, since a tap draws no focus ring. */
+/**
+ * Opens the fold, as a rider's tap would — and lets go of it, since a tap
+ * draws no focus ring. A train's says "N more stations".
+ */
 const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more hintuans/ });
+  const fold = within(canvasElement).getByRole('button', { name: /more (hintuans|stations)/ });
   await userEvent.click(fold);
   fold.blur();
 };

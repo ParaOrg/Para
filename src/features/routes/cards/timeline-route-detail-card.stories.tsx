@@ -444,7 +444,7 @@ export const EndsShowTheWhole: Story = {
     await expect(destination()).toBe('rest');
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
     await expect(origin()).toBe('rest');
-    await openFold(ctx);
+    // Amparo let go by Tala opened the list whole: nothing to unfold.
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
     await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: false }));
@@ -497,8 +497,10 @@ export const PickWithTheRestFolded: Story = {
 /**
  * Set as start (the owner's TimelineRouteDetail, 2026-10-15): Amparo picked,
  * then made the start, S before it and × Remove as start under it, the
- * tiles the ride from there; Bistek tapped is the end. × Remove as start
- * lets the start go, the keyboard's focus kept on Amparo's row.
+ * tiles still the whole trip's — a start alone is no ride yet (his Variant3,
+ * 2026-10-16); Bistek tapped is the end, and the tiles read the ride
+ * between them. × Remove as start lets the start go, the keyboard's focus
+ * kept on Amparo's row.
  */
 export const StartAndEnd: Story = {
   args: {
@@ -509,19 +511,46 @@ export const StartAndEnd: Story = {
     await openFold(ctx);
     const { canvasElement } = ctx;
     const canvas = within(canvasElement);
+    const wholeKm = canvas.getByTestId('trip-km').textContent;
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await userEvent.click(canvas.getByRole('button', { name: 'Set as start' }));
     const amparo = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h3"]');
     await expect(amparo?.querySelector('[data-part="start"]')).toBeTruthy();
-    await expect(canvas.getByTestId('trip-km').textContent).toBe(kmLabel(4_200));
-    await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱14');
+    await expect(canvas.getByTestId('trip-km').textContent).toBe(wholeKm);
     await userEvent.click(canvas.getByRole('button', { name: /Bistek/, pressed: false }));
     const bistek = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h7"]');
     await expect(bistek?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(canvas.getByTestId('trip-km').textContent).toBe(kmLabel(4_200));
+    await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱14');
     await userEvent.click(canvas.getByRole('button', { name: 'Remove as start' }));
     await expect(amparo?.querySelector('[data-part="start"]')).toBeNull();
     await expect(document.activeElement).toBe(
       amparo?.querySelector('[data-testid="trip-hintuan-pick"]'),
+    );
+  },
+};
+
+/**
+ * A ride from Amparo to Bistek, the rows outside it folded, and Bistek
+ * tapped again: the end let go, Amparo a start alone. The rows after a start
+ * alone fold, Bistek among them, so they open: the row just tapped stays in
+ * view, the keyboard's focus on it.
+ */
+export const LetTheEndGo: Story = {
+  args: {
+    start: 'h3',
+    picked: 'h7',
+    pickedMetres: 4_200,
+    pickedFare: { regular: '₱14', discounted: '₱11–12' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bistek = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h7"]');
+    await userEvent.click(canvas.getByRole('button', { name: /Bistek/, pressed: true }));
+    await expect(bistek?.getAttribute('data-state')).toBe('rest');
+    await expect(bistek?.classList.contains('visible')).toBe(true);
+    await expect(document.activeElement).toBe(
+      bistek?.querySelector('[data-testid="trip-hintuan-pick"]'),
     );
   },
 };
@@ -554,7 +583,11 @@ export const FloatingPicked: Story = {
   play: openFold,
 };
 
-/** A name too long for one line, picked: it wraps beside the pill, which keeps its line. Sample pesos. */
+/**
+ * A name too long for one line, picked: it wraps beside the pill, which
+ * keeps its line. Sample pesos. Bistek, the one row after it, is shown as it
+ * is, with nothing to fold.
+ */
 export const LongNamesPicked: Story = {
   args: {
     ...LongNames.args,
@@ -562,7 +595,6 @@ export const LongNamesPicked: Story = {
     pickedMetres: 5_200,
     pickedFare: { regular: '₱16–18', discounted: '₱12–15' },
   },
-  play: openFold,
 };
 
 /**

@@ -213,8 +213,9 @@ function fareFor(direction: Direction, metres: number, timeline: Timeline): Fare
  * The fare of the ride between the picks: a jeep's by the metres between
  * them, a train's by the two stations (railFares takes any pair, whichever
  * way round: an end before the start is ridden the other way), the ferry's
- * free. A start left at the origin, or an end at the destination, is that
- * end of the timeline.
+ * free. A start left at the origin is that end of the timeline. No end
+ * picked, no ride to price: a start alone is no ride yet (the owner's
+ * Variant3, 2026-10-16).
  */
 function pickedFareFor(
   direction: Direction,
@@ -223,7 +224,8 @@ function pickedFareFor(
   start: string | null,
   picked: string | null,
 ): Fare | undefined {
-  if (start === null && picked === null) return undefined;
+  // A start alone is no ride yet: nothing to price until its end is picked (the owner, 2026-10-16).
+  if (picked === null) return undefined;
   if (isFerry(direction.route?.mode)) return FREE;
   if (isRail(direction.route?.mode)) {
     const labelOf = (id: string | null, end: Timeline['from']) =>

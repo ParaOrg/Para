@@ -36,6 +36,12 @@ export const Two: Story = {
 /** One (4161:8300), on a jeep: the pesos alone. Red, the livery Figma draws it in. */
 export const One: Story = { args: { livery: 'red', code: null, pesos: '₱13' } };
 
+/**
+ * A train's start alone (the owner's Variant3, 4148:12161, 2026-10-16): no
+ * end picked, no ride to price, the station's code alone in One's shape.
+ */
+export const CodeAlone: Story = { args: { code: 'YL07', pesos: undefined } };
+
 /** Two with a range, the longest pesos a ride shows: pesoRange's en dash. */
 export const TwoRange: Story = { args: { pesos: '₱13–24' } };
 
@@ -44,17 +50,16 @@ export const OneRange: Story = { args: { livery: 'red', code: null, pesos: '₱1
 
 /** Every livery: One on each, and Two on each, each on its own card's colour. */
 export const EveryLivery: Story = {
-  render: (args) => (
+  render: () => (
     <div className="flex flex-col gap-1">
       {LIVERIES.map((livery) => (
         <div key={livery} className={'flex gap-3 p-3 ' + CARD_SURFACE[livery]}>
-          <RouteTripLineDetailPill livery={livery} code={null} pesos={args.pesos} />
-          <RouteTripLineDetailPill livery={livery} code="YL06" pesos={args.pesos} />
+          <RouteTripLineDetailPill livery={livery} code={null} pesos="₱13–24" />
+          <RouteTripLineDetailPill livery={livery} code="YL06" pesos="₱13–24" />
         </div>
       ))}
     </div>
   ),
-  args: { pesos: '₱13–24' },
 };
 
 /** On a phone: the width of the app's root, a container as the app's is. */

@@ -179,6 +179,83 @@ test('an end alone carries Set as start; with no start the origin keeps its S', 
   assert.deepEqual(marks, ['start', 'end']);
 });
 
+// The owner's Variant3 of 2026-10-16 (4148:12161): a start alone is no ride
+// yet. Its dot stands alone, the rail broken just above it and just below
+// and running on through every other row, the fold of the rows after it
+// among them; the destination has no E, and its pill holds its code alone.
+test('a start alone (Variant3): its dot alone, the rail on either side and through the fold, no E, its code alone', () => {
+  const html = render(10, {
+    livery: 'metro-rail-way-three',
+    start: 'h3',
+    startCode: 'YL07',
+    pickedPesos: '₱10',
+    onRemoveStart() {},
+  });
+  const r = rows(html);
+  // Folded as Choosing folded the end on its row a moment before: the rows
+  // above it open, the rows after it in a fold above the destination.
+  assert.deepEqual(
+    r.filter((x) => x.cls === SHOWN).map((x) => x.id),
+    ['h0', 'h1', 'h2', 'h3'],
+  );
+  assert.match(html, /data-testid="trip-fold"/);
+  const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
+  // The origin, h0 to h2 (h2 the rail's end above S), S alone, its button's
+  // stick, the fold of h4 to h9 with the rail through it, the destination.
+  assert.deepEqual(pieces, [
+    'below',
+    'through',
+    'through',
+    'above',
+    'disconnected',
+    'disconnected',
+    'connected',
+    'above',
+  ]);
+  const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
+  assert.deepEqual(marks, ['start'], 'the S on its row, no E anywhere');
+  const s = r.find((x) => x.id === 'h3').inside;
+  assert.match(s, /data-testid="trip-hintuan-fare" data-part="code"[^>]*>YL07<\/span>/);
+  assert.doesNotMatch(s, /₱10/, 'no pesos: no ride to price yet');
+});
+
+test('a start alone on the first hintuan stands apart from the origin, on the last from the destination', () => {
+  const pieces = (html) => [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
+  const first = render(10, { start: 'h0', onRemoveStart() {} });
+  // The origin, S alone, its button's stick, the fold of h1 to h9, the destination.
+  assert.deepEqual(pieces(first), [
+    'disconnected',
+    'disconnected',
+    'disconnected',
+    'connected',
+    'above',
+  ]);
+  const last = render(10, { start: 'h9', onRemoveStart() {} });
+  // Nothing after it to fold: the origin, h0 to h8, S alone, its stick, the destination.
+  assert.deepEqual(pieces(last), [
+    'below',
+    ...Array(8).fill('through'),
+    'above',
+    'disconnected',
+    'disconnected',
+    'disconnected',
+  ]);
+  assert.doesNotMatch(last, /data-testid="trip-fold"/);
+});
+
+test('a jeep’s start alone has no pill; a train’s ride with no fare has none on either pick', () => {
+  const jeep = render(10, { start: 'h3', pickedPesos: '₱13', onRemoveStart() {} });
+  assert.doesNotMatch(jeep, /trip-hintuan-fare/, 'a jeep’s S: no code, no ride to price');
+  const unpriced = render(10, {
+    livery: 'metro-rail-way-three',
+    start: 'h3',
+    startCode: 'YL07',
+    picked: 'h6',
+    pickedCode: 'YL10',
+  });
+  assert.doesNotMatch(unpriced, /trip-hintuan-fare/, 'a ride with no fare: no code alone either');
+});
+
 test('an end before the start (Variant5): the rail and the open rows run from the E down to the S', () => {
   const html = render(10, { start: 'h6', picked: 'h2' });
   const r = rows(html);

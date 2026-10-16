@@ -53,7 +53,10 @@ import './end-titles.css';
  * hintuan's name (HintuanPin), so its own tail keeps its name without one,
  * the label's Default in the line's colour (the owner's ask, 2026-10-02);
  * a ride started at a picked hintuan, Start's S on its pin, leaves its
- * head the same way (2026-10-15). Either is an end on the pale (`paled`). A place two rides share is named by the first to reach it
+ * head the same way (2026-10-15). Either is an end on the pale (`paled`).
+ * A start picked alone, no ride yet, leaves both its trip's ends without
+ * them, lit, the start's pin the one S (the owner, 2026-10-16: "Nothing
+ * yet, just the S"). A place two rides share is named by the first to reach it
  * (`rideEnds`), so a trip's change of ride is the earlier ride's tail, as
  * it sits under the start on the timeline; the other ride's end there keeps
  * its circle, bare.
@@ -103,33 +106,31 @@ export function EndTitles({
   };
   return (
     <>
-      {rideEnds(rides).map(({ end, name, named, at, hotspotId, rides: here, of, paled }) => {
-        const trip = onTrip && end === 'to' && here.length === 1 ? here[0] : null;
-        return (
-          <EndTitle
-            // The ride's own end: two rides can end at one point under one name (a route's two ways round).
-            key={`${of ?? name}:${end}@${at.join(',')}`}
-            map={map}
-            at={at}
-            name={name}
-            named={named}
-            head={end === 'from'}
-            // An end the ride picked on its trip doesn't reach: its S or E is on the pick's pin.
-            marked={!paled}
-            livery={livery}
-            codeSign={codeAt(of, name)}
-            paled={paled}
-            opens={trip ? 'trip' : 'place'}
-            onPick={
-              trip
-                ? () => onTrip?.(trip)
-                : onPick && hotspotId
-                  ? () => onPick(hotspotId)
-                  : undefined
-            }
-          />
-        );
-      })}
+      {rideEnds(rides).map(
+        ({ end, name, named, at, hotspotId, rides: here, of, paled, isMarked }) => {
+          const trip = onTrip && end === 'to' && here.length === 1 ? here[0] : null;
+          const handlePlacePick = onPick && hotspotId ? () => onPick(hotspotId) : undefined;
+          const handlePick = trip ? () => onTrip?.(trip) : handlePlacePick;
+          return (
+            <EndTitle
+              // The ride's own end: two rides can end at one point under one name (a route's two ways round).
+              key={`${of ?? name}:${end}@${at.join(',')}`}
+              map={map}
+              at={at}
+              name={name}
+              named={named}
+              head={end === 'from'}
+              // An end the ride picked on its trip doesn't reach, or a trip whose start stands alone: the S or E is on a pick's pin.
+              marked={isMarked}
+              livery={livery}
+              codeSign={codeAt(of, name)}
+              paled={paled}
+              opens={trip ? 'trip' : 'place'}
+              onPick={handlePick}
+            />
+          );
+        },
+      )}
     </>
   );
 }

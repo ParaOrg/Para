@@ -216,10 +216,10 @@ export function rideTheOtherWay<S extends Hotspot>(
 /**
  * The rows of a trip's timeline outside its ride: before the start and
  * after the end, or, with the end before the start (Variant5), outside the
- * stretch between the two rows. A null start is the origin and a null end
- * the destination. The card folds these rows and draws them with no rail,
- * and the map's dots along them wear the pale (the owner's rule of
- * 2026-10-15: "the rail runs only along the ride").
+ * stretch between the two rows. A null start is the origin; with no end,
+ * no ride, and nothing outside it. The card folds these rows and draws them
+ * with no rail, and the map's dots along them wear the pale (the owner's
+ * rule of 2026-10-15: "the rail runs only along the ride").
  */
 export function rowsOutsideRide(
   rows: readonly { id: string }[],
@@ -234,21 +234,22 @@ export function rowsOutsideRide(
 /**
  * Where a picked ride lies on a trip's timeline: its first row and its last,
  * whichever of the start and the end is above (an end picked above the start
- * is ridden the other way round). -1 is the origin, a start left there, and
- * `rows.length` the destination, an end left there. Null with nothing
- * picked, or a pick that is no row of these (another trip's, a moment
- * before it goes): the whole ride. The one rule the card's rail and folds
- * read (rowsOutsideRide).
+ * is ridden the other way round). -1 is the origin, a start left there. Null
+ * with no end picked — nothing, or a start alone, no ride yet until its end
+ * is picked (the owner, 2026-10-16: his Variant3's S stands alone, "so user
+ * don't get confused on the context") — or with a pick that is no row of
+ * these (another trip's, a moment before it goes): the whole ride. The one
+ * rule the card's rail and folds read (rowsOutsideRide).
  */
 export function rideRows(
   rows: readonly { id: string }[],
   startId: string | null,
   endId: string | null,
 ): { first: number; last: number } | null {
-  if (startId === null && endId === null) return null;
+  if (endId === null) return null;
   const startAt = startId === null ? -1 : rows.findIndex((r) => r.id === startId);
-  const endAt = endId === null ? rows.length : rows.findIndex((r) => r.id === endId);
-  if ((startId !== null && startAt < 0) || (endId !== null && endAt < 0)) return null;
+  const endAt = rows.findIndex((r) => r.id === endId);
+  if ((startId !== null && startAt < 0) || endAt < 0) return null;
   return startAt <= endAt ? { first: startAt, last: endAt } : { first: endAt, last: startAt };
 }
 

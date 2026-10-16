@@ -147,7 +147,7 @@ test('the rows outside the ride: before the start and after the end, whichever w
   const outside = (start, end) => [...rowsOutsideRide(rows, start, end)].sort();
   assert.deepEqual(outside(null, null), []);
   assert.deepEqual(outside(null, 'b'), ['c', 'd']);
-  assert.deepEqual(outside('b', null), ['a']);
+  assert.deepEqual(outside('b', null), [], 'a start alone is no ride yet (the owner, 2026-10-16)');
   assert.deepEqual(outside('b', 'c'), ['a', 'd']);
   assert.deepEqual(outside('c', 'a'), ['d'], 'Variant5: the stretch from E down to S is the ride');
   assert.deepEqual(outside('gone', 'c'), [], 'a pick no row of these holds');

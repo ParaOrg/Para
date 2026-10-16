@@ -110,29 +110,45 @@ const lit = along('lit', [
 const place = [121.06, 14.7];
 
 test('an open trip frames its route, whatever stands behind it', () => {
-  assert.deepEqual(framedBy(trip, place, true, [card], [lit]), { lines: [trip.shape.coordinates] });
+  assert.deepEqual(framedBy(trip, null, place, true, [card], [lit]), {
+    lines: [trip.shape.coordinates],
+  });
+});
+
+// The owner's ask of 2026-10-16: an end picked after a start, "the overview
+// of new start and end", and so as the sheet settles after.
+test('an open trip with a ride from a start to an end frames that ride', () => {
+  const ride = [
+    [121.01, 14.7],
+    [121.02, 14.7],
+  ];
+  assert.deepEqual(framedBy(trip, ride, place, true, [card], [lit]), { lines: [ride] });
 });
 
 // A place's card can stand in front of the list (an end name tapped on a trip
 // opened from it keeps the list behind), and wins over it.
 test("a place's card with a RouteCard picked frames that card's routes", () => {
-  assert.deepEqual(framedBy(null, place, true, [card], [lit]), { lines: [card.shape.coordinates] });
+  assert.deepEqual(framedBy(null, null, place, true, [card], [lit]), {
+    lines: [card.shape.coordinates],
+  });
 });
 
 test("a place's card with none picked frames the place, not the list behind it", () => {
-  assert.deepEqual(framedBy(null, place, true, null, [lit]), { at: place });
+  assert.deepEqual(framedBy(null, null, place, true, null, [lit]), { at: place });
 });
 
 test("the route list with a RouteCard picked frames that card's routes", () => {
-  assert.deepEqual(framedBy(null, null, true, [card], [lit]), { lines: [card.shape.coordinates] });
+  assert.deepEqual(framedBy(null, null, null, true, [card], [lit]), {
+    lines: [card.shape.coordinates],
+  });
 });
 
 test('the route list with none picked frames what it lights', () => {
-  assert.deepEqual(framedBy(null, null, true, null, [lit, card]), {
+  assert.deepEqual(framedBy(null, null, null, true, null, [lit, card]), {
     lines: [lit.shape.coordinates, card.shape.coordinates],
   });
 });
 
 test('nothing open frames nothing', () => {
-  assert.equal(framedBy(null, null, false, null, [lit]), null);
+  assert.equal(framedBy(null, null, null, false, null, [lit]), null);
 });
