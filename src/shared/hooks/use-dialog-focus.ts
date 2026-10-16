@@ -2,12 +2,11 @@ import { useEffect, type RefObject } from 'react';
 
 /**
  * Focus into a card when it is shown, and back to where it was when it goes:
- * the cards are dialogs to a screen reader, and one that opened and closed
- * with the focus left on the map behind it could not be found by keyboard
- * (the review's 3c). The card is focused itself, not its first control, so
- * nothing is pressed by accident and nothing scrolls; a card kept but hidden
- * (a hotspot under the trip it opened) gives the focus up until it is shown
- * again.
+ * the cards are dialogs to a screen reader, and one that opens and closes
+ * with the focus left on the map behind it cannot be found by keyboard. The
+ * card is focused itself, not its first control, so nothing is pressed by
+ * accident and nothing scrolls; a card kept but hidden (a hotspot under the
+ * trip it opened) gives the focus up until it is shown again.
  */
 export function useDialogFocus(ref: RefObject<HTMLElement | null>, hidden: boolean): void {
   useEffect(() => {

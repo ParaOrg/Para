@@ -11,11 +11,10 @@ interface SheetHeaderProps {
 }
 
 /**
- * The header a hotspot's card and the studio's route card have always had:
- * what was tapped, and ✕ — the route cards' own IconButton since the
- * owner's yes of 2026-09-30, so every card closes the same way. The route
- * list and a trip's card bring their own header (RouteCardHeader). Their
- * bodies sit 16 in, as this does (px-4).
+ * The header of the studio's hotspot card (HotspotCard): what was
+ * tapped, and ✕ — the route cards' own IconButton, the owner's pick, so every
+ * card closes the same way. The route list and a trip's card bring their own
+ * header (RouteCardHeader). Their bodies sit 16 in, as this does (px-4).
  */
 export function SheetHeader({ onClose, children }: SheetHeaderProps) {
   return (
