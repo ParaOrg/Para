@@ -153,7 +153,7 @@ The one person who runs ParaPo and edits its data.
 **Editor**:
 Anyone on the editor list, allowed to write. Since migration 0015
 (2026-10-14) every editor edits every route and hotspot, not only their own;
-a row still records who made it. The owner and two others today.
+a row still records who made it. The owner added two editors that day.
 _Avoid_: admin, user
 
 **Visitor**:
