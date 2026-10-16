@@ -1,8 +1,7 @@
 /**
- * The published map's contract, as the public map reads it (since 2026-09-29,
- * stage 7 of the clean-up; docs/archive/review-2026-09-29.md section 8, shape A): an
- * index, written by scripts/publish/publish-map.mjs and served as a static
- * file, holding every route, hotspot and link and each direction's
+ * The published map's contract, as the public map reads it: an index,
+ * written by scripts/publish/publish-map.mjs and served as a static file,
+ * holding every route, hotspot and link and each direction's
  * *overview* — its line thinned at 5 m — and a file per direction with its
  * full line, thinned to within half a metre, read when the direction is lit
  * or opened. At a thousand directions the index is a fifth of the one file
@@ -12,10 +11,9 @@
  * This file holds the names: where the index and the lines are, what shape
  * the app reads, the banner's message, the early request's name and the
  * worker's store. Reading is api/fetch-index.ts and api/fetch-line.ts; the
- * shape itself is schemas/index-schema.ts and schemas/line-file-schema.ts
- * (ticket 08 of the restructure follow-ups, 2026-10-07). vite.config.ts and
- * scripts/checks/check-build.mjs read MAP_FILE_URL and EARLY_MAP_FILE off
- * this file's text (scripts/node/map-file-constants.ts), so each stays a
+ * shape itself is schemas/index-schema.ts and schemas/line-file-schema.ts.
+ * vite.config.ts and scripts/checks/check-build.mjs read MAP_FILE_URL and
+ * EARLY_MAP_FILE off this file's text (scripts/node/map-file-constants.ts), so each stays a
  * single-quoted string constant on a line of its own.
  */
 
@@ -44,12 +42,12 @@ export const LINES_URL = '/data/lines/';
  *     publish keeps writing it for one release after shape 2, the index at
  *     its own path, so an app installed before still loads.
  *   - Shape 2 is `/data/index.json`; shape 3, `/data/index.v3.json`, is the
- *     same index with the train lines in (2026-10-03): a train's
- *     `routeCode` and a station's `line` change which hintuans a line stops
- *     at (servedBy), so a shape-2 app would draw a jeep stopping at a
- *     station. Shape 4, `/data/index.v4.json`, is shape 3 with the ferry
- *     in (the same day): a shape-3 app knows only the trains as lines, and
- *     would draw the ferry stopping at every jeep hintuan by the river. The
+ *     same index with the train lines in: a train's `routeCode` and a
+ *     station's `line` change which hintuans a line stops at (servedBy), so a
+ *     shape-2 app would draw a jeep stopping at a station. Shape 4,
+ *     `/data/index.v4.json`, is shape 3 with the ferry in: a shape-3 app
+ *     knows only the trains as lines, and would draw the ferry stopping at
+ *     every jeep hintuan by the river. The
  *     publish writes shape 3 without the ferry and shapes 1 and 2 without
  *     any line (scripts/publish/withoutLines.mjs), each a month at least
  *     after the next ships. The line files under `/data/lines/` are the
@@ -83,13 +81,12 @@ export const STORED_OLD = [
 export const MAP_FILE_CACHE = 'map-file';
 
 /**
- * Where index.html's own script leaves its request for this file (the
- * cheap-phone plan, step 20, 2026-10-04): vite.config.ts writes that script
- * into the page's <head>, with MAP_FILE_URL, so the file is asked for as the
- * page is read rather than once the app's script has come and run — 355 kB
- * on the wire before it when this was written, about 3.3 s of a slow phone
- * network; 385 kB since step 14 (2026-10-05). The script leaves a promise
- * of the answer and, for an ok one, of its body read as JSON (undefined for
+ * Where index.html's own script leaves its request for this file:
+ * vite.config.ts writes that script into the page's <head>, with
+ * MAP_FILE_URL, so the file is asked for as the page is read rather than
+ * once the app's script has come and run: that script measured 385 kB on the
+ * wire, and 355 kB took about 3.3 s of a slow phone network. The script
+ * leaves a promise of the answer and, for an ok one, of its body read as JSON (undefined for
  * a body that is not); it asks with `no-cache`, as fetchIndex does, and at
  * low priority, so the app's own script keeps the link first.
  */

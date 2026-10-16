@@ -6,12 +6,10 @@ import { TimelineDot } from './timeline-dot';
 import { TimelineStick } from './timeline-stick';
 
 /**
- * The owner's TimelineStick set (3716:1759): every piece, Connected and
+ * Figma's TimelineStick set (3716:1759): every piece, Connected and
  * Disconnected, in red, the set's own colour, each in a row as tall as
  * Figma draws it (40; Top 62, Bottom 38). The rail breaks where a ride
- * starts and where it ends, and a start alone wears Disconnected (the owner,
- * 2026-10-16: "can you still connect those dots"; from 2026-10-15 every row
- * outside the ride wore it).
+ * starts and where it ends, and a start alone wears Disconnected.
  */
 const rail = TIMELINE_SURFACE.red;
 const dot = <TimelineDot rail={rail} />;
@@ -140,8 +138,7 @@ export const DisclosureConnected: Story = {
  * Disclosure, Disconnected (4137:10175): nothing drawn — beside the button
  * under a row the rail breaks after (× Remove as start under an S at the
  * ride's foot), and beside a fold's row next to the ride, open or closed
- * (the owner, 2026-10-16: "when close it should disconnect the disclosure";
- * 4194:13004 in 4194:12702).
+ * (4194:13004 in 4194:12702).
  */
 export const DisclosureDisconnected: Story = {
   render: () => (

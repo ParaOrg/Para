@@ -52,7 +52,7 @@ const talaRoutes = [
 const meta = {
   title: 'Features/Routes/Departures',
   component: Departures,
-  // Rows of a list: the studio's hotspot card holds them in its own <ul>, as wide as the card.
+  // Rows of a list: HotspotCard holds them in its own <ul>, as wide as the card.
   decorators: [
     (Story) => (
       <ul className="w-80 bg-surface">
