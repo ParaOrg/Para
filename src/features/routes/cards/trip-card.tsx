@@ -3,11 +3,13 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
+import { RouteTripDetailHeader } from './route-trip-detail-header';
 import { FREE, TimelineRouteDetailCard, type Fare, type Fares } from './timeline-route-detail-card';
 import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { cardLiveries, type Livery } from '../model/liveries';
+import { railBound } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -140,6 +142,7 @@ export function TripCard({
   extras?: ReactNode;
 }) {
   const { from, to } = directionEnds(direction);
+  const line = railLineOf(direction);
   const sibling = otherDirection(directions, direction);
   const switchable = !!sibling && isDrawn(sibling);
   // The whole ride, measured once on its full line — the index's figure, so
@@ -171,7 +174,8 @@ export function TripCard({
       dockRef={dockRef}
       height={height}
       routeDirection={to}
-      isTrain={railLineOf(direction) !== null}
+      isTrain={line !== null}
+      header={line && <RouteTripDetailHeader line={line} bound={railBound(direction)} />}
       switchable={switchable}
       back={direction.reversed}
       way={wayWord(direction.reversed, [direction])}

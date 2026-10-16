@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useRef, useState, type ReactNode } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { ChevronDownIcon, CloseIcon, EndIcon, StartIcon } from '@/shared/ui/route-icons';
@@ -80,6 +80,12 @@ export interface TimelineRouteDetailProps {
    * hintuans".
    */
   isTrain?: boolean;
+  /**
+   * Above the first row, on the card's colour: a train's RouteTripDetailHeader,
+   * its line and bound (the owner's TimelineRouteDetailCard, 3778:3183, 2026-10-16).
+   * Jeeps and the ferry have none.
+   */
+  header?: ReactNode;
 }
 
 /**
@@ -150,6 +156,7 @@ export function TimelineRouteDetail({
   endPicked,
   routeDirection,
   isTrain = false,
+  header,
 }: TimelineRouteDetailProps) {
   const [open, setOpen] = useState(false);
   // Once a start or an end is picked, the rows outside the ride fold apart,
@@ -223,6 +230,7 @@ export function TimelineRouteDetail({
         aria-hidden
         className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
       />
+      {header}
       {/* The fold row keeps its place among the children whether open or not,
           so a keyboard's focus stays on it while the hintuans come and go. */}
       <ol className="flex w-full flex-col">
