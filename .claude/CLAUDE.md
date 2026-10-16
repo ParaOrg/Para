@@ -30,13 +30,13 @@ Much of the codebase predates this file.
 | TypeScript 7 (strict), native | All source code: `.ts` for logic, `.tsx` for anything that renders JSX. `tsc` comes from the `@typescript/native` alias; the `typescript` package is the 6.0 API (`@typescript/typescript6`), kept only for typescript-eslint until it supports TypeScript 7.1, then dropped |
 | Vite | Dev server and build |
 | Tailwind CSS v4 | Styling via utility classes and `@theme` tokens |
-| Supabase | Backend and database, accessed only through feature `api/` folders |
+| Supabase | Backend and database, read and written only by `features/studio/data/` (see Data fetching) |
 | TanStack Query | All server state: fetching, caching, mutations |
 | Zod | Runtime validation at every boundary; types inferred from schemas |
 | MapLibre GL | Map rendering, wrapped in one owning component |
 | Storybook | Component development and documentation |
 | vite-plugin-pwa | Installable, offline-capable mobile app |
-| ESLint 10 + Prettier | Automatic enforcement of these standards. Every rule warns until the tree is clean of it, then errors. jsx-a11y's ESLint peer range is overridden in package.json until it declares 10 |
+| ESLint 10 + Prettier | Automatic enforcement of these standards. Every rule is an error (since 2026-10-14): a new rule warns only until the tree is clean of it. jsx-a11y's ESLint peer range is overridden in package.json until it declares 10 |
 
 Don't add a dependency without asking first. Say what it replaces and why the current stack can't cover it.
 
@@ -49,7 +49,7 @@ src/
 ├── app/                        # App shells. Wiring only, no business logic.
 │   ├── public-map/             # The public map at /: main.tsx, public-map-app.tsx, status-bar.ts
 │   └── studio/                 # The studio at /studio/: main.tsx, studio-app.tsx
-├── pages/                      # Appears when an app gets a second screen. Thin screens that compose features.
+├── pages/                      # Not yet: appears when an app gets a second screen. Thin screens that compose features.
 ├── features/
 │   ├── routes/                 # The core both apps draw: routes, the places they pass, the map that shows them.
 │   │   ├── model/              # Domain types and rules. No React, no MapLibre.
@@ -58,14 +58,15 @@ src/
 │   │   └── cards/              # The cards and timelines.
 │   ├── locator/                # "Where am I". index.ts is its public API.
 │   ├── published-map/          # Reads the index and line files, tracks freshness, runs the installed app's updates. index.ts.
+│   │   └── api/ schemas/
 │   ├── studio/                 # The editor. The only feature the public page never loads. index.ts.
 │   │   └── auth/ data/ drawing/ panels/
 │   └── <small-feature>/        # components/ hooks/ api/ schemas/ types/ utils/ constants.ts index.ts
 ├── shared/                     # Used by 2+ features. Knows nothing about any feature.
-│   └── ui/ hooks/ lib/ config/ utils/ types/ constants/
+│   └── ui/ hooks/ utils/       # lib/ config/ types/ constants/ when first needed
 ├── styles/global.css           # Tailwind entry. Imports the design system's tokens and fonts.
-├── design-system/              # Domain-free: foundation/ ← primitives/ ← patterns/. Imports nothing else. Tokens live here.
-└── assets/                     # Static images, icons
+├── design-system/              # Domain-free: foundation/ ← primitives/ ← patterns/ (not yet). Imports nothing else. Tokens live here.
+└── assets/                     # Not yet: static images, icons. Today a feature keeps its own beside its code.
 ```
 
 Create only the folders a feature actually needs. Don't scaffold empty ones.
@@ -193,7 +194,7 @@ Choose the right home for each piece of state:
 
 ## Data fetching: Supabase, TanStack Query and Zod
 
-Components never call Supabase directly. Every request goes through a feature's `api/` folder:
+Components never call Supabase directly. In a small feature every request goes through its `api/` folder, as below; the studio's go through `features/studio/data/`, the one place Supabase is called (see the list after the example):
 
 ```ts
 // features/routes/api/route-keys.ts
@@ -328,7 +329,7 @@ import './route-map.css';                                // 4. side-effect / sty
 
 ## Formatting and linting
 
-These configs are the target. Once they're installed, they enforce everything above.
+These configs are installed and enforce everything above. Every ESLint rule is an error.
 
 - **Prettier:** 2-space indent, semicolons, single quotes, trailing commas everywhere, print width 100, with `prettier-plugin-tailwindcss` to sort classes.
 - **ESLint** (flat config, `eslint.config.js`):
@@ -338,7 +339,7 @@ These configs are the target. Once they're installed, they enforce everything ab
   - Import ordering (groups as above) and a no-default-export rule
   - `eslint-plugin-check-file` to enforce kebab-case file and folder names
   - `no-restricted-imports` to enforce the import direction and ban deep feature imports
-- **Scripts:** `npm run typecheck`, `npm run lint` and `npm run format`.
+- **Scripts:** `npm run typecheck`, `npm run lint` and `npm run format`. `npm run check` runs them all as CI does: `format:check`, `lint`, `build` (typecheck, Vite and the build guards) and the unit checks.
 
 Never disable a lint rule for a whole file. A single-line disable needs a comment explaining why.
 
@@ -353,8 +354,8 @@ Never disable a lint rule for a whole file. A single-line disable needs a commen
 
 Before calling a change finished, confirm all of these:
 
-- [ ] `npm run typecheck` passes, with no new `any`, `!` or `as`.
-- [ ] `npm run lint` is clean, once ESLint is set up.
+- [ ] `npm run check` passes: formatting, lint, the build with its guards and the unit checks.
+- [ ] No new `any`, `!` or `as`.
 - [ ] New and changed files follow the naming and folder rules above.
 - [ ] Imports flow `app → pages → features → shared → design-system`, through a leaf feature's `index.ts` and routes' concern folders; `npm run build` proves it.
 - [ ] Loading, error and empty states are handled for any data-driven UI.

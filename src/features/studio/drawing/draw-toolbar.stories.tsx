@@ -25,7 +25,6 @@ const straight = (from: LngLat, to: LngLat): Segment => ({
 
 const talaFairview: RouteRow & { name: string } = {
   id: 'sample-route',
-  ownerId: 'sample-owner',
   signboard: null,
   routeCode: null,
   shortName: null,
@@ -43,7 +42,6 @@ const talaFairview: RouteRow & { name: string } = {
 const parent: DirectionDrawing = {
   id: 'sample-out',
   routeId: 'sample-route',
-  ownerId: 'sample-owner',
   name: 'Tala → SM Fairview',
   originTerminal: null,
   destinationTerminal: null,

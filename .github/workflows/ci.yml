@@ -16,7 +16,7 @@
 #      long as the slowest suite, not the sum of them all. visitor-test, the
 #      slowest by far, runs as three parts (VISITOR_PART, see its top).
 #   3. The drawing suites off the pull request's path. group, regression-
-#      gestures, hotspot, snap and extend draw through the public OSRM demo
+#      gestures, hotspot, snap, extend and studio-phone draw through the public OSRM demo
 #      router (about one request a second, shared with the world) and read
 #      the live tables: slow, and at the router's mercy. They run on every
 #      push to main or staging (so a merge that breaks them is red on the

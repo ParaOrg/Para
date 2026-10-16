@@ -302,7 +302,7 @@ a redirect.
 
 **"Where am I", 2026-09-26.** The visitor's own position on the public
 map, shown as a small walking figure the owner drew with an image
-generator (`docs/figure/`, with the prompts) instead of a dot. Off until
+generator (its masters and prompts were in `docs/figure/` until 2026-10-16; commit 99fccaa holds them) instead of a dot. Off until
 asked: a button under the map-design button, the browser's own prompt, and
 the position never leaves the phone (`src/commuter/whereAmI.ts`; nothing
 talks to a server). The pose is read off the speed, so it is honest rather
@@ -410,7 +410,7 @@ the spellings on the owner's list, side of road, the field method behind
 | Snapping | FOSSGIS public OSRM — no API key |
 | Backend | Supabase — Postgres + PostGIS |
 | Auth | Email + password, single user (was magic link until 2026-09-12; owner did not want sign-in routed through Gmail). Forgot-password is the one flow that still sends mail. Change-password lives in the account pill. Visitors have no accounts (decided 2026-09-14); from step 2 only the owner signs in, at `/studio/`, with no sign-up. |
-| Write access | Public read. Writes only by accounts on the editor list, and only to rows they own (migration 0005, build-order step 1, applied 2026-09-15). The list has one member: the owner. Until then any signed-in account could write rows it owned (found 2026-09-14) |
+| Write access | Public read. Writes only by accounts on the editor list (migration 0005, build-order step 1, applied 2026-09-15). Since 0015 (2026-10-14) every editor edits every route and hotspot; until then only rows they owned. The owner added two editors on 2026-10-14 (0015's header). Before 0005 any signed-in account could write rows it owned (found 2026-09-14) |
 | Repo | github.com/Roviicc/ParaPo |
 | Live | https://parapo.villaralvorovic2.workers.dev |
 | Verified | 2026-09-07: local and live both render Metro Manila (real-clock headless screenshot, 718 KB, no error box) |
@@ -3154,6 +3154,19 @@ tracking table. Do not re-apply.
       empty; all 10 rows empty after), the public `signboards` bucket (SVG
       only, 100 kB) and its four editor-only policies on `storage.objects`,
       read back after apply; the security advisor showed nothing new
+- [x] 0011_rail — written 2026-10-02: the 'lrt' and 'mrt' modes and a
+      station's `line`; applied (the train lines are in the published map)
+- [x] 0012_ferry — written 2026-10-03: the 'ferry' mode and PRFS as a
+      station's line; applied (the ferry is in the published map)
+- [ ] 0013_hotspot_points — written 2026-10-03: every hotspot's point
+      recomputed from its box; for the owner to apply, then publish. Not
+      recorded here as applied
+- [ ] 0014_terminal_place_unique — written 2026-10-03: one terminal a place,
+      read by the informal name or else the name; for the owner to apply. Not
+      recorded here as applied
+- [ ] 0015_shared_editing — written 2026-10-14: every editor edits every
+      route and hotspot; inserts still record their maker. Not recorded here
+      as applied
 
 0004 and 0005 went through the Supabase MCP, which records them in
 `supabase_migrations.schema_migrations` (`stop_hotspot`, `editor_role`);
@@ -3163,8 +3176,10 @@ tracking table. Do not re-apply.
 enums match 0004, and TRUNCATE, TRIGGER and REFERENCES are off `anon` and
 `authenticated`. 0006 and 0007 followed later the same day (their sections
 above); the live `route_variant` columns and indexes were read back on
-2026-09-22 and match 0006 exactly. 0008 followed on 2026-09-25. Nothing in
-`supabase/migrations/` is left to apply; the next number is 0011.
+2026-09-22 and match 0006 exactly. 0008 followed on 2026-09-25. As of
+2026-10-16 the last file is 0015, so the next number is 0016; 0013, 0014 and
+0015 are not recorded here as applied (a check of `supabase_migrations.schema_migrations`
+would settle it).
 
 ## Open items
 
@@ -3191,8 +3206,8 @@ Worth doing before M2:
 
 ## The clean-up — 2026-09-29
 
-The review of 2026-09-29 (`docs/review-2026-09-29.md`, findings numbered
-there) and the plan that stages its fixes (`docs/plan-cleanup-2026-09-29.md`).
+The review of 2026-09-29 (`docs/archive/review-2026-09-29.md`, findings numbered
+there) and the plan that stages its fixes (`docs/archive/plan-cleanup-2026-09-29.md`).
 One branch `cleanup/NN-<name>` and one pull request into `staging` per stage,
 merged when both CI jobs are green; `main` is the owner's. A session picking
 this up reads both documents, then this section, then `git log` for PRs
@@ -3637,7 +3652,7 @@ down to Low and staying at Middle's place above that (BottomSheet says where
 its top is, `--dock-y`, on the page's `data-dock-host`); with no card, at
 the map's foot; where the card floats in the corner, bottom right, clear of
 the credit line. The walker, its sheets in `public/figure/` and its CSS are
-gone (the masters stay in `docs/figure/`). `where-test` is rewritten for it
+gone (the masters stayed in `docs/figure/` until the owner had them deleted on 2026-10-16; commit 99fccaa holds them). `where-test` is rewritten for it
 (27 → 35), `locator-test` replaces `where-am-i-test`.
 The button is 48 across (the owner's change the same afternoon; 40 at first):
 4 more padding round each look's icon, the icons as they were.

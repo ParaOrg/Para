@@ -129,7 +129,7 @@ export function openedOn(map: Watched, on: Bounds | null): void {
  * Whether useSavedRoutes frames the routes on `map` now, their lines in at
  * last (`bounds`, routesBounds). The studio's map, as always. The public
  * map's (openedOn) opened framed already, so only if what came frames
- * otherwise — the copy kept from an earlier visit (mapFile.ts,
+ * otherwise — the copy kept from an earlier visit (map-file.ts,
  * openingDirections) differing from the one the network brought, or none to
  * open on — and never once the visitor has moved it: the camera ends where
  * the framing of what came puts it, or where the visitor took it.
@@ -197,7 +197,7 @@ interface Rendered {
  *
  * The studio's map (no `drawn`): at its 'load', as always.
  *
- * The public map's (`drawn`, savedRoutesLayers.ts's routesDrawn; the
+ * The public map's (`drawn`, saved-routes-layers.ts's routesDrawn; the
  * owner's answer to question A of the cheap-phone report, 2026-10-06): at
  * the first frame it renders with the routes drawn, or at its 'load' if
  * that comes first, never later. Since Q1 its routes go on as its style
@@ -208,7 +208,7 @@ interface Rendered {
  * still on its way draws no route, and the text goes at 'load' as before.
  * Only the text: the clock (loadClock), the failure banner (shown for an
  * 'error' before 'load', cleared at it) and the design button still go by
- * 'load' (MapView.tsx). Once gone it never comes back: a style made afresh
+ * 'load' (map-view.tsx). Once gone it never comes back: a style made afresh
  * later (a basemap switch, a lost GL context given back) is not the map's
  * opening. `drawn` is asked inside MapLibre's frame, before it fires
  * 'load' and asks for the next: should it throw, the frame counts as one
