@@ -1,49 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
-import type { DirectionRow } from '@/features/routes/model/routes';
-
-import { groupBySignboard } from './hotspot-checks';
+import { groupBySignboard, type ListedDirection } from './hotspot-checks';
 import { PassesThrough } from './passes-through';
 import { PANEL } from './sheet';
 
-/** Sample data only, shaped like saved rows. Not read from Supabase. */
-const base: DirectionRow = {
-  id: 'sample-out',
-  routeId: 'sample-route',
-  name: 'Tala → SM Fairview',
-  originTerminal: null,
-  destinationTerminal: null,
-  shape: null,
-  reversed: false,
-  confidence: 'drawn',
-  ownerId: 'sample-owner',
-  updatedAt: '2026-09-21T00:00:00Z',
-  route: {
-    id: 'sample-route',
-    ownerId: 'sample-owner',
-    signboard: null,
-    routeCode: null,
-    shortName: null,
-    longName: null,
-    mode: 'jeepney',
-    fareNote: null,
-    fareAsOf: null,
-    headHotspotId: 'sample-tala',
-    tailHotspotId: 'sample-fairview',
-    via: null,
-    name: 'Tala – SM Fairview',
-  },
-};
-
+/** Sample directions only, as the lists read them. Not read from Supabase. */
 /** One route's two ways, under its generated name. */
-const route = (routeId: string, routeName: string, from: string, to: string): DirectionRow[] =>
+const route = (routeId: string, routeName: string, from: string, to: string): ListedDirection[] =>
   [`${from} → ${to}`, `${to} → ${from}`].map((name, i) => ({
-    ...base,
     id: `${routeId}-${i}`,
     routeId,
     name,
-    route: { ...base.route, id: routeId, name: routeName },
+    route: { name: routeName },
   }));
 
 /**

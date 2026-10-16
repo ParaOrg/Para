@@ -1,6 +1,5 @@
 import { ringCrossesItself } from '@/features/routes/geo/ring';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import type { DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { terminalAlreadyAt } from './places';
@@ -12,15 +11,25 @@ import type { HotspotKind } from '../drawing/drawing-types';
  * hotspot-panel.tsx, 2026-10-16, as save-checks.ts was from the save panel).
  */
 
+/** What the panel's two lists read of a direction: its ids, its name and its route's. */
+export interface ListedDirection {
+  id: string;
+  routeId: string;
+  name: string | null;
+  route?: { name: string } | null;
+}
+
 /** Directions under their route's generated name, the routes in name order. */
-export interface SignboardGroup {
+export interface SignboardGroup<TDirection extends ListedDirection = ListedDirection> {
   signboard: string;
-  directions: DirectionRow[];
+  directions: TDirection[];
 }
 
 /** Directions grouped under their route's generated name, for both lists. */
-export function groupBySignboard(directions: readonly DirectionRow[]): SignboardGroup[] {
-  const groups = new Map<string, SignboardGroup>();
+export function groupBySignboard<TDirection extends ListedDirection>(
+  directions: readonly TDirection[],
+): SignboardGroup<TDirection>[] {
+  const groups = new Map<string, SignboardGroup<TDirection>>();
   for (const v of directions) {
     const key = v.routeId;
     const g = groups.get(key) ?? { signboard: v.route?.name ?? '(unnamed)', directions: [] };

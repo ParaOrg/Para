@@ -3,7 +3,10 @@ import { useState, type FormEvent } from 'react';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 
 import { hotspotRefusal, type HotspotCheck } from './hotspot-checks';
-import { saveHotspot, type SaveHotspotInput } from '../data/hotspots-write';
+import { saveHotspot } from '../data/hotspots-write';
+
+/** What a save writes: saveHotspot's input. */
+type SaveHotspotInput = Parameters<typeof saveHotspot>[0];
 
 interface UseHotspotSaveOptions {
   onSaved: (s: HotspotRow) => void;
