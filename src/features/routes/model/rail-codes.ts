@@ -3,13 +3,13 @@ import { stationIndex } from './rail-fares';
 import { directionEnds, railLineOf, type RailLine } from './routes';
 
 /**
- * The station codes the signs carry, "Quezon Avenue YL02": a two-letter
- * line prefix and two digits, in a pill of the line's colour beside the
- * station's name. The owner's research of 2026-10-08 (Figma, the Research
- * page's "Research: train and ferry lines", 4029:4059) and Wikipedia's
- * Template:Manila MRT station code. GL is the Green Line, LRT-1; PL the
- * Purple Line, LRT-2; YL the Yellow Line, MRT-3. The ferry has no codes,
- * and PRFS is no RailLine, so it never asks here.
+ * The station codes the signs carry, "Quezon Avenue YL02": a two-letter line
+ * prefix and two digits, in a pill of the line's colour beside the station's
+ * name. From the owner's research (Figma, the Research page's "Research:
+ * train and ferry lines", 4029:4059) and Wikipedia's Template:Manila MRT
+ * station code. GL is the Green Line, LRT-1; PL the Purple Line, LRT-2; YL
+ * the Yellow Line, MRT-3. The ferry has no codes, and PRFS is no RailLine, so
+ * it never asks here.
  *
  * The digits are the station's place in its line, counted from the north
  * or west end, and the tables in rail-fares know every station by its map
@@ -47,8 +47,7 @@ export type Bound = 'Northbound' | 'Southbound' | 'Eastbound' | 'Westbound';
 /**
  * A line's two bounds: toward its lower numbers (the north or west end) and
  * toward its higher ones. LRT-1 and MRT-3 run north–south; LRT-2 runs
- * east–west, as LRTA calls its trains (the owner's ask of 2026-10-15, LRT-2's
- * words confirmed the same day).
+ * east–west, as LRTA calls its trains (the owner confirmed LRT-2's words).
  */
 const BOUNDS: Record<RailLine, { towardLower: Bound; towardHigher: Bound }> = {
   'LRT-1': { towardLower: 'Northbound', towardHigher: 'Southbound' },

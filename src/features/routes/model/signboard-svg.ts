@@ -1,6 +1,5 @@
 /**
- * A signboard as an SVG file (the owner's ask, 2026-10-01: "upload signboard
- * in svg format", per direction), made safe to keep and to serve.
+ * A direction's signboard as an SVG file, made safe to keep and to serve.
  *
  * An SVG is a document, not only a picture: it can carry scripts, handlers
  * and links out. Shown as an <img> none of that runs, but a board is also a
@@ -72,11 +71,10 @@ const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', a
  * A value or a text as an XML reader sees it: its character references
  * (`&#117;`, `&#x75;`) and the five named ones read as the characters they
  * stand for. The checks below test this, not the raw file: tested raw,
- * `fill="&#117;rl(https://…)"` passed as no url() at all, kept its
- * reference, and read as url(https://…) in the browser (review of
- * 2026-10-03, finding 5). Any other `&name;` is not XML without a DOCTYPE,
- * which is refused, so it stays as written and is escaped as text. A
- * reference to a character XML forbids becomes U+FFFD.
+ * `fill="&#117;rl(https://…)"` would pass as no url() at all, keep its
+ * reference, and read as url(https://…) in the browser. Any other `&name;` is
+ * not XML without a DOCTYPE, which is refused, so it stays as written and is
+ * escaped as text. A reference to a character XML forbids becomes U+FFFD.
  */
 function decodeReferences(s: string): string {
   return s.replace(
@@ -118,8 +116,7 @@ export function keepsAttribute(element: string, name: string, raw: string): bool
     if (!m[1].replace(/["']/g, '').startsWith('#')) return false;
   if (/@import|expression\(/.test(v)) return false;
   // CSS reads its own escapes, so `\75 rl(` is url( to a browser, and
-  // image-set() fetches without url() at all (review of 2026-10-03). A
-  // drawing's looks need neither.
+  // image-set() fetches without url() at all. A drawing's looks need neither.
   if (v.includes('\\') || /image-set\(/.test(v)) return false;
   return true;
 }
@@ -129,7 +126,7 @@ const isHref = (n: string) => n === 'href' || n.endsWith(':href');
 /**
  * Written back from what was read (decodeReferences), every `&` escaped: what
  * the browser reads is what was tested, and a bare `&` — "TALA & FAIRVIEW"
- * typed in a text — no longer leaves a file no XML reader opens.
+ * typed in a text — never leaves a file no XML reader opens.
  */
 const escapeValue = (v: string) =>
   v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');

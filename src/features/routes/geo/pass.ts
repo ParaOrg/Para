@@ -14,18 +14,17 @@ import { distanceToRingM, firstTouchIndex, type Ring } from './ring';
 
 /*
  * The one rule for "this direction passes this hotspot", and its geometry, in
- * one place (split from geo.ts and hotspots.ts, 2026-09-29): the save (both
- * sides: route and hotspot), the save panel, the hotspot panel, the timeline,
- * the orange stretches and the published map's check all ask it.
+ * one place: the save (both sides: route and hotspot), the save panel, the
+ * hotspot panel, the timeline, the orange stretches and the published map's
+ * check all ask it.
  */
 
 /**
  * How near a line must come to a box to pass it, in metres. A hintuan is
- * drawn where people stand — the roadside — and the line follows the road,
- * so the two touch without crossing by a metre or less. Five is enough for
- * that and short of the other carriageway, which on Quirino Highway sits
- * seven metres and more from a box on this side. Set 2026-09-22 from the
- * live boxes, replacing "the line enters the box" alone.
+ * drawn where people stand — the roadside — and the line follows the road, so
+ * the two touch without crossing by a metre or less. Five is enough for that
+ * and short of the other carriageway, which on Quirino Highway sits seven
+ * metres and more from a box on this side. Set from the live boxes.
  */
 export const PASS_WITHIN_M = 5;
 
@@ -103,11 +102,11 @@ export function passStretches(
   stepM = 1,
 ): LngLat[][] {
   if (ring.length < 3 || line.length < 2) return [];
-  // Only segments near the box's bounds are worth sampling, and only a
-  // vertex inside them is worth measuring: the ring distance is the cost
-  // here, and on a big map almost every vertex of almost every line is
-  // nowhere near this box (1,000 directions and 500 hotspots took 142 s to
-  // open before this check, 2026-09-25).
+  // Only segments near the box's bounds are worth sampling, and only a vertex
+  // inside them is worth measuring: the ring distance is the cost here, and
+  // on a big map almost every vertex of almost every line is nowhere near
+  // this box (measured with no bounds check here or in the callers'
+  // boxesReached: 1,000 directions and 500 hotspots took 142 s to open).
   const bounds = passBounds(ring, withinM, stepM);
   const [w, s, e, n] = bounds;
   const nearBox = (a: LngLat, b: LngLat) =>
@@ -118,13 +117,13 @@ export function passStretches(
   const near = (p: LngLat) => bboxContains(bounds, p) && distanceToRingM(p, ring) <= withinM;
 
   const out: LngLat[][] = [];
-  // The stretch being walked, and the last near sample between vertices,
-  // kept so the stretch ends where the box does and not at the vertex before.
+  // The stretch being walked, and the last near sample between vertices, kept
+  // so the stretch ends where the box does and not at the vertex before.
   // `last` is the sample before this one: a stretch that is one point — a
-  // line that only comes near at a vertex, its end most often — is drawn
-  // from the sample before it, or to the one after, a metre's stub. Dropped,
-  // passIndex listed the hintuan and the map painted nothing, and rideCut
-  // found no stretch to end the ride at (review of 2026-10-03, finding 14).
+  // line that only comes near at a vertex, its end most often — is drawn from
+  // the sample before it, or to the one after, a metre's stub. Were it
+  // dropped, passIndex would list the hintuan, the map would paint nothing,
+  // and rideCut would find no stretch to end the ride at.
   const st: {
     cur: LngLat[] | null;
     pending: LngLat | null;
