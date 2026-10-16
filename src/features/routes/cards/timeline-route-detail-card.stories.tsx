@@ -123,7 +123,7 @@ const wornBy = (className: string) => {
   return colour;
 };
 
-/** The picked row, its pill and the pesos in it, and the fare and Kilometer tiles following the pick. */
+/** The picked row, its pill and the pesos in it, and the fare and Distance tiles following the pick. */
 const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await openFold(ctx);
   const { canvasElement, args } = ctx;
@@ -138,7 +138,7 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await expect(code).toBe(args.pickedCode ?? null);
   await expect(pill?.textContent).toBe(code ? `${code} · ${pesos}` : pesos);
   await expect(within(canvasElement).getByTestId('trip-fare').textContent).toBe(pesos);
-  // The Kilometer tile follows the pick too.
+  // The Distance tile follows the pick too.
   await expect(within(canvasElement).getByTestId('trip-km').textContent).toBe(
     kmLabel(args.pickedMetres ?? args.metres),
   );
@@ -177,7 +177,7 @@ const pickedOnATrain: Story['play'] = async (ctx) => {
   }
 };
 
-/** On a phone, the owner's frame (3778:3183, Variant2): Tala → Novaliches, its Kilometer and Expected fare, its ten hintuans folded. */
+/** On a phone, the owner's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected fare, its ten hintuans folded. */
 export const Folded: Story = {};
 
 /**
@@ -278,7 +278,7 @@ export const NothingToGoBackTo: Story = {
 /** The route's other way is not drawn yet: SWITCH rests disabled. */
 export const NothingTheOtherWay: Story = { args: { switchable: false } };
 
-/** A mode with no fare rule: no Expected fare tile, and Kilometer takes the row (nothing drawn for it; the owner kept this, 2026-09-29). */
+/** A mode with no fare rule: no Expected fare tile, and Distance takes the row (nothing drawn for it; the owner kept this, 2026-09-29). */
 export const Unpriced: Story = { args: { fare: undefined } };
 
 /**
