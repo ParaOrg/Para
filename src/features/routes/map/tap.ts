@@ -106,7 +106,7 @@ function idsInOrder(features: IdFeature[], key: 'id' | 'routeId' = 'id'): string
 }
 
 /** What one tap landed on: every direction, every route those belong to, and every hotspot in its box. */
-export interface TapTargets {
+interface TapTargets {
   routeIds: string[];
   routeKeys: string[];
   hotspotIds: string[];
@@ -180,7 +180,7 @@ function queryTargets(
  * several of one kind — routes sharing a road, or hotspots side by side —
  * which light up and go to the sheet.
  */
-export type TapOutcome =
+type TapOutcome =
   | { kind: 'none' }
   | { kind: 'route'; routeIds: string[] }
   | { kind: 'hotspot'; hotspotId: string }

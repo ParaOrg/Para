@@ -50,7 +50,7 @@ export function useMapAge(loaded: unknown): MapAge {
 }
 
 /** When the map on screen was published, and whether it is a stored copy. */
-export interface MapAge {
+interface MapAge {
   publishedAt: string | null;
   stale: boolean;
 }

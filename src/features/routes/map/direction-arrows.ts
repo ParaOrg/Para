@@ -78,8 +78,10 @@ const SAME_END_M = 150;
  * ends (the owner, 2026-10-16: "the arrow in route line change the flow …
  * in accordance with start and endpoint selected"). `isUnmarked`: a start
  * picked on its trip with no ride drawn, alone or with an end the line can't
- * take it to: both its ends lose their S and E, lit, the start's pin
- * carrying the S (the owner, 2026-10-16: "Nothing yet, just the S").
+ * take it to: both its ends lose their S and E, the start's pin carrying the
+ * S (the owner, 2026-10-16: "Nothing yet, just the S"); its `pale` is then
+ * the whole line, the ends on it (useLitRides; his ask the same night, "the
+ * rouline would be in pale").
  */
 export interface Ride {
   id?: string;
@@ -108,7 +110,7 @@ export interface Ride {
  * E, turned round on a ride picked backwards, whose E an origin picked from
  * its row is (the owner, 2026-10-16: "keep the start").
  */
-export interface RideEnd {
+interface RideEnd {
   end: 'from' | 'to';
   name: string;
   named: boolean;

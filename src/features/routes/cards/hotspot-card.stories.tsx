@@ -41,7 +41,6 @@ const inbound: Direction = {
 
 const terminal: HotspotRow = {
   id: 'sample-hotspot',
-  ownerId: 'sample-owner',
   name: 'Tala Jeepney Terminal',
   informal: 'Tala',
   aliases: ['Tala Terminal', 'Terminal Tala'],

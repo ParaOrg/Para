@@ -42,7 +42,7 @@ import { warmSoon, type Twin } from './warm-programs';
  */
 
 /** As much of a map as a switch uses: a unit check hands it a stand-in. */
-export type SwitchMap = Pick<MapLibreMap, 'getLayer' | 'getPaintProperty' | 'setPaintProperty'>;
+type SwitchMap = Pick<MapLibreMap, 'getLayer' | 'getPaintProperty' | 'setPaintProperty'>;
 
 /** A layer's property that switches it, by its type: `line-layer-opacity` or `fill-layer-opacity`. */
 const switchOf = (type: string) => `${type}-layer-opacity` as 'line-layer-opacity';

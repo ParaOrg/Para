@@ -46,7 +46,10 @@ export function useLitRides(
    * The start picked on the trip (useRideTo's `startId`). With no ride drawn
    * — a start alone, or an end the line can't take it to — the trip's ends
    * lose their S and E, its pin the one S (the owner, 2026-10-16: "Nothing
-   * yet, just the S").
+   * yet, just the S"), and the whole line is on the pale, its ends and names
+   * with it (his ask the same night: "When start is only selected can you
+   * unselected all the unselected hintuan/station or labels?, and the
+   * rouline would be in pale"; it stayed lit until then).
    */
   startId: string | null = null,
 ): Ride[] {
@@ -67,25 +70,31 @@ export function useLitRides(
   const unmarkedId = startId !== null && ridden === null ? (saved.selected?.id ?? null) : null;
   const rides = useMemo(
     () =>
-      saved.litDirections.map((v) => ({
-        id: v.id,
-        line: travelLine(v, hotspots),
-        ...(ridden?.directionId === v.id
-          ? { pale: ridden.pale, isBackwards: ridden.isBackwards }
-          : {}),
-        ...(v.id === unmarkedId ? { isUnmarked: true } : {}),
-        ...directionEnds(v),
-        ...directionEndHotspots(v),
-        routeCode: v.route?.routeCode ?? null,
-      })),
+      saved.litDirections.map((v): Ride => {
+        const line = travelLine(v, hotspots);
+        return {
+          id: v.id,
+          line,
+          ...(ridden?.directionId === v.id
+            ? { pale: ridden.pale, isBackwards: ridden.isBackwards }
+            : {}),
+          // A start with no ride: the whole trip on the pale, its ends with it.
+          ...(v.id === unmarkedId ? { isUnmarked: true, pale: [line] } : {}),
+          ...directionEnds(v),
+          ...directionEndHotspots(v),
+          routeCode: v.route?.routeCode ?? null,
+        };
+      }),
     [saved.litDirections, hotspots, ridden, unmarkedId],
   );
   useDirectionArrows(map, rides);
   // Outside the ride, the trip's line in its card's pale (the owner's asks,
   // 2026-10-12: "the remaining line should be surface-pale of the selected
   // colour", and 2026-10-15, before a picked start too), over the lit line
-  // and under the chevrons; nothing while nothing is picked.
-  useRideRest(map, ridden?.pale ?? NOTHING_PALE);
+  // and under the chevrons; with a start and no ride, the whole of it;
+  // nothing while nothing is picked.
+  const pale = ridden?.pale ?? rides.find((r) => r.id === unmarkedId)?.pale ?? NOTHING_PALE;
+  useRideRest(map, pale);
   // The chosen direction's side of each hintuan it cuts across: its right.
   useBabaanSides(map, saved.selected, hotspots);
   return rides;
