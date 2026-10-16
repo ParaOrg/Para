@@ -79,6 +79,16 @@ import { gzipSync } from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mapFileConstants } from '../node/map-file-constants.ts';
+import {
+  FONTS_MAX_KB,
+  GROUPS,
+  MAPLIBRE_FILE,
+  SHARED_MAX_GZ_KB,
+  WORKER_MAX_GZ_KB,
+  chunksNamed as chunksIn,
+  fontBytes,
+  gzipBytes,
+} from './build-weight.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const dist = join(root, 'dist');
@@ -442,76 +452,15 @@ if (existsSync(swPath)) {
   );
 }
 
-// 5. Weight.
-const FONTS_MAX_KB = 135;
-const assetFiles = readdirSync(join(dist, 'assets'));
-const fontBytes = assetFiles
-  .filter((f) => f.endsWith('.woff2'))
-  .reduce((n, f) => n + statSync(join(dist, 'assets', f)).size, 0);
+// 5. Weight. The budgets and how they are measured are in build-weight.mjs.
+const fontsBytes = fontBytes(dist);
 check(
   `the fonts weigh under ${FONTS_MAX_KB} kB together`,
-  fontBytes > 0 && fontBytes < FONTS_MAX_KB * 1024,
-  `${(fontBytes / 1024).toFixed(1)} kB`,
+  fontsBytes > 0 && fontsBytes < FONTS_MAX_KB * 1024,
+  `${(fontsBytes / 1024).toFixed(1)} kB`,
 );
 
-// What both pages share, gzipped, in kB on 2026-10-05: MapLibre's page
-// file 137.4 and the code it shares with its worker 134.8 (step 14; one
-// chunk of 249.7 at step 12, the worker's share being in the worker then),
-// React 57.6 and our shared code 41.0, 370.8 together (the one chunk it was
-// weighed 348.4). Each ceiling leaves some headroom and none for another
-// group's package: React in `shared` is +58, a half of MapLibre +135.
-// `packages` is what the chunk may hold from node_modules, `only` the files
-// it may hold; `vendor` chunks may import no chunk of ours.
-const SHARED_MAX_GZ_KB = 400;
-const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
-const GROUPS = [
-  {
-    name: 'maplibre',
-    maxGzKb: 160,
-    vendor: true,
-    packages: ['maplibre-gl'],
-    only: MAPLIBRE_FILE('maplibre-gl'),
-    holds: 'maplibre-gl.mjs alone, and imports none of our code',
-  },
-  {
-    name: 'maplibre-gl-shared',
-    maxGzKb: 160,
-    vendor: true,
-    packages: ['maplibre-gl'],
-    only: MAPLIBRE_FILE('maplibre-gl-shared'),
-    holds: 'maplibre-gl-shared.mjs alone, and imports none of our code',
-  },
-  {
-    name: 'react',
-    maxGzKb: 70,
-    vendor: true,
-    packages: ['react', 'react-dom', 'scheduler'],
-    holds: 'react, react-dom and scheduler, none of our code, and imports none of it',
-  },
-  // Zod validates the published index as the public map reads it (ticket 08
-  // of the restructure follow-ups, 2026-10-07): zod/mini, the tree-shakeable
-  // API, since the classic one weighed 24.3 kB gzipped over these schemas.
-  // Its own chunk, so its weight is read here on every build.
-  {
-    name: 'zod',
-    maxGzKb: 10,
-    vendor: true,
-    packages: ['zod'],
-    holds: 'zod alone, and imports none of our code',
-  },
-  // From maplibre-gl, its stylesheet and the worker's address (map-view.tsx);
-  // its JavaScript here would be over the ceiling.
-  {
-    name: 'shared',
-    maxGzKb: 80,
-    vendor: false,
-    packages: ['maplibre-gl'],
-    holds: 'our shared code and no package but maplibre-gl',
-  },
-];
-// A group's chunk is the one Vite's manifest names after it.
-const chunksNamed = (name) =>
-  Object.values(manifest).filter((c) => c.name === name && c.file.endsWith('.js'));
+const chunksNamed = (name) => chunksIn(manifest, name);
 const vendorFiles = GROUPS.filter((g) => g.vendor).flatMap((g) =>
   chunksNamed(g.name).map((c) => c.file),
 );
@@ -519,7 +468,7 @@ let groupsGz = 0;
 for (const { name, maxGzKb, vendor, packages, only, holds } of GROUPS) {
   const chunks = chunksNamed(name);
   const files = chunks.map((c) => c.file);
-  const gz = files.reduce((n, f) => n + gzipSync(readFileSync(join(dist, f))).length, 0);
+  const gz = gzipBytes(dist, files);
   groupsGz += gz;
   check(
     `the ${name} chunk is named, loaded by the public page, and under ${maxGzKb} kB gzipped`,
@@ -585,7 +534,6 @@ for (const page of ['index.html', 'studio/index.html']) {
 
 // 7. MapLibre's worker: its chunk, and every chunk it imports, all the way
 // down, read from Vite's manifest and from what went into each.
-const WORKER_MAX_GZ_KB = 20;
 const workerChunks = chunksNamed('maplibre-gl-worker');
 const workerFile = workerChunks[0]?.file;
 const workerGz = workerFile ? gzipSync(readFileSync(join(dist, workerFile))).length : 0;
