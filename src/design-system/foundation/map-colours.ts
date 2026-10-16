@@ -87,7 +87,7 @@ export const CARD_PALE_COLOURS = {
  * for every colour the map's painters paint, so
  * tests/unit/map-colours-test.mjs can fail on a colour written in any other
  * of their .ts files (stage 9 of the clean-up, 2026-09-29). The map's
- * stylesheet (hintuanPin.css) is not read by it; its few raw
+ * stylesheet (hintuan-pin.css) is not read by it; its few raw
  * colours wait on the owner's list. Each is the owner's to name
  * in Figma; until then the key says what it paints, and moving one to a
  * Map/… token is changing only this file.

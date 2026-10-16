@@ -39,8 +39,8 @@ interface Hotspots<S extends { id: string }> {
  * hotspot's card, the trip opened from either — as one piece, for both apps:
  * which is up, what stands behind what, the height they share, the colour a
  * trip opens in and what is lit wearing it, and what each card's buttons do
- * to the others. The rules themselves are cardStack.ts's, tested; this keeps
- * their state. Split from CommuterApp and StudioApp, which each held it
+ * to the others. The rules themselves are card-stack.ts's, tested; this keeps
+ * their state. Split from PublicMapApp and StudioApp, which each held it
  * inline (2026-10-01).
  */
 export function useCardStack<V extends Direction, S extends { id: string }>(

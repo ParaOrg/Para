@@ -19,7 +19,7 @@ import { isRailLine, type RailLine } from './routes';
  */
 
 /** One ride's two fares, in centavos. */
-export interface RailFare {
+interface RailFare {
   card: number;
   ticket: number;
 }

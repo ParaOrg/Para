@@ -1,4 +1,4 @@
-// SWITCH and a trip's pick (src/features/routes/map/ride-to.ts, useRideTo's
+// SWITCH and a trip's pick (src/features/routes/map/use-ride-to.ts, useRideTo's
 // carryTo): on a jeep, the picked hintuan goes with the trip to the other
 // way round, landing where HintuanCard's SWITCH would (boxTheOtherWay), and a
 // picked end follows its place; on a train, SWITCH lets the picks go; a new
@@ -59,7 +59,7 @@ const vite = await createServer({
   optimizeDeps: { noDiscovery: true, include: [] },
 });
 after(() => vite.close());
-const { useRideTo } = await vite.ssrLoadModule('/src/features/routes/map/ride-to.ts');
+const { useRideTo } = await vite.ssrLoadModule('/src/features/routes/map/use-ride-to.ts');
 
 let n = 0;
 /** A hintuan box of the place people call `informal`, at [lng, 14.7]. */
