@@ -41,7 +41,7 @@ const AWS_TERRAIN_TILES: Elevation = {
     '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noreferrer">Terrain Tiles</a>',
 };
 
-/** The public map's designs, then Terrain (the muted Colour with the hills) and Satellite. */
+/** The public map's designs, then Terrain (Colour with the hills) and Satellite. */
 export const STUDIO_BASEMAPS: readonly Basemap[] = [
   ...BASEMAPS,
   { ...COLOUR, id: 'terrain', label: 'Terrain', elevation: AWS_TERRAIN_TILES },
