@@ -140,6 +140,21 @@ export const TailRouteMetroRailWayThree: Story = {
   },
 };
 
+/**
+ * Unselected: a trip's end outside the ride, Default at 60%, the pointer
+ * with it (the Label's Unselected, 4200:13645, 2026-10-16).
+ */
+export const Unselected: Story = {
+  args: { variant: 'unselected' },
+  play: async ({ canvasElement }) => {
+    const pill = pillOf(canvasElement);
+    await expectFigmaType(pill);
+    await expect(iconOf(pill)).toBe('none');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(pill).opacity).toBe('0.6');
+  },
+};
+
 /** Default: a ride's own tail past a picked hintuan, the name alone in the line's colour. */
 export const Default: Story = {
   args: { variant: 'default' },
