@@ -302,7 +302,7 @@ a redirect.
 
 **"Where am I", 2026-09-26.** The visitor's own position on the public
 map, shown as a small walking figure the owner drew with an image
-generator (`docs/figure/`, with the prompts) instead of a dot. Off until
+generator (its masters and prompts were in `docs/figure/` until 2026-10-16; commit 99fccaa holds them) instead of a dot. Off until
 asked: a button under the map-design button, the browser's own prompt, and
 the position never leaves the phone (`src/commuter/whereAmI.ts`; nothing
 talks to a server). The pose is read off the speed, so it is honest rather
@@ -3637,7 +3637,7 @@ down to Low and staying at Middle's place above that (BottomSheet says where
 its top is, `--dock-y`, on the page's `data-dock-host`); with no card, at
 the map's foot; where the card floats in the corner, bottom right, clear of
 the credit line. The walker, its sheets in `public/figure/` and its CSS are
-gone (the masters stay in `docs/figure/`). `where-test` is rewritten for it
+gone (the masters stayed in `docs/figure/` until the owner had them deleted on 2026-10-16; commit 99fccaa holds them). `where-test` is rewritten for it
 (27 → 35), `locator-test` replaces `where-am-i-test`.
 The button is 48 across (the owner's change the same afternoon; 40 at first):
 4 more padding round each look's icon, the icons as they were.
