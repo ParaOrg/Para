@@ -56,6 +56,7 @@ export const Hintuan: Story = {
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
     // At rest the ring is thick and the centre white (TimelineDot): the picked one's is filled.
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('6px');
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('1');
   },
 };
 
@@ -101,8 +102,17 @@ export const CodeSignStart: Story = {
   },
 };
 
-/** Along the rest past a picked hintuan: the dot rings in the card's pale, the name keeps the line's colour. */
-export const Paled: Story = { args: { variant: 'hintuan', isPaled: true } };
+/**
+ * Outside the ride: the dot rings in the card's pale, the name the Label's
+ * Unselected, the line's colour at 60% (4200:13645, 2026-10-16).
+ */
+export const Paled: Story = {
+  args: { variant: 'hintuan', isPaled: true },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('0.6');
+  },
+};
 
 /** Further out than the names show: the dot alone. */
 export const DotAlone: Story = {

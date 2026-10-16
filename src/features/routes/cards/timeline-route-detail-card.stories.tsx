@@ -730,8 +730,8 @@ export const SheetMiddleLongName: Story = {
 export const OtherRoutes: Story = {
   args: {
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview' },
-      { id: 'tala-bs', to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },
+      { id: 'tala-sm', to: 'SM Fairview', vehicle: 'Jeepney' },
+      { id: 'tala-bs', to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal', vehicle: 'Jeepney' },
     ],
     onOtherRoute: fn(),
   },
@@ -832,8 +832,8 @@ export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview' },
-      { id: 'tala-nova', to: 'Novaliches' },
+      { id: 'tala-sm', to: 'SM Fairview', vehicle: 'Jeepney' },
+      { id: 'tala-nova', to: 'Novaliches', vehicle: 'Jeepney' },
     ],
     onOtherRoute: fn(),
   },

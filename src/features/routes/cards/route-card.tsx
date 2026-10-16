@@ -8,6 +8,7 @@ import {
 } from './livery-card';
 import { RouteEndPointBar } from './route-end-point-bar';
 import type { Livery } from '../model/liveries';
+import type { Vehicle } from '../model/vehicles';
 
 /**
  * A place and the routes that leave it, in a jeepney's livery — the owner's
@@ -16,8 +17,9 @@ import type { Livery } from '../model/liveries';
  * is `livery` here, the name the tokens give these colours, because a variant
  * in this codebase is a direction. Figma's Pink was the orange tokens (the
  * owner, 2026-09-28) until the set named it Orange and drew a pink of its
- * own, Card/pink (4071:7014, 2026-10-13). How each livery paints the card — surface, words, glow,
- * shadow — is liveryCard.ts, shared with the trip card it opens.
+ * own, Card/pink (4071:7014, 2026-10-13). How each livery paints the card —
+ * surface, words, glow, shadow — is livery-card.ts, shared with the trip card
+ * it opens.
  *
  * Figma's State (2026-09-29): Rest, or Selected — pressed in, under the
  * Selected shadow, while the map lights its routes alone. A row opens its
@@ -38,6 +40,8 @@ export interface EndPoint {
   id: string;
   /** Figma's routeDirection: the place this direction goes to. */
   routeDirection: string;
+  /** What the direction rides, drawn at the row's end (RouteEndPointBar). */
+  vehicle: Vehicle | null;
 }
 
 interface Props {
@@ -110,6 +114,7 @@ export function RouteCard({
             <RouteEndPointBar
               routeDirection={e.routeDirection}
               on={livery}
+              vehicle={e.vehicle}
               data-testid={`${testId}-item`}
               data-direction={e.id}
               onClick={() => onPick(e.id)}
