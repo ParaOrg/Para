@@ -16,8 +16,7 @@ import { labelGroups } from '../model/places';
 
 /*
  * The saved hotspots on the map: their source, the place wash's, their
- * layers, and what a tap marks on them. Split from use-saved-hotspots.ts,
- * 2026-09-29.
+ * layers, and what a tap marks on them.
  */
 
 const SRC = 'saved-stops';
@@ -34,14 +33,11 @@ const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 18
 
 /**
  * Hotspot names, terminals' and hintuans' alike, once the scale bar's width
- * covers 700 m or less: zoom 13.40 (the owner, 2026-10-15: "at 300m show the
- * hintuan label and terminal", then "make it 700m"). The bar steps 1, 2, 3,
- * 5, so it never reads 700 m: it reads 500 m there, the names coming in
- * halfway through its 500 m. Close in only, as before, but nearer the
- * overview: from 2026-09-25 they waited for zoom 16.24, where the bar reads
- * 50 m, so a name would not sit over the line's stretch through its hotspot;
- * now one may, and where names meet, MapLibre keeps one. A bar's reading is
- * the zoom's at a given latitude, so the bar's rule is a zoom for a layer
+ * covers 700 m or less: zoom 13.40. The bar steps 1, 2, 3, 5, so it never
+ * reads 700 m: it reads 500 m there, the names coming in halfway through its
+ * 500 m. Close in only, but near enough to the overview that a name may sit
+ * over the line's stretch through its hotspot; where names meet, MapLibre
+ * keeps one. A bar's reading is the zoom's at a given latitude, so the bar's rule is a zoom for a layer
  * here (station-labels.tsx measures it live, for markers). Two layers, one a
  * kind, so each can be set apart.
  */
@@ -63,14 +59,13 @@ const labelsOf = (kind: HotspotKind, hidden = '') =>
     ...(hidden ? [['!', ['in', hidden, ['get', 'ids']]]] : []),
   ] as never;
 /**
- * A kind's names' paint (the owner's frame, 3837:11308): its content colour,
- * a white halo (Border/plain). One colour a layer, each layer holding one
- * kind's names (labelsOf), where it was the boxes' `match` on the kind:
- * the same pixels, and a colour that does not vary by feature is drawn by
- * the GL program the basemap's own names compile at load. The match was a
- * program of its own, compiled by the first frame that showed a name (from
- * zoom 16.24, a commuter's pinch or a hotspot's glide): 5-50 ms of a cheap
- * phone's main thread then (the cheap-phone plan, step 4, 2026-10-04).
+ * A kind's names' paint (Figma 3837:11308): its content colour, a white halo
+ * (Border/plain). One colour a layer, each layer holding one kind's names
+ * (labelsOf), rather than a `match` on the kind: the same pixels, and a colour
+ * that does not vary by feature is drawn by the GL program the basemap's own
+ * names compile at load. A match would be a program of its own, compiled by the
+ * first frame that showed a name (a commuter's pinch or a hotspot's glide):
+ * 5-50 ms of a cheap phone's main thread then.
  */
 export function namePaint(kind: HotspotKind) {
   return {
@@ -103,8 +98,7 @@ const hatchOf = (kind: HotspotKind) => `hotspot-hatch-${kind}`;
 
 /**
  * The Selected box's stripes (3837:11308): 0.6 px lines of the box's content
- * colour, 16 px apart since the owner's "make the lines much lesser"
- * (2026-09-30; 8 at first), rising to the right — a pattern MapLibre repeats in
+ * colour, 16 px apart, rising to the right — a pattern MapLibre repeats in
  * screen pixels, so they keep their spacing at every zoom. Drawn at twice the
  * size for a sharp screen.
  */
@@ -131,15 +125,14 @@ function hatch(hex: string): { width: number; height: number; data: Uint8Array }
 const HINTUAN_STRONGER =
   1 - (1 - MAP_OPACITY['Map/OverlayCard/Hintuan/surface-selected']) / (1 - HOTSPOT_OPACITY.hintuan);
 
-/** A hotspot's name sits in the middle of its box (the owner's frame, 3837:11308): the middle of its corners. */
+/** A hotspot's name sits in the middle of its box (Figma 3837:11308): the middle of its corners. */
 function boxMiddle(ring: Ring): LngLat {
   const lngs = ring.map((p) => p[0]);
   const lats = ring.map((p) => p[1]);
   return [(Math.min(...lngs) + Math.max(...lngs)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
 }
 /**
- * The place highlight, decided with the owner 2026-09-23: tap one box and
- * its siblings — the boxes sharing its informal name — draw stronger, and a
+ * The place highlight: tap one box and its siblings — the boxes sharing its informal name — draw stronger, and a
  * soft wash over the hull of all of them says "one place". Studio and public
  * map alike. The wash has its own source, rebuilt when the selection changes.
  */
@@ -162,8 +155,8 @@ const DRAW_ABOVE = LAYERS.drawCasing;
  * outline, and sets back once it is closed. The boxes' layers get one filter,
  * SIBLINGS too. MapLibre's worker lays out the layers of a source that share
  * a type, a filter and a layout as one bucket; left on its first filter,
- * SIBLINGS was a fill bucket of its own, every box triangulated and uploaded
- * a second time (the cheap-phone plan, step 5, 2026-10-04). It never drew the
+ * SIBLINGS would be a fill bucket of its own, every box triangulated and
+ * uploaded a second time. It never draws the
  * box being edited: the studio closes the hotspot's card, and its siblings'
  * marks with it, before it opens the outline, and takes no tap on a box
  * while one is open.
@@ -189,7 +182,7 @@ export function hotspotsData(hotspots: readonly Hotspot[]) {
   // one the cards, pickers and route names read: the map draws boxes, and the
   // three boxes of one place would otherwise carry three identical labels.
   // Tapping still opens a card that leads with the informal name and shows
-  // the ground name beneath it, so neither is lost. Decided 2026-09-22.
+  // the ground name beneath it, so neither is lost.
   const byId = new Map(hotspots.map((s) => [s.id, s]));
   const withArea = hotspots.filter(
     (s): s is Hotspot & { area: NonNullable<Hotspot['area']> } =>
@@ -205,7 +198,7 @@ export function hotspotsData(hotspots: readonly Hotspot[]) {
       })),
       // One label per hintuan: a box on each side of the road shares one
       // (labelGroups), halfway between them; a box alone has its name in
-      // its middle (the owner's frame, 3837:11308, 2026-09-30).
+      // its middle (Figma 3837:11308).
       ...labelGroups(
         withArea.map((s) => ({
           ...s,
@@ -285,7 +278,7 @@ export function addSavedHotspots(
     },
     before,
   );
-  // The owner's HotspotOverlayCard (3837:11308, 2026-09-30): the box's
+  // The HotspotOverlayCard (Figma 3837:11308): the box's
   // surface see-through, its edge and name in its content colour.
   const byKind = (terminal: string | number, hintuan: string | number) =>
     ['match', ['get', 'kind'], 'terminal', terminal, hintuan] as never;
@@ -341,9 +334,8 @@ export function addSavedHotspots(
     before,
   );
   // The lit boxes — the one chosen, or everything under a tap while the
-  // sheet asks which (the routes' lit pair's idea, 2026-09-22) — striped,
-  // their fill as it was: the owner's redrawn Selected variants
-  // (2026-09-30) keep the Rest surface under the stripes.
+  // sheet asks which — striped; the Selected variants keep the Rest surface
+  // under the stripes.
   map.addLayer(
     {
       id: HATCH,
@@ -378,7 +370,7 @@ export function addSavedHotspots(
       source: SRC,
       minzoom: NAMES_FROM,
       filter: labelsOf(kind),
-      // The same size at every zoom, as it was; 12, SemiBold as near as
+      // The same size at every zoom; 12, SemiBold as near as
       // the map's fonts come, two lines over some 92 px as drawn, a white
       // halo round it (namePaint).
       layout: {
@@ -407,8 +399,7 @@ export function useSavedHotspotsLayers(
   marks: ReadonlyMap<string, BoxMark>,
   hull: Ring,
 ) {
-  // The hotspots the source was last laid out from (the cheap-phone plan,
-  // step 10 (c), 2026-10-04): added with them when they are already in,
+  // The hotspots the source was last laid out from: added with them when they are already in,
   // laid out in the one worker round trip that adds the source rather
   // than an empty one and then the hotspots; later ones are the next
   // effect's, and the same ones are not laid out twice.
