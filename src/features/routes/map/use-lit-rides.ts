@@ -3,11 +3,11 @@ import { useMemo } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
+import { useBabaanSides } from './babaan-sides';
 import { useDirectionArrows, type Ride } from './direction-arrows';
+import { usePassStretches } from './pass-stretches';
 import { useRideRest } from './ride-rest';
 import type { Ridden } from './use-ride-to';
-import { useBabaanSides } from '../geo/babaan-sides';
-import { usePassStretches } from '../geo/pass-stretches';
 import type { Hotspot } from '../model/hotspots';
 import { travelLine } from '../model/ride';
 import { directionEndHotspots, directionEnds, type Direction } from '../model/routes';

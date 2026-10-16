@@ -5,9 +5,9 @@ import { shownAt, type Snap } from '@/shared/ui/sheet-gesture';
 import { clearOfSheet, roomBeside } from '@/shared/ui/sheet-room';
 import { bboxOf, zoomForScale, type LngLat } from '@/shared/utils/geo';
 
-import type { Framed } from './card-stack';
-import { APP_MOVE } from '../map/map-view';
-import type { Highlight } from '../map/use-saved-routes';
+import { APP_MOVE } from './map-view';
+import type { Highlight } from './use-saved-routes';
+import type { Framed } from '../cards/card-stack';
 import { directionLine, type Direction } from '../model/routes';
 
 /*

@@ -31,10 +31,10 @@ import {
 import { directionLine, isRailLine } from '../../src/features/routes/model/routes.ts';
 import { hotspotRing, nameOnMap } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
-import { addPassStretches } from '../../src/features/routes/geo/pass-stretches.ts';
+import { addPassStretches } from '../../src/features/routes/map/pass-stretches.ts';
 import { addDirectionArrows } from '../../src/features/routes/map/direction-arrows.ts';
 import { addRideRest } from '../../src/features/routes/map/ride-rest.ts';
-import { addBabaanSides } from '../../src/features/routes/geo/babaan-sides.ts';
+import { addBabaanSides } from '../../src/features/routes/map/babaan-sides.ts';
 import { INSET_PX, chevronAt } from '../../src/features/routes/map/chevrons.ts';
 import { litWidthAt } from '../../src/features/routes/map/line-style.ts';
 
