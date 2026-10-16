@@ -60,9 +60,10 @@ interface Cards {
  * `tripDock` on the trip card, `hotspotDock` on a hotspot's.
  *
  * `camera: false` turns those off: the overviews and the camera kept from
- * before get no map and do nothing, while a picked hintuan still glides. It is fixed for the page's life, not a switch for while
- * drawing: turned on later, the trip's and the card's overviews would fire
- * at once for whatever is open.
+ * before get no map and do nothing, while a picked hintuan still glides. It
+ * is fixed for the page's life, not a switch for while drawing: turned on
+ * later, the trip's and the card's overviews would fire at once for whatever
+ * is open.
  */
 export function useCardCamera<V extends Direction, S extends Hotspot>(
   map: MapLibreMap | null,

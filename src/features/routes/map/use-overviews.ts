@@ -69,9 +69,9 @@ function overview(
 /**
  * A trip opened — from a card, a tap on its line: the camera takes in its
  * whole route, zooming in or out, clear of the card (the owner's call). Keyed
- * on the route, so SWITCH, which covers the same ground the other way, leaves
- * the view as it is; the card's height and the trip's own changes move
- * nothing.
+ * on the route, so SWITCH, which covers the same ground the other way, does
+ * not fire it (useSwitchOverview has its own), nor does the sheet's height
+ * (useHeightOverview); the trip's own changes move nothing.
  */
 export function useTripOverview(
   map: MapLibreMap | null,
@@ -91,8 +91,9 @@ export function useTripOverview(
  * A RouteCard picked — in the route list or on a hotspot's card: the camera
  * takes in the routes it stands for, as a trip's row does for its trip (the
  * owner's call), clear of the sheet on show. Keyed on the card and what it
- * shows, so a card let go leaves the view as it is until another is picked;
- * SWITCH has its own (useSwitchOverview).
+ * shows, so this moves nothing as a card is let go (on a hotspot's card,
+ * useCameraBefore takes the camera back); SWITCH has its own
+ * (useSwitchOverview).
  */
 export function useCardOverview(
   map: MapLibreMap | null,
@@ -176,12 +177,12 @@ export function useSwitchOverview(
  * The sheet settled at another height — Low, Middle, Max, or where a drag
  * left it: the camera takes in again what the card on show frames, in what
  * map the sheet leaves now (the owner's call). Routes are fitted whole, in
- * close above Low, out above Middle — and at Max, which on a phone covers the
- * whole map, as at Middle (roomBeside); a place is brought into view at its
- * zoom. Whatever the commuter did to the map since, the overview comes back.
- * Going up, it zooms out no further than RAISED_FARTHEST_M on the scale bar
- * ("for scrolling up only"); coming down, the whole route. `frame` is read as
- * the sheet settles; null, with no card on show, moves nothing.
+ * close above Low, out above Middle — and at Max, which on a phone leaves
+ * only a strip of map, as at Middle (roomBeside); a place is brought into
+ * view at its zoom. Whatever the commuter did to the map since, the overview
+ * comes back. Going up, it zooms out no further than RAISED_FARTHEST_M on the
+ * scale bar (the owner's call); coming down, the whole route. `frame` is read
+ * as the sheet settles; null, with no card on show, moves nothing.
  */
 export function useHeightOverview(
   map: MapLibreMap | null,

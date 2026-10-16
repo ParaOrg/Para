@@ -48,9 +48,9 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   hotspots: Hotspots<S>,
 ) {
   // One tap, several things: routes, hotspots or both, in the owner's route
-  // list — the hotspots first, then the routes as the owner's RouteCards. It
-  // stays behind a trip picked from it, hidden, for the trip's ‹ — and so
-  // does a hotspot's card (the owner's call).
+  // list — the hotspots first, then the routes as RouteCards. It stays behind
+  // a trip picked from it, hidden, for the trip's ‹ — and so does a hotspot's
+  // card (the owner's call).
   const choice = [...saved.candidates, ...hotspots.candidates];
   const choosing = isChoosing(saved.candidates, hotspots.candidates);
 
