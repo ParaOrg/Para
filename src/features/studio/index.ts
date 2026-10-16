@@ -15,13 +15,13 @@ export { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from './drawing/studio-bas
 export { useDrawing } from './drawing/use-drawing';
 export { useFollow } from './drawing/use-follow';
 export { AccountPill } from './panels/account-pill';
-export { CardActions } from './panels/card-actions';
-export { HotspotPanel } from './panels/hotspot-panel';
 export { NewButtons } from './panels/new-buttons';
 export { returnTripLeft } from './panels/return-trip';
-export { SavePanel } from './panels/save-panel';
 export { SaveToasts } from './panels/save-toasts';
-export { TripCardExtras } from './panels/trip-card-extras';
+export { StudioHotspotCard } from './panels/studio-hotspot-card';
+export { StudioSaveSheets } from './panels/studio-save-sheets';
+export { StudioTripCard } from './panels/studio-trip-card';
 export { useDeleteActions } from './panels/use-delete-actions';
 export { useSaveFlow } from './panels/use-save-flow';
 export { useSaveTarget } from './panels/use-save-target';
+export { useStudioTrip } from './panels/use-studio-trip';
