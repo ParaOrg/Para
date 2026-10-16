@@ -1523,7 +1523,10 @@ const tripChecks = async () => {
       'none shown';
     check(
       '  the names along the rest at 60%, the ones before the hintuan whole',
-      paled.every((s) => s.fade === null || s.fade === '0.6') &&
+      // At least one name read on each side, so a name that stops showing fails it.
+      paled.some((s) => s.fade !== null) &&
+        before.some((s) => s.fade !== null) &&
+        paled.every((s) => s.fade === null || s.fade === '0.6') &&
         before.every((s) => s.fade === null || s.fade === '1'),
       `${fades(paled)} along the rest, ${fades(before)} before it`,
     );
