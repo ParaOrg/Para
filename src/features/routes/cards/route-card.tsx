@@ -11,30 +11,25 @@ import type { Livery } from '../model/liveries';
 import type { Vehicle } from '../model/vehicles';
 
 /**
- * A place and the routes that leave it, in a jeepney's livery — the owner's
- * RouteCard set (Figma 3665:2265): the place in SN Pro ExtraBold 20/28, and a
- * row for each place it goes to (his .RouteEndPointBar). The place was Black
- * 24/32 until the owner picked his RouteCardExample's (3746:1238) on
- * 2026-10-16, as the trip card's origin had gone on 2026-10-13. The Figma
- * property Variants is `livery` here, the name the tokens give these
- * colours, because a variant in this codebase is a direction. Figma's Pink
- * was the orange tokens (the owner, 2026-09-28) until the set named it
- * Orange and drew a pink of its own, Card/pink (4071:7014, 2026-10-13). How
- * each livery paints the card — surface, words, glow, shadow — is
- * livery-card.ts, shared with the trip card it opens.
+ * A place and the routes that leave it, in a jeepney's livery — Figma's
+ * RouteCard set (3665:2265): the place in SN Pro ExtraBold 20/28, the owner's
+ * pick from the RouteCardExample (3746:1238), and a row for each place it
+ * goes to (.RouteEndPointBar). The Figma property Variants is `livery` here,
+ * the name the tokens give these colours, because a variant in this codebase
+ * is a direction. How each livery paints the card — surface, words, glow,
+ * shadow — is livery-card.ts, shared with the trip card it opens.
  *
- * Figma's State (2026-09-29): Rest, or Selected — pressed in, under the
- * Selected shadow, while the map lights its routes alone. A row opens its
- * trip straight away; a tap anywhere else on the card — its name, the room
- * around its rows — selects it, or lets it go (the owner's picks, the same
- * day). Which card is Selected, one at a time, is the caller's to keep. The
- * pesos left the card with this set: the trip's Expected fare carries them.
+ * Figma's State: Rest, or Selected — pressed in, under the Selected shadow,
+ * while the map lights its routes alone. A row opens its trip straight away;
+ * a tap anywhere else on the card — its name, the room around its rows —
+ * selects it, or lets it go. Which card is Selected, one at a time, is the
+ * caller's to keep. The card carries no pesos: the trip's Expected fare does.
  *
- * A row's State (RouteEndPointBar, 3848:11928, 2026-10-01): Rest, or Pressed
- * — while the finger is down on it, the row in the card's timeline colour,
- * Card/<livery>/Timeline/surface; the trip opens as it lets go (the owner's
- * pick, the same day: a tap's feedback, not kept once the trip is open;
- * ROW_PRESSED, shared with the trip's timeline).
+ * A row's State (RouteEndPointBar, 3848:11928): Rest, or Pressed — while the
+ * finger is down on it, the row in the card's timeline colour,
+ * Card/<livery>/Timeline/surface; the trip opens as it lets go (a tap's
+ * feedback, not kept once the trip is open; ROW_PRESSED, shared with the
+ * trip's timeline).
  */
 
 interface EndPoint {
@@ -59,9 +54,9 @@ interface Props {
   /** A row was tapped: open that direction. */
   onPick: (id: string) => void;
   /**
-   * What the suites call the card and its parts — `<testId>-origin`, its
-   * name `<testId>-select`, its rows `<testId>-item` — `chooser` in the route
-   * list, `card` in a hotspot's card, the names the old rows there had.
+   * What the suites call the card and its parts — `<testId>-origin`, its name
+   * `<testId>-select`, its rows `<testId>-item` — `chooser` in the route
+   * list, `card` in a hotspot's card, the names the suites already knew.
    */
   testId: 'chooser' | 'card';
 }
