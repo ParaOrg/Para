@@ -3205,8 +3205,8 @@ Worth doing before M2:
 
 ## The clean-up — 2026-09-29
 
-The review of 2026-09-29 (`docs/review-2026-09-29.md`, findings numbered
-there) and the plan that stages its fixes (`docs/plan-cleanup-2026-09-29.md`).
+The review of 2026-09-29 (`docs/archive/review-2026-09-29.md`, findings numbered
+there) and the plan that stages its fixes (`docs/archive/plan-cleanup-2026-09-29.md`).
 One branch `cleanup/NN-<name>` and one pull request into `staging` per stage,
 merged when both CI jobs are green; `main` is the owner's. A session picking
 this up reads both documents, then this section, then `git log` for PRs
