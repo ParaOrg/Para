@@ -18,7 +18,7 @@ import {
 /*
  * The saved directions on the map: their source, their layers (five, and
  * a resting one for each train line since 2026-10-13), and what lights
- * them. Split from useSavedRoutes.ts, 2026-09-29.
+ * them. Split from use-saved-routes.ts, 2026-09-29.
  */
 
 const SRC = 'saved-routes';
@@ -29,7 +29,7 @@ const LINE = ROUTES_LINE;
 /** The lit directions, drawn again on top: thick, in the selected blue, or on the public map in a picked card's or an open trip's colour. */
 const SELECTED_CASING = 'saved-routes-selected-casing';
 const SELECTED = LAYERS.routesLit;
-/** The two that draw the lit directions only, switched off while none is (layerSwitch.ts). */
+/** The two that draw the lit directions only, switched off while none is (layer-switch.ts). */
 const LIT_LAYERS = [SELECTED_CASING, SELECTED] as const;
 const HIT = ROUTES_HIT_LAYER;
 
@@ -118,7 +118,7 @@ export function litOpacity() {
  * the lighting is applied when it arrives, not only when `lit` changes.
  * `switched`, the layers that draw only what is lit, are switched on with
  * anything lit and off with nothing, here with the feature state, so the
- * two reach the screen in one frame (layerSwitch.ts).
+ * two reach the screen in one frame (layer-switch.ts).
  */
 export function useLighting(
   map: MapLibreMap | null,
@@ -143,7 +143,7 @@ export function useLighting(
 /**
  * The colour the lit directions are drawn in, over the rest: the selected
  * blue unless the public map says otherwise — a picked card's, an open
- * trip's (liveryLine.ts). A paint property, set once per change: every lit
+ * trip's (livery-line.ts). A paint property, set once per change: every lit
  * line wears the same colour at a time.
  */
 export function useLitLineColour(map: MapLibreMap | null, colour: string) {
@@ -270,7 +270,7 @@ export function addSavedRoutes(
         'line-color': MAP_PAINT['Paint/casing'],
         'line-width': litWidth(CASING_EXTRA),
         'line-opacity': litOpacity(),
-        // Switched off while nothing is lit, and from the start (layerSwitch.ts): at once, never between.
+        // Switched off while nothing is lit, and from the start (layer-switch.ts): at once, never between.
         'line-layer-opacity': 0,
         'line-layer-opacity-transition': { duration: 0, delay: 0 },
       },
@@ -436,7 +436,7 @@ export function useSavedRoutesLayers(
   }, [map, hiddenDirectionId]);
 
   // The lit copy and its casing, off while nothing is lit, from the start;
-  // their GL program compiled by a twin while the map is idle (layerSwitch.ts).
+  // their GL program compiled by a twin while the map is idle (layer-switch.ts).
   const litSwitch = useLayerSwitch(map, LIT_LAYERS, map !== null);
   useLighting(map, SRC, lit, true, litSwitch);
 }

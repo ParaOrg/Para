@@ -1,17 +1,16 @@
 /*
- * PalimosPoDesignSystem type: the two families the Figma variables name
- * (font/family/SNPRO, font/family/Cubao), from the owner's files of
- * 2026-09-28. Only the faces designs use are wired — SN Pro 400–700, its
- * ExtraBold 800 (a trip's origin and its picked hintuan, the owner's
- * TimelineRouteDetailCard of 2026-10-13), its Black 900 (the route cards' titles,
- * 2026-09-28), and Cubao Free Regular — SN Pro as woff2 subset to Latin,
- * Cubao whole, its kerning a table the subsetter drops (fonts/subset.sh:
- * 129 kB for all seven; 113 kB for six, from 290 kB, on 2026-09-29); the
- * full sets, italics, and Cubao's
- * narrow and wide cuts sit beside them in fonts/, unwired until a design
- * asks. `swap` because the app is a map first: text in a fallback beats
- * text held back. The worker precaches them, so offline text keeps its
- * face; check-build.mjs holds them under 135 kB together.
+ * PalimosPoDesignSystem type: SN Pro, the family the Figma variables name
+ * (font/family/SNPRO), from the owner's files of 2026-09-28. Only the faces
+ * designs use are wired — SN Pro 400–700, its ExtraBold 800 (a trip's origin
+ * and its picked hintuan, the owner's TimelineRouteDetailCard of 2026-10-13)
+ * and its Black 900 (the route cards' titles, 2026-09-28) — as woff2 subset
+ * to Latin (fonts/subset.sh: 107 kB for all six, from 290 kB, on
+ * 2026-09-29). The full sets and italics sit beside them in fonts/, unwired
+ * until a design asks, and so do Cubao Free's .otf sources (dropped from the
+ * app on 2026-10-16: "Drop Cubao, keep SN Pro"). `swap` because the app is a
+ * map first: text in a fallback beats text held back. The worker precaches
+ * them, so offline text keeps its face; check-build.mjs holds them under
+ * 135 kB together.
  */
 
 @font-face {
@@ -56,16 +55,8 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'Cubao Free';
-  src: url('./fonts/Cubao/cubao-free-regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
 
-/* The families as utilities: font-sn-pro, font-cubao. */
+/* The family as a utility: font-sn-pro. */
 @theme {
   --font-sn-pro: 'SN Pro', ui-sans-serif, system-ui, sans-serif;
-  --font-cubao: 'Cubao Free', 'SN Pro', ui-sans-serif, system-ui, sans-serif;
 }

@@ -7,6 +7,7 @@ import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { TripCard } from '@/features/routes/cards/trip-card';
 import { useCardCamera } from '@/features/routes/cards/use-card-camera';
 import { useCardStack } from '@/features/routes/cards/use-card-stack';
+import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
 import { APP_MOVE, MapView } from '@/features/routes/map/map-view';
@@ -16,8 +17,7 @@ import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { hotspotRing } from '@/features/routes/model/hotspots';
 import { hotspotCount } from '@/features/routes/model/places';
-import { routeTimeline } from '@/features/routes/model/ride';
-import { isDrawn, directionLine } from '@/features/routes/model/routes';
+import { isDrawn } from '@/features/routes/model/routes';
 import {
   lineOf,
   listDirections,
@@ -134,20 +134,12 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     ride.startId,
   );
 
-  // The open trip's hintuans, worked out as the trip or the hotspots change,
-  // as the public map works them out (PublicMapApp): the card's rows and
-  // their dots along the line read one timeline, and the dots hang on its
-  // identity — a fresh `between` each render would place every dot anew
-  // (StationLabels' rowStops memo) — so the memo is load-bearing, not a
-  // saving.
-  const trip = saved.selected;
-  // The hook's result is a fresh object each render; its members are stable.
-  const { hotspots: hotspotRows, hotspotsAlong } = hotspots;
-  const timeline = useMemo(
-    () =>
-      trip ? routeTimeline(trip, hotspotRows, hotspotsAlong(trip.id, directionLine(trip))) : null,
-    [trip, hotspotRows, hotspotsAlong],
-  );
+  // The open trip's hintuans, as the public map works them out
+  // (useTripTimeline): the card's rows and their dots along the line read one
+  // timeline, and the dots hang on its identity — a fresh `between` each
+  // render would place every dot anew (StationLabels' rowStops memo) — so the
+  // memo is load-bearing, not a saving.
+  const timeline = useTripTimeline(saved.selected, hotspots);
 
   // The pill counts routes, not directions: a route is two rows, one of them
   // perhaps an empty slot, and five routes once read "10 routes" (finding 7).

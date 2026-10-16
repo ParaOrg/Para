@@ -1484,7 +1484,10 @@ const tripChecks = async () => {
       'none shown';
     check(
       '  the names along the rest at 60%, the ones before the hintuan whole',
-      paled.every((s) => s.fade === null || s.fade === '0.6') &&
+      // At least one name read on each side, so a name that stops showing fails it.
+      paled.some((s) => s.fade !== null) &&
+        before.some((s) => s.fade !== null) &&
+        paled.every((s) => s.fade === null || s.fade === '0.6') &&
         before.every((s) => s.fade === null || s.fade === '1'),
       `${fades(paled)} along the rest, ${fades(before)} before it`,
     );
@@ -1790,26 +1793,51 @@ const tripChecks = async () => {
           async () => (await startRow.locator('[data-part="start"]').count()) === 1,
         );
         // A start alone is no ride yet (the owner's Variant3, 2026-10-16:
-        // "Nothing yet, just the S"): the tiles the whole trip's, nothing pale
-        // on the map, its circle there and the one S, the route's own ends
-        // named without theirs, and no E on the card until an end is picked.
-        const alone = await page.evaluate(async () => ({
-          pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
-          rest: ((await window.__src('ride-rest'))?.features ?? []).length,
-          ends: document.querySelectorAll('[data-testid="trip"] [data-part="end"]').length,
-          titleMarks: document.querySelectorAll(
-            '[data-testid="end-title"] [data-part="start"] svg, [data-testid="end-title"] [data-part="end"] svg',
-          ).length,
-        }));
+        // "Nothing yet, just the S"): the tiles the whole trip's, its circle
+        // there and the one S, the route's own ends named without theirs, and
+        // no E on the card until an end is picked. The whole line is on the
+        // pale, every other dot and end with it, their names at 60% (his ask
+        // that night: "When start is only selected can you unselected all the
+        // unselected hintuan/station or labels?, and the rouline would be in
+        // pale").
+        const alone = await page.evaluate(async () => {
+          const stations = [...document.querySelectorAll('[data-testid="station-label"]')];
+          const ends = [
+            ...document.querySelectorAll('[data-testid="end-title"], [data-testid="end-circle"]'),
+          ];
+          const names = [
+            ...document.querySelectorAll(
+              '[data-testid="station-label"] [data-part="label"], [data-testid="end-title"] [data-part="name"]',
+            ),
+          ];
+          return {
+            pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+            rest: ((await window.__src('ride-rest'))?.features ?? []).length,
+            ends: document.querySelectorAll('[data-testid="trip"] [data-part="end"]').length,
+            titleMarks: document.querySelectorAll(
+              '[data-testid="end-title"] [data-part="start"] svg, [data-testid="end-title"] [data-part="end"] svg',
+            ).length,
+            stations: stations.length,
+            stationsPaled: stations.filter((e) => e.hasAttribute('data-paled')).length,
+            endsPaled: ends.filter((e) => e.hasAttribute('data-paled')).length,
+            endCount: ends.length,
+            fades: [...new Set(names.map((e) => getComputedStyle(e).opacity))],
+          };
+        });
         const aloneKm = await tile('trip-km');
         check(
-          '  a start alone is no ride yet: its circle, the tiles the whole trip, nothing pale, no E, the ends unmarked',
-          alone.pins === 1 &&
-            alone.rest === 0 &&
-            alone.ends === 0 &&
-            alone.titleMarks === 0 &&
-            aloneKm === km,
-          `${alone.pins} circle(s), ${alone.rest} pale stretch(es), ${alone.ends} E; ${alone.titleMarks} S or E on the route's ends; Distance "${aloneKm}", the whole "${km}"`,
+          '  a start alone is no ride yet: its circle, the tiles the whole trip, no E, the ends unmarked',
+          alone.pins === 1 && alone.ends === 0 && alone.titleMarks === 0 && aloneKm === km,
+          `${alone.pins} circle(s), ${alone.ends} E; ${alone.titleMarks} S or E on the route's ends; Distance "${aloneKm}", the whole "${km}"`,
+        );
+        check(
+          '  and the whole line on the pale, every other dot and both ends with it, their names at 60%',
+          alone.rest === 1 &&
+            alone.stationsPaled === alone.stations &&
+            alone.endCount === 2 &&
+            alone.endsPaled === 2 &&
+            alone.fades.every((o) => o === '0.6'),
+          `${alone.rest} pale stretch(es); ${alone.stationsPaled} of ${alone.stations} dot(s) paled, ${alone.endsPaled} of ${alone.endCount} end(s); names at ${alone.fades.join(', ') || 'none shown'}`,
         );
         // Then the end with the sheet at Max: the sheet comes down to Middle and
         // the camera takes in the ride from the start to the end (the owner,
