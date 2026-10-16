@@ -23,7 +23,8 @@ import { recolouredLayer, type Recolour } from './recolour';
  * schools, the airport, the shaded relief) is Liberty's own colour muted as
  * Colour was muted before (the owner, 2026-10-15: "more muted so the route
  * line pops"), so ParaPo's routes and hotspots on top still carry the
- * strongest colour on the map.
+ * strongest colour on the map. The place icons are the exception: they show
+ * in full, as Apple's do (the owner, 2026-10-16: "yeah").
  */
 
 const SOURCE = 'openmaptiles';
@@ -34,8 +35,6 @@ const SOURCE = 'openmaptiles';
 const SATURATION_KEPT = 0.4;
 /** How far a fill's or a line's lightness moves toward white. */
 const LIGHTER_BY = 0.15;
-/** Liberty's place icons, which are coloured pictures. */
-const ICON_OPACITY = 0.6;
 
 const mute: Recolour = (c, isName) => ({
   ...c,
@@ -45,9 +44,7 @@ const mute: Recolour = (c, isName) => ({
 
 function mutedLayer(l: LayerSpecification): LayerSpecification {
   if (l.type === 'raster') return { ...l, paint: { ...l.paint, 'raster-saturation': -0.6 } };
-  const muted = recolouredLayer(l, mute);
-  if (muted.type !== 'symbol' || muted.layout?.['icon-image'] === undefined) return muted;
-  return { ...muted, paint: { ...muted.paint, 'icon-opacity': ICON_OPACITY } };
+  return recolouredLayer(l, mute);
 }
 
 // ---------------------------------------------------------------- palette
@@ -74,7 +71,9 @@ const GROUND: Record<string, NonNullable<LayerSpecification['paint']>> = {
     'fill-color': MAP_PAINT['Paint/daylight-building'],
     'fill-outline-color': MAP_PAINT['Paint/daylight-building-edge'],
   },
-  'building-3d': { 'fill-extrusion-color': MAP_PAINT['Paint/daylight-building'] },
+  // Lighter than the flat ones (the owner, 2026-10-16: "Lighten them"): MapLibre shades an
+  // extrusion's walls darker than its colour, and Apple's stand up pale.
+  'building-3d': { 'fill-extrusion-color': MAP_PAINT['Paint/daylight-building-3d'] },
   // Road names dark gray on a white halo, as Apple writes them; Liberty's have none.
   'highway-name-minor': { 'text-halo-color': MAP_PAINT['Paint/casing'] },
   'highway-name-major': { 'text-halo-color': MAP_PAINT['Paint/casing'] },

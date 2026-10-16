@@ -92,7 +92,7 @@ test("the big surfaces wear Apple's palette, the input untouched", () => {
     water: 'Paint/daylight-water',
     waterway_river: 'Paint/daylight-water',
     building: 'Paint/daylight-building',
-    'building-3d': 'Paint/daylight-building',
+    'building-3d': 'Paint/daylight-building-3d',
     'daylight-commercial': 'Paint/daylight-commercial',
   };
   for (const [id, paint] of Object.entries(want)) {
@@ -121,7 +121,7 @@ test('roads by kind: highways, avenues and white streets, each with its edge', (
   assert.equal(layers.get('road_minor').paint['line-width'], 2);
 });
 
-test('everything else is muted as before; road names on a white halo', () => {
+test('everything else is muted as before, the icons in full; road names on a white halo', () => {
   const layers = byId(daylightStyle(liberty()));
   for (const id of ['landuse_hospital', 'road_major_rail', 'road_path_pedestrian']) {
     assert.match(colourOf(layers.get(id)), /^hsla\(/, `${id} recoloured by the muting`);
@@ -131,7 +131,8 @@ test('everything else is muted as before; road names on a white halo', () => {
     .match(/[\d.]+/g)
     .map(Number);
   assert.ok(saturation < 50, `${saturation}`);
-  assert.equal(layers.get('poi_r1').paint['icon-opacity'], 0.6);
+  // The place icons in full, as Apple's are (the owner, 2026-10-16).
+  assert.equal(layers.get('poi_r1').paint['icon-opacity'], undefined);
   assert.equal(
     layers.get('highway-name-major').paint['text-halo-color'],
     MAP_PAINT['Paint/casing'],

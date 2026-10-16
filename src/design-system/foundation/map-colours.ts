@@ -119,6 +119,7 @@ export const MAP_PAINT = {
   'Paint/daylight-commercial': '#fef5e4', // shops, offices and malls, a pale warm yellow
   'Paint/daylight-building': '#efe9df', // a touch darker than the ground
   'Paint/daylight-building-edge': '#e4ddd1',
+  'Paint/daylight-building-3d': '#fdfbf8', // a building standing up from z14: near white, so its walls stay soft
   'Paint/daylight-highway': '#dde1e1', // motorways and their ramps: EDSA, the Skyway
   'Paint/daylight-highway-edge': '#cdd2d2',
   'Paint/daylight-road': '#e1e3e7', // the avenues: trunk, primary to tertiary, and links
