@@ -123,7 +123,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   } = useCardCamera(map, saved, hotspots, cards);
 
   // What the lit routes wear on the map, as on the public map (useLitRides);
-  // none of the orange over the direction being redrawn.
+  // none of the green stretches over the direction being redrawn.
   const rides = useLitRides(
     map,
     saved,
