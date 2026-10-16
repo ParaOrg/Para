@@ -54,7 +54,7 @@ function pointAt(line: readonly LngLat[], metres: number): { point: LngLat; inde
 }
 
 /** One get-off circle of the ride-to preview: a mini hotspot, the middle of its orange stretch, and how far in that is. */
-export interface RideDot {
+interface RideDot {
   hotspotId: string;
   at: LngLat;
   metres: number;
@@ -122,7 +122,7 @@ export function rideCut(
  * `isBackwards`: the end comes before the start on the line, and `ridden`
  * runs back along it, from the start to the end.
  */
-export interface RideSpan {
+interface RideSpan {
   before: LngLat[];
   ridden: LngLat[];
   rest: LngLat[];
@@ -258,7 +258,7 @@ export function rideRows(
 }
 
 /** One row of a trip's timeline placed on the map: its dot's spot, and its name. */
-export interface RowStop {
+interface RowStop {
   id: string;
   label: string;
   at: LngLat;

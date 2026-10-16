@@ -8,7 +8,7 @@ import type { TransportMode } from './routes';
  * docs/research/ltfrb-jeepney-fares.md. Amounts in centavos, so the rounding
  * never meets a float.
  */
-export interface FareRule {
+interface FareRule {
   /** The first day it applies, Manila time, `YYYY-MM-DD`. */
   from: string;
   minimum: number;

@@ -42,7 +42,7 @@ export interface Basemap {
 }
 
 /** Monochrome's detail on Positron, or Liberty in Apple Maps' light palette. */
-export type Dressing = 'monochrome' | 'daylight';
+type Dressing = 'monochrome' | 'daylight';
 
 export interface Elevation {
   /** Terrarium-encoded elevation tiles, with `{z}`, `{x}` and `{y}`. */

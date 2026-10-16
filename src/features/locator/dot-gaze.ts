@@ -16,7 +16,7 @@ import { M_PER_DEG, nearestOnSegment, type LngLat } from '@/shared/utils/geo';
  */
 
 /** How long the dot gazes before its eyes wander again. */
-export const GAZE_MS = 3000;
+const GAZE_MS = 3000;
 
 /**
  * How far its eyes go from the middle toward what it gazes at, in px of the

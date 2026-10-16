@@ -110,7 +110,7 @@ export interface Ride {
  * E, turned round on a ride picked backwards, whose E an origin picked from
  * its row is (the owner, 2026-10-16: "keep the start").
  */
-export interface RideEnd {
+interface RideEnd {
   end: 'from' | 'to';
   name: string;
   named: boolean;
