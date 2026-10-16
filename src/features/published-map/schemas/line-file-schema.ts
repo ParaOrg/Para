@@ -4,8 +4,8 @@ import { lineStringSchema } from '@/features/routes/model/geojson-schema';
 
 /**
  * A direction's line file, `/data/lines/<id>.json`: its full line, and its
- * orange stretches with the key they were worked out against (line-pass.ts reads those as it will).
- * Shape 2's; shapes 3 and 4 of the index kept it, so every index reads the
+ * orange stretches with the key they were worked out against (line-pass.ts
+ * reads those as it will). Shape 2's; shapes 3 and 4 of the index kept it, so every index reads the
  * same files. The publish writes with it (scripts/publish/lineFile.mjs), the
  * reader parses with it.
  */

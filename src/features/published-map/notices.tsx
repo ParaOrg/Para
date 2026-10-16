@@ -80,8 +80,7 @@ export function Notices({
 
       {/*
         A new version never applies itself: a reload mid-ride would drop the
-        selected route. A Primary button, 24 below the top, centred (Figma
-        3732:2512).
+        selected route. A Primary button, 24 below the top, centred (Figma 3732:2512).
       */}
       {needRefresh && (
         <div className="pointer-events-none absolute top-[calc(1.5rem+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 *:pointer-events-auto">

@@ -12,18 +12,18 @@ interface InstallPromptProps {
 }
 
 /**
- * The welcome to a commuter who has not installed Para Po (Figma
- * 3732:2512): the page dimmed in Background/surface-transparent,
- * and over it, 16 in from the sides and centred, a card at most 384 wide —
- * its picture, then "Welcome to Para Po", a line under it, and two buttons
- * sharing the row, "I'll do it later" (Secondary) and Install (Primary). The
- * same card on a phone and a wide screen; only its width gives.
+ * The welcome to a commuter who has not installed Para Po (Figma 3732:2512):
+ * the page dimmed in Background/surface-transparent, and over it, 16 in from
+ * the sides and centred, a card at most 384 wide — its picture, then
+ * "Welcome to Para Po", a line under it, and two buttons sharing the row,
+ * "I'll do it later" (Secondary) and Install (Primary). The same card on a
+ * phone and a wide screen; only its width gives.
  *
  * A modal <dialog>: the page behind it is out of reach, the focus is kept
  * inside it, and Escape is "later" (the browser's own, so a screen reader
  * hears a dialog). The line under the title reads "Your almost…" in Figma;
- * here it is "You're almost…". The picture is cropped to what the card
- * shows and kept small for a first visit (48 kB).
+ * here it is "You're almost…", the owner's pick. The picture is cropped to
+ * what the card shows and kept small for a first visit (48 kB).
  */
 export function InstallPrompt({ onInstall, onLater }: InstallPromptProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);

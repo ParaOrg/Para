@@ -28,9 +28,8 @@ export function useOffline(): boolean {
 /**
  * When the map on screen was published, and whether it came from a stored
  * copy, from the file both hooks already share. Read again whenever the
- * routes load (`loaded`, their list), so a first load that failed and a
- * "Try again" that worked do not leave the notice saying "Offline" with no
- * date.
+ * routes load (`loaded`, their list), so a first load that failed and a "Try
+ * again" that worked do not leave the notice saying "Offline" with no date.
  */
 export function useMapAge(loaded: unknown): MapAge {
   const [age, setAge] = useState<MapAge>({ publishedAt: null, stale: false });
@@ -59,9 +58,8 @@ interface MapAge {
  * `now`, or `was` when it says the same. The public map hands useMapAge its
  * directions, which are a new list at every full line read, and each read
  * would set a new age with the same date: one more render of the whole app
- * per line. Kept, the state is unchanged and React renders nothing; still
- * read again each time, so a load that changes the date or the copy is
- * shown.
+ * per line. Kept, the state is unchanged and React renders nothing; still read
+ * again each time, so a load that changes the date or the copy is shown.
  */
 export function sameAge(was: MapAge, now: MapAge): MapAge {
   return was.publishedAt === now.publishedAt && was.stale === now.stale ? was : now;

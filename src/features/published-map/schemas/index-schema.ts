@@ -7,8 +7,8 @@ import { hotspotLinkSchema, hotspotSchema } from '@/features/routes/model/hotspo
 /**
  * The published index (shape 4, map-file.ts MAP_FILE_SCHEMA) as one
  * contract: the reader parses the file with it, the publish validates what
- * it writes with it, and the data check reads with it. The file says `variants`, `stops`,
- * `published_at` and a direction's `overview` and `route_id`, the database's
+ * it writes with it, and the data check reads with it. The file says
+ * `variants`, `stops`, `published_at` and a direction's `overview` and `route_id`, the database's
  * words; the app says directions, hotspots, publishedAt, a direction's
  * `shape` and routeId (CONTEXT.md), so the schema translates as it parses
  * (the rows' own `to…` functions, direction-schema.ts and hotspot-schema.ts).
