@@ -38,8 +38,8 @@ export const MAP_COLOURS = {
 } as const satisfies Record<`Map/${string}`, `#${string}`>;
 
 /**
- * The opacity Figma gives a Map/… surface with its colour (the owner's
- * HotspotOverlayCard, 3837:11308): the map paints it as `fill-opacity`.
+ * The opacity Figma gives a Map/… surface with its colour (HotspotOverlayCard,
+ * 3837:11308): the map paints it as `fill-opacity`.
  */
 export const MAP_OPACITY = {
   'Map/OverlayCard/Hintuan/surface': 0.3,
@@ -51,9 +51,9 @@ export const MAP_OPACITY = {
 
 /**
  * The RouteCards' Card/<livery>/surface, in hex, for the map: a picked
- * card's routes, and an open trip's line, wear their card's colour (the
- * owner's ask, 2026-09-29). Each hex is the primitive its token aliases,
- * held to tokens.css by tests/unit/map-colours-test.mjs as the Map/… ones are.
+ * card's routes, and an open trip's line, wear their card's colour. Each hex
+ * is the primitive its token aliases, held to tokens.css by
+ * tests/unit/map-colours-test.mjs as the Map/… ones are.
  */
 export const CARD_COLOURS = {
   'Card/red/surface': '#9f0712', // red/800
@@ -67,9 +67,8 @@ export const CARD_COLOURS = {
 /**
  * The RouteCards' Card/<livery>/surface-pale, in hex, for the map: the rest
  * of an open trip's line past a picked hintuan, from there to where the trip
- * goes, in the card's own hue paled (the owner's ask, 2026-10-12: the
- * remaining line should be surface-pale of the selected colour). Each hex is
- * the primitive its token aliases, each hue's 200, held to tokens.css by
+ * goes, in the card's own hue paled. Each hex is the primitive its token
+ * aliases, each hue's 200, held to tokens.css by
  * tests/unit/map-colours-test.mjs as CARD_COLOURS is.
  */
 export const CARD_PALE_COLOURS = {
@@ -82,15 +81,13 @@ export const CARD_PALE_COLOURS = {
 } as const satisfies Record<`Card/${string}/surface-pale`, `#${string}`>;
 
 /**
- * Everything else the map paints — the public map's and the editor's — in
- * the value it has always had: colours no Figma variable names yet. One file
- * for every colour the map's painters paint, so
- * tests/unit/map-colours-test.mjs can fail on a colour written in any other
- * of their .ts files (stage 9 of the clean-up, 2026-09-29). The map's
- * stylesheet (hintuan-pin.css) is not read by it; its few raw
- * colours wait on the owner's list. Each is the owner's to name
- * in Figma; until then the key says what it paints, and moving one to a
- * Map/… token is changing only this file.
+ * Everything else the map paints — the public map's and the editor's: colours
+ * no Figma variable names yet. One file for every colour the map's painters
+ * paint, so tests/unit/map-colours-test.mjs can fail on a colour written in
+ * any other of their .ts files. The map's stylesheets (hintuan-pin.css and its
+ * neighbours) hold no colour of their own. Until a colour is named in Figma,
+ * the key says what it paints, and moving one to a Map/… token changes only
+ * this file.
  */
 export const MAP_PAINT = {
   'Paint/casing': '#ffffff', // white: the rim under every line, circles' fill, text halos
@@ -112,7 +109,7 @@ export const MAP_PAINT = {
   'Paint/terrain-accent': 'rgb(122, 116, 104)', // the steepest ground
   'Paint/basemap-photo-label': '#ffffff', // Satellite, labelled: street and place names over the photo
   'Paint/basemap-photo-halo': '#1a1a1a', // near-black, so a name reads over a bright roof
-  // Colour: Apple Maps' light palette, read off the owner's screenshot (2026-10-16).
+  // Colour: Apple Maps' light palette, read off a screenshot.
   'Paint/daylight-land': '#f7f3eb', // the ground, a warm cream; homes the same
   'Paint/daylight-water': '#8edbf6', // rivers, the bay, lakes
   'Paint/daylight-green': '#d5efbe', // parks, cemeteries, grass and woods

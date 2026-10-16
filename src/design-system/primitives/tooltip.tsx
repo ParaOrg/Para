@@ -1,13 +1,12 @@
 /**
- * PalimosPoDesignSystem's Tooltip, from the owner's Figma set of 2026-09-28
- * (node 3745:1213): a dark pill of SN Pro Regular 14/20 in Content/inverse on
- * Components/Tooltip/surface, with an arrow. Figma's Position names the side
- * the arrow is on — Bottom points down at a control below, so the bubble
- * sits above it.
+ * PalimosPoDesignSystem's Tooltip, from the Figma set (node 3745:1213): a dark
+ * pill of SN Pro Regular 14/20 in Content/inverse on Components/Tooltip/surface,
+ * with an arrow. Figma's Position names the side the arrow is on — Bottom
+ * points down at a control below, so the bubble sits above it.
  *
  * This is the bubble only. Whoever owns the control places it and decides
- * when it shows; the owner's rules (2026-09-28): on hover only, never on
- * phones, after delay/tooltip.
+ * when it shows, by the design's rules: on hover only, never on phones, after
+ * delay/tooltip.
  */
 
 type Position = 'bottom' | 'top' | 'left' | 'right';

@@ -3,19 +3,18 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { Tooltip } from './tooltip';
 
 /**
- * PalimosPoDesignSystem's IconButton, from the owner's Figma set of
- * 2026-09-28 (node 3668:2815): Button's Special voice with the words taken
- * out — a round pill holding one icon, on the same surfaces and the same
- * InnerShadow/SpecialButton… effect styles, state for state (see Button).
+ * PalimosPoDesignSystem's IconButton, from the Figma set (node 3668:2815):
+ * Button's Special voice with the words taken out — a round pill holding one
+ * icon, on the same surfaces and the same InnerShadow/SpecialButton… effect
+ * styles, state for state (see Button).
  * Special is the only variant the set draws, so it is the only one here.
  *
- * With no words on it, its label shows as the owner's Tooltip on hover —
- * every IconButton, so none can forget it, a disabled one too (his yes of
- * the same day: it still says what the button is). His rules of that day: on
- * hover only, never on phones (Tailwind's hover waits for a pointer that
- * can hover), after delay/tooltip; it arrives over duration/base with
- * ease/enter, rising 4px off the button, and leaves over duration/quick
- * with ease/exit.
+ * With no words on it, its label shows as the Tooltip on hover — every
+ * IconButton, so none can forget it, a disabled one too (it still says what
+ * the button is). The Tooltip shows on hover only, never on phones
+ * (Tailwind's hover waits for a pointer that can hover), after
+ * delay/tooltip; it arrives over duration/base with ease/enter, rising 4px
+ * off the button, and leaves over duration/quick with ease/exit.
  */
 
 type Size = 'base' | 'small';
@@ -23,7 +22,7 @@ type Size = 'base' | 'small';
 /** Tooltip's Position: the side its arrow is on, so Bottom sits above the button. */
 type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
 
-// No `title` either: the owner's Tooltip replaces the browser's, and both
+// No `title` either: the Tooltip replaces the browser's, and both
 // at once would show two bubbles, perhaps saying different things.
 type Props = Omit<
   ComponentPropsWithoutRef<'button'>,
@@ -40,15 +39,14 @@ type Props = Omit<
   /** Figma's 🙏 Icon Instance: a square SVG drawing in currentColor. */
   icon: ReactNode;
   /**
-   * Not in the Figma set — added with the owner's yes (2026-09-28): with no
-   * words on it, this is what a screen reader says the button does, and
-   * what its tooltip reads.
+   * Not in the Figma set: with no words on it, this is what a screen reader
+   * says the button does, and what its tooltip reads.
    */
   label: string;
   /**
    * Where the tooltip points from, as the Tooltip set names it. The screen
-   * picks (the owner's call): a control at the bottom of the map wants the
-   * bubble above it, Bottom; one along a card's top edge wants it below, Top.
+   * picks: a control at the bottom of the map wants the bubble above it,
+   * Bottom; one along a card's top edge wants it below, Top.
    */
   tooltip?: TooltipPosition;
 };
@@ -61,9 +59,8 @@ const VARIANT = {
 } satisfies Record<NonNullable<Props['variant']>, string>;
 
 // Base is 40px round (8px around a 24px icon); Small 32px (6px around 20px).
-// The size is pinned as well as padded: in a flex column (the map's stack of
-// round controls) a padded-only Small stretched to its wider sibling and went
-// oval — the specimen story caught it on 2026-09-28.
+// The size is pinned as well as padded, so a parent that stretches its children
+// cannot make the pill oval; the size-fit wrapper below does the same.
 const SIZE = {
   base: 'size-10 p-2',
   small: 'size-8 p-1.5',

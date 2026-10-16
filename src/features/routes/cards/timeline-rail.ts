@@ -36,12 +36,10 @@ interface Stop {
  *
  * The rail joins two things next to each other on the card when both are
  * on the same side of the ride: along the ride, and along the rows before
- * it and after it, broken where the ride starts and where it ends (the
- * owner's Variant5, 4151:13619, 2026-10-16: "can you still connect those
- * dots"). A fold's row next to the ride carries no rail, open or closed
- * (the owner, 2026-10-16: "when close it should disconnect the disclosure",
- * 4194:12562 and 4194:12702): the `before` fold's row always sits just
- * above the ride, and the `after` fold's, closed, just below it, the
+ * it and after it, broken where the ride starts and where it ends (Figma
+ * Variant5, 4151:13619). A fold's row next to the ride carries no rail, open
+ * or closed (Figma 4194:12562 and 4194:12702): the `before` fold's row always
+ * sits just above the ride, and the `after` fold's, closed, just below it, the
  * destination's dot then alone. Opened, the `after` fold's row sits
  * between its last row and the destination, both after the ride, and the
  * rail runs through it (4189:11483); the `all` fold, nothing picked, is

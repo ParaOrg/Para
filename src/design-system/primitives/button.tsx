@@ -1,19 +1,17 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 /**
- * PalimosPoDesignSystem's Button, from the owner's Figma set of 2026-09-28
- * (node 3668:2812): a pill in four voices. Special is the jeepney one —
- * SN Pro Bold on the quiet surface with an edge and a soft shadow (Cubao
- * Free in the set, all capitals; SN Pro since the owner's "Papunta at
- * Pabalik", 2026-10-01, so its word reads as written); Secondary is
- * Special's surface and shadows in SN Pro Medium, the quiet one of a pair
- * (the install prompt's "I'll do it later", 3732:2512, 2026-10-13); Primary
- * speaks brand blue (or, on a card, the card's colours: its `fill`) and Error
- * the destructive red, both in SN Pro Medium.
+ * PalimosPoDesignSystem's Button, from the Figma set (node 3668:2812): a pill
+ * in four voices. Special is the jeepney one — SN Pro Bold on the quiet
+ * surface with an edge and a soft shadow (the set uses Cubao Free, all
+ * capitals; SN Pro here, so a word reads as written, as in "Papunta at
+ * Pabalik"); Secondary is Special's surface and shadows in SN Pro Medium, the
+ * quiet one of a pair (the install prompt's "I'll do it later", 3732:2512);
+ * Primary speaks brand blue (or, on a card, the card's colours: its `fill`)
+ * and Error the destructive red, both in SN Pro Medium.
  * Each state wears the set's effect style of the same name (tokens.css):
- * Rest, Hover (drawn 2026-09-28 — until then it matched Default), Pressed
- * (which also darkens the fill, and Special loses its edge). Error borrows
- * Primary's shadows, as the set does. Hover and press are `enabled:` only,
+ * Rest, Hover, Pressed (which also darkens the fill, and Special loses its
+ * edge). Error borrows Primary's shadows, as the set does. Hover and press are `enabled:` only,
  * so a disabled button keeps its Rest look at the design's opacity/60.
  * Tailwind puts hover behind `(hover: hover)`, so phones never stick on it.
  * No focus state is designed yet, so the browser's own focus ring stands
@@ -24,17 +22,17 @@ type Size = 'base' | 'small';
 
 /**
  * Small exists only where the set draws it — the types keep code from
- * getting ahead of the design. Special and Secondary had it from the start;
- * Primary gained it on 2026-10-15, when the owner drew Primary Small in
- * Default, Hover, Pressed and Disabled (3742:1196, for the timeline's "Set
- * as start", 4147:11947): Primary's fills and shadows at Small's sizes.
- * `size="small"` on error stays a compile error until the owner designs it.
+ * getting ahead of the design: Special, Secondary and Primary (Default, Hover,
+ * Pressed and Disabled: 3742:1196, for the timeline's "Set as start",
+ * 4147:11947); Primary Small is Primary's fills and shadows at Small's sizes.
+ * `size="small"` on error is a compile error until it is designed.
  */
 type VariantAndSize =
   | { variant: 'special' | 'secondary'; size?: Size; fill?: never }
   | { variant: 'primary'; size?: Size; fill?: 'brand' }
-  // A card's fill only as the owner draws it, Primary Small and enabled
-  // (4147:11947): its Base and its Disabled stay compile errors until he does.
+  // A card's fill only as the design draws it, Primary Small and enabled
+  // (4147:11947): its Base and its Disabled are compile errors until they are
+  // designed.
   | { variant: 'primary'; size: 'small'; fill: CardFill; disabled?: never }
   | { variant: 'error'; size?: 'base'; fill?: never };
 
@@ -70,14 +68,13 @@ const VARIANT = {
 } satisfies Record<Props['variant'], string>;
 
 /**
- * Primary's fill: brand blue, or the card it sits on (the owner's "card's
- * colours since it's on top of the card", 2026-10-16, for the timeline's
- * Set as start: his instance, 4147:11947, overrides the fill to
- * Card/red/surface). On a card it is the card's surface, pressed down to the
- * card's Timeline/surface as a pressed row of it is, a train's line's own
- * Map/Rail/<line>/… on its card. A card's fill sets no words: they are the
- * card's own, inherited (white, and dark on MRT-3's yellow), so they read as
- * the card's do.
+ * Primary's fill: brand blue, or the card it sits on (for the timeline's Set
+ * as start, which sits on top of its card: the Figma instance, 4147:11947,
+ * overrides the fill to Card/red/surface). On a card it is the card's
+ * surface, pressed down to the card's Timeline/surface as a pressed row of it
+ * is, a train's line's own Map/Rail/<line>/… on its card. A card's fill sets
+ * no words: they are the card's own, inherited (white, and dark on MRT-3's
+ * yellow), so they read as the card's do.
  */
 type PrimaryFill = keyof typeof PRIMARY_FILL;
 
