@@ -1,5 +1,9 @@
 # Choosing a ride's start and end
 
+Status: resolved
+
+> Done 2026-10-16: built in #173 with #166, #170, #171 and #172, merged into `claude/release-base` (094f3a9); every question in it answered by the owner the same day. It reaches `main` with the owner's release.
+
 **The owner's design (2026-10-15):** TimelineRouteDetail, Figma 4137:9886, the timeline inside TimelineRouteDetailCard (3778:3183). The example is MRT-3, North Avenue → Taft Avenue. In code, TimelineRouteDetail is `TripTimeline` (`src/features/routes/cards/trip-timeline.tsx`); `small-fixes` 3 gives it the Figma name.
 
 ## Today

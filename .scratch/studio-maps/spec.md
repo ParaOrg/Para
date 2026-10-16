@@ -26,7 +26,7 @@ Every route and hintuan goes **Draft → Pending → Approved**, and only approv
 ## The switch
 
 - **Always on screen at the top: Drafts | Tracking | Public.** Each choice has a word and an icon, not colour alone. Never in a menu: an editor must always see which map they're on.
-- **Not "Change map":** the round button at the top right (`basemap-control.tsx`) changes how the map *looks*. This switch changes what it *shows*.
+- **Not "Change map":** the layers button at the top right (`basemap-control.tsx`), which opens the Map Style card, changes how the map *looks*. This switch changes what it *shows*.
 - **The address remembers the choice:** `/studio/?map=drafts`, `tracking` or `public`. It can't be `/studio/tracking`: the host answers any unknown address with the public map's page (`wrangler.jsonc`).
 - **Switching keeps the camera** (the same place and zoom) and the basemap. A half-drawn line survives.
 - **Drafts opens by default.**
