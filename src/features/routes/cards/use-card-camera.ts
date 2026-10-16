@@ -120,11 +120,16 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const switched = () => setSwitches((n) => n + 1);
   useSwitchOverview(cam, saved.litDirections, switches, openSheet, cards.snap);
   // A ride from a start to an end (the owner, 2026-10-16): what the camera
-  // takes in once the end is picked (pickOnTrip), and what the trip frames
-  // as the sheet settles, in place of its whole route.
+  // takes in once the end is picked (pickOnTrip, endOnTrip), and what the
+  // trip frames as the sheet settles, in place of its whole route.
   const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
   const [endPicks, setEndPicks] = useState(0);
   useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
+  /** An end picked after a start: the sheet to Middle, or, there already, the camera alone. */
+  const takeInTheRide = () => {
+    if (cards.height.snap === 'middle') setEndPicks((n) => n + 1);
+    else cards.height.onSnap('middle');
+  };
   // The sheet settled at another height: what the card on show frames, again,
   // in the map it leaves — a trip's route, or its ride from a start to an
   // end; a picked card's routes or what the list lights, a hotspot's place
@@ -179,9 +184,19 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
       const isNewEnd =
         id !== null && ride.startId !== null && id !== ride.startId && id !== ride.pickedId;
       ride.pick(id);
-      if (!isNewEnd) return;
-      if (cards.height.snap === 'middle') setEndPicks((n) => n + 1);
-      else cards.height.onSnap('middle');
+      if (isNewEnd) takeInTheRide();
+    },
+
+    /**
+     * The origin's row or the destination's on the trip (useRideTo's toEnd).
+     * With a start, it is the ride's end, and the camera takes in the ride as
+     * for a hintuan picked as the end (the owner, 2026-10-16: "keep the
+     * start"); with none, the map glides to it.
+     */
+    endOnTrip: (end: 'from' | 'to') => {
+      const isNewEnd = ride.startId !== null && ride.endPicked !== end;
+      ride.toEnd(end);
+      if (isNewEnd) takeInTheRide();
     },
 
     /**

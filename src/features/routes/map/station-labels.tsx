@@ -92,6 +92,7 @@ export function StationLabels({
   livery,
   pickedId = null,
   startId = null,
+  endPicked = null,
   hasRide = false,
   onPick,
 }: {
@@ -105,6 +106,8 @@ export function StationLabels({
   pickedId?: string | null;
   /** The row made the ride's start, which its own HintuanPin marks. */
   startId?: string | null;
+  /** An end row picked as the ride's end, the start kept (useRideTo's `endPicked`). */
+  endPicked?: 'from' | 'to' | null;
   /** Called with the tapped row's id. */
   onPick?: (rowId: string) => void;
   /**
@@ -130,8 +133,8 @@ export function StationLabels({
   const stops = useMemo(() => rowStops(selected, hotspots, rows), [selected, hotspots, rows]);
   // The rows outside the ride sit along the pale, while it is drawn.
   const outside = useMemo(
-    () => (hasRide ? rowsOutsideRide(rows, startId, pickedId) : null),
-    [hasRide, rows, startId, pickedId],
+    () => (hasRide ? rowsOutsideRide(rows, startId, pickedId, endPicked) : null),
+    [hasRide, rows, startId, pickedId, endPicked],
   );
   return (
     <>

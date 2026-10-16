@@ -199,16 +199,6 @@ test('the start’s row tapped again lets the start go, as × Remove as start do
   root.unmount();
 });
 
-test('an end row tapped lets the start go too: the whole ride again', async () => {
-  const { out, root } = await mount(there, hotspots);
-  await act(async () => out.ride.pick(lagro1.id));
-  await act(async () => out.ride.setStart());
-  await act(async () => out.ride.toEnd('to'));
-  assert.equal(out.ride.startId, null);
-  assert.equal(out.ride.endPicked, 'to');
-  root.unmount();
-});
-
 test('a jeep’s SWITCH with a start and an end swaps them: the ride back, each on a box the other way passes', async () => {
   const { out, show, root } = await mount(there, hotspots);
   await act(async () => out.ride.pick(lagro1.id));
@@ -218,6 +208,34 @@ test('a jeep’s SWITCH with a start and an end swaps them: the ride back, each 
   await show(back);
   assert.equal(out.ride.startId, across.id, 'the way back starts where the ride ended');
   assert.equal(out.ride.pickedId, lagro2.id, 'and ends at the start’s place, across the road');
+  root.unmount();
+});
+
+test('a jeep’s SWITCH with a start and the destination its end swaps them too: the ride back from where the way back leaves', async () => {
+  // The owner's "keep the start" (2026-10-16) with his "yeah try swapping".
+  const { out, show, root } = await mount(there, hotspots);
+  await act(async () => out.ride.pick(lagro1.id));
+  await act(async () => out.ride.setStart());
+  await act(async () => out.ride.toEnd('to'));
+  await act(async () => out.ride.carryTo(back, passing(lagro2, across)));
+  await show(back);
+  assert.equal(out.ride.startId, null, 'the way back leaves from where the trip went');
+  assert.equal(out.ride.endPicked, null);
+  assert.equal(out.ride.pickedId, lagro2.id, 'and ends at the start’s place, across the road');
+  root.unmount();
+});
+
+test('…and with the origin its end, the start stays, the way back’s own destination its end', async () => {
+  // Ridden back to the origin, the ride ran the way the way back runs.
+  const { out, show, root } = await mount(there, hotspots);
+  await act(async () => out.ride.pick(lagro1.id));
+  await act(async () => out.ride.setStart());
+  await act(async () => out.ride.toEnd('from'));
+  await act(async () => out.ride.carryTo(back, passing(lagro2, across)));
+  await show(back);
+  assert.equal(out.ride.startId, lagro2.id, 'the start, across the road');
+  assert.equal(out.ride.endPicked, 'to', 'to where the way back goes, the trip’s origin');
+  assert.equal(out.ride.pickedId, null);
   root.unmount();
 });
 
@@ -339,6 +357,39 @@ test('a start alone is no ride yet: the trip whole, nothing pale, its circle whe
   assert.ok(out.ride.startPinAt, 'its circle on the map');
   await act(async () => out.ride.pick('c'));
   assert.ok(out.ride.ridden, 'an end picked: the ride, Variant4');
+  root.unmount();
+});
+
+test('an end row tapped keeps the start: the ride on to where the trip goes, or back to where it leaves', async () => {
+  // The owner, 2026-10-16: "keep the start"; until then an end row let it go.
+  const { out, root } = await mountLined(out1);
+  await act(async () => out.ride.pick('b'));
+  await act(async () => out.ride.setStart());
+  await act(async () => out.ride.toEnd('to'));
+  assert.deepEqual([out.ride.startId, out.ride.endPicked], ['b', 'to'], 'the start kept');
+  const on = out.ride.ridden.line;
+  assert.equal(out.ride.ridden.isBackwards, false);
+  assert.deepEqual(out.ride.startPinAt, on[0], 'from Bestlink');
+  assert.deepEqual(on.at(-1), LINE.at(-1), 'on to where the trip goes');
+  assert.equal(out.ride.ridden.pale.length, 1, 'the line pale before the start alone');
+  assert.ok(Math.abs(out.ride.rideTo.metres - 2226) < 40, `${out.ride.rideTo.metres}`);
+  // The origin: the ride back to it, its arrows from the S to the E.
+  await act(async () => out.ride.toEnd('from'));
+  assert.deepEqual([out.ride.startId, out.ride.endPicked], ['b', 'from']);
+  const back = out.ride.ridden.line;
+  assert.equal(out.ride.ridden.isBackwards, true);
+  assert.deepEqual(back.at(-1), LINE[0], 'back to where the trip leaves');
+  assert.equal(out.ride.ridden.pale.length, 1, 'the line pale after the start alone');
+  assert.ok(Math.abs(out.ride.rideTo.metres - 2226) < 40, `${out.ride.rideTo.metres}`);
+  // Again: the end let go, the start alone, no ride yet.
+  await act(async () => out.ride.toEnd('from'));
+  assert.deepEqual([out.ride.startId, out.ride.endPicked], ['b', null]);
+  assert.equal(out.ride.ridden, null);
+  // With no start, an end row is the whole ride again, as before.
+  await act(async () => out.ride.removeStart());
+  await act(async () => out.ride.toEnd('to'));
+  assert.deepEqual([out.ride.startId, out.ride.endPicked], [null, 'to']);
+  assert.equal(out.ride.ridden, null);
   root.unmount();
 });
 

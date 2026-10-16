@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { ChevronDownIcon, CloseIcon, EndIcon, StartIcon } from '@/shared/ui/route-icons';
@@ -65,7 +65,7 @@ export interface TimelineRouteDetailProps {
    * the ferry's, and a station the table does not know: the pesos alone.
    */
   pickedCode?: string | null;
-  /** The origin's row (`from`) or the destination's (`to`) was tapped: the whole ride again, and that end shown. */
+  /** The origin's row (`from`) or the destination's (`to`) was tapped: that end shown, the whole ride again, or with a start the ride's end. */
   onEnd: (end: 'from' | 'to') => void;
   /**
    * The origin (`from`) or the destination (`to`), picked from its row: its
@@ -134,13 +134,15 @@ export interface TimelineRouteDetailProps {
  * lets it go, the fare tile the whole ride's again; one at a time. A picked
  * row is in the ride, so it never folds away (it could, until 2026-10-15,
  * and stayed picked: the default he kept). The origin's and the
- * destination's rows are buttons too: a tap on either lets a hintuan go,
- * the ride whole again, and the map glides to that end, so a rider can look
- * along the route from end to end (his ask, 2026-09-29). Either end is
- * picked by its tap, its dot the Selected one, and let go by a second (his
+ * destination's rows are buttons too: a tap on either lets a hintuan go and
+ * picks that end, its dot the Selected one, and a second lets it go (his
  * "green circle too" for the destination and "it should have!" for the
- * origin, the same day); its name and the pesos stay as they are, the whole ride's being
- * the tile's.
+ * origin, 2026-09-29). With no start, the ride is whole again and the map
+ * glides to that end, so a rider can look along the route from end to end
+ * (his ask, the same day), its name and the pesos as they are, the whole
+ * ride's being the tile's. With a start, the end tapped is the ride's end
+ * and the start stays (his "keep the start", 2026-10-16): the destination's
+ * E, or the origin's E, the ride back to it, as an end above the start.
  */
 export function TimelineRouteDetail({
   livery,
@@ -160,29 +162,48 @@ export function TimelineRouteDetail({
   isTrain = false,
 }: TimelineRouteDetailProps) {
   const [open, setOpen] = useState(false);
+  // Whether the fold has ever been opened on this card: until then its rows
+  // are their bare <li>s, the hidden insides left out (the cheap-phone
+  // plan, step 11, 2026-10-04). A trip with 10 to 25 hintuans drew all of
+  // them, invisible, as it opened, for a fold most riders never open.
+  // Opened once, they stay drawn as long as the card is up, so they close
+  // in view and open again as they always did. Set with `open` itself, in
+  // the same render, so the first opening moves as every other; and as a
+  // pick is let go (below), so the rows it folds back close in view too.
+  const [everOpened, setEverOpened] = useState(false);
   // Once a start or an end is picked, the rows around it fold apart, before
   // and after, each its own fold (timelineFolds). Nothing folds under the
-  // finger: picked from the open list, both stay open; Set as start keeps
-  // them as they were; and the picks let go open the list whole, the row
-  // just used among the rest (Claude's call, 2026-10-15; whether it should
-  // fold back as it was is the owner's to say).
+  // finger as a pick is made: picked from the open list, both stay open, and
+  // Set as start keeps them as they were. Let go, they fold back as they were
+  // before the pick (the owner, 2026-10-16: "fold back"; from 2026-10-15 a
+  // let-go opened the whole list, so the row just used never folded away).
   const hasPick = start !== null || picked !== null;
   const [hadPick, setHadPick] = useState(hasPick);
   const [openParts, setOpenParts] = useState({ before: false, after: false });
   if (hadPick !== hasPick) {
     setHadPick(hasPick);
     if (hasPick) setOpenParts({ before: open, after: open });
-    else setOpen(true);
   }
-  // The end let go with the start kept: a start alone folds the rows after
-  // it, the row just let go among them, so they open. Set as start, the end
-  // becoming the start, moves nothing.
-  const [pickedBefore, setPickedBefore] = useState(picked);
-  if (pickedBefore !== picked) {
-    setPickedBefore(picked);
-    if (picked === null && start !== null && pickedBefore !== start) {
-      setOpenParts((parts) => ({ ...parts, after: true }));
-    }
+  // A pick let go keeps the rows it folds back drawn: the row just tapped
+  // closes in view, and the keyboard's focus on it passes to its fold (the
+  // effect below) rather than to nothing as its button leaves.
+  const [lastPicks, setLastPicks] = useState({ start, picked, endPicked });
+  if (
+    lastPicks.start !== start ||
+    lastPicks.picked !== picked ||
+    lastPicks.endPicked !== endPicked
+  ) {
+    // The start let go, or a hintuan end let go that neither became the
+    // start (Set as start) nor gave way to an end row: an end row's own
+    // button, which keeps the focus, never folds.
+    const isLetGo =
+      (lastPicks.start !== null && start === null) ||
+      (lastPicks.picked !== null &&
+        picked === null &&
+        lastPicks.picked !== start &&
+        endPicked === null);
+    setLastPicks({ start, picked, endPicked });
+    if (isLetGo) setEverOpened(true);
   }
   const isOpen = (part: FoldPart) => (part === 'all' ? open : openParts[part]);
   const toggle = (part: FoldPart) => {
@@ -191,20 +212,25 @@ export function TimelineRouteDetail({
     // The first tap opens it (it starts folded): from then on, drawn.
     setEverOpened(true);
   };
-  // Whether the fold has ever been opened on this card: until then its rows
-  // are their bare <li>s, the hidden insides left out (the cheap-phone
-  // plan, step 11, 2026-10-04). A trip with 10 to 25 hintuans drew all of
-  // them, invisible, as it opened, for a fold most riders never open.
-  // Opened once, they stay drawn as long as the card is up, so they close
-  // in view and open again as they always did. Set with `open` itself, in
-  // the same render, so the first opening moves as every other.
-  const [everOpened, setEverOpened] = useState(false);
-  const folds = timelineFolds(hintuans, start, picked);
+  const folds = timelineFolds(hintuans, start, picked, endPicked);
   const foldOf = new Map(folds.flatMap((f) => f.rowIds.map((id) => [id, f] as const)));
   const isShown = (id: string) => {
     const fold = foldOf.get(id);
     return !fold || isOpen(fold.part);
   };
+  // A row folded away under the keyboard's focus — a pick let go folds back
+  // (the owner, 2026-10-16) — hands the focus to the fold that now holds it,
+  // so it never sits on a row that can't be seen.
+  const list = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const row = document.activeElement?.closest('[data-testid="trip-hintuan"]');
+    const id = row && list.current?.contains(row) ? row.getAttribute('data-hintuan') : null;
+    const fold = id === null ? undefined : foldOf.get(id);
+    if (!fold || isOpen(fold.part)) return;
+    list.current
+      ?.querySelector<HTMLButtonElement>(`[data-testid="trip-fold"][data-part="${fold.part}"]`)
+      ?.focus();
+  });
   const rail = TIMELINE_SURFACE[livery];
   // The rail runs along the ride, from its first row to its last, and along
   // the rows before it and after it, broken where the ride starts and where
@@ -215,9 +241,10 @@ export function TimelineRouteDetail({
   // start alone is no ride yet (his Variant3, 2026-10-16: "it must originally
   // make the connection disconnected … so user don't get confused on the
   // context"): a ride of its one row, its dot alone, until an end is picked.
-  const lone = picked === null && start !== null ? hintuans.findIndex((h) => h.id === start) : -1;
+  const isStartAlone = start !== null && picked === null && endPicked === null;
+  const lone = isStartAlone ? hintuans.findIndex((h) => h.id === start) : -1;
   const { first, last } =
-    rideRows(hintuans, start, picked) ??
+    rideRows(hintuans, start, picked, endPicked) ??
     (lone >= 0 ? { first: lone, last: lone } : { first: -1, last: hintuans.length });
   const sideOf = (i: number): 'before' | 'ride' | 'after' => {
     if (i < first) return 'before';
@@ -257,13 +284,13 @@ export function TimelineRouteDetail({
       />
       {/* The fold row keeps its place among the children whether open or not,
           so a keyboard's focus stays on it while the hintuans come and go. */}
-      <ol className="flex w-full flex-col">
+      <ol ref={list} className="flex w-full flex-col">
         <TimelineTop
           livery={livery}
           rail={rail}
           pressed={pressed}
           routeOrigin={routeOrigin}
-          isStart={start === null}
+          mark={originMark(start, endPicked)}
           connection={hasRailBelow(-1) ? 'connected' : 'disconnected'}
           selected={endPicked === 'from'}
           onTap={() => onEnd('from')}
@@ -278,7 +305,7 @@ export function TimelineRouteDetail({
             isStart,
             isEnd,
             hasStart: start !== null,
-            hasEnd: picked !== null,
+            hasEnd: picked !== null || endPicked !== null,
             startCode,
             pickedCode,
             pickedPesos,
@@ -322,7 +349,7 @@ export function TimelineRouteDetail({
           rail={rail}
           pressed={pressed}
           routeDirection={routeDirection}
-          isEnd={picked === null && start === null}
+          isEnd={picked === null && (start === null || endPicked === 'to')}
           connection={hasRailAbove(hintuans.length) ? 'connected' : 'disconnected'}
           selected={endPicked === 'to'}
           onTap={() => onEnd('to')}
@@ -392,7 +419,7 @@ function TimelineTop({
   rail,
   pressed,
   routeOrigin,
-  isStart,
+  mark,
   connection,
   selected,
   onTap,
@@ -402,8 +429,8 @@ function TimelineTop({
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
   routeOrigin: string;
-  /** Where the ride starts, Start's S before its name: no start picked further on. */
-  isStart: boolean;
+  /** Start's S or End's E before its name, or neither (originMark). */
+  mark: 'start' | 'end' | null;
   /** Disconnected where a ride, or a start alone, starts at the first hintuan: the rail breaks under it. */
   connection: TimelineStickConnection;
   selected: boolean;
@@ -424,12 +451,12 @@ function TimelineTop({
           dot={<TimelineDot rail={rail} selected={selected} />}
         />
         <span className="flex min-w-0 flex-1 items-start gap-1 pb-2 pl-2">
-          {isStart && <RideMark mark="start" livery={livery} />}
+          {mark && <RideMark mark={mark} livery={livery} />}
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span
             className={
               'min-w-0 flex-1 text-xl/7 font-extrabold sheet-low:line-clamp-1' +
-              (isStart ? '' : ' pl-1')
+              (mark ? '' : ' pl-1')
             }
           >
             {routeOrigin}
@@ -438,6 +465,16 @@ function TimelineTop({
       </button>
     </li>
   );
+}
+
+/**
+ * What the origin's row wears: Start's S while no start is picked further
+ * on; End's E when, a start picked, it is the ride's end, tapped with the
+ * start kept (the owner, 2026-10-16: "keep the start"); else nothing.
+ */
+function originMark(start: string | null, endPicked: 'from' | 'to' | null): 'start' | 'end' | null {
+  if (start === null) return 'start';
+  return endPicked === 'from' ? 'end' : null;
 }
 
 /**
@@ -727,7 +764,7 @@ function TimelineBottomEndRoute({
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
   routeDirection: string;
-  /** Where the ride ends, End's E before its name: no hintuan picked as the end, and no start alone (Variant3). */
+  /** Where the ride ends, End's E before its name: no hintuan picked as the end, and no start alone (Variant3), or picked itself with a start kept. */
   isEnd: boolean;
   /** Disconnected where a ride, or a start alone, ends at the last hintuan: the rail breaks above it. */
   connection: TimelineStickConnection;

@@ -157,20 +157,50 @@ export function rideSpan(
   if (line.length < 2) return null;
   const start = startId === null ? 0 : rideCut(v, hotspots, startId)?.metres;
   const end = endId === null ? lineLength(line) : rideCut(v, hotspots, endId)?.metres;
-  if (start === undefined || end === undefined || Math.abs(end - start) < 1) return null;
+  if (start === undefined || end === undefined) return null;
+  return spanAlong(line, start, end);
+}
+
+/**
+ * The ride on `v` from the start row to one of the trip's own ends, picked
+ * from its row with the start kept (the owner, 2026-10-16: "keep the
+ * start"; until then an end row let the start go): on to where it goes, or
+ * back to where it leaves, ridden back along the line as any end above the
+ * start is. Null when the line misses the start's box.
+ */
+export function rideToEnd(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  startId: string,
+  end: 'from' | 'to',
+): RideSpan | null {
+  const line = travelLine(v, hotspots);
+  if (line.length < 2) return null;
+  const start = rideCut(v, hotspots, startId)?.metres;
+  if (start === undefined) return null;
+  return spanAlong(line, start, end === 'from' ? 0 : lineLength(line));
+}
+
+/**
+ * The ride along `line` from `start` metres in to `end`, back along it when
+ * the end comes first; null for a ride of under a metre.
+ */
+function spanAlong(line: readonly LngLat[], start: number, end: number): RideSpan | null {
+  if (Math.abs(end - start) < 1) return null;
   const s = pointAt(line, start);
   const e = pointAt(line, end);
   const isBackwards = end < start;
   // The pick the line reaches first and the one it reaches last, whichever
   // is the start: the pale runs up to the one and on from the other.
   const [upper, lower] = isBackwards ? [e, s] : [s, e];
+  const [first, last] = isBackwards ? [end, start] : [start, end];
   const between = [upper.point, ...line.slice(upper.index + 1, lower.index + 1), lower.point];
   // Nothing to pale before the origin or after the destination: an empty
   // line, not a point or a sliver the float sums leave.
   return {
-    before: startId === null ? [] : [...line.slice(0, upper.index + 1), upper.point],
+    before: first < 1 ? [] : [...line.slice(0, upper.index + 1), upper.point],
     ridden: isBackwards ? between.reverse() : between,
-    rest: endId === null ? [] : [lower.point, ...line.slice(lower.index + 1)],
+    rest: lineLength(line) - last < 1 ? [] : [lower.point, ...line.slice(lower.index + 1)],
     metres: Math.abs(end - start),
     from: s.point,
     at: e.point,
@@ -190,8 +220,9 @@ export function rowsOutsideRide(
   rows: readonly { id: string }[],
   startId: string | null,
   endId: string | null,
+  endRow: 'from' | 'to' | null = null,
 ): Set<string> {
-  const ride = rideRows(rows, startId, endId);
+  const ride = rideRows(rows, startId, endId, endRow);
   if (!ride) return new Set();
   return new Set(rows.filter((_, i) => i < ride.first || i > ride.last).map((r) => r.id));
 }
@@ -204,18 +235,25 @@ export function rowsOutsideRide(
  * alone, no ride yet until its end is picked (the owner, 2026-10-16: his
  * Variant3's S stands alone, "so user don't get confused on the context") —
  * or with a pick that is no row of these (another trip's, a moment before it
- * goes): the whole ride. The one rule the card's rail and folds read
- * (rowsOutsideRide).
+ * goes): the whole ride. `endRow`, an end row picked with the start kept
+ * (rideToEnd): the ride from the start's row to the destination, the row
+ * count, or back to the origin, -1. The one rule the card's rail and folds
+ * read (rowsOutsideRide).
  */
 export function rideRows(
   rows: readonly { id: string }[],
   startId: string | null,
   endId: string | null,
+  endRow: 'from' | 'to' | null = null,
 ): { first: number; last: number } | null {
-  if (endId === null) return null;
   const startAt = startId === null ? -1 : rows.findIndex((r) => r.id === startId);
+  if (startId !== null && startAt < 0) return null;
+  if (endId === null) {
+    if (endRow === null || startId === null) return null;
+    return endRow === 'to' ? { first: startAt, last: rows.length } : { first: -1, last: startAt };
+  }
   const endAt = rows.findIndex((r) => r.id === endId);
-  if ((startId !== null && startAt < 0) || endAt < 0) return null;
+  if (endAt < 0) return null;
   return startAt <= endAt ? { first: startAt, last: endAt } : { first: endAt, last: startAt };
 }
 

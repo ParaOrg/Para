@@ -322,6 +322,24 @@ export const RideEndAboveStart: Story = {
   },
 };
 
+/**
+ * Shaw Boulevard the start, then Taft Avenue's row tapped (the owner,
+ * 2026-10-16: "keep the start"): the ride from Shaw Boulevard on to it, its
+ * E on Taft Avenue, the stations above folded.
+ */
+export const RideStartToDestination: Story = {
+  args: { ...onMrt3, start: shaw, startCode: 'YL07', endPicked: 'to', pickedPesos: '₱13' },
+};
+
+/**
+ * Shaw Boulevard the start, then North Avenue's row tapped: the ride back
+ * from Shaw Boulevard to it, as an end above the start, its E on North
+ * Avenue, the stations after the start folded.
+ */
+export const RideStartToOrigin: Story = {
+  args: { ...onMrt3, start: shaw, startCode: 'YL07', endPicked: 'from', pickedPesos: '₱13' },
+};
+
 /** A jeep's ride between two hintuans: the pesos alone in the pill, the same buttons. */
 export const RideStartAndEndJeep: Story = {
   args: { start: 'h2', picked: 'h6', pickedPesos: '₱14', onSetStart: fn(), onRemoveStart: fn() },

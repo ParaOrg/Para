@@ -104,6 +104,9 @@ export interface Ride {
  * starts after it or ends before it, the line there drawn in the card's
  * pale; and `isMarked`, whether it wears its S or E: not on the pale, nor on
  * a trip whose start is picked with no ride drawn (Ride's `isUnmarked`).
+ * `mark`, which of the two it wears: the origin's S and the destination's
+ * E, turned round on a ride picked backwards, whose E an origin picked from
+ * its row is (the owner, 2026-10-16: "keep the start").
  */
 export interface RideEnd {
   end: 'from' | 'to';
@@ -115,6 +118,7 @@ export interface RideEnd {
   of: string | null;
   paled: boolean;
   isMarked: boolean;
+  mark: 'start' | 'end';
 }
 
 /**
@@ -151,11 +155,18 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           of: r.id ?? null,
           paled,
           isMarked: !paled && !r.isUnmarked,
+          mark: markOf(end, r.isBackwards ?? false),
         };
         if (e.named) named.push(e);
         return e;
       }),
     );
+}
+
+/** Which mark an end wears: the origin's S and the destination's E, the other way round on a ride picked backwards. */
+function markOf(end: 'from' | 'to', isBackwards: boolean): 'start' | 'end' {
+  if (isBackwards) return end === 'from' ? 'end' : 'start';
+  return end === 'from' ? 'start' : 'end';
 }
 
 /**

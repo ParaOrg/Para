@@ -9,7 +9,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
-import { rideSpan, routeTimeline, rowsOutsideRide } from '../../src/features/routes/model/ride.ts';
+import {
+  rideRows,
+  rideSpan,
+  rideToEnd,
+  routeTimeline,
+  rowsOutsideRide,
+} from '../../src/features/routes/model/ride.ts';
 import { railFares } from '../../src/features/routes/model/rail-fares.ts';
 import { lineLength } from '../../src/shared/utils/geo.ts';
 import { readPublished } from '../../scripts/checks/check-map-data.mjs';
@@ -116,6 +122,23 @@ test('an end before the start: the ride runs back along the line from the startâ
   assert.deepEqual(span.rest, forward.rest, 'and on from it: after Camarin');
 });
 
+test('an end row picked with the start kept: on to where the trip goes, or back to where it leaves', () => {
+  // The owner, 2026-10-16: "keep the start".
+  const on = rideToEnd(there, HOTSPOTS, 'b', 'to');
+  assert.equal(on.isBackwards, false);
+  assert.deepEqual(on.at, LINE.at(-1));
+  assert.deepEqual(on.rest, [], 'nothing after the destination to pale');
+  assert.deepEqual(on, rideSpan(there, HOTSPOTS, 'b', null), 'as a start with no end ran');
+  const back = rideToEnd(there, HOTSPOTS, 'b', 'from');
+  assert.equal(back.isBackwards, true);
+  assert.deepEqual(back.at, LINE[0]);
+  assert.deepEqual(back.ridden.at(-1), LINE[0], 'ridden back to the origin');
+  assert.deepEqual(back.before, [], 'nothing before the origin to pale');
+  assert.ok(near(back.metres, 2 * KM), `${back.metres}`);
+  const off = box('off', 0.025, 'Elsewhere', 0.01);
+  assert.equal(rideToEnd(there, [...HOTSPOTS, off], 'off', 'to'), null, 'a start the line misses');
+});
+
 test('the rows outside the ride: before the start and after the end, whichever way round they were picked', () => {
   const rows = ['a', 'b', 'c', 'd'].map((id) => ({ id }));
   const outside = (start, end) => [...rowsOutsideRide(rows, start, end)].sort();
@@ -125,6 +148,12 @@ test('the rows outside the ride: before the start and after the end, whichever w
   assert.deepEqual(outside('b', 'c'), ['a', 'd']);
   assert.deepEqual(outside('c', 'a'), ['d'], 'either way round, the stretch between the two');
   assert.deepEqual(outside('gone', 'c'), [], 'a pick no row of these holds');
+  // An end row picked with the start kept: the destination, the row count; the origin, -1.
+  assert.deepEqual([...rowsOutsideRide(rows, 'b', null, 'to')].sort(), ['a']);
+  assert.deepEqual([...rowsOutsideRide(rows, 'b', null, 'from')].sort(), ['c', 'd']);
+  assert.deepEqual(rideRows(rows, 'b', null, 'to'), { first: 1, last: 4 });
+  assert.deepEqual(rideRows(rows, 'b', null, 'from'), { first: -1, last: 1 });
+  assert.equal(rideRows(rows, null, null, 'to'), null, 'no start: the whole ride');
 });
 
 /** The committed map, every line in full: the index and its lines/ (check-map-data.mjs). */
