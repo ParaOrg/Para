@@ -7,7 +7,7 @@ import { shortDate } from './status';
  * What the public map says about itself, over the map: a load that failed
  * (or a map published for a newer app), how old the map is when it came
  * from the phone's store, and a new version waiting. Split from
- * CommuterApp.tsx, 2026-09-29.
+ * public-map-app.tsx, 2026-09-29.
  */
 export function Notices({
   loadFailed,

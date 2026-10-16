@@ -1,8 +1,6 @@
 #!/bin/sh
 # SN Pro's six wired faces, subset to Latin from the owner's sources beside
-# them. Cubao Free Regular is not subset: its kerning is an Apple-format
-# `kern` table (version 1.0, format 2) that pyftsubset cannot subset and
-# drops, and the browsers kern with it; its woff2 stays the owner's whole.
+# them.
 # Run by hand when a source or the character list changes, and commit what it
 # writes; the build only copies the results (no Python in the build).
 # Made with fonttools 4.66.1 (pip install fonttools brotli), 2026-09-29;

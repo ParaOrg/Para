@@ -14,11 +14,11 @@ import { pointSchema, polygonSchema } from './geojson-schema';
  */
 
 /** Mirrors the `stop_kind` enum in supabase/migrations/0004_stop_hotspot.sql. */
-export const hotspotKindSchema = z.enum(['terminal', 'hintuan']);
+const hotspotKindSchema = z.enum(['terminal', 'hintuan']);
 export type HotspotKind = z.infer<typeof hotspotKindSchema>;
 
-/** A hotspot as the index carries it (and the `stop` table, less its owner). */
-export const rawHotspotSchema = z.object({
+/** A hotspot as the index carries it (and the `stop` table). */
+const rawHotspotSchema = z.object({
   id: z.string(),
   name: z.string(),
   informal: z.nullable(z.string()),
@@ -30,18 +30,18 @@ export const rawHotspotSchema = z.object({
   created_at: z.string(),
   line: z.optional(z.nullable(z.string())),
 });
-export type RawHotspot = z.infer<typeof rawHotspotSchema>;
+type RawHotspot = z.infer<typeof rawHotspotSchema>;
 
 /** The app's hotspot from a row: the same facts, the glossary's names. */
 export const toHotspot = (raw: RawHotspot) => ({
   id: raw.id,
-  /** The ground name: what is written on the ground, "SM Fairview Terminal B". */
+  /** The name: what is written on the ground, "SM Fairview Terminal B". */
   name: raw.name,
   /**
-   * The hotspot name: what people say, "SM Fairview". Optional; `hotspotLabel`
-   * falls back to the ground name. The route name reads this (R1), and
-   * boxes that share it are one hotspot to a commuter, whatever is written on
-   * each — a terminal and two hintuans under one hotspot name. 0007; the
+   * The informal name: what people say, "SM Fairview". Optional; `hotspotLabel`
+   * falls back to the name. The route name reads this (R1), and
+   * boxes that share it are one place to a commuter, whatever is written on
+   * each — a terminal and two hintuans under one informal name. 0007; the
    * owner's two words for the two names, 2026-09-26.
    */
   informal: raw.informal,
@@ -66,15 +66,12 @@ export const toHotspot = (raw: RawHotspot) => ({
 export const hotspotSchema = z.pipe(rawHotspotSchema, z.transform(toHotspot));
 export type Hotspot = ReturnType<typeof toHotspot>;
 
-/** The `stop` row with what the editor needs: who owns it. */
-export const rawHotspotRowSchema = z.extend(rawHotspotSchema, { owner_id: z.string() });
-export type RawHotspotRow = z.infer<typeof rawHotspotRowSchema>;
-export const toHotspotRow = (raw: RawHotspotRow) => ({ ...toHotspot(raw), ownerId: raw.owner_id });
-export const hotspotRowSchema = z.pipe(rawHotspotRowSchema, z.transform(toHotspotRow));
-export type HotspotRow = ReturnType<typeof toHotspotRow>;
+/** The `stop` row as the editor reads it: the same hotspot, every editor may change every row (0015). */
+export const hotspotRowSchema = hotspotSchema;
+export type HotspotRow = Hotspot;
 
 /** One row of route_stop as the file and the table carry it. */
-export const rawHotspotLinkSchema = z.object({
+const rawHotspotLinkSchema = z.object({
   route_variant_id: z.string(),
   stop_id: z.string(),
   stop_sequence: z.number(),

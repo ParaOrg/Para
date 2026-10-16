@@ -7,7 +7,7 @@ import { fetchIndex, indexIsStale } from './api/fetch-index';
 /**
  * How the public map knows its own state: whether there is a network, and
  * how old the map on screen is — what the offline notice says (Notices.tsx).
- * Split from CommuterApp.tsx, 2026-09-29.
+ * Split from public-map-app.tsx, 2026-09-29.
  */
 
 /** Whether the browser believes it has a network; `false` is certain, `true` only hopeful. */
@@ -50,7 +50,7 @@ export function useMapAge(loaded: unknown): MapAge {
 }
 
 /** When the map on screen was published, and whether it is a stored copy. */
-export interface MapAge {
+interface MapAge {
   publishedAt: string | null;
   stale: boolean;
 }

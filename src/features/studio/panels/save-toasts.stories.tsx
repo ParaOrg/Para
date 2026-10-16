@@ -16,11 +16,9 @@ const talaFairviewOut: DirectionRow = {
   shape: null,
   reversed: false,
   confidence: 'drawn',
-  ownerId: 'sample-owner',
   updatedAt: '2026-09-21T00:00:00Z',
   route: {
     id: 'sample-route',
-    ownerId: 'sample-owner',
     signboard: null,
     routeCode: null,
     shortName: null,
@@ -37,7 +35,6 @@ const talaFairviewOut: DirectionRow = {
 
 const tala: HotspotRow = {
   id: 'sample-tala',
-  ownerId: 'sample-owner',
   name: 'Tala Jeepney Terminal',
   informal: 'Tala',
   aliases: [],

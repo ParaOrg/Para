@@ -29,8 +29,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Red: Content/inverse under Route/RouteCardPrimary, the Primary Blob. */
-export const Red: Story = {};
+/**
+ * Red: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
+ * place in SN Pro ExtraBold 20/28, as RouteCardExample draws it (3746:1238,
+ * the owner's pick of 2026-10-16).
+ */
+export const Red: Story = {
+  play: async ({ canvasElement }) => {
+    const place = within(canvasElement).getByTestId('chooser-select');
+    const type = getComputedStyle(place);
+    await expect(type.fontSize).toBe('20px');
+    await expect(type.lineHeight).toBe('28px');
+    await expect(type.fontWeight).toBe('800');
+  },
+};
 
 /** Orange, the Card/orange tokens (Figma's Pink until 2026-10-13). */
 export const Orange: Story = { args: { livery: 'orange', routeOrigin: 'SM Fairview' } };
