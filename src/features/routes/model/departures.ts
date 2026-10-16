@@ -1,3 +1,4 @@
+import { railBound } from './rail-codes';
 import {
   directionEndHotspots,
   directionEnds,
@@ -134,4 +135,22 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
   return all.filter(
     (v) => v.routeId !== of.routeId && isDrawn(v) && directionEndHotspots(v).fromHotspot === start,
   );
+}
+
+/**
+ * The word on SWITCH: the way that is showing — Papunta, there; Pabalik, the
+ * way back (the owner's ask, 2026-10-01: "instead of switch on the word").
+ * A tap turns it round, and the word with it.
+ *
+ * On a train it is the bound the riders and the operators say, Northbound or
+ * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's ask of
+ * 2026-10-15). One word fits every direction on show: a list with jeeps and
+ * trains, or two lines bound different ways, keeps Papunta and Pabalik, and so
+ * does the ferry, which has no bound.
+ */
+export function wayWord(back: boolean, showing: readonly Direction[]): string {
+  const bounds = new Set(showing.map(railBound));
+  const [bound] = bounds;
+  if (bounds.size === 1 && bound) return bound;
+  return back ? 'Pabalik' : 'Papunta';
 }

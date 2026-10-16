@@ -5,7 +5,7 @@ import { lineLength } from '@/shared/utils/geo';
 
 import { FREE, TimelineRouteDetailCard, type Fare, type Fares } from './timeline-route-detail-card';
 import { useFareKind } from './use-fare-kind';
-import { otherDirection, otherRoutesFrom } from '../model/departures';
+import { otherDirection, otherRoutesFrom, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { cardLiveries, type Livery } from '../model/liveries';
 import { railFares } from '../model/rail-fares';
@@ -157,6 +157,7 @@ export function TripCard({
       routeDirection={to}
       switchable={switchable}
       back={direction.reversed}
+      way={wayWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
       }}
