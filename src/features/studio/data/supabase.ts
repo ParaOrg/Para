@@ -12,7 +12,7 @@ export const supabaseConfig: { url: string; key: string } | null = url && key ? 
  *
  * Never throw here. An import-time throw takes the whole bundle with it: the
  * minifier removes every module after an unconditional throw, and the result
- * is a white page with no explanation. Production shipped exactly that.
+ * is a white page with no explanation.
  */
 export const supabaseConfigError: string | null = supabaseConfig
   ? null

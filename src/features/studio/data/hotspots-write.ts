@@ -49,7 +49,7 @@ interface SaveHotspotInput {
  * Two steps, not one transaction, as a direction's save is (save-route.ts):
  * `onWritten` hears of the row the moment it is in, so a retry after the
  * links failed updates that row instead of inserting a second box on the
- * same ground (review of 2026-10-03, finding 4).
+ * same ground.
  */
 export async function saveHotspot(
   input: SaveHotspotInput,
@@ -82,9 +82,9 @@ export async function saveHotspot(
     : client.from('stop').insert(row);
   const { data, error } = await query.select('*').single();
   if (error) {
-    // 0014 keys the index on the place, the informal name or else the
-    // ground name; before it, a blank informal name slipped past (review of
-    // 2026-10-03). The old name stays matched until the owner applies 0014.
+    // 0014 keys the index on the place: the informal name, else the ground
+    // name. The old index name is matched too, for a database that has not
+    // applied 0014.
     if (
       error.code === '23505' &&
       (error.message.includes('stop_terminal_place_unique') ||
@@ -97,7 +97,7 @@ export async function saveHotspot(
     throw new Error(error.message);
   }
   // The row comes back in the table's names; the app's hotspot is read off it
-  // (hotspot-schema.ts: this file is the boundary, CONTEXT.md, ticket 07).
+  // (hotspot-schema.ts: this file is the boundary, CONTEXT.md).
   const read = hotspotRowSchema.safeParse(data);
   if (!read.success) {
     const [issue] = read.error.issues;
@@ -157,7 +157,7 @@ async function replaceLinks(hotspotId: string, links: RawHotspotLink[]) {
 /**
  * Delete one hotspot. Its links go with it (route_stop cascades). A delete
  * RLS will not let through is not an error to PostgREST, only no rows: the
- * rows are read back, and none is said (review of 2026-10-03, finding 6).
+ * rows are read back, and none is said.
  */
 export async function deleteHotspot(hotspot: HotspotRow): Promise<void> {
   const { data, error } = await requireSupabase()
@@ -181,7 +181,7 @@ export const NOTHING_CHANGED =
 export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
   // Paged, as every table read is (read-all.ts): past 1,000 hintuans one
-  // request would silently see a subset (review finding 4).
+  // request would silently see a subset.
   const [hintuans, linked] = await Promise.all([
     readAll<HotspotRow>((from, to) =>
       client
@@ -212,8 +212,8 @@ export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   );
   const kept = new Set(keep.map((k) => k.stop_id));
   // Only the hintuan links this direction has and no longer earns — usually
-  // none. It once listed every hintuan the line does not pass, a request line
-  // that grows with the map past what the gateway accepts (finding 4).
+  // none. Listing every hintuan the line does not pass would make a request
+  // line that grows with the map past what the gateway accepts.
   const isHintuan = new Set(hintuans.map((h) => h.id));
   const drop = linked.map((l) => l.stop_id).filter((id) => isHintuan.has(id) && !kept.has(id));
 

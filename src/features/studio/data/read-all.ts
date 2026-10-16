@@ -13,12 +13,11 @@
  * many rows there are and how many the server answers at once; the rest
  * are asked for together, one request per page, rather than one after the
  * other — with 1,000 directions the links table is 14 pages, and asked in
- * turn they were 14 round trips (measured 2026-09-25, future-proofing
- * stage 2). It is right whatever the server's cap is, because it steps by
+ * turn they would be 14 round trips. It is right whatever the server's cap is, because it steps by
  * the size the server actually answered with, not by PAGE, and it costs one
  * request for a table that fits in one page.
  *
- * A server that gives no count is read the old way, page after page until
+ * A server that gives no count is read page after page until
  * a short one: nothing says how many to ask for.
  *
  * A caller's order must be total (end it with a unique column) or pages can

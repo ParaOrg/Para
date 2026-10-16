@@ -3,10 +3,10 @@ import { cleanSignboardSvg } from '@/features/routes/model/signboard-svg';
 import { getSupabase, supabaseConfig } from './supabase';
 
 /**
- * A direction's signboards, as the editor uploads them (0010, the owner's ask
- * of 2026-10-01): SVG files in the `signboards` bucket, named by a fresh uuid
- * each, and the direction's `signboards` column listing them in order. The
- * publish copies them beside the map (scripts/publish/publish-map.mjs).
+ * A direction's signboards, as the editor uploads them (0010): SVG files in
+ * the `signboards` bucket, named by a fresh uuid each, and the direction's
+ * `signboards` column listing them in order. The publish copies them beside
+ * the map (scripts/publish/publish-map.mjs).
  *
  * Each file is cleaned before it is sent (signboard-svg.ts): what reaches the
  * bucket is drawing only. Order of writes, so nothing is left pointing at a
@@ -62,8 +62,8 @@ export async function addSignboard(
 /**
  * Several files, each sent and listed in turn. `onStep` hears the list after
  * each one is in, so a file refused halfway leaves the editor holding the
- * boards already listed: it held the list from before them, and the next
- * change wrote that back over them (review of 2026-10-03, finding 11). The
+ * boards already listed: otherwise it holds the list from before them, and
+ * the next change writes that back over them. The
  * refusal is then thrown, as one file's is.
  */
 export async function addSignboards(
