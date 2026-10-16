@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Map as MapLibreMap } from 'maplibre-gl';
 import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -14,7 +14,10 @@ import type { TimelineRow } from '../model/timeline';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-type StationLabelsProps = Omit<ComponentProps<typeof StationLabels>, 'map'>;
+type StationLabelsProps = Omit<ComponentProps<typeof StationLabels>, 'map'> & {
+  /** How far in the map is: the names go once the scale bar reads 3 km. */
+  zoom?: number;
+};
 
 /**
  * The dots are DOM markers, so they need a real map to sit on. An empty
@@ -22,7 +25,7 @@ type StationLabelsProps = Omit<ComponentProps<typeof StationLabels>, 'map'>;
  * do), and no line is drawn under them: the story is the dots and names
  * alone.
  */
-function OnAnEmptyMap(props: StationLabelsProps) {
+function OnAnEmptyMap({ zoom = 14, ...props }: StationLabelsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
 
@@ -32,7 +35,7 @@ function OnAnEmptyMap(props: StationLabelsProps) {
       container: containerRef.current,
       style: { version: 8, sources: {}, layers: [] },
       center: [121.05, 14.7478],
-      zoom: 14,
+      zoom,
       attributionControl: false,
     });
     setMap(created);
@@ -40,7 +43,7 @@ function OnAnEmptyMap(props: StationLabelsProps) {
       setMap(null);
       created.remove();
     };
-  }, []);
+  }, [zoom]);
 
   return (
     <>
@@ -51,9 +54,11 @@ function OnAnEmptyMap(props: StationLabelsProps) {
 }
 
 /**
- * Sample trip only: five hintuans down a slope, Tala to Novaliches. Not read
- * from anywhere. The direction has no drawn line, so each row sits at its
- * hotspot's own point (rowStops).
+ * Sample trip only: Tala to Novaliches, and the five hintuans down a slope
+ * between them: the rows are the timeline's `between`, which leaves the
+ * trip's own ends out, as both apps pass it. Not read from anywhere. The
+ * direction has no drawn line, so each row sits at its hotspot's own point
+ * (rowStops).
  */
 const route = {
   id: 'sample-route',
@@ -61,8 +66,8 @@ const route = {
   longName: null,
   mode: 'jeepney',
   fareNote: null,
-  headHotspotId: 'barracks',
-  tailHotspotId: 'fatima',
+  headHotspotId: 'tala',
+  tailHotspotId: 'novaliches',
   via: null,
   name: 'Tala – Novaliches',
 } as const;
@@ -112,7 +117,7 @@ const meta = {
     ),
   ],
   parameters: { layout: 'fullscreen' },
-  args: { selected: direction, hotspots, rows, livery: 'rose' },
+  args: { selected: direction, hotspots, rows, livery: 'rose', onPick: fn() },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
 export default meta;
@@ -181,8 +186,25 @@ export const AtRest: Story = {
         wornBy(CARD_SURFACE.rose),
       );
     }
-    // Dots are decoration until given `onPick`: no button, so a tap reaches the map beneath.
-    await expect(canvasElement.querySelectorAll('button')).toHaveLength(0);
+    // Both apps give `onPick`: each dot and its name are one button, named for the row.
+    for (const [i, station] of stations.entries()) {
+      const buttons = station.querySelectorAll('button');
+      await expect(buttons).toHaveLength(1);
+      await expect(buttons[0]).toHaveAttribute('aria-label', rows[i].label);
+    }
+  },
+};
+
+/** A tap on a station's button hands `onPick` the row's id, and the map beneath never hears it. */
+export const TapPicksTheRow: Story = {
+  play: async ({ canvasElement, args }) => {
+    const stations = await stationsOf(canvasElement, 5);
+    await settled(canvasElement);
+    const button = stationNamed(stations, 'Pangarap').querySelector('button');
+    if (!button) throw new Error('no button rendered');
+    await userEvent.click(button);
+    await expect(args.onPick).toHaveBeenCalledTimes(1);
+    await expect(args.onPick).toHaveBeenCalledWith('pangarap');
   },
 };
 
@@ -234,5 +256,48 @@ export const StartAlone: Story = {
         wornBy(CARD_SURFACE_PALE.rose),
       );
     }
+  },
+};
+
+/**
+ * An end row picked with the start kept (`endPicked`, useRideTo): Pangarap
+ * the start, the ride on to where the trip goes. The rows before the start
+ * are outside it and on the pale; the rows after it ride on, in the line's
+ * colour.
+ */
+export const StartKeptToTheEnd: Story = {
+  args: { startId: 'pangarap', endPicked: 'to', hasRide: true },
+  play: async ({ canvasElement }) => {
+    const stations = await stationsOf(canvasElement, 4);
+    await settled(canvasElement);
+    for (const name of ['Barracks', 'Malaria']) {
+      const station = stationNamed(stations, name);
+      await expect(station).toHaveAttribute('data-paled');
+      await expect(labelOpacity(station)).toBe('0.6');
+    }
+    for (const name of ['Amparo', 'Fatima']) {
+      const station = stationNamed(stations, name);
+      await expect(station).not.toHaveAttribute('data-paled');
+      await expect(labelOpacity(station)).toBe('1');
+    }
+  },
+};
+
+/**
+ * Zoomed out past the scale bar's 3 km: the dots alone, smaller, so the
+ * names never pile up.
+ */
+export const ZoomedOut: Story = {
+  args: { zoom: 11 },
+  play: async ({ canvasElement }) => {
+    const stations = await stationsOf(canvasElement, 5);
+    await settled(canvasElement);
+    for (const [i, station] of stations.entries()) {
+      await expect(station).toHaveAttribute('data-far');
+      await expect(getComputedStyle(dotOf(station)).scale).toBe('0.6');
+      // The button is still named for the row, with no name drawn beside it.
+      await expect(station.querySelector('button')).toHaveAttribute('aria-label', rows[i].label);
+    }
+    await expect(canvasElement.querySelector('[data-part="hintuan-name"]')).toBeNull();
   },
 };

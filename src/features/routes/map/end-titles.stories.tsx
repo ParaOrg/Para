@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Map as MapLibreMap } from 'maplibre-gl';
 import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -28,8 +28,8 @@ function OnAnEmptyMap(props: EndTitlesProps) {
     const created = new MapLibreMap({
       container: containerRef.current,
       style: { version: 8, sources: {}, layers: [] },
-      center: [121.0539, 14.7489],
-      zoom: 13.2,
+      center: CENTRE,
+      zoom: ZOOM,
       attributionControl: false,
     });
     setMap(created);
@@ -46,6 +46,9 @@ function OnAnEmptyMap(props: EndTitlesProps) {
     </>
   );
 }
+
+const CENTRE: LngLat = [121.0539, 14.7489];
+const ZOOM = 13.2;
 
 /** Sample places only, a short ride east: Tala to Novaliches. Not read from anywhere. */
 const TALA: LngLat = [121.0467, 14.7478];
@@ -65,6 +68,8 @@ const rideOf = (over: Partial<Ride> = {}): Ride => ({
   line: talaToNovaliches,
   from: 'Tala',
   to: 'Novaliches',
+  fromHotspot: 'tala',
+  toHotspot: 'novaliches',
   ...over,
 });
 
@@ -137,11 +142,35 @@ const wornBy = (className: string) => {
 const settled = (root: HTMLElement) =>
   Promise.all(root.getAnimations({ subtree: true }).map((animation) => animation.finished));
 
-/** A named end's pill sits above its circle, the circle's centre on the point. */
+/** A named end's pill sits above its circle. */
 const expectPillOverCircle = async (end: HTMLElement) => {
   const pill = partOf(end, 'name').getBoundingClientRect();
   const circle = partOf(end, 'circle').getBoundingClientRect();
   await expect(pill.bottom).toBeLessThan(circle.top);
+};
+
+/** Where a point falls on the map, in px from its top left: Web Mercator, 512 px a world at zoom 0. */
+const projected = (at: LngLat, size: { width: number; height: number }) => {
+  const world = 512 * 2 ** ZOOM;
+  const x = (lng: number) => ((lng + 180) / 360) * world;
+  const y = (lat: number) => {
+    const rad = (lat * Math.PI) / 180;
+    return (0.5 - Math.log(Math.tan(Math.PI / 4 + rad / 2)) / (2 * Math.PI)) * world;
+  };
+  return {
+    x: size.width / 2 + x(at[0]) - x(CENTRE[0]),
+    y: size.height / 2 + y(at[1]) - y(CENTRE[1]),
+  };
+};
+
+/** The circle's centre is on the point: the marker is anchored at its foot, half a circle down. */
+const expectCircleOn = async (root: HTMLElement, end: HTMLElement, at: LngLat) => {
+  const map = root.querySelector('.maplibregl-map')?.getBoundingClientRect();
+  if (!map) throw new Error('no map rendered');
+  const circle = partOf(end, 'circle').getBoundingClientRect();
+  const point = projected(at, map);
+  await expect(circle.left + circle.width / 2 - map.left).toBeCloseTo(point.x, 0);
+  await expect(circle.top + circle.height / 2 - map.top).toBeCloseTo(point.y, 0);
 };
 
 /** Both ends of a lit ride, marked: Start's S on the head in green, End's E on the tail in the line's colour. */
@@ -172,6 +201,59 @@ export const BothEnds: Story = {
     await expect(getComputedStyle(head).pointerEvents).toBe('none');
     await expectPillOverCircle(head);
     await expectPillOverCircle(tail);
+    await expectCircleOn(canvasElement, head, TALA);
+    await expectCircleOn(canvasElement, tail, NOVALICHES);
+  },
+};
+
+/**
+ * A ride picked backwards, its end tapped above its start on the trip
+ * (`isBackwards`): the head, where the trip leaves, is the ride's E and
+ * stays marked; the tail lies on the pale past the ride and loses its mark.
+ */
+export const RidePickedBackwards: Story = {
+  args: {
+    rides: [rideOf({ isBackwards: true, pale: [[talaToNovaliches[2], talaToNovaliches[3]]] })],
+  },
+  play: async ({ canvasElement }) => {
+    const ends = await endsOf(canvasElement, 2);
+    await settled(canvasElement);
+    const head = endOf(ends, 'Tala', 'head');
+    const tail = endOf(ends, 'Novaliches', 'tail');
+    await expect(iconOf(head)).toBe('end');
+    await expect(partOf(head, 'name').textContent).toBe('End, Tala');
+    await expect(head).not.toHaveAttribute('data-paled');
+    await expect(getComputedStyle(partOf(head, 'name')).opacity).toBe('1');
+    await expect(iconOf(tail)).toBe('none');
+    await expect(tail).toHaveAttribute('data-paled');
+    await expect(getComputedStyle(partOf(tail, 'name')).opacity).toBe('0.6');
+  },
+};
+
+/**
+ * Given `onPick` and `onTrip`, as both apps give them, and a ride that says
+ * its hotspots: the pills are buttons. The tail, which one ride alone goes
+ * to, opens that ride's trip; the head opens its place's routes.
+ */
+export const PillsAsButtons: Story = {
+  args: { onPick: fn(), onTrip: fn() },
+  play: async ({ canvasElement, args }) => {
+    const ends = await endsOf(canvasElement, 2);
+    await settled(canvasElement);
+    const tail = endOf(ends, 'Novaliches', 'tail');
+    const head = endOf(ends, 'Tala', 'head');
+    const tailButton = tail.querySelector('button');
+    const headButton = head.querySelector('button');
+    if (!tailButton || !headButton) throw new Error('no button rendered');
+    await expect(tail).toHaveAttribute('data-opens', 'trip');
+    await expect(tailButton).toHaveAttribute('aria-label', 'End, Novaliches: the trip there');
+    await expect(head).toHaveAttribute('data-opens', 'place');
+    await expect(headButton).toHaveAttribute('aria-label', 'Start, Tala: the routes there');
+    // The button takes no taps itself, its pill does (end-titles.css): the tap lands on the pill.
+    await userEvent.click(partOf(tail, 'name'));
+    await expect(args.onTrip).toHaveBeenCalledWith('tala-novaliches');
+    await userEvent.click(partOf(head, 'name'));
+    await expect(args.onPick).toHaveBeenCalledWith('tala');
   },
 };
 

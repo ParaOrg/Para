@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Map as MapLibreMap } from 'maplibre-gl';
 import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -62,7 +62,7 @@ function OnAnEmptyMap(props: Omit<PinProps, 'at'>) {
 const meta = {
   title: 'Features/Routes/HintuanPin',
   component: OnAnEmptyMap,
-  // A phone-wide strip of map: the pin in the middle, its name hanging to the right.
+  // A phone-wide strip of map: the pin left of the middle, its name hanging to the right.
   decorators: [
     (Story) => (
       <div className="relative h-[200px] w-[390px] overflow-clip bg-surface-quaternary">
@@ -180,21 +180,62 @@ export const TrainStation: Story = {
   },
 };
 
-/** A name longer than the marker allows: the label is at most 256 wide, cut short with an ellipsis. */
+/** A jeepney's hintuan with a name longer than the marker allows: the label is at most 256 wide, cut short with an ellipsis. */
 export const LongName: Story = {
-  args: {
-    label: 'North Caloocan City Hall Station Northbound Platform',
-    code: 'GL02',
-    livery: 'light-rail-way-one',
-  },
+  args: { label: 'Novaliches Public Market and Jeepney Terminal Southbound Loading Bay' },
   play: async ({ canvasElement }) => {
     const pin = await pinOf(canvasElement);
     await settled(canvasElement);
     await expect(partOf(pin, 'label').getBoundingClientRect().width).toBeLessThanOrEqual(256);
     const words = partOf(pin, 'words');
     await expect(words.scrollWidth).toBeGreaterThan(words.clientWidth);
-    // The code and the disc stay whole.
-    await expect(partOf(pin, 'code').textContent).toBe('GL02');
-    await expect(partOf(pin, 'end').getBoundingClientRect().width).toBe(28);
+    // The E stays whole, before the name.
+    await expect(partOf(pin, 'end').getBoundingClientRect().width).toBe(24);
+  },
+};
+
+/** No name given: the circle stands alone. */
+export const CircleAlone: Story = {
+  args: { label: null },
+  play: async ({ canvasElement }) => {
+    const pin = await pinOf(canvasElement);
+    await expect(pin.querySelector('[data-part="hintuan-name"]')).toBeNull();
+    await expect(circleOf(pin)).toBeInTheDocument();
+    await expectOnThePoint(canvasElement, pin);
+  },
+};
+
+/**
+ * Given `onPick`, as the public map gives it: the name is a button, and it
+ * says what the tap does, the station's code too, since the code is only on
+ * the map. A tap lets the pick go.
+ */
+export const EndLetGo: Story = {
+  args: {
+    label: 'Balintawak',
+    code: 'GL03',
+    livery: 'light-rail-way-one',
+    onPick: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const pin = await pinOf(canvasElement);
+    const name = partOf(pin, 'hintuan-name');
+    await expect(name.tagName).toBe('BUTTON');
+    await expect(name).toHaveAttribute('aria-label', 'End, GL03 Balintawak: let it go');
+    await userEvent.click(name);
+    await expect(args.onPick).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The picked start's name is a button too, and says Start. */
+export const StartLetGo: Story = {
+  args: { marks: 'start', onPick: fn() },
+  play: async ({ canvasElement, args }) => {
+    const pin = await pinOf(canvasElement);
+    const name = partOf(pin, 'hintuan-name');
+    await expect(name.tagName).toBe('BUTTON');
+    await expect(name).toHaveAttribute('aria-label', 'Start, Novaliches Terminal: let it go');
+    await userEvent.click(name);
+    await expect(args.onPick).toHaveBeenCalledTimes(1);
   },
 };
