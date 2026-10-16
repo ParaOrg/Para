@@ -4,7 +4,7 @@
 // the file was committed; `git status` does.
 //
 //   npm run dev                          (in another terminal)
-//   node tests/e2e/visitor-test.mjs
+//   node tests/e2e/commuter-test.mjs
 //
 // Everything asserted here is read from the map itself first — source
 // features, layer order — and only then checked for internal consistency. Nothing is hard-coded about which or
@@ -38,13 +38,13 @@ import {
 
 const { check, skip, tally } = harness();
 
-// VISITOR_PART=k/n runs part k of n, so CI can run the parts side by side:
+// COMMUTER_PART=k/n runs part k of n, so CI can run the parts side by side:
 // every part opens the map and runs sections 1, 2 and 5; section 3's
 // hotspots are dealt out by their place in the list; 4 and 4b are part 1's.
 // Unset, one part runs it all.
-const [PART, PARTS] = (process.env.VISITOR_PART || '1/1').split('/').map(Number);
+const [PART, PARTS] = (process.env.COMMUTER_PART || '1/1').split('/').map(Number);
 if (!(PARTS >= 1 && PART >= 1 && PART <= PARTS))
-  throw new Error(`VISITOR_PART is k/n with 1 ≤ k ≤ n, not "${process.env.VISITOR_PART}"`);
+  throw new Error(`COMMUTER_PART is k/n with 1 ≤ k ≤ n, not "${process.env.COMMUTER_PART}"`);
 
 // ------------------------------------------------------------------ geometry
 // A handful of "probably inside" guesses for a ring (point-in-polygon itself

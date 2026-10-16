@@ -13,8 +13,8 @@
 #      code, the build, the lockfile, this file — runs both. A push to main
 #      or staging, the nightly run and "Run workflow" run everything.
 #   2. Every suite at once. Each suite is its own job, so the run takes as
-#      long as the slowest suite, not the sum of them all. visitor-test, the
-#      slowest by far, runs as three parts (VISITOR_PART, see its top).
+#      long as the slowest suite, not the sum of them all. commuter-test, the
+#      slowest by far, runs as three parts (COMMUTER_PART, see its top).
 #   3. The drawing suites off the pull request's path. group, regression-
 #      gestures, hotspot, snap and extend draw through the public OSRM demo
 #      router (about one request a second, shared with the world) and read
@@ -92,7 +92,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/studio-scale-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/visitor-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs)
+              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs)
                 public=true ;;
               *) public=true; studio=true ;;
             esac
@@ -134,7 +134,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.public == 'true'
     runs-on: ubuntu-latest
-    # visitor-test's first part reached the old 20 on 2026-10-06 (PR #128):
+    # commuter-test's first part reached the old 20 on 2026-10-06 (PR #128):
     # 19 min 49 s, then cut off two seconds after its 753 checks had passed.
     timeout-minutes: 30
     strategy:
@@ -142,9 +142,9 @@ jobs:
       matrix:
         suite: [gate-test, phone-test, where-test, scale-test, pwa-test]
         include:
-          - { suite: visitor-test, part: 1 }
-          - { suite: visitor-test, part: 2 }
-          - { suite: visitor-test, part: 3 }
+          - { suite: commuter-test, part: 1 }
+          - { suite: commuter-test, part: 2 }
+          - { suite: commuter-test, part: 3 }
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -172,7 +172,7 @@ jobs:
       - name: ${{ matrix.suite }}
         run: node tests/e2e/${{ matrix.suite }}.mjs
         env:
-          VISITOR_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
+          COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
       - name: Keep the screenshots and the dev server log
         if: failure()
         uses: actions/upload-artifact@v4

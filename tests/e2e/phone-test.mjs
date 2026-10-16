@@ -3,7 +3,7 @@
 //   npm run dev                        (in another terminal)
 //   node tests/e2e/phone-test.mjs
 //
-// Same rule as visitor-test: nothing is hard-coded about today's data. Every
+// Same rule as commuter-test: nothing is hard-coded about today's data. Every
 // tap position is computed from the map's own sources — the script reads the
 // route lines and hotspot rings out of `saved-routes` / `saved-stops`, finds a
 // stretch of line no other route comes near, a vertex two routes share, and a

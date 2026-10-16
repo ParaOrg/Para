@@ -30,7 +30,7 @@ import type {
  * own fills and lines already compile the programs the chevrons and the
  * babaan sides use. Its source and layers are its own: never `draw-…`,
  * which the studio's editor owns and the public page must not carry
- * (visitor-test), and never a feature in the ends' source, which the
+ * (commuter-test), and never a feature in the ends' source, which the
  * suites count (group-test, the `__src` readers).
  *
  * What it costs (review of step 3, 2026-10-05): the twins' frames are new

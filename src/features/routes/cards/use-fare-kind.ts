@@ -9,7 +9,7 @@ export type FareKind = 'regular' | 'discounted';
  * fare apply it to the whole … I don't want the user to keep tapping").
  * Remembered on the device only, and only once Discounted is picked, as the
  * basemap is: a visitor who never taps it leaves the browser's storage
- * empty, which the visitor test asserts.
+ * empty, which the commuter test asserts.
  */
 const STORAGE_KEY = 'parapo.fare.v1';
 

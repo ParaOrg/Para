@@ -263,7 +263,7 @@ export function MapView({
           // owner's Q1, 2026-10-04): MapLibre fits these bounds as the map is
           // made, with no animation, on the same size and limits a fit made
           // later would meet, so the camera is the one the routes' own fit
-          // put it at after 'load' (useSavedRoutes; visitor-test and
+          // put it at after 'load' (useSavedRoutes; commuter-test and
           // phone-test hold it to cameraForBounds of the map file's routes).
           ...(framing ? { bounds: framing, fitBoundsOptions: ROUTES_FRAMING } : {}),
           // The public map notes the tiles it asks for, changing none, so the
