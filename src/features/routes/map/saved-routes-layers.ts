@@ -17,8 +17,7 @@ import {
 
 /*
  * The saved directions on the map: their source, their layers (five, and
- * a resting one for each train line since 2026-10-13), and what lights
- * them. Split from use-saved-routes.ts, 2026-09-29.
+ * a resting one for each train line), and what lights them.
  */
 
 const SRC = 'saved-routes';
@@ -35,12 +34,12 @@ const HIT = ROUTES_HIT_LAYER;
 
 /**
  * A train line at rest, in its own line's pale, Map/Rail/<line>/surface-pale,
- * where every jeepney line rests in the light blue (the owner's ask of
- * 2026-10-13, looking at the map at rest). A layer a line, each one colour
- * and a filter set once: one data-driven line-color would give the resting
- * line a GL program of its own, which the casing, the ride's rest and the
- * warm-up share with it now (gl-programs-test). Lit, a train's line is drawn
- * over its pale as every lit line is, in its card's colour (useLitLineColour).
+ * where every jeepney line rests in the light blue (the owner's call). A
+ * layer a line, each one colour and a filter set once: one data-driven
+ * line-color would give the resting line a GL program of its own, which the
+ * casing, the ride's rest and the warm-up share with it now
+ * (gl-programs-test). Lit, a train's line is drawn over its pale as every lit
+ * line is, in its card's colour (useLitLineColour).
  */
 const RAIL_AT_REST = {
   'LRT-1': {
@@ -78,18 +77,15 @@ const RESTING_FILTER = {
 } satisfies Record<RestingLayer, ReturnType<typeof restsOn>>;
 
 /**
- * Two looks, the owner's of 2026-09-29, and no opacity: every direction
- * rests in Map/RouteLine/surface-default, opaque, in its white casing (a
- * train's in its own line's pale since 2026-10-13, RAIL_AT_REST); the
- * lit ones — the trip open, the Selected card's directions, or else every
- * direction a list or a hotspot's card shows — are drawn again on top in
- * Map/RouteLine/surface-selected, thicker; on the public map a picked
- * card's, or an open trip's, wear that card's Card/<livery>/surface instead
- * (useLitLineColour, his ask of 2026-09-29). See-through lines
- * stacked on a shared road and read as one muddle (his words: "it can stack
- * and confuse the user"), so nothing fades any more: the three levels of
- * 2026-09-22 (rest, faded, lit) and the resting way back of 2026-09-25 went
- * with them.
+ * Two looks and no opacity: every direction rests in
+ * Map/RouteLine/surface-default, opaque, in its white casing (a train's in
+ * its own line's pale, RAIL_AT_REST); the lit ones — the trip open, the
+ * Selected card's directions, or else every direction a list or a hotspot's
+ * card shows — are drawn again on top in Map/RouteLine/surface-selected,
+ * thicker; on the public map a picked card's, or an open trip's, wear that
+ * card's Card/<livery>/surface instead (useLitLineColour, the owner's call).
+ * See-through lines stacked on a shared road read as one muddle, so nothing
+ * fades (the owner's call): a direction is either at rest or lit.
  *
  * What a tap lights is kept as MapLibre feature state (`setFeatureState`)
  * rather than as a filter or a paint expression naming ids. The paint
@@ -98,7 +94,7 @@ const RESTING_FILTER = {
  * whereas a new filter, or a new expression in a data-driven paint
  * property, has MapLibre lay out every tile of the source again in its
  * worker — for 1,000 directions, a second and a half of stall a tap
- * (measured 2026-09-25, future-proofing step 5).
+ * (measured).
  */
 const isLit = ['boolean', ['feature-state', 'lit'], false];
 
@@ -181,8 +177,8 @@ export function routesData(rows: readonly Direction[]) {
 /**
  * The full lines of `lines` not patched into the source yet, as updateData
  * takes them, each noted in `sent` as it goes: by id, and again for an id
- * whose line is another object. Each arrival used to send every line read
- * so far (the cheap-phone plan, step 10 (e), 2026-10-04).
+ * whose line is another object. Sending every line read so far at each
+ * arrival would lay out again each tile within any of their bounds.
  */
 export function unpatched(
   sent: Map<string, LineStringGeoJSON>,
@@ -321,15 +317,14 @@ export function addSavedRoutes(
  * 'render' after drawing what it has (map.ts, _render). The same test as the
  * cheap-phone timer's "routes drawn" (phoneSpeedParts.mjs, routesOnMap), for
  * the same reason as its last part: the public map's source is added empty
- * when the style is in before the map file, and an empty GeoJSON source
- * loads like any other. In this order, each part only once the one before
- * holds: isSourceLoaded fires an 'error' on the map for a source it does not
- * have, and MapView says "The map failed to load" for an 'error' before the
- * map's 'load'; and the tiles are read only once they are all in, under 1 ms
- * on an empty source's and 1.6-6.6 ms at 4x CPU, once, for the opening
- * view's 80 routes (measured for the timer, 2026-10-04). For MapView's
- * "Loading map…" (framing.ts, loadingLifts; the owner's answer to question
- * A of the cheap-phone report, 2026-10-06).
+ * when the style is in before the map file, and an empty GeoJSON source loads
+ * like any other. In this order, each part only once the one before holds:
+ * isSourceLoaded fires an 'error' on the map for a source it does not have,
+ * and MapView says "The map failed to load" for an 'error' before the map's
+ * 'load'; and the tiles are read only once they are all in, under 1 ms on an
+ * empty source's and 1.6-6.6 ms at 4x CPU, once, for the opening view's 80
+ * routes (measured for the timer). Read by MapView's "Loading map…"
+ * (framing.ts, loadingLifts; the owner's call).
  */
 export function routesDrawn(
   map: Pick<MapLibreMap, 'getSource' | 'getLayer' | 'isSourceLoaded' | 'querySourceFeatures'>,
@@ -354,10 +349,9 @@ export function useSavedRoutesLayers(
   hiddenDirectionId: string | null | undefined,
   lit: readonly string[],
 ) {
-  // The rows the source was last laid out from, and the full lines patched
-  // in since, each by the very array or object handed on: what was sent
-  // is not sent again (the cheap-phone plan, step 10 (c) and (e),
-  // 2026-10-04).
+  // The rows the source was last laid out from, and the full lines patched in
+  // since, each by the very array or object handed on: what was sent is not
+  // sent again.
   const laidOut = useRef<readonly Direction[] | null>(null);
   const patched = useRef(new Map<string, LineStringGeoJSON>());
 
@@ -387,9 +381,9 @@ export function useSavedRoutesLayers(
     });
   }, [map, rows]);
 
-  // Only the lines not patched in yet: each arrival sent every line read so
-  // far again, and MapLibre laid out again each tile within any of their
-  // bounds (GeoJSONSource.shouldReloadTile).
+  // Only the lines not patched in yet: each arrival would send every line
+  // read so far again, and MapLibre would lay out again each tile within any
+  // of their bounds (GeoJSONSource.shouldReloadTile).
   //
   // And all of them again whenever the map makes its style afresh: a lost GL
   // context given back, or a basemap switch. MapLibre then builds the source
@@ -397,10 +391,9 @@ export function useSavedRoutesLayers(
   // and a patch reaches that data only once the worker has answered it
   // (geojson_source.ts): a line still on its way then, or patched in after,
   // is not in the new source. So the record starts again at 'style.load',
-  // and every line read so far goes to the new source. Before step 10 (e)
-  // the next line read sent them all and put such a line right; since,
-  // nothing did, and it stayed drawn as its overview (review of step 10 (e),
-  // 2026-10-05).
+  // and every line read so far goes to the new source. Otherwise such a
+  // line would stay drawn as its overview, as only lines not yet patched in
+  // are sent.
   useEffect(() => {
     if (!map) return;
     const send = () => {

@@ -2,8 +2,7 @@ import { isDrawn, type Direction } from '../model/routes';
 
 /*
  * What the saved directions show and light, worked out from what the sheet
- * and the cards hold. Pure; useSavedRoutes memoises each. Split from
- * use-saved-routes.ts, 2026-09-29.
+ * and the cards hold. Pure; useSavedRoutes memoises each.
  */
 
 /**
@@ -12,9 +11,9 @@ import { isDrawn, type Direction } from '../model/routes';
  *
  * The card first: a place opened from a trip's end keeps the list the trip
  * came from behind both, for ‹ (openPlace, keepList), and the hidden list
- * went on deciding what was lit over the place's card (review of
- * 2026-10-03). `cardShows` is null with no card open (HintuanCard's
- * onShown), so a card that shows no route still lights none of the list's.
+ * must not decide what is lit over the place's card. `cardShows` is null with
+ * no card open (HintuanCard's onShown), so a card that shows no route still
+ * lights none of the list's.
  */
 export function showingOf<T extends Direction>(
   candidates: readonly T[],
@@ -44,9 +43,9 @@ export function litOf<T extends Direction>(
 }
 
 /**
- * What a tap where directions overlap keeps to: what is lit — but with a
- * card picked, everything shown, so the taps of 2026-09-25 (route-taps.ts)
- * keep to the way round the list shows.
+ * What a tap where directions overlap keeps to: what is lit — but with a card
+ * picked, everything shown, so the taps (route-taps.ts) keep to the way round
+ * the list shows.
  */
 export function shownOf(
   selectedId: string | null,
@@ -57,17 +56,17 @@ export function shownOf(
 }
 
 /**
- * `next`, or `was` when the two hold the very same things in the same
- * order: what is lit kept one array while it is unchanged (useSavedRoutes'
+ * `next`, or `was` when the two hold the very same things in the same order:
+ * what is lit kept one array while it is unchanged (useSavedRoutes'
  * litDirections and lit). Every full line read makes a new list of
- * directions, and litOf made a new array of the same ones lit: a list's
- * (its rows keep the directions as they were tapped) at each of its lines,
- * a trip's at any other direction's. The chevrons, which start afresh with
- * a new list of lit rides, jumped back to the start of their lines, and
- * the rides, their ends and their names were worked out again (the
- * cheap-phone plan, step 16 (c), 2026-10-04). Compared by identity, never
- * by content: a lit direction whose own line arrives is a new object, and
- * makes a new array, as its chevrons must then follow the new line.
+ * directions, and litOf makes a new array of the same ones lit: a list's (its
+ * rows keep the directions as they were tapped) at each of its lines, a
+ * trip's at any other direction's. The chevrons, which start afresh with a
+ * new list of lit rides, would jump back to the start of their lines, and the
+ * rides, their ends and their names would be worked out again. Compared by
+ * identity, never by content: a lit direction whose own line arrives is a new
+ * object, and makes a new array, as its chevrons must then follow the new
+ * line.
  */
 export function steady<A extends readonly unknown[]>(was: A, next: A): A {
   if (was === next) return was;

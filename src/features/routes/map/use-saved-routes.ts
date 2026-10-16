@@ -14,7 +14,7 @@ import { directionLine, type LineStringGeoJSON, type Direction } from '../model/
  * The RouteCard picked in a list of them — the route list's, or a hotspot's
  * card's (`where`) — by its place, the directions its rows list, and the
  * colour it wears: what the map lights while no trip is open, and in what
- * (the owner, 2026-09-29).
+ * (the owner's call).
  */
 /**
  * From this zoom a pixel is a couple of metres, and an overview's corners
@@ -45,8 +45,8 @@ export interface Highlight {
  * Both pass `loadLine`: their lists carry each direction's overview (the
  * public map's file, map-file.ts; the editor's tables, 0009), and a
  * direction's full line is read when it is lit or chosen, or on screen at
- * street zoom (the public map's loadLine; the editor's lineOf, live.ts).
- * From then on `directions` carries that line in its `shape` — so the orange
+ * street zoom (the public map's loadLine; the editor's lineOf, live.ts). From
+ * then on `directions` carries that line in its `shape` — so the green
  * stretches, the chevrons, the ride-cut and the babaan sides all work on the
  * line itself — and the map draws it in place of the overview. The editor
  * still reads a line itself for what it opens to edit (live.ts, linesOf).
@@ -95,22 +95,21 @@ export function useSavedRoutes<T extends Direction>(
   const [candidates, setCandidates] = useState<T[]>([]);
   /**
    * Which way round the sheet shows the routes under a tap: outbound, or the
-   * way back. One way at a time; ⇄ flips all of them together. The owner's
-   * ask of 2026-09-25.
+   * way back. One way at a time; ⇄ flips all of them together (the owner's
+   * call).
    */
   const [back, setBack] = useState(false);
   /**
    * The Selected RouteCard, whose directions alone are lit while no trip is
-   * open; with none picked, a list lights every direction it shows (the
-   * owner, 2026-09-29, after seeing a list light nothing). SWITCH, a new
-   * list, a map tap, opening a trip and closing let it go.
+   * open; with none picked, a list lights every direction it shows, so it
+   * never lights nothing (the owner's call). SWITCH, a new list, a map tap,
+   * opening a trip and closing let it go.
    */
   const [highlight, setHighlight] = useState<Highlight | null>(null);
   /**
    * What a hotspot's RouteCards show, the way round its ⇄ has them: lit as a
-   * list's are, till one of its cards is picked (the owner, 2026-09-29: "on
-   * hintuan it should light its routes"). The card says what it shows, and
-   * null once it closes.
+   * list's are, till one of its cards is picked (the owner's call). The card
+   * says what it shows, and null once it closes.
    */
   const [cardShows, setCardShows] = useState<readonly string[] | null>(null);
   const flip = useCallback(() => {
@@ -121,10 +120,10 @@ export function useSavedRoutes<T extends Direction>(
   /**
    * Choosing one direction answers the question the chooser was asking, so
    * the list goes — unless `keepList`: the public map's trip card keeps what
-   * it was picked from behind it, the list or a hotspot's card, for its ‹
-   * (the owner's frames of 2026-09-28); ‹ is then `select(null, { keepList:
-   * true })`. A Selected card is let go either way, so ‹ comes back to every
-   * card at rest (the owner, 2026-09-29: "back to normal").
+   * it was picked from behind it, the list or a hotspot's card, for its ‹ (as
+   * the owner's frames draw it); ‹ is then `select(null, { keepList: true
+   * })`. A Selected card is let go either way, so ‹ comes back to every card
+   * at rest (the owner's call).
    */
   const select = useCallback((id: string | null, opts: { keepList?: boolean } = {}) => {
     setSelectedId(id);
@@ -135,8 +134,8 @@ export function useSavedRoutes<T extends Direction>(
   /**
    * Lists `directions` as a tap where they all run would, the way round
    * `way`, with nothing chosen: the ‹ of a trip opened on its own, whose
-   * route shares its head or its tail with others (the public map's, since
-   * the owner's ask of 2026-09-29; PublicMapApp says which).
+   * route shares its head or its tail with others (the public map's, by the
+   * owner's call; PublicMapApp says which).
    */
   const openList = useCallback((directions: readonly T[], way: boolean) => {
     setSelectedId(null);
@@ -172,11 +171,10 @@ export function useSavedRoutes<T extends Direction>(
   }, [directions]);
 
   // The full lines as they come in, handed on together once a frame
-  // (perFrame): a list's six lines were six renders of the whole app, each
-  // working out every lit line's stretches, rides and chevrons again (the
-  // cheap-phone plan, step 16 (e), 2026-10-04). Made once: setLines never
-  // changes. A reload drops what has not been handed on, as setting no
-  // lines did to what had.
+  // (perFrame): a list's six lines would be six renders of the whole app,
+  // each working out every lit line's stretches, rides and chevrons again.
+  // Made once: setLines never changes. A reload drops what has not been
+  // handed on, as `setLines(new Map())` does to what has.
   const arrivals = useRef<PerFrame<string, LineStringGeoJSON> | null>(null);
   arrivals.current ??= perFrame((batch) =>
     setLines((m) => {
@@ -237,8 +235,8 @@ export function useSavedRoutes<T extends Direction>(
   // Open on the routes, not on a fixed centre. Once, on first load, and never
   // while drawing: a draft already has a view the user chose. The public map
   // opens framed on them itself, from its making (MapView's `openOn`, the
-  // owner's Q1, 2026-10-04): there only if what came frames otherwise, and
-  // never once the commuter has moved the map (framesRoutes).
+  // owner's call): there only if what came frames otherwise, and never once
+  // the commuter has moved the map (framesRoutes).
   const fittedRef = useRef(false);
   useEffect(() => {
     if (!map || fittedRef.current || drawingRef.current) return;
@@ -253,8 +251,7 @@ export function useSavedRoutes<T extends Direction>(
   const loadLine = opts.loadLine;
   // Only a drawn direction has a line to read. A slot (a return not drawn
   // yet) has no /data/lines/<id>.json; the host answers a missing file with
-  // the page, 200, and that would be kept as the line (review of 2026-10-03,
-  // finding 10).
+  // the page, 200, and that would be kept as the line.
   const drawn = useMemo(
     () => new Set(rows.filter((v) => directionLine(v).length > 1).map((v) => v.id)),
     [rows],
@@ -278,18 +275,17 @@ export function useSavedRoutes<T extends Direction>(
   );
 
   // What is lit, and the chosen direction, get their full lines: asked
-  // whenever what is lit is worked out again (litNow), as when `lit` itself
-  // was new each time, before it was kept (steady). So a lit line whose read
-  // failed is asked for again as before: as it lights, and as any other
-  // line arrives.
+  // whenever what is lit is worked out again (litNow), not only when the kept
+  // set (`lit`, steady) changes. So a lit line whose read failed is asked for
+  // again: as it lights, and as any other line arrives.
   useEffect(() => {
     for (const id of selectedId ? [...lit, selectedId] : lit) request(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- asked again whenever what is lit is worked out (litNow), not only when the kept set changes
   }, [request, litNow, selectedId]);
 
   // So do the directions on screen at street zoom, where an overview's
-  // corners would show: a resting line on a street is drawn as it was drawn
-  // (the owner's look of 2026-09-25). Looked at whenever the map settles.
+  // corners would show: a resting line on a street is drawn from its full
+  // line (the owner's call). Looked at whenever the map settles.
   useEffect(() => {
     if (!map || !loadLine) return;
     const readInView = () => {
