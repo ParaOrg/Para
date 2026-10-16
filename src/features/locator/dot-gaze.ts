@@ -16,7 +16,7 @@ import { M_PER_DEG, nearestOnSegment, type LngLat } from '@/shared/utils/geo';
  */
 
 /** How long the dot gazes before its eyes wander again. */
-export const GAZE_MS = 3000;
+const GAZE_MS = 3000;
 
 /**
  * How far its eyes go from the middle toward what it gazes at, in px of the
@@ -99,7 +99,7 @@ export interface Picks {
  * card, a place, a trip, a card, or the routes a tap on the map lists —
  * keyed by route, not direction, so SWITCH is no pick. A route is gazed at
  * where it comes nearest the visitor at `from` (their fix). Built where the
- * dot is (VisitorLocation) since 2026-10-05, word for word as CommuterApp
+ * dot is (VisitorLocation) since 2026-10-05, word for word as PublicMapApp
  * built them.
  */
 export function gazeSubjects(p: Picks, from: LngLat | null): Subject[] {

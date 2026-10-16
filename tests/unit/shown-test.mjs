@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { litOf, shownOf, showingOf } from '../../src/features/routes/map/routes-shown.ts';
 import { boxMarks, placeHull } from '../../src/features/routes/map/hotspots-shown.ts';
 
-/** A direction of `route`, drawn unless `drawn` is false: sample data, shaped like the published file. */
+/** A direction of `route`, drawn unless `drawn` is false: sample data, shaped like the published map. */
 const dir = (id, route, reversed = false, drawn = true) => ({
   id,
   routeId: route,

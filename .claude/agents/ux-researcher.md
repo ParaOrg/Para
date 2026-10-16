@@ -49,7 +49,8 @@ dated in its title rather than overwriting the old one. Images go in with
   scratchpad, not the repo.
 - For a screen the script does not cover, write a small Playwright script in
   your scratchpad based on it. `tests/e2e/*.mjs` show how to reach states:
-  `?r=<direction id>` opens a route, `/studio/?e2e=1` skips sign-in in dev,
+  open a route by tapping its line (the `?r=<direction id>` link was removed
+  on 2026-10-03), `/studio/?e2e=1` skips sign-in in dev,
   and `window.__map` is the MapLibre map.
 - Run at most two headless browsers at once, and not right after a file edit.
 - **Read every screenshot before using it.** If a tap missed (no card, wrong

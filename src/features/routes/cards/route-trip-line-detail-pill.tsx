@@ -16,7 +16,7 @@ export type RouteTripLineDetailPillContent =
     }
   | { code: string; pesos?: never };
 
-export type RouteTripLineDetailPillProps = RouteTripLineDetailPillContent & { livery: Livery };
+type RouteTripLineDetailPillProps = RouteTripLineDetailPillContent & { livery: Livery };
 
 /** One white half: Figma's padding 2 × 6, text-sm/medium in SN Pro. TIMELINE_PILL gives the fill and the words. */
 const HALF = 'px-1.5 py-0.5 font-sn-pro text-sm/5 font-medium whitespace-nowrap';

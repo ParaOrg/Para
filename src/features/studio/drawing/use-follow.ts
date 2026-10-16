@@ -35,7 +35,7 @@ export function useFollow({
 }) {
   /**
    * A right-click on saved lines while drawing, or a finger's Follow chip
-   * (PointBar.tsx): join the one going the way
+   * (point-bar.tsx): join the one going the way
    * the drawing goes — preferring one that ends where the drawing is headed —
    * and follow it to its end. The two directions of a route often share a
    * road, so the click may land on both.
