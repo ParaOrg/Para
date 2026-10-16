@@ -258,10 +258,12 @@ export default defineConfig({
         // for all six): offline, the text keeps its face. And the install
         // prompt's picture (48 kB, the owner's call of 2026-10-13), so the
         // card is whole offline too; the transform keeps only the page's own.
+        // And the vehicles' sprite (the owner's "trim the icons with a
+        // sprite", 2026-10-16), so a trip's header draws its vehicle offline.
         globPatterns: [
           'index.html',
           'manifest.webmanifest',
-          'assets/*.{js,css,woff2,webp}',
+          'assets/*.{js,css,woff2,webp,svg}',
           'icons/icon-*.png',
         ],
         manifestTransforms: [

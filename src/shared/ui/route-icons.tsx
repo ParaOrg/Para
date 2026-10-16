@@ -10,6 +10,8 @@
  * Content/inverse, never a colour of their own.
  */
 
+import vehicleSprite from './vehicle-icons.svg?url&no-inline';
+
 export function JeepIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -141,4 +143,45 @@ export function EndIcon() {
       />
     </svg>
   );
+}
+
+/**
+ * The vehicles at the top of a trip's card (RouteTripDetailHeader), Figma's
+ * own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
+ * JeepneyIcon, not the side-on Jeep above), EJeep (4188:11168), Bus
+ * (4188:11156) and Ferry (4189:11183), 2026-10-16. They live in one sprite the
+ * page fetches, not as paths in its JS (the owner's "trim the icons with a
+ * sprite", the same day: inline, they took the public page over its 400 kB),
+ * so Figma's paths keep their full precision. Its file is hashed, and the
+ * offline precache holds it. Each draws in currentColor; the opacity is the
+ * caller's.
+ */
+type Vehicle = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry';
+
+function VehicleIcon({ vehicle }: { vehicle: Vehicle }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden>
+      <use href={`${vehicleSprite}#${vehicle}`} />
+    </svg>
+  );
+}
+
+export function TrainIcon() {
+  return <VehicleIcon vehicle="train" />;
+}
+
+export function JeepneyIcon() {
+  return <VehicleIcon vehicle="jeepney" />;
+}
+
+export function EJeepIcon() {
+  return <VehicleIcon vehicle="e-jeep" />;
+}
+
+export function BusIcon() {
+  return <VehicleIcon vehicle="bus" />;
+}
+
+export function FerryIcon() {
+  return <VehicleIcon vehicle="ferry" />;
 }

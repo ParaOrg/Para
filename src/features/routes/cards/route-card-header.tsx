@@ -7,12 +7,17 @@ type Props = {
   onSwitch: () => void;
   /** False when the other way round has nothing drawn to show; SWITCH then rests disabled. */
   switchable: boolean;
-  /** Whether the way back is what is showing: SWITCH is pressed then. */
+  /**
+   * Whether the way back is what is showing, for the suites (`data-back`).
+   * SWITCH is no toggle since its word names the way it leads to: pressed, a
+   * button called Papunta would say Papunta is on while Pabalik shows.
+   */
   back: boolean;
   /**
-   * The word on SWITCH, wayWord's for the directions on show: Papunta or
-   * Pabalik, or a train's bound. Its name is the word on it, so "tap Papunta"
-   * finds it by voice too.
+   * The word on SWITCH, switchWord's for the directions on show: the way a
+   * tap leads to, Pabalik over Papunta and back again, or a train's other
+   * bound (the owner's ask of 2026-10-16). Its name is the word on it, so
+   * "tap Pabalik" finds it by voice too.
    */
   way: string;
   onClose: () => void;
@@ -92,7 +97,7 @@ export function RouteCardHeader({
           variant="special"
           label={way}
           data-testid={routeCount !== undefined ? 'chooser-flip' : 'card-switch'}
-          aria-pressed={back}
+          data-back={back}
           disabled={!switchable}
           onClick={onSwitch}
         />
