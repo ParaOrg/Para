@@ -308,8 +308,11 @@ export function useRideTo(
    * (boxTheOtherWay): the same box when `next` passes it, else the nearest
    * box of its place that `next` passes; with none, the ride turns whole. A
    * picked end follows its place: where the trip went is where the way back
-   * leaves. On a train SWITCH lets the picks go, as before (the owner, the
-   * same day: "trains reset, jeeps keep").
+   * leaves. A start and an end both picked swap: the way back is the ride
+   * back, from where it ended to where it started (the owner's "yeah try
+   * swapping", 2026-10-16; until then each stayed what it was, and the ride
+   * back was served the other way round). On a train SWITCH lets the picks
+   * go, as before (the owner, 2026-10-15: "trains reset, jeeps keep").
    */
   const carryTo = useCallback(
     (next: Direction, passesNext: (hotspotId: string) => boolean) => {
@@ -318,8 +321,21 @@ export function useRideTo(
         const box = hotspots.find((s) => s.id === rowId);
         return box ? boxTheOtherWay(box, hotspots, passesNext) : null;
       };
-      // A start goes the same way, kept a start (its place's box the other
-      // way passes); with none, the ride leaves where the other way does.
+      if (live && liveStart) {
+        // The ride back: the end lands as the start, the start as the end,
+        // each on its place's box the other way passes; one that lands
+        // nowhere is let go, and the ride runs on from or up to that end.
+        const backFrom = land(live.rowId);
+        const backTo = land(liveStart.rowId);
+        if (backFrom) setStartPick({ directionId: next.id, rowId: backFrom.id });
+        if (backTo) {
+          carried.current = backTo.id;
+          setPicked({ directionId: next.id, rowId: backTo.id });
+        }
+        return;
+      }
+      // A start alone goes the same way, kept a start (its place's box the
+      // other way passes); with none, the ride leaves where the other way does.
       const startLanded = liveStart ? land(liveStart.rowId) : null;
       if (startLanded) setStartPick({ directionId: next.id, rowId: startLanded.id });
       if (live) {

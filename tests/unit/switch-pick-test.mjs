@@ -171,7 +171,8 @@ test('another trip opened, with no SWITCH, starts whole as before', async () => 
 // A ride's start (the owner's TimelineRouteDetail, 2026-10-15): Set as start
 // makes the picked hintuan the start, × Remove as start lets it go, and
 // SWITCH treats it as it treats the end: a jeep's goes with the trip, a
-// train's resets.
+// train's resets. A jeep's start and end both picked swap on SWITCH, the
+// ride back (the owner, 2026-10-16).
 
 test('Set as start: the picked hintuan becomes the start, and no end is picked', async () => {
   const { out, root } = await mount(there, hotspots);
@@ -208,15 +209,38 @@ test('an end row tapped lets the start go too: the whole ride again', async () =
   root.unmount();
 });
 
-test('a jeep’s SWITCH keeps the start a start, on its place’s box the other way passes', async () => {
+test('a jeep’s SWITCH with a start and an end swaps them: the ride back, each on a box the other way passes', async () => {
   const { out, show, root } = await mount(there, hotspots);
   await act(async () => out.ride.pick(lagro1.id));
   await act(async () => out.ride.setStart());
   await act(async () => out.ride.pick(across.id));
   await act(async () => out.ride.carryTo(back, passing(lagro2, across)));
   await show(back);
+  assert.equal(out.ride.startId, across.id, 'the way back starts where the ride ended');
+  assert.equal(out.ride.pickedId, lagro2.id, 'and ends at the start’s place, across the road');
+  root.unmount();
+});
+
+test('…and a pick the other way passes no box of is let go: the ride runs up to that end', async () => {
+  const { out, show, root } = await mount(there, hotspots);
+  await act(async () => out.ride.pick(lagro1.id));
+  await act(async () => out.ride.setStart());
+  await act(async () => out.ride.pick(across.id));
+  await act(async () => out.ride.carryTo(back, passing(across)));
+  await show(back);
+  assert.equal(out.ride.startId, across.id);
+  assert.equal(out.ride.pickedId, null, 'Lagro, passed by neither of its boxes, goes');
+  root.unmount();
+});
+
+test('a jeep’s SWITCH keeps a start alone a start, on its place’s box the other way passes', async () => {
+  const { out, show, root } = await mount(there, hotspots);
+  await act(async () => out.ride.pick(lagro1.id));
+  await act(async () => out.ride.setStart());
+  await act(async () => out.ride.carryTo(back, passing(lagro2)));
+  await show(back);
   assert.equal(out.ride.startId, lagro2.id);
-  assert.equal(out.ride.pickedId, across.id);
+  assert.equal(out.ride.pickedId, null);
   root.unmount();
 });
 
