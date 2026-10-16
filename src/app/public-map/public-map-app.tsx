@@ -1,19 +1,18 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { VisitorLocation, useGazeHush } from '@/features/locator';
 import {
-  MAP_FILE_TOO_NEW,
   fetchLine,
   InstallPrompt,
-  installApp,
   loadDirectionsFromFile,
   loadHotspotsFromFile,
+  loadProblems,
   openingDirections,
   reloadForNewerApp,
   reloadToUpdate,
   useNeedRefresh,
-  useInstallOffer,
+  useInstallPrompt,
   Notices,
   useMapAge,
   useOffline,
@@ -23,6 +22,7 @@ import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { TripCard } from '@/features/routes/cards/trip-card';
 import { useCardCamera } from '@/features/routes/cards/use-card-camera';
 import { useCardStack } from '@/features/routes/cards/use-card-stack';
+import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
@@ -32,8 +32,6 @@ import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { placeKey } from '@/features/routes/model/places';
-import { routeTimeline } from '@/features/routes/model/ride';
-import { directionLine } from '@/features/routes/model/routes';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
 import { useStatusBarColour } from './status-bar';
@@ -63,7 +61,8 @@ export function PublicMapApp() {
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
   // While a trip is open, the map lights only the trip (the owner, 2026-09-29).
   const hotspots = useSavedHotspots(map, loadHotspotsFromFile, { muted: !!saved.selected });
-  const tooNew = saved.error === MAP_FILE_TOO_NEW || hotspots.error === MAP_FILE_TOO_NEW;
+  // A load problem, and the map file too new for this app (loadProblems).
+  const problems = loadProblems([saved, hotspots]);
 
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
@@ -107,27 +106,13 @@ export function PublicMapApp() {
   useStatusBarColour(map);
   const age = useMapAge(saved.directions);
   const needRefresh = useNeedRefresh();
-  // The install prompt, on an Android phone that has not installed Para Po,
-  // once the routes are on the map; "later" hides it until the next visit
-  // (the owner's picks, 2026-10-13).
-  const canInstall = useInstallOffer();
-  const [isInstallPostponed, setIsInstallPostponed] = useState(false);
-  const shouldShowInstall = canInstall && !isInstallPostponed && saved.directions.length > 0;
+  // The install prompt, once the routes are on the map (useInstallPrompt).
+  const install = useInstallPrompt(saved.directions.length > 0);
 
   const { tripLivery, litLivery, height } = cards;
 
-  // The open trip's hintuans, worked out as the trip or the hotspots change,
-  // not at each render of the page (the cheap-phone plan, step 15,
-  // 2026-10-05): they read nothing else (timeline-test).
-  const trip = saved.selected;
-  const { hotspotsAlong } = hotspots;
-  const timeline = useMemo(
-    () =>
-      trip
-        ? routeTimeline(trip, hotspots.hotspots, hotspotsAlong(trip.id, directionLine(trip)))
-        : null,
-    [trip, hotspots.hotspots, hotspotsAlong],
-  );
+  // The open trip's hintuans, worked out once per trip (useTripTimeline).
+  const timeline = useTripTimeline(saved.selected, hotspots);
 
   return (
     // `data-directions`: how many the map file brought, for the suites on a
@@ -244,23 +229,17 @@ export function PublicMapApp() {
         share the bottom with.
       */}
       <Notices
-        loadFailed={!!(saved.error || hotspots.error)}
-        tooNew={tooNew}
-        onTryAgain={() => {
-          void saved.reload();
-          void hotspots.reload();
-        }}
+        loadFailed={problems.loadFailed}
+        tooNew={problems.tooNew}
+        onTryAgain={problems.tryAgain}
         onReloadNewer={() => void reloadForNewerApp()}
         offline={offline}
         age={age}
         needRefresh={needRefresh}
         onUpdate={reloadToUpdate}
       />
-      {shouldShowInstall && (
-        <InstallPrompt
-          onInstall={() => void installApp()}
-          onLater={() => setIsInstallPostponed(true)}
-        />
+      {install.shouldShow && (
+        <InstallPrompt onInstall={install.install} onLater={install.postpone} />
       )}
 
       {saved.selected && tripLivery && timeline && (
