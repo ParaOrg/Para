@@ -410,7 +410,7 @@ the spellings on the owner's list, side of road, the field method behind
 | Snapping | FOSSGIS public OSRM — no API key |
 | Backend | Supabase — Postgres + PostGIS |
 | Auth | Email + password, single user (was magic link until 2026-09-12; owner did not want sign-in routed through Gmail). Forgot-password is the one flow that still sends mail. Change-password lives in the account pill. Visitors have no accounts (decided 2026-09-14); from step 2 only the owner signs in, at `/studio/`, with no sign-up. |
-| Write access | Public read. Writes only by accounts on the editor list (migration 0005, build-order step 1, applied 2026-09-15). Since 0015 (2026-10-14) every editor edits every route and hotspot; until then only rows they owned. The list has three members: the owner and two editors. Before 0005 any signed-in account could write rows it owned (found 2026-09-14) |
+| Write access | Public read. Writes only by accounts on the editor list (migration 0005, build-order step 1, applied 2026-09-15). Since 0015 (2026-10-14) every editor edits every route and hotspot; until then only rows they owned. The owner added two editors on 2026-10-14 (0015's header). Before 0005 any signed-in account could write rows it owned (found 2026-09-14) |
 | Repo | github.com/Roviicc/ParaPo |
 | Live | https://parapo.villaralvorovic2.workers.dev |
 | Verified | 2026-09-07: local and live both render Metro Manila (real-clock headless screenshot, 718 KB, no error box) |
@@ -3164,8 +3164,9 @@ tracking table. Do not re-apply.
 - [ ] 0014_terminal_place_unique — written 2026-10-03: one terminal a place,
       read by the informal name or else the name; for the owner to apply. Not
       recorded here as applied
-- [x] 0015_shared_editing — written 2026-10-14: every editor edits every
-      route and hotspot; inserts still record their maker
+- [ ] 0015_shared_editing — written 2026-10-14: every editor edits every
+      route and hotspot; inserts still record their maker. Not recorded here
+      as applied
 
 0004 and 0005 went through the Supabase MCP, which records them in
 `supabase_migrations.schema_migrations` (`stop_hotspot`, `editor_role`);
@@ -3176,8 +3177,8 @@ enums match 0004, and TRUNCATE, TRIGGER and REFERENCES are off `anon` and
 `authenticated`. 0006 and 0007 followed later the same day (their sections
 above); the live `route_variant` columns and indexes were read back on
 2026-09-22 and match 0006 exactly. 0008 followed on 2026-09-25. As of
-2026-10-16 the last file is 0015, so the next number is 0016; 0013 and 0014
-are not recorded here as applied (a check of `supabase_migrations.schema_migrations`
+2026-10-16 the last file is 0015, so the next number is 0016; 0013, 0014 and
+0015 are not recorded here as applied (a check of `supabase_migrations.schema_migrations`
 would settle it).
 
 ## Open items
