@@ -30,9 +30,9 @@ interface Draft {
 /**
  * The draft as it is stored: the keys the contract was written with, where a
  * direction is `variantId` and a hotspot `stopId` (the database's words). The
- * app says directionId and hotspotId (CONTEXT.md, 2026-10-07); this file is
- * the one place that translates, so a draft left by an older build still reads
- * and the suites that write one still hold.
+ * app says directionId and hotspotId (CONTEXT.md); this file is the one place
+ * that translates, so a draft left by an older build still reads and the
+ * suites that write one still hold.
  */
 interface StoredDraft {
   controlPoints: LngLat[];
@@ -143,8 +143,7 @@ export function useDraftSaving(
         );
       } else {
         // Not drawing, or drawing with every point undone: nothing to keep.
-        // Only the first was cleared once, so a reload brought back what Undo
-        // had taken away (finding 12).
+        // Both clear the draft, so a reload does not bring back what Undo took away.
         localStorage.removeItem(DRAFT_KEY);
       }
     } catch {
