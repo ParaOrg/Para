@@ -9,9 +9,10 @@ import {
   CARD_SURFACE,
   CARD_TEXT,
   ROW_PRESSED,
-  TIMELINE_PILL,
   TIMELINE_SURFACE,
 } from './livery-card';
+import { RouteTripLineDetailPill } from './route-trip-line-detail-pill';
+import { TimelineStick, type TimelineStickConnection } from './timeline-stick';
 import type { Livery } from '../model/liveries';
 
 export interface TimelineRouteDetailProps {
@@ -34,8 +35,9 @@ export interface TimelineRouteDetailProps {
   pickedPesos?: string;
   /**
    * On a train, the picked station's code, YL06, before the pesos in its
-   * pill: "YL06 · ₱20" (the owner's answer of 2026-10-13 to the "YL06" his
-   * train frames draw there, code first). Null for a jeepney's hintuan,
+   * pill (the owner's answer of 2026-10-13 to the "YL06" his train frames
+   * draw there, code first): two halves since 2026-10-15,
+   * RouteTripLineDetailPill's Two. Null for a jeepney's hintuan,
    * the ferry's, and a station the table does not know: the pesos alone.
    */
   pickedCode?: string | null;
@@ -86,6 +88,10 @@ export interface TimelineRouteDetailProps {
  * The rows are the owner's Timeline set (3716:1894) — TimelineStick for the
  * rail, TimelineDot for the hotspots — drawn in red there; each livery takes
  * its own Card/<livery>/Timeline/surface.
+ * The rail runs only along the ride (the owner, 2026-10-15): end to end
+ * with nothing picked; to a picked hintuan, where it stops (TimelineStick
+ * MiddleBottom), the rows after it their dots alone (Disconnected), as the
+ * map leaves pale everything outside the ride.
  *
  * A hintuan's row picks it (his Timeline State=Selected, 3769:2847,
  * 2026-09-29): its dot turns to a white ring round a centre in the card's
@@ -131,6 +137,12 @@ export function TimelineRouteDetail({
   const folds = hintuans.length > 1;
   const drawn = !folds || open || everOpened;
   const rail = TIMELINE_SURFACE[livery];
+  // The rail runs only along the ride (the owner, 2026-10-15). A ride starts
+  // at the origin until a start can be picked; a picked hintuan ends it
+  // there, the rows after it, the fold's and the destination's, left
+  // without a rail. No pick, it runs end to end.
+  const rideEnd = hintuans.findIndex((h) => h.id === picked);
+  const isRideCut = rideEnd !== -1;
   // Every row's Pressed: the rail's colour, while the finger is down.
   const pressed = ROW_PRESSED[livery];
 
@@ -173,7 +185,9 @@ export function TimelineRouteDetail({
             selected={h.id === picked}
             pesos={h.id === picked ? pickedPesos : undefined}
             code={h.id === picked ? pickedCode : null}
-            pill={TIMELINE_PILL[livery]}
+            livery={livery}
+            connection={!isRideCut || i <= rideEnd ? 'connected' : 'disconnected'}
+            isRideEnd={i === rideEnd}
             onPick={onPick}
           />
         ))}
@@ -183,6 +197,7 @@ export function TimelineRouteDetail({
             pressed={pressed}
             open={open}
             count={hintuans.length}
+            connection={isRideCut ? 'disconnected' : 'connected'}
             isTrain={isTrain}
             onToggle={() => {
               setOpen((o) => !o);
@@ -195,6 +210,7 @@ export function TimelineRouteDetail({
           rail={rail}
           pressed={pressed}
           routeDirection={routeDirection}
+          connection={isRideCut ? 'disconnected' : 'connected'}
           selected={endPicked === 'to'}
           onTap={() => onEnd('to')}
         />
@@ -253,18 +269,6 @@ export function TimelineDot({ rail, selected = false, isTucked = true }: Timelin
 }
 
 /**
- * The rail's column, 24 wide, as tall as its row's content. The card has no
- * padding of its own: the 16 above the first row and below the last are
- * theirs (the owner's TimelineRouteDetailCard, 3778:3183, 2026-10-01), so a row
- * Pressed fills to the card's edge, the rail starting under that padding.
- * Every row is 16 in from both sides, its names 8 above and below (10 until
- * the owner's spacing of 2026-10-13, 3778:3183), the destination 12 down
- * (16 before), and the rail's last stretch 16 tall, Figma's TimelineStick
- * Bottom (20 before).
- */
-const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
-
-/**
  * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
  * ExtraBold 20/28 (the owner's TimelineRouteDetailCard of 2026-10-13, 3778:3183;
  * Black 24/32 until then); the whole row is its button. Picked, its dot is
@@ -292,10 +296,11 @@ function TimelineTop({
         onClick={onTap}
         className={'flex w-full items-center px-4 pt-4 text-left ' + pressed}
       >
-        <span aria-hidden className={STICK}>
-          <TimelineDot rail={rail} selected={selected} />
-          <span className={'min-h-px w-2 flex-1 ' + rail} />
-        </span>
+        <TimelineStick
+          variant="top"
+          rail={rail}
+          dot={<TimelineDot rail={rail} selected={selected} />}
+        />
         <span className="flex min-w-0 flex-1 flex-col justify-center pb-2 pl-3">
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span className="text-xl/7 font-extrabold sheet-low:line-clamp-1">{routeOrigin}</span>
@@ -333,7 +338,9 @@ function TimelineHintuan({
   selected,
   pesos,
   code,
-  pill,
+  livery,
+  connection,
+  isRideEnd,
   onPick,
 }: {
   id: string;
@@ -347,10 +354,13 @@ function TimelineHintuan({
   selected: boolean;
   /** The ride's pesos to here, for the pill; picked and priced only. */
   pesos?: string;
-  /** A train station's code, before the pesos in the pill; null for any other hintuan. */
+  /** A train station's code, before the pesos in the pill (RouteTripLineDetailPill); null for any other hintuan. */
   code: string | null;
-  /** TIMELINE_PILL's classes for the card's livery. */
-  pill: string;
+  livery: Livery;
+  /** On the ride's rail, or after its end, its dot alone. */
+  connection: TimelineStickConnection;
+  /** The row the ride ends at, a picked hintuan's: the rail stops at its dot (MiddleBottom). */
+  isRideEnd: boolean;
   onPick: (id: string) => void;
 }) {
   return (
@@ -373,11 +383,12 @@ function TimelineHintuan({
             onClick={() => onPick(id)}
             className={'flex w-full items-start px-4 text-left ' + pressed}
           >
-            <span aria-hidden className={STICK}>
-              <span className={'-mb-0.5 min-h-px w-2 flex-1 ' + rail} />
-              <TimelineDot rail={rail} selected={selected} />
-              <span className={'min-h-px w-2 flex-1 ' + rail} />
-            </span>
+            <TimelineStick
+              variant={isRideEnd ? 'middleBottom' : 'middle'}
+              connection={connection}
+              rail={rail}
+              dot={<TimelineDot rail={rail} selected={selected} />}
+            />
             <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3">
               <span
                 className={
@@ -386,25 +397,7 @@ function TimelineHintuan({
               >
                 {label}
               </span>
-              {pesos && (
-                <span
-                  data-testid="trip-hintuan-fare"
-                  className={
-                    'shrink-0 rounded-full px-1.5 py-0.5 text-sm/5 font-medium whitespace-nowrap ' +
-                    pill
-                  }
-                >
-                  {code ? (
-                    <>
-                      <span data-part="code">{code}</span>{' '}
-                      {/* The dot is for the eye; the spaces round it keep "YL06 ₱20" two words to a screen reader. */}
-                      <span aria-hidden>·</span> <span data-part="pesos">{pesos}</span>
-                    </>
-                  ) : (
-                    pesos
-                  )}
-                </span>
-              )}
+              {pesos && <RouteTripLineDetailPill livery={livery} code={code} pesos={pesos} />}
             </span>
           </button>
         </div>
@@ -419,6 +412,7 @@ function TimelineDisclosure({
   pressed,
   open,
   count,
+  connection,
   isTrain,
   onToggle,
 }: {
@@ -427,6 +421,8 @@ function TimelineDisclosure({
   pressed: string;
   open: boolean;
   count: number;
+  /** Disconnected once a picked hintuan ends the ride above it. */
+  connection: TimelineStickConnection;
   /** "N more stations" on a train, "N more hintuans" else. */
   isTrain: boolean;
   onToggle: () => void;
@@ -440,9 +436,7 @@ function TimelineDisclosure({
         onClick={onToggle}
         className={'flex w-full items-start px-4 text-left ' + pressed}
       >
-        <span aria-hidden className={STICK}>
-          <span className={'min-h-px w-2 flex-1 ' + rail} />
-        </span>
+        <TimelineStick variant="disclosure" connection={connection} rail={rail} />
         <span className="flex min-w-0 flex-1 items-center gap-2 py-2 pl-3 text-sm/5 font-normal whitespace-nowrap">
           {/* One chevron, turned: Figma's chevron-down, and its chevron-up opened. */}
           <span
@@ -471,6 +465,7 @@ function TimelineBottomEndRoute({
   rail,
   pressed,
   routeDirection,
+  connection,
   selected,
   onTap,
 }: {
@@ -478,6 +473,8 @@ function TimelineBottomEndRoute({
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
   routeDirection: string;
+  /** Disconnected once a picked hintuan ends the ride before it. */
+  connection: TimelineStickConnection;
   selected: boolean;
   onTap: () => void;
 }) {
@@ -489,10 +486,12 @@ function TimelineBottomEndRoute({
         onClick={onTap}
         className={'flex w-full items-center px-4 pb-4 text-left ' + pressed}
       >
-        <span aria-hidden className={STICK}>
-          <span className={'-mb-0.5 h-4 w-2 shrink-0 ' + rail} />
-          <TimelineDot rail={rail} selected={selected} />
-        </span>
+        <TimelineStick
+          variant="bottom"
+          connection={connection}
+          rail={rail}
+          dot={<TimelineDot rail={rail} selected={selected} />}
+        />
         <span className="flex min-w-0 flex-1 items-start gap-1 pt-3 pl-2">
           <span aria-hidden className="shrink-0 p-1 *:size-5">
             <EndIcon />

@@ -134,16 +134,19 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await expect(rows.length).toBe(1);
   const pill = rows[0].querySelector<HTMLElement>('[data-testid="trip-hintuan-fare"]');
   const pesos = args.pickedFare === FREE ? 'Free' : args.pickedFare?.regular;
-  // A train's station code goes before the pesos, in a part of its own.
+  // A train's station code goes before the pesos, the two halves of
+  // RouteTripLineDetailPill's Two (2026-10-15), a space between for a screen reader.
   const code = pill?.querySelector('[data-part="code"]')?.textContent ?? null;
   await expect(code).toBe(args.pickedCode ?? null);
-  await expect(pill?.textContent).toBe(code ? `${code} · ${pesos}` : pesos);
+  await expect(pill?.textContent).toBe(code ? `${code} ${pesos}` : pesos);
   await expect(within(canvasElement).getByTestId('trip-fare').textContent).toBe(pesos);
   // The Distance tile follows the pick too.
   await expect(within(canvasElement).getByTestId('trip-km').textContent).toBe(
     kmLabel(args.pickedMetres ?? args.metres),
   );
-  return { card: within(canvasElement).getByTestId('trip'), row: rows[0], pill };
+  // The white is the halves', not the Two's wrapper: the card shows between them.
+  const fill = pill?.querySelector<HTMLElement>('[data-part="pesos"]') ?? pill;
+  return { card: within(canvasElement).getByTestId('trip'), row: rows[0], pill: fill };
 };
 
 /**
@@ -376,7 +379,7 @@ export const PickedLightRailWayTwo: Story = {
 /** MRT-3, a train's trip (4080:4241, 2026-10-13): its line's colours, Content/primary, dark, words. */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
-/** Picked, MRT-3: the pill white, "YL06 · ₱20–22" in the line's Timeline/surface. */
+/** Picked, MRT-3: the pill's two white halves, YL06 and ₱20–22, in the line's Timeline/surface. */
 export const PickedMetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
   play: pickedOnATrain,

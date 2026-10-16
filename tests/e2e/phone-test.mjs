@@ -1234,9 +1234,38 @@ const tripChecks = async () => {
         (await pickButton.getAttribute('aria-pressed')) === 'true',
       `${selectedRows} Selected, weight ${weight}`,
     );
+    // The rail runs only along the ride (the owner, 2026-10-15): from the
+    // origin to the picked row, which ends it (MiddleBottom); the rows after
+    // it, the fold's and the destination's, their dots alone.
+    const rails = await card().evaluate((c) => {
+      const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
+      const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
+      const at = rows.findIndex((r) => r.getAttribute('data-state') === 'selected');
+      return {
+        origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
+        before: rows.slice(0, at).map(railOf).filter(Boolean),
+        picked: railOf(rows[at]),
+        after: rows
+          .slice(at + 1)
+          .map(railOf)
+          .filter(Boolean),
+        fold: railOf(c.querySelector('[data-testid="trip-fold"]')?.parentElement),
+        destination: railOf(c.querySelector('[data-testid="trip-destination"]')),
+      };
+    });
+    check(
+      '  the rail runs from the origin to the pick and stops there; the rows after it have none',
+      rails.origin === 'below' &&
+        rails.before.every((r) => r === 'through') &&
+        rails.picked === 'above' &&
+        rails.after.every((r) => r === 'disconnected') &&
+        (rails.fold === null || rails.fold === 'disconnected') &&
+        rails.destination === 'disconnected',
+      JSON.stringify(rails),
+    );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
-    // On a train the station's code comes first, "GL04 · ₱20" (the owner,
-    // 2026-10-13): the pesos are their own part then.
+    // On a train the station's code comes first, "GL04 ₱20" (the owner,
+    // 2026-10-13): the pesos are their own half then.
     const pesosOf = async (p) =>
       (await p.locator('[data-part="pesos"]').count())
         ? (await p.locator('[data-part="pesos"]').innerText()).trim()
@@ -1262,7 +1291,10 @@ const tripChecks = async () => {
         `pill "${pillText}"; tile "${pickedTile}", the sums "${pickWant.fare}"`,
       );
     const colours = await page.evaluate(() => {
-      const pill = document.querySelector('[data-testid="trip-hintuan-fare"]');
+      // A train's pill is two halves (RouteTripLineDetailPill's Two, 2026-10-15),
+      // the card showing between them: the colours are the pesos' half's.
+      const fare = document.querySelector('[data-testid="trip-hintuan-fare"]');
+      const pill = fare?.querySelector('[data-part="pesos"]') ?? fare;
       const trip = document.querySelector('[data-testid="trip"]');
       if (!pill || !trip) return null;
       const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
