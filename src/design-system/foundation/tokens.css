@@ -73,7 +73,8 @@
 
   /* Primitive: the train lines' own colours (2026-10-13), one family a line,
      only the four steps its Map/Rail/… semantics use: 200 the pale, 600 the
-     surface, 700 the border, 800 the timeline. */
+     surface, 700 the border, 800 the timeline. MRT-3's 200 and 600 brightened
+     on 2026-10-16 (the owner's, from #fae385 and #e2b709). */
   --color-light-rail-way-one-200: #b7f5ca;
   --color-light-rail-way-one-600: #1d7739;
   --color-light-rail-way-one-700: #12612a;
@@ -84,8 +85,8 @@
   --color-light-rail-way-two-700: #382859;
   --color-light-rail-way-two-800: #372b4f;
 
-  --color-metro-rail-way-three-200: #fae385;
-  --color-metro-rail-way-three-600: #e2b709;
+  --color-metro-rail-way-three-200: #fff1b8;
+  --color-metro-rail-way-three-600: #edc319;
   --color-metro-rail-way-three-700: #ac8b0b;
   --color-metro-rail-way-three-800: #967906;
 }
