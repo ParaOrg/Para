@@ -39,7 +39,7 @@ export function useLitRides(
   /**
    * An end picked on the trip, after a start or not (useRideTo's `ridden`):
    * the line outside the ride is drawn in the trip's pale, the chevrons
-   * flowing on over it.
+   * flowing on over it, from the S to the E for an end above the start.
    */
   ridden: Ridden | null = null,
   /**
@@ -70,7 +70,9 @@ export function useLitRides(
       saved.litDirections.map((v) => ({
         id: v.id,
         line: travelLine(v, hotspots),
-        ...(ridden?.directionId === v.id ? { pale: ridden.pale } : {}),
+        ...(ridden?.directionId === v.id
+          ? { pale: ridden.pale, isBackwards: ridden.isBackwards }
+          : {}),
         ...(v.id === unmarkedId ? { isUnmarked: true } : {}),
         ...directionEnds(v),
         ...directionEndHotspots(v),

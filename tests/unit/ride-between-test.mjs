@@ -1,21 +1,15 @@
 // A ride between two picks (src/features/routes/model/ride.ts: rideSpan,
-// endsBeforeStart, rowsOutsideRide): the owner's TimelineRouteDetail of
-// 2026-10-15 (Figma 4137:9886). A start and an end picked on a trip price and
-// draw the ride between them; a row picked before the start is known, so it
-// becomes the start and the ride follows the trip's own arrows (the owner,
-// 2026-10-16; useRideTo swaps them); the rows outside the ride fold and lose
-// the rail.
+// rowsOutsideRide): the owner's TimelineRouteDetail of 2026-10-15 (Figma
+// 4137:9886). A start and an end picked on a trip price and draw the ride
+// between them; an end picked before the start stays the end, and the ride
+// runs back along the trip's own line (the owner, 2026-10-16: "reverse the
+// arrow, dont' switch please"); the rows outside the ride fold.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/ride-between-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
-import {
-  endsBeforeStart,
-  rideSpan,
-  routeTimeline,
-  rowsOutsideRide,
-} from '../../src/features/routes/model/ride.ts';
+import { rideSpan, routeTimeline, rowsOutsideRide } from '../../src/features/routes/model/ride.ts';
 import { railFares } from '../../src/features/routes/model/rail-fares.ts';
 import { lineLength } from '../../src/shared/utils/geo.ts';
 import { readPublished } from '../../scripts/checks/check-map-data.mjs';
@@ -79,6 +73,7 @@ test('a ride between two picks runs from the start’s dot to the end’s, the r
   assert.deepEqual(span.ridden.at(-1), span.at);
   assert.deepEqual(span.before.at(-1), span.from, 'the pale before the start meets it');
   assert.deepEqual(span.rest[0], span.at, 'and the pale after the end');
+  assert.equal(span.isBackwards, false);
   const whole = lineLength(LINE);
   const parts = lineLength(span.before) + span.metres + lineLength(span.rest);
   assert.ok(near(parts, whole, 1), `${parts} of ${whole}`);
@@ -98,14 +93,27 @@ test('no end picked: the ride runs on from the start to where the direction goes
   assert.deepEqual(span.rest, [], 'nothing after the end to pale');
 });
 
-test('nothing picked, a pick the line misses, or an end before the start: no ride on this line', () => {
+test('nothing picked, or a pick the line misses: no ride on this line', () => {
   assert.equal(rideSpan(there, HOTSPOTS, null, null), null);
   const off = box('off', 0.025, 'Elsewhere', 0.01);
   assert.equal(rideSpan(there, [...HOTSPOTS, off], 'a', 'off'), null);
-  assert.equal(rideSpan(there, HOTSPOTS, 'c', 'a'), null);
-  assert.equal(endsBeforeStart(there, HOTSPOTS, 'c', 'a'), true);
-  assert.equal(endsBeforeStart(there, HOTSPOTS, 'a', 'c'), false);
-  assert.equal(endsBeforeStart(there, [...HOTSPOTS, off], 'c', 'off'), false);
+  assert.equal(rideSpan(there, [...HOTSPOTS, off], 'off', 'a'), null);
+});
+
+test('an end before the start: the ride runs back along the line from the start’s dot to the end’s, the S and E where they were picked', () => {
+  const span = rideSpan(there, HOTSPOTS, 'c', 'a');
+  assert.ok(span, 'ridden back on this line (the owner, 2026-10-16)');
+  assert.equal(span.isBackwards, true);
+  assert.ok(near(span.metres, 2 * KM), `${span.metres}`);
+  assert.ok(near(lineLength(span.ridden), span.metres, 1));
+  const forward = rideSpan(there, HOTSPOTS, 'a', 'c');
+  assert.deepEqual(span.from, forward.at, 'from Camarin’s dot');
+  assert.deepEqual(span.at, forward.from, 'to Amparo’s');
+  assert.deepEqual(span.ridden[0], span.from);
+  assert.deepEqual(span.ridden.at(-1), span.at);
+  assert.deepEqual(span.ridden, [...forward.ridden].reverse(), 'the same stretch, turned round');
+  assert.deepEqual(span.before, forward.before, 'the pale up to the ride: before Amparo');
+  assert.deepEqual(span.rest, forward.rest, 'and on from it: after Camarin');
 });
 
 test('the rows outside the ride: before the start and after the end, whichever way round they were picked', () => {
@@ -148,12 +156,12 @@ test('the owner’s example on the committed map: MRT-3 Southbound, Shaw Bouleva
     railFares('MRT-3', 'Shaw Boulevard', 'Ayala'),
   );
 
-  // Start at Shaw Boulevard, Quezon Avenue tapped above it: Quezon Avenue
-  // becomes the start, and the ride Quezon Avenue → Shaw Boulevard stays
-  // Southbound, on this line (the owner, 2026-10-16).
-  assert.equal(endsBeforeStart(south, m.hotspots, shaw.id, quezon.id), true);
-  const down = rideSpan(south, m.hotspots, quezon.id, shaw.id);
-  assert.ok(down, 'Quezon Avenue → Shaw Boulevard rides Southbound');
-  assert.ok(down.metres > 3000 && down.metres < 12000, `${Math.round(down.metres)} m`);
-  assert.ok(railFares('MRT-3', 'Quezon Avenue', 'Shaw Boulevard'), 'priced by the station pair');
+  // Variant5: start at Shaw Boulevard, Quezon Avenue tapped above it: the
+  // end, the ride Shaw Boulevard → Quezon Avenue run back along this line
+  // (the owner, 2026-10-16: "reverse the arrow, dont' switch please").
+  const back = rideSpan(south, m.hotspots, shaw.id, quezon.id);
+  assert.ok(back, 'Shaw Boulevard → Quezon Avenue on the Southbound line');
+  assert.equal(back.isBackwards, true);
+  assert.ok(back.metres > 3000 && back.metres < 12000, `${Math.round(back.metres)} m`);
+  assert.ok(railFares('MRT-3', 'Shaw Boulevard', 'Quezon Avenue'), 'priced by the station pair');
 });

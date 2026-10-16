@@ -120,10 +120,11 @@ _Avoid_: stop list, itinerary, sequence
 A direction as it is ridden: its line in travel order from the place it
 leaves, whichever way it was drawn, and what that order gives — the hintuans
 in the order reached, the metres, the fare. A ride may start and end at any
-hintuan it passes: the ride from there to there, priced between them,
-always along the direction's own arrows: a hintuan picked before the start
-becomes the start. On the map a lit direction is drawn as its ride: its
-arrows, its ends named, the stretch between the picks.
+hintuan it passes: the ride from there to there, priced between them, on
+the direction's own line; an end picked before the start is ridden back
+along it, its arrows turned to run from the start to the end. On the map a
+lit direction is drawn as its ride: its arrows, its ends named, the stretch
+between the picks.
 _Avoid_: journey, leg, run; trip (that is the card a ride is shown on)
 
 ### People and surfaces
