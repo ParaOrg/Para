@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect } from 'storybook/test';
 
 import { CARD_SURFACE } from './livery-card';
 import { RouteTripLineDetailPill } from './route-trip-line-detail-pill';
@@ -23,8 +24,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Two (4161:8298), on a train: the station's code and the pesos, two halves 1 px apart. */
-export const Two: Story = {};
+/** Two (4161:8298), on a train: the station's code and the pesos, two halves 2 px apart (2026-10-16). */
+export const Two: Story = {
+  play: async ({ canvasElement }) => {
+    const code = canvasElement.querySelector('[data-part="code"]')?.getBoundingClientRect();
+    const pesos = canvasElement.querySelector('[data-part="pesos"]')?.getBoundingClientRect();
+    await expect(code && pesos && pesos.left - code.right).toBe(2);
+  },
+};
 
 /** One (4161:8300), on a jeep: the pesos alone. Red, the livery Figma draws it in. */
 export const One: Story = { args: { livery: 'red', code: null, pesos: '₱13' } };

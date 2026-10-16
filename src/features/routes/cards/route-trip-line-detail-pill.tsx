@@ -17,8 +17,8 @@ const HALF = 'px-1.5 py-0.5 font-sn-pro text-sm/5 font-medium whitespace-nowrap'
  * (4161:8299, 2026-10-15). Its Property 1 is not a prop: the code decides it.
  *
  * - Two (4161:8298), on a train: the station's code and the pesos as two
- *   white halves 1 px apart (spacing/px), so the card's colour between them
- *   is the divider. They replace the dot of "YL06 · ₱20" (2026-10-13).
+ *   white halves 2 px apart (spacing/0-5, 2026-10-16; 1 px until then), so
+ *   the card's colour between them is the divider. They replace the dot of "YL06 · ₱20" (2026-10-13).
  * - One (4161:8300), on a jeep: the pesos alone, rounded both ends.
  *
  * The design writes ₱13-24 with a hyphen; the pesos keep pesoRange's en
@@ -36,7 +36,7 @@ export function RouteTripLineDetailPill({ livery, code, pesos }: RouteTripLineDe
     );
   }
   return (
-    <span data-testid="trip-hintuan-fare" className="flex shrink-0 gap-px">
+    <span data-testid="trip-hintuan-fare" className="flex shrink-0 gap-0.5">
       <span data-part="code" className={`rounded-l-full ${HALF} ${colours}`}>
         {code}
       </span>{' '}
