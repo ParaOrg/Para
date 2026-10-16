@@ -11,7 +11,7 @@ import {
 } from './route-line-endings-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
-import { TimelineDot } from '../cards/timeline-route-detail';
+import { TimelineDot } from '../cards/timeline-dot';
 import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { isRailLine } from '../model/routes';
@@ -141,7 +141,7 @@ export function EndTitles({
   );
 }
 
-/** The circle across: TimelineDot at rest (timeline-route-detail.tsx), its centre on the point. */
+/** The circle across: TimelineDot at rest (timeline-dot.tsx), its centre on the point. */
 const DOT_PX = 24;
 
 /** What a pill's button says before the name: which end, as its icon shows it. */
