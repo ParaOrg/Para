@@ -57,6 +57,22 @@ export const Default: Story = {
     await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
     await expect(canvasElement.querySelector('.sr-only')).toBeNull();
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('1');
+  },
+};
+
+/**
+ * Unselected (4200:13645, 2026-10-16): Default at 60%, a hintuan outside
+ * the ride (the owner: "if the label is unselected it would be transparent").
+ */
+export const Unselected: Story = {
+  args: { variant: 'unselected' },
+  play: async ({ canvasElement }) => {
+    const pill = partOf(canvasElement, 'name');
+    await expectFigmaType(pill);
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('0.6');
+    await expect(canvasElement.querySelector('.sr-only')).toBeNull();
   },
 };
 
