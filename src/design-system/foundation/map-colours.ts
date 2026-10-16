@@ -31,8 +31,8 @@ export const MAP_COLOURS = {
   'Map/Rail/LightRailWayTwo/surface-pale': '#d0b9ff', // light-rail-way-two/200
   'Map/Rail/LightRailWayTwo/border-primary': '#382859', // light-rail-way-two/700
   'Map/Rail/LightRailWayTwo/Timeline/surface': '#372b4f', // light-rail-way-two/800
-  'Map/Rail/MetroRailWayThree/surface': '#e2b709', // metro-rail-way-three/600
-  'Map/Rail/MetroRailWayThree/surface-pale': '#fae385', // metro-rail-way-three/200
+  'Map/Rail/MetroRailWayThree/surface': '#edc319', // metro-rail-way-three/600
+  'Map/Rail/MetroRailWayThree/surface-pale': '#fff1b8', // metro-rail-way-three/200
   'Map/Rail/MetroRailWayThree/border-primary': '#ac8b0b', // metro-rail-way-three/700
   'Map/Rail/MetroRailWayThree/Timeline/surface': '#967906', // metro-rail-way-three/800
 } as const satisfies Record<`Map/${string}`, `#${string}`>;
