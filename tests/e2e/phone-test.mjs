@@ -1414,6 +1414,10 @@ const tripChecks = async () => {
           paled: e.hasAttribute('data-paled'),
           ring: getComputedStyle(e.querySelector('.station-label-tap > span:first-child'))
             .backgroundColor,
+          // The name's opacity, 0.6 outside the ride (Label's Unselected); null, the dot alone.
+          fade: e.querySelector('[data-part="label"]')
+            ? getComputedStyle(e.querySelector('[data-part="label"]')).opacity
+            : null,
         })),
         pins: pins.length,
         off:
@@ -1472,6 +1476,17 @@ const tripChecks = async () => {
         paled.every((s) => s.ring === drawn.pale) &&
         before.every((s) => s.ring === drawn.line),
       `${paled.length} dot(s) along the rest for ${rowsAfter} row(s) past the pick, ringed ${rings(paled)} (the pale ${drawn.pale}); ${before.length} before it for ${pickedIndex} row(s), ringed ${rings(before)} (the line ${drawn.line})`,
+    );
+    // Their names: outside the ride the Label's Unselected, at 60%, inside it
+    // whole (Figma 4200:13645, the owner's ask of 2026-10-16).
+    const fades = (names) =>
+      [...new Set(names.filter((s) => s.fade !== null).map((s) => s.fade))].join(', ') ||
+      'none shown';
+    check(
+      '  the names along the rest at 60%, the ones before the hintuan whole',
+      paled.every((s) => s.fade === null || s.fade === '0.6') &&
+        before.every((s) => s.fade === null || s.fade === '1'),
+      `${fades(paled)} along the rest, ${fades(before)} before it`,
     );
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
     // Beside the circle, the hintuan's name in the line's colour, its
