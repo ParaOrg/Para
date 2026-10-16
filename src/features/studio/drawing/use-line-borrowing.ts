@@ -1,10 +1,11 @@
 import { useCallback, type RefObject } from 'react';
 
 import { coarsePointer } from '@/features/routes/map/tap';
+import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import type { DirectionDrawing } from '@/features/routes/model/routes';
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
-import { cutAt, nearestSpot, reverseDrawing, type BorrowPart } from './borrow';
+import { cutAt, nearestSpot, reverseDrawing } from './borrow';
 import type { AreaTarget, Borrow, Picking } from './drawing-types';
 import { straightSegment } from './snap';
 

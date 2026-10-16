@@ -1,7 +1,8 @@
+import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import type { DirectionDrawing } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
-import type { BorrowPart, LineSpot } from './borrow';
+import type { LineSpot } from './borrow';
 
 /**
  * The drawing's shared types: what a save writes to, which hotspot an outline

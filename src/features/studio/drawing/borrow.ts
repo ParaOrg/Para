@@ -1,3 +1,4 @@
+import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import {
   haversine,
   joinSegments,
@@ -19,9 +20,6 @@ import {
  * That record is what later lets the studio say "Tala – SM Fairview changed;
  * Tala – Novaliches borrowed it. Update it too?"
  */
-
-/** Which part of the parent the new line keeps, in the parent's stored order. */
-export type BorrowPart = 'start' | 'end';
 
 /** A spot on a drawn line: segment `seg`, between its coordinates `edge` and `edge + 1`. */
 export interface LineSpot {
