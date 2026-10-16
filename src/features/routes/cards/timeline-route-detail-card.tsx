@@ -215,7 +215,8 @@ export function TimelineRouteDetailCard({
           ))}
         </ul>
       )}
-      {/* 16 under the card, or under the signboards' strip (Figma 3778:3186). The tiles 8 apart (3778:3183, its row 3886:6278). */}
+      {/* 16 under the card, or under the signboards' strip (Figma 3778:3186).
+          The tiles 8 apart (3778:3183, its row 3886:6278). */}
       <div
         data-testid="trip-tiles"
         className="flex w-full gap-2 bg-surface px-3 py-4 text-center font-sn-pro"
@@ -305,8 +306,8 @@ export function TimelineRouteDetailCard({
 
 /**
  * One of the two tiles under the card, in Figma's row of them (3771:3055):
- * its figure over its name (the figure on top, 3778:3183),
- * on Background/surface-secondary. Figma writes the figure in a raw black;
+ * its figure over its name (the figure on top, 3778:3183), on
+ * Background/surface-secondary. Figma writes the figure in a raw black;
  * Content/primary is the token nearest it.
  */
 const TILE =

@@ -16,9 +16,9 @@ interface Props {
  * Routes one way round, grouped by the place they leave from — Tala, then
  * → SM Fairview and → Novaliches: the studio's hotspot card shows the routes
  * through its box so, one shape for "the routes here". Everywhere else they
- * are RouteCards. A row still a slot says so and opens nothing, which
- * keeps the returns still to draw in sight in the studio. Full-bleed rows: a
- * whole row is the target, not the words inside it.
+ * are RouteCards. A row still a slot says so and opens nothing, which keeps
+ * the returns still to draw in sight in the studio. Full-bleed rows: a whole
+ * row is the target, not the words inside it.
  */
 export function Departures({ routes, back, onRoute, testId }: Props) {
   return (

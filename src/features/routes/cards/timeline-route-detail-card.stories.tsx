@@ -200,8 +200,8 @@ const pickedOnATrain: Story['play'] = async (ctx) => {
 export const Folded: Story = {};
 
 /**
- * The ferry: Free in the fare tile, with no
- * Regular or Discounted to turn, and its fixed note under the tiles.
+ * The ferry: Free in the fare tile, with no Regular or Discounted to turn,
+ * and its fixed note under the tiles.
  */
 export const Ferry: Story = {
   args: {
@@ -302,8 +302,8 @@ export const NothingTheOtherWay: Story = { args: { switchable: false } };
 export const Unpriced: Story = { args: { fare: undefined } };
 
 /**
- * The fare tile turns (3778:3183): a tap shows the
- * discounted fare, ↻ turning once; another, the regular again.
+ * The fare tile turns (3778:3183): a tap shows the discounted fare, ↻ turning
+ * once; another, the regular again.
  */
 export const FareTurns: Story = {
   play: async ({ canvasElement }) => {
@@ -349,10 +349,9 @@ export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /**
  * A hintuan picked, red — the Timeline set's Selected row on Figma's
- * card (3769:2895, 3778:3183): Amparo's dot a white
- * ring round the rail's red, its name ExtraBold, and
- * a white pill with the pesos from Tala to there in the card's red. Opened,
- * since the fold keeps it.
+ * card (3769:2895, 3778:3183): Amparo's dot a white ring round the rail's
+ * red, its name ExtraBold, and a white pill with the pesos from Tala to there
+ * in the card's red. Opened, since the fold keeps it.
  */
 export const PickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: pickedAsDrawn };
 
@@ -423,9 +422,9 @@ export const PickAndLetGo: Story = {
 };
 
 /**
- * The ends are buttons too, and picked like a hintuan: Tala picks itself, its dot the Selected one, lets Amparo go and says
- * which end to show; a second tap lets it go. Novaliches the same. One at a
- * time: each lets the others go.
+ * The ends are buttons too, and picked like a hintuan: Tala picks itself, its
+ * dot the Selected one, lets Amparo go and says which end to show; a second
+ * tap lets it go. Novaliches the same. One at a time: each lets the others go.
  */
 export const EndsShowTheWhole: Story = {
   args: { picked: 'h3' },
@@ -444,8 +443,8 @@ export const EndsShowTheWhole: Story = {
     await expect(destination()).toBe('rest');
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
     await expect(origin()).toBe('rest');
-    // Amparo let go by Tala folds the list back as it was:
-    // opened again to pick Amparo.
+    // Amparo let go by Tala folds the list back as it was: opened again to pick
+    // Amparo.
     await userEvent.click(canvas.getByRole('button', { name: /more hintuans/ }));
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
@@ -497,11 +496,10 @@ export const PickWithTheRestFolded: Story = {
 };
 
 /**
- * Set as start: Amparo picked,
- * then made the start, S before it and × Remove as start under it, the
- * tiles still the whole trip's — a start alone is no ride yet (Figma
- * Variant3); Bistek tapped is the end, and the tiles read the ride
- * between them. × Remove as start lets the start go, the keyboard's focus
+ * Set as start: Amparo picked, then made the start, S before it and × Remove
+ * as start under it, the tiles still the whole trip's — a start alone is no
+ * ride yet (Figma Variant3); Bistek tapped is the end, and the tiles read the
+ * ride between them. × Remove as start lets the start go, the keyboard's focus
  * kept on Amparo's row.
  */
 export const StartAndEnd: Story = {
@@ -535,7 +533,8 @@ export const StartAndEnd: Story = {
 /**
  * A ride from Amparo to Bistek, the rows outside it folded, and Bistek
  * tapped again: the end let go, Amparo a start alone. The rows after a start
- * alone fold back as they were, Bistek among them, and the keyboard's focus goes to the fold that now holds it.
+ * alone fold back as they were, Bistek among them, and the keyboard's focus
+ * goes to the fold that now holds it.
  */
 export const LetTheEndGo: Story = {
   args: {
@@ -714,9 +713,10 @@ export const SheetMiddleLongName: Story = {
 };
 
 /**
- * "Other routes" under the tiles (Figma 3778:3183): the other routes out of where the trip starts, each by where
- * it goes; a tap opens that route's trip in this one's place. With none,
- * as in every story above, the section is not there.
+ * "Other routes" under the tiles (Figma 3778:3183): the other routes out of
+ * where the trip starts, each by where it goes; a tap opens that route's trip
+ * in this one's place. With none, as in every story above, the section is not
+ * there.
  */
 export const OtherRoutes: Story = {
   args: {

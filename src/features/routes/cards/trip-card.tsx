@@ -63,10 +63,8 @@ export function useTripLivery(
  * opened in: turned round, it is still the same card.
  *
  * A picked hintuan's pill prices the ride from the trip's start to there, as
- * the tile prices the whole. The card carries only the pesos: no students/
- * seniors/PWDs price, fare rule line, route fareNote, estimate source line or
- * "old ₱13" grace warning (fare.previous). The studio shows them under the
- * tiles (`extras`): the same card, with what an editor needs below it.
+ * the tile prices the whole. The studio shows what an editor needs under the
+ * tiles (`extras`): the same card, with more below it.
  *
  * No link to a trip: the address does not follow the card.
  */

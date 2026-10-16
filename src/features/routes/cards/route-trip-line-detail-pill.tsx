@@ -26,16 +26,15 @@ const HALF = 'px-1.5 py-0.5 font-sn-pro text-sm/5 font-medium whitespace-nowrap'
  * (4161:8299). Its Property 1 is not a prop: the code decides it.
  *
  * - Two (4161:8298), on a train: the station's code and the pesos as two
- *   white halves 2 px apart (spacing/0-5), so
- *   the card's colour between them is the divider.
+ *   white halves 2 px apart (spacing/0-5), so the card's colour between them
+ *   is the divider.
  * - One (4161:8300), on a jeep: the pesos alone, rounded both ends; a
  *   train's start alone, no ride to price yet, its code alone in the same
  *   shape (Variant3).
  *
  * The design writes ₱13-24 with a hyphen; the pesos keep pesoRange's en
- * dash. The space between the halves is drawn by
- * the gap, not the text, and is there so a screen reader hears "YL06 ₱20"
- * as two words.
+ * dash. The space between the halves is drawn by the gap, not the text, and
+ * is there so a screen reader hears "YL06 ₱20" as two words.
  */
 export function RouteTripLineDetailPill({ livery, code, pesos }: RouteTripLineDetailPillProps) {
   const colours = TIMELINE_PILL[livery];

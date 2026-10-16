@@ -29,7 +29,8 @@ const LINE_WORDS = {
 /**
  * Every other vehicle's words: its card's surface. Figma's jeep, bus, e-jeep
  * and ferry variants draw them in LRT-1's green, the Default's copied; the
- * card's own colour is used instead, as a train's are its line's. MRT-3's yellow card gives Content/primary, as a train's does.
+ * card's own colour is used instead, as a train's are its line's. MRT-3's
+ * yellow card gives Content/primary, as a train's does.
  */
 const CARD_WORDS = {
   red: 'text-card-red-surface',
@@ -53,14 +54,13 @@ const HALF = 'bg-content-inverse px-3.5 py-0.5 text-lg/7 font-bold whitespace-no
  * trains; every vehicle's in 4181:10844): what the rider is on and which way
  * it runs — which railway, LRT-1 or MRT, and southbound or northbound; for a
  * jeep, bus or ferry, Papunta or Pabalik, while SWITCH names the other way.
- * The vehicle first, then its name and
- * the way as two white halves 2 px apart, the card's colour between them
- * the divider, as RouteTripLineDetailPill's are.
+ * The vehicle first, then its name and the way as two white halves 2 px apart,
+ * the card's colour between them the divider, as RouteTripLineDetailPill's are.
  *
- * The icon takes the card's words colour, CARD_TEXT, from the card it sits
- * on: Content/inverse, and Content/primary on MRT-3's yellow, every vehicle at 70
- * (Figma's --opacity/70). Figma's frame draws the Train in Content/primary;
- * it is kept white like the others.
+ * The icon takes the card's words colour, CARD_TEXT, from the card it sits on:
+ * Content/inverse, and Content/primary on MRT-3's yellow, every vehicle at 70
+ * (Figma's --opacity/70). Figma's frame draws the Train in Content/primary; it
+ * is kept white like the others.
  *
  * The icon is decorative; the halves read "LRT-1, Northbound", the comma
  * there for the pause the gap draws.

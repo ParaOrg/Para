@@ -34,11 +34,11 @@ const ON_SURFACE =
 const VEHICLE_OPACITY = { card: 'opacity-70', surface: 'opacity-75' } as const;
 
 /**
- * Figma's .RouteEndPointBar (3656:132): a route by where it goes,
- * the circled arrow before it and its vehicle after it (3848:11928),
- * a button that opens it. One component where
- * Figma has one — a RouteCard's rows (RouteCard) and a trip's "Other routes"
- * (TimelineRouteDetailCard) — so a change to the row is made once.
+ * Figma's .RouteEndPointBar (3656:132): a route by where it goes, the circled
+ * arrow before it and its vehicle after it (3848:11928), a button that opens
+ * it. One component where Figma has one — a RouteCard's rows (RouteCard) and a
+ * trip's "Other routes" (TimelineRouteDetailCard) — so a change to the row is
+ * made once.
  */
 export function RouteEndPointBar({ routeDirection, on, vehicle, className, ...rest }: Props) {
   return (
