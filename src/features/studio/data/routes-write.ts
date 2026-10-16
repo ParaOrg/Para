@@ -60,7 +60,8 @@ const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
  * flipped, gives the studio a list of what is still undrawn, and makes "draw
  * the return trip" a fill rather than an insert.
  *
- * Writes require a signed-in editor who owns the row; RLS enforces it. The row
+ * Writes require a signed-in editor; any editor may change any row (0015); RLS
+ * enforces it. The row
  * comes back as the list reads it (DIRECTION_SELECT, without the drawing just
  * sent) and without its generated name: the caller has the hotspot list and
  * runs nameDirections on it.
@@ -71,10 +72,10 @@ const UNIQUE_VIOLATION = '23505';
 /**
  * The route with these ends already exists. Three cases:
  *
- * - It has no directions: an orphan — a save whose second request failed.
- *   Use it: same
- *   ends, same name, nobody can reach it from a card. Its facts are brought up
- *   to what was just typed, and both directions are inserted as for a new one.
+ * - It has no directions: an orphan — a save whose second request failed and
+ *   whose route was not taken back out. Use it: same ends, same name, nobody
+ *   can reach it from a card. Its facts are brought up to what was just typed,
+ *   and both directions are inserted as for a new one.
  * - This direction is still its empty slot: the line fills it. This is how a
  *   return trip drawn with Extend — from another route's line — lands on the
  *   route its outbound created, with nothing to pick. The route's facts are
@@ -281,15 +282,14 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
  * Delete one direction. Emptying a direction leaves its slot: a route always
  * has two. The route itself goes only when both of its directions are gone.
  *
- * The row is emptied, not deleted — deleting it would leave a route with one
- * row, no slot to redraw into and a card that cannot flip, and `+ New Route`
- * with the same ends would then be refused as "already drawn". What
- * deleting the row did on its own is done by hand: its hotspot links go (the
+ * The row is emptied, not deleted: deleting it would leave a route with one
+ * row, no slot to redraw into and a card that cannot flip. What deleting the
+ * row would do on its own is done here by hand: its hotspot links go (the
  * cascade), and a line extended from it forgets its parent (`on delete set
  * null`, 0008) and keeps its own copy.
  *
- * Every step reads its error: a refused clean-up is said, not
- * left as a route nobody can reach.
+ * Every step reads its error: a refused clean-up is said, not left as a route
+ * nobody can reach.
  */
 export async function deleteDirection(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
@@ -304,15 +304,14 @@ export async function deleteDirection(direction: DirectionRow): Promise<void> {
       borrowed_part: null,
       borrowed_m: null,
       // Its boards go with its line: kept, they would show on the next line
-      // drawn into the slot, which is another jeep's. The files stay in the bucket; the publish
-      // copies only listed ones.
+      // drawn into the slot, which is another jeep's. The files stay in the
+      // bucket; the publish copies only listed ones.
       signboards: [] as string[],
     })
     .eq('id', direction.id)
     .select('id');
   if (emptied.error) throw new Error(emptied.error.message);
-  // RLS refusing an update is no rows, not an error: said, not reloaded as
-  // if done.
+  // RLS refusing an update is no rows, not an error: said, not reloaded as if done.
   if (!emptied.data?.length) throw new Error(NOTHING_CHANGED);
   const unlinked = await client.from('route_stop').delete().eq('route_variant_id', direction.id);
   if (unlinked.error) throw new Error(unlinked.error.message);

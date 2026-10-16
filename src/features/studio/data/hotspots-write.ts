@@ -44,7 +44,8 @@ interface SaveHotspotInput {
 
 /**
  * Create or update a hotspot and replace its route links. Writes require a
- * signed-in editor who owns the rows; RLS enforces it on both tables.
+ * signed-in editor; any editor may change any row (0015); RLS enforces it on
+ * both tables.
  *
  * Two steps, not one transaction, as a direction's save is (save-route.ts):
  * `onWritten` hears of the row the moment it is in, so a retry after the
@@ -60,12 +61,12 @@ export async function saveHotspot(
 
   // Names are normalised here, not in the database: a stray double space
   // would otherwise make "SM  Fairview" a second group, and the terminal
-  // uniqueness index (0007) compares what is stored.
+  // uniqueness index (0014) compares what is stored.
   const name = normaliseName(input.name);
   const informal = normaliseName(input.informal);
   if (!name) throw new Error('A hotspot needs a name');
   // Six decimals, about 0.1 m, as a direction's points are saved: a traced
-  // corner carried 15 or more, and the publish script rounded them anyway.
+  // corner carries 15 or more, and the publish script rounds them anyway.
   const ring = input.ring.map(roundLngLat);
   const row = {
     name,

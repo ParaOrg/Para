@@ -63,8 +63,8 @@ export async function addSignboard(
  * Several files, each sent and listed in turn. `onStep` hears the list after
  * each one is in, so a file refused halfway leaves the editor holding the
  * boards already listed: otherwise it holds the list from before them, and
- * the next change writes that back over them. The
- * refusal is then thrown, as one file's is.
+ * the next change writes that back over them. The refusal is then thrown, as
+ * one file's is.
  */
 export async function addSignboards(
   directionId: string,
