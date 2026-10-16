@@ -76,8 +76,8 @@ const many: Direction[] = [
   direction('m' + i, `${p} – Tala`, `Tala → ${p}`, 3 + i * 2, true),
 ]);
 
-/** A place whose name runs to two lines on a phone. */
-const LONG = 'Novaliches (Bayan) via Zabarte';
+/** A place whose name runs to two lines on a phone, at RouteCard's 20/28 as at its 24/32 before. */
+const LONG = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 const longName: Direction[] = [
   direction('l', `${LONG} – Tala`, `${LONG} → Tala`, 8.4),
   direction('l', `${LONG} – Tala`, `Tala → ${LONG}`, 8.6, true),
@@ -254,13 +254,13 @@ export const SheetLow: Story = {
   },
 };
 
-/** Low with a long place: one line of it, cut short (3817:6007). */
+/** Low with a long place: one line of it, 28 tall (RouteCard's 20/28), cut short (3817:6007). */
 export const SheetLowLongName: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
     await tapHandle(canvasElement, 2);
     const name = within(canvasElement).getByText(LONG);
-    await waitFor(() => expect(name.getBoundingClientRect().height).toBe(32));
+    await waitFor(() => expect(name.getBoundingClientRect().height).toBe(28));
   },
 };
 
@@ -270,6 +270,6 @@ export const SheetMiddleLongName: Story = {
   play: async ({ canvasElement }) => {
     await expect(
       within(canvasElement).getByText(LONG).getBoundingClientRect().height,
-    ).toBeGreaterThan(32);
+    ).toBeGreaterThan(28);
   },
 };

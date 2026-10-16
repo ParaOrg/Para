@@ -1,6 +1,6 @@
 import { Button } from '@/design-system/primitives/button';
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { ChevronLeftIcon, CloseIcon, JeepIcon } from '@/shared/ui/route-icons';
+import { ChevronLeftIcon, CloseIcon, RoutesIcon } from '@/shared/ui/route-icons';
 
 type Props = {
   /** SWITCH: the other way round — every route in the list, or the trip's own. */
@@ -24,7 +24,7 @@ type Props = {
 } & (
   | {
       /**
-       * Figma's Default, over the route list: the Jeep and its count, `2
+       * Figma's Default, over the route list: Routes and its count, `2
        * Routes`, `1 Route` — or, with no route under the tap, its hotspots',
        * `2 Hotspots` (the owner, 2026-09-29).
        */
@@ -46,7 +46,8 @@ type Props = {
 
 /**
  * The top of the route list and of a trip — the owner's RouteCardHeader
- * (Figma 3742:1049, 2026-09-28): on the left the Jeep and the count in SN Pro
+ * (Figma 3742:1049, 2026-09-28): on the left Routes (the Jeep until the
+ * owner's "new update" of 2026-10-16) and the count in SN Pro
  * Bold (Default) or ‹ (Variant2, the trip's, 2026-09-29); on the right
  * SWITCH (Button, Special) and ✕ (IconButton), on Background/surface. SWITCH
  * answers to `chooser-flip` over the list and `card-switch` over a trip, as
@@ -75,8 +76,9 @@ export function RouteCardHeader({
     <div className="flex w-full items-center gap-2 bg-surface px-3 pt-0 pb-3 @float:pt-3">
       {routeCount !== undefined ? (
         <div className="flex min-w-0 flex-1 items-center gap-2 text-content-primary">
-          <span aria-hidden className="size-6 shrink-0 *:size-full">
-            <JeepIcon />
+          {/* Figma's Routes at 28 (4192:12133, the owner's "new update" of 2026-10-16; the side-on Jeep at 24 before). */}
+          <span aria-hidden className="size-7 shrink-0 *:size-full">
+            <RoutesIcon />
           </span>
           <p className="min-w-0 flex-1 truncate font-sn-pro text-xl/7 font-bold">{routeCount}</p>
         </div>
