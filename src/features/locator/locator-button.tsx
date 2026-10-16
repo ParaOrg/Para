@@ -2,9 +2,9 @@ import type { ComponentPropsWithoutRef } from 'react';
 
 /**
  * Figma's "Property 1" on LocatorButton (3870:5437), its values verbatim:
- * no location yet (LocationOff, the owner's of 2026-10-01: a tap asks for
- * it), the camera somewhere else, the camera on the commuter, and the camera
- * on the commuter turned the way the phone faces.
+ * no location yet (LocationOff: a tap asks for it), the camera somewhere
+ * else, the camera on the commuter, and the camera on the commuter turned
+ * the way the phone faces.
  */
 export type LocatorMode =
   'LocationOff' | 'TrackOwnLocation' | 'TrackedLocation' | 'TracksTheMapBasedOnCompassFacing';
@@ -16,7 +16,7 @@ type Props = Omit<
   mode: LocatorMode;
   /**
    * TrackedLocation's arrow turns the way the phone faces, on the screen
-   * (the owner's rule, 3870:5408): degrees clockwise from the screen's up.
+   * (Figma 3870:5408): degrees clockwise from the screen's up.
    * Null, it points up.
    */
   heading?: number | null;
@@ -25,15 +25,13 @@ type Props = Omit<
 };
 
 /**
- * The owner's LocatorButton (3870:5437, 2026-10-01), in WhereAmI's place:
- * a 48 px Special pill (40 until the owner's change later that day) showing
- * where the camera is with the commuter —
- * a struck-through compass while there is no location (LocationOff),
- * a blue dot when it is elsewhere (TrackOwnLocation), a black arrow when it
- * follows them (TrackedLocation), a blue arrow when it also turns with the
- * phone (TracksTheMapBasedOnCompassFacing). Pressed is
- * InnerShadow/SpecialButtonPressed while touched, nothing else changing,
- * as drawn; no hover is drawn, so none.
+ * LocatorButton (Figma 3870:5437): a 48 px Special pill showing where the
+ * camera is with the commuter — a struck-through compass while there is no
+ * location (LocationOff), a blue dot when it is elsewhere (TrackOwnLocation),
+ * a black arrow when it follows them (TrackedLocation), a blue arrow when it
+ * also turns with the phone (TracksTheMapBasedOnCompassFacing). Pressed is
+ * InnerShadow/SpecialButtonPressed while touched, nothing else changing, as
+ * drawn; no hover is drawn, so none.
  */
 export function LocatorButton({ mode, heading = null, 'aria-label': label, ...rest }: Props) {
   return (
@@ -75,7 +73,7 @@ export function LocatorButton({ mode, heading = null, 'aria-label': label, ...re
   );
 }
 
-/** Figma's `navigation-off` (3872:6014), 28 px in 6 around, in Content/tertiary (the owner's new colour, 2026-10-01, 3870:5437; Content/disabled before). */
+/** Figma's `navigation-off` (3872:6014), 28 px in 6 around, in Content/tertiary (3870:5437). */
 function NavigationOffIcon() {
   return (
     <svg
