@@ -38,6 +38,10 @@ const HALF = 'bg-content-inverse px-3.5 py-0.5 text-lg/7 font-bold whitespace-no
  * RouteTripLineDetailPill's are. Trains only: a jeep's card and the ferry's
  * have none (the owner's answer, 2026-10-16).
  *
+ * The Train takes the card's words colour, CARD_TEXT, from the card it sits
+ * on: Content/inverse, and Content/primary on MRT-3's yellow (the owner's
+ * ask of 2026-10-16), at Figma's 65%.
+ *
  * The icon is decorative; the halves read "LRT-1, Northbound", the comma
  * there for the pause the gap draws.
  */
@@ -47,7 +51,7 @@ export function RouteTripDetailHeader({ line, bound }: RouteTripDetailHeaderProp
       data-testid="trip-detail-header"
       className="flex w-full items-center gap-2 pt-4 pr-4 pb-2 pl-3 font-sn-pro"
     >
-      <span aria-hidden className="size-8 shrink-0 text-content-inverse opacity-65 *:size-full">
+      <span aria-hidden className="size-8 shrink-0 opacity-65 *:size-full">
         <TrainIcon />
       </span>
       <p className={'flex min-w-0 gap-0.5 ' + WORDS[line]}>
