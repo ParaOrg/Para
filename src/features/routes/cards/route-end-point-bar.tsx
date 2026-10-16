@@ -17,28 +17,27 @@ type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children'> & {
    */
   on: Livery | 'surface';
   /**
-   * The row's route's vehicle, drawn at its right end (Figma's Jeep,
-   * 4197:13125–13128). Figma draws only the Jeep; each row shows its own
-   * route's vehicle, as a trip's header names it (vehicleOf). Null, a mode with no drawing: none.
+   * The row's route's vehicle, drawn at its right end (Figma's Jeep, 4197:13125–13128). Figma draws
+   * only the Jeep; the owner keeps each row's own route's vehicle, as a trip's header names it
+   * (vehicleOf). Null, a mode with no drawing: none.
    */
   vehicle: Vehicle | null;
 };
 
 // 10 above and below, 44 tall.
 const BAR = 'flex w-full items-center gap-1 px-4 py-2.5 text-left text-base/6 font-medium';
-// Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed
-// draws it. The hover is tertiary too.
+// Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed draws it. The hover is
+// tertiary too.
 const ON_SURFACE =
   'rounded-full text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
 /** The vehicle's strength: Figma's 70 on a card's colour, 75 on the sheet's surface. */
 const VEHICLE_OPACITY = { card: 'opacity-70', surface: 'opacity-75' } as const;
 
 /**
- * Figma's .RouteEndPointBar (3656:132): a route by where it goes, the circled
- * arrow before it and its vehicle after it (3848:11928), a button that opens
- * it. One component where Figma has one — a RouteCard's rows (RouteCard) and a
- * trip's "Other routes" (TimelineRouteDetailCard) — so a change to the row is
- * made once.
+ * Figma's .RouteEndPointBar (3656:132): a route by where it goes, the circled arrow before it and
+ * its vehicle after it (3848:11928), a button that opens it. One component where Figma has one — a
+ * RouteCard's rows (RouteCard) and a trip's "Other routes" (TimelineRouteDetailCard) — so a change
+ * to the row is made once.
  */
 export function RouteEndPointBar({ routeDirection, on, vehicle, className, ...rest }: Props) {
   return (

@@ -25,15 +25,13 @@ import type { Timeline } from '../model/timeline';
 import { vehicleOf } from '../model/vehicles';
 
 /**
- * The trip's colour, one owner for it: decided as the trip opens — the
- * RouteCard's it was picked from, in the list or a hotspot's card, while that
- * card stands behind it (a card of several routes wears its first row's,
- * liveries.ts), else its route's for the visit (drawn when first met, kept
- * after; a train's is its line's, never drawn) — and kept until it closes,
- * through SWITCH and even when a tap on its own line closes the list behind it:
- * a card never changes colour while it is open. Its line wears it too, so the
- * page reads it, not the card. Settled while rendering, as derived state is,
- * so the card never shows a frame in the wrong colour.
+ * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
+ * from, in the list or a hotspot's card, while that card stands behind it (a card of several routes
+ * wears its first row's, liveries.ts), else its route's for the visit (drawn when first met, kept
+ * after; a train's is its line's, never drawn) — and kept until it closes, through SWITCH and even
+ * when a tap on its own line closes the list behind it: a card never changes colour while it is
+ * open. Its line wears it too, so the page reads it, not the card. Settled while rendering, as
+ * derived state is, so the card never shows a frame in the wrong colour.
  */
 export function useTripLivery(
   open: Direction | null,
@@ -54,17 +52,16 @@ export function useTripLivery(
 }
 
 /**
- * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from
- * what the map file knows: its ends as the list names them, the whole ride's
- * length and pesos, the hintuans on the way, and its colour — the one its
- * RouteCard wore, when it was picked from one, in the list or in a hotspot's
- * card; its route's, kept for the visit, when not. SWITCH turns it round, what
- * it was picked from staying behind it, and the card keeps the colour it
- * opened in: turned round, it is still the same card.
+ * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from what the map file
+ * knows: its ends as the list names them, the whole ride's length and pesos, the hintuans on the
+ * way, and its colour — the one its RouteCard wore, when it was picked from one, in the list or in
+ * a hotspot's card; its route's, kept for the visit, when not. SWITCH turns it round, what it was
+ * picked from staying behind it, and the card keeps the colour it opened in: turned round, it is
+ * still the same card.
  *
- * A picked hintuan's pill prices the ride from the trip's start to there, as
- * the tile prices the whole. The studio shows what an editor needs under the
- * tiles (`extras`): the same card, with more below it.
+ * A picked hintuan's pill prices the ride from the start to there, the same pesos the fare tile
+ * then shows. The studio shows what an editor needs under the tiles (`extras`): the same card, with
+ * more below it.
  *
  * No link to a trip: the address does not follow the card.
  */
@@ -215,11 +212,10 @@ function fareFor(direction: Direction, metres: number, timeline: Timeline): Fare
 }
 
 /**
- * The fare of the ride between the picks: a jeep's by the metres between
- * them, a train's by the two stations (railFares takes any pair, whichever
- * way round), the ferry's free. A start left at the origin is that end of
- * the timeline, and an end row picked with a start (`endPicked`) is its own end. No end
- * picked, no ride to price: a start alone is no ride yet.
+ * The fare of the ride between the picks: a jeep's by the metres between them, a train's by the two
+ * stations (railFares takes any pair, whichever way round), the ferry's free. A start left at the
+ * origin is that end of the timeline, and an end row picked with a start (`endPicked`) is its own
+ * end. No end picked, no ride to price: a start alone is no ride yet.
  */
 function pickedFareFor(
   direction: Direction,

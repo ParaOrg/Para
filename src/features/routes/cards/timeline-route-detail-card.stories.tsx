@@ -32,10 +32,9 @@ const openFold: Story['play'] = async ({ canvasElement }) => {
 };
 
 /**
- * Keeps the picks as the public map does (useRideTo): a row picks its
- * hintuan, or an end, and again lets it go; Set as start makes the picked
- * hintuan the start, and × Remove as start, or its row again, lets the
- * start go; an end row is the ride's end, the start kept.
+ * Keeps the picks as the public map does (useRideTo): a row picks its hintuan, or an end, and again
+ * lets it go; Set as start makes the picked hintuan the start, and × Remove as start, or its row
+ * again, lets the start go; an end row is the ride's end, the start kept.
  */
 function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
   const [picked, setPicked] = useState(props.picked);
@@ -101,7 +100,7 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
-    // Violet, where Figma's frames (3762:3546) are drawn yellow.
+    // Violet: Figma's frames (3762:3546) are drawn yellow, no longer a livery.
     livery: 'violet',
     // 12.8 km, as Figma's frame has it; its pesos on today's rule.
     metres: 12_800,
@@ -149,8 +148,8 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await expect(rows.length).toBe(1);
   const pill = rows[0].querySelector<HTMLElement>('[data-testid="trip-hintuan-fare"]');
   const pesos = args.pickedFare === FREE ? 'Free' : args.pickedFare?.regular;
-  // A train's station code goes before the pesos, the two halves of
-  // RouteTripLineDetailPill's Two, a space between for a screen reader.
+  // A train's station code goes before the pesos, the two halves of RouteTripLineDetailPill's Two,
+  // a space between for a screen reader.
   const code = pill?.querySelector('[data-part="code"]')?.textContent ?? null;
   await expect(code).toBe(args.pickedCode ?? null);
   await expect(pill?.textContent).toBe(code ? `${code} ${pesos}` : pesos);
@@ -179,9 +178,9 @@ const pickedAsDrawn: Story['play'] = async (ctx) => {
 };
 
 /**
- * A train's pick, as Figma's train frames draw it: the
- * pill white on every line, MRT-3's dark-worded card too, and its pesos in
- * the line's Timeline/surface, the rail's colour, not the card's.
+ * A train's pick, as Figma's train frames draw it: the pill white on every line, MRT-3's
+ * dark-worded card too, and its pesos in the line's Timeline/surface, the rail's colour, not the
+ * card's.
  */
 const pickedOnATrain: Story['play'] = async (ctx) => {
   const { row, pill } = await pickedPesos(ctx);
@@ -196,12 +195,15 @@ const pickedOnATrain: Story['play'] = async (ctx) => {
   }
 };
 
-/** On a phone, Figma's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected fare, its ten hintuans folded. */
+/**
+ * On a phone, Figma's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected
+ * fare, its ten hintuans folded.
+ */
 export const Folded: Story = {};
 
 /**
- * The ferry: Free in the fare tile, with no Regular or Discounted to turn,
- * and its fixed note under the tiles.
+ * The ferry: Free in the fare tile, with no Regular or Discounted to turn, and its fixed note under
+ * the tiles.
  */
 export const Ferry: Story = {
   args: {
@@ -270,7 +272,7 @@ export const NoHintuan: Story = {
 /** In red, the Timeline set's own colour, with Content/inverse words. */
 export const Red: Story = { args: { livery: 'red' } };
 
-/** Orange. */
+/** Orange, with Content/inverse words, like red. */
 export const Orange: Story = { args: { livery: 'orange' } };
 
 /** Fuchsia, with Content/inverse words, like red. */
@@ -298,12 +300,15 @@ export const NothingToGoBackTo: Story = {
 /** The route's other way is not drawn yet: SWITCH rests disabled. */
 export const NothingTheOtherWay: Story = { args: { switchable: false } };
 
-/** A mode with no fare rule: no Expected fare tile, and Distance takes the row (nothing is drawn for it). */
+/**
+ * A mode with no fare rule: no Expected fare tile, and Distance takes the row (Figma draws nothing
+ * for it; the owner keeps this default).
+ */
 export const Unpriced: Story = { args: { fare: undefined } };
 
 /**
- * The fare tile turns (3778:3183): a tap shows the discounted fare, ↻ turning
- * once; another, the regular again.
+ * The fare tile turns (3778:3183): a tap shows the discounted fare, ↻ turning once; another, the
+ * regular again.
  */
 export const FareTurns: Story = {
   play: async ({ canvasElement }) => {
@@ -348,14 +353,13 @@ export const FloatingOpened: Story = { parameters: { frame: 'wide' }, play: open
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /**
- * A hintuan picked, red — the Timeline set's Selected row on Figma's
- * card (3769:2895, 3778:3183): Amparo's dot a white ring round the rail's
- * red, its name ExtraBold, and a white pill with the pesos from Tala to there
- * in the card's red. Opened, since the fold keeps it.
+ * A hintuan picked, red — the Timeline set's Selected row on Figma's card (3769:2895, 3778:3183):
+ * Amparo's dot a white ring round the rail's red, its name ExtraBold, and a white pill with the
+ * pesos from Tala to there in the card's red. Opened, since the fold keeps it.
  */
 export const PickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: pickedAsDrawn };
 
-/** Orange, as red. */
+/** Orange, as red: Figma draws no orange trip. */
 export const PickedOrange: Story = {
   args: { livery: 'orange', picked: 'h3' },
   play: pickedAsDrawn,
@@ -422,9 +426,9 @@ export const PickAndLetGo: Story = {
 };
 
 /**
- * The ends are buttons too, and picked like a hintuan: Tala picks itself, its
- * dot the Selected one, lets Amparo go and says which end to show; a second
- * tap lets it go. Novaliches the same. One at a time: each lets the others go.
+ * The ends are buttons too, and picked like a hintuan: Tala picks itself, its dot the Selected one,
+ * lets Amparo go and says which end to show; a second tap lets it go. Novaliches the same. One at a
+ * time: each lets the others go.
  */
 export const EndsShowTheWhole: Story = {
   args: { picked: 'h3' },
@@ -443,8 +447,7 @@ export const EndsShowTheWhole: Story = {
     await expect(destination()).toBe('rest');
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
     await expect(origin()).toBe('rest');
-    // Amparo let go by Tala folds the list back as it was: opened again to pick
-    // Amparo.
+    // Amparo let go by Tala folds the list back as it was: opened again to pick Amparo.
     await userEvent.click(canvas.getByRole('button', { name: /more hintuans/ }));
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
@@ -475,9 +478,8 @@ export const OriginPicked: Story = { args: { livery: 'red', endPicked: 'from' } 
 export const DestinationPicked: Story = { args: { livery: 'red', endPicked: 'to' } };
 
 /**
- * A pick is in the ride, so it never folds away: View less
- * folds only the rows after it, and opened again they are back, the pick
- * still there, pill and all.
+ * A pick is in the ride, so it never folds away: View less folds only the rows after it, and opened
+ * again they are back, the pick still there, pill and all.
  */
 export const PickWithTheRestFolded: Story = {
   play: async (ctx) => {
@@ -496,11 +498,10 @@ export const PickWithTheRestFolded: Story = {
 };
 
 /**
- * Set as start: Amparo picked, then made the start, S before it and × Remove
- * as start under it, the tiles still the whole trip's — a start alone is no
- * ride yet (Figma Variant3); Bistek tapped is the end, and the tiles read the
- * ride between them. × Remove as start lets the start go, the keyboard's focus
- * kept on Amparo's row.
+ * Set as start: Amparo picked, then made the start, S before it and × Remove as start under it, the
+ * tiles still the whole trip's — a start alone is no ride yet (Figma Variant3); Bistek tapped is
+ * the end, and the tiles read the ride between them. × Remove as start lets the start go, the
+ * keyboard's focus kept on Amparo's row.
  */
 export const StartAndEnd: Story = {
   args: {
@@ -531,10 +532,9 @@ export const StartAndEnd: Story = {
 };
 
 /**
- * A ride from Amparo to Bistek, the rows outside it folded, and Bistek
- * tapped again: the end let go, Amparo a start alone. The rows after a start
- * alone fold back as they were, Bistek among them, and the keyboard's focus
- * goes to the fold that now holds it.
+ * A ride from Amparo to Bistek, the rows outside it folded, and Bistek tapped again: the end let
+ * go, Amparo a start alone. The rows after a start alone fold back as they were, Bistek among them,
+ * and the keyboard's focus goes to the fold that now holds it.
  */
 export const LetTheEndGo: Story = {
   args: {
@@ -556,8 +556,8 @@ export const LetTheEndGo: Story = {
 };
 
 /**
- * Amparo the start, then the destination's row tapped: the ride from Amparo to Novaliches, its E
- * on the destination, Amparo's S kept, the tiles the ride's.
+ * Amparo the start, then the destination's row tapped: the ride from Amparo to Novaliches, its E on
+ * the destination, Amparo's S kept, the tiles the ride's.
  */
 export const EndRowKeepsStart: Story = {
   args: {
@@ -578,12 +578,12 @@ export const EndRowKeepsStart: Story = {
 };
 
 /**
- * A row above the start tapped, Figma's Variant5 (4151:13619): Amparo is
- * the end, above Bistek, the start, and the ride runs back between them. The
- * rail breaks just above Amparo and just below Bistek, running on along the
- * rows outside the ride. The keyboard's focus stays on Amparo; then the hintuans
- * above the ride are opened, the rail running along them and stopping at
- * Pangarap, View less just above Amparo with none beside it (Figma 4194:12702).
+ * A row above the start tapped, Figma's Variant5 (4151:13619): Amparo is the end, above Bistek, the
+ * start, and the ride runs back between them (not SWITCHed, which would confuse a commuter). The
+ * rail breaks just above Amparo and just below Bistek, running on along the rows outside the ride.
+ * The keyboard's focus stays on Amparo; then the hintuans above the ride are opened, the rail
+ * running along them and stopping at Pangarap, View less just above Amparo with none beside it
+ * (Figma 4194:12702).
  */
 export const EndAboveStart: Story = {
   args: {
@@ -661,8 +661,8 @@ export const LongNamesPicked: Story = {
 };
 
 /**
- * Figma's BottomSheetConfiguration (3815:5637), on a phone:
- * the stories above open at Middle; a tap on the HandleNotch goes round.
+ * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above open at Middle; a tap
+ * on the HandleNotch goes round.
  */
 const tapHandle = async (canvasElement: HTMLElement, times: number) => {
   const handle = within(canvasElement).getByTestId('dock-handle');
@@ -713,10 +713,9 @@ export const SheetMiddleLongName: Story = {
 };
 
 /**
- * "Other routes" under the tiles (Figma 3778:3183): the other routes out of
- * where the trip starts, each by where it goes; a tap opens that route's trip
- * in this one's place. With none, as in every story above, the section is not
- * there.
+ * "Other routes" under the tiles (Figma 3778:3183): the other routes out of where the trip starts,
+ * each by where it goes; a tap opens that route's trip in this one's place. With none, as in every
+ * story above, the section is not there.
  */
 export const OtherRoutes: Story = {
   args: {
@@ -743,9 +742,8 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * Figma's Signboard (3919:11355): the direction's boards between the card
- * and the tiles, in their own white strip (Figma 4051:5528), 40 tall, 8 apart, 16
- * under the card and 16 over the tiles.
+ * Figma's Signboard (3919:11355): the direction's boards between the card and the tiles, in their
+ * own white strip (Figma 4051:5528), 40 tall, 8 apart, 16 under the card and 16 over the tiles.
  */
 export const Signboards: Story = {
   args: { signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')] },

@@ -257,10 +257,9 @@ export const TrainMrt3: Story = {
 };
 
 /**
- * A train whose end the line's table does not know: no bound, so the header
- * shows the line alone, and SWITCH falls back to Pabalik and Papunta, as
- * over a mixed list (switchWord). TODO: what SWITCH should say for a train
- * with no known bound is not designed yet.
+ * A train whose end the line's table does not know: no bound, so the header shows the line alone,
+ * and SWITCH falls back to Pabalik and Papunta, as over a mixed list (switchWord). TODO: what
+ * SWITCH should say for a train with no known bound is not designed yet.
  */
 export const TrainNoBound: Story = {
   args: {
@@ -288,8 +287,8 @@ export const Ferry: Story = {
 };
 
 /**
- * A sample board, not a real one: a picture standing in for the uploaded
- * photographs, so its colours are the picture's, not the page's.
+ * A sample board, not a real one: a picture standing in for the SVG files the studio uploads, so
+ * its colours are the picture's, not the page's.
  */
 const sampleBoard = (name: string) =>
   'data:image/svg+xml,' +

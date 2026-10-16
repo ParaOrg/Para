@@ -37,8 +37,8 @@ export const Two: Story = {
 export const One: Story = { args: { livery: 'red', code: null, pesos: '₱13' } };
 
 /**
- * A train's start alone (Figma Variant3, 4148:12161): no
- * end picked, no ride to price, the station's code alone in One's shape.
+ * A train's start alone (Figma Variant3, 4148:12161): no end picked, no ride to price, the
+ * station's code alone in One's shape.
  */
 export const CodeAlone: Story = { args: { code: 'YL07', pesos: undefined } };
 

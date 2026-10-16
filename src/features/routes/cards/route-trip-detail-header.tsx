@@ -6,9 +6,8 @@ import type { Vehicle } from '../model/vehicles';
 interface RouteTripDetailHeaderProps {
   vehicle: Vehicle;
   /**
-   * The way that is showing (wayWord): Papunta or Pabalik, or a train's
-   * bound. Null when a train's line table does not know an end: then the
-   * vehicle alone, rounded both ends.
+   * The way that is showing (wayWord): Papunta or Pabalik, or a train's bound. Null when a train's
+   * line table does not know an end: then the vehicle alone, rounded both ends.
    */
   way: string | null;
   /** The card's colour, the words' on every vehicle but a train. */
@@ -16,9 +15,9 @@ interface RouteTripDetailHeaderProps {
 }
 
 /**
- * A train's words: Figma's Map/Rail/<line>/surface, the line's own colour
- * whatever card it sits on, a jeep-coloured one too. MRT-3's is yellow,
- * unreadable on white, so its words are Content/primary.
+ * A train's words: Figma's Map/Rail/<line>/surface, the line's own colour whatever card it sits on,
+ * a jeep-coloured one too. MRT-3's is yellow, unreadable on white, so its words are
+ * Content/primary.
  */
 const LINE_WORDS = {
   'LRT-1': 'text-map-rail-light-rail-way-one-surface',
@@ -27,10 +26,10 @@ const LINE_WORDS = {
 } satisfies Record<RailLine, string>;
 
 /**
- * Every other vehicle's words: its card's surface. Figma's jeep, bus, e-jeep
- * and ferry variants draw them in LRT-1's green, the Default's copied; the
- * card's own colour is used instead, as a train's are its line's. MRT-3's
- * yellow card gives Content/primary, as a train's does.
+ * Every other vehicle's words: its card's surface. Figma's jeep, bus, e-jeep and ferry variants
+ * draw them in LRT-1's green, the Default's copied; the card's own colour is used, as a train's are
+ * its line's. MRT-3's yellow card gives Content/primary, as a train's does. TODO: the design for
+ * these words is not confirmed.
  */
 const CARD_WORDS = {
   red: 'text-card-red-surface',
@@ -50,20 +49,18 @@ const isLine = (vehicle: Vehicle): vehicle is RailLine => vehicle in LINE_WORDS;
 const HALF = 'bg-content-inverse px-3.5 py-0.5 text-lg/7 font-bold whitespace-nowrap';
 
 /**
- * The top of a trip's card, Figma's RouteTripDetailHeader (4170:7046 for
- * trains; every vehicle's in 4181:10844): what the rider is on and which way
- * it runs — which railway, LRT-1 or MRT, and southbound or northbound; for a
- * jeep, bus or ferry, Papunta or Pabalik, while SWITCH names the other way.
- * The vehicle first, then its name and the way as two white halves 2 px apart,
- * the card's colour between them the divider, as RouteTripLineDetailPill's are.
+ * The top of a trip's card, Figma's RouteTripDetailHeader (4170:7046 for trains; every vehicle's in
+ * 4181:10844): what the rider is on and which way it runs — which line, LRT-1, LRT-2 or MRT-3, and
+ * which bound; for a jeep, bus or ferry, Papunta or Pabalik, while SWITCH names the other way. The
+ * vehicle first, then its name and the way as two white halves 2 px apart, the card's colour
+ * between them the divider, as RouteTripLineDetailPill's are.
  *
- * The icon takes the card's words colour, CARD_TEXT, from the card it sits on:
- * Content/inverse, and Content/primary on MRT-3's yellow, every vehicle at 70
- * (Figma's --opacity/70). Figma's frame draws the Train in Content/primary; it
- * is kept white like the others.
+ * The icon takes the card's words colour, CARD_TEXT, from the card it sits on: Content/inverse, and
+ * Content/primary on MRT-3's yellow, every vehicle at 70 (Figma's --opacity/70). Figma's frame
+ * draws the Train in Content/primary; the owner keeps it white like the others.
  *
- * The icon is decorative; the halves read "LRT-1, Northbound", the comma
- * there for the pause the gap draws.
+ * The icon is decorative; the halves read "LRT-1, Northbound", the comma there for the pause the
+ * gap draws.
  */
 export function RouteTripDetailHeader({ vehicle, way, livery }: RouteTripDetailHeaderProps) {
   const words = isLine(vehicle) ? LINE_WORDS[vehicle] : CARD_WORDS[livery];

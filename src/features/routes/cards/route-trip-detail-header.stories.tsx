@@ -42,7 +42,10 @@ export const Lrt2Eastbound: Story = {
   args: { vehicle: 'LRT-2', way: 'Eastbound', livery: 'light-rail-way-two' },
 };
 
-/** MRT-3's words are Content/primary, its yellow unreadable on white, and so is its Train on the yellow card. */
+/**
+ * MRT-3's words are Content/primary, its yellow unreadable on white, and so is its Train on the
+ * yellow card.
+ */
 export const Mrt3Northbound: Story = {
   args: { vehicle: 'MRT-3', way: 'Northbound', livery: 'metro-rail-way-three' },
 };
@@ -51,7 +54,9 @@ export const Mrt3Southbound: Story = {
   args: { vehicle: 'MRT-3', way: 'Southbound', livery: 'metro-rail-way-three' },
 };
 
-/** A train on a jeep-coloured card, opened from a hotspot's card: its words keep the line's colour. */
+/**
+ * A train on a jeep-coloured card, opened from a hotspot's card: its words keep the line's colour.
+ */
 export const TrainOnAJeepCard: Story = { args: { livery: 'red' } };
 
 /** An end the line's table does not know: no bound, the line's code alone, rounded both ends. */

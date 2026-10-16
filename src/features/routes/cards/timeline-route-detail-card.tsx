@@ -14,7 +14,9 @@ export interface Fares {
   regular: string;
   discounted: string;
 }
-/** A ride nobody pays for, the ferry's: the tile says Free, with no Regular or Discounted to turn. */
+/**
+ * A ride nobody pays for, the ferry's: the tile says Free, with no Regular or Discounted to turn.
+ */
 export const FREE = 'free';
 export type Fare = Fares | typeof FREE;
 
@@ -57,9 +59,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
   /**
-   * Figma's "Signboard" (3919:11355): the boards this direction's
-   * jeeps show, as pictures, in their order — addresses of SVG files the
-   * studio uploaded. Empty or omitted, none is shown.
+   * Figma's "Signboard" (3919:11355): the boards this direction's jeeps show, as pictures, in their
+   * order — addresses of SVG files the studio uploaded. Empty or omitted, none is shown.
    */
   signboards?: readonly string[];
   /** Under the tiles, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
@@ -69,29 +70,27 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip — Figma's TimelineRouteDetailCard (3778:3183):
- * RouteCardHeader's Variant2; under it a card in the livery of the place the
- * trip leaves from, inset from the sides and rounded, where a rail runs from
- * the origin (TimelineTop) down to the place it goes to (TimelineBottomEndRoute);
- * under the card the direction's signboards as pictures (Figma's Signboard,
- * 3919:11355, uploaded in the studio) in their own strip (4051:5528); then two
- * tiles, the ride's Distance and its fare.
+ * One direction as a trip — Figma's TimelineRouteDetailCard (3778:3183): RouteCardHeader's
+ * Variant2; under it a card in the trip's colour (useTripLivery), inset from the sides and rounded,
+ * where a rail runs from the origin (TimelineTop) down to the place it goes to
+ * (TimelineBottomEndRoute); under the card the direction's signboards as pictures (Figma's
+ * Signboard, 3919:11355, uploaded in the studio) in their own strip (4051:5528); then two tiles,
+ * the ride's Distance and its fare.
  *
- * The fare tile is a button: the pesos, and under them ↻ and which fare they
- * are, Regular or Discounted; a tap turns it to the other. With a hintuan
- * picked it prices the ride from where the trip leaves to there — the pick's
- * pill the same pesos — and let go, the whole ride again. The fare picked is
- * kept for every trip after, and the next visit (useFareKind), so a rider does
- * not have to keep tapping. A first visit opens on Regular. The Distance tile
- * follows the pick the same way, from where the trip leaves to there. Since a
- * start can be picked too, both tiles read the ride from the start to the end,
- * once the end is picked: a start alone is no ride yet. A route no fare rule
- * prices has no Expected fare tile, and Distance takes the row (nothing is
- * drawn for it).
+ * The fare tile is a button: the pesos, and under them ↻ and which fare they are, Regular or
+ * Discounted; a tap turns it to the other. With a hintuan picked it prices the ride from where the
+ * trip leaves to there — the pick's pill the same pesos — and let go, the whole ride again. The
+ * fare picked is kept for every trip after, and the next visit (useFareKind), so a rider does not
+ * have to keep tapping. A first visit opens on Regular. The second fare reads "Discounted fare" on
+ * purpose, though Figma's Default variant has a layer named "Student fare" (3807:5510). The
+ * Distance tile follows the pick the same way, from where the trip leaves to there. Since a start
+ * can be picked too, both tiles read the ride from the start to the end, once the end is picked: a
+ * start alone is no ride yet. A route no fare rule prices has no Expected fare tile, and Distance
+ * takes the row (Figma draws nothing for it; the owner keeps this default).
  *
- * Under the tiles, "Other routes": a row per other route out of where the trip
- * starts, each by where it goes, as a RouteCard's rows are; a tap opens that
- * route's trip in this one's place. With none, there is no heading either.
+ * Under the tiles, "Other routes": a row per other route out of where the trip starts, each by
+ * where it goes, as a RouteCard's rows are; a tap opens that route's trip in this one's place. With
+ * none, there is no heading either.
  *
  * The card and its rail are TimelineRouteDetail's.
  */
@@ -134,12 +133,12 @@ export function TimelineRouteDetailCard({
   const [own, setOwn] = useState(false);
   const discounted = kept ?? own;
   const setDiscounted = (d: boolean) => (onDiscounted ? onDiscounted(d) : setOwn(d));
-  // Each tap turns ↻ round once more: counted, so the next tap turns it again
-  // rather than back. It turns over `turn`, gentle at 6/10 as fast.
+  // Each tap turns ↻ round once more: counted, so the next tap turns it again rather than back. It
+  // turns over `turn`, gentle at 6/10 as fast.
   const [turns, setTurns] = useState(0);
   const othersHeading = useId();
-  // An end picked: the tiles read the ride between it and the start, a
-  // hintuan's row or, with a start, an end's. A start alone is no ride yet, the whole trip's shown.
+  // An end picked: the tiles read the ride between it and the start, a hintuan's row or, with a
+  // start, an end's. A start alone is no ride yet, the whole trip's shown.
   const hasRide = picked !== null || (start !== null && endPicked !== null);
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
@@ -305,10 +304,9 @@ export function TimelineRouteDetailCard({
 }
 
 /**
- * One of the two tiles under the card, in Figma's row of them (3771:3055):
- * its figure over its name (the figure on top, 3778:3183), on
- * Background/surface-secondary. Figma writes the figure in a raw black;
- * Content/primary is the token nearest it.
+ * One of the two tiles under the card, in Figma's row of them (3771:3055): its figure over its name
+ * (the figure on top, 3778:3183), on Background/surface-secondary. Figma writes the figure in a raw
+ * black; Content/primary is the token nearest it.
  */
 const TILE =
   'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-2xl bg-surface-secondary p-4';

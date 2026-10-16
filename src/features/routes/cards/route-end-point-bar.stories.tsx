@@ -6,9 +6,8 @@ import { RouteEndPointBar } from './route-end-point-bar';
 import { VEHICLES } from '../model/vehicles';
 
 /**
- * Figma's .RouteEndPointBar (3848:11928): RouteTripDetail (on the sheet's
- * surface) and RouteCard (on a card's colour), each at Rest and Pressed, the
- * route's vehicle at the row's end.
+ * Figma's .RouteEndPointBar (3848:11928): RouteTripDetail (on the sheet's surface) and RouteCard
+ * (on a card's colour), each at Rest and Pressed, the route's vehicle at the row's end.
  */
 const meta = {
   title: 'Features/Routes/RouteEndPointBar',
@@ -56,7 +55,10 @@ export const OnRedPressed: Story = {
   args: { on: 'red', className: 'bg-card-red-timeline-surface' },
 };
 
-/** Every vehicle, each row its own route's (Figma draws the Jeep alone), on both grounds. */
+/**
+ * Every vehicle, each row its own route's (Figma draws the Jeep alone; the owner keeps each row's
+ * own), on both grounds.
+ */
 export const EveryVehicle: Story = {
   render: (args) => (
     <div className="flex w-96 flex-col gap-3">
