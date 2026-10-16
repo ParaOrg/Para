@@ -20,16 +20,12 @@ export interface LineLook {
 
 /**
  * A picked RouteCard's routes, and an open trip's line, in the card's own
- * colour (the owner's ask, 2026-09-29: "the highlighted route should change
- * the color to the surface color of selected routecard", and the trip's
- * line too). Card/<livery>/surface, the chevrons in Map/RouteLine/Arrow/Rest,
- * white, as the card's own words are on every jeepney livery (…/Arrow/Inverse,
- * near-black, on the light one until yellow left on 2026-10-12); and past a
- * picked hintuan the rest of the trip's line in Card/<livery>/surface-pale
- * (the owner's ask, 2026-10-12: "the remaining line should be surface-pale
- * of the selected colour"). A train's line wears its own line's
- * Map/Rail/<line>/surface and surface-pale (2026-10-13), and MRT-3's
- * yellow takes …/Arrow/Inverse, near-black, as its card's words are dark.
+ * colour (the owner's call): Card/<livery>/surface, the chevrons in
+ * Map/RouteLine/Arrow/Rest, white, as the card's own words are on every
+ * jeepney livery; and past a picked hintuan the rest of the trip's line in
+ * Card/<livery>/surface-pale (the owner's call). A train's line wears its own
+ * line's Map/Rail/<line>/surface and surface-pale, and MRT-3's yellow takes
+ * …/Arrow/Inverse, near-black, as its card's words are dark.
  */
 export const LIVERY_LINE = {
   red: {
@@ -98,7 +94,7 @@ export const LIT_LINE: LineLook = {
  */
 type LineColour = Livery | 'selected';
 
-/** A label's fill in the line's colour (the owner's "must be the color of routeline", 2026-10-13). */
+/** A label's fill in the line's colour (the owner's call). */
 export const LINE_SURFACE = {
   red: 'bg-card-red-surface',
   orange: 'bg-card-orange-surface',
@@ -113,12 +109,11 @@ export const LINE_SURFACE = {
 } satisfies Record<LineColour, string>;
 
 /**
- * Words in the line's colour, on white: a station's sign code (RouteLineLabel's
- * CodeSignEnd, RouteLineEndingsLabel's CodeSign). A train's are its line's
- * Timeline/surface, as the white pill on its trip card has them (the owner's
- * train frames, 2026-10-13) — but MRT-3's are Content/primary, black: its
- * yellow did not read on white (the owner's "I want to make it color black
- * the text only", 2026-10-16).
+ * Words in the line's colour, on white: a station's sign code
+ * (RouteLineLabel's CodeSignEnd, RouteLineEndingsLabel's CodeSign). A train's
+ * are its line's Timeline/surface, as the white pill on its trip card has
+ * them (the owner's train frames) — but MRT-3's are Content/primary, black:
+ * its yellow does not read on white (the owner's call).
  */
 export const LINE_TEXT = {
   red: 'text-card-red-surface',
@@ -149,8 +144,8 @@ export const LINE_FILL = {
 
 /**
  * A label's own words and icons, on its line-coloured fill: white, as the
- * chevrons are; near-black (Map/RouteLine/Arrow/Inverse) on MRT-3's
- * yellow, as its chevrons and its card's words are (2026-10-13).
+ * chevrons are; near-black (Map/RouteLine/Arrow/Inverse) on MRT-3's yellow,
+ * as its chevrons and its card's words are.
  */
 export const LINE_WORDS = {
   red: 'text-content-inverse',
@@ -175,11 +170,11 @@ export interface LabelLook {
 
 /**
  * Figma's Head Route (RouteLineEndingsLabels, 3848:12135): a ride's start
- * wears Map/HotspotsCard/Hintuan/surface, the green, whatever the line —
- * the pill and pointer green, the words white, a station's code green on
- * its white chip. RouteLineEndingsLabel's Head Route and RouteLineLabel's
- * Start, a picked start (the owner's "This would be the start pill not the
- * yellow", 2026-10-16).
+ * wears Map/HotspotsCard/Hintuan/surface, the green, whatever the line — the
+ * pill and pointer green, the words white, a station's code green on its
+ * white chip. RouteLineEndingsLabel's Head Route and RouteLineLabel's Start,
+ * a picked start (the owner's call: the green start pill, not the line's
+ * yellow).
  */
 export const HEAD_ROUTE: LabelLook = {
   surface: 'bg-map-hotspots-card-hintuan-surface',
