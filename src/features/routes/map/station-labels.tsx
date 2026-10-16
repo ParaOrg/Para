@@ -181,7 +181,7 @@ function StationLabel({
   // The row's spot moves as the trip's full line lands over its overview
   // (rowStops runs again on the new line): moved there, not made anew (useMapMarker).
   useMapMarker(map, el, at, { anchor: 'center', onTap: () => onPick?.(rowId) });
-  // Further out, a smaller dot (hintuanPin.css), so the stations read as
+  // Further out, a smaller dot (hintuan-pin.css), so the stations read as
   // beads, not a wall; and along the rest, said for the suites, the ring's
   // colour being the dot's own class.
   useEffect(() => {

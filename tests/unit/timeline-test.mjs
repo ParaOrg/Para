@@ -558,7 +558,7 @@ test('step 16 (b): a line drawn from the far end, turned round once and kept; th
 });
 
 // The public map works a trip card's timeline out once per trip and hotspots
-// (CommuterApp's useMemo on the trip, the hotspots and their hotspotsAlong; the
+// (PublicMapApp's useMemo on the trip, the hotspots and their hotspotsAlong; the
 // cheap-phone plan, step 15, 2026-10-05), not at each render of the page:
 // so it may read nothing but what it is given, and change none of it.
 test("the committed map: a trip card's timeline is the same for the same trip and hotspots, and touches neither", () => {

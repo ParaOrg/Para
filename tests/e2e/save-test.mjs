@@ -6,7 +6,7 @@
 // The other suites run signed out, so until 2026-09-29 nothing in
 // routes-write.ts or hotspots-write.ts ran under a check (docs/review-2026-09-29.md,
 // section 4). This one grew from the stand-in the review drove them with
-// (studio-standin.mjs): the tables are today's published map plus 500 hintuans far
+// (tests/unit/fixtures/fake-supabase.mjs): the tables are today's published map plus 500 hintuans far
 // off the map, held in memory and answered the way PostgREST answers — the
 // filters the studio sends, its unique indexes (409, code 23505), its foreign
 // keys and cascades — and a stored session is faked so ✓ Done opens the save

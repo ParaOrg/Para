@@ -20,7 +20,7 @@ const NOTHING_PALE: readonly (readonly LngLat[])[] = [];
  * where it passes a hintuan, its chevrons, the rest of its line past a
  * picked hintuan in its card's pale, and the chosen direction's side of each
  * hintuan it cuts across. Returns the rides, for the circles and names at
- * their ends (EndTitles). Split from CommuterApp and StudioApp, which each
+ * their ends (EndTitles). Split from PublicMapApp and StudioApp, which each
  * had it word for word (2026-10-01).
  */
 export function useLitRides(

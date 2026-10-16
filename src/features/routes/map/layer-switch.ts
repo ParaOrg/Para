@@ -13,7 +13,7 @@ import { warmSoon, type Twin } from './warm-programs';
  *
  * Each holds every direction or box, at opacity 0 unless its feature state
  * lights it: a filter naming the lit ones would lay the source out again at
- * every tap (useLighting, savedRoutesLayers.ts). So at rest they drew every
+ * every tap (useLighting, saved-routes-layers.ts). So at rest they drew every
  * tile's worth of nothing, every frame: seven draw calls a tile. MapLibre
  * 6.7's layer opacity (`line-layer-opacity`, `fill-layer-opacity`) at 0
  * returns before a single one (draw_line.ts, draw_fill.ts), and at 1 draws
@@ -34,7 +34,7 @@ import { warmSoon, type Twin } from './warm-programs';
  * compiled by twins instead (as the end circles' was, until they became DOM
  * markers on 2026-10-12): each layer's type and
  * paint over a speck of its own, drawn once while the map is idle
- * (warmPrograms.ts, warmSoon), which the switch asks for once its layers
+ * (warm-programs.ts, warmSoon), which the switch asks for once its layers
  * are on the map, and again once a lost GL context is given back. A tap
  * compiles none (the suites' program checks), and the pixels are the same:
  * with nothing lit, the layers drew nothing to see (review of the sources

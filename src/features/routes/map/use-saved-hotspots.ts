@@ -89,7 +89,7 @@ export function useSavedHotspots<S extends Hotspot>(
   }, [load]);
 
   // Once for each loader, however many times React runs the effect: twice
-  // as a page mounts in development (loadOnce.ts).
+  // as a page mounts in development (load-once.ts).
   const loadedBy = useRef<typeof load | null>(null);
   useEffect(() => {
     loadOnce(loadedBy, load, () => void reload());

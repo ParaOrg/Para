@@ -68,7 +68,7 @@ import './end-titles.css';
  *
  * Given `onPick`, a pill whose ride says which hotspot it ends at is a
  * button: a tap opens that place (the owner's ask, 2026-10-01), and the map
- * beneath never hears it (markerTap.ts). Without one, or a hotspot, it takes
+ * beneath never hears it (marker-tap.ts). Without one, or a hotspot, it takes
  * no taps, and a tap on it reaches the line or the box beneath; the circle
  * never takes one, as the picked hintuan's does not.
  *

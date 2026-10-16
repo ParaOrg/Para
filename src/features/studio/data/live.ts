@@ -36,7 +36,7 @@ import { getSupabase } from './supabase';
  * Each returns nothing when the build has no Supabase, so the studio shows
  * its config banner rather than a load error on top of it.
  *
- * Each reads its table in pages (readAll.ts): Supabase answers at most 1,000
+ * Each reads its table in pages (read-all.ts): Supabase answers at most 1,000
  * rows a request and does not say when it cut, and the links table passes
  * 1,000 at about forty routes. The publish script pages the same way.
  */

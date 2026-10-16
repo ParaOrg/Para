@@ -512,7 +512,7 @@ if (!onLine) {
   // The card that tap opened set to another height while the camera follows
   // the visitor: the card's overview starts (useHeightOverview) and the
   // camera following the visitor takes over in the same commit, as it did
-  // when the locator's hooks were CommuterApp's own, after the cards'. Since
+  // when the locator's hooks were PublicMapApp's own, after the cards'. Since
   // they moved into VisitorLocation, which React runs before the page's own
   // effects, its camera waits for the page's turn (commit-turn.ts; the
   // cheap-phone plan, step 15, 2026-10-05). It stays on the visitor, at the
