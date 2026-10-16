@@ -155,6 +155,7 @@ export function TripCard({
       dockRef={dockRef}
       height={height}
       routeDirection={to}
+      isTrain={railLineOf(direction) !== null}
       switchable={switchable}
       back={direction.reversed}
       way={wayWord(direction.reversed, [direction])}

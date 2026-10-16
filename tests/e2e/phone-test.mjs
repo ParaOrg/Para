@@ -1087,7 +1087,8 @@ const tripChecks = async () => {
       `"${km}" / "${fare}", the sums "${want.km}" / "${want.fare}"`,
     );
 
-  // The hintuans fold into one row, "N more hintuans"; opened, each is a row
+  // The hintuans fold into one row, "N more hintuans" ("N more stations" on a
+  // train, the owner's ask of 2026-10-15); opened, each is a row
   // of its own, and "View less" folds them again (the owner's 3762:3546,
   // with an s since 3778:3183). A lone hintuan is shown as it is, with
   // nothing to fold.
@@ -1115,7 +1116,7 @@ const tripChecks = async () => {
     );
   } else {
     const folded = (await fold.first().innerText()).trim();
-    const n = Number(/^(\d+) more hintuans$/.exec(folded)?.[1] ?? NaN);
+    const n = Number(/^(\d+) more (hintuans|stations)$/.exec(folded)?.[1] ?? NaN);
     // The rows' insides, drawn: none on a card just opened, folded, every
     // one from the first opening on (the cheap-phone plan, step 11, 2026-10-04).
     const drawnRows = () => card().locator('[data-testid="trip-hintuan-pick"]').count();
@@ -1127,7 +1128,7 @@ const tripChecks = async () => {
     const opening = await rowMotion();
     const shown = await restingRows();
     check(
-      '  its hintuans fold into one row, "N more hintuans", that opens to N rows',
+      '  its hintuans fold into one row, "N more hintuans" (stations on a train), that opens to N rows',
       n > 1 && shown === n && (await fold.first().innerText()).includes('View less'),
       `"${folded}" opened to ${shown} row(s)`,
     );

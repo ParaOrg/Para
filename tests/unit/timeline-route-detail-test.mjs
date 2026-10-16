@@ -98,6 +98,11 @@ test('folded and never opened, every row is its bare <li>: its data and its fold
   assert.match(html, />10 more hintuans</);
 });
 
+test('a train’s fold reads stations, a jeep’s hintuans (the owner, 2026-10-15)', () => {
+  assert.match(render(7, { isTrain: true }), />7 more stations</);
+  assert.match(render(7), />7 more hintuans</);
+});
+
 test("a hidden name asks for the rows' face as the card opens, in the weight a drawn row's name has", () => {
   const ask = askers(render(10));
   assert.equal(ask.length, 1, 'one, for every row');

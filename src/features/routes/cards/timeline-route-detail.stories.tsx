@@ -26,7 +26,7 @@ const talaToNovaliches = hintuans(
 
 /** Opens the fold, as a rider's tap would — and lets go of it, since a tap draws no focus ring. */
 const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more hintuans/ });
+  const fold = within(canvasElement).getByRole('button', { name: /more (hintuans|stations)/ });
   await userEvent.click(fold);
   fold.blur();
 };
@@ -121,30 +121,30 @@ export const HintuanPickedPink: Story = {
   play: openFold,
 };
 
-/** LRT-1: the rail in Map/Rail/LightRailWayOne/Timeline/surface, Content/inverse words (4074:7402, 2026-10-13). */
-export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
+/** LRT-1: the rail in Map/Rail/LightRailWayOne/Timeline/surface, Content/inverse words (4074:7402, 2026-10-13); a train's fold reads "N more stations". */
+export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one', isTrain: true } };
 
 /** Picked, LRT-1: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
 export const HintuanPickedLightRailWayOne: Story = {
-  args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04' },
+  args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04', isTrain: true },
   play: openFold,
 };
 
 /** LRT-2: the rail in Map/Rail/LightRailWayTwo/Timeline/surface, Content/inverse words (4080:4124, 2026-10-13). */
-export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
+export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two', isTrain: true } };
 
 /** Picked, LRT-2: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
 export const HintuanPickedLightRailWayTwo: Story = {
-  args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04' },
+  args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04', isTrain: true },
   play: openFold,
 };
 
 /** MRT-3: the rail in Map/Rail/MetroRailWayThree/Timeline/surface, Content/primary, dark, words (4080:4241, 2026-10-13). */
-export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
+export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three', isTrain: true } };
 
 /** Picked, MRT-3: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
 export const HintuanPickedMetroRailWayThree: Story = {
-  args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
+  args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06', isTrain: true },
   play: openFold,
 };
 
