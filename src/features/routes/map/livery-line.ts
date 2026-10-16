@@ -96,7 +96,7 @@ export const LIT_LINE: LineLook = {
  * RouteLineEndingsLabel): a card's colour, or `selected`, the blue with no
  * card picked.
  */
-export type LineColour = Livery | 'selected';
+type LineColour = Livery | 'selected';
 
 /** A label's fill in the line's colour (the owner's "must be the color of routeline", 2026-10-13). */
 export const LINE_SURFACE = {
