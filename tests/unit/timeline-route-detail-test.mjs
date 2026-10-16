@@ -127,6 +127,51 @@ test('a start and an end: folds before and after, S and E on their rows, the ori
   assert.doesNotMatch(html, />Set as start</);
 });
 
+// The owner's answers of 2026-10-16: the start's row has its pill too, its
+// own code and the ride's pesos, as Variant4 draws both; the S and the E sit
+// on white, a green disc and one in the card's colour; Set as start and
+// × Remove as start are in the card's colours, not brand blue.
+test('a start and an end: a pill on each, its own code and the ride’s pesos', () => {
+  const html = render(10, {
+    livery: 'metro-rail-way-three',
+    start: 'h3',
+    picked: 'h6',
+    startCode: 'YL07',
+    pickedCode: 'YL11',
+    pickedPesos: '₱20',
+  });
+  const pill = (id) => rows(html).find((x) => x.id === id).inside;
+  assert.match(pill('h3'), /data-part="code"[^>]*>YL07<\/span> <span data-part="pesos"[^>]*>₱20</);
+  assert.match(pill('h6'), /data-part="code"[^>]*>YL11<\/span> <span data-part="pesos"[^>]*>₱20</);
+  // A jeep's: the pesos alone, on both.
+  const jeep = render(10, { start: 'h3', picked: 'h6', pickedPesos: '₱13' });
+  const pills = [...jeep.matchAll(/data-testid="trip-hintuan-fare"[^>]*>([^<]*)</g)].map(
+    ([, p]) => p,
+  );
+  assert.deepEqual(pills, ['₱13', '₱13']);
+});
+
+test('the S on white with a green disc, the E on white in the card’s colour, the buttons in the card’s', () => {
+  const html = render(10, { start: 'h3', picked: 'h6', onRemoveStart() {} });
+  const mark = (part) => new RegExp(`data-part="${part}" class="([^"]*)"`).exec(html)?.[1] ?? '';
+  assert.match(mark('start'), /\bbg-content-inverse\b/);
+  assert.match(mark('start'), /\btext-map-hotspots-card-hintuan-surface\b/);
+  assert.match(mark('end'), /\bbg-content-inverse\b/);
+  assert.match(mark('end'), /\btext-card-violet-surface\b/);
+  const button = /<button[^>]*class="([^"]*)"[^>]*>(?:(?!<\/button>).)*Remove as start/s.exec(
+    html,
+  )?.[1];
+  assert.match(button, /\bbg-card-violet-surface\b/);
+  assert.match(button, /\benabled:active:bg-card-violet-timeline-surface\b/);
+  assert.doesNotMatch(button, /\bbg-brand-surface\b/);
+  // Set as start, under an end alone, wears them too.
+  const choosing = render(5, { picked: 'h2', onSetStart() {} });
+  const set = /<button[^>]*class="([^"]*)"[^>]*>(?:(?!<\/button>).)*Set as start/s.exec(
+    choosing,
+  )?.[1];
+  assert.match(set, /\bbg-card-violet-surface\b/);
+});
+
 test('an end alone carries Set as start; with no start the origin keeps its S', () => {
   const html = render(5, { picked: 'h2', onSetStart() {}, onRemoveStart() {} });
   assert.match(html, />Set as start</);

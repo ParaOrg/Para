@@ -5,11 +5,13 @@ import { ChevronDownIcon, CloseIcon, EndIcon, StartIcon } from '@/shared/ui/rout
 
 import {
   BLOB_PLACE,
+  BUTTON_FILL,
   CARD_BLOB,
   CARD_SHADOW,
   CARD_SURFACE,
   CARD_TEXT,
   ROW_PRESSED,
+  TIMELINE_PILL,
   TIMELINE_SURFACE,
 } from './livery-card';
 import { RouteTripLineDetailPill } from './route-trip-line-detail-pill';
@@ -36,7 +38,7 @@ export interface TimelineRouteDetailProps {
    * 2026-10-15, Figma 4137:9886).
    */
   start?: string | null;
-  /** On a train, the start station's code, for its pill while no end is picked (Variant3). */
+  /** On a train, the start station's code, for its pill (Variant3, and Variant4 beside the end's). */
   startCode?: string | null;
   /** Set as start, under the picked row while no start is picked. Without it, no button. */
   onSetStart?: () => void;
@@ -45,8 +47,8 @@ export interface TimelineRouteDetailProps {
   /** A hintuan's row was tapped: pick it, or, picked, let it go. */
   onPick: (id: string) => void;
   /**
-   * The pesos of the ride between the picks, for the pill on the end's row,
-   * or on the start's while no end is picked: the fare the tile under the
+   * The pesos of the ride between the picks, for the pills on the end's row
+   * and the start's (Variant4 draws both): the fare the tile under the
    * card shows, Regular or Discounted (the owner, 2026-09-30: "why it shows
    * calculated fare instead of its real value?" — the pill said "Calculated
    * Fare" for the day before). Omitted when unpriced, and no pill.
@@ -225,6 +227,7 @@ export function TimelineRouteDetail({
           so a keyboard's focus stays on it while the hintuans come and go. */}
       <ol className="flex w-full flex-col">
         <TimelineTop
+          livery={livery}
           rail={rail}
           pressed={pressed}
           routeOrigin={routeOrigin}
@@ -258,8 +261,8 @@ export function TimelineRouteDetail({
                 drawn={shown || everOpened}
                 selected={isStart || isEnd}
                 mark={mark}
-                // The ride's pesos on its end, or on its start while it runs on to the destination (Variant3).
-                pesos={isEnd || (isStart && picked === null) ? pickedPesos : undefined}
+                // The ride's pesos on its end and its start alike, as Variant4 draws them (the owner's yes, 2026-10-16).
+                pesos={isEnd || isStart ? pickedPesos : undefined}
                 code={code}
                 livery={livery}
                 connection={isOnRide(i) ? 'connected' : 'disconnected'}
@@ -284,6 +287,7 @@ export function TimelineRouteDetail({
           );
         })}
         <TimelineBottomEndRoute
+          livery={livery}
           rail={rail}
           pressed={pressed}
           routeDirection={routeDirection}
@@ -353,6 +357,7 @@ export function TimelineDot({ rail, selected = false, isTucked = true }: Timelin
  * TimelineDot's Selected one.
  */
 function TimelineTop({
+  livery,
   rail,
   pressed,
   routeOrigin,
@@ -361,6 +366,7 @@ function TimelineTop({
   selected,
   onTap,
 }: {
+  livery: Livery;
   rail: string;
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
@@ -387,7 +393,7 @@ function TimelineTop({
           dot={<TimelineDot rail={rail} selected={selected} />}
         />
         <span className="flex min-w-0 flex-1 items-start gap-1 pb-2 pl-2">
-          {isStart && <RideMark mark="start" />}
+          {isStart && <RideMark mark="start" livery={livery} />}
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span
             className={
@@ -537,9 +543,11 @@ function TimelineHintuan({
               rail={rail}
               dot={<TimelineDot rail={rail} selected={selected} />}
             />
-            {mark && <RideMark mark={mark} isSmall />}
+            {mark && <RideMark mark={mark} livery={livery} isSmall />}
             <span
-              className={'flex min-w-0 flex-1 items-center gap-2 py-2 ' + (mark ? 'pl-1' : 'pl-3')}
+              className={
+                'flex min-w-0 flex-1 items-center gap-2 py-2 ' + (mark ? 'pl-1.5' : 'pl-3')
+              }
             >
               <span
                 className={
@@ -571,6 +579,7 @@ function TimelineHintuan({
                 <Button
                   variant="primary"
                   size="small"
+                  fill={BUTTON_FILL[livery]}
                   label={action.label}
                   firstIcon={action.isRemove ? <CloseIcon /> : undefined}
                   onClick={() => {
@@ -648,6 +657,7 @@ function TimelineDisclosure({
  * the whole row is its button. Picked, its dot is TimelineDot's Selected one.
  */
 function TimelineBottomEndRoute({
+  livery,
   rail,
   pressed,
   routeDirection,
@@ -656,6 +666,7 @@ function TimelineBottomEndRoute({
   selected,
   onTap,
 }: {
+  livery: Livery;
   rail: string;
   /** ROW_PRESSED's classes for the card's livery. */
   pressed: string;
@@ -682,7 +693,7 @@ function TimelineBottomEndRoute({
           dot={<TimelineDot rail={rail} selected={selected} />}
         />
         <span className={'flex min-w-0 flex-1 items-start gap-1 pt-3 ' + (isEnd ? 'pl-2' : 'pl-3')}>
-          {isEnd && <RideMark mark="end" />}
+          {isEnd && <RideMark mark="end" livery={livery} />}
           {/* Bold, Figma's text-xl/bold (the owner, 2026-09-30: "bold"). The
               Timeline set (3716:1894) draws it Medium, ExtraBold picked; the
               owner kept the trip frame's Bold on 2026-10-13. */}
@@ -694,28 +705,44 @@ function TimelineBottomEndRoute({
 }
 
 /**
- * Where the ride starts and ends, before a row's name: Start's circled S in
- * its green (the owner's TimelineRouteDetailCard, 3778:3183, as the map's
- * Head Route wears it) and End's circled E in the card's words. They move
- * with the picks (his TimelineRouteDetail, 2026-10-15): the S from the
- * origin to a start picked further on, the E from the destination to a
- * picked end. For the eye: a hintuan's row says "start" or "end" after its
- * name, and the ends' rows are where a ride leaves and goes, as before.
- * `isSmall`, beside a hintuan's 16/24 name: 24 across, 8 down to sit on
- * its line, as the name's padding does; beside the ends' 20/28, 28.
+ * Where the ride starts and ends, before a row's name, the owner's
+ * RouteSigns (4148:12449): Start's circled S and End's circled E, each a
+ * disc on a white ring, the letter in white (his "start has white background
+ * and green icon color, E should have white background too", 2026-10-16:
+ * on the card till then, the S's disc and the E's letter showed the card
+ * through). The S's disc is green, as the map's Head Route wears it; the
+ * E's the card's colour, the pill's (TIMELINE_PILL: a train's line's
+ * Timeline/surface). They move with the picks (his TimelineRouteDetail,
+ * 2026-10-15): the S from the origin to a start picked further on, the E
+ * from the destination to a picked end. For the eye: a hintuan's row says
+ * "start" or "end" after its name, and the ends' rows are where a ride
+ * leaves and goes, as before. 24 across, as RouteSigns is, 12 after the
+ * rail and 6 before the name: `isSmall`, on a hintuan's 16/24 line, 8
+ * down as the name's padding is; beside the ends' 20/28, centred on it.
  */
-function RideMark({ mark, isSmall = false }: { mark: 'start' | 'end'; isSmall?: boolean }) {
+function RideMark({
+  mark,
+  livery,
+  isSmall = false,
+}: {
+  mark: 'start' | 'end';
+  livery: Livery;
+  isSmall?: boolean;
+}) {
   return (
     <span
       aria-hidden
       data-part={mark}
       className={
-        'shrink-0 *:size-5 ' +
-        (isSmall ? 'mt-2 ml-2 p-0.5' : 'p-1') +
-        (mark === 'start' ? ' text-map-hotspots-card-hintuan-surface' : '')
+        'flex shrink-0 rounded-full *:size-6 ' +
+        (isSmall ? 'mt-2 ml-3 ' : 'my-0.5 mr-0.5 ml-1 ') +
+        (mark === 'start' ? START_MARK : TIMELINE_PILL[livery])
       }
     >
       {mark === 'start' ? <StartIcon /> : <EndIcon />}
     </span>
   );
 }
+
+/** Start's S: a green disc (the hintuans' Head Route green) on Content/inverse. */
+const START_MARK = 'bg-content-inverse text-map-hotspots-card-hintuan-surface';
