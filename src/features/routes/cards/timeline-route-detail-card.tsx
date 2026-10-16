@@ -18,7 +18,7 @@ export const FREE = 'free';
 export type Fare = Fares | typeof FREE;
 
 type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
-  /** Figma's Kilometer tile: the whole ride's length, in metres; written `12.8km`. */
+  /** Figma's Distance tile (Kilometer until the owner's ask of 2026-10-15): the whole ride's length, in metres; written `12.8km`. */
   metres: number;
   /** …and the ride to the picked hintuan, which the tile shows while it is picked, as the fare tile does. */
   pickedMetres?: number;
@@ -72,7 +72,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
  * rail runs from the origin (TimelineTop) down to the place it goes to
  * (TimelineBottomEndRoute); under the card the direction's signboards as
  * pictures (his Signboard, 3919:11355, 2026-10-01, uploaded in the studio)
- * in their own strip (4051:5528); then two tiles, the ride's Kilometer and
+ * in their own strip (4051:5528); then two tiles, the ride's Distance and
  * its fare (moved under the card in his redrawing of 2026-09-29). The
  * boards sat under the tiles with a "Signboard" heading until 2026-10-12,
  * went right under the header by his first redrawing that day, and between
@@ -86,11 +86,11 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
  * hintuan they select"). The fare picked is kept for every trip after, and the
  * next visit (useFareKind; his "I don't want the user to keep tapping",
  * 2026-09-30). Its second fare was "Student fare" until he named it
- * "Discounted fare" (2026-09-30). A first visit opens on Regular. The Kilometer tile follows the pick the
+ * "Discounted fare" (2026-09-30). A first visit opens on Regular. The Distance tile follows the pick the
  * same way, from where the trip leaves to there (the owner, 2026-09-30: "it
  * should follow the picked hintuan").
  * The pesos moved off the rail into their tile with this set; a route no
- * fare rule prices has no Expected fare tile, and Kilometer takes the row
+ * fare rule prices has no Expected fare tile, and Distance takes the row
  * (the owner kept that default, 2026-09-29: nothing is drawn for it).
  *
  * Under the tiles, "Other routes" (his of 2026-10-01): a row per other
@@ -218,7 +218,7 @@ export function TimelineRouteDetailCard({
           <span data-testid="trip-km" className={FIGURE}>
             {kmLabel(shownMetres)}
           </span>
-          <span className={NAME}>Kilometer</span>
+          <span className={NAME}>Distance</span>
         </div>
         {shown === FREE ? (
           <div className={TILE}>
