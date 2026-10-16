@@ -256,6 +256,24 @@ export const TrainMrt3: Story = {
   },
 };
 
+/**
+ * A train whose end the line's table does not know: no bound, so the header
+ * shows the line alone (the owner's answer of 2026-10-16), and SWITCH falls
+ * back to Pabalik and Papunta, as over a mixed list (switchWord). What SWITCH
+ * says here is Claude's call of 2026-10-16, for the owner to say.
+ */
+export const TrainNoBound: Story = {
+  args: {
+    direction: direction('lrt1x', 'Fernando Poe Jr.', 'Nowhere', {
+      mode: 'lrt',
+      routeCode: 'LRT-1',
+    }),
+    directions: [],
+    timeline: timelineOf('Fernando Poe Jr.', 'Nowhere', ['Balintawak', 'Monumento']),
+    livery: 'light-rail-way-one',
+  },
+};
+
 /** The ferry: free, with the line's own words under the tiles. */
 export const Ferry: Story = {
   args: {
