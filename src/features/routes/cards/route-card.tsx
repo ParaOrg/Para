@@ -17,8 +17,9 @@ import type { Vehicle } from '../model/vehicles';
  * is `livery` here, the name the tokens give these colours, because a variant
  * in this codebase is a direction. Figma's Pink was the orange tokens (the
  * owner, 2026-09-28) until the set named it Orange and drew a pink of its
- * own, Card/pink (4071:7014, 2026-10-13). How each livery paints the card — surface, words, glow,
- * shadow — is liveryCard.ts, shared with the trip card it opens.
+ * own, Card/pink (4071:7014, 2026-10-13). How each livery paints the card —
+ * surface, words, glow, shadow — is livery-card.ts, shared with the trip card
+ * it opens.
  *
  * Figma's State (2026-09-29): Rest, or Selected — pressed in, under the
  * Selected shadow, while the map lights its routes alone. A row opens its

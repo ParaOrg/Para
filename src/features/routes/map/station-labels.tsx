@@ -58,9 +58,11 @@ function namesShow(map: MapLibreMap): boolean {
  * ride's start could be picked (2026-10-15) the rows before it, while the
  * ride is drawn (`hasRide`; his ask of 2026-10-12, with a screenshot: "the
  * circle is still the color of routeline instead of pale color of
- * routeline"). Their names keep the card's
- * surface: white words on the pale would not read, and he asked for the
- * circles; whether the names follow is his to say (asked, 2026-10-12).
+ * routeline"). Their names keep the card's surface, the whole label at
+ * 60%: the owner's Label, Unselected (Figma 4200:13645, 2026-10-16: "if the
+ * label is unselected it would be transparent", "if the route is not
+ * selected or not in side the start and end"); from 2026-10-12 until then
+ * they kept it whole, white words on the pale not reading.
  *
  * On a train line the dots stay dots: the owner's LRTHintuanCodes (Figma
  * 4051:6426, 2026-10-12) put each station's code, GL02, in its dot's place
@@ -173,7 +175,7 @@ function StationLabel({
   label: string;
   livery: Livery;
   named: boolean;
-  /** Along the rest past the picked row: its dot rings in the card's pale, the line's colour there. */
+  /** Outside the ride: its dot rings in the card's pale, the line's colour there, and its name is at 60%. */
   paled: boolean;
   onPick?: (rowId: string) => void;
 }) {
