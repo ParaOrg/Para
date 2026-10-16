@@ -82,7 +82,7 @@ if (!base) {
 console.log(`preview at ${base}`);
 
 /**
- * Opens a trip as a visitor does, by a tap on its line. A production build
+ * Opens a trip as a commuter does, by a tap on its line. A production build
  * keeps its map to itself (no window.__map) and trip links went on
  * 2026-10-03, so the line is found on a screenshot: a pixel in the colour
  * routes rest in (Map/RouteLine/surface-default, #8ec5ff), away from the
@@ -455,7 +455,7 @@ try {
   check('fast again: no notice', (await page.locator('[data-testid="offline"]').count()) === 0);
 
   // A trip opened reads its direction's full line, and the worker keeps it.
-  // Opened by a tap, as a visitor opens one: trip links (?r=<id>) went on
+  // Opened by a tap, as a commuter opens one: trip links (?r=<id>) went on
   // 2026-10-03.
   const opened = await openSomeTrip(page);
   if (!opened)

@@ -323,7 +323,7 @@ test('a ferry route with no line, or a train line, is a problem', () => {
 // them out again against the file's hintuans: where the key is the file's,
 // stretches that differ are a problem; a key that is another's is a note,
 // since the app works those out itself.
-import { linePass, passBoxes } from '../../src/features/routes/geo/line-pass.ts';
+import { linePass, passBoxes } from '../../src/features/routes/model/line-pass.ts';
 import { PASS_TOLERANCE, sameStretches } from '../../scripts/checks/check-map-data.mjs';
 
 /** good(), its direction carrying the stretches the publish writes, or `change` of them. */
@@ -469,7 +469,7 @@ test('step 13: a line file without stretches is checked as before', () => {
 // (publish-map.yml: the issue opens on a report without "Nothing to
 // report"). Against an older index they stay a note.
 import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
-import { boxesReached } from '../../src/features/routes/geo/line-pass.ts';
+import { boxesReached } from '../../src/features/routes/model/line-pass.ts';
 import { lineFileText } from '../../scripts/publish/lineFile.mjs';
 import { toDirection } from '../../src/features/routes/model/direction-schema.ts';
 import { toHotspot } from '../../src/features/routes/model/hotspot-schema.ts';
@@ -560,7 +560,7 @@ test("T: the report lists the publish's warning under a heading of its own, the 
 test("T: the committed map gives no warning of its line files' stretches", () => {
   // They carried none when this was written (2026-10-06); the next publish
   // writes them against index.v4.json's own hintuans, as the next test does.
-  // A change that bumps PASS_RULE (src/features/routes/geo/line-pass.ts) once they
+  // A change that bumps PASS_RULE (src/features/routes/model/line-pass.ts) once they
   // carry some keys them all anew: until the nightly publish writes them
   // again, the app works their stretches out itself, and this says so.
   for (const name of ['index.v4.json', 'index.v3.json', 'index.json']) {

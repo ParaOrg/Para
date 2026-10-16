@@ -86,9 +86,9 @@ export const BASEMAPS: readonly Basemap[] = [MONOCHROME, COLOUR, FIORD];
 export const DEFAULT_BASEMAP = MONOCHROME;
 
 /**
- * Remembered on the device only, and only once a viewer has chosen: a visitor
+ * Remembered on the device only, and only once a viewer has chosen: a commuter
  * who never touches the control leaves the browser's storage empty, which the
- * visitor test asserts and the no-tracking promise relies on.
+ * commuter test asserts and the no-tracking promise relies on.
  */
 const STORAGE_KEY = 'parapo.basemap.v1';
 

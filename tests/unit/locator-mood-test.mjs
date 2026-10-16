@@ -1,4 +1,4 @@
-// The visitor's dot's moods (src/features/locator/locator-mood.ts, the owner's ask of
+// The commuter's dot's moods (src/features/locator/locator-mood.ts, the owner's ask of
 // 2026-10-01): cross at a run of taps, glad as the location comes or the
 // camera arrives and on the move, and
 // otherwise neutral; and the faces each wears.

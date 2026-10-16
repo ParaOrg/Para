@@ -1,3 +1,4 @@
+import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import type {
   LineStringGeoJSON,
   TransportMode,
@@ -10,7 +11,6 @@ import { joinSegments, overviewOf, roundLngLat } from '@/shared/utils/geo';
 import { NOTHING_CHANGED } from './hotspots-write';
 import { DIRECTION_SELECT, unnamedFromListed } from './live';
 import { requireSupabase } from './supabase';
-import type { BorrowPart } from '../drawing/borrow';
 
 /**
  * What the save panel collects. Route fields — the ends, the via, the

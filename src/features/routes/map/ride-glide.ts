@@ -7,7 +7,7 @@ const PICKED_SCALE_M = 500;
 
 /**
  * Closer in than this — the scale bar reading under 300 m — a pick keeps
- * the visitor's zoom (the owner's ask, 2026-10-13: "if it's below 300m and
+ * the commuter's zoom (the owner's ask, 2026-10-13: "if it's below 300m and
  * tapped the hintuan, don't zoom out, remain where the user camera was").
  */
 const KEEP_CAMERA_UNDER_M = 300;
@@ -19,7 +19,7 @@ const IN_VIEW_PX = 48;
  * Where the camera goes for a picked hintuan or end at `at`, `offset` from
  * the map's centre clear of the card (onGlide): in to the scale bar's
  * 500 m; or, already closer than 300 m, nowhere while the place is in view
- * clear of the card, and there at the visitor's own zoom when it is not —
+ * clear of the card, and there at the commuter's own zoom when it is not —
  * a row tapped on the card can name a hintuan off the screen. Null: stay.
  */
 export function glideFor(

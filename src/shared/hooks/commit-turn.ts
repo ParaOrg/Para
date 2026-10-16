@@ -11,7 +11,7 @@ import { useEffect } from 'react';
  * down, and the child's effect takes it: `turn(go)` runs `go` there when the
  * parent rendered in the same commit, its effects still to come, and at once
  * when only the child rendered, as nothing of the parent's runs then.
- * VisitorLocation's camera, the cheap-phone plan, step 15 (2026-10-05).
+ * CommuterLocation's camera, the cheap-phone plan, step 15 (2026-10-05).
  */
 
 /** Run `go` at the parent's turn in this commit, or now if that has passed. */

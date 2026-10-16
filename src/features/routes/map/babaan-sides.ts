@@ -3,10 +3,10 @@ import { useEffect, useMemo } from 'react';
 
 import { bboxOf, bboxesOverlap, lineBounds } from '@/shared/utils/geo';
 
-import { rightOfLine } from './right-of-line';
-import { ringToPolygon, type Ring } from './ring';
-import { HOTSPOT_COLOUR } from '../map/colours';
-import { LAYERS, useLayerReady } from '../map/layers';
+import { HOTSPOT_COLOUR } from './colours';
+import { LAYERS, useLayerReady } from './layers';
+import { rightOfLine } from '../geo/right-of-line';
+import { ringToPolygon, type Ring } from '../geo/ring';
 import { hotspotRing, type Hotspot } from '../model/hotspots';
 import { travelLine } from '../model/ride';
 import { isLineMode, type Direction } from '../model/routes';

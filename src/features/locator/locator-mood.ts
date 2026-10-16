@@ -3,9 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { STILL_BELOW_MPS, type Camera, type Fix } from './use-locator';
 
 /*
- * The visitor's dot has moods (the owner's ask, 2026-10-01: "add other
+ * The commuter's dot has moods (the owner's ask, 2026-10-01: "add other
  * emotion ... sad, angry, happy"; sad since dropped, "we remove the sad, only
- * neutral, happy and angry"): glad as the visitor arrives or moves, a
+ * neutral, happy and angry"): glad as the commuter arrives or moves, a
  * reaction to a tap, and left to itself its mood swings; and neutral and
  * happy have several faces each, so it never reads as one loop (the owner's
  * "make more faces reaction to that"). The faces are drawn in locator.css.
@@ -47,7 +47,7 @@ export function reactionTo(count: number, roll: number): 'happy' | 'angry' {
   return count > 1 && roll < 1 / ANGRY_ODDS ? 'angry' : 'happy';
 }
 
-/** Happy this long when the location first comes, or the camera arrives on the visitor. */
+/** Happy this long when the location first comes, or the camera arrives on the commuter. */
 export const HAPPY_FOR_MS = 3000;
 /** Happy on the move from walking pace up, in metres a second. */
 const MOVING_FROM_MPS = 1;
@@ -110,14 +110,14 @@ export const MOOD_OF: Record<Face, Mood> = {
   glare: 'angry',
   huff: 'angry',
 };
-/** Happy changes face more often: it is short-lived, or the visitor is moving. */
+/** Happy changes face more often: it is short-lived, or the commuter is moving. */
 const HAPPY_EVERY_MS = 2500;
 const HAPPY: readonly Face[] = ['smile', 'hop', 'squee', 'wink-smile'];
 
 interface Signals {
   now: number;
   fix: Pick<Fix, 'accuracy' | 'speed' | 'time'> | null;
-  /** When the location first came, or the camera last arrived on the visitor. */
+  /** When the location first came, or the camera last arrived on the commuter. */
   arrivedAt: number | null;
   /** When the LocatorButton was tapped, oldest first. */
   taps: readonly number[];
@@ -145,9 +145,9 @@ function inATemper({ now, taps }: Pick<Signals, 'now' | 'taps'>): boolean {
 
 /**
  * The mood for these signals, the strongest first: cross at a run of taps,
- * then a tap's own reaction, then glad as the visitor arrives, then glad on
+ * then a tap's own reaction, then glad as the commuter arrives, then glad on
  * the move. Never low for the location itself: an old fix (a browser sends
- * none while the visitor stands still) or a rough one (common indoors) made
+ * none while the commuter stands still) or a rough one (common indoors) made
  * it sad most of the time (the owner, 2026-10-01: "can we drop the bad
  * location for now"), and sad is gone altogether.
  */
@@ -216,7 +216,7 @@ export function useLocatorMood({
   const [pokes, setPokes] = useState(0);
   const poke = useCallback(() => setPokes((n) => n + 1), []);
   const touches = taps + pokes;
-  // What happened, and when: taps on the button, the visitor arriving, standing still since.
+  // What happened, and when: taps on the button, the commuter arriving, standing still since.
   const [events, setEvents] = useState<{
     taps: number[];
     count: number;

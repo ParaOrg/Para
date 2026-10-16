@@ -26,7 +26,7 @@
 // of the drawn one, so a pass is only doubted beyond that half metre.
 //
 // A line file that carries its orange stretches (`pass`, since 2026-10-05,
-// the cheap-phone plan, step 13: src/features/routes/geo/line-pass.ts) has them worked
+// the cheap-phone plan, step 13: src/features/routes/model/line-pass.ts) has them worked
 // out again here, against this file's hotspots, as the app would. Where
 // their key is the one this file's hotspots give, the app paints them as
 // they are: stretches that are not the ones the line and the hotspots make,
@@ -61,7 +61,7 @@ import { stationIndex } from '../../src/features/routes/model/rail-fares.ts';
 import { bboxOf, bboxesOverlap, haversine, lineLength } from '../../src/shared/utils/geo.ts';
 import { distanceToRingM } from '../../src/features/routes/geo/ring.ts';
 import { firstNearIndex } from '../../src/features/routes/geo/pass.ts';
-import { linePass, passBoxes, readablePass } from '../../src/features/routes/geo/line-pass.ts';
+import { linePass, passBoxes, readablePass } from '../../src/features/routes/model/line-pass.ts';
 import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
 import {
   indexOutlineSchema,

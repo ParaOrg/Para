@@ -42,7 +42,7 @@ interface Props {
     /**
      * SWITCH pressed: the routes turn round, and `box`, when the other way
      * leaves from another box of the place, is the one to select. The camera
-     * stays where the visitor tapped the hintuan — no zoom, no glide (the
+     * stays where the commuter tapped the hintuan — no zoom, no glide (the
      * owner, 2026-10-01: "it must remain where the camera the user clicked
      * the hintuan").
      */

@@ -45,7 +45,7 @@ interface Props {
  * colour with the line it sits on and the dots before it (StationLabels;
  * past it, the line and its dots are the card's pale, useRideRest).
  *
- * A DOM marker, like the visitor's own (LocatorIndicatorOverlay): the pop
+ * A DOM marker, like the commuter's own (LocatorIndicatorOverlay): the pop
  * is a CSS animation that costs the map nothing, and it takes no taps, so
  * a tap on it reaches the line or the box beneath. The caller keys it on the pick, so another hintuan pops a
  * fresh circle.

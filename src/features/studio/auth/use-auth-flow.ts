@@ -12,9 +12,8 @@ export function useAuthFlow(session: Session | null, recovery: { recovering: boo
   const isSignedIn = !!session;
 
   // Signed in from the dialog Done opened: the dialog hides itself on the
-  // session, so its flag is cleared here, during render — left set, it kept
-  // the drawing keys (Ctrl+Z, Enter, F) off for the rest of the visit
-  // (finding 9).
+  // session, so its flag is cleared here, during render — left set, it would
+  // keep the drawing keys (Ctrl+Z, Enter, F) off for the rest of the visit.
   if (isSignedIn && isSigningIn) setIsSigningIn(false);
 
   return {

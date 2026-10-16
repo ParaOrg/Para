@@ -1,5 +1,5 @@
 /*
- * The visitor's dot on the public map (locator-indicator-overlay.tsx, which
+ * The commuter's dot on the public map (locator-indicator-overlay.tsx, which
  * imports this sheet): it breathes — a little bigger, then back — so the
  * eye finds it, as the owner asked (2026-10-01). A CSS animation on the dot
  * alone, which costs the map nothing (Walker's lesson, 2026-09-25); the

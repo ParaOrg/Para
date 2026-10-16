@@ -2,7 +2,7 @@
 // src/features/routes/map/framing.ts. The box it frames is the one useSavedRoutes'
 // fit framed after the map's 'load' until then; the fit itself now runs on
 // the public map only if what came frames otherwise, and never once the
-// visitor has moved the map. The studio's map is framed as it always was.
+// commuter has moved the map. The studio's map is framed as it always was.
 // And the map's 12 s to load, which on the public map counts again from its
 // style, when its routes go on (review of Q1, 2026-10-05). And "Loading
 // map…", which on the public map goes with the first frame that draws its
@@ -170,7 +170,7 @@ test('opened on nothing (the file still on its way, no copy kept), the routes ar
   assert.equal(framesRoutes(map, box), true);
 });
 
-test("a visitor's drag, zoom, turn or tilt before the routes come keeps the map where they took it", () => {
+test("a commuter's drag, zoom, turn or tilt before the routes come keeps the map where they took it", () => {
   for (const type of ['dragstart', 'zoomstart', 'rotatestart', 'pitchstart']) {
     const map = eventedMap();
     openedOn(map, null);
@@ -192,7 +192,7 @@ test("a visitor's drag, zoom, turn or tilt before the routes come keeps the map 
 // (handler/keyboard.ts, camera.ts _prepareEase); a shift-drag's box fires
 // 'boxzoomstart' with the mouse, then zooms with no input (box_zoom.ts,
 // fitScreenCoordinates).
-test("a visitor's pan by the arrow keys, or box drawn to zoom to, keeps the map where they took it", () => {
+test("a commuter's pan by the arrow keys, or box drawn to zoom to, keeps the map where they took it", () => {
   const key = eventedMap();
   openedOn(key, null);
   key.fire('movestart', { originalEvent: { type: 'keydown', key: 'ArrowRight' } });

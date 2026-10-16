@@ -1,4 +1,4 @@
-// Publishes the public map as files, so visitors never ask the database.
+// Publishes the public map as files, so commuters never ask the database.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/publish-map.mjs
 //                                                   writes public/data/
@@ -28,7 +28,7 @@
 //   data/lines/<id>.json    each direction's full line (below), fetched when
 //                           the direction is lit or opened, with its orange
 //                           stretches worked out (`pass`, and `passKey`, what
-//                           they were worked out against: src/features/routes/geo/line-pass.ts),
+//                           they were worked out against: src/features/routes/model/line-pass.ts),
 //                           since 2026-10-05.
 //   data/map.json           schema 1, everything in full as before (without
 //                           any line, as the index), for one
@@ -90,7 +90,7 @@ import { directionName, isLineMode, routeName } from '../../src/features/routes/
 import { hotspotLabel } from '../../src/features/routes/model/hotspots.ts';
 import { toDirection } from '../../src/features/routes/model/direction-schema.ts';
 import { toHotspot } from '../../src/features/routes/model/hotspot-schema.ts';
-import { passBoxes } from '../../src/features/routes/geo/line-pass.ts';
+import { passBoxes } from '../../src/features/routes/model/line-pass.ts';
 import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
 import { indexSchema } from '../../src/features/published-map/schemas/index-schema.ts';
 import { cleanSignboardSvg } from '../../src/features/routes/model/signboard-svg.ts';
@@ -329,7 +329,7 @@ if (!FORCE) {
 
 // Names are generated from the hotspots at each route's ends and never stored
 // (PLAN.md, "Naming and creating a route", 2026-09-21). The file carries the
-// generated strings so visitors need no join; a renamed hotspot shows on the
+// generated strings so commuters need no join; a renamed hotspot shows on the
 // next publish: routeName and directionName, from a hotspot's hotspotLabel — its
 // informal name, what people say, or the name on the ground (0007).
 const hotspotName = new Map(hotspotRows.map((s) => [s.id, hotspotLabel(s)]));
@@ -552,7 +552,7 @@ writeFileSync(INDEX_V4, indexV4File);
 //
 // With its orange stretches, worked out here once rather than by every
 // phone that lights the line (lineFile.mjs; the cheap-phone plan, step 13,
-// 2026-10-05): by the app's own rule (src/features/routes/geo/line-pass.ts: passBoxes,
+// 2026-10-05): by the app's own rule (src/features/routes/model/line-pass.ts: passBoxes,
 // passBounds, passStretches, hotspotRing, bboxOf, servedBy), on what the app
 // reads — the line as written and the hotspots as rounded in the index,
 // shape 4's, every line in — with the key the app checks them by.
