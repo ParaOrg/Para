@@ -5,13 +5,11 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { Elevation } from './basemap';
 
 /*
- * Terrain (the owner, 2026-10-15: "How about terrain?"): a style with the
- * ground's shape on it — its slopes shaded, and the map raised in 3D when it
+ * Terrain: a style with the ground's shape on it — its slopes shaded, and the map raised in 3D when it
  * is tilted. Metro Manila is flat; the shading tells from Marikina east, up
  * into Antipolo, San Mateo and Montalban, where routes climb.
  *
- * Terrain is the studio's only (the owner, 2026-10-15), so the elevation's
- * host is the studio's to name (features/studio); this draws any Terrarium
+ * Terrain is the studio's only, so the elevation's host is the studio's to name (features/studio); this draws any Terrarium
  * tiles. Its tiles are not kept offline: without a signal the map is drawn
  * flat and unshaded, as the style under it.
  *

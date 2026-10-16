@@ -13,8 +13,8 @@ import { maskedStyle } from './station-mask';
 import { terrainStyle } from './terrain';
 
 /**
- * The basemap designs a viewer can choose between, the owner's three
- * (2026-10-15): Monochrome, Colour and Fiord. All of them are OpenFreeMap
+ * The basemap designs a commuter can choose between: Monochrome, Colour and
+ * Fiord. All of them are OpenFreeMap
  * styles over the same `/planet` tiles, sprite and glyph endpoint, so a switch
  * fetches one small style file and nothing a phone has cached is wasted.
  *
@@ -24,9 +24,9 @@ import { terrainStyle } from './terrain';
  * rest of it muted so the routes still carry the strongest colour
  * (daylight.ts). Fiord, dark blue-gray, is for night.
  *
- * Satellite and Terrain are the studio's only (the owner, 2026-10-15): the
- * studio adds them to these (features/studio), so the hosts of the photo and
- * of the elevation never reach the public page.
+ * Satellite and Terrain are the studio's only: the studio adds them to these
+ * (features/studio), so the hosts of the photo and of the elevation never reach
+ * the public page.
  */
 export interface Basemap {
   /** What the device remembers; the studio's designs bring ids of their own. */
@@ -64,9 +64,8 @@ export interface Imagery {
 
 const OPENFREEMAP = 'https://tiles.openfreemap.org';
 
-// `positron` still, so a device that chose the old Gray or nothing at all
-// keeps the default; Gray, detailed (`positron-detailed`) and Dark (`dark`)
-// are gone, and a device that chose one falls back to it.
+// The id stays `positron` so a device that stored it, or nothing at all, keeps the
+// default. An id that is no longer offered falls back to the default (readBasemap).
 export const MONOCHROME: Basemap = {
   id: 'positron',
   label: 'Monochrome',
@@ -86,7 +85,7 @@ export const BASEMAPS: readonly Basemap[] = [MONOCHROME, COLOUR, FIORD];
 export const DEFAULT_BASEMAP = MONOCHROME;
 
 /**
- * Remembered on the device only, and only once a viewer has chosen: a commuter
+ * Remembered on the device only, and only once a commuter has chosen: one
  * who never touches the control leaves the browser's storage empty, which the
  * commuter test asserts and the no-tracking promise relies on.
  */
@@ -233,8 +232,7 @@ function styleTransform(b: Basemap, map: MapLibreMap) {
 /**
  * Swap the basemap under everything drawn on it. The new style is not checked
  * against the spec as a whole: setStyle takes the map's `validateStyle: false`
- * (map-view.tsx) as its default, so no option is passed here (the cheap-phone
- * plan, step 1, 2026-10-04).
+ * (map-view.tsx) as its default, so no option is passed here.
  */
 export function applyBasemap(map: MapLibreMap, b: Basemap): void {
   map.setStyle(b.url, { transformStyle: styleTransform(b, map) });

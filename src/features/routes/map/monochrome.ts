@@ -11,29 +11,23 @@ import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { recolouredStyle, type Recolour } from './recolour';
 
 /*
- * Monochrome: Positron, as detailed as its tiles allow, and still only grays
- * (the owner, 2026-10-15: "gray only but that gray is detailed", easy on the
- * eyes, renamed from Gray). Everything here draws what the tiles a phone
- * already holds carry: no new request, no bigger cache. The routes and
- * hotspots painted on top keep all the colour.
+ * Monochrome: Positron, as detailed as its tiles allow, and still only grays,
+ * easy on the eyes. Everything here draws what the tiles a phone already holds
+ * carry: no new request, no bigger cache. The routes and hotspots painted on
+ * top keep all the colour.
  *
- * Places — "Gray, detailed", decided 2026-09-22. The z14 tile over SM
- * Fairview holds the `poi`, `building` and `housenumber` layers: 19 of 22
- * names read off the owner's openstreetmap.org screenshot were in it. Rail
- * stations first, then the landmarks a driver would name, then, close in,
- * every other place and the house numbers. Italic is the basemap's voice; our own labels are bold. Taps
- * are unaffected: `tapTargets` queries our two hit layers by name and nothing
- * else.
+ * Places. The z14 tile over SM Fairview holds the `poi`, `building` and
+ * `housenumber` layers: 19 of 22 names read off an openstreetmap.org screenshot
+ * were in it. Rail stations first, then the landmarks a driver would name,
+ * then, close in, every other place and the house numbers. Italic is the
+ * basemap's voice; our own labels are bold. Taps are unaffected: `tapTargets`
+ * queries our two hit layers by name and nothing else.
  *
- * No road transit of the basemap's own (the owner, 2026-10-15, over Cubao:
- * "I don't want to add the terminal and routeline as additional detail"): its
- * bus terminals and stops, its ferry stops and its busway stood beside
- * ParaPo's own hotspots and routes as if they were ours. Rail stations stay
- * ("wait including the railstops too?"), by their names alone ("can we
- * remove those logo?").
+ * No road transit of the basemap's own: its bus terminals and stops, its ferry
+ * stops and its busway would stand beside ParaPo's own hotspots and routes as
+ * if they were ours. Rail stations stay, by their names alone, with no logo.
  *
- * Roads — after Dark (2026-10-15: "Dark has overpass, can we make the gray
- * like these?"). Every road in the tiles says whether it is a bridge or a
+ * Roads. Every road in the tiles says whether it is a bridge or a
  * tunnel and its level, 1 to 5 up and -1 and -2 down (the Skyway is 2 to 4
  * over EDSA, decoded at Magallanes). Positron reads that for the motorways
  * only: a flyover is drawn as one more street, and an underpass on top of the
@@ -90,7 +84,7 @@ const IS_LANDMARK: ExpressionSpecification = [
   ],
 ];
 // Real landmarks, but hundreds under one z15 view: at z15 they crowded the
-// anchors out (measured over SM Fairview, 2026-09-22).
+// anchors out (measured over SM Fairview).
 const IS_MINOR_LANDMARK: ExpressionSpecification = [
   'match',
   ['get', 'class'],
@@ -125,7 +119,7 @@ const place = (
   paint: { ...namePaint(MAP_PAINT['Paint/basemap-landmark']), 'icon-opacity': 0.75 },
 });
 
-/** A rail station by its name alone, blue-gray, on the station: no train icon (the owner, 2026-10-15). */
+/** A rail station by its name alone, blue-gray, on the station: no train icon. */
 const RAIL_STOPS: SymbolLayerSpecification = {
   id: 'detail-rail-stops',
   type: 'symbol',
@@ -448,8 +442,7 @@ export function monochromeStyle(style: StyleSpecification): StyleSpecification {
 // -------------------------------------------------------------- cool gray
 
 /*
- * Cool gray (the owner, 2026-10-15: "make the monochrome in cool colours,
- * cool gray"). Positron's grays lean warm, toward beige; here every colour
+ * Cool gray. Positron's grays lean warm, toward beige; here every colour
  * Monochrome draws, Positron's and ours, turns to the same slate hue with
  * the same small saturation, the cool gray of Tailwind's `gray`, and keeps
  * its lightness, so nothing gets lighter or darker and white stays white. A

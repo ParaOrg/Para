@@ -33,9 +33,8 @@ const afterClose = (): CardState =>
 /**
  * The button as one of MapLibre's own top-right controls, so MapLibre stacks
  * it under whatever is above it there, at its real height: the credits on a
- * phone, open three lines tall until the first drag folds them (the owner,
- * 2026-10-16: the button sat on them at a guessed 3rem), MapLibre's +, − and
- * compass for a mouse in the studio, or nothing on the public map's
+ * phone, open three lines tall until the first drag folds them, MapLibre's
+ * +, − and compass for a mouse in the studio, or nothing on the public map's
  * desktop, where it takes the corner. The corner keeps inside the safe area
  * itself (global.css). React draws into it, as the hintuan pins do into
  * their markers.
@@ -60,8 +59,8 @@ function useTopRightControl(map: MapLibreMap): HTMLElement {
 }
 
 /**
- * The owner's "MayLayers or Theme" button (4176:10679, 2026-10-16) at the
- * top right, and under it his Map Style card (MapStyle) for the designs. It
+ * The "MayLayers or Theme" button (Figma 4176:10679) at the top right, and
+ * under it the Map Style card (MapStyle) for the designs. It
  * draws nothing on the map itself — `applyBasemap` does the switch and
  * carries the routes and hotspots across — so both pages get it from
  * MapView for free.
@@ -104,8 +103,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
   }, [isOpen]);
 
   // Escape closes the card, as it closes a card (useEscape), and only the
-  // card: heard first, on the way down, so the card under it stays open
-  // (review of 2026-10-03: the menu could not be closed from the keyboard).
+  // card: heard first, on the way down, so the card under it stays open.
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -166,8 +164,8 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
 }
 
 /**
- * Figma's `map-type` (3751:1922, redrawn by the owner on 2026-10-16 a size
- * smaller inside its 24 box): a folded map, 28 px in 10 around, in currentColor.
+ * Figma's `map-type` (3751:1922), drawn a size smaller inside its 24 box: a
+ * folded map, 28 px in 10 around, in currentColor.
  */
 function MapTypeIcon() {
   return (
