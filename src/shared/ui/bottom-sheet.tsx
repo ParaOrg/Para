@@ -78,11 +78,11 @@ const FLOATS_AT = {
 };
 
 /**
- * Every card on the map is this one sheet: the route list, a trip's card, a
- * hotspot's card and the studio's route card alike. Only what it floats as on
- * a wide screen differs (`floats`): the list and a trip flush in the top-left
- * corner, 384 wide (Figma 3750:1911), the body scrolling under the header
- * with no scrollbar drawn.
+ * Every card on the map is this one sheet, by the owner's rule: the route
+ * list, a trip's card, a hotspot's card and the studio's route card alike.
+ * Only what it floats as on a wide screen differs (`floats`): the list and a
+ * trip flush in the top-left corner, 384 wide (Figma 3750:1911), the body
+ * scrolling under the header with no scrollbar drawn, the owner's pick.
  *
  * On a phone it is BottomSheetConfiguration (Figma 3815:5637), square along
  * the top: a HandleNotch over the header, and three heights (sheetGesture) —
@@ -96,8 +96,8 @@ const FLOATS_AT = {
  * scroll: a swipe on it moves the sheet; at Max it scrolls, and a pull down
  * from its top takes hold of the sheet — to Middle held slowly, to Low
  * flicked. A tap on the handle goes round, Low → Middle → Max. Between Middle
- * and Max it stays where it is let go (sheetGesture's snapFor), its body
- * still.
+ * and Max it stays where it is let go, the owner's pick (sheetGesture's
+ * snapFor), its body still.
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
  * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse

@@ -47,9 +47,9 @@ export function swallowTheTapsClick(x: number, y: number) {
  * phone: Low, the header and a trip's origin along the bottom (3814:3976);
  * Middle, about half the screen, where a trip opens (3813:3755, 3815:4040);
  * Max, the whole screen, the header at the top and the rest scrolling under
- * it (3815:4306). Between Middle and Max there is no magnet: a sheet let go
- * there stays, a number — the share of the map it shows, over Middle's and
- * under 1.
+ * it (3815:4306). Between Middle and Max there is no magnet, the owner's
+ * pick: a sheet let go there stays, a number — the share of the map it shows,
+ * over Middle's and under 1.
  */
 export type Snap = 'low' | 'middle' | 'max' | number;
 
@@ -63,7 +63,8 @@ export const aboveMiddle = (snap: Snap) => snap === 'max' || typeof snap === 'nu
 
 /**
  * Where a tap on the handle, or Enter on it, takes the sheet: round, Low →
- * Middle → Max → Low; from a free height, on up to Max. Pulls go by snapFor.
+ * Middle → Max → Low, the owner's defaults; from a free height, on up to Max.
+ * Pulls go by snapFor.
  */
 export function snapAfterTap(snap: Snap): Snap {
   return snap === 'low' ? 'middle' : snap === 'max' ? 'low' : 'max';
@@ -84,9 +85,9 @@ const RECENT_MS = 100;
 const MIDDLE = 0.45;
 
 /**
- * What Low shows, the same for every card (Figma 3817:6007, 3869:5195): the
- * notch, the header and the top of the first card, down past its title — cut
- * to one line there (`sheet-low:`).
+ * What Low shows, the same for every card, the owner's rule (Figma 3817:6007,
+ * 3869:5195): the notch, the header and the top of the first card, down past
+ * its title — cut to one line there (`sheet-low:`).
  */
 export const LOW_PX = 129;
 
@@ -195,9 +196,10 @@ const MAX_PULL_PX = 64;
  * upwards in px/ms (negative: downwards). A flick goes to the end in its
  * direction: up, to Max, from Low or Middle alike; down, to Low, from Max or
  * Middle alike — and down from Low, it closes. Let go slowly between Middle
- * and Max, it stays where it is, unless near enough either end to be drawn in
- * — up near the map's top, to Max. Below Middle it settles on Middle or Low,
- * the nearer, or closes when less than half of Low still shows.
+ * and Max, it stays where it is (the owner's pick), unless near enough either
+ * end to be drawn in — up near the map's top, to Max. Below Middle it settles
+ * on Middle or Low, the nearer, or closes when less than half of Low still
+ * shows.
  */
 export function snapFor(
   shown: number,
