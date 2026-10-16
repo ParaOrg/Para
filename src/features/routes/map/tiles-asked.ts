@@ -7,7 +7,7 @@
  * plan's Q1 (2026-10-04) the map opened on a default view and moved to its
  * routes after 'load', and the tiles of that second view usually came after
  * the worker had taken over and so were kept; since the map opens on its
- * routes, every tile of the first screen comes before it, and a visitor who
+ * routes, every tile of the first screen comes before it, and a commuter who
  * installed and went offline found the routes on a bare map (pwa-test's
  * "basemap-tiles holds tiles", on GitHub's runner, 2026-10-06). Once the
  * worker controls the page, warmCaches asks for these again, from the

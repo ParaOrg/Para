@@ -204,7 +204,7 @@ const STEP_MS = 1000 / 15;
  * buttons answering five seconds late, 13 frames in 8 s; 51 ms with them
  * still). Counted in time, not steps: three slow steps were under a second,
  * and a runner's short stall as tiles came in rested a flow that keeps up
- * (visitor-test on #95, 2026-10-01); a phone that cannot keep up stays slow.
+ * (commuter-test on #95, 2026-10-01); a phone that cannot keep up stays slow.
  *
  * For WARM_MS after they start, after the map zooms and after a hidden page
  * comes back, no step counts: a new view's first frames are its dearest —

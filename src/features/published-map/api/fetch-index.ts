@@ -189,7 +189,7 @@ export function fetchIndex(): Promise<Index> {
  * 11 while the file was asked again (a 304, a round trip), and fetched that
  * view's tiles only to throw them away. When the copy kept and the file
  * then brought differ, the routes' own fit takes the camera on to the
- * file's framing, unless the visitor has moved the map by then (framing.ts,
+ * file's framing, unless the commuter has moved the map by then (framing.ts,
  * framesRoutes).
  */
 export async function openingDirections(): Promise<Direction[] | null> {

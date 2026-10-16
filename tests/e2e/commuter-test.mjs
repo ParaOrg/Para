@@ -4,7 +4,7 @@
 // the file was committed; `git status` does.
 //
 //   npm run dev                          (in another terminal)
-//   node tests/e2e/visitor-test.mjs
+//   node tests/e2e/commuter-test.mjs
 //
 // Everything asserted here is read from the map itself first — source
 // features, layer order — and only then checked for internal consistency. Nothing is hard-coded about which or
@@ -38,13 +38,13 @@ import {
 
 const { check, skip, tally } = harness();
 
-// VISITOR_PART=k/n runs part k of n, so CI can run the parts side by side:
+// COMMUTER_PART=k/n runs part k of n, so CI can run the parts side by side:
 // every part opens the map and runs sections 1, 2 and 5; section 3's
 // hotspots are dealt out by their place in the list; 4 and 4b are part 1's.
 // Unset, one part runs it all.
-const [PART, PARTS] = (process.env.VISITOR_PART || '1/1').split('/').map(Number);
+const [PART, PARTS] = (process.env.COMMUTER_PART || '1/1').split('/').map(Number);
 if (!(PARTS >= 1 && PART >= 1 && PART <= PARTS))
-  throw new Error(`VISITOR_PART is k/n with 1 ≤ k ≤ n, not "${process.env.VISITOR_PART}"`);
+  throw new Error(`COMMUTER_PART is k/n with 1 ≤ k ≤ n, not "${process.env.COMMUTER_PART}"`);
 
 // ------------------------------------------------------------------ geometry
 // A handful of "probably inside" guesses for a ring (point-in-polygon itself
@@ -262,7 +262,7 @@ await page.waitForTimeout(1200);
   );
 }
 
-// 1. No editor chrome on the visitor page.
+// 1. No editor chrome on the public map.
 check(
   'no + New Route button',
   (await page.getByRole('button', { name: '+ New Route' }).count()) === 0,
@@ -513,7 +513,7 @@ for (const [i, p] of snapshot.polys.entries()) {
     JSON.stringify(own),
   );
   check(
-    '  no Edit/Delete for a visitor',
+    '  no Edit/Delete for a commuter',
     // The studio's buttons read "Edit route", "Edit terminal", "Edit hintuan" and "Delete".
     (await page
       .locator('[data-testid="card"]')
@@ -588,7 +588,7 @@ for (const [i, p] of snapshot.polys.entries()) {
       Math.abs(a.lat - b.lat) < 1e-6;
     const settled = () =>
       page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 4000 }).catch(() => {});
-    // Where the visitor had the camera as the card opened, before any pick:
+    // Where the commuter had the camera as the card opened, before any pick:
     // where the trip's ‹ brings it back (the owner, 2026-10-02).
     await settled();
     const camHome = await view();
@@ -649,7 +649,7 @@ for (const [i, p] of snapshot.polys.entries()) {
           .count()) === 0 && sameIds(relit, shownIds),
         `${relit.length} lit of ${shownIds.length}`,
       );
-      // …and the camera comes back in to where the visitor had it before
+      // …and the camera comes back in to where the commuter had it before
       // the pick, out of the trip's overview (the owner's ask, 2026-10-02).
       await page.waitForTimeout(400);
       await settled();
@@ -677,7 +677,7 @@ for (const [i, p] of snapshot.polys.entries()) {
         JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
       );
       // Picked, a second tap lets it go — and the camera, after the pick's
-      // overview, goes back to where the visitor had it (the owner, 2026-10-01).
+      // overview, goes back to where the commuter had it (the owner, 2026-10-01).
       const camBefore = await view();
       await name.click();
       await page.waitForTimeout(250);
@@ -702,7 +702,7 @@ for (const [i, p] of snapshot.polys.entries()) {
           Math.abs(camAfter.lat - camBefore.lat) < 1e-6,
         JSON.stringify({ camBefore, camAfter }),
       );
-      // ⇄ turns the routes round and leaves the camera where the visitor tapped
+      // ⇄ turns the routes round and leaves the camera where the commuter tapped
       // the hintuan: no zoom, no glide, even onto another box of the place (the
       // owner, 2026-10-01). Pressed twice, so the card is the way round it was;
       // last, as it may leave another box of the place the one Selected.

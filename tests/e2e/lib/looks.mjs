@@ -1,9 +1,9 @@
 // Reading the route lines' looks off the map: the directions a source has lit
 // and the lines' paint, read by what lookReaders puts in the page, and the lit
 // line's colours now, and the end circles' (DOM markers, EndTitles); and the
-// GL programs the map has compiled. lookReaders: visitor-test, phone-test and
+// GL programs the map has compiled. lookReaders: commuter-test, phone-test and
 // group-test. paintNow, rideLook, endRings, colourOf, ringVar, ringed,
-// programsAtRest and programsSince: visitor-test and phone-test.
+// programsAtRest and programsSince: commuter-test and phone-test.
 
 /**
  * In the page, before the app starts (`page.addInitScript(lookReaders)`):
@@ -183,7 +183,7 @@ export const programsAtRest = async (page, ms = 20000) => {
   // can be true before the first frame after a jumpTo, which is the frame
   // that asks for the new view's tiles: the keys were then read with nothing
   // of the view drawn, and its basemap's programs counted as the tap's
-  // (visitor-test's first tap of a page of its own, 1 run in 4 on
+  // (commuter-test's first tap of a page of its own, 1 run in 4 on
   // Monochrome, 2026-10-15).
   const keys = await page.evaluate(
     () =>

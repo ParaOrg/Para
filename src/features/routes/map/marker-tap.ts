@@ -22,8 +22,8 @@ const ITS_TAPS = ['click', 'dblclick'] as const;
 
 /**
  * `dragsPass`: a press that moves still reaches the map and pans it; only
- * the tap is the button's. For a button where the visitor's finger often
- * lands to pan — the visitor's own dot, in the middle of the screen
+ * the tap is the button's. For a button where the commuter's finger often
+ * lands to pan — the commuter's own dot, in the middle of the screen
  * (LocatorOnMap) — where a pan stopped dead would be the surprise.
  */
 export function tapsOnItsButton(
