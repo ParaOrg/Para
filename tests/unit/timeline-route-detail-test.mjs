@@ -1,4 +1,4 @@
-// A trip card's timeline as it first renders (src/features/routes/cards/trip-timeline.tsx):
+// A trip card's timeline as it first renders (src/features/routes/cards/timeline-route-detail.tsx):
 // folded rows are their bare <li>s until the fold is first opened (the
 // cheap-phone plan, step 11, 2026-10-04) — each with its data, its classes
 // and its 0fr row, so it folds, hides and first opens as it did — and one
@@ -8,7 +8,7 @@
 // cannot strip). What happens as the fold opens and folds again — every row
 // drawn from then on — is phone-test's (a trip card's fold).
 //
-//   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/trip-timeline-test.mjs
+//   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/timeline-route-detail-test.mjs
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
@@ -27,12 +27,14 @@ const vite = await createServer({
   optimizeDeps: { noDiscovery: true, include: [] },
 });
 after(() => vite.close());
-const { TripTimeline } = await vite.ssrLoadModule('/src/features/routes/cards/trip-timeline.tsx');
+const { TimelineRouteDetail } = await vite.ssrLoadModule(
+  '/src/features/routes/cards/timeline-route-detail.tsx',
+);
 
 /** The timeline of a trip with `n` hintuans, h0 … h(n-1), as it first renders. */
 const render = (n, props = {}) =>
   renderToStaticMarkup(
-    createElement(TripTimeline, {
+    createElement(TimelineRouteDetail, {
       livery: 'violet',
       routeOrigin: 'Tala',
       hintuans: Array.from({ length: n }, (_, i) => ({ id: `h${i}`, label: `Hintuan ${i}` })),

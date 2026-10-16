@@ -3,7 +3,7 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
-import { FREE, RouteTripDetail, type Fare, type Fares } from './route-trip-detail';
+import { FREE, TimelineRouteDetailCard, type Fare, type Fares } from './timeline-route-detail-card';
 import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
@@ -54,7 +54,7 @@ export function useTripLivery(
 }
 
 /**
- * The chosen direction as the owner's trip card (RouteTripDetail,
+ * The chosen direction as the owner's trip card (TimelineRouteDetailCard,
  * 2026-09-29), from what the map file knows: its ends as the list names
  * them, the whole ride's length and pesos, the hintuans on the way, and its
  * colour — the one its RouteCard wore, when it was picked from one, in the
@@ -137,7 +137,7 @@ export function TripCard({
   const [fareKind, setFareKind] = useFareKind();
   const others = onOtherRoute ? otherRoutesFrom(directions, direction) : [];
   return (
-    <RouteTripDetail
+    <TimelineRouteDetailCard
       livery={livery}
       metres={metres}
       pickedMetres={pickedMetres}
@@ -171,7 +171,7 @@ export function TripCard({
       }}
     >
       {extras}
-    </RouteTripDetail>
+    </TimelineRouteDetailCard>
   );
 }
 

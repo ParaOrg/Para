@@ -21,7 +21,7 @@
 // with the first frame that draws the routes, or at the map's 'load' when
 // that comes first (the owner's answer to question A, 2026-10-06); the
 // forgiving ±20 px tap, with a negative control well outside the box; the
-// trip card a lone route opens (the owner's RouteTripDetail, 2026-09-29) —
+// trip card a lone route opens (the owner's TimelineRouteDetailCard, 2026-09-29) —
 // its ends, its fold (its rows drawn only once it is opened, 2026-10-04),
 // SWITCH keeping its
 // colour, ‹ only where another route sharing an end runs its way; the route list
@@ -1029,7 +1029,7 @@ const card = () => page.locator('[data-testid="card"]');
 // one BottomSheet since the owner's ask of 2026-09-30 ("make it a universal
 // rule as component"), a hotspot's and a trip's alike, with its handle,
 // `dock-handle` — a trip's card with its rail of stops in it
-// (RouteTripDetail, 2026-09-29), named for its direction, "Tala → Novaliches".
+// (TimelineRouteDetailCard, 2026-09-29), named for its direction, "Tala → Novaliches".
 const handle = () => card().locator('button[data-testid="dock-handle"]');
 const trip = () => card().locator('[data-testid="trip"]');
 const tripLabel = async () =>
@@ -3843,7 +3843,7 @@ if (!fannedOne) {
 // ------------------------------------------- 5c. "Other routes" under a trip
 // The other drawn routes out of where a trip starts, one row each by where it
 // goes; a tap opens that route's trip in the card's place, its line alone
-// lit (the owner's RouteTripDetail, 3778:3183, 2026-10-01).
+// lit (the owner's TimelineRouteDetailCard, 3778:3183, 2026-10-01).
 const startOf = (d) => (d.reversed ? d.route?.tailHotspotId : d.route?.headHotspotId) ?? null;
 const drawnDirection = (d) => (d.shape?.coordinates?.length ?? 0) > 1;
 const othersOf = (d) =>

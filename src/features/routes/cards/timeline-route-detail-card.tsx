@@ -6,7 +6,7 @@ import { kmLabel } from '@/shared/utils/geo';
 
 import { RouteCardHeader } from './route-card-header';
 import { RouteEndPointBar } from './route-end-point-bar';
-import { TripTimeline, type TripTimelineProps } from './trip-timeline';
+import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 
 /** A ride's pesos both ways: `₱26` regular, and its discounted price — students, seniors, PWDs. */
 export interface Fares {
@@ -17,7 +17,7 @@ export interface Fares {
 export const FREE = 'free';
 export type Fare = Fares | typeof FREE;
 
-type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
+type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** Figma's Kilometer tile: the whole ride's length, in metres; written `12.8km`. */
   metres: number;
   /** …and the ride to the picked hintuan, which the tile shows while it is picked, as the fare tile does. */
@@ -66,7 +66,7 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip — the owner's RouteTripDetail (Figma 3778:3183,
+ * One direction as a trip — the owner's TimelineRouteDetailCard (Figma 3778:3183,
  * 2026-09-29): RouteCardHeader's Variant2; under it a card in the livery of
  * the place the trip leaves from, inset from the sides and rounded, where a
  * rail runs from the origin (TimelineTop) down to the place it goes to
@@ -98,9 +98,9 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
  * RouteCard's rows are; a tap opens that route's trip in this one's place.
  * With none, there is no heading either.
  *
- * The card and its rail are TripTimeline's.
+ * The card and its rail are TimelineRouteDetail's.
  */
-export function RouteTripDetail({
+export function TimelineRouteDetailCard({
   livery,
   metres,
   pickedMetres,
@@ -157,9 +157,9 @@ export function RouteTripDetail({
         />
       }
     >
-      {/* Under the header, whose 12 below is the gap (the owner's RouteTripDetail, 3778:3183, 2026-10-01). */}
+      {/* Under the header, whose 12 below is the gap (the owner's TimelineRouteDetailCard, 3778:3183, 2026-10-01). */}
       <div className="w-full px-3">
-        <TripTimeline
+        <TimelineRouteDetail
           livery={livery}
           routeOrigin={routeOrigin}
           hintuans={hintuans}
@@ -177,7 +177,7 @@ export function RouteTripDetail({
       </div>
       {/*
         Between the card and the tiles, the direction's signboards (the
-        owner's RouteTripDetail of 2026-10-12, its strip 4051:5528; right
+        owner's TimelineRouteDetailCard of 2026-10-12, its strip 4051:5528; right
         under the header by his first redrawing that day, under the tiles
         with a "Signboard" heading from 2026-10-01 until then): a white
         strip, 12 in from the sides and 16 above, each board 40 tall at its
@@ -209,7 +209,7 @@ export function RouteTripDetail({
           ))}
         </ul>
       )}
-      {/* 16 under the card, or under the signboards' strip (the owner's RouteTripDetail of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). The tiles 8 apart (his spacing of 2026-10-13: 3778:3183, its row 3886:6278; 12 before). */}
+      {/* 16 under the card, or under the signboards' strip (the owner's TimelineRouteDetailCard of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). The tiles 8 apart (his spacing of 2026-10-13: 3778:3183, its row 3886:6278; 12 before). */}
       <div
         data-testid="trip-tiles"
         className="flex w-full gap-2 bg-surface px-3 py-4 text-center font-sn-pro"
