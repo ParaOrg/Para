@@ -2,7 +2,7 @@
 
 Five files, one plan each, written 2026-10-13 against `staging` at 6e718da
 while the lint and stories passes were still open. The house method is
-stage 10's (`docs/plan-cleanup-2026-09-29.md`, PLAN.md's entry of
+stage 10's (`docs/archive/plan-cleanup-2026-09-29.md`, PLAN.md's entry of
 2026-09-29, PRs #18, #20–#27): one file a pull request, pure moves and
 clear seams, the same behaviour, the suites' counts the same on every one,
 and a unit test for what becomes pure. Every claim in the plans cites a
