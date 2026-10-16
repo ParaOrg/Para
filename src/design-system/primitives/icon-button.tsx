@@ -59,9 +59,8 @@ const VARIANT = {
 } satisfies Record<NonNullable<Props['variant']>, string>;
 
 // Base is 40px round (8px around a 24px icon); Small 32px (6px around 20px).
-// The size is pinned as well as padded: in a flex column (the map's stack of
-// round controls) a padded-only Small would stretch to its wider sibling and go
-// oval.
+// The size is pinned as well as padded, so a parent that stretches its children
+// cannot make the pill oval; the size-fit wrapper below does the same.
 const SIZE = {
   base: 'size-10 p-2',
   small: 'size-8 p-1.5',

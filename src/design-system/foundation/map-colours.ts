@@ -51,9 +51,9 @@ export const MAP_OPACITY = {
 
 /**
  * The RouteCards' Card/<livery>/surface, in hex, for the map: a picked
- * card's routes, and an open trip's line, wear their card's colour.
- * Each hex is the primitive its token aliases,
- * held to tokens.css by tests/unit/map-colours-test.mjs as the Map/… ones are.
+ * card's routes, and an open trip's line, wear their card's colour. Each hex
+ * is the primitive its token aliases, held to tokens.css by
+ * tests/unit/map-colours-test.mjs as the Map/… ones are.
  */
 export const CARD_COLOURS = {
   'Card/red/surface': '#9f0712', // red/800
@@ -67,9 +67,8 @@ export const CARD_COLOURS = {
 /**
  * The RouteCards' Card/<livery>/surface-pale, in hex, for the map: the rest
  * of an open trip's line past a picked hintuan, from there to where the trip
- * goes, in the card's own hue paled (the remaining line is the selected
- * card's surface-pale). Each hex is
- * the primitive its token aliases, each hue's 200, held to tokens.css by
+ * goes, in the card's own hue paled. Each hex is the primitive its token
+ * aliases, each hue's 200, held to tokens.css by
  * tests/unit/map-colours-test.mjs as CARD_COLOURS is.
  */
 export const CARD_PALE_COLOURS = {
@@ -83,13 +82,12 @@ export const CARD_PALE_COLOURS = {
 
 /**
  * Everything else the map paints — the public map's and the editor's: colours
- * no Figma variable names yet. One file
- * for every colour the map's painters paint, so
- * tests/unit/map-colours-test.mjs can fail on a colour written in any other
- * of their .ts files. The map's stylesheet (hintuan-pin.css) is not read by
- * it; its few raw colours wait for names in Figma too. Until a colour is
- * named there, the key says what it paints, and moving one to a Map/… token
- * changes only this file.
+ * no Figma variable names yet. One file for every colour the map's painters
+ * paint, so tests/unit/map-colours-test.mjs can fail on a colour written in
+ * any other of their .ts files. The map's stylesheets (hintuan-pin.css and its
+ * neighbours) hold no colour of their own. Until a colour is named in Figma,
+ * the key says what it paints, and moving one to a Map/… token changes only
+ * this file.
  */
 export const MAP_PAINT = {
   'Paint/casing': '#ffffff', // white: the rim under every line, circles' fill, text halos

@@ -10,9 +10,8 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
  * Primary speaks brand blue (or, on a card, the card's colours: its `fill`)
  * and Error the destructive red, both in SN Pro Medium.
  * Each state wears the set's effect style of the same name (tokens.css):
- * Rest, Hover, Pressed
- * (which also darkens the fill, and Special loses its edge). Error borrows
- * Primary's shadows, as the set does. Hover and press are `enabled:` only,
+ * Rest, Hover, Pressed (which also darkens the fill, and Special loses its
+ * edge). Error borrows Primary's shadows, as the set does. Hover and press are `enabled:` only,
  * so a disabled button keeps its Rest look at the design's opacity/60.
  * Tailwind puts hover behind `(hover: hover)`, so phones never stick on it.
  * No focus state is designed yet, so the browser's own focus ring stands
@@ -25,7 +24,7 @@ type Size = 'base' | 'small';
  * Small exists only where the set draws it — the types keep code from
  * getting ahead of the design: Special, Secondary and Primary (Default, Hover,
  * Pressed and Disabled: 3742:1196, for the timeline's "Set as start",
- * 4147:11947), which is Primary's fills and shadows at Small's sizes.
+ * 4147:11947); Primary Small is Primary's fills and shadows at Small's sizes.
  * `size="small"` on error is a compile error until it is designed.
  */
 type VariantAndSize =
@@ -71,11 +70,11 @@ const VARIANT = {
 /**
  * Primary's fill: brand blue, or the card it sits on (for the timeline's Set
  * as start, which sits on top of its card: the Figma instance, 4147:11947,
- * overrides the fill to Card/red/surface). On a card it is the card's surface, pressed down to the
- * card's Timeline/surface as a pressed row of it is, a train's line's own
- * Map/Rail/<line>/… on its card. A card's fill sets no words: they are the
- * card's own, inherited (white, and dark on MRT-3's yellow), so they read as
- * the card's do.
+ * overrides the fill to Card/red/surface). On a card it is the card's
+ * surface, pressed down to the card's Timeline/surface as a pressed row of it
+ * is, a train's line's own Map/Rail/<line>/… on its card. A card's fill sets
+ * no words: they are the card's own, inherited (white, and dark on MRT-3's
+ * yellow), so they read as the card's do.
  */
 type PrimaryFill = keyof typeof PRIMARY_FILL;
 
