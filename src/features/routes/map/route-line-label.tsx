@@ -1,10 +1,20 @@
-import { EndIcon } from '@/shared/ui/route-icons';
+import { EndIcon, StartIcon } from '@/shared/ui/route-icons';
 
 import { LINE_SURFACE, LINE_TEXT, LINE_WORDS } from './livery-line';
 import type { Livery } from '../model/liveries';
 
-/** Figma's Label, Property 1: Default, the name alone; End, End's E before it. */
-export type RouteLineLabelVariant = 'default' | 'end';
+/**
+ * Figma's Label, Property 1: Default, the name alone; End, End's E before
+ * it. Start, Start's S before it, is End's look for a ride's picked start
+ * (2026-10-15): Figma draws no Start Label yet.
+ */
+export type RouteLineLabelVariant = 'default' | 'end' | 'start';
+
+/** The circled letter before a marked label's name, and what it says to a screen reader. */
+const MARK = {
+  end: { Icon: EndIcon, spoken: 'End, ' },
+  start: { Icon: StartIcon, spoken: 'Start, ' },
+} as const;
 
 interface RouteLineLabelProps {
   variant: RouteLineLabelVariant;
@@ -40,8 +50,8 @@ interface RouteLineLabelProps {
  */
 export function RouteLineLabel({ variant, name, livery, codeSign = null }: RouteLineLabelProps) {
   const surface = LINE_SURFACE[livery];
-  const isEnd = variant === 'end';
-  const code = isEnd ? codeSign : null;
+  const mark = variant === 'default' ? null : MARK[variant];
+  const code = mark ? codeSign : null;
   return (
     <span
       data-part="label"
@@ -51,10 +61,14 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
       }
     >
       {/* CodeSignEnd: the E in a disc of its own, 28 across, beside the pill. */}
-      {code && (
-        <span aria-hidden data-part="end" className={'flex shrink-0 rounded-full p-0.5 ' + surface}>
+      {mark && code && (
+        <span
+          aria-hidden
+          data-part={variant}
+          className={'flex shrink-0 rounded-full p-0.5 ' + surface}
+        >
           <span className="size-6 *:size-full">
-            <EndIcon />
+            <mark.Icon />
           </span>
         </span>
       )}
@@ -67,12 +81,12 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
           PADDING[code ? 'code' : variant]
         }
       >
-        {isEnd && !code && (
-          <span aria-hidden data-part="end" className="size-5 shrink-0 *:size-full">
-            <EndIcon />
+        {mark && !code && (
+          <span aria-hidden data-part={variant} className="size-5 shrink-0 *:size-full">
+            <mark.Icon />
           </span>
         )}
-        {isEnd && <span className="sr-only">End, </span>}
+        {mark && <span className="sr-only">{mark.spoken}</span>}
         {code && (
           <span
             data-part="code"
@@ -93,5 +107,6 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
 const PADDING = {
   default: 'px-2',
   end: 'gap-1 pr-2 pl-1',
+  start: 'gap-1 pr-2 pl-1',
   code: 'gap-1.5 pr-2 pl-1',
 } satisfies Record<RouteLineLabelVariant | 'code', string>;

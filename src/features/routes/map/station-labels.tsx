@@ -5,11 +5,10 @@ import { createPortal } from 'react-dom';
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
 import { HintuanLabel } from './hintuan-label';
-import { restDrawn } from './ride-rest';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { rowStops } from '../model/ride';
+import { rowStops, rowsOutsideRide } from '../model/ride';
 import type { Direction } from '../model/routes';
 import type { TimelineRow } from '../model/timeline';
 
@@ -55,10 +54,11 @@ function namesShow(map: MapLibreMap): boolean {
  * one colour, as the owner asked ("the circle must be the same color as
  * routeline color lit", 2026-10-12). Past a picked hintuan the line is
  * drawn in the card's surface-pale (useRideRest), and the dots along that
- * rest ring in the same pale — the rows after the picked one, in travel
- * order as the rows are, while the rest is drawn (`rest`; his ask the same
- * evening, with a screenshot: "the circle is still the color of routeline
- * instead of pale color of routeline"). Their names keep the card's
+ * rest ring in the same pale — the rows after the picked one, and since a
+ * ride's start could be picked (2026-10-15) the rows before it, while the
+ * ride is drawn (`hasRide`; his ask of 2026-10-12, with a screenshot: "the
+ * circle is still the color of routeline instead of pale color of
+ * routeline"). Their names keep the card's
  * surface: white words on the pale would not read, and he asked for the
  * circles; whether the names follow is his to say (asked, 2026-10-12).
  *
@@ -70,7 +70,7 @@ function namesShow(map: MapLibreMap): boolean {
  * rest are circles, as a jeepney's hintuans are.
  *
  * The two ends are left to their end titles (EndTitles): the rows leave
- * them out. A picked row is left to its HintuanPin. Once the scale bar
+ * them out. A picked row, the start's as the end's, is left to its HintuanPin. Once the scale bar
  * reads 3 km only the dots show, smaller. That 3 km is his for
  * stations a kilometre or two apart; a jeepney's hintuans sit a few
  * hundred metres apart, so at the bar's 2 km their names overlap — kept at
@@ -90,9 +90,11 @@ export function StationLabels({
   hotspots,
   rows,
   livery,
-  pickedId,
+  pickedId = null,
+  startId = null,
+  endPicked = null,
+  hasRide = false,
   onPick,
-  rest = null,
 }: {
   map: MapLibreMap;
   selected: Direction;
@@ -100,17 +102,21 @@ export function StationLabels({
   /** The trip card's hintuan rows (Timeline's `between`), in travel order. */
   rows: readonly TimelineRow[];
   livery: Livery;
-  /** The picked row, which its HintuanPin marks. */
+  /** The picked row, the ride's end, which its HintuanPin marks. */
   pickedId?: string | null;
+  /** The row made the ride's start, which its own HintuanPin marks. */
+  startId?: string | null;
+  /** An end row picked as the ride's end, the start kept (useRideTo's `endPicked`). */
+  endPicked?: 'from' | 'to' | null;
   /** Called with the tapped row's id. */
   onPick?: (rowId: string) => void;
   /**
-   * The way on from the picked row to the end, drawn in the card's pale
-   * (useRideTo's `ridden.rest`, what useRideRest draws): the dots along it
-   * wear the pale too. Null, or a point alone, and every dot wears the
-   * line's colour.
+   * Whether the ride between the picks is drawn (useRideTo's `ridden`), the
+   * line outside it in the card's pale (useRideRest): the dots of the rows
+   * outside it wear the pale too (rowsOutsideRide, the card's own rule).
+   * False, and every dot wears the line's colour.
    */
-  rest?: LngLat[] | null;
+  hasRide?: boolean;
 }) {
   const [named, setNamed] = useState(() => namesShow(map));
   useEffect(() => {
@@ -125,13 +131,15 @@ export function StationLabels({
   // Where each row sits: worked out as the trip, the hotspots or the rows
   // change, not at each move of the map.
   const stops = useMemo(() => rowStops(selected, hotspots, rows), [selected, hotspots, rows]);
-  // The rows after the picked one sit along the rest, while it is drawn: the
-  // stops keep the rows' travel order. Nothing drawn, or no pick, and none do.
-  const pickedAt = restDrawn(rest) ? stops.findIndex((s) => s.id === pickedId) : -1;
+  // The rows outside the ride sit along the pale, while it is drawn.
+  const outside = useMemo(
+    () => (hasRide ? rowsOutsideRide(rows, startId, pickedId, endPicked) : null),
+    [hasRide, rows, startId, pickedId, endPicked],
+  );
   return (
     <>
-      {stops.map((s, i) =>
-        s.id === pickedId ? null : (
+      {stops.map((s) =>
+        s.id === pickedId || s.id === startId ? null : (
           <StationLabel
             key={s.id}
             map={map}
@@ -140,7 +148,7 @@ export function StationLabels({
             label={s.label}
             livery={livery}
             named={named}
-            paled={pickedAt >= 0 && i > pickedAt}
+            paled={outside?.has(s.id) ?? false}
             onPick={onPick}
           />
         ),

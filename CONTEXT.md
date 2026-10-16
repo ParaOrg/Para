@@ -119,10 +119,13 @@ _Avoid_: stop list, itinerary, sequence
 **Ride**:
 A direction as it is ridden: its line in travel order from the place it
 leaves, whichever way it was drawn, and what that order gives — the hintuans
-in the order reached, the metres, the fare. A ride may be cut short at a
-hintuan: the ride to there, priced from where the direction leaves. On the
-map a lit direction is drawn as its ride: its arrows, its ends named, the
-stretch to a picked hintuan.
+in the order reached, the metres, the fare. A ride may start and end at any
+hintuan it passes, or end at either end of the direction: the ride from
+there to there, priced between them, on
+the direction's own line; an end picked before the start is ridden back
+along it, its arrows turned to run from the start to the end. On the map a
+lit direction is drawn as its ride: its arrows, its ends named, the stretch
+between the picks.
 _Avoid_: journey, leg, run; trip (that is the card a ride is shown on)
 
 ### People and surfaces
@@ -151,8 +154,8 @@ _Avoid_: visitor map, commuter map, the site
 A direction opened as a card, on the public map or in the studio: the ride's
 timeline, kilometres and fare, SWITCH to the other direction, the other
 routes out of where it leaves. One trip is open at a time; the card keeps
-its colour and its height until it closes. A hintuan picked on the trip
-prices the ride to there.
+its colour and its height until it closes. A start and an end picked on
+the trip price the ride between them.
 _Avoid_: ride (that is what the trip shows), selected route, variant; and
 never for a direction that is not open — the studio's "Draw the return trip"
 means the return direction
