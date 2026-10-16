@@ -4064,9 +4064,7 @@ const withRoutes = snapshot.polys.find((poly) =>
 if (!withRoutes) {
   skip(
     'a tap on the handle of a hotspot card with routes raises it, opening none',
-    published
-      ? 'no hotspot has a drawn route linked today'
-      : 'the published file could not be read',
+    published ? 'no hotspot has a drawn route linked today' : 'the published map could not be read',
   );
 } else {
   const c = centroidOf(withRoutes.ring);
@@ -4328,7 +4326,7 @@ if (!fannedOne) {
   skip(
     'a trip opened on its own lists, behind its ‹, the routes sharing an end',
     !published
-      ? 'the published file could not be read'
+      ? 'the published map could not be read'
       : fannedCandidates.length
         ? 'none of those routes has a stretch of line a tap could open alone'
         : 'no two routes sharing an end are drawn the same way round today',
@@ -4418,7 +4416,7 @@ if (!withOthers) {
   skip(
     'a trip lists the other routes out of where it starts',
     !published
-      ? 'the published file could not be read'
+      ? 'the published map could not be read'
       : othersCandidates.length
         ? 'none of those routes has a stretch of line a tap could open alone'
         : 'no two drawn routes leave one hotspot today',
