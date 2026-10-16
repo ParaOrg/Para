@@ -37,7 +37,15 @@ interface Props {
  * drew the same: one or two renders a second for nothing while location
  * is on. Its camera still moves at the page's turn (`cameraTurn`).
  */
-export function VisitorLocation({ map, snap, offset, docked, cameraTurn, picks, hushedAt }: Props) {
+export function CommuterLocation({
+  map,
+  snap,
+  offset,
+  docked,
+  cameraTurn,
+  picks,
+  hushedAt,
+}: Props) {
   const locator = useLocator(map, { compass: coarse, snap, offset, cameraTurn });
   // How the dot feels: glad as the location comes, a boing at a tap on the
   // button or on the dot, now and then a huff (locatorMood).

@@ -82,8 +82,8 @@ A large feature groups by concern (`routes`: model, geo, map, cards; `studio`: a
 - Use the `@/` alias (maps to `src/`) for any import that leaves the current feature or folder. Use relative imports (`./`, `../`) only inside the same feature.
 
 ```ts
-import { VisitorLocation } from '@/features/locator';                   // ✅ a leaf feature's public API
-import { VisitorLocation } from '@/features/locator/visitor-location';  // ❌ deep import
+import { CommuterLocation } from '@/features/locator';                   // ✅ a leaf feature's public API
+import { CommuterLocation } from '@/features/locator/commuter-location'; // ❌ deep import
 import { routeName } from '@/features/routes/model/routes';             // ✅ routes, by its concern folder
 ```
 

@@ -207,7 +207,7 @@ async function sheetWhileFollowing(layout) {
   const gps = standInGps();
   const page = {};
   const opts = (snap) => ({ offset: () => [0, -100], snap, compass: false });
-  function Visitor({ snap, turn }) {
+  function Commuter({ snap, turn }) {
     page.locator = useLocator(map, { ...opts(snap), ...(turn ? { cameraTurn: turn } : {}) });
     return null;
   }
@@ -229,7 +229,7 @@ async function sheetWhileFollowing(layout) {
     }, [snap, last]);
     if (layout === 'page') page.locator = useLocator(map, opts(snap));
     const turn = useTurn();
-    return layout === 'page' ? null : h(Visitor, { snap, turn: layout === 'child' ? turn : null });
+    return layout === 'page' ? null : h(Commuter, { snap, turn: layout === 'child' ? turn : null });
   }
   const root = await mount(h(Page));
   await act(async () => page.locator.tap());
