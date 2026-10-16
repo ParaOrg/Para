@@ -37,10 +37,10 @@ import { useTurn } from '@/shared/hooks/commit-turn';
 import { useStatusBarColour } from './status-bar';
 
 /**
- * The routes' framing the map opens on: their
- * box as the index or the copy kept from an earlier visit has them
- * (openingDirections), the box the routes' own fit frames (useSavedRoutes).
- * Module-level, as the loaders below are.
+ * The routes' framing the map opens on: their box as the index or the copy
+ * kept from an earlier visit has them (openingDirections), the box the
+ * routes' own fit frames (useSavedRoutes). Module-level, as the loaders below
+ * are.
  */
 const openOnRoutes = () =>
   openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
@@ -95,8 +95,8 @@ export function PublicMapApp() {
 
   // The commuter's own position, the dot and the camera with them live in
   // CommuterLocation, so a fix, the phone's compass and the dot's moods
-  // render it alone. Its camera still moves here, at this page's turn: after
-  // the cards' camera above, which a sheet set to another height moves in the
+  // render it alone. Its camera moves here, at this page's turn: after the
+  // cards' camera above, which a sheet set to another height moves in the
   // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
   // The dot's gaze is hushed by ‹ and ✕: going back picks nothing (dot-gaze.ts).
@@ -127,13 +127,14 @@ export function PublicMapApp() {
     >
       {/*
         No count of routes and hotspots in a corner, and no +, − or compass:
-        they are left off as clutter for commuters.
+        the owner leaves them off as clutter for commuters.
       */}
       {/*
         Opened framed on the routes, and handed over to draw them as soon as
         its style is in (`openOn`). The credits start folded to their ⓘ, as the
-        studio's do, to keep the bar out of the way; the licences need them on
-        the map, so ⓘ still opens them until they have a place of their own.
+        studio's do: the owner keeps the bar out of the way. The licences need
+        them on the map, so ⓘ still opens them until they have a place of their
+        own.
       */}
       <MapView
         onReady={setMap}
@@ -163,7 +164,10 @@ export function PublicMapApp() {
         }}
         hushedAt={hushedAt}
       />
-      {/* Each lit ride's ends, named over their circles; with no trip open, a tail opens its ride's. */}
+      {/*
+        Each lit ride's ends, named over their circles; with no trip open, a
+        tail opens its ride's.
+      */}
       {map && (
         <EndTitles
           map={map}
@@ -246,7 +250,7 @@ export function PublicMapApp() {
       {saved.selected && tripLivery && timeline && (
         // One card for as long as a trip is open: SWITCH, and another
         // route from its "Other routes", leave the hintuans open or folded
-        // as they were, and the sheet at its height. A trip opened afresh opens folded.
+        // as they were. A trip opened afresh opens folded.
         <TripCard
           direction={saved.selected}
           directions={saved.directions}
@@ -304,8 +308,7 @@ export function PublicMapApp() {
           linkedDirectionIds={hotspots.linkedDirectionIds}
           directions={saved.directions}
           onSelectDirection={openTrip}
-          // Its Selected row tapped again: no box is the one until a row is
-          // picked.
+          // Its Selected row tapped again: no box is the one until a row is picked.
           deselected={hotspots.letGone}
           onDeselect={() => {
             saved.highlightCard(null);
@@ -324,9 +327,9 @@ export function PublicMapApp() {
 
       {/*
         Several things under the tap: the route list, kept hidden behind the
-        trip picked from it. Picking a
-        route leaves the hotspots under the tap listed, so ‹ finds the list
-        whole; a hotspot's row opens its card in the list's place.
+        trip picked from it. Picking a route leaves the hotspots under the tap
+        listed, so ‹ finds the list whole; a hotspot's row opens its card in
+        the list's place.
       */}
       {cards.choosing && (
         <RouteCardList

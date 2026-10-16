@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { firstLayerOfType } from '@/features/routes/map/layers';
 
 /**
- * The phone's status bar in the map's own colour. Android lets a
- * web page colour that bar but never draw behind it, so it takes the
+ * The phone's status bar in the map's own colour. Android lets a web page
+ * colour that bar but never draw behind it, so it takes the
  * basemap's background — Gray, Colour or Dark, whichever is up — and reads
  * as part of the map. On an iPhone opened from the Home Screen the page
  * runs behind it instead (index.html, black-translucent). The manifest keeps

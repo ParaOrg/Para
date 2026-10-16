@@ -102,12 +102,12 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // the public map (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
   // The camera with the cards, as on the public map (useCardCamera), so the
-  // studio has the public map's interaction. A hintuan picked on the trip card, the camera gliding
-  // there clear of the card and a circle popping up on it, the route left
-  // whole, the card staying at its height; a trip opened on its whole route,
-  // a RouteCard picked, SWITCH and the sheet settled at another height, each
-  // framed beside the card; and the camera from before a hotspot's RouteCard
-  // was picked, back as it is let go.
+  // studio has the public map's interaction. A hintuan picked on the trip
+  // card, the camera gliding there clear of the card and a circle popping up
+  // on it, the route left whole, the card staying at its height; a trip
+  // opened on its whole route, a RouteCard picked, SWITCH and the sheet
+  // settled at another height, each framed beside the card; and the camera
+  // from before a hotspot's RouteCard was picked, back as it is let go.
   const {
     root,
     tripDock,
@@ -206,7 +206,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
       {/* Each lit ride's ends, named over their circles. */}
       {map && !draw.drawing && <EndTitles map={map} rides={rides} livery={litLivery} />}
-      {/* The open trip's hintuans along its line, a train's stations and a jeepney's alike, named (RouteLineLabel). */}
+      {/*
+        The open trip's hintuans along its line, a train's stations and a
+        jeepney's alike, named (RouteLineLabel).
+      */}
       {map && !draw.drawing && saved.selected && tripLivery && timeline && (
         <StationLabels
           map={map}
@@ -246,8 +249,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
       {/*
         The tapped direction as the public map's trip card, the editor's facts
-        and its Edit, Extend and Delete under its tiles. Keyed on the route, as
-        there: SWITCH keeps its colour.
+        and its Edit, Extend and Delete under its tiles. Keyed on the route,
+        unlike the public map's: SWITCH keeps the card and its colour.
       */}
       {!draw.drawing && saved.selected && tripLivery && timeline && (
         <TripCard
@@ -359,8 +362,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
       {/*
         Several saved things under one click: the same list the public map
-        has, which lists only what is drawn, kept hidden behind the trip picked
-        from it.
+        has, kept hidden behind the trip picked from it. It lists only what is
+        drawn, and the owner keeps it so.
       */}
       {!draw.drawing && choosing && (
         <RouteCardList
