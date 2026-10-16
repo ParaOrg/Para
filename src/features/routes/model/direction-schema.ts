@@ -164,6 +164,7 @@ export type Direction = ReturnType<typeof toDirection>;
 /** What a line borrowed (Extend, 0008): which part of *this* line came from its parent. */
 const borrowPartSchema = z.enum(['start', 'end']);
 
+/** Which part of the parent the new line keeps, in the parent's stored order. */
 export type BorrowPart = z.infer<typeof borrowPartSchema>;
 
 /**
