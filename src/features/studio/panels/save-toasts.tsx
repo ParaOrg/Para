@@ -23,9 +23,9 @@ interface SaveToastsProps {
  * The toast the workshop holds, whichever kind it is: a hotspot saved, a
  * route saved (with "Draw the return trip" while a direction is undrawn), or
  * a notice. The workshop keeps the one value; this only shows it. Each kind
- * is keyed as its own toast, so another kind mounts afresh, as the three
- * siblings did: a notice replacing a saved toast is announced as an alert,
- * not a status that changed its role.
+ * is keyed as its own toast, so another kind mounts afresh: a notice
+ * replacing a saved toast is announced as an alert, not a status that
+ * changed its role.
  */
 export function SaveToasts({
   toast,

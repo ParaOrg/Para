@@ -7,8 +7,7 @@ import type { HotspotKind } from '../drawing/drawing-types';
 
 /**
  * What the hotspot panel works out from its form, pure, so
- * tests/unit/hotspot-checks-test.mjs can hold it (split from
- * hotspot-panel.tsx, 2026-10-16, as save-checks.ts was from the save panel).
+ * tests/unit/hotspot-checks-test.mjs can hold it.
  */
 
 /** What the panel's two lists read of a direction: its ids, its name and its route's. */

@@ -15,7 +15,7 @@ interface RouteFieldsProps {
 
 /**
  * The route's facts a save writes, below the save panel's ends and name: the
- * signboard, the mode and the fare note (split from save-panel.tsx, 2026-10-14).
+ * signboard, the mode and the fare note.
  */
 export function RouteFields({
   signboard,

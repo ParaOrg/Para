@@ -43,10 +43,10 @@ interface SavePanelProps {
 /**
  * The one form in the app. Appears once, at ✓ Done.
  *
- * Since 2026-09-21 it asks for a route's two ends rather than its name: the
- * name is generated from them and cannot be typed over, so a hotspot renamed
- * once fixes every route through it. Nothing here is required except the two
- * ends — the signboard is an observed fact and can wait until it is known.
+ * It asks for a route's two ends, not its name: the name is generated from
+ * them and cannot be typed over, so a hotspot renamed once fixes every route
+ * through it. Nothing here is required except the two ends — the signboard is
+ * an observed fact and can wait until it is known.
  *
  * Its pieces live beside it: the places and the first guess at the ends
  * (`places.ts`), what the line is (`useSaveFacts`), why a save is refused
