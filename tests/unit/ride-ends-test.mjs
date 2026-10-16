@@ -42,13 +42,15 @@ test('a ride from a start to an end: the ends on the pale are left unmarked, the
   );
 });
 
-test('a start alone: both ends unmarked and lit, the start’s pin the one S', () => {
-  const ends = rideEnds([{ ...trip, isUnmarked: true }]);
+// The owner, 2026-10-16: "Nothing yet, just the S", and that night, "the
+// rouline would be in pale": useLitRides gives the whole line as its pale.
+test('a start alone: both ends unmarked and on the pale with the whole line, the start’s pin the one S', () => {
+  const ends = rideEnds([{ ...trip, isUnmarked: true, pale: [line] }]);
   assert.deepEqual(
     ends.map((e) => [e.end, e.isMarked, e.paled]),
     [
-      ['from', false, false],
-      ['to', false, false],
+      ['from', false, true],
+      ['to', false, true],
     ],
   );
 });
