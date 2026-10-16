@@ -22,6 +22,7 @@ const meta = {
     thumbnails: BASEMAP_THUMBNAILS,
     onSelect: fn(),
     onClose: fn(),
+    onClosed: fn(),
   },
 } satisfies Meta<typeof MapStyle>;
 

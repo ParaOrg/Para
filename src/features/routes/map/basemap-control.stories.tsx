@@ -152,10 +152,41 @@ export const ReopenWhileLeaving: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
     const again = canvas.getByRole('dialog', { name: 'Map Style' });
     await expect(again).not.toHaveAttribute('data-closing');
+    // The keyboard back in the card, on the design shown, as at a first opening.
+    await expect(within(again).getByRole('button', { name: 'Monochrome' })).toHaveFocus();
     await expect(canvas.getByRole('button', { name: 'Map design' })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
+  },
+};
+
+/**
+ * Matches `(prefers-reduced-motion: reduce)` for one story, as
+ * draw-toolbar.stories.tsx fakes a finger: BasemapControl's own question.
+ * The stylesheet's `@media` still follows the real setting.
+ */
+const asStill = () => {
+  const real = window.matchMedia;
+  window.matchMedia = (query: string) => {
+    // Each call answers a fresh list, so changing this one touches nothing else.
+    const list = real.call(window, query);
+    return query === '(prefers-reduced-motion: reduce)'
+      ? Object.defineProperty(list, 'matches', { value: true })
+      : list;
+  };
+  return () => {
+    window.matchMedia = real;
+  };
+};
+
+/** A device asking for no motion: ✕ and the card is gone at once, with no leaving to wait for. */
+export const StillUnderReducedMotion: Story = {
+  beforeEach: asStill,
+  play: async ({ canvasElement }) => {
+    const card = await openCard(canvasElement);
+    await userEvent.click(within(card).getByRole('button', { name: 'Close' }));
+    await expect(within(canvasElement).queryByRole('dialog')).toBeNull();
   },
 };
 

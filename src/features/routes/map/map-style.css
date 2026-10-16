@@ -32,7 +32,7 @@
     opacity: 0;
   }
 }
-/* Shown and gone at once; BasemapControl unmounts it without waiting (prefersReducedMotion). */
+/* Shown and gone at once; BasemapControl unmounts it without waiting (afterClose). */
 @media (prefers-reduced-motion: reduce) {
   .map-style,
   .map-style[data-closing] {

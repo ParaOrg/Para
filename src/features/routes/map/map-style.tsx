@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type AnimationEvent } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { CloseIcon } from '@/shared/ui/route-icons';
@@ -18,8 +18,8 @@ interface MapStyleProps {
   isClosing?: boolean;
   onSelect: (basemap: Basemap) => void;
   onClose: () => void;
-  /** Its leaving is over: the control can let it go. */
-  onClosed?: () => void;
+  /** Its leaving is over, or was cut short: the control lets it go. */
+  onClosed: () => void;
 }
 
 /**
@@ -47,14 +47,29 @@ export function MapStyle({
   // An id of its own, so two cards on one page (a docs page of every story) name themselves.
   const titleId = useId();
 
-  // Its own leaving only: a tooltip or a picture inside has none, but one could.
-  const handleAnimationEnd = (e: AnimationEvent<HTMLDivElement>) => {
-    if (isClosing && e.target === e.currentTarget) onClosed?.();
-  };
-
+  // Let go once its own leaving is over (map-style.css): not the pop, which
+  // a close cuts short, nor a child's. Cut short itself (motion turned off
+  // midway, the page hidden), it is as good as over, so the card cannot stay
+  // stuck. React has no onAnimationCancel, so both are the DOM's.
   useEffect(() => {
     const card = cardRef.current;
-    if (!card) return;
+    if (!card || !isClosing) return;
+    const handleLeaveDone = (e: AnimationEvent) => {
+      if (e.target === card && e.animationName === 'map-style-leave') onClosed();
+    };
+    card.addEventListener('animationend', handleLeaveDone);
+    card.addEventListener('animationcancel', handleLeaveDone);
+    return () => {
+      card.removeEventListener('animationend', handleLeaveDone);
+      card.removeEventListener('animationcancel', handleLeaveDone);
+    };
+  }, [isClosing, onClosed]);
+
+  // On each opening, a reopening during the leave too: the keyboard to the
+  // design shown, and held in the card. Not while it leaves.
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || isClosing) return;
     card.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
@@ -71,7 +86,7 @@ export function MapStyle({
     };
     card.addEventListener('keydown', handleKeyDown);
     return () => card.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isClosing]);
 
   return (
     <div
@@ -82,7 +97,6 @@ export function MapStyle({
       data-testid="basemap-menu"
       data-closing={isClosing || undefined}
       inert={isClosing}
-      onAnimationEnd={handleAnimationEnd}
       className="map-style flex max-h-[calc(100dvh-8rem)] flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-4 font-sn-pro shadow-sm"
     >
       <div className="flex items-center">
