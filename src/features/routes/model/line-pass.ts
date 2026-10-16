@@ -6,8 +6,7 @@ import { passBounds, passStretches } from '../geo/pass';
 import type { Ring } from '../geo/ring';
 
 /*
- * The orange stretches as a direction's line file carries them (the
- * cheap-phone plan, step 13, 2026-10-05).
+ * The orange stretches as a direction's line file carries them.
  *
  * Working out where a lit line passes its hintuans is a metre-by-metre walk
  * of the line near every box it reaches, done on the phone as each lit
@@ -27,11 +26,11 @@ import type { Ring } from '../geo/ring';
  *
  * The app works the key out again from the index it has, and takes the
  * stretches from the file only when the two agree; otherwise it walks the
- * line as it always did. That is a line file published before this (no
- * `pass`), a line file and an index from different publishes (the service
- * worker answers each from its own store when the network is slow), a
- * hintuan moved, added or no longer stopped at since, a rule changed since
- * (PASS_RULE), and the studio, whose lines never carry any.
+ * line itself. That is a line file with no `pass`, a line file and an index
+ * from different publishes (the service worker answers each from its own
+ * store when the network is slow), a hintuan moved, added or no longer
+ * stopped at since, a rule changed since (PASS_RULE), and the studio, whose
+ * lines never carry any.
  */
 
 /**
@@ -157,7 +156,8 @@ export function readablePass(pass: unknown): pass is LngLat[][] {
 /**
  * Keeps the stretches a line file brought, under the line object it brought
  * (`shape`). A file without them, or with something else under their names,
- * keeps nothing, and that line's stretches are worked out as before.
+ * keeps nothing, and that line's stretches are worked out on the phone
+ * (stretchesPast).
  */
 export function keepLinePass(shape: object, file: { pass?: unknown; passKey?: unknown }): void {
   if (typeof file.passKey === 'string' && readablePass(file.pass))
