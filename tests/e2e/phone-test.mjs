@@ -492,7 +492,7 @@ check(
 // ----------------------------------- 1a. the opening: framed, and its gray
 // The owner's Q1 and Q4 (2026-10-04). The map is made framed on the routes,
 // where their fit put it after the map's 'load' until then — the box round
-// every overview in the published file, 100 px clear of the edges, zoom 13
+// every overview in the published map, 100 px clear of the edges, zoom 13
 // at most — so its first tiles are those of the view it keeps; the fit
 // itself no longer moves it. With the file still on its way it opens as it
 // always did and the fit frames the routes as they come, unless a finger has
@@ -1424,7 +1424,7 @@ const tripChecks = async () => {
               )
             : null,
         ring: ring ? getComputedStyle(ring).backgroundColor : null,
-        // The line's colour is the card's surface (liveryLine.ts): the card's own background.
+        // The line's colour is the card's surface (livery-line.ts): the card's own background.
         line: trip ? getComputedStyle(trip).backgroundColor : null,
         pale: cardPale,
         livery: pin?.dataset.livery ?? null,
@@ -1624,11 +1624,19 @@ const tripChecks = async () => {
           .catch(() => {});
       };
       // 150 m on the scale bar, the hintuan halfway up the map above the card, or a screen and a half aside.
+      // Done when the map is idle again, as jumpTo is: on a slow machine the
+      // page was still drawing the new view's tiles when the pick was tapped,
+      // its button gave no box in time, and no pick was made at all (a local
+      // run under load, 2026-10-16).
       const closeIn = async (offScreen) => {
         await page.evaluate(
           async ({ at, offScreen }) => {
             const m = window.__map;
             const { zoomForScale } = await import('/src/shared/utils/geo.ts');
+            const idle = new Promise((r) => {
+              m.once('idle', r);
+              setTimeout(r, 10000);
+            });
             m.jumpTo({ center: at, zoom: zoomForScale(150, at[1]) });
             const c = m.getCanvas().getBoundingClientRect();
             const d = document.querySelector('[data-testid="card"]').getBoundingClientRect();
@@ -1636,6 +1644,7 @@ const tripChecks = async () => {
             m.panBy(offScreen ? [1.5 * c.width, 0] : [0, m.project(at).y - wantY], {
               duration: 0,
             });
+            await idle;
           },
           { at: pickWant.at, offScreen },
         );
@@ -4249,10 +4258,20 @@ if (!routeA) {
         `the sheet never came down to Low: data-snap=${await sheetState()}`,
       );
     else {
-      await page.evaluate(() => {
-        const c = window.__map.getCenter();
-        window.__map.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
-      });
+      // Moved, and idle again before the handle is tapped: a cold zoom-16
+      // view kept a slow machine's page drawing past the handle's 2 s for
+      // its box, and the sheet never went up (a local run under load,
+      // 2026-10-16).
+      await page.evaluate(
+        () =>
+          new Promise((r) => {
+            const m = window.__map;
+            const c = m.getCenter();
+            m.once('idle', r);
+            setTimeout(r, 10000);
+            m.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
+          }),
+      );
       await buttonTap(handle(), async () => (await sheetState()) === 'middle');
       // The overview starts a beat after the sheet settles — most of a second
       // from a cold zoom-16 view, with the main thread busy over it (measured
