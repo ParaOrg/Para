@@ -42,8 +42,8 @@ export function useSavedHotspots<S extends Hotspot>(
    */
   const [candidates, setCandidates] = useState<S[]>([]);
   /**
-   * The box whose Selected row its card let go:
-   * no box is the one until a row is picked again (letGoHolds).
+   * The box whose Selected row its card let go: no box is the one until a row
+   * is picked again (letGoHolds).
    */
   const [letGoId, setLetGoId] = useState<string | null>(null);
 

@@ -78,8 +78,8 @@ export function useRouteTaps<T extends Direction>(
         setCandidates(all.filter((v) => keys.has(v.routeId)));
         // The way round under the finger, as for one route: outbound where an
         // outbound line was hit, the way back where only ways back were — so
-        // a tap on the light-blue way back switches to it — and, where a line shown was hit, the way
-        // round already shown.
+        // a tap on the light-blue way back switches to it — and, where a line
+        // shown was hit, the way round already shown.
         const hit = out.routeIds.map((id) => byId.current.get(id)).filter((v) => !!v);
         const shownHit = hit.find((v) => shown.current.includes(v.id));
         setBack(shownHit ? shownHit.reversed : hit.length > 0 && hit.every((v) => v.reversed));
@@ -97,8 +97,9 @@ export function useRouteTaps<T extends Direction>(
 
     map.on('click', onMapClick);
     // The hand over a line only where a pointer can hover, and from when one
-    // can: on a phone each pair cost a query of the map on every mousemove,
-    // a tap's among them (bindHover; a mouse paired later gets it too).
+    // can: on a phone each pair would cost a query of the map on every
+    // mousemove, a tap's among them (bindHover; a mouse paired later gets it
+    // too).
     const unhover = bindHover(map, HIT, enter, leave);
     return () => {
       map.off('click', onMapClick);

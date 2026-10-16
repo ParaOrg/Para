@@ -110,15 +110,15 @@ interface TapTargets {
 }
 
 /**
- * Each tap's answer, kept for the other hook. Both hooks hear the map's one `click` (routeTaps, hotspotTaps)
- * and each asks what it landed on: the same question, in the same task, of
- * a map nothing has changed in between (their setters render later), so the
- * second takes the first's answer instead of querying the rendered features
- * again — up to three queries a tap. Keyed on the browser's event, which
- * MapLibre hands every listener of a click, or, without one, on the point it
- * made for them; weakly, so an answer goes with its event. The same map and
- * the same point too, or it is asked afresh. The answer is shared: read it,
- * never change it.
+ * Each tap's answer, kept for the other hook. Both hooks hear the map's one
+ * `click` (routeTaps, hotspotTaps) and each asks what it landed on: the same
+ * question, in the same task, of a map nothing has changed in between (their
+ * setters render later), so the second takes the first's answer instead of
+ * querying the rendered features again — up to three queries a tap. Keyed on
+ * the browser's event, which MapLibre hands every listener of a click, or,
+ * without one, on the point it made for them; weakly, so an answer goes with
+ * its event. The same map and the same point too, or it is asked afresh. The
+ * answer is shared: read it, never change it.
  */
 const answered = new WeakMap<
   object,
@@ -126,12 +126,12 @@ const answered = new WeakMap<
 >();
 
 /**
- * One tap, one kind of thing. A tap inside a hotspot's box is the hotspot's, even
- * where a route runs through it; anywhere else it is the routes' under the
- * finger; and near nothing but a box — a finger's width off its edge — the
- * box's still. `routeKeys` counts
- * routes, not directions, because a route's two directions share most of
- * their road and are one thing to choose between.
+ * One tap, one kind of thing. A tap inside a hotspot's box is the hotspot's,
+ * even where a route runs through it; anywhere else it is the routes' under
+ * the finger; and near nothing but a box — a finger's width off its edge —
+ * the box's still. `routeKeys` counts routes, not directions, because a
+ * route's two directions share most of their road and are one thing to choose
+ * between.
  */
 export function tapTargets(
   map: MapLibreMap,

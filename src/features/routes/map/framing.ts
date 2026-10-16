@@ -41,13 +41,12 @@ export const sameBounds = (a: Bounds | null, b: Bounds | null): boolean =>
 
 /**
  * How long MapView waits for the framing to open on before it makes the map
- * without one. The framing is in at once when the map file
- * is; otherwise it is a read of the copy kept from an earlier visit, tens
- * of milliseconds, or with none kept the file on its way: a round trip on
- * a second visit, which asks it again (a 304). Past this, the map is made at
- * the centre, and the routes are framed as they come: a
- * file held up, a store that never answers. The map's own 12 s timer says
- * what fails after.
+ * without one. The framing is in at once when the map file is; otherwise it
+ * is a read of the copy kept from an earlier visit, tens of milliseconds, or
+ * with none kept the file on its way: a round trip on a second visit, which
+ * asks it again (a 304). Past this, the map is made at the centre, and the
+ * routes are framed as they come: a file held up, a store that never answers.
+ * The map's own 12 s timer says what fails after.
  */
 export const OPENING_WAIT_MS = 1000;
 
@@ -105,13 +104,13 @@ interface Opening {
 const openings = new WeakMap<object, Opening>();
 
 /**
- * The public map's opening: MapView makes the
- * map framed on the routes, `on` (null when it had none to frame on, and
- * opened at the centre), and calls this as soon as the map is made. From
- * then on the commuter's first drag, zoom, turn or tilt, pan by the arrow
- * keys or box drawn to zoom to (GESTURES) is noted, so the routes' framing
- * never takes the map back from under a finger, a key or a mouse
- * (framesRoutes). The studio's map is never recorded here.
+ * The public map's opening: MapView makes the map framed on the routes, `on`
+ * (null when it had none to frame on, and opened at the centre), and calls
+ * this as soon as the map is made. From then on the commuter's first drag,
+ * zoom, turn or tilt, pan by the arrow keys or box drawn to zoom to
+ * (GESTURES) is noted, so the routes' framing never takes the map back from
+ * under a finger, a key or a mouse (framesRoutes). The studio's map is never
+ * recorded here.
  */
 export function openedOn(map: Watched, on: Bounds | null): void {
   const opening: Opening = { on, moved: false };
@@ -156,11 +155,12 @@ interface Styled {
  * phone, ~397 kB of basemap) rather than the zoom-11 one (~189 kB): 1.4 s
  * later in the cheap-phone timer's first visit (8.16 -> 9.52 s), and on a map
  * of thousands of directions later by the time MapLibre's worker takes to cut
- * them. One 12 s from the map's making could run out over a map already drawn,
- * its routes on it, with "The map failed to load". So the style still has 12 s
- * from the map's making, and what comes after it 12 s of its own. A basemap
- * whose tiles never come is said so later, by the time its style took. The studio's map (no `fromStyle`; its routes go
- * on at 'load') keeps the one clock from its making.
+ * them. One 12 s from the map's making could run out over a map already
+ * drawn, its routes on it, with "The map failed to load". So the style still
+ * has 12 s from the map's making, and what comes after it 12 s of its own. A
+ * basemap whose tiles never come is said so later, by the time its style
+ * took. The studio's map (no `fromStyle`; its routes go on at 'load') keeps
+ * the one clock from its making.
  */
 export function loadClock(
   map: Styled,

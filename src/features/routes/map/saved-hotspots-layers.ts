@@ -33,13 +33,14 @@ const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 18
 
 /**
  * Hotspot names, terminals' and hintuans' alike, once the scale bar's width
- * covers 700 m or less: zoom 13.40. The bar steps 1, 2, 3, 5, so it never
- * reads 700 m: it reads 500 m there, the names coming in halfway through its
- * 500 m. Close in only, but near enough to the overview that a name may sit
- * over the line's stretch through its hotspot; where names meet, MapLibre
- * keeps one. A bar's reading is the zoom's at a given latitude, so the bar's rule is a zoom for a layer
- * here (station-labels.tsx measures it live, for markers). Two layers, one a
- * kind, so each can be set apart.
+ * covers 700 m or less (the owner's choice): zoom 13.40. The bar steps 1, 2,
+ * 3, 5, so it never reads 700 m: it reads 500 m there, the names coming in
+ * halfway through its 500 m. Close in only, but near enough to the overview
+ * that a name may sit over the line's stretch through its hotspot; where
+ * names meet, MapLibre keeps one. A bar's reading is the zoom's at a given
+ * latitude, so the bar's rule is a zoom for a layer here (station-labels.tsx
+ * measures it live, for markers). Two layers, one a kind, so each can be set
+ * apart.
  */
 const NAMES_FROM = Math.log2((METRES_PER_PX_AT_ZOOM_0 * SCALE_PX) / NAMES_WITHIN_M);
 
@@ -61,11 +62,11 @@ const labelsOf = (kind: HotspotKind, hidden = '') =>
 /**
  * A kind's names' paint (Figma 3837:11308): its content colour, a white halo
  * (Border/plain). One colour a layer, each layer holding one kind's names
- * (labelsOf), rather than a `match` on the kind: the same pixels, and a colour
- * that does not vary by feature is drawn by the GL program the basemap's own
- * names compile at load. A match would be a program of its own, compiled by the
- * first frame that showed a name (a commuter's pinch or a hotspot's glide):
- * 5-50 ms of a cheap phone's main thread then.
+ * (labelsOf), rather than a `match` on the kind: the same pixels, and a
+ * colour that does not vary by feature is drawn by the GL program the
+ * basemap's own names compile at load. A match would be a program of its own,
+ * compiled by the first frame that shows a name (a commuter's pinch or a
+ * hotspot's glide): 5-50 ms of a cheap phone's main thread.
  */
 export function namePaint(kind: HotspotKind) {
   return {
@@ -132,9 +133,10 @@ function boxMiddle(ring: Ring): LngLat {
   return [(Math.min(...lngs) + Math.max(...lngs)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
 }
 /**
- * The place highlight: tap one box and its siblings — the boxes sharing its informal name — draw stronger, and a
- * soft wash over the hull of all of them says "one place". Studio and public
- * map alike. The wash has its own source, rebuilt when the selection changes.
+ * The place highlight: tap one box and its siblings — the boxes sharing its
+ * informal name — draw stronger, and a soft wash over the hull of all of them
+ * says "one place". Studio and public map alike. The wash has its own source,
+ * rebuilt when the selection changes.
  */
 const SIBLINGS = 'saved-stops-siblings';
 const SIBLING_LAYERS = [SIBLINGS] as const;
@@ -151,15 +153,14 @@ const DRAW_ABOVE = LAYERS.drawCasing;
 
 /**
  * The filter of each layer drawn from the hotspots' source, the box being
- * edited (`hidden`, '' for none) left out: what the studio sets as it opens an
- * outline, and sets back once it is closed. The boxes' layers get one filter,
- * SIBLINGS too. MapLibre's worker lays out the layers of a source that share
- * a type, a filter and a layout as one bucket; left on its first filter,
- * SIBLINGS would be a fill bucket of its own, every box triangulated and
- * uploaded a second time. It never draws the
- * box being edited: the studio closes the hotspot's card, and its siblings'
- * marks with it, before it opens the outline, and takes no tap on a box
- * while one is open.
+ * edited (`hidden`, '' for none) left out: what the studio sets as it opens
+ * an outline, and sets back once it is closed. The boxes' layers get one
+ * filter, SIBLINGS too. MapLibre's worker lays out the layers of a source
+ * that share a type, a filter and a layout as one bucket; left on its first
+ * filter, SIBLINGS would be a fill bucket of its own, every box triangulated
+ * and uploaded a second time. It never draws the box being edited: the studio
+ * closes the hotspot's card, and its siblings' marks with it, before it opens
+ * the outline, and takes no tap on a box while one is open.
  */
 export function hiddenHotspotFilters(hidden: string): [string, unknown][] {
   const boxes = ['all', ['==', ['geometry-type'], 'Polygon'], ['!=', ['get', 'id'], hidden]];
@@ -278,8 +279,8 @@ export function addSavedHotspots(
     },
     before,
   );
-  // The HotspotOverlayCard (Figma 3837:11308): the box's
-  // surface see-through, its edge and name in its content colour.
+  // The HotspotOverlayCard (Figma 3837:11308): the box's surface see-through,
+  // its edge and name in its content colour.
   const byKind = (terminal: string | number, hintuan: string | number) =>
     ['match', ['get', 'kind'], 'terminal', terminal, hintuan] as never;
   const colour = byKind(HOTSPOT_COLOUR.terminal, HOTSPOT_COLOUR.hintuan);
@@ -370,9 +371,9 @@ export function addSavedHotspots(
       source: SRC,
       minzoom: NAMES_FROM,
       filter: labelsOf(kind),
-      // The same size at every zoom; 12, SemiBold as near as
-      // the map's fonts come, two lines over some 92 px as drawn, a white
-      // halo round it (namePaint).
+      // The same size at every zoom; 12, SemiBold as near as the map's fonts
+      // come, two lines over some 92 px as drawn, a white halo round it
+      // (namePaint).
       layout: {
         'text-field': ['get', 'name'],
         'text-size': 12,
