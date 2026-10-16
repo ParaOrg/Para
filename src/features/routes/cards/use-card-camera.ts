@@ -36,6 +36,8 @@ interface Routes<V extends Direction> {
 interface Hotspots<S extends Hotspot> {
   hotspots: readonly S[];
   selected: S | null;
+  /** The directions that pass a hotspot (its links): what a jeep's SWITCH carries its pick by. */
+  linkedDirectionIds: (hotspotId: string) => readonly string[];
 }
 
 interface Cards {
@@ -158,8 +160,13 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
         }
       : null,
 
-    /** SWITCH on a trip: the other way round, and the camera with it. */
-    switchTrip: (v: { id: string }) => {
+    /**
+     * SWITCH on a trip: the other way round, and the camera with it. On a
+     * jeep, the picked hintuan goes with it, onto a box the other way passes
+     * (carryTo; the owner's ask, 2026-10-15).
+     */
+    switchTrip: (v: Direction) => {
+      ride.carryTo(v, (hotspotId) => hotspots.linkedDirectionIds(hotspotId).includes(v.id));
       saved.select(v.id, { keepList: true });
       switched();
     },
