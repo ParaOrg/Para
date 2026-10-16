@@ -17,11 +17,10 @@ export function useTimelineFolds(
 ) {
   const [isAllOpen, setIsAllOpen] = useState(false);
   // Whether the fold has ever been opened on this card: until then its rows
-  // are their bare <li>s, the hidden insides left out (the cheap-phone
-  // plan, step 11, 2026-10-04). A trip with 10 to 25 hintuans drew all of
-  // them, invisible, as it opened, for a fold most riders never open.
-  // Opened once, they stay drawn as long as the card is up, so they close
-  // in view and open again as they always did. Set with the fold's own
+  // are their bare <li>s, the hidden insides left out. A trip with 10 to 25
+  // hintuans would otherwise draw all of them, invisible, as it opens, for a
+  // fold most riders never open. Opened once, they stay drawn as long as the
+  // card is up, so they close in view and open again. Set with the fold's own
   // state, in the same render, so the first opening moves as every other;
   // and as a pick is let go (below), so the rows it folds back close in
   // view too.
@@ -29,9 +28,9 @@ export function useTimelineFolds(
   // Once a start or an end is picked, the rows around it fold apart, before
   // and after, each its own fold (timelineFolds). Nothing folds under the
   // finger as a pick is made: picked from the open list, both stay open, and
-  // Set as start keeps them as they were. Let go, they fold back as they were
-  // before the pick (the owner, 2026-10-16: "fold back"; from 2026-10-15 a
-  // let-go opened the whole list, so the row just used never folded away).
+  // Set as start keeps them as they were. When the pick is let go, they fold
+  // back as they were before it, so the row just used folds away again
+  // instead of leaving the whole list open.
   const hasPick = start !== null || picked !== null;
   const [hadPick, setHadPick] = useState(hasPick);
   const [openParts, setOpenParts] = useState({ before: false, after: false });
@@ -78,9 +77,9 @@ export function useTimelineFolds(
     const fold = foldOf.get(id);
     return fold?.rowIds.at(-1) === id ? fold : undefined;
   };
-  // A row folded away under the keyboard's focus — a pick let go folds back
-  // (the owner, 2026-10-16) — hands the focus to the fold that now holds it,
-  // so it never sits on a row that can't be seen.
+  // A row folded away under the keyboard's focus — a pick let go folds back —
+  // hands the focus to the fold that now holds it, so it never sits on a row
+  // that can't be seen.
   const listRef = useRef<HTMLOListElement>(null);
   useEffect(() => {
     const row = document.activeElement?.closest('[data-testid="trip-hintuan"]');

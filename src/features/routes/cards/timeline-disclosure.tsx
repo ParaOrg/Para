@@ -21,12 +21,9 @@ interface TimelineDisclosureProps {
 /**
  * Figma's TimelineDisclosure: the hintuans folded into one row, or, opened,
  * the row that folds them. The rail runs through it between rows on one side
- * of the ride (the owner's Variant5, 4151:13619); next to the ride its
- * stretch is left unfilled, as his TimelineStick in 4194:12702 is (the
- * owner, 2026-10-16: "when close it should disconnect the disclosure").
- * Its words are 10 above and below, the row 40 tall, the chevron 6 before
- * them (the owner's Timeline set, 3716:1894, "new spacing changes",
- * 2026-10-16; 8 and 8 until then).
+ * of the ride (Figma 4151:13619); next to the ride its stretch is left
+ * unfilled, as TimelineStick in 4194:12702 is. Its words are 10 above and
+ * below, the row 40 tall, the chevron 6 before them (Timeline set, 3716:1894).
  */
 export function TimelineDisclosure({
   part,

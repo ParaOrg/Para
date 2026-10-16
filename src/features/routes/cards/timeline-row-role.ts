@@ -27,15 +27,12 @@ export interface RowRoleInput {
 }
 
 /**
- * What a hintuan's row wears for the picks (the owner's TimelineRouteDetail,
- * 2026-10-15): the start's row its S and × Remove as start under it; the
- * end's its E, and Set as start under it while no start is picked
- * (Choosing); any other row, nothing. The start's pill says its station's
- * code alone, and the end's its code and the ride's pesos (the owner,
- * 2026-10-16: "Pill on start is only the codesign of that station, no
- * price / the end should have both price and codesign"; that morning both
- * carried the pesos, as Variant4 draws them): a jeep's start, with no code,
- * has none, and a ride with no fare no pill on its end.
+ * What a hintuan's row wears for the picks: the start's row its S and ×
+ * Remove as start under it; the end's its E, and Set as start under it while
+ * no start is picked (Choosing); any other row, nothing. The start's pill says
+ * its station's code alone, and the end's its code and the ride's pesos: a
+ * jeep's start, with no code, has none, and a ride with no fare no pill on its
+ * end.
  */
 export function rowRole(row: RowRoleInput): RowRole {
   const priced = (code: string | null) =>
@@ -65,7 +62,7 @@ export function rowRole(row: RowRoleInput): RowRole {
 /**
  * What the origin's row wears: Start's S while no start is picked further
  * on; End's E when, a start picked, it is the ride's end, tapped with the
- * start kept (the owner, 2026-10-16: "keep the start"); else nothing.
+ * start kept; else nothing.
  */
 export function originMark(start: string | null, endPicked: EndRow | null): RideMarkKind | null {
   if (start === null) return 'start';
@@ -74,8 +71,7 @@ export function originMark(start: string | null, endPicked: EndRow | null): Ride
 
 /**
  * An end of the trip picked as the ride's end, with a start: its pill, as a
- * hintuan end's, its station's code and the ride's pesos (the owner,
- * 2026-10-16: "the end should have both price and codesign"). Null with no
+ * hintuan end's, its station's code and the ride's pesos. Null with no
  * start, or no fare.
  */
 export function endRowPill(

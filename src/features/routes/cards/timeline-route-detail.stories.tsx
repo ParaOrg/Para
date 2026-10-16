@@ -9,7 +9,7 @@ import { LIVERIES } from '../model/liveries';
  * and the pick in each livery. Long names, the rows after a pick folding,
  * and the taps, Set as start's among them, are TimelineRouteDetailCard's
  * stories. Sample data only: the places of
- * the owner's frames (3762:3546), not the real map.
+ * Figma's frames (3762:3546), not the real map.
  */
 const hintuans = (...labels: string[]) => labels.map((label, i) => ({ id: 'h' + i, label }));
 const talaToNovaliches = hintuans(
@@ -91,17 +91,15 @@ export const Pink: Story = { args: { livery: 'pink' } };
  * before its name, now ExtraBold, its pill with the pesos to there, and Set
  * as start under it when there is a button for it. The rail runs from the
  * origin down to it, ending there (MiddleBottom), and on again along the
- * rows after it, through the fold to the destination, without its E (the
- * owner's Variant5, 4151:13619, 2026-10-16: "can you still connect those
- * dots"). The fold after it opened.
+ * rows after it, through the fold to the destination, without its E (Figma
+ * Variant5, 4151:13619). The fold after it opened.
  */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: openFold };
 
 /**
  * A hintuan picked, the rows after it folded away: the ride's own rows stay
  * open. The fold's row, next to the pick, has no rail beside it, and the
- * destination's dot stands alone (the owner, 2026-10-16: "when close it
- * should disconnect the disclosure", 4194:12562).
+ * destination's dot stands alone (Figma 4194:12562).
  */
 export const HintuanPickedFolded: Story = { args: { picked: 'h3' } };
 
@@ -129,28 +127,28 @@ export const HintuanPickedPink: Story = {
   play: openFold,
 };
 
-/** LRT-1: the rail in Map/Rail/LightRailWayOne/Timeline/surface, Content/inverse words (4074:7402, 2026-10-13); a train's fold reads "N more stations". */
+/** LRT-1: the rail in Map/Rail/LightRailWayOne/Timeline/surface, Content/inverse words (4074:7402); a train's fold reads "N more stations". */
 export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one', isTrain: true } };
 
-/** Picked, LRT-1: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
+/** Picked, LRT-1: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
 export const HintuanPickedLightRailWayOne: Story = {
   args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04', isTrain: true },
   play: openFold,
 };
 
-/** LRT-2: the rail in Map/Rail/LightRailWayTwo/Timeline/surface, Content/inverse words (4080:4124, 2026-10-13). */
+/** LRT-2: the rail in Map/Rail/LightRailWayTwo/Timeline/surface, Content/inverse words (4080:4124). */
 export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two', isTrain: true } };
 
-/** Picked, LRT-2: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
+/** Picked, LRT-2: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
 export const HintuanPickedLightRailWayTwo: Story = {
   args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04', isTrain: true },
   play: openFold,
 };
 
-/** MRT-3: the rail in Map/Rail/MetroRailWayThree/Timeline/surface, Content/primary, dark, words (4080:4241, 2026-10-13). */
+/** MRT-3: the rail in Map/Rail/MetroRailWayThree/Timeline/surface, Content/primary, dark, words (4080:4241). */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three', isTrain: true } };
 
-/** Picked, MRT-3: the pill white, the station's code and pesos in the line's Timeline/surface, as his frame draws it. */
+/** Picked, MRT-3: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
 export const HintuanPickedMetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06', isTrain: true },
   play: openFold,
@@ -205,10 +203,10 @@ export const RowPressed: Story = {
 };
 
 /**
- * The owner's TimelineRouteDetail (Figma 4137:9886, 2026-10-15), on his
- * example: MRT-3 Southbound, North Avenue to Taft Avenue. Station names and
- * codes as the line's tables have them (rail-codes.ts); his frames write
- * YL60 for every pick.
+ * Figma's TimelineRouteDetail (4137:9886), on its example: MRT-3
+ * Southbound, North Avenue to Taft Avenue. Station names and codes as the
+ * line's tables have them (rail-codes.ts); the frames write YL60 for every
+ * pick.
  */
 const mrt3 = hintuans(
   'Quezon Avenue',
@@ -251,10 +249,10 @@ export const RideChoosing: Story = {
 /**
  * Variant3 (4148:12161): after Set as start, Shaw Boulevard is the start,
  * × Remove as start under it, its pill its code alone. A start alone is no
- * ride yet (the owner, 2026-10-16): its dot stands alone, the rail broken
+ * ride yet: its dot stands alone, the rail broken
  * just above it and just below and running on along the stations above it;
  * the closed fold next to it has no rail, and Taft Avenue's dot stands
- * alone (his "when close it should disconnect the disclosure", 4194:12562).
+ * alone (4194:12562).
  * North Avenue loses its S and Taft Avenue has no E until an end is picked.
  * Folded as Choosing was, the stations after it in that fold.
  */
@@ -293,9 +291,7 @@ export const RideStartJeep: Story = {
 /**
  * Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride
  * Shaw Boulevard → Ayala, the rail broken just above it and just below it.
- * The S's pill its code alone, the E's its code and the ride's pesos (the
- * owner, 2026-10-16: "Pill on start is only the codesign of that station, no
- * price / the end should have both price and codesign").
+ * The S's pill its code alone, the E's its code and the ride's pesos.
  */
 export const RideStartAndEnd: Story = {
   args: {
@@ -311,8 +307,7 @@ export const RideStartAndEnd: Story = {
 /**
  * Variant4, the stations above the ride opened: the rail runs from North
  * Avenue through them to Ortigas (MiddleBottom); View less, just above Shaw
- * Boulevard, has none beside it (the owner's 4194:12702, 2026-10-16: "when
- * close it should disconnect the disclosure").
+ * Boulevard, has none beside it (Figma 4194:12702).
  */
 export const RideStartAndEndOpened: Story = { ...RideStartAndEnd, play: openFold };
 
@@ -320,8 +315,7 @@ export const RideStartAndEndOpened: Story = { ...RideStartAndEnd, play: openFold
  * Variant5 (4151:13619): Shaw Boulevard the start, then Quezon Avenue tapped
  * above it, the end: E above S, the S's pill its code, the E's its code and
  * the pesos, the ride between them ridden back
- * along the line (the owner, 2026-10-16: "reverse the arrow, dont' switch
- * please"; that morning the row tapped became the start). The rail breaks
+ * along the line (the row tapped becomes the end, not the new start). The rail breaks
  * just above Quezon Avenue and just below Shaw Boulevard, under its × Remove
  * as start.
  */
@@ -337,10 +331,8 @@ export const RideEndAboveStart: Story = {
 };
 
 /**
- * Shaw Boulevard the start, then Taft Avenue's row tapped (the owner,
- * 2026-10-16: "keep the start"): the ride from Shaw Boulevard on to it, its
- * E on Taft Avenue with its pill, YL13 and the pesos ("the end should have
- * both price and codesign"), the stations above folded.
+ * Shaw Boulevard the start, then Taft Avenue's row tapped: the ride from Shaw Boulevard on to it, its
+ * E on Taft Avenue with its pill, YL13 and the pesos, the stations above folded.
  */
 export const RideStartToDestination: Story = {
   args: {
@@ -376,9 +368,9 @@ export const RideStartAndEndJeep: Story = {
 };
 
 /**
- * The owner's frames for "when close it should disconnect the disclosure"
- * (2026-10-16), on his example: LRT-2 from Antipolo to Recto, in the red his
- * frames draw it in, YL60 for every pick as they write it.
+ * Figma's frames for a fold next to the ride carrying no rail, on LRT-2
+ * from Antipolo to Recto, in the red the frames draw it in, YL60 for every
+ * pick as they write it.
  */
 const lrt2 = hintuans(
   'Marikina-Pasig',
