@@ -69,7 +69,8 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
       className={
         'flex max-w-full min-w-0 items-center gap-2 font-sn-pro text-sm/5 font-medium whitespace-nowrap ' +
         worn.words +
-        (variant === 'unselected' ? ' opacity-60' : '')
+        ' ' +
+        FADE[variant]
       }
     >
       {/* CodeSignEnd: the E, or Start's S, in a disc of its own, 28 across, beside the pill. */}
@@ -127,3 +128,11 @@ const PADDING = {
   start: 'gap-1 py-0.5 pr-2 pl-0.5',
   code: 'gap-1.5 py-1 pr-2 pl-1',
 } satisfies Record<RouteLineLabelVariant | 'code', string>;
+
+/** Figma's opacity/60 for a name outside the ride (the Label's Unselected, 4200:13645), else nothing. */
+const FADE = {
+  default: '',
+  unselected: 'opacity-60',
+  end: '',
+  start: '',
+} satisfies Record<RouteLineLabelVariant, '' | 'opacity-60'>;

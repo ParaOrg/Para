@@ -228,6 +228,18 @@ export function rowsOutsideRide(
 }
 
 /**
+ * The rows of a trip's timeline outside a start picked alone: every row but
+ * the start's. With no end there is no ride yet, so the whole trip is drawn
+ * on the pale and only the start stands out.
+ */
+export function rowsOutsideStartAlone(
+  rows: readonly { id: string }[],
+  startId: string,
+): Set<string> {
+  return new Set(rows.filter((r) => r.id !== startId).map((r) => r.id));
+}
+
+/**
  * Where a picked ride lies on a trip's timeline: its first row and its last,
  * whichever of the start and the end is above (an end tapped above the
  * start stays the end, ridden back along the line: rideSpan). -1 is the
