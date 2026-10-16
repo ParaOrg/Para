@@ -477,13 +477,15 @@ test("the studio's map: \"Loading map…\" goes at its 'load', routes drawn or n
   assert.equal((view.match(/setLifted\(/g) ?? []).length, 1, 'lifted by loadingLifts alone');
   // The design button still comes with the map's 'load', never with the
   // text: pwa-test reads it as the basemap's tiles in on a production build.
+  // On the public map its place above the LocatorButton is there by then
+  // (2026-10-16): the Locator is drawn once the map is handed over.
   assert.match(view, /map\.on\('load', \(\) => \{\n(?:(?!\n {6}\}\)).)*\n\s*setReady\(map\);?\n/s);
   assert.equal(
     (view.match(/setReady\(/g) ?? []).length,
     2,
     "set at the 'load', and let go as the map goes",
   );
-  assert.match(view, /\{ready && !error && \(\s*<BasemapControl/);
+  assert.match(view, /\{ready && !error && basemapSlot !== null && \(\s*<BasemapControl/);
 });
 
 test('"Loading map…" stopped (the map gone): never lifted', () => {

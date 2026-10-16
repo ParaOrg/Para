@@ -11,7 +11,8 @@
 // taps them. A check today's data cannot support prints SKIP instead of failing.
 //
 // Covers: touch chrome — no zoom buttons, attribution moved to the top right,
-// no horizontal scroll; the opening (the owner's Q1 and Q4, 2026-10-04) — the
+// the design button 16 px above the LocatorButton (2026-10-16), following
+// the sheet with it (4c), no horizontal scroll; the opening (the owner's Q1 and Q4, 2026-10-04) — the
 // map made framed on the routes where their fit framed it and kept there,
 // with the file still on its way the old opening and the routes framed as
 // they come, unless a finger has moved the map first (or, at 1280×800, an
@@ -480,6 +481,44 @@ check(
   (await page.locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').count()) > 0
     ? 'still bottom right'
     : '',
+);
+/**
+ * The design button against what is under it, the LocatorButton or the
+ * note on it, as they stand: the gap, how far apart their right edges are,
+ * and their tops, to tell how far each has slid.
+ */
+const designAboveWhere = () =>
+  page.evaluate(() => {
+    const design = document.querySelector('[data-testid="basemap"]');
+    const where = document.querySelector('[data-testid="where"]');
+    if (!design || !where) return null;
+    const below = document.querySelector('[data-testid="where-note"]') ?? where;
+    const d = design.getBoundingClientRect();
+    const w = where.getBoundingClientRect();
+    return {
+      gap: below.getBoundingClientRect().top - d.bottom,
+      rightApart: w.right - d.right,
+      designTop: d.top,
+      whereTop: w.top,
+      inCorner: !!design.closest('.maplibregl-ctrl-top-right'),
+    };
+  });
+/** 16 px above, right edges in line, out of the top-right corner. */
+const stacked = (s) =>
+  !!s && Math.abs(s.gap - 16) < 0.5 && Math.abs(s.rightApart) < 0.5 && !s.inCorner;
+const stackedSaid = (s) =>
+  s
+    ? `gap ${s.gap.toFixed(1)} px, right edges ${s.rightApart.toFixed(1)} px apart, LocatorButton's top at ${s.whereTop.toFixed(1)}${s.inCorner ? ', in the top-right corner' : ''}`
+    : 'no design button or no LocatorButton';
+// Above the LocatorButton since the owner's "Can you move the map layers on
+// top of the whereiamlocation button? Maybe 16px gap" (2026-10-16); at the
+// top right under the credits until then. 4c holds it there as a card's
+// sheet slides.
+const atFoot = await designAboveWhere();
+check(
+  'the design button sits 16 px above the LocatorButton, their right edges in line',
+  stacked(atFoot),
+  stackedSaid(atFoot),
 );
 const noHScroll = (p) =>
   p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -3343,6 +3382,17 @@ if (!hotspot) {
     (await sheetState()) === 'middle',
     `data-snap=${await sheetState()}`,
   );
+  // The design button goes where the LocatorButton goes (2026-10-16): up
+  // from the map's foot with the sheet, 16 above it all the way.
+  const atMiddle = await designAboveWhere();
+  const slidUp = atFoot && atMiddle ? atFoot.whereTop - atMiddle.whereTop : 0;
+  check(
+    '  the design button rides up on the sheet with the LocatorButton, still 16 px above it',
+    stacked(atMiddle) &&
+      slidUp > 1 &&
+      Math.abs(atFoot.designTop - atMiddle.designTop - slidUp) < 0.5,
+    `${stackedSaid(atMiddle)}; the LocatorButton up ${slidUp.toFixed(1)} px, the design button up ${atFoot && atMiddle ? (atFoot.designTop - atMiddle.designTop).toFixed(1) : '?'} px`,
+  );
 
   const hadHandle = await tapHandle();
   const firstTap = hadHandle && (await sheetState()) === 'max';
@@ -3362,6 +3412,17 @@ if (!hotspot) {
     'a second tap on the handle goes round to Low',
     (await sheetState()) === 'low',
     afterSecond,
+  );
+  // Max stands over both; at Low they are back out, lower than at Middle.
+  const atLow = await designAboveWhere();
+  const slidDown = atMiddle && atLow ? atLow.whereTop - atMiddle.whereTop : 0;
+  check(
+    '  and down to Low with it, still 16 px above it',
+    (await sheetState()) === 'low' &&
+      stacked(atLow) &&
+      slidDown > 1 &&
+      Math.abs(atLow.designTop - atMiddle.designTop - slidDown) < 0.5,
+    `${stackedSaid(atLow)}; the LocatorButton down ${slidDown.toFixed(1)} px, the design button down ${atMiddle && atLow ? (atLow.designTop - atMiddle.designTop).toFixed(1) : '?'} px`,
   );
 
   // From here each gesture starts from a known height, so one broken gesture

@@ -7,6 +7,9 @@ import type { Basemap } from './basemap';
 
 import './map-style.css';
 
+/** Which way the card opens from its button: down from one above it, up from one below it. */
+export type OpenDirection = 'down' | 'up';
+
 interface MapStyleProps {
   /** The designs offered, in order: three on the public map, five in the studio. */
   basemaps: readonly Basemap[];
@@ -14,8 +17,10 @@ interface MapStyleProps {
   selectedId: string;
   /** Each design's picture, by its id; a design without one shows a plain tile. */
   thumbnails: Readonly<Record<string, string>>;
-  /** How tall it may grow, in px: the room below the button, measured as it opens. Scrolls past it. */
+  /** How tall it may grow, in px: the room from the button to the map's edge, measured as it opens. Scrolls past it. */
   maxHeight?: number;
+  /** Which way it opens, and so the corner it pops out of and shrinks back into (map-style.css). */
+  opens?: OpenDirection;
   /** Leaving: it shrinks back into the button, and takes no taps or keys meanwhile. */
   isClosing?: boolean;
   onSelect: (basemap: Basemap) => void;
@@ -41,6 +46,7 @@ export function MapStyle({
   selectedId,
   thumbnails,
   maxHeight,
+  opens = 'down',
   isClosing = false,
   onSelect,
   onClose,
@@ -98,6 +104,7 @@ export function MapStyle({
       aria-modal="true"
       aria-labelledby={titleId}
       data-testid="basemap-menu"
+      data-opens={opens}
       data-closing={isClosing || undefined}
       inert={isClosing}
       // Measured at runtime (CLAUDE.md's one use for `style`); the class is the cap without it.

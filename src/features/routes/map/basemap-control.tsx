@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { applyBasemap, rememberBasemap, type Basemap } from './basemap';
-import { MapStyle } from './map-style';
+import { MapStyle, type OpenDirection } from './map-style';
 
 interface BasemapControlProps {
   map: MapLibreMap;
@@ -13,11 +13,27 @@ interface BasemapControlProps {
   thumbnails: Readonly<Record<string, string>>;
   /** The design the map was built with. */
   initial: Basemap;
+  /**
+   * An element of the page's, low on the map, to draw in: the card opens up
+   * from the button there. The public map's, above the LocatorButton (the
+   * owner, 2026-10-16). Left out, the button is one of the map's own
+   * top-right controls and the card opens down (the studio).
+   */
+  container?: HTMLElement;
 }
 
-/** Between the button and the card (gap-2), and kept clear under the card, as the corner's margin. */
+/**
+ * Between the button and the card (gap-2), and kept clear between the card
+ * and the map's edge it grows toward, as the corner's margin.
+ */
 const CARD_GAP_PX = 8;
-const CARD_FOOT_PX = 10;
+const CARD_EDGE_PX = 10;
+
+/** The card under the button or over it, the button read first either way. */
+const STACK_CLASSES = {
+  down: 'flex-col',
+  up: 'flex-col-reverse',
+} satisfies Record<OpenDirection, string>;
 
 /** Closing is the card on its way out, still drawn while its leaving plays. */
 type CardState = 'closed' | 'open' | 'closing';
@@ -31,17 +47,18 @@ const afterClose = (): CardState =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'closed' : 'closing';
 
 /**
- * The button as one of MapLibre's own top-right controls, so MapLibre stacks
- * it under whatever is above it there, at its real height: the credits on a
- * phone, open three lines tall until the first drag folds them (the owner,
- * 2026-10-16: the button sat on them at a guessed 3rem), MapLibre's +, − and
- * compass for a mouse in the studio, or nothing on the public map's
- * desktop, where it takes the corner. The corner keeps inside the safe area
- * itself (global.css). React draws into it, as the hintuan pins do into
- * their markers.
+ * Where the button is drawn: the page's element when it gives one. Without
+ * one, one of MapLibre's own top-right controls, so MapLibre stacks it under
+ * whatever is above it there, at its real height: the studio's +, − and
+ * compass for a mouse, or its credits on a phone, folded to their ⓘ until
+ * they are opened. On the public map, until 2026-10-16, that was the
+ * credits, open three lines tall until the first drag folds them (the owner,
+ * 2026-10-16: the button sat on them at a guessed 3rem). The corner keeps
+ * inside the safe area itself (global.css). React draws into it, as the
+ * hintuan pins do into their markers.
  */
-function useTopRightControl(map: MapLibreMap): HTMLElement {
-  const [element] = useState(() => {
+function useButtonPlace(map: MapLibreMap, container: HTMLElement | undefined): HTMLElement {
+  const [corner] = useState(() => {
     const div = document.createElement('div');
     // Placed as MapLibre places a .maplibregl-ctrl in the corner, without
     // the class: its button rules (a grey hover) would paint over ours.
@@ -49,28 +66,54 @@ function useTopRightControl(map: MapLibreMap): HTMLElement {
     return div;
   });
   useEffect(() => {
-    const control: IControl = { onAdd: () => element, onRemove: () => element.remove() };
+    // The page's own place: nothing to add to the map.
+    if (container) return;
+    const control: IControl = { onAdd: () => corner, onRemove: () => corner.remove() };
     map.addControl(control, 'top-right');
     return () => {
       // Gone with the map already, when the map goes first.
       if (map.hasControl(control)) map.removeControl(control);
     };
-  }, [map, element]);
-  return element;
+  }, [map, corner, container]);
+  return container ?? corner;
 }
 
 /**
- * The owner's "MayLayers or Theme" button (4176:10679, 2026-10-16) at the
- * top right, and under it his Map Style card (MapStyle) for the designs. It
- * draws nothing on the map itself — `applyBasemap` does the switch and
- * carries the routes and hotspots across — so both pages get it from
- * MapView for free.
+ * How tall the card may grow, in px: from the button to the map's edge it
+ * grows toward, less the gap and the margin. Past that edge it would be cut
+ * off: MapLibre's container clips the studio's corner, the page the public
+ * map's place.
  */
-export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapControlProps) {
-  const corner = useTopRightControl(map);
+function cardRoom(opens: OpenDirection, button: DOMRect, mapBox: DOMRect): number {
+  const toEdge = opens === 'down' ? mapBox.bottom - button.bottom : button.top - mapBox.top;
+  return toEdge - CARD_GAP_PX - CARD_EDGE_PX;
+}
+
+/**
+ * The owner's "MayLayers or Theme" button (4176:10679, 2026-10-16) and his
+ * Map Style card (MapStyle) for the designs. On the public map the button
+ * sits above the LocatorButton, 16 apart, and slides with it as a card's
+ * sheet does, the card opening up from it: the owner's "Can you move the map
+ * layers on top of the whereiamlocation button? Maybe 16px gap"
+ * (2026-10-16). The page gives it that place (`container`). It was at the
+ * top right under the credits until 2026-10-16; the studio, which has no
+ * LocatorButton, keeps it there, the card opening down. It draws nothing on
+ * the map itself — `applyBasemap` does the switch and carries the routes and
+ * hotspots across — so both pages get it from MapView for free.
+ */
+export function BasemapControl({
+  map,
+  basemaps,
+  thumbnails,
+  initial,
+  container,
+}: BasemapControlProps) {
+  const place = useButtonPlace(map, container);
+  // Away from the map's edge the button is at.
+  const opens: OpenDirection = container ? 'up' : 'down';
   const [current, setCurrent] = useState<Basemap>(initial);
   const [card, setCard] = useState<CardState>('closed');
-  const [cardRoom, setCardRoom] = useState<number | undefined>(undefined);
+  const [room, setRoom] = useState<number | undefined>(undefined);
   const isOpen = card === 'open';
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -81,13 +124,13 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
     buttonRef.current?.focus();
   };
 
-  // The card may grow down to the map's foot and no further: the map clips
-  // what is past it (MapLibre's overflow), and the button sits as low as the
-  // corner stacks it, under the open credits on a phone. Read as it opens.
+  // The card may grow to the map's edge and no further (cardRoom): down to
+  // its foot from as low as the studio's corner stacks the button, up to its
+  // top from wherever the public map's sheet has taken it. Read as it opens.
   const open = () => {
     const button = buttonRef.current?.getBoundingClientRect();
-    const mapFoot = map.getContainer().getBoundingClientRect().bottom;
-    setCardRoom(button ? mapFoot - button.bottom - CARD_GAP_PX - CARD_FOOT_PX : undefined);
+    const mapBox = map.getContainer().getBoundingClientRect();
+    setRoom(button ? cardRoom(opens, button, mapBox) : undefined);
     setCard('open');
   };
 
@@ -126,7 +169,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
   };
 
   return createPortal(
-    <div ref={rootRef} className="flex flex-col items-end gap-2">
+    <div ref={rootRef} className={'flex items-end gap-2 ' + STACK_CLASSES[opens]}>
       <button
         ref={buttonRef}
         type="button"
@@ -153,7 +196,8 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
           basemaps={basemaps}
           selectedId={current.id}
           thumbnails={thumbnails}
-          maxHeight={cardRoom}
+          maxHeight={room}
+          opens={opens}
           onSelect={handleSelect}
           isClosing={card === 'closing'}
           onClose={close}
@@ -161,7 +205,7 @@ export function BasemapControl({ map, basemaps, thumbnails, initial }: BasemapCo
         />
       )}
     </div>,
-    corner,
+    place,
   );
 }
 
