@@ -14,19 +14,17 @@ type Props = {
    */
   back: boolean;
   /**
-   * The word on SWITCH, switchWord's for the directions on show: the way a
-   * tap leads to, Pabalik over Papunta and back again, or a train's other
-   * bound. Its name is the word on it, so
-   * "tap Pabalik" finds it by voice too.
+   * The word on SWITCH, switchWord's for the directions on show: the way a tap leads to, Pabalik
+   * over Papunta and back again, or a train's other bound. Its name is the word on it, so "tap
+   * Pabalik" finds it by voice too.
    */
   way: string;
   onClose: () => void;
 } & (
   | {
       /**
-       * Figma's Default, over the route list: Routes and its count, `2
-       * Routes`, `1 Route` — or, with no route under the tap, its hotspots',
-       * `2 Hotspots`.
+       * Figma's Default, over the route list: Routes and its count, `2 Routes`, `1 Route` — or,
+       * with no route under the tap, its hotspots', `2 Hotspots`.
        */
       routeCount: string;
       onBackToList?: never;
@@ -45,19 +43,15 @@ type Props = {
 );
 
 /**
- * The top of the route list and of a trip — Figma's RouteCardHeader
- * (3742:1049): on the left Routes and the count in SN Pro
- * Bold (Default) or ‹ (Variant2, the trip's); on the right
- * SWITCH (Button, Special) and ✕ (IconButton), on Background/surface. SWITCH
- * answers to `chooser-flip` over the list and `card-switch` over a trip, as
- * the suites have known each since before the redesign.
+ * The top of the route list and of a trip — Figma's RouteCardHeader (3742:1049): on the left Routes
+ * and the count in SN Pro Bold (Default) or ‹ (Variant2, the trip's); on the right SWITCH (Button,
+ * Special) and ✕ (IconButton), on Background/surface. SWITCH answers to `chooser-flip` over the
+ * list and `card-switch` over a trip, as the suites have known each since before the redesign.
  *
- * On a phone it sits flush under the dock's HandleNotch (Figma's
- * BottomSheetConfiguration, 3815:5637); from `@float:` the notch is gone and
- * 12 stand above it.
+ * On a phone it sits flush under the dock's HandleNotch (Figma's BottomSheetConfiguration,
+ * 3815:5637); from `@float:` the notch is gone and 12 stand above it.
  *
- * The tooltips hang below their buttons: above, they would leave the card
- * at the top of the screen.
+ * The tooltips hang below their buttons: above, they would leave the card at the top of the screen.
  */
 export function RouteCardHeader({
   routeCount,
@@ -68,8 +62,8 @@ export function RouteCardHeader({
   way,
   onClose,
 }: Props) {
-  // 12 below, over the list and over a trip alike: the card follows it
-  // straight away (Figma 3742:1049 and 3778:3183).
+  // 12 below, over the list and over a trip alike: the card follows it straight away (Figma
+  // 3742:1049 and 3778:3183).
   return (
     <div className="flex w-full items-center gap-2 bg-surface px-3 pt-0 pb-3 @float:pt-3">
       {routeCount !== undefined ? (

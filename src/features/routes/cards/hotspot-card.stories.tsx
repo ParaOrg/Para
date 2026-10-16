@@ -51,7 +51,7 @@ const terminal: HotspotRow = {
   createdAt: '2026-09-12T00:00:00Z',
 };
 
-/** Keeps the Selected card as the public map does, so the RouteCards stories can be tapped through. */
+/** Keeps the Selected card as the app does, so the RouteCards stories can be tapped through. */
 function Picking(props: ComponentProps<typeof HotspotCard>) {
   const [selected, setSelected] = useState(props.routeCards?.selected ?? null);
   const routeCards = props.routeCards;
@@ -72,7 +72,7 @@ function Picking(props: ComponentProps<typeof HotspotCard>) {
   );
 }
 
-/** The public map's RouteCards, nothing picked yet. */
+/** RouteCards, nothing picked yet. */
 const routeCards = { selected: null, onSelect: fn(), onShown: fn() };
 
 const meta = {
@@ -108,7 +108,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A terminal with the route through it, in the studio's rows: by the place it leaves from, ⇄ for the way back. The hotspot name leads; the ground name is the small line under it. */
+/**
+ * A terminal with the route through it, in Departures' rows: by the place it leaves from, ⇄ for the
+ * way back. The hotspot name leads; the ground name is the small line under it.
+ */
 export const Terminal: Story = {};
 
 /** A hintuan with a note and nothing linked yet. */
@@ -161,8 +164,8 @@ export const Phone: Story = {
 };
 
 /**
- * Drawn directions, each line `km` long: two routes out of
- * Tala, both through SM Fairview. Sample data.
+ * Drawn directions, each line `km` long: two routes out of Tala, both through SM Fairview. Sample
+ * data.
  */
 const drawn = (
   key: string,
@@ -193,12 +196,11 @@ const talaRoutes = [
 ];
 
 /**
- * The public map's card (`routeCards`): the routes through here as
- * RouteCards, edge to edge — SM Fairview's, Tala with its two ways out, in a
- * colour drawn at random. The map lights every route they show; a tap on a
- * card off its rows narrows that to its own; a row opens its trip straight
- * away. No pesos on any card: the trip's Expected fare carries them. TODO: the
- * rest of the card is not redesigned yet.
+ * The card with `routeCards`, as the studio gives it: the routes through here as RouteCards, edge
+ * to edge — SM Fairview's, Tala with its two ways out, in a colour drawn at random. The map lights
+ * every route they show; a tap on a card off its rows narrows that to its own; a row opens its trip
+ * straight away. No pesos on any card: the trip's Expected fare carries them. TODO: the rest of the
+ * card is not redesigned yet.
  */
 export const RouteCards: Story = {
   args: {
@@ -254,9 +256,9 @@ export const RouteCardsPhone: Story = {
 };
 
 /**
- * The ways back not drawn yet: the RouteCards list drawn ways only, so the
- * way there is shown, and ⇄ is gone — there is nothing to turn round to. The
- * studio's rows would offer ⇄ and "Not mapped yet".
+ * The ways back not drawn yet: the RouteCards list drawn ways only, so the way there is shown, and
+ * ⇄ is gone — there is nothing to turn round to. The Departures' rows would offer ⇄ and "Not mapped
+ * yet".
  */
 export const RouteCardsNothingTheOtherWay: Story = {
   args: {

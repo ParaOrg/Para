@@ -4,20 +4,17 @@ import { fn } from 'storybook/test';
 import { RouteCardHeader } from './route-card-header';
 
 /**
- * The top of the route list and of a trip (Figma 3742:1049): Default,
- * Routes and the count, over a list; Variant2, ‹ back, over a trip. SWITCH
- * names the way a tap leads to (switchWord): Pabalik
- * over Papunta and back, on a train the other bound. It rests disabled when
- * the other way round has nothing drawn.
- * Rendered by hand: its two shapes of props do not make one set of args.
+ * The top of the route list and of a trip (Figma 3742:1049): Default, Routes and the count, over a
+ * list; Variant2, ‹ back, over a trip. SWITCH names the way a tap leads to (switchWord): Pabalik
+ * over Papunta and back, on a train the other bound. It rests disabled when the other way round has
+ * nothing drawn. Rendered by hand: its two shapes of props do not make one set of args.
  */
 const meta: Meta = {
   title: 'Features/Routes/RouteCardHeader',
   decorators: [
-    // Marked @container, as the apps' roots are, and wide enough inside its padding for
-    // `@float:` (64rem): there the header has 12 above it, as over the corner
-    // card; on a phone (the Phone story) it sits flush under the dock's
-    // HandleNotch (3815:5637).
+    // Marked @container, as the apps' roots are, and wide enough inside its padding for `@float:`
+    // (64rem): there the header has 12 above it, as over the corner card; on a phone (the Phone
+    // story) it sits flush under the dock's HandleNotch (3815:5637).
     (Story, ctx) => (
       <div
         className={

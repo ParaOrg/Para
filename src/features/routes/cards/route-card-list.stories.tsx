@@ -156,10 +156,9 @@ const meta = {
   title: 'Features/Routes/RouteCardList',
   component: RouteCardList,
   render: (args) => <Picking {...args} />,
-  // A map-sized box, marked @container as the apps' roots are: the list docks
-  // along its bottom, and sits in the top-left corner from 1024 wide
-  // (`@float:`) — Figma's frames at 393, 640 and 1024. Never taller than
-  // the canvas, so the story itself does not scroll.
+  // A map-sized box, marked @container as the apps' roots are: the list docks along its bottom, and
+  // sits in the top-left corner from 1024 wide (`@float:`) — Figma's frames at 393, 640 and 1024.
+  // Never taller than the canvas, so the story itself does not scroll.
   decorators: [
     (Story, ctx) => (
       <div
@@ -209,8 +208,8 @@ export const ManyPlaces: Story = { args: { routes: many } };
 export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
 
 /**
- * A tap on a hotspot with routes running through it: the hotspot first, as
- * a plain row, then the cards. The count stays the routes'.
+ * A tap on a hotspot with routes running through it: the hotspot first, as a plain row, then the
+ * cards. The count stays the routes'.
  */
 export const WithAHotspot: Story = { args: { hotspots: [talaTerminal] } };
 
@@ -223,12 +222,15 @@ export const WithAHotspotFloating: Story = {
 /** Two boxes and no line: "2 Hotspots", with no route to count, and nothing to SWITCH. */
 export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 
-/** Both boxes of one hintuan and no line: a row each, and "1 Hotspot", as a rider counts it (hotspotCount). */
+/**
+ * Both boxes of one hintuan and no line: a row each, and "1 Hotspot", as a rider counts it
+ * (hotspotCount).
+ */
 export const OneHintuanTwoBoxes: Story = { args: { routes: [], hotspots: oneHintuan } };
 
 /**
- * Figma's BottomSheetConfiguration (3815:5637) holds the list
- * too: it opens at Middle (Phone, above); a tap on the HandleNotch goes round.
+ * Figma's BottomSheetConfiguration (3815:5637) holds the list too: it opens at Middle (Phone,
+ * above); a tap on the HandleNotch goes round.
  */
 const tapHandle = async (canvasElement: HTMLElement, times: number) => {
   const handle = within(canvasElement).getByTestId('dock-handle');
