@@ -8,15 +8,16 @@ export interface RouteTripDetailHeaderProps {
   line: RailLine;
   /**
    * Which way it runs (railBound), or null when the line's table does not know
-   * an end. Undesigned: the code alone, rounded both ends, is Claude's call of
-   * 2026-10-16; how it should look is the owner's to say.
+   * an end: then the line's code alone, rounded both ends (the owner's answer
+   * of 2026-10-16: "show the line alone").
    */
   bound: Bound | null;
 }
 
 /**
  * The words on the white halves: Figma's Map/Rail/<line>/surface, the line's
- * own colour whatever card it sits on. MRT-3's is yellow, unreadable on
+ * own colour whatever card it sits on, a jeep-coloured one too (the owner's
+ * answer of 2026-10-16: "keep the line colour"). MRT-3's is yellow, unreadable on
  * white, so its words are Content/primary (the owner's ask of 2026-10-16).
  */
 const WORDS = {

@@ -46,7 +46,7 @@ export const Mrt3Northbound: Story = { args: { line: 'MRT-3', bound: 'Northbound
 
 export const Mrt3Southbound: Story = { args: { line: 'MRT-3', bound: 'Southbound' } };
 
-/** An end the line's table does not know: no bound. Undesigned: the code alone, rounded both ends, is Claude's call of 2026-10-16; the owner's to say. */
+/** An end the line's table does not know: no bound, the line's code alone, rounded both ends (the owner's answer of 2026-10-16: "show the line alone"). */
 export const NoBound: Story = { args: { bound: null } };
 
 /** On a phone: the width of the app's root, a container as the app's is. */
