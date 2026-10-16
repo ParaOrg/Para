@@ -9,14 +9,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { rideSpan, rideToEnd, routeTimeline } from '../../src/features/routes/model/ride.ts';
 import {
   rideRows,
-  rideSpan,
-  rideToEnd,
-  routeTimeline,
   rowsOutsideRide,
   rowsOutsideStartAlone,
-} from '../../src/features/routes/model/ride.ts';
+} from '../../src/features/routes/model/ride-rows.ts';
 import { railFares } from '../../src/features/routes/model/rail-fares.ts';
 import { lineLength } from '../../src/shared/utils/geo.ts';
 import { readPublished } from '../../scripts/checks/check-map-data.mjs';
