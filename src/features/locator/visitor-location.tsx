@@ -1,5 +1,4 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import type { ReactNode } from 'react';
 
 import { coarse } from '@/features/routes/map/map-view';
 import type { Turn } from '@/shared/hooks/commit-turn';
@@ -24,8 +23,6 @@ interface Props {
   /** What was just picked, for the dot to gaze at; and when ‹ or ✕ last went back (useGazeHush). */
   picks: Picks;
   hushedAt: { readonly current: number };
-  /** What the page puts above the LocatorButton, 16 apart, going where it goes (Locator). */
-  children?: ReactNode;
 }
 
 /**
@@ -40,16 +37,7 @@ interface Props {
  * drew the same: one or two renders a second for nothing while location
  * is on. Its camera still moves at the page's turn (`cameraTurn`).
  */
-export function VisitorLocation({
-  map,
-  snap,
-  offset,
-  docked,
-  cameraTurn,
-  picks,
-  hushedAt,
-  children,
-}: Props) {
+export function VisitorLocation({ map, snap, offset, docked, cameraTurn, picks, hushedAt }: Props) {
   const locator = useLocator(map, { compass: coarse, snap, offset, cameraTurn });
   // How the dot feels: glad as the location comes, a boing at a tap on the
   // button or on the dot, now and then a huff (locatorMood).
@@ -59,11 +47,7 @@ export function VisitorLocation({
   const gazeAt = gazeSubjects(picks, locator.fix?.at ?? null);
   return (
     <>
-      {map && (
-        <Locator locator={locator} docked={docked}>
-          {children}
-        </Locator>
-      )}
+      {map && <Locator locator={locator} docked={docked} />}
       {map && locator.fix && (
         <LocatorOnMap
           map={map}

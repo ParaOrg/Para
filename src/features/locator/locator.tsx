@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 import { slide } from '@/shared/ui/sheet-gesture';
 
@@ -9,8 +9,6 @@ interface Props {
   locator: State;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
-  /** What the page puts above the button, 16 apart, going where it goes. */
-  children?: ReactNode;
 }
 
 /** What each look says it will do, for a screen reader. */
@@ -42,14 +40,8 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  *
  * Denied or unavailable: a short note above it, and the button stays as it
  * was, to try again once the browser's setting is changed.
- *
- * What the page puts in it (`children`) sits above the button and its note,
- * 16 apart, right edges in line, and slides with them: on the public map,
- * the map's design button, since the owner's "Can you move the map layers
- * on top of the whereiamlocation button? Maybe 16px gap" (2026-10-16). It
- * was at the top right under the credits until then.
  */
-export function Locator({ locator, docked, children }: Props) {
+export function Locator({ locator, docked }: Props) {
   const { status, noFix, mode, heading, compass, tap } = locator;
   const [note, setNote] = useState(() => noteFor(status, noFix));
   // Each change of the state says its note afresh, even one the timer below has hidden.
@@ -78,32 +70,26 @@ export function Locator({ locator, docked, children }: Props) {
       }
       style={{ translate: `0 ${y}` }}
     >
-      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-4 @float:right-3 @float:bottom-10 @float:mb-0">
-        {children}
-        {/* The note stays right on the button, whatever is above them. */}
-        <div className="flex flex-col items-end gap-1">
-          {/* The note's look is WhereAmI's, raw palette and all: no Figma design for it yet (the owner's to draw, 2026-10-01). */}
-          {note && (
-            <p
-              role="status"
-              data-testid="where-note"
-              className="max-w-[14rem] rounded-lg bg-neutral-900/90 px-3 py-2 text-right text-xs text-content-inverse shadow backdrop-blur"
-            >
-              {note}
-            </p>
-          )}
-          <LocatorButton
-            mode={mode}
-            // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
-            heading={mode === 'TrackedLocation' ? heading : null}
-            onClick={tap}
-            aria-label={
-              mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]
-            }
-            data-testid="where"
-            data-state={status}
-          />
-        </div>
+      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-10 @float:mb-0">
+        {/* The note's look is WhereAmI's, raw palette and all: no Figma design for it yet (the owner's to draw, 2026-10-01). */}
+        {note && (
+          <p
+            role="status"
+            data-testid="where-note"
+            className="max-w-[14rem] rounded-lg bg-neutral-900/90 px-3 py-2 text-right text-xs text-content-inverse shadow backdrop-blur"
+          >
+            {note}
+          </p>
+        )}
+        <LocatorButton
+          mode={mode}
+          // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
+          heading={mode === 'TrackedLocation' ? heading : null}
+          onClick={tap}
+          aria-label={mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]}
+          data-testid="where"
+          data-state={status}
+        />
       </div>
     </div>
   );

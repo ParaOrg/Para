@@ -72,25 +72,16 @@ body,
   left: env(safe-area-inset-left);
 }
 /*
- * The studio's top-right corner holds the design button and its Map Style
- * card (BasemapControl), which hangs down the map's right edge: at z 10, as
- * the button was before it became a corner control (2026-10-16), so a card
- * is never under a button that would take its taps. MapLibre's own 2 would
- * put it under.
+ * The top-right corner holds the design button and its Map Style card
+ * (BasemapControl), which hangs down the map's right edge: above the
+ * LocatorButton's dock (z 5) as the button was at z-10 before it became a
+ * corner control (2026-10-16), so a card is never under a button that would
+ * take its taps. MapLibre's own 2 would put it under.
  */
 .maplibregl-ctrl-top-right {
   top: env(safe-area-inset-top);
   right: env(safe-area-inset-right);
   z-index: 10;
-}
-/*
- * The public map's holds only the credits since the button moved above the
- * LocatorButton (2026-10-16): MapLibre's own 2 again, under the LocatorButton's
- * dock (z 5), so the card opening up from there is never under the credits.
- * The dock's host is the public map's page; the studio has none.
- */
-[data-dock-host] .maplibregl-ctrl-top-right {
-  z-index: 2;
 }
 .maplibregl-ctrl-bottom-left {
   bottom: env(safe-area-inset-bottom);

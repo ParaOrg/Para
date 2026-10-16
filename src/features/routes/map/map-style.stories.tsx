@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { fn } from 'storybook/test';
 
 import { BASEMAPS, type Basemap } from './basemap';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
@@ -48,25 +48,6 @@ const STUDIO_LIKE: readonly Basemap[] = [
 
 /** The studio's five, three a row (the owner, 2026-10-16); here Terrain and Satellite without pictures. */
 export const FiveWrap: Story = { args: { basemaps: STUDIO_LIKE, selectedId: 'terrain' } };
-
-/**
- * Opening up, from a button under it (the public map's, above the
- * LocatorButton since 2026-10-16): the same card, popping out of its bottom
- * right corner and shrinking back into it.
- */
-export const OpensUp: Story = {
-  args: { opens: 'up' },
-  play: async ({ canvasElement }) => {
-    const card = within(canvasElement).getByRole('dialog', { name: 'Map Style' });
-    await expect(card).toHaveAttribute('data-opens', 'up');
-    // Its bottom right, in px: the card's own width and height.
-    await waitFor(() => {
-      const [x, y] = getComputedStyle(card).transformOrigin.split(' ').map(parseFloat);
-      expect(Math.abs(x - card.offsetWidth)).toBeLessThan(1);
-      expect(Math.abs(y - card.offsetHeight)).toBeLessThan(1);
-    });
-  },
-};
 
 /** No picture for any design: plain tiles, the names still read. */
 export const NoPictures: Story = { args: { thumbnails: {} } };
