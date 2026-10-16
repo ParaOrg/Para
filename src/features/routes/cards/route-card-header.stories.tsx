@@ -7,8 +7,8 @@ import { RouteCardHeader } from './route-card-header';
  * The top of the route list and of a trip (Figma 3742:1049): Default, the
  * Jeep and the count, over a list; Variant2, ‹ back, over a trip. SWITCH is
  * pressed while the way back shows, and rests disabled when the other way
- * round has nothing drawn. Rendered by hand: its two shapes of props do not
- * make one set of args.
+ * round has nothing drawn. On a train it names the bound (wayWord).
+ * Rendered by hand: its two shapes of props do not make one set of args.
  */
 const meta: Meta = {
   title: 'Features/Routes/RouteCardHeader',
@@ -34,7 +34,7 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
-const common = { onSwitch: fn(), onClose: fn(), switchable: true, back: false };
+const common = { onSwitch: fn(), onClose: fn(), switchable: true, back: false, way: 'Papunta' };
 
 /** Over the route list: the Jeep and the count. */
 export const Default: Story = {
@@ -53,7 +53,7 @@ export const Hotspots: Story = {
 
 /** The way back showing: SWITCH pressed. */
 export const WayBack: Story = {
-  render: () => <RouteCardHeader {...common} back routeCount="2 Routes" />,
+  render: () => <RouteCardHeader {...common} back way="Pabalik" routeCount="2 Routes" />,
 };
 
 /** Nothing drawn the other way round: SWITCH rests disabled. */
@@ -64,6 +64,16 @@ export const NothingToSwitchTo: Story = {
 /** Over a trip (Variant2): ‹ back to what it was picked from. */
 export const OverATrip: Story = {
   render: () => <RouteCardHeader {...common} onBackToList={fn()} />,
+};
+
+/** Over a train's trip: SWITCH names its bound (the owner's ask, 2026-10-15). */
+export const OverATrain: Story = {
+  render: () => <RouteCardHeader {...common} way="Southbound" onBackToList={fn()} />,
+};
+
+/** LRT-2 runs east–west: Eastbound and Westbound. */
+export const OverAnEastWestTrain: Story = {
+  render: () => <RouteCardHeader {...common} back way="Westbound" onBackToList={fn()} />,
 };
 
 /** A trip opened on its own, no route sharing an end drawn its way round: no ‹. */
