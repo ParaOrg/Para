@@ -16,7 +16,7 @@ export interface Room {
 }
 
 /** What the room is worked out from: a box on the page, as getBoundingClientRect gives it. */
-export interface Rect extends Room {
+interface Rect extends Room {
   height: number;
 }
 

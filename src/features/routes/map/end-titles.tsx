@@ -11,7 +11,7 @@ import {
 } from './route-line-endings-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
-import { TimelineDot } from '../cards/timeline-route-detail';
+import { TimelineDot } from '../cards/timeline-dot';
 import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { isRailLine } from '../model/routes';
@@ -73,7 +73,7 @@ import './end-titles.css';
  *
  * Given `onPick`, a pill whose ride says which hotspot it ends at is a
  * button: a tap opens that place (the owner's ask, 2026-10-01), and the map
- * beneath never hears it (markerTap.ts). Without one, or a hotspot, it takes
+ * beneath never hears it (marker-tap.ts). Without one, or a hotspot, it takes
  * no taps, and a tap on it reaches the line or the box beneath; the circle
  * never takes one, as the picked hintuan's does not.
  *
@@ -141,7 +141,7 @@ export function EndTitles({
   );
 }
 
-/** The circle across: TimelineDot at rest (timeline-route-detail.tsx), its centre on the point. */
+/** The circle across: TimelineDot at rest (timeline-dot.tsx), its centre on the point. */
 const DOT_PX = 24;
 
 /** What a pill's button says before the name: which end, as its icon shows it. */

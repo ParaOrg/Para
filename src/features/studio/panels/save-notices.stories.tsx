@@ -19,7 +19,6 @@ const straight: Segment = { snap: 'freehand', coordinates: [from, to] };
 const parent: DirectionRow = {
   id: 'sample-out',
   routeId: 'sample-route',
-  ownerId: 'sample-owner',
   name: 'Tala → SM Fairview',
   originTerminal: null,
   destinationTerminal: null,
@@ -29,7 +28,6 @@ const parent: DirectionRow = {
   updatedAt: '2026-09-21T00:00:00Z',
   route: {
     id: 'sample-route',
-    ownerId: 'sample-owner',
     signboard: null,
     routeCode: null,
     shortName: null,

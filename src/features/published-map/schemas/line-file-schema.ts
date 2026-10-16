@@ -20,4 +20,3 @@ export const lineFileSchema = z.looseObject({
   pass: z.optional(z.unknown()),
   passKey: z.optional(z.unknown()),
 });
-export type LineFile = z.infer<typeof lineFileSchema>;

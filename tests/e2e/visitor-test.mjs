@@ -207,7 +207,7 @@ await page.waitForTimeout(1200);
 
 // 0. The map is made framed on the routes (the owner's Q1, 2026-10-04):
 // where their fit put it after the map's 'load' until then — the box round
-// every overview in the published file, 100 px clear of the edges, zoom 13
+// every overview in the published map, 100 px clear of the edges, zoom 13
 // at most — and the fit no longer moves it. phone-test holds the same at a
 // phone's size, and a finger moving the map before the routes come.
 {
@@ -1680,7 +1680,7 @@ if (PART === 1) {
 const lsCount = await page.evaluate(() => Object.keys(localStorage).length);
 check('localStorage stays empty', lsCount === 0, lsCount ? `${lsCount} key(s)` : '');
 check('no request to router.project-osrm.org', !osrmHit);
-// Since step 5 the public map is one published file; the database is never asked.
+// Since step 5 the public map is one published map; the database is never asked.
 check('no request to the database (*.supabase.co)', !supabaseHit);
 check(
   'the map came from /data/index.v4.json, fetched once and served',

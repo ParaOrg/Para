@@ -5,7 +5,7 @@ import { M_PER_DEG, haversine, pointToSegmentM, type LngLat } from '@/shared/uti
  * an earlier lit line already flows on, and each one's polygon, shaped in
  * screen pixels. Pure — the map is only its view — so a unit test can hold
  * it (chevrons-test). useDirectionArrows moves them. Split from
- * directionArrows.ts, 2026-09-29.
+ * direction-arrows.ts, 2026-09-29.
  */
 
 /** What of the map is on screen, and at what zoom: all a frame of chevrons needs of it. */

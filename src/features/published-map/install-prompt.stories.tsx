@@ -16,7 +16,9 @@ type Story = StoryObj<typeof meta>;
 /** Over the page, centred, at most 384 wide (3732:2512). On a phone, 16 in from each side. */
 export const Default: Story = {
   play: async ({ canvasElement, args }) => {
-    const dialog = within(canvasElement.ownerDocument.body).getByRole('dialog', {
+    // Found, not got: the dialog opens in an effect, which a built Storybook
+    // (no act() in production) runs only after the play has begun.
+    const dialog = await within(canvasElement.ownerDocument.body).findByRole('dialog', {
       name: 'Welcome to Para Po',
     });
     await expect(dialog).toBeVisible();
@@ -36,10 +38,12 @@ export const Phone: Story = {
 /** "I'll do it later", and Escape the same. */
 export const Later: Story = {
   play: async ({ canvasElement, args }) => {
-    const dialog = within(canvasElement.ownerDocument.body).getByRole('dialog');
+    const dialog = await within(canvasElement.ownerDocument.body).findByRole('dialog');
     await userEvent.click(within(dialog).getByRole('button', { name: 'I’ll do it later' }));
     await expect(args.onLater).toHaveBeenCalledOnce();
-    await userEvent.keyboard('{Escape}');
+    // The browser answers a real Escape with `cancel` on the modal; a scripted
+    // keypress is untrusted and gets no such default, so the play sends it.
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
     await expect(args.onLater).toHaveBeenCalledTimes(2);
   },
 };

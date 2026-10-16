@@ -1,6 +1,6 @@
 /*
- * The picked hintuan's circle (HintuanPin.tsx) and the open trip's hintuans
- * along its line (StationLabels.tsx; a train's stations alone until
+ * The picked hintuan's circle (hintuan-pin.tsx) and the open trip's hintuans
+ * along its line (station-labels.tsx; a train's stations alone until
  * 2026-10-12); both import this sheet, so only the maps that draw them load
  * it. The marker's own element is MapLibre's to move — it sets its
  * transform — so the pop is on the circle inside, TimelineDot's own span,
@@ -11,7 +11,7 @@
 .hintuan-pin {
   pointer-events: none;
 }
-/* A hintuan's dot and name, one button (StationLabels.tsx); the picked hintuan's circle never takes a tap. */
+/* A hintuan's dot and name, one button (station-labels.tsx); the picked hintuan's circle never takes a tap. */
 button.station-label-tap {
   pointer-events: auto;
   cursor: pointer;
@@ -21,7 +21,7 @@ button.station-label-tap {
   animation: hintuan-pin-pop var(--transition-duration-base) var(--ease-enter) both;
 }
 /*
- * A hintuan further out (StationLabels.tsx): its dot smaller. On
+ * A hintuan further out (station-labels.tsx): its dot smaller. On
  * the dot, not the marker: MapLibre moves the marker by its transform, and
  * a scale there would scale where it sits too. `scale`, not `transform`,
  * so the pop keeps its own.

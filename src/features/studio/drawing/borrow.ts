@@ -164,7 +164,7 @@ function nearestOnCoords(
  * A saved direction that a right-click while drawing may mean to follow: its
  * line in travel order, and whether it ends at the place the drawing is for.
  */
-export interface FollowOption<V> {
+interface FollowOption<V> {
   v: V;
   travel: readonly LngLat[];
   endsAtDestination: boolean;
