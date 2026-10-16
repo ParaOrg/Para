@@ -284,6 +284,9 @@ export const RideStartJeep: Story = {
 /**
  * Variant4 (4151:13124): start at Shaw Boulevard, Ayala tapped: the ride
  * Shaw Boulevard → Ayala, the rail broken just above it and just below it.
+ * The S's pill its code alone, the E's its code and the ride's pesos (the
+ * owner, 2026-10-16: "Pill on start is only the codesign of that station, no
+ * price / the end should have both price and codesign").
  */
 export const RideStartAndEnd: Story = {
   args: {
@@ -305,7 +308,8 @@ export const RideStartAndEndOpened: Story = { ...RideStartAndEnd, play: openFold
 
 /**
  * Variant5 (4151:13619): Shaw Boulevard the start, then Quezon Avenue tapped
- * above it, the end: E above S, both pills, the ride between them ridden back
+ * above it, the end: E above S, the S's pill its code, the E's its code and
+ * the pesos, the ride between them ridden back
  * along the line (the owner, 2026-10-16: "reverse the arrow, dont' switch
  * please"; that morning the row tapped became the start). The rail breaks
  * just above Quezon Avenue and just below Shaw Boulevard, under its × Remove
@@ -325,19 +329,35 @@ export const RideEndAboveStart: Story = {
 /**
  * Shaw Boulevard the start, then Taft Avenue's row tapped (the owner,
  * 2026-10-16: "keep the start"): the ride from Shaw Boulevard on to it, its
- * E on Taft Avenue, the stations above folded.
+ * E on Taft Avenue with its pill, YL13 and the pesos ("the end should have
+ * both price and codesign"), the stations above folded.
  */
 export const RideStartToDestination: Story = {
-  args: { ...onMrt3, start: shaw, startCode: 'YL07', endPicked: 'to', pickedPesos: '₱13' },
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    endPicked: 'to',
+    pickedCode: 'YL13',
+    pickedPesos: '₱13',
+  },
 };
 
 /**
  * Shaw Boulevard the start, then North Avenue's row tapped: the ride back
  * from Shaw Boulevard to it, as an end above the start, its E on North
- * Avenue, the stations after the start folded.
+ * Avenue with its pill, YL01 and the pesos, the stations after the start
+ * folded.
  */
 export const RideStartToOrigin: Story = {
-  args: { ...onMrt3, start: shaw, startCode: 'YL07', endPicked: 'from', pickedPesos: '₱13' },
+  args: {
+    ...onMrt3,
+    start: shaw,
+    startCode: 'YL07',
+    endPicked: 'from',
+    pickedCode: 'YL01',
+    pickedPesos: '₱13',
+  },
 };
 
 /** A jeep's ride between two hintuans: the pesos alone in the pill, the same buttons. */

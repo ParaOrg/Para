@@ -267,6 +267,11 @@ export function TimelineRouteDetail({
   };
   /** Whether the rail runs on below row `i` (-1 the origin) to what comes after it. */
   const hasRailBelow = (i: number) => isFoldEnd(i) || sideOf(i) === sideOf(i + 1);
+  // An end of the trip picked as the ride's end, with a start: its pill, as
+  // a hintuan end's, its station's code and the ride's pesos (the owner,
+  // 2026-10-16: "the end should have both price and codesign").
+  const endRowPill: RouteTripLineDetailPillContent | null =
+    start !== null && pickedPesos ? { code: pickedCode, pesos: pickedPesos } : null;
   /** Whether the rail reaches row `i` (the row count the destination) from what comes before it. */
   const hasRailAbove = (i: number) => sideOf(i - 1) === sideOf(i);
   // Every row's Pressed: the rail's colour, while the finger is down.
@@ -299,6 +304,7 @@ export function TimelineRouteDetail({
           pressed={pressed}
           routeOrigin={routeOrigin}
           mark={originMark(start, endPicked)}
+          pill={endPicked === 'from' ? endRowPill : null}
           connection={hasRailBelow(-1) ? 'connected' : 'disconnected'}
           selected={endPicked === 'from'}
           onTap={() => onEnd('from')}
@@ -313,7 +319,6 @@ export function TimelineRouteDetail({
             isStart,
             isEnd,
             hasStart: start !== null,
-            hasEnd: picked !== null || endPicked !== null,
             startCode,
             pickedCode,
             pickedPesos,
@@ -358,6 +363,7 @@ export function TimelineRouteDetail({
           pressed={pressed}
           routeDirection={routeDirection}
           isEnd={picked === null && (start === null || endPicked === 'to')}
+          pill={endPicked === 'to' ? endRowPill : null}
           connection={hasRailAbove(hintuans.length) ? 'connected' : 'disconnected'}
           selected={endPicked === 'to'}
           onTap={() => onEnd('to')}
@@ -428,6 +434,7 @@ function TimelineTop({
   pressed,
   routeOrigin,
   mark,
+  pill,
   connection,
   selected,
   onTap,
@@ -439,6 +446,8 @@ function TimelineTop({
   routeOrigin: string;
   /** Start's S or End's E before its name, or neither (originMark). */
   mark: 'start' | 'end' | null;
+  /** As the ride's end, its pill after its name; else null. */
+  pill: RouteTripLineDetailPillContent | null;
   /** Disconnected where a ride, or a start alone, starts at the first hintuan: the rail breaks under it. */
   connection: TimelineStickConnection;
   selected: boolean;
@@ -469,6 +478,7 @@ function TimelineTop({
           >
             {routeOrigin}
           </span>
+          {pill && <EndRowPill livery={livery} pill={pill} />}
         </span>
       </button>
     </li>
@@ -522,17 +532,17 @@ interface RowRole {
  * What a hintuan's row wears for the picks (the owner's TimelineRouteDetail,
  * 2026-10-15): the start's row its S and × Remove as start under it; the
  * end's its E, and Set as start under it while no start is picked
- * (Choosing); any other row, nothing. The start's and the end's pills alike
- * say the station's code and the ride's pesos, as Variant4 draws them (the
- * owner's yes, 2026-10-16), and a ride with no fare has none. A start alone
- * has no ride to price: a train's says its code alone (his Variant3,
- * 2026-10-16), a jeep's has no pill.
+ * (Choosing); any other row, nothing. The start's pill says its station's
+ * code alone, and the end's its code and the ride's pesos (the owner,
+ * 2026-10-16: "Pill on start is only the codesign of that station, no
+ * price / the end should have both price and codesign"; that morning both
+ * carried the pesos, as Variant4 draws them): a jeep's start, with no code,
+ * has none, and a ride with no fare no pill on its end.
  */
 function rowRole(row: {
   isStart: boolean;
   isEnd: boolean;
   hasStart: boolean;
-  hasEnd: boolean;
   startCode: string | null;
   pickedCode: string | null;
   pickedPesos?: string;
@@ -542,10 +552,9 @@ function rowRole(row: {
   const priced = (code: string | null) =>
     row.pickedPesos ? { code, pesos: row.pickedPesos } : null;
   if (row.isStart) {
-    const codeAlone = row.startCode === null ? null : { code: row.startCode };
     return {
       mark: 'start',
-      pill: row.hasEnd ? priced(row.startCode) : codeAlone,
+      pill: row.startCode === null ? null : { code: row.startCode },
       action: row.onRemoveStart
         ? { label: 'Remove as start', isRemove: true, onTap: row.onRemoveStart }
         : null,
@@ -763,6 +772,7 @@ function TimelineBottomEndRoute({
   pressed,
   routeDirection,
   isEnd,
+  pill,
   connection,
   selected,
   onTap,
@@ -774,6 +784,8 @@ function TimelineBottomEndRoute({
   routeDirection: string;
   /** Where the ride ends, End's E before its name: no hintuan picked as the end, and no start alone (Variant3), or picked itself with a start kept. */
   isEnd: boolean;
+  /** As the ride's end, its pill after its name; else null. */
+  pill: RouteTripLineDetailPillContent | null;
   /** Disconnected where a ride, or a start alone, ends at the last hintuan: the rail breaks above it. */
   connection: TimelineStickConnection;
   selected: boolean;
@@ -799,9 +811,22 @@ function TimelineBottomEndRoute({
               Timeline set (3716:1894) draws it Medium, ExtraBold picked; the
               owner kept the trip frame's Bold on 2026-10-13. */}
           <span className="min-w-0 flex-1 text-xl/7 font-bold">{routeDirection}</span>
+          {pill && <EndRowPill livery={livery} pill={pill} />}
         </span>
       </button>
     </li>
+  );
+}
+
+/**
+ * An end row's pill, 8 after its name as a hintuan's is (the 4 of the row's
+ * gap and 4 more), centred on the name's 28 line.
+ */
+function EndRowPill({ livery, pill }: { livery: Livery; pill: RouteTripLineDetailPillContent }) {
+  return (
+    <span className="ml-1 flex h-7 shrink-0 items-center">
+      <RouteTripLineDetailPill livery={livery} {...pill} />
+    </span>
   );
 }
 
