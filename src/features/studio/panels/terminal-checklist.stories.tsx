@@ -105,3 +105,13 @@ export const Empty: Story = {
 
 /** Many routes: the list scrolls inside the panel. */
 export const LongList: Story = { args: { groups: MANY, ticked: new Set() } };
+
+/**
+ * A long list at a phone's width, in the panel's full-screen sheet: the
+ * sheet follows the viewport, not this box.
+ */
+export const Phone: Story = {
+  args: { groups: MANY, ticked: new Set(['tala-0']) },
+  parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};

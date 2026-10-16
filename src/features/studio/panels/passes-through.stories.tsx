@@ -89,3 +89,12 @@ export const Empty: Story = {
     ).toBeVisible();
   },
 };
+
+/**
+ * At a phone's width, in the panel's full-screen sheet, the ways wrapping
+ * under their route: the sheet follows the viewport, not this box.
+ */
+export const Phone: Story = {
+  parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};
