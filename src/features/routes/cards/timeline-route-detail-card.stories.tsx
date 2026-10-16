@@ -586,7 +586,8 @@ export const EndRowKeepsStart: Story = {
  * users"): Amparo is the end, above Bistek, the start, and the ride runs
  * back between them. The rail breaks just above Amparo and just below
  * Bistek, running on along the rows outside the ride ("can you still connect
- * those dots"). The keyboard's focus stays on Amparo.
+ * those dots"). The keyboard's focus stays on Amparo; then the hintuans
+ * above the ride are opened, the rail running through them.
  */
 export const EndAboveStart: Story = {
   args: {

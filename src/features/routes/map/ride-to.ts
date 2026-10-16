@@ -310,9 +310,9 @@ export function useRideTo(
    * picked as the end (his "keep the start", the same day), the way back
    * leaving from there. A start ridden back to the origin rides the way the
    * way back runs: it stays the start, and the origin, where the way back
-   * goes, its end (Claude's call, 2026-10-16, the owner's to confirm: a
-   * swap would start the way back at its own destination, which no start
-   * can). On a train SWITCH lets the picks go, as before (the owner,
+   * goes, its end (Claude's call, 2026-10-16, the owner's "ok as is" the
+   * same day: a swap would start the way back at its own destination, which
+   * no start can). On a train SWITCH lets the picks go, as before (the owner,
    * 2026-10-15: "trains reset, jeeps keep").
    */
   const carryTo = useCallback(
