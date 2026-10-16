@@ -114,10 +114,10 @@ export interface Timeline {
  * the boxes of one place passed one after another — a mini hotspot on each
  * side of the road, or the several of SM Fairview — are one row, and a box's
  * own ground name is for the hotspot card, not the route. The ends' places
- * are left out of the middle: the rider is already getting off there. When
- * the line was drawn from the far end (the save panel allows it with a
- * warning) and `lineStart` says so, the middle is turned round to read in
- * travel order. The row keeps the first box's id.
+ * are left out of the middle: the rider is already getting off there. The
+ * owner's model. When the line was drawn from the far end (the save panel
+ * allows it with a warning) and `lineStart` says so, the middle is turned
+ * round to read in travel order. The row keeps the first box's id.
  */
 export function timelineFor(
   head: Hotspot | null | undefined,

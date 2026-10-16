@@ -21,7 +21,7 @@ export function placeKey(s: Pick<Hotspot, 'name' | 'informal'>): string {
  * The other boxes of this box's place — SM Fairview's terminal and hintuans
  * when one of them is tapped — terminal first, then by name. Empty for a place
  * with one box. What the card's "Part of …" line lists, so a rider who tapped
- * a hintuan can find the terminal.
+ * a hintuan can find the terminal. Decided with the owner.
  */
 export function siblingsOf<S extends Hotspot>(hotspot: Hotspot, all: readonly S[]): S[] {
   const key = placeKey(hotspot);
@@ -72,7 +72,8 @@ export function placeBoxes<S extends Hotspot>(
  * way passes it (a box drawn across both sides of the road serves both), else
  * the nearest box of the same place that it passes, across the road; null when
  * it passes none. HintuanCard's SWITCH moves its selection so, and a jeep's
- * trip keeps its picked hintuan the same way over Papunta and Pabalik.
+ * trip keeps its picked hintuan the same way over Papunta and Pabalik (the
+ * owner's call).
  */
 export function boxTheOtherWay<S extends Hotspot>(
   box: S,
@@ -95,6 +96,7 @@ export function boxTheOtherWay<S extends Hotspot>(
  * "terminal + hintuan · 2 mini stops", "hintuan · 2 mini stops" (the owner's
  * wording, kept as is): what a place is made of. A place's hintuan boxes are
  * one hintuan to a rider; each box is a mini hotspot, there for information.
+ * The owner's model.
  */
 export function placeSummary(boxes: readonly Hotspot[]): string {
   const terminals = boxes.filter((s) => s.kind === 'terminal').length;
@@ -107,8 +109,8 @@ export function placeSummary(boxes: readonly Hotspot[]): string {
 
 /**
  * How many hotspots there are, as a rider counts them: each terminal, and each
- * place's hintuan once however many mini hotspots it has. The studio's pill
- * and the route list's header read it.
+ * place's hintuan once however many mini hotspots it has: the owner's rule.
+ * The studio's pill and the route list's header read it.
  */
 export function hotspotCount(hotspots: readonly Hotspot[]): number {
   const hintuans = new Set(hotspots.filter((s) => s.kind === 'hintuan').map(placeKey));
@@ -121,8 +123,8 @@ export const SAME_HINTUAN_M = 100;
 /**
  * One map label per hintuan: boxes of the same kind and name within
  * SAME_HINTUAN_M of each other — one traced on each side of the road — share a
- * label halfway between them, so one hintuan does not read as two (Bestlink is
- * one). Farther apart, each keeps its own.
+ * label halfway between them, so one hintuan does not read as two: the owner's
+ * call, from Bestlink's two boxes. Farther apart, each keeps its own.
  */
 export function labelGroups<S extends Hotspot>(
   hotspots: readonly S[],

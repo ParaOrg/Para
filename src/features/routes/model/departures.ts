@@ -41,8 +41,8 @@ export interface Departures<V extends Direction> {
  * The routes under a tap one way round — outbound, or with `back` the way
  * back — gathered by the place each leaves from, in the order met. Tala → SM
  * Fairview and Tala → Novaliches read as Tala, then its two ends; the way
- * back reads SM Fairview, then Tala, and Novaliches, then Tala. A direction
- * still a slot is listed, marked undrawn.
+ * back reads SM Fairview, then Tala, and Novaliches, then Tala. The owner's
+ * layout. A direction still a slot is listed, marked undrawn.
  */
 export function departures<V extends Direction>(
   directions: readonly V[],
@@ -63,7 +63,7 @@ export function departures<V extends Direction>(
 
 /**
  * `departures`, the drawn directions only, and no place left with none: what
- * the route cards list: a row that opens nothing is no row.
+ * the route cards list, the owner's call: a row that opens nothing is no row.
  */
 export function drawnDepartures<V extends Direction>(
   directions: readonly V[],
@@ -76,8 +76,9 @@ export function drawnDepartures<V extends Direction>(
 
 /**
  * The direction a route opens with when it is picked as a whole: the outbound
- * when it has a line, else the return — predictable, and ⇄ is one tap away.
- * Null only for a route with nothing drawn, which no tap can reach.
+ * when it has a line, else the return — predictable, and ⇄ is one tap away
+ * (the owner's call). Null only for a route with nothing drawn, which no tap
+ * can reach.
  */
 export function directionToOpen<V extends Direction>(directions: readonly V[]): V | null {
   return (
@@ -105,7 +106,7 @@ export function otherDirection<V extends Direction>(all: readonly V[], of: V): V
  * that is a change of jeep, not another way. An old file's route may carry no
  * ends; it then shares none. The trip's own route leads, so the card its ‹
  * lists it on leads with it and wears its colour (liveries.ts: a card wears
- * its first row's route's, so the colour does not change).
+ * its first row's route's, so a route keeps one colour; the owner's call).
  */
 export function sharingAnEnd<V extends Direction>(all: readonly V[], of: V): V[] {
   const { headHotspotId: head, tailHotspotId: tail } = of.route;
@@ -140,10 +141,10 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
  * says the other way's word (switchWord).
  *
  * On a train it is the bound the riders and the operators say, Northbound or
- * Southbound, Eastbound or Westbound on LRT-2 (railBound). One word fits
- * every direction on show: a list with jeeps and trains, or two lines bound
- * different ways, keeps Papunta and Pabalik, and so does the ferry, which has
- * no bound.
+ * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's call).
+ * One word fits every direction on show: a list with jeeps and trains, or two
+ * lines bound different ways, keeps Papunta and Pabalik, and so does the
+ * ferry, which has no bound.
  */
 export function wayWord(back: boolean, showing: readonly Direction[]): string {
   const bounds = new Set(showing.map(railBound));
@@ -153,11 +154,11 @@ export function wayWord(back: boolean, showing: readonly Direction[]): string {
 }
 
 /**
- * The word on SWITCH: the way a tap leads to, not the way showing: on a
- * Papunta card SWITCH reads Pabalik, on a Pabalik one Papunta, so a commuter
- * reads where a tap leads. The showing way's word is the header's (wayWord).
- * On a train it is the other bound, Southbound on a Northbound card, by the
- * same one-word-fits-all rule as wayWord's.
+ * The word on SWITCH is the way a tap leads to, not the way showing (the
+ * owner's call): on a Papunta card SWITCH reads Pabalik, on a Pabalik one
+ * Papunta, so a commuter reads where a tap leads. The showing way's word is
+ * the header's (wayWord). On a train it is the other bound, Southbound on a
+ * Northbound card, by the same one-word-fits-all rule as wayWord's.
  */
 export function switchWord(back: boolean, showing: readonly Direction[]): string {
   const bounds = new Set(showing.map(railBound));

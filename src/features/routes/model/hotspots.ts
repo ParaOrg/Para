@@ -25,10 +25,10 @@ export function hotspotLabel(s: Pick<Hotspot, 'name' | 'informal'>): string {
 
 /**
  * The name a hotspot's label on the map shows: a station's without its line
- * in front, "MRT-3 Boni Station" → "Boni Station"; the line drawn through it
- * in its colour says which line already. Every other name as it is, and a
- * station's too when it does not start with its line. The saved name keeps
- * the line: cards and searches read it whole.
+ * in front, "MRT-3 Boni Station" → "Boni Station" (the owner's call); the
+ * line drawn through it in its colour says which line already. Every other
+ * name as it is, and a station's too when it does not start with its line.
+ * The saved name keeps the line: cards and searches read it whole.
  */
 export function nameOnMap(s: Pick<Hotspot, 'name' | 'line'>): string {
   const name = normaliseName(s.name);

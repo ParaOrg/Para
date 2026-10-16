@@ -61,16 +61,18 @@ interface RideDot {
 }
 
 /**
- * The ride cut short at one hintuan — what tapping a timeline row previews.
- * The row is a place; each of its mini hotspots the line passes gets a dot at
- * the middle of its orange stretch (`passStretches`, the one rule, walked
- * rather than the stored `sequence`, which indexes the editor's full line and
- * overshoots the published, thinned one). The ride ends at `endHotspotId`'s
- * dot when given — tapping a dot toggles the get-off side without moving the
- * hintuan — and at the last dot otherwise. `ridden` runs from the place this
- * direction leaves: it is cut from `travelLine`, turned to rider order by the
- * one rule `timelineFor` reads the middle with (drawnFromTheEnd). `rest` is
- * the way not ridden, for the map to fade.
+ * The ride cut short at one hintuan: where its row's dot sits (`at`), how far
+ * in (`metres`) and which box it is (`endHotspotId`), which the picks, the
+ * camera and rowStops read. The row is a place; each of its mini hotspots the
+ * line passes gets a dot at the middle of its orange stretch
+ * (`passStretches`, the one rule, walked rather than the stored `sequence`,
+ * which indexes the editor's full line and overshoots the published, thinned
+ * one). The ride ends at `endHotspotId`'s dot when given (timeline-test pins
+ * it; the app passes none) and at the last dot otherwise. `ridden` runs from
+ * the place this direction leaves, cut from `travelLine`, turned to rider
+ * order by the one rule `timelineFor` reads the middle with
+ * (drawnFromTheEnd); `rest` is the way not ridden. Only the unit tests read
+ * `ridden`, `rest` and `dots`.
  */
 export function rideCut(
   v: Direction,
@@ -137,7 +139,7 @@ interface RideSpan {
  * (rideCut's `at`, rowStops), so the S and E on the map sit on the dots. An
  * end before the start is ridden back along the trip's own line, the S and
  * the E left where they were picked, rather than switched, which would
- * confuse a commuter.
+ * confuse a commuter (the owner's call).
  *
  * Null when nothing is picked, or when the line misses a picked row's box
  * (that row is shown picked with nothing to price).
@@ -159,9 +161,9 @@ export function rideSpan(
 
 /**
  * The ride on `v` from the start row to one of the trip's own ends, picked
- * from its row with the start kept: on to where it goes, or back to where it
- * leaves, ridden back along the line as any end above the start is. Null when
- * the line misses the start's box.
+ * from its row with the start kept (the owner's call): on to where it goes,
+ * or back to where it leaves, ridden back along the line as any end above the
+ * start is. Null when the line misses the start's box.
  */
 export function rideToEnd(
   v: Direction,
@@ -207,8 +209,8 @@ function spanAlong(line: readonly LngLat[], start: number, end: number): RideSpa
  * The rows of a trip's timeline outside its ride: outside the stretch between
  * the start's row and the end's, whichever is above. A null start is the
  * origin; with no end, no ride, and nothing outside it. The card folds these
- * rows, its rail broken where the ride starts and ends, and the map's dots
- * along them wear the pale.
+ * rows, its rail broken where the ride starts and ends (the owner's Variant5,
+ * 4151:13619), and the map's dots along them wear the pale.
  */
 export function rowsOutsideRide(
   rows: readonly { id: string }[],
@@ -238,12 +240,12 @@ export function rowsOutsideStartAlone(
  * whichever of the start and the end is above (an end tapped above the start
  * stays the end, ridden back along the line: rideSpan). -1 is the origin, a
  * start left there. Null with no end picked — nothing, or a start alone, no
- * ride yet until its end is picked (Figma Variant3: the S stands alone, so a
- * start alone does not read as a ride) — or with a pick that is no row of
- * these (another trip's, a moment before it goes): the whole ride. `endRow`,
- * an end row picked with the start kept (rideToEnd): the ride from the
- * start's row to the destination, the row count, or back to the origin, -1.
- * The one rule the card's rail and folds read (rowsOutsideRide).
+ * ride yet until its end is picked (the owner's Variant3: the S stands alone,
+ * so a start alone does not read as a ride) — or with a pick that is no row
+ * of these (another trip's, a moment before it goes): the whole ride.
+ * `endRow`, an end row picked with the start kept (rideToEnd): the ride from
+ * the start's row to the destination, the row count, or back to the origin,
+ * -1. The one rule the card's rail and folds read (rowsOutsideRide).
  */
 export function rideRows(
   rows: readonly { id: string }[],
@@ -271,15 +273,15 @@ interface RowStop {
 
 /**
  * Where each hintuan row of a trip sits on the map — the dots along every lit
- * route, a jeepney's as a train's: on the line, at the middle of the stretch
- * past the row's last box, where the picked circle pops (rideCut's `at`), so
- * a pick replaces the dot in its own spot. A row whose box the line misses
- * sits at its hotspot's own point, as its pin does (useRideTo's pinAt). Each
- * row cuts the line once more here: a trip's twenty-five rows walk a line of
- * a few thousand points a few times each — twice as a trip opens, on its
- * overview and then its full line, and again as the studio reloads its
- * hotspots (StationLabels memoises it) — tens of milliseconds on a cheap
- * phone, which is nothing beside drawing them.
+ * route, a jeepney's as a train's (the owner's call): on the line, at the
+ * middle of the stretch past the row's last box, where the picked circle pops
+ * (rideCut's `at`), so a pick replaces the dot in its own spot. A row whose
+ * box the line misses sits at its hotspot's own point, as its pin does
+ * (useRideTo's pinAt). Each row cuts the line once more here: a trip's
+ * twenty-five rows walk a line of a few thousand points a few times each —
+ * twice as a trip opens, on its overview and then its full line, and again as
+ * the studio reloads its hotspots (StationLabels memoises it) — tens of
+ * milliseconds on a cheap phone, which is nothing beside drawing them.
  */
 export function rowStops(
   v: Direction,
@@ -322,7 +324,7 @@ const reversed = new WeakMap<readonly LngLat[], readonly LngLat[]>();
  * — a full line read, a save, a reload — is a new key, never a stale copy;
  * and the copy is handed out read-only, so no caller can change what the next
  * one gets. Otherwise every hook that asks (the chevrons, the babaan sides,
- * the ride-to cut) would make its own copy at every render.
+ * the ride-to cut) would make a copy of its own each time it runs.
  */
 function reversedOf(line: readonly LngLat[]): readonly LngLat[] {
   let r = reversed.get(line);
