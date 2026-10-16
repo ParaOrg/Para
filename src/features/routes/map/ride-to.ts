@@ -8,7 +8,7 @@ import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
 import { rideCut, rideSpan, rideToEnd, travelLine } from '../model/ride';
-import { isRailLine, railLineOf, type Direction } from '../model/routes';
+import { directionEnds, isRailLine, railLineOf, type Direction } from '../model/routes';
 
 /**
  * The ride between the picks as the map draws it (useLitRides): `line`, the
@@ -277,6 +277,11 @@ export function useRideTo(
 
   const pickedHotspot = live ? hotspots.find((s) => s.id === live.rowId) : undefined;
   const pickedLabel = pickedHotspot ? hotspotLabel(pickedHotspot) : null;
+  // The ride's end: the picked hintuan, or, with a start, the end of the trip
+  // picked from its row, whose pill names its station too (the owner,
+  // 2026-10-16: "the end should have both price and codesign").
+  const endLabel =
+    pickedLabel ?? (liveStart && endPicked && selected ? directionEnds(selected)[endPicked] : null);
   const startHotspot = liveStart ? hotspots.find((s) => s.id === liveStart.rowId) : undefined;
   const startLabel = startHotspot ? hotspotLabel(startHotspot) : null;
   const line = selected?.route?.routeCode;
@@ -384,10 +389,11 @@ export function useRideTo(
      * On a train line, the picked station's code, GL02, in a white chip
      * before its name on the map (HintuanPin, RouteLineLabel's CodeSignEnd,
      * 2026-10-13; a box left of its circle from the owner's LRTHintuanCodes
-     * of 2026-10-12); null for a jeepney's hintuan, the ferry's, and a
-     * station the table does not know.
+     * of 2026-10-12); with a start, an end of the trip picked as the ride's
+     * end names its own station, for its pill on the card. Null for a
+     * jeepney's hintuan, the ferry's, and a station the table does not know.
      */
-    pickedCode: pickedLabel && isRailLine(line) ? stationCode(line, pickedLabel) : null,
+    pickedCode: endLabel && isRailLine(line) ? stationCode(line, endLabel) : null,
     pick,
     /** The row made the ride's start (Set as start), or null: the ride leaves where the direction does. */
     startId: liveStart?.rowId ?? null,

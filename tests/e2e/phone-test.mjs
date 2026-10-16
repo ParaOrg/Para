@@ -1863,6 +1863,27 @@ const tripChecks = async () => {
             onMap.end < 3,
           `${JSON.stringify(marks)}; Distance "${rideKm}", the sums "${rideWant?.km}"; fare "${rideFareShown}", the sums "${rideWant?.fare}"; ${onMap.pins} circle(s), S ${onMap.start?.toFixed(1)} px off, E ${onMap.end?.toFixed(1)} px off`,
         );
+        // The start's pill its station's code alone, no price; the end's its
+        // code and the ride's pesos (the owner, 2026-10-16: "Pill on start is
+        // only the codesign of that station, no price / the end should have
+        // both price and codesign").
+        const pesosIn = async (where) => {
+          const pill = where.locator('[data-testid="trip-hintuan-fare"]').first();
+          if (!(await pill.count())) return null;
+          const half = pill.locator('[data-part="pesos"]');
+          if (await half.count()) return (await half.innerText()).trim();
+          return (await pill.getAttribute('data-part')) === 'code'
+            ? null
+            : (await pill.innerText()).trim();
+        };
+        const startPesos = await pesosIn(startRow);
+        const endPesos = await pesosIn(endRow);
+        check(
+          "  the start's pill has no price, the end's the ride's pesos",
+          startPesos === null &&
+            (endPesos === null ? rideWant?.fare == null : endPesos === rideFareShown),
+          `start's ${startPesos ?? 'none'}; end's ${endPesos ?? 'none'}; the fare tile ${rideFareShown}`,
+        );
         // Another end picked with the sheet already at Middle: the sheet stays,
         // and the camera takes in the new ride, though the map was moved away.
         // Then the first end again, for what follows.
@@ -2031,7 +2052,7 @@ const tripChecks = async () => {
           // start go): the ride on to it, its E there, on the card and on the
           // map, the tiles the ride's.
           const KEEP =
-            "  the destination's row with a start: the start kept, the ride on to it, its E there";
+            "  the destination's row with a start: the start kept, the ride on to it, its E and pill there";
           const toDestination = await rideOf(ids[1], null);
           await endPick.scrollIntoViewIfNeeded();
           await buttonTap(endPick, () => isSelected(endRow));
@@ -2072,6 +2093,7 @@ const tripChecks = async () => {
           }));
           const keptKm = await tile('trip-km');
           const keptFare = await tile('trip-fare');
+          const keptPill = await pesosIn(destination);
           if (!toDestination)
             skip(KEEP, 'no ride from the start to the destination on the published line');
           else
@@ -2080,8 +2102,9 @@ const tripChecks = async () => {
               kept.card.join() === `${ids[1]}:start,trip-destination:end` &&
                 kept.map.join() === 'tail:end' &&
                 keptKm === toDestination.km &&
-                (toDestination.fare == null || keptFare === toDestination.fare),
-              `card ${kept.card.join()}; map ${kept.map.join()}; Distance "${keptKm}", the sums "${toDestination.km}"; fare "${keptFare}", the sums "${toDestination.fare}"`,
+                (toDestination.fare == null ||
+                  (keptFare === toDestination.fare && keptPill === toDestination.fare)),
+              `card ${kept.card.join()}; map ${kept.map.join()}; Distance "${keptKm}", the sums "${toDestination.km}"; fare "${keptFare}", its pill "${keptPill}", the sums "${toDestination.fare}"`,
             );
           // Let it go again: the destination's row, then × Remove as start.
           await destinationPick.scrollIntoViewIfNeeded();

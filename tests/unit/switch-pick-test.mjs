@@ -393,6 +393,25 @@ test('an end row tapped keeps the start: the ride on to where the trip goes, or 
   root.unmount();
 });
 
+test('on a train, an end of the trip picked as the ride’s end names its station, for its pill', async () => {
+  // The owner, 2026-10-16: "the end should have both price and codesign".
+  const base = withLine('mrt', LINE, false);
+  const mrt = {
+    ...base,
+    name: 'North Avenue → Taft Avenue',
+    route: { ...base.route, routeCode: 'MRT-3' },
+  };
+  const { out, root } = await mountLined(mrt);
+  await act(async () => out.ride.pick('b'));
+  await act(async () => out.ride.setStart());
+  assert.equal(out.ride.pickedCode, null, 'a start alone: no end to name');
+  await act(async () => out.ride.toEnd('to'));
+  assert.equal(out.ride.pickedCode, 'YL13', 'Taft Avenue');
+  await act(async () => out.ride.toEnd('from'));
+  assert.equal(out.ride.pickedCode, 'YL01', 'North Avenue');
+  root.unmount();
+});
+
 test('a row above the start is the end, above it: the ride runs back along the trip’s own line', async () => {
   // The owner, 2026-10-16: "reverse the arrow, dont' switch please, it's
   // confusing for users"; that morning the row tapped became the start.
