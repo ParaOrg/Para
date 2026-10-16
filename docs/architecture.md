@@ -65,17 +65,13 @@ flowchart TD
   features_locator --> shared_ui
   features_locator --> shared_utils
   features_published_map --> design_system_primitives
-  features_published_map --> features_routes_geo
   features_published_map --> features_routes_map
   features_published_map --> features_routes_model
   features_published_map --> shared_utils
   features_routes_cards --> design_system_primitives
-  features_routes_cards --> features_routes_map
   features_routes_cards --> features_routes_model
   features_routes_cards --> shared_ui
   features_routes_cards --> shared_utils
-  features_routes_geo --> features_routes_map
-  features_routes_geo --> features_routes_model
   features_routes_geo --> shared_utils
   features_routes_map --> design_system_foundation
   features_routes_map --> design_system_primitives
@@ -125,9 +121,9 @@ flowchart TD
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/published-map` | `design-system/primitives`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `shared/utils` |
-| `features/routes/cards` | `design-system/primitives`, `features/routes/map`, `features/routes/model`, `shared/ui`, `shared/utils` |
-| `features/routes/geo` | `features/routes/map`, `features/routes/model`, `shared/utils` |
+| `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/model`, `shared/utils` |
+| `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
+| `features/routes/geo` | `shared/utils` |
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/panels` |

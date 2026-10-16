@@ -5,8 +5,6 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 import { clearOfSheet } from '@/shared/ui/sheet-room';
 
-import { framedBy, type Framed } from './card-stack';
-import type { PickedPlace } from './route-card-stack';
 import {
   useCameraBefore,
   useCardOverview,
@@ -16,8 +14,10 @@ import {
   useSwitchOverview,
   useTripOverview,
 } from './use-overviews';
-import { useRideTo } from '../map/use-ride-to';
-import type { Highlight } from '../map/use-saved-routes';
+import { useRideTo } from './use-ride-to';
+import type { Highlight } from './use-saved-routes';
+import { framedBy, type Framed } from '../cards/card-stack';
+import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';

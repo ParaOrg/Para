@@ -16,7 +16,7 @@ import {
   featureFilter,
   latest,
 } from '@maplibre/maplibre-gl-style-spec';
-import { PASS_LAYER } from '../../src/features/routes/geo/pass-stretches.ts';
+import { PASS_LAYER } from '../../src/features/routes/map/pass-stretches.ts';
 import { RIDE_REST_LAYER } from '../../src/features/routes/map/ride-rest.ts';
 import {
   WARM_SOURCE,
