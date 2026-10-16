@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn, userEvent, within } from 'storybook/test';
 
-import { TripTimeline } from './trip-timeline';
+import { TimelineRouteDetail } from './timeline-route-detail';
 import { LIVERIES } from '../model/liveries';
 
 /**
- * A trip's card on its own, as RouteTripDetail insets it: one story a state,
+ * A trip's card on its own, as TimelineRouteDetailCard insets it: one story a state,
  * and the pick in each livery. Long names, the pick kept while folded, and
- * the taps are RouteTripDetail's stories. Sample data only: the places of
+ * the taps are TimelineRouteDetailCard's stories. Sample data only: the places of
  * the owner's frames (3762:3546), not the real map.
  */
 const hintuans = (...labels: string[]) => labels.map((label, i) => ({ id: 'h' + i, label }));
@@ -32,8 +32,8 @@ const openFold: Story['play'] = async ({ canvasElement }) => {
 };
 
 const meta = {
-  title: 'Features/Routes/TripTimeline',
-  component: TripTimeline,
+  title: 'Features/Routes/TimelineRouteDetail',
+  component: TimelineRouteDetail,
   decorators: [
     (Story) => (
       <div className="w-[393px] bg-surface px-3 py-3">
@@ -52,7 +52,7 @@ const meta = {
     onEnd: fn(),
     endPicked: null,
   },
-} satisfies Meta<typeof TripTimeline>;
+} satisfies Meta<typeof TimelineRouteDetail>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -178,7 +178,7 @@ export const RowPressed: Story = {
   render: (args) => (
     <div className="flex flex-col gap-4">
       {LIVERIES.map((livery) => (
-        <TripTimeline key={livery} {...args} livery={livery} />
+        <TimelineRouteDetail key={livery} {...args} livery={livery} />
       ))}
     </div>
   ),

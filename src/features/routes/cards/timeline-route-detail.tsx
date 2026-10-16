@@ -14,7 +14,7 @@ import {
 } from './livery-card';
 import type { Livery } from '../model/liveries';
 
-export interface TripTimelineProps {
+export interface TimelineRouteDetailProps {
   livery: Livery;
   /** Figma's Route on TimelineTop: the place the trip leaves from. */
   routeOrigin: string;
@@ -53,7 +53,7 @@ export interface TripTimelineProps {
 }
 
 /**
- * A trip's card, RouteTripDetail's (split from it, 2026-09-29): in the
+ * A trip's card, TimelineRouteDetailCard's (split from it, 2026-09-29): in the
  * trip's livery, its route's (liveries.ts), a rail from the origin
  * (TimelineTop) down to the place it goes to (TimelineBottomEndRoute).
  *
@@ -99,7 +99,7 @@ export interface TripTimelineProps {
  * origin, the same day); its name and the pesos stay as they are, the whole ride's being
  * the tile's.
  */
-export function TripTimeline({
+export function TimelineRouteDetail({
   livery,
   routeOrigin,
   hintuans,
@@ -110,7 +110,7 @@ export function TripTimeline({
   onEnd,
   endPicked,
   routeDirection,
-}: TripTimelineProps) {
+}: TimelineRouteDetailProps) {
   const [open, setOpen] = useState(false);
   // Whether the fold has ever been opened on this card: until then its rows
   // are their bare <li>s, the hidden insides left out (the cheap-phone
@@ -246,7 +246,7 @@ export function TimelineDot({ rail, selected = false, isTucked = true }: Timelin
 /**
  * The rail's column, 24 wide, as tall as its row's content. The card has no
  * padding of its own: the 16 above the first row and below the last are
- * theirs (the owner's RouteTripDetail, 3778:3183, 2026-10-01), so a row
+ * theirs (the owner's TimelineRouteDetailCard, 3778:3183, 2026-10-01), so a row
  * Pressed fills to the card's edge, the rail starting under that padding.
  * Every row is 16 in from both sides, its names 8 above and below (10 until
  * the owner's spacing of 2026-10-13, 3778:3183), the destination 12 down
@@ -257,7 +257,7 @@ const STICK = 'flex w-6 shrink-0 flex-col items-center self-stretch';
 
 /**
  * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
- * ExtraBold 20/28 (the owner's RouteTripDetail of 2026-10-13, 3778:3183;
+ * ExtraBold 20/28 (the owner's TimelineRouteDetailCard of 2026-10-13, 3778:3183;
  * Black 24/32 until then); the whole row is its button. Picked, its dot is
  * TimelineDot's Selected one.
  */
@@ -333,7 +333,7 @@ function TimelineHintuan({
   pressed: string;
   label: string;
   shown: boolean;
-  /** Whether its inside is drawn: shown, or folded after it has been opened (TripTimeline's everOpened). */
+  /** Whether its inside is drawn: shown, or folded after it has been opened (TimelineRouteDetail's everOpened). */
   drawn: boolean;
   selected: boolean;
   /** The ride's pesos to here, for the pill; picked and priced only. */
@@ -451,7 +451,7 @@ function TimelineDisclosure({
 
 /**
  * Figma's TimelineBottomEndRoute: the rail's last dot, and where the trip
- * goes, behind End's circled E (the owner's RouteTripDetail of 2026-10-13,
+ * goes, behind End's circled E (the owner's TimelineRouteDetailCard of 2026-10-13,
  * 3778:3183, as the map's end label has it; the list's arrow until then);
  * the whole row is its button. Picked, its dot is TimelineDot's Selected one.
  */
