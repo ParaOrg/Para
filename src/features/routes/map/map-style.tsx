@@ -25,12 +25,11 @@ interface MapStyleProps {
 }
 
 /**
- * The owner's MapStyle card (4179:10790, 2026-10-16): "Map Style" and ✕
- * over a picture of each design, its name under it, the one shown ringed
- * in Brand/surface (his screenshot of that day; the frame draws no ring).
- * Three a row, so the studio's five wrap onto a second (his answer that
- * day). A pick switches the map behind and moves the ring; the card stays
- * until ✕, Escape or a tap outside, so the viewer sees what they picked.
+ * The MapStyle card (Figma 4179:10790): "Map Style" and ✕ over a picture of
+ * each design, its name under it, the one shown ringed in Brand/surface (the
+ * frame draws no ring). Three a row, so the studio's five wrap onto a second.
+ * A pick switches the map behind and moves the ring; the card stays until ✕,
+ * Escape or a tap outside, so whoever picked sees it.
  *
  * It holds the keyboard while open, as a dialog does (CLAUDE.md): it opens
  * on the design shown, and Tab goes round inside it. It pops in and out
@@ -111,9 +110,7 @@ export function MapStyle({
         >
           Map Style
         </h2>
-        {/* Figma's Small, 32 px: under CLAUDE.md's 44 px touch target, kept as drawn by the
-            owner's choice (2026-10-16), the card's one exception; Escape and a tap outside
-            close it too. */}
+        {/* Figma's Small, 32 px, kept as drawn; Escape and a tap outside close the card too. */}
         <IconButton
           icon={<CloseIcon />}
           label="Close"

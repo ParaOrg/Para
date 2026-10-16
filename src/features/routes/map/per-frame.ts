@@ -1,7 +1,6 @@
 /*
- * What arrives in a burst, handed on once a frame (the cheap-phone plan,
- * step 16 (e), 2026-10-04). Pure but for the frame clock, which a unit test
- * replaces.
+ * What arrives in a burst, handed on once a frame. Pure but for the frame clock,
+ * which a unit test replaces.
  */
 
 /** The frame clock: the browser's, or a test's. */
