@@ -1,4 +1,4 @@
-import { railLineOf, type Direction, type RailLine } from './routes';
+import { RAIL_LINES, railLineOf, type Direction } from './routes';
 
 /**
  * What a trip rides, as its header names it: a train's line by its code, or
@@ -6,7 +6,8 @@ import { railLineOf, type Direction, type RailLine } from './routes';
  * (4181:10844, 2026-10-16): Default the LRT-1, Variant2 the Jeepney,
  * Variant3 the Bus, Variant4 the E-Jeep, Variant5 the Ferry.
  */
-export type Vehicle = RailLine | 'Jeepney' | 'E-Jeep' | 'Bus' | 'Ferry';
+export const VEHICLES = [...RAIL_LINES, 'Jeepney', 'E-Jeep', 'Bus', 'Ferry'] as const;
+export type Vehicle = (typeof VEHICLES)[number];
 
 /**
  * A direction's vehicle, by its line's code or its route's mode; null for a

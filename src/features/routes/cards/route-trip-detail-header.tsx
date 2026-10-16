@@ -1,7 +1,4 @@
-import type { ComponentType } from 'react';
-
-import { BusIcon, EJeepIcon, FerryIcon, JeepneyIcon, TrainIcon } from '@/shared/ui/route-icons';
-
+import { VehicleIcon } from './vehicle-icon';
 import type { Livery } from '../model/liveries';
 import type { RailLine } from '../model/routes';
 import type { Vehicle } from '../model/vehicles';
@@ -18,16 +15,6 @@ interface RouteTripDetailHeaderProps {
   /** The card's colour, the words' on every vehicle but a train. */
   livery: Livery;
 }
-
-const ICON = {
-  'LRT-1': TrainIcon,
-  'LRT-2': TrainIcon,
-  'MRT-3': TrainIcon,
-  Jeepney: JeepneyIcon,
-  'E-Jeep': EJeepIcon,
-  Bus: BusIcon,
-  Ferry: FerryIcon,
-} satisfies Record<Vehicle, ComponentType>;
 
 /**
  * A train's words: Figma's Map/Rail/<line>/surface, the line's own colour
@@ -85,7 +72,6 @@ const HALF = 'bg-content-inverse px-3.5 py-0.5 text-lg/7 font-bold whitespace-no
  * there for the pause the gap draws.
  */
 export function RouteTripDetailHeader({ vehicle, way, livery }: RouteTripDetailHeaderProps) {
-  const Icon = ICON[vehicle];
   const words = isLine(vehicle) ? LINE_WORDS[vehicle] : CARD_WORDS[livery];
   return (
     <div
@@ -93,7 +79,7 @@ export function RouteTripDetailHeader({ vehicle, way, livery }: RouteTripDetailH
       className="flex w-full items-center gap-2 pt-4 pr-4 pb-2 pl-3 font-sn-pro"
     >
       <span aria-hidden className="size-8 shrink-0 opacity-70 *:size-full">
-        <Icon />
+        <VehicleIcon vehicle={vehicle} />
       </span>
       <p className={'flex min-w-0 gap-0.5 ' + words}>
         <span className={HALF + ' ' + (way ? 'rounded-l-full' : 'rounded-full')}>{vehicle}</span>
