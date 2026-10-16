@@ -56,9 +56,9 @@ interface RouteLineEndingsLabelProps {
  * hangs beside it.
  *
  * Default is the name alone in the line's colour, which Figma's set does
- * not draw: a ride a picked hintuan stops short ends there, End's E before
- * the hintuan's name (HintuanLabel), so its own tail keeps its name without
- * one (the owner's ask, 2026-10-02).
+ * not draw. Unselected is Default at 60%, the Label's Unselected (4200:13645):
+ * an end outside the ride. The map draws every unmarked end outside the ride,
+ * so it wears Unselected; Default stays for an unmarked end inside one.
  *
  * The font is set here: the marker holding it sits in MapLibre's container,
  * whose stylesheet sets Helvetica Neue (RouteLineLabel). The icons say
@@ -95,7 +95,8 @@ export function RouteLineEndingsLabel({
         (code ? CODE_PADDING : look.padding) +
         ' ' +
         worn.surface +
-        (variant === 'unselected' ? ' opacity-60' : '')
+        ' ' +
+        look.fade
       }
     >
       {Icon && !code && (
@@ -146,14 +147,20 @@ export function RouteLineEndingsLabel({
  * What each variant is (3848:12135, respaced 2026-10-16): its padding — 2
  * round a 24 icon and 8 after the name, so the pill stays 28 tall; 8 each
  * side and 4 above and below the name alone — what it wears, Start's green
- * or the line's colour, its icon, and the word a screen reader hears
- * before the name.
+ * or the line's colour, its icon, the word a screen reader hears before
+ * the name, and its fade.
  */
 const LOOK = {
-  head: { padding: 'py-0.5 pr-2 pl-0.5', wears: 'start', icon: 'start', word: 'Start, ' },
-  tail: { padding: 'py-0.5 pr-2 pl-0.5', wears: 'line', icon: 'end', word: 'End, ' },
-  default: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null },
-  unselected: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null },
+  head: {
+    padding: 'py-0.5 pr-2 pl-0.5',
+    wears: 'start',
+    icon: 'start',
+    word: 'Start, ',
+    fade: '',
+  },
+  tail: { padding: 'py-0.5 pr-2 pl-0.5', wears: 'line', icon: 'end', word: 'End, ', fade: '' },
+  default: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null, fade: '' },
+  unselected: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null, fade: 'opacity-60' },
 } as const satisfies Record<
   RouteLineEndingsLabelVariant,
   {
@@ -161,6 +168,8 @@ const LOOK = {
     wears: 'start' | 'line';
     icon: 'start' | 'end' | null;
     word: string | null;
+    /** Figma's opacity/60 for a name outside the ride (the Label's Unselected), else nothing. */
+    fade: '' | 'opacity-60';
   }
 >;
 

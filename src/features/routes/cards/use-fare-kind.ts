@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 /** Which fare the trip card's tile shows: Regular, or Discounted (students, seniors, PWDs). */
-export type FareKind = 'regular' | 'discounted';
+type FareKind = 'regular' | 'discounted';
 
 /**
  * The fare a rider picked on the tile, kept for every trip since and the

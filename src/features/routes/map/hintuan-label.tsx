@@ -11,7 +11,7 @@ import './hintuan-label.css';
  * HintuanStart, a picked start, is HintuanEnd with Start's S on Head
  * Route's green (2026-10-15, green 2026-10-16): Figma draws no start yet.
  */
-export type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';
+type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';
 
 /** The Label each look of the hintuan wears beside its dot. */
 const LABEL_VARIANT = {

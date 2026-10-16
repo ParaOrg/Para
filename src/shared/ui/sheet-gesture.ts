@@ -107,7 +107,7 @@ const MAX_GAP_CSS = `calc(env(safe-area-inset-top) + ${MAX_STRIP_PX}px)`;
 
 /** The status bar's height as the page reads it (BottomSheet measures it): 0 where the page hotspots under it. */
 let safeTop = 0;
-export function setSafeTop(px: number) {
+function setSafeTop(px: number) {
   safeTop = Math.max(0, Math.round(px));
 }
 

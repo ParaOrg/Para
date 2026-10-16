@@ -14,7 +14,6 @@ function terminal(id: string, name: string, at: LngLat): HotspotRow {
   const d = 0.0003;
   return {
     id,
-    ownerId: 'sample-owner',
     name,
     informal: null,
     aliases: [],
@@ -183,7 +182,6 @@ export const ManyBoxesOnePlace: Story = {
 /** The route the return-trip stories add a direction to. */
 const talaFairview: RouteRow = {
   id: 'sample-route',
-  ownerId: 'sample-owner',
   signboard: null,
   routeCode: null,
   shortName: null,
@@ -290,7 +288,6 @@ const talaFairviewOut: DirectionRow = {
   shape: null,
   reversed: false,
   confidence: 'drawn',
-  ownerId: 'sample-owner',
   updatedAt: '2026-09-21T00:00:00Z',
   route: { ...talaFairview, name: 'Tala – SM Fairview' },
 };
