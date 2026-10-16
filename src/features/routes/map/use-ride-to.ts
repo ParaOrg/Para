@@ -29,9 +29,9 @@ export interface Ridden {
 /**
  * A hintuan picked on the trip card (Timeline State=Selected): its pill prices
  * the ride from the start to there, and the map glides there clear of the
- * card. The route stays whole, a circle popping up where `pinAt` says
- * (hintuan-pin.tsx); the studio does the same, so neither draws the way not
- * ridden at rest or get-off circles. Tapping the row again, an end row,
+ * card. The route stays whole (the owner's call), a circle popping up where
+ * `pinAt` says (hintuan-pin.tsx), in the studio as on the public map. Tapping
+ * the row again, an end row,
  * another route or the card away lets the pick go. An end row glides there
  * (`toEnd`), so a rider can look along the route from end to end, in as close
  * as a hintuan is brought; with a start picked, it is the ride's end instead,
@@ -88,7 +88,7 @@ export function useRideTo(
   // leaves) to the picked hintuan, on the trip's own line, back along it for
   // an end above the start (rideSpan); or from the start to an end row picked
   // with it kept (rideToEnd). A start alone is no ride yet, the trip left
-  // whole until its end is picked.
+  // whole until its end is picked (Variant3).
   const span = useMemo(() => {
     if (!selected) return null;
     if (live) return rideSpan(selected, hotspots, liveStart?.rowId ?? null, live.rowId);
@@ -179,14 +179,16 @@ export function useRideTo(
     ],
   );
 
-  // Glide to where the rider would get off, in to where the scale bar reads 500 m (the stretch
-  // fitted whole would zoom far out), or, closer in than 300 m, at the commuter's own zoom
-  // (glideFor). `offset`, never `padding`: MapLibre keeps a padding for every later move, and a
-  // trip's fit or "Where am I" would land off centre ever after. An end picked after a start, with
-  // a ride between them, does not glide: the camera takes in that ride (useCardCamera's
-  // pickOnTrip). With none to take in (a box the line misses) it glides to the end as any pick
-  // does. Read as the cut changes, so letting the start go moves nothing.
-  // Kept before the glide's effect, which reads it in the same commit.
+  // Glide to where the rider would get off, in to where the scale bar reads
+  // 500 m (the owner's call; the stretch fitted whole zooms far out), or,
+  // closer in than 300 m, at the commuter's own zoom (glideFor). `offset`,
+  // never `padding`: MapLibre keeps a padding for every later move, and a
+  // trip's fit or "Where am I" would land off centre ever after. An end
+  // picked after a start, with a ride between them, does not glide: the
+  // camera takes in that ride (useCardCamera's pickOnTrip). With none to take
+  // in (a box the line misses) it glides to the end as any pick does. Read as
+  // the cut changes, so letting the start go moves nothing. Kept before the
+  // glide's effect, which reads it in the same commit.
   const isRideFramed = useRef(false);
   useEffect(() => {
     isRideFramed.current = liveStart !== null && span !== null;
@@ -269,9 +271,9 @@ export function useRideTo(
     /**
      * On a train line, the picked station's code, GL02, in a white chip
      * before its name on the map (HintuanPin, RouteLineLabel's CodeSignEnd);
-     * with a start, an end of the trip picked as the ride's
-     * end names its own station, for its pill on the card. Null for a
-     * jeepney's hintuan, the ferry's, and a station the table does not know.
+     * with a start, an end of the trip picked as the ride's end names its own
+     * station, for its pill on the card. Null for a jeepney's hintuan, the
+     * ferry's, and a station the table does not know.
      */
     pickedCode: endLabel && isRailLine(line) ? stationCode(line, endLabel) : null,
     pick,

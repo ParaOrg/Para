@@ -26,9 +26,10 @@ const SAME_ROAD_M = 8;
 const SAME_WAY_DEG = 45;
 
 /**
- * On screen: how far apart the chevrons sit, and how fast they flow. There are
- * 12/10 as many zoomed out (below zoom 14, the whole ride on screen) and 8/10
- * as many zoomed in (from 16, street level).
+ * On screen: how far apart the chevrons sit, and how fast they flow. The
+ * spacing is the one the owner approved for the arrows; 12/10 as many zoomed
+ * out (below zoom 14, the whole ride on screen) and 8/10 as many zoomed in
+ * (from 16, street level) is the owner's call on the chevrons.
  */
 const SPACING_PX = 112;
 const MORE_ZOOMED_OUT = 1.2;
@@ -78,11 +79,10 @@ const measured = new WeakMap<readonly LngLat[], Omit<Measured, 'covered'>>();
 /**
  * The line measured: worked out once per line array and kept, `covered` all
  * false and fresh at every call, for markCovered to fill against whatever
- * else is lit this time. It was measured again each time what is lit
- * changed would measure every line of a list again at each of its lines'
- * arrival. Keyed on the line array, as
- * lineBounds's box is (geo.ts): a line is never changed in place, so a new
- * line is a new key, and what is kept is read-only.
+ * else is lit this time. Measured again each time what is lit changes, every
+ * line of a list would be measured again at each of its lines' arrival. Keyed
+ * on the line array, as lineBounds's box is (geo.ts): a line is never changed
+ * in place, so a new line is a new key, and what is kept is read-only.
  */
 export function measure(line: readonly LngLat[]): Measured {
   let m = measured.get(line);

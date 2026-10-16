@@ -22,22 +22,25 @@ import { REST_LAYER, restDrawn } from './ride-rest';
 import { ROUTES_HIT_LAYER } from './tap';
 
 /**
- * Which way the jeep goes, drawn on the lit directions only; each end of
- * each is circled and named by end-titles.tsx.
+ * Which way the jeep goes, drawn on the lit directions only; each end of each
+ * is circled and named by end-titles.tsx.
  *
  * The marks sit *inside* the line, never as a second offset line, and only on
  * what is lit — on every resting line they would be clutter once a road
  * carries three routes — and **flow smoothly** along it from the start of the
- * ride to its end, for as long as it is lit (STEP_MS). No glow. What is lit is
- * the chosen direction; or the Selected RouteCard's directions (a route
- * list's card or a hotspot's); or else every route a list shows, the way round
- * it shows them, or a hotspot's cards do. Where two of those share a road they
- * flow as one stream, not two.
+ * ride to its end, for as long as it is lit (STEP_MS); no glow. These are the
+ * owner's calls. What is lit is the chosen direction; or the Selected
+ * RouteCard's directions (a route list's card or a hotspot's); or else every
+ * route a list shows, the way round it shows them, or a hotspot's cards do.
+ * Where two of those share a road they flow as one stream, not two.
  *
- * The mark is a white chevron (its colour is useRideColours'), one to a place
- * and all alike, with no trail. It is a chevron bigger than the line and cut off
- * by it: its arms run out to the line's edges and stop there, so none of it
- * shows outside the line.
+ * The mark is a chevron, white (Map/RouteLine/Arrow/Rest) or near-black on
+ * MRT-3's yellow (…/Arrow/Inverse), as useRideColours sets it; one to a place
+ * and all alike, with no trail: the owner's call over white arrows and a
+ * train of four fading chevrons. Jeepneys are parked for a Simulate button
+ * (PLAN.md). It is a chevron bigger than the line and cut off by it: its arms
+ * run out to the line's edges and stop there, so none of it shows outside the
+ * line.
  *
  * MapLibre can neither slide a mark along a line nor clip one to a line's
  * width, so each chevron is a small polygon we draw ourselves: every frame,
@@ -59,15 +62,16 @@ const SAME_END_M = 150;
  * One lit ride: its direction, its line in travel order, and the places it
  * runs from and to; and `pale`, the way not ridden when an end is picked on
  * its trip, after a start or not (useRideTo's ridden): the line on either
- * side of the ride. useRideRest draws it in the card's pale, and an end circle
- * on it wears the pale too and loses its S or E (EndTitles), the picks' pins
- * carrying them. The chevrons flow on along the pale, white on it as on the
- * line. `isBackwards`: an end picked above the start, ridden back along the
- * line, and the chevrons along the whole of it flow from the S to the E, the
- * line itself still in travel order for its ends. `isUnmarked`: a start
- * picked on its trip with no ride drawn, alone or with an end the line can't
- * take it to: both its ends lose their S and E, the start's pin carrying the
- * S; its `pale` is then the whole line, the ends on it (useLitRides).
+ * side of the ride. useRideRest draws it in the card's pale, and an end
+ * circle on it wears the pale too and loses its S or E (EndTitles), the
+ * picks' pins carrying them. The chevrons flow on along the pale, in the
+ * colour they wear on the line (the owner's call). `isBackwards`: an end
+ * picked above the start, ridden back along the line, and the chevrons along
+ * the whole of it flow from the S to the E, the line itself still in travel
+ * order for its ends. `isUnmarked`: a start picked on its trip with no ride
+ * drawn, alone or with an end the line can't take it to: both its ends lose
+ * their S and E, the start's pin carrying the S; its `pale` is then the whole
+ * line, the ends on it (useLitRides).
  */
 export interface Ride {
   id?: string;
@@ -172,10 +176,12 @@ function samePoint(a: LngLat, b: LngLat): boolean {
 }
 
 /**
- * How often they move on: fifteen times a second. They flow for as long as a route is lit. A flow
- * at thirty frames kept a phone's main thread nine-tenths busy (a CPU slowed 4×: 17 fps flowing, 60
- * at rest). At 28 px a second a step of about 2 px still reads as a flow, for half that work; and
- * it holds while the map is dragged or zoomed, so moving the map keeps the whole frame to itself.
+ * How often they move on: fifteen times a second. They flow for as long as a
+ * route is lit, the owner's call over resting after three seconds. A flow at
+ * thirty frames kept a phone's main thread nine-tenths busy (a CPU slowed 4×:
+ * 17 fps flowing, 60 at rest). At 28 px a second a step of about 2 px still
+ * reads as a flow, for half that work; and it holds while the map is dragged
+ * or zoomed, so moving the map keeps the whole frame to itself.
  */
 const STEP_MS = 1000 / 15;
 
@@ -185,18 +191,18 @@ const STEP_MS = 1000 / 15;
  * the map four times a second, each step took the whole frame and a tap
  * waited seconds for its turn (on a GitHub runner the trip card's buttons
  * answered five seconds late, 13 frames in 8 s; 51 ms with the flow still).
- * Counted in time, not steps: three slow steps are under a second, and a
- * runner's short stall as tiles came in would rest a flow that keeps up
- * (commuter-test); a phone that cannot keep up stays slow.
+ * Counted in time, not steps: counted in steps, three slow steps came under a
+ * second, and a runner's short stall as tiles came in rested a flow that
+ * keeps up (commuter-test); a phone that cannot keep up stays slow.
  *
  * For WARM_MS after they start, after the map zooms and after a hidden page
- * comes back, no step counts: a new view's first frames are its dearest —
- * its tiles read and laid out — and say little of what the next ones will
- * cost (on a GitHub runner a jump to street zoom drew a few slow frames, and
- * the flow rested where it keeps up easily). A gap past AWAY_MS
- * is the page having been away, not a slow step. Rested, they try again only
- * once the map has zoomed a level or more — another view, another cost; a
- * pan, as the locator's camera makes each second, is the same view's.
+ * comes back, no step counts: a new view's first frames are its dearest — its
+ * tiles read and laid out — and say little of what the next ones will cost
+ * (on a GitHub runner a jump to street zoom drew a few slow frames, and the
+ * flow rested where it keeps up easily). A gap past AWAY_MS is the page
+ * having been away, not a slow step. Rested, they try again only once the map
+ * has zoomed a level or more — another view, another cost; a pan, as the
+ * locator's camera makes each second, is the same view's.
  */
 const SLOW_STEP_MS = 4 * STEP_MS;
 const SLOW_FOR_MS = 2000;
@@ -214,8 +220,8 @@ function stillPlease(): boolean {
  * selected blue's white chevrons unless the public map says otherwise — a
  * picked card's or an open trip's (livery-line.ts) — and the rest in the
  * card's pale (surface-pale of the selected colour). The end circles wear the
- * line's colour by their own classes (EndTitles), so there is nothing to paint
- * on the map for them.
+ * line's colour by their own classes (EndTitles), so there is nothing to
+ * paint on the map for them.
  */
 export function useRideColours(map: MapLibreMap | null, look: LineLook) {
   // The chevrons' hook adds their layer; wait for it.
@@ -288,10 +294,10 @@ export function widened(view: View): View {
  * What a move of the map does to the chevrons, which do not flow while it
  * moves:
  * - 'hold': nothing, while the view stays inside the window they were last
- *   drawn for (`held`) at its zoom: every chevron it can show is there,
- *   the same polygon a draw for the view would make;
- * - 'wide': drawn again a screen wider each way, as the map pans at the
- *   zoom they were last drawn at (`drawnAt`) and leaves the window;
+ *   drawn for (`held`) at its zoom: every chevron it can show is there, the
+ *   same polygon a draw for the view would make;
+ * - 'wide': drawn again a screen wider each way, as the map pans at the zoom
+ *   they were last drawn at (`drawnAt`) and leaves the window;
  * - 'view': drawn for the view, while the zoom changes, each frame changing
  *   their size and spacing.
  * Drawing them for the view at every move would make each frame of a pan a
@@ -392,8 +398,8 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
     // the next frame, and is dropped if a move starts first; and a move that
     // starts inside what is held, at its zoom, draws nothing. Back to back,
     // such eases cost no draw, where each would cost two, one of them nine
-    // screens' worth. What is on screen is
-    // the same: what is held has every chevron a draw for the view makes.
+    // screens' worth. What is on screen is the same: what is held has every
+    // chevron a draw for the view makes.
     let settle = 0;
     const onStart = () => {
       moving = true;

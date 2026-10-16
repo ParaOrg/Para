@@ -6,8 +6,8 @@ import { zoomForScale, type LngLat } from '@/shared/utils/geo';
 const PICKED_SCALE_M = 500;
 
 /**
- * Closer in than this — the scale bar reading under 300 m — a pick keeps
- * the commuter's zoom, so a tap on a hintuan never zooms them out.
+ * Closer in than this (the scale bar reading under 300 m), a pick keeps the
+ * commuter's zoom rather than going out to PICKED_SCALE_M's: the owner's call.
  */
 const KEEP_CAMERA_UNDER_M = 300;
 

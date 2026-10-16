@@ -16,7 +16,7 @@ import { directionEndHotspots, directionEnds, type Direction } from '../model/ro
 const NOTHING_PALE: readonly (readonly LngLat[])[] = [];
 
 /**
- * What a lit route wears on the map, in both apps: its orange stretches
+ * What a lit route wears on the map, in both apps: its green stretches
  * where it passes a hintuan, its chevrons, the rest of its line past a
  * picked hintuan in its card's pale, and the chosen direction's side of each
  * hintuan it cuts across. Returns the rides, for the circles and names at
@@ -49,9 +49,9 @@ export function useLitRides(
    */
   startId: string | null = null,
 ): Ride[] {
-  // Where a lit direction passes a hintuan, the line turns orange for that
+  // Where a lit direction passes a hintuan, the line turns green for that
   // stretch: worked out on the full lines read — a lit direction's is asked
-  // for as it lights, and its orange comes with it — rather than on every
+  // for as it lights, and its green comes with it — rather than on every
   // overview at load. Offline, a line never read has none.
   const withLines = useMemo(
     () => saved.directions.filter((v) => saved.fullIds.has(v.id)),

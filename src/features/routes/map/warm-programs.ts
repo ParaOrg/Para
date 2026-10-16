@@ -12,8 +12,8 @@ import type {
  * MapLibre compiles a layer's GL program the first time it draws the layer,
  * and a layer with nothing in view draws nothing. A layer that has nothing
  * until a route is lit compiles its program at the first tap that lights
- * one, as the card comes up: in the harness every list and trip tap did (5 of
- * 5 runs). A first-use program can hold a cheap
+ * one, as the card comes up: in the harness without the warm-up, every list
+ * and trip tap did (5 of 5 runs). A first-use program can hold a cheap
  * phone's main thread for 5-50 ms, and SwiftShader's for a second and more;
  * a program is keyed on which paint properties vary by feature and zoom, so
  * one layer drawn once compiles it for every layer painted alike.
@@ -23,35 +23,34 @@ import type {
  * box, each twin over the one its type draws), at the bottom of the stack,
  * drawn once. The five layers that draw only what is lit, which are off from
  * the start (layer-switch.ts), have twins: they compile the lit line's
- * program, which the orange stretches share, and the marked boxes'. The basemaps'
- * own fills and lines already compile the programs the chevrons and the
- * babaan sides use. Its source and layers are its own: never `draw-…`,
+ * program, which the green stretches share, and the marked boxes'. The
+ * basemaps' own fills and lines already compile the programs the chevrons and
+ * the babaan sides use. Its source and layers are its own: never `draw-…`,
  * which the studio's editor owns and the public page must not carry
- * (commuter-test), and never a feature in the ends' source, which the
- * suites count (group-test, the `__src` readers).
+ * (commuter-test), and never a feature in the chevrons' source
+ * (`direction-arrows`), which the suites count (group-test, the `__src`
+ * readers).
  *
- * What it costs: the twins' frames are new
- * work on every load, first visit or repeat, the studio's too, whether a
- * tap follows or not; only a visit that taps gets it back, as a tap with
- * no compile. In the cheap-phone timer (CPU 4x, SwiftShader; 3 runs,
- * medians) the warm-up is one long task of 235-468 ms after the first idle,
- * and total blocking time goes 600 -> 1,130 ms on a first
- * visit, 290 -> 816 on a repeat one and 670 -> 1,271 on a first visit with
- * the service worker, each range clear of the one before, the longest task
- * 277-296 -> 491-550 ms and the page settles 1.7-1.8 s later; while a list
- * tap goes 1,453 -> 170 ms and a trip tap 718 -> 256. On a phone, one
- * first-use program, 5-50 ms, while the commuter looks at the map. Without
- * the warm-up (warmSoon's callers, direction-arrows.ts and layer-switch.ts),
- * the first tap compiles the programs.
+ * What it costs: the twins' frames are new work on every load, first visit
+ * or repeat, the studio's too, whether a tap follows or not; only a visit
+ * that taps gets it back, as a tap with no compile. In the cheap-phone timer
+ * (CPU 4x, SwiftShader; 3 runs, medians) the warm-up measured one long task
+ * of 235-468 ms after the first idle, and total blocking time went 600 ->
+ * 1,130 ms on a first visit, 290 -> 816 on a repeat one and 670 -> 1,271 on a
+ * first visit with the service worker, each range clear of the one before,
+ * the longest task 277-296 -> 491-550 ms and the page settled 1.7-1.8 s
+ * later; against a list tap's 1,453 -> 170 ms and a trip tap's 718 -> 256. On
+ * a phone, one first-use program, 5-50 ms, while the commuter looks at the
+ * map. Keeping the warm-up is the owner's call; without it (warmSoon's
+ * caller, layer-switch.ts), the first tap compiles the programs.
  *
  * Each change to the map's style asks for a frame of the whole map, and a
  * warm-up would take four: the twins added, then drawn, then taken away at
  * the next 'idle' (two). On the suites' maps of 5,000 directions at 1,280 x
- * 800 on SwiftShader each is 0.9-1.0 s of main thread (scale-test, timed
- * in the page). So the twins are taken away with the map's
- * first move after that idle, in the frames the move draws anyway, as the
- * lit layers' switch waits for a move (layer-switch.ts); a map held still
- * keeps them, unseen, and draws them only where their speck is in view.
+ * 800 on SwiftShader each is 0.9-1.0 s of main thread (scale-test, timed in
+ * the page). So the twins are taken away with the map's first move after that
+ * idle, in the frames the move draws anyway; a map held still keeps them,
+ * unseen, and draws them only where their speck is in view.
  */
 
 /** The twins' source; each twin is `warm-programs-<n>`. */

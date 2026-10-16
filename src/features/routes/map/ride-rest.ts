@@ -8,15 +8,18 @@ import { litWidth } from './line-style';
 import { LIT_LINE } from './livery-line';
 
 /**
- * The rest of a lit ride past a picked hintuan: from there to where the trip goes, drawn over the
- * lit line in the trip card's Card/<livery>/surface-pale, the rest of the lit line staying as it
- * is. The ride ends at the hintuan (useRideTo's `ridden`, Ride.flow); this is the way not ridden,
- * told apart by its colour, the chevrons flowing on over it white. It sits right above the lit line
- * and under everything else drawn on it — the green hintuan stretches, the chevrons — and the
- * circles at the trip's far end and at the picked hintuan, DOM markers (EndTitles, HintuanPin),
- * stand over it all. Nothing picked, no features: the source is empty and the layer draws nothing.
- * The dots along the rest ring in the same pale, and so does the far end's circle (StationLabels,
- * EndTitles).
+ * The rest of a lit ride past a picked hintuan: from there to where the trip
+ * goes, drawn over the lit line in the trip card's Card/<livery>/surface-pale
+ * (the owner's call), the rest of the lit line staying as it is. The ride
+ * ends at the hintuan (useRideTo's `ridden`, flowLines); this is the way not
+ * ridden, told apart by its colour, the chevrons flowing on over it white
+ * (the owner's call too). It sits right above the lit line and under
+ * everything else drawn on it — the green hintuan stretches, the chevrons —
+ * and the circles at the trip's far end and at the picked hintuan, DOM
+ * markers (EndTitles, HintuanPin), stand over it all. Nothing picked, no
+ * features: the source is empty and the layer draws nothing. The dots along
+ * the rest ring in the same pale, and so does the far end's circle
+ * (StationLabels, EndTitles).
  *
  * The way not ridden is a shade of the trip's own, no casing, at the lit
  * line's width.
