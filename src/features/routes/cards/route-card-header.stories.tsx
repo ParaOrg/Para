@@ -5,9 +5,10 @@ import { RouteCardHeader } from './route-card-header';
 
 /**
  * The top of the route list and of a trip (Figma 3742:1049): Default, the
- * Jeep and the count, over a list; Variant2, ‹ back, over a trip. SWITCH is
- * pressed while the way back shows, and rests disabled when the other way
- * round has nothing drawn. On a train it names the bound (wayWord).
+ * Jeep and the count, over a list; Variant2, ‹ back, over a trip. SWITCH
+ * names the way a tap leads to (switchWord; the owner, 2026-10-16): Pabalik
+ * over Papunta and back, on a train the other bound. It rests disabled when
+ * the other way round has nothing drawn.
  * Rendered by hand: its two shapes of props do not make one set of args.
  */
 const meta: Meta = {
@@ -34,7 +35,8 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
-const common = { onSwitch: fn(), onClose: fn(), switchable: true, back: false, way: 'Papunta' };
+// Papunta showing, so SWITCH names where a tap leads: Pabalik (the owner's ask of 2026-10-16).
+const common = { onSwitch: fn(), onClose: fn(), switchable: true, back: false, way: 'Pabalik' };
 
 /** Over the route list: the Jeep and the count. */
 export const Default: Story = {
@@ -51,9 +53,9 @@ export const Hotspots: Story = {
   render: () => <RouteCardHeader {...common} routeCount="2 Hotspots" />,
 };
 
-/** The way back showing: SWITCH pressed. */
+/** The way back showing: SWITCH reads Papunta, the way a tap leads. */
 export const WayBack: Story = {
-  render: () => <RouteCardHeader {...common} back way="Pabalik" routeCount="2 Routes" />,
+  render: () => <RouteCardHeader {...common} back way="Papunta" routeCount="2 Routes" />,
 };
 
 /** Nothing drawn the other way round: SWITCH rests disabled. */
@@ -66,12 +68,12 @@ export const OverATrip: Story = {
   render: () => <RouteCardHeader {...common} onBackToList={fn()} />,
 };
 
-/** Over a train's trip: SWITCH names its bound (the owner's ask, 2026-10-15). */
+/** Over a Northbound train's trip: SWITCH names the other bound (the owner's asks of 2026-10-15 and 2026-10-16). */
 export const OverATrain: Story = {
   render: () => <RouteCardHeader {...common} way="Southbound" onBackToList={fn()} />,
 };
 
-/** LRT-2 runs east–west: Eastbound and Westbound. */
+/** LRT-2 runs east–west: Westbound on SWITCH over an Eastbound trip. */
 export const OverAnEastWestTrain: Story = {
   render: () => <RouteCardHeader {...common} back way="Westbound" onBackToList={fn()} />,
 };

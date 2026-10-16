@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { railBound, stationNumber } from '../../src/features/routes/model/rail-codes.ts';
-import { wayWord } from '../../src/features/routes/model/departures.ts';
+import { switchWord, wayWord } from '../../src/features/routes/model/departures.ts';
 
 /** A direction as wayWord and railBound read it: its name, which way it runs, its route. */
 const direction = (name, routeName, routeCode, reversed = false) => ({
@@ -104,4 +104,16 @@ test('one word fits every direction on show: mixed lists keep Papunta and Pabali
   assert.equal(wayWord(false, [mrtSouth, lrt2West]), 'Papunta');
   assert.equal(wayWord(true, [mrtSouth, jeep]), 'Pabalik');
   assert.equal(wayWord(false, [ferry]), 'Papunta');
+});
+
+test('SWITCH names the way a tap leads to: Pabalik over Papunta, the other bound on a train', () => {
+  const jeep = direction('Tala → SM Fairview', 'Tala – SM Fairview', null);
+  assert.equal(switchWord(false, [jeep]), 'Pabalik');
+  assert.equal(switchWord(true, [jeep]), 'Papunta');
+  const mrtSouth = direction('North Avenue → Taft Avenue', 'North Avenue – Taft Avenue', 'MRT-3');
+  assert.equal(switchWord(false, [mrtSouth]), 'Northbound');
+  const lrt2East = direction('Recto → Antipolo', 'Antipolo – Recto', 'LRT-2', true);
+  assert.equal(switchWord(true, [lrt2East]), 'Westbound');
+  const lrt2West = direction('Antipolo → Recto', 'Antipolo – Recto', 'LRT-2');
+  assert.equal(switchWord(false, [mrtSouth, lrt2West]), 'Pabalik');
 });

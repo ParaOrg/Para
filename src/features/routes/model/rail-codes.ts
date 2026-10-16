@@ -69,3 +69,16 @@ export function railBound(v: Direction): Bound | null {
   if (start === null || end === null || start === end) return null;
   return end > start ? BOUNDS[line].towardHigher : BOUNDS[line].towardLower;
 }
+
+/** The bound the other way round: Northbound's is Southbound, Eastbound's Westbound. */
+const OTHER_BOUND = {
+  Northbound: 'Southbound',
+  Southbound: 'Northbound',
+  Eastbound: 'Westbound',
+  Westbound: 'Eastbound',
+} as const satisfies Record<Bound, Bound>;
+
+/** The bound a train runs the other way round on its line. */
+export function otherBound(bound: Bound): Bound {
+  return OTHER_BOUND[bound];
+}

@@ -384,6 +384,17 @@ if (existsSync(swPath)) {
     fonts.length > 0 && fonts.every((f) => precached.includes(f)),
     fonts.filter((f) => !precached.includes(f)).join(', '),
   );
+  // The vehicles' sprite, fetched by the trip's header rather than inlined in
+  // the JS (the owner's "trim the icons with a sprite", 2026-10-16): offline,
+  // the header still draws its vehicle.
+  const sprites = readdirSync(join(dist, 'assets'))
+    .filter((f) => /^vehicle-icons-.*\.svg$/.test(f))
+    .map((f) => `assets/${f}`);
+  check(
+    "precache holds the vehicles' sprite",
+    sprites.length === 1 && precached.includes(sprites[0]),
+    sprites.join(', ') || 'no vehicle-icons-*.svg in assets/',
+  );
   check(
     'precache holds the three icons',
     ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png'].every((u) =>
