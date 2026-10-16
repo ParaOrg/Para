@@ -28,13 +28,14 @@ import { getSupabase } from './supabase';
  * page's build too.
  *
  * This is the boundary where the database's names become the glossary's
- * (CONTEXT.md; ticket 07 of the restructure follow-ups, 2026-10-07): every
- * row is parsed with the raw schema of its table and translated by the
- * model's own `to…` function, so no `route_variant_id` or `stop_id` reaches
- * a panel. A row the schema cannot read is said, naming the field.
+ * (CONTEXT.md): every row is parsed with the raw schema of its table and
+ * translated by the model's own `to…` function, so no `route_variant_id` or
+ * `stop_id` reaches a panel. A row the schema cannot read is said, naming the
+ * field.
  *
- * Each returns nothing when the build has no Supabase, so the studio shows
- * its config banner rather than a load error on top of it.
+ * Each returns nothing when the build has no Supabase (withDrawing, which must
+ * return a drawing, throws), so the studio shows its config banner rather than
+ * a load error on top of it.
  *
  * Each reads its table in pages (read-all.ts): Supabase answers at most 1,000
  * rows a request and does not say when it cut, and the links table passes
@@ -43,23 +44,23 @@ import { getSupabase } from './supabase';
 
 /**
  * A direction as the editor lists it, with its parent route embedded: every
- * column but the drawing. `control_points` and `segments` were half of every
- * row and are read only when a direction is opened (withDrawing): with 1,000
- * directions the list was 25 MB a load, measured 2026-09-25.
+ * column but the drawing. `control_points` and `segments` are half of every
+ * row, so they are read only when a direction is opened (withDrawing): a list
+ * of every column measured 25 MB a load at 1,000 directions.
  *
  * Named columns, not `*`: a column added later is left out of the list until
  * it is named here, which is the point — the list stays as light as it is.
  */
 // One literal, not pieces joined: the client reads the row's type off it.
 //
-// `overview`, not `shape` (0009, 2026-09-29): the line thinned at 5 m, about
-// a quarter of it. The list draws it and a tap finds it; a direction's full
-// line is read when it is lit or opened (lineOf, withDrawing), and before a
-// hotspot's links are worked out (linesOf). `shape` stayed in the list until
-// then, 15–27 MB of it at a thousand directions.
+// `overview`, not `shape` (0009): the line thinned at 5 m, about a quarter of
+// it. The list draws it and a tap finds it; a direction's full line is read
+// when it is lit or opened (lineOf, withDrawing), and before a hotspot's links
+// are worked out (linesOf). The full `shape` in the list measured 15–27 MB at a
+// thousand directions.
 //
-// `signboards` (0010, 2026-10-01): a few file names, for the trip card's
-// Signboard and the editor's own (SignboardEditor).
+// `signboards` (0010): a few file names, for the trip card's Signboard and the
+// editor's own (SignboardEditor).
 export const DIRECTION_SELECT =
   'id, route_id, direction_name, origin_terminal, destination_terminal, overview, reversed, confidence, updated_at, borrowed_from, borrowed_part, borrowed_m, signboards, route:route(*)';
 /** The rest of a direction: its drawing, and its full line. */
@@ -157,7 +158,7 @@ export async function lineOf(id: string): Promise<LineStringGeoJSON | null> {
   return (data as { shape: LineStringGeoJSON | null }).shape;
 }
 
-/** How many ids one read of full lines names: its request line stays short (finding 4). */
+/** How many ids one read of full lines names: its request line stays short. */
 const LINES_PER_READ = 50;
 
 /**
@@ -220,10 +221,9 @@ export async function withDrawing(v: DirectionRow): Promise<DirectionDrawing> {
  * Every hotspot, in full. Public: RLS allows anyone to read.
  *
  * Both hooks load at once — the directions need the hotspots to name
- * themselves, the hotspots hook needs them to draw — and each used to read
- * the whole table (review finding 6: two reads a load, four under
- * StrictMode). A read already in flight is shared; the next load, after it
- * settles, reads afresh.
+ * themselves, the hotspots hook needs them to draw — so a read already in
+ * flight is shared, not repeated by each (two reads a load, four under
+ * StrictMode). The next load, after it settles, reads afresh.
  */
 let hotspotsInFlight: Promise<HotspotRow[]> | null = null;
 function listHotspots(): Promise<HotspotRow[]> {
