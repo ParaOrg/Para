@@ -6,6 +6,10 @@ import {
   type Elevation,
   type Imagery,
 } from '@/features/routes/map/basemap';
+import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
+
+import satellite from './basemap-thumbnails/satellite.webp';
+import terrain from './basemap-thumbnails/terrain.webp';
 
 /*
  * Satellite and Terrain are the studio's only (the owner, 2026-10-15): a
@@ -47,3 +51,10 @@ export const STUDIO_BASEMAPS: readonly Basemap[] = [
   { ...COLOUR, id: 'terrain', label: 'Terrain', elevation: AWS_TERRAIN_TILES },
   { id: 'satellite', label: 'Satellite', url: MONOCHROME.url, imagery: ESRI_WORLD_IMAGERY },
 ];
+
+/** The Map Style card's pictures: the public map's, then Terrain's and Satellite's, cropped as they are. */
+export const STUDIO_BASEMAP_THUMBNAILS: Readonly<Record<string, string>> = {
+  ...BASEMAP_THUMBNAILS,
+  terrain,
+  satellite,
+};
