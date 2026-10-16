@@ -212,7 +212,7 @@ export function afterIdle(
 }
 
 /** What a hook wants warmed, asked as the warm-up comes: its twins then, or none. */
-export type Provider = () => readonly Twin[];
+type Provider = () => readonly Twin[];
 
 /** Each map's warm-up to come: the providers asked so far, and its cancel. */
 const batches = new WeakMap<object, { providers: Set<Provider>; cancel: () => void }>();

@@ -32,7 +32,7 @@ export const MODES: { value: TransportMode; label: string }[] = [
  * own track and stops only at its own stations, so everything that asks
  * which hintuans a line passes asks `servedBy` too.
  */
-export const RAIL_MODES: readonly TransportMode[] = ['lrt', 'mrt'];
+const RAIL_MODES: readonly TransportMode[] = ['lrt', 'mrt'];
 
 /** The lines a routeCode or a station's `line` may name; 0011 holds `hotspot.line` to them. */
 export const RAIL_LINES = ['LRT-1', 'LRT-2', 'MRT-3'] as const;

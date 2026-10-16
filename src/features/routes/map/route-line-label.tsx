@@ -8,11 +8,15 @@ import type { Livery } from '../model/liveries';
  * it. Start, Start's S before it, for a ride's picked start (2026-10-15):
  * End's shape in Head Route's green (2026-10-16), as Figma draws no Start
  * Label but draws the start that way on RouteLineEndingsLabels.
+ * Unselected, Default at 60% (4200:13645, 2026-10-16), a hintuan outside
+ * the ride.
  */
-export type RouteLineLabelVariant = 'default' | 'end' | 'start';
+export type RouteLineLabelVariant = 'default' | 'unselected' | 'end' | 'start';
 
 /** The circled letter before a marked label's name, and what it says to a screen reader. */
 const MARK = {
+  default: null,
+  unselected: null,
   end: { Icon: EndIcon, spoken: 'End, ' },
   start: { Icon: StartIcon, spoken: 'Start, ' },
 } as const;
@@ -57,14 +61,16 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
       ? HEAD_ROUTE
       : { surface: LINE_SURFACE[livery], code: LINE_TEXT[livery], words: LINE_WORDS[livery] };
   const surface = worn.surface;
-  const mark = variant === 'default' ? null : MARK[variant];
+  const mark = MARK[variant];
   const code = mark ? codeSign : null;
   return (
     <span
       data-part="label"
       className={
         'flex max-w-full min-w-0 items-center gap-2 font-sn-pro text-sm/5 font-medium whitespace-nowrap ' +
-        worn.words
+        worn.words +
+        ' ' +
+        FADE[variant]
       }
     >
       {/* CodeSignEnd: the E, or Start's S, in a disc of its own, 28 across, beside the pill. */}
@@ -117,7 +123,16 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
  */
 const PADDING = {
   default: 'px-2 py-1',
+  unselected: 'px-2 py-1',
   end: 'gap-1 py-0.5 pr-2 pl-0.5',
   start: 'gap-1 py-0.5 pr-2 pl-0.5',
   code: 'gap-1.5 py-1 pr-2 pl-1',
 } satisfies Record<RouteLineLabelVariant | 'code', string>;
+
+/** Figma's opacity/60 for a name outside the ride (the Label's Unselected, 4200:13645), else nothing. */
+const FADE = {
+  default: '',
+  unselected: 'opacity-60',
+  end: '',
+  start: '',
+} satisfies Record<RouteLineLabelVariant, '' | 'opacity-60'>;

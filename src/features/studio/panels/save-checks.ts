@@ -8,7 +8,7 @@ import { ENDS_TAKEN } from '../data/routes-write';
  */
 
 /** What the refusals read from the form. */
-export interface SaveCheck {
+interface SaveCheck {
   headId: string;
   tailId: string;
   /** The places of the two picked boxes, when known. */
