@@ -6,7 +6,7 @@ import { kmLabel } from '@/shared/utils/geo';
 
 import { RouteCardHeader } from './route-card-header';
 import { RouteEndPointBar } from './route-end-point-bar';
-import { TripTimeline, type TripTimelineProps } from './trip-timeline';
+import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 
 /** A ride's pesos both ways: `₱26` regular, and its discounted price — students, seniors, PWDs. */
 export interface Fares {
@@ -17,14 +17,14 @@ export interface Fares {
 export const FREE = 'free';
 export type Fare = Fares | typeof FREE;
 
-type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
-  /** Figma's Kilometer tile: the whole ride's length, in metres; written `12.8km`. */
+type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
+  /** Figma's Distance tile (Kilometer until the owner's ask of 2026-10-15): the whole ride's length, in metres; written `12.8km`. */
   metres: number;
-  /** …and the ride to the picked hintuan, which the tile shows while it is picked, as the fare tile does. */
+  /** …and the ride between the picks, which the tile shows once an end is picked, as the fare tile does. */
   pickedMetres?: number;
   /** The fare tile's pesos for the whole ride, or FREE. Omitted when unpriced, and the tile with it. */
   fare?: Fare;
-  /** …and for the ride to the picked hintuan, which the tile shows while it is picked. */
+  /** …and for the ride between the picks, which the tile shows once an end is picked. */
   pickedFare?: Fare;
   /**
    * Whether the tile shows the Discounted fare, and where a tap says so: the
@@ -39,6 +39,8 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
   switchable: boolean;
   /** Whether this trip is the route's way back: SWITCH is pressed then, as over the list. */
   back: boolean;
+  /** The word on SWITCH (wayWord): Papunta or Pabalik, or a train's bound. */
+  way: string;
   /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none. */
   onBackToList: (() => void) | null;
   onClose: () => void;
@@ -66,13 +68,13 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip — the owner's RouteTripDetail (Figma 3778:3183,
+ * One direction as a trip — the owner's TimelineRouteDetailCard (Figma 3778:3183,
  * 2026-09-29): RouteCardHeader's Variant2; under it a card in the livery of
  * the place the trip leaves from, inset from the sides and rounded, where a
  * rail runs from the origin (TimelineTop) down to the place it goes to
  * (TimelineBottomEndRoute); under the card the direction's signboards as
  * pictures (his Signboard, 3919:11355, 2026-10-01, uploaded in the studio)
- * in their own strip (4051:5528); then two tiles, the ride's Kilometer and
+ * in their own strip (4051:5528); then two tiles, the ride's Distance and
  * its fare (moved under the card in his redrawing of 2026-09-29). The
  * boards sat under the tiles with a "Signboard" heading until 2026-10-12,
  * went right under the header by his first redrawing that day, and between
@@ -86,11 +88,13 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
  * hintuan they select"). The fare picked is kept for every trip after, and the
  * next visit (useFareKind; his "I don't want the user to keep tapping",
  * 2026-09-30). Its second fare was "Student fare" until he named it
- * "Discounted fare" (2026-09-30). A first visit opens on Regular. The Kilometer tile follows the pick the
+ * "Discounted fare" (2026-09-30). A first visit opens on Regular. The Distance tile follows the pick the
  * same way, from where the trip leaves to there (the owner, 2026-09-30: "it
- * should follow the picked hintuan").
+ * should follow the picked hintuan"). Since a start can be picked too
+ * (2026-10-15), both tiles read the ride from the start to the end, once the
+ * end is picked: a start alone is no ride yet (2026-10-16).
  * The pesos moved off the rail into their tile with this set; a route no
- * fare rule prices has no Expected fare tile, and Kilometer takes the row
+ * fare rule prices has no Expected fare tile, and Distance takes the row
  * (the owner kept that default, 2026-09-29: nothing is drawn for it).
  *
  * Under the tiles, "Other routes" (his of 2026-10-01): a row per other
@@ -98,9 +102,9 @@ type Props = Omit<TripTimelineProps, 'pickedPesos'> & {
  * RouteCard's rows are; a tap opens that route's trip in this one's place.
  * With none, there is no heading either.
  *
- * The card and its rail are TripTimeline's.
+ * The card and its rail are TimelineRouteDetail's.
  */
-export function RouteTripDetail({
+export function TimelineRouteDetailCard({
   livery,
   metres,
   pickedMetres,
@@ -108,17 +112,23 @@ export function RouteTripDetail({
   routeOrigin,
   hintuans,
   picked,
+  start = null,
+  startCode,
+  onSetStart,
+  onRemoveStart,
   onPick,
   pickedFare,
   pickedCode,
   onEnd,
   endPicked,
   routeDirection,
+  isTrain,
   discounted: kept,
   onDiscounted,
   onSwitch,
   switchable,
   back,
+  way,
   onBackToList,
   onClose,
   dockRef,
@@ -138,8 +148,12 @@ export function RouteTripDetail({
   // the same day).
   const [turns, setTurns] = useState(0);
   const othersHeading = useId();
-  const shown = picked && pickedFare ? pickedFare : fare;
-  const shownMetres = picked && pickedMetres !== undefined ? pickedMetres : metres;
+  // An end picked: the tiles read the ride between it and the start, a
+  // hintuan's row or, with a start, an end's (the owner, 2026-10-16: "keep
+  // the start"). A start alone is no ride yet, the whole trip's shown.
+  const hasRide = picked !== null || (start !== null && endPicked !== null);
+  const shown = hasRide && pickedFare ? pickedFare : fare;
+  const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
   return (
     <BottomSheet
       ref={dockRef}
@@ -153,17 +167,22 @@ export function RouteTripDetail({
           onSwitch={onSwitch}
           switchable={switchable}
           back={back}
+          way={way}
           onClose={onClose}
         />
       }
     >
-      {/* Under the header, whose 12 below is the gap (the owner's RouteTripDetail, 3778:3183, 2026-10-01). */}
+      {/* Under the header, whose 12 below is the gap (the owner's TimelineRouteDetailCard, 3778:3183, 2026-10-01). */}
       <div className="w-full px-3">
-        <TripTimeline
+        <TimelineRouteDetail
           livery={livery}
           routeOrigin={routeOrigin}
           hintuans={hintuans}
           picked={picked}
+          start={start}
+          startCode={startCode}
+          onSetStart={onSetStart}
+          onRemoveStart={onRemoveStart}
           onPick={onPick}
           pickedPesos={
             pickedFare &&
@@ -173,11 +192,12 @@ export function RouteTripDetail({
           onEnd={onEnd}
           endPicked={endPicked}
           routeDirection={routeDirection}
+          isTrain={isTrain}
         />
       </div>
       {/*
         Between the card and the tiles, the direction's signboards (the
-        owner's RouteTripDetail of 2026-10-12, its strip 4051:5528; right
+        owner's TimelineRouteDetailCard of 2026-10-12, its strip 4051:5528; right
         under the header by his first redrawing that day, under the tiles
         with a "Signboard" heading from 2026-10-01 until then): a white
         strip, 12 in from the sides and 16 above, each board 40 tall at its
@@ -209,7 +229,7 @@ export function RouteTripDetail({
           ))}
         </ul>
       )}
-      {/* 16 under the card, or under the signboards' strip (the owner's RouteTripDetail of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). The tiles 8 apart (his spacing of 2026-10-13: 3778:3183, its row 3886:6278; 12 before). */}
+      {/* 16 under the card, or under the signboards' strip (the owner's TimelineRouteDetailCard of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). The tiles 8 apart (his spacing of 2026-10-13: 3778:3183, its row 3886:6278; 12 before). */}
       <div
         data-testid="trip-tiles"
         className="flex w-full gap-2 bg-surface px-3 py-4 text-center font-sn-pro"
@@ -218,7 +238,7 @@ export function RouteTripDetail({
           <span data-testid="trip-km" className={FIGURE}>
             {kmLabel(shownMetres)}
           </span>
-          <span className={NAME}>Kilometer</span>
+          <span className={NAME}>Distance</span>
         </div>
         {shown === FREE ? (
           <div className={TILE}>

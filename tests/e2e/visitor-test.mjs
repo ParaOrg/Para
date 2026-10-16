@@ -1391,8 +1391,8 @@ if (PART === 1) {
         await page
           .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
           .catch(() => {});
-        // On a train the station's code comes first, "GL04 · ₱20" (the
-        // owner, 2026-10-13): the pesos are their own part then.
+        // On a train the station's code comes first, "GL04 ₱20" (the
+        // owner, 2026-10-13): the pesos are their own half then.
         const fare = row.locator('[data-testid="trip-hintuan-fare"]');
         const pesos = fare.locator('[data-part="pesos"]');
         const pill = (await fare.count())
@@ -1420,7 +1420,9 @@ if (PART === 1) {
           probe.remove();
           return {
             lit: (await window.__lit('saved-routes')) ?? [],
-            rest: ((await window.__src('ride-rest'))?.features ?? []).map(
+            // The pale stretches, one line each: the source holds them as one
+            // MultiLineString (useRideRest).
+            rest: ((await window.__src('ride-rest'))?.features ?? []).flatMap(
               (f) => f.geometry.coordinates,
             ),
             restColour: m.getLayer('ride-rest-line')
@@ -1466,10 +1468,10 @@ if (PART === 1) {
             (!want || want.fare == null || (pill === want.fare && fareTile === want.fare)),
           `pill "${pill}"; tile "${fareTile}"${want ? `, the sums "${want.fare}"` : ''}`,
         );
-        // The Kilometer tile follows the pick too (the owner, 2026-09-30).
+        // The Distance tile follows the pick too (the owner, 2026-09-30).
         const kmPicked = (await cardEl.locator('[data-testid="trip-km"]').innerText()).trim();
         check(
-          '  the Kilometer tile the ride from the start to there',
+          '  the Distance tile the ride from the start to there',
           want ? kmPicked === want.km : kmPicked !== '',
           `"${kmPicked}"${want ? `, the sums "${want.km}"` : ''}; the whole ride ${kmBefore}`,
         );
@@ -1556,7 +1558,7 @@ if (PART === 1) {
         }));
         const kmAfter = await cardEl.locator('[data-testid="trip-km"]').innerText();
         check(
-          '  a second tap lets it go, its circle and the pale rest too, no dot along it, the Kilometer tile the whole ride again',
+          '  a second tap lets it go, its circle and the pale rest too, no dot along it, the Distance tile the whole ride again',
           (await row.getAttribute('data-state')) === 'rest' &&
             letGo.pins === 0 &&
             letGo.rest === 0 &&

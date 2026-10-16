@@ -93,6 +93,34 @@ export const CodeSignEnd: Story = {
   },
 };
 
+/**
+ * Start (2026-10-15): a ride's picked start, End's look with Start's
+ * circled S. Figma draws no Start Label yet: this is the stand-in until the
+ * owner draws one.
+ */
+export const Start: Story = {
+  args: { variant: 'start' },
+  play: async ({ canvasElement }) => {
+    const pill = partOf(canvasElement, 'name');
+    await expectFigmaType(pill);
+    await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(true);
+    await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
+    await expect(pill.querySelector('.sr-only')?.textContent).toBe('Start, ');
+  },
+};
+
+/** CodeSignStart: a picked start station, the S in a disc of its own, as CodeSignEnd's E. A stand-in, as Start is. */
+export const CodeSignStart: Story = {
+  args: { variant: 'start', codeSign: 'YL07' },
+  play: async ({ canvasElement }) => {
+    const pill = partOf(canvasElement, 'name');
+    const disc = partOf(canvasElement, 'start');
+    await expect(pill.contains(disc)).toBe(false);
+    await expect(disc.getBoundingClientRect().width).toBe(28);
+    await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
+  },
+};
+
 /** A code given to Default draws nothing: Figma shows a station's code once it is picked. */
 export const DefaultIgnoresCode: Story = {
   args: { variant: 'default', codeSign: 'YL06' },

@@ -4,7 +4,7 @@ The owner's files, dropped 2026-09-28: SN Pro's sixteen static cuts in
 `SNPro/`, Cubao Free's three (narrow, regular, wide) in `Cubao/`.
 
 **Wired** (fonts.css): SN Pro 400 / 500 / 600 / 700, its ExtraBold 800 (a
-trip's origin and picked hintuan, the owner's RouteTripDetail of
+trip's origin and picked hintuan, the owner's TimelineRouteDetailCard of
 2026-10-13) and its Black 900 (the route cards' titles, 2026-09-28), as
 woff2 subset to Latin from these
 sources by `subset.sh`, which says what the subset holds and how to run it

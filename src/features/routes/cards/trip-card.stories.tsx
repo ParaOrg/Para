@@ -146,9 +146,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Opens the fold, as a rider's tap would — and lets go of it, since a tap draws no focus ring. */
+/**
+ * Opens the fold, as a rider's tap would — and lets go of it, since a tap
+ * draws no focus ring. A train's says "N more stations".
+ */
 const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more hintuans/ });
+  const fold = within(canvasElement).getByRole('button', { name: /more (hintuans|stations)/ });
   await userEvent.click(fold);
   fold.blur();
 };
@@ -236,7 +239,8 @@ export const Train: Story = {
     pickedCode: 'CAR',
     height: { snap: 'max', onSnap: fn() },
   },
-  play: openFold,
+  // Carriedo picked: the stations before it on the ride, EDSA the one after
+  // it, shown as it is, so nothing folds.
 };
 
 /** The ferry: free, with the line's own words under the tiles. */

@@ -78,6 +78,29 @@ export const CodeSign: Story = {
   },
 };
 
+/**
+ * HintuanStart (2026-10-15): a ride's picked start, its dot filled, Start's
+ * S before its name. Figma draws no start yet: HintuanEnd's look with the S,
+ * until the owner draws one.
+ */
+export const HintuanStart: Story = {
+  args: { variant: 'hintuan-start' },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'start'))).toBe(true);
+    await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+  },
+};
+
+/** A picked start station: the S in its own disc, the code in a white chip. */
+export const CodeSignStart: Story = {
+  args: { variant: 'hintuan-start', codeSign: 'YL07' },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
+  },
+};
+
 /** Along the rest past a picked hintuan: the dot rings in the card's pale, the name keeps the line's colour. */
 export const Paled: Story = { args: { variant: 'hintuan', isPaled: true } };
 
