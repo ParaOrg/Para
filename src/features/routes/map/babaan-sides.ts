@@ -14,14 +14,15 @@ import { inPassingOrder, listedAlong, passedAt } from '../model/timeline';
 
 /**
  * The babaan side: on the chosen direction, each hintuan box it cuts across
- * is drawn again on the line's right only — the owner's rule of 2026-09-26,
- * the babaan is on the right of the road in the direction of travel, papunta
- * and balikan alike. A box beside the road is not cut (`rightOfLine` is null)
- * and stays as it is. The chosen direction only: with every route showing, a
- * box crossed by several lines would be cut into strips.
+ * is drawn again on the line's right only — the owner's rule: the babaan is
+ * on the right of the road in the direction of travel, papunta and balikan
+ * alike. A box beside the road is not cut (`rightOfLine` is null) and stays
+ * as it is. The chosen direction only: with every route showing, a box
+ * crossed by several lines would be cut into strips.
  *
- * A placeholder look until the owner designs it: the hintuan orange, stronger.
- * Not for a train or the ferry: a platform or a pier has no side of the road to get off on.
+ * TODO: the look is a placeholder until the owner designs it: the hintuan
+ * orange, stronger. Not for a train or the ferry: a platform or a pier has no
+ * side of the road to get off on.
  */
 
 const SRC = 'babaan-side';
@@ -83,23 +84,21 @@ export function useBabaanSides(
  * the line's right, in the order the line reaches them. None for a train or
  * the ferry, or with nothing chosen.
  *
- * The cut is asked first, and only of the boxes the line's own box reaches
- * (a metre wider, as rightOfLine pads its own); where along the line, of
- * only the boxes it cuts. It was every listed hintuan placed along the
- * whole line first, and then cut: worked out in the render of a trip tap,
- * before its card paints, and on the first trip of a visit about 27 ms of
- * Node at full speed (Bagong Silang Kanan 5 → Philcoa), 7 ms now (the
- * cheap-phone plan, step 8, 2026-10-04). In a browser at CPU 4x, on three
- * trips opened one after another (5 runs, medians [min-max], this function
- * and all it calls, measured 2026-10-04): 60 [46-70] -> 35 [28-41] ms on
- * the first, 26 -> 9 and 16 -> 9 ms on the next two. So a cheap phone's
- * first trip of a visit gains about 25 ms (review of step 8, 2026-10-05).
- * The same features in the same order: a box the line's box misses is
- * crossed by none of the line, nor by a carry, which starts at an end
- * inside the box; a box listed but not cut was dropped either way; and the
- * sort is stable, as hintuansAlong's is. babaan-side-test holds the two
- * against each other, word for word, on the committed map and on made-up
- * directions.
+ * The cut is asked first, and only of the boxes the line's own box reaches (a
+ * metre wider, as rightOfLine pads its own); where along the line, of only
+ * the boxes it cuts. Placing every listed hintuan along the whole line first,
+ * and then cutting, would be worked out in the render of a trip tap, before
+ * its card paints: on the first trip of a visit about 27 ms of Node at full
+ * speed (Bagong Silang Kanan 5 → Philcoa) against 7 ms. In a browser at CPU
+ * 4x, on three trips opened one after another (5 runs, medians [min-max],
+ * this function and all it calls): 60 [46-70] -> 35 [28-41] ms on the first,
+ * 26 -> 9 and 16 -> 9 ms on the next two. So a cheap phone's first trip of a
+ * visit gains about 25 ms. The same features in the same order: a box the
+ * line's box misses is crossed by none of the line, nor by a carry, which
+ * starts at an end inside the box; a box listed but not cut was dropped
+ * either way; and the sort is stable, as hintuansAlong's is. babaan-side-test
+ * holds the two against each other, word for word, on the committed map and
+ * on made-up directions.
  */
 export function babaanSideFeatures(chosen: Direction | null, hotspots: readonly Hotspot[]) {
   if (!chosen || isLineMode(chosen.route?.mode)) return [];

@@ -57,8 +57,7 @@ interface Cards {
  * RouteCard picked, SWITCH, the sheet settled at another height — and the
  * camera from before a RouteCard was picked on a hotspot's card, back as it
  * is let go; and the card buttons that move it. `root` goes on the page,
- * `tripDock` on the trip card, `hotspotDock` on a hotspot's. Split from
- * PublicMapApp, which held it inline (2026-10-01).
+ * `tripDock` on the trip card, `hotspotDock` on a hotspot's.
  *
  * `camera: false` turns those off: the overviews and the camera kept from
  * before get no map and do nothing, while a picked hintuan still glides. It is fixed for the page's life, not a switch for while
@@ -76,11 +75,10 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   // the camera off (see above).
   const cam = opts.camera === false ? null : map;
 
-  // A hintuan picked on the trip card (the owner's Timeline State=Selected,
-  // 2026-09-29): the camera gliding there clear of the card, and a circle
-  // popping up on it — the route left whole, no get-off circles (the
-  // owner's ask of 2026-09-30: "now I don't want to cut the route"). The
-  // card stays at its height (clearOfSheet).
+  // A hintuan picked on the trip card (the owner's Timeline State=Selected):
+  // the camera gliding there clear of the card, and a circle popping up on it
+  // — the route left whole, no get-off circles (the owner's call). The card
+  // stays at its height (clearOfSheet).
   const tripDock = useRef<HTMLDivElement>(null);
   // The HintuanCard's, for a picked box to land clear of it.
   const hotspotDock = useRef<HTMLDivElement>(null);
@@ -100,10 +98,10 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const before = useCameraBefore(cam);
   // A trip opened from a card — a list's, a hotspot's, a tail's name — and
   // its ‹: the camera the commuter had as they tapped, back with the card
-  // (the owner's ask, 2026-10-02: a hintuan's card, zoomed in, a RouteCard's
-  // row, ‹, and in again where they were). A hotspot's card picked first
-  // comes back at rest, so the camera from before that pick. One trip
-  // opening another ("Other routes") keeps the first one's.
+  // (the owner's call: a hintuan's card, zoomed in, a RouteCard's row, ‹, and
+  // in again where they were). A hotspot's card picked first comes back at
+  // rest, so the camera from before that pick. One trip opening another
+  // ("Other routes") keeps the first one's.
   const beforeTrip = useCameraBefore(cam);
   const keepForTrip = () => {
     if (saved.selected) return;
@@ -119,9 +117,9 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const [switches, setSwitches] = useState(0);
   const switched = () => setSwitches((n) => n + 1);
   useSwitchOverview(cam, saved.litDirections, switches, openSheet, cards.snap);
-  // A ride from a start to an end (the owner, 2026-10-16): what the camera
-  // takes in once the end is picked (pickOnTrip, endOnTrip), and what the
-  // trip frames as the sheet settles, in place of its whole route.
+  // A ride from a start to an end (the owner's call): what the camera takes
+  // in once the end is picked (pickOnTrip, endOnTrip), and what the trip
+  // frames as the sheet settles, in place of its whole route.
   const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
   const [endPicks, setEndPicks] = useState(0);
   useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
@@ -177,8 +175,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     /**
      * A row picked on the trip, or its dot on the map (useRideTo's pick). An
      * end picked after a start takes the sheet to Middle and the camera in to
-     * the ride between them (the owner's ask, 2026-10-16): as the sheet
-     * settles there, or at once when it is already there.
+     * the ride between them (the owner's call): as the sheet settles there,
+     * or at once when it is already there.
      */
     pickOnTrip: (id: string | null) => {
       const isNewEnd =
@@ -190,8 +188,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     /**
      * The origin's row or the destination's on the trip (useRideTo's toEnd).
      * With a start, it is the ride's end, and the camera takes in the ride as
-     * for a hintuan picked as the end (the owner, 2026-10-16: "keep the
-     * start"); with none, the map glides to it.
+     * for a hintuan picked as the end (the owner's call: keep the start);
+     * with none, the map glides to it.
      */
     endOnTrip: (end: 'from' | 'to') => {
       const isNewEnd = ride.startId !== null && ride.endPicked !== end;
@@ -202,7 +200,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     /**
      * SWITCH on a trip: the other way round, and the camera with it. On a
      * jeep, the picked hintuan goes with it, onto a box the other way passes
-     * (carryTo; the owner's ask, 2026-10-15).
+     * (carryTo; the owner's call).
      */
     switchTrip: (v: Direction) => {
       ride.carryTo(v, (hotspotId) => hotspots.linkedDirectionIds(hotspotId).includes(v.id));
@@ -218,8 +216,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
 
     /**
      * A trip's "Other routes": the sheet to Middle from wherever it is, so
-     * the map shows the route the camera takes in (the owner, 2026-10-01),
-     * and that route's trip in this one's place.
+     * the map shows the route the camera takes in (the owner's call), and
+     * that route's trip in this one's place.
      */
     otherRoute: (v: { id: string }) => {
       if (cards.height.snap !== 'middle') cards.height.onSnap('middle');

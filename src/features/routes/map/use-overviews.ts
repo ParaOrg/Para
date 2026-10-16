@@ -12,15 +12,14 @@ import { directionLine, type Direction } from '../model/routes';
 
 /*
  * The camera taking in routes whole — a trip opened, a RouteCard picked,
- * SWITCH pressed — zooming in or out, clear of the card's sheet: the owner's
- * asks of 2026-10-01, one fit for all three.
+ * SWITCH pressed — zooming in or out, clear of the card's sheet: one fit for
+ * all three (the owner's call).
  */
 
 /**
- * The farthest out the sheet going up takes the camera: the scale bar at
- * 5 km (the owner, 2026-10-01; 2.5 km at first, too close from Middle
- * up). Further out than that only by the
- * commuter's own hand.
+ * The farthest out the sheet going up takes the camera: the scale bar at 5 km
+ * (the owner's call; 2.5 km is too close from Middle up). Further out than
+ * that only by the commuter's own hand.
  */
 const RAISED_FARTHEST_M = 5000;
 
@@ -68,11 +67,11 @@ function overview(
 }
 
 /**
- * A trip opened — from a card, a tap on its line: the camera
- * takes in its whole route, zooming in or out, clear of the card (the
- * owner's ask, 2026-10-01). Keyed on the route, so SWITCH, which covers the
- * same ground the other way, leaves the view as it is; the card's height and
- * the trip's own changes move nothing.
+ * A trip opened — from a card, a tap on its line: the camera takes in its
+ * whole route, zooming in or out, clear of the card (the owner's call). Keyed
+ * on the route, so SWITCH, which covers the same ground the other way, leaves
+ * the view as it is; the card's height and the trip's own changes move
+ * nothing.
  */
 export function useTripOverview(
   map: MapLibreMap | null,
@@ -91,9 +90,9 @@ export function useTripOverview(
 /**
  * A RouteCard picked — in the route list or on a hotspot's card: the camera
  * takes in the routes it stands for, as a trip's row does for its trip (the
- * owner's ask, 2026-10-01), clear of the sheet on show. Keyed on the card
- * and what it shows, so a card let go leaves the view as it is until another
- * is picked; SWITCH has its own (useSwitchOverview).
+ * owner's call), clear of the sheet on show. Keyed on the card and what it
+ * shows, so a card let go leaves the view as it is until another is picked;
+ * SWITCH has its own (useSwitchOverview).
  */
 export function useCardOverview(
   map: MapLibreMap | null,
@@ -113,11 +112,10 @@ export function useCardOverview(
 
 /**
  * The route list opened — a tap where routes share a road, or a trip's ‹
- * listing those sharing an end: the camera takes in every route it lights,
- * in the selected blue, as a picked card's do (the owner's ask, 2026-10-02).
- * Keyed on what it lists, so a card picked and let go, or a trip opened from
- * it and its ‹, leave the view to those. What is lit is read a frame later,
- * as for SWITCH.
+ * listing those sharing an end: the camera takes in every route it lights, in
+ * the selected blue, as a picked card's do (the owner's call). Keyed on what
+ * it lists, so a card picked and let go, or a trip opened from it and its ‹,
+ * leave the view to those. What is lit is read a frame later, as for SWITCH.
  */
 export function useListOverview(
   map: MapLibreMap | null,
@@ -148,9 +146,9 @@ export function useListOverview(
 /**
  * SWITCH pressed — on the route list, a hotspot's card or a trip: the camera
  * takes in what is lit now, the routes the other way round, as a pick does
- * (the owner's ask, 2026-10-01). `switches` counts the presses. What is lit
- * is read a frame later: a hotspot's card says what it shows from its own
- * effect, a render after the press.
+ * (the owner's call). `switches` counts the presses. What is lit is read a
+ * frame later: a hotspot's card says what it shows from its own effect, a
+ * render after the press.
  */
 export function useSwitchOverview(
   map: MapLibreMap | null,
@@ -177,15 +175,13 @@ export function useSwitchOverview(
 /**
  * The sheet settled at another height — Low, Middle, Max, or where a drag
  * left it: the camera takes in again what the card on show frames, in what
- * map the sheet leaves now (the owner's ask, 2026-10-01: "zooming out and
- * zoom in when bottomsheet is low, middle and max"). Routes are fitted whole,
- * in close above Low, out above Middle — and at Max, which on a phone covers
- * the whole map, as at Middle (roomBeside); a place is brought into view at
- * its zoom. Whatever the commuter did to the map since, the
- * overview comes back (their "the camera reset to overview"). Going up, it
- * zooms out no further than RAISED_FARTHEST_M on the scale bar ("for
- * scrolling up only"); coming down, the whole route. `frame` is read as the
- * sheet settles; null, with no card on show, moves nothing.
+ * map the sheet leaves now (the owner's call). Routes are fitted whole, in
+ * close above Low, out above Middle — and at Max, which on a phone covers the
+ * whole map, as at Middle (roomBeside); a place is brought into view at its
+ * zoom. Whatever the commuter did to the map since, the overview comes back.
+ * Going up, it zooms out no further than RAISED_FARTHEST_M on the scale bar
+ * ("for scrolling up only"); coming down, the whole route. `frame` is read as
+ * the sheet settles; null, with no card on show, moves nothing.
  */
 export function useHeightOverview(
   map: MapLibreMap | null,
@@ -219,15 +215,13 @@ export function useHeightOverview(
 }
 
 /**
- * An end picked after a start, the sheet already at Middle (the owner's ask,
- * 2026-10-16: "after choosing the end, the bottomsheet would go to middle
- * position and rearrange the camera to the overview of new start and end"):
- * the camera takes in the ride from the start to the end, clear of the
+ * An end picked after a start, the sheet already at Middle (the owner's
+ * call): the camera takes in the ride from the start to the end, clear of the
  * sheet. Below or above Middle the sheet moves there first and
- * useHeightOverview frames the ride as it settles. `picks` counts those
- * ends; the ride is read in the render the pick makes, and with none there
- * (an end the line can't take the ride to) the camera stays, the pick's own
- * glide taking it there (useRideTo).
+ * useHeightOverview frames the ride as it settles. `picks` counts those ends;
+ * the ride is read in the render the pick makes, and with none there (an end
+ * the line can't take the ride to) the camera stays, the pick's own glide
+ * taking it there (useRideTo).
  */
 export function useRideOverview(
   map: MapLibreMap | null,
@@ -258,11 +252,9 @@ interface Camera {
 
 /**
  * A hotspot's RouteCard picked and let go: the camera goes back to where the
- * commuter had it before the pick's overview (the owner, 2026-10-01:
- * "deselecting head route … should go back to original camera of the user,
- * after the overview"). `keep` as a card is picked with none picked yet — so
- * moving between cards keeps the camera from before them all — and `back`
- * as it is let go.
+ * commuter had it before the pick's overview (the owner's call). `keep` as a
+ * card is picked with none picked yet — so moving between cards keeps the
+ * camera from before them all — and `back` as it is let go.
  */
 export function useCameraBefore(map: MapLibreMap | null) {
   const kept = useRef<Camera | null>(null);
