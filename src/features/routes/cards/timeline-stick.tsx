@@ -23,7 +23,7 @@ interface TimelineStickDisclosureProps {
   rail: string;
 }
 
-export type TimelineStickProps = TimelineStickDotProps | TimelineStickDisclosureProps;
+type TimelineStickProps = TimelineStickDotProps | TimelineStickDisclosureProps;
 
 /**
  * Whether a Connected piece draws its rail above the dot (Figma's layer
