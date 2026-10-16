@@ -79,6 +79,11 @@ export function lookReaders() {
         at: e.dataset.at.split(',').map(Number),
         paled: e.hasAttribute('data-paled'),
         ring: getComputedStyle(e.querySelector('[data-part="circle"] > span')).backgroundColor,
+        // The pill's opacity, 0.6 outside the ride (Label's Unselected); null with no pill.
+        fade:
+          e.dataset.testid === 'end-title'
+            ? getComputedStyle(e.querySelector('[data-part="name"]')).opacity
+            : null,
       }),
     );
   // A colour as the page computes it, through a probe span — a token's
@@ -109,15 +114,21 @@ export const rideLook = (page) =>
     };
   });
 
-/** The end circles now (window.__ends): how many, and the rings they wear, bare and paled, as the DOM computes them. */
+/**
+ * The end circles now (window.__ends): how many, the rings they wear, bare
+ * and paled, as the DOM computes them, and their pills' opacities likewise.
+ */
 export const endRings = (page) =>
   page.evaluate(() => {
     const ends = window.__ends();
     const worn = (list) => [...new Set(list.map((e) => e.ring))];
+    const fades = (list) => [...new Set(list.filter((e) => e.fade !== null).map((e) => e.fade))];
     return {
       circles: ends.length,
       rings: worn(ends.filter((e) => !e.paled)),
       paledRings: worn(ends.filter((e) => e.paled)),
+      fades: fades(ends.filter((e) => !e.paled)),
+      paledFades: fades(ends.filter((e) => e.paled)),
     };
   });
 

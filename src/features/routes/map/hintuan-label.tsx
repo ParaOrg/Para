@@ -29,9 +29,10 @@ interface HintuanLabelProps {
   /** A train station's sign code, YL06, on the picked one's label (RouteLineLabel). */
   codeSign?: string | null;
   /**
-   * Along the rest past a picked hintuan: the dot ringed in the card's pale,
-   * as the line is there. Hintuan alone: the picked one ends the ride, so
-   * it never sits on the rest.
+   * Outside the ride, along the pale: the dot ringed in the card's pale, as
+   * the line is there, and the name the Label's Unselected, at 60% (Figma
+   * 4200:13645, 2026-10-16). Hintuan alone: a pick is the ride's start or
+   * end, so it never sits on the pale.
    */
   isPaled?: boolean;
   /**
@@ -66,7 +67,9 @@ export function HintuanLabel({
 }: HintuanLabelProps) {
   // A pick's dot, the start's as the end's: filled, and never on the pale.
   const isPicked = variant !== 'hintuan';
-  const rail = isPaled && !isPicked ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery];
+  const isOutsideRide = isPaled && !isPicked;
+  const rail = isOutsideRide ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery];
+  const labelVariant = isOutsideRide ? 'unselected' : LABEL_VARIANT[variant];
   const Name = nameButtonLabel ? 'button' : 'span';
   return (
     <>
@@ -77,12 +80,7 @@ export function HintuanLabel({
           data-part="hintuan-name"
           className="hintuan-label-name absolute top-1/2 left-full ml-2 flex max-w-64"
         >
-          <RouteLineLabel
-            variant={LABEL_VARIANT[variant]}
-            name={name}
-            livery={livery}
-            codeSign={codeSign}
-          />
+          <RouteLineLabel variant={labelVariant} name={name} livery={livery} codeSign={codeSign} />
         </Name>
       )}
     </>
