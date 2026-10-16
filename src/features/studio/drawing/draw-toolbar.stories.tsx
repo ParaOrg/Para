@@ -217,7 +217,7 @@ export const KeysOff: Story = {
   },
 };
 
-/** Enter on a focused button presses that button, and is not Done (review of 2026-10-03). */
+/** Enter on a focused button presses that button, and is not Done. */
 export const EnterOnAButton: Story = {
   play: async ({ canvasElement, args }) => {
     await settled();

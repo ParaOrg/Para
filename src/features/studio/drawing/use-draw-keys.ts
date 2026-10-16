@@ -30,8 +30,8 @@ export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: Use
         e.preventDefault();
         if (points > 0) draw.undo();
       } else if (!mod && !e.altKey && e.key === 'Enter') {
-        // Enter on a focused button or link presses it, as everywhere: it
-        // also opened the save panel under it (review of 2026-10-03).
+        // Enter on a focused button or link presses it, as everywhere, so
+        // it must not also open the save panel under it.
         const pressable = (e.target as Element | null)?.closest?.(
           'button, a[href], [role="button"], [role^="menuitem"], summary',
         );
