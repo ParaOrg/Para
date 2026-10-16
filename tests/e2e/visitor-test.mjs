@@ -1420,7 +1420,9 @@ if (PART === 1) {
           probe.remove();
           return {
             lit: (await window.__lit('saved-routes')) ?? [],
-            rest: ((await window.__src('ride-rest'))?.features ?? []).map(
+            // The pale stretches, one line each: the source holds them as one
+            // MultiLineString (useRideRest).
+            rest: ((await window.__src('ride-rest'))?.features ?? []).flatMap(
               (f) => f.geometry.coordinates,
             ),
             restColour: m.getLayer('ride-rest-line')

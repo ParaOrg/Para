@@ -1,4 +1,4 @@
-import { RouteLineLabel } from './route-line-label';
+import { RouteLineLabel, type RouteLineLabelVariant } from './route-line-label';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/timeline-route-detail';
 import type { Livery } from '../model/liveries';
@@ -8,8 +8,17 @@ import './hintuan-label.css';
 /**
  * Figma's Property 1: Hintuan, a hintuan along a trip; HintuanEnd, the
  * picked one, where the ride now ends (CodeSign, given a `codeSign`).
+ * HintuanStart, a picked start, is HintuanEnd with Start's S (2026-10-15):
+ * Figma draws no start yet.
  */
-export type HintuanLabelVariant = 'hintuan' | 'hintuan-end';
+export type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';
+
+/** The Label each look of the hintuan wears beside its dot. */
+const LABEL_VARIANT = {
+  hintuan: 'default',
+  'hintuan-end': 'end',
+  'hintuan-start': 'start',
+} as const satisfies Record<HintuanLabelVariant, RouteLineLabelVariant>;
 
 interface HintuanLabelProps {
   variant: HintuanLabelVariant;
@@ -54,12 +63,13 @@ export function HintuanLabel({
   isPaled = false,
   nameButtonLabel,
 }: HintuanLabelProps) {
-  const isEnd = variant === 'hintuan-end';
-  const rail = isPaled && !isEnd ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery];
+  // A pick's dot, the start's as the end's: filled, and never on the pale.
+  const isPicked = variant !== 'hintuan';
+  const rail = isPaled && !isPicked ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery];
   const Name = nameButtonLabel ? 'button' : 'span';
   return (
     <>
-      <TimelineDot rail={rail} selected={isEnd} isTucked={false} />
+      <TimelineDot rail={rail} selected={isPicked} isTucked={false} />
       {name && (
         <Name
           {...(nameButtonLabel ? { type: 'button' as const, 'aria-label': nameButtonLabel } : {})}
@@ -67,7 +77,7 @@ export function HintuanLabel({
           className="hintuan-label-name absolute top-1/2 left-full ml-2.5 flex max-w-64"
         >
           <RouteLineLabel
-            variant={isEnd ? 'end' : 'default'}
+            variant={LABEL_VARIANT[variant]}
             name={name}
             livery={livery}
             codeSign={codeSign}
