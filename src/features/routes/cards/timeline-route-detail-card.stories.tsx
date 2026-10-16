@@ -50,6 +50,14 @@ function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
       onPick={(id) => {
         props.onPick(id);
         if (id === start) return setStart(null);
+        // A row above the start becomes the start, the start the end, as
+        // useRideTo does (the owner, 2026-10-16: "it should follow the arrow").
+        const at = (row: string | null) => props.hintuans.findIndex((h) => h.id === row);
+        if (start !== null && at(id) < at(start)) {
+          setAtEnd(null);
+          setPicked(start);
+          return setStart(id);
+        }
         setAtEnd(null);
         setPicked((cur) => (cur === id ? null : id));
       }}
@@ -551,6 +559,32 @@ export const LetTheEndGo: Story = {
     await expect(bistek?.classList.contains('visible')).toBe(true);
     await expect(document.activeElement).toBe(
       bistek?.querySelector('[data-testid="trip-hintuan-pick"]'),
+    );
+  },
+};
+
+/**
+ * A row above the start tapped (the owner, 2026-10-16: "it should follow the
+ * arrow … without changing to southbound and north bound"): Amparo becomes
+ * the start, and Bistek, the start a moment before, the end; the ride runs
+ * the trip's own way between them, and the keyboard's focus stays on Amparo.
+ */
+export const StartMovesUp: Story = {
+  args: {
+    start: 'h7',
+    pickedMetres: 4_200,
+    pickedFare: { regular: '₱14', discounted: '₱11–12' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = (id: string) =>
+      canvasElement.querySelector(`[data-testid="trip-hintuan"][data-hintuan="${id}"]`);
+    await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
+    await expect(row('h3')?.querySelector('[data-part="start"]')).toBeTruthy();
+    await expect(row('h7')?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(canvas.getByTestId('trip-km').textContent).toBe(kmLabel(4_200));
+    await expect(document.activeElement).toBe(
+      row('h3')?.querySelector('[data-testid="trip-hintuan-pick"]'),
     );
   },
 };

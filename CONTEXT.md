@@ -120,9 +120,9 @@ _Avoid_: stop list, itinerary, sequence
 A direction as it is ridden: its line in travel order from the place it
 leaves, whichever way it was drawn, and what that order gives — the hintuans
 in the order reached, the metres, the fare. A ride may start and end at any
-hintuan it passes: the ride from there to there, priced between them. An
-end picked before the start is ridden the other way, on the other
-direction's line. On the map a lit direction is drawn as its ride: its
+hintuan it passes: the ride from there to there, priced between them,
+always along the direction's own arrows: a hintuan picked before the start
+becomes the start. On the map a lit direction is drawn as its ride: its
 arrows, its ends named, the stretch between the picks.
 _Avoid_: journey, leg, run; trip (that is the card a ride is shown on)
 

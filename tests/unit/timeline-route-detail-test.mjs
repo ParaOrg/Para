@@ -256,7 +256,10 @@ test('a jeep’s start alone has no pill; a train’s ride with no fare has none
   assert.doesNotMatch(unpriced, /trip-hintuan-fare/, 'a ride with no fare: no code alone either');
 });
 
-test('an end before the start (Variant5): the rail and the open rows run from the E down to the S', () => {
+// A row the line misses has no place on it before the start, so it stays the
+// end when tapped above it (useRideTo swaps only where the line reaches
+// both): the card draws E above S, the rail between them.
+test('an end above the start (a row the line misses): the rail and the open rows run from the E down to the S', () => {
   const html = render(10, { start: 'h6', picked: 'h2' });
   const r = rows(html);
   assert.deepEqual(
@@ -280,7 +283,7 @@ test('an end before the start (Variant5): the rail and the open rows run from th
     'disconnected',
   ]);
   const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
-  assert.deepEqual(marks, ['end', 'start'], 'E above S, as Variant5 draws it');
+  assert.deepEqual(marks, ['end', 'start']);
 });
 
 test('a train’s fold reads stations, a jeep’s hintuans (the owner, 2026-10-15)', () => {

@@ -17,7 +17,7 @@
 | Choosing (4137:9887) | Shaw Boulevard tapped: it becomes the end (E), with its code pill (YL06). Under the row: **Set as start** |
 | Variant3 (4148:12161) | After Set as start: Shaw Boulevard is the start (S), and North Avenue loses its S. Under the row: **× Remove as start** |
 | Variant4 (4151:13124) | Start at Shaw Boulevard, then Ayala tapped: Ayala is the end (E), with the fare pill. The ride is Shaw Boulevard → Ayala |
-| Variant5 (4151:13619) | Start at Shaw Boulevard, then Quezon Avenue tapped, a station **before** the start: E Quezon Avenue, with the fare pill |
+| Variant5 (4151:13619) | Start at Shaw Boulevard, then Quezon Avenue tapped, a station **before** the start: E Quezon Avenue, with the fare pill. Superseded on 2026-10-16: the row tapped becomes the start (below) |
 
 ## The rail: TimelineStick (Figma 3716:1759)
 
@@ -43,12 +43,10 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 - **Fares need no new data.** Jeeps price by the metres between the two picks (`fareFor` in `src/features/routes/model/fares.ts`). Trains price by the station pair: `railFare` (`src/features/routes/model/rail-fares.ts`) already takes any two stations, from LRMC's and LRTA's full matrices and MRT-3's count of stations.
 - **Jeeps and trains alike:** the design's example is a train, and it is read as the same for jeep hintuans.
 - **The studio** gets it too, since it shares the card.
-- **A row before the start (Variant5): the card stays as it is** (the owner, 2026-10-15). Variant5 is the design, exactly as drawn: on the Southbound card, E Quezon Avenue sits above S Shaw Boulevard. The card never flips on a tap, and no switch button is ever added under the row (a first try in Figma was taken out at the owner's word).
-  - **The map serves the ride by itself,** so the rider keeps their place: it draws Shaw Boulevard → Quezon Avenue along the other direction's line (here Northbound), its arrows pointing the way the ride goes, with S and E where the picks are.
-  - **The tiles** read that ride: a train's fare by the station pair (`railFare`), a jeep's by the metres along the other direction's line between the two places.
-  - **On a jeep**, the other direction may run other roads: the two picks are found on it with `small-fixes` 2's rule (the same box, else the nearest box of the same place). If it passes no box of one of the places, there's no ride to price: the row is picked, with no pill.
-  - **The rail** is the ride's stretch on the card, from the E row down to the S row (MiddleTop at Quezon Avenue, MiddleBottom at Shaw Boulevard, as Variant5 draws it).
-  - **The card only turns when the rider taps Northbound or Southbound** (Papunta or Pabalik on a jeep).
+- **A row before the start becomes the start, and the start the end** (the owner, 2026-10-16, superseding Variant5's card of 2026-10-15): "when user choose the before stations, it should follow the arrow … so users can study the route, fare without changing to southbound and north bound". Asked where the S and E go, the owner chose the swap. On the Northbound card with Ortigas the start, Buendia tapped: S Buendia, E Ortigas, the ride Buendia → Ortigas on this card's own line, its arrows Northbound, the rest pale; no ride on the other direction's line.
+  - **Any end already picked** is replaced, as any tap picks the ride's other end.
+  - **A jeep's SWITCH** keeps the first of the two landed picks the start, so the ride back follows its arrows too.
+  - **The card only turns when the rider taps Northbound or Southbound** (Papunta or Pabalik on a jeep), and no switch button is ever added under the row.
 
 ## Decided (the owner, 2026-10-15)
 
@@ -70,7 +68,7 @@ Nothing is left open.
 
 ## Words (for `CONTEXT.md`)
 
-- **Ride:** "A ride may be cut short at a hintuan …" becomes: a ride may start and end at any hintuan it passes. It's the ride from there to there, priced between them; an end before the start is ridden the other way, on the other direction's line.
+- **Ride:** "A ride may be cut short at a hintuan …" becomes: a ride may start and end at any hintuan it passes. It's the ride from there to there, priced between them, always along its direction's arrows: a hintuan picked before the start becomes the start.
 - **Trip:** "A hintuan picked on the trip prices the ride to there" becomes: a start and an end picked on the trip price the ride between them.
 
 ## Depends on
@@ -80,6 +78,6 @@ Nothing is left open.
 
 ## Done when
 
-- Unit tests: a ride between two picks (metres, a jeep's fare and a train's); an end before the start ridden on the other direction's line with the card unturned; a jeep whose other direction misses one of the places; and what Northbound / Southbound and Papunta / Pabalik do to the picks.
+- Unit tests: a ride between two picks (metres, a jeep's fare and a train's); a row before the start made the start and the start the end, with an end already picked or not (2026-10-16); a jeep's SWITCH by other streets keeping the first landed pick the start; and what Northbound / Southbound and Papunta / Pabalik do to the picks.
 - A story for each Figma state.
 - A headless check on the public map: pick a start and an end, and the Distance and fare tiles and the map's S and E agree.
