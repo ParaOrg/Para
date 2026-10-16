@@ -234,10 +234,11 @@ export const PickARow: Story = {
 };
 
 /**
- * The Selected row tapped again lets it go: no row Selected, and the routes through every box of
- * the place — SM Fairview Main's one becomes the place's two each way, SWITCH turning them round
- * where they stand; a tap on the row picks it back. The counter counts head routes, a card each:
- * one there, Tala's to both ends, and two back.
+ * The Selected row tapped again lets it go: no row Selected, and the routes
+ * through every box of the place — SM Fairview Main's one becomes the place's
+ * two each way, SWITCH turning them round where they stand; a tap on the row
+ * picks it back. The counter counts head routes, a card each: one there,
+ * Tala's to both ends, and two back.
  */
 export const LetGoAndPickBack: Story = {
   args: { hotspot: main, onDeselect: fn() },
@@ -274,9 +275,9 @@ export const LetGoPhone: Story = {
 };
 
 /**
- * SWITCH at a box passed one way only: the other way round, at the nearest box of the place passed
- * that way — across the road, Fairview Teraccess 2, selected where the camera stands: onSwitch, not
- * onPickBox's glide.
+ * SWITCH at a box passed one way only: the other way round, at the nearest
+ * box of the place passed that way — across the road, Fairview Teraccess 2,
+ * selected where the camera stands: onSwitch, not onPickBox's glide.
  */
 export const SwitchMovesAcross: Story = {
   args: { hotspot: teraccess1 },

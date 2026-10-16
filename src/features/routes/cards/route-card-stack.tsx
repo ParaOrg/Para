@@ -29,15 +29,18 @@ interface Props {
 }
 
 /**
- * Routes one way round as RouteCards: a card per place they leave from (departures), each in its
- * livery — liveries.ts: its first row's route's, at random, kept for the visit, the same the other
- * way round, never two alike side by side; a train's, its line's own, never drawn — with a row per
- * drawn direction. One card at a time is Selected, and the map lights its directions alone; a row
- * opens its trip straight away, whether its card is picked or not, and picks none, so a row tap
- * does not also select its card, and the trip's ‹ comes back to every card at rest. The route list
- * stacks them under its header; the public map's HintuanCard under its place's boxes, the routes
- * stopping at the Selected one; the studio's hotspot card under "Routes that pass through", or a
- * terminal's "Routes that stage here" — edge to edge in all three.
+ * Routes one way round as RouteCards: a card per place they leave from
+ * (departures), each in its livery — liveries.ts: its first row's route's, at
+ * random, kept for the visit, the same the other way round, never two alike
+ * side by side; a train's, its line's own, never drawn — with a row per drawn
+ * direction. One card at a time is Selected, and the map lights its
+ * directions alone; a row opens its trip straight away, whether its card is
+ * picked or not, and picks none: selecting it too is confusing (the owner's
+ * call), and the trip's ‹ comes back to every card at rest. The route list
+ * stacks them under its header; the public map's HintuanCard under its
+ * place's boxes, the routes stopping at the Selected one; the studio's
+ * hotspot card under "Routes that pass through", or a terminal's "Routes that
+ * stage here" — edge to edge in all three.
  */
 export function RouteCardStack({ routes, back, selected, onSelect, onRoute, testId }: Props) {
   const places = drawnDepartures(routes, back);

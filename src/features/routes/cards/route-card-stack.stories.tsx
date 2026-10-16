@@ -7,8 +7,8 @@ import { RouteCardStack } from './route-card-stack';
 import type { Direction } from '../model/routes';
 
 /**
- * Sample data only, shaped like the published map: two routes out of Tala, each line `km` long
- * straight north. Not the real map.
+ * Sample data only, shaped like the published map: two routes out of Tala,
+ * each line `km` long straight north. Not the real map.
  */
 function direction(
   route: string,
@@ -109,8 +109,9 @@ export const InAHotspotCard: Story = { parameters: { frame: 'hotspot' } };
 export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview' } };
 
 /**
- * Tapped through: a row opens its trip straight away and picks no card; a tap on Tala's card
- * selects it, handing the map its two directions, and a second lets it go.
+ * Tapped through: a row opens its trip straight away and picks no card, since
+ * selecting it too is confusing; a tap on Tala's card selects it, handing the
+ * map its two directions, and a second lets it go.
  */
 export const ARowOpens: Story = {
   play: async ({ args, canvasElement }) => {

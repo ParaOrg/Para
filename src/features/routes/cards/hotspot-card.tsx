@@ -20,11 +20,12 @@ interface Props {
   /** Called with the direction picked, and, from a RouteCard, the colour its card wore: its trip wears the same. */
   onSelectDirection: (v: Direction, livery?: Livery) => void;
   /**
-   * The routes through here as RouteCards, as the route list shows them, with the place whose card
-   * is Selected, what to do when one is picked or let go, and where to say which directions the
-   * cards show, for the map to light (nothing once the card closes). Without it, the card shows
-   * Departures' rows, which only the stories use: their "Not mapped yet" is a list of returns still
-   * to draw.
+   * The routes through here as RouteCards, as the route list shows them, with
+   * the place whose card is Selected, what to do when one is picked or let go,
+   * and where to say which directions the cards show, for the map to light
+   * (nothing once the card closes). Without it, the card shows Departures' rows,
+   * which only the stories use: their "Not mapped yet" is a list of returns
+   * still to draw.
    */
   routeCards?: {
     selected: string | null;
@@ -36,7 +37,10 @@ interface Props {
   hotspots?: readonly Hotspot[];
   /** Show a sibling box on the map: select it and go there. */
   onPickSibling?: (id: string) => void;
-  /** Buttons along the bottom. The editor passes Edit and Delete. */
+  /**
+   * Buttons along the bottom. The studio passes Edit and Delete when an editor
+   * is signed in.
+   */
   actions?: ReactNode;
   onClose: () => void;
   /** Kept but not shown, while a trip picked from it is on top: ‹ comes back to it as it was left, every card at rest. */
@@ -46,11 +50,11 @@ interface Props {
 }
 
 /**
- * What anyone sees when they tap a hotspot. The card does not know who is
- * looking: whoever renders it decides which actions to offer.
+ * The studio's card for a tapped hotspot. Whoever renders it decides which
+ * actions to offer.
  *
- * `BottomSheet` decides the shape, the same as every card's. Its header is
- * the name and what kind of place it is; under it, the routes through it.
+ * `BottomSheet` decides the shape, the same as every card's. Its header is the
+ * name and what kind of place it is; under it, the routes through it.
  */
 export function HotspotCard({
   hotspot,
@@ -70,13 +74,15 @@ export function HotspotCard({
   const siblings = siblingsOf(hotspot, hotspots);
   const byId = new Map(directions.map((v) => [v.id, v]));
   const linked = linkedDirectionIds.map((id) => byId.get(id)).filter((v): v is Direction => !!v);
-  // The routes through here, one way round, by the place each leaves from, ⇄ for the way back:
-  // RouteCards when `routeCards` is given, Departures' rows otherwise. Both directions of a route
-  // are linked to a box on a two-way road, so each route shows once either way round; a route
-  // linked one way only is a slot the other way, which Departures' rows show as "not mapped yet"
-  // and the RouteCards leave out. A box on a one-way street, or beside one carriageway, is passed
-  // one way only: then that way is the one shown, and there is nothing to flip to. The RouteCards
-  // list drawn directions only, so for them a way round with nothing drawn is no way round at all.
+  // The routes through here, one way round, by the place each leaves from, ⇄ for
+  // the way back: RouteCards when `routeCards` is given, Departures' rows
+  // otherwise. Both directions of a route are linked to a box on a two-way road,
+  // so each route shows once either way round; a route linked one way only is a
+  // slot the other way, which Departures' rows show as "not mapped yet" and the
+  // RouteCards leave out. A box on a one-way street, or beside one carriageway,
+  // is passed one way only: then that way is the one shown, and there is nothing
+  // to flip to. The RouteCards list drawn directions only, so for them a way
+  // round with nothing drawn is no way round at all.
   const listed = routeCards ? drawnDepartures : departures;
   const [flipped, setFlipped] = useState(false);
   const there = listed(linked, false).length > 0;
@@ -85,9 +91,9 @@ export function HotspotCard({
   const flipLabel = back ? 'Show the way there' : 'Show the way back';
   const none = routeCards ? !there && !backToo : linked.length === 0;
 
-  // What the RouteCards show, for the map to light; nothing once the card closes. Told only when
-  // that changes: the caller's function is read from a ref, so one made afresh each render cannot
-  // set the lights going in a loop.
+  // What the RouteCards show, for the map to light; nothing once the card
+  // closes. Told only when that changes: the caller's function is read from a
+  // ref, so one made afresh each render cannot set the lights going in a loop.
   const showsKey = routeCards
     ? drawnDepartures(linked, back)
         .flatMap((p) => p.directions.map((d) => d.v.id))
@@ -196,8 +202,9 @@ export function HotspotCard({
             {isTerminal ? 'None recorded yet.' : 'No saved route passes through here yet.'}
           </p>
         ) : routeCards ? (
-          // Edge to edge, as the route list stacks them. ⇄ lets the Selected card go, as SWITCH
-          // does over the list. TODO: the rest of this card is not redesigned yet.
+          // Edge to edge, as the route list stacks them. ⇄ lets the Selected
+          // card go, as SWITCH does over the list. TODO: the rest of this card
+          // awaits the owner's design.
           <div className="-mx-4 mt-1">
             <RouteCardStack
               routes={linked}

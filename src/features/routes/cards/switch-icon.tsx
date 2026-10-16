@@ -1,4 +1,7 @@
-/** Two arrows passing each other: the usual sign for "the other way". On a hotspot's card. */
+/**
+ * Two arrows passing each other: the usual sign for "the other way". On a
+ * hotspot's card.
+ */
 export function SwitchIcon() {
   return (
     <svg
