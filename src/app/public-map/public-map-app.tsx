@@ -37,7 +37,7 @@ import { useTurn } from '@/shared/hooks/commit-turn';
 import { useStatusBarColour } from './status-bar';
 
 /**
- * The routes' framing the map opens on (the owner's Q1, 2026-10-04): their
+ * The routes' framing the map opens on: their
  * box as the index or the copy kept from an earlier visit has them
  * (openingDirections), the box the routes' own fit frames (useSavedRoutes).
  * Module-level, as the loaders below are.
@@ -60,7 +60,7 @@ export function PublicMapApp() {
   // One index, fetched once, shared by both hooks; a direction's full line
   // read as it is lit (fetch-line.ts).
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
-  // While a trip is open, the map lights only the trip (the owner, 2026-09-29).
+  // While a trip is open, the map lights only the trip.
   const hotspots = useSavedHotspots(map, loadHotspotsFromFile, { muted: !!saved.selected });
   // A load problem, and a published map too new for this app (loadProblems).
   const problems = loadProblems([saved, hotspots]);
@@ -95,10 +95,9 @@ export function PublicMapApp() {
 
   // The commuter's own position, the dot and the camera with them live in
   // CommuterLocation, so a fix, the phone's compass and the dot's moods
-  // render it alone (the cheap-phone plan, step 15, 2026-10-05). Its camera
-  // still moves here, where its hook stood: after the cards' camera above,
-  // which a sheet set to another height moves in the same commit
-  // (commit-turn.ts).
+  // render it alone. Its camera still moves here, at this page's turn: after
+  // the cards' camera above, which a sheet set to another height moves in the
+  // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
   // The dot's gaze is hushed by ‹ and ✕: going back picks nothing (dot-gaze.ts).
   const { hush, hushedAt } = useGazeHush();
@@ -117,8 +116,7 @@ export function PublicMapApp() {
 
   return (
     // `data-directions`: how many the index brought, for the suites on a
-    // production build, where the map itself is out of their reach — the
-    // count pill that told them went on 2026-09-29.
+    // production build, where the map itself is out of their reach.
     // `data-dock-host`: the open card's sheet says where its top is here,
     // for the LocatorButton to follow (BottomSheet).
     <div
@@ -129,15 +127,12 @@ export function PublicMapApp() {
     >
       {/*
         No count of routes and hotspots in a corner, and no +, − or compass:
-        the owner's notes on his screenshot, "annoying for users"
-        (2026-09-29).
+        they are left off as clutter for commuters.
       */}
       {/*
         Opened framed on the routes, and handed over to draw them as soon as
-        its style is in (`openOn`, the owner's Q1 of 2026-10-04). The credits
-        start folded to their ⓘ, as the studio's do: the owner asked for the
-        bar out of the way on 2026-10-16 ("can we remove this for now? I'm
-        planning to move them somewhere in tha map"); the licences need them on
+        its style is in (`openOn`). The credits start folded to their ⓘ, as the
+        studio's do, to keep the bar out of the way; the licences need them on
         the map, so ⓘ still opens them until they have a place of their own.
       */}
       <MapView
@@ -180,9 +175,9 @@ export function PublicMapApp() {
       )}
       {/*
         The open trip's hintuans along its line, a train's stations and a
-        jeepney's hintuans alike since 2026-10-12, each named (RouteLineLabel).
-        A tap picks one as its row on the trip card does, the map gliding in
-        to it (the owner's ask, 2026-10-03), as the studio's do.
+        jeepney's hintuans alike, each named (RouteLineLabel). A tap picks one
+        as its row on the trip card does, the map gliding in to it, as the
+        studio's do.
       */}
       {map && saved.selected && tripLivery && timeline && (
         <StationLabels
@@ -201,7 +196,7 @@ export function PublicMapApp() {
       {/*
         Keyed on the pick: another hintuan pops a fresh circle. Its name,
         tapped, lets the pick go and takes the camera back where it was, as
-        its row tapped again does (the owner's ask, 2026-10-03).
+        its row tapped again does.
       */}
       {map && ride.pinAt && tripLivery && (
         <HintuanPin
@@ -251,8 +246,7 @@ export function PublicMapApp() {
       {saved.selected && tripLivery && timeline && (
         // One card for as long as a trip is open: SWITCH, and another
         // route from its "Other routes", leave the hintuans open or folded
-        // as they were (the owner, 2026-10-01: "don't shrink it"), and the
-        // sheet at its height. A trip opened afresh opens folded.
+        // as they were, and the sheet at its height. A trip opened afresh opens folded.
         <TripCard
           direction={saved.selected}
           directions={saved.directions}
@@ -277,20 +271,18 @@ export function PublicMapApp() {
           height={height}
           // "Other routes": that route's trip in this one's place, ‹ still to
           // what this one was picked from; the camera takes it in as it opens.
-          // The sheet goes to Middle from wherever it is, so the map shows it
-          // (the owner, 2026-10-01: from Max at first, then "not only max");
+          // The sheet goes to Middle from wherever it is, so the map shows it;
           // the hintuans stay open or folded.
           onOtherRoute={otherRoute}
         />
       )}
 
       {/*
-        A hotspot's card: the owner's HintuanCard (3854:12690, 2026-09-30),
-        its place and every box of it, the routes stopping at the Selected
-        one as his RouteCards; it stays behind the trip picked from them,
-        hidden, for the trip's ‹. It is `card` to the suites too, and comes
-        after the trip here on purpose: their first `card` is then the trip
-        while this one hides behind it.
+        A hotspot's card: HintuanCard (Figma 3854:12690), its place and every
+        box of it, the routes stopping at the Selected one as RouteCards; it
+        stays behind the trip picked from them, hidden, for the trip's ‹. It is
+        `card` to the suites too, and comes after the trip here on purpose:
+        their first `card` is then the trip while this one hides behind it.
       */}
       {hotspots.selected && (
         // Keyed by the place: another of its boxes — a row, or SWITCH moving
@@ -313,14 +305,14 @@ export function PublicMapApp() {
           directions={saved.directions}
           onSelectDirection={openTrip}
           // Its Selected row tapped again: no box is the one until a row is
-          // picked (the owner, 2026-10-01).
+          // picked.
           deselected={hotspots.letGone}
           onDeselect={() => {
             saved.highlightCard(null);
             hotspots.letGo();
           }}
           // Another box: the map goes there, the box clear of the card,
-          // which stays at its height (the owner, 2026-10-01).
+          // which stays at its height.
           onPickBox={(id) => {
             saved.highlightCard(null);
             hotspots.show(id, cards.clearOf(hotspotDock));
@@ -331,8 +323,8 @@ export function PublicMapApp() {
       )}
 
       {/*
-        Several things under the tap: the owner's route list (2026-09-28),
-        kept hidden behind the trip picked from it (2026-09-29). Picking a
+        Several things under the tap: the route list, kept hidden behind the
+        trip picked from it. Picking a
         route leaves the hotspots under the tap listed, so ‹ finds the list
         whole; a hotspot's row opens its card in the list's place.
       */}
