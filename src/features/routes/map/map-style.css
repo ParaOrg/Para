@@ -4,10 +4,16 @@
  * of the button's corner, over duration/gentle with ease/enter, a card's
  * timing on his Motion page (3748:2585). It leaves the way his tooltip
  * does, over duration/quick with ease/exit, shrinking back into the corner.
+ * The corner is the one nearest the button: its top right where it opens
+ * down (the studio's, at the map's top right), its bottom right where it
+ * opens up (the public map's, above the LocatorButton since 2026-10-16).
  */
 .map-style {
   transform-origin: top right;
   animation: map-style-pop var(--transition-duration-gentle) var(--ease-enter) both;
+}
+.map-style[data-opens='up'] {
+  transform-origin: bottom right;
 }
 .map-style[data-closing] {
   animation: map-style-leave var(--transition-duration-quick) var(--ease-exit) both;
