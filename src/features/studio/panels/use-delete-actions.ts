@@ -29,9 +29,9 @@ export function useDeleteActions({
   setNotice,
 }: DeleteActionsOptions) {
   const onDeleteHotspot = async (s: HotspotRow) => {
-    // As Done does: with the session gone, the delete goes out on the
-    // publishable key, matches no row, comes back 2xx, and the box is still
-    // there after the reload with nothing said.
+    // As Done does: signed out, the delete would go out on the publishable key
+    // and match no row, and deleteHotspot would only say "Nothing was changed".
+    // Asking for sign-in first lets the delete go through.
     if (!signedIn) {
       onSignInNeeded();
       return;
@@ -53,7 +53,8 @@ export function useDeleteActions({
   };
 
   const onDelete = async (v: DirectionRow) => {
-    // Signed out, the delete would match nothing and say nothing (onDeleteHotspot).
+    // Signed out, the delete would match no row and deleteDirection would only say
+    // "Nothing was changed"; ask for sign-in first (onDeleteHotspot).
     if (!signedIn) {
       onSignInNeeded();
       return;

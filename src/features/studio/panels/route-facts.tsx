@@ -14,10 +14,11 @@ import { lineLength } from '@/shared/utils/geo';
 /**
  * What only the editor sees of a direction, under the trip card the public
  * map opens. The trip card carries the ride — its ends, its hintuans, its
- * kilometres and pesos; this carries the rest: whether it has been ridden, its mode and signboard, and the
- * fare's small print — the discounted price, the rule, the grace for the old
- * minimum, the route's own fare note and where the estimate comes from. Then
- * Edit, Extend and Delete, when the direction is the editor's own.
+ * kilometres and pesos; this carries the rest: whether it has been ridden, its
+ * mode and signboard, and the fare's small print — the discounted price, the
+ * rule, the grace for the old minimum, the route's own fare note and where the
+ * estimate comes from. Then Edit, Extend and Delete, when the direction is the
+ * editor's own.
  */
 export function RouteFacts({ direction, actions }: { direction: Direction; actions?: ReactNode }) {
   const r = direction.route;

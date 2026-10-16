@@ -145,10 +145,6 @@ export const WithAUTurn: Story = {
   },
 };
 
-/**
- * A real-shaped list: one terminal and four hintuans at SM Fairview (one
- * typed "SM fairview"), two boxes each named Lagro and Fatima, and Tala. The pickers must show eight places, never a box name.
- */
 const hintuan = (
   id: string,
   name: string,
@@ -159,6 +155,11 @@ const hintuan = (
   kind: 'hintuan',
   informal,
 });
+/**
+ * Two terminals and eleven hintuans: five boxes at SM Fairview (one typed "SM fairview"), two
+ * each named Lagro and Fatima, Robinson and Malaria. The pickers must show six places, never a
+ * box name.
+ */
 export const ManyBoxesOnePlace: Story = {
   args: {
     hotspots: [
@@ -310,9 +311,8 @@ const lagroFairviewOut: DirectionRow = {
 };
 
 /**
- * Edit route on a saved direction: Head, Tail,
- * Via, Signboard, Mode and Fare note are open, and the panel says they are
- * the route's, so a change is a change to both directions.
+ * Edit route on a saved direction: Head, Tail, Via, Signboard, Mode and Fare note are open,
+ * and the panel says they are the route's, so a change is a change to both directions.
  */
 export const EditRoute: Story = {
   args: {

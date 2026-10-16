@@ -13,8 +13,9 @@ export type SignboardCalls = Pick<
 
 /**
  * The editor's Signboard for one direction, uploaded as SVG. Under the trip
- * card's facts, for the direction on show — SWITCH brings up the other way's. Each board as the
- * public card shows it, 40 tall at its own width, with ‹ to move it earlier
+ * card's facts, for the direction on show — SWITCH brings up the other way's.
+ * Its look is the studio's own; there is no Figma design for it. Each board as
+ * the public card shows it, 40 tall at its own width, with ‹ to move it earlier
  * and ✕ to take it off; "Add SVG" sends one or more, each cleaned first.
  * `onChanged` reloads the directions, so the card above shows the new list.
  */
@@ -44,7 +45,7 @@ export function SignboardEditor({
     setNames(listed ? listed.split('\n') : []);
     // A problem stays until the next change or another direction: the list
     // read again after an earlier change can land after it, and would take
-    // it away unread.
+    // it away unread. save-test catches this race on slower CI runners.
     if (shown.directionId !== direction.id) setProblem(null);
   }
 

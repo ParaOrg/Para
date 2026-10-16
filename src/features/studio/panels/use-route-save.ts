@@ -46,9 +46,9 @@ export function useRouteSave({ facts, draw, hotspots, onSaved }: UseRouteSaveOpt
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // The direction as a save wrote it, when the link sync after it failed.
-  // Saves are two steps, not one transaction, so a second press must update
-  // the row already written: inserting the route again would meet its own row
-  // and be refused as "already drawn".
+  // Saves are two steps, so a second press must update the row already written:
+  // inserting the route again would meet its own row and be refused as "already drawn".
+  // TODO: one RPC per save would make this one transaction (saves are not transactional today).
   const [written, setWritten] = useState<WrittenDirection | null>(null);
 
   async function save(form: RouteSaveForm) {
