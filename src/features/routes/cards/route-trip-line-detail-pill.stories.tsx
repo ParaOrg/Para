@@ -24,7 +24,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Two (4161:8298), on a train: the station's code and the pesos, two halves 2 px apart (2026-10-16). */
+/** Two (4161:8298), on a train: the station's code and the pesos, two halves 2 px apart. */
 export const Two: Story = {
   play: async ({ canvasElement }) => {
     const code = canvasElement.querySelector('[data-part="code"]')?.getBoundingClientRect();
@@ -37,8 +37,8 @@ export const Two: Story = {
 export const One: Story = { args: { livery: 'red', code: null, pesos: '₱13' } };
 
 /**
- * A train's start alone (the owner's Variant3, 4148:12161, 2026-10-16): no
- * end picked, no ride to price, the station's code alone in One's shape.
+ * A train's start alone (Figma Variant3, 4148:12161): no end picked, no ride to price, the
+ * station's code alone in One's shape.
  */
 export const CodeAlone: Story = { args: { code: 'YL07', pesos: undefined } };
 

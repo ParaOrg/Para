@@ -13,13 +13,10 @@ interface Props {
 }
 
 /**
- * Routes one way round, grouped by the place they leave from — Tala, then
- * → SM Fairview and → Novaliches: the studio's hotspot card shows the routes
- * through its box so (the owner's ask, 2026-09-26: one shape for "the routes
- * here", wherever it is asked). Everywhere else they are his RouteCards
- * since 2026-09-29. A row still a slot says so and opens nothing, which
- * keeps the returns still to draw in sight in the studio. Full-bleed rows: a
- * whole row is the target, not the words inside it.
+ * Routes one way round, grouped by the place they leave from — Tala, then → SM Fairview and →
+ * Novaliches: HotspotCard's rows when it is given no `routeCards`. Both apps give it RouteCards, so
+ * only the stories show these rows. A row still a slot says so and opens nothing, so the returns
+ * still to draw stay in sight. Full-bleed rows: a whole row is the target, not the words inside it.
  */
 export function Departures({ routes, back, onRoute, testId }: Props) {
   return (

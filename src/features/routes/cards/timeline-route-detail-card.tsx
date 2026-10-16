@@ -14,12 +14,14 @@ export interface Fares {
   regular: string;
   discounted: string;
 }
-/** A ride nobody pays for, the ferry's (the owner's pick, 2026-10-03): the tile says Free, with no Regular or Discounted to turn. */
+/**
+ * A ride nobody pays for, the ferry's: the tile says Free, with no Regular or Discounted to turn.
+ */
 export const FREE = 'free';
 export type Fare = Fares | typeof FREE;
 
 type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
-  /** Figma's Distance tile (Kilometer until the owner's ask of 2026-10-15): the whole ride's length, in metres; written `12.8km`. */
+  /** Figma's Distance tile: the whole ride's length, in metres; written `12.8km`. */
   metres: number;
   /** …and the ride between the picks, which the tile shows once an end is picked, as the fare tile does. */
   pickedMetres?: number;
@@ -57,9 +59,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
   /**
-   * Figma's "Signboard" (3919:11355, 2026-10-01): the boards this direction's
-   * jeeps show, as pictures, in their order — addresses of SVG files the
-   * studio uploaded. Empty or omitted, none is shown.
+   * Figma's "Signboard" (3919:11355): the boards this direction's jeeps show, as pictures, in their
+   * order — addresses of SVG files the studio uploaded. Empty or omitted, none is shown.
    */
   signboards?: readonly string[];
   /** Under the tiles, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
@@ -69,39 +70,27 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip — the owner's TimelineRouteDetailCard (Figma 3778:3183,
- * 2026-09-29): RouteCardHeader's Variant2; under it a card in the livery of
- * the place the trip leaves from, inset from the sides and rounded, where a
- * rail runs from the origin (TimelineTop) down to the place it goes to
- * (TimelineBottomEndRoute); under the card the direction's signboards as
- * pictures (his Signboard, 3919:11355, 2026-10-01, uploaded in the studio)
- * in their own strip (4051:5528); then two tiles, the ride's Distance and
- * its fare (moved under the card in his redrawing of 2026-09-29). The
- * boards sat under the tiles with a "Signboard" heading until 2026-10-12,
- * went right under the header by his first redrawing that day, and between
- * the card and the tiles by his second, where the strip is now.
+ * One direction as a trip — Figma's TimelineRouteDetailCard (3778:3183): RouteCardHeader's
+ * Variant2; under it a card in the trip's colour (useTripLivery), inset from the sides and rounded,
+ * where a rail runs from the origin (TimelineTop) down to the place it goes to
+ * (TimelineBottomEndRoute); under the card the direction's signboards as pictures (Figma's
+ * Signboard, 3919:11355, uploaded in the studio) in their own strip (4051:5528); then two tiles,
+ * the ride's Distance and its fare.
  *
- * The fare tile (his 3778:3183, redrawn 2026-09-30) is a button: the pesos,
- * and under them ↻ and which fare they are, Regular or Discounted; a tap turns
- * it to the other. With a hintuan picked it prices the ride from where the
- * trip leaves to there — the pick's pill the same pesos — and let go,
- * the whole ride again (his ask: "change the value of it based on the
- * hintuan they select"). The fare picked is kept for every trip after, and the
- * next visit (useFareKind; his "I don't want the user to keep tapping",
- * 2026-09-30). Its second fare was "Student fare" until he named it
- * "Discounted fare" (2026-09-30). A first visit opens on Regular. The Distance tile follows the pick the
- * same way, from where the trip leaves to there (the owner, 2026-09-30: "it
- * should follow the picked hintuan"). Since a start can be picked too
- * (2026-10-15), both tiles read the ride from the start to the end, once the
- * end is picked: a start alone is no ride yet (2026-10-16).
- * The pesos moved off the rail into their tile with this set; a route no
- * fare rule prices has no Expected fare tile, and Distance takes the row
- * (the owner kept that default, 2026-09-29: nothing is drawn for it).
+ * The fare tile is a button: the pesos, and under them ↻ and which fare they are, Regular or
+ * Discounted; a tap turns it to the other. With a hintuan picked it prices the ride from where the
+ * trip leaves to there — the pick's pill the same pesos — and let go, the whole ride again. The
+ * fare picked is kept for every trip after, and the next visit (useFareKind), so a rider does not
+ * have to keep tapping. A first visit opens on Regular. The second fare reads "Discounted fare" on
+ * purpose, though Figma's Default variant has a layer named "Student fare" (3807:5510). The
+ * Distance tile follows the pick the same way, from where the trip leaves to there. Since a start
+ * can be picked too, both tiles read the ride from the start to the end, once the end is picked: a
+ * start alone is no ride yet. A route no fare rule prices has no Expected fare tile, and Distance
+ * takes the row (Figma draws nothing for it; the owner keeps this default).
  *
- * Under the tiles, "Other routes" (his of 2026-10-01): a row per other
- * route out of where the trip starts, each by where it goes, as a
- * RouteCard's rows are; a tap opens that route's trip in this one's place.
- * With none, there is no heading either.
+ * Under the tiles, "Other routes": a row per other route out of where the trip starts, each by
+ * where it goes, as a RouteCard's rows are; a tap opens that route's trip in this one's place. With
+ * none, there is no heading either.
  *
  * The card and its rail are TimelineRouteDetail's.
  */
@@ -144,15 +133,12 @@ export function TimelineRouteDetailCard({
   const [own, setOwn] = useState(false);
   const discounted = kept ?? own;
   const setDiscounted = (d: boolean) => (onDiscounted ? onDiscounted(d) : setOwn(d));
-  // Each tap turns ↻ round once more (the owner's "simple rotation only if
-  // selected", 2026-09-30): counted, so the next tap turns it again rather
-  // than back. It turns over `turn`, gentle at 6/10 as fast (his "it's fast",
-  // the same day).
+  // Each tap turns ↻ round once more: counted, so the next tap turns it again rather than back. It
+  // turns over `turn`, gentle at 6/10 as fast.
   const [turns, setTurns] = useState(0);
   const othersHeading = useId();
-  // An end picked: the tiles read the ride between it and the start, a
-  // hintuan's row or, with a start, an end's (the owner, 2026-10-16: "keep
-  // the start"). A start alone is no ride yet, the whole trip's shown.
+  // An end picked: the tiles read the ride between it and the start, a hintuan's row or, with a
+  // start, an end's. A start alone is no ride yet, the whole trip's shown.
   const hasRide = picked !== null || (start !== null && endPicked !== null);
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
@@ -174,7 +160,7 @@ export function TimelineRouteDetailCard({
         />
       }
     >
-      {/* Under the header, whose 12 below is the gap (the owner's TimelineRouteDetailCard, 3778:3183, 2026-10-01). */}
+      {/* Under the header, whose 12 below is the gap (Figma 3778:3183). */}
       <div className="w-full px-3">
         <TimelineRouteDetail
           livery={livery}
@@ -199,17 +185,13 @@ export function TimelineRouteDetailCard({
         />
       </div>
       {/*
-        Between the card and the tiles, the direction's signboards (the
-        owner's TimelineRouteDetailCard of 2026-10-12, its strip 4051:5528; right
-        under the header by his first redrawing that day, under the tiles
-        with a "Signboard" heading from 2026-10-01 until then): a white
-        strip, 12 in from the sides and 16 above, each board 40 tall at its
+        Between the card and the tiles, the direction's signboards (Figma strip
+        4051:5528): a white strip, 12 in from the sides and 16 above, each board 40 tall at its
         own width, 8 apart, wrapping on a narrow phone (3919:11447). No
         heading: the boards say what they are. Pictures, so nothing in a
         file can run. None uploaded, no strip: the tiles sit right under the
         card. At a sheet's Low the card's top is all that shows (sheetGesture's
-        LOW_PX), so the strip needs no hiding of its own, as it did under the
-        header.
+        LOW_PX), so the strip needs no hiding of its own.
       */}
       {signboards.length > 0 && (
         <ul
@@ -232,7 +214,8 @@ export function TimelineRouteDetailCard({
           ))}
         </ul>
       )}
-      {/* 16 under the card, or under the signboards' strip (the owner's TimelineRouteDetailCard of 2026-10-12, 3778:3186; 12 under the card by his of 2026-09-29 until then). The tiles 8 apart (his spacing of 2026-10-13: 3778:3183, its row 3886:6278; 12 before). */}
+      {/* 16 under the card, or under the signboards' strip (Figma 3778:3186).
+          The tiles 8 apart (3778:3183, its row 3886:6278). */}
       <div
         data-testid="trip-tiles"
         className="flex w-full gap-2 bg-surface px-3 py-4 text-center font-sn-pro"
@@ -321,10 +304,9 @@ export function TimelineRouteDetailCard({
 }
 
 /**
- * One of the two tiles under the card, in Figma's row of them (3771:3055):
- * its figure over its name (the figure on top since 3778:3183's redrawing),
- * on Background/surface-secondary. Figma writes the figure in a raw black;
- * Content/primary is the token nearest it.
+ * One of the two tiles under the card, in Figma's row of them (3771:3055): its figure over its name
+ * (the figure on top, 3778:3183), on Background/surface-secondary. Figma writes the figure in a raw
+ * black; Content/primary is the token nearest it.
  */
 const TILE =
   'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-2xl bg-surface-secondary p-4';
