@@ -16,7 +16,7 @@ import {
   useSwitchOverview,
   useTripOverview,
 } from './use-overviews';
-import { useRideTo } from '../map/ride-to';
+import { useRideTo } from '../map/use-ride-to';
 import type { Highlight } from '../map/use-saved-routes';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
