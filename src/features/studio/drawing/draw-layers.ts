@@ -11,7 +11,7 @@ import { LAYERS } from '@/features/routes/map/layers';
  * `draw-*` ids are a contract — the suites read them — and never change.
  */
 
-export const EMPTY = { type: 'FeatureCollection', features: [] } as const;
+const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 
 export const LINE_SRC = 'draw-line';
 export const POINT_SRC = 'draw-points';
