@@ -5,7 +5,8 @@
 # shipping fast"). Three ideas:
 #
 #   1. Only what a change can reach. `changes` reads the files a pull request
-#      touches: docs and Markdown alone run nothing; src/app/studio/,
+#      touches: docs and Markdown alone run nothing (except docs/architecture.md,
+#      which the build job's architecture step checks); src/app/studio/,
 #      src/features/studio/ and the studio's suites alone skip the public
 #      suites; src/app/public-map/, src/features/locator/,
 #      src/features/published-map/, public/ and the public suites alone skip
@@ -89,6 +90,7 @@ jobs:
           while IFS= read -r f; do
             [ -z "$f" ] && continue
             case "$f" in
+              docs/architecture.md) public=true; studio=true ;;
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/studio-scale-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;

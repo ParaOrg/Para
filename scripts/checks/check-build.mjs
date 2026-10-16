@@ -84,6 +84,7 @@ import {
   GROUPS,
   MAPLIBRE_FILE,
   SHARED_MAX_GZ_KB,
+  WORKER_MAX_GZ_KB,
   chunksNamed as chunksIn,
   fontBytes,
   gzipBytes,
@@ -533,7 +534,6 @@ for (const page of ['index.html', 'studio/index.html']) {
 
 // 7. MapLibre's worker: its chunk, and every chunk it imports, all the way
 // down, read from Vite's manifest and from what went into each.
-const WORKER_MAX_GZ_KB = 20;
 const workerChunks = chunksNamed('maplibre-gl-worker');
 const workerFile = workerChunks[0]?.file;
 const workerGz = workerFile ? gzipSync(readFileSync(join(dist, workerFile))).length : 0;

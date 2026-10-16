@@ -4,13 +4,16 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/architecture-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { assertKnownLayers, resolveImport, unitOf } from '../../scripts/docs/architecture.mjs';
 import {
   parseCssImports,
   parseExports,
   parseImports,
-  resolveImport,
-  unitOf,
-} from '../../scripts/docs/architecture.mjs';
+  withoutComments,
+} from '../../scripts/docs/source-scan.mjs';
 
 /** routes and studio have concern folders; locator and published-map are one unit each. */
 const GROUPED = new Map([
@@ -89,7 +92,7 @@ test('every form of import is found, comments and strings that look like one are
 
 test('JSX files parse too', () => {
   const text = `import { a } from './a';\nexport function X() { return <div>{a}</div>; }`;
-  assert.deepEqual(parseImports(text, 'x.tsx'), [{ specifier: './a', isDynamic: false }]);
+  assert.deepEqual(parseImports(text), [{ specifier: './a', isDynamic: false }]);
 });
 
 test('CSS @import is found in both forms, comments are not', () => {
@@ -110,4 +113,60 @@ test('an index.ts exports are its names, with type-only ones and star exports', 
     const hidden = 2;
   `;
   assert.deepEqual(parseExports(text), ['A', 'renamed', 'C', '* from ./d', 'e', 'F']);
+});
+
+test('a string, a template or a regular expression holding a quote or a comment does not hide an import', () => {
+  const text = `
+    const a = "it's // not a comment";
+    const b = \`a \${"}"} \\\` // still the template\`;
+    const c = /['"]\\/\\/x/.test(a) ? 1 : 2 / 2;
+    import { real } from './real';
+    const d = import('./late');
+  `;
+  assert.deepEqual(parseImports(text), [
+    { specifier: './real', isDynamic: false },
+    { specifier: './late', isDynamic: true },
+  ]);
+});
+
+test('import.meta and a plain import word are not imports', () => {
+  assert.deepEqual(parseImports('const u = import.meta.env.DEV; const important = 1;'), []);
+});
+
+test('multi-line, namespace, default and type-only forms are found', () => {
+  const text = `import def, {
+    a,
+    b as c,
+  } from './multi';
+  import * as ns from './ns';
+  import type Def from './type-default';
+  export type { T } from './types';
+  export * as all from './all';`;
+  assert.deepEqual(
+    parseImports(text).map((i) => i.specifier),
+    ['./multi', './ns', './type-default', './types', './all'],
+  );
+});
+
+test('comments are blanked and code lines are kept', () => {
+  const text = 'const a = 1; // trailing\n/* block\n   block */\nconst s = "// kept";\n';
+  const lines = withoutComments(text).split('\n');
+  assert.equal(lines.length, 5);
+  assert.equal(lines[0].trim(), 'const a = 1;');
+  assert.equal(lines[1].trim(), '');
+  assert.equal(lines[2].trim(), '');
+  assert.equal(lines[3], 'const s = "// kept";');
+  assert.equal(withoutComments(text).length, text.length);
+});
+
+test('a folder under src/ that is no known layer throws, so it cannot be dropped silently', () => {
+  const src = mkdtempSync(join(tmpdir(), 'architecture-test-'));
+  try {
+    for (const name of ['app', 'features', 'shared', 'assets']) mkdirSync(join(src, name));
+    assertKnownLayers(src);
+    mkdirSync(join(src, 'pages'));
+    assert.throws(() => assertKnownLayers(src), /src\/pages is not a layer/);
+  } finally {
+    rmSync(src, { recursive: true });
+  }
 });

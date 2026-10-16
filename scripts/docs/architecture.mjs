@@ -9,7 +9,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import ts from 'typescript';
+import { parseCssImports, parseExports, parseImports } from './source-scan.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUTPUT = join(ROOT, 'docs', 'architecture.md');
@@ -20,6 +20,9 @@ const KIND_FOLDERS = new Set(['components', 'hooks', 'api', 'schemas', 'types', 
 
 /** The order the layers are drawn in, which is also the direction imports may flow. */
 const LAYERS = ['app', 'features', 'shared', 'design-system', 'styles'];
+
+/** Folders directly under src/ that hold no source, so they are no layer. */
+const NON_CODE_FOLDERS = new Set(['assets']);
 
 const sorted = (values) => [...values].sort();
 
@@ -76,8 +79,24 @@ export function unitOf(srcPath, groupedFeatures = new Map()) {
   }
 }
 
+/**
+ * Throws on a folder directly under src/ that is neither a layer nor known to hold
+ * no source, so a new layer (pages/, say) cannot be left off the page unnoticed.
+ */
+export function assertKnownLayers(srcDir) {
+  const unknown = subfolders(srcDir).filter(
+    (name) => !LAYERS.includes(name) && !NON_CODE_FOLDERS.has(name),
+  );
+  if (unknown.length > 0) {
+    throw new Error(
+      `src/${unknown.join(', src/')} is not a layer the architecture page knows: add it to LAYERS and unitOf() in scripts/docs/architecture.mjs`,
+    );
+  }
+}
+
 /** Every unit that exists on disk, sorted. */
 export function listUnits(srcDir, groupedFeatures = findGroupedFeatures(srcDir)) {
+  assertKnownLayers(srcDir);
   const units = [];
   for (const app of subfolders(join(srcDir, 'app'))) units.push(`app/${app}`);
   for (const feature of subfolders(join(srcDir, 'features'))) {
@@ -100,44 +119,6 @@ export function listUnits(srcDir, groupedFeatures = findGroupedFeatures(srcDir))
   }
   if (existsSync(join(srcDir, 'styles'))) units.push('styles');
   return sorted(units);
-}
-
-/**
- * Every module a source text imports, as { specifier, isDynamic }. Covers
- * `import … from`, `export … from`, `import 'x'` and `import('x')`; comments and
- * strings that merely look like imports are ignored.
- */
-export function parseImports(text, fileName = 'file.ts') {
-  const source = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, false);
-  const found = [];
-  const visit = (node) => {
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
-      found.push({ specifier: node.moduleSpecifier.text, isDynamic: false });
-    } else if (
-      ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
-      node.arguments[0] &&
-      ts.isStringLiteralLike(node.arguments[0])
-    ) {
-      found.push({ specifier: node.arguments[0].text, isDynamic: true });
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return found;
-}
-
-/** The stylesheets a CSS text imports (`@import 'x'` and `@import url('x')`), as parseImports does. */
-export function parseCssImports(text) {
-  const withoutComments = text.replace(/\/\*[\s\S]*?\*\//g, '');
-  return [...withoutComments.matchAll(/@import\s+(?:url\(\s*)?['"]([^'"]+)['"]/g)].map((m) => ({
-    specifier: m[1],
-    isDynamic: false,
-  }));
 }
 
 /**
@@ -173,13 +154,14 @@ function* sourceFiles(dir, base = dir) {
  * import between the pair is dynamic (lazy).
  */
 export function buildGraph(srcDir) {
+  assertKnownLayers(srcDir);
   const groupedFeatures = findGroupedFeatures(srcDir);
   const edges = new Map();
   for (const file of sourceFiles(srcDir)) {
     const from = unitOf(file, groupedFeatures);
     if (!from) continue;
     const text = readFileSync(join(srcDir, file), 'utf8');
-    const imports = file.endsWith('.css') ? parseCssImports(text) : parseImports(text, file);
+    const imports = file.endsWith('.css') ? parseCssImports(text) : parseImports(text);
     for (const { specifier, isDynamic } of imports) {
       const target = resolveImport(specifier, file);
       const to = target && unitOf(target, groupedFeatures);
@@ -190,32 +172,6 @@ export function buildGraph(srcDir) {
     }
   }
   return edges;
-}
-
-/** The names a feature's index.ts exports; `export *` is listed as '* from <path>'. */
-export function parseExports(text) {
-  const source = ts.createSourceFile('index.ts', text, ts.ScriptTarget.Latest, false);
-  const names = [];
-  for (const node of source.statements) {
-    if (ts.isExportDeclaration(node)) {
-      if (node.exportClause && ts.isNamedExports(node.exportClause)) {
-        for (const element of node.exportClause.elements) names.push(element.name.text);
-      } else if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-        names.push(`* from ${node.moduleSpecifier.text}`);
-      }
-    } else if (ts.canHaveModifiers(node)) {
-      const isExported = ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
-      if (!isExported) continue;
-      if (ts.isVariableStatement(node)) {
-        for (const declaration of node.declarationList.declarations) {
-          if (ts.isIdentifier(declaration.name)) names.push(declaration.name.text);
-        }
-      } else if (node.name && ts.isIdentifier(node.name)) {
-        names.push(node.name.text);
-      }
-    }
-  }
-  return names;
 }
 
 /** The module each HTML page loads: { page, script }, for the root's and studio/'s pages. */
@@ -269,7 +225,7 @@ export function renderPage({ units, edges, apis, entryPoints }) {
     '',
     '# Architecture',
     '',
-    'This page is generated from the code, so it cannot go stale. It shows the structure only: which units exist, which import which, and what each feature exposes. Arrows point from the importing unit to the one it imports. A dashed arrow means every import between the two is lazy (`import()`). Stories are left out; stylesheet `@import`s count as imports. The rules the arrows must follow are in `.claude/CLAUDE.md`, and ESLint enforces them.',
+    'This page is generated from the code, so it cannot go stale. It shows the structure only: which units exist, which import which, and what each feature exposes. Arrows point from the importing unit to the one it imports. A dashed arrow means every import between the two is lazy (`import()`). Stories are left out; stylesheet `@import`s count as imports, and so do type-only imports (`import type`), which cost nothing at runtime but still tie two units together. The rules the arrows must follow are in `.claude/CLAUDE.md`, and ESLint enforces them.',
     '',
     '## Units',
     '',
@@ -336,3 +292,5 @@ function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
+
+export { parseCssImports, parseExports, parseImports };

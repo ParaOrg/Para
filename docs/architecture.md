@@ -2,7 +2,7 @@
 
 # Architecture
 
-This page is generated from the code, so it cannot go stale. It shows the structure only: which units exist, which import which, and what each feature exposes. Arrows point from the importing unit to the one it imports. A dashed arrow means every import between the two is lazy (`import()`). Stories are left out; stylesheet `@import`s count as imports. The rules the arrows must follow are in `.claude/CLAUDE.md`, and ESLint enforces them.
+This page is generated from the code, so it cannot go stale. It shows the structure only: which units exist, which import which, and what each feature exposes. Arrows point from the importing unit to the one it imports. A dashed arrow means every import between the two is lazy (`import()`). Stories are left out; stylesheet `@import`s count as imports, and so do type-only imports (`import type`), which cost nothing at runtime but still tie two units together. The rules the arrows must follow are in `.claude/CLAUDE.md`, and ESLint enforces them.
 
 ## Units
 

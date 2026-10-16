@@ -4,15 +4,16 @@
 //
 // It measures and never fails: ESLint errors, a build over budget and the like
 // are reported here and enforced by `npm run check`.
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import ts from 'typescript';
+import { withoutComments } from '../docs/source-scan.mjs';
 import {
   FONTS_MAX_KB,
   GROUPS,
   SHARED_MAX_GZ_KB,
+  WORKER_MAX_GZ_KB,
   chunksNamed,
   fontBytes,
   gzipBytes,
@@ -38,32 +39,9 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
 const lineCount = (text) => text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
 const kb = (bytes) => `${(bytes / 1024).toFixed(1)} kB`;
 
-/** The text with every comment blanked out (newlines kept), so a line left empty was all comment. */
-export function withoutComments(text, fileName = 'file.ts') {
-  const source = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true);
-  const ranges = new Map();
-  const visit = (node) => {
-    const children = node.getChildren(source);
-    if (children.length === 0 && node.kind !== ts.SyntaxKind.JsxText) {
-      for (const range of ts.getLeadingCommentRanges(text, node.pos) ?? []) {
-        ranges.set(range.pos, range.end);
-      }
-    }
-    children.forEach(visit);
-  };
-  visit(source);
-  let result = '';
-  let cursor = 0;
-  for (const [start, end] of [...ranges].sort((a, b) => a[0] - b[0])) {
-    result += text.slice(cursor, start) + text.slice(start, end).replace(/[^\n]/g, ' ');
-    cursor = end;
-  }
-  return result + text.slice(cursor);
-}
-
 /** How many of the non-blank lines of `text` hold nothing but comment. */
-export function commentLines(text, fileName) {
-  const stripped = withoutComments(text, fileName).split('\n');
+export function commentLines(text) {
+  const stripped = withoutComments(text).split('\n');
   const original = text.split('\n');
   let nonBlank = 0;
   let comment = 0;
@@ -93,7 +71,7 @@ function commentShare(files) {
   let nonBlank = 0;
   let comment = 0;
   for (const path of files) {
-    const counts = commentLines(read(path), path);
+    const counts = commentLines(read(path));
     nonBlank += counts.nonBlank;
     comment += counts.comment;
   }
@@ -108,6 +86,8 @@ function eslintReport() {
   const run = spawnSync('npx', ['--no-install', 'eslint', '.', '-f', 'json'], {
     cwd: root,
     encoding: 'utf8',
+    // npx is npx.cmd on Windows, which spawn finds only through a shell
+    shell: process.platform === 'win32',
     maxBuffer: 256 * 1024 * 1024,
   });
   let results;
@@ -137,19 +117,27 @@ function buildSize() {
   if (!manifest || !existsSync(join(dist, 'assets'))) {
     return ['- **Build size against its budget:** run npm run build first'];
   }
-  const lines = ['- **Build size against its budget (gzipped unless noted):**'];
+  const built = statSync(join(dist, '.vite', 'manifest.json')).mtime.toISOString();
+  const lines = [
+    `- **Build size against its budget (gzipped unless noted):** read from \`${relative(root, dist)}/\`, built ${built}`,
+  ];
+  const sized = (label, files, maxKb) => {
+    if (files.length === 0) {
+      lines.push(`  - ${label}: missing from the build (budget ${maxKb} kB)`);
+      return 0;
+    }
+    const bytes = gzipBytes(dist, files);
+    lines.push(`  - ${label}: ${kb(bytes)} of ${maxKb} kB`);
+    return bytes;
+  };
+  const chunkFiles = (name) => chunksNamed(manifest, name).map((c) => c.file);
   let total = 0;
-  for (const { name, maxGzKb } of GROUPS) {
-    const bytes = gzipBytes(
-      dist,
-      chunksNamed(manifest, name).map((c) => c.file),
-    );
-    total += bytes;
-    lines.push(`  - ${name} chunk: ${kb(bytes)} of ${maxGzKb} kB`);
-  }
+  for (const { name, maxGzKb } of GROUPS)
+    total += sized(`${name} chunk`, chunkFiles(name), maxGzKb);
   lines.push(
     `  - MapLibre, React and the shared code together: ${kb(total)} of ${SHARED_MAX_GZ_KB} kB`,
   );
+  sized("MapLibre's worker", chunkFiles('maplibre-gl-worker'), WORKER_MAX_GZ_KB);
   lines.push(`  - fonts (not gzipped): ${kb(fontBytes(dist))} of ${FONTS_MAX_KB} kB`);
   return lines;
 }

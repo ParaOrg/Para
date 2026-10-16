@@ -6,6 +6,9 @@ import { gzipSync } from 'node:zlib';
 
 export const FONTS_MAX_KB = 135;
 
+/** MapLibre's worker, its own chunk, gzipped. */
+export const WORKER_MAX_GZ_KB = 20;
+
 // What both pages share, gzipped, in kB on 2026-10-05: MapLibre's page
 // file 137.4 and the code it shares with its worker 134.8 (step 14; one
 // chunk of 249.7 at step 12, the worker's share being in the worker then),
@@ -77,19 +80,6 @@ export function chunksNamed(manifest, name) {
 /** The gzipped size of the given files of dist/, together. */
 export function gzipBytes(dist, files) {
   return files.reduce((n, f) => n + gzipSync(readFileSync(join(dist, f))).length, 0);
-}
-
-/** What the shared groups (MapLibre, React, zod, our shared code) weigh gzipped, together. */
-export function sharedGroupsGzipBytes(manifest, dist) {
-  return GROUPS.reduce(
-    (n, g) =>
-      n +
-      gzipBytes(
-        dist,
-        chunksNamed(manifest, g.name).map((c) => c.file),
-      ),
-    0,
-  );
 }
 
 /** Reads dist/'s manifest, or null when the app has not been built. */
