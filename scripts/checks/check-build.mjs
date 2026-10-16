@@ -462,10 +462,7 @@ check(
 // group's package: React in `shared` is +58, a half of MapLibre +135.
 // `packages` is what the chunk may hold from node_modules, `only` the files
 // it may hold; `vendor` chunks may import no chunk of ours.
-// PREVIEW ONLY (claude/preview-everything, never merged): every open PR at
-// once weighs 400.6, each alone under 400; the owner, 2026-10-16, chose to
-// raise it here so the combined preview builds. Staging keeps 400.
-const SHARED_MAX_GZ_KB = 405;
+const SHARED_MAX_GZ_KB = 400;
 const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
 const GROUPS = [
   {
