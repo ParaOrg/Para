@@ -7,12 +7,10 @@ import { directionLine, type Direction } from '@/features/routes/model/routes';
 import { M_PER_DEG, nearestOnSegment, type LngLat } from '@/shared/utils/geo';
 
 /**
- * The dot's gaze at what was just picked (the owner's ask, 2026-10-01: "when
- * I tap the route it should look the route for maybe 3 sec then go back
- * again to normal"; routes, and hintuans too, and still when what it looks
- * at is off the screen). Its eyes leave their wandering for the way to it,
- * hold there, and wander again (locator.css). The face it wears stays: only
- * the eyes turn.
+ * The dot's gaze at what was just picked: routes, and hintuans too, and still
+ * when what it looks at is off the screen. Its eyes leave their wandering for
+ * the way to it, hold there, and wander again (locator.css). The face it wears
+ * stays: only the eyes turn.
  */
 
 /** How long the dot gazes before its eyes wander again. */
@@ -99,8 +97,7 @@ export interface Picks {
  * card, a place, a trip, a card, or the routes a tap on the map lists —
  * keyed by route, not direction, so SWITCH is no pick. A route is gazed at
  * where it comes nearest the commuter at `from` (their fix). Built where the
- * dot is (CommuterLocation) since 2026-10-05, word for word as PublicMapApp
- * built them.
+ * dot is (CommuterLocation).
  */
 export function gazeSubjects(p: Picks, from: LngLat | null): Subject[] {
   const nearestLit = (lines: LngLat[][]) => (from ? nearestOnLines(from, lines) : null);

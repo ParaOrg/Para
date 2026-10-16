@@ -20,8 +20,8 @@ const HALO_MAX_PX = 1600;
 
 /**
  * The circle as drawn: the fix's metres on the ground, so it shrinks as the
- * map zooms out and is gone once the dot covers it, as Google Maps' is (the
- * owner's screenshots, 2026-10-01); never past HALO_MAX_PX. 0: none.
+ * map zooms out and is gone once the dot covers it, as Google Maps' is;
+ * never past HALO_MAX_PX. 0: none.
  */
 const haloFor = (px: number, scale = 1) =>
   px < DOT_PX * scale ? 0 : Math.round(Math.min(HALO_MAX_PX, px));
@@ -45,8 +45,7 @@ interface Props {
 }
 
 /**
- * The owner's LocatorIndicatorOverlay (3870:5247, 2026-10-01, its second
- * pass the same day): the commuter on the map, in the walking figure's place
+ * LocatorIndicatorOverlay (Figma 3870:5247): the commuter on the map
  * — a 24 px Brand/surface dot in white, lifted by LocatorDotShadow,
  * breathing, its wandering eyes glancing about (locator.css); a beam the
  * way they face fading out from it; and the circle the fix is good to, in
@@ -83,10 +82,8 @@ export function LocatorIndicatorOverlay({
         {beamDeg !== null && (
           // From the dot's centre, drawn pointing south and turned to the
           // heading, in the border's blue as Figma's is. Figma's (3876:6051)
-          // leans 2.7 px to one side; here it is the owner's size, made even
-          // (their ask, 2026-10-01), then cut to 7/10 of its length at the
-          // same spread ("make it like 7/10 only", the same day): 59 long, 70
-          // across at its end.
+          // leans 2.7 px to one side; here it is made even, then cut to 7/10
+          // of its length at the same spread: 59 long, 70 across at its end.
           <div
             className="absolute top-1/2 left-1/2 size-0 text-map-locator-indicator-overlay-border"
             style={{ rotate: `${beamDeg - BEAM_DRAWN_DEG}deg` }}
@@ -133,7 +130,7 @@ export function LocatorIndicatorOverlay({
           }
         >
           <div className="relative size-6 overflow-clip rounded-full bg-brand-surface">
-            {/* Its wandering eyes (3878:6071, 3878:6072, 2026-10-01): every face is theirs (locator.css). */}
+            {/* Its wandering eyes (3878:6071, 3878:6072): every face is theirs (locator.css). */}
             <div aria-hidden className="locator-eyes absolute inset-0">
               <span className="locator-eye absolute top-[6.33px] left-[10.48px] h-1.5 w-1 rounded-full bg-surface" />
               <span className="locator-eye absolute top-[6.33px] left-[17.43px] h-1.5 w-1 rounded-full bg-surface" />
@@ -148,7 +145,7 @@ export function LocatorIndicatorOverlay({
 /**
  * The overlay at the commuter's fix, as a DOM marker, not a map layer: it
  * costs the map nothing to move (an animated layer kept MapLibre repainting
- * the whole map, 2026-09-25). It lies on the ground and turns with the map
+ * the whole map). It lies on the ground and turns with the map
  * (MapLibre's `map` alignments), as Google Maps' does: tilted, in the
  * compass view, the circle and the dot go oval with the street; and its
  * beam points the way they face, from north.

@@ -3,12 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { STILL_BELOW_MPS, type Camera, type Fix } from './use-locator';
 
 /*
- * The commuter's dot has moods (the owner's ask, 2026-10-01: "add other
- * emotion ... sad, angry, happy"; sad since dropped, "we remove the sad, only
- * neutral, happy and angry"): glad as the commuter arrives or moves, a
- * reaction to a tap, and left to itself its mood swings; and neutral and
- * happy have several faces each, so it never reads as one loop (the owner's
- * "make more faces reaction to that"). The faces are drawn in locator.css.
+ * The commuter's dot has moods, neutral, happy and angry: glad as the commuter
+ * arrives or moves, a reaction to a tap, and left to itself its mood swings;
+ * and neutral and happy have several faces each, so it never reads as one
+ * loop. The faces are drawn in locator.css.
  */
 
 export type Mood = 'neutral' | 'happy' | 'angry';
@@ -34,10 +32,8 @@ const ANGRY_WITHIN_MS = 2000;
 /** …and it stays cross this long after the third. */
 export const ANGRY_FOR_MS = 3000;
 /**
- * A tap on the LocatorButton gets a reaction, this long (the owner's ask,
- * 2026-10-01: "if the user tapped the locator it should be happy then
- * sometimes angry, make an animation for it"): glad, a boing; now and then,
- * one tap in ANGRY_ODDS, cross, a huff. Never cross at the first tap.
+ * A tap on the LocatorButton gets a reaction, this long: glad, a boing; now
+ * and then, one tap in ANGRY_ODDS, cross, a huff. Never cross at the first tap.
  */
 export const REACT_FOR_MS = 2500;
 export const ANGRY_ODDS = 4;
@@ -55,13 +51,10 @@ const MOVING_FROM_MPS = 1;
 export const SLEEPY_AFTER_MS = 60_000;
 
 /**
- * With nothing going on, the dot's mood swings (the owner's ask, 2026-10-01:
- * "back and forth between neutral and happy ... then sometimes sad and
- * angry"): a face every AMBIENT_EVERY_MS from this list, half of them
- * neutral, nearly all the rest happy, one in forty cross — for one turn
- * only, where a run of taps holds cross as long as it lasts, so that one
- * still reads as real (halved from one in twenty at the owner's "make
- * neutral and happy more", the same day; sad dropped later that day).
+ * With nothing going on, the dot's mood swings: a face every AMBIENT_EVERY_MS
+ * from this list, half of them neutral, nearly all the rest happy, one in forty
+ * cross — for one turn only, where a run of taps holds cross as long as it
+ * lasts, so that one still reads as real.
  */
 const AMBIENT_EVERY_MS = 5000;
 const NEUTRAL_SWINGS = [
@@ -146,10 +139,9 @@ function inATemper({ now, taps }: Pick<Signals, 'now' | 'taps'>): boolean {
 /**
  * The mood for these signals, the strongest first: cross at a run of taps,
  * then a tap's own reaction, then glad as the commuter arrives, then glad on
- * the move. Never low for the location itself: an old fix (a browser sends
- * none while the commuter stands still) or a rough one (common indoors) made
- * it sad most of the time (the owner, 2026-10-01: "can we drop the bad
- * location for now"), and sad is gone altogether.
+ * the move. The location itself never makes it low: an old fix (a browser
+ * sends none while the commuter stands still) or a rough one (common indoors)
+ * would hold it low most of the time.
  */
 export function moodAt(s: Signals): Mood {
   const { now, fix, arrivedAt } = s;
@@ -171,8 +163,7 @@ function pick<T>(list: readonly T[], slot: number): T {
  * swings (AMBIENT), and it dozes after `stillFor` ms standing still.
  * `tapped`: the mood is a tap's reaction — a boing, or a huff. `taps`: how
  * many times it has been tapped; each tap rolls its swings afresh, so after
- * the reaction it comes back in another mood (the owner, 2026-10-01:
- * "tapping may change the mood").
+ * the reaction it comes back in another mood.
  */
 export function faceFor(mood: Mood, now: number, stillFor: number, tapped = false, taps = 0): Face {
   if (tapped && mood === 'happy') return 'boing';
@@ -208,7 +199,7 @@ export function useLocatorMood({
   face: Face;
   /** The last tap's time: a new one plays the reaction again, even with the face unchanged. */
   beat: number;
-  /** A tap on the dot itself: the same reaction as one on the button (the owner, 2026-10-01). */
+  /** A tap on the dot itself: the same reaction as one on the button. */
   poke: () => void;
 } {
   const [now, setNow] = useState(() => Date.now());
