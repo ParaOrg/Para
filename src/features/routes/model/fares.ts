@@ -98,7 +98,7 @@ export function peso(centavos: number): string {
 /**
  * `₱26` or `₱26–28`, in whole pesos: the low end rounded down, the high end
  * up, so the range still holds the fare — a discounted ₱19.25–20.75 is
- * `₱19–21`: the cards never show decimals.
+ * `₱19–21`: the cards never show decimals (the owner's rule).
  */
 export function pesoRange(low: number, high: number): string {
   const lo = Math.floor(low / 100);
@@ -110,10 +110,10 @@ export function pesoRange(low: number, high: number): string {
  * One ride of `metres` by `mode`, as the cards write pesos — `₱14`, `₱24–26`
  * — or nothing when no fare rule prices the mode. A range, the part km
  * counted down and up (fareFor), in whole pesos (pesoRange), a range on the
- * discounted fare too, because the range helps a commuter. The trip card's
- * Expected fare, over its whole ride (Figma 3778:3183). The only pesos on the
- * public map: the RouteCards carry none. The studio keeps its own fare
- * details, under the trip card (RouteFacts).
+ * discounted fare too, because the range helps a commuter (the owner's call).
+ * The trip card's Expected fare, over its whole ride (Figma 3778:3183). The
+ * only pesos on the public map: the RouteCards carry none. The studio keeps
+ * its own fare details, under the trip card (RouteFacts).
  */
 export function rideFare(
   mode: TransportMode | undefined,

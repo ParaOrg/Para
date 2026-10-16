@@ -40,7 +40,8 @@ export const toHotspot = (raw: RawHotspot) => ({
    * The informal name: what people say, "SM Fairview". Optional;
    * `hotspotLabel` falls back to the name. The route name reads this (R1),
    * and boxes that share it are one place to a commuter, whatever is written
-   * on each — a terminal and two hintuans under one informal name. 0007.
+   * on each — a terminal and two hintuans under one informal name. 0007; the
+   * owner's words for the two names.
    */
   informal: raw.informal,
   /** Other ways people say the same place, for a search or a suggestion list. */

@@ -8,17 +8,17 @@ import { RAIL_LINES, type RailLine } from './routes';
  *
  * A colour belongs to a route: a card wears the colour of the route its first
  * row belongs to, so a route reads in one colour whichever way round the list
- * shows it, Papunta or Pabalik. Colours do not change at random: one is added
- * only when the Papunta or Pabalik list has an additional route. Tala's card
- * lists Tala → SM Fairview and Tala → Novaliches in the first row's route's
- * colour; the way back makes Novaliches → Tala a card of its own, which draws
- * a colour of its own and keeps it. The list a trip's ‹ opens leads with the
- * trip's own route (sharingAnEnd), so the card it lists the trip on wears the
- * trip's colour. The colour is not the place's: the way back renames the
- * place, which would draw the cards anew. Once open, a trip's card keeps its
- * colour until it closes, even SWITCHed to leave from another place: turned
- * round, it is the same card (`useTripLivery` in trip-card.tsx, since its
- * line wears the colour too).
+ * shows it, Papunta or Pabalik. Colours do not change at random (the owner's
+ * call): one is added only when the Papunta or Pabalik list has an additional
+ * route. Tala's card lists Tala → SM Fairview and Tala → Novaliches in the
+ * first row's route's colour; the way back makes Novaliches → Tala a card of
+ * its own, which draws a colour of its own and keeps it. The list a trip's ‹
+ * opens leads with the trip's own route (sharingAnEnd), so the card it lists
+ * the trip on wears the trip's colour. The colour is not the place's: the way
+ * back renames the place, which would draw the cards anew. Once open, a
+ * trip's card keeps its colour until it closes, even SWITCHed to leave from
+ * another place: turned round, it is the same card (`useTripLivery` in
+ * trip-card.tsx, since its line wears the colour too).
  */
 export const JEEPNEY_LIVERIES = ['red', 'orange', 'violet', 'rose', 'fuchsia', 'pink'] as const;
 type JeepneyLivery = (typeof JEEPNEY_LIVERIES)[number];
@@ -46,14 +46,15 @@ const visit = new Map<string, JeepneyLivery>();
 /**
  * The colours for a list of cards, in order: each card its rows' route ids,
  * the first row's first, which the card is keyed by. No colour comes twice in
- * a list until every one has come once; then the round starts again, never
- * beside the same colour. A route drawn before keeps its colour — unless this
- * round has had it, or it would sit beside itself, when it draws again and
- * keeps that (a clash settles once, so nothing changes colour at random). A
- * redraw, and a route new to the visit, draws among the colours this round
- * has not had, leaving those that routes further down keep and, where it can,
- * those any listed row's route keeps: the way round leads a card with any of
- * them, so a redraw clear of them makes no clash of its own there.
+ * a list until every one has come once (the owner's rule); then the round
+ * starts again, never beside the same colour. A route drawn before keeps its
+ * colour — unless this round has had it, or it would sit beside itself, when
+ * it draws again and keeps that (a clash settles once, so nothing changes
+ * colour at random). A redraw, and a route new to the visit, draws among the
+ * colours this round has not had, leaving those that routes further down keep
+ * and, where it can, those any listed row's route keeps: the way round leads
+ * a card with any of them, so a redraw clear of them makes no clash of its
+ * own there.
  */
 export function liveriesFor(
   cards: readonly (readonly string[])[],
