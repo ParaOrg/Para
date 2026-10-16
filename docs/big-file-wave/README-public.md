@@ -6,7 +6,7 @@ studio's files have their own `README.md` in this folder, from another
 session. The splits are for later sessions on Opus 5.5, one file a pull
 request, after tonight's pull requests merge.
 
-The method is Stage 10's (`docs/plan-cleanup-2026-09-29.md`, and the
+The method is Stage 10's (`docs/archive/plan-cleanup-2026-09-29.md`, and the
 commits `git log --oneline --grep "Stage 10"` once the clone is deepened):
 pure moves and clear seams, the same behaviour, the same suite counts in the
 PR body, and a unit test for whatever becomes pure. PR #18's body is the
