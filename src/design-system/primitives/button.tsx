@@ -22,13 +22,16 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 type Size = 'base' | 'small';
 
 /**
- * Small exists only for Special and Secondary in the set — the types keep
- * code from getting ahead of the design: `size="small"` on primary or error
- * is a compile error until the owner designs it.
+ * Small exists only where the set draws it — the types keep code from
+ * getting ahead of the design. Special and Secondary had it from the start;
+ * Primary gained it on 2026-10-15, when the owner drew Primary Small in
+ * Default, Hover, Pressed and Disabled (3742:1196, for the timeline's "Set
+ * as start", 4147:11947): Primary's fills and shadows at Small's sizes.
+ * `size="small"` on error stays a compile error until the owner designs it.
  */
 type VariantAndSize =
-  | { variant: 'special' | 'secondary'; size?: Size }
-  | { variant: 'primary' | 'error'; size?: 'base' };
+  | { variant: 'special' | 'secondary' | 'primary'; size?: Size }
+  | { variant: 'error'; size?: 'base' };
 
 type Props = Omit<
   ComponentPropsWithoutRef<'button'>,
@@ -61,7 +64,7 @@ const VARIANT = {
     'enabled:active:bg-error-surface-secondary enabled:active:shadow-primary-button-pressed',
 } satisfies Record<Props['variant'], string>;
 
-// The weight is each voice's own (VARIANT): Small is Special's, bold, and Secondary's, medium.
+// The weight is each voice's own (VARIANT): Special's Small is bold; Secondary's and Primary's, medium.
 const SIZE = {
   base: 'gap-1 px-4 py-2 text-base/6',
   small: 'gap-1 px-3 py-1.5 text-sm/5',
