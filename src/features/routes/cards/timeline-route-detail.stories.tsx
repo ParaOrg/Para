@@ -85,8 +85,20 @@ export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
 /** Pink. */
 export const Pink: Story = { args: { livery: 'pink' } };
 
-/** A hintuan picked: its dot a white ring round the rail's colour, its name ExtraBold, its pill with the pesos to there. Opened, since the fold keeps it. */
+/**
+ * A hintuan picked: its dot a white ring round the rail's colour, its name
+ * ExtraBold, its pill with the pesos to there. The rail runs only along the
+ * ride (the owner, 2026-10-15): from the origin down to it, ending there
+ * (MiddleBottom); the rows after it, the fold's and the destination's, are
+ * their dots alone (Disconnected). Opened, since the fold keeps it.
+ */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: openFold };
+
+/** A hintuan picked and folded away: the rail leaves the origin into the fold, which has none. */
+export const HintuanPickedFolded: Story = { args: { picked: 'h3' } };
+
+/** The last hintuan picked: the rail runs to it, and only the destination is left without one. */
+export const LastHintuanPicked: Story = { args: { picked: 'h9' }, play: openFold };
 
 /** Picked, red: the pill in the card's own colours, swapped. */
 export const HintuanPickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: openFold };
