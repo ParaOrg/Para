@@ -1,5 +1,5 @@
 /*
- * A hintuan's label beside its dot (HintuanLabel.tsx, which imports this
+ * A hintuan's label beside its dot (hintuan-label.tsx, which imports this
  * sheet): centred on the dot, on one line, popping from its left edge a beat
  * after the dot pops (hintuan-pin.css), over the base duration with the
  * arriving ease (tokens.css, Motion). `prefers-reduced-motion` has it

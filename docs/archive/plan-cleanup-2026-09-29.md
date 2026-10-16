@@ -1,5 +1,7 @@
 # ParaPo — the clean-up, staged
 
+> Done 2026-09-29: all 12 stages merged into `staging` (#9–#28); PLAN.md's "The clean-up — 2026-09-29" records each. Kept as a record: nothing here is left to start.
+
 2026-09-29. Companion to `review-2026-09-29.md` (the findings, numbered as
 referenced below). Written so that the work can run unattended: every
 decision the review left open is taken here, every stage has a gate that
