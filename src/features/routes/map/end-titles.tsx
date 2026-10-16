@@ -107,7 +107,7 @@ export function EndTitles({
   return (
     <>
       {rideEnds(rides).map(
-        ({ end, name, named, at, hotspotId, rides: here, of, paled, isMarked }) => {
+        ({ end, name, named, at, hotspotId, rides: here, of, paled, isMarked, mark }) => {
           const trip = onTrip && end === 'to' && here.length === 1 ? here[0] : null;
           const handlePlacePick = onPick && hotspotId ? () => onPick(hotspotId) : undefined;
           const handlePick = trip ? () => onTrip?.(trip) : handlePlacePick;
@@ -122,6 +122,7 @@ export function EndTitles({
               head={end === 'from'}
               // An end the ride picked on its trip doesn't reach, or a trip whose start stands alone: the S or E is on a pick's pin.
               marked={isMarked}
+              mark={mark}
               livery={livery}
               codeSign={codeAt(of, name)}
               paled={paled}
@@ -161,6 +162,7 @@ function EndTitle({
   named,
   head,
   marked,
+  mark,
   livery,
   codeSign,
   paled,
@@ -176,6 +178,8 @@ function EndTitle({
   head: boolean;
   /** Start's S or End's E before the name: a Head or a Tail Route; else Default. */
   marked: boolean;
+  /** Which it wears when marked: the S, or the E (rideEnds' `mark`). */
+  mark: 'start' | 'end';
   livery: Livery | null;
   /** A train station's sign code, before its name (RouteLineEndingsLabel's CodeSign). */
   codeSign: string | null;
@@ -202,7 +206,7 @@ function EndTitle({
     el.toggleAttribute('data-paled', paled);
   }, [el, named, name, head, opensWhat, at, paled]);
   const rail = livery ? (paled ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery]) : LIT_RAIL;
-  const markedAs = head ? 'head' : 'tail';
+  const markedAs = mark === 'start' ? 'head' : 'tail';
   const variant: RouteLineEndingsLabelVariant = marked ? markedAs : 'default';
   const Pill = onPick ? 'button' : 'div';
   return createPortal(

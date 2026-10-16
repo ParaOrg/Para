@@ -149,9 +149,10 @@ export function TimelineRouteDetailCard({
   // the same day).
   const [turns, setTurns] = useState(0);
   const othersHeading = useId();
-  // An end picked: the tiles read the ride between it and the start. A start
-  // alone is no ride yet, the whole trip's shown (the owner, 2026-10-16).
-  const hasRide = picked !== null;
+  // An end picked: the tiles read the ride between it and the start, a
+  // hintuan's row or, with a start, an end's (the owner, 2026-10-16: "keep
+  // the start"). A start alone is no ride yet, the whole trip's shown.
+  const hasRide = picked !== null || (start !== null && endPicked !== null);
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
   return (

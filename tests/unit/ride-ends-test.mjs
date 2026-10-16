@@ -24,6 +24,10 @@ test('a lit ride with nothing picked: both ends marked, Start’s S and End’s 
     ['from', true],
     ['to', true],
   ]);
+  assert.deepEqual(
+    rideEnds([trip]).map((e) => e.mark),
+    ['start', 'end'],
+  );
 });
 
 test('a ride from a start to an end: the ends on the pale are left unmarked, the picks’ pins carrying them', () => {
@@ -60,6 +64,16 @@ test('the chevrons flow along the line, and back along it for a ride picked back
   assert.equal(ahead, line, 'the line itself, in travel order');
   assert.deepEqual(back, [...line].reverse(), 'from the S, after the E, back to it');
   assert.deepEqual(line[0], [121.0, 14.7], 'the line handed in is left as it was');
+  // The origin picked with the start kept (the owner, 2026-10-16: "keep the
+  // start"): the ride back to it, which wears the E there.
+  const toOrigin = rideEnds([{ ...trip, pale: [line.slice(1)], isBackwards: true }]);
+  assert.deepEqual(
+    toOrigin.map((e) => [e.end, e.isMarked, e.mark]),
+    [
+      ['from', true, 'end'],
+      ['to', false, 'start'],
+    ],
+  );
   // Its ends on the pale, as a ride the trip's way has them: the picks' pins carry the S and E.
   const ends = rideEnds([{ ...trip, pale, isBackwards: true }]);
   assert.deepEqual(

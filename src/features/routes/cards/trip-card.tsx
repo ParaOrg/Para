@@ -127,7 +127,7 @@ export function TripCard({
   /** × Remove as start, under the start's row (useRideTo's `removeStart`). */
   onRemoveStart?: () => void;
   onPick: (id: string) => void;
-  /** The origin's or the destination's row: the whole ride, and that end on the map. */
+  /** The origin's or the destination's row: that end on the map, the whole ride, or with a start the ride's end. */
   onEnd: (end: 'from' | 'to') => void;
   /** The end picked from its row (useRideTo's `endPicked`), or null. */
   endPicked: 'from' | 'to' | null;
@@ -166,7 +166,7 @@ export function TripCard({
       startCode={startCode}
       onSetStart={onSetStart}
       onRemoveStart={onRemoveStart}
-      pickedFare={pickedFareFor(direction, pickedMetres, timeline, start, picked)}
+      pickedFare={pickedFareFor(direction, pickedMetres, timeline, start, picked, endPicked)}
       pickedCode={pickedCode}
       onPick={onPick}
       onEnd={onEnd}
@@ -216,9 +216,10 @@ function fareFor(direction: Direction, metres: number, timeline: Timeline): Fare
 /**
  * The fare of the ride between the picks: a jeep's by the metres between
  * them, a train's by the two stations (railFares takes any pair, whichever
- * way round), the ferry's free. A start left at the origin is that end of the timeline. No end
- * picked, no ride to price: a start alone is no ride yet (the owner's
- * Variant3, 2026-10-16).
+ * way round), the ferry's free. A start left at the origin is that end of
+ * the timeline, and an end row picked with a start (`endPicked`, the owner's
+ * "keep the start", 2026-10-16) is its own end. No end picked, no ride to
+ * price: a start alone is no ride yet (the owner's Variant3, 2026-10-16).
  */
 function pickedFareFor(
   direction: Direction,
@@ -226,15 +227,17 @@ function pickedFareFor(
   timeline: Timeline,
   start: string | null,
   picked: string | null,
+  endPicked: 'from' | 'to' | null,
 ): Fare | undefined {
   // A start alone is no ride yet: nothing to price until its end is picked (the owner, 2026-10-16).
-  if (picked === null) return undefined;
+  const isEndRow = start !== null && endPicked !== null;
+  if (picked === null && !isEndRow) return undefined;
   if (isFerry(direction.route?.mode)) return FREE;
   if (isRail(direction.route?.mode)) {
     const labelOf = (id: string | null, end: Timeline['from']) =>
       id === null ? end?.label : timeline.between.find((r) => r.id === id)?.label;
     const from = labelOf(start, timeline.from);
-    const to = labelOf(picked, timeline.to);
+    const to = labelOf(picked, endPicked === 'from' ? timeline.from : timeline.to);
     return railFares(direction.route.routeCode, from, to);
   }
   return pickedMetres === undefined ? undefined : faresFor(direction.route?.mode, pickedMetres);

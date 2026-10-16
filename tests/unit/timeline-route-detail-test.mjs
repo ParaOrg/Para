@@ -307,6 +307,54 @@ test('an end above the start (Variant5): the open rows run from the E down to th
   assert.deepEqual(marks, ['end', 'start']);
 });
 
+// The owner, 2026-10-16: "keep the start": an end row tapped with a start
+// is the ride's end, the start kept.
+test('the destination picked with the start kept: its E, the ride from the S to it, the rows above folded', () => {
+  const html = render(10, { start: 'h4', endPicked: 'to', onRemoveStart() {} });
+  const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
+  // The origin and the fold of the four above the ride, the rail through
+  // them; S (rail below) and beside its × Remove as start, five through,
+  // the destination.
+  assert.deepEqual(pieces, [
+    'below',
+    'connected',
+    'below',
+    'connected',
+    'through',
+    'through',
+    'through',
+    'through',
+    'through',
+    'above',
+  ]);
+  const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
+  assert.deepEqual(marks, ['start', 'end'], 'the S on its row, the E on the destination');
+  assert.match(html, /data-testid="trip-destination" data-state="selected"/);
+  const origin = /<li data-testid="trip-origin".*?<\/li>/s.exec(html)?.[0] ?? '';
+  assert.doesNotMatch(origin, /data-part=/, 'no S or E on the origin');
+});
+
+test('the origin picked with the start kept: its E, the ride back from the S to it, the rows after folded', () => {
+  const html = render(10, { start: 'h4', endPicked: 'from', onRemoveStart() {} });
+  const pieces = [...html.matchAll(/data-rail="([a-z]+)"/g)].map(([, p]) => p);
+  // The origin, four through, S (rail above) and no rail beside its
+  // × Remove as start, the fold of the five after it, the destination.
+  assert.deepEqual(pieces, [
+    'below',
+    'through',
+    'through',
+    'through',
+    'through',
+    'above',
+    'disconnected',
+    'connected',
+    'above',
+  ]);
+  const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
+  assert.deepEqual(marks, ['end', 'start'], 'the E on the origin, the S below it');
+  assert.match(html, /data-testid="trip-origin" data-state="selected"/);
+});
+
 test('a train’s fold reads stations, a jeep’s hintuans (the owner, 2026-10-15)', () => {
   assert.match(render(7, { isTrain: true }), />7 more stations</);
   assert.match(render(7), />7 more hintuans</);
