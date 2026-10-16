@@ -280,7 +280,7 @@ export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
 /** Pink (4071:7014, 2026-10-13), with Content/inverse words, like fuchsia. */
 export const Pink: Story = { args: { livery: 'pink' } };
 
-/** SWITCHed: the way back. SWITCH is pressed for a screen reader only; it has no drawn "on" look yet. */
+/** SWITCHed: the way back, so SWITCH reads Papunta, the way a tap leads (the owner, 2026-10-16). */
 export const TheWayBack: Story = {
   args: {
     routeOrigin: 'Novaliches',

@@ -37,7 +37,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   onSwitch: () => void;
   /** False when the route has no other way drawn; SWITCH then rests disabled. */
   switchable: boolean;
-  /** Whether this trip is the route's way back: SWITCH is pressed then, as over the list. */
+  /** Whether this trip is the route's way back, for the suites (SWITCH's `data-back`). */
   back: boolean;
   /** The word on SWITCH (switchWord): the way a tap leads to, Pabalik or Papunta, or a train's other bound. */
   way: string;
