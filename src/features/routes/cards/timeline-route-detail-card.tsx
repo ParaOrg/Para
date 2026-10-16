@@ -7,6 +7,7 @@ import { kmLabel } from '@/shared/utils/geo';
 import { RouteCardHeader } from './route-card-header';
 import { RouteEndPointBar } from './route-end-point-bar';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
+import type { Vehicle } from '../model/vehicles';
 
 /** A ride's pesos both ways: `₱26` regular, and its discounted price — students, seniors, PWDs. */
 export interface Fares {
@@ -52,7 +53,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
    * Figma's "Other routes" under the tiles: the other routes out of where
    * this trip starts, each by where it goes. Empty or omitted, none is shown.
    */
-  otherRoutes?: readonly { id: string; to: string }[];
+  otherRoutes?: readonly { id: string; to: string; vehicle: Vehicle | null }[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
   /**
@@ -304,6 +305,7 @@ export function TimelineRouteDetailCard({
                 <RouteEndPointBar
                   routeDirection={r.to}
                   on="surface"
+                  vehicle={r.vehicle}
                   data-testid="trip-other-route"
                   data-direction={r.id}
                   onClick={() => onOtherRoute?.(r.id)}

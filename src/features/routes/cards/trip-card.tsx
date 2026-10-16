@@ -197,7 +197,11 @@ export function TripCard({
       onClose={onClose}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
-      otherRoutes={others.map((v) => ({ id: v.id, to: directionEnds(v).to }))}
+      otherRoutes={others.map((v) => ({
+        id: v.id,
+        to: directionEnds(v).to,
+        vehicle: vehicleOf(v),
+      }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);
         if (v) onOtherRoute?.(v);

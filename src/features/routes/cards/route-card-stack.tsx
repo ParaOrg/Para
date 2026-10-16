@@ -4,6 +4,7 @@ import { RouteCard } from './route-card';
 import { drawnDepartures } from '../model/departures';
 import { cardLiveries, type Livery } from '../model/liveries';
 import { isRailLine, railLineOf, type Direction } from '../model/routes';
+import { vehicleOf } from '../model/vehicles';
 
 /** A card picked: the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
 export interface PickedPlace {
@@ -82,7 +83,11 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
           livery={liveries[i]}
           state={selected === p.from ? 'selected' : 'rest'}
           routeOrigin={p.from}
-          endPoints={p.directions.map((d) => ({ id: d.v.id, routeDirection: d.to }))}
+          endPoints={p.directions.map((d) => ({
+            id: d.v.id,
+            routeDirection: d.to,
+            vehicle: vehicleOf(d.v),
+          }))}
           onSelect={() =>
             onSelect(
               selected === p.from
