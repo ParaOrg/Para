@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react';
 
+import { wayWord } from '@/features/routes/model/departures';
 import type { Direction } from '@/features/routes/model/routes';
 
 import * as live from '../data/signboards';
@@ -34,7 +35,7 @@ export function SignboardEditor({
   const [problem, setProblem] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const heading = useId();
-  const way = direction.reversed ? 'Pabalik' : 'Papunta';
+  const way = wayWord(direction.reversed, [direction]);
 
   // Another direction, or the list read again: the boards as they stand, set
   // during render against the ones last shown.

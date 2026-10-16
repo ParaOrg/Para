@@ -40,11 +40,11 @@ const dotOf = (root: HTMLElement): HTMLElement => {
 const settled = (root: HTMLElement) =>
   Promise.all(root.getAnimations({ subtree: true }).map((animation) => animation.finished));
 
-/** The label 10 right of the dot (Figma's spacing/2-5) and centred on it. */
+/** The label 8 right of the dot (Figma's spacing/2, 2026-10-16) and centred on it. */
 const expectBesideTheDot = async (root: HTMLElement) => {
   const dot = dotOf(root).getBoundingClientRect();
   const label = partOf(root, 'label').getBoundingClientRect();
-  await expect(label.left - dot.right).toBe(10);
+  await expect(label.left - dot.right).toBe(8);
   await expect(label.top + label.height / 2).toBe(dot.top + dot.height / 2);
 };
 
@@ -75,6 +75,29 @@ export const CodeSign: Story = {
   play: async ({ canvasElement }) => {
     await expectBesideTheDot(canvasElement);
     await expect(partOf(canvasElement, 'code').textContent).toBe('YL06');
+  },
+};
+
+/**
+ * HintuanStart: a ride's picked start, its dot filled, Start's S before its
+ * name on Head Route's green (2026-10-16). Figma draws no HintuanStart:
+ * HintuanEnd's shape in RouteLineEndingsLabels' start.
+ */
+export const HintuanStart: Story = {
+  args: { variant: 'hintuan-start' },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'start'))).toBe(true);
+    await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+  },
+};
+
+/** A picked start station: the S in its own green disc, the code in a white chip. */
+export const CodeSignStart: Story = {
+  args: { variant: 'hintuan-start', codeSign: 'YL07' },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
   },
 };
 
@@ -136,6 +159,17 @@ export const LightRailWayTwo: Story = {
 export const MetroRailWayThree: Story = {
   args: { variant: 'hintuan-end', livery: 'metro-rail-way-three' },
 };
+
+/** A picked start on MRT-3: the dot the line's yellow, the label green (2026-10-16). */
+export const MetroRailWayThreeStart: Story = {
+  args: { variant: 'hintuan-start', codeSign: 'YL07', livery: 'metro-rail-way-three' },
+};
+
+/** A picked MRT-3 station: the code black on white (2026-10-16). */
+export const MetroRailWayThreeCodeSign: Story = {
+  args: { variant: 'hintuan-end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
+};
+export const RedStart: Story = { args: { variant: 'hintuan-start', livery: 'red' } };
 
 /** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it (2026-10-13). */
 export const MetroRailWayThreeHintuan: Story = {

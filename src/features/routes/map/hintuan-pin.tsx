@@ -26,6 +26,11 @@ interface Props {
   livery: Livery;
   /** Given, the name is a button: the public map's lets the pick go. */
   onPick?: () => void;
+  /**
+   * Which pick it marks: the ride's end, End's E before the name, or its
+   * start, Start's S (the owner's TimelineRouteDetail, 2026-10-15).
+   */
+  marks?: 'end' | 'start';
 }
 
 /**
@@ -61,25 +66,30 @@ interface Props {
  * it lets the pick go, the camera back); the circle still takes no taps.
  * The code is only on the map, so the name's button says it too.
  */
-export function HintuanPin({ map, at, label, code, livery, onPick }: Props) {
+export function HintuanPin({ map, at, label, code, livery, onPick, marks = 'end' }: Props) {
   const el = useMarkerElement('hintuan-pin', 'hintuan-pin');
   // Moved, not made anew: the line's point for a pick can land a moment after the pick itself.
   useMapMarker(map, el, at, { anchor: 'center', onTap: onPick });
   // For the suites: the card's colour it wears.
   useEffect(() => {
     el.setAttribute('data-livery', livery);
-  }, [el, livery]);
+    el.setAttribute('data-marks', marks);
+  }, [el, livery, marks]);
 
   // Popped by hintuan-pin.css, its label by hintuan-label.css.
   return createPortal(
     <HintuanLabel
-      variant="hintuan-end"
+      variant={marks === 'start' ? 'hintuan-start' : 'hintuan-end'}
       name={label ?? null}
       livery={livery}
       codeSign={code}
       // Says what the tap does since the owner's ask of 2026-10-03: it lets
       // the pick go, no longer opening the routes there.
-      nameButtonLabel={onPick ? `End, ${code ? `${code} ` : ''}${label}: let it go` : undefined}
+      nameButtonLabel={
+        onPick
+          ? `${marks === 'start' ? 'Start' : 'End'}, ${code ? `${code} ` : ''}${label}: let it go`
+          : undefined
+      }
     />,
     el,
   );

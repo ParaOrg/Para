@@ -338,7 +338,7 @@
  * between; an exit runs about two thirds of its enter (tooltip: base in,
  * quick out). Animate opacity and transform only — save a fold, which has
  * to push what is below it down: the trip card's hintuans open and close
- * their height (RouteTripDetail; the owner allowed it, 2026-09-29).
+ * their height (TimelineRouteDetailCard; the owner allowed it, 2026-09-29).
  */
 @theme {
   --transition-duration-instant: 100ms; /* press */

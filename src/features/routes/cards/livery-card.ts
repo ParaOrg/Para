@@ -1,10 +1,12 @@
+import type { CardFill } from '@/design-system/primitives/button';
+
 import blobInverse from './route-card-blob-inverse.svg';
 import blobPrimary from './route-card-blob-primary.svg';
 import type { Livery } from '../model/liveries';
 
 /**
  * How a livery paints a card — the owner's RouteCard set (Figma 3665:2265,
- * 2026-09-28) — for the list's cards and a trip's card alike (RouteTripDetail,
+ * 2026-09-28) — for the list's cards and a trip's card alike (TimelineRouteDetailCard,
  * 2026-09-29), so a trip opens in the colours of the card it was picked from.
  *
  * Red and orange write in Content/inverse under Route/RouteCardPrimary.
@@ -175,7 +177,9 @@ export const ROW_PRESSED = {
  * Orange follows red: he drew no orange trip; nor violet, rose, fuchsia and pink.
  * A train's pill is white too, on every line, its words in the line's
  * Timeline/surface, not its surface: his three train frames draw it so,
- * MRT-3's dark words included (2026-10-13).
+ * MRT-3's dark words included (2026-10-13). The ride's E (RideMark) wears
+ * it too, its disc in the pill's words' colour on the same white (the
+ * owner's RouteSigns, 2026-10-16): a pill restyled restyles the E.
  */
 export const TIMELINE_PILL = {
   red: 'bg-content-inverse text-card-red-surface',
@@ -188,3 +192,21 @@ export const TIMELINE_PILL = {
   'light-rail-way-two': 'bg-content-inverse text-map-rail-light-rail-way-two-timeline-surface',
   'metro-rail-way-three': 'bg-content-inverse text-map-rail-metro-rail-way-three-timeline-surface',
 } satisfies Record<Livery, string>;
+
+/**
+ * Set as start and × Remove as start, on the card they sit on: Button's
+ * Primary filled with the card's colours (the owner's "card's colours since
+ * it's on top of the card", 2026-10-16; his instance, 4147:11947, fills
+ * with Card/red/surface), a train's in its line's.
+ */
+export const BUTTON_FILL = {
+  red: 'card-red',
+  orange: 'card-orange',
+  violet: 'card-violet',
+  rose: 'card-rose',
+  fuchsia: 'card-fuchsia',
+  pink: 'card-pink',
+  'light-rail-way-one': 'map-rail-light-rail-way-one',
+  'light-rail-way-two': 'map-rail-light-rail-way-two',
+  'metro-rail-way-three': 'map-rail-metro-rail-way-three',
+} as const satisfies Record<Livery, CardFill>;

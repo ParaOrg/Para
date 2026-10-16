@@ -12,6 +12,7 @@ import {
   useCardOverview,
   useHeightOverview,
   useListOverview,
+  useRideOverview,
   useSwitchOverview,
   useTripOverview,
 } from './use-overviews';
@@ -36,6 +37,8 @@ interface Routes<V extends Direction> {
 interface Hotspots<S extends Hotspot> {
   hotspots: readonly S[];
   selected: S | null;
+  /** The directions that pass a hotspot (its links): what a jeep's SWITCH carries its pick by. */
+  linkedDirectionIds: (hotspotId: string) => readonly string[];
 }
 
 interface Cards {
@@ -116,14 +119,27 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const [switches, setSwitches] = useState(0);
   const switched = () => setSwitches((n) => n + 1);
   useSwitchOverview(cam, saved.litDirections, switches, openSheet, cards.snap);
+  // A ride from a start to an end (the owner, 2026-10-16): what the camera
+  // takes in once the end is picked (pickOnTrip, endOnTrip), and what the
+  // trip frames as the sheet settles, in place of its whole route.
+  const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
+  const [endPicks, setEndPicks] = useState(0);
+  useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
+  /** An end picked after a start: the sheet to Middle, or, there already, the camera alone. */
+  const takeInTheRide = () => {
+    if (cards.height.snap === 'middle') setEndPicks((n) => n + 1);
+    else cards.height.onSnap('middle');
+  };
   // The sheet settled at another height: what the card on show frames, again,
-  // in the map it leaves — a trip's route, a picked card's routes or what the
-  // list lights, a hotspot's place (framedBy).
+  // in the map it leaves — a trip's route, or its ride from a start to an
+  // end; a picked card's routes or what the list lights, a hotspot's place
+  // (framedBy).
   const framed = (): Framed => {
     const ids = saved.highlight && new Set(saved.highlight.ids);
     const picked = ids && saved.directions.filter((v) => ids.has(v.id));
     return framedBy(
       saved.selected,
+      rideLine,
       hotspots.selected?.point.coordinates ?? null,
       cards.choosing,
       picked,
@@ -158,8 +174,38 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
         }
       : null,
 
-    /** SWITCH on a trip: the other way round, and the camera with it. */
-    switchTrip: (v: { id: string }) => {
+    /**
+     * A row picked on the trip, or its dot on the map (useRideTo's pick). An
+     * end picked after a start takes the sheet to Middle and the camera in to
+     * the ride between them (the owner's ask, 2026-10-16): as the sheet
+     * settles there, or at once when it is already there.
+     */
+    pickOnTrip: (id: string | null) => {
+      const isNewEnd =
+        id !== null && ride.startId !== null && id !== ride.startId && id !== ride.pickedId;
+      ride.pick(id);
+      if (isNewEnd) takeInTheRide();
+    },
+
+    /**
+     * The origin's row or the destination's on the trip (useRideTo's toEnd).
+     * With a start, it is the ride's end, and the camera takes in the ride as
+     * for a hintuan picked as the end (the owner, 2026-10-16: "keep the
+     * start"); with none, the map glides to it.
+     */
+    endOnTrip: (end: 'from' | 'to') => {
+      const isNewEnd = ride.startId !== null && ride.endPicked !== end;
+      ride.toEnd(end);
+      if (isNewEnd) takeInTheRide();
+    },
+
+    /**
+     * SWITCH on a trip: the other way round, and the camera with it. On a
+     * jeep, the picked hintuan goes with it, onto a box the other way passes
+     * (carryTo; the owner's ask, 2026-10-15).
+     */
+    switchTrip: (v: Direction) => {
+      ride.carryTo(v, (hotspotId) => hotspots.linkedDirectionIds(hotspotId).includes(v.id));
       saved.select(v.id, { keepList: true });
       switched();
     },
