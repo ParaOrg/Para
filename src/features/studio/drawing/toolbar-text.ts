@@ -1,6 +1,5 @@
 /**
- * What the drawing's toolbar says, pure, so tests/unit/toolbar-text-test.mjs
- * can hold it.
+ * What the drawing's toolbar says, pure, so tests/unit/toolbar-text-test.mjs can hold it.
  */
 
 /** A route's length as the toolbar shows it: metres under a kilometre, else km to two places. */

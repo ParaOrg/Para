@@ -30,9 +30,9 @@ interface Draft {
 /**
  * The draft as it is stored: the keys the contract was written with, where a
  * direction is `variantId` and a hotspot `stopId` (the database's words). The
- * app says directionId and hotspotId (CONTEXT.md); this file is
- * the one place that translates, so a draft left by an older build still reads
- * and the suites that write one still hold.
+ * app says directionId and hotspotId (CONTEXT.md); this file is the one place
+ * that translates, so a draft left by an older build still reads and the
+ * suites that write one still hold.
  */
 interface StoredDraft {
   controlPoints: LngLat[];

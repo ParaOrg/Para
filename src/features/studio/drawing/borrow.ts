@@ -15,8 +15,8 @@ import {
  * kilometres are never redrawn.
  *
  * The borrowed part is **copied**, point for point, into the new drawing
- * (not shared by reference): the new line owns its full geometry, and the
- * save only remembers which line it borrowed from, which part, and how far.
+ * (not one stored road shared by both lines): the new line owns its full
+ * geometry, and the save only remembers which line it borrowed from, which part, and how far.
  * That record is what later lets the studio say "Tala – SM Fairview changed;
  * Tala – Novaliches borrowed it. Update it too?"
  */

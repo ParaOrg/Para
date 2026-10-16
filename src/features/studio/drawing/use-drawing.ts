@@ -28,9 +28,10 @@ import { findUTurns } from './uturns';
  * modes, and wires the rest together. Its types are drawing-types.ts and the
  * array arithmetic behind the edits drawing-edits.ts; the finger's Delete,
  * Put back and follow offer are use-point-bar.ts, Extend's keep and the
- * right-click's join use-line-borrowing.ts; what it paints is draw-layers.ts,
- * how the pointer drives it use-draw-events.ts, the router's answers
- * gap-resolver.ts, and the draft on this device draft.ts.
+ * right-click's join use-line-borrowing.ts; what it paints is the draw-*
+ * layers (draw-layers.ts), fed by use-draw-rendering.ts; how the pointer
+ * drives it is use-draw-events.ts, the router's answers gap-resolver.ts, and
+ * the draft on this device draft.ts.
  */
 
 export type Drawing = ReturnType<typeof useDrawing>;

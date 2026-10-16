@@ -9,8 +9,7 @@ import { straightSegment } from './snap';
  * writeSegments) and asks (resolveGaps); the map's handlers never see this
  * file. Every function splices the very point objects it was given, never
  * copies: the join point and a right-click's join are held by identity
- * (joinRef, connectedRef in use-drawing.ts), and `indexOf` must keep finding
- * them.
+ * (joinRef, connectedRef in use-drawing.ts), and `indexOf` must keep finding them.
  */
 
 export interface Edit {

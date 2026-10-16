@@ -12,10 +12,10 @@ import satellite from './basemap-thumbnails/satellite.webp';
 import terrain from './basemap-thumbnails/terrain.webp';
 
 /*
- * Satellite and Terrain are the studio's only: a
- * photo and the ground's shape help trace a route, and commuters keep the
- * drawn maps. Kept here so their hosts never reach the public page
- * (scripts/checks/check-build.mjs proves no studio module does).
+ * Only the studio has Satellite and Terrain: a photo and the ground's shape help
+ * trace a route, and commuters keep the drawn maps. Kept here so their hosts
+ * never reach the public page (scripts/checks/check-build.mjs proves no studio
+ * module does).
  */
 
 /*
@@ -28,15 +28,14 @@ const ESRI_WORLD_IMAGERY: Imagery = {
   tiles:
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
-  // Positron's street and place names over the photo: the one satellite
-  // design kept, the names telling one road from the next.
+  // Positron's street and place names over the photo, so one road can be told
+  // from the next.
   isLabelled: true,
 };
 
 /*
  * AWS's open Terrain Tiles (Mapzen's Terrarium encoding): no key, global to
- * z15, SRTM's 30 m over the Philippines. OpenFreeMap has
- * no elevation.
+ * z15, SRTM's 30 m over the Philippines. OpenFreeMap has no elevation.
  */
 const AWS_TERRAIN_TILES: Elevation = {
   tiles: 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png',
