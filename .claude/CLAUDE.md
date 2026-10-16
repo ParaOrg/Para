@@ -346,6 +346,7 @@ Never disable a lint rule for a whole file. A single-line disable needs a commen
 ## Comments
 
 - Comment *why*, not *what*. The code says what it does.
+- Don't record history in comments: who asked for a change, when, or what the code used to do. That goes in the commit message and the pull request.
 - Exported functions in `shared/` get a one-line JSDoc summary.
 - `TODO` comments say what is missing and why: `// TODO: paginate once routes exceed 500`.
 - Delete commented-out code. Git keeps the history.
@@ -376,3 +377,11 @@ The five default triage labels, unchanged. See `docs/agents/triage-labels.md`.
 ### Domain docs
 
 Single-context: `CONTEXT.md` at the root and `docs/adr/`. See `docs/agents/domain.md`.
+
+### How we work
+
+Read `docs/agents/how-we-work.md` before starting work. In short:
+
+- The owner owns the design. Never make up a look; batch questions for the owner.
+- Opus plans, designs the architecture and reviews; Sonnet builds from a clear plan; Haiku watches and scans.
+- At most about four sessions build at once, each owning its own folders. Only the owner merges into `staging` and `main`.
