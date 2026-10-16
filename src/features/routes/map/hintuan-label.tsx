@@ -8,8 +8,8 @@ import './hintuan-label.css';
 /**
  * Figma's Property 1: Hintuan, a hintuan along a trip; HintuanEnd, the
  * picked one, where the ride now ends (CodeSign, given a `codeSign`).
- * HintuanStart, a picked start, is HintuanEnd with Start's S (2026-10-15):
- * Figma draws no start yet.
+ * HintuanStart, a picked start, is HintuanEnd with Start's S on Head
+ * Route's green (2026-10-15, green 2026-10-16): Figma draws no start yet.
  */
 export type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';
 
@@ -43,9 +43,10 @@ interface HintuanLabelProps {
 
 /**
  * A hintuan on the map, the owner's HintuanLabel (Figma 4068:4791,
- * 2026-10-13): the timeline's own TimelineDot and, 10 to its right and
- * centred on it, its RouteLineLabel — Default for Hintuan, End for
- * HintuanEnd, CodeSignEnd for a picked station.
+ * 2026-10-13): the timeline's own TimelineDot and, 8 to its right and
+ * centred on it (respaced 2026-10-16), its RouteLineLabel — Default for
+ * Hintuan, End for HintuanEnd, Start for HintuanStart, CodeSignEnd for a
+ * picked station.
  *
  * Figma draws every variant's dot as the picked one's; the owner kept the
  * map's (2026-10-13): a hintuan along the trip a hollow ring, the picked
@@ -74,7 +75,7 @@ export function HintuanLabel({
         <Name
           {...(nameButtonLabel ? { type: 'button' as const, 'aria-label': nameButtonLabel } : {})}
           data-part="hintuan-name"
-          className="hintuan-label-name absolute top-1/2 left-full ml-2.5 flex max-w-64"
+          className="hintuan-label-name absolute top-1/2 left-full ml-2 flex max-w-64"
         >
           <RouteLineLabel
             variant={LABEL_VARIANT[variant]}

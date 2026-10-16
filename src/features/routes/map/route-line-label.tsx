@@ -1,12 +1,13 @@
 import { EndIcon, StartIcon } from '@/shared/ui/route-icons';
 
-import { LINE_SURFACE, LINE_TEXT, LINE_WORDS } from './livery-line';
+import { HEAD_ROUTE, LINE_SURFACE, LINE_TEXT, LINE_WORDS, type LabelLook } from './livery-line';
 import type { Livery } from '../model/liveries';
 
 /**
  * Figma's Label, Property 1: Default, the name alone; End, End's E before
- * it. Start, Start's S before it, is End's look for a ride's picked start
- * (2026-10-15): Figma draws no Start Label yet.
+ * it. Start, Start's S before it, for a ride's picked start (2026-10-15):
+ * End's shape in Head Route's green (2026-10-16), as Figma draws no Start
+ * Label but draws the start that way on RouteLineEndingsLabels.
  */
 export type RouteLineLabelVariant = 'default' | 'end' | 'start';
 
@@ -23,8 +24,9 @@ interface RouteLineLabelProps {
   livery: Livery;
   /**
    * Figma's `codeSign`: a train station's sign code, YL06, in a white chip
-   * before the name, End's E then a disc of its own (CodeSignEnd). Drawn
-   * on End alone, as Figma draws it: a station shows its code once picked.
+   * before the name, End's E or Start's S then a disc of its own
+   * (CodeSignEnd). Drawn on End and Start alone: a station shows its code
+   * once picked.
    */
   codeSign?: string | null;
 }
@@ -36,7 +38,8 @@ interface RouteLineLabelProps {
  * where the ride now ends, and CodeSignEnd for a picked train station. All
  * three wear the line's colour (his "must be color of route line") with
  * white words in SN Pro Medium 14/20, 28 tall, drawn flat — near-black on
- * MRT-3's yellow (LINE_WORDS, 2026-10-13).
+ * MRT-3's yellow (LINE_WORDS, 2026-10-13). Start, a picked start, wears
+ * Head Route's green instead, whatever the line (HEAD_ROUTE, 2026-10-16).
  *
  * The font is set here, not inherited: every label sits in a DOM marker
  * inside MapLibre's container, whose stylesheet sets Helvetica Neue on all
@@ -49,7 +52,11 @@ interface RouteLineLabelProps {
  * button's label instead.
  */
 export function RouteLineLabel({ variant, name, livery, codeSign = null }: RouteLineLabelProps) {
-  const surface = LINE_SURFACE[livery];
+  const worn: Omit<LabelLook, 'pointer'> =
+    variant === 'start'
+      ? HEAD_ROUTE
+      : { surface: LINE_SURFACE[livery], code: LINE_TEXT[livery], words: LINE_WORDS[livery] };
+  const surface = worn.surface;
   const mark = variant === 'default' ? null : MARK[variant];
   const code = mark ? codeSign : null;
   return (
@@ -57,10 +64,10 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
       data-part="label"
       className={
         'flex max-w-full min-w-0 items-center gap-2 font-sn-pro text-sm/5 font-medium whitespace-nowrap ' +
-        LINE_WORDS[livery]
+        worn.words
       }
     >
-      {/* CodeSignEnd: the E in a disc of its own, 28 across, beside the pill. */}
+      {/* CodeSignEnd: the E, or Start's S, in a disc of its own, 28 across, beside the pill. */}
       {mark && code && (
         <span
           aria-hidden
@@ -75,14 +82,14 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
       <span
         data-part="name"
         className={
-          'flex max-w-full min-w-0 items-center rounded-full py-1 ' +
+          'flex max-w-full min-w-0 items-center rounded-full ' +
           surface +
           ' ' +
           PADDING[code ? 'code' : variant]
         }
       >
         {mark && !code && (
-          <span aria-hidden data-part={variant} className="size-5 shrink-0 *:size-full">
+          <span aria-hidden data-part={variant} className="size-6 shrink-0 *:size-full">
             <mark.Icon />
           </span>
         )}
@@ -90,7 +97,7 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
         {code && (
           <span
             data-part="code"
-            className={'shrink-0 rounded-full bg-content-inverse px-1.5 ' + LINE_TEXT[livery]}
+            className={'shrink-0 rounded-full bg-content-inverse px-1.5 ' + worn.code}
           >
             {code}
           </span>
@@ -103,10 +110,14 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
   );
 }
 
-/** The pill's padding and gap per look (4068:4799): 8 each side for the name alone; 4 before an icon or chip, 8 after the name. */
+/**
+ * The pill's padding and gap per look (4068:4799, respaced 2026-10-16): 8
+ * each side and 4 above and below the name alone; 2 round a 24 icon, so
+ * End and Start stay 28 tall; 4 before the code's chip, 8 after the name.
+ */
 const PADDING = {
-  default: 'px-2',
-  end: 'gap-1 pr-2 pl-1',
-  start: 'gap-1 pr-2 pl-1',
-  code: 'gap-1.5 pr-2 pl-1',
+  default: 'px-2 py-1',
+  end: 'gap-1 py-0.5 pr-2 pl-0.5',
+  start: 'gap-1 py-0.5 pr-2 pl-0.5',
+  code: 'gap-1.5 py-1 pr-2 pl-1',
 } satisfies Record<RouteLineLabelVariant | 'code', string>;

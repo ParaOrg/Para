@@ -1477,8 +1477,8 @@ const tripChecks = async () => {
     // Beside the circle, the hintuan's name in the line's colour, its
     // circled E before it (HintuanLabel's HintuanEnd, Figma 4068:4791,
     // 2026-10-13; the brand's blue from 2026-10-12, the trip card's colours
-    // before, and the word End over it until his icons): 10px right of it
-    // (12 on 2026-10-12, his LRTHintuanCodes) and centred on it, in SN Pro.
+    // before, and the word End over it until his icons): 8px right of it
+    // (10 until 2026-10-16, 12 on 2026-10-12) and centred on it, in SN Pro.
     const rowName = (
       await pickButton.evaluate((b) => b.lastElementChild.firstElementChild.textContent)
     ).trim();
@@ -1529,7 +1529,7 @@ const tripChecks = async () => {
         title.colours &&
         title.font &&
         title.icon &&
-        Math.abs(title.gap - 10) < 1.5 &&
+        Math.abs(title.gap - 8) < 1.5 &&
         Math.abs(title.drop) < 1.5,
       title
         ? `"${title.text}" for "${rowName}"${title.code ? `, code ${title.code}` : ''}; ${title.detail}; E ${title.icon}; ${title.gap.toFixed(1)} px right, ${title.drop.toFixed(1)} px low`
