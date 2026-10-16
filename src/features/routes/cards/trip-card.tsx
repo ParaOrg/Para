@@ -6,7 +6,7 @@ import { lineLength } from '@/shared/utils/geo';
 import { RouteTripDetailHeader } from './route-trip-detail-header';
 import { FREE, TimelineRouteDetailCard, type Fare, type Fares } from './timeline-route-detail-card';
 import { useFareKind } from './use-fare-kind';
-import { otherDirection, otherRoutesFrom, wayWord } from '../model/departures';
+import { otherDirection, otherRoutesFrom, switchWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { cardLiveries, type Livery } from '../model/liveries';
 import { railBound } from '../model/rail-codes';
@@ -178,7 +178,7 @@ export function TripCard({
       header={line && <RouteTripDetailHeader line={line} bound={railBound(direction)} />}
       switchable={switchable}
       back={direction.reversed}
-      way={wayWord(direction.reversed, [direction])}
+      way={switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
       }}

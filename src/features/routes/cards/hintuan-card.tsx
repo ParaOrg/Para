@@ -13,7 +13,7 @@ import {
 } from '@/shared/ui/route-icons';
 
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { drawnDepartures, wayWord } from '../model/departures';
+import { drawnDepartures, switchWord } from '../model/departures';
 import { hotspotLabel, type HotspotKind, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { boxTheOtherWay, placeBoxes } from '../model/places';
@@ -309,9 +309,9 @@ export function HintuanCard({
               <Button
                 variant="special"
                 size="small"
-                label={wayWord(back, showing)}
+                label={switchWord(back, showing)}
                 data-testid="card-flip"
-                aria-pressed={back}
+                data-back={back}
                 disabled={!switchTo}
                 onClick={() => {
                   if (!switchTo) return;

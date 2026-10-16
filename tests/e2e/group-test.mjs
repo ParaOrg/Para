@@ -140,11 +140,11 @@ if (!spot) {
 
   const chooser = page.locator('[data-testid="chooser"]');
   check('a tap where routes share a road opens the list', (await chooser.count()) === 1);
-  /** Whether the list shows the way back (SWITCH pressed). */
+  /** Whether the list shows the way back (SWITCH's data-back). */
   const showsBack = async () =>
     (await chooser
       .locator('[data-testid="chooser-flip"]')
-      .getAttribute('aria-pressed', { timeout: 2000 })
+      .getAttribute('data-back', { timeout: 2000 })
       .catch(() => null)) === 'true';
 
   // What the list shows — each card's place, its rows and the directions
