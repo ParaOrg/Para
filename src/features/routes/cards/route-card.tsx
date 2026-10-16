@@ -35,7 +35,7 @@ import type { Vehicle } from '../model/vehicles';
  * ROW_PRESSED, shared with the trip's timeline).
  */
 
-export interface EndPoint {
+interface EndPoint {
   /** Which direction the row opens. */
   id: string;
   /** Figma's routeDirection: the place this direction goes to. */
