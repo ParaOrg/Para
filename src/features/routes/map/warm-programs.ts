@@ -25,7 +25,7 @@ import type {
  * drawn once. The end circles needed one while they were a layer; since
  * 2026-10-05 the five layers that draw only what is lit, which are off from
  * the start
- * (layerSwitch.ts): their twins compile the lit line's program, which the
+ * (layer-switch.ts): their twins compile the lit line's program, which the
  * orange stretches share since step 2, and the marked boxes'. The basemaps'
  * own fills and lines already compile the programs the chevrons and the
  * babaan sides use. Its source and layers are its own: never `draw-…`,
@@ -45,7 +45,7 @@ import type {
  * list tap's 1,453 -> 170 ms and a trip tap's 718 -> 256. On a phone, one
  * first-use program, 5-50 ms, while the commuter looks at the map. Keeping
  * it is the owner's call (asked 2026-10-05); without it (warmSoon's
- * callers, directionArrows.ts and layerSwitch.ts), the first tap compiles
+ * callers, direction-arrows.ts and layer-switch.ts), the first tap compiles
  * the programs again.
  *
  * Each change to the map's style asks for a frame of the whole map, and a
@@ -212,7 +212,7 @@ export function afterIdle(
 }
 
 /** What a hook wants warmed, asked as the warm-up comes: its twins then, or none. */
-export type Provider = () => readonly Twin[];
+type Provider = () => readonly Twin[];
 
 /** Each map's warm-up to come: the providers asked so far, and its cancel. */
 const batches = new WeakMap<object, { providers: Set<Provider>; cancel: () => void }>();

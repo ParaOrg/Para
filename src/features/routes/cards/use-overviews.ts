@@ -22,7 +22,7 @@ import { directionLine, type Direction } from '../model/routes';
  * up). Further out than that only by the
  * commuter's own hand.
  */
-export const RAISED_FARTHEST_M = 5000;
+const RAISED_FARTHEST_M = 5000;
 
 /**
  * The camera takes in these lines whole, zooming in or out, clear of the

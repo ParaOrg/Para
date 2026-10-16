@@ -1,6 +1,6 @@
 /**
  * The basemap tiles the public map asked for, noted so that the service
- * worker can keep them after a first visit (src/commuter/pwa.ts, warmCaches).
+ * worker can keep them after a first visit (src/features/published-map/pwa.ts, warmCaches).
  *
  * On a first visit the page asks for everything before the new worker takes
  * control, so none of it reaches the worker's caches. Until the cheap-phone

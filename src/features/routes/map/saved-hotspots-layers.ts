@@ -16,7 +16,7 @@ import { labelGroups } from '../model/places';
 
 /*
  * The saved hotspots on the map: their source, the place wash's, their
- * layers, and what a tap marks on them. Split from useSavedHotspots.ts,
+ * layers, and what a tap marks on them. Split from use-saved-hotspots.ts,
  * 2026-09-29.
  */
 
@@ -323,7 +323,7 @@ export function addSavedHotspots(
   // The chosen box's siblings, drawn stronger than the rest and outlined.
   // Every box is in this layer and the lit one, at opacity 0 unless its
   // feature state says so: a filter naming the boxes would lay the whole
-  // source out again at every tap (see useLighting in savedRoutesLayers.ts).
+  // source out again at every tap (see useLighting in saved-routes-layers.ts).
   map.addLayer(
     {
       id: SIBLINGS,
@@ -333,7 +333,7 @@ export function addSavedHotspots(
       paint: {
         'fill-color': colour,
         'fill-opacity': ['case', state('sibling'), byKind(0.3, HINTUAN_STRONGER), 0] as never,
-        // Switched off while no box is a sibling, and from the start (layerSwitch.ts): at once, never between.
+        // Switched off while no box is a sibling, and from the start (layer-switch.ts): at once, never between.
         'fill-layer-opacity': 0,
         'fill-layer-opacity-transition': { duration: 0, delay: 0 },
       },
@@ -439,7 +439,7 @@ export function useSavedHotspotsLayers(
   // removal in charge.
   // The siblings' and the stripes' layers are off while no box is either,
   // from the start, and switched here with the feature state; their GL
-  // programs compiled by twins while the map is idle (layerSwitch.ts).
+  // programs compiled by twins while the map is idle (layer-switch.ts).
   const was = useRef<ReadonlyMap<string, BoxMark>>(new Map());
   const siblingSwitch = useLayerSwitch(map, SIBLING_LAYERS, map !== null);
   const hatchSwitch = useLayerSwitch(map, HATCH_LAYERS, map !== null);

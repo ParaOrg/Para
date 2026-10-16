@@ -3,7 +3,7 @@ import { isDrawn, type Direction } from '../model/routes';
 /*
  * What the saved directions show and light, worked out from what the sheet
  * and the cards hold. Pure; useSavedRoutes memoises each. Split from
- * useSavedRoutes.ts, 2026-09-29.
+ * use-saved-routes.ts, 2026-09-29.
  */
 
 /**
@@ -45,7 +45,7 @@ export function litOf<T extends Direction>(
 
 /**
  * What a tap where directions overlap keeps to: what is lit — but with a
- * card picked, everything shown, so the taps of 2026-09-25 (routeTaps.ts)
+ * card picked, everything shown, so the taps of 2026-09-25 (route-taps.ts)
  * keep to the way round the list shows.
  */
 export function shownOf(

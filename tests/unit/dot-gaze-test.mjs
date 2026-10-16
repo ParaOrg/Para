@@ -89,7 +89,7 @@ function before(ride, stops, saved, locator) {
   ];
 }
 
-test("the public map's subjects: the same keys, gazed at the same places, as CommuterApp's were", () => {
+test("the public map's subjects: the same keys, gazed at the same places, as PublicMapApp's were", () => {
   const line = (id, routeId, pts) => ({
     id,
     routeId,

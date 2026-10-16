@@ -1,5 +1,9 @@
 # Small fixes on the trip card
 
+Status: resolved
+
+> Done 2026-10-16: all four built and brought together on `claude/release-base`: 3 in #163 (d38c50c), 1 in #164 (8e0ae0d), 4 in #167 (17a1632), 2 in #169 (45a6657). They reach `main` with the owner's release.
+
 Four changes, one pull request each. All show on the public map and in the studio, which share the trip card. They don't depend on each other.
 
 ## 1. "Kilometer" → "Distance"

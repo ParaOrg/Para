@@ -207,7 +207,7 @@ await page.waitForTimeout(1200);
 
 // 0. The map is made framed on the routes (the owner's Q1, 2026-10-04):
 // where their fit put it after the map's 'load' until then — the box round
-// every overview in the published file, 100 px clear of the edges, zoom 13
+// every overview in the published map, 100 px clear of the edges, zoom 13
 // at most — and the fit no longer moves it. phone-test holds the same at a
 // phone's size, and a finger moving the map before the routes come.
 {
@@ -262,7 +262,7 @@ await page.waitForTimeout(1200);
   );
 }
 
-// 1. No editor chrome on the commuter page.
+// 1. No editor chrome on the public map.
 check(
   'no + New Route button',
   (await page.getByRole('button', { name: '+ New Route' }).count()) === 0,
@@ -1548,7 +1548,11 @@ if (PART === 1) {
           'none shown';
         check(
           '  the names outside the ride at 60%, the stations past the hintuan and the end where the trip goes; the ones inside it whole',
-          paled.every((s) => s.fade === null || s.fade === '0.6') &&
+          // At least one name read outside the ride and one end each way, so a name that stops showing fails it.
+          paled.some((s) => s.fade !== null) &&
+            endsPicked.paledFades.length > 0 &&
+            endsPicked.fades.length > 0 &&
+            paled.every((s) => s.fade === null || s.fade === '0.6') &&
             before.every((s) => s.fade === null || s.fade === '1') &&
             endsPicked.paledFades.every((o) => o === '0.6') &&
             endsPicked.fades.every((o) => o === '1'),
@@ -1676,7 +1680,7 @@ if (PART === 1) {
 const lsCount = await page.evaluate(() => Object.keys(localStorage).length);
 check('localStorage stays empty', lsCount === 0, lsCount ? `${lsCount} key(s)` : '');
 check('no request to router.project-osrm.org', !osrmHit);
-// Since step 5 the public map is one published file; the database is never asked.
+// Since step 5 the public map is one published map; the database is never asked.
 check('no request to the database (*.supabase.co)', !supabaseHit);
 check(
   'the map came from /data/index.v4.json, fetched once and served',

@@ -15,9 +15,9 @@ import type { AreaTarget, Borrow, Target } from './drawing-types';
 const DRAFT_KEY = 'parapo.draft.v1';
 
 /** A gap still waiting for the router when the draft was written is marked `pending`. */
-export type DraftSegment = Segment & { pending?: boolean };
+type DraftSegment = Segment & { pending?: boolean };
 
-export interface Draft {
+interface Draft {
   controlPoints: LngLat[];
   segments: DraftSegment[];
   target: Target;

@@ -10,7 +10,7 @@ export interface RailReach {
 }
 
 /** The rail along a trip's timeline (TimelineRouteDetail), row by row. */
-export interface TimelineRail {
+interface TimelineRail {
   /** Whether the rail leaves the origin's dot downwards. */
   originHasBelow: boolean;
   /** Each hintuan row's piece, in the timeline's order. */

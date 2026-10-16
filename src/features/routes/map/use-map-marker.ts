@@ -23,12 +23,12 @@ export function useMarkerElement(testid: string, className = ''): HTMLDivElement
 
 interface MapMarkerOptions extends Omit<MarkerOptions, 'element'> {
   /**
-   * A tap on a button inside the marker (markerTap.ts), read as the tap
+   * A tap on a button inside the marker (marker-tap.ts), read as the tap
    * comes: the latest handler, bound once, so a fresh function each render
    * binds nothing anew.
    */
   onTap?: () => void;
-  /** A press that moves still pans the map (markerTap.ts's dragsPass). */
+  /** A press that moves still pans the map (marker-tap.ts's dragsPass). */
   dragsPass?: boolean;
 }
 

@@ -16,7 +16,7 @@ import {
   useSwitchOverview,
   useTripOverview,
 } from './use-overviews';
-import { useRideTo } from '../map/ride-to';
+import { useRideTo } from '../map/use-ride-to';
 import type { Highlight } from '../map/use-saved-routes';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
@@ -53,12 +53,12 @@ interface Cards {
 
 /**
  * The camera with the cards, for both apps: a hintuan picked on a trip, the
- * map gliding there; the overviews of useOverviews.ts — a trip opened, a
+ * map gliding there; the overviews of use-overviews.ts — a trip opened, a
  * RouteCard picked, SWITCH, the sheet settled at another height — and the
  * camera from before a RouteCard was picked on a hotspot's card, back as it
  * is let go; and the card buttons that move it. `root` goes on the page,
  * `tripDock` on the trip card, `hotspotDock` on a hotspot's. Split from
- * CommuterApp, which held it inline (2026-10-01).
+ * PublicMapApp, which held it inline (2026-10-01).
  *
  * `camera: false` turns those off: the overviews and the camera kept from
  * before get no map and do nothing, while a picked hintuan still glides. It is fixed for the page's life, not a switch for while

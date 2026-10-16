@@ -1,7 +1,7 @@
 # Train fares: LRT-1, LRT-2, MRT-3
 
 Researched 2026-10-02 for the train lines (the owner's "real train fares,
-shown by station like jeep fares"). What `src/shared/model/railFares.ts`
+shown by station like jeep fares"). What `src/features/routes/model/rail-fares.ts`
 holds, and where each number comes from. `tests/unit/rail-fares-test.mjs`
 checks the module against every cell of the tables below, kept in
 `tests/unit/fixtures/rail-fares-official.json`.

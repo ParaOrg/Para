@@ -1,5 +1,5 @@
 /*
- * The commuter's dot on the public map (LocatorIndicatorOverlay.tsx, which
+ * The commuter's dot on the public map (locator-indicator-overlay.tsx, which
  * imports this sheet): it breathes — a little bigger, then back — so the
  * eye finds it, as the owner asked (2026-10-01). A CSS animation on the dot
  * alone, which costs the map nothing (Walker's lesson, 2026-09-25); the
@@ -78,7 +78,7 @@
 }
 
 /*
- * Its moods (locatorMood.ts; the owner's ask, 2026-10-01): the dot wears a
+ * Its moods (locator-mood.ts; the owner's ask, 2026-10-01): the dot wears a
  * face for each — `data-mood` and `data-face` on .locator-dot. Every face
  * but the glance looks out from the middle, its eyes centred (4 px left of
  * where they are drawn, a `transform`), and morphs from the last over a
@@ -206,7 +206,7 @@
 }
 
 /*
- * Its gaze at what was just picked (dotGaze.ts; the owner's ask, 2026-10-01:
+ * Its gaze at what was just picked (dot-gaze.ts; the owner's ask, 2026-10-01:
  * "when I tap the route it should look the route for maybe 3 sec"): the
  * eyes stop wandering and turn the way to it, `--gaze-x` and `--gaze-y` from
  * the middle, then wander again. The face's eyes stay as they are, but come

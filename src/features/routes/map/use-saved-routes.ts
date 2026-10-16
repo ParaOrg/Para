@@ -34,7 +34,7 @@ export interface Highlight {
  * ParaPo: no sign-in, no editor, just the map with what has been recorded.
  *
  * `load` decides where the directions come from: the public map reads the
- * published file (summaries, simplified lines), the editor the live tables
+ * published map (summaries, simplified lines), the editor the live tables
  * (their overviews, 0009, and what a save needs). Pass a function defined
  * once at module level, not a new one per render, or it reloads every
  * render.
@@ -43,7 +43,7 @@ export interface Highlight {
  * passes neither, and both default to off.
  *
  * Both pass `loadLine`: their lists carry each direction's overview (the
- * public map's file, mapFile.ts; the editor's tables, 0009), and a
+ * public map's file, map-file.ts; the editor's tables, 0009), and a
  * direction's full line is read when it is lit or chosen, or on screen at
  * street zoom (the public map's loadLine; the editor's lineOf, live.ts).
  * From then on `directions` carries that line in its `shape` — so the orange
@@ -136,7 +136,7 @@ export function useSavedRoutes<T extends Direction>(
    * Lists `directions` as a tap where they all run would, the way round
    * `way`, with nothing chosen: the ‹ of a trip opened on its own, whose
    * route shares its head or its tail with others (the public map's, since
-   * the owner's ask of 2026-09-29; CommuterApp says which).
+   * the owner's ask of 2026-09-29; PublicMapApp says which).
    */
   const openList = useCallback((directions: readonly T[], way: boolean) => {
     setSelectedId(null);
@@ -205,13 +205,13 @@ export function useSavedRoutes<T extends Direction>(
   }, [load]);
 
   // Once for each loader, however many times React runs the effect: twice
-  // as a page mounts in development (loadOnce.ts).
+  // as a page mounts in development (load-once.ts).
   const loadedBy = useRef<typeof load | null>(null);
   useEffect(() => {
     loadOnce(loadedBy, load, () => void reload());
   }, [load, reload]);
 
-  // What is shown and what is lit (routesShown.ts).
+  // What is shown and what is lit (routes-shown.ts).
   const showing = useMemo(
     () => showingOf(candidates, back, directions, cardShows),
     [candidates, back, directions, cardShows],
@@ -252,10 +252,9 @@ export function useSavedRoutes<T extends Direction>(
   // stored) is asked again when it lights, not at every look at the screen.
   const loadLine = opts.loadLine;
   // Only a drawn direction has a line to read. A slot (a return not drawn
-  // yet) opened by a trip link (?r=, since taken out) asked for
-  // /data/lines/<id>.json, which is not there; the host answers a missing
-  // file with the page, 200, and that was kept as the line (review of
-  // 2026-10-03, finding 10).
+  // yet) has no /data/lines/<id>.json; the host answers a missing file with
+  // the page, 200, and that would be kept as the line (review of 2026-10-03,
+  // finding 10).
   const drawn = useMemo(
     () => new Set(rows.filter((v) => directionLine(v).length > 1).map((v) => v.id)),
     [rows],
@@ -309,7 +308,7 @@ export function useSavedRoutes<T extends Direction>(
   const fullIds = useMemo(() => new Set(lines.keys()), [lines]);
 
   // The click handler is bound once; this is how it reads what a tap where
-  // directions overlap keeps to (routesShown.ts).
+  // directions overlap keeps to (routes-shown.ts).
   const shown = useMemo(() => shownOf(selectedId, lit, showing), [selectedId, lit, showing]);
   const shownRef = useRef<readonly string[]>([]);
   useEffect(() => {

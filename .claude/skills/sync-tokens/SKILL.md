@@ -48,8 +48,8 @@ already is the Figma value.
 
 ## 3. Apply
 
-- Edit `tokens.css`: keep the file's comment voice, group order and the
-  Light-block structure.
+- Edit `tokens.css`: keep its group order and the Light-block structure.
+  Comments say why; no dates or who asked (`.claude/CLAUDE.md`, Comments).
 - Update `tokens.stories.tsx` so every token shows: new semantics get a
   swatch or text line, new custom families a `Ramp` — with **literal**
   class names written out (Tailwind cannot see built names; the empty

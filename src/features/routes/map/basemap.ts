@@ -42,7 +42,7 @@ export interface Basemap {
 }
 
 /** Monochrome's detail on Positron, or Liberty in Apple Maps' light palette. */
-export type Dressing = 'monochrome' | 'daylight';
+type Dressing = 'monochrome' | 'daylight';
 
 export interface Elevation {
   /** Terrarium-encoded elevation tiles, with `{z}`, `{x}` and `{y}`. */
@@ -233,7 +233,7 @@ function styleTransform(b: Basemap, map: MapLibreMap) {
 /**
  * Swap the basemap under everything drawn on it. The new style is not checked
  * against the spec as a whole: setStyle takes the map's `validateStyle: false`
- * (MapView.tsx) as its default, so no option is passed here (the cheap-phone
+ * (map-view.tsx) as its default, so no option is passed here (the cheap-phone
  * plan, step 1, 2026-10-04).
  */
 export function applyBasemap(map: MapLibreMap, b: Basemap): void {
