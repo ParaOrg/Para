@@ -15,8 +15,7 @@ import {
  * of corner points in order, NOT closed: the edge from the last point back to
  * the first is implied. Hotspots are a few hundred metres across at most, so
  * plain lng/lat arithmetic is used throughout; at that scale the difference
- * from a proper projection is far below click precision. (Split from geo.ts,
- * 2026-09-29.)
+ * from a proper projection is far below click precision.
  */
 
 /** Polygon corners in order; the closing edge is implied. */
@@ -77,8 +76,8 @@ export function segmentsIntersect(a: LngLat, b: LngLat, c: LngLat, d: LngLat): b
  * Whether two edges of the ring that do not share a corner touch or cross: a
  * bow-tie, or a corner dragged across the far side. Such a box has no inside
  * one can trust (pointInRing counts it by crossings) and its centroid can sit
- * outside it, so the studio refuses it before a save (review of 2026-10-03).
- * Plain O(n²): a box has a handful of corners.
+ * outside it, so the studio refuses it before a save. Plain O(n²): a box has
+ * a handful of corners.
  */
 export function ringCrossesItself(corners: Ring): boolean {
   // A corner repeated where it stands — the ferry's imported stations end on
@@ -155,7 +154,7 @@ export function entryDistance(line: LngLat[], ring: Ring): number {
   if (found < 0) return -1;
   // A first vertex inside, reached from outside, was entered on the segment
   // before it: measured to that vertex, the entry overshot the crossing by up
-  // to a segment, 20–30 m on a snapped road (review of 2026-10-03).
+  // to a segment, 20–30 m on a snapped road.
   if (pointInRing(line[found], ring) && found === 0) return 0;
   const idx = pointInRing(line[found], ring) ? found - 1 : found;
   const upTo = lineLength(line.slice(0, idx + 1));
@@ -177,13 +176,12 @@ export function entryDistance(line: LngLat[], ring: Ring): number {
  *
  * The shoelace sums are taken from the ring's first corner, not from 0°, and
  * the corner added back at the end, as signedArea2 in right-of-line.ts does.
- * From 0° every term is about 121 × 14.7 while a box's area is about 1e-8,
- * so the sums cancelled away the digits that mattered: a 10 m box at Manila
- * had its centroid some 60 m off, and 23 of the 102 published hotspots had
- * their point outside their own box (review of 2026-10-03). From the corner
- * the terms are the box's own size, and the degenerate test below compares
- * an area in square degrees that actually means something (1e-12 is about
- * 0.01 m²).
+ * From 0° every term is about 121 × 14.7 while a box's area is about 1e-8, so
+ * the sums would cancel away the digits that mattered (measured: a 10 m box
+ * at Manila had its centroid some 60 m off, and 23 of the 102 published
+ * hotspots had their point outside their own box). From the corner the terms
+ * are the box's own size, and the degenerate test below compares an area in
+ * square degrees that actually means something (1e-12 is about 0.01 m²).
  */
 export function ringCentroid(ring: Ring): LngLat {
   const n = ring.length;

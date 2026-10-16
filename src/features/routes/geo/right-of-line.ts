@@ -2,7 +2,7 @@ import { bboxMeetsSegment, bboxOf, type LngLat } from '@/shared/utils/geo';
 
 import { pointInRing, type Ring } from './ring';
 
-/* The babaan side: a box's half on a line's right (split from geo.ts, 2026-09-29). */
+/* The babaan side: a box's half on a line's right. */
 
 /**
  * Twice the signed area, in degrees²: positive when the ring runs
@@ -38,13 +38,13 @@ export function rightOfLine(ring: Ring, line: readonly LngLat[]): Ring | null {
     return len === 0 ? to : [to[0] + (dx / len) * reach, to[1] + (dy / len) * reach];
   };
   // Carried on from the nearest point that is not the end itself: a line
-  // whose end is repeated (a last click made twice) gave carry a zero-length
-  // step, which carried nothing, and the tail in the box cut nothing
-  // (review of 2026-10-03). Found by walking the line from each end, and the
-  // line copied only when a carry is added: a copy and a reversed copy of
-  // it for every box it is asked about were most of a trip's babaan sides
-  // (the cheap-phone plan, step 8, 2026-10-04). A line whose every point is
-  // its last has no point before either end, and carries neither.
+  // whose end is repeated (a last click made twice) would give carry a
+  // zero-length step, which carries nothing, and the tail in the box would
+  // cut nothing. Found by walking the line from each end, and the line copied
+  // only when a carry is added: a copy and a reversed copy of it for every
+  // box it is asked about would be most of a trip's babaan sides. A line
+  // whose every point is its last has no point before either end, and carries
+  // neither.
   const same = (p: LngLat, q: LngLat) => p[0] === q[0] && p[1] === q[1];
   const first = line[0];
   const last = line[line.length - 1];
@@ -58,7 +58,7 @@ export function rightOfLine(ring: Ring, line: readonly LngLat[]): Ring | null {
   const path = head || tail ? [...(head ? [head] : []), ...line, ...(tail ? [tail] : [])] : line;
   // A segment that does not reach the box crosses none of its edges. A metre
   // wider than the box, so one that rounding could call a crossing is never
-  // passed over (step 8).
+  // passed over.
   const near = bboxOf(ring, 1);
 
   // Every place the path crosses an edge, in travel order. `at` is where on
