@@ -37,6 +37,9 @@ The owner's TimelineStick set gained pieces for a ride that doesn't run end to e
 - **Tap a row:** it becomes the end, and the ride runs from the start to there, as today.
 - **Set as start:** that row becomes the start instead. Until another row is tapped, the ride runs from it to where the direction goes. Variant3 marks no row E; read as Taft Avenue keeping its E, as today.
 - **Remove as start:** the start goes back to where the direction leaves.
+- **An end row tapped with a start keeps the start** (the owner, 2026-10-16: "keep the start"; until then it let the start go): that end is the ride's end. The destination: the ride from the S on to it, its E there. The origin: the ride back from the S to it, as an end above the start, its E there and the arrows from S to E. With no start, an end row is the whole ride, as before. A jeep's SWITCH swaps a start and the destination as it swaps a start and an end. A start ridden back to the origin rode the way back's own way, so it stays the start and the way back's destination is its end (Claude's call, 2026-10-16, the owner's to confirm: a swap would start the way back at its own destination, which no start can).
+- **Letting a pick go folds back** (the owner, 2026-10-16: "fold back"): the folds return to how they were before the pick; the rows it folds back stay drawn, closing in view, and a row folded away under the keyboard's focus hands it to its fold. From 2026-10-15 a let-go opened the whole list.
+- **The ferry** keeps its picks over SWITCH and swaps them, as a jeep does (the owner, 2026-10-16: "ferry ok").
 - **With a start picked,** tapping a row after it sets the end (Variant4).
 - **The tiles:** Distance and fare read from the start to the end.
 - **The map:** the stretch from start to end is drawn as the ride; the line on either side of it is pale, as after a picked end today. The S and E markers on the map move with the picks.

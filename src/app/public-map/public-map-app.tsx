@@ -87,6 +87,7 @@ export function PublicMapApp() {
     openTrip,
     backFromTrip,
     pickOnTrip,
+    endOnTrip,
   } = useCardCamera(map, saved, hotspots, cards);
   // What the lit routes wear on the map, their ends named (useLitRides): a
   // picked hintuan's ride flowing only as far as there.
@@ -201,6 +202,7 @@ export function PublicMapApp() {
           livery={tripLivery}
           pickedId={ride.pickedId}
           startId={ride.startId}
+          endPicked={ride.endPicked}
           hasRide={ride.ridden !== null}
           onPick={pickOnTrip}
         />
@@ -284,7 +286,7 @@ export function PublicMapApp() {
           onSetStart={ride.setStart}
           onRemoveStart={ride.removeStart}
           onPick={pickOnTrip}
-          onEnd={ride.toEnd}
+          onEnd={endOnTrip}
           endPicked={ride.endPicked}
           dockRef={tripDock}
           height={height}

@@ -2026,6 +2026,72 @@ const tripChecks = async () => {
           await buttonTap(removeBack, async () => !(await isSelected(endRow)));
           await startPick.scrollIntoViewIfNeeded();
           await buttonTap(startPick, async () => !(await isSelected(startRow)));
+          // The destination's row tapped with a start set keeps the start
+          // (the owner, 2026-10-16: "keep the start"; until then it let the
+          // start go): the ride on to it, its E there, on the card and on the
+          // map, the tiles the ride's.
+          const KEEP =
+            "  the destination's row with a start: the start kept, the ride on to it, its E there";
+          const toDestination = await rideOf(ids[1], null);
+          await endPick.scrollIntoViewIfNeeded();
+          await buttonTap(endPick, () => isSelected(endRow));
+          const setStartLater = card().getByRole('button', { name: 'Set as start' });
+          await setStartLater.scrollIntoViewIfNeeded();
+          await buttonTap(
+            setStartLater,
+            async () => (await endRow.locator('[data-part="start"]').count()) === 1,
+          );
+          const destination = card().locator('[data-testid="trip-destination"]');
+          const destinationPick = destination.locator('button').first();
+          await destinationPick.scrollIntoViewIfNeeded();
+          await buttonTap(
+            destinationPick,
+            async () => (await destination.getAttribute('data-state')) === 'selected',
+          );
+          await page.waitForTimeout(900);
+          await page
+            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+            .catch(() => {});
+          const kept = await page.evaluate(() => ({
+            card: [
+              ...document.querySelectorAll(
+                '[data-testid="trip"] [data-part="start"], [data-testid="trip"] [data-part="end"]',
+              ),
+            ].map(
+              (e) =>
+                `${e.closest('[data-hintuan]')?.getAttribute('data-hintuan') ?? e.closest('li')?.dataset.testid}:${e.dataset.part}`,
+            ),
+            map: [
+              ...document.querySelectorAll(
+                '[data-testid="end-title"] [data-part="start"] svg, [data-testid="end-title"] [data-part="end"] svg',
+              ),
+            ].map(
+              (svg) =>
+                `${svg.closest('[data-testid="end-title"]').dataset.end}:${svg.closest('[data-part]').dataset.part}`,
+            ),
+          }));
+          const keptKm = await tile('trip-km');
+          const keptFare = await tile('trip-fare');
+          if (!toDestination)
+            skip(KEEP, 'no ride from the start to the destination on the published line');
+          else
+            check(
+              KEEP,
+              kept.card.join() === `${ids[1]}:start,trip-destination:end` &&
+                kept.map.join() === 'tail:end' &&
+                keptKm === toDestination.km &&
+                (toDestination.fare == null || keptFare === toDestination.fare),
+              `card ${kept.card.join()}; map ${kept.map.join()}; Distance "${keptKm}", the sums "${toDestination.km}"; fare "${keptFare}", the sums "${toDestination.fare}"`,
+            );
+          // Let it go again: the destination's row, then × Remove as start.
+          await destinationPick.scrollIntoViewIfNeeded();
+          await buttonTap(
+            destinationPick,
+            async () => (await destination.getAttribute('data-state')) !== 'selected',
+          );
+          const removeKept = card().getByRole('button', { name: 'Remove as start' });
+          await removeKept.scrollIntoViewIfNeeded();
+          await buttonTap(removeKept, async () => !(await isSelected(endRow)));
         }
       }
     }

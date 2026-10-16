@@ -35,7 +35,8 @@ const openFold: Story['play'] = async ({ canvasElement }) => {
  * Keeps the picks as the public map does (useRideTo): a row picks its
  * hintuan, or an end, and again lets it go; Set as start makes the picked
  * hintuan the start, and × Remove as start, or its row again, lets the
- * start go; an end row lets both go.
+ * start go; an end row is the ride's end, the start kept (the owner,
+ * 2026-10-16: "keep the start").
  */
 function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
   const [picked, setPicked] = useState(props.picked);
@@ -65,7 +66,6 @@ function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
       onEnd={(end) => {
         props.onEnd(end);
         setPicked(null);
-        setStart(null);
         setAtEnd((cur) => (cur === end ? null : end));
       }}
     />
@@ -444,7 +444,9 @@ export const EndsShowTheWhole: Story = {
     await expect(destination()).toBe('rest');
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
     await expect(origin()).toBe('rest');
-    // Amparo let go by Tala opened the list whole: nothing to unfold.
+    // Amparo let go by Tala folds the list back as it was (the owner,
+    // 2026-10-16: "fold back"): opened again to pick Amparo.
+    await userEvent.click(canvas.getByRole('button', { name: /more hintuans/ }));
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
     await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: false }));
@@ -533,8 +535,8 @@ export const StartAndEnd: Story = {
 /**
  * A ride from Amparo to Bistek, the rows outside it folded, and Bistek
  * tapped again: the end let go, Amparo a start alone. The rows after a start
- * alone fold, Bistek among them, so they open: the row just tapped stays in
- * view, the keyboard's focus on it.
+ * alone fold back as they were, Bistek among them (the owner, 2026-10-16:
+ * "fold back"), and the keyboard's focus goes to the fold that now holds it.
  */
 export const LetTheEndGo: Story = {
   args: {
@@ -548,10 +550,33 @@ export const LetTheEndGo: Story = {
     const bistek = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h7"]');
     await userEvent.click(canvas.getByRole('button', { name: /Bistek/, pressed: true }));
     await expect(bistek?.getAttribute('data-state')).toBe('rest');
-    await expect(bistek?.classList.contains('visible')).toBe(true);
-    await expect(document.activeElement).toBe(
-      bistek?.querySelector('[data-testid="trip-hintuan-pick"]'),
-    );
+    await expect(bistek?.classList.contains('invisible')).toBe(true);
+    const after = canvasElement.querySelector('[data-testid="trip-fold"][data-part="after"]');
+    await expect(after?.getAttribute('aria-expanded')).toBe('false');
+    await expect(document.activeElement).toBe(after);
+  },
+};
+
+/**
+ * Amparo the start, then the destination's row tapped (the owner,
+ * 2026-10-16: "keep the start"): the ride from Amparo to Novaliches, its E
+ * on the destination, Amparo's S kept, the tiles the ride's.
+ */
+export const EndRowKeepsStart: Story = {
+  args: {
+    start: 'h3',
+    pickedMetres: 6_100,
+    pickedFare: { regular: '₱16', discounted: '₱13' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const destination = canvas.getByTestId('trip-destination');
+    await userEvent.click(within(destination).getByRole('button'));
+    await expect(destination.getAttribute('data-state')).toBe('selected');
+    await expect(destination.querySelector('[data-part="end"]')).toBeTruthy();
+    const amparo = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h3"]');
+    await expect(amparo?.querySelector('[data-part="start"]')).toBeTruthy();
+    await expect(canvas.getByTestId('trip-km').textContent).toBe(kmLabel(6_100));
   },
 };
 

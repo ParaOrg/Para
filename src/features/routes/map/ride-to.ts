@@ -7,7 +7,7 @@ import { APP_MOVE } from './map-view';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
-import { rideCut, rideSpan, travelLine } from '../model/ride';
+import { rideCut, rideSpan, rideToEnd, travelLine } from '../model/ride';
 import { isRailLine, railLineOf, type Direction } from '../model/routes';
 
 /**
@@ -76,7 +76,8 @@ function isInClearView(map: MapLibreMap, at: LngLat, [dx, dy]: [number, number])
  * again, an end row, another route or the card away lets the pick go. An end
  * row glides there (`toEnd`), so a rider can look along the route from end
  * to end (the owner's ask, 2026-09-29), in as close as a hintuan is brought
- * (the owner's ask, 2026-10-03).
+ * (the owner's ask, 2026-10-03); with a start picked, it is the ride's end
+ * instead, the camera taking in the ride (2026-10-16).
  */
 export function useRideTo(
   map: MapLibreMap | null,
@@ -156,13 +157,15 @@ export function useRideTo(
 
   // The ride between the picks: from the start (or where the direction
   // leaves) to the picked hintuan, on the trip's own line, back along it for
-  // an end above the start (rideSpan). A start alone is no ride yet, the trip
-  // left whole until its end is picked (his Variant3, 2026-10-16).
-  const span = useMemo(
-    () =>
-      selected && live ? rideSpan(selected, hotspots, liveStart?.rowId ?? null, live.rowId) : null,
-    [selected, hotspots, live, liveStart],
-  );
+  // an end above the start (rideSpan); or from the start to an end row picked
+  // with it kept (rideToEnd). A start alone is no ride yet, the trip left
+  // whole until its end is picked (his Variant3, 2026-10-16).
+  const span = useMemo(() => {
+    if (!selected) return null;
+    if (live) return rideSpan(selected, hotspots, liveStart?.rowId ?? null, live.rowId);
+    if (liveStart && endPicked) return rideToEnd(selected, hotspots, liveStart.rowId, endPicked);
+    return null;
+  }, [selected, hotspots, live, liveStart, endPicked]);
 
   /** Keeps the camera as the first pick is made; a later pick keeps the first one's. */
   const remember = useCallback(() => {
@@ -222,18 +225,24 @@ export function useRideTo(
   const removeStart = useCallback(() => setStartPick(null), []);
 
   /**
-   * An end row: the whole ride again, that end picked, and the map gliding
-   * in to it as to a picked hintuan. A second tap lets it go, the camera
-   * back where it was, as a hintuan's does.
+   * An end row: that end picked, and the map gliding in to it as to a picked
+   * hintuan; with no start, the whole ride again. With a start, it is the
+   * ride's end, the start kept (the owner, 2026-10-16: "keep the start";
+   * until then it let the start go), and the camera takes in the ride rather
+   * than gliding (useCardCamera's endOnTrip). A second tap lets it go, the
+   * camera back where it was, as a hintuan's does.
    */
   const toEnd = useCallback(
     (end: 'from' | 'to') => {
       setPicked(null);
-      setStartPick(null);
       carried.current = null;
       const on = endPicked !== end;
       setAtEnd(on && selectedId ? { directionId: selectedId, end } : null);
       if (!on) return goBack();
+      // A ride to take in: the camera frames it (endOnTrip) rather than gliding.
+      if (startRow !== null && selected && rideToEnd(selected, hotspots, startRow, end)) {
+        return remember();
+      }
       if (!map || !selected) return;
       const line = travelLine(selected, hotspots);
       if (line.length < 2) return;
@@ -242,7 +251,7 @@ export function useRideTo(
       const glide = glideFor(map, at, onGlide.current?.() ?? [0, 0]);
       if (glide) map.easeTo({ ...glide, duration: 700 }, APP_MOVE);
     },
-    [map, selected, selectedId, hotspots, endPicked, remember, goBack],
+    [map, selected, selectedId, hotspots, endPicked, startRow, remember, goBack],
   );
 
   // Glide to where the rider would get off, in to where the scale bar reads
@@ -292,8 +301,14 @@ export function useRideTo(
    * leaves. A start and an end both picked swap: the way back is the ride
    * back, from where it ended to where it started (the owner's "yeah try
    * swapping", 2026-10-16; until then each stayed what it was, and the ride
-   * back was served the other way round). On a train SWITCH lets the picks
-   * go, as before (the owner, 2026-10-15: "trains reset, jeeps keep").
+   * back was served the other way round); so do a start and the destination
+   * picked as the end (his "keep the start", the same day), the way back
+   * leaving from there. A start ridden back to the origin rides the way the
+   * way back runs: it stays the start, and the origin, where the way back
+   * goes, its end (Claude's call, 2026-10-16, the owner's to confirm: a
+   * swap would start the way back at its own destination, which no start
+   * can). On a train SWITCH lets the picks go, as before (the owner,
+   * 2026-10-15: "trains reset, jeeps keep").
    */
   const carryTo = useCallback(
     (next: Direction, passesNext: (hotspotId: string) => boolean) => {
@@ -314,6 +329,20 @@ export function useRideTo(
           carried.current = backTo.id;
           setPicked({ directionId: next.id, rowId: backTo.id });
         }
+        return;
+      }
+      if (liveStart && endPicked) {
+        const landed = land(liveStart.rowId);
+        if (endPicked === 'to') {
+          // The ride back: from where the way back leaves to the start's place.
+          if (!landed) return;
+          carried.current = landed.id;
+          setPicked({ directionId: next.id, rowId: landed.id });
+          return;
+        }
+        // Back to the origin, against the trip: the way back's own way, to where it goes.
+        if (landed) setStartPick({ directionId: next.id, rowId: landed.id });
+        setAtEnd({ directionId: next.id, end: 'to' });
         return;
       }
       // A start alone goes the same way, kept a start (its place's box the
