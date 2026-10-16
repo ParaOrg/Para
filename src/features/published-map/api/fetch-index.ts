@@ -182,10 +182,9 @@ export function fetchIndex(): Promise<Index> {
  * with no copy kept, the file once it comes. MapView waits for it no more
  * than a second (OPENING_WAIT_MS), and opens without it, the routes framed
  * as they come, as it does after a load that failed.
- * Without that wait a visit with no worker — a first one whose script beat
- * the file, a second one before the worker was installed — would open at
- * zoom 11 while the file was asked again (a 304, a round trip), and fetch
- * that view's tiles only to throw them away. When the copy kept and the file
+ * Without that wait the map is made at its fixed centre at zoom 11, and
+ * fetches that view's tiles only for the routes' fit to throw them away
+ * (MapView, `openOn`). When the copy kept and the file
  * then brought differ, the routes' own fit takes the camera on to the
  * file's framing, unless the commuter has moved the map by then (framing.ts,
  * framesRoutes).
