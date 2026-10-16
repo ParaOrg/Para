@@ -127,11 +127,13 @@ test('a start and an end: folds before and after, S and E on their rows, the ori
   assert.doesNotMatch(html, />Set as start</);
 });
 
-// The owner's answers of 2026-10-16: the start's row has its pill too, its
-// own code and the ride's pesos, as Variant4 draws both; the S and the E sit
-// on white, a green disc and one in the card's colour; Set as start and
-// × Remove as start are in the card's colours, not brand blue.
-test('a start and an end: a pill on each, its own code and the ride’s pesos', () => {
+// The owner's answers of 2026-10-16: the start's pill is its own code alone
+// ("Pill on start is only the codesign of that station, no price"), the
+// end's its code and the ride's pesos ("the end should have both price and
+// codesign"); the S and the E sit on white, a green disc and one in the
+// card's colour; Set as start and × Remove as start are in the card's
+// colours, not brand blue.
+test('a start and an end: the start’s pill its code alone, the end’s its code and the ride’s pesos', () => {
   const html = render(10, {
     livery: 'metro-rail-way-three',
     start: 'h3',
@@ -141,14 +143,36 @@ test('a start and an end: a pill on each, its own code and the ride’s pesos', 
     pickedPesos: '₱20',
   });
   const pill = (id) => rows(html).find((x) => x.id === id).inside;
-  assert.match(pill('h3'), /data-part="code"[^>]*>YL07<\/span> <span data-part="pesos"[^>]*>₱20</);
+  assert.match(pill('h3'), /data-testid="trip-hintuan-fare" data-part="code"[^>]*>YL07<\/span>/);
+  assert.doesNotMatch(pill('h3'), /₱20/, 'no price on the start');
   assert.match(pill('h6'), /data-part="code"[^>]*>YL11<\/span> <span data-part="pesos"[^>]*>₱20</);
-  // A jeep's: the pesos alone, on both.
+  // A jeep's: no code to say on the start, so no pill; the pesos alone on the end.
   const jeep = render(10, { start: 'h3', picked: 'h6', pickedPesos: '₱13' });
   const pills = [...jeep.matchAll(/data-testid="trip-hintuan-fare"[^>]*>([^<]*)</g)].map(
     ([, p]) => p,
   );
-  assert.deepEqual(pills, ['₱13', '₱13']);
+  assert.deepEqual(pills, ['₱13']);
+  // An end of the trip picked as the ride's end, with a start: its pill too.
+  const toDestination = render(10, {
+    livery: 'metro-rail-way-three',
+    start: 'h3',
+    startCode: 'YL07',
+    endPicked: 'to',
+    pickedCode: 'YL13',
+    pickedPesos: '₱24',
+  });
+  const destination = /<li data-testid="trip-destination".*?<\/li>/s.exec(toDestination)?.[0] ?? '';
+  assert.match(destination, /data-part="code"[^>]*>YL13<\/span> <span data-part="pesos"[^>]*>₱24</);
+  const toOrigin = render(10, {
+    livery: 'metro-rail-way-three',
+    start: 'h3',
+    startCode: 'YL07',
+    endPicked: 'from',
+    pickedCode: 'YL01',
+    pickedPesos: '₱13',
+  });
+  const origin = /<li data-testid="trip-origin".*?<\/li>/s.exec(toOrigin)?.[0] ?? '';
+  assert.match(origin, /data-part="code"[^>]*>YL01<\/span> <span data-part="pesos"[^>]*>₱13</);
 });
 
 test('the S on white with a green disc, the E on white in the card’s colour, the buttons in the card’s', () => {
@@ -243,7 +267,7 @@ test('a start alone on the first hintuan stands apart from the origin, on the la
   assert.doesNotMatch(last, /data-testid="trip-fold"/);
 });
 
-test('a jeep’s start alone has no pill; a train’s ride with no fare has none on either pick', () => {
+test('a jeep’s start has no pill; a train’s ride with no fare has its start’s code alone, no pill on its end', () => {
   const jeep = render(10, { start: 'h3', pickedPesos: '₱13', onRemoveStart() {} });
   assert.doesNotMatch(jeep, /trip-hintuan-fare/, 'a jeep’s S: no code, no ride to price');
   const unpriced = render(10, {
@@ -253,7 +277,10 @@ test('a jeep’s start alone has no pill; a train’s ride with no fare has none
     picked: 'h6',
     pickedCode: 'YL10',
   });
-  assert.doesNotMatch(unpriced, /trip-hintuan-fare/, 'a ride with no fare: no code alone either');
+  const pills = [...unpriced.matchAll(/data-testid="trip-hintuan-fare"[^>]*>([^<]*)</g)].map(
+    ([, p]) => p,
+  );
+  assert.deepEqual(pills, ['YL07'], 'the start’s code; nothing to price on the end');
 });
 
 // The owner, 2026-10-16: "can you still connect those dots, since it might
