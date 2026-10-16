@@ -30,9 +30,10 @@ row, a tap for the end, and the Distance and fare tiles read the ride between
 them. SWITCH turns the card to the other direction, and names it: Pabalik on
 a Papunta card, the other bound on a train. The layers button at the top
 right opens the Map Style card: Monochrome, Colour (Apple Maps' light
-palette) or Fiord. "Where am I" shows the
-visitor as a small walking figure, flying at jeep speed, over a halo the
-size of the fix's accuracy; the position never leaves the phone. It installs
+palette) or Fiord. Each route's row on a card ends with its vehicle, and
+the map's credits start folded to their ⓘ; a tap opens them. "Where am I"
+shows the visitor as a blue dot with a heading cone, in a circle the size of
+the fix's accuracy; the position never leaves the phone. It installs
 as an app and keeps the last map it saw, so it works offline.
 
 **`/studio/` is the editor**, for the owner and the accounts on the editor
