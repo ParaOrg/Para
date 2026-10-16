@@ -94,8 +94,10 @@ If a rule can be broken by a caller, the type is wrong.
 (`<name>.tsx` + `<name>.stories.tsx`, kebab-case) in the layer or area that owns it —
 design-system components in `src/design-system/primitives|patterns/`,
 domain-free; app components in their area; no barrel
-files; comments say *why* and carry dates and the owner's decisions, in
-the voice of the files around it. A test file only if the component has
+files; comments say *why*, with no history: who asked, when, and what the
+code used to do belong in the commit and the PR (`.claude/CLAUDE.md`,
+Comments), so flag a new comment that records them. Figma node ids may
+stay. A test file only if the component has
 real logic — a lookup table over an element does not need one; the
 repo's unit tests live in `tests/unit/` and run through `npm run test:unit`.
 

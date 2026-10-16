@@ -8,7 +8,7 @@ import type { LayerSpecification, StyleSpecification } from 'maplibre-gl';
  * colour is written here.
  */
 
-export interface Hsla {
+interface Hsla {
   /** 0 to 360. */
   hue: number;
   /** 0 to 100. */

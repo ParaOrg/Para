@@ -8,7 +8,7 @@ import type { Direction } from '../model/routes';
 
 /*
  * A tap on the saved directions: what it opens, lists or lets go. Split from
- * useSavedRoutes.ts, 2026-09-29.
+ * use-saved-routes.ts, 2026-09-29.
  */
 
 const HIT = ROUTES_HIT_LAYER;

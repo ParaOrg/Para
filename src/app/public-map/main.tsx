@@ -13,8 +13,8 @@ import { PublicMapApp } from './public-map-app.tsx';
  * A password-reset email sent before /studio/ existed still links to /, an
  * invite links to the project's Site URL (/), and Supabase reports a refused link with `error_code` and `error_description`
  * in the address. Only the studio can finish either, so the query and fragment
- * go there untouched. This page never reads the token itself: its client has
- * detectSessionInUrl off.
+ * go there untouched. This page never reads the token itself: it has no
+ * Supabase client.
  *
  * Deliberately narrow. A bare `code=` or `error=` could mean anything — a
  * share link carrying a route code, one day — and the studio's client uses
@@ -40,7 +40,7 @@ if (forwardTo) {
   window.location.replace(forwardTo);
 } else {
   // No Supabase client here: visitors read the published map file
-  // (src/commuter/mapFile.ts) and never talk to the database. That keeps
+  // (src/features/published-map/map-file.ts) and never talk to the database. That keeps
   // supabase-js out of this page's bundle, which scripts/checks/check-build.mjs proves.
   registerServiceWorker();
   listenForInstallOffer();
