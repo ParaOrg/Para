@@ -1,9 +1,9 @@
 /*
  * The Map Style card pops like the hintuan pins (hintuan-pin.css): from
- * 40% and clear to whole (the owner, 2026-10-16: "pop like the pins"), out
- * of the button's corner, over duration/gentle with ease/enter, a card's
- * timing on his Motion page (3748:2585). It leaves the way his tooltip
- * does, over duration/quick with ease/exit, shrinking back into the corner.
+ * 40% and clear to whole, out of the button's corner, over duration/gentle
+ * with ease/enter, a card's timing on the Figma Motion page (3748:2585). It
+ * leaves the way the tooltip does, over duration/quick with ease/exit,
+ * shrinking back into the corner.
  */
 .map-style {
   transform-origin: top right;

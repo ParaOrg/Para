@@ -4,8 +4,7 @@ import { siblingsOf } from '../model/places';
 
 /*
  * What a tap marks on the saved hotspots, worked out from what is chosen and
- * what the sheet asks about. Pure; useSavedHotspots memoises each. Split from
- * use-saved-hotspots.ts, 2026-09-29.
+ * what the sheet asks about. Pure; useSavedHotspots memoises each.
  */
 
 /** A box's mark: lit (chosen, or under the tap while the sheet asks), a sibling of the chosen one, both, or the chosen one. */
