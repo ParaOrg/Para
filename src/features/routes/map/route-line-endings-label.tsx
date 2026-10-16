@@ -14,9 +14,11 @@ import type { Livery } from '../model/liveries';
 
 /**
  * Figma's Variant: Head Route, where a ride starts; Tail Route, where it
- * goes; and Default, an end named with neither (see below).
+ * goes; and Default, an end named with neither (see below). Unselected,
+ * Default at 60%, an end outside the ride, as the Label's Unselected
+ * (4200:13645, 2026-10-16).
  */
-export type RouteLineEndingsLabelVariant = 'head' | 'tail' | 'default';
+export type RouteLineEndingsLabelVariant = 'head' | 'tail' | 'default' | 'unselected';
 
 interface RouteLineEndingsLabelProps {
   variant: RouteLineEndingsLabelVariant;
@@ -92,7 +94,8 @@ export function RouteLineEndingsLabel({
         ' ' +
         (code ? CODE_PADDING : look.padding) +
         ' ' +
-        worn.surface
+        worn.surface +
+        (variant === 'unselected' ? ' opacity-60' : '')
       }
     >
       {Icon && !code && (
@@ -150,6 +153,7 @@ const LOOK = {
   head: { padding: 'py-0.5 pr-2 pl-0.5', wears: 'start', icon: 'start', word: 'Start, ' },
   tail: { padding: 'py-0.5 pr-2 pl-0.5', wears: 'line', icon: 'end', word: 'End, ' },
   default: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null },
+  unselected: { padding: 'px-2 py-1', wears: 'line', icon: null, word: null },
 } as const satisfies Record<
   RouteLineEndingsLabelVariant,
   {
