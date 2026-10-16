@@ -20,8 +20,7 @@ const NOTHING_PALE: readonly (readonly LngLat[])[] = [];
  * where it passes a hintuan, its chevrons, the rest of its line past a
  * picked hintuan in its card's pale, and the chosen direction's side of each
  * hintuan it cuts across. Returns the rides, for the circles and names at
- * their ends (EndTitles). Split from PublicMapApp and StudioApp, which each
- * had it word for word (2026-10-01).
+ * their ends (EndTitles).
  */
 export function useLitRides(
   map: MapLibreMap | null,
@@ -45,11 +44,8 @@ export function useLitRides(
   /**
    * The start picked on the trip (useRideTo's `startId`). With no ride drawn
    * — a start alone, or an end the line can't take it to — the trip's ends
-   * lose their S and E, its pin the one S (the owner, 2026-10-16: "Nothing
-   * yet, just the S"), and the whole line is on the pale, its ends and names
-   * with it (his ask the same night: "When start is only selected can you
-   * unselected all the unselected hintuan/station or labels?, and the
-   * rouline would be in pale"; it stayed lit until then).
+   * lose their S and E, its pin the one S, and the whole line is on the pale,
+   * its ends and names with it.
    */
   startId: string | null = null,
 ): Ride[] {
@@ -88,9 +84,7 @@ export function useLitRides(
     [saved.litDirections, hotspots, ridden, unmarkedId],
   );
   useDirectionArrows(map, rides);
-  // Outside the ride, the trip's line in its card's pale (the owner's asks,
-  // 2026-10-12: "the remaining line should be surface-pale of the selected
-  // colour", and 2026-10-15, before a picked start too), over the lit line
+  // Outside the ride, the trip's line in its card's pale, over the lit line
   // and under the chevrons; with a start and no ride, the whole of it;
   // nothing while nothing is picked.
   const pale = ridden?.pale ?? rides.find((r) => r.id === unmarkedId)?.pale ?? NOTHING_PALE;

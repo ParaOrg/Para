@@ -23,17 +23,14 @@ export function useRidePicks(selected: Direction | null) {
   const live = picked && picked.directionId === selected?.id ? picked : null;
 
   // An end of the trip, picked from its row: the line stays whole, its dot
-  // picked like a hintuan's (the owner's asks, 2026-09-29: "tapping
-  // Novaliches should indicate green circle too", then the origin: "it
-  // should have!"). One pick at a time with the hintuans; kept by
+  // picked like a hintuan's. One pick at a time with the hintuans; kept by
   // direction, as a pick is.
   const [atEnd, setAtEnd] = useState<{ directionId: string; end: 'from' | 'to' } | null>(null);
   const endPicked = selected && atEnd?.directionId === selected.id ? atEnd.end : null;
 
-  // A hintuan made the ride's start by Set as start (the owner's
-  // TimelineRouteDetail, 2026-10-15): the ride runs from it, not from where
-  // the direction leaves, to the hintuan picked as its end; alone, it is no
-  // ride yet (his Variant3, 2026-10-16). Kept by direction, as the end's
+  // A hintuan made the ride's start by Set as start: the ride runs from it, not
+  // from where the direction leaves, to the hintuan picked as its end; alone,
+  // it is no ride yet. Kept by direction, as the end's
   // pick is.
   const [start, setStartPick] = useState<RowPick | null>(null);
   const liveStart = start && start.directionId === selected?.id ? start : null;
@@ -54,9 +51,8 @@ export function useRidePicks(selected: Direction | null) {
   const liveRow = live?.rowId ?? null;
 
   /**
-   * Set as start, under the picked hintuan's row (the owner's Choosing and
-   * Variant3, 2026-10-15): it becomes the ride's start, standing alone until
-   * another row is tapped as the end (2026-10-16).
+   * Set as start, under the picked hintuan's row: it becomes the ride's
+   * start, standing alone until another row is tapped as the end.
    */
   const setStart = useCallback(() => {
     if (!selectedId || liveRow === null) return;
