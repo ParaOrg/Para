@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { RideSummary } from '@/features/routes/model/ride-recording';
-
 import { ConfirmDelete } from './confirm-delete';
-import { OTHER_WAY, type Way } from './ride-rules';
+import { OTHER_WAY, type Way } from './recording-rules';
 import { StatsStrip } from './stats-strip';
 import { TrackingButton } from './tracking-button';
 import { useFocusHeading } from './use-focus-heading';
+import type { RecordingFigures } from './use-recording';
+import { useStackRoom } from './use-stack-room';
 
 interface RecordingScreenProps {
-  summary: RideSummary;
+  figures: RecordingFigures;
   way: Way;
   /** Stopped for now: Resume replaces Stop. */
   isPaused: boolean;
@@ -17,30 +17,31 @@ interface RecordingScreenProps {
   isAwake: boolean;
   onStop: () => void;
   onResume: () => void;
-  onLegSwitch: () => void;
+  onWaySwitch: () => void;
   onSave: () => void;
   onCancel: () => void;
 }
 
 /** The leg button's variant: named for the way a tap switches TO. */
-const NEXT_LEG = { outbound: 'papunta', return: 'pabalik' } satisfies Record<
+const NEXT_WAY = { outbound: 'papunta', return: 'pabalik' } satisfies Record<
   Way,
   'papunta' | 'pabalik'
 >;
 
 /** While recording, or stopped for a while: the figures over Stop (or Resume), and the row of Pabalik, Save and Cancel. */
 export function RecordingScreen({
-  summary,
+  figures,
   way,
   isPaused,
   isAwake,
   onStop,
   onResume,
-  onLegSwitch,
+  onWaySwitch,
   onSave,
   onCancel,
 }: RecordingScreenProps) {
   const headingRef = useFocusHeading();
+  const stackRef = useStackRoom();
   const [isAsking, setIsAsking] = useState(false);
   const cancelRef = useRef<HTMLDivElement>(null);
   const wasAsking = useRef(false);
@@ -53,10 +54,9 @@ export function RecordingScreen({
     wasAsking.current = isAsking;
   }, [isAsking]);
 
-  const elapsedSeconds = summary.movingSeconds + summary.standingSeconds + summary.lostSeconds;
-
   return (
     <section
+      ref={stackRef}
       aria-labelledby="recording-heading"
       className="absolute inset-x-0 bottom-0 z-10 flex flex-col pb-[env(safe-area-inset-bottom)]"
     >
@@ -69,8 +69,8 @@ export function RecordingScreen({
         </p>
       )}
       <StatsStrip
-        elapsedSeconds={elapsedSeconds}
-        distanceM={summary.distanceM}
+        elapsedSeconds={figures.elapsedSeconds}
+        distanceM={figures.distanceM}
         way={way}
         isPaused={isPaused}
       />
@@ -87,7 +87,7 @@ export function RecordingScreen({
         />
       ) : (
         <div ref={cancelRef} className="flex">
-          <TrackingButton variant={NEXT_LEG[OTHER_WAY[way]]} onClick={onLegSwitch} />
+          <TrackingButton variant={NEXT_WAY[OTHER_WAY[way]]} onClick={onWaySwitch} />
           <TrackingButton variant="save" onClick={onSave} />
           <TrackingButton variant="cancel" onClick={() => setIsAsking(true)} />
         </div>

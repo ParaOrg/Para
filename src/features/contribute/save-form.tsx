@@ -12,18 +12,18 @@ interface SaveFormProps {
   /** Fixes the phone could not keep; above zero, the ride is incomplete and can be downloaded now. */
   failedFixWrites: number;
   onDownload: () => void;
-  /** Continue saves with what was said; Skip, and the form's two minutes running out, save without. */
+  /** Continue, and the form's two minutes running out, save what was said; Skip saves without. */
   onSave: (details: RecordingDetails | null) => void;
 }
 
 const FIELD =
-  'rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-base/6 text-content-primary';
+  'rounded-lg border border-border-secondary bg-surface px-3 py-2 text-base/6 font-normal text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary';
 
 const isRideKind = (value: string): value is RideKind => RIDE_KINDS.some((kind) => kind === value);
 
 /**
  * What the contributor may say about the ride, every field optional. Left
- * alone for two minutes it saves the ride without details, so a phone put
+ * alone for two minutes it saves the ride with what was typed, so a phone put
  * away after the ride does not keep a recording open.
  */
 export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps) {
@@ -35,7 +35,7 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
     description: '',
     rideKind: null,
   });
-  const { secondsLeft, touch } = useSaveCountdown(() => onSave(null));
+  const { secondsLeft, touch } = useSaveCountdown(() => onSave(details));
 
   return (
     <form
@@ -75,7 +75,7 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
         Start point name
         <input
           id={`${ids}-start`}
-          className={FIELD + ' font-normal'}
+          className={FIELD}
           value={details.startPointName}
           onChange={(event) => setDetails({ ...details, startPointName: event.target.value })}
         />
@@ -84,7 +84,7 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
         End point name
         <input
           id={`${ids}-end`}
-          className={FIELD + ' font-normal'}
+          className={FIELD}
           value={details.endPointName}
           onChange={(event) => setDetails({ ...details, endPointName: event.target.value })}
         />
@@ -93,7 +93,7 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
         Description
         <textarea
           id={`${ids}-description`}
-          className={FIELD + ' font-normal'}
+          className={FIELD}
           rows={3}
           value={details.description}
           onChange={(event) => setDetails({ ...details, description: event.target.value })}
@@ -103,7 +103,7 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
         What did you ride?
         <select
           id={`${ids}-kind`}
-          className={FIELD + ' font-normal'}
+          className={FIELD}
           value={details.rideKind ?? ''}
           onChange={(event) =>
             setDetails({

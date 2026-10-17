@@ -6,14 +6,14 @@ import { SavedScreen } from './saved-screen';
 import { UnfinishedScreen } from './unfinished-screen';
 import { useFollow } from './use-follow';
 import { useRecording } from './use-recording';
-import { useRideTrack } from './use-ride-track';
+import { useRecordingTrack } from './use-recording-track';
 
 /** The contributor's page: a map with the ride drawn on it, and the screen for where the recording is. */
 export function ContributePage() {
   const recording = useRecording();
   const follow = useFollow();
-  const track = useRideTrack(recording.fixes, recording.current?.switches);
-  const { phase, summary } = recording;
+  const track = useRecordingTrack(recording.kept, recording.current?.switches);
+  const { phase, figures } = recording;
 
   const handleStart = () => {
     follow.recentre();
@@ -39,23 +39,23 @@ export function ContributePage() {
         {recording.announcement}
       </p>
       {phase === 'ready' && <ReadyScreen onStart={handleStart} />}
-      {phase === 'unfinished' && summary && (
+      {phase === 'unfinished' && figures && (
         <UnfinishedScreen
-          summary={summary}
+          figures={figures}
           way={recording.way}
           onResume={recording.resume}
           onStop={recording.stopAtLastFix}
         />
       )}
-      {(phase === 'recording' || phase === 'paused') && summary && (
+      {(phase === 'recording' || phase === 'paused') && figures && (
         <RecordingScreen
-          summary={summary}
+          figures={figures}
           way={recording.way}
           isPaused={phase === 'paused'}
           isAwake={recording.isAwake}
           onStop={recording.stop}
           onResume={recording.resume}
-          onLegSwitch={recording.switchLeg}
+          onWaySwitch={recording.switchWay}
           onSave={recording.openSave}
           onCancel={recording.cancel}
         />

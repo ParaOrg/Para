@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import type { FollowMode } from '@/features/routes/map/use-ride-follow';
+import type { FollowMode } from '@/features/routes/map/use-recording-follow';
 
 export interface Follow {
   mode: FollowMode;

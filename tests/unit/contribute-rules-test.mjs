@@ -1,6 +1,6 @@
 // The page's one door to the rules for the way a ride is on
-// (src/features/contribute/ride-rules.ts): what it adds to ride-recording.ts's own
-// rules (tested in ride-recording-test.mjs) — the current way, the words the contributor
+// (src/features/contribute/recording-rules.ts): what it adds to ride-recording.ts's own
+// rules (tested in ride-recording-test.mjs) — the words the contributor
 // reads, and the trail the map is handed — and the way the stats strip and the
 // countdown say their figures.
 //
@@ -8,12 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  OTHER_WAY,
-  WAY_LABEL,
-  currentWay,
-  trailOf,
-} from '../../src/features/contribute/ride-rules.ts';
+import { OTHER_WAY, WAY_LABEL, trailOf } from '../../src/features/contribute/recording-rules.ts';
 import {
   countdownText,
   kilometresText,
@@ -29,19 +24,6 @@ const fix = (s, east) => ({
   accuracyM: 5,
 });
 
-test('a recording starts outbound and is on the way of its latest switch', () => {
-  assert.equal(currentWay([]), 'outbound');
-  assert.equal(currentWay([{ time: T0 + 1, to: 'return' }]), 'return');
-  assert.equal(
-    currentWay([
-      { time: T0 + 2, to: 'outbound' },
-      { time: T0 + 1, to: 'return' },
-    ]),
-    'outbound',
-    'the latest by time, however they are listed',
-  );
-});
-
 test('the leg button switches to the other way, and the ways read as papunta and pabalik', () => {
   assert.equal(OTHER_WAY.outbound, 'return');
   assert.equal(OTHER_WAY.return, 'outbound');
@@ -53,11 +35,11 @@ test('the trail is a papunta line, a pabalik line joined to it at the switch, a 
   const kept = [fix(0, 0), fix(10, 100), fix(20, 200), fix(30, 100), fix(40, 0)];
   const trail = trailOf(kept, [{ time: T0 + 20_000, to: 'return' }]);
   assert.deepEqual(
-    trail.legs.map((leg) => leg.direction),
-    ['papunta', 'pabalik'],
+    trail.lines.map((line) => line.way),
+    ['outbound', 'return'],
   );
-  assert.deepEqual(trail.legs[0].path.at(-1), trail.legs[1].path[0]);
-  assert.deepEqual(trail.markers, [kept[2].at]);
+  assert.deepEqual(trail.lines[0].path.at(-1), trail.lines[1].path[0]);
+  assert.deepEqual(trail.markers, [{ at: kept[2].at, way: 'return' }]);
   assert.deepEqual(trail.here, kept[4].at);
 });
 

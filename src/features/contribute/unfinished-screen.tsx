@@ -1,22 +1,24 @@
-import type { RideSummary } from '@/features/routes/model/ride-recording';
-
-import type { Way } from './ride-rules';
+import type { Way } from './recording-rules';
 import { StatsStrip } from './stats-strip';
 import { TrackingButton } from './tracking-button';
 import { useFocusHeading } from './use-focus-heading';
+import type { RecordingFigures } from './use-recording';
+import { useStackRoom } from './use-stack-room';
 
 interface UnfinishedScreenProps {
-  summary: RideSummary;
+  figures: RecordingFigures;
   way: Way;
   onResume: () => void;
   onStop: () => void;
 }
 
 /** A recording was left open when the page closed: carry on with it, or stop it where it was. */
-export function UnfinishedScreen({ summary, way, onResume, onStop }: UnfinishedScreenProps) {
+export function UnfinishedScreen({ figures, way, onResume, onStop }: UnfinishedScreenProps) {
   const headingRef = useFocusHeading();
+  const stackRef = useStackRoom();
   return (
     <section
+      ref={stackRef}
       aria-labelledby="unfinished-heading"
       className="absolute inset-x-0 bottom-0 z-10 flex flex-col pb-[env(safe-area-inset-bottom)]"
     >
@@ -34,8 +36,8 @@ export function UnfinishedScreen({ summary, way, onResume, onStop }: UnfinishedS
         </p>
       </div>
       <StatsStrip
-        elapsedSeconds={summary.movingSeconds + summary.standingSeconds + summary.lostSeconds}
-        distanceM={summary.distanceM}
+        elapsedSeconds={figures.elapsedSeconds}
+        distanceM={figures.distanceM}
         way={way}
         isPaused
       />

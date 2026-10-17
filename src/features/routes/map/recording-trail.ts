@@ -3,45 +3,50 @@ import type { FilterSpecification, GeoJSONSource, MapLibreMap } from 'maplibre-g
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
-/** Which leg of the loop a stretch of the trail is: papunta out, pabalik back. */
-export type TrailDirection = 'papunta' | 'pabalik';
+import type { Way } from '../model/ride-recording';
 
-export interface TrailLeg {
-  direction: TrailDirection;
+/** A run of the trail on one way: outbound is papunta, return is pabalik. */
+export interface TrailLine {
+  way: Way;
   path: readonly LngLat[];
 }
 
+/** A dot where the way switched, ringed in the colour of the way that began there. */
+export interface TrailMarker {
+  at: LngLat;
+  way: Way;
+}
+
 /** What the contributor's recording has drawn so far. */
-export interface RideTrail {
-  legs: readonly TrailLeg[];
-  /** A dot at each switch of leg. */
-  markers: readonly LngLat[];
+export interface RecordingTrail {
+  lines: readonly TrailLine[];
+  markers: readonly TrailMarker[];
   /** Where the contributor is now, or null before the first fix. */
   here: LngLat | null;
 }
 
-export const TRAIL_SRC = 'ride-trail';
-const CASING = 'ride-trail-casing';
-const LINE = 'ride-trail-line';
-const MARKERS = 'ride-trail-markers';
-const HERE = 'ride-trail-here';
+export const TRAIL_SRC = 'recording-trail';
+const CASING = 'recording-trail-casing';
+const LINE = 'recording-trail-line';
+const MARKERS = 'recording-trail-markers';
+const HERE = 'recording-trail-here';
 
-/** The trail as its source takes it: a line per leg, a point per switch, and the contributor. */
-export function trailData(trail: RideTrail) {
+/** The trail as its source takes it: a line per run, a point per switch, and the contributor. */
+export function trailData(trail: RecordingTrail) {
   return {
     type: 'FeatureCollection' as const,
     features: [
-      ...trail.legs
-        .filter((leg) => leg.path.length >= 2)
-        .map((leg) => ({
+      ...trail.lines
+        .filter((line) => line.path.length >= 2)
+        .map((line) => ({
           type: 'Feature' as const,
-          properties: { direction: leg.direction },
-          geometry: { type: 'LineString' as const, coordinates: leg.path.map((p) => [...p]) },
+          properties: { way: line.way },
+          geometry: { type: 'LineString' as const, coordinates: line.path.map((p) => [...p]) },
         })),
-      ...trail.markers.map((at) => ({
+      ...trail.markers.map((marker) => ({
         type: 'Feature' as const,
-        properties: { kind: 'switch' },
-        geometry: { type: 'Point' as const, coordinates: [...at] },
+        properties: { kind: 'switch', way: marker.way },
+        geometry: { type: 'Point' as const, coordinates: [...marker.at] },
       })),
       ...(trail.here
         ? [
@@ -57,11 +62,11 @@ export function trailData(trail: RideTrail) {
 }
 
 /** Adds the trail's source and layers, empty. A basemap switch carries them across (basemap.ts). */
-export function addRideTrail(map: MapLibreMap): void {
+export function addRecordingTrail(map: MapLibreMap): void {
   if (map.getSource(TRAIL_SRC)) return;
   map.addSource(TRAIL_SRC, {
     type: 'geojson',
-    data: trailData({ legs: [], markers: [], here: null }),
+    data: trailData({ lines: [], markers: [], here: null }),
   });
   const isLine: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
   map.addLayer({
@@ -81,8 +86,8 @@ export function addRideTrail(map: MapLibreMap): void {
     paint: {
       'line-color': [
         'match',
-        ['get', 'direction'],
-        'pabalik',
+        ['get', 'way'],
+        'return',
         MAP_COLOURS['Map/Trail/pabalik'],
         MAP_COLOURS['Map/Trail/papunta'],
       ],
@@ -97,7 +102,13 @@ export function addRideTrail(map: MapLibreMap): void {
     paint: {
       'circle-radius': 6,
       'circle-color': MAP_PAINT['Paint/casing'],
-      'circle-stroke-color': MAP_COLOURS['Map/Trail/pabalik'],
+      'circle-stroke-color': [
+        'match',
+        ['get', 'way'],
+        'return',
+        MAP_COLOURS['Map/Trail/pabalik'],
+        MAP_COLOURS['Map/Trail/papunta'],
+      ],
       'circle-stroke-width': 3,
     },
   });
@@ -116,7 +127,7 @@ export function addRideTrail(map: MapLibreMap): void {
 }
 
 /** Lays the trail out in its source. */
-export function setRideTrail(map: MapLibreMap, trail: RideTrail): void {
+export function setRecordingTrail(map: MapLibreMap, trail: RecordingTrail): void {
   const source = map.getSource(TRAIL_SRC);
   if (source) (source as GeoJSONSource).setData(trailData(trail));
 }

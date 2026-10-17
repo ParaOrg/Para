@@ -587,8 +587,8 @@ check(
 );
 
 // The contribute page's own weight: what it loads beyond the public page's
-// chunks, its script and its stylesheet, so it stays a page for a phone in the
-// field. The map it draws on is the public page's, already counted above.
+// chunks: its script only (its stylesheet is not counted), so it stays a page
+// for a phone in the field. The map it draws on is the public page's, already counted above.
 const CONTRIBUTE_OWN_MAX_GZ_KB = 30;
 const contributeOwnGz = gzipBytes(dist, contributeOnlyFiles);
 check(

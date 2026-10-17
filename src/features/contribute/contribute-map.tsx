@@ -2,16 +2,16 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useState } from 'react';
 
 import { MapView } from '@/features/routes/map/map-view';
-import { RideFollowControls } from '@/features/routes/map/ride-follow-controls';
-import type { FollowMode } from '@/features/routes/map/use-ride-follow';
-import { useRideFollow } from '@/features/routes/map/use-ride-follow';
-import { useRideTrail } from '@/features/routes/map/use-ride-trail';
+import { RecordingFollowControls } from '@/features/routes/map/recording-follow-controls';
+import type { FollowMode } from '@/features/routes/map/use-recording-follow';
+import { useRecordingFollow } from '@/features/routes/map/use-recording-follow';
+import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
 
 import type { Follow } from './use-follow';
-import type { RideTrack } from './use-ride-track';
+import type { RecordingTrack } from './use-recording-track';
 
 interface ContributeMapProps {
-  track: RideTrack;
+  track: RecordingTrack;
   follow: Follow;
   /** Whether a recording is on the screen, which is when the follow controls show. */
   hasRecording: boolean;
@@ -29,8 +29,8 @@ const NEXT_MODE = { 'course-up': 'north-up', 'north-up': 'course-up' } satisfies
 export function ContributeMap({ track, follow, hasRecording }: ContributeMapProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
 
-  useRideTrail(map, track.trail);
-  useRideFollow(map, {
+  useRecordingTrail(map, track.trail);
+  useRecordingFollow(map, {
     here: track.trail.here,
     bearing: track.bearing,
     mode: follow.mode,
@@ -40,9 +40,15 @@ export function ContributeMap({ track, follow, hasRecording }: ContributeMapProp
 
   return (
     <>
-      <MapView onReady={setMap} zoomButtons={false} foldCredits />
+      <MapView
+        onReady={setMap}
+        zoomButtons={false}
+        foldCredits
+        buttonStyle="icon-button"
+        creditsAtBottom
+      />
       {map && hasRecording && (
-        <RideFollowControls
+        <RecordingFollowControls
           map={map}
           mode={follow.mode}
           isFollowing={follow.isFollowing}

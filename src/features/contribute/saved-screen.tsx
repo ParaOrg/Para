@@ -37,7 +37,7 @@ export function SavedScreen({ failedFixWrites, onRecordAgain, onDownload }: Save
       <button
         type="button"
         onClick={onDownload}
-        className="text-base/6 text-content-quaternary underline"
+        className="text-base/6 text-content-quaternary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary"
       >
         Download last recording
       </button>

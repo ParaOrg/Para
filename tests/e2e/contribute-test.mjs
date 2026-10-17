@@ -8,7 +8,7 @@
 // pabalik), the Save form and Successfully recorded at 393×852.
 //
 // The GPS is a stand-in navigator.geolocation the suite feeds fix by fix, with
-// timestamps of its own (ten seconds apart), so a kilometre out and back takes
+// timestamps of its own (a second apart), so a kilometre out and back takes
 // no time. The 2-minute form timeout runs on Playwright's fake clock.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
@@ -63,6 +63,13 @@ async function phone({ consented }) {
     acceptDownloads: true,
   });
   const page = await context.newPage();
+  // PARAPO_CPU_THROTTLE=4 runs the page at a quarter of the container's speed, as a slow CI runner is.
+  if (process.env.PARAPO_CPU_THROTTLE) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', {
+      rate: Number(process.env.PARAPO_CPU_THROTTLE),
+    });
+  }
   await nodeFetch(page);
   await bareStyle(page);
   await page.addInitScript(GPS);
@@ -76,14 +83,35 @@ async function phone({ consented }) {
 }
 
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
-/** One fix of the ride, `metres` east of the start, ten seconds after the last. */
+/** One fix of the ride, `metres` east of the start, a second after the last. */
 const emit = (page, metres) => {
   const [lng, lat] = eastOf(metres);
-  return page.evaluate(([a, b]) => window.__fix(a, b, window.__advance(10_000)), [lng, lat]);
+  return page.evaluate(([a, b]) => window.__fix(a, b, window.__advance(1000)), [lng, lat]);
+};
+/** A fix every 10 m from `from` to `to` metres east, a second apart: 36 km/h, as a jeepney. */
+const ride = async (page, from, to) => {
+  const step = to >= from ? 10 : -10;
+  for (let m = from; step > 0 ? m <= to : m >= to; m += step) await emit(page, m);
 };
 const mapSource = (page) =>
-  page.evaluate(() => window.__map.getSource('ride-trail')?.serialize().data ?? null);
+  page.evaluate(() => window.__map.getSource('recording-trail')?.serialize().data ?? null);
 /** The map's bearing as 0–360, so -90 and 270 are the same way. */
+/** The status of the recording IndexedDB holds, or null. */
+const storedStatus = (page) =>
+  page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('parapo-contribute');
+        open.onerror = () => resolve(null);
+        open.onsuccess = () => {
+          const all = open.result.transaction('recordings').objectStore('recordings').getAll();
+          all.onsuccess = () => {
+            open.result.close();
+            resolve(all.result[0]?.status ?? null);
+          };
+        };
+      }),
+  );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
 const buttons = (page) =>
   page
@@ -125,11 +153,13 @@ const buttons = (page) =>
   await shot(page, '1-ready');
 
   await page.getByRole('button', { name: 'Start recording' }).click();
-  await page.getByRole('group', { name: 'Ride so far' }).waitFor();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   check(
     'Start begins on Papunta: the stats say so, and the leg button offers Pabalik',
-    (await page.getByRole('group', { name: 'Ride so far' }).innerText()).includes('Papunta') &&
-      (await page.getByRole('group', { name: 'Ride so far' }).innerText()).includes('Recording') &&
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Papunta') &&
+      (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes(
+        'Recording',
+      ) &&
       (await buttons(page)).join('|').includes('Switch to Pabalik'),
   );
   check(
@@ -150,9 +180,9 @@ const buttons = (page) =>
   );
 
   // Out 1.2 km, a fix every 100 m.
-  for (let m = 0; m <= 1200; m += 100) await emit(page, m);
+  await ride(page, 0, 1200);
   await page.waitForTimeout(1500);
-  const outDistance = await page.getByRole('group', { name: 'Ride so far' }).innerText();
+  const outDistance = await page.getByRole('group', { name: 'Recording so far' }).innerText();
   check(
     'the distance reads one decimal: 1.2 km',
     /1\.2\s*km/.test(outDistance),
@@ -166,12 +196,12 @@ const buttons = (page) =>
   const outData = await mapSource(page);
   check(
     'the trail is drawn live: one papunta line, no switch dot yet',
-    outData?.features.filter((f) => f.properties.direction === 'papunta').length === 1 &&
+    outData?.features.filter((f) => f.properties.way === 'outbound').length === 1 &&
       outData.features.filter((f) => f.properties.kind === 'switch').length === 0,
   );
   const paint = await page.evaluate(() => {
     const colour = (id) => window.__map.getPaintProperty(id, 'line-color');
-    return JSON.stringify(colour('ride-trail-line'));
+    return JSON.stringify(colour('recording-trail-line'));
   });
   check(
     '  the line takes both colours from map-colours (blue/700 papunta, orange/700 pabalik)',
@@ -193,7 +223,7 @@ const buttons = (page) =>
           ),
         )
       ).every((c) => c === 1) &&
-      (await page.getByRole('group', { name: 'Ride so far' }).innerText()).includes('Stopped'),
+      (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Stopped'),
   );
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
@@ -204,30 +234,27 @@ const buttons = (page) =>
   check(
     'the leg switch is announced once, politely, and the stats now say Pabalik',
     (await page.getByRole('status').innerText()) === 'Switched to Pabalik' &&
-      (await page.getByRole('group', { name: 'Ride so far' }).innerText()).includes('Pabalik'),
-    `${await page.getByRole('status').innerText()} / ${(await page.getByRole('group', { name: 'Ride so far' }).innerText()).replace(/\n/g, ' ')}`,
+      (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Pabalik'),
+    `${await page.getByRole('status').innerText()} / ${(await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ')}`,
   );
   const afterSwitch = await mapSource(page);
   check(
     'a dot is left at the switch',
     afterSwitch?.features.filter((f) => f.properties.kind === 'switch').length === 1,
   );
-  for (let m = 1100; m >= 700; m -= 100) await emit(page, m);
+  await ride(page, 1190, 700);
   await page.waitForTimeout(1200);
   const pabalikData = await mapSource(page);
+  const lineOf = (way) =>
+    pabalikData.features.filter(
+      (f) => f.geometry.type === 'LineString' && f.properties.way === way,
+    );
   check(
     'blue papunta and orange pabalik, joined at the switch',
-    pabalikData.features.filter((f) => f.properties.direction === 'pabalik').length === 1 &&
-      pabalikData.features.filter((f) => f.properties.direction === 'papunta').length === 1 &&
-      JSON.stringify(
-        pabalikData.features.find((f) => f.properties.direction === 'pabalik').geometry
-          .coordinates[0],
-      ) ===
-        JSON.stringify(
-          pabalikData.features
-            .find((f) => f.properties.direction === 'papunta')
-            .geometry.coordinates.at(-1),
-        ),
+    lineOf('return').length === 1 &&
+      lineOf('outbound').length === 1 &&
+      JSON.stringify(lineOf('return')[0].geometry.coordinates[0]) ===
+        JSON.stringify(lineOf('outbound')[0].geometry.coordinates.at(-1)),
   );
   check(
     '  the map turned with the ride: course-up now heads west',
@@ -257,23 +284,40 @@ const buttons = (page) =>
   await page.mouse.move(120, 360, { steps: 6 });
   await page.mouse.up();
   await page.getByRole('button', { name: 'Follow me again' }).waitFor();
+  // The drag's glide has to be over before the centre is read; then a fix arrives, and
+  // the check waits for the map to have it (the trail's dot is there) before looking.
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
   const centreBefore = await page.evaluate(() => window.__map.getCenter().lng);
-  await emit(page, 600);
-  await page.waitForTimeout(1200);
+  await ride(page, 690, 640);
+  await page.waitForFunction(
+    (lng) =>
+      window.__map
+        .getSource('recording-trail')
+        ?.serialize()
+        .data.features.some(
+          (f) => f.properties.kind === 'here' && Math.abs(f.geometry.coordinates[0] - lng) < 1e-7,
+        ),
+    eastOf(640)[0],
+    { timeout: 30000 },
+  );
+  await page.waitForTimeout(1500);
   check(
     '  a new fix does not move a map the finger took',
     Math.abs((await page.evaluate(() => window.__map.getCenter().lng)) - centreBefore) < 1e-6,
   );
   await page.getByRole('button', { name: 'Follow me again' }).click();
-  await page.waitForTimeout(1500);
+  await page.waitForFunction(
+    (lng) => Math.abs(window.__map.getCenter().lng - lng) < 1e-4 && !window.__map.isMoving(),
+    eastOf(640)[0],
+    { timeout: 30000 },
+  );
   check(
     '  Follow me again brings the camera back to the ride',
-    Math.abs((await page.evaluate(() => window.__map.getCenter().lng)) - centreBefore) > 1e-6 &&
-      (await page.getByRole('button', { name: 'Follow me again' }).count()) === 0,
+    (await page.getByRole('button', { name: 'Follow me again' }).count()) === 0,
   );
 
   // Back within 300 m of the start: the recording ends itself and the form opens.
-  for (let m = 500; m >= 150; m -= 100) await emit(page, m);
+  await ride(page, 630, 150);
   await page.getByRole('heading', { name: 'About this ride' }).waitFor({ timeout: 10000 });
   check(
     'back within 300 m of the start after a Pabalik tap and over a kilometre: auto-stop opens the Save form',
@@ -338,8 +382,8 @@ const buttons = (page) =>
 {
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).click();
-  await page.getByRole('group', { name: 'Ride so far' }).waitFor();
-  for (let m = 0; m <= 300; m += 100) await emit(page, m);
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
 
   await page.getByRole('button', { name: 'Cancel' }).click();
   await page.getByRole('group', { name: 'Throw this recording away?' }).waitFor();
@@ -392,21 +436,25 @@ const buttons = (page) =>
 {
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).click();
-  await page.getByRole('group', { name: 'Ride so far' }).waitFor();
-  for (let m = 0; m <= 1200; m += 100) await emit(page, m);
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 1200);
   await page.getByRole('button', { name: 'Switch to Pabalik' }).click();
-  for (let m = 1100; m >= 200; m -= 100) await emit(page, m);
-  await page.getByRole('heading', { name: 'About this ride' }).waitFor({ timeout: 10000 });
+  await ride(page, 1190, 200);
+  await page.getByRole('heading', { name: 'About this ride' }).waitFor({ timeout: 30000 });
+  // The recording's stop is written to IndexedDB a moment after the form opens: reload
+  // only once it has been, as a person's reload would come long after.
+  for (let tries = 0; tries < 100 && (await storedStatus(page)) !== 'stopped'; tries++) {
+    await page.waitForTimeout(100);
+  }
   await page.reload({ waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 20000 });
+  await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 30000 });
   check(
     'a recording that stopped itself and was reloaded is stopped, with Resume',
     (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 0,
   );
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
-  await emit(page, 100);
-  await emit(page, 50);
+  await ride(page, 190, 50);
   await page.waitForTimeout(500);
   check(
     'Resume near the start does not stop it again',
@@ -417,12 +465,80 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ----------------- where the buttons are, standing still, and Stop on an unfinished one
+{
+  const { page, errors } = await phone({ consented: true });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  const box = await page.getByRole('button', { name: 'Map design' }).boundingBox();
+  check(
+    "the map-style button is Figma's 40 px IconButton, 16 px from the top and right",
+    box &&
+      Math.abs(box.width - 40) < 0.5 &&
+      Math.abs(box.y - 16) < 0.5 &&
+      Math.abs(393 - (box.x + box.width) - 16) < 0.5,
+    JSON.stringify(box),
+  );
+  check(
+    '  the credits are not in that corner: they are bottom right',
+    (await page.locator('.maplibregl-ctrl-top-right .maplibregl-ctrl-attrib').count()) === 0 &&
+      (await page.locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').count()) === 1,
+  );
+  const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
+  const credits = await page.locator('.maplibregl-ctrl-bottom-right').boundingBox();
+  check(
+    '  and above the Start bar, not under it',
+    credits && stack && credits.y + credits.height <= stack.y + 0.5,
+    JSON.stringify([credits, stack]),
+  );
+
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 500);
+  await page.waitForTimeout(1500);
+  // Two minutes standing 500 m out, the phone's position wandering by up to 8 m.
+  let seed = 7;
+  const wander = () => ((seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5) * 16;
+  const headings = [];
+  for (let s = 0; s < 120; s++) {
+    const [lng, lat] = eastOf(500 + wander());
+    await page.evaluate(
+      ([a, b]) => window.__fix(a, b, window.__advance(1000)),
+      [lng, lat + wander() / 111_000],
+    );
+    if (s % 4 === 0) headings.push(await bearing(page));
+  }
+  await page.waitForTimeout(1000);
+  headings.push(await bearing(page));
+  const turn = Math.max(...headings.map((h) => Math.abs(((h - headings[0] + 540) % 360) - 180)));
+  check(
+    'standing still two minutes with the phone wandering 8 m, the map keeps its heading',
+    turn < 5,
+    `heading ${headings[0].toFixed(1)}°, largest turn ${turn.toFixed(1)}°`,
+  );
+  console.log(`  standing-still max turn: ${turn.toFixed(2)} degrees`);
+
+  await page.reload({ waitUntil: 'load' });
+  await page
+    .getByRole('heading', { name: 'A recording was left open' })
+    .waitFor({ timeout: 30000 });
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).waitFor();
+  check(
+    'Stop on a recording left open pauses it too: Resume and Save, no form',
+    (await page.getByRole('heading', { name: 'About this ride' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Save', exact: true }).count()) === 1,
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------- two minutes alone on the form
 {
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).click();
-  await page.getByRole('group', { name: 'Ride so far' }).waitFor();
-  for (let m = 0; m <= 200; m += 100) await emit(page, m);
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 200);
   // Installed before the form opens, so the form's own timer runs on it.
   await page.clock.install();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -456,7 +572,11 @@ const buttons = (page) =>
   const file = JSON.parse(
     await (await import('node:fs/promises')).readFile(await download.path(), 'utf8'),
   );
-  check('  and it saved without details', file.description === '' && file.savedAt !== null);
+  check(
+    '  and it saved what was typed',
+    file.description === 'Crowded' && file.savedAt !== null,
+    file.description,
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

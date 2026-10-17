@@ -7,6 +7,7 @@ import {
   CARD_SHADOW_SELECTED,
   CARD_SURFACE,
 } from '@/features/routes/cards/livery-card';
+import { cn } from '@/shared/utils/cn';
 
 import { PauseIcon, PlayIcon } from './tracking-icons';
 
@@ -99,14 +100,14 @@ const SIZE = {
   row: 'px-3.5 py-3',
 } satisfies Record<Look['size'], string>;
 
-type TrackingButtonProps = Omit<
+interface TrackingButtonProps extends Omit<
   ComponentPropsWithoutRef<'button'>,
   'children' | 'className' | 'style' | 'aria-label' | 'dangerouslySetInnerHTML'
-> & {
+> {
   variant: TrackingVariant;
   /** Pressed in, as Figma draws the Stop bar while the ride is being recorded. */
   isActive?: boolean;
-};
+}
 
 /**
  * Figma's TrackingButtonPrimary: a square bar in a RouteCard's colours, its
@@ -123,20 +124,19 @@ export function TrackingButton({
   const look = LOOK[variant];
   const shadow = isActive
     ? CARD_SHADOW_SELECTED.red
-    : CARD_SHADOW.red + ' group-active:shadow-route-card-primary-selected';
+    : cn(CARD_SHADOW.red, 'group-active:shadow-route-card-primary-selected');
   return (
     <button
       {...rest}
       type={type}
       aria-label={look.name}
-      className={
-        'group relative isolate flex items-center justify-center overflow-clip border-[0.6px] font-sn-pro text-lg/7 font-bold text-content-inverse ' +
-        look.surface +
-        ' ' +
-        look.width +
-        ' ' +
-        SIZE[look.size]
-      }
+      className={cn(
+        // A white ring inside the bar: the browser's own is nearly invisible on orange and red.
+        'group relative isolate flex items-center justify-center overflow-clip border-[0.6px] font-sn-pro text-lg/7 font-bold text-content-inverse focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-content-inverse',
+        look.surface,
+        look.width,
+        SIZE[look.size],
+      )}
     >
       <img src={CARD_BLOB.red.src} alt="" aria-hidden className={BLOB_PLACE} />
       {look.icon && (
@@ -145,7 +145,7 @@ export function TrackingButton({
         </span>
       )}
       {look.text}
-      <span aria-hidden className={'pointer-events-none absolute inset-0 ' + shadow} />
+      <span aria-hidden className={cn('pointer-events-none absolute inset-0', shadow)} />
     </button>
   );
 }

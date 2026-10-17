@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   keptFixes,
   summarize,
   type Fix,
   type GapReason,
-  type RideSummary,
 } from '@/features/routes/model/ride-recording';
 
 import { locationProblem } from './location-problem';
 import { downloadRecording, recordingFile } from './recording-file';
+import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './recording-rules';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
 import {
   deleteRecording,
@@ -18,7 +18,6 @@ import {
   putFix,
   putRecording,
 } from './recording-store';
-import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './ride-rules';
 import { useGeolocationWatch } from './use-geolocation-watch';
 import { useHiddenGaps } from './use-hidden-gaps';
 import { useWakeLock } from './use-wake-lock';
@@ -38,13 +37,22 @@ export interface RecordingDetails {
   rideKind: RideKind | null;
 }
 
+/** What the stats strip shows. */
+export interface RecordingFigures {
+  elapsedSeconds: number;
+  distanceM: number;
+}
+
 export interface RecordingState {
   phase: Phase;
   /** The recording being made, or stopped and not yet saved; null on Ready. */
   current: Recording | null;
   /** Every fix the phone reported for it, in order. */
   fixes: readonly Fix[];
-  summary: RideSummary | null;
+  /** The fixes that count, worked out once per fix. */
+  kept: readonly Fix[];
+  /** Time recorded (pauses left out) and distance so far; null on Ready. */
+  figures: RecordingFigures | null;
   /** The way the ride is on now: outbound is papunta, return is pabalik. */
   way: Way;
   /** The recording just saved, until the contributor records again. */
@@ -58,10 +66,10 @@ export interface RecordingState {
   start: () => void;
   /** Pauses the recording; Resume carries on. */
   stop: () => void;
-  /** Stops a recording found open after a reload where its last fix left it, and opens Save. */
+  /** Stops a recording found open after a reload where its last fix left it, as Stop does: paused, with Save and Resume. */
   stopAtLastFix: () => void;
   resume: () => void;
-  switchLeg: () => void;
+  switchWay: () => void;
   /** Stops a running recording, then opens the Save form. */
   openSave: () => void;
   /** Saves the recording; with no details, as it is. */
@@ -94,7 +102,11 @@ export function useRecording(): RecordingState {
   const [phase, setPhase] = useState<Phase>('loading');
   const [lastSaved, setLastSaved] = useState<Recording | null>(null);
   const [current, setCurrent] = useState<Recording | null>(null);
-  const [fixes, setFixes] = useState<Fix[]>([]);
+  // The fixes and the ones that count, set together: the rules run once per fix, not once per render.
+  const [{ fixes, kept }, setTrack] = useState<{ fixes: Fix[]; kept: Fix[] }>({
+    fixes: [],
+    kept: [],
+  });
   const [now, setNow] = useState(() => Date.now());
   const [announcement, setAnnouncement] = useState('');
   // Two slots, so a location error never hides a storage failure: storage stays
@@ -123,9 +135,12 @@ export function useRecording(): RecordingState {
     [reportStore],
   );
 
-  function setFixList(list: Fix[]) {
+  /** Makes this the list of fixes, and returns the ones that count. */
+  function setFixList(list: Fix[]): Fix[] {
+    const counted = keptFixes(list);
     fixesRef.current = list;
-    setFixes(list);
+    setTrack({ fixes: list, kept: counted });
+    return counted;
   }
 
   function forgetCurrent() {
@@ -184,11 +199,11 @@ export function useRecording(): RecordingState {
         failedFixWrites.current += 1;
         reportStore(error);
       });
-      setFixList([...fixesRef.current, toFix(row)]);
+      const counted = setFixList([...fixesRef.current, toFix(row)]);
       setLocationError(null);
-      if (isBackAtStart()) {
+      if (isBackAtStart(counted)) {
         setAnnouncement('Back at the start. The recording stopped.');
-        finish(position.timestamp, 'form', { autoStopped: true });
+        finish(position.timestamp, 'form', { hasAutoStopped: true });
       }
     },
     onError: (error) => setLocationError(locationProblem(error)),
@@ -199,10 +214,10 @@ export function useRecording(): RecordingState {
    * and stays true once it has fired, so a recording that stopped itself is
    * marked and never asked again: a Resume must not stop it a second time.
    */
-  function isBackAtStart(): boolean {
+  function isBackAtStart(counted: readonly Fix[]): boolean {
     const recording = currentRef.current;
-    if (!recording || recording.autoStopped) return false;
-    return shouldAutoStop(keptFixes(fixesRef.current), recording.switches ?? []);
+    if (!recording || recording.hasAutoStopped) return false;
+    return shouldAutoStop(counted, recording.switches ?? []);
   }
 
   // The clock the live totals and the open silence run on.
@@ -240,7 +255,7 @@ export function useRecording(): RecordingState {
     setPhase('recording');
   }
 
-  function finish(at: number, next: 'paused' | 'form', extra?: Pick<Recording, 'autoStopped'>) {
+  function finish(at: number, next: 'paused' | 'form', extra?: Pick<Recording, 'hasAutoStopped'>) {
     const recording = currentRef.current;
     if (!recording) return;
     const failed = failedFixWrites.current;
@@ -254,7 +269,7 @@ export function useRecording(): RecordingState {
     setPhase(next);
   }
   const stop = () => finish(Date.now(), 'paused');
-  const stopAtLastFix = () => finish(fixes[fixes.length - 1]?.time ?? Date.now(), 'form');
+  const stopAtLastFix = () => finish(fixes[fixes.length - 1]?.time ?? Date.now(), 'paused');
 
   function openSave() {
     if (phase === 'recording') finish(Date.now(), 'form');
@@ -287,7 +302,7 @@ export function useRecording(): RecordingState {
     setPhase('recording');
   }
 
-  function switchLeg() {
+  function switchWay() {
     const recording = currentRef.current;
     if (!recording) return;
     const switches = recording.switches ?? [];
@@ -343,15 +358,32 @@ export function useRecording(): RecordingState {
       .catch(reportStore);
   }
 
-  const problem = storageProblem ?? locationError;
+  // The totals come from the fixes alone (the fix-time `end`), so the 1 Hz clock only
+  // adds the time since the last fix instead of running the rules again.
+  const lastFixTime = fixes[fixes.length - 1]?.time ?? null;
+  const summary = useMemo(() => {
+    if (!current) return null;
+    const end = isRecording ? (lastFixTime ?? current.startedAt) : (current.stoppedAt ?? now);
+    return summarize(fixes, current.gaps, current.startedAt, end);
+    // `now` only ends a recording that is neither running nor stopped, which has no clock.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+  }, [fixes, current, isRecording, lastFixTime]);
   const end = isRecording ? now : (current?.stoppedAt ?? now);
-  const summary = current ? summarize(fixes, current.gaps, current.startedAt, end) : null;
+  const figures =
+    current && summary
+      ? {
+          elapsedSeconds: Math.max(0, (end - current.startedAt) / 1000 - summary.pausedSeconds),
+          distanceM: summary.distanceM,
+        }
+      : null;
+  const problem = storageProblem ?? locationError;
 
   return {
     phase,
     current,
     fixes,
-    summary,
+    kept,
+    figures,
     way: currentWay(current?.switches ?? []),
     lastSaved,
     isAwake,
@@ -361,7 +393,7 @@ export function useRecording(): RecordingState {
     stop,
     stopAtLastFix,
     resume,
-    switchLeg,
+    switchWay,
     openSave,
     save,
     cancel,

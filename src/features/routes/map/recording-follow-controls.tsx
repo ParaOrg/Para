@@ -4,9 +4,9 @@ import { createPortal } from 'react-dom';
 import { IconButton } from '@/design-system/primitives/icon-button';
 
 import { useTopRightControl } from './basemap-control';
-import type { FollowMode } from './use-ride-follow';
+import type { FollowMode } from './use-recording-follow';
 
-interface RideFollowControlsProps {
+interface RecordingFollowControlsProps {
   map: MapLibreMap;
   mode: FollowMode;
   /** False once the contributor has moved the map by hand. */
@@ -19,13 +19,13 @@ interface RideFollowControlsProps {
  * Under the map-style button, top right: course-up or north-up, and while the
  * camera is let go, a button that brings it back to the contributor.
  */
-export function RideFollowControls({
+export function RecordingFollowControls({
   map,
   mode,
   isFollowing,
   onModeToggle,
   onRecentre,
-}: RideFollowControlsProps) {
+}: RecordingFollowControlsProps) {
   const corner = useTopRightControl(map);
   const isCourseUp = mode === 'course-up';
   return createPortal(

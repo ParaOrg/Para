@@ -5,6 +5,7 @@ import { ConsentPanel } from './consent-panel';
 import { TrackingButton } from './tracking-button';
 import { useConsent } from './use-consent';
 import { useFocusHeading } from './use-focus-heading';
+import { useStackRoom } from './use-stack-room';
 
 interface ReadyScreenProps {
   onStart: () => void;
@@ -16,6 +17,7 @@ const goBackToMap = () => window.location.assign('/');
 export function ReadyScreen({ onStart }: ReadyScreenProps) {
   const { hasConsent, giveConsent } = useConsent();
   const headingRef = useFocusHeading();
+  const stackRef = useStackRoom();
 
   return (
     <>
@@ -29,6 +31,7 @@ export function ReadyScreen({ onStart }: ReadyScreenProps) {
       </div>
       {hasConsent ? (
         <section
+          ref={stackRef}
           aria-labelledby="ready-heading"
           className="absolute inset-x-0 bottom-0 z-10 pb-[env(safe-area-inset-bottom)]"
         >

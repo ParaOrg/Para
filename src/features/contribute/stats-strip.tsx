@@ -1,5 +1,7 @@
+import { cn } from '@/shared/utils/cn';
+
 import { kilometresText, minutesText } from './format';
-import { WAY_LABEL, type Way } from './ride-rules';
+import { WAY_LABEL, type Way } from './recording-rules';
 
 interface StatsStripProps {
   /** Time recorded so far, pauses left out. */
@@ -51,16 +53,17 @@ export function StatsStrip({ elapsedSeconds, distanceM, way, isPaused }: StatsSt
   return (
     <div
       role="group"
-      aria-label="Ride so far"
+      aria-label="Recording so far"
       className="relative bg-surface/5 px-4 pb-4 font-sn-pro"
     >
       {BLUR_LAYERS.map((mask) => (
         <span
           key={mask}
           aria-hidden
-          className={
-            'pointer-events-none absolute inset-x-0 -top-6 bottom-0 backdrop-blur-[3px] ' + mask
-          }
+          className={cn(
+            'pointer-events-none absolute inset-x-0 -top-6 bottom-0 backdrop-blur-[3px]',
+            mask,
+          )}
         />
       ))}
       <dl className="relative flex gap-4">

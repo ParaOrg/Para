@@ -1,6 +1,7 @@
 import { Button } from '@/design-system/primitives/button';
 
 import { useFocusHeading } from './use-focus-heading';
+import { useStackRoom } from './use-stack-room';
 
 interface ConsentPanelProps {
   onAgree: () => void;
@@ -10,8 +11,10 @@ interface ConsentPanelProps {
 /** The first visit: what the page records and where it goes, before anything is asked of the phone. */
 export function ConsentPanel({ onAgree, onDecline }: ConsentPanelProps) {
   const headingRef = useFocusHeading();
+  const stackRef = useStackRoom();
   return (
     <section
+      ref={stackRef}
       aria-labelledby="consent-heading"
       className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-4 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary shadow-bottom-sheet-top-shadow"
     >

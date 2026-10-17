@@ -13,8 +13,13 @@ function hasGivenConsent(): boolean {
   }
 }
 
+interface Consent {
+  hasConsent: boolean;
+  giveConsent: () => void;
+}
+
 /** Whether this phone has already been told what the page does, and a way to say it has. */
-export function useConsent(): { hasConsent: boolean; giveConsent: () => void } {
+export function useConsent(): Consent {
   const [hasConsent, setHasConsent] = useState(hasGivenConsent);
 
   const giveConsent = () => {

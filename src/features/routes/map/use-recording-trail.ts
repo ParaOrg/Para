@@ -1,18 +1,18 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect } from 'react';
 
-import { addRideTrail, setRideTrail, type RideTrail } from './ride-trail';
+import { addRecordingTrail, setRecordingTrail, type RecordingTrail } from './recording-trail';
 
 /**
  * A contributor's recording drawn on `map` as it is made: blue for papunta and
  * orange for pabalik, a dot at each switch, and the contributor's own dot.
  */
-export function useRideTrail(map: MapLibreMap | null, trail: RideTrail): void {
+export function useRecordingTrail(map: MapLibreMap | null, trail: RecordingTrail): void {
   useEffect(() => {
-    if (map) addRideTrail(map);
+    if (map) addRecordingTrail(map);
   }, [map]);
 
   useEffect(() => {
-    if (map) setRideTrail(map, trail);
+    if (map) setRecordingTrail(map, trail);
   }, [map, trail]);
 }

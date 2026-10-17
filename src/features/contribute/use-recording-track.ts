@@ -1,26 +1,25 @@
 import { useMemo, useState } from 'react';
 
-import type { RideTrail } from '@/features/routes/map/ride-trail';
-import { keptFixes, type Fix } from '@/features/routes/model/ride-recording';
+import type { RecordingTrail } from '@/features/routes/map/recording-trail';
+import { type Fix } from '@/features/routes/model/ride-recording';
 
+import { courseBearing, trailOf } from './recording-rules';
 import type { SwitchRow } from './recording-schema';
-import { courseBearing, trailOf } from './ride-rules';
 
-export interface RideTrack {
-  trail: RideTrail;
+export interface RecordingTrack {
+  trail: RecordingTrail;
   /** The direction of travel in degrees from north: the last one found, held while standing still. */
   bearing: number | null;
 }
 
 const NO_SWITCHES: readonly SwitchRow[] = [];
 
-/** What the map is shown of a recording: the trail drawn so far, and which way the ride is heading. */
-export function useRideTrack(
-  fixes: readonly Fix[],
+/** What the map is shown of a recording, from the fixes that count: the trail so far, and which way it is heading. */
+export function useRecordingTrack(
+  kept: readonly Fix[],
   recorded: readonly SwitchRow[] | undefined,
-): RideTrack {
+): RecordingTrack {
   const switches = recorded ?? NO_SWITCHES;
-  const kept = useMemo(() => keptFixes(fixes), [fixes]);
   const trail = useMemo(() => trailOf(kept, switches), [kept, switches]);
 
   // The rule takes the heading it had and gives it back while the ride stands
