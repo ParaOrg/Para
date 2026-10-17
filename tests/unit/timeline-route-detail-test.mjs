@@ -400,6 +400,35 @@ test('the origin picked with the start kept: its E, the ride back from the S to 
   assert.match(html, /data-testid="trip-origin" data-state="selected"/);
 });
 
+test('the end rows say start or end to a screen reader, after the name, wherever the circled letter shows', () => {
+  const sr = (html, id) => {
+    const row = new RegExp(`<li data-testid="${id}".*?</li>`, 's').exec(html)?.[0] ?? '';
+    return {
+      mark: [...row.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m),
+      said: [...row.matchAll(/<span class="sr-only">([^<]*)<\/span>/g)].map(([, t]) => t),
+      afterName: /Tala<\/span><span class="sr-only">|Novaliches<\/span><span class="sr-only">/.test(
+        row,
+      ),
+    };
+  };
+  // Nothing picked: the S on the origin, the E on the destination.
+  const fresh = render(3);
+  assert.deepEqual(sr(fresh, 'trip-origin').said, [', start']);
+  assert.deepEqual(sr(fresh, 'trip-destination').said, [', end']);
+  assert.ok(sr(fresh, 'trip-origin').afterName && sr(fresh, 'trip-destination').afterName);
+  // A start kept and the origin picked as the end: the E moves to the origin.
+  const back = render(3, { start: 'h1', endPicked: 'from', onRemoveStart() {} });
+  assert.deepEqual(sr(back, 'trip-origin').said, [', end']);
+  assert.deepEqual(sr(back, 'trip-destination').said, []);
+  // Every circled letter on an end row comes with its words, and none without.
+  for (const html of [fresh, back, render(3, { start: 'h1', picked: 'h2', onRemoveStart() {} })]) {
+    for (const id of ['trip-origin', 'trip-destination']) {
+      const { mark, said } = sr(html, id);
+      assert.equal(said.length, mark.length, `${id}: one spoken mark for each circled letter`);
+    }
+  }
+});
+
 test('a train’s fold reads stations, a jeep’s hintuans (the owner, 2026-10-15)', () => {
   assert.match(render(7, { isTrain: true }), />7 more stations</);
   assert.match(render(7), />7 more hintuans</);

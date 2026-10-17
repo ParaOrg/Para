@@ -64,6 +64,8 @@ export function TimelineTop({
           >
             {routeOrigin}
           </span>
+          {/* After the name, so the name is still the row's first words; the circled letter is for the eye. */}
+          {mark && <span className="sr-only">{mark === 'start' ? ', start' : ', end'}</span>}
           {pill && <EndRowPill livery={livery} pill={pill} />}
         </span>
       </button>
