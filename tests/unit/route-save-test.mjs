@@ -228,7 +228,7 @@ const ROUTE_ENDS = { head_stop_id: 'tala', tail_stop_id: 'fairview', via: null }
 const DIRECTION_COLUMNS =
   'id, route_id, direction_name, origin_terminal, destination_terminal, overview, reversed, confidence, updated_at, borrowed_from, borrowed_part, borrowed_m, signboards, route:route(*)';
 
-test('a new route writes its facts and ends, then the drawn way and the empty other way', async () => {
+test('a new route writes its facts and ends, then the drawn way and its slot', async () => {
   const { client, log } = fakeSupabase((q) => {
     if (q.table === 'route' && q.op === 'insert') return { data: { id: 'r7' } };
     if (q.table === 'route_variant' && q.op === 'insert')
@@ -246,7 +246,7 @@ test('a new route writes its facts and ends, then the drawn way and the empty ot
   assert.equal(directionInsert.select, DIRECTION_COLUMNS);
 });
 
-test('a new route going the way back writes that way drawn and the forward way empty', async () => {
+test('a new route drawn as the return writes the return drawn and the outbound as the slot', async () => {
   const { client, log } = fakeSupabase((q) => {
     if (q.table === 'route' && q.op === 'insert') return { data: { id: 'r8' } };
     if (q.table === 'route_variant' && q.op === 'insert')
@@ -340,7 +340,7 @@ test("Edit route writes the route's six fields to its own row, before any line",
     writeRoute: true,
     signboard: ' Fairview ',
     fareNote: '',
-    via: 'EDSA',
+    via: ' EDSA ',
     headHotspotId: 'a',
     tailHotspotId: 'b',
     mode: 'bus',
@@ -577,7 +577,10 @@ test('a saved line is announced to its caller before the hintuan links are broug
   assert.equal(saved.id, 'v40');
   assert.equal(order[0], 'route_variant update');
   assert.equal(order[1], 'heard');
-  assert.ok(log.length >= 3);
+  assert.deepEqual(
+    log.map((q) => `${q.table} ${q.op}`),
+    ['route_variant update', 'stop select', 'route_stop select'],
+  );
 });
 
 test('a refused link sync says the line is saved and to press Save again', async () => {
