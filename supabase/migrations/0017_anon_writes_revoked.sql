@@ -1,9 +1,10 @@
 -- ParaPo — anon never writes, and a new table grants nothing by default
 --
--- The policy audit (.scratch/contribute/database.md section 2, fix 1). Row security already stops every write by an anonymous phone: no
--- write rule passes for a user who is signed in but not on private.editor. But
--- the privileges underneath were wide open. Read from the live project before
--- this file was written (pg_class.relacl, pg_default_acl):
+-- The policy audit (.scratch/contribute/database.md section 2, fix 1). Row
+-- security already stops every write by an anonymous phone: no write rule
+-- passes for a user who is signed in but not on private.editor. But the
+-- privileges underneath were wide open. Read from the live project before this
+-- file was written (pg_class.relacl, pg_default_acl):
 --   - anon and authenticated each hold SELECT, INSERT, UPDATE, DELETE and
 --     MAINTAIN (arwdm) on all five public tables (route, route_variant,
 --     route_stop, stop, gps_session). TRUNCATE, TRIGGER and REFERENCES were
