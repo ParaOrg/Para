@@ -192,11 +192,12 @@ const talaRoutes = [
 ];
 
 /**
- * The routes through here as RouteCards, as the studio gives them, edge to edge — at SM Fairview, Tala with its two ways out, in
- * a colour drawn at random. The map lights every route they show; a tap on a
- * card off its rows narrows that to its own; a row opens its trip straight
- * away. No pesos on any card: the trip's Expected fare carries them. TODO: the
- * rest of the card awaits the owner's design.
+ * The routes through here as RouteCards, as the studio gives them, edge to
+ * edge — at SM Fairview, Tala with its two ways out, in a colour drawn at
+ * random. The map lights every route they show; a tap on a card off its rows
+ * narrows that to its own; a row opens its trip straight away. No pesos on any
+ * card: the trip's Expected fare carries them. TODO: the rest of the card
+ * awaits the owner's design.
  */
 export const RouteCards: Story = {
   args: {
