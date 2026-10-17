@@ -161,3 +161,32 @@ test('a route with these ends but no row this way round is filled, not refused a
     ['route insert', 'route select', 'route_variant update', 'route_variant insert'],
   );
 });
+
+test("a claimed orphan's drawn row and slot both carry the claimed route id", async () => {
+  const { client, log } = fakeSupabase((q) => {
+    if (q.table === 'route' && q.op === 'insert') return { error: refused };
+    // The orphan: same ends, no directions.
+    if (q.table === 'route' && q.op === 'select') return { data: { id: 'r5', route_variant: [] } };
+    if (q.table === 'route' && q.op === 'update') return {};
+    if (q.table === 'route_variant' && q.op === 'insert')
+      return {
+        data: [
+          listed({ id: 'v11', route_id: 'r5', reversed: false }),
+          listed({ id: 'v12', route_id: 'r5', reversed: true }),
+        ],
+      };
+    throw new Error(`unexpected ${q.op} on ${q.table}`);
+  });
+  setSupabase(client);
+  const saved = await saveDirection(input);
+  assert.equal(saved.id, 'v11');
+  const inserted = log.find((q) => q.table === 'route_variant' && q.op === 'insert');
+  assert.equal(inserted.payload.length, 2);
+  assert.deepEqual(
+    inserted.payload.map((row) => [row.route_id, row.reversed]),
+    [
+      ['r5', false],
+      ['r5', true],
+    ],
+  );
+});
