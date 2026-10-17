@@ -46,8 +46,8 @@ export interface SaveInput {
 }
 
 // The column objects below carry the database's names (fare_note,
-// head_stop_id, control_points): this file is the boundary where the
-// glossary's names become the table's (CONTEXT.md).
+// head_stop_id, control_points): this file and direction-rows.ts are the
+// boundary where the glossary's names become the table's (CONTEXT.md).
 
 const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
 

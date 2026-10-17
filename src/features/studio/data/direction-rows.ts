@@ -1,8 +1,28 @@
+import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import type { LineStringGeoJSON } from '@/features/routes/model/routes';
 import type { LngLat, Segment } from '@/shared/utils/geo';
 import { joinSegments, overviewOf, roundLngLat } from '@/shared/utils/geo';
 
 import type { SaveInput } from './routes-write';
+
+/** A route_variant row as a save writes it, in the table's names. */
+interface DirectionRowColumns {
+  route_id: string;
+  reversed: boolean;
+  control_points: LngLat[];
+  segments: Segment[];
+  shape: LineStringGeoJSON | null;
+  overview: LineStringGeoJSON | null;
+  borrowed_from: string | null;
+  borrowed_part: BorrowPart | null;
+  borrowed_m: number | null;
+}
+
+export interface DirectionRowsResult {
+  drawn: DirectionRowColumns;
+  slot: DirectionRowColumns;
+  shape: LineStringGeoJSON;
+}
 
 /**
  * The rows a direction save writes, from the panel's input: the drawn
@@ -16,7 +36,7 @@ export function directionRows(
     'reversed' | 'controlPoints' | 'segments' | 'borrowedFrom' | 'borrowedPart' | 'borrowedMetres'
   >,
   routeId: string,
-) {
+): DirectionRowsResult {
   // Six decimals, about 0.1 m (roundLngLat): the router's points carry 15 or
   // more, and those digits would be half of every row. The line is joined from
   // the rounded segments, so a segment's end and the shape's point are the
