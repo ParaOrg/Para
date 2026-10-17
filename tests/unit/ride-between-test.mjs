@@ -1,5 +1,5 @@
-// A ride between two picks (src/features/routes/model/ride.ts: rideSpan,
-// rowsOutsideRide): the owner's TimelineRouteDetail of 2026-10-15 (Figma
+// A ride between two picks (src/features/routes/model/ride.ts: rideSpan;
+// ride-rows.ts: rowsOutsideRide): the owner's TimelineRouteDetail of 2026-10-15 (Figma
 // 4137:9886). A start and an end picked on a trip price and draw the ride
 // between them; an end picked before the start stays the end, and the ride
 // runs back along the trip's own line (the owner, 2026-10-16: "reverse the
@@ -9,14 +9,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { rideSpan, rideToEnd, routeTimeline } from '../../src/features/routes/model/ride.ts';
 import {
   rideRows,
-  rideSpan,
-  rideToEnd,
-  routeTimeline,
   rowsOutsideRide,
   rowsOutsideStartAlone,
-} from '../../src/features/routes/model/ride.ts';
+} from '../../src/features/routes/model/ride-rows.ts';
 import { railFares } from '../../src/features/routes/model/rail-fares.ts';
 import { lineLength } from '../../src/shared/utils/geo.ts';
 import { readPublished } from '../../scripts/checks/check-map-data.mjs';
