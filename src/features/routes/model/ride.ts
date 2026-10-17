@@ -210,7 +210,11 @@ export function loopFrom(line: readonly LngLat[], metres: number): LngLat[] {
   const whole = lineLength(ring);
   const at = whole > 0 ? ((metres % whole) + whole) % whole : 0;
   const { point, index } = pointAt(ring, at);
-  return [point, ...ring.slice(index + 1), ...ring.slice(1, index + 1), point];
+  const rotated = [point, ...ring.slice(index + 1), ...ring.slice(1, index + 1), point];
+  // A rotation that lands on a vertex would repeat it.
+  return rotated.filter(
+    (p, i) => i === 0 || p[0] !== rotated[i - 1][0] || p[1] !== rotated[i - 1][1],
+  );
 }
 
 /**
