@@ -22,8 +22,8 @@ export { LINE_FILE_SCHEMA };
 
 /**
  * The text of `v`'s line file: its id, its line as published, and its
- * stretches past `boxes` — passBoxes of the index the app reads (shape 4's,
- * every line in), so the key is the one the app works out. No date in it: a
+ * stretches past `boxes` — passBoxes of the index the app reads (the same
+ * stops in every shape; the app reads shape 5), so the key is the one the app works out. No date in it: a
  * file changes only when its line does, or a hintuan near it (its stretches
  * and their key). Key order is the file's contract; keep it fixed.
  */

@@ -18,7 +18,7 @@ mkdirSync(OUT, { recursive: true });
 const readPublished = () => {
   const at = (name) =>
     JSON.parse(readFileSync(new URL(`../../public/data/${name}`, import.meta.url), 'utf8'));
-  const index = at('index.v4.json');
+  const index = at('index.v5.json');
   return {
     ...index,
     variants: index.variants.map(({ overview, ...v }) => ({
@@ -126,7 +126,7 @@ if (stop) {
   });
 }
 await shot(phone, '/', '05-phone-load-error', {
-  before: (p) => p.route('**/data/index.v4.json*', (r) => r.abort()),
+  before: (p) => p.route('**/data/index.v5.json*', (r) => r.abort()),
 });
 await shot(desk, '/', '06-desktop-map');
 if (route) await shot(desk, '/', '07-desktop-route', { after: openRoute });

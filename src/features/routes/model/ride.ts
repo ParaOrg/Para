@@ -5,6 +5,7 @@ import { placeKey } from './places';
 import { servedBy, directionLine, isLoop, type Direction } from './routes';
 import {
   drawnFromTheEnd,
+  hintuansAlong,
   loopTimeline,
   timelineFor,
   type Timeline,
@@ -146,7 +147,7 @@ export function rideSpan(
   if (line.length < 2) return null;
   if (isLoop(v)) {
     // A null start is the tip, where the trip leaves; a null end, the tip again.
-    const tip = tipId === null ? 0 : rideCut(v, hotspots, tipId)?.metres;
+    const tip = tipMetres(v, hotspots, tipId);
     const s = startId === null ? tip : rideCut(v, hotspots, startId)?.metres;
     const e = endId === null ? tip : rideCut(v, hotspots, endId)?.metres;
     return s === undefined || e === undefined ? null : loopSpan(line, s, e);
@@ -174,7 +175,7 @@ export function rideToEnd(
   if (line.length < 2) return null;
   if (isLoop(v)) {
     // Either end row is the tip: the ride goes on round to it.
-    const tip = tipId === null ? 0 : rideCut(v, hotspots, tipId)?.metres;
+    const tip = tipMetres(v, hotspots, tipId);
     const s = rideCut(v, hotspots, startId)?.metres;
     return s === undefined || tip === undefined ? null : loopSpan(line, s, tip);
   }
@@ -189,11 +190,37 @@ export function rideToEnd(
  * start is (the end row being the tip). The line is rotated to leave from the
  * start, so the ride is its first stretch and the rest is what remains.
  */
-function loopSpan(ring: readonly LngLat[], start: number, end: number): RideSpan | null {
+function loopSpan(line: readonly LngLat[], start: number, end: number): RideSpan | null {
+  const ring = closedRing(line);
   const whole = lineLength(ring);
   if (whole < 1) return null;
   const gap = (((end - start) % whole) + whole) % whole;
   return spanAlong(loopFrom(ring, start), 0, gap < 1 ? whole : gap);
+}
+
+/**
+ * The line closed on its first point: as it is when it already ends there,
+ * else with that point added. A loop's length, its cuts and its rotation are
+ * all measured on this, so a line that stops a few metres short is one ring.
+ */
+function closedRing(line: readonly LngLat[]): readonly LngLat[] {
+  const first = line[0];
+  const last = line[line.length - 1];
+  return !first || (first[0] === last[0] && first[1] === last[1]) ? line : [...line, first];
+}
+
+/**
+ * Where the trip leaves from, in metres along the drawn line: the tip, or with
+ * none the first place the line passes, which is where loopTimeline starts
+ * too. Undefined when the line misses the place, or passes none.
+ */
+function tipMetres(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  tipId: string | null,
+): number | undefined {
+  const id = tipId ?? hintuansAlong(directionLine(v), hotspots, v.route)[0]?.hotspot.id;
+  return id === undefined ? undefined : rideCut(v, hotspots, id)?.metres;
 }
 
 /**
@@ -204,13 +231,15 @@ function loopSpan(ring: readonly LngLat[], start: number, end: number): RideSpan
  */
 export function loopFrom(line: readonly LngLat[], metres: number): LngLat[] {
   if (line.length < 2) return [...line];
-  const first = line[0];
-  const last = line[line.length - 1];
-  const ring = first[0] === last[0] && first[1] === last[1] ? line : [...line, first];
+  const ring = closedRing(line);
   const whole = lineLength(ring);
   const at = whole > 0 ? ((metres % whole) + whole) % whole : 0;
   const { point, index } = pointAt(ring, at);
-  return [point, ...ring.slice(index + 1), ...ring.slice(1, index + 1), point];
+  const rotated = [point, ...ring.slice(index + 1), ...ring.slice(1, index + 1), point];
+  // A rotation that lands on a vertex would repeat it.
+  return rotated.filter(
+    (p, i) => i === 0 || p[0] !== rotated[i - 1][0] || p[1] !== rotated[i - 1][1],
+  );
 }
 
 /**

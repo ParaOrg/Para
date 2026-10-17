@@ -435,7 +435,7 @@ const basemapFile = (url) => {
 const geometry = (() => {
   const at = (name) => JSON.parse(readFileSync(join(ROOT, 'public', 'data', name), 'utf8'));
   return mapGeometry(
-    at('index.v4.json'),
+    at('index.v5.json'),
     (id) => at(`lines/${id}.json`).shape?.coordinates ?? null,
   );
 })();
