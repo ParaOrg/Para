@@ -19,7 +19,7 @@
 //    file (/data/index.v4.json and the lines; the index since 2026-09-29), so
 //    no module from @supabase may reach it — 54 kB gzipped a commuter does not
 //    download (the shared chunk went 375 → 321 kB), and a database the public
-//    never touches. The live-table readers live in src/features/studio/data/live.ts, which
+//    never touches. The live-table readers live in src/features/studio/data (live.ts and hotspots-read.ts), which
 //    ESLint (import-x/no-restricted-paths) keeps out of the public shell and its features by
 //    construction; these two checks are the backstop.
 //

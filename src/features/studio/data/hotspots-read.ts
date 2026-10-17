@@ -50,7 +50,10 @@ async function listHotspotLinks(): Promise<HotspotLink[]> {
 }
 
 /** What the editor's hotspots hook loads. Module-level, so it never changes between renders. */
-export const loadHotspotsFromSupabase = async () => {
+export const loadHotspotsFromSupabase = async (): Promise<{
+  hotspots: HotspotRow[];
+  links: HotspotLink[];
+}> => {
   const [hotspots, links] = await Promise.all([listHotspots(), listHotspotLinks()]);
   return { hotspots, links };
 };

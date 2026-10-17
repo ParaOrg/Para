@@ -39,6 +39,9 @@ import { getSupabase } from './supabase';
  * Each reads its table in pages (read-all.ts): Supabase answers at most 1,000
  * rows a request and does not say when it cut, and the links table passes
  * 1,000 at about forty routes. The publish script pages the same way.
+ *
+ * The hotspot readers (hotspots and their links) are hotspots-read.ts's; the
+ * pager and `parsed`, the row parser every reader shares, are read-all.ts's.
  */
 
 /**
