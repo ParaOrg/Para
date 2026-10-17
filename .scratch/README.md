@@ -8,7 +8,7 @@ Five projects for now and one for later, planned with the owner on 2026-10-15; p
 | 2 | Ride start and end (done) | [ride-start-and-end/spec.md](ride-start-and-end/spec.md) | On the trip's timeline, any hintuan or station can be the ride's start, not only its end | Nothing |
 | 3 | Commuter rename | [commuter-rename/spec.md](commuter-rename/spec.md) | "Visitor" becomes "commuter", in the docs and then the code | Nothing |
 | 4 | Contributors (was the driver app) | [contribute/spec.md](contribute/spec.md) | `/contribute/`: anyone records a ride on their phone, and Save sends it to the studio | The field test; the owner's design of the screens |
-| 5 | Studio maps | [studio-maps/spec.md](studio-maps/spec.md) | Contributors \| Playground \| Public, and Draft → Pending → Approved | Nothing (the Contributors map needs contributions to be useful) |
+| 5 | Studio maps | [studio-maps/spec.md](studio-maps/spec.md) | Contributors \| Playground \| Public, and Draft → Pending → Approved | Contributions, for the Contributors map only |
 | Later | Train tracking | [train-tracking/spec.md](train-tracking/spec.md) | "My train ride" (stations left, an alert before yours) and trains estimated from the timetable | The owner deciding when; timetables |
 
 ## Order

@@ -54,7 +54,7 @@ src/
 │   └── contribute/             # The contributor page at /contribute/: main.tsx, contribute-app.tsx
 ├── pages/                      # Not yet: appears when an app gets a second screen. Thin screens that compose features.
 ├── features/
-│   ├── routes/                 # The core both apps draw: routes, the places they pass, the map that shows them.
+│   ├── routes/                 # The core the public map and the studio draw: routes, the places they pass, the map that shows them.
 │   │   ├── model/              # Domain types and rules. No React, no MapLibre.
 │   │   ├── geo/                # The pass and babaan-side rules.
 │   │   ├── map/                # The map view (the one MapLibre owner), its basemap and layers, the route and hotspot layers and hooks.
@@ -62,8 +62,7 @@ src/
 │   │   └── cards/              # The cards and timelines.
 │   ├── locator/                # "Where am I". index.ts is its public API.
 │   ├── published-map/          # Tracks the published map's freshness and runs the installed app's updates. index.ts.
-│   │   └── api/ schemas/
-│   ├── studio/                 # The editor. The only feature the public page never loads. index.ts.
+│   ├── studio/                 # The editor. The public page never loads it. index.ts.
 │   │   └── auth/ data/ drawing/ panels/
 │   ├── contribute/             # The contributor page: consent, the recorder, saving and sending. index.ts. The public page never loads it.
 │   └── <small-feature>/        # components/ hooks/ api/ schemas/ types/ utils/ constants.ts index.ts

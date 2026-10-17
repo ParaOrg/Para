@@ -1,6 +1,6 @@
 # Rule changes for the owner to approve
 
-**Status: approved 2026-10-17.** Nothing here is applied. `.claude/CLAUDE.md`, `CONTEXT.md` and `docs/adr/` are unchanged on this branch. Once you approve, ticket `issues/03-docs-words-adrs-rules.md` applies what you approved, as written or as you amend it.
+**Status: approved 2026-10-17, option A for 1.8; applied by `issues/03-docs-words-adrs-rules.md`.**
 
 Each change says what the file says today, what it would say, and why.
 

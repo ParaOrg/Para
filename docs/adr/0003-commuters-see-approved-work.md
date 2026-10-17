@@ -17,9 +17,10 @@ approved rows only, so the publish needs no rule of its own to leave drafts out.
 
 ## Consequences
 
-- [ADR 0001](0001-visitors-read-a-published-file.md)'s consequence "a change the editor saves is seen by visitors when it
-  is published" becomes: a change is seen once it is approved, then published.
-  ADR 0001's decision stands: commuters read static files, never the database.
+- [ADR 0001](0001-visitors-read-a-published-file.md)'s consequence "a change
+  the editor saves is seen by visitors when it is published" becomes: a change
+  is seen once it is approved, then published. ADR 0001's decision stands:
+  commuters read static files, never the database.
 - Hintuan links are worked out from approved lines and boxes only, when
   something is approved, so a draft never reaches a public timeline.
 - Taking work down on purpose is listed, and the publish's 30% guard counts

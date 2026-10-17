@@ -159,7 +159,8 @@ _Avoid_: admin, user
 **Commuter**:
 Anyone who opens the public map. Asks nothing of anyone: no account, no
 permission, no tracking. On the contributor page the same person may become a
-contributor, by choice (ADR 0004).
+contributor, by choice
+([ADR 0004](docs/adr/0004-location-leaves-the-phone-only-by-choice.md)).
 _Avoid_: user, visitor
 
 **Studio**:
@@ -228,8 +229,8 @@ switches the map behind it; ✕, Escape or a tap outside closes it.
 
 **Published map**:
 The set of files the public map reads, rebuilt nightly from the studio's
-approved data: the index, one line file per direction, and the signboards. Commuters
-never read the database.
+approved data: the index, one line file per direction, and the signboards.
+Commuters never read the database.
 _Avoid_: export, snapshot, API, published file (the word from when it was one
 file)
 
@@ -244,15 +245,15 @@ One direction's full line, read when the direction is lit or opened.
 ### Contributors
 
 **Contributor**:
-Anyone who records a ride on the contributor page. The studio knows a
+Anyone who makes a contribution on the contributor page. The studio knows a
 contributor only as a phone, an anonymous identity made on the first Save,
 never by name. A commuter who taps the Contributor button and records becomes
 one, on that page only.
 _Avoid_: driver, user, reporter
 
 **Contribution**:
-One recording on the contributor page, from Start to Save, as it reaches the
-studio: its points (about one a second), its hintos and gaps, and what the
+One recording on the contributor page, from tapping Start to tapping Save, as
+it reaches the studio: its points (about one a second), its hintos and gaps, and what the
 contributor typed: a start point name, an end point name, a description, what
 was ridden. Never public.
 _Avoid_: trip and ride (both taken), ikot, biyahe, session, track, trace
