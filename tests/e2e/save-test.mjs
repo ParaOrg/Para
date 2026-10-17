@@ -27,7 +27,11 @@
 // that updates rather than inserts (13); the drawing keys alive after signing
 // in from Done (9); the map switch — Contributors, Playground and Public in a band of
 // its own, the address, a half-drawn line, the camera and the basemap kept, the keys and
-// clicks dead on the other maps, Escape leaving a card open under them alone; no React
+// clicks dead on the other maps, Escape leaving a card open under them alone; a new head or
+// tail made from the save panel's pickers (a 30 m box at the line's end, the hotspot panel's
+// own write, the drawn line left alone; Enter on any field saving the place and not the
+// route, one write however many Enters, none before the lines are read, a retry updating the
+// box it wrote, a name already a place refused); no React
 // warnings (the duplicate key). And the camera
 // with the cards, the public map's in the studio too (the owner, 2026-09-30):
 // a trip opened on its whole route, beside the card.
@@ -306,6 +310,17 @@ const fill = (table, r) =>
 const log = [];
 /** The next request matching `when` is refused with a 500, once. */
 let fault = null;
+/** Requests matching `when` wait until `release()` is called: `{ when, release }`. */
+let hold = null;
+const holdRequests = (when) => {
+  let release = () => {};
+  const gate = new Promise((resolve) => (release = resolve));
+  hold = { when, gate };
+  return () => {
+    hold = null;
+    release();
+  };
+};
 
 const serve = async (req) => {
   const u = new URL(req.url());
@@ -313,6 +328,7 @@ const serve = async (req) => {
   const method = req.method();
   const body = req.postData() ? JSON.parse(req.postData()) : null;
   log.push({ method, table, url: req.url(), query: decodeURIComponent(u.search), body });
+  if (hold?.when(method, table, u)) await hold.gate;
   if (fault && fault(method, table, u)) {
     fault = null;
     return {
@@ -1539,6 +1555,297 @@ await page.waitForTimeout(300);
   await page.waitForTimeout(300);
   check('  and Escape in the Playground still closes it', !(await cardOpen()));
   await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(300);
+}
+
+// ---- 10c. A new head and tail made from the save panel, the line left alone
+{
+  const draftOf = () => page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  const NEW = '+new-place';
+  const L = [at(-0.003, 0.02), at(0, 0.0212), at(0.003, 0.02)];
+  await go(at(0, 0.02), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  for (const p of L) await clickAt(p, 300);
+  await idle();
+  await page.getByRole('button', { name: /Done/ }).click();
+  await page.waitForTimeout(600);
+  const draftBefore = await draftOf();
+  // Where the clicks landed, a pixel's worth off the points asked for.
+  const line = JSON.parse(draftBefore).controlPoints;
+  const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
+  const isFocused = (locator) => locator.evaluate((e) => e === document.activeElement);
+  const stopsBefore = tables.stop.length;
+  const routesBefore = tables.route.length;
+
+  check(
+    'each end picker ends with "+ New place here…"',
+    (await page.getByTestId('save-head').locator('option').last().innerText()) ===
+      '+ New place here…' &&
+      (await page.getByTestId('save-tail').locator('option').last().innerText()) ===
+        '+ New place here…',
+  );
+
+  await page.getByTestId('save-head').selectOption(NEW);
+  await page.waitForTimeout(300);
+  check(
+    'the head option opens a form inside the panel: Terminal chosen, focus on the ground name',
+    (await form('head').isVisible()) &&
+      (await form('head').getByLabel('Terminal').isChecked()) &&
+      (await isFocused(form('head').getByLabel(/Ground name/))),
+  );
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check(
+    '  Escape closes only the form: the panel stays, focus returns to the picker',
+    !(await form('head').isVisible()) &&
+      (await saveButton().isVisible()) &&
+      (await isFocused(page.getByTestId('save-head'))),
+  );
+
+  await page.getByTestId('save-head').selectOption(NEW);
+  // A place that already has a terminal, in the name people say it by.
+  const taken = tables.stop.find((r) => r.kind === 'terminal');
+  await form('head')
+    .getByLabel(/Ground name/)
+    .fill(taken.informal ?? taken.name);
+  await form('head').getByRole('button', { name: 'Save place' }).click();
+  await page.waitForTimeout(500);
+  check(
+    '  a name that is already a place is refused in words, with nothing written',
+    /is already a place/.test(await form('head').innerText()) && tables.stop.length === stopsBefore,
+    (await form('head').innerText()).slice(-160),
+  );
+
+  let n = log.length;
+  await form('head')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Newhead');
+  await form('head')
+    .getByLabel(/Stop name/)
+    .fill('Newhead');
+  await page.keyboard.press('Enter');
+  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newhead'));
+  await page.waitForTimeout(500);
+  const head = tables.stop.find((r) => r.name === 'Stand-in Newhead');
+  const boxOf = (r) => r.area.coordinates[0];
+  const metres = ([lng1, lat1], [lng2, lat2]) => {
+    const rad = Math.PI / 180;
+    const h =
+      Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lng2 - lng1) * rad) / 2) ** 2;
+    return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+  };
+  check(
+    "the head is created as a terminal with a 30 m box centred on the line's first point",
+    !!head &&
+      head.kind === 'terminal' &&
+      head.informal === 'Newhead' &&
+      boxOf(head).length === 5 &&
+      Math.abs(metres(boxOf(head)[0], boxOf(head)[1]) - 30) < 0.5 &&
+      metres(head.point.coordinates, line[0]) < 0.5,
+    '',
+  );
+  check(
+    "  through the hotspot panel's own write: one stop row and its links, nothing else",
+    writesSince(n).every((w) => w.table === 'stop' || w.table === 'route_stop') &&
+      writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop').length === 1,
+    said(writesSince(n)),
+  );
+  check(
+    '  the picker shows it, the form is gone, focus is back on the picker',
+    (await page.getByTestId('save-head').evaluate((e) => e.selectedOptions[0]?.text)) ===
+      'Newhead' &&
+      !(await form('head').isVisible()) &&
+      (await isFocused(page.getByTestId('save-head'))),
+  );
+
+  await page.getByTestId('save-tail').selectOption(NEW);
+  await page.waitForTimeout(300);
+  check(
+    'the tail option opens the same form, Hintuan chosen',
+    (await form('tail').isVisible()) && (await form('tail').getByLabel('Hintuan').isChecked()),
+  );
+  await form('tail')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Newtail');
+  await form('tail').getByRole('button', { name: 'Save place' }).click();
+  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newtail'));
+  await page.waitForTimeout(500);
+  const tail = tables.stop.find((r) => r.name === 'Stand-in Newtail');
+  check(
+    "the tail is created as a hintuan with a 30 m box centred on the line's last point",
+    !!tail &&
+      tail.kind === 'hintuan' &&
+      boxOf(tail).length === 5 &&
+      Math.abs(metres(boxOf(tail)[0], boxOf(tail)[1]) - 30) < 0.5 &&
+      metres(tail.point.coordinates, line[line.length - 1]) < 0.5,
+  );
+  check(
+    '  the drawn line is untouched by both',
+    (await draftOf()) === draftBefore && tables.stop.length === stopsBefore + 2,
+  );
+
+  n = log.length;
+  await saveButton().click();
+  await waitFor(async () => (await toast().count()) > 0);
+  const made = tables.route.find((r) => r.head_stop_id === head?.id && r.tail_stop_id === tail?.id);
+  check(
+    'the route saves with the new places as its head and tail',
+    !!made && tables.route.length === routesBefore + 1,
+    said(writesSince(n)),
+  );
+  await dismissToasts();
+
+  // Leave the stand-in as it was for what follows.
+  if (made) remove('route', [made]);
+  if (head) remove('stop', [head]);
+  if (tail) remove('stop', [tail]);
+  await page.evaluate(() => localStorage.removeItem('parapo.draft.v1'));
+}
+
+// ---- 10d. The new-place form: what Enter does, one write, a retry, a name already taken
+{
+  const NEW = '+new-place';
+  const draftOf = () => page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  // A short line out of P1's corner, among the saved lines, so the lines near its ends are read.
+  const L = [at(-0.004, 0.0004), at(-0.0035, 0.002)];
+  await go(at(-0.004, 0.001), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  for (const p of L) await clickAt(p, 300);
+  await idle();
+  await page.getByRole('button', { name: /Done/ }).click();
+  await page.waitForTimeout(600);
+  const draftBefore = await draftOf();
+  const routesBefore = tables.route.length;
+  const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
+  const stopsNamed = (name) => tables.stop.filter((r) => r.name === name);
+  const stopWrites = (n) => writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop');
+  const open = async (end) => {
+    await page.getByTestId(`save-${end.toLowerCase()}`).selectOption(NEW);
+    await form(end)
+      .getByLabel(/Ground name/)
+      .waitFor();
+  };
+  const taken = tables.stop.find((r) => r.kind === 'terminal');
+
+  // 4. A name that is already a place is refused, case and spacing as the pickers group it.
+  await open('Head');
+  await form('Head')
+    .getByLabel(/Ground name/)
+    .fill(` ${(taken.informal ?? taken.name).toUpperCase()} `);
+  let n = log.length;
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(600);
+  check(
+    'a ground name that is already a place is refused, however it is cased, and nothing is written',
+    /is already a place: pick it from the list/.test(await form('Head').innerText()) &&
+      stopWrites(n).length === 0,
+    (await form('Head').innerText()).slice(-140),
+  );
+  await page.keyboard.press('Escape');
+
+  // 2. No write before the lines near the box are read; then one box for two quick Enters.
+  const release = holdRequests(
+    (method, table, u) => method === 'GET' && table === 'route_variant' && /shape/.test(u.search),
+  );
+  await open('Head');
+  await form('Head')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Guard');
+  n = log.length;
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  check(
+    'Enter before the lines near the box are read writes nothing, and Save place waits',
+    stopWrites(n).length === 0 &&
+      (await form('Head').getByRole('button', { name: 'Save place' }).isDisabled()),
+  );
+  release();
+  await waitFor(async () => form('Head').getByRole('button', { name: 'Save place' }).isEnabled());
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await waitFor(() => stopsNamed('Stand-in Guard').length > 0);
+  await page.waitForTimeout(800);
+  check(
+    'two Enters write one box, once the lines are in',
+    stopsNamed('Stand-in Guard').length === 1 && stopWrites(n).length === 1,
+    said(writesSince(n)),
+  );
+
+  // 1. Enter on a radio saves the place and leaves the route unsaved.
+  n = log.length;
+  await open('Head');
+  await form('Head')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Radio Head');
+  await waitFor(async () => form('Head').getByRole('button', { name: 'Save place' }).isEnabled());
+  await form('Head').getByLabel('Hintuan').focus();
+  await page.keyboard.press('Enter');
+  await waitFor(() => stopsNamed('Stand-in Radio Head').length > 0);
+  await page.waitForTimeout(500);
+  check(
+    'Enter on the Hintuan radio saves the place and not the route',
+    stopsNamed('Stand-in Radio Head').length === 1 &&
+      tables.route.length === routesBefore &&
+      (await saveButton().isVisible()),
+  );
+  await open('Tail');
+  await form('Tail')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Radio Tail');
+  await waitFor(async () => form('Tail').getByRole('button', { name: 'Save place' }).isEnabled());
+  await form('Tail').getByLabel('Terminal').focus();
+  await page.keyboard.press('Enter');
+  await waitFor(() => stopsNamed('Stand-in Radio Tail').length > 0);
+  await page.waitForTimeout(500);
+  check(
+    '  and on the Terminal radio',
+    stopsNamed('Stand-in Radio Tail').length === 1 &&
+      tables.route.length === routesBefore &&
+      (await saveButton().isVisible()),
+  );
+
+  // 3. A retry after the links failed updates the box it wrote.
+  await open('Tail');
+  await form('Tail')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Retry');
+  await waitFor(async () => form('Tail').getByRole('button', { name: 'Save place' }).isEnabled());
+  fault = (method, table) => method === 'DELETE' && table === 'route_stop';
+  await page.keyboard.press('Enter');
+  await waitFor(async () => /Press Save again to retry/.test(await form('Tail').innerText()));
+  check(
+    'a failed link write is said, with the box already written once',
+    /Press Save again to retry/.test(await form('Tail').innerText()) &&
+      stopsNamed('Stand-in Retry').length === 1,
+  );
+  n = log.length;
+  await form('Tail')
+    .getByLabel(/Ground name/)
+    .press('Enter');
+  await waitFor(async () => !(await form('Tail').isVisible()));
+  await page.waitForTimeout(400);
+  check(
+    '  the retry updates that box: one row, no second POST',
+    stopsNamed('Stand-in Retry').length === 1 &&
+      stopWrites(n).length === 0 &&
+      writesSince(n).some((w) => w.method === 'PATCH' && w.table === 'stop'),
+    said(writesSince(n)),
+  );
+  check('  the drawn line is untouched through all of it', (await draftOf()) === draftBefore);
+
+  // Leave the stand-in as it was for what follows.
+  for (const name of [
+    'Stand-in Guard',
+    'Stand-in Radio Head',
+    'Stand-in Radio Tail',
+    'Stand-in Retry',
+  ])
+    for (const r of stopsNamed(name)) remove('stop', [r]);
+  await page.getByRole('button', { name: 'Back to map' }).click();
+  await page.getByTitle('Discard this route').click();
   await page.waitForTimeout(300);
 }
 
