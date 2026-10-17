@@ -3,12 +3,8 @@ import { useState } from 'react';
 
 import { CommuterLocation, useGazeHush } from '@/features/locator';
 import {
-  fetchLine,
   InstallPrompt,
-  loadDirectionsFromFile,
-  loadHotspotsFromFile,
   loadProblems,
-  openingDirections,
   reloadForNewerApp,
   reloadToUpdate,
   useNeedRefresh,
@@ -32,6 +28,12 @@ import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { placeKey } from '@/features/routes/model/places';
+import {
+  loadDirectionsFromFile,
+  loadHotspotsFromFile,
+  openingDirections,
+} from '@/features/routes/published/fetch-index';
+import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
 import { useStatusBarColour } from './status-bar';

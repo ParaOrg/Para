@@ -62,11 +62,11 @@ import { bboxOf, bboxesOverlap, haversine, lineLength } from '../../src/shared/u
 import { distanceToRingM } from '../../src/features/routes/geo/ring.ts';
 import { firstNearIndex } from '../../src/features/routes/geo/pass.ts';
 import { linePass, passBoxes, readablePass } from '../../src/features/routes/model/line-pass.ts';
-import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
+import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
 import {
   indexOutlineSchema,
   indexSchema,
-} from '../../src/features/published-map/schemas/index-schema.ts';
+} from '../../src/features/routes/published/index-schema.ts';
 
 /** How far a line's first or last point may sit from the hotspot it leaves from or arrives at. */
 export const END_WITHIN_M = 50;
@@ -424,7 +424,7 @@ export function readPublished(path) {
   const file = JSON.parse(readFileSync(path, 'utf8'));
   if (![2, 3, 4].includes(file.schema)) return { file, problems: [] };
   const problems = [];
-  // Read as the app reads it (src/features/published-map/schemas/index-schema.ts):
+  // Read as the app reads it (src/features/routes/published/index-schema.ts):
   // a row the reader would refuse is a problem, so the map is not published.
   const read = indexSchema.safeParse(file);
   if (!read.success) {

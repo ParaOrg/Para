@@ -9,7 +9,7 @@ This page is generated from the code, so it cannot go stale. It shows the struct
 A unit is a folder: an app, a feature (or a concern folder of a feature that has them), a kind of shared code, a design-system layer, or the styles.
 
 - **app**: `public-map`, `studio`
-- **features**: `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `studio`, `studio/auth`, `studio/data`, `studio/drawing`, `studio/panels`
+- **features**: `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/data`, `studio/drawing`, `studio/panels`
 - **shared**: `hooks`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
@@ -29,6 +29,7 @@ flowchart TD
     features_routes_geo["routes/geo"]
     features_routes_map["routes/map"]
     features_routes_model["routes/model"]
+    features_routes_published["routes/published"]
     features_studio["studio"]
     features_studio_auth["studio/auth"]
     features_studio_data["studio/data"]
@@ -53,6 +54,7 @@ flowchart TD
   app_public_map --> features_routes_cards
   app_public_map --> features_routes_map
   app_public_map --> features_routes_model
+  app_public_map --> features_routes_published
   app_public_map --> shared_hooks
   app_public_map --> styles
   app_studio --> features_routes_cards
@@ -68,7 +70,7 @@ flowchart TD
   features_locator --> shared_utils
   features_published_map --> design_system_primitives
   features_published_map --> features_routes_map
-  features_published_map --> features_routes_model
+  features_published_map --> features_routes_published
   features_published_map --> shared_utils
   features_routes_cards --> design_system_primitives
   features_routes_cards --> features_routes_model
@@ -84,6 +86,7 @@ flowchart TD
   features_routes_map --> shared_utils
   features_routes_model --> features_routes_geo
   features_routes_model --> shared_utils
+  features_routes_published --> features_routes_model
   features_studio --> features_studio_auth
   features_studio --> features_studio_data
   features_studio --> features_studio_drawing
@@ -118,16 +121,17 @@ flowchart TD
 
 | Unit | Imports |
 | --- | --- |
-| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `styles` |
+| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `styles` |
 | `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/model`, `shared/utils` |
+| `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/geo` | `shared/utils` |
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
+| `features/routes/published` | `features/routes/model` |
 | `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/panels` |
 | `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `shared/types`, `shared/utils` |
@@ -149,7 +153,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/published-map`
 
-`fetchIndex`, `loadDirectionsFromFile`, `loadHotspotsFromFile`, `openingDirections`, `fetchLine`, `listenForInstallOffer`, `InstallPrompt`, `loadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
+`listenForInstallOffer`, `InstallPrompt`, `loadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
 
 ### `features/studio`
 

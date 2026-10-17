@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { loadProblems } from '../../src/features/published-map/load-problems.ts';
-import { MAP_FILE_TOO_NEW } from '../../src/features/published-map/map-file.ts';
+import { MAP_FILE_TOO_NEW } from '../../src/features/routes/published/map-file.ts';
 
 const source = (error, reads) => ({ error, reload: () => reads.push(error) });
 

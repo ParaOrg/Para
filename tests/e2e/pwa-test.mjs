@@ -35,7 +35,7 @@ if (!existsSync(join(root, 'dist', 'sw.js'))) {
   process.exit(1);
 }
 const published = JSON.parse(readFileSync(join(root, 'public', 'data', 'index.v4.json'), 'utf8'));
-/** One past the shape this app reads (src/features/published-map/map-file.ts, MAP_FILE_SCHEMA). */
+/** One past the shape this app reads (src/features/routes/published/map-file.ts, MAP_FILE_SCHEMA). */
 const MAP_FILE_SCHEMA_NEXT = published.schema + 1;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const d = new Date(published.published_at);

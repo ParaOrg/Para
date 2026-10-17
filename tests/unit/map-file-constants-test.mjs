@@ -41,7 +41,7 @@ test('a constant missing, or not a single-quoted string, is named', () => {
 
 test('the committed map-file.ts declares both', () => {
   const source = readFileSync(
-    new URL('../../src/features/published-map/map-file.ts', import.meta.url),
+    new URL('../../src/features/routes/published/map-file.ts', import.meta.url),
     'utf8',
   );
   const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(source);

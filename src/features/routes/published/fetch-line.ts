@@ -1,8 +1,7 @@
-import type { LineStringGeoJSON } from '@/features/routes/model/geojson-schema';
-import { keepLinePass } from '@/features/routes/model/line-pass';
-
-import { LINES_URL } from '../map-file';
-import { lineFileSchema } from '../schemas/line-file-schema';
+import { lineFileSchema } from './line-file-schema';
+import { LINES_URL } from './map-file';
+import type { LineStringGeoJSON } from '../model/geojson-schema';
+import { keepLinePass } from '../model/line-pass';
 
 const lines = new Map<string, Promise<LineStringGeoJSON | null>>();
 

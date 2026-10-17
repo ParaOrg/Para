@@ -67,26 +67,13 @@ interface RideDot {
  * line passes gets a dot at the middle of its orange stretch
  * (`passStretches`, the one rule, walked rather than the stored `sequence`,
  * which indexes the editor's full line and overshoots the published, thinned
- * one). The ride ends at `endHotspotId`'s dot when given (timeline-test pins
- * it; the app passes none) and at the last dot otherwise. `ridden` runs from
- * the place this direction leaves, cut from `travelLine`, turned to rider
- * order by the one rule `timelineFor` reads the middle with
- * (drawnFromTheEnd); `rest` is the way not ridden. Only the unit tests read
- * `ridden`, `rest` and `dots`.
+ * one). The ride ends at the last dot along the line.
  */
 export function rideCut(
   v: Direction,
   hotspots: readonly Hotspot[],
   rowHotspotId: string,
-  endHotspotId: string | null = null,
-): {
-  ridden: LngLat[];
-  rest: LngLat[];
-  metres: number;
-  at: LngLat;
-  endHotspotId: string;
-  dots: RideDot[];
-} | null {
+): { metres: number; at: LngLat; endHotspotId: string } | null {
   const row = hotspots.find((s) => s.id === rowHotspotId);
   const ride = travelLine(v, hotspots);
   if (!row || ride.length < 2) return null;
@@ -100,17 +87,9 @@ export function rideCut(
     dots.push({ hotspotId: s.id, at: pointAt(ride, metres).point, metres });
   }
   dots.sort((a, b) => a.metres - b.metres);
-  const end = dots.find((d) => d.hotspotId === endHotspotId) ?? dots[dots.length - 1];
+  const end = dots[dots.length - 1];
   if (!end || end.metres < 1) return null;
-  const { point, index } = pointAt(ride, end.metres);
-  return {
-    ridden: [...ride.slice(0, index + 1), point],
-    rest: [point, ...ride.slice(index + 1)],
-    metres: end.metres,
-    at: point,
-    endHotspotId: end.hotspotId,
-    dots,
-  };
+  return { metres: end.metres, at: pointAt(ride, end.metres).point, endHotspotId: end.hotspotId };
 }
 
 /**

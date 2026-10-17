@@ -34,7 +34,7 @@
 //                           any line, as the index), for one
 //                           release: an installed app that has not updated
 //                           reads it. Drop it a month at least after the
-//                           index ships (src/features/published-map/map-file.ts has the
+//                           index ships (src/features/routes/published/map-file.ts has the
 //                           rule), with its commit line in the workflow.
 // A line file of a direction that no longer exists is removed.
 //
@@ -91,8 +91,8 @@ import { hotspotLabel } from '../../src/features/routes/model/hotspots.ts';
 import { toDirection } from '../../src/features/routes/model/direction-schema.ts';
 import { toHotspot } from '../../src/features/routes/model/hotspot-schema.ts';
 import { passBoxes } from '../../src/features/routes/model/line-pass.ts';
-import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
-import { indexSchema } from '../../src/features/published-map/schemas/index-schema.ts';
+import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
+import { indexSchema } from '../../src/features/routes/published/index-schema.ts';
 import { cleanSignboardSvg } from '../../src/features/routes/model/signboard-svg.ts';
 import { EVERY_LINE, FERRY, withoutLines } from './withoutLines.mjs';
 import { boardsRefusal } from './boardGuard.mjs';
@@ -145,7 +145,7 @@ const MAX_SHRINK = 0.3;
 const PAGE = 1000;
 const TIMEOUT_MS = 30_000;
 
-/** map.json's shape, the one before the index: fixed, since installed apps read it as it is (src/features/published-map/map-file.ts has the rules). */
+/** map.json's shape, the one before the index: fixed, since installed apps read it as it is (src/features/routes/published/map-file.ts has the rules). */
 const SCHEMA = 1;
 /** The old index's shape, before the train lines: fixed, as map.json's, for installed apps. */
 const INDEX_SCHEMA = 2;
@@ -515,11 +515,11 @@ const published_at = same
 
 // The terms travel inside each file, so no copy can arrive without them. The
 // shape number first: an installed app reads whatever its path serves, and
-// checks the number against the one it knows (src/features/published-map/map-file.ts has the
+// checks the number against the one it knows (src/features/routes/published/map-file.ts has the
 // rules for changing it — a new shape goes to a new path).
 const stamp = (schema, rows) => {
   const file = { schema, published_at, license: LICENSE, attribution: ATTRIBUTION, ...rows };
-  // Read back as the app reads it (src/features/published-map/schemas/index-schema.ts)
+  // Read back as the app reads it (src/features/routes/published/index-schema.ts)
   // before it is written: a file the reader would refuse is never published.
   // map.json (shape 1) carries whole lines as `shape`, the one shape the index
   // schema does not describe; its rows are the index's own, checked there.

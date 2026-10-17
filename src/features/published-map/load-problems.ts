@@ -1,4 +1,4 @@
-import { MAP_FILE_TOO_NEW } from './map-file';
+import { MAP_FILE_TOO_NEW } from '@/features/routes/published/map-file';
 
 /** One thing read from the published map: its error, if any, and how to read it again. */
 export interface MapFileSource {

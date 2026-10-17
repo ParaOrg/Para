@@ -468,7 +468,7 @@ test('step 13: a line file without stretches is checked as before', () => {
 // unreadable — are a warning, so the nightly run opens the owner's issue
 // (publish-map.yml: the issue opens on a report without "Nothing to
 // report"). Against an older index they stay a note.
-import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
+import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
 import { boxesReached } from '../../src/features/routes/model/line-pass.ts';
 import { lineFileText } from '../../scripts/publish/lineFile.mjs';
 import { toDirection } from '../../src/features/routes/model/direction-schema.ts';
