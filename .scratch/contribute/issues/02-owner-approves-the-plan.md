@@ -1,6 +1,6 @@
 # 02: The owner approves the plan
 
-Status: ready-for-human
+Status: resolved
 Type: grilling
 Wave: 1
 Who: the owner
@@ -20,5 +20,9 @@ Read the plan and answer its open decisions. Approving a file approves its recom
 - Each open decision has an answer under `## Answer` below.
 - The plan's PR ("Plan: contributors and the studio's three maps") is merged into `staging`, as written or amended.
 - `Status: resolved`.
+
+## Answer
+
+The owner approved the plan on 17 Oct 2026 at about 03:50 UTC ("ok approve the plan, start building the studio maps"). That covers every recommendation in `../database.md` §12 and `../rule-changes.md` as written, option A for rule-changes 1.8 (the reader moves to `features/routes/published/`), and Playground as the studio's default map.
 
 ## Comments

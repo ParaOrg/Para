@@ -1,6 +1,6 @@
 # 03: Docs: the words, ADRs 0003 and 0004, the rule changes
 
-Status: ready-for-agent
+Status: claimed
 Type: task
 Wave: 1, once 02 is resolved
 Who: Sonnet
