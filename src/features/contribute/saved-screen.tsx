@@ -3,14 +3,14 @@ import { Button } from '@/design-system/primitives/button';
 import { useFocusHeading } from './use-focus-heading';
 
 interface SavedScreenProps {
-  /** Fixes the phone could not keep of the ride just saved. */
+  /** Fixes the phone could not keep of the recording just saved. */
   failedFixWrites: number;
   onRecordAgain: () => void;
-  /** Field test only: hands over the ride's file. Goes at contribute/13, when it is sent to the studio. */
+  /** Field test only: hands over the recording's file. Goes at contribute/13, when it is sent to the studio. */
   onDownload: () => void;
 }
 
-/** After Save: the ride is kept on this phone, and Record again. */
+/** After Save: the recording is kept on this phone, and Record again. */
 export function SavedScreen({ failedFixWrites, onRecordAgain, onDownload }: SavedScreenProps) {
   const headingRef = useFocusHeading();
   return (

@@ -8,7 +8,7 @@ import { useFollow } from './use-follow';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 
-/** The contributor's page: a map with the ride drawn on it, and the screen for where the recording is. */
+/** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage() {
   const recording = useRecording();
   const follow = useFollow();

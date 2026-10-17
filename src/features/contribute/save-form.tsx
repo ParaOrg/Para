@@ -9,7 +9,7 @@ import type { RecordingDetails } from './use-recording';
 import { useSaveCountdown } from './use-save-countdown';
 
 interface SaveFormProps {
-  /** Fixes the phone could not keep; above zero, the ride is incomplete and can be downloaded now. */
+  /** Fixes the phone could not keep; above zero, the recording is incomplete and can be downloaded now. */
   failedFixWrites: number;
   onDownload: () => void;
   /** Back to recording, for a stop that was a mistake. */
@@ -24,9 +24,9 @@ const FIELD =
 const isRideKind = (value: string): value is RideKind => RIDE_KINDS.some((kind) => kind === value);
 
 /**
- * What the contributor may say about the ride, every field optional. Left
- * alone for two minutes it saves the ride with what was typed, so a phone put
- * away after the ride does not keep a recording open.
+ * What the contributor may say about the recording, every field optional. Left
+ * alone for two minutes it saves the recording with what was typed, so a phone put
+ * away after the recording does not keep a recording open.
  */
 export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave }: SaveFormProps) {
   const ids = useId();

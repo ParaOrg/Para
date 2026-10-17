@@ -24,7 +24,7 @@ export const Start: Story = {};
 
 export const Resume: Story = { args: { variant: 'resume' } };
 
-/** Pressed in, as Figma draws the Stop bar while the ride is being recorded. */
+/** Pressed in, as Figma draws the Stop bar while the recording is running. */
 export const StopRecording: Story = { args: { variant: 'stop', isActive: true } };
 
 export const StopAtRest: Story = { args: { variant: 'stop' } };

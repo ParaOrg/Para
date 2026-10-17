@@ -24,7 +24,7 @@ const NEXT_MODE = { 'course-up': 'north-up', 'north-up': 'course-up' } satisfies
 
 /**
  * The map under every screen: the public map's own view and map-style button,
- * with the recording's trail drawn on it and the camera following the ride.
+ * with the recording's trail drawn on it and the camera following the recording.
  */
 export function ContributeMap({ track, follow, hasRecording }: ContributeMapProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
