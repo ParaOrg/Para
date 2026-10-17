@@ -21,7 +21,7 @@ interface RideMarkProps {
  * the card's colour, the pill's (TIMELINE_PILL: a train's line's
  * Timeline/surface). They move with the picks: the S from the origin to a
  * start picked further on, the E from the destination to a picked end. For the
- * eye: a hintuan's row says "start" or "end" after its name. 24 across, as
+ * eye: every row that draws one says "start" or "end" after its name. 24 across, as
  * RouteSigns is, 12 after the rail: `isSmall`, on a hintuan's 16/24 line, 6
  * before the name and 10 down as the name's padding is; beside the ends' 20/28,
  * 8 before it and centred on it (Timeline set, 3716:1894).

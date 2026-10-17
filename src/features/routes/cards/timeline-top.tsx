@@ -57,6 +57,7 @@ export function TimelineTop({
           {mark && <RideMark mark={mark} livery={livery} />}
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span
+            data-part="name"
             className={
               'min-w-0 flex-1 text-xl/7 font-extrabold sheet-low:line-clamp-1' +
               (mark ? '' : ' pl-1')
