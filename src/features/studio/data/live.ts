@@ -75,6 +75,9 @@ const listedRowSchema = z.extend(z.omit(rawDirectionRowSchema, { shape: true }),
 });
 type ListedRow = z.infer<typeof listedRowSchema>;
 
+/** Just a direction's full line, as lineOf and withDrawing read it. */
+const lineShapeSchema = z.object({ shape: z.nullable(lineStringSchema) });
+
 /** A direction's id and full line, as lines are read on their own. */
 const lineRowSchema = z.object({ id: z.string(), shape: z.nullable(lineStringSchema) });
 
@@ -146,7 +149,8 @@ export async function lineOf(id: string): Promise<LineStringGeoJSON | null> {
   if (!client) return null;
   const { data, error } = await client.from('route_variant').select('shape').eq('id', id).single();
   if (error) throw new Error(error.message);
-  return z.parse(z.nullable(lineStringSchema), data.shape);
+  const [line] = parsed(lineShapeSchema, [data], 'direction line');
+  return line?.shape ?? null;
 }
 
 /** How many ids one read of full lines names: its request line stays short. */
@@ -202,7 +206,7 @@ export async function withDrawing(v: DirectionRow): Promise<DirectionDrawing> {
   const segments: unknown = data.segments;
   return {
     ...v,
-    shape: z.parse(z.nullable(lineStringSchema), data.shape),
+    shape: parsed(lineShapeSchema, [data], 'direction line')[0]?.shape ?? null,
     controlPoints: Array.isArray(controlPoints)
       ? (controlPoints as DirectionDrawing['controlPoints'])
       : [],
