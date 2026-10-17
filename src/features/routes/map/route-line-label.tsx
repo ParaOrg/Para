@@ -4,12 +4,11 @@ import { HEAD_ROUTE, LINE_SURFACE, LINE_TEXT, LINE_WORDS, type LabelLook } from 
 import type { Livery } from '../model/liveries';
 
 /**
- * Figma's Label, Property 1: Default, the name alone; End, End's E before
- * it. Start, Start's S before it, for a ride's picked start (2026-10-15):
- * End's shape in Head Route's green (2026-10-16), as Figma draws no Start
- * Label but draws the start that way on RouteLineEndingsLabels.
- * Unselected, Default at 60% (4200:13645, 2026-10-16), a hintuan outside
- * the ride.
+ * Figma's Label, Property 1: Default, the name alone; End, End's E before it.
+ * Start, Start's S before it, for a ride's picked start: End's shape in Head
+ * Route's green, as Figma draws no Start Label but draws the start that way
+ * on RouteLineEndingsLabels. Unselected, Default at 60% (4200:13645), a
+ * hintuan outside the ride.
  */
 export type RouteLineLabelVariant = 'default' | 'unselected' | 'end' | 'start';
 
@@ -36,20 +35,18 @@ interface RouteLineLabelProps {
 }
 
 /**
- * A hintuan's name on the map, the owner's Label (Figma 4068:4799,
- * 2026-10-13; its Default is 3846:11748, the RouteLineLabel of 2026-10-02):
- * Default beside a hintuan's dot along a trip, End beside the picked one,
- * where the ride now ends, and CodeSignEnd for a picked train station. All
- * three wear the line's colour (his "must be color of route line") with
- * white words in SN Pro Medium 14/20, 28 tall, drawn flat — near-black on
- * MRT-3's yellow (LINE_WORDS, 2026-10-13). Start, a picked start, wears
- * Head Route's green instead, whatever the line (HEAD_ROUTE, 2026-10-16).
+ * A hintuan's name on the map, Figma's Label (4068:4799; its Default is
+ * 3846:11748, the RouteLineLabel): Default beside a hintuan's dot along a
+ * trip, End beside the picked one, where the ride now ends, and CodeSignEnd
+ * for a picked train station. All three wear the line's colour (the owner's
+ * call) with white words in SN Pro Medium 14/20, 28 tall, drawn flat —
+ * near-black on MRT-3's yellow (LINE_WORDS). Start, a picked start, wears
+ * Head Route's green instead, whatever the line (HEAD_ROUTE).
  *
  * The font is set here, not inherited: every label sits in a DOM marker
- * inside MapLibre's container, whose stylesheet sets Helvetica Neue on all
- * of it (the owner's "why the font is in helvetica Neue", 2026-10-13).
- * HintuanLabel places it beside the dot; the ends of a ride have their own,
- * RouteLineEndingsLabel.
+ * inside MapLibre's container, whose stylesheet sets Helvetica Neue on all of
+ * it. HintuanLabel places it beside the dot; the ends of a ride have their
+ * own, RouteLineEndingsLabel.
  *
  * The E says which end to the eye alone, so the word goes before the name
  * for a screen reader, unseen; a label inside a button says it in the
@@ -117,9 +114,9 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
 }
 
 /**
- * The pill's padding and gap per look (4068:4799, respaced 2026-10-16): 8
- * each side and 4 above and below the name alone; 2 round a 24 icon, so
- * End and Start stay 28 tall; 4 before the code's chip, 8 after the name.
+ * The pill's padding and gap per look (4068:4799): 8 each side and 4 above
+ * and below the name alone; 2 round a 24 icon, so End and Start stay 28 tall;
+ * 4 before the code's chip, 8 after the name.
  */
 const PADDING = {
   default: 'px-2 py-1',

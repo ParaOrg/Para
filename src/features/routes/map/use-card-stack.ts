@@ -40,8 +40,7 @@ interface Hotspots<S extends { id: string }> {
  * which is up, what stands behind what, the height they share, the colour a
  * trip opens in and what is lit wearing it, and what each card's buttons do
  * to the others. The rules themselves are card-stack.ts's, tested; this keeps
- * their state. Split from PublicMapApp and StudioApp, which each held it
- * inline (2026-10-01).
+ * their state.
  */
 export function useCardStack<V extends Direction, S extends { id: string }>(
   map: MapLibreMap | null,
@@ -49,9 +48,9 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   hotspots: Hotspots<S>,
 ) {
   // One tap, several things: routes, hotspots or both, in the owner's route
-  // list — the hotspots first, then the routes as his RouteCards. It stays
-  // behind a trip picked from it, hidden, for the trip's ‹ — and so does a
-  // hotspot's card (the owner, 2026-09-29).
+  // list — the hotspots first, then the routes as RouteCards. It stays behind
+  // a trip picked from it, hidden, for the trip's ‹ — and so does a hotspot's
+  // card (the owner's call).
   const choice = [...saved.candidates, ...hotspots.candidates];
   const choosing = isChoosing(saved.candidates, hotspots.candidates);
 
@@ -69,19 +68,19 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   // The colour a card wore — in the list, or in a hotspot's card — for the
   // trip picked from it. Read only as the trip opens, and only while that
   // card stands behind it: a card of several routes wears one of them
-  // (liveries.ts), so the same trip opened again any other way wears its
-  // own route's kept colour. Once open, the trip keeps what it opened in until
-  // it closes — through SWITCH, and even when a tap on its own line closes
-  // the list behind it: a card never changes colour while it is open (the
-  // owner, 2026-09-29).
+  // (liveries.ts), so the same trip opened again any other way wears its own
+  // route's kept colour. Once open, the trip keeps what it opened in until it
+  // closes — through SWITCH, and even when a tap on its own line closes the
+  // list behind it: a card never changes colour while it is open (the owner's
+  // call).
   const [worn, setWorn] = useState<{ id: string; livery: Livery } | null>(null);
   const tripLivery = useTripLivery(saved.selected, worn, choosing || !!hotspots.selected);
   // A list of one RouteCard: its routes wear that card's colour, picked or
-  // not, a pick only bringing the camera to them (the owner's ask,
-  // 2026-10-02). The colour is the one the card is drawn in (cardLiveries
-  // keeps a jeepney route's draw for the visit, and a train's is its line's,
-  // so the card reads the same).
-  // Only while the list is what is up: behind a place's card it decides nothing (showingOf).
+  // not, a pick only bringing the camera to them (the owner's call). The
+  // colour is the one the card is drawn in (cardLiveries keeps a jeepney
+  // route's draw for the visit, and a train's is its line's, so the card
+  // reads the same). Only while the list is what is up: behind a place's card
+  // it decides nothing (showingOf).
   const onlyPlace =
     choosing && !hotspots.selected ? drawnDepartures(saved.candidates, saved.back) : [];
   // Its rows' routes, the first row's first, as RouteCardStack keys the card
@@ -94,10 +93,9 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
     () => (onlyRoutes ? cardLiveries([onlyRoutes.split(' ')], [onlyLine])[0] : null),
     [onlyRoutes, onlyLine],
   );
-  // What is lit wears the colour of the card it answers: the open trip's,
-  // the picked RouteCard's, or a list's only card's; a list of several with
-  // none picked lights its routes in the selected blue (the owner's ask,
-  // 2026-09-29).
+  // What is lit wears the colour of the card it answers: the open trip's, the
+  // picked RouteCard's, or a list's only card's; a list of several with none
+  // picked lights its routes in the selected blue (the owner's call).
   const litLivery: Livery | null = tripLivery ?? saved.highlight?.livery ?? onlyLivery ?? null;
   const look: LineLook = litLivery ? LIVERY_LINE[litLivery] : LIT_LINE;
   useLitLineColour(map, look.line);
@@ -105,10 +103,9 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
 
   // A place's name on the map tapped — an end of what is lit, or the picked
   // hintuan's — opens its card, the map flying in to it and lighting the
-  // routes through it (the owner's ask, 2026-10-01). An open trip steps
-  // behind it, with whatever stood behind the trip, and the card's ‹ brings
-  // it back as it was; anything else that opens or closes lets that go
-  // (tripBehindHolds).
+  // routes through it (the owner's call). An open trip steps behind it, with
+  // whatever stood behind the trip, and the card's ‹ brings it back as it
+  // was; anything else that opens or closes lets that go (tripBehindHolds).
   const [tripBehind, setTripBehind] = useState<{ id: string; hotspotId: string | null } | null>(
     null,
   );

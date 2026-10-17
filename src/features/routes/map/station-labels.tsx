@@ -21,12 +21,11 @@ const SCALE_PX = 100;
 const NAMES_UNTIL_M = 3000;
 
 /**
- * Whether the names show: until the scale bar reads 3 km — the owner's
- * asks of 2026-10-02, "as zoomed out to 1km it will be removed", then
- * 1.5 km, 2 km, then "try 3km". Measured the way the bar measures itself,
- * across its width at the map's middle height: it reads 2 km up to
- * 3,000 m, so the names stay through its 2 km and go at its 3 km.
- * Further out, the dots alone, so the pills never pile up.
+ * Whether the names show: until the scale bar reads 3 km (the owner's call).
+ * Measured the way the bar measures itself, across its width at the map's
+ * middle height: it reads 2 km up to 3,000 m, so the names stay through its
+ * 2 km and go at its 3 km. Further out, the dots alone, so the pills never
+ * pile up.
  */
 function namesShow(map: MapLibreMap): boolean {
   const y = map.getContainer().clientHeight / 2;
@@ -37,58 +36,42 @@ function namesShow(map: MapLibreMap): boolean {
 }
 
 /**
- * The selected direction's hintuans along its line, a dot at each with
- * its name beside it: a train's or the ferry's stations (the owner's asks
- * of 2026-10-02 and 2026-10-03) and, since 2026-10-12, a jeepney's
- * hintuans the same way (his ask: "if the route is selected specially
- * jeepney, it must show their hintuans similar to LRT, MRT, and Ferry").
- * One dot per row of the trip card's timeline (`rows`, its `between`),
+ * The selected direction's hintuans along its line, a dot at each with its
+ * name beside it: a train's or the ferry's stations and a jeepney's hintuans
+ * alike. One dot per row of the trip card's timeline (`rows`, its `between`),
  * on the line at the middle of the stretch past the row's box, where the
- * picked circle pops (rowStops; his "middle of the line", 2026-10-12), so
- * a pick replaces the dot in its spot. Each is the owner's HintuanLabel,
- * Hintuan (Figma 4068:4791, 2026-10-13): the timeline's own TimelineDot at
- * rest and beside it the name, his Label's Default, in the line's colour,
- * SN Pro 14/20, drawn flat (a 12px pill in the card's surface, lifted off
- * the map by a shadow, from 2026-10-02 until then). The dot is ringed in
- * the lit line's colour, the card's surface, so the dot and its name are
- * one colour, as the owner asked ("the circle must be the same color as
- * routeline color lit", 2026-10-12). Past a picked hintuan the line is
- * drawn in the card's surface-pale (useRideRest), and the dots along that
- * rest ring in the same pale — the rows after the picked one, and since a
- * ride's start could be picked (2026-10-15) the rows before it, while the
- * ride is drawn (`hasRide`; his ask of 2026-10-12, with a screenshot: "the
- * circle is still the color of routeline instead of pale color of
- * routeline"). Their names keep the card's surface, the whole label at
- * 60%: the owner's Label, Unselected (Figma 4200:13645, 2026-10-16: "if the
- * label is unselected it would be transparent", "if the route is not
- * selected or not in side the start and end"); from 2026-10-12 until then
- * they kept it whole, white words on the pale not reading. A start picked
- * alone, no ride yet, puts every other row on the pale with the whole line
- * (the owner, 2026-10-16: "When start is only selected can you unselected
- * all the unselected hintuan/station or labels?, and the rouline would be in
- * pale"); until then the trip stayed lit around a lone S.
+ * picked circle pops (rowStops; the owner's call), so a pick replaces the dot
+ * in its spot. Each is Figma's HintuanLabel, Hintuan (4068:4791): the
+ * timeline's own TimelineDot at rest and beside it the name, the Label's
+ * Default, in the line's colour, SN Pro 14/20, drawn flat. The dot is ringed
+ * in the lit line's colour, the card's surface, so the dot and its name are
+ * one colour. Past a picked hintuan the line is drawn in the card's
+ * surface-pale (useRideRest), and the dots along that rest ring in the same
+ * pale — the rows after the picked one, and, since a ride's start can be
+ * picked, the rows before it, while the ride is drawn (`hasRide`). Their
+ * names keep the card's surface, the whole label at 60%: the Label's
+ * Unselected (Figma 4200:13645). A start picked alone, no ride yet, puts
+ * every other row on the pale with the whole line. All of these are the
+ * owner's calls.
  *
- * On a train line the dots stay dots: the owner's LRTHintuanCodes (Figma
- * 4051:6426, 2026-10-12) put each station's code, GL02, in its dot's place
- * for a morning ("instead of circle we must show their code"), then went
- * back ("we will go back to circle, but only one is selected it must
- * show"): the picked station's code is on its pin (HintuanPin), and the
- * rest are circles, as a jeepney's hintuans are.
+ * On a train line the dots stay dots, not Figma's LRTHintuanCodes
+ * (4051:6426), each station's code in its dot's place: the picked station's
+ * code, GL02, is on its pin (HintuanPin), and the rest are circles, as a
+ * jeepney's hintuans are (the owner's call).
  *
- * The two ends are left to their end titles (EndTitles): the rows leave
- * them out. A picked row, the start's as the end's, is left to its HintuanPin. Once the scale bar
- * reads 3 km only the dots show, smaller. That 3 km is his for
- * stations a kilometre or two apart; a jeepney's hintuans sit a few
- * hundred metres apart, so at the bar's 2 km their names overlap — kept at
- * 3 km until he says otherwise (asked, 2026-10-12). Given `onPick`, the
- * dot and its name are one button that hands it the row's id, as the
- * row's tap on the card does (useRideTo's pick): the public map and the
- * studio both pick it. A long jeepney trip is thirty or forty of these
- * markers, each a button MapLibre re-projects at every move — the one
- * place a trip puts dozens of DOM markers on the map, as many as the end
- * titles at their most, which the cheap-phone plan should count. Still
- * named for the stations it began with; a jeepney's hintuans ride along
- * until the refactor renames it.
+ * The two ends are left to their end titles (EndTitles): the rows leave them
+ * out. A picked row, the start's as the end's, is left to its HintuanPin.
+ * Once the scale bar reads 3 km only the dots show, smaller. That 3 km is the
+ * owner's call for stations a kilometre or two apart; a jeepney's hintuans sit
+ * a few hundred metres apart, so at the bar's 2 km their names overlap — kept
+ * at 3 km until the owner says otherwise. Given `onPick`, the dot and its name
+ * are one button that hands it the row's id, as the row's tap on the card does
+ * (useRideTo's pick): the public map and the studio both pick it. A long
+ * jeepney trip is thirty or forty of these markers, each a button MapLibre
+ * re-projects at every move — the one place a trip puts dozens of DOM markers
+ * on the map, as many as the end titles at their most. TODO: count them in
+ * the cheap-phone timer. The name still says stations, as it began with them;
+ * a jeepney's hintuans ride along until a refactor renames it.
  */
 export function StationLabels({
   map,
@@ -199,7 +182,7 @@ function StationLabel({
     el.toggleAttribute('data-far', !named);
     el.toggleAttribute('data-paled', paled);
   }, [el, named, paled]);
-  // The dot and its name are one tap (the owner's ask, 2026-10-02): one button around both.
+  // The dot and its name are one tap (the owner's call): one button around both.
   const Tap = onPick ? 'button' : 'div';
   return createPortal(
     <Tap
