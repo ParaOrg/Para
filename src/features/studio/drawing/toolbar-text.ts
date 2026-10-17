@@ -71,6 +71,8 @@ export interface HintState {
   /** Drawing a hotspot's outline, not a route. */
   isArea: boolean;
   points: number;
+  /** A return trip being drawn: the way already drawn, which the faint line under it shows. */
+  loopOther?: string | null;
 }
 
 /**
@@ -79,8 +81,20 @@ export interface HintState {
  * there is a point. Dragging and right-clicking are not discoverable on a
  * bare map.
  */
-export function drawHint({ uTurnHelp, isFinger, isArea, points }: HintState): string | null {
+export function drawHint({
+  uTurnHelp,
+  isFinger,
+  isArea,
+  points,
+  loopOther = null,
+}: HintState): string | null {
   if (uTurnHelp !== null) return uTurnHelp;
+  if (loopOther !== null && !isArea && points === 0) {
+    return `Tap the dot where ${loopOther} ended: this line starts there`;
+  }
+  if (loopOther !== null && !isArea && points === 1) {
+    return `This line starts where ${loopOther} ended (the dot). Close the loop ends it where ${loopOther} began (the ring)`;
+  }
   if (isFinger) {
     if (isArea) {
       return points === 0

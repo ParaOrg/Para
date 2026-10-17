@@ -13,6 +13,7 @@ import { SaveNotices } from './save-notices';
 import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
 import { useRouteSave } from './use-route-save';
 import { useSaveFacts } from './use-save-facts';
+import { returnTripNotices } from '../drawing/loop-closing';
 import type { Drawing } from '../drawing/use-drawing';
 
 interface SavePanelProps {
@@ -123,6 +124,10 @@ export function SavePanel({
     direction,
     preview,
   } = facts;
+  // A return trip that stops short of where the other way began or ended says so, and saves anyway.
+  const loop = existing
+    ? []
+    : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
   const { busy, error, setError, written, save } = useRouteSave({ facts, draw, hotspots, onSaved });
 
   // A return trip fills its route's slot and leaves the route as it is; Edit
@@ -166,6 +171,7 @@ export function SavePanel({
         <SaveNotices
           segments={draw.segments}
           uTurns={draw.uTurns}
+          loop={loop}
           hotspotsCount={hotspots.length}
           wrongWay={
             wrongWayRound && head && tail
