@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
  */
 const published = () => {
   const { file, problems } = readPublished(
-    fileURLToPath(new URL('../../public/data/index.v4.json', import.meta.url)),
+    fileURLToPath(new URL('../../public/data/index.v5.json', import.meta.url)),
   );
   assert.deepEqual(problems, []);
   return file;
@@ -462,7 +462,7 @@ test('step 13: a line file without stretches is checked as before', () => {
 });
 
 // The owner's answer to question T of the cheap-phone report (2026-10-06):
-// against the index the app reads (MAP_FILE_SCHEMA's, index.v4.json), which
+// against the index the app reads (MAP_FILE_SCHEMA's, index.v5.json), which
 // the publish writes every line file's stretches against, stretches the app
 // will not take — under another key, a stale or a tampered one, or
 // unreadable — are a warning, so the nightly run opens the owner's issue
@@ -559,11 +559,11 @@ test("T: the report lists the publish's warning under a heading of its own, the 
 
 test("T: the committed map gives no warning of its line files' stretches", () => {
   // They carried none when this was written (2026-10-06); the next publish
-  // writes them against index.v4.json's own hintuans, as the next test does.
+  // writes them against index.v5.json's own hintuans, as the next test does.
   // A change that bumps PASS_RULE (src/features/routes/model/line-pass.ts) once they
   // carry some keys them all anew: until the nightly publish writes them
   // again, the app works their stretches out itself, and this says so.
-  for (const name of ['index.v4.json', 'index.v3.json', 'index.json']) {
+  for (const name of ['index.v5.json', 'index.v4.json', 'index.v3.json', 'index.json']) {
     const { file, problems } = readPublished(
       fileURLToPath(new URL(`../../public/data/${name}`, import.meta.url)),
     );
@@ -586,8 +586,8 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
       return file;
     };
     const check = (name) => checkMapData(read(name));
-    const index = read('index.v4.json');
-    assert.equal(index.schema, MAP_FILE_SCHEMA, 'index.v4.json is the index the app reads');
+    const index = read('index.v5.json');
+    assert.equal(index.schema, MAP_FILE_SCHEMA, 'index.v5.json is the index the app reads');
     const drawn = index.directions.filter((v) => v.shape);
     const writeAll = (boxes) => {
       for (const v of drawn)
@@ -597,15 +597,15 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
     const boxes = passBoxes(index.hotspots);
     writeAll(boxes);
     assert.ok(
-      read('index.v4.json')
+      read('index.v5.json')
         .directions.filter((v) => v.shape)
         .every((v) => typeof v.passKey === 'string' && Array.isArray(v.pass)),
     );
-    const fresh = check('index.v4.json');
+    const fresh = check('index.v5.json');
     assert.deepEqual(fresh.problems, []);
     assert.deepEqual(passWarning(fresh), []);
     assert.deepEqual(passNote(fresh), []);
-    for (const name of ['index.v3.json', 'index.json'])
+    for (const name of ['index.v4.json', 'index.v3.json', 'index.json'])
       assert.deepEqual(passWarning(check(name)), [], name);
     const others = (r) => r.warnings.filter((w) => !passWarning(r).includes(w));
 
@@ -616,7 +616,7 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
     const path = join(dir, 'lines', `${one.id}.json`);
     const written = readFileSync(path, 'utf8');
     writeFileSync(path, JSON.stringify({ ...JSON.parse(written), passKey: 'tampered' }) + '\n');
-    const tampered = check('index.v4.json');
+    const tampered = check('index.v5.json');
     assert.deepEqual(tampered.problems, []);
     assert.equal(passWarning(tampered).length, 1);
     assert.match(
@@ -630,7 +630,7 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
     assert.deepEqual(passWarning(olderTampered), []);
     assert.equal(passNote(olderTampered).length, 1, 'against shape 3, a note');
     writeFileSync(path, written);
-    assert.deepEqual(passWarning(check('index.v4.json')), []);
+    assert.deepEqual(passWarning(check('index.v5.json')), []);
 
     // Stale: every line file kept from a publish before a hintuan that line reaches moved 3 m east.
     const hintuan = boxesReached(one, one.shape.coordinates, boxes)[0].hotspot;
@@ -649,7 +649,7 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
       'its key is another',
     );
     writeAll(beforeBoxes);
-    const stale = check('index.v4.json');
+    const stale = check('index.v5.json');
     assert.deepEqual(stale.problems, []);
     assert.equal(passWarning(stale).length, 1);
     assert.match(
@@ -664,4 +664,72 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// A loop (0021): no head or tail, one direction, called by its signboard, its
+// line closed. Published in shape 5 only, since a shape-4 app refuses the
+// whole index for a route with no ends.
+const loopRoute = {
+  id: 'lr',
+  signboard: 'UP – Ikot',
+  long_name: null,
+  mode: 'jeepney',
+  fare_note: null,
+  head_stop_id: null,
+  tail_stop_id: null,
+  via: null,
+  name: 'UP – Ikot',
+  is_loop: true,
+};
+const loopDirection = (line, extra = {}) => ({
+  ...direction(line, { id: 'ld', route_id: 'lr', direction_name: 'UP – Ikot', route: loopRoute }),
+  ...extra,
+});
+const ring = [at(0, 0), at(200, 0), at(200, 200), at(0, 200), at(0, 0)];
+const loopMap = (extra = {}) => ({
+  ...good(),
+  schema: 5,
+  variants: [loopDirection(ring)],
+  stops: [stop('A', 'hintuan', 100, 0), stop('B', 'hintuan', 200, 100)],
+  links: [
+    { route_variant_id: 'ld', stop_id: 'A', stop_sequence: 1 },
+    { route_variant_id: 'ld', stop_id: 'B', stop_sequence: 2 },
+  ],
+  ...extra,
+});
+
+test('a loop whose line is closed, with two places linked, has nothing to report and owes no ends', () => {
+  const r = checkMapData(loopMap());
+  assert.deepEqual(r.problems, []);
+  assert.deepEqual(r.warnings, []);
+});
+
+test("a loop whose line stops short of where it began is a problem, said with the loop's name", () => {
+  const open = [...ring.slice(0, -1), at(0, 60)];
+  const r = checkMapData(loopMap({ variants: [loopDirection(open)] }));
+  assert.equal(r.problems.length, 1);
+  assert.match(r.problems[0], /UP – Ikot.*within 15 m of where it began/);
+});
+
+test('a loop in a file older than shape 5 is a problem; the older indexes must be written without it', () => {
+  for (const schema of [1, 2, 3, 4]) {
+    const r = checkMapData(loopMap({ schema }));
+    assert.ok(
+      r.problems.some((p) => new RegExp(`a loop in a shape-${schema} file`).test(p)),
+      `shape ${schema}: ${r.problems.join(' | ')}`,
+    );
+  }
+});
+
+test('a loop with a way back, or a second direction, is a problem; one with a single place is a warning', () => {
+  const back = checkMapData(
+    loopMap({
+      variants: [loopDirection(ring), loopDirection(ring, { id: 'ld2', reversed: true })],
+    }),
+  );
+  assert.ok(back.problems.some((p) => /one direction/.test(p)));
+  const lonely = checkMapData(loopMap({ links: [loopMap().links[0]] }));
+  assert.deepEqual(lonely.problems, []);
+  assert.equal(lonely.warnings.length, 2, lonely.warnings.join(' | '));
+  assert.ok(lonely.warnings.some((w) => /1 place\(s\) linked/.test(w)));
 });
