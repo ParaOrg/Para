@@ -50,3 +50,20 @@ export function placeHull(
     ? convexHull([chosen, ...siblings].flatMap((s) => hotspotRing(s)))
     : [];
 }
+
+/**
+ * A box's feature state for its mark (none: undefined): lit (striped)
+ * when chosen, or under the tap while the sheet asks; a sibling when it
+ * shares the chosen box's place.
+ */
+export function boxState(mark: BoxMark | undefined): {
+  lit: boolean;
+  sibling: boolean;
+  chosen: boolean;
+} {
+  return {
+    lit: mark === 'lit' || mark === 'lit+sibling' || mark === 'chosen',
+    sibling: !!mark?.includes('sibling'),
+    chosen: mark === 'chosen',
+  };
+}

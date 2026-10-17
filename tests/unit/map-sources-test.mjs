@@ -26,8 +26,8 @@ import {
 import {
   addSavedHotspots,
   hiddenHotspotFilters,
-  hotspotsData,
 } from '../../src/features/routes/map/saved-hotspots-layers.ts';
+import { hotspotsData } from '../../src/features/routes/map/saved-hotspots-data.ts';
 import { directionLine, isRailLine } from '../../src/features/routes/model/routes.ts';
 import { hotspotRing, nameOnMap } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
