@@ -27,6 +27,7 @@ test('a path maps to the unit of its folder', () => {
     'app/studio/studio-app.tsx': 'app/studio',
     'features/locator/use-locator.ts': 'features/locator',
     'features/published-map/status.ts': 'features/published-map',
+    'features/published-map/api/fetch-index.ts': 'features/published-map',
     'features/routes/published/fetch-index.ts': 'features/routes/published',
     'features/routes/geo/pass.ts': 'features/routes/geo',
     'features/routes/map/basemap-thumbnails/osm.webp': 'features/routes/map',

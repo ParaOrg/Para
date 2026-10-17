@@ -34,7 +34,7 @@ const subfolders = (dir) =>
     : [];
 
 /**
- * The features that are split into concern folders (routes: model, geo, map, cards),
+ * The features that are split into concern folders (routes: model, geo, map, cards, published),
  * as a Map of feature name → its concern folders. A feature whose subfolders are all
  * kind folders (api, schemas, ...) is one unit and is not in the Map.
  */
