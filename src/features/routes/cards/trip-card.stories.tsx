@@ -352,3 +352,48 @@ export const LongContent: Story = {
 
 /** A wide map: the trip in the top-left corner, 384 wide, as the list was. */
 export const Wide: Story = { parameters: { phone: false } };
+
+const ikotBase = direction('ikot', 'UP', 'UP', { metres: 5_200 });
+const ikot: Direction = {
+  ...ikotBase,
+  id: 'ikot-out',
+  name: 'UP – Ikot',
+  route: ikotBase.route && {
+    ...ikotBase.route,
+    signboard: 'UP – Ikot',
+    headHotspotId: null,
+    tailHotspotId: null,
+    name: 'UP – Ikot',
+    isLoop: true,
+  },
+};
+const ikotTimeline: Timeline = {
+  from: row('Oblation'),
+  to: row('Oblation'),
+  between: ['Palma Hall', 'Quezon Hall', 'Sunken Garden', 'Engineering'].map((l) => row(l)),
+};
+
+/**
+ * A loop's trip (UP – Ikot): "Ikot" where Papunta stands, the tip at the top
+ * and again at the bottom, the tiles the whole loop's, and no SWITCH.
+ */
+export const Loop: Story = {
+  args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'orange' },
+  play: async ({ canvasElement }) => {
+    const card = within(canvasElement);
+    await expect(card.queryByTestId('card-switch')).toBeNull();
+    await expect(card.getByText('Ikot')).toBeVisible();
+  },
+};
+
+/** A hintuan picked on the loop: the ride from the tip forward to it. */
+export const LoopPicked: Story = {
+  args: {
+    direction: ikot,
+    directions: [ikot],
+    timeline: ikotTimeline,
+    livery: 'orange',
+    picked: 'quezon-hall',
+    pickedMetres: 2_100,
+  },
+};

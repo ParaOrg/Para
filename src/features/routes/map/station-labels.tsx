@@ -10,7 +10,7 @@ import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { rowStops } from '../model/ride';
 import { rowsOutsideRide, rowsOutsideStartAlone } from '../model/ride-rows';
-import type { Direction } from '../model/routes';
+import { isLoop, type Direction } from '../model/routes';
 import type { TimelineRow } from '../model/timeline';
 
 import './hintuan-pin.css';
@@ -127,10 +127,10 @@ export function StationLabels({
   // start and no ride, every row but the start's, the whole line pale
   // (useLitRides).
   const outside = useMemo(() => {
-    if (hasRide) return rowsOutsideRide(rows, startId, pickedId, endPicked);
+    if (hasRide) return rowsOutsideRide(rows, startId, pickedId, endPicked, isLoop(selected));
     if (startId !== null) return rowsOutsideStartAlone(rows, startId);
     return null;
-  }, [hasRide, rows, startId, pickedId, endPicked]);
+  }, [hasRide, rows, startId, pickedId, endPicked, selected]);
   return (
     <>
       {stops.map((s) =>

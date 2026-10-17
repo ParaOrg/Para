@@ -4,7 +4,7 @@ import { useEffect, type RefObject } from 'react';
 import { ROUTES_HIT_LAYER, bindHover, resolveTap, tapTargets } from './tap';
 import type { Highlight } from './use-saved-routes';
 import { directionToOpen } from '../model/departures';
-import type { Direction } from '../model/routes';
+import { isLoop, type Direction } from '../model/routes';
 
 /*
  * A tap on the saved directions: what it opens, lists or lets go.
@@ -80,9 +80,14 @@ export function useRouteTaps<T extends Direction>(
         // outbound line was hit, the way back where only ways back were — so
         // a tap on the light-blue way back switches to it — and, where a line
         // shown was hit, the way round already shown.
-        const hit = out.routeIds.map((id) => byId.current.get(id)).filter((v) => !!v);
-        const shownHit = hit.find((v) => shown.current.includes(v.id));
-        setBack(shownHit ? shownHit.reversed : hit.length > 0 && hit.every((v) => v.reversed));
+        // A loop has no way back to be under the finger: only the two-ended routes decide it.
+        const hit = out.routeIds
+          .map((id) => byId.current.get(id))
+          .filter((v): v is T => !!v && !isLoop(v));
+        if (hit.length > 0) {
+          const shownHit = hit.find((v) => shown.current.includes(v.id));
+          setBack(shownHit ? shownHit.reversed : hit.every((v) => v.reversed));
+        }
       } else {
         setSelectedId(null);
         setCandidates([]);

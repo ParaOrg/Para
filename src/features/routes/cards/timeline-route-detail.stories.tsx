@@ -458,3 +458,46 @@ export const RideStartAndEndFoldsOpened: Story = {
     await expect(railAt(canvasElement, '[data-testid="trip-destination"]')).toBe('above');
   },
 };
+
+// A loop (UP – Ikot): it leaves from its tip and comes back to it, so the top
+// and the bottom row are one place, and a ride only goes forward round it.
+const loopRows = hintuans(
+  'Palma Hall',
+  'Quezon Hall',
+  'Sunken Garden',
+  'Engineering',
+  'Math Building',
+);
+const onLoop = {
+  livery: 'orange',
+  routeOrigin: 'Oblation',
+  routeDirection: 'Oblation',
+  hintuans: loopRows,
+  isLoop: true,
+} as const;
+
+/** A loop at rest: the tip is both ends, S on top and E at the bottom, the rail end to end. */
+export const LoopRest: Story = { args: onLoop };
+
+/** A loop with a hintuan tapped: the ride goes from the tip forward to it. */
+export const LoopPicked: Story = { args: { ...onLoop, picked: 'h2' } };
+
+/**
+ * A loop's ride that wraps: started at Engineering, ended at Quezon Hall above
+ * it. The rail runs lit to the end, breaks, the rows between fold into one
+ * fold, breaks again, and runs lit from the start down to the bottom.
+ */
+export const LoopWrapRide: Story = {
+  args: { ...onLoop, start: 'h3', picked: 'h1' },
+};
+
+/** The same wrap with the rows between it open. */
+export const LoopWrapRideOpened: Story = {
+  args: { ...onLoop, start: 'h4', picked: 'h0' },
+  play: openFold,
+};
+
+/** An end row picked with a start: on a loop either end is the tip, so the ride goes on round to it. */
+export const LoopEndPickedWithStart: Story = {
+  args: { ...onLoop, start: 'h2', endPicked: 'to' },
+};

@@ -87,3 +87,13 @@ export const Phone: Story = {
   parameters: { phone: true },
   render: () => <RouteCardHeader {...common} onBackToList={fn()} />,
 };
+
+/** Over a loop's trip (UP – Ikot): ‹ and ✕, and no SWITCH, for a loop has no way back. */
+export const OverALoop: Story = {
+  render: () => <RouteCardHeader {...common} way={null} onBackToList={fn()} />,
+};
+
+/** Over a list of loops alone: the count and ✕, no SWITCH. */
+export const OverLoopsAlone: Story = {
+  render: () => <RouteCardHeader {...common} way={null} routeCount="1 Route" />,
+};

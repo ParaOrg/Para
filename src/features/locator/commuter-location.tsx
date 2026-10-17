@@ -1,6 +1,8 @@
 import type { MapLibreMap } from 'maplibre-gl';
+import { useEffect, useRef } from 'react';
 
 import { coarse } from '@/features/routes/map/map-view';
+import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 
@@ -9,6 +11,7 @@ import { Locator } from './locator';
 import { LocatorOnMap } from './locator-on-map';
 import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
+import { shouldTell } from './where-told';
 
 interface Props {
   map: MapLibreMap | null;
@@ -23,6 +26,15 @@ interface Props {
   /** What was just picked, for the dot to gaze at; and when ‹ or ✕ last went back (useGazeHush). */
   picks: Picks;
   hushedAt: { readonly current: number };
+  /**
+   * Where the commuter is, said at the first fix and then only when it
+   * matters (shouldTell), so the page that listens renders for a walk across
+   * town and not for every fix; null when the fix is lost, so the page does
+   * not keep choosing from a position the commuter has taken back. It never
+   * leaves this phone (ADR 0004): the page keeps it in memory to choose a
+   * loop's tip.
+   */
+  onWhere?: (where: CommuterWhere | null) => void;
 }
 
 /**
@@ -44,11 +56,30 @@ export function CommuterLocation({
   cameraTurn,
   picks,
   hushedAt,
+  onWhere,
 }: Props) {
   const locator = useLocator(map, { compass: coarse, snap, offset, cameraTurn });
   // How the dot feels: glad as the location comes, a boing at a tap on the
   // button or on the dot, now and then a huff (locatorMood).
   const { mood, face, beat, poke } = useLocatorMood(locator);
+  // Told to the page by shouldTell; a fix lost says null, and found again says it afresh.
+  const told = useRef<CommuterWhere | null>(null);
+  const latestOnWhere = useRef(onWhere);
+  useEffect(() => {
+    latestOnWhere.current = onWhere;
+  });
+  const fix = locator.fix;
+  useEffect(() => {
+    if (!fix) {
+      if (told.current) latestOnWhere.current?.(null);
+      told.current = null;
+      return;
+    }
+    const where = { at: fix.at, accuracyM: fix.accuracy };
+    if (!shouldTell(told.current, where)) return;
+    told.current = where;
+    latestOnWhere.current?.(where);
+  }, [fix]);
   // …and its gaze: at what was just picked, for three seconds (dot-gaze.ts);
   // ‹ and ✕ are hushed, so going back picks nothing.
   const gazeAt = gazeSubjects(picks, locator.fix?.at ?? null);
