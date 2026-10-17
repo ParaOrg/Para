@@ -16,7 +16,7 @@ const LETTER = { terminal: <TerminalIcon />, hintuan: <HintuanIcon /> } satisfie
 >;
 
 interface HintuanCardBoxProps {
-  box: Hotspot;
+  box: Pick<Hotspot, 'id' | 'kind'>;
   /** The box as it is written on the ground, numbered where two share a name (placeBoxes). */
   name: string;
   isSelected: boolean;

@@ -7,7 +7,7 @@ interface HintuanCardCounterProps {
   /** The word on SWITCH (switchWord). */
   word: string;
   /** Whether the other way round is showing, for the suites (`data-back`). */
-  back: boolean;
+  isBack: boolean;
   /** False when there is no box passed the other way; SWITCH then rests disabled. */
   canSwitch: boolean;
   onFlip: () => void;
@@ -19,7 +19,7 @@ interface HintuanCardCounterProps {
 export function HintuanCardCounter({
   count,
   word,
-  back,
+  isBack,
   canSwitch,
   onFlip,
 }: HintuanCardCounterProps) {
@@ -42,7 +42,7 @@ export function HintuanCardCounter({
           size="small"
           label={word}
           data-testid="card-flip"
-          data-back={back}
+          data-back={isBack}
           disabled={!canSwitch}
           onClick={onFlip}
         />

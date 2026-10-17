@@ -10,7 +10,7 @@ const meta = {
   args: {
     count: '2 routes pass here',
     word: 'Pabalik',
-    back: false,
+    isBack: false,
     canSwitch: true,
     onFlip: fn(),
   },
@@ -36,4 +36,4 @@ export const OneRoute: Story = { args: { count: '1 route passes here' } };
 export const NothingTheOtherWay: Story = { args: { canSwitch: false } };
 
 /** The way back showing. */
-export const TheWayBack: Story = { args: { back: true, word: 'Papunta' } };
+export const TheWayBack: Story = { args: { isBack: true, word: 'Papunta' } };

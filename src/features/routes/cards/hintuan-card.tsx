@@ -196,7 +196,7 @@ export function HintuanCard({
           <HintuanCardCounter
             count={count}
             word={switchWord(back, showing)}
-            back={back}
+            isBack={back}
             canSwitch={!!switchTo}
             onFlip={() => {
               if (!switchTo) return;
