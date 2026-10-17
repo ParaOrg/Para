@@ -1,24 +1,13 @@
-import { useId, useState, type ReactNode, type Ref } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
-import { ReloadIcon } from '@/shared/ui/route-icons';
-import { kmLabel } from '@/shared/utils/geo';
 
 import { RouteCardHeader } from './route-card-header';
-import { RouteEndPointBar } from './route-end-point-bar';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
-import type { Vehicle } from '../model/vehicles';
-
-/** A ride's pesos both ways: `₱26` regular, and its discounted price — students, seniors, PWDs. */
-export interface Fares {
-  regular: string;
-  discounted: string;
-}
-/**
- * A ride nobody pays for, the ferry's: the tile says Free, with no Regular or Discounted to turn.
- */
-export const FREE = 'free';
-export type Fare = Fares | typeof FREE;
+import { FREE, type Fare } from './trip-fare';
+import { TripOtherRoutes, type OtherRoute } from './trip-other-routes';
+import { TripSignboards } from './trip-signboards';
+import { TripTiles } from './trip-tiles';
 
 type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** Figma's Distance tile: the whole ride's length, in metres; written `12.8km`. */
@@ -55,7 +44,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
    * Figma's "Other routes" under the tiles: the other routes out of where
    * this trip starts, each by where it goes. Empty or omitted, none is shown.
    */
-  otherRoutes?: readonly { id: string; to: string; vehicle: Vehicle | null }[];
+  otherRoutes?: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
   /**
@@ -136,7 +125,6 @@ export function TimelineRouteDetailCard({
   // Each tap turns ↻ round once more: counted, so the next tap turns it again rather than back. It
   // turns over `turn`, gentle at 6/10 as fast.
   const [turns, setTurns] = useState(0);
-  const othersHeading = useId();
   // An end picked: the tiles read the ride between it and the start, a hintuan's row or, with a
   // start, an end's. A start alone is no ride yet, the whole trip's shown.
   const hasRide = picked !== null || (start !== null && endPicked !== null);
@@ -184,87 +172,17 @@ export function TimelineRouteDetailCard({
           header={header}
         />
       </div>
-      {/*
-        Between the card and the tiles, the direction's signboards (Figma strip
-        4051:5528): a white strip, 12 in from the sides and 16 above, each board 40 tall at its
-        own width, 8 apart, wrapping on a narrow phone (3919:11447). No
-        heading: the boards say what they are. Pictures, so nothing in a
-        file can run. None uploaded, no strip: the tiles sit right under the
-        card. At a sheet's Low the card's top is all that shows (sheetGesture's
-        LOW_PX), so the strip needs no hiding of its own.
-      */}
-      {signboards.length > 0 && (
-        <ul
-          data-testid="trip-signboards"
-          aria-label="Signboards"
-          className="flex w-full flex-wrap gap-2 bg-surface px-3 pt-4"
-        >
-          {signboards.map((src, i) => (
-            <li key={src}>
-              <img
-                data-testid="trip-signboard"
-                src={src}
-                alt={
-                  signboards.length > 1 ? `Signboard ${i + 1} of ${signboards.length}` : 'Signboard'
-                }
-                className="block h-10 w-auto max-w-full"
-                decoding="async"
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      {/* 16 under the card, or under the signboards' strip (Figma 3778:3186).
-          The tiles 8 apart (3778:3183, its row 3886:6278). */}
-      <div
-        data-testid="trip-tiles"
-        className="flex w-full gap-2 bg-surface px-3 py-4 text-center font-sn-pro"
-      >
-        <div className={TILE}>
-          <span data-testid="trip-km" className={FIGURE}>
-            {kmLabel(shownMetres)}
-          </span>
-          <span className={NAME}>Distance</span>
-        </div>
-        {shown === FREE ? (
-          <div className={TILE}>
-            <span data-testid="trip-fare" className={FIGURE}>
-              Free
-            </span>
-            <span className={NAME}>Fare</span>
-          </div>
-        ) : (
-          shown && (
-            <button
-              type="button"
-              data-testid="trip-fare-turn"
-              aria-label={`${discounted ? 'Discounted' : 'Regular'} fare ${discounted ? shown.discounted : shown.regular}. Show the ${discounted ? 'regular' : 'discounted'} fare`}
-              onClick={() => {
-                setDiscounted(!discounted);
-                setTurns((t) => t + 1);
-              }}
-              className={
-                TILE +
-                ' transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-quaternary'
-              }
-            >
-              <span data-testid="trip-fare" className={FIGURE}>
-                {discounted ? shown.discounted : shown.regular}
-              </span>
-              <span className={NAME + ' flex items-center gap-1.5'}>
-                <span
-                  aria-hidden
-                  style={{ rotate: `${turns * 360}deg` }}
-                  className="size-4 shrink-0 text-content-quaternary transition-[rotate] duration-turn ease-move *:size-full motion-reduce:transition-none"
-                >
-                  <ReloadIcon />
-                </span>
-                {discounted ? 'Discounted fare' : 'Regular fare'}
-              </span>
-            </button>
-          )
-        )}
-      </div>
+      {signboards.length > 0 && <TripSignboards signboards={signboards} />}
+      <TripTiles
+        shown={shown}
+        shownMetres={shownMetres}
+        discounted={discounted}
+        turns={turns}
+        onTurn={() => {
+          setDiscounted(!discounted);
+          setTurns((t) => t + 1);
+        }}
+      />
       {note && (
         <p
           data-testid="trip-note"
@@ -273,42 +191,8 @@ export function TimelineRouteDetailCard({
           {note}
         </p>
       )}
-      {otherRoutes.length > 0 && (
-        <section
-          data-testid="trip-other-routes"
-          aria-labelledby={othersHeading}
-          className="flex w-full flex-col gap-2 px-3 pt-2 pb-4 font-sn-pro"
-        >
-          <h3 id={othersHeading} className="text-sm/5 font-medium text-content-tertiary">
-            Other routes
-          </h3>
-          <ul>
-            {otherRoutes.map((r) => (
-              <li key={r.id}>
-                <RouteEndPointBar
-                  routeDirection={r.to}
-                  on="surface"
-                  vehicle={r.vehicle}
-                  data-testid="trip-other-route"
-                  data-direction={r.id}
-                  onClick={() => onOtherRoute?.(r.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {otherRoutes.length > 0 && <TripOtherRoutes routes={otherRoutes} onRoute={onOtherRoute} />}
       {children}
     </BottomSheet>
   );
 }
-
-/**
- * One of the two tiles under the card, in Figma's row of them (3771:3055): its figure over its name
- * (the figure on top, 3778:3183), on Background/surface-secondary. Figma writes the figure in a raw
- * black; Content/primary is the token nearest it.
- */
-const TILE =
-  'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-2xl bg-surface-secondary p-4';
-const FIGURE = 'block text-2xl/8 font-bold text-content-primary';
-const NAME = 'block text-sm/5 font-normal text-content-tertiary';
