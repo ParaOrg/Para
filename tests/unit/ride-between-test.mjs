@@ -1,5 +1,5 @@
-// A ride between two picks (src/features/routes/model/ride.ts: rideSpan,
-// rowsOutsideRide): the owner's TimelineRouteDetail of 2026-10-15 (Figma
+// A ride between two picks (src/features/routes/model/ride.ts: rideSpan;
+// ride-rows.ts: rowsOutsideRide): the owner's TimelineRouteDetail of 2026-10-15 (Figma
 // 4137:9886). A start and an end picked on a trip price and draw the ride
 // between them; an end picked before the start stays the end, and the ride
 // runs back along the trip's own line (the owner, 2026-10-16: "reverse the
