@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   keptFixes,
-  pathLengthM,
   summarize,
   type Fix,
   type GapReason,
@@ -19,7 +18,7 @@ import {
   putFix,
   putRecording,
 } from './recording-store';
-import { LEG_LABEL, legAfter, shouldAutoStop, type LegName } from './ride-rules';
+import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './ride-rules';
 import { useGeolocationWatch } from './use-geolocation-watch';
 import { useHiddenGaps } from './use-hidden-gaps';
 import { useWakeLock } from './use-wake-lock';
@@ -46,8 +45,8 @@ export interface RecordingState {
   /** Every fix the phone reported for it, in order. */
   fixes: readonly Fix[];
   summary: RideSummary | null;
-  /** The leg the ride is on now. */
-  leg: LegName;
+  /** The way the ride is on now: outbound is papunta, return is pabalik. */
+  way: Way;
   /** The recording just saved, until the contributor records again. */
   lastSaved: Recording | null;
   /** Whether the screen is being kept awake. */
@@ -189,21 +188,21 @@ export function useRecording(): RecordingState {
       setLocationError(null);
       if (isBackAtStart()) {
         setAnnouncement('Back at the start. The recording stopped.');
-        finish(position.timestamp, 'form');
+        finish(position.timestamp, 'form', { autoStopped: true });
       }
     },
     onError: (error) => setLocationError(locationProblem(error)),
   });
 
-  /** Whether the ride has gone out, turned back and come home (ride-rules.ts). */
+  /**
+   * Whether the ride has gone out, turned back and come home. The rule is pure
+   * and stays true once it has fired, so a recording that stopped itself is
+   * marked and never asked again: a Resume must not stop it a second time.
+   */
   function isBackAtStart(): boolean {
-    const kept = keptFixes(fixesRef.current);
-    return shouldAutoStop({
-      rideDistanceM: pathLengthM(kept),
-      start: kept[0]?.at ?? null,
-      here: kept.at(-1)?.at ?? null,
-      switchCount: currentRef.current?.switches?.length ?? 0,
-    });
+    const recording = currentRef.current;
+    if (!recording || recording.autoStopped) return false;
+    return shouldAutoStop(keptFixes(fixesRef.current), recording.switches ?? []);
   }
 
   // The clock the live totals and the open silence run on.
@@ -241,12 +240,13 @@ export function useRecording(): RecordingState {
     setPhase('recording');
   }
 
-  function finish(at: number, next: 'paused' | 'form') {
+  function finish(at: number, next: 'paused' | 'form', extra?: Pick<Recording, 'autoStopped'>) {
     const recording = currentRef.current;
     if (!recording) return;
     const failed = failedFixWrites.current;
     keep({
       ...recording,
+      ...extra,
       status: 'stopped',
       stoppedAt: at,
       ...(failed > 0 && { failedFixWrites: failed }),
@@ -289,15 +289,11 @@ export function useRecording(): RecordingState {
 
   function switchLeg() {
     const recording = currentRef.current;
-    const here = fixesRef.current[fixesRef.current.length - 1];
-    // A switch is a place on the ride: with no fix yet there is none to mark.
-    if (!recording || !here) return;
-    const switches = [
-      ...(recording.switches ?? []),
-      { time: Date.now(), lng: here.at[0], lat: here.at[1] },
-    ];
-    keep({ ...recording, switches });
-    setAnnouncement(`Switched to ${LEG_LABEL[legAfter(switches.length)]}`);
+    if (!recording) return;
+    const switches = recording.switches ?? [];
+    const to = OTHER_WAY[currentWay(switches)];
+    keep({ ...recording, switches: [...switches, { time: Date.now(), to }] });
+    setAnnouncement(`Switched to ${WAY_LABEL[to]}`);
   }
 
   function save(details: RecordingDetails | null) {
@@ -356,7 +352,7 @@ export function useRecording(): RecordingState {
     current,
     fixes,
     summary,
-    leg: legAfter(current?.switches?.length ?? 0),
+    way: currentWay(current?.switches ?? []),
     lastSaved,
     isAwake,
     problem,

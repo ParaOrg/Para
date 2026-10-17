@@ -13,8 +13,8 @@ export interface RecordingFile {
   endPointName: string;
   description: string;
   rideKind: string | null;
-  /** Each tap on the leg button; the first is where pabalik begins. */
-  switches: { time: string; lng: number; lat: number }[];
+  /** Each tap on the leg button and the way (outbound is papunta, return is pabalik) the ride was on from then. */
+  switches: { time: string; to: 'outbound' | 'return' }[];
   /** Fixes the phone reported but could not keep, so the file is missing that many. */
   failedFixWrites: number;
   summary: {
@@ -51,11 +51,7 @@ export function recordingFile(
     endPointName: recording.endPointName,
     description: recording.description,
     rideKind: recording.rideKind,
-    switches: (recording.switches ?? []).map((s) => ({
-      time: iso(s.time),
-      lng: s.lng,
-      lat: s.lat,
-    })),
+    switches: (recording.switches ?? []).map((s) => ({ time: iso(s.time), to: s.to })),
     failedFixWrites: recording.failedFixWrites ?? 0,
     summary: {
       distanceM: Math.round(summary.distanceM),

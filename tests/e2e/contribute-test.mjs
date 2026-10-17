@@ -386,6 +386,35 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// -------------------------------- a Resume after an auto-stop stops no second time
+{
+  const { page, errors } = await phone({ consented: true });
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Ride so far' }).waitFor();
+  for (let m = 0; m <= 1200; m += 100) await emit(page, m);
+  await page.getByRole('button', { name: 'Switch to Pabalik' }).click();
+  for (let m = 1100; m >= 200; m -= 100) await emit(page, m);
+  await page.getByRole('heading', { name: 'About this ride' }).waitFor({ timeout: 10000 });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 20000 });
+  check(
+    'a recording that stopped itself and was reloaded is stopped, with Resume',
+    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 0,
+  );
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  await emit(page, 100);
+  await emit(page, 50);
+  await page.waitForTimeout(500);
+  check(
+    'Resume near the start does not stop it again',
+    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 1 &&
+      (await page.getByRole('heading', { name: 'About this ride' }).count()) === 0,
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------- two minutes alone on the form
 {
   const { page, errors } = await phone({ consented: true });

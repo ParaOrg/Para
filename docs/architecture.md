@@ -69,7 +69,6 @@ flowchart TD
   features_contribute --> features_routes_map
   features_contribute --> features_routes_model
   features_contribute --> shared_ui
-  features_contribute --> shared_utils
   features_locator --> features_routes_map
   features_locator --> features_routes_model
   features_locator --> shared_hooks
@@ -131,7 +130,7 @@ flowchart TD
 | `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
-| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/ui`, `shared/utils` |
+| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/ui` |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/model`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |

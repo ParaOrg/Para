@@ -1,19 +1,19 @@
 import type { RideSummary } from '@/features/routes/model/ride-recording';
 
-import type { LegName } from './ride-rules';
+import type { Way } from './ride-rules';
 import { StatsStrip } from './stats-strip';
 import { TrackingButton } from './tracking-button';
 import { useFocusHeading } from './use-focus-heading';
 
 interface UnfinishedScreenProps {
   summary: RideSummary;
-  leg: LegName;
+  way: Way;
   onResume: () => void;
   onStop: () => void;
 }
 
 /** A recording was left open when the page closed: carry on with it, or stop it where it was. */
-export function UnfinishedScreen({ summary, leg, onResume, onStop }: UnfinishedScreenProps) {
+export function UnfinishedScreen({ summary, way, onResume, onStop }: UnfinishedScreenProps) {
   const headingRef = useFocusHeading();
   return (
     <section
@@ -36,7 +36,7 @@ export function UnfinishedScreen({ summary, leg, onResume, onStop }: UnfinishedS
       <StatsStrip
         elapsedSeconds={summary.movingSeconds + summary.standingSeconds + summary.lostSeconds}
         distanceM={summary.distanceM}
-        leg={leg}
+        way={way}
         isPaused
       />
       <TrackingButton variant="resume" onClick={onResume} />

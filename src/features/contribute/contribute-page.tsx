@@ -42,7 +42,7 @@ export function ContributePage() {
       {phase === 'unfinished' && summary && (
         <UnfinishedScreen
           summary={summary}
-          leg={recording.leg}
+          way={recording.way}
           onResume={recording.resume}
           onStop={recording.stopAtLastFix}
         />
@@ -50,7 +50,7 @@ export function ContributePage() {
       {(phase === 'recording' || phase === 'paused') && summary && (
         <RecordingScreen
           summary={summary}
-          leg={recording.leg}
+          way={recording.way}
           isPaused={phase === 'paused'}
           isAwake={recording.isAwake}
           onStop={recording.stop}

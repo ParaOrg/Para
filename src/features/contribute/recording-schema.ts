@@ -22,11 +22,10 @@ export const gapSchema = z.object({
   reasons: z.array(z.enum(GAP_REASONS)),
 });
 
-/** A tap on the leg button: when it was, and where the ride was. */
+/** A tap on the leg button: when it was, and the way the ride was on from then. */
 export const switchSchema = z.object({
   time: z.number(),
-  lng: z.number(),
-  lat: z.number(),
+  to: z.enum(['outbound', 'return']),
 });
 
 export type SwitchRow = z.infer<typeof switchSchema>;
@@ -44,6 +43,8 @@ export const recordingSchema = z.object({
   gaps: z.array(gapSchema),
   /** Each tap on the leg button, in order: the first is the start of pabalik. Absent on a recording from before legs. */
   switches: z.optional(z.array(switchSchema)),
+  /** Set when the ride stopped itself on coming back to its start, so a Resume does not stop it again. */
+  autoStopped: z.optional(z.boolean()),
   /** Fixes the phone reported but could not write to IndexedDB; absent when none failed. */
   failedFixWrites: z.optional(z.number()),
   startPointName: z.string(),

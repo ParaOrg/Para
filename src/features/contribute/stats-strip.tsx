@@ -1,11 +1,11 @@
 import { kilometresText, minutesText } from './format';
-import { LEG_LABEL, type LegName } from './ride-rules';
+import { WAY_LABEL, type Way } from './ride-rules';
 
 interface StatsStripProps {
   /** Time recorded so far, pauses left out. */
   elapsedSeconds: number;
   distanceM: number;
-  leg: LegName;
+  way: Way;
   /** Stopped for now: the third column says so. */
   isPaused: boolean;
 }
@@ -34,7 +34,7 @@ function Stat({ label, value, unit, className = '' }: StatProps) {
  * They change every second, so nothing here is a live region; the leg switch
  * is announced once on its own (RecordingScreen).
  */
-export function StatsStrip({ elapsedSeconds, distanceM, leg, isPaused }: StatsStripProps) {
+export function StatsStrip({ elapsedSeconds, distanceM, way, isPaused }: StatsStripProps) {
   return (
     <div
       role="group"
@@ -47,7 +47,7 @@ export function StatsStrip({ elapsedSeconds, distanceM, leg, isPaused }: StatsSt
         <Stat
           className="shrink-0 text-right"
           label={isPaused ? 'Stopped' : 'Recording'}
-          value={LEG_LABEL[leg]}
+          value={WAY_LABEL[way]}
         />
       </dl>
     </div>

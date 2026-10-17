@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import type { RideSummary } from '@/features/routes/model/ride-recording';
 
 import { ConfirmDelete } from './confirm-delete';
-import type { LegName } from './ride-rules';
+import { OTHER_WAY, type Way } from './ride-rules';
 import { StatsStrip } from './stats-strip';
 import { TrackingButton } from './tracking-button';
 import { useFocusHeading } from './use-focus-heading';
 
 interface RecordingScreenProps {
   summary: RideSummary;
-  leg: LegName;
+  way: Way;
   /** Stopped for now: Resume replaces Stop. */
   isPaused: boolean;
   /** Whether the screen is being kept awake. */
@@ -22,12 +22,16 @@ interface RecordingScreenProps {
   onCancel: () => void;
 }
 
-const OTHER_LEG = { papunta: 'pabalik', pabalik: 'papunta' } satisfies Record<LegName, LegName>;
+/** The leg button's variant: named for the way a tap switches TO. */
+const NEXT_LEG = { outbound: 'papunta', return: 'pabalik' } satisfies Record<
+  Way,
+  'papunta' | 'pabalik'
+>;
 
 /** While recording, or stopped for a while: the figures over Stop (or Resume), and the row of Pabalik, Save and Cancel. */
 export function RecordingScreen({
   summary,
-  leg,
+  way,
   isPaused,
   isAwake,
   onStop,
@@ -67,7 +71,7 @@ export function RecordingScreen({
       <StatsStrip
         elapsedSeconds={elapsedSeconds}
         distanceM={summary.distanceM}
-        leg={leg}
+        way={way}
         isPaused={isPaused}
       />
       {isPaused ? (
@@ -83,7 +87,7 @@ export function RecordingScreen({
         />
       ) : (
         <div ref={cancelRef} className="flex">
-          <TrackingButton variant={OTHER_LEG[leg]} onClick={onLegSwitch} />
+          <TrackingButton variant={NEXT_LEG[OTHER_WAY[way]]} onClick={onLegSwitch} />
           <TrackingButton variant="save" onClick={onSave} />
           <TrackingButton variant="cancel" onClick={() => setIsAsking(true)} />
         </div>
