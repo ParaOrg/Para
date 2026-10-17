@@ -1,5 +1,8 @@
 // Proves, from the production build, that the public page carries no editor.
 // Runs as the last step of `npm run build`, so a deploy that would leak fails.
+// The contributors' page (contribute/index.html) is held to the same: it loads
+// no editor, no Supabase, no MapLibre and not the shared chunk, it is not
+// installable, and the public page loads none of its code.
 //
 // 1. Modules. Walks Vite's manifest from each HTML entry through every chunk it
 //    imports, statically or dynamically, and reads which source files went

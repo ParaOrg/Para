@@ -109,11 +109,11 @@ export function useRecording(): RecordingState {
     [reportStore],
   );
 
-  const forgetCurrent = useCallback(() => {
+  function forgetCurrent() {
     currentRef.current = null;
     setCurrent(null);
     setFixes([]);
-  }, []);
+  }
 
   useEffect(() => {
     let isCancelled = false;
@@ -199,7 +199,7 @@ export function useRecording(): RecordingState {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [isRecording, keep]);
 
-  const start = useCallback(() => {
+  function start() {
     const startedAt = Date.now();
     nextSeq.current = 0;
     setFixes([]);
@@ -221,30 +221,24 @@ export function useRecording(): RecordingState {
       rideKind: null,
     });
     setPhase('recording');
-  }, [keep]);
+  }
 
-  const finish = useCallback(
-    (at: number) => {
-      const recording = currentRef.current;
-      if (!recording) return;
-      const failed = failedFixWrites.current;
-      keep({
-        ...recording,
-        status: 'stopped',
-        stoppedAt: at,
-        ...(failed > 0 && { failedFixWrites: failed }),
-      });
-      setPhase('stopped');
-    },
-    [keep],
-  );
-  const stop = useCallback(() => finish(Date.now()), [finish]);
-  const stopAtLastFix = useCallback(
-    () => finish(fixes[fixes.length - 1]?.time ?? Date.now()),
-    [finish, fixes],
-  );
+  function finish(at: number) {
+    const recording = currentRef.current;
+    if (!recording) return;
+    const failed = failedFixWrites.current;
+    keep({
+      ...recording,
+      status: 'stopped',
+      stoppedAt: at,
+      ...(failed > 0 && { failedFixWrites: failed }),
+    });
+    setPhase('stopped');
+  }
+  const stop = () => finish(Date.now());
+  const stopAtLastFix = () => finish(fixes[fixes.length - 1]?.time ?? Date.now());
 
-  const resume = useCallback(() => {
+  function resume() {
     const recording = currentRef.current;
     if (!recording) return;
     const resumedAt = Date.now();
@@ -268,59 +262,50 @@ export function useRecording(): RecordingState {
       gaps: [...recording.gaps, ...lost],
     });
     setPhase('recording');
-  }, [fixes, keep, phase]);
+  }
 
-  const save = useCallback(
-    (details: RecordingDetails) => {
-      const recording = currentRef.current;
-      if (!recording) return;
-      const kept: Recording = { ...recording, ...details, status: 'saved', savedAt: Date.now() };
-      putRecording(kept).catch(reportStore);
-      setSaved((previous) => [kept, ...previous]);
-      forgetCurrent();
-      setPhase('ready');
-    },
-    [forgetCurrent, reportStore],
-  );
+  function save(details: RecordingDetails) {
+    const recording = currentRef.current;
+    if (!recording) return;
+    const kept: Recording = { ...recording, ...details, status: 'saved', savedAt: Date.now() };
+    putRecording(kept).catch(reportStore);
+    setSaved((previous) => [kept, ...previous]);
+    forgetCurrent();
+    setPhase('ready');
+  }
 
-  const cancel = useCallback(() => {
+  function cancel() {
     const recording = currentRef.current;
     if (recording) deleteRecording(recording.id).catch(reportStore);
     forgetCurrent();
     setStorageProblem(null);
     setPhase('ready');
-  }, [forgetCurrent, reportStore]);
+  }
 
-  const download = useCallback(
-    (id: string) => {
-      const recording = saved.find((r) => r.id === id);
-      if (!recording) return;
-      loadFixes(id)
-        .then((rows) => {
-          const recorded = rows.map(toFix);
-          const end = recording.stoppedAt ?? recording.savedAt ?? recording.startedAt;
-          const summary = summarize(recorded, recording.gaps, recording.startedAt, end);
-          downloadRecording(recordingFile(recording, recorded, summary));
-        })
-        .catch(reportStore);
-    },
-    [reportStore, saved],
-  );
+  function download(id: string) {
+    const recording = saved.find((r) => r.id === id);
+    if (!recording) return;
+    loadFixes(id)
+      .then((rows) => {
+        const recorded = rows.map(toFix);
+        const end = recording.stoppedAt ?? recording.savedAt ?? recording.startedAt;
+        const summary = summarize(recorded, recording.gaps, recording.startedAt, end);
+        downloadRecording(recordingFile(recording, recorded, summary));
+      })
+      .catch(reportStore);
+  }
 
-  const remove = useCallback(
-    (id: string) => {
-      deleteRecording(id).catch(reportStore);
-      setSaved((previous) => previous.filter((r) => r.id !== id));
-    },
-    [reportStore],
-  );
+  function remove(id: string) {
+    deleteRecording(id).catch(reportStore);
+    setSaved((previous) => previous.filter((r) => r.id !== id));
+  }
 
-  const downloadCurrent = useCallback(() => {
+  function downloadCurrent() {
     if (!current) return;
     const end = current.stoppedAt ?? Date.now();
     const summary = summarize(fixes, current.gaps, current.startedAt, end);
     downloadRecording(recordingFile(current, fixes, summary));
-  }, [current, fixes]);
+  }
 
   const problem = storageProblem ?? locationError;
   const end = isRecording ? now : (current?.stoppedAt ?? now);

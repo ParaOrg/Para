@@ -15,8 +15,23 @@ function openDatabase(): Promise<IDBDatabase> {
       db.createObjectStore(RECORDINGS, { keyPath: 'id' });
       db.createObjectStore(FIXES, { keyPath: ['recordingId', 'seq'] });
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      // A browser may close the connection under a running page (low storage, a
+      // cleared site); the next write then opens a fresh one.
+      db.onclose = () => {
+        opened = null;
+      };
+      db.onversionchange = () => {
+        db.close();
+        opened = null;
+      };
+      resolve(db);
+    };
+    request.onerror = () => {
+      opened = null;
+      reject(request.error);
+    };
   });
   return opened;
 }

@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import { ReadyScreen } from './ready-screen';
 import { RecordingScreen } from './recording-screen';
 import { StoppedScreen } from './stopped-screen';
@@ -8,10 +10,20 @@ import { useRecording } from './use-recording';
 export function ContributePage() {
   const recording = useRecording();
   const { phase, summary } = recording;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const previousPhase = useRef(phase);
+
+  // A screen change moves focus to the title, so a screen reader starts the new screen from its top.
+  useEffect(() => {
+    if (previousPhase.current !== phase && phase !== 'loading') headingRef.current?.focus();
+    previousPhase.current = phase;
+  }, [phase]);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-4">
-      <h1 className="text-xl font-bold">Record a ride</h1>
+      <h1 ref={headingRef} tabIndex={-1} className="text-xl font-bold focus:outline-none">
+        Record a ride
+      </h1>
       {recording.problem && <p role="alert">{recording.problem}</p>}
       {phase === 'loading' && <p>Loading…</p>}
       {phase === 'ready' && (

@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef } from 'react';
+import type { ComponentProps } from 'react';
 
 /** A plain button for this page: a border, and an outline when focused. */
-export function PageButton({ className = '', ...rest }: ComponentPropsWithoutRef<'button'>) {
+export function PageButton({ className = '', ...rest }: ComponentProps<'button'>) {
   return (
     <button
       type="button"

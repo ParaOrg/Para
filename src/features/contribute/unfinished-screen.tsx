@@ -1,6 +1,6 @@
 import type { RideSummary } from '@/features/routes/model/ride-recording';
 
-import { PageButton } from './button';
+import { PageButton } from './page-button';
 import { RideTotals } from './ride-totals';
 
 interface UnfinishedScreenProps {

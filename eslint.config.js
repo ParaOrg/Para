@@ -119,8 +119,8 @@ export default defineConfig([
       // only, and only its own shell imports it. Each zone is an importer
       // (target) and what it may not import (from). CSS is not linted: the only CSS
       // @imports are src/styles/global.css's, of the design system's tokens
-      // and fonts, and a stylesheet imported from TypeScript is checked
-      // through that import.
+      // and fonts, and src/app/contribute/contribute.css's, of Tailwind alone;
+      // a stylesheet imported from TypeScript is checked through that import.
       'import-x/no-restricted-paths': [
         'error',
         {

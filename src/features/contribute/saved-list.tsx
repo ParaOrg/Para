@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { PageButton } from './button';
+import { ConfirmDelete } from './confirm-delete';
 import { dayText } from './format';
+import { PageButton } from './page-button';
 import type { Recording } from './recording-schema';
 
 interface SavedListProps {
@@ -13,6 +14,17 @@ interface SavedListProps {
 /** The recordings kept on the phone, each to download or delete (after one question). */
 export function SavedList({ recordings, onDownload, onRemove }: SavedListProps) {
   const [askingAbout, setAskingAbout] = useState<string | null>(null);
+  const deleteButtons = useRef(new Map<string, HTMLButtonElement>());
+  const askedAbout = useRef<string | null>(null);
+
+  // Back from the question on a Keep it, focus returns to that row's Delete.
+  useEffect(() => {
+    if (askingAbout === null && askedAbout.current !== null) {
+      deleteButtons.current.get(askedAbout.current)?.focus();
+    }
+    askedAbout.current = askingAbout;
+  }, [askingAbout]);
+
   if (recordings.length === 0) return <p>No saved recordings yet.</p>;
   return (
     <section aria-label="Saved recordings" className="flex flex-col gap-2">
@@ -31,22 +43,26 @@ export function SavedList({ recordings, onDownload, onRemove }: SavedListProps) 
               <p>The phone could not keep {recording.failedFixWrites} fixes of this ride.</p>
             ) : null}
             {askingAbout === recording.id ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <span>Delete this recording from the phone?</span>
-                <PageButton
-                  onClick={() => {
-                    onRemove(recording.id);
-                    setAskingAbout(null);
-                  }}
-                >
-                  Delete
-                </PageButton>
-                <PageButton onClick={() => setAskingAbout(null)}>Keep it</PageButton>
-              </div>
+              <ConfirmDelete
+                question="Delete this recording from the phone?"
+                onConfirm={() => {
+                  onRemove(recording.id);
+                  setAskingAbout(null);
+                }}
+                onKeep={() => setAskingAbout(null)}
+              />
             ) : (
               <div className="flex gap-2">
                 <PageButton onClick={() => onDownload(recording.id)}>Download</PageButton>
-                <PageButton onClick={() => setAskingAbout(recording.id)}>Delete</PageButton>
+                <PageButton
+                  ref={(button) => {
+                    if (button) deleteButtons.current.set(recording.id, button);
+                    else deleteButtons.current.delete(recording.id);
+                  }}
+                  onClick={() => setAskingAbout(recording.id)}
+                >
+                  Delete
+                </PageButton>
               </div>
             )}
           </li>

@@ -1,9 +1,10 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import type { Hinto, RideSummary } from '@/features/routes/model/ride-recording';
 
-import { PageButton } from './button';
+import { ConfirmDelete } from './confirm-delete';
 import { clockText, minutesText } from './format';
+import { PageButton } from './page-button';
 import { RIDE_KINDS, type RideKind } from './recording-schema';
 import { RideTotals } from './ride-totals';
 import type { RecordingDetails } from './use-recording';
@@ -22,7 +23,11 @@ const FIELD = 'rounded border-2 px-2 py-2 focus-visible:outline-2 focus-visible:
 
 const isRideKind = (value: string): value is RideKind => RIDE_KINDS.some((kind) => kind === value);
 
-function HintoList({ hintos }: { hintos: readonly Hinto[] }) {
+interface HintoListProps {
+  hintos: readonly Hinto[];
+}
+
+function HintoList({ hintos }: HintoListProps) {
   if (hintos.length === 0) return <p>No hintos.</p>;
   return (
     <ul className="flex flex-col gap-1">
@@ -52,6 +57,14 @@ export function StoppedScreen({
     rideKind: null,
   });
   const [isAsking, setIsAsking] = useState(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const wasAsking = useRef(false);
+
+  // Back from the question, focus returns to the button that asked it.
+  useEffect(() => {
+    if (wasAsking.current && !isAsking) cancelRef.current?.focus();
+    wasAsking.current = isAsking;
+  }, [isAsking]);
 
   return (
     <section aria-label="Stopped" className="flex flex-col gap-4">
@@ -127,16 +140,18 @@ export function StoppedScreen({
           </select>
         </label>
         {isAsking ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Delete this recording?</span>
-            <PageButton onClick={onCancel}>Delete</PageButton>
-            <PageButton onClick={() => setIsAsking(false)}>Keep it</PageButton>
-          </div>
+          <ConfirmDelete
+            question="Delete this recording?"
+            onConfirm={onCancel}
+            onKeep={() => setIsAsking(false)}
+          />
         ) : (
           <div className="flex flex-wrap gap-2">
             <PageButton type="submit">Save</PageButton>
             <PageButton onClick={onResume}>Resume</PageButton>
-            <PageButton onClick={() => setIsAsking(true)}>Cancel</PageButton>
+            <PageButton ref={cancelRef} onClick={() => setIsAsking(true)}>
+              Cancel
+            </PageButton>
           </div>
         )}
       </form>

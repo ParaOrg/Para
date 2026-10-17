@@ -1,4 +1,4 @@
-import { PageButton } from './button';
+import { PageButton } from './page-button';
 import type { Recording } from './recording-schema';
 import { SavedList } from './saved-list';
 
