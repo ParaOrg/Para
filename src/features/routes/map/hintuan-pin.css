@@ -1,12 +1,12 @@
 /*
  * The picked hintuan's circle (hintuan-pin.tsx) and the open trip's hintuans
- * along its line (station-labels.tsx; a train's stations alone until
- * 2026-10-12); both import this sheet, so only the maps that draw them load
- * it. The marker's own element is MapLibre's to move — it sets its
- * transform — so the pop is on the circle inside, TimelineDot's own span,
- * the first in the marker (HintuanLabel): from nothing to its size, over the
- * base duration with the arriving ease (tokens.css, Motion). Its label pops by its own sheet
- * (hintuan-label.css). `prefers-reduced-motion` has it simply there.
+ * along its line (station-labels.tsx); both import this sheet, so only the
+ * maps that draw them load it. The marker's own element is MapLibre's to move
+ * — it sets its transform — so the pop is on the circle inside, TimelineDot's
+ * own span, the first in the marker (HintuanLabel): from nothing to its size,
+ * over the base duration with the arriving ease (tokens.css, Motion). Its
+ * label pops by its own sheet (hintuan-label.css). `prefers-reduced-motion`
+ * has it simply there.
  */
 .hintuan-pin {
   pointer-events: none;

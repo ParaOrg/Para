@@ -29,34 +29,31 @@ import { noteTile } from './tiles-asked';
 
 /**
  * MapLibre 6 spawns its tile-parsing worker from a sibling file whose URL it
- * computes at runtime, so no bundler can see it: the production build shipped
- * no worker, the URL 404'd silently, tiles never parsed and the map never
- * fired 'load'. `?worker&url` makes Vite bundle the worker (and the shared
- * chunk it imports) and hand back its real URL. It still does in dev. In a
- * build, vite.config.ts's maplibreWorkerWithThePage answers this import with
- * a worker built with the page, which imports the page's own copy of
- * MapLibre's shared code rather than carrying one (the cheap-phone plan,
- * step 14, 2026-10-05).
+ * computes at runtime, so no bundler can see it. Without this, a production
+ * build ships no worker, so the worker never starts, tiles never parse and the
+ * map never fires 'load'. `?worker&url` makes Vite bundle the worker (and the shared
+ * chunk it imports) and hand back its real URL. In a build, vite.config.ts's
+ * maplibreWorkerWithThePage answers this import with a worker built with the
+ * page, which imports the page's own copy of MapLibre's shared code rather
+ * than carrying one.
  */
 setWorkerUrl(maplibreWorkerUrl);
 
 /**
- * The worker is started as this module is read, not when the map is made
- * (the cheap-phone plan, step 6, 2026-10-04). It parses every tile, so the
- * map's 'load' waits for its script: 133 kB on the wire when this was
- * written. Since step 14 (2026-10-05) a build's worker is 6 kB on the wire,
- * and the two chunks it imports, MapLibre's shared code and Vite's preload
- * helper, are the page's own, which the browser already holds: no request
- * for them reaches the server, but the worker still has to run them. Made by
- * the map, it was asked for only after React's first render and commit, the
- * effect, its timer and the style's lookup (a fetch of its own for "Gray,
- * detailed"). prewarm() starts the same one worker (up to three on Safari:
- * MapLibre's WorkerPool) from the address set just above, which it reads as
- * it starts, so it must come after setWorkerUrl; the map takes it when it is
- * made. It lives as long as the page, as it always did once a map had been
- * made: MapLibre's global dispatcher holds it. On the studio's sign-in, and
- * on an auth result passed on from / (app/public-map/main.tsx), it starts for
- * nothing.
+ * The worker is started as this module is read, not when the map is made.
+ * It parses every tile, so the map's 'load' waits for its script. A build's
+ * worker is 6 kB on the wire, and the two chunks it imports, MapLibre's shared
+ * code and Vite's preload helper, are the page's own, which the browser already
+ * holds: no request for them reaches the server, but the worker still has to
+ * run them. Left to the map, the worker would be asked for only after React's
+ * first render and commit, the effect, its timer, the style's lookup (a fetch of
+ * its own for Monochrome, the default, and Colour) and, on the public map, the
+ * wait for its framing (openOn, OPENING_WAIT_MS). prewarm() starts the same one worker
+ * (up to three on Safari: MapLibre's WorkerPool) from the address set just
+ * above, which it reads as it starts, so it must come after setWorkerUrl; the
+ * map takes it when it is made. It lives as long as the page: MapLibre's global
+ * dispatcher holds it. On the studio's sign-in, and on an auth result passed on
+ * from / (app/public-map/main.tsx), it starts for nothing.
  */
 prewarm();
 
@@ -67,18 +64,18 @@ prewarm();
  * Positron, not Liberty: a desaturated basemap, so the route lines and hotspot
  * polygons we paint on top carry all the colour on the screen. It serves the
  * same `/planet` tiles, sprite and fonts as Liberty from half the layers, so
- * the switch costs no cached tile and draws a little cheaper. A viewer can
- * pick another design from the control at the top right (shared/basemap.ts);
+ * it draws a little cheaper and shares Liberty's cached tiles. A commuter can
+ * pick another design from the control at the top right (basemap.ts);
  * this is the one the map starts with when nothing has been chosen.
  */
 export const STYLE_URL = DEFAULT_BASEMAP.url;
 
 /**
- * Passed as the event data of a camera move the app makes on the visitor's
+ * Passed as the event data of a camera move the app makes on the commuter's
  * behalf — to a hintuan picked, an end tapped, a trip's whole route as it
  * opens — so whatever is steering the camera can tell it from a gesture and
- * from its own moves. "Where am I" lets go on it: it once undid those moves with the next
- * fix (the review's 3c).
+ * from its own moves. "Where am I" lets go on it, so its next fix does not undo
+ * those moves.
  */
 export const APP_MOVE = { appMove: true } as const;
 
@@ -111,8 +108,7 @@ const ZOOM = 11;
 /**
  * How long to wait before assuming the style is never arriving: from the
  * map's making, and on the public map from its style's coming too, for its
- * tiles and our routes (framing.ts, loadClock; review of the owner's Q1,
- * 2026-10-05).
+ * tiles and our routes (framing.ts, loadClock).
  */
 const LOAD_TIMEOUT_MS = 12_000;
 
@@ -124,9 +120,9 @@ interface Props {
   onReady?: (map: MapLibreMap) => void;
   /**
    * MapLibre's +, − and compass, top right, for a mouse (never a finger:
-   * `coarse`). The studio keeps them; the public map has none since the
-   * owner's "annoying for users" of 2026-09-29 — the wheel, a double click
-   * and the keys zoom it. Read once, as the map is made.
+   * `coarse`). The studio keeps them; the public map has none (the owner's
+   * call: they were annoying for commuters), as the wheel, a double click and
+   * the keys zoom it. Read once, as the map is made.
    */
   zoomButtons?: boolean;
   /**
@@ -144,27 +140,24 @@ interface Props {
    */
   foldCredits?: boolean;
   /**
-   * The public map's (the owner's Q1, 2026-10-04): the routes' framing to
-   * open on, from the map file in by then, the copy kept from an earlier
-   * visit, or the file on its way (fetch-index.ts, openingDirections), null for
-   * none. It is asked for as the map is about to be made, waited for a
-   * second at most (OPENING_WAIT_MS), and the map is made framed on it — as
-   * the routes' own fit (useSavedRoutes) left it, padding 100, zoom 13 at
-   * most — so its first tiles are those of the view it keeps, not of a fixed
-   * centre at zoom 11 a fit then threw away. And `onReady` fires as soon as
-   * the style is in, so the routes are drawn while the basemap's tiles
-   * still come, and "Loading map…" goes with the first frame that draws
-   * them, or at the map's 'load' if that comes first (loadingLifts, the
-   * owner's answer to question A of the cheap-phone report, 2026-10-06).
-   * Without it (the studio), the map opens at the centre, `onReady` waits
-   * for 'load', and so does "Loading map…", as always. Read once, as the
-   * map is made.
+   * The public map's: the routes' framing to open on, from the map file in by
+   * then, the copy kept from an earlier visit, or the file on its way
+   * (fetch-index.ts, openingDirections), null for none. It is asked for as the
+   * map is about to be made, waited for a second at most (OPENING_WAIT_MS), and
+   * the map is made framed on it — as the routes' own fit (useSavedRoutes)
+   * leaves it, padding 100, zoom 13 at most — so its first tiles are those of
+   * the view it keeps, not of a fixed centre at zoom 11 that a fit would then
+   * throw away. And `onReady` fires as soon as the style is in, so the routes
+   * are drawn while the basemap's tiles still come, and "Loading map…" goes
+   * with the first frame that draws them, or at the map's 'load' if that comes
+   * first (loadingLifts). Without it (the studio), the map opens at the centre,
+   * and `onReady` and "Loading map…" wait for 'load'. Read once, as the map is
+   * made.
    */
   openOn?: () => Promise<Bounds | null>;
   /**
    * The designs the menu offers. The public map's are BASEMAPS; the studio
-   * adds its satellite ones (the owner, 2026-10-15). Read once, as the map is
-   * made.
+   * adds its satellite ones. Read once, as the map is made.
    */
   basemaps?: readonly Basemap[];
   /** Each design's picture on the Map Style card, by its id: BASEMAP_THUMBNAILS, and the studio's. */
@@ -201,8 +194,7 @@ export function MapView({
   // A blank map with no explanation is the worst possible failure mode, so
   // surface whatever went wrong rather than rendering nothing.
   const [error, setError] = useState<string | null>(null);
-  // The map's 'load', which "Loading map…" waited for until 2026-10-06: the
-  // 12 s clock below reads it, through its setter.
+  // The map's 'load': the 12 s clock below reads it, through its setter.
   const [, setLoaded] = useState(false);
   // "Loading map…" gone (loadingLifts): at 'load', or on the public map at
   // its first frame with the routes drawn if that comes first.
@@ -251,20 +243,19 @@ export function MapView({
           maxBounds,
           attributionControl: false,
           // No check of the whole style against the spec before it is used:
-          // 82-91 ms of main thread at 4x CPU on every load, before the first
-          // tile is asked for (profiled 2026-10-04, the cheap-phone plan,
-          // step 1). The basemaps are OpenFreeMap's own and ours is built in
-          // code, so it found nothing. A basemap switch skips it too: setStyle
-          // takes this as its default (MapLibre 6.7, map.ts). A style that
-          // fails still says so, by 'error' or the 12 s timeout below, each
-          // with `diagnose`.
+          // (profiled: 82-91 ms of main thread at 4x CPU on every load),
+          // before the first tile is asked for. The basemaps are
+          // OpenFreeMap's own and ours is built in code, so it found nothing.
+          // A basemap switch skips it too: setStyle takes this as its default
+          // (MapLibre 6.7, map.ts). A style that fails still says so, by
+          // 'error' or the 12 s timeout below, each with `diagnose`.
           validateStyle: false,
-          // Framed on the routes from its making, the public map's (the
-          // owner's Q1, 2026-10-04): MapLibre fits these bounds as the map is
-          // made, with no animation, on the same size and limits a fit made
-          // later would meet, so the camera is the one the routes' own fit
-          // put it at after 'load' (useSavedRoutes; visitor-test and
-          // phone-test hold it to cameraForBounds of the map file's routes).
+          // Framed on the routes from its making, on the public map: MapLibre
+          // fits these bounds as the map is made, with no animation, on the
+          // same size and limits a fit made later would meet, so the camera
+          // is the one the routes' own fit (useSavedRoutes) would put it at.
+          // commuter-test and phone-test hold it to cameraForBounds of the
+          // map file's routes.
           ...(framing ? { bounds: framing, fitBoundsOptions: ROUTES_FRAMING } : {}),
           // The public map notes the tiles it asks for, changing none, so the
           // service worker can keep a first visit's (tiles-asked.ts). The
@@ -282,31 +273,29 @@ export function MapView({
 
       // The map from its making, for the builds that hand it out (see 'load'
       // below): the cheap-phone timer stamps its 'load' and its first frame
-      // with the routes drawn from here, before any of its events can fire
-      // (the cheap-phone plan, Step 0, 2026-10-04). So do the suites, for
-      // the camera it was made at and the first lines it draws, before its
-      // 'load' on the public map (the owner's Q1, 2026-10-04).
+      // with the routes drawn from here, before any of its events can fire.
+      // So do the suites, for the camera it was made at and the first lines
+      // it draws, before its 'load' on the public map.
       if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1')
         (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
 
-      // The public map (the owner's Q1, 2026-10-04): what it opened framed
-      // on, and the visitor's gestures from now on, for the routes' own fit
-      // to leave a map they have moved alone (framing.ts). And the map is
-      // handed over as soon as its style is in, for the routes to go on it
-      // then, not after every basemap tile in view has come and been read
-      // ('load'): the first 'style.load' only, the one of this style, never
-      // a basemap switch's. Registered here, before anything can load.
+      // The public map: what it opened framed on, and the commuter's gestures
+      // from now on, for the routes' own fit to leave a map they have moved
+      // alone (framing.ts). And the map is handed over as soon as its style is
+      // in, for the routes to go on it then, not after every basemap tile in
+      // view has come and been read ('load'): the first 'style.load' only, the
+      // one of this style, never a basemap switch's. Registered here, before
+      // anything can load.
       if (openOn) {
         openedOn(map, framing);
         made.once('style.load', () => onReadyRef.current?.(made));
       }
 
       // "Loading map…" goes at the map's 'load'; on the public map at the
-      // first frame that draws its routes, if that comes first (the owner's
-      // answer to question A of the cheap-phone report, 2026-10-06): since
-      // Q1 they are drawn seconds before 'load', which waits for every
-      // basemap tile in view too. Only the text: the design button, the
-      // clock and the failure banner still go by 'load' (below).
+      // first frame that draws its routes, if that comes first: the routes
+      // are drawn seconds before 'load', which waits for every basemap tile
+      // in view too. Only the text: the design button, the clock and the
+      // failure banner still go by 'load' (below).
       stopLift = loadingLifts(map, openOn ? routesDrawn : null, () => setLifted(true));
 
       // Record how far MapLibre gets, so a silent failure at least says
@@ -355,12 +344,12 @@ export function MapView({
         // Dev builds expose the map so the headless suites (tests/e2e/) can read real
         // screen positions from the drawn geometry instead of guessing. So does
         // the production build scripts/research/phone-speed.mjs makes for itself
-        // with VITE_EXPOSE_MAP=1, to time a cheap phone on the code visitors get
-        // (2026-10-04); `npm run build` never sets it, and check-build.mjs fails
-        // a build that carries the map out. With it, the GL programs compiled
-        // so far by MapLibre's own key: painter.cache is MapLibre's inside, so
-        // it is read here and nowhere else, for the timer and the suites to
-        // see what a tap compiles (the cheap-phone plan, Step 0, 2026-10-04).
+        // with VITE_EXPOSE_MAP=1, to time a cheap phone on the code commuters get;
+        // `npm run build` never sets it, and check-build.mjs fails a build that
+        // carries the map out. With it, the GL programs compiled so far by
+        // MapLibre's own key: painter.cache is MapLibre's inside, so it is read
+        // here and nowhere else, for the timer and the suites to see what a tap
+        // compiles.
         if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
           const shown = made;
           const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };

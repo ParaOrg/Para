@@ -6,10 +6,9 @@ import { pointSchema, polygonSchema } from './geojson-schema';
  * A hotspot's rows as they enter the app: from the published index (the
  * reader parses with these) and from the studio's live reads. The file and
  * the database say `stop_id` and `created_at`; the app says hotspotId and
- * createdAt (CONTEXT.md; ticket 07 of the restructure follow-ups,
- * 2026-10-07). The raw schemas describe what comes in, the `to…` functions
- * translate, and the schemas the app parses with are the two piped. The
- * types the app uses derive from them; hotspots.ts re-exports them beside
+ * createdAt (CONTEXT.md). The raw schemas describe what comes in, the `to…`
+ * functions translate, and the schemas the app parses with are the two piped.
+ * The types the app uses derive from them; hotspots.ts re-exports them beside
  * the functions.
  */
 
@@ -38,11 +37,11 @@ export const toHotspot = (raw: RawHotspot) => ({
   /** The name: what is written on the ground, "SM Fairview Terminal B". */
   name: raw.name,
   /**
-   * The informal name: what people say, "SM Fairview". Optional; `hotspotLabel`
-   * falls back to the name. The route name reads this (R1), and
-   * boxes that share it are one place to a commuter, whatever is written on
-   * each — a terminal and two hintuans under one informal name. 0007; the
-   * owner's two words for the two names, 2026-09-26.
+   * The informal name: what people say, "SM Fairview". Optional;
+   * `hotspotLabel` falls back to the name. The route name reads this (R1),
+   * and boxes that share it are one place to a commuter, whatever is written
+   * on each — a terminal and two hintuans under one informal name. 0007; the
+   * owner's words for the two names.
    */
   informal: raw.informal,
   /** Other ways people say the same place, for a search or a suggestion list. */

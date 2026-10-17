@@ -12,7 +12,11 @@ import type { LngLat } from '@/shared/utils/geo';
 import { lineToFollow } from './borrow';
 import type { Drawing } from './use-drawing';
 import { withDrawing } from '../data/live';
-import type { SaveTarget } from '../panels/use-save-target';
+
+interface FollowTarget {
+  destinationHotspotId: string | null;
+  placeOfHotspot: (id: string | null) => string | null;
+}
 
 /**
  * Two ways a saved direction comes into the drawing: `opening` reads its
@@ -30,7 +34,7 @@ export function useFollow({
   draw: Drawing;
   directions: DirectionRow[];
   hotspots: HotspotRow[];
-  target: SaveTarget;
+  target: FollowTarget;
   setNotice: (text: string) => void;
 }) {
   /**

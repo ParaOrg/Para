@@ -6,10 +6,10 @@ import type { Livery } from '../model/liveries';
 import './hintuan-label.css';
 
 /**
- * Figma's Property 1: Hintuan, a hintuan along a trip; HintuanEnd, the
- * picked one, where the ride now ends (CodeSign, given a `codeSign`).
- * HintuanStart, a picked start, is HintuanEnd with Start's S on Head
- * Route's green (2026-10-15, green 2026-10-16): Figma draws no start yet.
+ * Figma's Property 1: Hintuan, a hintuan along a trip; HintuanEnd, the picked
+ * one, where the ride now ends (CodeSign, given a `codeSign`). HintuanStart,
+ * a picked start, is HintuanEnd with Start's S on Head Route's green: Figma
+ * draws no start.
  */
 type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';
 
@@ -31,8 +31,8 @@ interface HintuanLabelProps {
   /**
    * Outside the ride, along the pale: the dot ringed in the card's pale, as
    * the line is there, and the name the Label's Unselected, at 60% (Figma
-   * 4200:13645, 2026-10-16). Hintuan alone: a pick is the ride's start or
-   * end, so it never sits on the pale.
+   * 4200:13645). Hintuan alone: a pick is the ride's start or end, so it
+   * never sits on the pale.
    */
   isPaled?: boolean;
   /**
@@ -43,15 +43,14 @@ interface HintuanLabelProps {
 }
 
 /**
- * A hintuan on the map, the owner's HintuanLabel (Figma 4068:4791,
- * 2026-10-13): the timeline's own TimelineDot and, 8 to its right and
- * centred on it (respaced 2026-10-16), its RouteLineLabel — Default for
- * Hintuan, End for HintuanEnd, Start for HintuanStart, CodeSignEnd for a
- * picked station.
+ * A hintuan on the map, Figma's HintuanLabel (4068:4791): the timeline's own
+ * TimelineDot and, 8 to its right and centred on it, its RouteLineLabel —
+ * Default for Hintuan, End for HintuanEnd, Start for HintuanStart,
+ * CodeSignEnd for a picked station.
  *
- * Figma draws every variant's dot as the picked one's; the owner kept the
- * map's (2026-10-13): a hintuan along the trip a hollow ring, the picked
- * one filled, so the pick shows in its circle as well as its E.
+ * Figma draws every variant's dot as the picked one's; the owner keeps the
+ * map's: a hintuan along the trip a hollow ring, the picked one filled, so
+ * the pick shows in its circle as well as its E.
  *
  * Its parent is the box it sits in, positioned: the dot is in the flow, so
  * a marker sized by it is anchored at its centre, and the label hangs

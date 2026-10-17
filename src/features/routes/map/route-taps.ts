@@ -7,8 +7,7 @@ import { directionToOpen } from '../model/departures';
 import type { Direction } from '../model/routes';
 
 /*
- * A tap on the saved directions: what it opens, lists or lets go. Split from
- * use-saved-routes.ts, 2026-09-29.
+ * A tap on the saved directions: what it opens, lists or lets go.
  */
 
 const HIT = ROUTES_HIT_LAYER;
@@ -60,11 +59,10 @@ export function useRouteTaps<T extends Direction>(
       const all = [...byId.current.values()];
       if (out.kind === 'route') {
         // The line under the finger wins: where a route's two directions run
-        // on different roads, tapping the other one must open it (the owner's
-        // check, 2026-09-22). Where both overlap, the one already shown stays
-        // (the owner's ask of 2026-09-25: a tap on the lit Novaliches → Tala
-        // opened Tala → Novaliches); with neither shown, the outbound rule
-        // decides.
+        // on different roads, tapping the other one must open it. Where both
+        // overlap, the one already shown stays (a tap on the lit Novaliches →
+        // Tala must not open Tala → Novaliches); with neither shown, the
+        // outbound rule decides.
         const under = out.routeIds.map((id) => byId.current.get(id)).filter((v) => !!v);
         const routeId = under[0]?.routeId;
         const open =
@@ -80,9 +78,8 @@ export function useRouteTaps<T extends Direction>(
         setCandidates(all.filter((v) => keys.has(v.routeId)));
         // The way round under the finger, as for one route: outbound where an
         // outbound line was hit, the way back where only ways back were — so
-        // a tap on the light-blue way back switches to it (the owner's
-        // report, 2026-09-25) — and, where a line shown was hit, the way
-        // round already shown.
+        // a tap on the light-blue way back switches to it — and, where a line
+        // shown was hit, the way round already shown.
         const hit = out.routeIds.map((id) => byId.current.get(id)).filter((v) => !!v);
         const shownHit = hit.find((v) => shown.current.includes(v.id));
         setBack(shownHit ? shownHit.reversed : hit.length > 0 && hit.every((v) => v.reversed));
@@ -100,9 +97,9 @@ export function useRouteTaps<T extends Direction>(
 
     map.on('click', onMapClick);
     // The hand over a line only where a pointer can hover, and from when one
-    // can: on a phone each pair cost a query of the map on every mousemove,
-    // a tap's among them (bindHover, 2026-10-04; a mouse paired later gets
-    // it too, 2026-10-05).
+    // can: on a phone each pair would cost a query of the map on every
+    // mousemove, a tap's among them (bindHover; a mouse paired later gets it
+    // too).
     const unhover = bindHover(map, HIT, enter, leave);
     return () => {
       map.off('click', onMapClick);

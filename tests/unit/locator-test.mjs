@@ -1,8 +1,8 @@
-// The LocatorButton's rules (src/features/locator/use-locator.ts, the owner's
-// 3870:5408, 2026-10-01): the button's look for where the camera is, where a
-// tap takes it, the zooms its "1000 ft" and "200 ft" come to, the phone's
-// compass read; and the speed and heading worked out from the fixes when the
-// browser gives neither.
+// The LocatorButton's rules (src/features/locator/locator-rules.ts and
+// locator-motion.ts, the owner's 3870:5408, 2026-10-01): the button's look
+// for where the camera is, where a tap takes it, the zooms its "1000 ft" and
+// "200 ft" come to, the phone's compass read; and the speed and heading worked
+// out from the fixes when the browser gives neither.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/locator-test.mjs
 import { test } from 'node:test';
@@ -11,17 +11,22 @@ import {
   ACCURACY_MAX_M,
   ACCURACY_MIN_M,
   COMPASS_SCALE_M,
+  STILL_BELOW_MPS,
   TRACKED_SCALE_M,
   circleRadius,
   afterTap,
+  commuterCamera,
+  modeFor,
+  indicatorScale,
+  trackedZoom,
+} from '../../src/features/locator/locator-rules.ts';
+import {
   apart,
   bearing,
   compassHeading,
-  modeFor,
+  fixFrom,
   motionFrom,
-  indicatorScale,
-  trackedZoom,
-} from '../../src/features/locator/use-locator.ts';
+} from '../../src/features/locator/locator-motion.ts';
 import { M_PER_DEG, SCALE_PX, metresPerPixel, zoomForScale } from '../../src/shared/utils/geo.ts';
 
 /** A point `east` metres east and `north` metres north of 121.05, 14.70: sample geometry, not the map. */
@@ -40,13 +45,13 @@ test('the button: LocationOff with no fix, TrackOwnLocation until the camera is 
   assert.equal(modeFor('compass', true), 'TracksTheMapBasedOnCompassFacing');
 });
 
-test('a tap: to the visitor, then round tracked ⇄ compass on a phone', () => {
+test('a tap: to the commuter, then round tracked ⇄ compass on a phone', () => {
   assert.equal(afterTap('free', true), 'tracked');
   assert.equal(afterTap('tracked', true), 'compass');
   assert.equal(afterTap('compass', true), 'tracked');
 });
 
-test('a tap with no compass (a laptop) stays tracked: it only comes back to the visitor', () => {
+test('a tap with no compass (a laptop) stays tracked: it only comes back to the commuter', () => {
   assert.equal(afterTap('free', false), 'tracked');
   assert.equal(afterTap('tracked', false), 'tracked');
 });
@@ -103,7 +108,7 @@ test('motion: nothing to go on is standing still, keeping the last heading', () 
 });
 
 test('motion: fixes under 2 s apart are not read as a sprint', () => {
-  // 50 m in a second would be 180 km/h: GPS jitter, not the visitor.
+  // 50 m in a second would be 180 km/h: GPS jitter, not the commuter.
   assert.deepEqual(motionFrom([fix(at(0), 0), fix(at(0, 50), 1000)], 90), {
     speed: 0,
     heading: 90,
@@ -146,14 +151,124 @@ test('the dot and cone: full size from street level, smaller zoomed out, never u
     assert.ok(indicatorScale(z) <= indicatorScale(z + 0.5), `grows with zoom at ${z}`);
 });
 
-test("a tap to the visitor keeps the map's zoom, unless it is further out than 2 km", () => {
+test("a tap to the commuter keeps the map's zoom, unless it is further out than 2 km", () => {
   const far = zoomForScale(2000, 14.7);
   const street = zoomForScale(200, 14.7);
-  // The scale bar at 2 km or under: the visitor's height stays.
+  // The scale bar at 2 km or under: the commuter's height stays.
   assert.equal(trackedZoom(16, 14.7), 16);
   assert.equal(trackedZoom(far, 14.7), far);
   assert.equal(trackedZoom(19, 14.7), 19);
   // Further out (the city at 11): in to 200 m.
   assert.equal(trackedZoom(far - 0.01, 14.7), street);
   assert.equal(trackedZoom(11, 14.7), street);
+});
+
+/** A position as the browser's watch hands it over. */
+const position = (point, time, extra = {}) => ({
+  coords: {
+    longitude: point[0],
+    latitude: point[1],
+    accuracy: 5,
+    speed: null,
+    heading: null,
+    ...extra,
+  },
+  timestamp: time,
+});
+
+test("a fix keeps the browser's speed when it gives one, else works it out from the run", () => {
+  const first = fixFrom(position(at(0), 1000, { speed: 7 }), [], null, 99_000);
+  assert.equal(first.fix.speed, 7);
+  assert.equal(first.fix.time, 1000);
+  // Zero is a speed too; a negative one, or none, is not.
+  assert.equal(fixFrom(position(at(0), 1000, { speed: 0 }), [], null, 0).fix.speed, 0);
+  const run = [fix(at(0), 0)];
+  for (const speed of [null, -1]) {
+    const next = fixFrom(position(at(10), 5000, { speed }), run, null, 0);
+    assert.ok(Math.abs(next.fix.speed - 2) < 0.01, `${next.fix.speed}`);
+  }
+});
+
+test("a fix keeps the browser's heading only while moving, else the one worked out", () => {
+  const run = [fix(at(0), 0)];
+  const moving = fixFrom(position(at(10), 5000, { speed: 5, heading: 123 }), run, null, 0);
+  assert.equal(moving.fix.heading, 123);
+  const still = fixFrom(
+    position(at(0), 5000, { speed: STILL_BELOW_MPS - 0.1, heading: 123 }),
+    run,
+    40,
+    0,
+  );
+  assert.equal(still.fix.heading, 40);
+  const nan = fixFrom(position(at(10), 5000, { speed: 5, heading: NaN }), run, null, 0);
+  assert.ok(Math.abs(nan.fix.heading - 90) < 0.5, `${nan.fix.heading}`);
+  const none = fixFrom(position(at(10), 5000, { speed: 5 }), run, null, 0);
+  assert.ok(Math.abs(none.fix.heading - 90) < 0.5, `${none.fix.heading}`);
+});
+
+test('a fix joins a run of the last 15 s, and takes its time from the position or from now', () => {
+  const run = [fix(at(0), 0), fix(at(1), 10_000), fix(at(2), 14_000)];
+  const next = fixFrom(position(at(3), 16_000), run, null, 0);
+  assert.deepEqual(
+    next.run.map((f) => f.time),
+    [10_000, 14_000, 16_000],
+  );
+  assert.equal(next.fix.time, 16_000);
+  assert.equal(next.run[2].accuracy, 5);
+  // No timestamp from the browser: now stands in for it.
+  assert.equal(fixFrom(position(at(3), 0), [], null, 123).fix.time, 123);
+});
+
+const locatedAt = { at: [121.05, 14.7], accuracy: 5, speed: 0, heading: null, time: 0 };
+
+test('the tracked camera: on the fix at the kept zoom, flat, north up', () => {
+  const view = commuterCamera({
+    camera: 'tracked',
+    fix: locatedAt,
+    turn: 80,
+    keptZoom: 16.5,
+    mapBearing: 33,
+    tapped: false,
+  });
+  assert.deepEqual(view.center, locatedAt.at);
+  assert.equal(view.zoom, 16.5);
+  assert.equal(view.pitch, 0);
+  assert.equal(view.bearing, 0);
+});
+
+test('the compass camera: 200 m on the scale bar, tilted, turned the way the phone faces, else as the map is', () => {
+  const turned = commuterCamera({
+    camera: 'compass',
+    fix: locatedAt,
+    turn: 80,
+    keptZoom: 16.5,
+    mapBearing: 33,
+    tapped: false,
+  });
+  assert.equal(turned.zoom, zoomForScale(COMPASS_SCALE_M, 14.7));
+  assert.equal(turned.pitch, 45);
+  assert.equal(turned.bearing, 80);
+  const unturned = commuterCamera({
+    camera: 'compass',
+    fix: locatedAt,
+    turn: null,
+    keptZoom: 16.5,
+    mapBearing: 33,
+    tapped: false,
+  });
+  assert.equal(unturned.bearing, 33);
+});
+
+test('the camera takes 800 ms on a tap or a change of the card, 400 on a fix', () => {
+  const view = (tapped) =>
+    commuterCamera({
+      camera: 'tracked',
+      fix: locatedAt,
+      turn: null,
+      keptZoom: 16,
+      mapBearing: 0,
+      tapped,
+    });
+  assert.equal(view(true).duration, 800);
+  assert.equal(view(false).duration, 400);
 });

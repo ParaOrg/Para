@@ -7,38 +7,34 @@ import { warmSoon, type Twin } from './warm-programs';
 
 /*
  * The layers that draw only what is lit or marked, switched off as a whole
- * while nothing is (the cheap-phone plan, step 18, 2026-10-04): the lit
- * routes' casing and copy, their orange stretches, and the hotspots'
- * siblings and stripes.
+ * while nothing is: the lit routes' casing and copy, their green stretches,
+ * and the hotspots' siblings and stripes.
  *
  * Each holds every direction or box, at opacity 0 unless its feature state
  * lights it: a filter naming the lit ones would lay the source out again at
- * every tap (useLighting, saved-routes-layers.ts). So at rest they drew every
- * tile's worth of nothing, every frame: seven draw calls a tile. MapLibre
- * 6.7's layer opacity (`line-layer-opacity`, `fill-layer-opacity`) at 0
- * returns before a single one (draw_line.ts, draw_fill.ts), and at 1 draws
- * the layer exactly as without it: the pass through a texture of its own
- * is for the values between, which a 0 ms transition never shows. Unlike
- * `visibility`, it leaves the layer to the worker's layout, so switching
- * it on lays nothing out again; and like the feature state, it reaches the
+ * every tap (useLighting, lighting.ts). So at rest they would draw
+ * every tile's worth of nothing, every frame: seven draw calls a tile.
+ * MapLibre 6.7's layer opacity (`line-layer-opacity`, `fill-layer-opacity`)
+ * at 0 returns before a single one (draw_line.ts, draw_fill.ts), and at 1
+ * draws the layer exactly as without it: the pass through a texture of its
+ * own is for the values between, which a 0 ms transition never shows. Unlike
+ * `visibility`, it leaves the layer to the worker's layout, so switching it
+ * on lays nothing out again; and like the feature state, it reaches the
  * screen in the next frame drawn, so the two change together.
  *
  * Off from the start: each layer is added at 0 (its paint says so), and
- * nothing is ever lit as a map opens. Until 2026-10-05 they started on and
- * went off from the first move after the map's first 'idle', so that the
- * opening's frames, which drew them with nothing lit, compiled their GL
- * programs before any tap (step 3). Every frame of an opening drew them
- * then, and an opening of many directions is many frames of the whole map:
- * in the suites' maps of 5,000 directions at 1,280 x 800 on SwiftShader,
- * 0.5-1.7 s each (timed in the page, 2026-10-05). Their programs are
- * compiled by twins instead (as the end circles' was, until they became DOM
- * markers on 2026-10-12): each layer's type and
+ * nothing is ever lit as a map opens. Starting on and going off at the first
+ * move after the map's first 'idle' would let the opening's frames, which
+ * draw them with nothing lit, compile their GL programs before any tap, but
+ * every frame of an opening would then draw them, and an opening of many
+ * directions is many frames of the whole map: in the suites' maps of 5,000
+ * directions at 1,280 x 800 on SwiftShader, 0.5-1.7 s each (timed in the
+ * page). Their programs are compiled by twins instead: each layer's type and
  * paint over a speck of its own, drawn once while the map is idle
- * (warm-programs.ts, warmSoon), which the switch asks for once its layers
- * are on the map, and again once a lost GL context is given back. A tap
- * compiles none (the suites' program checks), and the pixels are the same:
- * with nothing lit, the layers drew nothing to see (review of the sources
- * group, 2026-10-05).
+ * (warm-programs.ts, warmSoon), which the switch asks for once its layers are
+ * on the map, and again once a lost GL context is given back. A tap compiles
+ * none (the suites' program checks), and the pixels are the same: with
+ * nothing lit, the layers draw nothing to see.
  */
 
 /** As much of a map as a switch uses: a unit check hands it a stand-in. */

@@ -1,201 +1,30 @@
-import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef } from 'react';
+import type { MapLibreMap } from 'maplibre-gl';
 
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 
-import { useLayerSwitch, type LayerSwitch } from './layer-switch';
-import { LAYERS, applyHidden, firstLayerOfType, layOutOnce } from './layers';
+import { LAYERS, firstLayerOfType } from './layers';
+import { litOpacity } from './lighting';
 import { CASING_EXTRA, litWidth, roadWidth } from './line-style';
+import { RAIL_AT_REST, RESTING_FILTER, ROUTES_LINE } from './rail-rest-layers';
+import { routesData } from './saved-routes-data';
 import { ROUTES_HIT_LAYER } from './tap';
-import {
-  directionLine,
-  railLineOf,
-  type LineStringGeoJSON,
-  type Direction,
-  type RailLine,
-} from '../model/routes';
+import type { Direction } from '../model/routes';
 
 /*
- * The saved directions on the map: their source, their layers (five, and
- * a resting one for each train line since 2026-10-13), and what lights
- * them. Split from use-saved-routes.ts, 2026-09-29.
+ * The saved directions on the map: their source and their layers (five, and
+ * a resting one for each train line). What lights them is lighting.ts's, and
+ * the hook that keeps them in step is use-saved-routes-layers.ts.
  */
 
-const SRC = 'saved-routes';
-const CASING = LAYERS.routesCasing;
-/** The resting lines, every direction: what the map shows of a direction on screen. */
-export const ROUTES_LINE = 'saved-routes-line';
+export const SRC = 'saved-routes';
+export const CASING = LAYERS.routesCasing;
 const LINE = ROUTES_LINE;
 /** The lit directions, drawn again on top: thick, in the selected blue, or on the public map in a picked card's or an open trip's colour. */
-const SELECTED_CASING = 'saved-routes-selected-casing';
-const SELECTED = LAYERS.routesLit;
+export const SELECTED_CASING = 'saved-routes-selected-casing';
+export const SELECTED = LAYERS.routesLit;
 /** The two that draw the lit directions only, switched off while none is (layer-switch.ts). */
-const LIT_LAYERS = [SELECTED_CASING, SELECTED] as const;
-const HIT = ROUTES_HIT_LAYER;
-
-/**
- * A train line at rest, in its own line's pale, Map/Rail/<line>/surface-pale,
- * where every jeepney line rests in the light blue (the owner's ask of
- * 2026-10-13, looking at the map at rest). A layer a line, each one colour
- * and a filter set once: one data-driven line-color would give the resting
- * line a GL program of its own, which the casing, the ride's rest and the
- * warm-up share with it now (gl-programs-test). Lit, a train's line is drawn
- * over its pale as every lit line is, in its card's colour (useLitLineColour).
- */
-const RAIL_AT_REST = {
-  'LRT-1': {
-    id: 'saved-routes-rail-lrt-1',
-    colour: MAP_COLOURS['Map/Rail/LightRailWayOne/surface-pale'],
-  },
-  'LRT-2': {
-    id: 'saved-routes-rail-lrt-2',
-    colour: MAP_COLOURS['Map/Rail/LightRailWayTwo/surface-pale'],
-  },
-  'MRT-3': {
-    id: 'saved-routes-rail-mrt-3',
-    colour: MAP_COLOURS['Map/Rail/MetroRailWayThree/surface-pale'],
-  },
-} as const satisfies Record<RailLine, { id: string; colour: string }>;
-
-/** A resting layer: the light blue's, or a train line's pale. */
-type RestingLayer = typeof ROUTES_LINE | (typeof RAIL_AT_REST)[RailLine]['id'];
-
-/** The resting lines' layers, the light blue's and each train line's: what a query for the lines on screen asks. */
-export const RESTING_LAYERS: RestingLayer[] = [
-  ROUTES_LINE,
-  RAIL_AT_REST['LRT-1'].id,
-  RAIL_AT_REST['LRT-2'].id,
-  RAIL_AT_REST['MRT-3'].id,
-];
-
-/** Which features each resting layer draws, by the train line a feature's route runs on ('' for none). */
-const restsOn = (line: RailLine | '') => ['==', ['get', 'line'], line] as const;
-const RESTING_FILTER = {
-  [ROUTES_LINE]: restsOn(''),
-  [RAIL_AT_REST['LRT-1'].id]: restsOn('LRT-1'),
-  [RAIL_AT_REST['LRT-2'].id]: restsOn('LRT-2'),
-  [RAIL_AT_REST['MRT-3'].id]: restsOn('MRT-3'),
-} satisfies Record<RestingLayer, ReturnType<typeof restsOn>>;
-
-/**
- * Two looks, the owner's of 2026-09-29, and no opacity: every direction
- * rests in Map/RouteLine/surface-default, opaque, in its white casing (a
- * train's in its own line's pale since 2026-10-13, RAIL_AT_REST); the
- * lit ones — the trip open, the Selected card's directions, or else every
- * direction a list or a hotspot's card shows — are drawn again on top in
- * Map/RouteLine/surface-selected, thicker; on the public map a picked
- * card's, or an open trip's, wear that card's Card/<livery>/surface instead
- * (useLitLineColour, his ask of 2026-09-29). See-through lines
- * stacked on a shared road and read as one muddle (his words: "it can stack
- * and confuse the user"), so nothing fades any more: the three levels of
- * 2026-09-22 (rest, faded, lit) and the resting way back of 2026-09-25 went
- * with them.
- *
- * What a tap lights is kept as MapLibre feature state (`setFeatureState`)
- * rather than as a filter or a paint expression naming ids. The paint
- * expressions below read it and never change, and a change of feature state
- * repaints only the features whose state changed, on the main thread;
- * whereas a new filter, or a new expression in a data-driven paint
- * property, has MapLibre lay out every tile of the source again in its
- * worker — for 1,000 directions, a second and a half of stall a tap
- * (measured 2026-09-25, future-proofing step 5).
- */
-const isLit = ['boolean', ['feature-state', 'lit'], false];
-
-/**
- * The opacity of a layer that draws the lit directions only: 1 for them, 0
- * for the rest — a switch, never a shade.
- */
-export function litOpacity() {
-  return ['case', isLit, 1, 0] as never;
-}
-
-/**
- * Lights exactly `lit` on `source` and nothing else, changing only what
- * changed since the last call. Never `removeFeatureState`: a removal and a
- * set of the same id in one frame leave the removal in charge. `ready` is
- * for a source added once another hook's layer is there (useLayerReady):
- * the lighting is applied when it arrives, not only when `lit` changes.
- * `switched`, the layers that draw only what is lit, are switched on with
- * anything lit and off with nothing, here with the feature state, so the
- * two reach the screen in one frame (layer-switch.ts).
- */
-export function useLighting(
-  map: MapLibreMap | null,
-  source: string,
-  lit: readonly string[],
-  ready = true,
-  switched?: LayerSwitch,
-) {
-  const was = useRef(new Set<string>());
-  useEffect(() => {
-    if (!map || !ready || !map.getSource(source)) return;
-    const now = new Set(lit);
-    for (const id of was.current)
-      if (!now.has(id)) map.setFeatureState({ source, id }, { lit: false });
-    for (const id of now)
-      if (!was.current.has(id)) map.setFeatureState({ source, id }, { lit: true });
-    was.current = now;
-    switched?.set(map, now.size > 0);
-  }, [map, source, lit, ready, switched]);
-}
-
-/**
- * The colour the lit directions are drawn in, over the rest: the selected
- * blue unless the public map says otherwise — a picked card's, an open
- * trip's (livery-line.ts). A paint property, set once per change: every lit
- * line wears the same colour at a time.
- */
-export function useLitLineColour(map: MapLibreMap | null, colour: string) {
-  useEffect(() => {
-    if (!map || !map.getLayer(SELECTED)) return;
-    map.setPaintProperty(SELECTED, 'line-color', colour);
-  }, [map, colour]);
-}
-
-/**
- * The saved directions as their source takes them: one feature for each
- * that has a line to draw, its id promoted for the lighting.
- */
-export function routesData(rows: readonly Direction[]) {
-  return {
-    type: 'FeatureCollection' as const,
-    features: rows
-      .map((v) => ({ v, line: directionLine(v) }))
-      .filter(({ line }) => line.length > 1)
-      .map(({ v, line }) => ({
-        type: 'Feature' as const,
-        properties: {
-          id: v.id,
-          routeId: v.routeId,
-          name: v.route?.name ?? '',
-          mode: v.route?.mode ?? 'jeepney',
-          // The train line it runs on, '' for every other route: which resting layer draws it.
-          line: railLineOf(v) ?? '',
-        },
-        geometry: { type: 'LineString' as const, coordinates: line },
-      })),
-  };
-}
-
-/**
- * The full lines of `lines` not patched into the source yet, as updateData
- * takes them, each noted in `sent` as it goes: by id, and again for an id
- * whose line is another object. Each arrival used to send every line read
- * so far (the cheap-phone plan, step 10 (e), 2026-10-04).
- */
-export function unpatched(
-  sent: Map<string, LineStringGeoJSON>,
-  lines: ReadonlyMap<string, LineStringGeoJSON>,
-): { id: string; newGeometry: LineStringGeoJSON }[] {
-  const update: { id: string; newGeometry: LineStringGeoJSON }[] = [];
-  for (const [id, line] of lines) {
-    if (sent.get(id) === line) continue;
-    sent.set(id, line);
-    update.push({ id, newGeometry: line });
-  }
-  return update;
-}
+export const LIT_LAYERS = [SELECTED_CASING, SELECTED] as const;
+export const HIT = ROUTES_HIT_LAYER;
 
 /**
  * The saved directions' source, laid out from `rows`, and its layers,
@@ -321,15 +150,14 @@ export function addSavedRoutes(
  * 'render' after drawing what it has (map.ts, _render). The same test as the
  * cheap-phone timer's "routes drawn" (phoneSpeedParts.mjs, routesOnMap), for
  * the same reason as its last part: the public map's source is added empty
- * when the style is in before the map file, and an empty GeoJSON source
- * loads like any other. In this order, each part only once the one before
- * holds: isSourceLoaded fires an 'error' on the map for a source it does not
- * have, and MapView says "The map failed to load" for an 'error' before the
- * map's 'load'; and the tiles are read only once they are all in, under 1 ms
- * on an empty source's and 1.6-6.6 ms at 4x CPU, once, for the opening
- * view's 80 routes (measured for the timer, 2026-10-04). For MapView's
- * "Loading map…" (framing.ts, loadingLifts; the owner's answer to question
- * A of the cheap-phone report, 2026-10-06).
+ * when the style is in before the map file, and an empty GeoJSON source loads
+ * like any other. In this order, each part only once the one before holds:
+ * isSourceLoaded fires an 'error' on the map for a source it does not have,
+ * and MapView says "The map failed to load" for an 'error' before the map's
+ * 'load'; and the tiles are read only once they are all in, under 1 ms on an
+ * empty source's and 1.6-6.6 ms at 4x CPU, once, for the opening view's 80
+ * routes (measured for the timer). Read by MapView's "Loading map…"
+ * (framing.ts, loadingLifts; the owner's call).
  */
 export function routesDrawn(
   map: Pick<MapLibreMap, 'getSource' | 'getLayer' | 'isSourceLoaded' | 'querySourceFeatures'>,
@@ -340,103 +168,4 @@ export function routesDrawn(
     map.isSourceLoaded(SRC) &&
     map.querySourceFeatures(SRC).length > 0
   );
-}
-
-/**
- * The saved directions' source and layers on `map`: laid out from `rows` as
- * loaded, the full `lines` read since patched in, the one being edited
- * hidden, and exactly `lit` lit.
- */
-export function useSavedRoutesLayers(
-  map: MapLibreMap | null,
-  rows: readonly Direction[],
-  lines: ReadonlyMap<string, LineStringGeoJSON>,
-  hiddenDirectionId: string | null | undefined,
-  lit: readonly string[],
-) {
-  // The rows the source was last laid out from, and the full lines patched
-  // in since, each by the very array or object handed on: what was sent
-  // is not sent again (the cheap-phone plan, step 10 (c) and (e),
-  // 2026-10-04).
-  const laidOut = useRef<readonly Direction[] | null>(null);
-  const patched = useRef(new Map<string, LineStringGeoJSON>());
-
-  // Added with the rows already in, when they are (the public map's file
-  // usually comes in before the basemap's style): laid out in the one
-  // worker round trip that adds the source, not an empty one and then
-  // the rows. Later rows are the next effect's.
-  useEffect(() => {
-    if (!map || map.getSource(SRC)) return;
-    addSavedRoutes(map, rows);
-    laidOut.current = rows;
-    patched.current = new Map();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the rows the source is made with; later rows are the next effect's
-  }, [map]);
-
-  // The source is laid out from the rows as loaded — on the public map, the
-  // overviews — and a full line read later is patched into it alone
-  // (updateData), not the whole source laid out again. New rows lay it all
-  // out again, the full lines with it: those are patched in afresh.
-  useEffect(() => {
-    if (!map) return;
-    const src = map.getSource(SRC) as GeoJSONSource | undefined;
-    if (!src) return;
-    layOutOnce(laidOut, rows, (next) => {
-      patched.current = new Map();
-      src.setData(routesData(next));
-    });
-  }, [map, rows]);
-
-  // Only the lines not patched in yet: each arrival sent every line read so
-  // far again, and MapLibre laid out again each tile within any of their
-  // bounds (GeoJSONSource.shouldReloadTile).
-  //
-  // And all of them again whenever the map makes its style afresh: a lost GL
-  // context given back, or a basemap switch. MapLibre then builds the source
-  // anew from a copy of its data taken at the loss or at setStyle (map.ts),
-  // and a patch reaches that data only once the worker has answered it
-  // (geojson_source.ts): a line still on its way then, or patched in after,
-  // is not in the new source. So the record starts again at 'style.load',
-  // and every line read so far goes to the new source. Before step 10 (e)
-  // the next line read sent them all and put such a line right; since,
-  // nothing did, and it stayed drawn as its overview (review of step 10 (e),
-  // 2026-10-05).
-  useEffect(() => {
-    if (!map) return;
-    const send = () => {
-      const src = map.getSource(SRC) as GeoJSONSource | undefined;
-      if (!src || lines.size === 0) return;
-      const update = unpatched(patched.current, lines);
-      if (update.length > 0) void src.updateData({ update });
-    };
-    const afresh = () => {
-      patched.current = new Map();
-      send();
-    };
-    send();
-    map.on('style.load', afresh);
-    return () => {
-      map.off('style.load', afresh);
-    };
-  }, [map, rows, lines]);
-
-  // The direction being edited is drawn by the editor; hide the saved copy.
-  // Set only once there is one, and once more to show it again
-  // (applyHidden): the public map never hides one, and sets no filter.
-  const hiddenNow = useRef<string | null>(null);
-  useEffect(() => {
-    if (!map || !map.getLayer(LINE)) return;
-    applyHidden(hiddenNow, hiddenDirectionId, (hidden) => {
-      const filter = ['!=', ['get', 'id'], hidden] as const;
-      for (const id of [CASING, SELECTED_CASING, SELECTED, HIT]) map.setFilter(id, filter as never);
-      // A resting layer keeps its own filter, the line it draws, with the hidden one taken out.
-      for (const id of RESTING_LAYERS)
-        map.setFilter(id, ['all', RESTING_FILTER[id], filter] as never);
-    });
-  }, [map, hiddenDirectionId]);
-
-  // The lit copy and its casing, off while nothing is lit, from the start;
-  // their GL program compiled by a twin while the map is idle (layer-switch.ts).
-  const litSwitch = useLayerSwitch(map, LIT_LAYERS, map !== null);
-  useLighting(map, SRC, lit, true, litSwitch);
 }

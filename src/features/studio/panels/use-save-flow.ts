@@ -52,8 +52,8 @@ export function useSaveFlow({
     cancelDrawing();
     void reloadHotspots();
     // The directions too: their names are generated from the hotspots at
-    // their ends when they load, so a renamed end left every card, the list
-    // and the pill on the old name until the next route save (finding 8).
+    // their ends when they load, so a renamed end would leave every card, the
+    // list and the pill on the old name until the next route save.
     void reloadRoutes();
     setToast({ kind: 'hotspot', s });
   };

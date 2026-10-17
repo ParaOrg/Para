@@ -5,9 +5,9 @@
 // for the next page that connects.
 //
 // BASE and harness: every suite but pwa-test, which starts its own server and
-// keeps its own count. nodeFetch: gate, visitor, phone, hotspot,
+// keeps its own count. nodeFetch: gate, commuter, phone, hotspot,
 // regression-gestures, snap and studio-phone. bareStyle: where, scale,
-// studio-scale and save. waitForSource: visitor, phone, hotspot,
+// studio-scale and save. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
 
 /** The dev server's address: PARAPO_BASE, or http://localhost:5173. */

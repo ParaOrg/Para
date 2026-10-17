@@ -107,7 +107,7 @@ its edge — a hintuan is drawn on the roadside and the line follows the road,
 so they touch without crossing. Five metres reaches the box on this side of
 the road and not the one across it. Nothing else makes a hotspot part of a
 direction. On the map, the stretch of the line that passes a hintuan is
-painted orange.
+painted green.
 _Avoid_: near (without the number), serves, links to
 
 **Babaan side** (of a direction at a hintuan):
@@ -156,17 +156,17 @@ Anyone on the editor list, allowed to write. Since migration 0015
 a row still records who made it. The owner added two editors that day.
 _Avoid_: admin, user
 
-**Visitor**:
+**Commuter**:
 Anyone who opens the public map. Asks nothing of anyone: no account, no
 permission, no tracking.
-_Avoid_: user, commuter (a visitor may be a driver or a dispatcher)
+_Avoid_: user, visitor
 
 **Studio**:
 The editor at `/studio/`: the map plus every drawing and saving tool.
 _Avoid_: admin, dashboard, editor (that is a person)
 
 **Public map**:
-The map at `/`, read by visitors from the published map.
+The map at `/`, read by commuters from the published map.
 _Avoid_: visitor map, commuter map, the site
 
 **Trip**:
@@ -193,7 +193,7 @@ lets them go, and the card shows the whole ride.
 The map drawn under the routes: Monochrome (the default, gray), Colour
 (OpenFreeMap's Liberty in Apple Maps' light palette, since 2026-10-16) and
 Fiord (dark blue-gray, for night). The studio adds Terrain (Colour with the
-hills) and Satellite. A visitor's pick is kept on the phone.
+hills) and Satellite. A commuter's pick is kept on the phone.
 
 **Map Style card**:
 The card the layers button opens under it, at the map's top-right corner: a
@@ -202,7 +202,7 @@ switches the map behind it; ✕, Escape or a tap outside closes it.
 
 **Published map**:
 The set of files the public map reads, rebuilt nightly from the studio's
-data: the index, one line file per direction, and the signboards. Visitors
+data: the index, one line file per direction, and the signboards. Commuters
 never read the database.
 _Avoid_: export, snapshot, API, published file (the word from when it was one
 file)

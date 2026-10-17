@@ -8,7 +8,7 @@ import type { Hotspot } from '../model/hotspots';
 import type { RouteSummary, Direction } from '../model/routes';
 
 /*
- * Sample data only, shaped like saved rows: SM Fairview as the owner drew it
+ * Sample data only, shaped like saved rows: SM Fairview as Figma draws it
  * in 3854:12690 — a terminal, Fairview Teraccess on each side of the road,
  * SM Fairview Main and its babaan — and two routes from Tala, each both ways.
  */
@@ -235,11 +235,10 @@ export const PickARow: Story = {
 
 /**
  * The Selected row tapped again lets it go: no row Selected, and the routes
- * through every box of the place — SM Fairview Main's one becomes the
- * place's two each way, SWITCH turning them round where they stand; a tap
- * on the row picks it back (the owner's ask, 2026-10-01). The counter counts
- * head routes, a card each (the owner, 2026-10-01): one there, Tala's to
- * both ends, and two back.
+ * through every box of the place — SM Fairview Main's one becomes the place's
+ * two each way, SWITCH turning them round where they stand; a tap on the row
+ * picks it back. The counter counts head routes, a card each: one there,
+ * Tala's to both ends, and two back.
  */
 export const LetGoAndPickBack: Story = {
   args: { hotspot: main, onDeselect: fn() },
@@ -278,8 +277,7 @@ export const LetGoPhone: Story = {
 /**
  * SWITCH at a box passed one way only: the other way round, at the nearest
  * box of the place passed that way — across the road, Fairview Teraccess 2,
- * selected where the camera stands: onSwitch, not onPickBox's glide (the
- * owner, 2026-10-01).
+ * selected where the camera stands: onSwitch, not onPickBox's glide.
  */
 export const SwitchMovesAcross: Story = {
   args: { hotspot: teraccess1 },

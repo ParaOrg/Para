@@ -8,8 +8,8 @@ import { modesAround, nearestWithin, waitingGapsAround } from './draw-gestures';
 /**
  * A finger within this many pixels of one of the drawing's points is on that
  * point, the nearest one winning. A dot is 6 px across its middle; a finger is
- * not, and a tap just beside a dot was inserting a second point on the line
- * under it.
+ * not, and a tap just beside a dot would otherwise insert a second point on
+ * the line under it.
  */
 const FINGER_PX = 20;
 /** A finger on a point drags it once it has moved this far: less is a tap. */

@@ -24,11 +24,9 @@ interface TimelineTopProps {
 
 /**
  * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
- * ExtraBold 20/28 (the owner's TimelineRouteDetailCard of 2026-10-13, 3778:3183;
- * Black 24/32 until then); the whole row is its button. Picked, its dot is
- * TimelineDot's Selected one. Its name is 12 above the first row (the
- * owner's Timeline set, 3716:1894, "new spacing changes", 2026-10-16; 8
- * from 2026-10-13).
+ * ExtraBold 20/28 (3778:3183); the whole row is its button. Picked, its dot is
+ * TimelineDot's Selected one. Its name is 12 above the first row (Timeline
+ * set, 3716:1894).
  */
 export function TimelineTop({
   livery,
@@ -59,6 +57,7 @@ export function TimelineTop({
           {mark && <RideMark mark={mark} livery={livery} />}
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span
+            data-part="name"
             className={
               'min-w-0 flex-1 text-xl/7 font-extrabold sheet-low:line-clamp-1' +
               (mark ? '' : ' pl-1')
@@ -66,6 +65,8 @@ export function TimelineTop({
           >
             {routeOrigin}
           </span>
+          {/* After the name, so the name is still the row's first words; the circled letter is for the eye. */}
+          {mark && <span className="sr-only">{mark === 'start' ? ', start' : ', end'}</span>}
           {pill && <EndRowPill livery={livery} pill={pill} />}
         </span>
       </button>

@@ -83,8 +83,8 @@ A large feature groups by concern (`routes`: model, geo, map, cards; `studio`: a
 - Use the `@/` alias (maps to `src/`) for any import that leaves the current feature or folder. Use relative imports (`./`, `../`) only inside the same feature.
 
 ```ts
-import { VisitorLocation } from '@/features/locator';                   // ✅ a leaf feature's public API
-import { VisitorLocation } from '@/features/locator/visitor-location';  // ❌ deep import
+import { CommuterLocation } from '@/features/locator';                   // ✅ a leaf feature's public API
+import { CommuterLocation } from '@/features/locator/commuter-location'; // ❌ deep import
 import { routeName } from '@/features/routes/model/routes';             // ✅ routes, by its concern folder
 ```
 
@@ -223,7 +223,7 @@ export function useRoutesQuery(filters: RouteFilters) {
 }
 ```
 
-- The public map's only data source is the published map (the index and the line files), read by `features/published-map` the way any fetcher reads: fetch, validate, throw on error. Visitors never read the database (ADR 0001).
+- The public map's only data source is the published map (the index and the line files), read by `features/published-map` the way any fetcher reads: fetch, validate, throw on error. Commuters never read the database (ADR 0001).
 - Supabase is read and written only by `features/studio/data/`, and the one Supabase client lives there, never in `shared/`: the public page must never carry it, and `scripts/checks/check-build.mjs` proves that by path. One `QueryClient`, in `shared/lib/query-client.ts`, once TanStack Query is adopted.
 - Build every query key from the feature's key factory. Never write key arrays inline.
 - Fetchers throw on error. Never return `null` to signal a failure.

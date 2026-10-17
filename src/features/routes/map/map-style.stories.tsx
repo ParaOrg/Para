@@ -29,7 +29,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The public map's three, Monochrome shown: the owner's frame (4179:10790). */
+/** The public map's three, Monochrome shown: Figma 4179:10790. */
 export const Default: Story = {};
 
 /** Colour shown. */
@@ -46,7 +46,7 @@ const STUDIO_LIKE: readonly Basemap[] = [
   { ...BASEMAPS[0], id: 'satellite', label: 'Satellite' },
 ];
 
-/** The studio's five, three a row (the owner, 2026-10-16); here Terrain and Satellite without pictures. */
+/** The studio's five, three a row; here Terrain and Satellite without pictures. */
 export const FiveWrap: Story = { args: { basemaps: STUDIO_LIKE, selectedId: 'terrain' } };
 
 /** No picture for any design: plain tiles, the names still read. */

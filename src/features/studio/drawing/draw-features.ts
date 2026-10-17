@@ -7,8 +7,7 @@ import type { UTurn } from './uturns';
 
 /**
  * What the drawing's sources hold, worked out from the drawing: pure, so
- * tests/unit/draw-features-test.mjs can hold it (split from draw-layers.ts,
- * 2026-10-16). useDrawRendering hands them to the map.
+ * tests/unit/draw-features-test.mjs can hold it. useDrawRendering hands them to the map.
  */
 
 interface Feature<TGeometry, TProperties> {

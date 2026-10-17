@@ -6,8 +6,6 @@ import {
   type UnnamedDirectionRow,
 } from '@/features/routes/model/direction-schema';
 import { lineStringSchema } from '@/features/routes/model/geojson-schema';
-import { hotspotLinkSchema, hotspotRowSchema } from '@/features/routes/model/hotspot-schema';
-import type { HotspotLink, HotspotRow } from '@/features/routes/model/hotspots';
 import {
   nameDirections,
   type DirectionDrawing,
@@ -15,7 +13,8 @@ import {
   type LineStringGeoJSON,
 } from '@/features/routes/model/routes';
 
-import { readAll, type Page } from './read-all';
+import { listHotspots } from './hotspots-read';
+import { parsed, readAll, type Page } from './read-all';
 import { getSupabase } from './supabase';
 
 /**
@@ -28,38 +27,42 @@ import { getSupabase } from './supabase';
  * page's build too.
  *
  * This is the boundary where the database's names become the glossary's
- * (CONTEXT.md; ticket 07 of the restructure follow-ups, 2026-10-07): every
- * row is parsed with the raw schema of its table and translated by the
- * model's own `to…` function, so no `route_variant_id` or `stop_id` reaches
- * a panel. A row the schema cannot read is said, naming the field.
+ * (CONTEXT.md): every row is parsed with the raw schema of its table and
+ * translated by the model's own `to…` function, so no `route_variant_id` or
+ * `stop_id` reaches a panel. A row the schema cannot read is said, naming the
+ * field.
  *
- * Each returns nothing when the build has no Supabase, so the studio shows
- * its config banner rather than a load error on top of it.
+ * Each returns nothing when the build has no Supabase (withDrawing, which must
+ * return a drawing, throws), so the studio shows its config banner rather than
+ * a load error on top of it.
  *
  * Each reads its table in pages (read-all.ts): Supabase answers at most 1,000
  * rows a request and does not say when it cut, and the links table passes
  * 1,000 at about forty routes. The publish script pages the same way.
+ *
+ * The hotspot readers (hotspots and their links) are hotspots-read.ts's; the
+ * pager and `parsed`, the row parser every reader shares, are read-all.ts's.
  */
 
 /**
  * A direction as the editor lists it, with its parent route embedded: every
- * column but the drawing. `control_points` and `segments` were half of every
- * row and are read only when a direction is opened (withDrawing): with 1,000
- * directions the list was 25 MB a load, measured 2026-09-25.
+ * column but the drawing. `control_points` and `segments` are half of every
+ * row, so they are read only when a direction is opened (withDrawing): a list
+ * of every column measured 25 MB a load at 1,000 directions.
  *
  * Named columns, not `*`: a column added later is left out of the list until
  * it is named here, which is the point — the list stays as light as it is.
  */
 // One literal, not pieces joined: the client reads the row's type off it.
 //
-// `overview`, not `shape` (0009, 2026-09-29): the line thinned at 5 m, about
-// a quarter of it. The list draws it and a tap finds it; a direction's full
-// line is read when it is lit or opened (lineOf, withDrawing), and before a
-// hotspot's links are worked out (linesOf). `shape` stayed in the list until
-// then, 15–27 MB of it at a thousand directions.
+// `overview`, not `shape` (0009): the line thinned at 5 m, about a quarter of
+// it. The list draws it and a tap finds it; a direction's full line is read
+// when it is lit or opened (lineOf, withDrawing), and before a hotspot's links
+// are worked out (linesOf). The full `shape` in the list measured 15–27 MB at a
+// thousand directions.
 //
-// `signboards` (0010, 2026-10-01): a few file names, for the trip card's
-// Signboard and the editor's own (SignboardEditor).
+// `signboards` (0010): a few file names, for the trip card's Signboard and the
+// editor's own (SignboardEditor).
 export const DIRECTION_SELECT =
   'id, route_id, direction_name, origin_terminal, destination_terminal, overview, reversed, confidence, updated_at, borrowed_from, borrowed_part, borrowed_m, signboards, route:route(*)';
 /** The rest of a direction: its drawing, and its full line. */
@@ -71,19 +74,6 @@ const listedRowSchema = z.extend(z.omit(rawDirectionRowSchema, { shape: true }),
   shape: z.optional(z.nullable(lineStringSchema)),
 });
 type ListedRow = z.infer<typeof listedRowSchema>;
-
-/** Rows off the wire as the schema reads them, or the first field it cannot, named. */
-function parsed<T>(schema: z.ZodMiniType<T>, rows: unknown[], what: string): T[] {
-  return rows.map((row, i) => {
-    const read = schema.safeParse(row);
-    if (read.success) return read.data;
-    const [issue] = read.error.issues;
-    const at = issue?.path.map(String).join('.') ?? '';
-    throw new Error(
-      `A ${what} the studio cannot read (row ${i}): ${at} ${issue?.message ?? ''}`.trimEnd(),
-    );
-  });
-}
 
 /**
  * A listed row as the editor holds it, before nameDirections: the glossary's
@@ -157,7 +147,7 @@ export async function lineOf(id: string): Promise<LineStringGeoJSON | null> {
   return (data as { shape: LineStringGeoJSON | null }).shape;
 }
 
-/** How many ids one read of full lines names: its request line stays short (finding 4). */
+/** How many ids one read of full lines names: its request line stays short. */
 const LINES_PER_READ = 50;
 
 /**
@@ -215,55 +205,3 @@ export async function withDrawing(v: DirectionRow): Promise<DirectionDrawing> {
     segments: Array.isArray(d.segments) ? (d.segments as DirectionDrawing['segments']) : [],
   };
 }
-
-/**
- * Every hotspot, in full. Public: RLS allows anyone to read.
- *
- * Both hooks load at once — the directions need the hotspots to name
- * themselves, the hotspots hook needs them to draw — and each used to read
- * the whole table (review finding 6: two reads a load, four under
- * StrictMode). A read already in flight is shared; the next load, after it
- * settles, reads afresh.
- */
-let hotspotsInFlight: Promise<HotspotRow[]> | null = null;
-function listHotspots(): Promise<HotspotRow[]> {
-  const client = getSupabase();
-  if (!client) return Promise.resolve([]);
-  if (hotspotsInFlight) return hotspotsInFlight;
-  const read = readAll<unknown>((from, to) =>
-    client
-      .from('stop')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .order('id')
-      .range(from, to),
-  ).then((rows) => parsed(hotspotRowSchema, rows, 'hotspot'));
-  hotspotsInFlight = read;
-  const settle = () => {
-    if (hotspotsInFlight === read) hotspotsInFlight = null;
-  };
-  read.then(settle, settle);
-  return read;
-}
-
-/** Every hotspot ↔ direction link. Public read. */
-async function listHotspotLinks(): Promise<HotspotLink[]> {
-  const client = getSupabase();
-  if (!client) return [];
-  const rows = await readAll<unknown>((from, to) =>
-    client
-      .from('route_stop')
-      .select('route_variant_id, stop_id, stop_sequence', { count: 'exact' })
-      .order('route_variant_id')
-      .order('stop_sequence')
-      .order('stop_id')
-      .range(from, to),
-  );
-  return parsed(hotspotLinkSchema, rows, 'link');
-}
-
-/** What the editor's hotspots hook loads. Module-level, so it never changes between renders. */
-export const loadHotspotsFromSupabase = async () => {
-  const [hotspots, links] = await Promise.all([listHotspots(), listHotspotLinks()]);
-  return { hotspots, links };
-};

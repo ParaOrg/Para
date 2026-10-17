@@ -243,7 +243,7 @@ export const Train: Story = {
   // it, shown as it is, so nothing folds.
 };
 
-/** MRT-3 Northbound: its header's words black on the white halves, not its yellow (the owner, 2026-10-16). */
+/** MRT-3 Northbound: its header's words black on the white halves, not its yellow. */
 export const TrainMrt3: Story = {
   args: {
     direction: direction('mrt3', 'Taft Avenue', 'North Avenue', {
@@ -257,10 +257,9 @@ export const TrainMrt3: Story = {
 };
 
 /**
- * A train whose end the line's table does not know: no bound, so the header
- * shows the line alone (the owner's answer of 2026-10-16), and SWITCH falls
- * back to Pabalik and Papunta, as over a mixed list (switchWord). What SWITCH
- * says here is Claude's call of 2026-10-16, for the owner to say.
+ * A train whose end the line's table does not know: no bound, so the header shows the line alone,
+ * and SWITCH falls back to Pabalik and Papunta, as over a mixed list (switchWord). TODO: what
+ * SWITCH should say for a train with no known bound is not designed yet.
  */
 export const TrainNoBound: Story = {
   args: {
@@ -288,8 +287,8 @@ export const Ferry: Story = {
 };
 
 /**
- * A sample board, not a real one: a picture standing in for the owner's
- * photographs, so its colours are the picture's, not the page's.
+ * A sample board, not a real one: a picture standing in for the SVG files the studio uploads, so
+ * its colours are the picture's, not the page's.
  */
 const sampleBoard = (name: string) =>
   'data:image/svg+xml,' +

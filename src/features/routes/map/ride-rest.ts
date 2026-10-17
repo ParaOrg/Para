@@ -10,22 +10,18 @@ import { LIT_LINE } from './livery-line';
 /**
  * The rest of a lit ride past a picked hintuan: from there to where the trip
  * goes, drawn over the lit line in the trip card's Card/<livery>/surface-pale
- * (the owner's ask, 2026-10-12: "the remaining line should be surface-pale
- * of the selected colour"), the rest of the lit line staying as it is. The
- * ride ends at the hintuan (useRideTo's `ridden`, Ride.flow); this is the
- * way not ridden, told apart by its colour, the chevrons flowing on over it
- * white (the owner's ask, 2026-10-13). It sits
- * right above the lit line and under everything else drawn on it — the
- * green hintuan stretches, the chevrons — and the circles at the trip's far
- * end and at the picked hintuan, DOM markers (EndTitles, HintuanPin), stand
- * over it all. Nothing picked, no features: the source is empty and the
- * layer draws nothing. The dots along the rest ring in the same pale, and so
- * does the far end's circle (StationLabels, EndTitles; the owner's asks the
- * same evening, with a screenshot of the dots still in the line's colour).
+ * (the owner's call), the rest of the lit line staying as it is. The ride
+ * ends at the hintuan (useRideTo's `ridden`, flowLines); this is the way not
+ * ridden, told apart by its colour, the chevrons flowing on over it white
+ * (the owner's call too). It sits right above the lit line and under
+ * everything else drawn on it — the green hintuan stretches, the chevrons —
+ * and the circles at the trip's far end and at the picked hintuan, DOM
+ * markers (EndTitles, HintuanPin), stand over it all. Nothing picked, no
+ * features: the source is empty and the layer draws nothing. The dots along
+ * the rest ring in the same pale, and so does the far end's circle
+ * (StationLabels, EndTitles).
  *
- * The way not ridden was drawn at rest once (useRideTo, until the owner's
- * "now I don't want to cut the route", 2026-09-30), in the resting blue in
- * its white casing; this is a shade of the trip's own, no casing, at the lit
+ * The way not ridden is a shade of the trip's own, no casing, at the lit
  * line's width.
  *
  * Painted so that the resting line's GL program draws it, compiled at load

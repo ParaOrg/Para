@@ -1,14 +1,8 @@
-import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useId, useState, type CSSProperties } from 'react';
-import { createPortal } from 'react-dom';
-
-import { useMapMarker, useMarkerElement } from '@/features/routes/map/use-map-marker';
-import { metresPerPixel } from '@/shared/utils/geo';
+import { useId, type CSSProperties } from 'react';
 
 import './locator.css';
-import { gazeOffset, useDotGaze, type Subject } from './dot-gaze';
+import { gazeOffset } from './dot-gaze';
 import type { Face, Mood } from './locator-mood';
-import { circleRadius, indicatorScale, type Fix } from './use-locator';
 
 /** Where the beam points as drawn: due south, so it is turned by the heading less this. */
 export const BEAM_DRAWN_DEG = 180;
@@ -20,10 +14,10 @@ const HALO_MAX_PX = 1600;
 
 /**
  * The circle as drawn: the fix's metres on the ground, so it shrinks as the
- * map zooms out and is gone once the dot covers it, as Google Maps' is (the
- * owner's screenshots, 2026-10-01); never past HALO_MAX_PX. 0: none.
+ * map zooms out and is gone once the dot covers it, as Google Maps' is;
+ * never past HALO_MAX_PX. 0: none.
  */
-const haloFor = (px: number, scale = 1) =>
+export const haloFor = (px: number, scale = 1) =>
   px < DOT_PX * scale ? 0 : Math.round(Math.min(HALO_MAX_PX, px));
 
 interface Props {
@@ -45,15 +39,14 @@ interface Props {
 }
 
 /**
- * The owner's LocatorIndicatorOverlay (3870:5247, 2026-10-01, its second
- * pass the same day): the visitor on the map, in the walking figure's place
+ * LocatorIndicatorOverlay (Figma 3870:5247): the commuter on the map
  * — a 24 px Brand/surface dot in white, lifted by LocatorDotShadow,
  * breathing, its wandering eyes glancing about (locator.css); a beam the
  * way they face fading out from it; and the circle the fix is good to, in
- * Map/LocatorIndicatorOverlay/surface with its border's hairline. The circle matters: GPS in Metro Manila is often
- * 20–50 m out, and a dot alone would claim a certainty the phone does not
- * have. Figma's is 240 across; here the circle is the fix's metres, the beam
- * as drawn.
+ * Map/LocatorIndicatorOverlay/surface with its border's hairline. The circle
+ * matters: GPS in Metro Manila is often 20–50 m out, and a dot alone would
+ * claim a certainty the phone does not have. Figma's is 240 across; here the
+ * circle is the fix's metres, the beam as drawn.
  */
 export function LocatorIndicatorOverlay({
   haloPx,
@@ -83,10 +76,8 @@ export function LocatorIndicatorOverlay({
         {beamDeg !== null && (
           // From the dot's centre, drawn pointing south and turned to the
           // heading, in the border's blue as Figma's is. Figma's (3876:6051)
-          // leans 2.7 px to one side; here it is the owner's size, made even
-          // (their ask, 2026-10-01), then cut to 7/10 of its length at the
-          // same spread ("make it like 7/10 only", the same day): 59 long, 70
-          // across at its end.
+          // leans 2.7 px to one side; here it is made even, then cut to 7/10
+          // of its length at the same spread: 59 long, 70 across at its end.
           <div
             className="absolute top-1/2 left-1/2 size-0 text-map-locator-indicator-overlay-border"
             style={{ rotate: `${beamDeg - BEAM_DRAWN_DEG}deg` }}
@@ -133,7 +124,7 @@ export function LocatorIndicatorOverlay({
           }
         >
           <div className="relative size-6 overflow-clip rounded-full bg-brand-surface">
-            {/* Its wandering eyes (3878:6071, 3878:6072, 2026-10-01): every face is theirs (locator.css). */}
+            {/* Its wandering eyes (3878:6071, 3878:6072): every face is theirs (locator.css). */}
             <div aria-hidden className="locator-eyes absolute inset-0">
               <span className="locator-eye absolute top-[6.33px] left-[10.48px] h-1.5 w-1 rounded-full bg-surface" />
               <span className="locator-eye absolute top-[6.33px] left-[17.43px] h-1.5 w-1 rounded-full bg-surface" />
@@ -142,81 +133,5 @@ export function LocatorIndicatorOverlay({
         </Dot>
       </div>
     </div>
-  );
-}
-
-/**
- * The overlay at the visitor's fix, as a DOM marker, not a map layer: it
- * costs the map nothing to move (an animated layer kept MapLibre repainting
- * the whole map, 2026-09-25). It lies on the ground and turns with the map
- * (MapLibre's `map` alignments), as Google Maps' does: tilted, in the
- * compass view, the circle and the dot go oval with the street; and its
- * beam points the way they face, from north.
- */
-export function LocatorOnMap({
-  map,
-  fix,
-  heading,
-  mood,
-  face,
-  beat,
-  gazeAt = [],
-  hushedAt,
-  onPoke,
-}: {
-  map: MapLibreMap;
-  fix: Fix;
-  heading: number | null;
-  mood: Mood;
-  face: Face;
-  beat: number;
-  /** What it gazes at, for a while after one is picked, and when a change is no pick (dot-gaze.ts). */
-  gazeAt?: readonly Subject[];
-  hushedAt?: { readonly current: number };
-  /** A tap on the dot (locatorMood's `poke`). */
-  onPoke: () => void;
-}) {
-  const el = useMarkerElement('locator-overlay');
-  // The dot answers a tap itself, and the map beneath never hears the tap
-  // (marker-tap.ts): no line opens, the camera stays. A drag that starts on
-  // it still pans the map: it sits mid-screen, where a finger lands to pan.
-  useMapMarker(map, el, fix.at, {
-    anchor: 'center',
-    pitchAlignment: 'map',
-    rotationAlignment: 'map',
-    onTap: onPoke,
-    dragsPass: true,
-  });
-  const [zoom, setZoom] = useState(() => map.getZoom());
-  useEffect(() => {
-    const zoomed = () => setZoom(map.getZoom());
-    map.on('zoom', zoomed);
-    return () => {
-      map.off('zoom', zoomed);
-    };
-  }, [map]);
-
-  const gazeDeg = useDotGaze(fix.at, gazeAt, hushedAt);
-  const haloPx = (2 * circleRadius(fix.accuracy)) / metresPerPixel(fix.at[1], zoom);
-  const scale = indicatorScale(zoom);
-  // For the suites (where-test): what the overlay was drawn from.
-  useEffect(() => {
-    el.setAttribute('data-accuracy-m', String(Math.round(fix.accuracy)));
-    el.setAttribute('data-halo-px', String(haloFor(haloPx, scale)));
-    el.setAttribute('data-scale', scale.toFixed(2));
-    el.setAttribute('data-heading', heading === null ? '' : String(Math.round(heading)));
-  }, [el, fix.accuracy, haloPx, heading, scale]);
-  return createPortal(
-    <LocatorIndicatorOverlay
-      haloPx={haloPx}
-      beamDeg={heading}
-      scale={scale}
-      mood={mood}
-      face={face}
-      beat={beat}
-      gazeDeg={gazeDeg}
-      pokeable
-    />,
-    el,
   );
 }

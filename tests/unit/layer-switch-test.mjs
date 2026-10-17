@@ -9,8 +9,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { LayerSwitch, twinsOf } from '../../src/features/routes/map/layer-switch.ts';
 import { addSavedRoutes } from '../../src/features/routes/map/saved-routes-layers.ts';
-import { addSavedHotspots, boxState } from '../../src/features/routes/map/saved-hotspots-layers.ts';
-import { PASS_LAYER } from '../../src/features/routes/geo/pass-stretches.ts';
+import { addSavedHotspots } from '../../src/features/routes/map/saved-hotspots-layers.ts';
+import { boxState } from '../../src/features/routes/map/hotspots-shown.ts';
+import { PASS_LAYER } from '../../src/features/routes/map/pass-stretches.ts';
 
 /** A map of layers with paint, counting each paint set, as MapLibre's: unset is undefined. */
 function paintedMap(layers) {

@@ -129,12 +129,12 @@ test("a line file that is not that direction's is refused, and a failed line is 
 });
 
 // The cheap-phone plan, step 13, 2026-10-05: a line file may carry its
-// direction's orange stretches and their key (src/features/routes/geo/line-pass.ts).
+// direction's orange stretches and their key (src/features/routes/model/line-pass.ts).
 // The line read is the same object either way; the stretches are kept
 // under it, and a file without them, or with them unreadable, keeps none.
 test("step 13: a line file's orange stretches are kept under the line it brings; the line is read as before", async () => {
   const { passBoxes, linePass, publishedStretches } =
-    await import('../../src/features/routes/geo/line-pass.ts');
+    await import('../../src/features/routes/model/line-pass.ts');
   // A jeep's hintuan on the line's middle point.
   const [x, y] = line.coordinates[1];
   const d = 0.0001;

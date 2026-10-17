@@ -23,8 +23,7 @@ interface TimelineBottomEndRouteProps {
 
 /**
  * Figma's TimelineBottomEndRoute: the rail's last dot, and where the trip
- * goes, behind End's circled E (the owner's TimelineRouteDetailCard of 2026-10-13,
- * 3778:3183, as the map's end label has it; the list's arrow until then);
+ * goes, behind End's circled E (3778:3183), as the map's end label has it;
  * the whole row is its button. Picked, its dot is TimelineDot's Selected one.
  */
 export function TimelineBottomEndRoute({
@@ -54,10 +53,14 @@ export function TimelineBottomEndRoute({
         />
         <span className={'flex min-w-0 flex-1 items-start gap-1 pt-3 ' + (isEnd ? 'pl-2' : 'pl-3')}>
           {isEnd && <RideMark mark="end" livery={livery} />}
-          {/* Bold, Figma's text-xl/bold (the owner, 2026-09-30: "bold"). The
-              Timeline set (3716:1894) draws it Medium, ExtraBold picked; the
-              owner kept the trip frame's Bold on 2026-10-13. */}
-          <span className="min-w-0 flex-1 text-xl/7 font-bold">{routeDirection}</span>
+          {/* Bold, Figma's text-xl/bold, as the trip frame (3778:3183) draws it.
+              The Timeline set (3716:1894) draws it Medium, ExtraBold picked;
+              the trip frame's Bold is kept. */}
+          <span data-part="name" className="min-w-0 flex-1 text-xl/7 font-bold">
+            {routeDirection}
+          </span>
+          {/* After the name, so the name is still the row's first words; the circled letter is for the eye. */}
+          {isEnd && <span className="sr-only">, end</span>}
           {pill && <EndRowPill livery={livery} pill={pill} />}
         </span>
       </button>

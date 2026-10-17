@@ -6,8 +6,7 @@ import type { LngLat } from '@/shared/utils/geo';
  * The GeoJSON the rows carry: a point for a hotspot, a polygon for its box, a
  * line string for a direction's line. Each schema validates what enters the
  * app (the published index and its line files, the studio's rows) and is the
- * one definition of the type (ticket 08 of the restructure follow-ups,
- * 2026-10-07). A coordinate is [lng, lat], shared/utils/geo's LngLat.
+ * one definition of the type. A coordinate is [lng, lat] (LngLat).
  *
  * zod/mini, the tree-shakeable API, throughout the schemas: the classic one
  * weighed 24 kB gzipped on the public page (check-build.mjs's zod ceiling),
@@ -26,8 +25,8 @@ export const lngLatSchema = z.custom<LngLat>(isLngLat, { message: 'Not a [lng, l
  * loop and kept as it came. The index of 5,000 directions carries 337,500
  * pairs: read pair by pair through z.array(z.tuple(…)) they cost the opening
  * some 200 ms of the main thread and a copy of every pair (scale-test's
- * budget, 2026-10-12); the loop reads them in a third of that and copies
- * nothing, and refuses exactly what the tuple refused.
+ * budget); the loop reads them in a third of that and copies nothing, and
+ * refuses exactly what the tuple refused.
  */
 const isLngLats = (cs: unknown): cs is LngLat[] => Array.isArray(cs) && cs.every(isLngLat);
 

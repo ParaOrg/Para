@@ -11,9 +11,7 @@ import { recolouredLayer } from './recolour';
 import type { Recolour } from './recolour';
 
 /*
- * Colour, in Apple Maps' light palette (the owner, 2026-10-16: "on the color
- * map theme of ours can we change the color similar to apple maps?", with a
- * screenshot of Makati and BGC). Liberty's drawing stays — its widths, its
+ * Colour, in Apple Maps' light palette. Liberty's drawing stays — its widths, its
  * zooms, its labels and icons — and the big surfaces take Apple's colours
  * (MAP_PAINT's Paint/daylight-…): a warm cream ground, bright light-blue
  * water, light-green parks, pale-yellow commercial blocks, blue-gray avenues,
@@ -21,11 +19,10 @@ import type { Recolour } from './recolour';
  * ground.
  *
  * Everything this does not repaint (labels, rail, boundaries, hospitals and
- * schools, the airport, the shaded relief) is Liberty's own colour muted as
- * Colour was muted before (the owner, 2026-10-15: "more muted so the route
- * line pops"), so ParaPo's routes and hotspots on top still carry the
+ * schools, the airport, the shaded relief) is Liberty's own colour, muted
+ * (mutedLayer), so ParaPo's routes and hotspots on top still carry the
  * strongest colour on the map. The place icons are the exception: they show
- * in full, as Apple's do (the owner, 2026-10-16: "yeah").
+ * in full, as Apple's do.
  */
 
 const SOURCE = 'openmaptiles';
@@ -55,8 +52,8 @@ const GREEN = MAP_PAINT['Paint/daylight-green'];
 /** Apple's colours by Liberty's layer: the ground, the green, the water, the buildings, the names' halos. */
 const BY_LAYER: Record<string, NonNullable<LayerSpecification['paint']>> = {
   background: { 'background-color': MAP_PAINT['Paint/daylight-land'] },
-  // Unseen: the ground's own colour already, and opaque it covered the parks and the
-  // commercial blocks under it below z12 (the review of 2026-10-16).
+  // Unseen: the ground's own colour already, and opaque it would cover the parks and the
+  // commercial blocks under it below z12.
   landuse_residential: { 'fill-color': MAP_PAINT['Paint/daylight-land'], 'fill-opacity': 0 },
   // Opaque, so the green is Apple's and not Liberty's thinned over the cream.
   park: { 'fill-color': GREEN, 'fill-outline-color': GREEN, 'fill-opacity': 1 },
@@ -74,8 +71,8 @@ const BY_LAYER: Record<string, NonNullable<LayerSpecification['paint']>> = {
     'fill-color': MAP_PAINT['Paint/daylight-building'],
     'fill-outline-color': MAP_PAINT['Paint/daylight-building-edge'],
   },
-  // Lighter than the flat ones (the owner, 2026-10-16: "Lighten them"): MapLibre shades an
-  // extrusion's walls darker than its colour, and Apple's stand up pale.
+  // Lighter than the flat ones: MapLibre shades an extrusion's walls darker than its
+  // colour, and Apple's stand up pale.
   'building-3d': { 'fill-extrusion-color': MAP_PAINT['Paint/daylight-building-3d'] },
   // Road names dark gray on a white halo, as Apple writes them; Liberty's have none.
   'highway-name-minor': { 'text-halo-color': MAP_PAINT['Paint/casing'] },

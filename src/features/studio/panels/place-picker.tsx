@@ -17,8 +17,7 @@ interface PlacePickerProps {
 
 /**
  * One of the save panel's two ends: a place, not a box — the panel turns the
- * picked place into the box the route references (split from save-panel.tsx,
- * 2026-10-14).
+ * picked place into the box the route references.
  */
 export function PlacePicker({
   label,

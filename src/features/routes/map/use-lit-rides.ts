@@ -3,11 +3,11 @@ import { useMemo } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
+import { useBabaanSides } from './babaan-sides';
 import { useDirectionArrows, type Ride } from './direction-arrows';
+import { usePassStretches } from './pass-stretches';
 import { useRideRest } from './ride-rest';
 import type { Ridden } from './use-ride-to';
-import { useBabaanSides } from '../geo/babaan-sides';
-import { usePassStretches } from '../geo/pass-stretches';
 import type { Hotspot } from '../model/hotspots';
 import { travelLine } from '../model/ride';
 import { directionEndHotspots, directionEnds, type Direction } from '../model/routes';
@@ -16,12 +16,11 @@ import { directionEndHotspots, directionEnds, type Direction } from '../model/ro
 const NOTHING_PALE: readonly (readonly LngLat[])[] = [];
 
 /**
- * What a lit route wears on the map, in both apps: its orange stretches
+ * What a lit route wears on the map, in both apps: its green stretches
  * where it passes a hintuan, its chevrons, the rest of its line past a
  * picked hintuan in its card's pale, and the chosen direction's side of each
  * hintuan it cuts across. Returns the rides, for the circles and names at
- * their ends (EndTitles). Split from PublicMapApp and StudioApp, which each
- * had it word for word (2026-10-01).
+ * their ends (EndTitles).
  */
 export function useLitRides(
   map: MapLibreMap | null,
@@ -45,17 +44,14 @@ export function useLitRides(
   /**
    * The start picked on the trip (useRideTo's `startId`). With no ride drawn
    * — a start alone, or an end the line can't take it to — the trip's ends
-   * lose their S and E, its pin the one S (the owner, 2026-10-16: "Nothing
-   * yet, just the S"), and the whole line is on the pale, its ends and names
-   * with it (his ask the same night: "When start is only selected can you
-   * unselected all the unselected hintuan/station or labels?, and the
-   * rouline would be in pale"; it stayed lit until then).
+   * lose their S and E, its pin the one S, and the whole line is on the pale,
+   * its ends and names with it.
    */
   startId: string | null = null,
 ): Ride[] {
-  // Where a lit direction passes a hintuan, the line turns orange for that
+  // Where a lit direction passes a hintuan, the line turns green for that
   // stretch: worked out on the full lines read — a lit direction's is asked
-  // for as it lights, and its orange comes with it — rather than on every
+  // for as it lights, and its green comes with it — rather than on every
   // overview at load. Offline, a line never read has none.
   const withLines = useMemo(
     () => saved.directions.filter((v) => saved.fullIds.has(v.id)),
@@ -88,9 +84,7 @@ export function useLitRides(
     [saved.litDirections, hotspots, ridden, unmarkedId],
   );
   useDirectionArrows(map, rides);
-  // Outside the ride, the trip's line in its card's pale (the owner's asks,
-  // 2026-10-12: "the remaining line should be surface-pale of the selected
-  // colour", and 2026-10-15, before a picked start too), over the lit line
+  // Outside the ride, the trip's line in its card's pale, over the lit line
   // and under the chevrons; with a start and no ride, the whole of it;
   // nothing while nothing is picked.
   const pale = ridden?.pale ?? rides.find((r) => r.id === unmarkedId)?.pale ?? NOTHING_PALE;

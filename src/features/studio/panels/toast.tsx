@@ -12,8 +12,8 @@ const TONE = {
  * phone, where the New buttons and the drawing's bars fill the foot of the
  * screen, as wide as the screen and wrapping: what a save did, or
  * what went wrong. One slot — the workshop shows one toast at a time, the
- * newest (Workshop, through SaveToasts) — where three once stood in the same place and did not
- * clear each other (the review's 6.7). `alert` is the red of a problem, and
+ * newest (Workshop, through SaveToasts), so toasts never stack in one place
+ * without clearing each other. `alert` is the red of a problem, and
  * is announced as one.
  */
 export function Toast({

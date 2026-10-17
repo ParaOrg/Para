@@ -7,7 +7,7 @@ import { useHotspotTaps } from './hotspot-taps';
 import { boxMarks, placeHull } from './hotspots-shown';
 import { loadOnce } from './load-once';
 import { APP_MOVE } from './map-view';
-import { useSavedHotspotsLayers } from './saved-hotspots-layers';
+import { useSavedHotspotsLayers } from './use-saved-hotspots-layers';
 import { letGoHolds } from '../cards/card-stack';
 import type { HotspotLink, Hotspot } from '../model/hotspots';
 import { orderLinked } from '../model/timeline';
@@ -22,8 +22,8 @@ import { orderLinked } from '../model/timeline';
  *
  * The editor also passes `drawing` and `hiddenHotspotId`; the public map passes
  * neither, and both default to off. Both pass `muted` while a trip is open: the hotspot card or route list it was picked from waits
- * hidden behind it, and the hotspots that lit go dark until ‹ brings it back
- * (the owner, 2026-09-29: the map lights only the trip).
+ * hidden behind it, and the hotspots that lit go dark until ‹ brings it back,
+ * so the map lights only the trip.
  */
 export function useSavedHotspots<S extends Hotspot>(
   map: MapLibreMap | null,
@@ -42,8 +42,8 @@ export function useSavedHotspots<S extends Hotspot>(
    */
   const [candidates, setCandidates] = useState<S[]>([]);
   /**
-   * The box whose Selected row its card let go (the owner's ask, 2026-10-01):
-   * no box is the one until a row is picked again (letGoHolds).
+   * The box whose Selected row its card let go: no box is the one until a row
+   * is picked again (letGoHolds).
    */
   const [letGoId, setLetGoId] = useState<string | null>(null);
 
