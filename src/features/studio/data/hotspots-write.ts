@@ -166,19 +166,17 @@ export const NOTHING_CHANGED =
  */
 export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
-  const kinds: HotspotKind[] = isLoop(direction) ? ['hintuan', 'terminal'] : ['hintuan'];
+  const loop = isLoop(direction);
   // Paged, as every table read is (read-all.ts): past 1,000 hintuans one
   // request would silently see a subset.
   const [hintuanRows, linked] = await Promise.all([
-    readAll<unknown>((from, to) =>
-      client
-        .from('stop')
-        .select('*', { count: 'exact' })
-        .in('kind', kinds)
+    readAll<unknown>((from, to) => {
+      const stops = client.from('stop').select('*', { count: 'exact' });
+      return (loop ? stops.in('kind', ['hintuan', 'terminal']) : stops.eq('kind', 'hintuan'))
         .not('area', 'is', null)
         .order('id')
-        .range(from, to),
-    ),
+        .range(from, to);
+    }),
     // This direction's links as they stand: one small request.
     readAll<{ stop_id: string }>((from, to) =>
       client

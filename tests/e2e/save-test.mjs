@@ -70,6 +70,7 @@ for (const v of m.variants) {
     head_stop_id: v.route.head_stop_id,
     tail_stop_id: v.route.tail_stop_id,
     via: v.route.via ?? null,
+    is_loop: false,
     created_at: now,
     updated_at: now,
   });
@@ -203,10 +204,42 @@ const refuse = (code, message) => ({
   status: 409,
   body: { code, message, details: null, hint: null },
 });
+/** A check or trigger refusing a row (23514), as Postgres words it. */
+const refuseCheck = (message) => ({
+  status: 400,
+  body: { code: '23514', message, details: null, hint: null },
+});
+/** route_loop_unique's fold (0021): case and the spaces at either end, no via being the empty one. */
+const loopKey = (r) =>
+  `${(r.signboard ?? '').trim().toLowerCase()}\u0000${(r.via ?? '').trim().toLowerCase()}`;
 const conflictOf = (table, row, except = null) => {
   const others = tables[table].filter((r) => r !== except);
+  // 0021's triggers run first, then its checks, then the unique indexes.
+  if (table === 'route' && except && (except.is_loop === true) !== (row.is_loop === true))
+    return refuseCheck('A route is made a loop or not, and stays so.');
+  if (
+    table === 'route_variant' &&
+    row.reversed &&
+    tables.route.some((r) => r.id === row.route_id && r.is_loop === true)
+  )
+    return refuseCheck('A loop has one direction: it has no way back.');
+  if (table === 'route') {
+    const noEnds = row.head_stop_id == null && row.tail_stop_id == null;
+    const bothEnds = row.head_stop_id != null && row.tail_stop_id != null;
+    if (row.is_loop === true ? !noEnds : !bothEnds)
+      return refuseCheck(
+        'new row for relation "route" violates check constraint "route_loop_ends"',
+      );
+    if (row.is_loop === true && (row.signboard ?? '').trim() === '')
+      return refuseCheck(
+        'new row for relation "route" violates check constraint "route_loop_signboard"',
+      );
+  }
+  // Null ends never collide, so an ikot's do not (route_ends_unique, 0006).
   if (
     table === 'route' &&
+    row.head_stop_id != null &&
+    row.tail_stop_id != null &&
     others.some(
       (r) =>
         r.head_stop_id === row.head_stop_id &&
@@ -215,6 +248,12 @@ const conflictOf = (table, row, except = null) => {
     )
   )
     return refuse('23505', 'duplicate key value violates unique constraint "route_ends_unique"');
+  if (
+    table === 'route' &&
+    row.is_loop === true &&
+    others.some((r) => r.is_loop === true && loopKey(r) === loopKey(row))
+  )
+    return refuse('23505', 'duplicate key value violates unique constraint "route_loop_unique"');
   if (
     table === 'route_variant' &&
     others.some((r) => r.route_id === row.route_id && r.reversed === row.reversed)
@@ -273,6 +312,7 @@ const fill = (table, r) =>
         fare_note: null,
         fare_as_of: null,
         via: null,
+        is_loop: false,
         created_at: now,
         updated_at: now,
         ...r,
@@ -829,7 +869,7 @@ async function drawLine(points) {
   if (!newRouteChecked) {
     newRouteChecked = true;
     check(
-      'a new route has no "Close the loop": it only closes a return trip',
+      'a new route has no "Close the loop" before its first point, and no outbound under it',
       (await page.getByTestId('close-loop').count()) === 0 &&
         (await page.evaluate(() => window.__src('draw-outbound')))?.features.length === 0,
     );
@@ -1303,6 +1343,245 @@ check(
   said(w),
 );
 await dismissToasts();
+
+// ---- 6b. An ikot: a loop with no ends (0021)
+// Drawn round the two hintuans, closed on its own first point, saved with no head
+// and no tail, one direction and no slot; its terminals linked by its line.
+{
+  const IKOT = [
+    P1,
+    at(-0.002, 0.0025),
+    at(0.002, 0.0025),
+    P2,
+    at(0.002, -0.0025),
+    at(-0.002, -0.0025),
+  ];
+  const ikotLine = () => directionsOf(tables.route.find((r) => r.is_loop)?.id)[0];
+  const toggle = () => page.getByTestId('save-loop-toggle');
+  const dialogs = [];
+  page.on('dialog', (d) => dialogs.push(d.message()));
+
+  await go(at(0, 0), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  await clickAt(IKOT[0], 300);
+  check(
+    'a new route can close on its own first point, but not before it has three points',
+    (await closeLoop().count()) === 1 && (await closeLoop().isDisabled()),
+    await closeLoop().getAttribute('aria-label'),
+  );
+  for (const p of IKOT.slice(1)) await clickAt(p, 300);
+  check(
+    '  with the line going round, "Close the loop" is on',
+    await closeLoop().isEnabled(),
+    await closeLoop().getAttribute('aria-label'),
+  );
+  await closeLoop().click();
+  await idle();
+  await page.waitForTimeout(400);
+  drawn = await drawnPoints();
+  check(
+    '  it ends the line on the first point (<1 m), and then rests',
+    drawn.length === IKOT.length + 1 &&
+      metresBetween(drawn.at(-1), drawn[0]) < 1 &&
+      (await closeLoop().isDisabled()),
+    `${drawn.length} point(s)`,
+  );
+  await done();
+  check(
+    'Done opens the panel as an ikot: the toggle ticked for a closed line, no ends to pick',
+    (await toggle().isChecked()) &&
+      (await page.getByTestId('save-head').count()) === 0 &&
+      (await page.getByTestId('save-tail').count()) === 0 &&
+      (await body()).includes('Save this ikot'),
+    (await body()).slice(0, 160),
+  );
+  check(
+    '  its places are listed from the first drawn, the signboard asked for',
+    (await page.getByTestId('save-timeline').innerText()).includes('Stand-in Head') &&
+      (await page.getByTestId('save-timeline').innerText()).includes('Stand-in Tail') &&
+      /required/.test(
+        await page
+          .getByLabel(/Signboard/)
+          .locator('..')
+          .innerText(),
+      ),
+    (await page.getByTestId('save-timeline').innerText()).replace(/\s+/g, ' '),
+  );
+  n = log.length;
+  await saveButton().click();
+  await page.waitForTimeout(400);
+  check(
+    'saving without a signboard is refused in words, and writes nothing',
+    /An ikot is called by its signboard/.test(await body()) && writesSince(n).length === 0,
+    said(writesSince(n)),
+  );
+  await page.getByLabel(/Signboard/).fill('UP – Ikot');
+  await saveButton().click();
+  await waitFor(async () => (await toast().count()) > 0);
+  w = writesSince(n);
+  const ikot = tables.route.find((r) => r.is_loop);
+  const ikotV = ikot && directionsOf(ikot.id);
+  check(
+    'an ikot is one route row with is_loop and no ends, and one direction row: no slot',
+    !!ikot &&
+      ikot.head_stop_id === null &&
+      ikot.tail_stop_id === null &&
+      ikot.signboard === 'UP – Ikot' &&
+      ikotV.length === 1 &&
+      ikotV[0].reversed === false &&
+      !!ikotV[0].shape,
+    said(w),
+  );
+  check(
+    '  its line is linked to the two hintuans it goes round',
+    ['Stand-in Head', 'Stand-in Tail'].every((nm) =>
+      tables.route_stop.some(
+        (l) =>
+          l.route_variant_id === ikotV?.[0]?.id &&
+          l.stop_id === tables.stop.find((x) => x.name === nm)?.id,
+      ),
+    ),
+  );
+  await page.waitForTimeout(1200);
+  check(
+    '  and the toast offers no return trip: an ikot has no way back',
+    (await toast().count()) === 1 && (await returnTrip().count()) === 0,
+  );
+  await dismissToasts();
+
+  // The same signboard again, round the same two hintuans by a longer way so its
+  // line is not under the first's: refused in words by the panel, before any write.
+  const WIDER = [
+    P1,
+    at(-0.002, 0.005),
+    at(0.002, 0.005),
+    P2,
+    at(0.002, -0.005),
+    at(-0.002, -0.005),
+  ];
+  await go(at(0, 0), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  for (const p of WIDER) await clickAt(p, 300);
+  await closeLoop().click();
+  await done();
+  await page.getByLabel(/Signboard/).fill('  up – IKOT ');
+  n = log.length;
+  await saveButton().click();
+  await page.waitForTimeout(400);
+  check(
+    'a second ikot with the same signboard is refused in words, to the fold, and writes nothing',
+    /Another ikot already has this signboard/.test(await body()) && writesSince(n).length === 0,
+    said(writesSince(n)),
+  );
+  check(
+    '  a via tells them apart: the refusal goes',
+    await (async () => {
+      await page.getByLabel(/^Via/).fill('Katipunan');
+      await saveButton().click();
+      await waitFor(async () => (await toast().count()) > 0);
+      return tables.route.filter((r) => r.is_loop).length === 2;
+    })(),
+    `${tables.route.filter((r) => r.is_loop).length} ikots`,
+  );
+  await dismissToasts();
+
+  // The card: no Extend, and an ikot's own words.
+  await openCard(IKOT[1]);
+  check(
+    "an ikot's card has Edit route and Delete, but no Extend: it has no end to go on from",
+    (await page.getByRole('button', { name: 'Edit route' }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Extend' }).count()) === 0 &&
+      (await page.getByTestId('facts-loop').count()) === 1,
+    (await page
+      .getByTestId('facts-loop')
+      .innerText()
+      .catch(() => '')) || (await body()).slice(0, 120),
+  );
+
+  // Edit: the toggle is locked on, and the update names no ends and no is_loop.
+  await page.getByRole('button', { name: 'Edit route' }).click();
+  await waitFor(async () => (await pointsShown()) === IKOT.length + 1);
+  await done();
+  check(
+    'Edit route on an ikot keeps the toggle ticked and locked, with no ends to pick',
+    (await toggle().isChecked()) &&
+      (await toggle().isDisabled()) &&
+      (await page.getByTestId('save-head').count()) === 0 &&
+      (await body()).includes('Update this ikot'),
+  );
+  n = log.length;
+  await saveButton().click();
+  await waitFor(async () => (await toast().count()) > 0);
+  w = writesSince(n);
+  const routePatch = w.find((x) => x.method === 'PATCH' && x.table === 'route');
+  check(
+    '  the update writes the route facts and the line, never the ends or is_loop',
+    !!routePatch &&
+      !('head_stop_id' in routePatch.body) &&
+      !('tail_stop_id' in routePatch.body) &&
+      !('is_loop' in routePatch.body) &&
+      w.some((x) => x.method === 'PATCH' && x.table === 'route_variant'),
+    said(w),
+  );
+  await dismissToasts();
+
+  // A terminal drawn on the ikot afterwards is linked to it by itself, and its
+  // checklist does not offer the ikot.
+  const TERMINAL_AT = at(0, 0.0025);
+  await go(TERMINAL_AT, 17);
+  await page.getByRole('button', { name: '+ New hotspot' }).click();
+  await page.getByRole('menuitem', { name: /Terminal/ }).click();
+  await page.waitForTimeout(200);
+  for (const [dx, dy] of [
+    [-R, -R],
+    [R, -R],
+    [R, R],
+    [-R, R],
+  ])
+    await clickAt([TERMINAL_AT[0] + dx, TERMINAL_AT[1] + dy], 150);
+  await done();
+  await page.getByPlaceholder('SM Fairview Terminal A').fill('Stand-in Ikot Terminal');
+  check(
+    "a terminal's checklist leaves an ikot out, and says it links its terminals itself",
+    !(await body()).includes('UP – Ikot') &&
+      /An ikot links the terminals on it by itself/.test(await body()),
+  );
+  n = log.length;
+  await page.getByRole('button', { name: 'Save terminal' }).click();
+  await waitFor(
+    async () => (await page.getByRole('button', { name: 'Save terminal' }).count()) === 0,
+  );
+  await page.waitForTimeout(500);
+  await dismissToasts();
+  const ikotTerminal = tables.stop.find((x) => x.name === 'Stand-in Ikot Terminal');
+  check(
+    "  saved, the terminal is linked to the ikot's line, though nobody ticked it",
+    !!ikotTerminal &&
+      tables.route_stop.some(
+        (l) => l.route_variant_id === ikotV?.[0]?.id && l.stop_id === ikotTerminal.id,
+      ),
+    said(writesSince(n)),
+  );
+
+  // Delete: the confirm names the ikot, and emptying its only direction removes the route.
+  await openCard(IKOT[1]);
+  n = log.length;
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await waitFor(async () => !tables.route.some((r) => r.id === ikot?.id));
+  check(
+    'Delete on an ikot asks about the ikot, and takes the route away with its only direction',
+    dialogs.some((d) => d === 'Delete the ikot "UP – Ikot"?') &&
+      !tables.route.some((r) => r.id === ikot?.id) &&
+      directionsOf(ikot?.id).length === 0 &&
+      !tables.route_stop.some((l) => l.route_variant_id === ikotV?.[0]?.id),
+    `${dialogs.at(-1)} · ${said(writesSince(n))}`,
+  );
+  await dismissToasts();
+  // The second ikot (with its via) is taken away too, so the sections after see what they saw before.
+  for (const r of tables.route.filter((x) => x.is_loop)) remove('route', [r]);
+}
 
 // ---- 7. A route's end is refused a delete, in words
 await go(P1, 17);

@@ -68,6 +68,24 @@ export const DrawnJeepney: Story = {
   },
 };
 
+/** An ikot: the facts say it goes one way round, with no ends. */
+export const Ikot: Story = {
+  args: {
+    direction: direction({
+      signboard: 'UP – Ikot',
+      headHotspotId: null,
+      tailHotspotId: null,
+      isLoop: true,
+      name: 'UP – Ikot',
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('facts-loop')).toHaveTextContent(
+      'Ikot · one way round, no ends',
+    );
+  },
+};
+
 /** Ridden end to end: the status turns to verified. */
 export const Verified: Story = {
   args: { direction: direction({}, 'verified') },

@@ -59,6 +59,8 @@ function drawing(segments: Segment[], uTurns = 0): Drawing {
   ];
   return {
     controlPoints,
+    // Joined, as the drawing's line is: the open sample line is not closed.
+    line: controlPoints,
     segments,
     metres: 640,
     uTurns: Array.from({ length: uTurns }, (_, i) => ({ point: i + 1, stub: [], metres: 60 })),
@@ -200,7 +202,8 @@ function drawingBack(): Drawing {
     routed([{ name: 'Assyria Street', metres: 55 }]),
     routed([{ name: 'Sinai Street', metres: 160 }]),
   ]);
-  return { ...d, controlPoints: [...d.controlPoints].reverse() } as Drawing;
+  const controlPoints = [...d.controlPoints].reverse();
+  return { ...d, controlPoints, line: controlPoints } as Drawing;
 }
 
 /**
@@ -346,5 +349,111 @@ export const EditRouteTurnedRound: Story = {
     await expect(
       await canvas.findByText(/Head and tail swapped would turn the route round/),
     ).toBeVisible();
+  },
+};
+
+/** A line round the sample ground that ends where it began, and the two places it passes. */
+const ROUND: LngLat[] = [
+  [121.043326, 14.742006],
+  [121.0431, 14.7425],
+  [121.0424, 14.7425],
+  [121.0424, 14.741507],
+  [121.0431, 14.7411],
+  [121.043326, 14.742006],
+];
+function ikotDrawing(line: LngLat[] = ROUND): Drawing {
+  const segments: Segment[] = line.slice(1).map((to, i) => ({
+    snap: 'freehand',
+    coordinates: [line[i], to],
+  }));
+  return {
+    controlPoints: line,
+    line,
+    segments,
+    metres: 1200,
+    uTurns: [],
+  } as unknown as Drawing;
+}
+
+/** An ikot saved before, to be edited or to be named twice. */
+const upIkot: DirectionRow = {
+  id: 'sample-ikot-out',
+  routeId: 'sample-ikot',
+  name: 'UP – Ikot',
+  originTerminal: null,
+  destinationTerminal: null,
+  shape: null,
+  reversed: false,
+  confidence: 'drawn',
+  updatedAt: '2026-10-17T00:00:00Z',
+  route: {
+    ...talaFairview,
+    id: 'sample-ikot',
+    signboard: 'UP – Ikot',
+    headHotspotId: null,
+    tailHotspotId: null,
+    isLoop: true,
+    name: 'UP – Ikot',
+  },
+};
+
+/**
+ * A line closed on its own first point: the Ikot toggle starts ticked, there are no ends to pick,
+ * the signboard is the name and is asked for, and the places it goes round are listed.
+ */
+export const NewIkot: Story = {
+  args: { draw: ikotDrawing(), hotspots },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ })).toBeChecked();
+    await expect(canvas.queryByTestId('save-head')).toBeNull();
+    await expect(canvas.getByRole('heading', { name: 'Save this ikot' })).toBeVisible();
+    await expect(canvas.getByTestId('save-timeline')).toHaveTextContent('Tala');
+  },
+};
+
+/** No signboard: refused in one sentence, before anything is written. */
+export const IkotWithoutASignboard: Story = {
+  args: NewIkot.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(await canvas.findByText(/An ikot is called by its signboard/)).toBeVisible();
+  },
+};
+
+/** The signboard another ikot has (to the fold): refused, with the way out. */
+export const IkotSignboardTaken: Story = {
+  args: { ...NewIkot.args, directions: [upIkot] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText(/Signboard/), ' up – IKOT');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(await canvas.findByText(/Another ikot already has this signboard/)).toBeVisible();
+  },
+};
+
+/** An open line, ticked by hand as an ikot: refused until it is closed on the map. */
+export const OpenLineTickedAsAnIkot: Story = {
+  args: { draw: drawing([routed([{ name: 'Sinai Street', metres: 160 }])]), hotspots },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('checkbox', { name: /Ikot/ })).not.toBeChecked();
+    await userEvent.click(canvas.getByRole('checkbox', { name: /Ikot/ }));
+    await userEvent.type(canvas.getByLabelText(/Signboard/), 'UP – Ikot');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(await canvas.findByText(/An ikot ends where it began/)).toBeVisible();
+  },
+};
+
+/** Edit route on an ikot: the toggle is ticked and locked, there are no ends, and it says so. */
+export const EditIkot: Story = {
+  args: { draw: ikotDrawing(), existing: upIkot, hotspots, directions: [upIkot] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const toggle = canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ });
+    await expect(toggle).toBeChecked();
+    await expect(toggle).toBeDisabled();
+    await expect(canvas.getByRole('heading', { name: 'Update this ikot' })).toBeVisible();
   },
 };

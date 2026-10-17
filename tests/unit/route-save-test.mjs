@@ -704,5 +704,5 @@ test("a route with ends still reads hintuans only: its terminals are the owner's
     [],
   );
   const read = log.find((q) => q.table === 'stop' && q.op === 'select');
-  assert.deepEqual(read.filters[0], ['in', 'kind', ['hintuan']]);
+  assert.deepEqual(read.filters[0], ['eq', 'kind', 'hintuan']);
 });
