@@ -9,6 +9,7 @@ import { MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
+import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { hotspotCount } from '@/features/routes/model/places';
@@ -109,6 +110,12 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // The route list, a hotspot's card and the trip opened from either, as on
   // the public map (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
+  // Where an open ikot's trip leaves from: the place whose card it was opened
+  // from, else its first. The studio has no commuter's position to start from.
+  const tipId = useLoopTip(saved.selected, hotspots, {
+    where: null,
+    openedFrom: hotspots.selected,
+  });
   // The camera with the cards, as on the public map (useCardCamera), so the
   // studio has the public map's interaction. A hintuan picked on the trip
   // card, the camera gliding there clear of the card and a circle popping up
@@ -128,7 +135,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     backFromTrip,
     pickOnTrip,
     endOnTrip,
-  } = useCardCamera(map, saved, hotspots, cards);
+  } = useCardCamera(map, saved, hotspots, cards, { tipId });
 
   const { rides, timeline, routeCount } = useStudioTrip({
     map,
@@ -136,6 +143,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     hotspots,
     hiddenDirectionId: draw.target.directionId,
     ride,
+    tipId,
   });
 
   // Every editor edits every route and hotspot (migration 0015). There is no

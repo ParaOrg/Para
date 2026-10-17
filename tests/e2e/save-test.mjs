@@ -1493,7 +1493,10 @@ await dismissToasts();
     "an ikot's card has Edit route and Delete, but no Extend: it has no end to go on from",
     (await page.getByRole('button', { name: 'Edit route' }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Extend' }).count()) === 0 &&
-      (await page.getByTestId('facts-loop').count()) === 1,
+      (await page.getByTestId('facts-loop').count()) === 1 &&
+      // The trip is the ikot's: its word for the way, and no SWITCH to a way back.
+      /Ikot/.test(await body()) &&
+      !/Pabalik|Papunta/.test(await body()),
     (await page
       .getByTestId('facts-loop')
       .innerText()
