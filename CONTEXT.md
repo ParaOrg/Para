@@ -158,12 +158,39 @@ _Avoid_: admin, user
 
 **Commuter**:
 Anyone who opens the public map. Asks nothing of anyone: no account, no
-permission, no tracking.
+permission, no tracking. On the contributor page the same person may become a
+contributor, by choice
+([ADR 0004](docs/adr/0004-location-leaves-the-phone-only-by-choice.md)).
 _Avoid_: user, visitor
 
 **Studio**:
-The editor at `/studio/`: the map plus every drawing and saving tool.
+The editor at `/studio/`: three maps behind one switch, Contributors,
+Playground and Public, and every drawing and saving tool.
 _Avoid_: admin, dashboard, editor (that is a person)
+
+**Contributors map**:
+The studio's map of every contribution as it came: faint lines and hintos, for
+editors only.
+_Avoid_: Tracking map, heatmap
+
+**Playground**:
+The studio's map where editors draw. Every route and hotspot goes Draft →
+Pending → Approved there.
+_Avoid_: Drafts map, sandbox, staging
+
+**Draft** / **Pending** / **Approved**:
+A route or hotspot being drawn or changed, seen by editors only, one at a time
+per route or hotspot; a draft submitted for review; what commuters get at the
+next publish. Any editor approves, their own work included.
+_Avoid_: push, publish (the nightly publish is something else), staging
+
+**Send back**:
+Return a pending draft to its editor, with a note.
+
+**Take down** / **Put back**:
+Remove an approved route or hotspot from the public map at the next publish;
+undo it.
+_Avoid_: delete (a taken-down row is kept)
 
 **Public map**:
 The map at `/`, read by commuters from the published map.
@@ -202,8 +229,8 @@ switches the map behind it; ✕, Escape or a tap outside closes it.
 
 **Published map**:
 The set of files the public map reads, rebuilt nightly from the studio's
-data: the index, one line file per direction, and the signboards. Commuters
-never read the database.
+approved data: the index, one line file per direction, and the signboards.
+Commuters never read the database.
 _Avoid_: export, snapshot, API, published file (the word from when it was one
 file)
 
@@ -214,6 +241,43 @@ schema number; an app reads only the shape it knows.
 
 **Line file**:
 One direction's full line, read when the direction is lit or opened.
+
+### Contributors
+
+**Contributor**:
+Anyone who makes a contribution on the contributor page. The studio knows a
+contributor only as a phone, an anonymous identity made on the first Save,
+never by name. A commuter who taps the Contributor button and records becomes
+one, on that page only.
+_Avoid_: driver, user, reporter
+
+**Contribution**:
+One recording on the contributor page, from tapping Start to tapping Save, as
+it reaches the studio: its points (about one a second), its hintos and gaps, and what the
+contributor typed: a start point name, an end point name, a description, what
+was ridden. Never public.
+_Avoid_: trip and ride (both taken), ikot, biyahe, session, track, trace
+
+**Hinto**:
+A time the phone stood still in one spot during a contribution: 8 seconds or
+more within 25 metres, for now. Many hintos at one spot, across many
+contributions, suggest a hintuan. The database uses the same word.
+_Avoid_: stop (the database's name for a hotspot), dwell, idle
+
+**Gap**:
+A stretch of a contribution with no location: the screen went off, a call came,
+another app was in front, no fix came for 5 seconds, or the page was reloaded.
+Not a Stop, which the contributor chose.
+_Avoid_: pause; lost signal (only one of its causes)
+
+**Contributor page**:
+The page at `/contribute/` where a contribution is recorded: Ready, Recording,
+Stopped, Saved. A page of its own, so the public map carries none of it.
+_Avoid_: driver app, driver link, tracker
+
+**Contributor button**:
+The button at the public map's top left: a plain link to the contributor page.
+Shown once the test period ends.
 
 ### Planned, decided, not built
 
