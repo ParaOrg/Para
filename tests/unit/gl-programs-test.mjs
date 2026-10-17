@@ -30,7 +30,7 @@ import { addSavedHotspots } from '../../src/features/routes/map/saved-hotspots-l
 import { hiddenHotspotFilters } from '../../src/features/routes/map/saved-hotspots-layers.ts';
 import { namePaint } from '../../src/features/routes/map/saved-hotspots-labels.ts';
 import { HOTSPOT_CONTENT } from '../../src/features/routes/map/colours.ts';
-import { litOpacity } from '../../src/features/routes/map/saved-routes-layers.ts';
+import { litOpacity } from '../../src/features/routes/map/lighting.ts';
 import { litWidth } from '../../src/features/routes/map/line-style.ts';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
