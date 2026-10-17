@@ -35,8 +35,11 @@ export interface Fix {
   accuracyM: number;
 }
 
-/** Why a stretch of time has no fixes. */
-export type GapReason = 'hidden' | 'silent' | 'resumed';
+/**
+ * Why a stretch of time has no fixes. `paused` is the contributor's own Stop
+ * and Resume, which is not the phone's fault and is left out of the lost time.
+ */
+export type GapReason = 'hidden' | 'silent' | 'resumed' | 'paused';
 
 /** A stretch of time the phone did not record, in milliseconds since the epoch. */
 export interface Gap {
@@ -62,39 +65,83 @@ export const HINTO_MIN_SECONDS = 8;
 export const HINTO_RADIUS_M = 25;
 /** No fix for longer than this is a gap: the phone normally reports about once a second. */
 export const SILENCE_SECONDS = 5;
+/** Fixes that are all too fast for the last one that counted, but agree with each other, start a new anchor. */
+export const REANCHOR_AFTER = 3;
+
+const byTime = (a: Fix, b: Fix): number => a.time - b.time;
+
+function speedKmh(from: Fix, to: Fix): number {
+  return (distanceM(from.at, to.at) / ((to.time - from.time) / 1000)) * 3.6;
+}
 
 /**
- * The fixes that count: each is accurate enough, and implies no more than
- * MAX_SPEED_KMH from the last one that counted. A fix that is ignored does not
- * become the point the next is measured from.
+ * The fixes that count, in time order: each is accurate enough, and implies no
+ * more than MAX_SPEED_KMH from the last one that counted. A fix that is ignored
+ * does not become the point the next is measured from, with one exception: if
+ * the first fixes were wrong, every later one would look like a jump, so
+ * REANCHOR_AFTER fast fixes in a row that agree with each other (each implies
+ * no more than MAX_SPEED_KMH from the one before) are taken as the true
+ * position, and the few fixes before them, which they contradict, are dropped.
  */
 export function keptFixes(fixes: readonly Fix[]): Fix[] {
-  const kept: Fix[] = [];
-  for (const fix of fixes) {
+  let kept: Fix[] = [];
+  let pending: Fix[] = [];
+  for (const fix of [...fixes].sort(byTime)) {
     if (fix.accuracyM > MAX_ACCURACY_M) continue;
     const last = kept[kept.length - 1];
-    if (last) {
-      const seconds = (fix.time - last.time) / 1000;
-      if (seconds <= 0) continue;
-      const kmh = (distanceM(last.at, fix.at) / seconds) * 3.6;
-      if (kmh > MAX_SPEED_KMH) continue;
+    if (last && fix.time <= last.time) continue;
+    if (!last || speedKmh(last, fix) <= MAX_SPEED_KMH) {
+      kept.push(fix);
+      pending = [];
+      continue;
     }
-    kept.push(fix);
+    const before = pending[pending.length - 1];
+    pending = before && speedKmh(before, fix) <= MAX_SPEED_KMH ? [...pending, fix] : [fix];
+    if (pending.length >= REANCHOR_AFTER) {
+      if (kept.length < REANCHOR_AFTER) kept = [];
+      kept.push(...pending);
+      pending = [];
+    }
   }
   return kept;
 }
 
-/** The length of the path through these fixes, in metres. Across a gap the straight line counts. */
-export function pathLengthM(fixes: readonly Fix[]): number {
+/**
+ * The length of the path through these fixes, in metres. Across a gap the
+ * straight line counts. Within a hinto it does not: standing still, the phone's
+ * position wanders a few metres, and every wander is a leg that would add up.
+ */
+export function pathLengthM(fixes: readonly Fix[], hintos: readonly Hinto[] = []): number {
+  const inside = (fix: Fix) => hintos.find((h) => fix.time >= h.from && fix.time <= h.to);
   let total = 0;
-  for (let i = 1; i < fixes.length; i++) total += distanceM(fixes[i - 1].at, fixes[i].at);
+  for (let i = 1; i < fixes.length; i++) {
+    const was = inside(fixes[i - 1]);
+    if (was && was === inside(fixes[i])) continue;
+    total += distanceM(fixes[i - 1].at, fixes[i].at);
+  }
   return total;
+}
+
+/** Hintos that touch, or are no more than SILENCE_SECONDS apart, joined into one. */
+function mergeHintos(hintos: readonly Hinto[]): Hinto[] {
+  const merged: Hinto[] = [];
+  for (const hinto of hintos) {
+    const last = merged[merged.length - 1];
+    if (last && (hinto.from - last.to) / 1000 <= SILENCE_SECONDS) {
+      merged[merged.length - 1] = { ...last, to: Math.max(last.to, hinto.to) };
+    } else {
+      merged.push(hinto);
+    }
+  }
+  return merged;
 }
 
 /**
  * Where the ride stood: each run of fixes that stays within HINTO_RADIUS_M of
- * the run's first fix and lasts HINTO_MIN_SECONDS or more. Expects fixes that
- * count (keptFixes), in time order.
+ * the run's first fix and lasts HINTO_MIN_SECONDS or more. Runs that touch, or
+ * are a few seconds apart, are one hinto: a crawl is a string of short runs,
+ * and a single wild fix splits a long stand in two. Expects fixes that count
+ * (keptFixes), in time order.
  */
 export function hintosOf(fixes: readonly Fix[]): Hinto[] {
   const hintos: Hinto[] = [];
@@ -113,24 +160,46 @@ export function hintosOf(fixes: readonly Fix[]): Hinto[] {
     }
   }
   if (fixes.length > 0) close(fixes.length - 1);
-  return hintos;
+  return mergeHintos(hintos);
 }
 
 /**
- * Stretches with no fixes: between two fixes more than SILENCE_SECONDS apart,
- * and from the last fix to `now` when that is also longer than that. `now` is
- * the end of the recording, or the present while it runs. Every fix the phone
- * reported counts here, kept or not: the phone was answering. The wait for
- * the first fix is not a gap.
+ * Stretches with no fixes. The silence clock starts at `from`, the start of the
+ * recording, and again at the end of each `paused` gap (a Stop and Resume), and
+ * runs to `now`: the end of the recording, or the present while it runs. So
+ * the wait for the first fix counts, and so does a phone that never answers.
+ * Every fix the phone reported counts, kept or not: the phone was answering.
  */
-export function silentGaps(fixes: readonly Fix[], now: number): Gap[] {
+export function silentGaps(
+  fixes: readonly Fix[],
+  from: number,
+  now: number,
+  paused: readonly Gap[] = [],
+): Gap[] {
   const gaps: Gap[] = [];
-  const silent = (from: number, to: number) => {
-    if ((to - from) / 1000 > SILENCE_SECONDS) gaps.push({ from, to, reasons: ['silent'] });
-  };
-  for (let i = 1; i < fixes.length; i++) silent(fixes[i - 1].time, fixes[i].time);
-  const last = fixes[fixes.length - 1];
-  if (last) silent(last.time, now);
+  const times = [...fixes].sort(byTime).map((f) => f.time);
+  const pauses = mergeGaps(paused);
+  // The stretches the recording was running: between the pauses.
+  const runs: [number, number][] = [];
+  let runStart = from;
+  for (const pause of pauses) {
+    if (pause.to <= runStart) continue;
+    if (pause.from > runStart) runs.push([runStart, Math.min(pause.from, now)]);
+    runStart = Math.max(runStart, pause.to);
+  }
+  if (runStart < now) runs.push([runStart, now]);
+  for (const [runFrom, runTo] of runs) {
+    let last = runFrom;
+    const silent = (to: number) => {
+      if ((to - last) / 1000 > SILENCE_SECONDS) gaps.push({ from: last, to, reasons: ['silent'] });
+    };
+    for (const time of times) {
+      if (time < runFrom || time > runTo) continue;
+      silent(time);
+      last = time;
+    }
+    silent(runTo);
+  }
   return gaps;
 }
 
@@ -153,6 +222,9 @@ export function mergeGaps(gaps: readonly Gap[]): Gap[] {
   return merged;
 }
 
+const secondsIn = (gaps: readonly Gap[]): number =>
+  gaps.reduce((sum, g) => sum + (g.to - g.from) / 1000, 0);
+
 /** Seconds of `from`–`to` that fall inside the gaps, which must already be merged. */
 function overlapSeconds(from: number, to: number, gaps: readonly Gap[]): number {
   let ms = 0;
@@ -168,17 +240,21 @@ export interface RideSummary {
   distanceM: number;
   movingSeconds: number;
   standingSeconds: number;
-  /** Time the phone did not record: the merged gaps, clipped to the recording. */
+  /** Time the phone did not record: the merged gaps, clipped to the recording, without the pauses. */
   lostSeconds: number;
+  /** The contributor's own Stop and Resume pauses, which are neither moving nor lost. */
+  pausedSeconds: number;
   hintos: Hinto[];
+  /** The gaps, merged, without the pauses. */
   gaps: Gap[];
 }
 
 /**
- * The totals of a recording. `logged` are the gaps the page saw happen (hidden,
- * resumed after a reload); the silent ones are found from the fixes. Standing
- * is the hintos' time that was not lost, and moving is what is left of the
- * recorded span once standing and lost time are taken out.
+ * The totals of a recording. `logged` are the gaps the page saw happen
+ * (hidden, resumed after a reload, paused between a Stop and a Resume); the
+ * silent ones are found from the fixes. Standing is the hintos' time that was
+ * neither lost nor paused, and moving is what is left of the recorded span
+ * once standing, lost and paused time are taken out.
  */
 export function summarize(
   fixes: readonly Fix[],
@@ -186,24 +262,33 @@ export function summarize(
   from: number,
   now: number,
 ): RideSummary {
+  const clip = (g: Gap): Gap => ({ ...g, from: Math.max(g.from, from), to: Math.min(g.to, now) });
+  const inside = (g: Gap): boolean => g.to > g.from;
+  const paused = mergeGaps(logged.filter((g) => g.reasons.includes('paused')).map(clip)).filter(
+    inside,
+  );
+  const others = logged.filter((g) => !g.reasons.includes('paused'));
   const kept = keptFixes(fixes);
-  const gaps = mergeGaps([...logged, ...silentGaps(fixes, now)])
-    .map((g) => ({ ...g, from: Math.max(g.from, from), to: Math.min(g.to, now) }))
-    .filter((g) => g.to > g.from);
+  const gaps = mergeGaps([...others, ...silentGaps(fixes, from, now, paused)])
+    .map(clip)
+    .filter(inside);
+  const blocked = mergeGaps([...gaps, ...paused]);
   const hintos = hintosOf(kept);
   const standingSeconds = hintos.reduce(
-    (sum, h) => sum + (h.to - h.from) / 1000 - overlapSeconds(h.from, h.to, gaps),
+    (sum, h) => sum + (h.to - h.from) / 1000 - overlapSeconds(h.from, h.to, blocked),
     0,
   );
-  const lostSeconds = gaps.reduce((sum, g) => sum + (g.to - g.from) / 1000, 0);
+  const pausedSeconds = secondsIn(paused);
+  const lostSeconds = secondsIn(blocked) - pausedSeconds;
   const spanSeconds = Math.max(0, (now - from) / 1000);
   return {
     fixCount: fixes.length,
     keptCount: kept.length,
-    distanceM: pathLengthM(kept),
-    movingSeconds: Math.max(0, spanSeconds - lostSeconds - standingSeconds),
+    distanceM: pathLengthM(kept, hintos),
+    movingSeconds: Math.max(0, spanSeconds - secondsIn(blocked) - standingSeconds),
     standingSeconds,
     lostSeconds,
+    pausedSeconds,
     hintos,
     gaps,
   };

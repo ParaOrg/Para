@@ -10,6 +10,9 @@ import type { RecordingDetails } from './use-recording';
 
 interface StoppedScreenProps {
   summary: RideSummary;
+  /** Fixes the phone could not keep; above zero, the recording is incomplete and can be downloaded now. */
+  failedFixWrites: number;
+  onDownload: () => void;
   onSave: (details: RecordingDetails) => void;
   onResume: () => void;
   onCancel: () => void;
@@ -33,7 +36,14 @@ function HintoList({ hintos }: { hintos: readonly Hinto[] }) {
 }
 
 /** After Stop: the totals, the hintos, four optional fields, and Save, Resume or Cancel. */
-export function StoppedScreen({ summary, onSave, onResume, onCancel }: StoppedScreenProps) {
+export function StoppedScreen({
+  summary,
+  failedFixWrites,
+  onDownload,
+  onSave,
+  onResume,
+  onCancel,
+}: StoppedScreenProps) {
   const ids = useId();
   const [details, setDetails] = useState<RecordingDetails>({
     startPointName: '',
@@ -46,7 +56,18 @@ export function StoppedScreen({ summary, onSave, onResume, onCancel }: StoppedSc
   return (
     <section aria-label="Stopped" className="flex flex-col gap-4">
       <RideTotals summary={summary} showLost />
-      <p>A pause between Stop and Resume counts as a gap too.</p>
+      {summary.pausedSeconds > 0 && (
+        <p>Paused: {minutesText(summary.pausedSeconds)} min, not counted as lost.</p>
+      )}
+      {failedFixWrites > 0 && (
+        <div className="flex flex-col gap-2">
+          <p>
+            The phone could not keep {failedFixWrites} fixes. Download this ride now, before you
+            close the page.
+          </p>
+          <PageButton onClick={onDownload}>Download this ride</PageButton>
+        </div>
+      )}
       <h2 className="font-bold">Hintos</h2>
       <HintoList hintos={summary.hintos} />
       <form

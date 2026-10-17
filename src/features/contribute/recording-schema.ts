@@ -1,5 +1,7 @@
 import * as z from 'zod/mini';
 
+import type { GapReason } from '@/features/routes/model/ride-recording';
+
 /** The saved format's version: bump it when the file or the stored rows change shape. */
 export const RECORDING_VERSION = 1;
 
@@ -7,10 +9,17 @@ export const RECORDING_VERSION = 1;
 export const RIDE_KINDS = ['Jeep', 'Bus', 'Train', 'Ferry', 'Tricycle', 'Other'] as const;
 export type RideKind = (typeof RIDE_KINDS)[number];
 
+const GAP_REASONS = [
+  'hidden',
+  'silent',
+  'resumed',
+  'paused',
+] as const satisfies readonly GapReason[];
+
 export const gapSchema = z.object({
   from: z.number(),
   to: z.number(),
-  reasons: z.array(z.enum(['hidden', 'silent', 'resumed'])),
+  reasons: z.array(z.enum(GAP_REASONS)),
 });
 
 /** A recording as IndexedDB keeps it, apart from its fixes. */
@@ -22,8 +31,10 @@ export const recordingSchema = z.object({
   startedAt: z.number(),
   stoppedAt: z.nullable(z.number()),
   savedAt: z.nullable(z.number()),
-  /** The gaps the page saw happen: hidden, and resumed after a reload. The silent ones come from the fixes. */
+  /** The gaps the page saw happen: hidden, paused, and resumed after a reload. The silent ones come from the fixes. */
   gaps: z.array(gapSchema),
+  /** Fixes the phone reported but could not write to IndexedDB; absent when none failed. */
+  failedFixWrites: z.optional(z.number()),
   startPointName: z.string(),
   endPointName: z.string(),
   description: z.string(),

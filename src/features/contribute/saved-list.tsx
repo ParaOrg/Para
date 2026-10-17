@@ -27,6 +27,9 @@ export function SavedList({ recordings, onDownload, onRemove }: SavedListProps) 
                 ? ` · ${recording.startPointName || '?'} → ${recording.endPointName || '?'}`
                 : ''}
             </p>
+            {recording.failedFixWrites ? (
+              <p>The phone could not keep {recording.failedFixWrites} fixes of this ride.</p>
+            ) : null}
             {askingAbout === recording.id ? (
               <div className="flex flex-wrap items-center gap-2">
                 <span>Delete this recording from the phone?</span>

@@ -35,6 +35,8 @@ export function ContributePage() {
       {phase === 'stopped' && summary && (
         <StoppedScreen
           summary={summary}
+          failedFixWrites={recording.current?.failedFixWrites ?? 0}
+          onDownload={recording.downloadCurrent}
           onSave={recording.save}
           onResume={recording.resume}
           onCancel={recording.cancel}

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { summarize, type Fix, type RideSummary } from '@/features/routes/model/ride-recording';
+import {
+  summarize,
+  type Fix,
+  type GapReason,
+  type RideSummary,
+} from '@/features/routes/model/ride-recording';
 
 import { downloadRecording, recordingFile } from './recording-file';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
@@ -43,6 +48,8 @@ export interface RecordingState {
   save: (details: RecordingDetails) => void;
   cancel: () => void;
   download: (id: string) => void;
+  /** Downloads the recording in hand from memory, for when the phone could not keep its fixes. */
+  downloadCurrent: () => void;
   remove: (id: string) => void;
 }
 
@@ -76,16 +83,20 @@ export function useRecording(): RecordingState {
   const [current, setCurrent] = useState<Recording | null>(null);
   const [fixes, setFixes] = useState<Fix[]>([]);
   const [now, setNow] = useState(() => Date.now());
-  const [problem, setProblem] = useState<string | null>(null);
+  // Two slots, so a location error never hides a storage failure: storage stays
+  // until a new recording starts, location clears when the next fix arrives.
+  const [storageProblem, setStorageProblem] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   // The recording as the effects below read it, kept beside the state because
   // they write it without waiting for a render.
   const currentRef = useRef<Recording | null>(null);
   const nextSeq = useRef(0);
   const hiddenAt = useRef<number | null>(null);
+  const failedFixWrites = useRef(0);
 
   const reportStore = useCallback((error: unknown) => {
     console.error('IndexedDB failed.', error);
-    setProblem(STORE_PROBLEM);
+    setStorageProblem(STORE_PROBLEM);
   }, []);
 
   /** Makes this the recording in hand and writes it to the phone. */
@@ -118,6 +129,7 @@ export function useRecording(): RecordingState {
           setCurrent(open);
           setFixes(rows.map(toFix));
           nextSeq.current = rows.length > 0 ? rows[rows.length - 1].seq + 1 : 0;
+          failedFixWrites.current = open.failedFixWrites ?? 0;
           setPhase(open.status === 'stopped' ? 'stopped' : 'unfinished');
         } else {
           setPhase('ready');
@@ -149,10 +161,14 @@ export function useRecording(): RecordingState {
         lat: position.coords.latitude,
         accuracyM: position.coords.accuracy,
       };
-      putFix(row).catch(reportStore);
+      putFix(row).catch((error: unknown) => {
+        failedFixWrites.current += 1;
+        reportStore(error);
+      });
       setFixes((previous) => [...previous, toFix(row)]);
+      setLocationError(null);
     },
-    onError: (error) => setProblem(locationProblem(error)),
+    onError: (error) => setLocationError(locationProblem(error)),
   });
 
   // The clock the live totals and the open silence run on.
@@ -188,7 +204,9 @@ export function useRecording(): RecordingState {
     nextSeq.current = 0;
     setFixes([]);
     setNow(startedAt);
-    setProblem(null);
+    setStorageProblem(null);
+    setLocationError(null);
+    failedFixWrites.current = 0;
     keep({
       version: RECORDING_VERSION,
       id: crypto.randomUUID(),
@@ -209,7 +227,13 @@ export function useRecording(): RecordingState {
     (at: number) => {
       const recording = currentRef.current;
       if (!recording) return;
-      keep({ ...recording, status: 'stopped', stoppedAt: at });
+      const failed = failedFixWrites.current;
+      keep({
+        ...recording,
+        status: 'stopped',
+        stoppedAt: at,
+        ...(failed > 0 && { failedFixWrites: failed }),
+      });
       setPhase('stopped');
     },
     [keep],
@@ -224,19 +248,19 @@ export function useRecording(): RecordingState {
     const recording = currentRef.current;
     if (!recording) return;
     const resumedAt = Date.now();
-    // A recording found open after a reload lost the time since its last fix.
-    const lost: Recording['gaps'] =
-      phase === 'unfinished'
-        ? [
-            {
-              from: fixes[fixes.length - 1]?.time ?? recording.startedAt,
-              to: resumedAt,
-              reasons: ['resumed'],
-            },
-          ]
-        : [];
+    const missed = (from: number, reason: GapReason): Recording['gaps'] => [
+      { from, to: resumedAt, reasons: [reason] },
+    ];
+    // A recording found open after a reload lost the time since its last fix;
+    // one stopped on purpose was paused from the Stop.
+    let lost: Recording['gaps'] = [];
+    if (phase === 'unfinished') {
+      lost = missed(fixes[fixes.length - 1]?.time ?? recording.startedAt, 'resumed');
+    } else if (recording.stoppedAt !== null) {
+      lost = missed(recording.stoppedAt, 'paused');
+    }
     setNow(resumedAt);
-    setProblem(null);
+    setLocationError(null);
     keep({
       ...recording,
       status: 'recording',
@@ -253,7 +277,6 @@ export function useRecording(): RecordingState {
       const kept: Recording = { ...recording, ...details, status: 'saved', savedAt: Date.now() };
       putRecording(kept).catch(reportStore);
       setSaved((previous) => [kept, ...previous]);
-      setProblem(null);
       forgetCurrent();
       setPhase('ready');
     },
@@ -264,7 +287,7 @@ export function useRecording(): RecordingState {
     const recording = currentRef.current;
     if (recording) deleteRecording(recording.id).catch(reportStore);
     forgetCurrent();
-    setProblem(null);
+    setStorageProblem(null);
     setPhase('ready');
   }, [forgetCurrent, reportStore]);
 
@@ -292,6 +315,14 @@ export function useRecording(): RecordingState {
     [reportStore],
   );
 
+  const downloadCurrent = useCallback(() => {
+    if (!current) return;
+    const end = current.stoppedAt ?? Date.now();
+    const summary = summarize(fixes, current.gaps, current.startedAt, end);
+    downloadRecording(recordingFile(current, fixes, summary));
+  }, [current, fixes]);
+
+  const problem = storageProblem ?? locationError;
   const end = isRecording ? now : (current?.stoppedAt ?? now);
   const summary = current ? summarize(fixes, current.gaps, current.startedAt, end) : null;
 
@@ -309,6 +340,7 @@ export function useRecording(): RecordingState {
     save,
     cancel,
     download,
+    downloadCurrent,
     remove,
   };
 }

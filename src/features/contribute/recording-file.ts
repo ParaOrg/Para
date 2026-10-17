@@ -13,11 +13,14 @@ export interface RecordingFile {
   endPointName: string;
   description: string;
   rideKind: string | null;
+  /** Fixes the phone reported but could not keep, so the file is missing that many. */
+  failedFixWrites: number;
   summary: {
     distanceM: number;
     movingSeconds: number;
     standingSeconds: number;
     lostSeconds: number;
+    pausedSeconds: number;
     hintoCount: number;
     gapCount: number;
     fixCount: number;
@@ -46,11 +49,13 @@ export function recordingFile(
     endPointName: recording.endPointName,
     description: recording.description,
     rideKind: recording.rideKind,
+    failedFixWrites: recording.failedFixWrites ?? 0,
     summary: {
       distanceM: Math.round(summary.distanceM),
       movingSeconds: Math.round(summary.movingSeconds),
       standingSeconds: Math.round(summary.standingSeconds),
       lostSeconds: Math.round(summary.lostSeconds),
+      pausedSeconds: Math.round(summary.pausedSeconds),
       hintoCount: summary.hintos.length,
       gapCount: summary.gaps.length,
       fixCount: summary.fixCount,
@@ -72,13 +77,17 @@ export function recordingFile(
   };
 }
 
-/** Hands the browser the file to save, named by the ride's day and the start of its id. */
+const MANILA_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' });
+
+/** Hands the browser the file to save, named by the ride's day in Manila and the start of its id. */
 export function downloadRecording(file: RecordingFile): void {
   const blob = new Blob([JSON.stringify(file, null, 1)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `parapo-ride-${file.startedAt.slice(0, 10)}-${file.id.slice(0, 8)}.json`;
+  const day = MANILA_DAY.format(new Date(file.startedAt));
+  link.download = `parapo-ride-${day}-${file.id.slice(0, 8)}.json`;
   link.click();
-  URL.revokeObjectURL(url);
+  // The browser reads the blob after the click returns, so it is let go a moment later.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
