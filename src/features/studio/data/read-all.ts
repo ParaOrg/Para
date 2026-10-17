@@ -1,3 +1,5 @@
+import type * as z from 'zod/mini';
+
 /**
  * Read a whole table through a server that answers a bounded number of rows
  * a request.
@@ -68,4 +70,17 @@ export async function readAll<T>(
     if (got.length === 0 || (count !== null ? rows.length >= count : got.length < PAGE))
       return rows;
   }
+}
+
+/** Rows off the wire as the schema reads them, or the first field it cannot, named. */
+export function parsed<T>(schema: z.ZodMiniType<T>, rows: unknown[], what: string): T[] {
+  return rows.map((row, i) => {
+    const read = schema.safeParse(row);
+    if (read.success) return read.data;
+    const [issue] = read.error.issues;
+    const at = issue?.path.map(String).join('.') ?? '';
+    throw new Error(
+      `A ${what} the studio cannot read (row ${i}): ${at} ${issue?.message ?? ''}`.trimEnd(),
+    );
+  });
 }

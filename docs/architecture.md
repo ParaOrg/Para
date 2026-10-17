@@ -148,7 +148,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/studio`
 
-`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `lineOf`, `listDirections`, `loadHotspotsFromSupabase`, `signboardUrl`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `CardActions`, `HotspotPanel`, `NewButtons`, `returnTripLeft`, `SavePanel`, `SaveToasts`, `TripCardExtras`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`
+`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `signboardUrl`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `CardActions`, `HotspotPanel`, `NewButtons`, `returnTripLeft`, `SavePanel`, `SaveToasts`, `TripCardExtras`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`
 
 ## Entry points
 
