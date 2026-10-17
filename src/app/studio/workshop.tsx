@@ -179,11 +179,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
         <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
       </div>
-      <div
-        ref={root}
-        data-map-box
-        className="@container relative min-h-0 flex-1 overflow-clip [--map-safe-top:0px]"
-      >
+      <div ref={root} data-map-box className="@container relative min-h-0 flex-1 overflow-clip">
         {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
         <div inert={!isPlayground} className="contents">
           <MapView

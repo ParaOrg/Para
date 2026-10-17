@@ -126,11 +126,12 @@ export function BottomSheet({
   // A finger on it: the glide is off, and --sheet-y is the drag's, written
   // straight onto the sheet move by move rather than rendered.
   const [dragging, setDragging] = useState(false);
+  // The status bar's height as this sheet sees it, before anything asks for Max's height.
+  useLayoutEffect(() => measureSafeTop(own.current), []);
   // Where it first stands, drawn with it: a card opening over another (a
   // place's name tapped) is new, and without this it would show at Max for a
   // moment and glide down to its height. Never changed after, so React
   // leaves the drag's and the glide's --sheet-y alone.
-  measureSafeTop();
   const [opensAt] = useState(() => ({ '--sheet-y': slide(snap) }) as CSSProperties);
   useDialogFocus(own, hidden);
   // A sheet left open under an inert page (the studio's other maps) is out of reach, Escape too.
