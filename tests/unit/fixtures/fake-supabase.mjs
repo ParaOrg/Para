@@ -6,6 +6,14 @@
 // studio uses are here; anything else fails loudly. Since 2026-10-03.
 export function fakeSupabase(answer) {
   const log = [];
+  // The storage calls the studio makes, recorded as { bucket, op: 'upload' |
+  // 'remove', path (upload) or paths (remove), body, options }; `uploaded`
+  // answers an upload, `{ error }` refusing it.
+  const storage = {
+    calls: [],
+    uploaded: () => ({ error: null }),
+    removed: () => ({ error: null }),
+  };
   const from = (table) => {
     const q = {
       table,
@@ -86,5 +94,15 @@ export function fakeSupabase(answer) {
     };
     return builder;
   };
-  return { client: { from }, log };
+  const bucket = (name) => ({
+    async upload(path, body, options) {
+      storage.calls.push({ bucket: name, op: 'upload', path, body, options });
+      return storage.uploaded(path);
+    },
+    async remove(paths) {
+      storage.calls.push({ bucket: name, op: 'remove', paths });
+      return storage.removed(paths);
+    },
+  });
+  return { client: { from, storage: { from: bucket } }, log, storage };
 }
