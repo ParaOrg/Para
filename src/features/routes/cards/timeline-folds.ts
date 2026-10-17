@@ -1,4 +1,4 @@
-import { rowsOutsideRide } from '../model/ride';
+import { rowsOutsideRide } from '../model/ride-rows';
 
 /**
  * A fold of a trip's timeline (TimelineRouteDetail): `all`, every hintuan,

@@ -6,7 +6,7 @@ import type { Snap } from '@/shared/ui/sheet-gesture';
 
 import { gazeSubjects, type Picks } from './dot-gaze';
 import { Locator } from './locator';
-import { LocatorOnMap } from './locator-indicator-overlay';
+import { LocatorOnMap } from './locator-on-map';
 import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
 

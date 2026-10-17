@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 
 import { timelineFolds } from '../../src/features/routes/cards/timeline-folds.ts';
 import { timelineRail } from '../../src/features/routes/cards/timeline-rail.ts';
-import { rideRows } from '../../src/features/routes/model/ride.ts';
+import { rideRows } from '../../src/features/routes/model/ride-rows.ts';
 
 // A train's ten stations between Antipolo and Recto, as his frames draw them.
 const STATIONS = [

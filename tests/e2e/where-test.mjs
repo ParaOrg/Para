@@ -1,6 +1,7 @@
-// The LocatorButton on the public map (src/features/locator/use-locator.ts and
-// locator-rules.ts, locator.tsx, locator-button.tsx, locator-indicator-overlay.tsx — the owner's
-// 3870:5408 rules, 2026-10-01), driven by a pretend GPS. Playwright's
+// The LocatorButton on the public map (src/features/locator/use-locator.ts,
+// locator-rules.ts, locator.tsx, locator-button.tsx,
+// locator-indicator-overlay.tsx, locator-on-map.tsx — the owner's 3870:5408
+// rules, 2026-10-01), driven by a pretend GPS. Playwright's
 // geolocation emulation feeds the browser's own watchPosition, so the app's
 // code path is the real one — except for the GPS that never has a fix, which
 // stands in for navigator.geolocation itself, and the compass, a
