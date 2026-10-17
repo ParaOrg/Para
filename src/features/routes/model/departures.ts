@@ -58,7 +58,8 @@ export function departures<V extends Direction>(
     const v = g.directions.find((d) => isLoop(d) || d.reversed === back);
     if (!v) continue;
     const { from, to } = directionEnds(v);
-    const key = from.toLowerCase();
+    // A loop is its own place, never the one a route of the same name leaves from.
+    const key = (isLoop(v) ? 'loop:' : '') + from.toLowerCase();
     const place = byPlace.get(key) ?? { from, directions: [] };
     place.directions.push({ v, to, drawn: isDrawn(v) });
     byPlace.set(key, place);
