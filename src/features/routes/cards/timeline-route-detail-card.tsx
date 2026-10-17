@@ -176,7 +176,7 @@ export function TimelineRouteDetailCard({
       <TripTiles
         shown={shown}
         shownMetres={shownMetres}
-        discounted={discounted}
+        isDiscounted={discounted}
         turns={turns}
         onTurn={() => {
           setDiscounted(!discounted);

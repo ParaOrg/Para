@@ -4,11 +4,11 @@ import { kmLabel } from '@/shared/utils/geo';
 import { FREE, type Fare } from './trip-fare';
 
 interface TripTilesProps {
-  /** The fare the tile shows, or FREE; omitted when unpriced, and the tile with it. */
+  /** The fare the tile shows, or FREE; undefined when unpriced, and the tile with it. */
   shown: Fare | undefined;
   shownMetres: number;
   /** Whether the tile shows the Discounted fare. */
-  discounted: boolean;
+  isDiscounted: boolean;
   /** How many times the fare tile was tapped: ↻ turns once more for each. */
   turns: number;
   /** The fare tile was tapped: turn it to the other fare. */
@@ -19,7 +19,7 @@ interface TripTilesProps {
  * 16 under the card, or under the signboards' strip (Figma 3778:3186). The tiles 8 apart (3778:3183,
  * its row 3886:6278).
  */
-export function TripTiles({ shown, shownMetres, discounted, turns, onTurn }: TripTilesProps) {
+export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: TripTilesProps) {
   return (
     <div
       data-testid="trip-tiles"
@@ -43,7 +43,7 @@ export function TripTiles({ shown, shownMetres, discounted, turns, onTurn }: Tri
           <button
             type="button"
             data-testid="trip-fare-turn"
-            aria-label={`${discounted ? 'Discounted' : 'Regular'} fare ${discounted ? shown.discounted : shown.regular}. Show the ${discounted ? 'regular' : 'discounted'} fare`}
+            aria-label={`${isDiscounted ? 'Discounted' : 'Regular'} fare ${isDiscounted ? shown.discounted : shown.regular}. Show the ${isDiscounted ? 'regular' : 'discounted'} fare`}
             onClick={onTurn}
             className={
               TILE +
@@ -51,7 +51,7 @@ export function TripTiles({ shown, shownMetres, discounted, turns, onTurn }: Tri
             }
           >
             <span data-testid="trip-fare" className={FIGURE}>
-              {discounted ? shown.discounted : shown.regular}
+              {isDiscounted ? shown.discounted : shown.regular}
             </span>
             <span className={NAME + ' flex items-center gap-1.5'}>
               <span
@@ -61,7 +61,7 @@ export function TripTiles({ shown, shownMetres, discounted, turns, onTurn }: Tri
               >
                 <ReloadIcon />
               </span>
-              {discounted ? 'Discounted fare' : 'Regular fare'}
+              {isDiscounted ? 'Discounted fare' : 'Regular fare'}
             </span>
           </button>
         )
