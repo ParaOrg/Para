@@ -15,9 +15,14 @@ export function rowsOutsideRide(
   startId: string | null,
   endId: string | null,
   endRow: 'from' | 'to' | null = null,
+  isLoop = false,
 ): Set<string> {
-  const ride = rideRows(rows, startId, endId, endRow);
+  const ride = rideRows(rows, startId, endId, endRow, isLoop);
   if (!ride) return new Set();
+  // A wrapped ride runs from the start down to the bottom and on from the top
+  // to the end: what it leaves out is the rows strictly between the end and the start.
+  if (ride.wraps)
+    return new Set(rows.filter((_, i) => i > ride.last && i < ride.first).map((r) => r.id));
   return new Set(rows.filter((_, i) => i < ride.first || i > ride.last).map((r) => r.id));
 }
 
@@ -44,20 +49,30 @@ export function rowsOutsideStartAlone(
  * `endRow`, an end row picked with the start kept (rideToEnd): the ride from
  * the start's row to the destination, the row count, or back to the origin,
  * -1. The one rule the card's rail and folds read (rowsOutsideRide).
+ *
+ * On a loop (`isLoop`) the rows are what lies between its tip at the top and
+ * the tip again at the bottom, and a ride only goes forward, round: an
+ * `endRow` of 'from' is the same row as 'to', the tip, and an end above the
+ * start wraps — `first` is the start's row, `last` the end's above it, and
+ * `wraps` is true: the ride runs from the start to the bottom and on from the
+ * top to the end.
  */
 export function rideRows(
   rows: readonly { id: string }[],
   startId: string | null,
   endId: string | null,
   endRow: 'from' | 'to' | null = null,
-): { first: number; last: number } | null {
+  isLoop = false,
+): { first: number; last: number; wraps?: true } | null {
   const startAt = startId === null ? -1 : rows.findIndex((r) => r.id === startId);
   if (startId !== null && startAt < 0) return null;
   if (endId === null) {
     if (endRow === null || startId === null) return null;
-    return endRow === 'to' ? { first: startAt, last: rows.length } : { first: -1, last: startAt };
+    if (isLoop || endRow === 'to') return { first: startAt, last: rows.length };
+    return { first: -1, last: startAt };
   }
   const endAt = rows.findIndex((r) => r.id === endId);
   if (endAt < 0) return null;
+  if (isLoop && endAt < startAt) return { first: startAt, last: endAt, wraps: true };
   return startAt <= endAt ? { first: startAt, last: endAt } : { first: endAt, last: startAt };
 }
