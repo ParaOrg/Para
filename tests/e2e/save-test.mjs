@@ -31,6 +31,9 @@
 // warnings (the duplicate key). And the camera
 // with the cards, the public map's in the studio too (the owner, 2026-09-30):
 // a trip opened on its whole route, beside the card.
+// And the return trip closing the loop: it begins on the outbound's end, the outbound shows
+// faintly under it, Close the loop ends it on the outbound's start, and the save panel says
+// how far an open loop falls short.
 import { readFileSync } from 'node:fs';
 
 import { chromium } from 'playwright';
@@ -807,9 +810,18 @@ async function drawLine(points) {
   await go(at(0, 0), 15);
   await page.getByRole('button', { name: '+ New Route' }).click();
   await page.waitForTimeout(200);
+  if (!newRouteChecked) {
+    newRouteChecked = true;
+    check(
+      'a new route has no "Close the loop": it only closes a return trip',
+      (await page.getByTestId('close-loop').count()) === 0 &&
+        (await page.evaluate(() => window.__src('draw-outbound')))?.features.length === 0,
+    );
+  }
   for (const p of points) await clickAt(p, 300);
   await done();
 }
+let newRouteChecked = false;
 await drawLine(OUT);
 check(
   'Done opens the save panel, the ends guessed from where the line runs',
@@ -886,13 +898,72 @@ check(
 );
 
 // ---- 4. The return trip, into the slot
+const metresBetween = ([lng1, lat1], [lng2, lat2]) => {
+  const rad = Math.PI / 180;
+  const h =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lng2 - lng1) * rad) / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+};
+const drawnPoints = async () =>
+  (await page.evaluate(() => window.__src('draw-points')))?.features.map(
+    (f) => f.geometry.coordinates,
+  ) ?? [];
+const closeLoop = () => page.getByTestId('close-loop');
+const outLine = outV?.shape?.coordinates ?? [];
 await returnTrip().click();
-await page.waitForTimeout(200);
-for (const p of BACK) await clickAt(p, 300);
+await page.waitForTimeout(400);
+let drawn = await drawnPoints();
+check(
+  "the return trip begins with its first point on the outbound line's end (<1 m)",
+  drawn.length === 1 && outLine.length > 1 && metresBetween(drawn[0], outLine.at(-1)) < 1,
+  `${drawn.length} point(s), ${drawn[0] && outLine.length ? metresBetween(drawn[0], outLine.at(-1)).toFixed(2) : '?'} m`,
+);
+check(
+  '  the outbound shows under it: its line, and a ring and a dot at its two ends',
+  (await page.evaluate(() => window.__src('draw-outbound')))?.features
+    .map((f) => f.properties.role)
+    .join() === 'line,start,end',
+);
+check(
+  '  "Close the loop" is on the toolbar, enabled: there is a point to come from',
+  (await closeLoop().count()) === 1 && (await closeLoop().isEnabled()),
+);
+// Two more clicks leave the line well short of where papunta began.
+await clickAt(BACK[1], 300);
+await clickAt(at(-0.002, -0.0015), 300);
+await done();
+const gapNotice = await page
+  .getByTestId('save-loop')
+  .innerText()
+  .catch(() => '');
+check(
+  '  Done, with the loop open: the panel says how far the end is from where papunta began',
+  /^The return trip ends \d+ m from where papunta began\. Close the loop\?$/.test(gapNotice.trim()),
+  gapNotice,
+);
+await page.getByRole('button', { name: 'Back to map' }).click();
+await page.waitForTimeout(300);
+await closeLoop().click();
+await idle();
+await page.waitForTimeout(400);
+drawn = await drawnPoints();
+check(
+  "  Close the loop adds a last point on the outbound line's start (<1 m), and then rests",
+  drawn.length === 4 &&
+    outLine.length > 1 &&
+    metresBetween(drawn.at(-1), outLine[0]) < 1 &&
+    (await closeLoop().isDisabled()),
+  `${drawn.length} point(s), ${drawn.length && outLine.length ? metresBetween(drawn.at(-1), outLine[0]).toFixed(2) : '?'} m`,
+);
 await done();
 check(
   'the return trip opens as "Draw the return trip"',
   (await body()).includes('Draw the return trip'),
+);
+check(
+  '  and, with the loop closed, the panel has no gap to say',
+  (await page.getByTestId('save-loop').count()) === 0,
 );
 n = log.length;
 await saveButton().click();
@@ -910,6 +981,17 @@ check(
   '  both directions are drawn, still two rows',
   directionsOf(outRoute?.id).length === 2 && directionsOf(outRoute?.id).every((v) => v.shape),
   `${directionsOf(outRoute?.id).map((v) => (v.shape ? 'drawn' : 'slot'))}`,
+);
+const backLine = backV?.shape?.coordinates ?? [];
+check(
+  '  the two lines meet at both ends: the return begins where papunta ended, and ends where it began (<1 m)',
+  backLine.length > 1 &&
+    outLine.length > 1 &&
+    metresBetween(backLine[0], outLine.at(-1)) < 1 &&
+    metresBetween(backLine.at(-1), outLine[0]) < 1,
+  backLine.length && outLine.length
+    ? `${metresBetween(backLine[0], outLine.at(-1)).toFixed(2)} m and ${metresBetween(backLine.at(-1), outLine[0]).toFixed(2)} m`
+    : 'no lines',
 );
 await page.waitForTimeout(1200);
 check(

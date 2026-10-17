@@ -35,6 +35,7 @@ import {
   useAuthFlow,
   useDrawing,
   useFollow,
+  useLoopClosing,
   useSaveFlow,
   useSaveTarget,
   useStudioMap,
@@ -153,6 +154,16 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     target,
     setNotice,
   });
+
+  // A return trip starts where the other way ended, shows it faintly, and can close the loop.
+  const { loop, startReturnTrip } = useLoopClosing(
+    map,
+    draw,
+    target.editing ? null : (target.parentRoute?.id ?? null),
+    target.slotReversed,
+    saved.directions,
+    hotspots.hotspots,
+  );
 
   const onDone = () => {
     if (!isSignedIn) setIsSigningIn(true);
@@ -341,7 +352,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             onDismiss={() => setToast(null)}
             onDrawReturnTrip={(routeId) => {
               setToast(null);
-              draw.start(routeId);
+              startReturnTrip(routeId);
             }}
           />
 
@@ -353,6 +364,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 isPlayground && !isSaving && !isSigningIn && !isChangingPassword && !isResetting
               }
               ends={extendEnds}
+              loop={loop}
             />
           ) : choosing ? null : (
             /*
