@@ -132,14 +132,12 @@ test("the ride-to cut of a place shared by a jeep hintuan and a station keeps to
     route: { ...route, headHotspotId: 'h', tailHotspotId: 't' },
     shape: { type: 'LineString', coordinates: LINE },
   });
-  assert.deepEqual(
-    rideCut(v(JEEP), HOTSPOTS, 'jeep-buendia').dots.map((d) => d.hotspotId),
-    ['jeep-buendia'],
-  );
-  assert.deepEqual(
-    rideCut(v(LRT1), HOTSPOTS, 'lrt-buendia').dots.map((d) => d.hotspotId),
-    ['lrt-buendia'],
-  );
+  // The ride ends at the line's own box whichever order the boxes are listed
+  // in: were the other line's box counted too, it could be the last dot.
+  for (const boxes of [HOTSPOTS, [...HOTSPOTS].reverse()]) {
+    assert.equal(rideCut(v(JEEP), boxes, 'jeep-buendia').endHotspotId, 'jeep-buendia');
+    assert.equal(rideCut(v(LRT1), boxes, 'lrt-buendia').endHotspotId, 'lrt-buendia');
+  }
 });
 
 // The studio's links when a hintuan is saved (hotspots-geometry.ts, linksThrough):

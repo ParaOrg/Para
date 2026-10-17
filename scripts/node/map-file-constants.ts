@@ -1,5 +1,5 @@
 // The map file's address and the early request's name, read from the text of
-// src/features/published-map/map-file.ts rather than imported: Vite bundles
+// src/features/routes/published/map-file.ts rather than imported: Vite bundles
 // its config before the `@/` alias exists, and map-file.ts reaches the rest
 // of the app through `@/`; check-build.mjs runs on plain Node. One regex for
 // both readers (vite.config.ts, scripts/checks/check-build.mjs), so the two

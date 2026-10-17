@@ -874,7 +874,7 @@ const snapshot = await page.evaluate(async () => {
   // Each direction's full line, as the page reads it for a lit direction
   // (map-file.ts): the source holds overviews until then, and where two routes
   // share a road is found on the lines themselves, as before the index.
-  const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+  const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
   const routes = [];
   for (const f of routesFC?.features ?? []) {
     if (f.geometry.type !== 'LineString' || f.geometry.coordinates.length < 2) continue;
@@ -907,7 +907,7 @@ console.log(
 // its route's two end hotspots — from the published index, through the page's
 // own reader (overviews as the lines: only whether one is drawn is asked).
 const published = await page.evaluate(() =>
-  import('/src/features/published-map/api/fetch-index.ts')
+  import('/src/features/routes/published/fetch-index.ts')
     .then((f) => f.fetchIndex())
     .catch(() => null),
 );
@@ -1035,8 +1035,8 @@ const trip = () => card().locator('[data-testid="trip"]');
 const tripLabel = async () =>
   (await trip().count()) ? ((await card().first().getAttribute('aria-label')) ?? '') : '';
 const tripRow = async (id) => {
-  const row = card().locator(`[data-testid="${id}"]`);
-  return (await row.count()) ? (await row.first().innerText()).replace(/\s+/g, ' ').trim() : '';
+  const name = card().locator(`[data-testid="${id}"] [data-part="name"]`);
+  return (await name.count()) ? (await name.first().innerText()).replace(/\s+/g, ' ').trim() : '';
 };
 
 /**
@@ -1060,8 +1060,8 @@ const tripChecks = async () => {
         import('/src/features/routes/model/routes.ts'),
       ]);
       // The direction with its full line, as the page reads them (map-file.ts).
-      const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
-      const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+      const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
+      const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
       const found = (await fetchIndex()).directions.find((x) => x.id === id);
       const v = found && { ...found, shape: (await fetchLine(id)) ?? found.shape };
       const metres = v && lineLength(directionLine(v));
@@ -1193,8 +1193,8 @@ const tripChecks = async () => {
             import('/src/features/routes/model/ride.ts'),
             import('/src/shared/utils/geo.ts'),
           ]);
-          const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
-          const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+          const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
+          const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
           const m = await fetchIndex();
           const found = m.directions.find((x) => x.id === id);
           const v = found && { ...found, shape: (await fetchLine(id)) ?? found.shape };
@@ -1770,8 +1770,8 @@ const tripChecks = async () => {
                   import('/src/shared/utils/geo.ts'),
                 ]);
                 const { fetchIndex } =
-                  await import('/src/features/published-map/api/fetch-index.ts');
-                const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+                  await import('/src/features/routes/published/fetch-index.ts');
+                const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
                 const m = await fetchIndex();
                 const found = m.directions.find((x) => x.id === id);
                 const v = found && { ...found, shape: (await fetchLine(id)) ?? found.shape };
@@ -2249,8 +2249,8 @@ const tripChecks = async () => {
     const ends = await page.evaluate(async (id) => {
       try {
         const { travelLine } = await import('/src/features/routes/model/ride.ts');
-        const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
-        const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+        const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
+        const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
         const m = await fetchIndex();
         const found = m.directions.find((x) => x.id === id);
         const line = travelLine(
@@ -2410,7 +2410,7 @@ const tripChecks = async () => {
       const want = await page.evaluate(async (pickedId) => {
         try {
           const [{ fetchIndex }, { boxTheOtherWay }, { railLineOf }] = await Promise.all([
-            import('/src/features/published-map/api/fetch-index.ts'),
+            import('/src/features/routes/published/fetch-index.ts'),
             import('/src/features/routes/model/places.ts'),
             import('/src/features/routes/model/routes.ts'),
           ]);

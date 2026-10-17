@@ -1,5 +1,4 @@
-import type { Direction } from '@/features/routes/model/direction-schema';
-
+import { indexOutlineSchema, indexSchema, type Index } from './index-schema';
 import {
   EARLY_MAP_FILE,
   MAP_FILE_CACHE,
@@ -9,13 +8,13 @@ import {
   SERVED_FROM_HEADER,
   STORED_OLD,
   type EarlyMapFile,
-} from '../map-file';
-import { indexOutlineSchema, indexSchema, type Index } from '../schemas/index-schema';
+} from './map-file';
+import type { Direction } from '../model/direction-schema';
 
 /**
  * The published index, fetched, validated and shared: the public map's one
  * read of its data (ADR 0001; the contract is map-file.ts, the shape
- * schemas/index-schema.ts). Fetched once per page; a failure is not cached,
+ * index-schema.ts). Fetched once per page; a failure is not cached,
  * so a reload can try again. `no-cache` asks the server whether the file
  * changed rather than trusting a stale copy: the answer is a cheap 304 when
  * it has not. With no answer and no copy of this file in store, the copy an

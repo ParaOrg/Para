@@ -14,7 +14,7 @@ import { mapFileConstants } from './scripts/node/map-file-constants.ts';
 // and map-file.ts reaches the rest of the app through `@/` (2026-10-07, the
 // restructure). The same reader guards the build in check-build.mjs.
 const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
-  readFileSync(new URL('./src/features/published-map/map-file.ts', import.meta.url), 'utf8'),
+  readFileSync(new URL('./src/features/routes/published/map-file.ts', import.meta.url), 'utf8'),
 );
 
 /**

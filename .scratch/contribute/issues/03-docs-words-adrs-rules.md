@@ -1,6 +1,6 @@
 # 03: Docs: the words, ADRs 0003 and 0004, the rule changes
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 1, once 02 is resolved
 Who: Sonnet
@@ -27,5 +27,9 @@ Nothing else in those files changes. No em-dash asides; the glossary's own style
 - Links between the ADRs and the glossary resolve.
 - Docs only: CI runs nothing for it (`.github/workflows/ci.yml`).
 - An Opus review against `rule-changes.md` before the owner sees it.
+
+## Answer
+
+Applied in [PR #253](https://github.com/Roviicc/ParaPo/pull/253), with each item of `../rule-changes.md` listed against where it landed.
 
 ## Comments

@@ -17,7 +17,7 @@ import {
 
 /** routes and studio have concern folders; locator and published-map are one unit each. */
 const GROUPED = new Map([
-  ['routes', new Set(['model', 'geo', 'map', 'cards'])],
+  ['routes', new Set(['model', 'geo', 'map', 'cards', 'published'])],
   ['studio', new Set(['auth', 'data', 'drawing', 'panels'])],
 ]);
 
@@ -26,7 +26,9 @@ test('a path maps to the unit of its folder', () => {
     'app/public-map/main.tsx': 'app/public-map',
     'app/studio/studio-app.tsx': 'app/studio',
     'features/locator/use-locator.ts': 'features/locator',
+    'features/published-map/status.ts': 'features/published-map',
     'features/published-map/api/fetch-index.ts': 'features/published-map',
+    'features/routes/published/fetch-index.ts': 'features/routes/published',
     'features/routes/geo/pass.ts': 'features/routes/geo',
     'features/routes/map/basemap-thumbnails/osm.webp': 'features/routes/map',
     'features/studio/index.ts': 'features/studio',
