@@ -11,8 +11,9 @@ import { ROUTES_HIT_LAYER } from './tap';
 import type { Direction } from '../model/routes';
 
 /*
- * The saved directions on the map: their source, their layers (five, and
- * a resting one for each train line), and what lights them.
+ * The saved directions on the map: their source and their layers (five, and
+ * a resting one for each train line). What lights them is lighting.ts's, and
+ * the hook that keeps them in step is use-saved-routes-layers.ts.
  */
 
 export const SRC = 'saved-routes';
