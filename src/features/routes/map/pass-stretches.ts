@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { useLayerSwitch } from './layer-switch';
 import { applyHidden, useLayerReady } from './layers';
+import { litOpacity, useLighting } from './lighting';
 import { PASS_COLOUR, litWidth } from './line-style';
-import { litOpacity, useLighting } from './saved-routes-layers';
 import { ROUTES_HIT_LAYER } from './tap';
 import type { Hotspot } from '../model/hotspots';
 import {

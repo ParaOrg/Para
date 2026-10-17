@@ -13,7 +13,7 @@ import {
   type Mood,
   type Signals,
 } from './locator-mood';
-import { STILL_BELOW_MPS, type Camera, type Fix } from './use-locator';
+import { STILL_BELOW_MPS, type Camera, type Fix } from './locator-rules';
 
 /**
  * The dot's mood and face, from the locator: its fix, its camera, and the

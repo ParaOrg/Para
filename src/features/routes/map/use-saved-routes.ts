@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ROUTES_FRAMING, framesRoutes, routesBounds } from './framing';
 import { loadOnce } from './load-once';
 import { perFrame, type PerFrame } from './per-frame';
+import { RESTING_LAYERS, ROUTES_LINE } from './rail-rest-layers';
 import { useRouteTaps } from './route-taps';
 import { litOf, shownOf, showingOf, steady } from './routes-shown';
-import { RESTING_LAYERS, ROUTES_LINE, useSavedRoutesLayers } from './saved-routes-layers';
+import { useSavedRoutesLayers } from './use-saved-routes-layers';
 import type { Livery } from '../model/liveries';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 

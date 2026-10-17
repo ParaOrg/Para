@@ -1,4 +1,4 @@
-import type { Fix } from './use-locator';
+import type { Fix } from './locator-rules';
 
 /*
  * The commuter's dot has three moods, neutral, happy and angry: glad as the commuter
