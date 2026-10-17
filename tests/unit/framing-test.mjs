@@ -24,7 +24,8 @@ import {
   sameBounds,
   within,
 } from '../../src/features/routes/map/framing.ts';
-import { ROUTES_LINE, routesDrawn } from '../../src/features/routes/map/saved-routes-layers.ts';
+import { ROUTES_LINE } from '../../src/features/routes/map/rail-rest-layers.ts';
+import { routesDrawn } from '../../src/features/routes/map/saved-routes-layers.ts';
 import { directionLine } from '../../src/features/routes/model/routes.ts';
 import { routesOnMap } from '../../scripts/research/phoneSpeedParts.mjs';
 

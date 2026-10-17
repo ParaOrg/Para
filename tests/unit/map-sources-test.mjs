@@ -18,11 +18,8 @@ import { readFileSync } from 'node:fs';
 import { createPropertyExpression, groupByLayout, latest } from '@maplibre/maplibre-gl-style-spec';
 import { TILE_BUFFER, layOutOnce } from '../../src/features/routes/map/layers.ts';
 import { loadOnce } from '../../src/features/routes/map/load-once.ts';
-import {
-  addSavedRoutes,
-  routesData,
-  unpatched,
-} from '../../src/features/routes/map/saved-routes-layers.ts';
+import { addSavedRoutes } from '../../src/features/routes/map/saved-routes-layers.ts';
+import { routesData, unpatched } from '../../src/features/routes/map/saved-routes-data.ts';
 import {
   addSavedHotspots,
   hiddenHotspotFilters,
@@ -583,7 +580,7 @@ test('a style made afresh gets every full line read so far, one on its way when 
   const { createElement: h, act } = await import('react');
   const { createRoot } = await import('react-dom/client');
   const { useSavedRoutesLayers } =
-    await import('../../src/features/routes/map/saved-routes-layers.ts');
+    await import('../../src/features/routes/map/use-saved-routes-layers.ts');
 
   const map = routesMap();
   const [a, b, c] = rows.map((r) => r.id);

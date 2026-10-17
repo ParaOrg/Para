@@ -317,7 +317,7 @@ export function addSavedHotspots(
   // The chosen box's siblings, drawn stronger than the rest and outlined.
   // Every box is in this layer and the lit one, at opacity 0 unless its
   // feature state says so: a filter naming the boxes would lay the whole
-  // source out again at every tap (see useLighting in saved-routes-layers.ts).
+  // source out again at every tap (see useLighting in lighting.ts).
   map.addLayer(
     {
       id: SIBLINGS,
