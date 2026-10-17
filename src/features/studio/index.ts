@@ -8,7 +8,6 @@ export { useAuthFlow } from './auth/use-auth-flow';
 export { usePasswordRecovery } from './auth/use-password-recovery';
 export { useSession } from './auth/use-session';
 export { lineOf, listDirections, loadHotspotsFromSupabase } from './data/live';
-export { signboardUrl } from './data/signboards';
 export { getSupabase, setSupabase, supabaseConfig, supabaseConfigError } from './data/supabase';
 export { DrawToolbar } from './drawing/draw-toolbar';
 export { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from './drawing/studio-basemaps';

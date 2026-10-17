@@ -16,8 +16,8 @@ interface UseStudioTripOptions {
 }
 
 /**
- * What the workshop works out from the open trip: the rides lit on the map,
- * the trip's timeline and the pill's route count.
+ * The rides lit on the map, the open trip's timeline and the pill's route
+ * count.
  */
 export function useStudioTrip({
   map,
