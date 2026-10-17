@@ -1152,7 +1152,7 @@ if (PART === 1) {
       const [from = '', to = ''] = label.split(' → ');
       const row = (id) =>
         page
-          .locator(`[data-testid="${id}"]`)
+          .locator(`[data-testid="${id}"] [data-part="name"]`)
           .first()
           .innerText()
           .then(
@@ -1162,8 +1162,7 @@ if (PART === 1) {
       const [top, bottom] = [await row('trip-origin'), await row('trip-destination')];
       check(
         '  the card runs from where its direction leaves to where it goes',
-        // The origin says "start" and the destination "end" to a screen reader, after the name.
-        !!from && !!to && top === `${from} , start` && bottom === `${to} , end`,
+        !!from && !!to && top === from && bottom === to,
         `"${label}": top "${top}", bottom "${bottom}"`,
       );
       const litIds = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];

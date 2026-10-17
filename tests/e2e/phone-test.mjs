@@ -1035,8 +1035,8 @@ const trip = () => card().locator('[data-testid="trip"]');
 const tripLabel = async () =>
   (await trip().count()) ? ((await card().first().getAttribute('aria-label')) ?? '') : '';
 const tripRow = async (id) => {
-  const row = card().locator(`[data-testid="${id}"]`);
-  return (await row.count()) ? (await row.first().innerText()).replace(/\s+/g, ' ').trim() : '';
+  const name = card().locator(`[data-testid="${id}"] [data-part="name"]`);
+  return (await name.count()) ? (await name.first().innerText()).replace(/\s+/g, ' ').trim() : '';
 };
 
 /**
@@ -2903,8 +2903,7 @@ if (routeA) {
   const end = await tripRow('trip-destination');
   check(
     '  it opens the trip card, from where its direction leaves to where it goes',
-    // The origin says "start" and the destination "end" to a screen reader, after the name.
-    !!from && !!to && origin === `${from} , start` && end === `${to} , end`,
+    !!from && !!to && origin === from && end === to,
     `"${label}": top "${origin}", bottom "${end}"`,
   );
   // Opened, the camera takes in the whole route, clear of the card.
