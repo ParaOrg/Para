@@ -391,7 +391,8 @@ Written by sessions, applied by you, one at a time. Two sessions never write mig
 | 0018 | `review` | studio-maps/01 | `status` and `status_at` on `route` and `stop`, `stop.updated_at`, the partial unique indexes, `draft`, `takedown`, `editor_name`, the two guards, the new read rules |
 | 0019 | `contributions` | contribute/08 | The five tables, the monthly pieces, the helpers, the triggers, `save_contribution`, `retire_month`, `add_months`; drops `gps_session` |
 | 0020 | `backup_reader` | contribute/15 | The backup's read-only role and its read rules |
-| (0021) | `signup_hook` | contribute/09 | Only if the sign-up switch needs it (fix 3) |
+| 0021 | `loops` | loops (slice A) | `route.is_loop`; a loop's ends null; the signboard required and unique among loops; one direction; made a loop or not and stays so. Written; the owner applies it. Takes 0021, so 0018 to 0020 keep their numbers |
+| (0022) | `signup_hook` | contribute/09 | Only if the sign-up switch needs it (fix 3); was 0021 |
 
 After each: regenerate the types, re-run the advisors and §13's query.
 

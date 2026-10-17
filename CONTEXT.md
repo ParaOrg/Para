@@ -11,12 +11,13 @@ existed, one was chosen.
 
 **Route**:
 A named pair of ends that jeeps run between, in both directions — `Tala – SM
-Fairview`. A route is its two ends; it has no name of its own.
+Fairview`. A route is its two ends; it has no name of its own. A loop is the
+exception: it has no ends at all, and its signboard is its name.
 _Avoid_: line, service
 
 **Direction**:
 One way of riding a route — `Tala → SM Fairview` or `SM Fairview → Tala`.
-Every route has exactly two. A direction owns its line; the route owns the ends.
+Every route has exactly two; a loop, one. A direction owns its line; the route owns the ends.
 _Avoid_: variant, leg; trip (a direction is a trip only while its card is open — see Trip)
 
 **Outbound** / **Return**:
@@ -27,9 +28,9 @@ LRT-1 and MRT-3, Eastbound or Westbound on LRT-2.
 _Avoid_: forward/backward, inbound (meaningless here)
 
 **Slot**:
-A direction that exists but has no line yet. Every route is born with its
-return as a slot, so the card can always be flipped and the studio always
-knows what is undrawn.
+A direction that exists but has no line yet. Every route but a loop is born
+with its return as a slot, so the card can always be flipped and the studio
+always knows what is undrawn.
 _Avoid_: missing direction, placeholder
 
 **Head** / **Tail**:
@@ -42,6 +43,26 @@ _Avoid_: origin/destination, start/end, from/to (those belong to a direction)
 **Via**:
 The one place that tells apart two routes sharing both ends by different
 roads — `Tala – Novaliches via Zabarte`. Absent unless needed.
+
+**Loop**:
+A route that goes round one way with no ends — `UP – Ikot`. Commuters and
+editors read it as **Ikot** (the owner's word, 2026-10-17, in a list's row and
+in a trip's header where "Papunta" would stand); the concept is Loop in code
+and here. It has one direction, its line closed on where it began, and no
+head, tail, return or SWITCH; every place on it is a stop, a terminal box on
+it counting as one. It is called by its signboard, which a loop must have. The
+same streets the other way round are another loop with a signboard of its own
+— `UP – Toki`.
+_Avoid_: paikot (said of two-ended routes whose two directions make a circle,
+as `loop-closing.ts` has it), circular route, ring
+
+**Tip** (of a loop's trip):
+Where a loop's timeline starts: the place whose card the trip was opened
+from, else the one nearest the commuter, else the first its line passes as
+drawn. A place, not only a hintuan: a terminal's box on a loop counts. Not an
+end: a ride goes on round past it, and it is chosen once, when the trip opens,
+so nothing moves under the rider.
+_Avoid_: start (a ride's), head, origin
 
 **Line**:
 The drawn geometry of one direction: the road it follows, snapped to the
@@ -56,9 +77,9 @@ _Avoid_: variant, branch
 
 **Signboard**:
 The short informal wording a jeep is called out by — `TALA – SM FAIRVIEW` —
-written by the editor in the jeepneys' own style. Optional. It is the
-editor's words, never the app's: the route name is generated, the signboard
-is not.
+written by the editor in the jeepneys' own style. Optional, except on a loop,
+which is called by it. It is the editor's words, never the app's: the route
+name is generated, the signboard is not.
 _Avoid_: route name, label
 
 ### Places
@@ -119,7 +140,8 @@ _Avoid_: east side, north side (compass sides change with the road)
 
 **Timeline**:
 A direction as its string of places in travel order: where it leaves from,
-every hintuan it passes, where it is going. What a signboard lists, generated.
+every hintuan it passes, where it is going; on a loop, from its tip round to
+the tip again. What a signboard lists, generated.
 A row is the place; when the place has several boxes and the box has a name
 of its own, the row reads both — `SM Fairview – Main Babaan`.
 _Avoid_: stop list, itinerary, sequence
@@ -133,7 +155,8 @@ there to there, priced between them, on
 the direction's own line; an end picked before the start is ridden back
 along it, its arrows turned to run from the start to the end. On the map a
 lit direction is drawn as its ride: its arrows, its ends named, the stretch
-between the picks.
+between the picks. On a loop a ride only goes forward, round past the tip if
+need be.
 _Avoid_: journey, leg, run; trip (that is the card a ride is shown on)
 
 **Start** / **End** (of a ride):
@@ -256,7 +279,7 @@ One recording on the contributor page, from tapping Start to tapping Save, as
 it reaches the studio: its points (about one a second), its hintos and gaps, and what the
 contributor typed: a start point name, an end point name, a description, what
 was ridden. Never public.
-_Avoid_: trip and ride (both taken), ikot, biyahe, session, track, trace
+_Avoid_: trip and ride (both taken), ikot (said of a contribution it would be wrong: Ikot is the word shown for a loop, a route; see Loop), biyahe, session, track, trace
 
 **Hinto**:
 A time the phone stood still in one spot during a contribution: 8 seconds or

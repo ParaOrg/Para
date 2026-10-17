@@ -14,9 +14,10 @@ import type { Ring } from '../geo/ring';
 /**
  * The hintuans a line passes, in the order it reaches them. `index` is
  * where along the line, which is what `route_stop.sequence` stores.
- * Terminals are not listed (a route's ends come from the route itself),
- * except on a loop, which has no ends, and neither are the hintuans this route does not stop at (`servedBy`): the
- * jeep hintuans under a train's track, the stations over a jeep's road.
+ * Terminals are not listed, since a route's ends come from the route itself,
+ * except on a loop, which has no ends. Neither are the hintuans this route
+ * does not stop at (`servedBy`): the jeep hintuans under a train's track, the
+ * stations over a jeep's road.
  */
 export function hintuansAlong<S extends Hotspot>(
   line: readonly LngLat[],
@@ -132,15 +133,14 @@ export function timelineFor(
   along: readonly Hotspot[],
   lineStart?: LngLat,
 ): Timeline {
-  const row = toRow;
   const [from, to] = reversed ? [tail, head] : [head, tail];
   const endPlaces = new Set([head, tail].filter((s) => !!s).map((s) => placeKey(s)));
   let between = along.filter((s) => s.kind === 'hintuan' && !endPlaces.has(placeKey(s)));
   if (lineStart && from && to && drawnFromTheEnd(lineStart, from, to)) between = between.reverse();
   const rows = between
     .filter((s, i) => i === 0 || placeKey(s) !== placeKey(between[i - 1]))
-    .map(row);
-  return { from: from ? row(from) : null, to: to ? row(to) : null, between: rows };
+    .map(toRow);
+  return { from: from ? toRow(from) : null, to: to ? toRow(to) : null, between: rows };
 }
 
 /**
@@ -178,7 +178,18 @@ export function loopRows(along: readonly Hotspot[]): TimelineRow[] {
 export function loopTimeline(along: readonly Hotspot[], tipRowId: string | null = null): Timeline {
   const rows = loopRows(along);
   if (rows.length === 0) return { from: null, to: null, between: [] };
-  const found = rows.findIndex((r) => r.id === tipRowId);
+  // The row itself first: a place passed twice by two boxes has two rows, and each is a tip.
+  // Failing that, another box of the tip's place is the same tip, as it is for a ride's cut.
+  const exact = rows.findIndex((r) => r.id === tipRowId);
+  const tipBox = along.find((s) => s.id === tipRowId);
+  const tipKey = tipBox ? placeKey(tipBox) : null;
+  const found =
+    exact >= 0
+      ? exact
+      : rows.findIndex((r) => {
+          const box = along.find((s) => s.id === r.id);
+          return box ? placeKey(box) === tipKey : false;
+        });
   const tip = Math.max(0, found);
   return {
     from: rows[tip],
