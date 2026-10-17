@@ -107,7 +107,7 @@ its edge — a hintuan is drawn on the roadside and the line follows the road,
 so they touch without crossing. Five metres reaches the box on this side of
 the road and not the one across it. Nothing else makes a hotspot part of a
 direction. On the map, the stretch of the line that passes a hintuan is
-painted orange.
+painted green.
 _Avoid_: near (without the number), serves, links to
 
 **Babaan side** (of a direction at a hintuan):
