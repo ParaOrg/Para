@@ -10,6 +10,20 @@ import { LocatorIndicatorOverlay, haloFor } from './locator-indicator-overlay';
 import type { Face, Mood } from './locator-mood';
 import { circleRadius, indicatorScale, type Fix } from './use-locator';
 
+interface LocatorOnMapProps {
+  map: MapLibreMap;
+  fix: Fix;
+  heading: number | null;
+  mood: Mood;
+  face: Face;
+  beat: number;
+  /** What it gazes at, for a while after one is picked, and when a change is no pick (dot-gaze.ts). */
+  gazeAt?: readonly Subject[];
+  hushedAt?: { readonly current: number };
+  /** A tap on the dot (locatorMood's `poke`). */
+  onPoke: () => void;
+}
+
 /**
  * The overlay at the commuter's fix, as a DOM marker, not a map layer: it
  * costs the map nothing to move (an animated layer keeps MapLibre repainting
@@ -28,19 +42,7 @@ export function LocatorOnMap({
   gazeAt = [],
   hushedAt,
   onPoke,
-}: {
-  map: MapLibreMap;
-  fix: Fix;
-  heading: number | null;
-  mood: Mood;
-  face: Face;
-  beat: number;
-  /** What it gazes at, for a while after one is picked, and when a change is no pick (dot-gaze.ts). */
-  gazeAt?: readonly Subject[];
-  hushedAt?: { readonly current: number };
-  /** A tap on the dot (locatorMood's `poke`). */
-  onPoke: () => void;
-}) {
+}: LocatorOnMapProps) {
   const el = useMarkerElement('locator-overlay');
   // The dot answers a tap itself, and the map beneath never hears the tap
   // (marker-tap.ts): no line opens, the camera stays. A drag that starts on
