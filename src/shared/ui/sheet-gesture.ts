@@ -112,16 +112,16 @@ function setSafeTop(px: number) {
 /** Whether measureSafeTop has read it: once a page. */
 let safeTopRead = false;
 /**
- * Reads the status bar's height, what Max leaves above its strip of map. 0
- * where the page does not run behind the bar.
+ * Reads the status bar's height, what Max leaves above its strip of map, as
+ * `sheet` sees it: inside the studio's map box the variable is 0. 0 where the
+ * page does not run behind the bar.
  */
-export function measureSafeTop() {
-  if (safeTopRead || typeof document === 'undefined') return;
+export function measureSafeTop(sheet: Element | null) {
+  if (safeTopRead || !sheet) return;
   safeTopRead = true;
   const probe = document.createElement('div');
   probe.style.cssText = 'position:fixed;top:0;visibility:hidden;padding-top:var(--map-safe-top)';
-  // Inside the map box when there is one, where the variable may be 0.
-  (document.querySelector('[data-map-box]') ?? document.body).appendChild(probe);
+  sheet.appendChild(probe);
   setSafeTop(parseFloat(getComputedStyle(probe).paddingTop) || 0);
   probe.remove();
 }

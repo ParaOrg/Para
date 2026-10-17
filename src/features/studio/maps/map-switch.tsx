@@ -69,6 +69,8 @@ const OPTION =
  * Public. A radio group, so Tab reaches it once and the arrow keys move
  * between the maps. The current one is filled and carries a check (on a phone
  * the check stands in for its icon), so it does not rest on colour alone.
+ * Below the `xs` breakpoint the other options drop their icons, so the three
+ * words fit whole.
  * This changes what the map shows; the layers button changes how it looks.
  */
 export function MapSwitch({ ref, value, onChange }: MapSwitchProps) {
@@ -95,9 +97,7 @@ export function MapSwitch({ ref, value, onChange }: MapSwitchProps) {
               onChange={() => onChange(option)}
               className="sr-only"
             />
-            <Icon className={isCurrent ? 'max-sm:hidden' : 'max-[360px]:hidden'}>
-              {ICONS[option]}
-            </Icon>
+            <Icon className={isCurrent ? 'max-sm:hidden' : 'max-xs:hidden'}>{ICONS[option]}</Icon>
             {isCurrent && <Icon className="sm:hidden">{CHECK}</Icon>}
             <span className="truncate">{LABELS[option]}</span>
             {isCurrent && <Icon className="max-sm:hidden">{CHECK}</Icon>}

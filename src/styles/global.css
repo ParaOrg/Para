@@ -18,6 +18,8 @@
 @theme {
   --container-wide: 40rem;
   --container-float: 64rem;
+  /* The narrowest phones, where the studio's map switch drops its icons (`max-xs:`). */
+  --breakpoint-xs: 22.5rem;
 }
 
 /*
@@ -56,11 +58,15 @@
 /*
  * How far the map's top-anchored things stand clear of the status bar. The
  * page's own inset where the map runs to the screen's top; 0 inside a map box
- * that starts below something that already clears the bar (the studio's top
- * band sets it, with data-map-box), so the inset is paid once.
+ * (`data-map-box`), which starts below something that already clears the bar,
+ * so the inset is paid once. One rule, so the sheets' measuring and the CSS
+ * read the same value.
  */
 :root {
   --map-safe-top: env(safe-area-inset-top);
+}
+[data-map-box] {
+  --map-safe-top: 0px;
 }
 
 html,
