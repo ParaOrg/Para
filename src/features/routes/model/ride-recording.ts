@@ -333,15 +333,26 @@ export interface RecordedWays {
 export const AUTO_STOP_ARM_M = 1000;
 /** Once armed, coming back within this of where the ride began stops it; the owner may widen it to 500 m. */
 export const AUTO_STOP_RADIUS_M = 300;
-/** A direction of travel needs this much movement; less is the phone's wander, not a heading. */
+/**
+ * A direction of travel needs the recent fixes' older and newer halves to sit
+ * this far apart (their averages, not single fixes); less is the phone's
+ * wander, not a heading. A jeep at 15 km/h covers about 21 m between the
+ * halves, so it still gets a heading, and a crawl keeps the last one.
+ */
 export const BEARING_MIN_M = 20;
 /**
- * That movement must come within this long. Standing, the phone drifts a few
- * metres a minute (HINTO_RADIUS_M allows 25); without a time limit the drift
- * adds up to a heading and the map turns while the contributor waits. It also
- * stops a heading being measured from before a stop.
+ * The fixes that decide a heading are the ones this recent. Standing, the
+ * phone drifts (HINTO_RADIUS_M allows 25 m); with no time limit the drift adds
+ * up to a heading and the map turns while the contributor waits. It also stops
+ * a heading being measured from before a stop.
  */
 export const BEARING_WINDOW_S = 10;
+/**
+ * Each half needs this many fixes. One phone fix is off by 8 m or more; the
+ * average of several is off by about that over their square root, so a false
+ * 20 m between the halves is rare where between two single fixes it is not.
+ */
+const BEARING_MIN_FIXES_PER_HALF = 2;
 
 interface PlacedSwitch {
   time: number;
@@ -350,19 +361,31 @@ interface PlacedSwitch {
   index: number;
 }
 
+/** The switches that change the way, in time order; one to the way already on is dropped. */
+function effectiveSwitches(switches: readonly WaySwitch[]): WaySwitch[] {
+  let way: Way = 'outbound';
+  return [...switches]
+    .sort((a, b) => a.time - b.time)
+    .filter((waySwitch) => {
+      if (waySwitch.to === way) return false;
+      way = waySwitch.to;
+      return true;
+    });
+}
+
+/** The way the recording is on now: the last switch that changed it, or outbound with none. */
+export function currentWay(switches: readonly WaySwitch[]): Way {
+  return effectiveSwitches(switches).at(-1)?.to ?? 'outbound';
+}
+
 /** The switches that change the way, in time order, each placed on a fix. */
 function placeSwitches(fixes: readonly Fix[], switches: readonly WaySwitch[]): PlacedSwitch[] {
   if (fixes.length === 0) return [];
-  const placed: PlacedSwitch[] = [];
-  let way: Way = 'outbound';
-  for (const waySwitch of [...switches].sort((a, b) => a.time - b.time)) {
-    if (waySwitch.to === way) continue;
-    way = waySwitch.to;
+  return effectiveSwitches(switches).map((waySwitch) => {
     let index = 0;
     while (index + 1 < fixes.length && fixes[index + 1].time <= waySwitch.time) index++;
-    placed.push({ time: waySwitch.time, to: waySwitch.to, index });
-  }
-  return placed;
+    return { time: waySwitch.time, to: waySwitch.to, index };
+  });
 }
 
 /**
@@ -415,32 +438,47 @@ export function shouldAutoStop(fixes: readonly Fix[], switches: readonly WaySwit
   const placed = placeSwitches(fixes, switches);
   const latest = placed[placed.length - 1];
   const away = fixes.find((fix) => distanceM(start, fix.at) > AUTO_STOP_ARM_M);
-  if (latest?.to !== 'return' || !away) return false;
+  if (currentWay(switches) !== 'return' || !latest || !away) return false;
   const armedAt = Math.max(latest.time, away.time);
   return fixes.some((fix) => fix.time > armedAt && distanceM(start, fix.at) <= AUTO_STOP_RADIUS_M);
 }
 
+/** The initial great-circle bearing from one point to another, in degrees clockwise from north. */
+function bearingBetween([lng1, lat1]: LngLat, [lng2, lat2]: LngLat): number {
+  const dLng = toRad(lng2 - lng1);
+  const y = Math.sin(dLng) * Math.cos(toRad(lat2));
+  const x =
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
+/** The average position of some fixes; short distances only, where lng and lat average plainly. */
+function meanPosition(fixes: readonly Fix[]): LngLat {
+  const sum = fixes.reduce<LngLat>((acc, fix) => [acc[0] + fix.at[0], acc[1] + fix.at[1]], [0, 0]);
+  return [sum[0] / fixes.length, sum[1] / fixes.length];
+}
+
 /**
  * The direction of travel for a course-up map, in degrees clockwise from
- * north: from the latest fix back to the nearest earlier one at least
- * BEARING_MIN_M away and no more than BEARING_WINDOW_S older. Standing still or
- * crawling gives `previous` (or null when there is none), so the map keeps the
- * heading it had.
+ * north. The kept fixes within BEARING_WINDOW_S of the latest one are split by
+ * time into an older and a newer half; each needs at least two fixes, and the
+ * heading runs from the older half's average position to the newer half's,
+ * which must sit BEARING_MIN_M apart. Anything less (standing, crawling, too
+ * few fixes) gives `previous`, or null when there is none, so the map keeps the
+ * heading it had. Averaging first is what stops GPS noise turning the map.
  */
 export function courseBearing(fixes: readonly Fix[], previous: number | null): number | null {
   const latest = fixes[fixes.length - 1];
   if (!latest) return previous;
-  for (let i = fixes.length - 2; i >= 0; i--) {
-    if (latest.time - fixes[i].time > BEARING_WINDOW_S * 1000) break;
-    if (distanceM(fixes[i].at, latest.at) < BEARING_MIN_M) continue;
-    const [lng1, lat1] = fixes[i].at;
-    const [lng2, lat2] = latest.at;
-    const dLng = toRad(lng2 - lng1);
-    const y = Math.sin(dLng) * Math.cos(toRad(lat2));
-    const x =
-      Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-      Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
-    return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+  const recent = fixes.filter((fix) => latest.time - fix.time <= BEARING_WINDOW_S * 1000);
+  const middle = (recent[0].time + latest.time) / 2;
+  const older = recent.filter((fix) => fix.time < middle);
+  const newer = recent.filter((fix) => fix.time >= middle);
+  if (older.length < BEARING_MIN_FIXES_PER_HALF || newer.length < BEARING_MIN_FIXES_PER_HALF) {
+    return previous;
   }
-  return previous;
+  const from = meanPosition(older);
+  const to = meanPosition(newer);
+  return distanceM(from, to) >= BEARING_MIN_M ? bearingBetween(from, to) : previous;
 }

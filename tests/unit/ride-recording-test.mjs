@@ -11,6 +11,7 @@ import {
   AUTO_STOP_RADIUS_M,
   BEARING_WINDOW_S,
   courseBearing,
+  currentWay,
   distanceM,
   hintosOf,
   keptFixes,
@@ -521,48 +522,143 @@ test('ways: a switch between fixes sits on the last fix before it, and one befor
   assert.deepEqual(waysOf(fixes, [{ time: T0 + 10_000, to: 'return' }]).endPoint, fixes[1].at);
 });
 
-test('bearing: east is 90, a turn north is 0, and the heading is kept while standing', () => {
-  const east = [at(0, 0), at(5, 25), at(10, 50)];
-  assert.ok(Math.abs(courseBearing(east, null) - 90) < 0.5);
-  const turned = [...east, at(13, 50, 25), at(16, 50, 50)];
-  const bearing = courseBearing(turned, 90);
-  assert.ok(bearing < 0.5 || bearing > 359.5);
-  // Standing: every earlier fix within 20 m. The previous bearing stands; with none it is null.
-  const still = [at(0, 0), at(10, 3), at(20, 1)];
-  assert.equal(courseBearing(still, 123), 123);
-  assert.equal(courseBearing(still, null), null);
-  assert.equal(courseBearing([], 45), 45);
-});
-
-test('bearing: 20 m of movement gives a heading, 19 m does not; west is 270 and south 180', () => {
-  assert.equal(courseBearing([at(0, 0), at(5, 19)], 7), 7);
-  assert.ok(Math.abs(courseBearing([at(0, 0), at(5, 20.5)], 7) - 90) < 0.5);
-  assert.ok(Math.abs(courseBearing([at(0, 100), at(5, 50)], null) - 270) < 0.5);
-  assert.ok(Math.abs(courseBearing([at(0, 0, 100), at(5, 0, 50)], null) - 180) < 0.5);
-});
-
-test('bearing: the 20 m must come within 10 s', () => {
-  assert.equal(BEARING_WINDOW_S, 10);
-  assert.ok(Math.abs(courseBearing([at(0, 0), at(10, 21)], 7) - 90) < 0.5);
-  assert.equal(courseBearing([at(0, 0), at(11, 21)], 7), 7);
-});
-
-test('bearing: a drifting stand keeps the previous heading, and a move after it takes a new one', () => {
-  // Five minutes at a fix a second: the phone creeps east at 0.1 m/s (30 m in all) and jitters
-  // within 8 m. No 10 s stretch moves 20 m, so the map must not turn.
-  let seed = 7;
-  const random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648) * 2 - 1;
-  const stand = [];
-  for (let s = 0; s <= 300; s++) {
-    const angle = random() * Math.PI;
-    const radius = 8 * Math.abs(random());
-    stand.push(at(s, s * 0.1 + radius * Math.cos(angle), radius * Math.sin(angle)));
+/** A repeatable stream of independent normal numbers (mulberry32 and Box-Muller). */
+function gaussians(seed) {
+  let state = seed;
+  const uniform = () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  return () => Math.sqrt(-2 * Math.log(1 - uniform())) * Math.cos(2 * Math.PI * uniform());
+}
+/** The smallest angle between two bearings, in degrees. */
+const angleBetween = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+/** Walk `bearingFn` along growing prefixes of the fixes, as the screen does, one call per fix. */
+function headings(fixes, start = null) {
+  const out = [];
+  let heading = start;
+  for (let i = 1; i <= fixes.length; i++) {
+    heading = courseBearing(fixes.slice(0, i), heading);
+    out.push(heading);
   }
-  let heading = 77;
-  for (let i = 1; i <= stand.length; i++) heading = courseBearing(stand.slice(0, i), heading);
-  assert.equal(heading, 77);
-  // Then the jeepney moves off north: 25 m in 5 s is a heading again.
-  const moved = [...stand, at(303, 30, 12), at(305, 30, 25), at(308, 30, 40)];
-  const bearing = courseBearing(moved, heading);
-  assert.ok(bearing < 15 || bearing > 345, `bearing ${bearing}`);
+  return out;
+}
+
+test('currentWay: outbound with no switch, the last real flip otherwise', () => {
+  assert.equal(currentWay([]), 'outbound');
+  assert.equal(currentWay([{ time: T0, to: 'return' }]), 'return');
+  // A flip and a flip back is outbound again; a switch to the way already on changes nothing.
+  assert.equal(
+    currentWay([
+      { time: T0, to: 'return' },
+      { time: T0 + 1000, to: 'outbound' },
+    ]),
+    'outbound',
+  );
+  assert.equal(
+    currentWay([
+      { time: T0, to: 'return' },
+      { time: T0 + 1000, to: 'return' },
+    ]),
+    'return',
+  );
+  // Out of order: sorted by time first.
+  assert.equal(
+    currentWay([
+      { time: T0 + 2000, to: 'outbound' },
+      { time: T0, to: 'return' },
+    ]),
+    'outbound',
+  );
+  assert.equal(
+    currentWay([
+      { time: T0 + 2000, to: 'return' },
+      { time: T0, to: 'outbound' },
+    ]),
+    'return',
+  );
+  // It agrees with where the ride is armed to stop.
+  assert.equal(currentWay([{ time: T0, to: 'outbound' }]), 'outbound');
+});
+
+test('bearing: straight at 15 km/h gives the true heading in every direction', () => {
+  const metresPerSecond = 15 / 3.6;
+  const ride = (dx, dy) => {
+    const fixes = [];
+    for (let s = 0; s <= 30; s++)
+      fixes.push(at(s, dx * s * metresPerSecond, dy * s * metresPerSecond));
+    return courseBearing(fixes, null);
+  };
+  assert.ok(Math.abs(ride(1, 0) - 90) < 0.5);
+  assert.ok(Math.abs(ride(-1, 0) - 270) < 0.5);
+  assert.ok(Math.abs(ride(0, 1) - 0) < 0.5 || Math.abs(ride(0, 1) - 360) < 0.5);
+  assert.ok(Math.abs(ride(0, -1) - 180) < 0.5);
+});
+
+test('bearing: a 15 km/h ride with 2 m of noise stays within 10 degrees of the true heading', () => {
+  // The first seed tried (6.8 degrees); over 200 seeds about 7% of 90 s rides stray past 10 once.
+  const noise = gaussians(1);
+  const metresPerSecond = 15 / 3.6;
+  const fixes = [];
+  for (let s = 0; s <= 90; s++) {
+    fixes.push(at(s, s * metresPerSecond + 2 * noise(), 2 * noise()));
+  }
+  const all = headings(fixes);
+  const worst = Math.max(...all.slice(11).map((h) => angleBetween(h, 90)));
+  assert.ok(worst < 10, `worst error ${worst.toFixed(1)} degrees`);
+});
+
+test('bearing: a 90 degree corner at 20 km/h reaches the new direction within 10 s', () => {
+  const metresPerSecond = 20 / 3.6;
+  const fixes = [];
+  for (let s = 0; s <= 30; s++) fixes.push(at(s, s * metresPerSecond));
+  for (let s = 1; s <= 20; s++) fixes.push(at(30 + s, 30 * metresPerSecond, s * metresPerSecond));
+  const all = headings(fixes);
+  const bearingAt = (secondsPastCorner) => all[30 + secondsPastCorner];
+  assert.ok(angleBetween(bearingAt(0), 90) < 1);
+  assert.ok(angleBetween(bearingAt(10), 0) < 10, `${bearingAt(10)} 10 s after the corner`);
+  assert.ok(angleBetween(bearingAt(20), 0) < 1);
+});
+
+test('bearing: standing still with 8 m of noise per axis keeps the heading it had', () => {
+  // Two minutes at a fix a second, independent noise of 8 m per axis, and a creep of 0.1 m/s. The
+  // seed is the first one tried; it is not picked.
+  const noise = gaussians(1);
+  const fixes = [];
+  for (let s = 0; s <= 120; s++) fixes.push(at(s, 0.1 * s + 8 * noise(), 8 * noise()));
+  const all = headings(fixes, 77);
+  let turns = 0;
+  let before = 77;
+  for (const heading of all) {
+    if (angleBetween(heading, before) > 10) turns++;
+    before = heading;
+  }
+  assert.ok(turns <= 1, `${turns} turns over 10 degrees`);
+});
+
+test('bearing: with too few fixes in the window, or a half short of two, the heading is the previous', () => {
+  // Three fixes in the window, however far apart they are.
+  assert.equal(courseBearing([at(0, 0), at(5, 50), at(10, 100)], 7), 7);
+  // Four fixes, but one in the older half.
+  assert.equal(courseBearing([at(0, 0), at(8, 80), at(9, 90), at(10, 100)], 7), 7);
+  // Two and two: a heading.
+  assert.ok(Math.abs(courseBearing([at(0, 0), at(1, 0), at(9, 100), at(10, 100)], 7) - 90) < 0.5);
+  assert.equal(courseBearing([], 45), 45);
+  assert.equal(courseBearing([at(0, 0)], null), null);
+});
+
+test('bearing: the halves must sit 20 m apart, and only fixes from the last 10 s count', () => {
+  const halves = (apartM) => [at(0, 0), at(1, 0), at(9, apartM), at(10, apartM)];
+  assert.equal(BEARING_WINDOW_S, 10);
+  assert.equal(courseBearing(halves(19), 7), 7);
+  assert.ok(Math.abs(courseBearing(halves(20.5), 7) - 90) < 0.5);
+  // A fix 14 s old is outside the window: the four recent ones are all standing.
+  const stale = [at(0, 0), at(11, 100), at(12, 100), at(13, 100), at(14, 100)];
+  assert.equal(courseBearing(stale, 7), 7);
+  // A fix exactly 10 s old is inside it.
+  const edge = [at(0, 0), at(1, 0), at(9, 30), at(10, 30)];
+  assert.ok(Math.abs(courseBearing(edge, 7) - 90) < 0.5);
+  assert.equal(courseBearing([at(0, 0), at(1, 0), at(11, 30), at(12, 30)], 7), 7);
 });
