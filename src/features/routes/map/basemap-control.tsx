@@ -10,7 +10,7 @@ import { MapStyle } from './map-style';
 /** The public map's round 48 px button, or Figma's 40 px IconButton at 16 px from the corner. */
 export type MapButtonStyle = 'round' | 'icon-button';
 
-const CORNER_MARGIN = {
+export const CORNER_MARGIN = {
   round: 'mt-2.5 mr-2.5',
   'icon-button': 'mt-4 mr-4',
 } satisfies Record<MapButtonStyle, string>;

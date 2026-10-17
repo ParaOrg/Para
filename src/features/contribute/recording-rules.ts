@@ -19,7 +19,7 @@ export {
 /** The way as the contributor reads it. */
 export const WAY_LABEL = { outbound: 'Papunta', return: 'Pabalik' } satisfies Record<Way, string>;
 
-/** The way a tap on the leg button switches TO. */
+/** The way a tap on the way button switches TO. */
 export const OTHER_WAY = { outbound: 'return', return: 'outbound' } satisfies Record<Way, Way>;
 
 /** What the map draws of the fixes that count: a blue line per outbound run, an orange one per return run, a dot per switch. */

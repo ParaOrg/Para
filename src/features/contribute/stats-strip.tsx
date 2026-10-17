@@ -45,8 +45,8 @@ const BLUR_LAYERS = [
 ];
 
 /**
- * The figures over the bars: time and distance, and the leg the ride is on.
- * They change every second, so nothing here is a live region; the leg switch
+ * The figures over the bars: time and distance, and the way the recording is on.
+ * They change every second, so nothing here is a live region; the switch of way
  * is announced once on its own (RecordingScreen).
  */
 export function StatsStrip({ elapsedSeconds, distanceM, way, isPaused }: StatsStripProps) {

@@ -22,7 +22,7 @@ export const gapSchema = z.object({
   reasons: z.array(z.enum(GAP_REASONS)),
 });
 
-/** A tap on the leg button: when it was, and the way the ride was on from then. */
+/** A tap on the way button: when it was, and the way the recording was on from then. */
 export const switchSchema = z.object({
   time: z.number(),
   to: z.enum(['outbound', 'return']),

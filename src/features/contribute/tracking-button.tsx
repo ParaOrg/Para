@@ -12,7 +12,7 @@ import { cn } from '@/shared/utils/cn';
 import { PauseIcon, PlayIcon } from './tracking-icons';
 
 /**
- * Which bar. Papunta and Pabalik are the leg button, named for the leg a tap
+ * Which bar. Papunta and Pabalik are the way button, named for the way a tap
  * switches TO: Pabalik (orange) while the ride is on papunta, Papunta (blue)
  * while it is on pabalik.
  */
@@ -113,7 +113,7 @@ interface TrackingButtonProps extends Omit<
  * Figma's TrackingButtonPrimary: a square bar in a RouteCard's colours, its
  * Route/RouteCardPrimary effect and gloss Blob, which press in under
  * RouteCardPrimarySelected. Start, Resume and Stop are full-width bars; Save,
- * Cancel and the leg button sit in a row under them.
+ * Cancel and the way button sit in a row under them.
  */
 export function TrackingButton({
   variant,

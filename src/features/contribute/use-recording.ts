@@ -61,7 +61,7 @@ export interface RecordingState {
   isAwake: boolean;
   /** Something the contributor should know went wrong, in words. */
   problem: string | null;
-  /** What a screen reader hears once: a leg switch, or the ride stopping itself. */
+  /** What a screen reader hears once: a switch of way, or the ride stopping itself. */
   announcement: string;
   start: () => void;
   /** Pauses the recording; Resume carries on. */
@@ -363,7 +363,12 @@ export function useRecording(): RecordingState {
   const lastFixTime = fixes[fixes.length - 1]?.time ?? null;
   const summary = useMemo(() => {
     if (!current) return null;
-    const end = isRecording ? (lastFixTime ?? current.startedAt) : (current.stoppedAt ?? now);
+    // A running recording is summarised to its last fix, or to the end of the latest pause when
+    // that is later, so a Resume counts the pause as paused before the first new fix comes.
+    const lastGapEnd = Math.max(0, ...current.gaps.map((g) => g.to));
+    const end = isRecording
+      ? Math.max(lastFixTime ?? current.startedAt, lastGapEnd)
+      : (current.stoppedAt ?? now);
     return summarize(fixes, current.gaps, current.startedAt, end);
     // `now` only ends a recording that is neither running nor stopped, which has no clock.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see above

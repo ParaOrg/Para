@@ -29,10 +29,10 @@ export const StopRecording: Story = { args: { variant: 'stop', isActive: true } 
 
 export const StopAtRest: Story = { args: { variant: 'stop' } };
 
-/** The leg button names the leg a tap switches TO: orange Pabalik on papunta, blue Papunta on pabalik. */
-export const LegSwitchToPabalik: Story = { args: { variant: 'pabalik' } };
+/** The way button names the way a tap switches TO: orange Pabalik on papunta, blue Papunta on pabalik. */
+export const WaySwitchToPabalik: Story = { args: { variant: 'pabalik' } };
 
-export const LegSwitchToPapunta: Story = { args: { variant: 'papunta' } };
+export const WaySwitchToPapunta: Story = { args: { variant: 'papunta' } };
 
 export const Save: Story = { args: { variant: 'save' } };
 

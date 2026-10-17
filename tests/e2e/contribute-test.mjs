@@ -133,6 +133,16 @@ const buttons = (page) =>
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  {
+    const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
+    const credits = await page.locator('.maplibregl-ctrl-bottom-right').boundingBox();
+    check(
+      'on a first visit, after Okay, the credits sit above the Start bar',
+      start && credits && credits.y + credits.height <= start.y + 0.5,
+      JSON.stringify([credits, start]),
+    );
+  }
   await page.waitForFunction(() => !!window.__map?.loaded());
   check(
     'Ready: Start and a way back to the map, no saved-recordings list',
@@ -385,6 +395,17 @@ const buttons = (page) =>
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
 
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).waitFor();
+  await page.evaluate(() => window.__advance(600_000));
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  check(
+    'after ten minutes stopped, Resume shows no time for the pause before the first new fix',
+    /Time\s+0 min/.test(await page.getByRole('group', { name: 'Recording so far' }).innerText()),
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' '),
+  );
+  await ride(page, 310, 330);
   await page.getByRole('button', { name: 'Cancel' }).click();
   await page.getByRole('group', { name: 'Throw this recording away?' }).waitFor();
   check(

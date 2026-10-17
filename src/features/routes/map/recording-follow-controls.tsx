@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
-import { useTopRightControl } from './basemap-control';
+import { CORNER_MARGIN, useTopRightControl } from './basemap-control';
 import type { FollowMode } from './use-recording-follow';
 
 interface RecordingFollowControlsProps {
@@ -26,7 +26,7 @@ export function RecordingFollowControls({
   onModeToggle,
   onRecentre,
 }: RecordingFollowControlsProps) {
-  const corner = useTopRightControl(map);
+  const corner = useTopRightControl(map, CORNER_MARGIN['icon-button']);
   const isCourseUp = mode === 'course-up';
   return createPortal(
     <div className="flex flex-col items-end gap-2">

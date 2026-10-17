@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
-import { type Fix } from '@/features/routes/model/ride-recording';
+import type { Fix } from '@/features/routes/model/ride-recording';
 
 import { courseBearing, trailOf } from './recording-rules';
 import type { SwitchRow } from './recording-schema';
