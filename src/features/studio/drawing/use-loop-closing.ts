@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { LAYERS } from '@/features/routes/map/layers';
 import type { Hotspot } from '@/features/routes/model/hotspots';
-import type { DirectionRow } from '@/features/routes/model/routes';
+import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { ROUTE_COLOUR } from './draw-layers';
@@ -83,11 +83,11 @@ function addOutboundLayers(map: MapLibreMap): void {
   );
 }
 
-/** What the toolbar needs to end a return trip on the outbound's first point. */
+/** What the toolbar needs to end a line where something began. */
 export interface LoopPlan {
   closeAt: LngLat;
-  /** The way already drawn, which the toolbar's words name. */
-  other: 'papunta' | 'pabalik';
+  /** The way already drawn, which the toolbar's words name; null for a line that closes on its own first point. */
+  other: 'papunta' | 'pabalik' | null;
 }
 
 /**
@@ -95,6 +95,9 @@ export interface LoopPlan {
  * loop closes. `routeId` is the route whose empty slot the drawing fills (null
  * for anything else), `slotReversed` which way that slot runs. `startReturnTrip`
  * begins that drawing with its first point already on the outbound line's last.
+ *
+ * A new route, or a loop being edited, has no other way to join: it closes on
+ * its own first point, so a line can go round and end where it began.
  */
 export function useLoopClosing(
   map: MapLibreMap | null,
@@ -104,7 +107,7 @@ export function useLoopClosing(
   directions: readonly DirectionRow[],
   hotspots: readonly Hotspot[],
 ): { loop: LoopPlan | null; startReturnTrip: (routeId: string) => void } {
-  const { drawing, area, picking, start, addPoint } = draw;
+  const { drawing, area, picking, start, addPoint, target, controlPoints } = draw;
   const outbound = useMemo(
     () =>
       drawing && !area && !picking && routeId ? outboundFor(directions, routeId, hotspots) : null,
@@ -126,6 +129,18 @@ export function useLoopClosing(
     },
     [start, addPoint, directions, hotspots],
   );
+
+  const editedLoop = target.directionId
+    ? directions.find((v) => v.id === target.directionId)
+    : undefined;
+  const ownStart =
+    !!drawing &&
+    !area &&
+    !picking &&
+    !routeId &&
+    (target.directionId === null ? target.routeId === null : !!editedLoop && isLoop(editedLoop));
+  const first = controlPoints[0];
+  if (ownStart && first) return { loop: { closeAt: first, other: null }, startReturnTrip };
 
   const closeAt = outbound && loopClosingPoint(outbound);
   const other = slotReversed === false ? 'pabalik' : 'papunta';

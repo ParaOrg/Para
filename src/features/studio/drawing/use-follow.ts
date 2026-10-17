@@ -3,6 +3,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import { travelLine } from '@/features/routes/model/ride';
 import {
   isDrawn,
+  isLoop,
   directionLine,
   type DirectionDrawing,
   type DirectionRow,
@@ -12,6 +13,9 @@ import type { LngLat } from '@/shared/utils/geo';
 import { lineToFollow } from './borrow';
 import type { Drawing } from './use-drawing';
 import { withDrawing } from '../data/live';
+
+/** What a right-click on an ikot's line says: it is not followed. */
+export const NO_END_TO_FOLLOW = 'An ikot has no end to go on from.';
 
 interface FollowTarget {
   destinationHotspotId: string | null;
@@ -51,17 +55,22 @@ export function useFollow({
       return;
     }
     const home = target.placeOfHotspot(target.destinationHotspotId);
-    const options = ids
+    const candidates = ids
       .map((id) => directions.find((v) => v.id === id))
-      .filter((v): v is DirectionRow => !!v && isDrawn(v))
-      .map((v) => ({
-        v,
-        travel: travelLine(v, hotspots),
-        endsAtDestination:
-          home !== null &&
-          target.placeOfHotspot(v.reversed ? v.route.headHotspotId : v.route.tailHotspotId) ===
-            home,
-      }));
+      .filter((v): v is DirectionRow => !!v && isDrawn(v));
+    // An ikot has no end to go on from, and no way the drawing goes to follow it.
+    const followable = candidates.filter((v) => !isLoop(v));
+    if (candidates.length > 0 && followable.length === 0) {
+      setNotice(NO_END_TO_FOLLOW);
+      return;
+    }
+    const options = followable.map((v) => ({
+      v,
+      travel: travelLine(v, hotspots),
+      endsAtDestination:
+        home !== null &&
+        target.placeOfHotspot(v.reversed ? v.route.headHotspotId : v.route.tailHotspotId) === home,
+    }));
     // The line now, without the point an offer would drop: the render's
     // `draw.line` is a step behind the edits that led here.
     const choice = lineToFollow(options, draw.lineNow(offered), at);

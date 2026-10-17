@@ -158,3 +158,18 @@ test('"Close the loop" says why not: no point yet, or the loop is already closed
   assert.equal(whyCannotCloseLoop([END, at(0.5, 0)], START), 'the loop is closed');
   assert.equal(whyCannotCloseLoop([END, at(3, 0)], START), null);
 });
+
+test('a line that closes on its own first point needs three points first', () => {
+  const FIRST = at(0, 0);
+  assert.equal(whyCannotCloseLoop([], FIRST, true), 'add a point first');
+  // One point is the first itself: it is not "closed", it has not begun.
+  assert.equal(whyCannotCloseLoop([FIRST], FIRST, true), 'add 2 more points first');
+  assert.equal(whyCannotCloseLoop([FIRST, at(400, 0)], FIRST, true), 'add one more point first');
+  assert.equal(whyCannotCloseLoop([FIRST, at(400, 0), at(400, 300)], FIRST, true), null);
+  assert.equal(
+    whyCannotCloseLoop([FIRST, at(400, 0), at(400, 300), FIRST], FIRST, true),
+    'the loop is closed',
+  );
+  // A return trip is not held to it: two points close it, as before.
+  assert.equal(whyCannotCloseLoop([END, at(300, 700)], START), null);
+});

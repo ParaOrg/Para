@@ -5,13 +5,20 @@ import { placeKey } from '@/features/routes/model/places';
 import {
   directionName,
   isDrawn,
+  isLoop as isLoopDirection,
+  loopName,
   routeName,
   directionLine,
   type RouteRow,
   type TransportMode,
   type DirectionRow,
 } from '@/features/routes/model/routes';
-import { hintuansAlong, timelineFor } from '@/features/routes/model/timeline';
+import {
+  hintuansAlong,
+  loopRows,
+  loopTimeline,
+  timelineFor,
+} from '@/features/routes/model/timeline';
 import { haversine, joinSegments, type LngLat } from '@/shared/utils/geo';
 import { noop } from '@/shared/utils/noop';
 
@@ -39,6 +46,8 @@ export function useSaveFacts({
   tailId,
   via,
   mode,
+  isLoop,
+  signboard,
 }: {
   draw: Drawing;
   existing: DirectionRow | null;
@@ -53,6 +62,9 @@ export function useSaveFacts({
   via: string;
   /** The mode the panel has picked: a train's timeline lists only its stations. */
   mode: TransportMode;
+  /** The line is an ikot: no ends, one direction, called by its signboard. */
+  isLoop: boolean;
+  signboard: string;
 }) {
   const line = draw.controlPoints;
   /**
@@ -65,7 +77,12 @@ export function useSaveFacts({
     if (!head || !tail || line.length === 0) return null;
     return haversine(line[0], tail.point.coordinates) < haversine(line[0], head.point.coordinates);
   }, [head, tail, line]);
-  const reversed = existing ? existing.reversed : (slotReversed ?? drawnReversed ?? false);
+  // An ikot has one direction, the way it was drawn.
+  const reversed = isLoop
+    ? false
+    : existing
+      ? existing.reversed
+      : (slotReversed ?? drawnReversed ?? false);
   // The slot says "SM Fairview → Tala" but the line starts at Tala: drawn the
   // wrong way round, or drawn as the outbound again. Say so; do not block —
   // a line can honestly begin nearer the far end than the near one.
@@ -75,7 +92,7 @@ export function useSaveFacts({
   // A new route whose ends already make a route: the save fills that route's
   // empty slot, or is refused when the direction is drawn (routesWrite).
   const sameEnds = useMemo(() => {
-    if (parent || !headId || !tailId) return null;
+    if (isLoop || parent || !headId || !tailId) return null;
     const v = directions.find(
       (x) =>
         x.route.headHotspotId === headId &&
@@ -84,13 +101,13 @@ export function useSaveFacts({
         x.reversed === reversed,
     );
     return v ? { name: v.route.name, drawn: isDrawn(v) } : null;
-  }, [parent, headId, tailId, via, reversed, directions]);
+  }, [isLoop, parent, headId, tailId, via, reversed, directions]);
 
   // Edit route, the ends changed: onto another route's (refused, as the
   // database would), or turned round (a direction's way round is kept
   // against its route's head, so a swap would mislabel both lines).
   const endsTaken = useMemo(() => {
-    if (!existing || !headId || !tailId) return false;
+    if (isLoop || !existing || !headId || !tailId) return false;
     return directions.some(
       (x) =>
         x.routeId !== existing.routeId &&
@@ -98,7 +115,7 @@ export function useSaveFacts({
         x.route.tailHotspotId === tailId &&
         (x.route.via ?? '') === via.trim(),
     );
-  }, [existing, headId, tailId, via, directions]);
+  }, [isLoop, existing, headId, tailId, via, directions]);
   // By place, as the pickers choose: another box of the same place is the
   // same end.
   const headNow = existing
@@ -168,20 +185,60 @@ export function useSaveFacts({
     return full ? borrowedOn(full.coordinates) : 0;
   };
 
-  const name = head && tail ? routeName(hotspotLabel(head), hotspotLabel(tail), via) : '';
+  const name = isLoop
+    ? loopName(signboard, via)
+    : head && tail
+      ? routeName(hotspotLabel(head), hotspotLabel(tail), via)
+      : '';
   const direction =
-    head && tail ? directionName(hotspotLabel(head), hotspotLabel(tail), reversed) : '';
+    !isLoop && head && tail ? directionName(hotspotLabel(head), hotspotLabel(tail), reversed) : '';
   // The line a train runs is its route's (routeCode); a new route has none yet.
   const routeCode = (existing?.route ?? parent)?.routeCode ?? null;
   // The snapped geometry, not the control points: a box between two clicks
   // still counts, and this is the line the save will check.
+  const loopFacts = useMemo(() => {
+    const line = joinSegments(draw.segments);
+    const along = hintuansAlong(line, hotspots, { mode, routeCode, isLoop: true }).map(
+      (a) => a.hotspot,
+    );
+    const rows = loopRows(along);
+    // A place met twice on the way round is listed once, at its first pass.
+    const seen = new Set<string>();
+    const twice = new Set<string>();
+    for (const s of along.filter((a, i) => i === 0 || placeKey(a) !== placeKey(along[i - 1]))) {
+      const key = placeKey(s);
+      if (seen.has(key)) twice.add(hotspotLabel(s));
+      seen.add(key);
+    }
+    return {
+      // The trip leaves from the first place drawn; picking another start is the commuter's.
+      timeline: loopTimeline(along),
+      placesCount: rows.length,
+      placesPassedTwice: [...twice],
+      gapM: line.length >= 2 ? haversine(line[0], line[line.length - 1]) : 0,
+    };
+  }, [draw.segments, hotspots, mode, routeCode]);
+  // A loop's name is its signboard: another ikot with the same one (folded as
+  // the unique index folds it) and the same via is taken. This ikot itself is not.
+  const signboardTaken = useMemo(() => {
+    if (!isLoop) return false;
+    const fold = (text: string | null | undefined) => (text ?? '').trim().toLowerCase();
+    return directions.some(
+      (x) =>
+        isLoopDirection(x) &&
+        x.routeId !== (existing?.routeId ?? parent?.id ?? null) &&
+        fold(x.route.signboard) === fold(signboard) &&
+        fold(x.route.via) === fold(via),
+    );
+  }, [isLoop, directions, existing, parent, signboard, via]);
   const preview = useMemo(() => {
+    if (isLoop) return loopFacts.timeline;
     const line = joinSegments(draw.segments);
     const along = hintuansAlong(line, hotspots, { mode, routeCode: routeCode }).map(
       (a) => a.hotspot,
     );
     return timelineFor(head, tail, reversed, along, line[0]);
-  }, [head, tail, reversed, draw.segments, hotspots, mode, routeCode]);
+  }, [isLoop, loopFacts, head, tail, reversed, draw.segments, hotspots, mode, routeCode]);
 
   return {
     reversed,
@@ -196,5 +253,9 @@ export function useSaveFacts({
     name,
     direction,
     preview,
+    loopGapM: loopFacts.gapM,
+    loopPlacesCount: loopFacts.placesCount,
+    placesPassedTwice: loopFacts.placesPassedTwice,
+    signboardTaken,
   };
 }

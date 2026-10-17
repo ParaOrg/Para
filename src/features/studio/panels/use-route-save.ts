@@ -19,6 +19,7 @@ type RouteSaveForm = Pick<
   | 'fareNote'
   | 'headHotspotId'
   | 'tailHotspotId'
+  | 'isLoop'
   | 'via'
 >;
 

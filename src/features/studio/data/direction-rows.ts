@@ -22,7 +22,8 @@ interface DirectionRowColumns {
 
 export interface DirectionRowsResult {
   drawn: DirectionRowColumns;
-  slot: DirectionRowColumns;
+  /** The route's other way as an empty slot; null for a loop, which has no other way. */
+  slot: DirectionRowColumns | null;
   shape: LineStringGeoJSON;
 }
 
@@ -31,11 +32,20 @@ export interface DirectionRowsResult {
  * direction, the empty slot for the route's other way, and the line the
  * caller gets back. Pure, so tests/unit/direction-rows-test.mjs can hold the
  * rounding, the overview and the borrow columns without a database.
+ *
+ * A loop is one direction, the way it was drawn: `reversed` is false whatever
+ * the input says (0021's trigger refuses a way back), and there is no slot.
  */
 export function directionRows(
   input: Pick<
     SaveInput,
-    'reversed' | 'controlPoints' | 'segments' | 'borrowedFrom' | 'borrowedPart' | 'borrowedMetres'
+    | 'reversed'
+    | 'isLoop'
+    | 'controlPoints'
+    | 'segments'
+    | 'borrowedFrom'
+    | 'borrowedPart'
+    | 'borrowedMetres'
   >,
   routeId: string,
 ): DirectionRowsResult {
@@ -43,6 +53,7 @@ export function directionRows(
   // more, and those digits would be half of every row. The line is joined from
   // the rounded segments, so a segment's end and the shape's point are the
   // same number, and the publish script's rounding then changes nothing.
+  const isLoop = input.isLoop === true;
   const segments: Segment[] = input.segments.map((s) => ({
     ...s,
     coordinates: s.coordinates.map(roundLngLat),
@@ -58,7 +69,7 @@ export function directionRows(
       : null;
   const drawn: DirectionRowColumns = {
     route_id: routeId,
-    reversed: input.reversed,
+    reversed: isLoop ? false : input.reversed,
     control_points: toJson(input.controlPoints.map(roundLngLat)),
     segments: toJson(segments),
     shape: toJson(shape),
@@ -72,17 +83,19 @@ export function directionRows(
   // inserted together must share one column list, and PostgREST fills a
   // key one row lacks with null — not the column's default. Sent bare, the
   // slot would arrive as control_points = null and the table refuses it.
-  const slot: DirectionRowColumns = {
-    route_id: routeId,
-    reversed: !input.reversed,
-    control_points: [],
-    segments: [],
-    shape: null,
-    overview: null,
-    borrowed_from: null,
-    borrowed_part: null,
-    borrowed_m: null,
-  };
+  const slot: DirectionRowColumns | null = isLoop
+    ? null
+    : {
+        route_id: routeId,
+        reversed: !input.reversed,
+        control_points: [],
+        segments: [],
+        shape: null,
+        overview: null,
+        borrowed_from: null,
+        borrowed_part: null,
+        borrowed_m: null,
+      };
 
   return { drawn, slot, shape };
 }

@@ -1,7 +1,7 @@
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import type { DirectionRow } from '@/features/routes/model/routes';
+import { isLoop, LOOP_WORD, type DirectionRow } from '@/features/routes/model/routes';
 
 import { endsRefusal } from './hotspot-in-use';
 import { deleteHotspot } from '../data/hotspots-write';
@@ -59,7 +59,10 @@ export function useDeleteActions({
       onSignInNeeded();
       return;
     }
-    if (!window.confirm(`Delete "${v.route?.name}" — ${v.name}?`)) return;
+    const confirmation = isLoop(v)
+      ? `Delete the ${LOOP_WORD.toLowerCase()} "${v.route?.name}"?`
+      : `Delete "${v.route?.name}" — ${v.name}?`;
+    if (!window.confirm(confirmation)) return;
     try {
       await deleteDirection(v);
       saved.select(null);

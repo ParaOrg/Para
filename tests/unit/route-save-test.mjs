@@ -599,3 +599,110 @@ test('a refused link sync says the line is saved and to press Save again', async
   );
   assert.deepEqual(heard, { routeId: 'r2', directionId: 'v41' });
 });
+
+// ---------------------------------------------------------------- an ikot's links (0021)
+
+/** A stop row as the table answers it, whole, with a box of about 20 m round `at`. */
+const stopAt = (id, kind, at) => ({
+  id,
+  owner_id: 'o',
+  name: id,
+  informal: null,
+  aliases: [],
+  kind,
+  point: { type: 'Point', coordinates: at },
+  area: {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [at[0] - 0.0001, at[1] - 0.0001],
+        [at[0] + 0.0001, at[1] - 0.0001],
+        [at[0] + 0.0001, at[1] + 0.0001],
+        [at[0] - 0.0001, at[1] + 0.0001],
+        [at[0] - 0.0001, at[1] - 0.0001],
+      ],
+    ],
+  },
+  note: null,
+  created_at: '2026-10-07T00:00:00Z',
+  line: null,
+});
+const IKOT_LINE = [
+  [121.04, 14.7],
+  [121.05, 14.7],
+  [121.05, 14.71],
+  [121.04, 14.71],
+  [121.04, 14.7],
+];
+const ikotInput = {
+  ...input,
+  isLoop: true,
+  headHotspotId: null,
+  tailHotspotId: null,
+  signboard: 'UP – Ikot',
+  routeId: 'r20',
+  directionId: 'v20',
+  controlPoints: IKOT_LINE,
+  segments: [{ mode: 'freehand', coordinates: IKOT_LINE }],
+};
+const ikotRoute = {
+  ...listed({}).route,
+  id: 'r20',
+  signboard: 'UP – Ikot',
+  head_stop_id: null,
+  tail_stop_id: null,
+  is_loop: true,
+};
+
+/** What a save's link sync asks for and writes, against a stop table and a set of existing links. */
+async function syncedAfterSaving(saveInput, route, stops, existingLinks) {
+  const { client, log } = fakeSupabase((q) => {
+    if (q.table === 'route_variant' && q.op === 'update')
+      return { data: listed({ id: 'v20', route_id: 'r20', route }) };
+    if (q.table === 'stop' && q.op === 'select') return { data: stops, count: stops.length };
+    if (q.table === 'route_stop' && q.op === 'select')
+      return { data: existingLinks, count: existingLinks.length };
+    if (q.table === 'route_stop') return {};
+    throw new Error(`unexpected ${q.op} on ${q.table}`);
+  });
+  setSupabase(client);
+  await saveRouteAndLinks(saveInput, [], () => {});
+  return log;
+}
+
+test("an ikot's link sync reads terminals as well as hintuans, and links the ones on its line", async () => {
+  const stops = [
+    stopAt('t1', 'terminal', [121.045, 14.7]),
+    stopAt('h1', 'hintuan', [121.05, 14.705]),
+  ];
+  const log = await syncedAfterSaving(ikotInput, ikotRoute, stops, []);
+  const read = log.find((q) => q.table === 'stop' && q.op === 'select');
+  assert.deepEqual(read.filters[0], ['in', 'kind', ['hintuan', 'terminal']]);
+  const upsert = log.find((q) => q.op === 'upsert');
+  assert.deepEqual(upsert.payload.map((l) => l.stop_id).sort(), ['h1', 't1']);
+});
+
+test("an ikot's link sync drops a terminal link its line no longer earns", async () => {
+  const stops = [
+    stopAt('t-far', 'terminal', [121.3, 14.9]),
+    stopAt('h1', 'hintuan', [121.05, 14.705]),
+  ];
+  const log = await syncedAfterSaving(ikotInput, ikotRoute, stops, [{ stop_id: 't-far' }]);
+  const del = log.find((q) => q.table === 'route_stop' && q.op === 'delete');
+  assert.deepEqual(del.filters, [
+    ['eq', 'route_variant_id', 'v20'],
+    ['in', 'stop_id', ['t-far']],
+  ]);
+});
+
+test("a route with ends still reads hintuans only: its terminals are the owner's", async () => {
+  const stops = [stopAt('h1', 'hintuan', [121.045, 14.7])];
+  const log = await syncedAfterSaving(
+    { ...input, routeId: 'r20', directionId: 'v20' },
+    listed({}).route,
+    stops,
+    [],
+  );
+  const read = log.find((q) => q.table === 'stop' && q.op === 'select');
+  assert.deepEqual(read.filters[0], ['in', 'kind', ['hintuan']]);
+});

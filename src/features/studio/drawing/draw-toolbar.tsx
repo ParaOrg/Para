@@ -214,7 +214,7 @@ const TOOL =
  * until there is a point to come from and while the loop is already closed.
  */
 function CloseLoop({ draw, loop }: { draw: Drawing; loop: LoopPlan }) {
-  const reason = whyCannotCloseLoop(draw.controlPoints, loop.closeAt);
+  const reason = whyCannotCloseLoop(draw.controlPoints, loop.closeAt, loop.other === null);
   const label = reason ? `Close the loop: ${reason}` : 'Close the loop';
   return (
     <button
@@ -223,7 +223,7 @@ function CloseLoop({ draw, loop }: { draw: Drawing; loop: LoopPlan }) {
       onClick={() => void draw.addPoint(loop.closeAt)}
       disabled={reason !== null}
       aria-label={label}
-      title={reason ? label : `End the line where ${loop.other} began`}
+      title={reason ? label : `End the line where ${loop.other ?? 'it'} began`}
       className={TOOL}
     >
       ⟲ Close the loop

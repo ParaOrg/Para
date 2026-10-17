@@ -80,3 +80,11 @@ test('the slot is the other way round, empty, with every key spelled out', () =>
     assert.equal(slot[key], null);
   }
 });
+
+test('an ikot is one direction: never reversed, and no slot for a way back', () => {
+  const { drawn, slot } = directionRows({ ...input, reversed: true, isLoop: true }, 'r1');
+  assert.equal(drawn.reversed, false);
+  assert.equal(slot, null);
+  // A route that is not an ikot is as it was.
+  assert.ok(directionRows({ ...input, isLoop: false }, 'r1').slot);
+});

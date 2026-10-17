@@ -49,10 +49,27 @@ export function loopGaps(outbound: OutboundLine, drawn: readonly LngLat[]): Loop
 /** A last point this near the loop's close counts as closed: a second one would only double it. */
 const CLOSED_WITHIN_M = 1;
 
-/** Why "Close the loop" cannot be pressed yet; null when it can. */
-export function whyCannotCloseLoop(drawn: readonly LngLat[], closeAt: LngLat): string | null {
+/**
+ * The points a loop's line needs before it can close on its own first point:
+ * fewer would be a line out and back, which goes round nothing.
+ */
+const OWN_LOOP_POINTS = 3;
+
+/**
+ * Why "Close the loop" cannot be pressed yet; null when it can. A line that
+ * closes on its own first point (`ownStart`) needs OWN_LOOP_POINTS first.
+ */
+export function whyCannotCloseLoop(
+  drawn: readonly LngLat[],
+  closeAt: LngLat,
+  ownStart = false,
+): string | null {
   const last = drawn[drawn.length - 1];
   if (!last) return 'add a point first';
+  if (ownStart && drawn.length < OWN_LOOP_POINTS) {
+    const missing = OWN_LOOP_POINTS - drawn.length;
+    return `add ${missing === 1 ? 'one more point' : `${missing} more points`} first`;
+  }
   return haversine(last, closeAt) <= CLOSED_WITHIN_M ? 'the loop is closed' : null;
 }
 

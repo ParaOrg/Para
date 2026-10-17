@@ -19,6 +19,8 @@ export function SaveNotices({
   sameEnds,
   direction,
   loop = [],
+  isLoop = false,
+  passedTwice = [],
 }: {
   /** The drawing's stretches, for the streets they run along. */
   segments: Drawing['segments'];
@@ -32,6 +34,10 @@ export function SaveNotices({
   direction: string;
   /** Each end of a return trip that stops short of the other way's (loop-closing.ts). */
   loop?: readonly string[];
+  /** The line is an ikot: no ends, so no hotspots are needed to end at. */
+  isLoop?: boolean;
+  /** An ikot's places the line passes more than once: only the first pass is listed. */
+  passedTwice?: readonly string[];
 }) {
   const streets = routeStreets(segments);
   return (
@@ -75,6 +81,15 @@ export function SaveNotices({
           {text}
         </p>
       ))}
+      {passedTwice.length > 0 && (
+        <p
+          data-testid="save-passed-twice"
+          className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800"
+        >
+          This ikot passes {passedTwice.join(', ')} more than once. Only the first pass is listed,
+          so a rider cannot pick the second.
+        </p>
+      )}
       {wrongWay && (
         <p
           data-testid="save-wrong-way"
@@ -120,7 +135,7 @@ export function SaveNotices({
         </p>
       )}
 
-      {hotspotsCount === 0 && (
+      {!isLoop && hotspotsCount === 0 && (
         <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
           No hotspots yet. A route is named after the hotspots at its two ends, so draw a terminal
           at each end of this line first — then come back and save.
