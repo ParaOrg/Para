@@ -104,6 +104,7 @@ flowchart TD
   features_studio_panels --> features_routes_model
   features_studio_panels --> features_studio_data
   features_studio_panels --> features_studio_drawing
+  features_studio_panels --> shared_ui
   features_studio_panels --> shared_utils
   shared_ui --> design_system_primitives
   shared_ui --> shared_hooks
@@ -128,7 +129,7 @@ flowchart TD
 | `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
-| `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `shared/utils` |
+| `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
 | `shared/hooks` | — |
 | `shared/ui` | `design-system/primitives`, `shared/hooks` |
 | `shared/utils` | — |
@@ -148,7 +149,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/studio`
 
-`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `signboardUrl`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `CardActions`, `HotspotPanel`, `NewButtons`, `returnTripLeft`, `SavePanel`, `SaveToasts`, `TripCardExtras`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`
+`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `NewButtons`, `returnTripLeft`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`, `useStudioTrip`
 
 ## Entry points
 
