@@ -86,3 +86,21 @@ test('the chevrons flow along the line, and back along it for a ride picked back
     ],
   );
 });
+
+test('a loop lit with no trip open has no end circles; an open one has the one on its tip', async () => {
+  const { rideEnds } = await import('../../src/features/routes/map/direction-arrows.ts');
+  const ring = [
+    [121.07, 14.65],
+    [121.08, 14.65],
+    [121.08, 14.66],
+    [121.07, 14.65],
+  ];
+  const loop = { id: 'ikot', line: ring, from: 'Oblation', to: 'Oblation' };
+  assert.deepEqual(rideEnds([{ ...loop, loopEnd: 'none' }]), []);
+  const ends = rideEnds([{ ...loop, loopEnd: 'tip', fromHotspot: 'h1', toHotspot: 'h1' }]);
+  assert.equal(ends.length, 1, 'one circle: the line comes back to where it left');
+  assert.equal(ends[0].end, 'from');
+  assert.equal(ends[0].name, 'Oblation');
+  assert.equal(ends[0].named, true);
+  assert.equal(ends[0].mark, 'start', 'the tip wears the S');
+});

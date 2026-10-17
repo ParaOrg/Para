@@ -16,8 +16,10 @@ import {
   directionEnds,
   isDrawn,
   isFerry,
+  isLoop,
   isRail,
   LINE_NOTES,
+  LOOP_WORD,
   railLineOf,
   directionLine,
   type Direction,
@@ -126,11 +128,17 @@ export function TripCard({
   /** Under the tiles, the studio's alone: its facts and its Edit, Extend and Delete. */
   extras?: ReactNode;
 }) {
-  const { from, to } = directionEnds(direction);
+  const loop = isLoop(direction);
+  // A loop's trip leaves from its tip and comes back to it: both ends read the timeline's.
+  const { from, to } =
+    loop && timeline.from
+      ? { from: timeline.from.label, to: (timeline.to ?? timeline.from).label }
+      : directionEnds(direction);
   const line = railLineOf(direction);
   const vehicle = vehicleOf(direction);
   const sibling = otherDirection(directions, direction);
-  const switchable = !!sibling && isDrawn(sibling);
+  // A loop has no way back, so no SWITCH at all.
+  const switchable = !loop && !!sibling && isDrawn(sibling);
   // The whole ride, measured once on its full line — the index's figure, so
   // an overview drawn while the line is read never prices it: its Distance
   // and its Expected fare.
@@ -161,6 +169,8 @@ export function TripCard({
       height={height}
       routeDirection={to}
       isTrain={line !== null}
+      isLoop={loop}
+      label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
       header={
         vehicle && (
           <RouteTripDetailHeader
@@ -173,7 +183,7 @@ export function TripCard({
       }
       switchable={switchable}
       back={direction.reversed}
-      way={switchWord(direction.reversed, [direction])}
+      way={loop ? null : switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
       }}

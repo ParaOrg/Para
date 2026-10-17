@@ -20,10 +20,14 @@ interface TripTimelineHotspots {
 export function useTripTimeline(
   trip: Direction | null,
   { hotspots, hotspotsAlong }: TripTimelineHotspots,
+  /** A loop's tip (useLoopTip): the row its timeline leaves from and comes back to. */
+  tipId: string | null = null,
 ) {
   return useMemo(
     () =>
-      trip ? routeTimeline(trip, hotspots, hotspotsAlong(trip.id, directionLine(trip))) : null,
-    [trip, hotspots, hotspotsAlong],
+      trip
+        ? routeTimeline(trip, hotspots, hotspotsAlong(trip.id, directionLine(trip)), tipId)
+        : null,
+    [trip, hotspots, hotspotsAlong, tipId],
   );
 }

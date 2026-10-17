@@ -191,3 +191,18 @@ test("step 16 (c): a line arriving keeps what is lit unless it is a lit directio
     ids,
   );
 });
+
+test('a loop shows whichever way round the list is: it has one direction and no way back', () => {
+  const loop = { ...dir('loop', 'l'), route: { isLoop: true } };
+  const withLoop = [...all, loop];
+  for (const back of [false, true]) {
+    assert.ok(
+      showingOf(withLoop, back, withLoop, null).some((v) => v.id === 'loop'),
+      `way back ${back}`,
+    );
+  }
+  assert.deepEqual(
+    showingOf(withLoop, true, withLoop, null).map((v) => v.id),
+    ['a-back', 'loop'],
+  );
+});

@@ -21,10 +21,27 @@ interface TimelineRail {
   destinationHasAbove: boolean;
 }
 
+/**
+ * The rows a ride covers: first and last (-1 the origin, the row count the
+ * destination). A loop's ride that wraps (rideRows) has its first below its
+ * last: it runs from `first` down to the bottom and on from the top to `last`.
+ */
+export interface RideReach {
+  first: number;
+  last: number;
+  wraps?: true;
+}
+
 /** One thing on the timeline the rail can run through, in order: an end, a row or a fold's row. */
 interface Stop {
   /** Its side of the ride; null for a fold's row by the ride, which carries no rail. */
   side: Side | null;
+  /**
+   * Which stretch of the rail it is on: a wrapped ride is two, the top's and
+   * the bottom's, and the rail never runs from one to the other even where
+   * they sit next to each other on the card.
+   */
+  stretch: number;
   isShown: boolean;
   fold?: FoldPart;
 }
@@ -50,7 +67,7 @@ interface Stop {
  */
 export function timelineRail(
   rowIds: readonly string[],
-  ride: { first: number; last: number },
+  ride: RideReach,
   folds: readonly TimelineFold[],
   isOpen: (part: FoldPart) => boolean,
 ): TimelineRail {
@@ -71,28 +88,41 @@ export function timelineRail(
 /** The origin, every row with each fold's row after its last, and the destination. */
 function stopsOf(
   rowIds: readonly string[],
-  ride: { first: number; last: number },
+  ride: RideReach,
   folds: readonly TimelineFold[],
   isOpen: (part: FoldPart) => boolean,
 ): Stop[] {
   const sideOf = (i: number): Side => {
+    // A wrapped ride covers the rows down to its end and from its start down; what lies between is outside.
+    if (ride.wraps) return i <= ride.last || i >= ride.first ? 'ride' : 'after';
     if (i < ride.first) return 'before';
     if (i > ride.last) return 'after';
     return 'ride';
   };
-  const stops: Stop[] = [{ side: sideOf(-1), isShown: true }];
+  const stretchOf = (i: number): number => {
+    if (!ride.wraps) return 0;
+    if (i <= ride.last) return 0;
+    return i >= ride.first ? 1 : 2;
+  };
+  const stops: Stop[] = [{ side: sideOf(-1), stretch: stretchOf(-1), isShown: true }];
   rowIds.forEach((id, i) => {
     const fold = folds.find((f) => f.rowIds.includes(id));
-    stops.push({ side: sideOf(i), isShown: !fold || isOpen(fold.part) });
+    stops.push({ side: sideOf(i), stretch: stretchOf(i), isShown: !fold || isOpen(fold.part) });
     if (!fold || fold.rowIds.at(-1) !== id) return;
     // The fold's row sits after its last row, and every row of a fold is on
     // one side of the ride. Above it, its last row when open, or the row
     // before its first when closed; below it, the row after its last.
     const above = isOpen(fold.part) ? i : rowIds.indexOf(fold.rowIds[0]) - 1;
-    const isByTheRide = sideOf(above) !== sideOf(i + 1);
-    stops.push({ side: isByTheRide ? null : sideOf(i), isShown: true, fold: fold.part });
+    // It sits by the ride when a neighbour is on another side than its own rows.
+    const isByTheRide = sideOf(above) !== sideOf(i) || sideOf(i + 1) !== sideOf(i);
+    stops.push({
+      side: isByTheRide ? null : sideOf(i),
+      stretch: stretchOf(i),
+      isShown: true,
+      fold: fold.part,
+    });
   });
-  stops.push({ side: sideOf(rowIds.length), isShown: true });
+  stops.push({ side: sideOf(rowIds.length), stretch: stretchOf(rowIds.length), isShown: true });
   return stops;
 }
 
@@ -100,7 +130,11 @@ function stopsOf(
 function reaches(stops: Stop[]): { stop: Stop; reach: RailReach }[] {
   const onCard = stops.filter((s) => s.isShown);
   const joins = (a: Stop | undefined, b: Stop | undefined) =>
-    a !== undefined && b !== undefined && a.side !== null && a.side === b.side;
+    a !== undefined &&
+    b !== undefined &&
+    a.side !== null &&
+    a.side === b.side &&
+    a.stretch === b.stretch;
   return stops.map((stop) => {
     const at = onCard.indexOf(stop);
     return {

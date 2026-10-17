@@ -4,8 +4,8 @@ import { JeepIcon } from '@/shared/ui/route-icons';
 interface HintuanCardCounterProps {
   /** "2 routes pass here". */
   count: string;
-  /** The word on SWITCH (switchWord). */
-  word: string;
+  /** The word on SWITCH (switchWord); null with only loops showing, which have no way back: no SWITCH. */
+  word: string | null;
   /** Whether the other way round is showing, for the suites (`data-back`). */
   isBack: boolean;
   /** False when there is no box passed the other way; SWITCH then rests disabled. */
@@ -37,15 +37,17 @@ export function HintuanCardCounter({
             {count}
           </p>
         </div>
-        <Button
-          variant="special"
-          size="small"
-          label={word}
-          data-testid="card-flip"
-          data-back={isBack}
-          disabled={!canSwitch}
-          onClick={onFlip}
-        />
+        {word !== null && (
+          <Button
+            variant="special"
+            size="small"
+            label={word}
+            data-testid="card-flip"
+            data-back={isBack}
+            disabled={!canSwitch}
+            onClick={onFlip}
+          />
+        )}
       </div>
     </div>
   );

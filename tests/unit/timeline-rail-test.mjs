@@ -188,3 +188,123 @@ test('the origin as the end with a start: the after-fold by the ride without the
   ]);
   assert.equal(opened.at(-1), 'destination:above');
 });
+
+// ---------------------------------------------------------------- a loop's wrap
+// A loop's trip leaves from its tip and comes back to it: the origin and the
+// destination are one place, and a ride only goes forward round it, so an end
+// above the start wraps. Five rows below the tip: a b c d e.
+
+const LOOP = ['a', 'b', 'c', 'd', 'e'];
+const loopRows = LOOP.map((id) => ({ id }));
+
+/** The rail of a loop's trip, laid out as railFor lays a linear one, the start and the end given as row ids. */
+const loopRailFor = ({ start = null, end = null, endRow = null, open = {} }) => {
+  const folds = timelineFolds(loopRows, start, end, endRow, true);
+  const lone = start !== null && end === null && endRow === null ? LOOP.indexOf(start) : -1;
+  const ride =
+    rideRows(loopRows, start, end, endRow, true) ??
+    (lone >= 0 ? { first: lone, last: lone } : { first: -1, last: LOOP.length });
+  const rail = timelineRail(LOOP, ride, folds, (part) => open[part] ?? false);
+  const piece = ({ hasAbove, hasBelow }) =>
+    hasAbove && hasBelow ? 'through' : hasAbove ? 'above' : hasBelow ? 'below' : 'alone';
+  const laid = [rail.originHasBelow ? 'origin:below' : 'origin:alone'];
+  LOOP.forEach((id, i) => {
+    laid.push(`${id}:${piece(rail.rows[i])}`);
+    const fold = folds.find((f) => f.rowIds.at(-1) === id);
+    if (fold) laid.push(`fold-${fold.part}:${rail.foldHasRail(fold.part) ? 'rail' : 'none'}`);
+  });
+  laid.push(rail.destinationHasAbove ? 'destination:above' : 'destination:alone');
+  return laid;
+};
+
+test('a loop with nothing picked runs its rail end to end, as any trip', () => {
+  assert.deepEqual(loopRailFor({}), [
+    'origin:below',
+    'a:through',
+    'b:through',
+    'c:through',
+    'd:through',
+    'e:through',
+    'fold-all:rail',
+    'destination:above',
+  ]);
+});
+
+test('a wrapped ride: lit from the top to its end, broken, the rows between folded, broken, lit from its start to the bottom', () => {
+  // Start at d, end at b (above it): the ride runs d, e, the tip, a, b. c is outside it.
+  assert.deepEqual(loopRailFor({ start: 'd', end: 'b' }), [
+    'origin:below',
+    'a:through',
+    'b:above',
+    'c:alone',
+    'd:below',
+    'e:through',
+    'destination:above',
+  ]);
+});
+
+test('a wrapped ride with several rows between its end and its start folds them into one fold with no rail', () => {
+  // Start at e, end at a: b, c and d are outside. Folded, they wear the rail they wear open, as any folded rows do.
+  assert.deepEqual(loopRailFor({ start: 'e', end: 'a' }), [
+    'origin:below',
+    'a:above',
+    'b:below',
+    'c:through',
+    'd:above',
+    'fold-after:none',
+    'e:below',
+    'destination:above',
+  ]);
+});
+
+test('the rail is not run from the end to the start when no row lies between them', () => {
+  // Start at c, end at b: the ride is c, d, e, the tip, a, b and nothing is outside it,
+  // yet b and c sit next to each other on the card and the rail must still break between them.
+  assert.deepEqual(loopRailFor({ start: 'c', end: 'b' }), [
+    'origin:below',
+    'a:through',
+    'b:above',
+    'c:below',
+    'd:through',
+    'e:through',
+    'destination:above',
+  ]);
+});
+
+test('a start alone on a loop is no ride yet: the rows above it open, the rest folded, as on any trip', () => {
+  assert.deepEqual(loopRailFor({ start: 'c' }), [
+    'origin:below',
+    'a:through',
+    'b:above',
+    'c:alone',
+    'd:below',
+    'e:through',
+    'fold-after:none',
+    'destination:alone',
+  ]);
+});
+
+test('an end row picked with a start on a loop runs the ride round to the tip, never back to the origin', () => {
+  assert.deepEqual(loopRailFor({ start: 'c', endRow: 'to' }), [
+    'origin:alone',
+    'a:through',
+    'b:above',
+    'fold-before:none',
+    'c:below',
+    'd:through',
+    'e:through',
+    'destination:above',
+  ]);
+  // The origin's row is the same end on a loop: it rides on to the tip too.
+  assert.deepEqual(
+    loopRailFor({ start: 'c', endRow: 'from' }),
+    loopRailFor({ start: 'c', endRow: 'to' }),
+  );
+});
+
+test('a closed fold between the end and the start carries no rail, an open one does not either: it sits by the ride', () => {
+  const closed = loopRailFor({ start: 'e', end: 'a' });
+  const open = loopRailFor({ start: 'e', end: 'a', open: { after: true } });
+  assert.ok(closed.includes('fold-after:none'));
+  assert.ok(open.includes('fold-after:none'));
+});

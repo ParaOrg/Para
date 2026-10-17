@@ -85,6 +85,13 @@ export interface Ride {
   toHotspot?: string | null;
   /** Its route's code: a train's names its line, LRT-1, so its ends are named with their stations' codes (EndTitles). */
   routeCode?: string | null;
+  /**
+   * A loop has no ends. With its trip open, its line leaves from its tip and
+   * comes back to it: `'tip'`, one circle there named for the tip (`from`,
+   * `fromHotspot`). Lit in a list or on a card, `'none'`: no circle at all.
+   * Absent on every other ride.
+   */
+  loopEnd?: 'tip' | 'none';
 }
 
 /**
@@ -122,36 +129,39 @@ interface RideEnd {
 export function rideEnds(rides: readonly Ride[]): RideEnd[] {
   const named: RideEnd[] = [];
   return rides
-    .filter((r) => r.line.length > 1)
+    .filter((r) => r.line.length > 1 && r.loopEnd !== 'none')
     .flatMap((r) =>
       (
         [
           ['from', r.from, r.line[0], r.fromHotspot ?? null],
           ['to', r.to, r.line[r.line.length - 1], r.toHotspot ?? null],
         ] as const
-      ).map(([end, name, at, hotspotId]) => {
-        const same = name
-          ? named.find((n) => n.name === name && haversine(n.at, at) < SAME_END_M)
-          : undefined;
-        if (same && same.end === end && r.id) same.rides.push(r.id);
-        const paled = (r.pale ?? []).some(
-          (l) => restDrawn(l) && samePoint(end === 'from' ? l[0] : l[l.length - 1], at),
-        );
-        const e: RideEnd = {
-          end,
-          name,
-          named: !!name && !same,
-          at,
-          hotspotId,
-          rides: !same && r.id ? [r.id] : [],
-          of: r.id ?? null,
-          paled,
-          isMarked: !paled && !r.isUnmarked,
-          mark: markOf(end, r.isBackwards ?? false),
-        };
-        if (e.named) named.push(e);
-        return e;
-      }),
+      )
+        // A loop's line comes back to where it left: its one end is the tip.
+        .filter(([end]) => r.loopEnd !== 'tip' || end === 'from')
+        .map(([end, name, at, hotspotId]) => {
+          const same = name
+            ? named.find((n) => n.name === name && haversine(n.at, at) < SAME_END_M)
+            : undefined;
+          if (same && same.end === end && r.id) same.rides.push(r.id);
+          const paled = (r.pale ?? []).some(
+            (l) => restDrawn(l) && samePoint(end === 'from' ? l[0] : l[l.length - 1], at),
+          );
+          const e: RideEnd = {
+            end,
+            name,
+            named: !!name && !same,
+            at,
+            hotspotId,
+            rides: !same && r.id ? [r.id] : [],
+            of: r.id ?? null,
+            paled,
+            isMarked: !paled && !r.isUnmarked,
+            mark: markOf(end, r.isBackwards ?? false),
+          };
+          if (e.named) named.push(e);
+          return e;
+        }),
     );
 }
 

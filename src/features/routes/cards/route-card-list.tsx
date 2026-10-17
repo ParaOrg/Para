@@ -2,11 +2,11 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { RouteCardHeader } from './route-card-header';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { drawnDepartures, switchWord } from '../model/departures';
+import { drawnDepartures, otherWayHasRoutes, switchWord } from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { hotspotCount } from '../model/places';
-import type { Direction } from '../model/routes';
+import { isLoop, type Direction } from '../model/routes';
 
 interface Props {
   /** Every direction of every route under the tap, slots included, as the hooks hand them over. */
@@ -70,7 +70,8 @@ export function RouteCardList({
   height,
 }: Props) {
   const places = drawnDepartures(routes, back);
-  const switchable = drawnDepartures(routes, !back).length > 0;
+  const switchable = otherWayHasRoutes(routes, back);
+  const shownDirections = places.flatMap((p) => p.directions.map((d) => d.v));
   const hotspotTotal = hotspotCount(hotspots);
   const count =
     places.length === 0 && hotspotTotal > 0
@@ -90,10 +91,12 @@ export function RouteCardList({
           onSwitch={onFlip}
           switchable={switchable}
           back={back}
-          way={switchWord(
-            back,
-            places.flatMap((p) => p.directions.map((d) => d.v)),
-          )}
+          // Only loops showing: they have no way back, so no SWITCH.
+          way={
+            shownDirections.length > 0 && shownDirections.every(isLoop)
+              ? null
+              : switchWord(back, shownDirections)
+          }
           onClose={onClose}
         />
       }

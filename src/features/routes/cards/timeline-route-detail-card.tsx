@@ -31,8 +31,10 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   switchable: boolean;
   /** Whether this trip is the route's way back, for the suites (SWITCH's `data-back`). */
   back: boolean;
-  /** The word on SWITCH (switchWord): the way a tap leads to, Pabalik or Papunta, or a train's other bound. */
-  way: string;
+  /** The word on SWITCH (switchWord): the way a tap leads to, Pabalik or Papunta, or a train's other bound. Null: no SWITCH at all, as on a loop. */
+  way: string | null;
+  /** The sheet's name for a screen reader, where `origin → destination` does not say it (a loop's). */
+  label?: string;
   /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none. */
   onBackToList: (() => void) | null;
   onClose: () => void;
@@ -102,6 +104,7 @@ export function TimelineRouteDetailCard({
   endPicked,
   routeDirection,
   isTrain,
+  isLoop,
   header,
   discounted: kept,
   onDiscounted,
@@ -109,6 +112,7 @@ export function TimelineRouteDetailCard({
   switchable,
   back,
   way,
+  label,
   onBackToList,
   onClose,
   dockRef,
@@ -134,7 +138,7 @@ export function TimelineRouteDetailCard({
     <BottomSheet
       ref={dockRef}
       height={height}
-      label={`${routeOrigin} → ${routeDirection}`}
+      label={label ?? `${routeOrigin} → ${routeDirection}`}
       testId="card"
       onClose={onClose}
       header={
@@ -169,6 +173,7 @@ export function TimelineRouteDetailCard({
           endPicked={endPicked}
           routeDirection={routeDirection}
           isTrain={isTrain}
+          isLoop={isLoop}
           header={header}
         />
       </div>

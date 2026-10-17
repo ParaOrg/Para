@@ -8,9 +8,9 @@ import { useDirectionArrows, type Ride } from './direction-arrows';
 import { usePassStretches } from './pass-stretches';
 import { useRideRest } from './ride-rest';
 import type { Ridden } from './use-ride-to';
-import type { Hotspot } from '../model/hotspots';
-import { travelLine } from '../model/ride';
-import { directionEndHotspots, directionEnds, type Direction } from '../model/routes';
+import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import { tipLine, travelLine } from '../model/ride';
+import { directionEndHotspots, directionEnds, isLoop, type Direction } from '../model/routes';
 
 /** No stretch drawn pale: one array, so the rest's source is not set afresh each render. */
 const NOTHING_PALE: readonly (readonly LngLat[])[] = [];
@@ -48,6 +48,12 @@ export function useLitRides(
    * its ends and names with it.
    */
   startId: string | null = null,
+  /**
+   * The open loop's tip (useLoopTip): its line is drawn leaving from there and
+   * coming back, and its one circle stands on it. A loop lit with no trip open
+   * has no ends to circle.
+   */
+  tipId: string | null = null,
 ): Ride[] {
   // Where a lit direction passes a hintuan, the line turns green for that
   // stretch: worked out on the full lines read — a lit direction's is asked
@@ -67,6 +73,14 @@ export function useLitRides(
   const rides = useMemo(
     () =>
       saved.litDirections.map((v): Ride => {
+        if (isLoop(v))
+          return loopRide(
+            v,
+            hotspots,
+            saved.selected?.id === v.id ? tipId : null,
+            ridden,
+            unmarkedId,
+          );
         const line = travelLine(v, hotspots);
         return {
           id: v.id,
@@ -81,7 +95,7 @@ export function useLitRides(
           routeCode: v.route?.routeCode ?? null,
         };
       }),
-    [saved.litDirections, hotspots, ridden, unmarkedId],
+    [saved.litDirections, saved.selected, hotspots, ridden, unmarkedId, tipId],
   );
   useDirectionArrows(map, rides);
   // Outside the ride, the trip's line in its card's pale, over the lit line
@@ -92,4 +106,32 @@ export function useLitRides(
   // The chosen direction's side of each hintuan it cuts across: its right.
   useBabaanSides(map, saved.selected, hotspots);
   return rides;
+}
+
+/**
+ * A lit loop as a ride: its line as drawn, or with its trip open, rotated to
+ * leave from its tip (tipLine) with one circle there, named for the tip.
+ */
+function loopRide(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  tipId: string | null,
+  ridden: Ridden | null,
+  unmarkedId: string | null,
+): Ride {
+  const line = tipLine(v, hotspots, tipId);
+  const tip = tipId === null ? undefined : hotspots.find((s) => s.id === tipId);
+  const name = tip ? hotspotLabel(tip) : (v.name ?? '');
+  return {
+    id: v.id,
+    line,
+    ...(ridden?.directionId === v.id ? { pale: ridden.pale, isBackwards: ridden.isBackwards } : {}),
+    ...(v.id === unmarkedId ? { isUnmarked: true, pale: [line] } : {}),
+    from: name,
+    to: name,
+    fromHotspot: tip?.id ?? null,
+    toHotspot: tip?.id ?? null,
+    routeCode: v.route?.routeCode ?? null,
+    loopEnd: tip ? 'tip' : 'none',
+  };
 }
