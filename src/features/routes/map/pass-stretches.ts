@@ -17,36 +17,33 @@ import {
 import type { Direction } from '../model/routes';
 
 /**
- * Where a lit direction passes a hintuan, the line turns orange for that
+ * Where a lit direction passes a hintuan, the line turns green for that
  * stretch.
  *
- * The owner's design of 2026-09-23 (his Figma frame: blue, a band of colour,
- * blue). What is painted is decided by the one "passes" rule — inside the
- * box or within five metres of it — so a box is orange on a direction
- * exactly when the timeline lists it. Hintuans only: the ends are the ends.
- * On the lit directions only, since the map's two looks of 2026-09-29: a
- * resting line is one light blue end to end, and no route line is
- * see-through (the owner's call). Shown from zoom 15, where a box is more
- * than a couple of pixels and the stretch no longer looks speckled — at
- * once, not faded in: a fade is a see-through line on its way.
+ * The owner's Figma design (blue, a band of colour, blue). What is painted is
+ * decided by the one "passes" rule — inside the box or within five metres of
+ * it — so a box is green on a direction exactly when the timeline lists it.
+ * Hintuans only: the ends are the ends. On the lit directions only, given the
+ * map's two looks: a resting jeepney line is one light blue end to end, and
+ * no route line is see-through (the owner's call). Shown from zoom 15, where
+ * a box is more than a couple of pixels and the stretch no longer looks
+ * speckled — at once, not faded in: a fade is a see-through line on its way.
  *
  * "From zoom 15" is the layer's own `minzoom`, and the stretches switch on
- * and off with the lit line's own `litOpacity`, since 2026-10-04 (the
- * cheap-phone plan, step 2). It was one opacity, a step at zoom 15 around
- * the switch: an expression of the zoom and of each stretch's state, a GL
- * program of its own that the map compiled at the first tap that lit a
- * route, wherever the camera was (its key ended `z_line-opacity`; up to a
- * second of a cheap phone's main thread in the harness, 5–50 ms on a
- * phone). Now the stretches are drawn with the program of the lit line and
- * its casing, compiled before any tap (at load until 2026-10-05, by their
- * twins while the map is idle since: layer-switch.ts), the same pixels from
- * 15 up, and none below it:
- * the step drew nothing there either. Two things differ, neither on a
- * screen held still: zooming out across 15, the stretches go at 15 rather
- * than staying on the zoom-15 tiles shown while the map's zoom-14 ones load;
- * and a map tilted by hand at 14-15 no longer shows them on its nearer
- * zoom-15 tiles. Below 15 no tile carries them, and a query of the layer
- * finds none there.
+ * and off with the lit line's own `litOpacity`. One opacity with a step at
+ * zoom 15 around the switch is an expression of the zoom and of each
+ * stretch's state: a GL program of its own, which the map compiles at the
+ * first tap that lights a route, wherever the camera is (its key ends
+ * `z_line-opacity`; measured up to a second of a cheap phone's main thread in
+ * the harness, 5–50 ms on a phone). So the stretches are drawn with the
+ * program of the lit line and its casing, compiled before any tap (by their
+ * twins while the map is idle: layer-switch.ts), the same pixels from 15 up,
+ * and none below it: the step drew nothing there either. Two things differ
+ * from the step, neither on a screen held still: zooming out across 15, the
+ * stretches go at 15 rather than staying on the zoom-15 tiles shown while the
+ * map's zoom-14 ones load; and a map tilted by hand at 14-15 no longer shows
+ * them on its nearer zoom-15 tiles. Below 15 no tile carries them, and a
+ * query of the layer finds none there.
  */
 
 const SRC = 'saved-routes-pass';
@@ -90,7 +87,10 @@ export function addPassStretches(map: Pick<MapLibreMap, 'addSource' | 'addLayer'
   map.addLayer(PASS_LAYER, ROUTES_HIT_LAYER);
 }
 
-/** Draw the orange stretches of the lit directions; `lit` and `hiddenDirectionId` as the line hook has them. */
+/**
+ * Draw the green stretches of the lit directions; `lit` and
+ * `hiddenDirectionId` as the line hook has them.
+ */
 export function usePassStretches(
   map: MapLibreMap | null,
   directions: readonly Direction[],
@@ -139,17 +139,15 @@ export function usePassStretches(
   useLighting(map, SRC, lit, hitReady, passSwitch);
 }
 
-// Worked out in line-pass.ts, which the publish runs too (the cheap-phone
-// plan, step 13, 2026-10-05), and handed on from here as before.
+// Worked out in line-pass.ts, which the publish runs too; handed on here.
 export { passBoxes, stretchesPast, type PassBox, type PassFeature };
 
 const stretchesKept = new WeakMap<readonly PassBox[], WeakMap<Direction, readonly PassFeature[]>>();
 
 /**
- * One direction's orange stretches past these boxes, worked out once and
- * kept. They were worked out for every lit direction each time any line
- * arrived — a list of six lit routes, six times over as their lines came in
- * (the cheap-phone plan, step 16 (a), 2026-10-04).
+ * One direction's green stretches past these boxes, worked out once and kept:
+ * without that, every line that arrives works out every lit direction's
+ * again, six times over for a list of six lit routes as their lines come in.
  *
  * Kept by the boxes, then by the direction, both the very objects passed,
  * which is safe because neither is ever changed in place:
@@ -164,8 +162,7 @@ const stretchesKept = new WeakMap<readonly PassBox[], WeakMap<Direction, readonl
  * before it changes one (geojson_source_diff.ts), and nothing here does.
  *
  * Worked out means taken from the line file when it brought them for these
- * very boxes, and walked otherwise (line-pass.ts, publishedStretches; the
- * cheap-phone plan, step 13, 2026-10-05).
+ * very boxes, and walked otherwise (line-pass.ts, publishedStretches).
  */
 export function stretchesOf(v: Direction, boxes: readonly PassBox[]): readonly PassFeature[] {
   let byDirection = stretchesKept.get(boxes);
