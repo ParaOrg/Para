@@ -546,7 +546,7 @@ const indexV5File = files.v5;
 // 2026-10-05): by the app's own rule (src/features/routes/model/line-pass.ts: passBoxes,
 // passBounds, passStretches, hotspotRing, bboxOf, servedBy), on what the app
 // reads — the line as written and the hotspots as rounded in the index,
-// shape 4's, every line in — with the key the app checks them by.
+// the same stops in every shape, the app reads shape 5 — with the key the app checks them by.
 // The rows are the file's (the database's names); the app's rules read the
 // glossary's, so each is handed over translated (toHotspot, toDirection:
 // the same functions the reader uses).
@@ -619,7 +619,7 @@ console.log(
 const indexV5Gz = gzipSync(Buffer.from(indexV5File)).length;
 const loopCount = variants.filter((v) => v.route.is_loop === true).length;
 console.log(
-  `${previousIndexV5 === indexV5File ? 'Unchanged' : 'Wrote'} public/data/index.v5.json: ${variants.length} direction(s) (${loopCount} loop), ` +
+  `${previousIndexV5 === indexV5File ? 'Unchanged' : 'Wrote'} public/data/index.v5.json: ${variants.length} direction(s) (${loopCount} loop(s)), ` +
     `${stops.length} hotspot(s), ${links.length} link(s); ${indexV5File.length} bytes, ${indexV5Gz} gzipped; ` +
     `lines/: ${lineFiles.size} file(s), ${linesWritten} written, ${linesRemoved} removed`,
 );

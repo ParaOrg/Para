@@ -425,8 +425,9 @@ if (existsSync(swPath)) {
     sw.includes('/^\\/(\\?.*)?$/') && sw.includes('/^\\/studio(\\/|$)/'),
   );
   check(
-    'sw.js caches /data/index.v5.json NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst',
-    sw.includes('/data/index.v5.json') &&
+    `sw.js caches ${MAP_FILE_URL} NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst`,
+    !!MAP_FILE_URL &&
+      sw.includes(MAP_FILE_URL) &&
       sw.includes('/data/lines/') &&
       sw.includes('map-lines') &&
       sw.includes('/data/signboards/') &&
