@@ -25,7 +25,10 @@
 // words (15);
 // undo to no points leaving no draft (12); a link sync that fails and a retry
 // that updates rather than inserts (13); the drawing keys alive after signing
-// in from Done (9); no React warnings (the duplicate key). And the camera
+// in from Done (9); the map switch — Contributors, Playground and Public in a band of
+// its own, the address, a half-drawn line, the camera and the basemap kept, the keys and
+// clicks dead on the other maps, Escape leaving a card open under them alone; no React
+// warnings (the duplicate key). And the camera
 // with the cards, the public map's in the studio too (the owner, 2026-09-30):
 // a trip opened on its whole route, beside the card.
 import { readFileSync } from 'node:fs';
@@ -670,6 +673,135 @@ check(
   said(log.slice(nTail)),
 );
 
+// ---- 2b. The map switch: a half-drawn line, the camera and the basemap survive it
+{
+  const camera = () =>
+    page.evaluate(() => {
+      const m = window.__map;
+      return { c: m.getCenter().toArray(), z: m.getZoom(), b: m.getBearing(), p: m.getPitch() };
+    });
+  const sameCamera = (a, b) =>
+    a.c[0] === b.c[0] && a.c[1] === b.c[1] && a.z === b.z && a.b === b.b && a.p === b.p;
+  const mapOf = () => new URL(page.url()).searchParams.get('map');
+
+  const basemapPicked = async () => {
+    await page.getByRole('button', { name: 'Map design' }).click();
+    const dialog = page.getByRole('dialog');
+    const picked = await dialog.locator('button[aria-pressed="true"]').innerText();
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await page.waitForTimeout(300);
+    return picked.trim();
+  };
+  // Another basemap than the one it opens on, so that "kept" means something.
+  await page.getByRole('button', { name: 'Map design' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Terrain' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+  await page.waitForTimeout(500);
+  const basemapBefore = await basemapPicked();
+  await go(at(0, 0), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  await clickAt(OUT[0], 300);
+  await clickAt(OUT[1], 300);
+  await idle();
+  const draftBefore = await page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  const pointsBefore = await pointsShown();
+  const cameraBefore = await camera();
+
+  check(
+    'the switch always shows Contributors, Playground and Public, the Playground current',
+    (await page.locator('[role=radiogroup] label').allInnerTexts())
+      .map((t) => t.trim())
+      .join('|') === 'Contributors|Playground|Public' &&
+      (await page.getByRole('radio', { name: 'Playground' }).isChecked()) &&
+      pointsBefore === 2,
+  );
+  check(
+    '  and the current one is marked by more than colour: a check beside it',
+    await page.evaluate(() => {
+      const count = (sel) =>
+        [...document.querySelectorAll(sel)].map((l) => l.querySelectorAll('svg').length);
+      return (
+        Math.min(...count('label:has(input:checked)')) >
+        Math.max(...count('label:has(input:not(:checked))'))
+      );
+    }),
+  );
+
+  await page.keyboard.press('Escape');
+  await page.getByRole('radio', { name: 'Playground' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(300);
+  check(
+    'an arrow key moves to the Public map: the address says so and says it plainly',
+    mapOf() === 'public' &&
+      (await page.getByRole('radio', { name: 'Public' }).isChecked()) &&
+      (await page.getByRole('heading', { name: 'Public map' }).isVisible()),
+    page.url(),
+  );
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  check(
+    '  the keyboard cannot reach the map there to pan it',
+    await page.evaluate(() => !document.activeElement?.closest('.maplibregl-map')),
+  );
+  await page.getByRole('radio', { name: 'Public' }).focus();
+  await page.keyboard.press('Control+z');
+  // Over the map beside the placeholder's card, where a click would add a point.
+  await page.mouse.click(box.x + 40, box.y + box.height - 60);
+  await page.waitForTimeout(400);
+  check(
+    '  the drawing tools are out of reach there: no Done, and keys and clicks leave the line alone',
+    (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === draftBefore &&
+      !(await page.getByRole('button', { name: /Done/ }).isVisible()),
+  );
+  check('  the camera is as it was', sameCamera(cameraBefore, await camera()));
+
+  await page.locator('label', { hasText: 'Contributors' }).click();
+  await page.waitForTimeout(300);
+  check(
+    'the Contributors map says what will be there, and invents nothing',
+    mapOf() === 'contributors' &&
+      (await page.getByRole('heading', { name: 'Contributors map' }).isVisible()) &&
+      /None are shown yet/.test(await body()),
+  );
+  await page.getByRole('button', { name: 'Back to the Playground' }).click();
+  await page.waitForTimeout(500);
+  check(
+    'back in the Playground the half-drawn line is as it was, with its camera',
+    mapOf() === 'playground' &&
+      (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === draftBefore &&
+      (await pointsShown()) === pointsBefore &&
+      sameCamera(cameraBefore, await camera()) &&
+      (await page
+        .getByRole('radio', { name: 'Playground' })
+        .evaluate((e) => e === document.activeElement)),
+    `${pointsBefore} points`,
+  );
+
+  check(
+    '  and the basemap picked before is still the one picked',
+    (await basemapPicked()) === basemapBefore && basemapBefore === 'Terrain',
+    basemapBefore,
+  );
+  await page.goBack();
+  await page.waitForTimeout(300);
+  check(
+    'Back follows the address: the Contributors map again',
+    mapOf() === 'contributors' &&
+      (await page.getByRole('radio', { name: 'Contributors' }).isChecked()),
+  );
+  await page.goForward();
+  await page.waitForTimeout(300);
+  await page.locator('button[title="Discard this route"]').click();
+  await page.waitForTimeout(300);
+  check(
+    '  the line can still be discarded after the visits',
+    (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === null,
+  );
+}
+
 // ---- 3. A route between them, saved with its slot
 async function drawLine(points) {
   await go(at(0, 0), 15);
@@ -1271,6 +1403,62 @@ check('  and nothing is written', writesSince(n).length === 0, said(writesSince(
 await page.getByRole('button', { name: 'Back to map' }).click();
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
+
+// ---- 10b. The switch's top band, and a card left open under another map
+{
+  const mapOf = () => new URL(page.url()).searchParams.get('map');
+  /** The text of the button under the middle of the named button, or null if something else is. */
+  const reachable = (locator) =>
+    locator.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return hit?.closest('button') === el;
+    });
+  const band = await page.locator('[role=radiogroup]').evaluate((el) => {
+    const b = el.parentElement.getBoundingClientRect();
+    return { top: b.top, bottom: b.bottom, width: b.width };
+  });
+  check(
+    "the switch has a band of its own, 48 px high, at the page's top edge",
+    band.top === 0 && band.bottom === 48 && band.width === 1280,
+    JSON.stringify(band),
+  );
+  for (const width of [768, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.waitForTimeout(400);
+    check(
+      `at ${width} px the pill's buttons are clickable, clear of the switch`,
+      (await reachable(page.getByRole('button', { name: 'Password' }))) &&
+        (await reachable(page.getByRole('button', { name: 'Sign out' }))),
+    );
+  }
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await openCard(OUT[1]);
+  await page.waitForTimeout(500);
+  check(
+    "at 1024 px the corner trip card's ✕ is clickable, clear of the switch",
+    await reachable(
+      page.locator('[data-testid="card"]').first().getByRole('button', { name: 'Close' }),
+    ),
+  );
+  const cardOpen = async () => (await page.locator('[data-testid="card"]').count()) > 0;
+  await page.getByRole('radio', { name: 'Playground' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await page.locator('label', { hasText: 'Playground' }).click();
+  await page.waitForTimeout(400);
+  check(
+    'Escape on another map leaves a card open in the Playground alone',
+    mapOf() === 'playground' && (await cardOpen()),
+  );
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check('  and Escape in the Playground still closes it', !(await cardOpen()));
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(300);
+}
 
 // ---- 11. Signing in from Done leaves the drawing keys alive
 const guest = await open(false, '/studio/?e2e=1');
