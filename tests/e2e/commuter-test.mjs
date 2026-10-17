@@ -1162,7 +1162,8 @@ if (PART === 1) {
       const [top, bottom] = [await row('trip-origin'), await row('trip-destination')];
       check(
         '  the card runs from where its direction leaves to where it goes',
-        !!from && !!to && top === from && bottom === to,
+        // The origin says "start" and the destination "end" to a screen reader, after the name.
+        !!from && !!to && top === `${from} , start` && bottom === `${to} , end`,
         `"${label}": top "${top}", bottom "${bottom}"`,
       );
       const litIds = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];

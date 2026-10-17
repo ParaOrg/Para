@@ -2903,7 +2903,8 @@ if (routeA) {
   const end = await tripRow('trip-destination');
   check(
     '  it opens the trip card, from where its direction leaves to where it goes',
-    !!from && !!to && origin === from && end === to,
+    // The origin says "start" and the destination "end" to a screen reader, after the name.
+    !!from && !!to && origin === `${from} , start` && end === `${to} , end`,
     `"${label}": top "${origin}", bottom "${end}"`,
   );
   // Opened, the camera takes in the whole route, clear of the card.
