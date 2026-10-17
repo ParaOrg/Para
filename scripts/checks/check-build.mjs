@@ -16,7 +16,7 @@
 //                                published map and never call it
 //
 // 3. No Supabase client: since step 5 the public page reads the published
-//    file (/data/index.v4.json and the lines; the index since 2026-09-29), so
+//    file (/data/index.v5.json and the lines; the index since 2026-09-29), so
 //    no module from @supabase may reach it — 54 kB gzipped a commuter does not
 //    download (the shared chunk went 375 → 321 kB), and a database the public
 //    never touches. The live-table readers live in src/features/studio/data (live.ts and hotspots-read.ts), which
@@ -425,8 +425,8 @@ if (existsSync(swPath)) {
     sw.includes('/^\\/(\\?.*)?$/') && sw.includes('/^\\/studio(\\/|$)/'),
   );
   check(
-    'sw.js caches /data/index.v4.json NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst',
-    sw.includes('/data/index.v4.json') &&
+    'sw.js caches /data/index.v5.json NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst',
+    sw.includes('/data/index.v5.json') &&
       sw.includes('/data/lines/') &&
       sw.includes('map-lines') &&
       sw.includes('/data/signboards/') &&

@@ -45,3 +45,7 @@ What commuters see is what was approved, then published
 ([ADR 0003](0003-commuters-see-approved-work.md)); the contributor page sends
 recordings by choice ([ADR 0004](0004-location-leaves-the-phone-only-by-choice.md)).
 The public map still sends nothing.
+
+The published map's index is now `index.v5.json`: shape 4 with the loops in. A
+loop has no head or tail, which a shape-4 app's schema refuses for the whole
+map, so `index.v4.json` and the older indexes are written without loops.
