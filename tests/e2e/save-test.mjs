@@ -1626,7 +1626,8 @@ await page.waitForTimeout(300);
     .fill('Newhead');
   await page.keyboard.press('Enter');
   await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newhead'));
-  await page.waitForTimeout(500);
+  // The save ends when its links are written and the form closes, not when the box is in the table.
+  await form('head').waitFor({ state: 'hidden' });
   const head = tables.stop.find((r) => r.name === 'Stand-in Newhead');
   const boxOf = (r) => r.area.coordinates[0];
   const metres = ([lng1, lat1], [lng2, lat2]) => {
@@ -1671,7 +1672,7 @@ await page.waitForTimeout(300);
     .fill('Stand-in Newtail');
   await form('tail').getByRole('button', { name: 'Save place' }).click();
   await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newtail'));
-  await page.waitForTimeout(500);
+  await form('tail').waitFor({ state: 'hidden' });
   const tail = tables.stop.find((r) => r.name === 'Stand-in Newtail');
   check(
     "the tail is created as a hintuan with a 30 m box centred on the line's last point",
@@ -1767,7 +1768,8 @@ await page.waitForTimeout(300);
   await page.keyboard.press('Enter');
   await page.keyboard.press('Enter');
   await waitFor(() => stopsNamed('Stand-in Guard').length > 0);
-  await page.waitForTimeout(800);
+  // Only once the form has closed is the next one a new form, not this one still saving.
+  await form('Head').waitFor({ state: 'hidden' });
   check(
     'two Enters write one box, once the lines are in',
     stopsNamed('Stand-in Guard').length === 1 && stopWrites(n).length === 1,
@@ -1784,7 +1786,7 @@ await page.waitForTimeout(300);
   await form('Head').getByLabel('Hintuan').focus();
   await page.keyboard.press('Enter');
   await waitFor(() => stopsNamed('Stand-in Radio Head').length > 0);
-  await page.waitForTimeout(500);
+  await form('Head').waitFor({ state: 'hidden' });
   check(
     'Enter on the Hintuan radio saves the place and not the route',
     stopsNamed('Stand-in Radio Head').length === 1 &&
@@ -1799,7 +1801,7 @@ await page.waitForTimeout(300);
   await form('Tail').getByLabel('Terminal').focus();
   await page.keyboard.press('Enter');
   await waitFor(() => stopsNamed('Stand-in Radio Tail').length > 0);
-  await page.waitForTimeout(500);
+  await form('Tail').waitFor({ state: 'hidden' });
   check(
     '  and on the Terminal radio',
     stopsNamed('Stand-in Radio Tail').length === 1 &&
@@ -1825,8 +1827,7 @@ await page.waitForTimeout(300);
   await form('Tail')
     .getByLabel(/Ground name/)
     .press('Enter');
-  await waitFor(async () => !(await form('Tail').isVisible()));
-  await page.waitForTimeout(400);
+  await form('Tail').waitFor({ state: 'hidden' });
   check(
     '  the retry updates that box: one row, no second POST',
     stopsNamed('Stand-in Retry').length === 1 &&
