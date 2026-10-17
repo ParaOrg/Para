@@ -27,7 +27,7 @@ export function ConsentPanel({ onAgree, onDecline }: ConsentPanelProps) {
         Before you record
       </h1>
       <p className="text-base/6">
-        This page records where your ride goes using your phone&apos;s location, while it is open.
+        This page records the route you travel using your phone&apos;s location, while it is open.
         The recording stays on this phone for now. Nothing is sent anywhere.
       </p>
       <div className="flex flex-col gap-2">

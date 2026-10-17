@@ -72,6 +72,10 @@ export interface RecordingState {
   switchWay: () => void;
   /** Stops a running recording, then opens the Save form. */
   openSave: () => void;
+  /** From the Save form, back to recording as Resume does: the time on the form is a gap. */
+  keepRecording: () => void;
+  /** Where focus goes as the recording screen opens: its heading, or the Stop bar after Keep recording. */
+  focusTarget: 'heading' | 'stop';
   /** Saves the recording; with no details, as it is. */
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
@@ -109,6 +113,7 @@ export function useRecording(): RecordingState {
   });
   const [now, setNow] = useState(() => Date.now());
   const [announcement, setAnnouncement] = useState('');
+  const [focusTarget, setFocusTarget] = useState<'heading' | 'stop'>('heading');
   // Two slots, so a location error never hides a storage failure: storage stays
   // until a new recording starts, location clears when the next fix arrives.
   const [storageProblem, setStorageProblem] = useState<string | null>(null);
@@ -237,6 +242,7 @@ export function useRecording(): RecordingState {
     setStorageProblem(null);
     setLocationError(null);
     setAnnouncement('');
+    setFocusTarget('heading');
     failedFixWrites.current = 0;
     keep({
       version: RECORDING_VERSION,
@@ -272,6 +278,8 @@ export function useRecording(): RecordingState {
   const stopAtLastFix = () => finish(fixes[fixes.length - 1]?.time ?? Date.now(), 'paused');
 
   function openSave() {
+    // Cleared, so the same words are announced again after the next Keep recording.
+    setAnnouncement('');
     if (phase === 'recording') finish(Date.now(), 'form');
     else setPhase('form');
   }
@@ -300,6 +308,12 @@ export function useRecording(): RecordingState {
       gaps: [...recording.gaps, ...lost],
     });
     setPhase('recording');
+  }
+
+  function keepRecording() {
+    resume();
+    setFocusTarget('stop');
+    setAnnouncement('Recording again');
   }
 
   function switchWay() {
@@ -400,6 +414,8 @@ export function useRecording(): RecordingState {
     resume,
     switchWay,
     openSave,
+    keepRecording,
+    focusTarget,
     save,
     cancel,
     recordAgain,

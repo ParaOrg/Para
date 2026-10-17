@@ -36,7 +36,7 @@ export function ReadyScreen({ onStart }: ReadyScreenProps) {
           className="absolute inset-x-0 bottom-0 z-10 pb-[env(safe-area-inset-bottom)]"
         >
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
-            Record a ride
+            Record a route
           </h1>
           <TrackingButton variant="start" onClick={onStart} />
         </section>

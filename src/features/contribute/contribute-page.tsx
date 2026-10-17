@@ -53,6 +53,7 @@ export function ContributePage() {
           way={recording.way}
           isPaused={phase === 'paused'}
           isAwake={recording.isAwake}
+          shouldFocusStop={recording.focusTarget === 'stop'}
           onStop={recording.stop}
           onResume={recording.resume}
           onWaySwitch={recording.switchWay}
@@ -64,6 +65,7 @@ export function ContributePage() {
         <SaveForm
           failedFixWrites={recording.current?.failedFixWrites ?? 0}
           onDownload={recording.downloadCurrent}
+          onKeepRecording={recording.keepRecording}
           onSave={recording.save}
         />
       )}

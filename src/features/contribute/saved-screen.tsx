@@ -26,14 +26,14 @@ export function SavedScreen({ failedFixWrites, onRecordAgain, onDownload }: Save
       >
         Successfully recorded
       </h1>
-      <p className="text-base/6 text-content-quaternary">Your ride is kept on this phone.</p>
+      <p className="text-base/6 text-content-quaternary">Your recording is kept on this phone.</p>
       {failedFixWrites > 0 && (
         <p className="text-base/6">
-          The phone could not keep {failedFixWrites} fixes of this ride.
+          The phone could not keep {failedFixWrites} fixes of this recording.
         </p>
       )}
       <Button variant="primary" label="Record again" onClick={onRecordAgain} />
-      {/* TODO: remove at contribute/13, when a saved recording is sent to the studio. Field test only: there is no database to read the ride from yet. */}
+      {/* TODO: remove at contribute/13, when a saved recording is sent to the studio. Field test only: there is no database to read the recording from yet. */}
       <button
         type="button"
         onClick={onDownload}

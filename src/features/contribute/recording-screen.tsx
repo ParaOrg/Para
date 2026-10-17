@@ -4,7 +4,6 @@ import { ConfirmDelete } from './confirm-delete';
 import { OTHER_WAY, type Way } from './recording-rules';
 import { StatsStrip } from './stats-strip';
 import { TrackingButton } from './tracking-button';
-import { useFocusHeading } from './use-focus-heading';
 import type { RecordingFigures } from './use-recording';
 import { useStackRoom } from './use-stack-room';
 
@@ -15,6 +14,8 @@ interface RecordingScreenProps {
   isPaused: boolean;
   /** Whether the screen is being kept awake. */
   isAwake: boolean;
+  /** Focus the Stop bar as the screen opens, not its heading: back from Keep recording. */
+  shouldFocusStop: boolean;
   onStop: () => void;
   onResume: () => void;
   onWaySwitch: () => void;
@@ -34,14 +35,24 @@ export function RecordingScreen({
   way,
   isPaused,
   isAwake,
+  shouldFocusStop,
   onStop,
   onResume,
   onWaySwitch,
   onSave,
   onCancel,
 }: RecordingScreenProps) {
-  const headingRef = useFocusHeading();
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const stackRef = useStackRoom();
+  // The heading takes focus as the screen opens, a screen reader starting at its top; back from
+  // Keep recording it is the Stop bar, where the contributor was before.
+  useEffect(() => {
+    const section = headingRef.current?.closest('section');
+    const stop = section?.querySelector<HTMLButtonElement>('button[aria-label="Stop"]');
+    (shouldFocusStop ? stop : headingRef.current)?.focus();
+    // Once, as the screen opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a change of the prop alone must not move focus
+  }, []);
   const [isAsking, setIsAsking] = useState(false);
   const cancelRef = useRef<HTMLDivElement>(null);
   const wasAsking = useRef(false);
@@ -61,7 +72,7 @@ export function RecordingScreen({
       className="absolute inset-x-0 bottom-0 z-10 flex flex-col pb-[env(safe-area-inset-bottom)]"
     >
       <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
-        {isPaused ? 'Recording stopped' : 'Recording a ride'}
+        {isPaused ? 'Recording stopped' : 'Recording a route'}
       </h1>
       {!isAwake && !isPaused && (
         <p className="mx-4 mb-2 bg-surface p-2 font-sn-pro text-sm/5 text-content-primary">

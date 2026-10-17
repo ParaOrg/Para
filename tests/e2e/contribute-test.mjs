@@ -328,14 +328,14 @@ const buttons = (page) =>
 
   // Back within 300 m of the start: the recording ends itself and the form opens.
   await ride(page, 630, 150);
-  await page.getByRole('heading', { name: 'About this ride' }).waitFor({ timeout: 10000 });
+  await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 10000 });
   check(
     'back within 300 m of the start after a Pabalik tap and over a kilometre: auto-stop opens the Save form',
     true,
   );
   check(
     '  focus is on the form heading',
-    await page.evaluate(() => document.activeElement?.textContent === 'About this ride'),
+    await page.evaluate(() => document.activeElement?.textContent === 'About this route'),
   );
   check(
     '  the auto-stop was announced',
@@ -419,7 +419,7 @@ const buttons = (page) =>
     await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Cancel'),
   );
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await page.getByRole('heading', { name: 'About this ride' }).waitFor();
+  await page.getByRole('heading', { name: 'About this route' }).waitFor();
   check(
     'Save by hand while recording stops the recording and shows the same form',
     (await page.evaluate(() => window.__watchers())) === 0 &&
@@ -461,7 +461,7 @@ const buttons = (page) =>
   await ride(page, 0, 1200);
   await page.getByRole('button', { name: 'Switch to Pabalik' }).click();
   await ride(page, 1190, 200);
-  await page.getByRole('heading', { name: 'About this ride' }).waitFor({ timeout: 30000 });
+  await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 30000 });
   // The recording's stop is written to IndexedDB a moment after the form opens: reload
   // only once it has been, as a person's reload would come long after.
   for (let tries = 0; tries < 100 && (await storedStatus(page)) !== 'stopped'; tries++) {
@@ -480,8 +480,91 @@ const buttons = (page) =>
   check(
     'Resume near the start does not stop it again',
     (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 1 &&
-      (await page.getByRole('heading', { name: 'About this ride' }).count()) === 0,
+      (await page.getByRole('heading', { name: 'About this route' }).count()) === 0,
   );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------------------- Keep recording on the form
+{
+  const { page, errors } = await phone({ consented: true });
+  const stats = async () =>
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ');
+  const activeName = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
+
+  // (a) a wrong auto-stop, ten minutes on the form, and back.
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 1200);
+  await page.getByRole('button', { name: 'Switch to Pabalik' }).click();
+  await ride(page, 1190, 200);
+  await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 30000 });
+  await page.evaluate(() => window.__advance(600_000));
+  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  check(
+    'Keep recording after an auto-stop: back on the recording screen, Stop focused, "Recording again" said',
+    (await activeName()) === 'Stop' &&
+      (await page.getByRole('status').innerText()) === 'Recording again',
+    `${await activeName()} / ${await page.getByRole('status').innerText()}`,
+  );
+  const minutes = Number((await stats()).match(/Time\s+(\d+) min/)?.[1]);
+  check(
+    '  Time does not count the ten minutes on the form',
+    minutes < 8,
+    `${minutes} min; ${await stats()}`,
+  );
+  await ride(page, 190, 50);
+  await page.waitForTimeout(500);
+  check(
+    '  a fix near the start does not stop it again, and the ways are kept',
+    (await page.getByRole('heading', { name: 'About this route' }).count()) === 0 &&
+      (await stats()).includes('Pabalik') &&
+      (await mapSource(page)).features.filter((f) => f.properties.kind === 'switch').length === 1,
+    await stats(),
+  );
+
+  // (c) then a manual Stop and Skip save it once, as one contribution.
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  const counts = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('parapo-contribute');
+        open.onsuccess = () => {
+          const all = open.result.transaction('recordings').objectStore('recordings').getAll();
+          all.onsuccess = () => resolve(all.result.map((r) => r.status));
+        };
+      }),
+  );
+  check(
+    'after Keep recording, a manual Stop and Skip save it once, as one contribution',
+    counts.length === 1 && counts[0] === 'saved',
+    JSON.stringify(counts),
+  );
+  await page.getByRole('button', { name: 'Record again' }).click();
+
+  // (b) a Save by hand, then Keep recording.
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await page.evaluate(() => window.__advance(600_000));
+  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  check(
+    'Keep recording after a Save by hand: recording again, Stop focused, no time for the form',
+    (await activeName()) === 'Stop' &&
+      Number((await stats()).match(/Time\s+(\d+) min/)?.[1]) < 8 &&
+      (await page.evaluate(() => window.__watchers())) === 1,
+    await stats(),
+  );
+  await ride(page, 310, 340);
+  check('  and the fixes after it count', /Distance\s+0\.3 km/.test(await stats()), await stats());
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -547,7 +630,7 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Resume' }).waitFor();
   check(
     'Stop on a recording left open pauses it too: Resume and Save, no form',
-    (await page.getByRole('heading', { name: 'About this ride' }).count()) === 0 &&
+    (await page.getByRole('heading', { name: 'About this route' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'Save', exact: true }).count()) === 1,
   );
   check('no page errors', errors.length === 0, errors.join('; '));
@@ -563,7 +646,7 @@ const buttons = (page) =>
   // Installed before the form opens, so the form's own timer runs on it.
   await page.clock.install();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await page.getByRole('heading', { name: 'About this ride' }).waitFor();
+  await page.getByRole('heading', { name: 'About this route' }).waitFor();
   await page.clock.runFor(61_000);
   const sixty = await page.locator('form').innerText();
   check(
@@ -580,7 +663,7 @@ const buttons = (page) =>
   await page.clock.runFor(116_000);
   check(
     'still on the form a couple of seconds before the time is up',
-    (await page.getByRole('heading', { name: 'About this ride' }).count()) === 1,
+    (await page.getByRole('heading', { name: 'About this route' }).count()) === 1,
   );
   await page.clock.runFor(3_000);
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor({ timeout: 5000 });

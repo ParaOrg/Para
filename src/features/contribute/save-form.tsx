@@ -12,6 +12,8 @@ interface SaveFormProps {
   /** Fixes the phone could not keep; above zero, the ride is incomplete and can be downloaded now. */
   failedFixWrites: number;
   onDownload: () => void;
+  /** Back to recording, for a stop that was a mistake. */
+  onKeepRecording: () => void;
   /** Continue, and the form's two minutes running out, save what was said; Skip saves without. */
   onSave: (details: RecordingDetails | null) => void;
 }
@@ -26,7 +28,7 @@ const isRideKind = (value: string): value is RideKind => RIDE_KINDS.some((kind) 
  * alone for two minutes it saves the ride with what was typed, so a phone put
  * away after the ride does not keep a recording open.
  */
-export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps) {
+export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave }: SaveFormProps) {
   const ids = useId();
   const headingRef = useFocusHeading();
   const [details, setDetails] = useState<RecordingDetails>({
@@ -56,7 +58,7 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
           tabIndex={-1}
           className="text-2xl/8 font-extrabold focus:outline-none"
         >
-          About this ride
+          About this route
         </h1>
         <p className="text-base/6 text-content-quaternary">
           Everything here is optional. Saving in {countdownText(secondsLeft)}
@@ -65,10 +67,10 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
       {failedFixWrites > 0 && (
         <div className="flex flex-col gap-2">
           <p role="alert" className="text-base/6">
-            The phone could not keep {failedFixWrites} fixes. Download this ride now, before you
-            close the page.
+            The phone could not keep {failedFixWrites} fixes. Download this recording now, before
+            you close the page.
           </p>
-          <Button variant="secondary" label="Download this ride" onClick={onDownload} />
+          <Button variant="secondary" label="Download this recording" onClick={onDownload} />
         </div>
       )}
       <label className="flex flex-col gap-1 text-base/6 font-bold" htmlFor={`${ids}-start`}>
@@ -123,6 +125,14 @@ export function SaveForm({ failedFixWrites, onDownload, onSave }: SaveFormProps)
       <div className="mt-auto flex flex-col gap-2">
         <Button variant="primary" type="submit" label="Continue" />
         <Button variant="secondary" label="Skip" onClick={() => onSave(null)} />
+        {/* The design system has no tertiary or ghost Button: a quiet text button in tokens, 44 px tall. */}
+        <button
+          type="button"
+          onClick={onKeepRecording}
+          className="min-h-11 text-base/6 font-bold text-content-quaternary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary"
+        >
+          Keep recording
+        </button>
       </div>
     </form>
   );
