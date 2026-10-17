@@ -42,3 +42,34 @@ test('no fix, no choice', () => {
   assert.equal(usableNear(along, null), null);
   assert.equal(usableNear([], { at: at(0), accuracyM: 5 }), null);
 });
+
+// ------------------------------------------------------------ the tip on a ride
+import { tipOnRide } from '../../src/features/routes/map/loop-tip.ts';
+
+const WHOLE = 3000;
+
+test('with no start the ride leaves from the tip', () => {
+  assert.equal(tipOnRide(WHOLE, 500, null, 1200), 'start');
+});
+
+test('a start with no end of its own rides round to the tip: the tip is the end', () => {
+  assert.equal(tipOnRide(WHOLE, 500, 2000, null), 'end');
+});
+
+test('a ride that wraps past the tip passes through it', () => {
+  // From 2000 forward to 300 crosses the seam and the tip at 500? No: 300 is short of it.
+  assert.equal(tipOnRide(WHOLE, 500, 2000, 300), 'outside');
+  assert.equal(tipOnRide(WHOLE, 500, 2000, 800), 'through');
+});
+
+test('a ride that stays between the start and the tip leaves the tip outside it', () => {
+  assert.equal(tipOnRide(WHOLE, 2900, 1000, 1500), 'outside');
+});
+
+test('an end picked on the tip is where the ride ends', () => {
+  assert.equal(tipOnRide(WHOLE, 500, 2000, 500), 'end');
+});
+
+test('a start on the tip is where the ride leaves', () => {
+  assert.equal(tipOnRide(WHOLE, 500, 500, 1200), 'start');
+});

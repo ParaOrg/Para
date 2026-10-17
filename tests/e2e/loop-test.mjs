@@ -231,6 +231,18 @@ const pickRow = (page, name) =>
   page.locator('[data-testid="trip-hintuan-pick"]', { hasText: name }).first().tap();
 /** What a ride of `metres` reads as on the tile, one decimal of a kilometre. */
 const asTile = (metres) => Math.round(metres / 100) / 10;
+/** What the map's end labels say, one string each: which end, and where. */
+const endLabels = async (page) =>
+  (
+    await page
+      .locator('[data-testid="end-title"] button')
+      .evaluateAll((els) => els.map((e) => (e.getAttribute('aria-label') ?? '').split(':')[0]))
+  ).sort();
+/** The places the map circles bare, with no name over them. */
+const bareCircles = (page) =>
+  page
+    .locator('[data-testid="end-circle"]')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-name')));
 const near = (value, metres) => Math.abs(value - metres / 1000) <= 0.16;
 /** A click on a row the sheet has scrolled out of the screen: the button's own handler, as a tap would reach it. */
 const press = (locator) => locator.evaluate((el) => el.click());
@@ -248,9 +260,15 @@ const closeTrip = async (page) => {
     "a loop's trip has no SWITCH",
     (await page.locator('[data-testid="card-switch"]').count()) === 0,
   );
+  const header = await page.locator('[data-testid="trip-detail-header"]').innerText();
   check(
-    '  and says Ikot where Papunta stands',
-    (await card.innerText()).includes('Ikot') && !(await card.innerText()).includes('Papunta'),
+    "  and says Ikot where Papunta stands, with the loop's name beside it",
+    /Ikot/.test(header) && !/Papunta|Pabalik/.test(header) && header.includes('UP – Ikot'),
+    header.replace(/\n/g, ' | '),
+  );
+  check(
+    '  nothing in the card says Papunta or Pabalik',
+    !/Papunta|Pabalik/.test(await card.innerText()),
   );
   check(
     'with no location the trip leaves from the first place the line passes, and comes back to it',
@@ -272,9 +290,9 @@ const closeTrip = async (page) => {
     `${await km(page)} km, the loop ${asTile(LOOP_METRES)} km`,
   );
   check(
-    'the top row wears the S and the bottom row the E',
-    (await page.locator('[data-testid="trip-origin"]').innerHTML()).length > 0 &&
-      (await page.locator('[data-testid="trip-destination"]').count()) === 1,
+    'at rest the map names the tip once, as the Start',
+    JSON.stringify(await endLabels(page)) === JSON.stringify([`Start, ${PALMA.name}`]),
+    JSON.stringify(await endLabels(page)),
   );
 
   // A row tapped: the ride goes from the tip forward to it.
@@ -301,6 +319,12 @@ const closeTrip = async (page) => {
     `${await km(page)} km, expected ${asTile(wrapped)} km`,
   );
   check(
+    '  the tip is passed through: a bare circle on the map, no Start over it',
+    !(await endLabels(page)).some((l) => l.includes(PALMA.name)) &&
+      (await bareCircles(page)).includes(PALMA.name),
+    `${JSON.stringify(await endLabels(page))} / ${JSON.stringify(await bareCircles(page))}`,
+  );
+  check(
     '  the rows between the end and the start fold into one fold',
     (await page.locator('[data-testid="trip-fold"]').count()) === 1 &&
       (await page.locator('[data-testid="trip-fold"]').getAttribute('data-part')) === 'after',
@@ -309,6 +333,12 @@ const closeTrip = async (page) => {
   // An end row with the start kept: either end is the tip, the ride goes on round to it.
   await press(page.locator('[data-testid="trip-destination"] button').first());
   await page.waitForTimeout(500);
+  check(
+    'the ride ending at the tip: the map marks it End, not Start',
+    (await endLabels(page)).some((l) => l === `End, ${PALMA.name}`) &&
+      !(await endLabels(page)).some((l) => l === `Start, ${PALMA.name}`),
+    JSON.stringify(await endLabels(page)),
+  );
   const toTip = (PALMA.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
   check(
     'the bottom row with a start: the ride runs from the start round to the tip',
@@ -411,6 +441,17 @@ const closeTrip = async (page) => {
   );
   await closeTrip(page);
 
+  // A coarse fix sharpening on the spot, as a phone's does before its GPS has found itself.
+  await context.setGeolocation({ longitude: SUNKEN.at[0], latitude: SUNKEN.at[1], accuracy: 10 });
+  await page.waitForTimeout(2500);
+  await openTrip(page);
+  check(
+    'the same point, vague and then sharp: the sharp one is heard, the tip is Sunken Garden',
+    (await originLabel(page)).includes(SUNKEN.name),
+    await originLabel(page),
+  );
+  await closeTrip(page);
+
   // Far away: nothing near the loop.
   await context.setGeolocation({ longitude: 121.01, latitude: 14.5, accuracy: 15 });
   await page.waitForTimeout(2500);
@@ -434,10 +475,8 @@ const closeTrip = async (page) => {
   await page.touchscreen.tap(at.x, at.y);
   await page.locator('[data-testid="card"]').first().waitFor({ timeout: 15000 });
   await page.waitForTimeout(500);
-  check(
-    "the place's card lists the loop with Ikot where its way goes",
-    (await page.locator('[data-testid="card"]').first().innerText()).includes('Ikot'),
-  );
+  const row = (await page.locator('[data-testid="card-item"]').first().innerText()).trim();
+  check("the place's card lists the loop with Ikot where its way goes", row === 'Ikot', row);
   check(
     '  and has no SWITCH over loops alone',
     (await page.locator('[data-testid="card-flip"]').count()) === 0,

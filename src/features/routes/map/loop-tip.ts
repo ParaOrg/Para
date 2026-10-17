@@ -25,3 +25,29 @@ export function usableNear(along: readonly Hotspot[], where: CommuterWhere | nul
   );
   return isInReach ? where.at : null;
 }
+
+/** Where a loop's tip lies on the ride between the picks. */
+export type TipOnRide = 'start' | 'end' | 'through' | 'outside';
+
+/**
+ * The tip's place on a ride round a loop of `whole` metres, all measured along
+ * its line: the ride leaves from the start (a null start is the tip itself)
+ * and goes forward to the end (a null end, with a start, is the tip again). The
+ * tip is where the ride starts, where it ends, or on a wrapped ride passes
+ * through it; a ride that stops short of it leaves it outside.
+ */
+export function tipOnRide(
+  whole: number,
+  tip: number,
+  start: number | null,
+  end: number | null,
+): TipOnRide {
+  if (start === null) return 'start';
+  if (end === null) return 'end';
+  const forward = (from: number, to: number) => (((to - from) % whole) + whole) % whole;
+  const ride = forward(start, end) < 1 ? whole : forward(start, end);
+  const toTip = forward(start, tip);
+  if (toTip < 1) return 'start';
+  if (Math.abs(toTip - ride) < 1) return 'end';
+  return toTip < ride ? 'through' : 'outside';
+}

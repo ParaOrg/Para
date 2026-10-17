@@ -178,6 +178,7 @@ export function TripCard({
             // A train's bound alone: with none, its line alone, never Papunta.
             way={line ? railBound(direction) : wayWord(direction.reversed, [direction])}
             livery={livery}
+            name={loop ? (direction.name ?? undefined) : undefined}
           />
         )
       }

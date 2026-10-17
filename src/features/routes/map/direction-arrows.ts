@@ -87,11 +87,14 @@ export interface Ride {
   routeCode?: string | null;
   /**
    * A loop has no ends. With its trip open, its line leaves from its tip and
-   * comes back to it: `'tip'`, one circle there named for the tip (`from`,
-   * `fromHotspot`). Lit in a list or on a card, `'none'`: no circle at all.
+   * comes back to it, and the tip gets one circle named for it (`from`,
+   * `fromHotspot`), wearing what it is to the ride: `'start'` (the S, at rest
+   * and on a ride from the tip), `'end'` (the E, where a ride with a start
+   * ends) or `'bare'` (a ride passes through it or stops short of it: a plain
+   * circle, no name). Lit in a list or on a card, `'none'`: no circle at all.
    * Absent on every other ride.
    */
-  loopEnd?: 'tip' | 'none';
+  loopEnd?: 'none' | 'start' | 'end' | 'bare';
 }
 
 /**
@@ -137,8 +140,8 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           ['to', r.to, r.line[r.line.length - 1], r.toHotspot ?? null],
         ] as const
       )
-        // A loop's line comes back to where it left: its one end is the tip.
-        .filter(([end]) => r.loopEnd !== 'tip' || end === 'from')
+        // A loop's line comes back to where it left: its one end is the tip, the E where the ride ends there.
+        .filter(([end]) => !r.loopEnd || end === (r.loopEnd === 'end' ? 'to' : 'from'))
         .map(([end, name, at, hotspotId]) => {
           const same = name
             ? named.find((n) => n.name === name && haversine(n.at, at) < SAME_END_M)
@@ -150,13 +153,13 @@ export function rideEnds(rides: readonly Ride[]): RideEnd[] {
           const e: RideEnd = {
             end,
             name,
-            named: !!name && !same,
+            named: !!name && !same && r.loopEnd !== 'bare',
             at,
             hotspotId,
             rides: !same && r.id ? [r.id] : [],
             of: r.id ?? null,
             paled,
-            isMarked: !paled && !r.isUnmarked,
+            isMarked: !paled && !r.isUnmarked && r.loopEnd !== 'bare',
             mark: markOf(end, r.isBackwards ?? false),
           };
           if (e.named) named.push(e);

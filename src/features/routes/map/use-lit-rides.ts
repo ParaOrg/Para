@@ -5,6 +5,7 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { useBabaanSides } from './babaan-sides';
 import { useDirectionArrows, type Ride } from './direction-arrows';
+import type { TipOnRide } from './loop-tip';
 import { usePassStretches } from './pass-stretches';
 import { useRideRest } from './ride-rest';
 import type { Ridden } from './use-ride-to';
@@ -69,18 +70,13 @@ export function useLitRides(
   // Selected card's directions, or else a list's or a hotspot card's: chevrons
   // flowing inside each line from where the ride starts, and each end a
   // circle with its place's name and, where the route says, its hotspot.
-  const unmarkedId = startId !== null && ridden === null ? (saved.selected?.id ?? null) : null;
+  const selectedId = saved.selected?.id ?? null;
+  const unmarkedId = startId !== null && ridden === null ? selectedId : null;
   const rides = useMemo(
     () =>
       saved.litDirections.map((v): Ride => {
         if (isLoop(v))
-          return loopRide(
-            v,
-            hotspots,
-            saved.selected?.id === v.id ? tipId : null,
-            ridden,
-            unmarkedId,
-          );
+          return loopRide(v, hotspots, selectedId === v.id ? tipId : null, ridden, unmarkedId);
         const line = travelLine(v, hotspots);
         return {
           id: v.id,
@@ -95,7 +91,7 @@ export function useLitRides(
           routeCode: v.route?.routeCode ?? null,
         };
       }),
-    [saved.litDirections, saved.selected, hotspots, ridden, unmarkedId, tipId],
+    [saved.litDirections, selectedId, hotspots, ridden, unmarkedId, tipId],
   );
   useDirectionArrows(map, rides);
   // Outside the ride, the trip's line in its card's pale, over the lit line
@@ -132,6 +128,18 @@ function loopRide(
     fromHotspot: tip?.id ?? null,
     toHotspot: tip?.id ?? null,
     routeCode: v.route?.routeCode ?? null,
-    loopEnd: tip ? 'tip' : 'none',
+    loopEnd: loopEndOf(tip !== undefined, ridden?.directionId === v.id ? ridden.atTip : undefined),
   };
+}
+
+/**
+ * What a loop's tip wears on the map: nothing with no trip open, its S at rest
+ * and on a ride from it, the E where a ride with a start ends there, and a bare
+ * circle where a ride passes through it or stops short.
+ */
+function loopEndOf(hasTip: boolean, atTip: TipOnRide | undefined): Ride['loopEnd'] {
+  if (!hasTip) return 'none';
+  if (atTip === 'end') return 'end';
+  if (atTip === 'through' || atTip === 'outside') return 'bare';
+  return 'start';
 }

@@ -1,16 +1,17 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
+import type { CommuterWhere } from '@/features/routes/map/loop-tip';
 import { coarse } from '@/features/routes/map/map-view';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import type { Snap } from '@/shared/ui/sheet-gesture';
-import { haversine, type LngLat } from '@/shared/utils/geo';
 
 import { gazeSubjects, type Picks } from './dot-gaze';
 import { Locator } from './locator';
 import { LocatorOnMap } from './locator-on-map';
 import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
+import { shouldTell } from './where-told';
 
 interface Props {
   map: MapLibreMap | null;
@@ -26,16 +27,15 @@ interface Props {
   picks: Picks;
   hushedAt: { readonly current: number };
   /**
-   * Where the commuter is, said once at the first fix and then only after a
-   * move of more than WHERE_MOVE_M, so the page that listens renders for a
-   * walk across town and not for every fix. It never leaves this phone
-   * (ADR 0004): the page keeps it in memory to choose a loop's tip.
+   * Where the commuter is, said at the first fix and then only when it
+   * matters (shouldTell), so the page that listens renders for a walk across
+   * town and not for every fix; null when the fix is lost, so the page does
+   * not keep choosing from a position the commuter has taken back. It never
+   * leaves this phone (ADR 0004): the page keeps it in memory to choose a
+   * loop's tip.
    */
-  onWhere?: (at: LngLat, accuracyM: number) => void;
+  onWhere?: (where: CommuterWhere | null) => void;
 }
-
-/** How far the commuter moves before the page is told again. */
-export const WHERE_MOVE_M = 50;
 
 /**
  * The commuter's own position, when they ask for it, and the camera with
@@ -62,8 +62,8 @@ export function CommuterLocation({
   // How the dot feels: glad as the location comes, a boing at a tap on the
   // button or on the dot, now and then a huff (locatorMood).
   const { mood, face, beat, poke } = useLocatorMood(locator);
-  // Told to the page at the first fix and after each 50 m; a fix lost and found again says it afresh.
-  const told = useRef<LngLat | null>(null);
+  // Told to the page by shouldTell; a fix lost says null, and found again says it afresh.
+  const told = useRef<CommuterWhere | null>(null);
   const latestOnWhere = useRef(onWhere);
   useEffect(() => {
     latestOnWhere.current = onWhere;
@@ -71,12 +71,14 @@ export function CommuterLocation({
   const fix = locator.fix;
   useEffect(() => {
     if (!fix) {
+      if (told.current) latestOnWhere.current?.(null);
       told.current = null;
       return;
     }
-    if (told.current && haversine(told.current, fix.at) <= WHERE_MOVE_M) return;
-    told.current = fix.at;
-    latestOnWhere.current?.(fix.at, fix.accuracy);
+    const where = { at: fix.at, accuracyM: fix.accuracy };
+    if (!shouldTell(told.current, where)) return;
+    told.current = where;
+    latestOnWhere.current?.(where);
   }, [fix]);
   // …and its gaze: at what was just picked, for three seconds (dot-gaze.ts);
   // ‹ and ✕ are hushed, so going back picks nothing.

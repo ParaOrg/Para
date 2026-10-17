@@ -173,7 +173,7 @@ export function PublicMapApp() {
           litDirections: saved.litDirections,
         }}
         hushedAt={hushedAt}
-        onWhere={(at, accuracyM) => setWhere({ at, accuracyM })}
+        onWhere={setWhere}
       />
       {/*
         Each lit ride's ends, named over their circles; with no trip open, a

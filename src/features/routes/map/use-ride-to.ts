@@ -2,7 +2,9 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
+import { lineLength } from '@/shared/utils/geo';
 
+import { tipOnRide, type TipOnRide } from './loop-tip';
 import { APP_MOVE } from './map-view';
 import { glideFor } from './ride-glide';
 import { useRidePicks } from './use-ride-picks';
@@ -24,6 +26,8 @@ export interface Ridden {
   line: readonly LngLat[];
   pale: readonly (readonly LngLat[])[];
   isBackwards: boolean;
+  /** On a loop, where its tip lies on the ride: the start, the end, passed through, or outside it. */
+  atTip?: TipOnRide;
 }
 
 /**
@@ -223,13 +227,15 @@ export function useRideTo(
   // Kept one object while the span is, so the lit rides are not made anew each render.
   const ridden = useMemo((): Ridden | null => {
     if (!span || !selected) return null;
+    const atTip = isLoop(selected) ? tipOnLoop(selected, hotspots, tipId, liveStart, live) : null;
     return {
       directionId: selected.id,
       line: span.ridden,
       pale: [span.before, span.rest].filter((l) => l.length > 1),
       isBackwards: span.isBackwards,
+      ...(atTip ? { atTip } : {}),
     };
-  }, [span, selected]);
+  }, [span, selected, hotspots, tipId, liveStart, live]);
 
   /**
    * SWITCH on a jeep's trip, just before it turns: the picks go with it to
@@ -309,4 +315,25 @@ export function useRideTo(
     toEnd,
     carryTo,
   };
+}
+
+/**
+ * Where a loop's tip lies on the ride the picks make (tipOnRide), measured along
+ * its line. A start with no end of its own is an end row picked: the tip again.
+ */
+function tipOnLoop(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  tipId: string | null,
+  start: { rowId: string } | null,
+  end: { rowId: string } | null,
+): TipOnRide {
+  const metresOf = (rowId: string | null) =>
+    rowId === null ? null : (rideCut(v, hotspots, rowId)?.metres ?? null);
+  return tipOnRide(
+    lineLength(travelLine(v, hotspots)),
+    metresOf(tipId) ?? 0,
+    metresOf(start?.rowId ?? null),
+    metresOf(end?.rowId ?? null),
+  );
 }
