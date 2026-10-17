@@ -1,6 +1,6 @@
 # Migrations
 
-The files here are numbered (`0001` to `0016`). The project's ledger,
+The files here are numbered (`0001` to `0017`). The project's ledger,
 `supabase_migrations.schema_migrations`, is timestamped. This table says which
 ledger version each file is. Nothing here is applied by a session: the owner
 applies each file, one at a time, and regenerates `src/shared/types/database.types.ts`
@@ -24,6 +24,7 @@ after every one.
 | `0014_terminal_place_unique.sql` | `20261016132957` | `0014_terminal_place_unique` | Only its create ran; 0016 is its drop |
 | `0015_shared_editing.sql` | `20261014072047` | `0015_shared_editing` | Applied before 0013 and 0014 |
 | `0016_finish_terminal_index.sql` | `20261017052153` | `0016_finish_terminal_index` | Drops the index 0014 meant to drop |
+| `0017_anon_writes_revoked.sql` | not yet applied | | `anon` loses its writes; a new table grants nothing by default |
 
 A new file takes the next free number. Its ledger version is whatever
 timestamp the project gives it when the owner applies it; add the row here in
