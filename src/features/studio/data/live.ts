@@ -14,7 +14,7 @@ import {
 } from '@/features/routes/model/routes';
 
 import { listHotspots } from './hotspots-read';
-import { parsed, readAll, type Page } from './read-all';
+import { parsed, readAll } from './read-all';
 import { getSupabase } from './supabase';
 
 /**
@@ -75,6 +75,9 @@ const listedRowSchema = z.extend(z.omit(rawDirectionRowSchema, { shape: true }),
 });
 type ListedRow = z.infer<typeof listedRowSchema>;
 
+/** A direction's id and full line, as lines are read on their own. */
+const lineRowSchema = z.object({ id: z.string(), shape: z.nullable(lineStringSchema) });
+
 /**
  * A listed row as the editor holds it, before nameDirections: the glossary's
  * names, and `shape` holding what the list carried for it (`line` when the
@@ -96,20 +99,18 @@ export function unnamedFromListed(
 export async function listDirections(): Promise<DirectionRow[]> {
   const client = getSupabase();
   if (!client) return [];
-  // The client reads a row type off the select and guesses the embedded
-  // route as a list; the foreign key makes it one row. Read as unknown and
-  // parsed, as every row here is.
-  const list = (select: string) =>
+  // Read as unknown and parsed, as every row here is: the client's guess at
+  // the embedded route (a list) is not what the foreign key makes it (one row).
+  const list = () =>
     readAll<unknown>((from, to) =>
       client
         .from('route_variant')
-        .select(select, { count: 'exact' })
+        .select(DIRECTION_SELECT, { count: 'exact' })
         .order('updated_at', { ascending: false })
         .order('id')
-        .range(from, to)
-        .then((r) => r as unknown as Page<unknown>),
+        .range(from, to),
     );
-  const [listedRaw, hotspots] = await Promise.all([list(DIRECTION_SELECT), listHotspots()]);
+  const [listedRaw, hotspots] = await Promise.all([list(), listHotspots()]);
   const listed: ListedRow[] = parsed(listedRowSchema, listedRaw, 'direction');
   // A drawn row saved before 0009 and not backfilled has no overview yet: its
   // full line stands in, read for those rows alone.
@@ -126,7 +127,7 @@ export async function listDirections(): Promise<DirectionRow[]> {
 async function unsummarised(): Promise<Map<string, LineStringGeoJSON>> {
   const client = getSupabase();
   if (!client) return new Map();
-  const rows = await readAll<{ id: string; shape: LineStringGeoJSON | null }>((from, to) =>
+  const rawRows = await readAll<unknown>((from, to) =>
     client
       .from('route_variant')
       .select('id, shape', { count: 'exact' })
@@ -135,6 +136,7 @@ async function unsummarised(): Promise<Map<string, LineStringGeoJSON>> {
       .order('id')
       .range(from, to),
   );
+  const rows = parsed(lineRowSchema, rawRows, 'direction line');
   return new Map(rows.flatMap((r) => (r.shape ? [[r.id, r.shape] as const] : [])));
 }
 
@@ -144,7 +146,7 @@ export async function lineOf(id: string): Promise<LineStringGeoJSON | null> {
   if (!client) return null;
   const { data, error } = await client.from('route_variant').select('shape').eq('id', id).single();
   if (error) throw new Error(error.message);
-  return (data as { shape: LineStringGeoJSON | null }).shape;
+  return z.parse(z.nullable(lineStringSchema), data.shape);
 }
 
 /** How many ids one read of full lines names: its request line stays short. */
@@ -172,8 +174,7 @@ export async function linesOf<T extends DirectionRow>(directions: readonly T[]):
   const byId = new Map<string, LineStringGeoJSON | null>();
   for (const { data, error } of await Promise.all(reads)) {
     if (error) throw new Error(error.message);
-    for (const r of data as { id: string; shape: LineStringGeoJSON | null }[])
-      byId.set(r.id, r.shape);
+    for (const r of parsed(lineRowSchema, data, 'direction line')) byId.set(r.id, r.shape);
   }
   return directions.map((v) => ({
     ...v,
@@ -195,13 +196,16 @@ export async function withDrawing(v: DirectionRow): Promise<DirectionDrawing> {
     .eq('id', v.id)
     .single();
   if (error) throw new Error(error.message);
-  const d = data as { control_points: unknown; segments: unknown; shape: LineStringGeoJSON | null };
+  // Read as unknown: the drawing columns are stored as given and no schema
+  // for a segment exists yet, so the generated Json type proves nothing here.
+  const controlPoints: unknown = data.control_points;
+  const segments: unknown = data.segments;
   return {
     ...v,
-    shape: d.shape,
-    controlPoints: Array.isArray(d.control_points)
-      ? (d.control_points as DirectionDrawing['controlPoints'])
+    shape: z.parse(z.nullable(lineStringSchema), data.shape),
+    controlPoints: Array.isArray(controlPoints)
+      ? (controlPoints as DirectionDrawing['controlPoints'])
       : [],
-    segments: Array.isArray(d.segments) ? (d.segments as DirectionDrawing['segments']) : [],
+    segments: Array.isArray(segments) ? (segments as DirectionDrawing['segments']) : [],
   };
 }

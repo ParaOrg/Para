@@ -28,12 +28,12 @@ async function writeList(directionId: string, names: readonly string[]): Promise
   if (!client) throw new Error('Supabase is not configured.');
   const { data, error } = await client
     .from('route_variant')
-    .update({ signboards: names })
+    .update({ signboards: [...names] })
     .eq('id', directionId)
     .select('signboards')
     .single();
   if (error) throw new Error(`The signboards were not saved: ${error.message}`);
-  return (data as { signboards: string[] }).signboards;
+  return data.signboards;
 }
 
 /** A file cleaned and sent, then put last in the direction's list. */

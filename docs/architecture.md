@@ -10,7 +10,7 @@ A unit is a folder: an app, a feature (or a concern folder of a feature that has
 
 - **app**: `public-map`, `studio`
 - **features**: `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `studio`, `studio/auth`, `studio/data`, `studio/drawing`, `studio/panels`
-- **shared**: `hooks`, `ui`, `utils`
+- **shared**: `hooks`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
 
@@ -37,6 +37,7 @@ flowchart TD
   end
   subgraph shared_layer["shared"]
     shared_hooks["hooks"]
+    shared_types["types"]
     shared_ui["ui"]
     shared_utils["utils"]
   end
@@ -58,6 +59,7 @@ flowchart TD
   app_studio --> features_routes_map
   app_studio --> features_routes_model
   app_studio --> features_studio
+  app_studio --> shared_types
   app_studio --> styles
   features_locator --> features_routes_map
   features_locator --> features_routes_model
@@ -91,6 +93,7 @@ flowchart TD
   features_studio_auth --> features_studio_panels
   features_studio_data --> features_routes_geo
   features_studio_data --> features_routes_model
+  features_studio_data --> shared_types
   features_studio_data --> shared_utils
   features_studio_drawing --> design_system_foundation
   features_studio_drawing --> features_routes_map
@@ -116,7 +119,7 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `styles` |
-| `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `styles` |
+| `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
@@ -127,10 +130,11 @@ flowchart TD
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/panels` |
 | `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels` |
-| `features/studio/data` | `features/routes/geo`, `features/routes/model`, `shared/utils` |
+| `features/studio/data` | `features/routes/geo`, `features/routes/model`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
 | `shared/hooks` | — |
+| `shared/types` | — |
 | `shared/ui` | `design-system/primitives`, `shared/hooks` |
 | `shared/utils` | — |
 | `styles` | `design-system/foundation` |
