@@ -66,6 +66,12 @@ export interface WatchPosition {
   timestamp: number;
 }
 
+/** A fix and the run of fixes it joins. */
+export interface FixRun {
+  fix: Fix;
+  run: Sample[];
+}
+
 /**
  * The fix for a position the watch has given, and the run of fixes it joins:
  * those of the last 15 s and this one. The browser's speed is kept when it
@@ -78,7 +84,7 @@ export function fixFrom(
   run: readonly Sample[],
   lastHeading: number | null,
   now: number,
-): { fix: Fix; run: Sample[] } {
+): FixRun {
   const { coords } = position;
   const at: LngLat = [coords.longitude, coords.latitude];
   const time = position.timestamp || now;

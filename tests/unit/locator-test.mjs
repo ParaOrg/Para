@@ -1,9 +1,8 @@
 // The LocatorButton's rules (src/features/locator/locator-rules.ts and
-// locator-motion.ts, the owner's
-// 3870:5408, 2026-10-01): the button's look for where the camera is, where a
-// tap takes it, the zooms its "1000 ft" and "200 ft" come to, the phone's
-// compass read; and the speed and heading worked out from the fixes when the
-// browser gives neither.
+// locator-motion.ts, the owner's 3870:5408, 2026-10-01): the button's look
+// for where the camera is, where a tap takes it, the zooms its "1000 ft" and
+// "200 ft" come to, the phone's compass read; and the speed and heading worked
+// out from the fixes when the browser gives neither.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/locator-test.mjs
 import { test } from 'node:test';

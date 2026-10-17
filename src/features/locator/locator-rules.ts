@@ -1,5 +1,4 @@
-import type { LngLat } from '@/shared/utils/geo';
-import { zoomForScale } from '@/shared/utils/geo';
+import { zoomForScale, type LngLat } from '@/shared/utils/geo';
 
 import type { LocatorMode } from './locator-button';
 
