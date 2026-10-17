@@ -1175,7 +1175,7 @@ if (PART === 1) {
           new Promise((done) => {
             const m = window.__map;
             const read = async () => {
-              const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
+              const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
               const { directionLine } = await import('/src/features/routes/model/routes.ts');
               const v = (await fetchIndex()).directions.find((x) => x.id === id);
               const line = v ? directionLine(v) : [];
@@ -1362,8 +1362,8 @@ if (PART === 1) {
                 import('/src/features/routes/model/ride.ts'),
                 import('/src/shared/utils/geo.ts'),
               ]);
-              const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
-              const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+              const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
+              const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
               const m = await fetchIndex();
               const found = m.directions.find((x) => x.id === id);
               const v = found && { ...found, shape: (await fetchLine(id)) ?? found.shape };
@@ -1594,8 +1594,8 @@ if (PART === 1) {
         const end = await page.evaluate(async (id) => {
           try {
             const { travelLine } = await import('/src/features/routes/model/ride.ts');
-            const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
-            const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+            const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
+            const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
             const m = await fetchIndex();
             const found = m.directions.find((x) => x.id === id);
             const line = travelLine(

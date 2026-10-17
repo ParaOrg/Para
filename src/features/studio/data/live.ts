@@ -21,7 +21,7 @@ import { getSupabase } from './supabase';
  * Readers of the live tables, for the editor. They live in studio/, apart
  * from the types in routes/model/routes.ts and routes/model/hotspots.ts, on
  * purpose: the public map imports those types but reads the published map
- * instead (published-map/api/fetch-index.ts), and ESLint forbids the public
+ * instead (routes/published/fetch-index.ts), and ESLint forbids the public
  * shell importing studio/. So Supabase's address can never land in a chunk
  * both pages share; check-build.mjs proves it stays out of the public
  * page's build too.

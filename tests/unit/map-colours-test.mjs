@@ -171,6 +171,7 @@ test('no colour is written in the map code outside map-colours.ts', () => {
     '../../src/features/studio/drawing/',
     '../../src/features/locator/',
     '../../src/features/published-map/',
+    '../../src/features/routes/published/',
     '../../src/app/public-map/',
     '../../src/shared/hooks/',
   ];

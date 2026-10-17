@@ -10,8 +10,8 @@
  *
  * This file holds the names: where the index and the lines are, what shape
  * the app reads, the banner's message, the early request's name and the
- * worker's store. Reading is api/fetch-index.ts and api/fetch-line.ts; the
- * shape itself is schemas/index-schema.ts and schemas/line-file-schema.ts.
+ * worker's store. Reading is fetch-index.ts and fetch-line.ts; the shape
+ * itself is index-schema.ts and line-file-schema.ts.
  * vite.config.ts and scripts/checks/check-build.mjs read MAP_FILE_URL and
  * EARLY_MAP_FILE off this file's text (scripts/node/map-file-constants.ts), so each stays a
  * single-quoted string constant on a line of its own.
