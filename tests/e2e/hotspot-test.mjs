@@ -203,7 +203,20 @@ await page.waitForTimeout(200);
 // refuses a click more than 25 m from one) routes the gap. Fixed offsets from
 // the centre can land inside a block, and a refused gap is drawn freehand.
 // The band is measured from the canvas centre, so the picks do not move when
-// the map box's height does.
+// the map box's height does. At zoom 15 a pixel is about 3 m; the studio's
+// one-time fit to the saved routes can still land after a recentre (the routes
+// arrive late), and at its zoom a pixel is about 100 m, which puts a click far
+// from the road. So the view is put back and left to settle first.
+await waitForSource(page, 'saved-routes');
+for (let attempt = 0; attempt < 5; attempt++) {
+  await recentre();
+  await page.waitForTimeout(500);
+  const settled = await page.evaluate(() => {
+    const m = window.__map;
+    return !m.isMoving() && m.getZoom() === 15;
+  });
+  if (settled) break;
+}
 const onRoad = await page.evaluate((line) => {
   const m = window.__map,
     { clientWidth: w, clientHeight: h } = m.getCanvas();
