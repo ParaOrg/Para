@@ -147,7 +147,7 @@ test('an informal name that is the name in other letters, or blank, is written a
   assert.equal(second.payload.informal, null);
 });
 
-test('the outline is rounded to six decimals before it is written, and its centre from the rounded corners', async () => {
+test('the outline is rounded to six decimals before it is written', async () => {
   const { client, log } = acceptingClient();
   setSupabase(client);
   await saveHotspot({
@@ -301,4 +301,19 @@ test('a hotspot is deleted by its id alone', async () => {
   assert.equal(log.length, 1);
   assert.deepEqual(log[0].filters, [['eq', 'id', 's1']]);
   assert.equal(log[0].select, 'id');
+});
+
+test('a station is linked to the train of its line, not to the jeep or the other line passing under it', async () => {
+  const { client, log } = acceptingClient({ ...row, line: 'LRT-1' });
+  setSupabase(client);
+  await saveHotspot({
+    ...input,
+    directions: [
+      direction('v1', THROUGH),
+      { ...direction('v2', THROUGH), route: { mode: 'lrt', routeCode: 'LRT-1' } },
+      { ...direction('v3', THROUGH), route: { mode: 'mrt', routeCode: 'MRT-3' } },
+    ],
+  });
+  const inserted = log.find((q) => q.table === 'route_stop' && q.op === 'insert');
+  assert.deepEqual(inserted.payload, [{ route_variant_id: 'v2', stop_id: 's1', stop_sequence: 1 }]);
 });

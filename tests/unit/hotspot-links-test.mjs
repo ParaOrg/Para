@@ -61,7 +61,7 @@ function script(hintuans, linked) {
   });
 }
 
-test('the hintuans are read with their boxes and the direction’s own links, each in one ordered request', async () => {
+test('the hintuans are read with their boxes and the direction’s own links, each in one request', async () => {
   const { client, log } = script([hintuan('near', 121.04)], []);
   setSupabase(client);
   await syncHintuanLinks(direction);
@@ -108,7 +108,7 @@ test('a hintuan linked that the line no longer passes is unlinked; the ones it s
   assert.deepEqual(up.payload, [{ route_variant_id: 'v1', stop_id: 'near', stop_sequence: 1 }]);
 });
 
-test('a link to a place that is not a hintuan (a terminal) is never dropped, however far the line runs', async () => {
+test('a link to a hotspot that is not a hintuan (a terminal) is never dropped, however far the line runs', async () => {
   const { client, log } = script([hintuan('near', 121.04)], ['near', 'a-terminal']);
   setSupabase(client);
   await syncHintuanLinks(direction);

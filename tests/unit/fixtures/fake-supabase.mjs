@@ -1,9 +1,9 @@
 // A stand-in for the Supabase client the studio writes with, for checks that
 // need to see which requests a save sends and what it does when one is
-// refused. Every query is recorded as { table, op, payload, filters, select }
-// and answered by `answer(query)`, which returns { data, error } (plus
-// `count` for a head count). Only the builder calls the studio uses are
-// here; anything else fails loudly. Since 2026-10-03.
+// refused. Every query is recorded as { table, op, payload, filters, select,
+// options, upsertOptions } and answered by `answer(query)`, which returns
+// { data, error } (plus `count` for a head count). Only the builder calls the
+// studio uses are here; anything else fails loudly. Since 2026-10-03.
 export function fakeSupabase(answer) {
   const log = [];
   const from = (table) => {
@@ -14,6 +14,7 @@ export function fakeSupabase(answer) {
       filters: [],
       select: undefined,
       options: undefined,
+      upsertOptions: undefined,
     };
     const builder = {
       insert(payload) {
