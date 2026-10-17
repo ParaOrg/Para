@@ -1,6 +1,6 @@
 # Migrations
 
-The files here are numbered (`0001` to `0016`). The project's ledger,
+The files here are numbered (`0001` to `0017`). The project's ledger,
 `supabase_migrations.schema_migrations`, is timestamped. This table says which
 ledger version each file is. Nothing here is applied by a session: the owner
 applies each file, one at a time, and regenerates `src/shared/types/database.types.ts`
@@ -24,6 +24,7 @@ after every one.
 | `0014_terminal_place_unique.sql` | `20261016132957` | `0014_terminal_place_unique` | Only its create ran; 0016 is its drop |
 | `0015_shared_editing.sql` | `20261014072047` | `0015_shared_editing` | Applied before 0013 and 0014 |
 | `0016_finish_terminal_index.sql` | `20261017052153` | `0016_finish_terminal_index` | Drops the index 0014 meant to drop |
+| `0017_anon_writes_revoked.sql` | not yet applied | | `anon` loses its writes; a new table grants nothing by default |
 
 A new file takes the next free number. Its ledger version is whatever
 timestamp the project gives it when the owner applies it; add the row here in
@@ -37,8 +38,22 @@ its row in the same run, under the file's name:
 ```sql
 -- the file's statements, then:
 insert into supabase_migrations.schema_migrations (version, name, statements)
-values (to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'), '0017_example', '{}');
+select to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'), '00NN_example', '{}'
+where not exists (
+  select 1 from supabase_migrations.schema_migrations where name = '00NN_example'
+);
 ```
+
+Keep the editor's role on `postgres`, and paste the file and the insert as one
+run. The insert adds the row only once, so pasting the whole run twice is safe
+(the file's statements must be safe to repeat too).
 
 `list_migrations` (or `select version, name from supabase_migrations.schema_migrations order by version`)
 should then show every file here, each under its own name.
+
+## Grants for new tables
+
+Since 0017 a new table in `public` gets no grants for `anon` or `authenticated`
+until its migration adds them, so a forgotten grant fails closed. Use identity
+columns (`generated always as identity`) rather than `serial`: a `serial`
+column's sequence needs its own `grant usage on sequence`.
