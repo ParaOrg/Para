@@ -26,9 +26,10 @@ export function fakeSupabase(answer) {
         q.payload = payload;
         return builder;
       },
-      upsert(payload) {
+      upsert(payload, options) {
         q.op = 'upsert';
         q.payload = payload;
+        q.upsertOptions = options;
         return builder;
       },
       delete() {
