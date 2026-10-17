@@ -23,7 +23,7 @@ const NO_TILES = !!process.env.PARAPO_NO_TILES;
 const { check, tally } = harness();
 
 // ------------------------------------------------------------------ the fixture
-const published = JSON.parse(readFileSync('public/data/index.v4.json', 'utf8'));
+const published = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
 const SCHEMA = Number(
   /MAP_FILE_SCHEMA = (\d+);/.exec(
     readFileSync('src/features/routes/published/map-file.ts', 'utf8'),
@@ -160,6 +160,8 @@ const phone = async ({ geolocation = null } = {}) => {
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
+  if (process.env.LOOP_DEBUG)
+    page.on('console', (m) => console.log('console:', m.type(), m.text().slice(0, 300)));
   if (NO_TILES) await bareStyle(page);
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map?.loaded(), null, { timeout: 30000 });
