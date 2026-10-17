@@ -1489,6 +1489,7 @@ await dismissToasts();
 
   // The card: no Extend, and an ikot's own words.
   await openCard(IKOT[1]);
+  await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) > 0);
   check(
     "an ikot's card has Edit route and Delete, but no Extend: it has no end to go on from",
     (await page.getByRole('button', { name: 'Edit route' }).count()) === 1 &&
@@ -1570,6 +1571,8 @@ await dismissToasts();
 
   // Delete: the confirm names the ikot, and emptying its only direction removes the route.
   await openCard(IKOT[1]);
+  // The card reads the line before it opens, as D's trip card does: wait for it.
+  await waitFor(async () => (await page.getByRole('button', { name: 'Delete' }).count()) > 0);
   n = log.length;
   await page.getByRole('button', { name: 'Delete' }).click();
   await waitFor(async () => !tables.route.some((r) => r.id === ikot?.id));
