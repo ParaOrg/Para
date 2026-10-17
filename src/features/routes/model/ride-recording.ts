@@ -293,3 +293,131 @@ export function summarize(
     gaps,
   };
 }
+
+/*
+ * One recording holds a papunta and then a pabalik, because a jeepney route is
+ * often a loop. A recording starts on papunta; a switch flips the leg and
+ * leaves a marker at the fix it happened on. The functions below take fixes
+ * that count (keptFixes), in time order, as hintosOf does.
+ */
+
+/** Which way the contributor is riding: toward the destination, or back. */
+export type Leg = 'papunta' | 'pabalik';
+
+/** The contributor pressing the switch: from then on the ride is on `to`. */
+export interface LegSwitch {
+  time: number;
+  to: Leg;
+}
+
+/** Where a switch left its mark: the fix it happened on, and the leg that began there. */
+export interface LegMarker {
+  /** When the contributor pressed the switch. */
+  time: number;
+  at: LngLat;
+  to: Leg;
+}
+
+/** The ride split by leg, ready to draw as two trails. */
+export interface RideLegs {
+  /** Each run of fixes on papunta, as a line. A switch back makes more than one. */
+  papunta: LngLat[][];
+  pabalik: LngLat[][];
+  markers: LegMarker[];
+  /** The first pabalik marker: where the route ends. Null while the contributor has not switched. */
+  endPoint: LngLat | null;
+}
+
+/** The ride is armed to stop on its own once it has been this far (straight line) from where it began. */
+export const AUTO_STOP_ARM_M = 1000;
+/** Once armed, coming back within this of where the ride began stops it; the owner may widen it to 500 m. */
+export const AUTO_STOP_RADIUS_M = 300;
+/** A direction of travel needs this much movement; less is the phone's wander, not a heading. */
+export const BEARING_MIN_M = 20;
+
+interface PlacedSwitch {
+  time: number;
+  to: Leg;
+  /** The fix the switch happened on: the last one at or before it, or the first if it came before any. */
+  index: number;
+}
+
+/** The switches that change the leg, in time order, each placed on a fix. */
+function placeSwitches(fixes: readonly Fix[], switches: readonly LegSwitch[]): PlacedSwitch[] {
+  if (fixes.length === 0) return [];
+  const placed: PlacedSwitch[] = [];
+  let leg: Leg = 'papunta';
+  for (const sw of [...switches].sort((a, b) => a.time - b.time)) {
+    if (sw.to === leg) continue;
+    leg = sw.to;
+    let index = 0;
+    while (index + 1 < fixes.length && fixes[index + 1].time <= sw.time) index++;
+    placed.push({ time: sw.time, to: sw.to, index });
+  }
+  return placed;
+}
+
+/**
+ * The fixes split into papunta and pabalik lines. The fix a switch happened on
+ * ends the old line and begins the new one, so the two trails meet there with
+ * no gap. A run of one fix is no line and is left out.
+ */
+export function legsOf(fixes: readonly Fix[], switches: readonly LegSwitch[]): RideLegs {
+  const legs: RideLegs = { papunta: [], pabalik: [], markers: [], endPoint: null };
+  const placed = placeSwitches(fixes, switches);
+  let leg: Leg = 'papunta';
+  let run: LngLat[] = [];
+  fixes.forEach((fix, i) => {
+    run.push(fix.at);
+    for (const sw of placed) {
+      if (sw.index !== i) continue;
+      if (run.length >= 2) legs[leg].push(run);
+      legs.markers.push({ time: sw.time, at: fix.at, to: sw.to });
+      leg = sw.to;
+      run = [fix.at];
+    }
+  });
+  if (run.length >= 2) legs[leg].push(run);
+  legs.endPoint = legs.markers.find((m) => m.to === 'pabalik')?.at ?? null;
+  return legs;
+}
+
+/**
+ * Whether the ride has come full circle and should stop. It arms once the
+ * contributor has been more than AUTO_STOP_ARM_M from the first fix and has
+ * switched to pabalik at least once, and fires at the first fix after that
+ * within AUTO_STOP_RADIUS_M of the first fix (exactly that far still stops).
+ * Switching back to papunta does not disarm it.
+ */
+export function shouldAutoStop(fixes: readonly Fix[], switches: readonly LegSwitch[]): boolean {
+  if (fixes.length < 2) return false;
+  const start = fixes[0].at;
+  const toPabalik = placeSwitches(fixes, switches).find((sw) => sw.to === 'pabalik');
+  const away = fixes.find((fix) => distanceM(start, fix.at) > AUTO_STOP_ARM_M);
+  if (!toPabalik || !away) return false;
+  const armedAt = Math.max(toPabalik.time, away.time);
+  return fixes.some((fix) => fix.time > armedAt && distanceM(start, fix.at) <= AUTO_STOP_RADIUS_M);
+}
+
+/**
+ * The direction of travel for a course-up map, in degrees clockwise from
+ * north: from the latest fix back to the nearest earlier one at least
+ * BEARING_MIN_M away. Standing still or crawling gives `previous` (or null
+ * when there is none), so the map keeps the heading it had.
+ */
+export function courseBearing(fixes: readonly Fix[], previous: number | null): number | null {
+  const latest = fixes[fixes.length - 1];
+  if (!latest) return previous;
+  for (let i = fixes.length - 2; i >= 0; i--) {
+    if (distanceM(fixes[i].at, latest.at) < BEARING_MIN_M) continue;
+    const [lng1, lat1] = fixes[i].at;
+    const [lng2, lat2] = latest.at;
+    const dLng = toRad(lng2 - lng1);
+    const y = Math.sin(dLng) * Math.cos(toRad(lat2));
+    const x =
+      Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+      Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
+    return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+  }
+  return previous;
+}
