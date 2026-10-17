@@ -71,6 +71,17 @@ test('the hint: the warning asked for first; a finger told what it does; a mouse
   assert.match(drawHint({ ...base, isArea: true, points: 1 }), /click an edge to insert a corner/);
 });
 
+test('the hint on a return trip names the way already drawn, until there are two points', () => {
+  const base = { uTurnHelp: null, isFinger: false, isArea: false, points: 0, loopOther: 'papunta' };
+  assert.match(drawHint(base), /^Tap the dot where papunta ended/);
+  assert.match(drawHint({ ...base, points: 1 }), /starts where papunta ended \(the dot\)/);
+  assert.match(drawHint({ ...base, points: 1 }), /began \(the ring\)/);
+  // From two points on it is the ordinary hint again; a hotspot's outline is not a return trip.
+  assert.match(drawHint({ ...base, points: 2 }), /drag a point to move/);
+  assert.equal(drawHint({ ...base, isArea: true }), null);
+  assert.equal(drawHint({ ...base, loopOther: null }), null);
+});
+
 test('a key typed into a field is the field’s', () => {
   assert.equal(isTyping(null), false);
   assert.equal(isTyping({ tagName: 'INPUT', isContentEditable: false }), true);
