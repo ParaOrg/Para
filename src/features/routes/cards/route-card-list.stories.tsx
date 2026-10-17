@@ -283,3 +283,22 @@ export const SheetMiddleLongName: Story = {
     ).toBeGreaterThan(28);
   },
 };
+
+/** UP – Ikot: a loop, one direction, called by its signboard and going to "Ikot". */
+const ikotLoop: Direction = {
+  ...direction('ikot', 'UP – Ikot', 'UP – Ikot', 5.2),
+  name: 'UP – Ikot',
+  route: {
+    ...route('ikot-route', 'UP – Ikot'),
+    headHotspotId: null,
+    tailHotspotId: null,
+    signboard: 'UP – Ikot',
+    isLoop: true,
+  },
+};
+
+/** A loop in the list, beside Tala's routes: its row says Ikot, and it is there whichever way round the list is. */
+export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
+
+/** Only a loop: no way back to turn to, so no SWITCH. */
+export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };

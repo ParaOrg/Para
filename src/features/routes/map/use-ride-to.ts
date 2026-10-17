@@ -2,16 +2,18 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
+import { lineLength } from '@/shared/utils/geo';
 
 import { APP_MOVE } from './map-view';
 import { glideFor } from './ride-glide';
 import { useRidePicks } from './use-ride-picks';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import { tipOnRide, type TipOnRide } from '../model/loop-tip';
 import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
 import { rideCut, rideSpan, rideToEnd, travelLine } from '../model/ride';
 import { carryPicks } from '../model/ride-carry';
-import { directionEnds, isRailLine, railLineOf, type Direction } from '../model/routes';
+import { directionEnds, isLoop, isRailLine, railLineOf, type Direction } from '../model/routes';
 
 /**
  * The ride between the picks as the map draws it (useLitRides): `line`, the
@@ -24,6 +26,8 @@ export interface Ridden {
   line: readonly LngLat[];
   pale: readonly (readonly LngLat[])[];
   isBackwards: boolean;
+  /** On a loop, where its tip lies on the ride: the start, the end, passed through, or outside it. */
+  atTip?: TipOnRide;
 }
 
 /**
@@ -47,6 +51,11 @@ export function useRideTo(
      * map's centre, in pixels — clear of a card over the map (clearOfSheet).
      */
     onGlide?: () => [number, number];
+    /**
+     * A loop's tip (useLoopTip): the row its trip leaves from and comes back
+     * to. A ride round a loop is measured from it, and its ends are the tip.
+     */
+    tipId?: string | null;
   } = {},
 ) {
   const { live, liveStart, endPicked, setPicked, setAtEnd, setStartPick, setStart, removeStart } =
@@ -71,6 +80,8 @@ export function useRideTo(
   // after lets it go.
   const carried = useRef<string | null>(null);
 
+  const tipId = opts.tipId ?? null;
+
   // Called as a glide starts, so a fresh function each render moves nothing.
   // Kept before the glide's effect below, which reads it in the same commit.
   const onGlide = useRef(opts.onGlide);
@@ -91,10 +102,12 @@ export function useRideTo(
   // whole until its end is picked (Variant3).
   const span = useMemo(() => {
     if (!selected) return null;
-    if (live) return rideSpan(selected, hotspots, liveStart?.rowId ?? null, live.rowId);
-    if (liveStart && endPicked) return rideToEnd(selected, hotspots, liveStart.rowId, endPicked);
+    if (live) return rideSpan(selected, hotspots, liveStart?.rowId ?? null, live.rowId, tipId);
+    if (liveStart && endPicked) {
+      return rideToEnd(selected, hotspots, liveStart.rowId, endPicked, tipId);
+    }
     return null;
-  }, [selected, hotspots, live, liveStart, endPicked]);
+  }, [selected, hotspots, live, liveStart, endPicked, tipId]);
 
   /** Keeps the camera as the first pick is made; a later pick keeps the first one's. */
   const remember = useCallback(() => {
@@ -154,14 +167,16 @@ export function useRideTo(
       setAtEnd(on && selectedId ? { directionId: selectedId, end } : null);
       if (!on) return goBack();
       // A ride to take in: the camera frames it (endOnTrip) rather than gliding.
-      if (startRow !== null && selected && rideToEnd(selected, hotspots, startRow, end)) {
+      if (startRow !== null && selected && rideToEnd(selected, hotspots, startRow, end, tipId)) {
         return remember();
       }
       if (!map || !selected) return;
       const line = travelLine(selected, hotspots);
       if (line.length < 2) return;
       remember();
-      const at = end === 'from' ? line[0] : line[line.length - 1];
+      // A loop's two ends are its tip: the glide goes to its dot, not to where the line was drawn from.
+      const tipAt = isLoop(selected) && tipId ? rideCut(selected, hotspots, tipId)?.at : undefined;
+      const at = tipAt ?? (end === 'from' ? line[0] : line[line.length - 1]);
       const glide = glideFor(map, at, onGlide.current?.() ?? [0, 0]);
       if (glide) map.easeTo({ ...glide, duration: 700 }, APP_MOVE);
     },
@@ -172,6 +187,7 @@ export function useRideTo(
       hotspots,
       endPicked,
       startRow,
+      tipId,
       remember,
       goBack,
       setPicked,
@@ -211,13 +227,15 @@ export function useRideTo(
   // Kept one object while the span is, so the lit rides are not made anew each render.
   const ridden = useMemo((): Ridden | null => {
     if (!span || !selected) return null;
+    const atTip = isLoop(selected) ? tipOnLoop(selected, hotspots, tipId, liveStart, live) : null;
     return {
       directionId: selected.id,
       line: span.ridden,
       pale: [span.before, span.rest].filter((l) => l.length > 1),
       isBackwards: span.isBackwards,
+      ...(atTip ? { atTip } : {}),
     };
-  }, [span, selected]);
+  }, [span, selected, hotspots, tipId, liveStart, live]);
 
   /**
    * SWITCH on a jeep's trip, just before it turns: the picks go with it to
@@ -297,4 +315,25 @@ export function useRideTo(
     toEnd,
     carryTo,
   };
+}
+
+/**
+ * Where a loop's tip lies on the ride the picks make (tipOnRide), measured along
+ * its line. A start with no end of its own is an end row picked: the tip again.
+ */
+function tipOnLoop(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  tipId: string | null,
+  start: { rowId: string } | null,
+  end: { rowId: string } | null,
+): TipOnRide {
+  const metresOf = (rowId: string | null) =>
+    rowId === null ? null : (rideCut(v, hotspots, rowId)?.metres ?? null);
+  return tipOnRide(
+    lineLength(travelLine(v, hotspots)),
+    metresOf(tipId) ?? 0,
+    metresOf(start?.rowId ?? null),
+    metresOf(end?.rowId ?? null),
+  );
 }

@@ -70,6 +70,12 @@ export interface TimelineRouteDetailProps {
    */
   isTrain?: boolean;
   /**
+   * A loop's trip: its origin and its destination are one place, the tip, and
+   * a ride only goes forward round it, so an end above the start wraps (the
+   * rail breaks twice) and either end row is the same end.
+   */
+  isLoop?: boolean;
+  /**
    * Above the first row, on the card's colour: a train's RouteTripDetailHeader,
    * its line and bound (Figma 3778:3183). Jeeps and the ferry have none.
    */
@@ -140,6 +146,7 @@ export function TimelineRouteDetail({
   endPicked,
   routeDirection,
   isTrain = false,
+  isLoop = false,
   header,
 }: TimelineRouteDetailProps) {
   const { listRef, folds, isOpen, toggle, isShown, foldEndingAt, everOpened } = useTimelineFolds(
@@ -147,6 +154,7 @@ export function TimelineRouteDetail({
     start,
     picked,
     endPicked,
+    isLoop,
   );
   const rail = TIMELINE_SURFACE[livery];
   // The rail runs along the ride and along the rows before it and after it,
@@ -158,7 +166,7 @@ export function TimelineRouteDetail({
   const isStartAlone = start !== null && picked === null && endPicked === null;
   const lone = isStartAlone ? hintuans.findIndex((h) => h.id === start) : -1;
   const ride =
-    rideRows(hintuans, start, picked, endPicked) ??
+    rideRows(hintuans, start, picked, endPicked, isLoop) ??
     (lone >= 0 ? { first: lone, last: lone } : { first: -1, last: hintuans.length });
   const railOf = timelineRail(
     hintuans.map((h) => h.id),
@@ -199,7 +207,8 @@ export function TimelineRouteDetail({
           pill={endPicked === 'from' ? endPill : null}
           connection={railOf.originHasBelow ? 'connected' : 'disconnected'}
           selected={endPicked === 'from'}
-          onTap={() => onEnd('from')}
+          // A loop's two ends are the tip: with a start picked, either is the ride's end.
+          onTap={() => onEnd(isLoop && start !== null ? 'to' : 'from')}
         />
         {hintuans.map((h, i) => {
           const isStart = h.id === start;

@@ -106,3 +106,21 @@ export const Phone: Story = {
   ),
   args: { vehicle: 'LRT-2', way: 'Eastbound', livery: 'light-rail-way-two' },
 };
+
+/**
+ * A loop's trip (UP – Ikot): its signboard beside the word, plain words in the
+ * card's own words colour (CARD_TEXT), white on a jeep's dark card — the one
+ * thing that tells it from UP – Toki, which reads the same.
+ */
+export const LoopOnViolet: Story = {
+  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'violet', name: 'UP – Ikot' },
+};
+
+export const LoopOnRed: Story = {
+  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'red', name: 'UP – Toki' },
+};
+
+/** On MRT-3's yellow the words are dark, as the card's are. */
+export const LoopOnYellow: Story = {
+  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'metro-rail-way-three', name: 'UP – Ikot' },
+};
