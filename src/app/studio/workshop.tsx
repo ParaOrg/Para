@@ -179,7 +179,11 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
         <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
       </div>
-      <div ref={root} className="@container relative min-h-0 flex-1 overflow-clip">
+      <div
+        ref={root}
+        data-map-box
+        className="@container relative min-h-0 flex-1 overflow-clip [--map-safe-top:0px]"
+      >
         {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
         <div inert={!isPlayground} className="contents">
           <MapView
@@ -192,7 +196,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
         {/* A config or load problem is a banner, never a blank page. */}
         {(supabaseConfigError || saved.error || hotspots.error) && (
-          <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
+          <div className="absolute top-[calc(1rem+var(--map-safe-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
             {supabaseConfigError ?? `Couldn't load saved routes: ${saved.error ?? hotspots.error}`}
           </div>
         )}

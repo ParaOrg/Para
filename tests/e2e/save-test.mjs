@@ -1536,6 +1536,22 @@ check(
 );
 const pill = await rect(phone.getByRole('button', { name: 'Sign out' }));
 check('phone: the account pill is below the notch', !!pill && pill.y >= 47, JSON.stringify(pill));
+// The band clears the notch itself, so the map's own offsets must not add it again.
+const bandBox = await rect(phone.locator('[role=radiogroup]').locator('..'));
+const pillBox = await rect(phone.getByRole('button', { name: 'Sign out' }).locator('..'));
+const ctrlBox = await rect(phone.locator('.maplibregl-ctrl-top-right'));
+check(
+  'phone: the notch is paid once — the pill and the map controls start within 16 px of the band',
+  !!bandBox &&
+    !!pillBox &&
+    !!ctrlBox &&
+    bandBox.y + bandBox.height === 95 &&
+    pillBox.y - 95 >= 0 &&
+    pillBox.y - 95 <= 16 &&
+    ctrlBox.y - 95 >= 0 &&
+    ctrlBox.y - 95 <= 16,
+  JSON.stringify({ bandBox, pillBox, ctrlBox }),
+);
 const newRoute = await rect(phone.getByRole('button', { name: '+ New Route' }));
 const newHotspot = await rect(phone.getByRole('button', { name: '+ New hotspot' }));
 check(

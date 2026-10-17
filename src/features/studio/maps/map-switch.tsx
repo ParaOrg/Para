@@ -95,7 +95,9 @@ export function MapSwitch({ ref, value, onChange }: MapSwitchProps) {
               onChange={() => onChange(option)}
               className="sr-only"
             />
-            <Icon className={isCurrent ? 'max-sm:hidden' : ''}>{ICONS[option]}</Icon>
+            <Icon className={isCurrent ? 'max-sm:hidden' : 'max-[360px]:hidden'}>
+              {ICONS[option]}
+            </Icon>
             {isCurrent && <Icon className="sm:hidden">{CHECK}</Icon>}
             <span className="truncate">{LABELS[option]}</span>
             {isCurrent && <Icon className="max-sm:hidden">{CHECK}</Icon>}
