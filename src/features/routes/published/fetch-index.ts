@@ -1,5 +1,4 @@
-import type { Direction } from '@/features/routes/model/direction-schema';
-
+import { indexOutlineSchema, indexSchema, type Index } from './index-schema';
 import {
   EARLY_MAP_FILE,
   MAP_FILE_CACHE,
@@ -9,8 +8,8 @@ import {
   SERVED_FROM_HEADER,
   STORED_OLD,
   type EarlyMapFile,
-} from '../map-file';
-import { indexOutlineSchema, indexSchema, type Index } from '../schemas/index-schema';
+} from './map-file';
+import type { Direction } from '../model/direction-schema';
 
 /**
  * The published index, fetched, validated and shared: the public map's one

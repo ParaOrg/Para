@@ -294,7 +294,7 @@ let EARLY_MAP_FILE = null;
 let constantsError = '';
 try {
   ({ MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
-    readFileSync(join(root, 'src', 'features', 'published-map', 'map-file.ts'), 'utf8'),
+    readFileSync(join(root, 'src', 'features', 'routes', 'published', 'map-file.ts'), 'utf8'),
   ));
 } catch (e) {
   constantsError = e instanceof Error ? e.message : String(e);

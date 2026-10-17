@@ -1,4 +1,4 @@
-// The public map's file reader (src/features/published-map/map-file.ts) against files of
+// The public map's file reader (src/features/routes/published/map-file.ts) against files of
 // every shape it can meet, served by a fake fetch.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/map-file-test.mjs
@@ -18,15 +18,15 @@ import { readdirSync, readFileSync } from 'node:fs';
 
 let n = 0;
 /** A fresh copy of the module, since it caches the first successful load. */
-import * as contract from '../../src/features/published-map/map-file.ts';
+import * as contract from '../../src/features/routes/published/map-file.ts';
 
 /** The two fetchers afresh (their module-level state with them), with the contract's names beside. */
 const fresh = async () => {
   const k = n++;
   return {
     ...contract,
-    ...(await import(`../../src/features/published-map/api/fetch-index.ts?case=${k}`)),
-    ...(await import(`../../src/features/published-map/api/fetch-line.ts?case=${k}`)),
+    ...(await import(`../../src/features/routes/published/fetch-index.ts?case=${k}`)),
+    ...(await import(`../../src/features/routes/published/fetch-line.ts?case=${k}`)),
   };
 };
 
@@ -596,9 +596,9 @@ const read = (name) => JSON.parse(readFileSync(new URL(name, data), 'utf8'));
 const lineFiles = readdirSync(new URL('lines/', data)).filter((f) => f.endsWith('.json'));
 
 test('the committed index parses with its schema, every line file with its own, inside a budget', async () => {
-  const { indexSchema } = await import('../../src/features/published-map/schemas/index-schema.ts');
+  const { indexSchema } = await import('../../src/features/routes/published/index-schema.ts');
   const { lineFileSchema } =
-    await import('../../src/features/published-map/schemas/line-file-schema.ts');
+    await import('../../src/features/routes/published/line-file-schema.ts');
   const raw = read('index.v4.json');
   const started = performance.now();
   const parsed = indexSchema.parse(raw);

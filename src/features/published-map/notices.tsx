@@ -1,6 +1,6 @@
 import { Button } from '@/design-system/primitives/button';
+import { MAP_FILE_TOO_NEW } from '@/features/routes/published/map-file';
 
-import { MAP_FILE_TOO_NEW } from './map-file';
 import { shortDate } from './status';
 
 /**
