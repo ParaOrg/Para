@@ -4,7 +4,8 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
 import { RouteTripDetailHeader } from './route-trip-detail-header';
-import { FREE, TimelineRouteDetailCard, type Fare, type Fares } from './timeline-route-detail-card';
+import { TimelineRouteDetailCard } from './timeline-route-detail-card';
+import { FREE, type Fare, type Fares } from './trip-fare';
 import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';

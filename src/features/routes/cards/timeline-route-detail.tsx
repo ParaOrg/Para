@@ -17,7 +17,7 @@ import { endRowPill, originMark, railPiece, rowRole, type EndRow } from './timel
 import { TimelineTop } from './timeline-top';
 import { useTimelineFolds } from './use-timeline-folds';
 import type { Livery } from '../model/liveries';
-import { rideRows } from '../model/ride';
+import { rideRows } from '../model/ride-rows';
 
 export interface TimelineRouteDetailProps {
   livery: Livery;
