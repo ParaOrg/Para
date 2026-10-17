@@ -27,7 +27,9 @@
 // that updates rather than inserts (13); the drawing keys alive after signing
 // in from Done (9); the map switch — Contributors, Playground and Public in a band of
 // its own, the address, a half-drawn line, the camera and the basemap kept, the keys and
-// clicks dead on the other maps, Escape leaving a card open under them alone; no React
+// clicks dead on the other maps, Escape leaving a card open under them alone; a new head or
+// tail made from the save panel's pickers (a 30 m box at the line's end, the hotspot panel's
+// own write and refusals, the drawn line left alone); no React
 // warnings (the duplicate key). And the camera
 // with the cards, the public map's in the studio too (the owner, 2026-09-30):
 // a trip opened on its whole route, beside the card.
@@ -1458,6 +1460,153 @@ await page.waitForTimeout(300);
   check('  and Escape in the Playground still closes it', !(await cardOpen()));
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.waitForTimeout(300);
+}
+
+// ---- 10c. A new head and tail made from the save panel, the line left alone
+{
+  const draftOf = () => page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  const NEW = '+new-place';
+  const L = [at(-0.003, 0.02), at(0, 0.0212), at(0.003, 0.02)];
+  await go(at(0, 0.02), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  for (const p of L) await clickAt(p, 300);
+  await idle();
+  await page.getByRole('button', { name: /Done/ }).click();
+  await page.waitForTimeout(600);
+  const draftBefore = await draftOf();
+  // Where the clicks landed, a pixel's worth off the points asked for.
+  const line = JSON.parse(draftBefore).controlPoints;
+  const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
+  const isFocused = (locator) => locator.evaluate((e) => e === document.activeElement);
+  const stopsBefore = tables.stop.length;
+  const routesBefore = tables.route.length;
+
+  check(
+    'each end picker ends with "+ New place here…"',
+    (await page.getByTestId('save-head').locator('option').last().innerText()) ===
+      '+ New place here…' &&
+      (await page.getByTestId('save-tail').locator('option').last().innerText()) ===
+        '+ New place here…',
+  );
+
+  await page.getByTestId('save-head').selectOption(NEW);
+  await page.waitForTimeout(300);
+  check(
+    'the head option opens a form inside the panel: Terminal chosen, focus on the ground name',
+    (await form('head').isVisible()) &&
+      (await form('head').getByLabel('Terminal').isChecked()) &&
+      (await isFocused(form('head').getByLabel(/Ground name/))),
+  );
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check(
+    '  Escape closes only the form: the panel stays, focus returns to the picker',
+    !(await form('head').isVisible()) &&
+      (await saveButton().isVisible()) &&
+      (await isFocused(page.getByTestId('save-head'))),
+  );
+
+  await page.getByTestId('save-head').selectOption(NEW);
+  // A place that already has a terminal, in the name people say it by.
+  const taken = tables.stop.find((r) => r.kind === 'terminal');
+  await form('head')
+    .getByLabel(/Ground name/)
+    .fill(taken.informal ?? taken.name);
+  await form('head').getByRole('button', { name: 'Save place' }).click();
+  await page.waitForTimeout(500);
+  check(
+    '  a second terminal at a place is refused in words, as the hotspot panel refuses it',
+    /already has a terminal/.test(await form('head').innerText()) &&
+      tables.stop.length === stopsBefore,
+    (await form('head').innerText()).slice(-160),
+  );
+
+  let n = log.length;
+  await form('head')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Newhead');
+  await form('head')
+    .getByLabel(/Stop name/)
+    .fill('Newhead');
+  await page.keyboard.press('Enter');
+  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newhead'));
+  await page.waitForTimeout(500);
+  const head = tables.stop.find((r) => r.name === 'Stand-in Newhead');
+  const boxOf = (r) => r.area.coordinates[0];
+  const metres = ([lng1, lat1], [lng2, lat2]) => {
+    const rad = Math.PI / 180;
+    const h =
+      Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lng2 - lng1) * rad) / 2) ** 2;
+    return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+  };
+  check(
+    "the head is created as a terminal with a 30 m box centred on the line's first point",
+    !!head &&
+      head.kind === 'terminal' &&
+      head.informal === 'Newhead' &&
+      boxOf(head).length === 5 &&
+      Math.abs(metres(boxOf(head)[0], boxOf(head)[1]) - 30) < 0.5 &&
+      metres(head.point.coordinates, line[0]) < 0.5,
+    '',
+  );
+  check(
+    "  through the hotspot panel's own write: one stop row and its links, nothing else",
+    writesSince(n).every((w) => w.table === 'stop' || w.table === 'route_stop') &&
+      writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop').length === 1,
+    said(writesSince(n)),
+  );
+  check(
+    '  the picker shows it, the form is gone, focus is back on the picker',
+    (await page.getByTestId('save-head').evaluate((e) => e.selectedOptions[0]?.text)) ===
+      'Newhead' &&
+      !(await form('head').isVisible()) &&
+      (await isFocused(page.getByTestId('save-head'))),
+  );
+
+  await page.getByTestId('save-tail').selectOption(NEW);
+  await page.waitForTimeout(300);
+  check(
+    'the tail option opens the same form, Hintuan chosen',
+    (await form('tail').isVisible()) && (await form('tail').getByLabel('Hintuan').isChecked()),
+  );
+  await form('tail')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Newtail');
+  await form('tail').getByRole('button', { name: 'Save place' }).click();
+  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newtail'));
+  await page.waitForTimeout(500);
+  const tail = tables.stop.find((r) => r.name === 'Stand-in Newtail');
+  check(
+    "the tail is created as a hintuan with a 30 m box centred on the line's last point",
+    !!tail &&
+      tail.kind === 'hintuan' &&
+      boxOf(tail).length === 5 &&
+      Math.abs(metres(boxOf(tail)[0], boxOf(tail)[1]) - 30) < 0.5 &&
+      metres(tail.point.coordinates, line[line.length - 1]) < 0.5,
+  );
+  check(
+    '  the drawn line is untouched by both',
+    (await draftOf()) === draftBefore && tables.stop.length === stopsBefore + 2,
+  );
+
+  n = log.length;
+  await saveButton().click();
+  await waitFor(async () => (await toast().count()) > 0);
+  const made = tables.route.find((r) => r.head_stop_id === head?.id && r.tail_stop_id === tail?.id);
+  check(
+    'the route saves with the new places as its head and tail',
+    !!made && tables.route.length === routesBefore + 1,
+    said(writesSince(n)),
+  );
+  await dismissToasts();
+
+  // Leave the stand-in as it was for what follows.
+  if (made) remove('route', [made]);
+  if (head) remove('stop', [head]);
+  if (tail) remove('stop', [tail]);
+  await page.evaluate(() => localStorage.removeItem('parapo.draft.v1'));
 }
 
 // ---- 11. Signing in from Done leaves the drawing keys alive
