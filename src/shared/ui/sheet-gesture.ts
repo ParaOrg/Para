@@ -98,7 +98,7 @@ export const LOW_PX = 129;
  * the commuter keeps their place: the owner's pick.
  */
 export const MAX_STRIP_PX = 24;
-const MAX_GAP_CSS = `calc(env(safe-area-inset-top) + ${MAX_STRIP_PX}px)`;
+const MAX_GAP_CSS = `calc(var(--map-safe-top) + ${MAX_STRIP_PX}px)`;
 
 /**
  * The status bar's height as the page reads it (BottomSheet measures it): 0
@@ -119,9 +119,9 @@ export function measureSafeTop() {
   if (safeTopRead || typeof document === 'undefined') return;
   safeTopRead = true;
   const probe = document.createElement('div');
-  probe.style.cssText =
-    'position:fixed;top:0;visibility:hidden;padding-top:env(safe-area-inset-top)';
-  document.body.appendChild(probe);
+  probe.style.cssText = 'position:fixed;top:0;visibility:hidden;padding-top:var(--map-safe-top)';
+  // Inside the map box when there is one, where the variable may be 0.
+  (document.querySelector('[data-map-box]') ?? document.body).appendChild(probe);
   setSafeTop(parseFloat(getComputedStyle(probe).paddingTop) || 0);
   probe.remove();
 }

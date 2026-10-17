@@ -20,7 +20,7 @@ export function AccountPill({
   onSignOut: () => void;
 }) {
   return (
-    <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-[calc(1rem+env(safe-area-inset-left))] z-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs text-neutral-600 shadow ring-1 ring-black/5 backdrop-blur">
+    <div className="absolute top-[calc(1rem+var(--map-safe-top))] left-[calc(1rem+env(safe-area-inset-left))] z-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs text-neutral-600 shadow ring-1 ring-black/5 backdrop-blur">
       {routes > 0 && (
         <span className="text-neutral-500 max-sm:hidden">
           {routes} {routes === 1 ? 'route' : 'routes'}

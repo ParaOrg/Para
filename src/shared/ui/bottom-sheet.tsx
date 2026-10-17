@@ -254,7 +254,7 @@ export function BottomSheet({
         // of it under the screen's bottom: padded by that, its list scrolls to the end.
         style={
           snap === 'max'
-            ? { paddingBottom: 'calc(env(safe-area-inset-top) + ' + MAX_STRIP_PX + 'px)' }
+            ? { paddingBottom: 'calc(var(--map-safe-top) + ' + MAX_STRIP_PX + 'px)' }
             : undefined
         }
       >
