@@ -2,7 +2,7 @@
 
 **The owner's call (2026-10-15):** the person on the public map is a **commuter**.
 
-**Why now:** the glossary chose "visitor" and avoided "commuter" because a driver or a dispatcher may open the public map too. Drivers now get their own word and their own page (see `driver-app`), so whoever opens the public map is there as a commuter.
+**Why now:** the glossary chose "visitor" and avoided "commuter" because a driver or a dispatcher may open the public map too. Drivers now get their own word and their own page (see `driver-app`, now `contribute`), so whoever opens the public map is there as a commuter.
 
 **Nothing changes on a phone.** "Visitor" appears in no on-screen text, stored setting, the published map, address or test id: only in docs, code names and comments (checked 2026-10-15).
 
