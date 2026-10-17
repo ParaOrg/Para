@@ -202,13 +202,15 @@ await page.waitForTimeout(200);
 // and clear of the cards and the toolbar: on a road, so the router (which
 // refuses a click more than 25 m from one) routes the gap. Fixed offsets from
 // the centre can land inside a block, and a refused gap is drawn freehand.
+// The band is measured from the canvas centre, so the picks do not move when
+// the map box's height does.
 const onRoad = await page.evaluate((line) => {
   const m = window.__map,
     { clientWidth: w, clientHeight: h } = m.getCanvas();
   const picked = [];
   for (const c of line) {
     const p = m.project(c);
-    if (p.x < 80 || p.x > w - 80 || p.y < 80 || p.y > h - 140) continue;
+    if (p.x < 80 || p.x > w - 80 || p.y < h / 2 - 320 || p.y > h / 2 + 260) continue;
     if (picked.every(([x, y]) => Math.hypot(p.x - x, p.y - y) >= 120)) picked.push([p.x, p.y]);
     if (picked.length === 2) break;
   }
