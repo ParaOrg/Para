@@ -120,6 +120,8 @@ const buttons = (page) =>
     '  nothing scrolls sideways',
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
   );
+  // The map's first frame is still painting under the buttons for a moment.
+  await page.waitForTimeout(1500);
   await shot(page, '1-ready');
 
   await page.getByRole('button', { name: 'Start recording' }).click();
