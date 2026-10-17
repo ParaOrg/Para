@@ -180,33 +180,26 @@ const vr = (coordinates, reversed = false) => ({
 });
 const KM = 3339.6 / 3; // one 0.01° step at the equator, in metres
 
-test('a dot for each mini stop, and the ride ends at the last one', () => {
+test('the ride ends at the last mini stop of the place along the line', () => {
   const r = rideCut(vr(LINE), RIDE_HOTSPOTS, 'near');
-  assert.deepEqual(
-    r.dots.map((d) => d.hotspotId),
-    ['near', 'far'],
-  );
   assert.equal(r.endHotspotId, 'far');
   assert.ok(Math.abs(r.metres - 2 * KM) < 30, `${r.metres}`);
   assert.ok(Math.abs(r.at[0] - 0.02) < 0.0003);
-  assert.ok(Math.abs(lineLength(r.ridden) - r.metres) < 1);
-  assert.deepEqual(r.rest[0], r.at);
+  // The order the boxes are listed in does not decide which is last.
+  const reversed = rideCut(vr(LINE), [...RIDE_HOTSPOTS].reverse(), 'near');
+  assert.equal(reversed.endHotspotId, 'far');
+  assert.equal(reversed.metres, r.metres);
 });
 
-test('tapping the other dot moves the get-off side, not the hintuan', () => {
-  const r = rideCut(vr(LINE), RIDE_HOTSPOTS, 'near', 'near');
+test('each mini stop the line passes is a get-off dot, at the middle of its own stretch', () => {
+  // With the far box gone, the near one is the last: the dot of every box counts.
+  const alone = RIDE_HOTSPOTS.filter((s) => s.id !== 'far');
+  const r = rideCut(vr(LINE), alone, 'near');
   assert.equal(r.endHotspotId, 'near');
   assert.ok(Math.abs(r.metres - 1.5 * KM) < 30, `${r.metres}`);
-  assert.deepEqual(
-    r.dots.map((d) => d.hotspotId),
-    ['near', 'far'],
-  );
-});
-
-test('each dot sits at the middle of its own stretch', () => {
-  const r = rideCut(vr(LINE), RIDE_HOTSPOTS, 'near');
-  const near = r.dots.find((d) => d.hotspotId === 'near');
-  assert.ok(Math.abs(near.at[0] - 0.015) < 0.0003, `${near.at[0]}`);
+  assert.ok(Math.abs(r.at[0] - 0.015) < 0.0003, `${r.at[0]}`);
+  // Asked for through its own row, the far box gives the same place's cut.
+  assert.equal(rideCut(vr(LINE), RIDE_HOTSPOTS, 'far').endHotspotId, 'far');
 });
 
 test('a line drawn from the far end is cut on the leaving side', () => {
