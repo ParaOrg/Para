@@ -523,3 +523,18 @@ test('only a loop carries the flag, and a two-ended route’s row has no such ke
   );
   assert.equal('isLoop' in two.route, false);
 });
+
+test('a place passed twice by two boxes has two rows, and each is a tip of its own', () => {
+  // A at the start, B, C, and A's second box on the way back.
+  const a2 = place('a2', 'hintuan', 0.0201, 0.04, 'Amparo');
+  const along = [A, B, C, a2, D];
+  const rows = loopRows(along).map((r) => r.id);
+  assert.deepEqual(rows, ['a', 'b', 'c', 'a2', 'd']);
+  const t = loopTimeline(along, 'a2');
+  assert.equal(t.from.id, 'a2');
+  assert.deepEqual(
+    t.between.map((r) => r.id),
+    ['d', 'a', 'b', 'c'],
+  );
+  assert.equal(loopTimeline(along, 'a').from.id, 'a');
+});

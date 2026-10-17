@@ -178,13 +178,18 @@ export function loopRows(along: readonly Hotspot[]): TimelineRow[] {
 export function loopTimeline(along: readonly Hotspot[], tipRowId: string | null = null): Timeline {
   const rows = loopRows(along);
   if (rows.length === 0) return { from: null, to: null, between: [] };
-  // Another box of the tip's place is the same tip, as it is for a ride's cut.
+  // The row itself first: a place passed twice by two boxes has two rows, and each is a tip.
+  // Failing that, another box of the tip's place is the same tip, as it is for a ride's cut.
+  const exact = rows.findIndex((r) => r.id === tipRowId);
   const tipBox = along.find((s) => s.id === tipRowId);
   const tipKey = tipBox ? placeKey(tipBox) : null;
-  const found = rows.findIndex((r) => {
-    const box = along.find((s) => s.id === r.id);
-    return box ? placeKey(box) === tipKey : false;
-  });
+  const found =
+    exact >= 0
+      ? exact
+      : rows.findIndex((r) => {
+          const box = along.find((s) => s.id === r.id);
+          return box ? placeKey(box) === tipKey : false;
+        });
   const tip = Math.max(0, found);
   return {
     from: rows[tip],

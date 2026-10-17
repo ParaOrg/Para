@@ -59,8 +59,9 @@ as `loop-closing.ts` has it), circular route, ring
 **Tip** (of a loop's trip):
 Where a loop's timeline starts: the place whose card the trip was opened
 from, else the one nearest the commuter, else the first its line passes as
-drawn. A place, not only a hintuan: a terminal's box on a loop counts. Not an end: a ride goes on round past it, and it is chosen once, when
-the trip opens, so nothing moves under the rider.
+drawn. A place, not only a hintuan: a terminal's box on a loop counts. Not an
+end: a ride goes on round past it, and it is chosen once, when the trip opens,
+so nothing moves under the rider.
 _Avoid_: start (a ride's), head, origin
 
 **Line**:
