@@ -6,8 +6,8 @@ import { useLayerSwitch } from './layer-switch';
 import { applyHidden, layOutOnce } from './layers';
 import { hotspotsData } from './saved-hotspots-data';
 import {
-  HATCH_LAYERS,
   FILL,
+  HATCH_LAYERS,
   SIBLING_LAYERS,
   SIBLINGS,
   SRC,
