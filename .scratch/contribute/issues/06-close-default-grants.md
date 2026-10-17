@@ -1,6 +1,6 @@
 # 06: Close the default grants (the policy audit's fix)
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2
 Who: Sonnet
@@ -26,5 +26,9 @@ Blocked by: 05
   - the publish, run by hand ("Run workflow"), reads every table and writes byte-identical files;
   - the owner saves one change in the studio, and it works.
 - The advisors show nothing new.
+
+## Answer
+
+Built in [PR #261](https://github.com/Roviicc/ParaPo/pull/261) and applied on 17 October at the owner's word (ledger `20261017091759`). Checked after: `anon` holds only SELECT on `route`, `route_variant`, `stop` and `route_stop`, and nothing on `gps_session`; `authenticated` holds SELECT, INSERT, UPDATE and DELETE on all five; `postgres`'s default privileges in `public` give `anon` and `authenticated` nothing on new tables or sequences; §13's third query returns no rows. With the publishable key, the publish's three reads return 200, and a read of `gps_session` or an update of `stop` is refused (42501). The security advisors show only the two notices from before.
 
 ## Comments
