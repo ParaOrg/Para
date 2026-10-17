@@ -9,7 +9,7 @@ This page is generated from the code, so it cannot go stale. It shows the struct
 A unit is a folder: an app, a feature (or a concern folder of a feature that has them), a kind of shared code, a design-system layer, or the styles.
 
 - **app**: `public-map`, `studio`
-- **features**: `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `studio`, `studio/auth`, `studio/data`, `studio/drawing`, `studio/panels`
+- **features**: `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `studio`, `studio/auth`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`
 - **shared**: `hooks`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
@@ -33,6 +33,7 @@ flowchart TD
     features_studio_auth["studio/auth"]
     features_studio_data["studio/data"]
     features_studio_drawing["studio/drawing"]
+    features_studio_maps["studio/maps"]
     features_studio_panels["studio/panels"]
   end
   subgraph shared_layer["shared"]
@@ -85,6 +86,7 @@ flowchart TD
   features_studio --> features_studio_auth
   features_studio --> features_studio_data
   features_studio --> features_studio_drawing
+  features_studio --> features_studio_maps
   features_studio --> features_studio_panels
   features_studio_auth --> features_routes_map
   features_studio_auth --> features_studio_data
@@ -125,10 +127,11 @@ flowchart TD
 | `features/routes/geo` | `shared/utils` |
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
-| `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/panels` |
+| `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels` |
 | `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
+| `features/studio/maps` | — |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
 | `shared/hooks` | — |
 | `shared/ui` | `design-system/primitives`, `shared/hooks` |
@@ -149,7 +152,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/studio`
 
-`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `NewButtons`, `returnTripLeft`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`, `useStudioTrip`
+`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `MapPlaceholder`, `MapSwitch`, `useStudioMap`, `AccountPill`, `NewButtons`, `returnTripLeft`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`, `useStudioTrip`
 
 ## Entry points
 

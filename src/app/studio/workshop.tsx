@@ -21,6 +21,8 @@ import {
   returnTripLeft,
   AuthDialogs,
   AccountPill,
+  MapPlaceholder,
+  MapSwitch,
   NewButtons,
   DrawToolbar,
   SaveToasts,
@@ -35,6 +37,7 @@ import {
   useFollow,
   useSaveFlow,
   useSaveTarget,
+  useStudioMap,
   useDeleteActions,
   useStudioTrip,
 } from '@/features/studio';
@@ -56,6 +59,11 @@ interface WorkshopProps {
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [hotspotMenu, setHotspotMenu] = useState(false);
+  // Which of the three maps is shown. Only the Playground has tools: the others
+  // stay behind the one map and its state, so a switch keeps the camera, the
+  // basemap and a half-drawn line.
+  const { studioMap, chooseStudioMap } = useStudioMap();
+  const isPlayground = studioMap === 'playground';
   // Sign-in, the password change and a reset link's (useAuthFlow).
   const {
     isSignedIn,
@@ -161,203 +169,219 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   return (
     <div ref={root} className="@container relative h-full w-full overflow-clip">
-      <MapView
-        onReady={setMap}
-        foldCredits
-        basemaps={STUDIO_BASEMAPS}
-        basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
-      />
+      {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
+      <div inert={!isPlayground} className="contents">
+        <MapView
+          onReady={setMap}
+          foldCredits
+          basemaps={STUDIO_BASEMAPS}
+          basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
+        />
+      </div>
 
       {/* A config or load problem is a banner, never a blank page. */}
       {(supabaseConfigError || saved.error || hotspots.error) && (
-        <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
+        <div className="absolute top-[calc(4.5rem+env(safe-area-inset-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
           {supabaseConfigError ?? `Couldn't load saved routes: ${saved.error ?? hotspots.error}`}
         </div>
       )}
 
-      {/* Each lit ride's ends, named over their circles. */}
-      {map && !draw.drawing && <EndTitles map={map} rides={rides} livery={litLivery} />}
-      {/*
+      <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2">
+        <MapSwitch value={studioMap} onChange={chooseStudioMap} />
+      </div>
+      {!isPlayground && (
+        <MapPlaceholder map={studioMap} onOpenPlayground={() => chooseStudioMap('playground')} />
+      )}
+
+      {/* Out of the page's reach, not unmounted, on the other maps. */}
+      <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
+        {/* Each lit ride's ends, named over their circles. */}
+        {map && !draw.drawing && <EndTitles map={map} rides={rides} livery={litLivery} />}
+        {/*
         The open trip's hintuans along its line, a train's stations and a
         jeepney's alike, named (RouteLineLabel).
       */}
-      {map && !draw.drawing && saved.selected && tripLivery && timeline && (
-        <StationLabels
-          map={map}
-          selected={saved.selected}
-          hotspots={hotspots.hotspots}
-          rows={timeline.between}
-          livery={tripLivery}
-          pickedId={ride.pickedId}
-          startId={ride.startId}
-          endPicked={ride.endPicked}
-          hasRide={ride.ridden !== null}
-          onPick={pickOnTrip}
-        />
-      )}
-      {/* Keyed on the pick: another hintuan pops a fresh circle. */}
-      {map && !draw.drawing && ride.pinAt && tripLivery && (
-        <HintuanPin
-          key={ride.pickedId}
-          map={map}
-          at={ride.pinAt}
-          label={ride.pickedLabel}
-          code={ride.pickedCode}
-          livery={tripLivery}
-        />
-      )}
-      {map && !draw.drawing && ride.startPinAt && tripLivery && (
-        <HintuanPin
-          key={`start:${ride.startId}`}
-          map={map}
-          at={ride.startPinAt}
-          label={ride.startLabel}
-          code={ride.startCode}
-          livery={tripLivery}
-          marks="start"
-        />
-      )}
+        {map && !draw.drawing && saved.selected && tripLivery && timeline && (
+          <StationLabels
+            map={map}
+            selected={saved.selected}
+            hotspots={hotspots.hotspots}
+            rows={timeline.between}
+            livery={tripLivery}
+            pickedId={ride.pickedId}
+            startId={ride.startId}
+            endPicked={ride.endPicked}
+            hasRide={ride.ridden !== null}
+            onPick={pickOnTrip}
+          />
+        )}
+        {/* Keyed on the pick: another hintuan pops a fresh circle. */}
+        {map && !draw.drawing && ride.pinAt && tripLivery && (
+          <HintuanPin
+            key={ride.pickedId}
+            map={map}
+            at={ride.pinAt}
+            label={ride.pickedLabel}
+            code={ride.pickedCode}
+            livery={tripLivery}
+          />
+        )}
+        {map && !draw.drawing && ride.startPinAt && tripLivery && (
+          <HintuanPin
+            key={`start:${ride.startId}`}
+            map={map}
+            at={ride.startPinAt}
+            label={ride.startLabel}
+            code={ride.startCode}
+            livery={tripLivery}
+            marks="start"
+          />
+        )}
 
-      {/*
+        {/*
         The tapped direction as the public map's trip card, the editor's facts
         and its Edit, Extend and Delete under its tiles. Keyed on the route,
         unlike the public map's: SWITCH keeps the card and its colour.
       */}
-      {!draw.drawing && saved.selected && tripLivery && timeline && (
-        <StudioTripCard
-          key={saved.selected.routeId}
-          direction={saved.selected}
-          saved={saved}
-          hotspots={hotspots}
-          draw={draw}
-          timeline={timeline}
-          livery={tripLivery}
-          ride={ride}
-          tripDock={tripDock}
-          height={height}
-          canEdit={canEdit}
-          opening={opening}
-          onDelete={onDelete}
-          onBackToList={backFromTrip}
-          onSwitch={switchTrip}
-          onClose={closeAll}
-          onPick={pickOnTrip}
-          onEnd={endOnTrip}
-        />
-      )}
+        {!draw.drawing && saved.selected && tripLivery && timeline && (
+          <StudioTripCard
+            key={saved.selected.routeId}
+            direction={saved.selected}
+            saved={saved}
+            hotspots={hotspots}
+            draw={draw}
+            timeline={timeline}
+            livery={tripLivery}
+            ride={ride}
+            tripDock={tripDock}
+            height={height}
+            canEdit={canEdit}
+            opening={opening}
+            onDelete={onDelete}
+            onBackToList={backFromTrip}
+            onSwitch={switchTrip}
+            onClose={closeAll}
+            onPick={pickOnTrip}
+            onEnd={endOnTrip}
+          />
+        )}
 
-      {/*
+        {/*
         A hotspot's card, its routes as RouteCards; it stays behind the trip
         picked from them, hidden, for the trip's ‹. After the trip on
         purpose, as on the public map: the suites' first `card` is the trip.
       */}
-      {!draw.drawing && hotspots.selected && (
-        <StudioHotspotCard
-          key={hotspots.selected.id}
-          hotspot={hotspots.selected}
-          map={map}
-          saved={saved}
-          hotspots={hotspots}
-          draw={draw}
-          height={height}
-          canEdit={canEdit}
-          clearOfOpen={clearOfOpen}
-          onPickOnPlaceCard={pickOnPlaceCard}
-          onOpenTrip={openTrip}
-          onDeleteHotspot={onDeleteHotspot}
-          onCloseAll={closeAll}
-          onClose={cards.closeHotspot}
-        />
-      )}
+        {!draw.drawing && hotspots.selected && (
+          <StudioHotspotCard
+            key={hotspots.selected.id}
+            hotspot={hotspots.selected}
+            map={map}
+            saved={saved}
+            hotspots={hotspots}
+            draw={draw}
+            height={height}
+            canEdit={canEdit}
+            clearOfOpen={clearOfOpen}
+            onPickOnPlaceCard={pickOnPlaceCard}
+            onOpenTrip={openTrip}
+            onDeleteHotspot={onDeleteHotspot}
+            onCloseAll={closeAll}
+            onClose={cards.closeHotspot}
+          />
+        )}
 
-      {/*
+        {/*
         Several saved things under one click: the same list the public map
         has, kept hidden behind the trip picked from it. It lists only what is
         drawn, and the owner keeps it so.
       */}
-      {!draw.drawing && choosing && (
-        <RouteCardList
-          key={choice.map((c) => c.id).join()}
-          hidden={!!saved.selected}
-          height={height}
-          routes={saved.candidates}
-          hotspots={hotspots.candidates}
-          back={saved.back}
-          onFlip={flipList}
-          selected={saved.highlight?.where === 'list' ? saved.highlight.from : null}
-          onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
-          onRoute={openTrip}
-          onHotspot={(s) => cards.openHotspot(s.id)}
-          onClose={closeAll}
-        />
-      )}
-      {!draw.drawing && !saved.selected && !hotspots.selected && !choosing && (
-        <AccountPill
-          routes={routeCount}
-          hotspots={hotspots.hotspots.length > 0 ? hotspotCount(hotspots.hotspots) : 0}
-          email={session ? (session.user.email ?? '') : null}
-          onSignIn={() => setIsSigningIn(true)}
-          onPassword={() => setIsChangingPassword(true)}
-          onSignOut={() => void getSupabase()?.auth.signOut()}
-        />
-      )}
+        {!draw.drawing && choosing && (
+          <RouteCardList
+            key={choice.map((c) => c.id).join()}
+            hidden={!!saved.selected}
+            height={height}
+            routes={saved.candidates}
+            hotspots={hotspots.candidates}
+            back={saved.back}
+            onFlip={flipList}
+            selected={saved.highlight?.where === 'list' ? saved.highlight.from : null}
+            onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
+            onRoute={openTrip}
+            onHotspot={(s) => cards.openHotspot(s.id)}
+            onClose={closeAll}
+          />
+        )}
+        {!draw.drawing && !saved.selected && !hotspots.selected && !choosing && (
+          // The phone's switch spans the top, so the pill steps down below it.
+          <div className="pointer-events-none absolute inset-0 max-sm:translate-y-12 [&>*]:pointer-events-auto">
+            <AccountPill
+              routes={routeCount}
+              hotspots={hotspots.hotspots.length > 0 ? hotspotCount(hotspots.hotspots) : 0}
+              email={session ? (session.user.email ?? '') : null}
+              onSignIn={() => setIsSigningIn(true)}
+              onPassword={() => setIsChangingPassword(true)}
+              onSignOut={() => void getSupabase()?.auth.signOut()}
+            />
+          </div>
+        )}
 
-      <SaveToasts
-        toast={toast}
-        isDrawing={draw.drawing}
-        canDrawReturnTrip={slotLeft}
-        onDismiss={() => setToast(null)}
-        onDrawReturnTrip={(routeId) => {
-          setToast(null);
-          draw.start(routeId);
-        }}
-      />
-
-      {draw.drawing ? (
-        <DrawToolbar
-          draw={draw}
-          onDone={onDone}
-          keys={!isSaving && !isSigningIn && !isChangingPassword && !isResetting}
-          ends={extendEnds}
+        <SaveToasts
+          toast={toast}
+          isDrawing={draw.drawing}
+          canDrawReturnTrip={slotLeft}
+          onDismiss={() => setToast(null)}
+          onDrawReturnTrip={(routeId) => {
+            setToast(null);
+            draw.start(routeId);
+          }}
         />
-      ) : choosing ? null : (
-        /*
+
+        {draw.drawing ? (
+          <DrawToolbar
+            draw={draw}
+            onDone={onDone}
+            keys={isPlayground && !isSaving && !isSigningIn && !isChangingPassword && !isResetting}
+            ends={extendEnds}
+          />
+        ) : choosing ? null : (
+          /*
           Drawing needs no account; saving does, and asks for it at Done. Not
           while the route list is open, as the account pill is not: under
           1024 px wide the list docks along the bottom, and these would stand
           on its corner.
         */
-        <NewButtons
-          ready={!!map}
-          menu={hotspotMenu}
-          setMenu={setHotspotMenu}
-          onNewRoute={() => draw.start()}
-          onNewHotspot={(kind) => draw.startArea(kind)}
+          <NewButtons
+            ready={!!map}
+            menu={hotspotMenu}
+            setMenu={setHotspotMenu}
+            onNewRoute={() => draw.start()}
+            onNewHotspot={(kind) => draw.startArea(kind)}
+          />
+        )}
+
+        <AuthDialogs
+          signingIn={isSigningIn && !isSignedIn}
+          onSignInDismiss={() => setIsSigningIn(false)}
+          resetting={isResetting}
+          isInvite={recovery.isInvite}
+          onResetDone={recovery.done}
+          changingPasswordFor={
+            isChangingPassword && !isResetting ? (session?.user.email ?? null) : null
+          }
+          onPasswordDone={() => setIsChangingPassword(false)}
         />
-      )}
 
-      <AuthDialogs
-        signingIn={isSigningIn && !isSignedIn}
-        onSignInDismiss={() => setIsSigningIn(false)}
-        resetting={isResetting}
-        isInvite={recovery.isInvite}
-        onResetDone={recovery.done}
-        changingPasswordFor={
-          isChangingPassword && !isResetting ? (session?.user.email ?? null) : null
-        }
-        onPasswordDone={() => setIsChangingPassword(false)}
-      />
-
-      <StudioSaveSheets
-        isSaving={isSaving}
-        draw={draw}
-        saved={saved}
-        hotspots={hotspots}
-        target={target}
-        onSaved={onSaved}
-        onSavedHotspot={onSavedHotspot}
-        onCancel={() => setIsSaving(false)}
-      />
+        <StudioSaveSheets
+          isSaving={isSaving}
+          draw={draw}
+          saved={saved}
+          hotspots={hotspots}
+          target={target}
+          onSaved={onSaved}
+          onSavedHotspot={onSavedHotspot}
+          onCancel={() => setIsSaving(false)}
+        />
+      </div>
     </div>
   );
 }

@@ -670,6 +670,112 @@ check(
   said(log.slice(nTail)),
 );
 
+// ---- 2b. The map switch: a half-drawn line, the camera and the basemap survive it
+{
+  const camera = () =>
+    page.evaluate(() => {
+      const m = window.__map;
+      return { c: m.getCenter().toArray(), z: m.getZoom(), b: m.getBearing(), p: m.getPitch() };
+    });
+  const sameCamera = (a, b) =>
+    a.c[0] === b.c[0] && a.c[1] === b.c[1] && a.z === b.z && a.b === b.b && a.p === b.p;
+  const mapOf = () => new URL(page.url()).searchParams.get('map');
+
+  await go(at(0, 0), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  await clickAt(OUT[0], 300);
+  await clickAt(OUT[1], 300);
+  await idle();
+  const draftBefore = await page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  const pointsBefore = await pointsShown();
+  const cameraBefore = await camera();
+  const styleBefore = await page.evaluate(() => window.__map.getStyle().name ?? null);
+
+  check(
+    'the switch always shows Contributors, Playground and Public, the Playground current',
+    (await page.locator('[role=radiogroup] label').allInnerTexts())
+      .map((t) => t.trim())
+      .join('|') === 'Contributors|Playground|Public' &&
+      (await page.getByRole('radio', { name: 'Playground' }).isChecked()) &&
+      pointsBefore === 2,
+  );
+  check(
+    '  and the current one is marked by more than colour: a check beside it',
+    (await page.locator('label:has(input:checked) svg').count()) === 2 &&
+      (await page.locator('label:has(input:not(:checked)) svg').count()) === 2,
+  );
+
+  await page.keyboard.press('Escape');
+  await page.getByRole('radio', { name: 'Playground' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(300);
+  check(
+    'an arrow key moves to the Public map: the address says so and says it plainly',
+    mapOf() === 'public' &&
+      (await page.getByRole('radio', { name: 'Public' }).isChecked()) &&
+      (await page.getByRole('heading', { name: 'Public map' }).isVisible()),
+    page.url(),
+  );
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  check(
+    '  the keyboard cannot reach the map there to pan it',
+    await page.evaluate(() => !document.activeElement?.closest('.maplibregl-map')),
+  );
+  await page.getByRole('radio', { name: 'Public' }).focus();
+  await page.keyboard.press('Control+z');
+  const [x, y] = await px(OUT[2]);
+  await page.mouse.click(x, y);
+  await page.waitForTimeout(400);
+  check(
+    '  the drawing tools are out of reach there: no Done, and keys and clicks leave the line alone',
+    (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === draftBefore &&
+      !(await page.getByRole('button', { name: /Done/ }).isVisible()),
+  );
+  check(
+    '  the camera and the basemap are as they were',
+    sameCamera(cameraBefore, await camera()) &&
+      (await page.evaluate(() => window.__map.getStyle().name ?? null)) === styleBefore,
+  );
+
+  await page.locator('label', { hasText: 'Contributors' }).click();
+  await page.waitForTimeout(300);
+  check(
+    'the Contributors map says what will be there, and invents nothing',
+    mapOf() === 'contributors' &&
+      (await page.getByRole('heading', { name: 'Contributors map' }).isVisible()) &&
+      /None are shown yet/.test(await body()),
+  );
+  await page.getByRole('button', { name: 'Back to the Playground' }).click();
+  await page.waitForTimeout(500);
+  check(
+    'back in the Playground the half-drawn line is as it was, with its camera',
+    mapOf() === 'playground' &&
+      (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === draftBefore &&
+      (await pointsShown()) === pointsBefore &&
+      sameCamera(cameraBefore, await camera()),
+    `${pointsBefore} points`,
+  );
+
+  await page.goBack();
+  await page.waitForTimeout(300);
+  check(
+    'Back follows the address: the Contributors map again',
+    mapOf() === 'contributors' &&
+      (await page.getByRole('radio', { name: 'Contributors' }).isChecked()),
+  );
+  await page.goForward();
+  await page.waitForTimeout(300);
+  await page.locator('button[title="Discard this route"]').click();
+  await page.waitForTimeout(300);
+  check(
+    '  the line can still be discarded after the visits',
+    (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === null,
+  );
+}
+
 // ---- 3. A route between them, saved with its slot
 async function drawLine(points) {
   await go(at(0, 0), 15);
