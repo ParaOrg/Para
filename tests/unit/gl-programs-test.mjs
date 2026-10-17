@@ -27,12 +27,10 @@ import {
 import { twinsOf } from '../../src/features/routes/map/layer-switch.ts';
 import { addSavedRoutes } from '../../src/features/routes/map/saved-routes-layers.ts';
 import { addSavedHotspots } from '../../src/features/routes/map/saved-hotspots-layers.ts';
-import {
-  hiddenHotspotFilters,
-  namePaint,
-} from '../../src/features/routes/map/saved-hotspots-layers.ts';
+import { hiddenHotspotFilters } from '../../src/features/routes/map/saved-hotspots-layers.ts';
+import { namePaint } from '../../src/features/routes/map/saved-hotspots-labels.ts';
 import { HOTSPOT_CONTENT } from '../../src/features/routes/map/colours.ts';
-import { litOpacity } from '../../src/features/routes/map/saved-routes-layers.ts';
+import { litOpacity } from '../../src/features/routes/map/lighting.ts';
 import { litWidth } from '../../src/features/routes/map/line-style.ts';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');

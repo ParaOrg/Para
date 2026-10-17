@@ -8,7 +8,7 @@ import { metresPerPixel } from '@/shared/utils/geo';
 import { useDotGaze, type Subject } from './dot-gaze';
 import { LocatorIndicatorOverlay, haloFor } from './locator-indicator-overlay';
 import type { Face, Mood } from './locator-mood';
-import { circleRadius, indicatorScale, type Fix } from './use-locator';
+import { circleRadius, indicatorScale, type Fix } from './locator-rules';
 
 interface LocatorOnMapProps {
   map: MapLibreMap;

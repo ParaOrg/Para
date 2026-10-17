@@ -1,6 +1,7 @@
 // The LocatorButton on the public map (src/features/locator/use-locator.ts,
-// locator.tsx, locator-button.tsx, locator-indicator-overlay.tsx,
-// locator-on-map.tsx — the owner's 3870:5408 rules, 2026-10-01), driven by a pretend GPS. Playwright's
+// locator-rules.ts, locator.tsx, locator-button.tsx,
+// locator-indicator-overlay.tsx, locator-on-map.tsx — the owner's 3870:5408
+// rules, 2026-10-01), driven by a pretend GPS. Playwright's
 // geolocation emulation feeds the browser's own watchPosition, so the app's
 // code path is the real one — except for the GPS that never has a fix, which
 // stands in for navigator.geolocation itself, and the compass, a
@@ -642,7 +643,7 @@ check(
   (await page3.evaluate(() => window.__watches)) === 1,
   `${await page3.evaluate(() => window.__watches)} watch(es)`,
 );
-// Quiet past QUIET_MS (use-locator.ts): the phone's location off, say. A tap
+// Quiet past QUIET_MS (locator-rules.ts, use-locator.ts): the phone's location off, say. A tap
 // asks again, a new watch in its place, for Android's "turn on location"
 // answers only a new request (the owner, 2026-10-13).
 await page3.waitForTimeout(10_500);

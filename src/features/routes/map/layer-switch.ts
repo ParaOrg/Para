@@ -12,7 +12,7 @@ import { warmSoon, type Twin } from './warm-programs';
  *
  * Each holds every direction or box, at opacity 0 unless its feature state
  * lights it: a filter naming the lit ones would lay the source out again at
- * every tap (useLighting, saved-routes-layers.ts). So at rest they would draw
+ * every tap (useLighting, lighting.ts). So at rest they would draw
  * every tile's worth of nothing, every frame: seven draw calls a tile.
  * MapLibre 6.7's layer opacity (`line-layer-opacity`, `fill-layer-opacity`)
  * at 0 returns before a single one (draw_line.ts, draw_fill.ts), and at 1
