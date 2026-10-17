@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { LngLat } from '@/shared/utils/geo';
 import { lineLength } from '@/shared/utils/geo';
 
-import { tipOnRide, type TipOnRide } from './loop-tip';
 import { APP_MOVE } from './map-view';
 import { glideFor } from './ride-glide';
 import { useRidePicks } from './use-ride-picks';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import { tipOnRide, type TipOnRide } from '../model/loop-tip';
 import { boxTheOtherWay } from '../model/places';
 import { stationCode } from '../model/rail-codes';
 import { rideCut, rideSpan, rideToEnd, travelLine } from '../model/ride';

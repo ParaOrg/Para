@@ -2,8 +2,8 @@ import { useState } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
-import { usableNear, type CommuterWhere } from './loop-tip';
 import type { Hotspot } from '../model/hotspots';
+import { usableNear, type CommuterWhere } from '../model/loop-tip';
 import { directionLine, isLoop, type Direction } from '../model/routes';
 import { loopTip } from '../model/timeline';
 

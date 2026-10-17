@@ -20,7 +20,6 @@ import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
-import type { CommuterWhere } from '@/features/routes/map/loop-tip';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
@@ -29,6 +28,7 @@ import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import { placeKey } from '@/features/routes/model/places';
 import {
   loadDirectionsFromFile,

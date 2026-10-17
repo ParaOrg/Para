@@ -1,4 +1,4 @@
-import { NEAR_MAX_ACCURACY_M, type CommuterWhere } from '@/features/routes/map/loop-tip';
+import { NEAR_MAX_ACCURACY_M, type CommuterWhere } from '@/features/routes/model/loop-tip';
 import { haversine } from '@/shared/utils/geo';
 
 /** How far the commuter moves before the page is told again. */

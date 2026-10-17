@@ -148,7 +148,7 @@ const serveFixture = async (context) => {
 // ---------------------------------------------------------------------- helpers
 const browser = await chromium.launch();
 
-const phone = async ({ geolocation = null } = {}) => {
+const phone = async ({ geolocation = null, init = null } = {}) => {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -157,6 +157,7 @@ const phone = async ({ geolocation = null } = {}) => {
     ...(geolocation ? { geolocation, permissions: ['geolocation'] } : {}),
   });
   await serveFixture(context);
+  if (init) await context.addInitScript(init);
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -458,6 +459,70 @@ const closeTrip = async (page) => {
   await openTrip(page);
   check(
     'a commuter more than 1 km from every box chooses nothing either',
+    (await originLabel(page)).includes(PALMA.name),
+    await originLabel(page),
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await context.close();
+}
+
+// ------------------------------------------ 2b. the location taken back while a trip is open
+{
+  // A stand-in navigator.geolocation the test drives: a fix on demand, and the error a browser
+  // gives when the permission is taken back (code 1).
+  const stub = () => {
+    const watchers = new Map();
+    let nextId = 0;
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        watchPosition: (ok, err) => {
+          watchers.set(++nextId, { ok, err });
+          return nextId;
+        },
+        clearWatch: (id) => watchers.delete(id),
+        getCurrentPosition: () => {},
+      },
+    });
+    window.__fix = (lng, lat, accuracy) =>
+      watchers.forEach(({ ok }) =>
+        ok({
+          timestamp: Date.now(),
+          coords: { longitude: lng, latitude: lat, accuracy, heading: null, speed: null },
+        }),
+      );
+    window.__deny = () =>
+      watchers.forEach(({ err }) =>
+        err({
+          code: 1,
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+          message: 'denied',
+        }),
+      );
+  };
+  const { context, page, errors } = await phone({ init: stub });
+  await page.locator('[data-testid="where"]').tap();
+  await page.evaluate(([x, y]) => window.__fix(x, y, 15), [SUNKEN.at[0] + 0.0001, SUNKEN.at[1]]);
+  await page.waitForTimeout(1500);
+  await openTrip(page);
+  check(
+    'with a fix, the trip leaves from the nearest place',
+    (await originLabel(page)).includes(SUNKEN.name),
+    await originLabel(page),
+  );
+  await page.evaluate(() => window.__deny());
+  await page.waitForTimeout(1500);
+  check(
+    'the location taken back while the trip is open: the tip stays put',
+    (await originLabel(page)).includes(SUNKEN.name),
+    await originLabel(page),
+  );
+  await closeTrip(page);
+  await openTrip(page);
+  check(
+    '  and reopened it starts at the first place: the old position is not kept',
     (await originLabel(page)).includes(PALMA.name),
     await originLabel(page),
   );

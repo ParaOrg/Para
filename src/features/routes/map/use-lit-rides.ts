@@ -5,11 +5,11 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { useBabaanSides } from './babaan-sides';
 import { useDirectionArrows, type Ride } from './direction-arrows';
-import type { TipOnRide } from './loop-tip';
 import { usePassStretches } from './pass-stretches';
 import { useRideRest } from './ride-rest';
 import type { Ridden } from './use-ride-to';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import type { TipOnRide } from '../model/loop-tip';
 import { tipLine, travelLine } from '../model/ride';
 import { directionEndHotspots, directionEnds, isLoop, type Direction } from '../model/routes';
 

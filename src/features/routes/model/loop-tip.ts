@@ -1,6 +1,6 @@
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
-import type { Hotspot } from '../model/hotspots';
+import type { Hotspot } from './hotspots';
 
 /** A fix vaguer than this says nothing about which place is nearest. */
 export const NEAR_MAX_ACCURACY_M = 200;

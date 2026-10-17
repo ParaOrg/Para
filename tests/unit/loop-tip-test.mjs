@@ -1,4 +1,4 @@
-// Whether the commuter's place may choose a loop's tip (src/features/routes/map/loop-tip.ts):
+// Whether the commuter's place may choose a loop's tip (src/features/routes/model/loop-tip.ts):
 // a sharp fix within reach of the loop does; a vague one, or one far away, leaves the first place.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/loop-tip-test.mjs
@@ -9,7 +9,7 @@ import {
   NEAR_MAX_ACCURACY_M,
   NEAR_MAX_DISTANCE_M,
   usableNear,
-} from '../../src/features/routes/map/loop-tip.ts';
+} from '../../src/features/routes/model/loop-tip.ts';
 
 const M_PER_DEG_LAT = 111_000;
 /** A box `north` metres north of the UP Diliman Oblation. */
@@ -44,7 +44,7 @@ test('no fix, no choice', () => {
 });
 
 // ------------------------------------------------------------ the tip on a ride
-import { tipOnRide } from '../../src/features/routes/map/loop-tip.ts';
+import { tipOnRide } from '../../src/features/routes/model/loop-tip.ts';
 
 const WHOLE = 3000;
 
@@ -56,10 +56,12 @@ test('a start with no end of its own rides round to the tip: the tip is the end'
   assert.equal(tipOnRide(WHOLE, 500, 2000, null), 'end');
 });
 
-test('a ride that wraps past the tip passes through it', () => {
-  // From 2000 forward to 300 crosses the seam and the tip at 500? No: 300 is short of it.
-  assert.equal(tipOnRide(WHOLE, 500, 2000, 300), 'outside');
+test('a ride that wraps across the seam and on past the tip passes through it', () => {
   assert.equal(tipOnRide(WHOLE, 500, 2000, 800), 'through');
+});
+
+test('a ride that wraps across the seam and stops short of the tip leaves it outside', () => {
+  assert.equal(tipOnRide(WHOLE, 500, 2000, 300), 'outside');
 });
 
 test('a ride that stays between the start and the tip leaves the tip outside it', () => {

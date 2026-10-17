@@ -1,3 +1,4 @@
+import { CARD_TEXT } from './livery-card';
 import { VehicleIcon } from './vehicle-icon';
 import type { Livery } from '../model/liveries';
 import type { RailLine } from '../model/routes';
@@ -84,7 +85,10 @@ export function RouteTripDetailHeader({ vehicle, way, livery, name }: RouteTripD
         )}
       </p>
       {name && (
-        <p data-testid="trip-name" className={'min-w-0 truncate text-lg/7 font-bold ' + words}>
+        <p
+          data-testid="trip-name"
+          className={'min-w-0 truncate text-lg/7 font-bold ' + CARD_TEXT[livery]}
+        >
           {name}
         </p>
       )}

@@ -1,8 +1,8 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
-import type { CommuterWhere } from '@/features/routes/map/loop-tip';
 import { coarse } from '@/features/routes/map/map-view';
+import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 
