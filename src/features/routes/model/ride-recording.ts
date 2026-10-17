@@ -295,36 +295,37 @@ export function summarize(
 }
 
 /*
- * One recording holds a papunta and then a pabalik, because a jeepney route is
- * often a loop. A recording starts on papunta; a switch flips the leg and
- * leaves a marker at the fix it happened on. The functions below take fixes
- * that count (keptFixes), in time order, as hintosOf does.
+ * One recording holds an outbound way (papunta) and then a return (pabalik),
+ * because a jeepney route is often a loop. A recording starts outbound; a
+ * switch flips the way and leaves a marker at the fix it happened on. Flipping
+ * back is an undo: only where the recording is now counts. The functions below
+ * take fixes that count (keptFixes), in time order, as hintosOf does.
  */
 
-/** Which way the contributor is riding: toward the destination, or back. */
-export type Leg = 'papunta' | 'pabalik';
+/** Which way the contributor is riding: toward the destination (papunta), or back (pabalik). */
+export type Way = 'outbound' | 'return';
 
 /** The contributor pressing the switch: from then on the ride is on `to`. */
-export interface LegSwitch {
+export interface WaySwitch {
   time: number;
-  to: Leg;
+  to: Way;
 }
 
-/** Where a switch left its mark: the fix it happened on, and the leg that began there. */
-export interface LegMarker {
+/** Where a switch left its mark: the fix it happened on, and the way that began there. */
+export interface WayMarker {
   /** When the contributor pressed the switch. */
   time: number;
   at: LngLat;
-  to: Leg;
+  to: Way;
 }
 
-/** The ride split by leg, ready to draw as two trails. */
-export interface RideLegs {
-  /** Each run of fixes on papunta, as a line. A switch back makes more than one. */
-  papunta: LngLat[][];
-  pabalik: LngLat[][];
-  markers: LegMarker[];
-  /** The first pabalik marker: where the route ends. Null while the contributor has not switched. */
+/** The ride split by way, ready to draw as two trails. */
+export interface RecordedWays {
+  /** Each run of fixes on the outbound way, as a line. A switch back makes more than one. */
+  outboundLines: LngLat[][];
+  returnLines: LngLat[][];
+  markers: WayMarker[];
+  /** Where the contributor last switched to the return; null while the recording is on the outbound way. */
   endPoint: LngLat | null;
 }
 
@@ -334,81 +335,103 @@ export const AUTO_STOP_ARM_M = 1000;
 export const AUTO_STOP_RADIUS_M = 300;
 /** A direction of travel needs this much movement; less is the phone's wander, not a heading. */
 export const BEARING_MIN_M = 20;
+/**
+ * That movement must come within this long. Standing, the phone drifts a few
+ * metres a minute (HINTO_RADIUS_M allows 25); without a time limit the drift
+ * adds up to a heading and the map turns while the contributor waits. It also
+ * stops a heading being measured from before a stop.
+ */
+export const BEARING_WINDOW_S = 10;
 
 interface PlacedSwitch {
   time: number;
-  to: Leg;
+  to: Way;
   /** The fix the switch happened on: the last one at or before it, or the first if it came before any. */
   index: number;
 }
 
-/** The switches that change the leg, in time order, each placed on a fix. */
-function placeSwitches(fixes: readonly Fix[], switches: readonly LegSwitch[]): PlacedSwitch[] {
+/** The switches that change the way, in time order, each placed on a fix. */
+function placeSwitches(fixes: readonly Fix[], switches: readonly WaySwitch[]): PlacedSwitch[] {
   if (fixes.length === 0) return [];
   const placed: PlacedSwitch[] = [];
-  let leg: Leg = 'papunta';
-  for (const sw of [...switches].sort((a, b) => a.time - b.time)) {
-    if (sw.to === leg) continue;
-    leg = sw.to;
+  let way: Way = 'outbound';
+  for (const waySwitch of [...switches].sort((a, b) => a.time - b.time)) {
+    if (waySwitch.to === way) continue;
+    way = waySwitch.to;
     let index = 0;
-    while (index + 1 < fixes.length && fixes[index + 1].time <= sw.time) index++;
-    placed.push({ time: sw.time, to: sw.to, index });
+    while (index + 1 < fixes.length && fixes[index + 1].time <= waySwitch.time) index++;
+    placed.push({ time: waySwitch.time, to: waySwitch.to, index });
   }
   return placed;
 }
 
 /**
- * The fixes split into papunta and pabalik lines. The fix a switch happened on
+ * The fixes split into outbound and return lines. The fix a switch happened on
  * ends the old line and begins the new one, so the two trails meet there with
- * no gap. A run of one fix is no line and is left out.
+ * no gap. A run of one fix is no line and is left out. The end point is where
+ * the contributor last switched to the return, and null while the recording is
+ * on the outbound way: a mistaken tap flipped back leaves no end point.
  */
-export function legsOf(fixes: readonly Fix[], switches: readonly LegSwitch[]): RideLegs {
-  const legs: RideLegs = { papunta: [], pabalik: [], markers: [], endPoint: null };
+export function waysOf(fixes: readonly Fix[], switches: readonly WaySwitch[]): RecordedWays {
+  const ways: RecordedWays = { outboundLines: [], returnLines: [], markers: [], endPoint: null };
   const placed = placeSwitches(fixes, switches);
-  let leg: Leg = 'papunta';
+  let way: Way = 'outbound';
   let run: LngLat[] = [];
+  const close = () => {
+    if (run.length >= 2) (way === 'outbound' ? ways.outboundLines : ways.returnLines).push(run);
+  };
   fixes.forEach((fix, i) => {
     run.push(fix.at);
-    for (const sw of placed) {
-      if (sw.index !== i) continue;
-      if (run.length >= 2) legs[leg].push(run);
-      legs.markers.push({ time: sw.time, at: fix.at, to: sw.to });
-      leg = sw.to;
+    for (const waySwitch of placed) {
+      if (waySwitch.index !== i) continue;
+      close();
+      ways.markers.push({ time: waySwitch.time, at: fix.at, to: waySwitch.to });
+      way = waySwitch.to;
       run = [fix.at];
     }
   });
-  if (run.length >= 2) legs[leg].push(run);
-  legs.endPoint = legs.markers.find((m) => m.to === 'pabalik')?.at ?? null;
-  return legs;
+  close();
+  const last = ways.markers[ways.markers.length - 1];
+  ways.endPoint = last?.to === 'return' ? last.at : null;
+  return ways;
 }
 
 /**
- * Whether the ride has come full circle and should stop. It arms once the
- * contributor has been more than AUTO_STOP_ARM_M from the first fix and has
- * switched to pabalik at least once, and fires at the first fix after that
- * within AUTO_STOP_RADIUS_M of the first fix (exactly that far still stops).
- * Switching back to papunta does not disarm it.
+ * Whether the ride has come full circle and should stop. It is armed only
+ * while the recording is on the return, from the later of the first fix more
+ * than AUTO_STOP_ARM_M from the first fix and the latest switch to the return,
+ * and fires at the first fix after that within AUTO_STOP_RADIUS_M of the first
+ * fix (exactly that far still stops). A switch to the return made already
+ * inside that radius stops the ride on the next fix: the contributor forgot at
+ * the turnaround, and that is kept. Flipping back to outbound disarms it.
+ *
+ * Pure, so it answers true for every call after it first fires. The caller
+ * asks until it is true, then remembers that it fired and stops asking: a
+ * Resume after an auto-stop must not stop again.
  */
-export function shouldAutoStop(fixes: readonly Fix[], switches: readonly LegSwitch[]): boolean {
+export function shouldAutoStop(fixes: readonly Fix[], switches: readonly WaySwitch[]): boolean {
   if (fixes.length < 2) return false;
   const start = fixes[0].at;
-  const toPabalik = placeSwitches(fixes, switches).find((sw) => sw.to === 'pabalik');
+  const placed = placeSwitches(fixes, switches);
+  const latest = placed[placed.length - 1];
   const away = fixes.find((fix) => distanceM(start, fix.at) > AUTO_STOP_ARM_M);
-  if (!toPabalik || !away) return false;
-  const armedAt = Math.max(toPabalik.time, away.time);
+  if (latest?.to !== 'return' || !away) return false;
+  const armedAt = Math.max(latest.time, away.time);
   return fixes.some((fix) => fix.time > armedAt && distanceM(start, fix.at) <= AUTO_STOP_RADIUS_M);
 }
 
 /**
  * The direction of travel for a course-up map, in degrees clockwise from
  * north: from the latest fix back to the nearest earlier one at least
- * BEARING_MIN_M away. Standing still or crawling gives `previous` (or null
- * when there is none), so the map keeps the heading it had.
+ * BEARING_MIN_M away and no more than BEARING_WINDOW_S older. Standing still or
+ * crawling gives `previous` (or null when there is none), so the map keeps the
+ * heading it had.
  */
 export function courseBearing(fixes: readonly Fix[], previous: number | null): number | null {
   const latest = fixes[fixes.length - 1];
   if (!latest) return previous;
   for (let i = fixes.length - 2; i >= 0; i--) {
+    if (latest.time - fixes[i].time > BEARING_WINDOW_S * 1000) break;
     if (distanceM(fixes[i].at, latest.at) < BEARING_MIN_M) continue;
     const [lng1, lat1] = fixes[i].at;
     const [lng2, lat2] = latest.at;

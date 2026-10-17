@@ -9,16 +9,17 @@ import { haversine } from '../../src/shared/utils/geo.ts';
 import {
   AUTO_STOP_ARM_M,
   AUTO_STOP_RADIUS_M,
+  BEARING_WINDOW_S,
   courseBearing,
   distanceM,
   hintosOf,
   keptFixes,
-  legsOf,
   mergeGaps,
   pathLengthM,
   shouldAutoStop,
   silentGaps,
   summarize,
+  waysOf,
 } from '../../src/features/routes/model/ride-recording.ts';
 
 const T0 = Date.UTC(2026, 9, 17, 6, 0, 0);
@@ -311,13 +312,13 @@ test('the distance agrees with shared/utils/geo, whose haversine it repeats', ()
   for (const [a, b] of pairs) assert.equal(distanceM(a, b), haversine(a, b));
 });
 
-// ---------------------------------------------------------------- legs, auto-stop, bearing
+// ---------------------------------------------------------------- ways, auto-stop, bearing
 
 /** Metres east per `fix` unit, measured, so a distance below is the distance haversine gives. */
 const PER_METRE = distanceM(fix(0).at, fix(0, 1000).at) / 1000;
-/** A fix `s` seconds in, exactly `m` metres east of the start by haversine. */
+/** A fix `s` seconds in, exactly `m` metres east (and `north` metres north) of the start by haversine. */
 const at = (s, m, north = 0) => fix(s, m / PER_METRE, north);
-/** Out along the road to `farM` and back to `backM`, a fix every 10 s and every 100 m; the switch is at the far end. */
+/** Out along the road to `farM` and back to `backM`, a fix every 10 s and every 100 m. */
 function loop(farM, backM = 0) {
   const fixes = [];
   let s = 0;
@@ -325,16 +326,17 @@ function loop(farM, backM = 0) {
   for (let m = farM - 100; m >= backM; m -= 100, s += 10) fixes.push(at(s, m));
   return fixes;
 }
-const SWITCH_AT_FAR = (farM) => ({ time: T0 + (farM / 100) * 10_000 + 5_000, to: 'pabalik' });
+const fromStart = (fixes, f) => Math.round(distanceM(fixes[0].at, f.at));
+/** The contributor taps Pabalik 5 s after the fix at the far end of loop(farM). */
+const returnAtFar = (farM) => ({ time: T0 + (farM / 100) * 10_000 + 5_000, to: 'return' });
 
-test('a loop arms past 1 km with a switch, and stops at the first fix within 300 m', () => {
+test('a loop arms past 1 km with a switch to the return, and stops at the first fix within 300 m', () => {
   const fixes = loop(1500);
-  const switches = [SWITCH_AT_FAR(1500)];
-  const fromStart = (f) => Math.round(distanceM(fixes[0].at, f.at));
-  const outward = fixes.findIndex((f) => fromStart(f) === 1500);
-  // Still out, and then on the way back: 400 m from the start has not stopped it.
-  assert.equal(shouldAutoStop(fixes.slice(0, outward + 1), switches), false);
-  const at400 = fixes.findIndex((f, i) => i > outward && fromStart(f) === 400);
+  const switches = [returnAtFar(1500)];
+  const far = fixes.findIndex((f) => fromStart(fixes, f) === 1500);
+  assert.equal(shouldAutoStop(fixes.slice(0, far + 1), switches), false);
+  // On the way back: 400 m from the start has not stopped it.
+  const at400 = fixes.findIndex((f, i) => i > far && fromStart(fixes, f) === 400);
   assert.equal(shouldAutoStop(fixes.slice(0, at400 + 1), switches), false);
   // The next fix, just inside 300 m of the start, stops it.
   const inside = at(fixes[at400].time / 1000 - T0 / 1000 + 10, 299.9);
@@ -349,35 +351,114 @@ test('a one-way ride never stops, and neither does a ride that returns without s
   assert.equal(shouldAutoStop(loop(1500), []), false);
 });
 
-test('a switch to pabalik without ever being 1 km away never stops', () => {
-  assert.equal(shouldAutoStop(loop(900), [SWITCH_AT_FAR(900)]), false);
+test('a switch to the return without ever being 1 km away never stops', () => {
+  assert.equal(shouldAutoStop(loop(900), [returnAtFar(900)]), false);
   assert.equal(AUTO_STOP_ARM_M, 1000);
 });
 
-test('arming needs more than 1 km: 999 m is not enough, 1001 m is', () => {
-  const near = [at(0, 0), at(10, 999), at(20, 100), at(30, 50)];
+test('arming needs more than 1 km: 999.5 m is not enough, 1001 m is', () => {
+  const near = [at(0, 0), at(10, 999.5), at(20, 100), at(30, 50)];
   const far = [at(0, 0), at(10, 1001), at(20, 100), at(30, 50)];
-  const switches = [{ time: T0 + 15_000, to: 'pabalik' }];
+  const switches = [{ time: T0 + 15_000, to: 'return' }];
   assert.equal(shouldAutoStop(near, switches), false);
   assert.equal(shouldAutoStop(far, switches), true);
 });
 
-test('it arms when the switch comes after the 1 km, and not before the switch', () => {
+test('it arms when the switch comes after the 1 km, and not for a fix before the switch', () => {
   const fixes = [at(0, 0), at(10, 1200), at(20, 1100), at(30, 200)];
   // Switched only after the fix at 200 m: that fix came before the switch and must not stop it.
-  assert.equal(shouldAutoStop(fixes, [{ time: T0 + 35_000, to: 'pabalik' }]), false);
-  assert.equal(shouldAutoStop(fixes, [{ time: T0 + 25_000, to: 'pabalik' }]), true);
+  assert.equal(shouldAutoStop(fixes, [{ time: T0 + 35_000, to: 'return' }]), false);
+  assert.equal(shouldAutoStop(fixes, [{ time: T0 + 25_000, to: 'return' }]), true);
 });
 
-test('switching back to papunta does not disarm it', () => {
+test('a late tap on the way back still stops, measured from the start and not from the tap', () => {
   const fixes = loop(1500);
-  const switches = [SWITCH_AT_FAR(1500), { time: T0 + 200_000, to: 'papunta' }];
+  const far = fixes.findIndex((f) => fromStart(fixes, f) === 1500);
+  const at600 = fixes.findIndex((f, i) => i > far && fromStart(fixes, f) === 600);
+  const switches = [{ time: fixes[at600].time + 5_000, to: 'return' }];
+  const at500 = fixes.findIndex((f, i) => i > far && fromStart(fixes, f) === 500);
+  assert.equal(shouldAutoStop(fixes.slice(0, at500 + 1), switches), false);
+  const inside = at(fixes[at500].time / 1000 - T0 / 1000 + 10, 299.9);
+  assert.equal(shouldAutoStop([...fixes.slice(0, at500 + 1), inside], switches), true);
+});
+
+test('flipping back is an undo: a mistaken tap flipped back arms nothing and leaves no end point', () => {
+  const fixes = loop(1500);
+  const mistaken = [
+    { time: T0 + 5_000, to: 'return' },
+    { time: T0 + 6_000, to: 'outbound' },
+  ];
+  assert.equal(shouldAutoStop(fixes, mistaken), false);
+  const ways = waysOf(fixes, mistaken);
+  assert.equal(ways.endPoint, null);
+  assert.deepEqual(
+    ways.markers.map((m) => m.to),
+    ['return', 'outbound'],
+  );
+  // Flipped back after the far end: the way is outbound again, so the return no longer counts.
+  assert.equal(
+    shouldAutoStop(fixes, [returnAtFar(1500), { time: T0 + 200_000, to: 'outbound' }]),
+    false,
+  );
+});
+
+test('switching to the return again arms it again, from the latest switch', () => {
+  const fixes = loop(1500);
+  const switches = [
+    returnAtFar(1500),
+    { time: T0 + 170_000, to: 'outbound' },
+    { time: T0 + 175_000, to: 'return' },
+  ];
   assert.equal(shouldAutoStop(fixes, switches), true);
+  // The latest switch comes after every fix: nothing after it can stop the ride yet.
+  assert.equal(
+    shouldAutoStop(fixes, [
+      ...switches,
+      { time: T0 + 900_000, to: 'outbound' },
+      { time: T0 + 901_000, to: 'return' },
+    ]),
+    false,
+  );
+});
+
+test('switches given out of order are applied in time order', () => {
+  const fixes = loop(1500);
+  const backToOutbound = { time: T0 + 200_000, to: 'outbound' };
+  assert.equal(shouldAutoStop(fixes, [backToOutbound, returnAtFar(1500)]), false);
+  const six = [at(0, 0), at(10, 100), at(20, 200), at(30, 300), at(40, 400), at(50, 500)];
+  const ways = waysOf(six, [
+    { time: T0 + 35_000, to: 'outbound' },
+    { time: T0 + 25_000, to: 'return' },
+  ]);
+  assert.deepEqual(
+    ways.markers.map((m) => m.to),
+    ['return', 'outbound'],
+  );
+  assert.equal(ways.endPoint, null);
+});
+
+test('a return tapped already inside 300 m stops on the next fix', () => {
+  const out = [at(0, 0), at(10, 1200), at(20, 250)];
+  const switches = [{ time: T0 + 25_000, to: 'return' }];
+  assert.equal(shouldAutoStop(out, switches), false);
+  assert.equal(shouldAutoStop([...out, at(30, 240)], switches), true);
+});
+
+test('the fix a switch is made on does not stop the ride, and neither do fixes before it is 1 km out', () => {
+  const out = [at(0, 0), at(10, 1200), at(20, 250)];
+  const atFix = [{ time: T0 + 20_000, to: 'return' }];
+  assert.equal(shouldAutoStop(out, atFix), false);
+  assert.equal(shouldAutoStop([...out, at(30, 240)], atFix), true);
+  // Pabalik tapped at the start: the early fixes near it are not the way home.
+  const early = [{ time: T0 + 5_000, to: 'return' }];
+  const fixes = [at(0, 0), at(10, 100), at(20, 1200)];
+  assert.equal(shouldAutoStop(fixes, early), false);
+  assert.equal(shouldAutoStop([...fixes, at(30, 250)], early), true);
 });
 
 test('299 m stops, 301 m does not, and the edge sits at 300 m', () => {
   const out = [at(0, 0), at(10, 500), at(20, 1100)];
-  const switches = [{ time: T0 + 25_000, to: 'pabalik' }];
+  const switches = [{ time: T0 + 25_000, to: 'return' }];
   const backTo = (m) => [...out, at(30, 700), at(40, m)];
   assert.equal(shouldAutoStop(backTo(299), switches), true);
   assert.equal(shouldAutoStop(backTo(AUTO_STOP_RADIUS_M - 0.01), switches), true);
@@ -385,60 +466,65 @@ test('299 m stops, 301 m does not, and the edge sits at 300 m', () => {
   assert.equal(shouldAutoStop(backTo(301), switches), false);
 });
 
-test('legs: the papunta and pabalik lines meet at the switch fix, which is the route end', () => {
+test('ways: the outbound and return lines meet at the switch fix, which is the route end', () => {
   const fixes = [at(0, 0), at(10, 100), at(20, 200), at(30, 100), at(40, 0)];
-  const legs = legsOf(fixes, [{ time: T0 + 24_000, to: 'pabalik' }]);
-  assert.equal(legs.papunta.length, 1);
-  assert.equal(legs.pabalik.length, 1);
-  assert.deepEqual(legs.papunta[0], [fixes[0].at, fixes[1].at, fixes[2].at]);
-  assert.deepEqual(legs.pabalik[0], [fixes[2].at, fixes[3].at, fixes[4].at]);
-  assert.deepEqual(legs.markers, [{ time: T0 + 24_000, at: fixes[2].at, to: 'pabalik' }]);
-  assert.deepEqual(legs.endPoint, fixes[2].at);
+  const ways = waysOf(fixes, [{ time: T0 + 24_000, to: 'return' }]);
+  assert.equal(ways.outboundLines.length, 1);
+  assert.equal(ways.returnLines.length, 1);
+  assert.deepEqual(ways.outboundLines[0], [fixes[0].at, fixes[1].at, fixes[2].at]);
+  assert.deepEqual(ways.returnLines[0], [fixes[2].at, fixes[3].at, fixes[4].at]);
+  assert.deepEqual(ways.markers, [{ time: T0 + 24_000, at: fixes[2].at, to: 'return' }]);
+  assert.deepEqual(ways.endPoint, fixes[2].at);
 });
 
-test('legs: no switch is all papunta with no marker and no end point', () => {
+test('ways: no switch is all outbound with no marker and no end point', () => {
   const fixes = [at(0, 0), at(10, 100), at(20, 200)];
-  const legs = legsOf(fixes, []);
-  assert.deepEqual(legs, {
-    papunta: [[fixes[0].at, fixes[1].at, fixes[2].at]],
-    pabalik: [],
+  assert.deepEqual(waysOf(fixes, []), {
+    outboundLines: [[fixes[0].at, fixes[1].at, fixes[2].at]],
+    returnLines: [],
     markers: [],
     endPoint: null,
   });
 });
 
-test('legs: switching back makes a second papunta line, and the end point stays the first pabalik marker', () => {
+test('ways: switching back makes a second outbound line, and the end point is the latest switch to the return', () => {
   const fixes = [at(0, 0), at(10, 100), at(20, 200), at(30, 300), at(40, 400), at(50, 500)];
-  const legs = legsOf(fixes, [
-    { time: T0 + 20_000, to: 'pabalik' },
-    { time: T0 + 40_000, to: 'papunta' },
-    { time: T0 + 45_000, to: 'papunta' }, // already on papunta: no marker
-    { time: T0 + 50_000, to: 'pabalik' }, // a second pabalik marker: the end point stays the first
+  const ways = waysOf(fixes, [
+    { time: T0 + 20_000, to: 'return' },
+    { time: T0 + 40_000, to: 'outbound' },
+    { time: T0 + 45_000, to: 'outbound' }, // already outbound: no marker
   ]);
-  assert.equal(legs.papunta.length, 2);
-  assert.equal(legs.pabalik.length, 1);
-  assert.deepEqual(legs.pabalik[0], [fixes[2].at, fixes[3].at, fixes[4].at]);
-  assert.deepEqual(legs.papunta[1], [fixes[4].at, fixes[5].at]);
+  assert.equal(ways.outboundLines.length, 2);
+  assert.equal(ways.returnLines.length, 1);
+  assert.deepEqual(ways.returnLines[0], [fixes[2].at, fixes[3].at, fixes[4].at]);
+  assert.deepEqual(ways.outboundLines[1], [fixes[4].at, fixes[5].at]);
   assert.deepEqual(
-    legs.markers.map((m) => m.to),
-    ['pabalik', 'papunta', 'pabalik'],
+    ways.markers.map((m) => m.to),
+    ['return', 'outbound'],
   );
-  assert.deepEqual(legs.endPoint, fixes[2].at);
+  // On the outbound way now, so there is no end point.
+  assert.equal(ways.endPoint, null);
+  const again = waysOf(fixes, [
+    { time: T0 + 20_000, to: 'return' },
+    { time: T0 + 30_000, to: 'outbound' },
+    { time: T0 + 40_000, to: 'return' },
+  ]);
+  assert.deepEqual(again.endPoint, fixes[4].at);
 });
 
-test('legs: a switch between fixes sits on the last fix before it, and one before any sits on the first', () => {
+test('ways: a switch between fixes sits on the last fix before it, and one before any sits on the first', () => {
   const fixes = [at(0, 0), at(10, 100), at(20, 200)];
-  assert.deepEqual(legsOf(fixes, [{ time: T0 + 19_000, to: 'pabalik' }]).endPoint, fixes[1].at);
-  assert.deepEqual(legsOf(fixes, [{ time: T0 - 5_000, to: 'pabalik' }]).endPoint, fixes[0].at);
-  assert.equal(legsOf([], [{ time: T0, to: 'pabalik' }]).endPoint, null);
+  assert.deepEqual(waysOf(fixes, [{ time: T0 + 19_000, to: 'return' }]).endPoint, fixes[1].at);
+  assert.deepEqual(waysOf(fixes, [{ time: T0 - 5_000, to: 'return' }]).endPoint, fixes[0].at);
+  assert.equal(waysOf([], [{ time: T0, to: 'return' }]).endPoint, null);
   // A switch at the very time of a fix sits on that fix.
-  assert.deepEqual(legsOf(fixes, [{ time: T0 + 10_000, to: 'pabalik' }]).endPoint, fixes[1].at);
+  assert.deepEqual(waysOf(fixes, [{ time: T0 + 10_000, to: 'return' }]).endPoint, fixes[1].at);
 });
 
 test('bearing: east is 90, a turn north is 0, and the heading is kept while standing', () => {
-  const east = [at(0, 0), at(10, 25), at(20, 50)];
+  const east = [at(0, 0), at(5, 25), at(10, 50)];
   assert.ok(Math.abs(courseBearing(east, null) - 90) < 0.5);
-  const turned = [...east, at(30, 50, 25), at(40, 50, 50)];
+  const turned = [...east, at(13, 50, 25), at(16, 50, 50)];
   const bearing = courseBearing(turned, 90);
   assert.ok(bearing < 0.5 || bearing > 359.5);
   // Standing: every earlier fix within 20 m. The previous bearing stands; with none it is null.
@@ -449,8 +535,34 @@ test('bearing: east is 90, a turn north is 0, and the heading is kept while stan
 });
 
 test('bearing: 20 m of movement gives a heading, 19 m does not; west is 270 and south 180', () => {
-  assert.equal(courseBearing([at(0, 0), at(10, 19)], 7), 7);
-  assert.ok(Math.abs(courseBearing([at(0, 0), at(10, 20.5)], 7) - 90) < 0.5);
-  assert.ok(Math.abs(courseBearing([at(0, 100), at(10, 50)], null) - 270) < 0.5);
-  assert.ok(Math.abs(courseBearing([at(0, 0, 100), at(10, 0, 50)], null) - 180) < 0.5);
+  assert.equal(courseBearing([at(0, 0), at(5, 19)], 7), 7);
+  assert.ok(Math.abs(courseBearing([at(0, 0), at(5, 20.5)], 7) - 90) < 0.5);
+  assert.ok(Math.abs(courseBearing([at(0, 100), at(5, 50)], null) - 270) < 0.5);
+  assert.ok(Math.abs(courseBearing([at(0, 0, 100), at(5, 0, 50)], null) - 180) < 0.5);
+});
+
+test('bearing: the 20 m must come within 10 s', () => {
+  assert.equal(BEARING_WINDOW_S, 10);
+  assert.ok(Math.abs(courseBearing([at(0, 0), at(10, 21)], 7) - 90) < 0.5);
+  assert.equal(courseBearing([at(0, 0), at(11, 21)], 7), 7);
+});
+
+test('bearing: a drifting stand keeps the previous heading, and a move after it takes a new one', () => {
+  // Five minutes at a fix a second: the phone creeps east at 0.1 m/s (30 m in all) and jitters
+  // within 8 m. No 10 s stretch moves 20 m, so the map must not turn.
+  let seed = 7;
+  const random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648) * 2 - 1;
+  const stand = [];
+  for (let s = 0; s <= 300; s++) {
+    const angle = random() * Math.PI;
+    const radius = 8 * Math.abs(random());
+    stand.push(at(s, s * 0.1 + radius * Math.cos(angle), radius * Math.sin(angle)));
+  }
+  let heading = 77;
+  for (let i = 1; i <= stand.length; i++) heading = courseBearing(stand.slice(0, i), heading);
+  assert.equal(heading, 77);
+  // Then the jeepney moves off north: 25 m in 5 s is a heading again.
+  const moved = [...stand, at(303, 30, 12), at(305, 30, 25), at(308, 30, 40)];
+  const bearing = courseBearing(moved, heading);
+  assert.ok(bearing < 15 || bearing > 345, `bearing ${bearing}`);
 });
