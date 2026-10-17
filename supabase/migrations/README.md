@@ -38,8 +38,22 @@ its row in the same run, under the file's name:
 ```sql
 -- the file's statements, then:
 insert into supabase_migrations.schema_migrations (version, name, statements)
-values (to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'), '0017_example', '{}');
+select to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'), '00NN_example', '{}'
+where not exists (
+  select 1 from supabase_migrations.schema_migrations where name = '00NN_example'
+);
 ```
+
+Keep the editor's role on `postgres`, and paste the file and the insert as one
+run. The insert adds the row only once, so pasting the whole run twice is safe
+(the file's statements must be safe to repeat too).
 
 `list_migrations` (or `select version, name from supabase_migrations.schema_migrations order by version`)
 should then show every file here, each under its own name.
+
+## Grants for new tables
+
+Since 0017 a new table in `public` gets no grants for `anon` or `authenticated`
+until its migration adds them, so a forgotten grant fails closed. Use identity
+columns (`generated always as identity`) rather than `serial`: a `serial`
+column's sequence needs its own `grant usage on sequence`.

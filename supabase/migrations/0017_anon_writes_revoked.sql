@@ -1,10 +1,9 @@
 -- ParaPo — anon never writes, and a new table grants nothing by default
 --
--- The policy audit of 2026-10-17 (.scratch/contribute/database.md section 2,
--- fix 1). Row security already stops every write by an anonymous phone: no
+-- The policy audit (.scratch/contribute/database.md section 2, fix 1). Row security already stops every write by an anonymous phone: no
 -- write rule passes for a user who is signed in but not on private.editor. But
--- the privileges underneath were wide open. Read from the live project on
--- 2026-10-17 (pg_class.relacl, pg_default_acl):
+-- the privileges underneath were wide open. Read from the live project before
+-- this file was written (pg_class.relacl, pg_default_acl):
 --   - anon and authenticated each hold SELECT, INSERT, UPDATE, DELETE and
 --     MAINTAIN (arwdm) on all five public tables (route, route_variant,
 --     route_stop, stop, gps_session). TRUNCATE, TRIGGER and REFERENCES were
@@ -23,7 +22,7 @@
 --      and the like), and row security does not guard it.
 --   3. anon keeps SELECT on route, route_variant, stop and route_stop, and
 --      loses it on gps_session. The publish (scripts/publish/publish-map.mjs)
---      reads the publishable key's role over REST: route_variant with route
+--      reads as anon (the publishable key) over REST: route_variant with route
 --      embedded, stop and route_stop. Nothing reads gps_session as anon, and
 --      its only read rule is for authenticated.
 --   4. authenticated keeps SELECT, INSERT, UPDATE and DELETE on all five
@@ -46,10 +45,12 @@
 --
 -- Not applied by the session that wrote it; the owner applies it, as postgres,
 -- from the SQL editor, with the ledger row of the README's "Applying a file".
--- The studio, the publish and the contributor tables (0019) are unaffected:
--- every grant they need is one that stays, or that 0019 gives.
+-- The studio and the publish are unaffected: every grant they need stays. Each
+-- later migration (0018, 0019) grants its own: 0018 makes tables too (draft,
+-- takedown, editor_name), and none of them get a grant until it adds one.
 --
--- Reversible with
+-- Reversible, before 0018, with (after 0018 a "grant ... on all tables" would
+-- open its new tables too)
 --   grant insert, update, delete, maintain on all tables in schema public to anon;
 --   grant select on public.gps_session to anon;
 --   grant maintain on all tables in schema public to authenticated;
