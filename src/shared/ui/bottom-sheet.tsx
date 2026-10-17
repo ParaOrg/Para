@@ -133,7 +133,10 @@ export function BottomSheet({
   measureSafeTop();
   const [opensAt] = useState(() => ({ '--sheet-y': slide(snap) }) as CSSProperties);
   useDialogFocus(own, hidden);
-  useEscape(onClose, !hidden);
+  // A sheet left open under an inert page (the studio's other maps) is out of reach, Escape too.
+  useEscape(() => {
+    if (!own.current?.closest('[inert]')) onClose();
+  }, !hidden);
 
   /**
    * Where the sheet slides to. The page's `[data-dock-host]` hears it too, as

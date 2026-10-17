@@ -99,6 +99,7 @@ flowchart TD
   features_studio_drawing --> features_routes_model
   features_studio_drawing --> features_studio_data
   features_studio_drawing --> shared_utils
+  features_studio_maps --> design_system_primitives
   features_studio_panels --> design_system_primitives
   features_studio_panels --> features_routes_cards
   features_studio_panels --> features_routes_geo
@@ -131,7 +132,7 @@ flowchart TD
 | `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
-| `features/studio/maps` | — |
+| `features/studio/maps` | `design-system/primitives` |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
 | `shared/hooks` | — |
 | `shared/ui` | `design-system/primitives`, `shared/hooks` |

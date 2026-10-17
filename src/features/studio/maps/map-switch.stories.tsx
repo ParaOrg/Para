@@ -44,16 +44,18 @@ export const WithFocus: Story = {
   },
 };
 
-/** A phone's width, where the three words and the check must still fit. */
+/**
+ * A phone: `max-sm:` reads the viewport, not this box, so the phone viewport
+ * is set as well as the width.
+ */
 export const Phone: Story = {
-  args: { value: 'playground' },
-  decorators: [
-    (Story) => (
-      <div className="w-[360px]">
-        <Story />
-      </div>
-    ),
-  ],
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};
+
+/** The longest word with the check, which on a phone stands in for its icon. */
+export const PhoneContributors: Story = {
+  args: { value: 'contributors' },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };
 
 export const Contributors: Story = {

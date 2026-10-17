@@ -14,7 +14,7 @@ const meta = {
     ),
   ],
   parameters: { layout: 'fullscreen' },
-  args: { map: 'contributors', onOpenPlayground: fn() },
+  args: { map: 'contributors', hasLine: false, onOpenPlayground: fn() },
 } satisfies Meta<typeof MapPlaceholder>;
 
 export default meta;
@@ -29,15 +29,12 @@ export const Contributors: Story = {
   },
 };
 
-/** A phone's width. */
+/** With a line half drawn, which the placeholder says is waiting. */
+export const WithLine: Story = { args: { hasLine: true } };
+
+/** A phone's width; the placeholder fills the box it stands in. */
 export const Phone: Story = {
-  decorators: [
-    (Story) => (
-      <div className="w-[360px]">
-        <Story />
-      </div>
-    ),
-  ],
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };
 
 export const Public: Story = { args: { map: 'public' } };
