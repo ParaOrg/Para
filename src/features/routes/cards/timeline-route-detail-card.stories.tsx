@@ -5,7 +5,8 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { kmLabel } from '@/shared/utils/geo';
 
-import { FREE, TimelineRouteDetailCard } from './timeline-route-detail-card';
+import { TimelineRouteDetailCard } from './timeline-route-detail-card';
+import { FREE } from './trip-fare';
 
 /** Sample data only: the places of Figma's frames (3762:3546), not the real map. */
 const hintuans = (...labels: string[]) => labels.map((label, i) => ({ id: 'h' + i, label }));
