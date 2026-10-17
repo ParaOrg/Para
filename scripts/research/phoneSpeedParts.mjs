@@ -54,7 +54,7 @@ export function distToRings(p, rings, k) {
 
 // ---------------------------------------------------------- the published map
 /**
- * The published map's directions and hotspot boxes, from index.v4.json:
+ * The published map's directions and hotspot boxes, from index.v5.json:
  * each direction's full line where `lineOf(id)` has one (a direction with an
  * overview has a file in data/lines/), else its overview.
  */

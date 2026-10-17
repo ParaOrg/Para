@@ -132,7 +132,7 @@ What is cached where on the phone:
 | GPS traces (`gps_session`)               | Studio  | Table, unused today                   | The editor who recorded it               |
 | Drawing draft                            | Studio  | The browser's local storage           | That browser only                        |
 | Index, line files, signboard copies      | Publish | JSON and SVG in `public/data/`, in git | Everyone; served by Cloudflare          |
-| Older indexes for installed apps         | Publish | `index.v3.json`, `index.json`, `map.json` | Everyone                            |
+| Older indexes for installed apps         | Publish | `index.v4.json`, `index.v3.json`, `index.json`, `map.json` | Everyone                            |
 | Cached map, lines, tiles                 | Phone   | Service worker caches                 | That phone only                          |
 | The commuter's position                  | Phone   | Memory only                           | That phone only; never sent to ParaPo or stored |
 

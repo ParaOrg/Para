@@ -11,14 +11,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { mapFileConstants } from '../../scripts/node/map-file-constants.ts';
 
-const bare = `export const MAP_FILE_URL = '/data/index.v4.json'
+const bare = `export const MAP_FILE_URL = '/data/index.v5.json'
 const LINES_URL = '/data/lines/'
 export const EARLY_MAP_FILE = '__parapoMapFile'
 `;
 const withSemicolons = bare.replace(/'$/gm, "';");
 
 test('the two constants read the same with or without a semicolon after the quote', () => {
-  const expected = { MAP_FILE_URL: '/data/index.v4.json', EARLY_MAP_FILE: '__parapoMapFile' };
+  const expected = { MAP_FILE_URL: '/data/index.v5.json', EARLY_MAP_FILE: '__parapoMapFile' };
   assert.deepEqual(mapFileConstants(bare), expected);
   assert.deepEqual(mapFileConstants(withSemicolons), expected);
 });
@@ -30,11 +30,11 @@ test('a constant missing, or not a single-quoted string, is named', () => {
     message,
   );
   assert.throws(
-    () => mapFileConstants(bare.replace("'/data/index.v4.json'", '"/data/index.v4.json"')),
+    () => mapFileConstants(bare.replace("'/data/index.v5.json'", '"/data/index.v5.json"')),
     message,
   );
   assert.throws(
-    () => mapFileConstants(bare.replace("'/data/index.v4.json'", "'/data/' + 'index.v4.json'")),
+    () => mapFileConstants(bare.replace("'/data/index.v5.json'", "'/data/' + 'index.v5.json'")),
     message,
   );
 });
@@ -45,6 +45,6 @@ test('the committed map-file.ts declares both', () => {
     'utf8',
   );
   const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(source);
-  assert.equal(MAP_FILE_URL, '/data/index.v4.json');
+  assert.equal(MAP_FILE_URL, '/data/index.v5.json');
   assert.match(EARLY_MAP_FILE, /^__parapo/);
 });

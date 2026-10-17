@@ -14,7 +14,7 @@ export const shift = (k) => [(k % 25) * 0.03, Math.floor(k / 25) * 0.03];
 export const readPublished = () => {
   const at = (name) =>
     JSON.parse(readFileSync(new URL(`../../../public/data/${name}`, import.meta.url), 'utf8'));
-  const index = at('index.v4.json');
+  const index = at('index.v5.json');
   return {
     ...index,
     variants: index.variants.map(({ overview, ...v }) => ({

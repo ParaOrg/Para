@@ -315,7 +315,7 @@ await page.addInitScript(earlyFileRecorder);
 const mapFileAsks = [];
 let pageLoads = 0;
 page.on('request', (req) => {
-  if (/\/data\/index\.v4\.json/.test(req.url()) && !req.headers()['x-parapo-test'])
+  if (/\/data\/index\.v5\.json/.test(req.url()) && !req.headers()['x-parapo-test'])
     mapFileAsks.push({ req, end: 'no answer yet' });
 });
 page.on('requestfinished', async (req) => {
@@ -507,7 +507,7 @@ check(
   const fitCamera = (p) =>
     p.evaluate(async () => {
       const f = await (
-        await fetch('/data/index.v4.json', { headers: { 'x-parapo-test': '1' } })
+        await fetch('/data/index.v5.json', { headers: { 'x-parapo-test': '1' } })
       ).json();
       let [w, s, e, n] = [Infinity, Infinity, -Infinity, -Infinity];
       for (const v of f.variants) {
@@ -590,7 +590,7 @@ check(
     await p.addInitScript(liftRecorder);
     let release;
     const held = new Promise((r) => (release = r));
-    await p.route(/\/data\/index\.v4\.json/, async (route) => {
+    await p.route(/\/data\/index\.v5\.json/, async (route) => {
       await held;
       await route.fallback();
     });
