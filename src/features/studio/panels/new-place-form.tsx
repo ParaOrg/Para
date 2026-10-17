@@ -21,7 +21,12 @@ interface NewPlaceFormProps {
   onCancel: () => void;
 }
 
-const KINDS: { kind: HotspotKind; label: string }[] = [
+interface KindOption {
+  kind: HotspotKind;
+  label: string;
+}
+
+const KINDS: KindOption[] = [
   { kind: 'terminal', label: 'Terminal' },
   { kind: 'hintuan', label: 'Hintuan' },
 ];
@@ -57,18 +62,13 @@ export function NewPlaceForm({
     if (e.key === 'Escape') {
       e.stopPropagation();
       onCancel();
-    } else if (
-      e.key === 'Enter' &&
-      e.target instanceof HTMLInputElement &&
-      e.target.type !== 'radio'
-    ) {
+    } else if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
       e.preventDefault();
       handleSave();
     }
   };
 
   return (
-    // The keys are caught on the group, whichever field has focus.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape and Enter are caught once on the labelled group, whichever field has focus; every control inside is itself reachable and operable
     <div
       role="group"

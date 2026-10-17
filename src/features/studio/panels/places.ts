@@ -89,6 +89,24 @@ export function terminalAlreadyAt(
   );
 }
 
+/**
+ * The box of a place already standing under this name, if any: grouped by the
+ * same key the pickers group by (placeKey), so case and spacing count as they
+ * do there. `exceptId` is a row of the caller's own, never its own match.
+ */
+export function placeAlreadyNamed(
+  hotspots: HotspotRow[],
+  box: { name: string; informal: string },
+  exceptId: string | null = null,
+): HotspotRow | null {
+  const key = placeKey({
+    name: normaliseName(box.name),
+    informal: normaliseName(box.informal) || null,
+  });
+  if (!key) return null;
+  return hotspots.find((s) => s.id !== exceptId && placeKey(s) === key) ?? null;
+}
+
 /** The place a box belongs to, if any. */
 export function placeOfBox(places: Place[], id: string): Place | undefined {
   return places.find((p) => p.boxes.some((s) => s.id === id));

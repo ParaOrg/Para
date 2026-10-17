@@ -28,6 +28,9 @@ export function squareBox(centre: LngLat, sideM: number = NEW_PLACE_SIDE_M): Rin
 }
 
 /** The box as the polygon the database keeps: the ring, closed. */
-export function squareBoxPolygon(centre: LngLat, sideM?: number) {
+export function squareBoxPolygon(
+  centre: LngLat,
+  sideM?: number,
+): { type: 'Polygon'; coordinates: LngLat[][] } {
   return ringToPolygon(squareBox(centre, sideM));
 }

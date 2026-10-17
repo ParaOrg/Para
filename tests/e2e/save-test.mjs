@@ -29,7 +29,9 @@
 // its own, the address, a half-drawn line, the camera and the basemap kept, the keys and
 // clicks dead on the other maps, Escape leaving a card open under them alone; a new head or
 // tail made from the save panel's pickers (a 30 m box at the line's end, the hotspot panel's
-// own write and refusals, the drawn line left alone); no React
+// own write, the drawn line left alone; Enter on any field saving the place and not the
+// route, one write however many Enters, none before the lines are read, a retry updating the
+// box it wrote, a name already a place refused); no React
 // warnings (the duplicate key). And the camera
 // with the cards, the public map's in the studio too (the owner, 2026-09-30):
 // a trip opened on its whole route, beside the card.
@@ -308,6 +310,17 @@ const fill = (table, r) =>
 const log = [];
 /** The next request matching `when` is refused with a 500, once. */
 let fault = null;
+/** Requests matching `when` wait until `release()` is called: `{ when, release }`. */
+let hold = null;
+const holdRequests = (when) => {
+  let release = () => {};
+  const gate = new Promise((resolve) => (release = resolve));
+  hold = { when, gate };
+  return () => {
+    hold = null;
+    release();
+  };
+};
 
 const serve = async (req) => {
   const u = new URL(req.url());
@@ -315,6 +328,7 @@ const serve = async (req) => {
   const method = req.method();
   const body = req.postData() ? JSON.parse(req.postData()) : null;
   log.push({ method, table, url: req.url(), query: decodeURIComponent(u.search), body });
+  if (hold?.when(method, table, u)) await hold.gate;
   if (fault && fault(method, table, u)) {
     fault = null;
     return {
@@ -1598,9 +1612,8 @@ await page.waitForTimeout(300);
   await form('head').getByRole('button', { name: 'Save place' }).click();
   await page.waitForTimeout(500);
   check(
-    '  a second terminal at a place is refused in words, as the hotspot panel refuses it',
-    /already has a terminal/.test(await form('head').innerText()) &&
-      tables.stop.length === stopsBefore,
+    '  a name that is already a place is refused in words, with nothing written',
+    /is already a place/.test(await form('head').innerText()) && tables.stop.length === stopsBefore,
     (await form('head').innerText()).slice(-160),
   );
 
@@ -1689,6 +1702,151 @@ await page.waitForTimeout(300);
   if (head) remove('stop', [head]);
   if (tail) remove('stop', [tail]);
   await page.evaluate(() => localStorage.removeItem('parapo.draft.v1'));
+}
+
+// ---- 10d. The new-place form: what Enter does, one write, a retry, a name already taken
+{
+  const NEW = '+new-place';
+  const draftOf = () => page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  // A short line out of P1's corner, among the saved lines, so the lines near its ends are read.
+  const L = [at(-0.004, 0.0004), at(-0.0035, 0.002)];
+  await go(at(-0.004, 0.001), 15);
+  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.waitForTimeout(200);
+  for (const p of L) await clickAt(p, 300);
+  await idle();
+  await page.getByRole('button', { name: /Done/ }).click();
+  await page.waitForTimeout(600);
+  const draftBefore = await draftOf();
+  const routesBefore = tables.route.length;
+  const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
+  const stopsNamed = (name) => tables.stop.filter((r) => r.name === name);
+  const stopWrites = (n) => writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop');
+  const open = async (end) => {
+    await page.getByTestId(`save-${end.toLowerCase()}`).selectOption(NEW);
+    await form(end)
+      .getByLabel(/Ground name/)
+      .waitFor();
+  };
+  const taken = tables.stop.find((r) => r.kind === 'terminal');
+
+  // 4. A name that is already a place is refused, case and spacing as the pickers group it.
+  await open('Head');
+  await form('Head')
+    .getByLabel(/Ground name/)
+    .fill(` ${(taken.informal ?? taken.name).toUpperCase()} `);
+  let n = log.length;
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(600);
+  check(
+    'a ground name that is already a place is refused, however it is cased, and nothing is written',
+    /is already a place: pick it from the list/.test(await form('Head').innerText()) &&
+      stopWrites(n).length === 0,
+    (await form('Head').innerText()).slice(-140),
+  );
+  await page.keyboard.press('Escape');
+
+  // 2. No write before the lines near the box are read; then one box for two quick Enters.
+  const release = holdRequests(
+    (method, table, u) => method === 'GET' && table === 'route_variant' && /shape/.test(u.search),
+  );
+  await open('Head');
+  await form('Head')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Guard');
+  n = log.length;
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  check(
+    'Enter before the lines near the box are read writes nothing, and Save place waits',
+    stopWrites(n).length === 0 &&
+      (await form('Head').getByRole('button', { name: 'Save place' }).isDisabled()),
+  );
+  release();
+  await waitFor(async () => form('Head').getByRole('button', { name: 'Save place' }).isEnabled());
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await waitFor(() => stopsNamed('Stand-in Guard').length > 0);
+  await page.waitForTimeout(800);
+  check(
+    'two Enters write one box, once the lines are in',
+    stopsNamed('Stand-in Guard').length === 1 && stopWrites(n).length === 1,
+    said(writesSince(n)),
+  );
+
+  // 1. Enter on a radio saves the place and leaves the route unsaved.
+  n = log.length;
+  await open('Head');
+  await form('Head')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Radio Head');
+  await waitFor(async () => form('Head').getByRole('button', { name: 'Save place' }).isEnabled());
+  await form('Head').getByLabel('Hintuan').focus();
+  await page.keyboard.press('Enter');
+  await waitFor(() => stopsNamed('Stand-in Radio Head').length > 0);
+  await page.waitForTimeout(500);
+  check(
+    'Enter on the Hintuan radio saves the place and not the route',
+    stopsNamed('Stand-in Radio Head').length === 1 &&
+      tables.route.length === routesBefore &&
+      (await saveButton().isVisible()),
+  );
+  await open('Tail');
+  await form('Tail')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Radio Tail');
+  await waitFor(async () => form('Tail').getByRole('button', { name: 'Save place' }).isEnabled());
+  await form('Tail').getByLabel('Terminal').focus();
+  await page.keyboard.press('Enter');
+  await waitFor(() => stopsNamed('Stand-in Radio Tail').length > 0);
+  await page.waitForTimeout(500);
+  check(
+    '  and on the Terminal radio',
+    stopsNamed('Stand-in Radio Tail').length === 1 &&
+      tables.route.length === routesBefore &&
+      (await saveButton().isVisible()),
+  );
+
+  // 3. A retry after the links failed updates the box it wrote.
+  await open('Tail');
+  await form('Tail')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Retry');
+  await waitFor(async () => form('Tail').getByRole('button', { name: 'Save place' }).isEnabled());
+  fault = (method, table) => method === 'DELETE' && table === 'route_stop';
+  await page.keyboard.press('Enter');
+  await waitFor(async () => /Press Save again to retry/.test(await form('Tail').innerText()));
+  check(
+    'a failed link write is said, with the box already written once',
+    /Press Save again to retry/.test(await form('Tail').innerText()) &&
+      stopsNamed('Stand-in Retry').length === 1,
+  );
+  n = log.length;
+  await form('Tail')
+    .getByLabel(/Ground name/)
+    .press('Enter');
+  await waitFor(async () => !(await form('Tail').isVisible()));
+  await page.waitForTimeout(400);
+  check(
+    '  the retry updates that box: one row, no second POST',
+    stopsNamed('Stand-in Retry').length === 1 &&
+      stopWrites(n).length === 0 &&
+      writesSince(n).some((w) => w.method === 'PATCH' && w.table === 'stop'),
+    said(writesSince(n)),
+  );
+  check('  the drawn line is untouched through all of it', (await draftOf()) === draftBefore);
+
+  // Leave the stand-in as it was for what follows.
+  for (const name of [
+    'Stand-in Guard',
+    'Stand-in Radio Head',
+    'Stand-in Radio Tail',
+    'Stand-in Retry',
+  ])
+    for (const r of stopsNamed(name)) remove('stop', [r]);
+  await page.getByRole('button', { name: 'Back to map' }).click();
+  await page.getByTitle('Discard this route').click();
+  await page.waitForTimeout(300);
 }
 
 // ---- 11. Signing in from Done leaves the drawing keys alive
