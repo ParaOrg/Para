@@ -7,7 +7,7 @@ import { useHotspotTaps } from './hotspot-taps';
 import { boxMarks, placeHull } from './hotspots-shown';
 import { loadOnce } from './load-once';
 import { APP_MOVE } from './map-view';
-import { useSavedHotspotsLayers } from './saved-hotspots-layers';
+import { useSavedHotspotsLayers } from './use-saved-hotspots-layers';
 import { letGoHolds } from '../cards/card-stack';
 import type { HotspotLink, Hotspot } from '../model/hotspots';
 import { orderLinked } from '../model/timeline';
