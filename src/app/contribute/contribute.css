@@ -1,10 +1,21 @@
 /*
- * The contribute page's own stylesheet: Tailwind, for the files of this page
- * and its feature only. It does not import styles/global.css, whose rules and
- * MapLibre's stylesheet are the map's, so a contributor's phone loads neither.
+ * The contribute page's own stylesheet: Tailwind, the design system's tokens and
+ * fonts, and the map's frame, for the files of this page and its feature and the
+ * few map and design-system files it draws. It does not import styles/global.css,
+ * whose container-query variants and sheet rules are the public map's, and
  * global.css leaves these two folders out for the same reason, which keeps the
  * public page's stylesheet exactly what it was.
  */
 @import 'tailwindcss' source(none);
+@import '../../design-system/foundation/tokens.css';
+@import '../../design-system/foundation/fonts.css';
+@import '../../styles/map-frame.css';
 @source './';
 @source '../../features/contribute/';
+@source '../../features/routes/map/basemap-control.tsx';
+@source '../../features/routes/map/map-style.tsx';
+@source '../../features/routes/map/map-view.tsx';
+@source '../../features/routes/map/ride-follow-controls.tsx';
+@source '../../features/routes/cards/livery-card.ts';
+@source '../../design-system/primitives/';
+@source not '../../**/*.stories.tsx';

@@ -39,7 +39,7 @@ const afterClose = (): CardState =>
  * the safe area itself (global.css). React draws into it, as the hintuan pins
  * do into their markers.
  */
-function useTopRightControl(map: MapLibreMap): HTMLElement {
+export function useTopRightControl(map: MapLibreMap): HTMLElement {
   const [element] = useState(() => {
     const div = document.createElement('div');
     // Placed as MapLibre places a .maplibregl-ctrl in the corner, without

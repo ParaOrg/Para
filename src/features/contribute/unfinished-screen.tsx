@@ -1,27 +1,46 @@
 import type { RideSummary } from '@/features/routes/model/ride-recording';
 
-import { PageButton } from './page-button';
-import { RideTotals } from './ride-totals';
+import type { LegName } from './ride-rules';
+import { StatsStrip } from './stats-strip';
+import { TrackingButton } from './tracking-button';
+import { useFocusHeading } from './use-focus-heading';
 
 interface UnfinishedScreenProps {
   summary: RideSummary;
+  leg: LegName;
   onResume: () => void;
   onStop: () => void;
 }
 
 /** A recording was left open when the page closed: carry on with it, or stop it where it was. */
-export function UnfinishedScreen({ summary, onResume, onStop }: UnfinishedScreenProps) {
+export function UnfinishedScreen({ summary, leg, onResume, onStop }: UnfinishedScreenProps) {
+  const headingRef = useFocusHeading();
   return (
-    <section aria-label="Unfinished recording" className="flex flex-col gap-4">
-      <p>
-        A recording was left open. Resume it, and the time since its last fix is logged as a gap, or
-        stop it where it was.
-      </p>
-      <RideTotals summary={summary} />
-      <div className="flex gap-2">
-        <PageButton onClick={onResume}>Resume</PageButton>
-        <PageButton onClick={onStop}>Stop</PageButton>
+    <section
+      aria-labelledby="unfinished-heading"
+      className="absolute inset-x-0 bottom-0 z-10 flex flex-col pb-[env(safe-area-inset-bottom)]"
+    >
+      <div className="bg-surface px-4 pt-4 font-sn-pro text-content-primary">
+        <h1
+          id="unfinished-heading"
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-xl/7 font-extrabold focus:outline-none"
+        >
+          A recording was left open
+        </h1>
+        <p className="py-2 text-base/6">
+          Resume it, and the time since its last fix is logged as a gap, or stop it where it was.
+        </p>
       </div>
+      <StatsStrip
+        elapsedSeconds={summary.movingSeconds + summary.standingSeconds + summary.lostSeconds}
+        distanceM={summary.distanceM}
+        leg={leg}
+        isPaused
+      />
+      <TrackingButton variant="resume" onClick={onResume} />
+      <TrackingButton variant="stop" onClick={onStop} />
     </section>
   );
 }
