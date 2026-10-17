@@ -163,9 +163,10 @@ Made in the code, with no ADR yet (candidates):
 
 ## 6. Not yet built
 
-- **Driver app:** drivers record their trips on their phones. See
-  [`.scratch/driver-app/`](../.scratch/driver-app/spec.md).
-- **Studio maps:** Drafts, Tracking and Public maps in the studio. See
+- **Contributors:** anyone records a ride on their phone at `/contribute/`,
+  and Save sends it to the studio. See
+  [`.scratch/contribute/`](../.scratch/contribute/spec.md).
+- **Studio maps:** Contributors, Playground and Public maps in the studio. See
   [`.scratch/studio-maps/`](../.scratch/studio-maps/spec.md).
 - **Train tracking:** for LRT and MRT riders, on their own phones. See
   [`.scratch/train-tracking/`](../.scratch/train-tracking/spec.md).
