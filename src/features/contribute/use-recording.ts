@@ -7,6 +7,7 @@ import {
   type RideSummary,
 } from '@/features/routes/model/ride-recording';
 
+import { locationProblem } from './location-problem';
 import { downloadRecording, recordingFile } from './recording-file';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
 import {
@@ -17,6 +18,7 @@ import {
   putRecording,
 } from './recording-store';
 import { useGeolocationWatch } from './use-geolocation-watch';
+import { useHiddenGaps } from './use-hidden-gaps';
 import { useWakeLock } from './use-wake-lock';
 
 export type Phase = 'loading' | 'ready' | 'unfinished' | 'recording' | 'stopped';
@@ -62,16 +64,6 @@ const toFix = (row: FixRow): Fix => ({
   accuracyM: row.accuracyM,
 });
 
-function locationProblem(error: GeolocationPositionError): string {
-  if (error.code === error.PERMISSION_DENIED) {
-    return 'Location is blocked for this page. Allow it in the browser settings, then start again.';
-  }
-  if (error.code === error.POSITION_UNAVAILABLE) {
-    return 'The phone could not work out where it is. Check that location is on.';
-  }
-  return 'The phone took too long to find its position.';
-}
-
 /**
  * The page's whole state: what phase it is in, the recording being made and
  * its fixes, the saved ones. Every fix goes to IndexedDB as it arrives; the
@@ -91,7 +83,6 @@ export function useRecording(): RecordingState {
   // they write it without waiting for a render.
   const currentRef = useRef<Recording | null>(null);
   const nextSeq = useRef(0);
-  const hiddenAt = useRef<number | null>(null);
   const failedFixWrites = useRef(0);
 
   const reportStore = useCallback((error: unknown) => {
@@ -178,26 +169,7 @@ export function useRecording(): RecordingState {
     return () => clearInterval(timer);
   }, [isRecording]);
 
-  // The page hidden is a gap: the phone may stop locating while another app is in front.
-  useEffect(() => {
-    if (!isRecording) return;
-    const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        hiddenAt.current = Date.now();
-        return;
-      }
-      const from = hiddenAt.current;
-      const recording = currentRef.current;
-      hiddenAt.current = null;
-      if (from === null || !recording) return;
-      keep({
-        ...recording,
-        gaps: [...recording.gaps, { from, to: Date.now(), reasons: ['hidden'] }],
-      });
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [isRecording, keep]);
+  useHiddenGaps(isRecording, currentRef, keep);
 
   function start() {
     const startedAt = Date.now();
