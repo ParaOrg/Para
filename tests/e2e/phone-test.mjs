@@ -1035,8 +1035,8 @@ const trip = () => card().locator('[data-testid="trip"]');
 const tripLabel = async () =>
   (await trip().count()) ? ((await card().first().getAttribute('aria-label')) ?? '') : '';
 const tripRow = async (id) => {
-  const row = card().locator(`[data-testid="${id}"]`);
-  return (await row.count()) ? (await row.first().innerText()).replace(/\s+/g, ' ').trim() : '';
+  const name = card().locator(`[data-testid="${id}"] [data-part="name"]`);
+  return (await name.count()) ? (await name.first().innerText()).replace(/\s+/g, ' ').trim() : '';
 };
 
 /**

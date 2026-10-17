@@ -375,7 +375,7 @@ test('the destination picked with the start kept: its E, the ride from the S to 
   assert.deepEqual(marks, ['start', 'end'], 'the S on its row, the E on the destination');
   assert.match(html, /data-testid="trip-destination" data-state="selected"/);
   const origin = /<li data-testid="trip-origin".*?<\/li>/s.exec(html)?.[0] ?? '';
-  assert.doesNotMatch(origin, /data-part=/, 'no S or E on the origin');
+  assert.doesNotMatch(origin, /data-part="(start|end)"/, 'no S or E on the origin');
 });
 
 test('the origin picked with the start kept: its E, the ride back from the S to it, the rows after folded', () => {
@@ -398,6 +398,52 @@ test('the origin picked with the start kept: its E, the ride back from the S to 
   const marks = [...html.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m);
   assert.deepEqual(marks, ['end', 'start'], 'the E on the origin, the S below it');
   assert.match(html, /data-testid="trip-origin" data-state="selected"/);
+});
+
+test('the end rows say start or end to a screen reader, after the name, wherever the circled letter shows', () => {
+  const sr = (html, id, name) => {
+    const row = new RegExp(`<li data-testid="${id}".*?</li>`, 's').exec(html)?.[0] ?? '';
+    return {
+      mark: [...row.matchAll(/data-part="(start|end)"/g)].map(([, m]) => m),
+      said: [...row.matchAll(/<span class="sr-only">([^<]*)<\/span>/g)].map(([, t]) => t),
+      // The words follow this row's own name, which carries data-part="name".
+      afterName: new RegExp(`data-part="name"[^>]*>${name}</span><span class="sr-only">`).test(row),
+    };
+  };
+  const origin = (html) => sr(html, 'trip-origin', 'Tala');
+  const destination = (html) => sr(html, 'trip-destination', 'Novaliches');
+  // Nothing picked: the S on the origin, the E on the destination.
+  const fresh = render(3);
+  assert.deepEqual(origin(fresh).said, [', start']);
+  assert.deepEqual(destination(fresh).said, [', end']);
+  assert.ok(origin(fresh).afterName && destination(fresh).afterName);
+  // A start kept and the origin picked as the end: the E moves to the origin.
+  const back = render(3, { start: 'h1', endPicked: 'from', onRemoveStart() {} });
+  assert.deepEqual(origin(back).said, [', end']);
+  assert.deepEqual(destination(back).said, []);
+  assert.ok(origin(back).afterName);
+  // A start kept and nothing else: neither end row draws a letter.
+  const startAlone = render(3, { start: 'h1', onRemoveStart() {} });
+  assert.deepEqual(origin(startAlone).said, []);
+  assert.deepEqual(destination(startAlone).said, []);
+  // A start kept and the destination picked as the end: its E shows.
+  const toEnd = render(3, { start: 'h1', endPicked: 'to', onRemoveStart() {} });
+  assert.deepEqual(origin(toEnd).said, []);
+  assert.deepEqual(destination(toEnd).said, [', end']);
+  assert.ok(destination(toEnd).afterName);
+  // Every circled letter on an end row comes with its words, and none without.
+  const states = [
+    fresh,
+    back,
+    startAlone,
+    toEnd,
+    render(3, { start: 'h1', picked: 'h2', onRemoveStart() {} }),
+  ];
+  for (const html of states) {
+    for (const row of [origin(html), destination(html)]) {
+      assert.equal(row.said.length, row.mark.length, 'one spoken mark for each circled letter');
+    }
+  }
 });
 
 test('a train’s fold reads stations, a jeep’s hintuans (the owner, 2026-10-15)', () => {

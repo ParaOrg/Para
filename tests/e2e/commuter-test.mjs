@@ -1152,7 +1152,7 @@ if (PART === 1) {
       const [from = '', to = ''] = label.split(' → ');
       const row = (id) =>
         page
-          .locator(`[data-testid="${id}"]`)
+          .locator(`[data-testid="${id}"] [data-part="name"]`)
           .first()
           .innerText()
           .then(
