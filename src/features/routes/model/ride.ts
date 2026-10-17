@@ -2,8 +2,14 @@ import { haversine, lineLength, type LngLat } from '@/shared/utils/geo';
 
 import { hotspotRing, type Hotspot } from './hotspots';
 import { placeKey } from './places';
-import { servedBy, directionLine, type Direction } from './routes';
-import { drawnFromTheEnd, timelineFor, type Timeline, type TimelineRow } from './timeline';
+import { servedBy, directionLine, isLoop, type Direction } from './routes';
+import {
+  drawnFromTheEnd,
+  loopTimeline,
+  timelineFor,
+  type Timeline,
+  type TimelineRow,
+} from './timeline';
 import { passStretches } from '../geo/pass';
 
 /*
@@ -19,7 +25,10 @@ export function routeTimeline(
   v: Direction,
   hotspots: readonly Hotspot[],
   along: readonly Hotspot[],
+  tipId: string | null = null,
 ): Timeline {
+  // A loop has no ends: its trip leaves from its tip and comes back to it.
+  if (isLoop(v)) return loopTimeline(along, tipId);
   const head = hotspots.find((s) => s.id === v.route?.headHotspotId) ?? null;
   const tail = hotspots.find((s) => s.id === v.route?.tailHotspotId) ?? null;
   return timelineFor(head, tail, v.reversed, along, directionLine(v)[0]);
@@ -80,7 +89,9 @@ export function rideCut(
   const key = placeKey(row);
   const dots: RideDot[] = [];
   for (const s of hotspots) {
-    if (s.kind !== 'hintuan' || placeKey(s) !== key || !s.area || !servedBy(s, v.route)) continue;
+    // A loop has no ends to be the end of, so a terminal's box is a place on it like a hintuan's.
+    const isPlace = s.kind === 'hintuan' || (isLoop(v) && s.kind === 'terminal');
+    if (!isPlace || placeKey(s) !== key || !s.area || !servedBy(s, v.route)) continue;
     const piece = passStretches(ride, hotspotRing(s))[0];
     if (!piece) continue;
     const metres = distanceAlong(ride, piece[0]) + lineLength(piece) / 2;
@@ -128,10 +139,18 @@ export function rideSpan(
   hotspots: readonly Hotspot[],
   startId: string | null,
   endId: string | null,
+  tipId: string | null = null,
 ): RideSpan | null {
   if (startId === null && endId === null) return null;
   const line = travelLine(v, hotspots);
   if (line.length < 2) return null;
+  if (isLoop(v)) {
+    // A null start is the tip, where the trip leaves; a null end, the tip again.
+    const tip = tipId === null ? 0 : rideCut(v, hotspots, tipId)?.metres;
+    const s = startId === null ? tip : rideCut(v, hotspots, startId)?.metres;
+    const e = endId === null ? tip : rideCut(v, hotspots, endId)?.metres;
+    return s === undefined || e === undefined ? null : loopSpan(line, s, e);
+  }
   const start = startId === null ? 0 : rideCut(v, hotspots, startId)?.metres;
   const end = endId === null ? lineLength(line) : rideCut(v, hotspots, endId)?.metres;
   if (start === undefined || end === undefined) return null;
@@ -149,12 +168,65 @@ export function rideToEnd(
   hotspots: readonly Hotspot[],
   startId: string,
   end: 'from' | 'to',
+  tipId: string | null = null,
 ): RideSpan | null {
   const line = travelLine(v, hotspots);
   if (line.length < 2) return null;
+  if (isLoop(v)) {
+    // Either end row is the tip: the ride goes on round to it.
+    const tip = tipId === null ? 0 : rideCut(v, hotspots, tipId)?.metres;
+    const s = rideCut(v, hotspots, startId)?.metres;
+    return s === undefined || tip === undefined ? null : loopSpan(line, s, tip);
+  }
   const start = rideCut(v, hotspots, startId)?.metres;
   if (start === undefined) return null;
   return spanAlong(line, start, end === 'from' ? 0 : lineLength(line));
+}
+
+/**
+ * A ride round a loop from `start` metres in to `end`: only ever forward, on
+ * past the seam if it must, and the whole way round when the end is where the
+ * start is (the end row being the tip). The line is rotated to leave from the
+ * start, so the ride is its first stretch and the rest is what remains.
+ */
+function loopSpan(ring: readonly LngLat[], start: number, end: number): RideSpan | null {
+  const whole = lineLength(ring);
+  if (whole < 1) return null;
+  const gap = (((end - start) % whole) + whole) % whole;
+  return spanAlong(loopFrom(ring, start), 0, gap < 1 ? whole : gap);
+}
+
+/**
+ * A closed line rotated to leave from `metres` along it and come back to the
+ * same point: the way a ride round a loop reads from its start. A line that
+ * stops a few metres short of its start is closed first. Metres past the
+ * line's length go round again.
+ */
+export function loopFrom(line: readonly LngLat[], metres: number): LngLat[] {
+  if (line.length < 2) return [...line];
+  const first = line[0];
+  const last = line[line.length - 1];
+  const ring = first[0] === last[0] && first[1] === last[1] ? line : [...line, first];
+  const whole = lineLength(ring);
+  const at = whole > 0 ? ((metres % whole) + whole) % whole : 0;
+  const { point, index } = pointAt(ring, at);
+  return [point, ...ring.slice(index + 1), ...ring.slice(1, index + 1), point];
+}
+
+/**
+ * A loop's line as the trip rides it: closed and rotated to leave from the
+ * tip, so the arrows and the glow run forward from there round to there
+ * again. With no tip, as drawn.
+ */
+export function tipLine(
+  v: Direction,
+  hotspots: readonly Hotspot[],
+  tipId: string | null,
+): readonly LngLat[] {
+  const line = travelLine(v, hotspots);
+  if (!isLoop(v) || tipId === null) return line;
+  const tip = rideCut(v, hotspots, tipId);
+  return tip ? loopFrom(line, tip.metres) : line;
 }
 
 /**
@@ -227,7 +299,8 @@ export function rowStops(
  */
 export function travelLine(v: Direction, hotspots: readonly Hotspot[]): readonly LngLat[] {
   const line = directionLine(v);
-  if (line.length < 2) return line;
+  // A loop's line is as it was drawn, the way the jeeps go: there are no ends to orient it by.
+  if (line.length < 2 || isLoop(v)) return line;
   const head = hotspots.find((s) => s.id === v.route?.headHotspotId);
   const tail = hotspots.find((s) => s.id === v.route?.tailHotspotId);
   const [from, to] = v.reversed ? [tail, head] : [head, tail];

@@ -31,22 +31,40 @@ const confidenceSchema = z.enum(['drawn', 'verified']);
 export type Confidence = z.infer<typeof confidenceSchema>;
 
 /**
+ * A loop has neither end and every other route has both (0021's route_loop_ends
+ * check, held here too so a file or a read that breaks it is refused, not guessed at).
+ */
+const hasEndsOfItsKind = (r: {
+  head_stop_id: string | null;
+  tail_stop_id: string | null;
+  is_loop?: boolean;
+}): boolean =>
+  r.is_loop === true
+    ? r.head_stop_id === null && r.tail_stop_id === null
+    : r.head_stop_id !== null && r.tail_stop_id !== null;
+const ENDS_OF_ITS_KIND = 'A loop has no ends; any other route has both.';
+
+/**
  * The parent route as the index carries it. `name` is not a column: it is
  * generated from the two end hotspots by whoever reads the rows — the studio
  * after loading (live.ts), the publish script before writing the file.
  */
-const rawRouteSummarySchema = z.object({
-  id: z.string(),
-  signboard: z.nullable(z.string()),
-  long_name: z.nullable(z.string()),
-  mode: transportModeSchema,
-  fare_note: z.nullable(z.string()),
-  head_stop_id: z.string(),
-  tail_stop_id: z.string(),
-  via: z.nullable(z.string()),
-  name: z.string(),
-  route_code: z.optional(z.nullable(z.string())),
-});
+const rawRouteSummarySchema = z
+  .object({
+    id: z.string(),
+    signboard: z.nullable(z.string()),
+    long_name: z.nullable(z.string()),
+    mode: transportModeSchema,
+    fare_note: z.nullable(z.string()),
+    head_stop_id: z.nullable(z.string()),
+    tail_stop_id: z.nullable(z.string()),
+    via: z.nullable(z.string()),
+    name: z.string(),
+    route_code: z.optional(z.nullable(z.string())),
+    /** True only on a loop, and then only in the file: a row without it is a route with ends. */
+    is_loop: z.optional(z.boolean()),
+  })
+  .check(z.refine(hasEndsOfItsKind, ENDS_OF_ITS_KIND));
 type RawRouteSummary = z.infer<typeof rawRouteSummarySchema>;
 
 const toRouteSummary = (raw: RawRouteSummary) => ({
@@ -61,9 +79,18 @@ const toRouteSummary = (raw: RawRouteSummary) => ({
   longName: raw.long_name,
   mode: raw.mode,
   fareNote: raw.fare_note,
-  /** The two ends, as hotspots. The name is generated from them; see routeName. */
+  /**
+   * The two ends, as hotspots. The name is generated from them; see routeName.
+   * Both null on a loop, which has neither (0021).
+   */
   headHotspotId: raw.head_stop_id,
   tailHotspotId: raw.tail_stop_id,
+  /**
+   * Set (true) only on a loop: goes round one way, no head, no tail, one
+   * direction, called by its signboard, shown as Ikot. Absent on every other
+   * route, so a two-ended route's row is what it always was.
+   */
+  ...(raw.is_loop ? { isLoop: true } : {}),
   /** Set only when another route shares both ends by a different road. */
   via: raw.via,
   name: raw.name,
@@ -78,19 +105,22 @@ export type RouteSummary = ReturnType<typeof toRouteSummary>;
  * suites') or a select that names fewer columns reads the same as null.
  */
 const absentOrNull = (schema: z.ZodMiniString) => z.optional(z.nullable(schema));
-const rawRouteRowSchema = z.object({
-  id: z.string(),
-  signboard: absentOrNull(z.string()),
-  route_code: absentOrNull(z.string()),
-  short_name: absentOrNull(z.string()),
-  long_name: absentOrNull(z.string()),
-  mode: transportModeSchema,
-  fare_note: absentOrNull(z.string()),
-  fare_as_of: absentOrNull(z.string()),
-  head_stop_id: z.string(),
-  tail_stop_id: z.string(),
-  via: absentOrNull(z.string()),
-});
+const rawRouteRowSchema = z
+  .object({
+    id: z.string(),
+    signboard: absentOrNull(z.string()),
+    route_code: absentOrNull(z.string()),
+    short_name: absentOrNull(z.string()),
+    long_name: absentOrNull(z.string()),
+    mode: transportModeSchema,
+    fare_note: absentOrNull(z.string()),
+    fare_as_of: absentOrNull(z.string()),
+    head_stop_id: z.nullable(z.string()),
+    tail_stop_id: z.nullable(z.string()),
+    via: absentOrNull(z.string()),
+    is_loop: z.optional(z.boolean()),
+  })
+  .check(z.refine(hasEndsOfItsKind, ENDS_OF_ITS_KIND));
 type RawRouteRow = z.infer<typeof rawRouteRowSchema>;
 
 const toRouteRow = (raw: RawRouteRow) => ({
@@ -104,6 +134,7 @@ const toRouteRow = (raw: RawRouteRow) => ({
   fareAsOf: raw.fare_as_of ?? null,
   headHotspotId: raw.head_stop_id,
   tailHotspotId: raw.tail_stop_id,
+  ...(raw.is_loop ? { isLoop: true } : {}),
   via: raw.via ?? null,
 });
 export type RouteRow = ReturnType<typeof toRouteRow>;

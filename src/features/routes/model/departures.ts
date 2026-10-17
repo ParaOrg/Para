@@ -3,6 +3,8 @@ import {
   directionEndHotspots,
   directionEnds,
   isDrawn,
+  isLoop,
+  LOOP_WORD,
   type RouteSummary,
   type Direction,
 } from './routes';
@@ -42,7 +44,9 @@ export interface Departures<V extends Direction> {
  * back — gathered by the place each leaves from, in the order met. Tala → SM
  * Fairview and Tala → Novaliches read as Tala, then its two ends; the way
  * back reads SM Fairview, then Tala, and Novaliches, then Tala. The owner's
- * layout. A direction still a slot is listed, marked undrawn.
+ * layout. A direction still a slot is listed, marked undrawn. A loop is
+ * listed whichever way round, as its own place under its name, going to the
+ * word for a loop (LOOP_WORD).
  */
 export function departures<V extends Direction>(
   directions: readonly V[],
@@ -50,7 +54,8 @@ export function departures<V extends Direction>(
 ): Departures<V>[] {
   const byPlace = new Map<string, Departures<V>>();
   for (const g of groupByRoute(directions)) {
-    const v = g.directions.find((d) => d.reversed === back);
+    // A loop has one direction and no way back: it is listed both ways round.
+    const v = g.directions.find((d) => isLoop(d) || d.reversed === back);
     if (!v) continue;
     const { from, to } = directionEnds(v);
     const key = from.toLowerCase();
@@ -144,9 +149,11 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
  * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's call).
  * One word fits every direction on show: a list with jeeps and trains, or two
  * lines bound different ways, keeps Papunta and Pabalik, and so does the
- * ferry, which has no bound.
+ * ferry, which has no bound. Only loops showing, it is LOOP_WORD.
  */
 export function wayWord(back: boolean, showing: readonly Direction[]): string {
+  // Loops go neither there nor back: when only loops show, the word is theirs.
+  if (showing.length > 0 && showing.every(isLoop)) return LOOP_WORD;
   const bounds = new Set(showing.map(railBound));
   const [bound] = bounds;
   if (bounds.size === 1 && bound) return bound;
@@ -165,4 +172,21 @@ export function switchWord(back: boolean, showing: readonly Direction[]): string
   const [bound] = bounds;
   if (bounds.size === 1 && bound) return otherBound(bound);
   return back ? 'Papunta' : 'Pabalik';
+}
+
+/**
+ * Whether the way a list is not showing has any route to turn to: the other
+ * way's drawn routes, not counting loops, which are in both. What decides
+ * whether a list or a card offers SWITCH at all.
+ */
+export function otherWayHasRoutes<V extends Direction>(
+  directions: readonly V[],
+  back: boolean,
+): boolean {
+  return (
+    drawnDepartures(
+      directions.filter((v) => !isLoop(v)),
+      !back,
+    ).length > 0
+  );
 }
