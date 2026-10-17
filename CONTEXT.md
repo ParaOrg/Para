@@ -11,8 +11,8 @@ existed, one was chosen.
 
 **Route**:
 A named pair of ends that jeeps run between, in both directions — `Tala – SM
-Fairview`. A route is its two ends; it has no name of its own — or a loop,
-which has neither.
+Fairview`. A route is its two ends; it has no name of its own. A loop is the
+exception: it has no ends at all, and its signboard is its name.
 _Avoid_: line, service
 
 **Direction**:
@@ -57,9 +57,9 @@ _Avoid_: paikot (said of two-ended routes whose two directions make a circle,
 as `loop-closing.ts` has it), circular route, ring
 
 **Tip** (of a loop's trip):
-Where a loop's timeline starts: the hintuan whose card the trip was opened
+Where a loop's timeline starts: the place whose card the trip was opened
 from, else the one nearest the commuter, else the first its line passes as
-drawn. Not an end: a ride goes on round past it, and it is chosen once, when
+drawn. A place, not only a hintuan: a terminal's box on a loop counts. Not an end: a ride goes on round past it, and it is chosen once, when
 the trip opens, so nothing moves under the rider.
 _Avoid_: start (a ride's), head, origin
 

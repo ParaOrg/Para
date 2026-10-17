@@ -19,6 +19,7 @@ import {
 import {
   rawDirectionRowSchema,
   rawDirectionSchema,
+  toDirection,
 } from '../../src/features/routes/model/direction-schema.ts';
 import {
   hintuansAlong,
@@ -42,7 +43,7 @@ import {
   switchWord,
   wayWord,
 } from '../../src/features/routes/model/departures.ts';
-import { lineLength } from '../../src/shared/utils/geo.ts';
+import { haversine, lineLength } from '../../src/shared/utils/geo.ts';
 
 const pt = (lng, lat = 0) => ({ type: 'Point', coordinates: [lng, lat] });
 const ringAt = (lng, lat = 0, r = 0.0002) => ({
@@ -453,4 +454,72 @@ test('the header says Ikot when only loops show, and SWITCH needs a two-ended ro
   assert.equal(otherWayHasRoutes([IKOT], false), false, 'loops alone have no other way');
   assert.equal(otherWayHasRoutes([IKOT, two(false), two(true)], false), true);
   assert.equal(otherWayHasRoutes([IKOT, two(false)], false), false, 'the other way is undrawn');
+});
+
+// A loop drawn from the middle of the east side, a quarter of the way up: its first place is B.
+const MID = loopFrom(RING, 1.25 * SIDE);
+const MID_LOOP = loopDirection({ shape: { type: 'LineString', coordinates: MID } });
+
+test('with no tip a loop leaves from its first place, where its timeline starts, not from where it was drawn', () => {
+  const along = hintuansAlong(MID, HOTSPOTS, MID_LOOP.route).map((x) => x.hotspot);
+  assert.equal(loopTimeline(along, null).from.id, 'b');
+  const fromTip = rideSpan(MID_LOOP, HOTSPOTS, null, 'c');
+  assert.ok(near(fromTip.metres, SIDE), `${fromTip.metres}: b to c, not the drawn start to c`);
+  assert.equal(
+    Math.round(fromTip.metres),
+    Math.round(rideSpan(MID_LOOP, HOTSPOTS, null, 'c', 'b').metres),
+  );
+  const toTip = rideSpan(MID_LOOP, HOTSPOTS, 'c', null);
+  assert.ok(near(toTip.metres, PERIMETER - SIDE), `${toTip.metres}`);
+  assert.ok(near(rideToEnd(MID_LOOP, HOTSPOTS, 'c', 'to').metres, PERIMETER - SIDE));
+});
+
+test('a line that stops a few metres short of closing is one ring: the whole way round ends where it began', () => {
+  const short = loopDirection({
+    shape: { type: 'LineString', coordinates: [...RING.slice(0, 4), [0.00009, 0]] },
+  });
+  const whole = rideSpan(short, HOTSPOTS, 'a', 'a');
+  assert.ok(haversine(whole.from, whole.at) < 1, `${haversine(whole.from, whole.at)} m apart`);
+  assert.ok(near(lineLength(whole.ridden), whole.metres, 1));
+  const closed = rideSpan(IKOT, HOTSPOTS, 'a', 'a');
+  assert.ok(near(whole.metres, closed.metres, 40), `${whole.metres} against ${closed.metres}`);
+});
+
+test('another box of the tip’s place is the same tip', () => {
+  const second = place('b2', 'hintuan', 0.04, 0.0205, 'Bestlink');
+  const along = [A, T, B, second, C, D];
+  assert.equal(loopTimeline(along, 'b2').from.id, 'b');
+  assert.equal(loopTimeline(along, 'b').between[0].id, 'c');
+});
+
+test('a loop named like a place is not listed under that place', () => {
+  const two = {
+    id: 'v1',
+    routeId: 'r1',
+    reversed: false,
+    name: 'Tala → Novaliches',
+    shape: {
+      type: 'LineString',
+      coordinates: [
+        [0, 0],
+        [0.1, 0],
+      ],
+    },
+    route: { id: 'r1', headHotspotId: 'h', tailHotspotId: 't', name: 'Tala – Novaliches' },
+  };
+  const named = loopDirection({ name: 'Tala' });
+  const places = departures([two, named], false);
+  assert.deepEqual(places.map((p) => p.from).sort(), ['Tala', 'Tala']);
+  assert.equal(places.length, 2);
+});
+
+test('only a loop carries the flag, and a two-ended route’s row has no such key', () => {
+  const loop = toDirection(rawDirectionSchema.parse(rawDirection(rawRoute({}))));
+  assert.equal(loop.route.isLoop, true);
+  const two = toDirection(
+    rawDirectionSchema.parse(
+      rawDirection(rawRoute({ is_loop: undefined, head_stop_id: 'h', tail_stop_id: 't' })),
+    ),
+  );
+  assert.equal('isLoop' in two.route, false);
 });

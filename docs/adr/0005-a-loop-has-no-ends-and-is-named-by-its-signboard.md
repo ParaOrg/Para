@@ -35,5 +35,7 @@ glossary.
 - A loop in the published index would blank every installed app that reads
   the shape before it, so the index gains a shape that carries loops and the
   older ones do not.
-- A place a loop passes twice is listed once, at its first pass, until
-  passes get numbers (PLAN.md, M8).
+- A place a loop passes twice by one box is listed once, at its first pass,
+  until passes get numbers (PLAN.md, M8). A place of two boxes the line
+  passes at different times can be two rows; the ride cuts both at the
+  place's last pass.

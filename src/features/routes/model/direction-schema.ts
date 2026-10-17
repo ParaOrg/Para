@@ -90,7 +90,7 @@ const toRouteSummary = (raw: RawRouteSummary) => ({
    * direction, called by its signboard, shown as Ikot. Absent on every other
    * route, so a two-ended route's row is what it always was.
    */
-  ...(raw.is_loop ? { isLoop: true } : {}),
+  ...(raw.is_loop ? { isLoop: true as const } : {}),
   /** Set only when another route shares both ends by a different road. */
   via: raw.via,
   name: raw.name,
@@ -134,7 +134,7 @@ const toRouteRow = (raw: RawRouteRow) => ({
   fareAsOf: raw.fare_as_of ?? null,
   headHotspotId: raw.head_stop_id,
   tailHotspotId: raw.tail_stop_id,
-  ...(raw.is_loop ? { isLoop: true } : {}),
+  ...(raw.is_loop ? { isLoop: true as const } : {}),
   via: raw.via ?? null,
 });
 export type RouteRow = ReturnType<typeof toRouteRow>;
