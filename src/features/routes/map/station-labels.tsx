@@ -8,7 +8,8 @@ import { HintuanLabel } from './hintuan-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { rowStops, rowsOutsideRide, rowsOutsideStartAlone } from '../model/ride';
+import { rowStops } from '../model/ride';
+import { rowsOutsideRide, rowsOutsideStartAlone } from '../model/ride-rows';
 import type { Direction } from '../model/routes';
 import type { TimelineRow } from '../model/timeline';
 
