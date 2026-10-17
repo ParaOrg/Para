@@ -97,19 +97,18 @@ async function claimExistingRoute(
   if (error) throw new Error(error.message);
   if (!data)
     throw new Error('A route with these ends already exists, but it could not be read back.');
-  const directions =
-    (data.route_variant as { id: string; reversed: boolean; shape: unknown }[] | null) ?? [];
+  const directions = data.route_variant;
   if (directions.length === 0) {
     const { error: updateError } = await client.from('route').update(facts).eq('id', data.id);
     if (updateError) throw new Error(updateError.message);
-    return { routeId: data.id as string, fillSlot: false };
+    return { routeId: data.id, fillSlot: false };
   }
   const mine = directions.find((d) => d.reversed === reversed);
   // No row this way round at all (a slot deleted by hand, a route from
   // before 0006) is a slot to fill too: saveDirection's update finds nothing
   // and its insert is the honest repair. It is not a duplicate, so it must not
   // be refused as drawn already.
-  if (!mine || mine.shape === null) return { routeId: data.id as string, fillSlot: true };
+  if (!mine || mine.shape === null) return { routeId: data.id, fillSlot: true };
   throw new Error(DRAWN_ALREADY);
 }
 
@@ -171,7 +170,7 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
     } else if (error) {
       throw new Error(error.message);
     } else {
-      routeId = data.id as string;
+      routeId = data.id;
       createdRoute = true;
     }
   }
@@ -195,9 +194,7 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
         await client.from('route').delete().eq('id', routeId);
       throw new Error(error.message);
     }
-    const saved = (data as unknown[]).find(
-      (v) => (v as { reversed: boolean }).reversed === input.reversed,
-    );
+    const saved = data.find((v) => v.reversed === input.reversed);
     if (!saved) throw new Error('Saved the route but could not read the direction back');
     return unnamedFromListed(saved, shape);
   }
@@ -254,8 +251,8 @@ export async function deleteDirection(direction: DirectionRow): Promise<void> {
   const emptied = await client
     .from('route_variant')
     .update({
-      control_points: [] as LngLat[],
-      segments: [] as Segment[],
+      control_points: [],
+      segments: [],
       shape: null,
       overview: null,
       borrowed_from: null,
@@ -264,7 +261,7 @@ export async function deleteDirection(direction: DirectionRow): Promise<void> {
       // Its boards go with its line: kept, they would show on the next line
       // drawn into the slot, which is another jeep's. The files stay in the
       // bucket; the publish copies only listed ones.
-      signboards: [] as string[],
+      signboards: [],
     })
     .eq('id', direction.id)
     .select('id');

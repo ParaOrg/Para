@@ -24,7 +24,16 @@ const SOURCE = [
 ];
 
 export default defineConfig([
-  globalIgnores(['dist/', 'storybook-static/', 'node_modules/', 'public/', '.vite/', '.scratch/']),
+  globalIgnores([
+    'dist/',
+    'storybook-static/',
+    'node_modules/',
+    'public/',
+    '.vite/',
+    '.scratch/',
+    // Generated; see the header of the file.
+    'src/shared/types/database.types.ts',
+  ]),
 
   ...[
     js.configs.recommended,

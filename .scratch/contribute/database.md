@@ -363,17 +363,18 @@ The studio starts a draft with `subject_id` set to the route's id and `base_upda
 Ticket contribute/05.
 
 1. **Generated Supabase types.** `database.types.ts` doesn't exist, and the studio's rows are typed `any` (the blind-spot audit of 2026-10-17, finding 7). Generate it (read-only) and type the client `SupabaseClient<Database>`. Regenerated after every migration. The contributor page needs the same file, so `rule-changes.md` proposes `src/shared/types/database.types.ts` instead of `src/features/studio/data/`; it holds types only, so no code reaches any page.
-2. **The migration ledger.** `supabase_migrations.schema_migrations` lacks 0001 to 0003, which were applied by hand in September (their effects are live: the pinned search path, the split policies). 0004 and 0005 are recorded as `stop_hotspot` and `editor_role`. 0015 was recorded before 0013 and 0014, which is only the order they were applied. For you to run, as `postgres`:
+2. **The migration ledger.** `supabase_migrations.schema_migrations` lacks 0001 to 0003, which were applied by hand in September (their effects are live: the pinned search path, the split policies). 0004 and 0005 are recorded as `stop_hotspot` and `editor_role`. 0015 was recorded before 0013 and 0014, which is only the order they were applied. For you to run, as `postgres` (safe to run twice):
 
    ```sql
    -- 0001 to 0003: applied by hand before the ledger was used. The versions sort before 0004's.
    insert into supabase_migrations.schema_migrations (version, name, statements) values
      ('20260907000001', '0001_init', '{}'),
      ('20260907000002', '0002_pin_function_search_path', '{}'),
-     ('20260908000003', '0003_rls_performance', '{}');
+     ('20260908000003', '0003_rls_performance', '{}')
+   on conflict (version) do nothing;
    -- 0004 and 0005 under their files' names.
-   update supabase_migrations.schema_migrations set name = '0004_stop_hotspot' where version = '20260912135400';
-   update supabase_migrations.schema_migrations set name = '0005_editor_role' where version = '20260914172324';
+   update supabase_migrations.schema_migrations set name = '0004_stop_hotspot' where version = '20260912135400' and name = 'stop_hotspot';
+   update supabase_migrations.schema_migrations set name = '0005_editor_role' where version = '20260914172324' and name = 'editor_role';
    ```
 
    And a short `supabase/migrations/README.md` mapping each file to its ledger version, since the files are numbered and the ledger is timestamped.
