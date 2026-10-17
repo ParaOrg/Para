@@ -30,6 +30,19 @@ function Stat({ label, value, unit, className = '' }: StatProps) {
 }
 
 /**
+ * Figma's progressive blur: four layers of 3px blur, each masked to come in
+ * over its own quarter, so the map is clear at the top of the strip and
+ * blurred by 6px (the four together) at the bottom. They reach 24px above the
+ * strip, so the blur has a run-up and no edge.
+ */
+const BLUR_LAYERS = [
+  '[mask-image:linear-gradient(to_bottom,transparent_0%,black_25%)]',
+  '[mask-image:linear-gradient(to_bottom,transparent_25%,black_50%)]',
+  '[mask-image:linear-gradient(to_bottom,transparent_50%,black_75%)]',
+  '[mask-image:linear-gradient(to_bottom,transparent_75%,black_100%)]',
+];
+
+/**
  * The figures over the bars: time and distance, and the leg the ride is on.
  * They change every second, so nothing here is a live region; the leg switch
  * is announced once on its own (RecordingScreen).
@@ -39,9 +52,18 @@ export function StatsStrip({ elapsedSeconds, distanceM, way, isPaused }: StatsSt
     <div
       role="group"
       aria-label="Ride so far"
-      className="bg-surface/5 px-4 pb-4 font-sn-pro backdrop-blur-[6px]"
+      className="relative bg-surface/5 px-4 pb-4 font-sn-pro"
     >
-      <dl className="flex gap-4">
+      {BLUR_LAYERS.map((mask) => (
+        <span
+          key={mask}
+          aria-hidden
+          className={
+            'pointer-events-none absolute inset-x-0 -top-6 bottom-0 backdrop-blur-[3px] ' + mask
+          }
+        />
+      ))}
+      <dl className="relative flex gap-4">
         <Stat className="flex-1" label="Time" value={minutesText(elapsedSeconds)} unit="min" />
         <Stat className="flex-1" label="Distance" value={kilometresText(distanceM)} unit="km" />
         <Stat
