@@ -56,21 +56,19 @@ const terminal: HotspotRow = {
  * tapped through.
  */
 function Picking(props: ComponentProps<typeof HotspotCard>) {
-  const [selected, setSelected] = useState(props.routeCards?.selected ?? null);
+  const [selected, setSelected] = useState(props.routeCards.selected);
   const routeCards = props.routeCards;
   return (
     <HotspotCard
       {...props}
-      routeCards={
-        routeCards && {
-          ...routeCards,
-          selected,
-          onSelect: (p) => {
-            routeCards.onSelect(p);
-            setSelected(p?.from ?? null);
-          },
-        }
-      }
+      routeCards={{
+        ...routeCards,
+        selected,
+        onSelect: (p) => {
+          routeCards.onSelect(p);
+          setSelected(p?.from ?? null);
+        },
+      }}
     />
   );
 }
@@ -103,6 +101,7 @@ const meta = {
     hotspot: terminal,
     linkedDirectionIds: [outbound.id, inbound.id],
     directions: [outbound, inbound],
+    routeCards,
     onSelectDirection: fn(),
     onClose: fn(),
   },
@@ -110,13 +109,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-/**
- * A terminal with the route through it, in Departures' rows: by the place it
- * leaves from, ⇄ for the way back. The hotspot name leads; the ground name is
- * the small line under it.
- */
-export const Terminal: Story = {};
 
 /** A hintuan with a note and nothing linked yet. */
 export const EmptyHintuan: Story = {
@@ -200,8 +192,7 @@ const talaRoutes = [
 ];
 
 /**
- * The card with `routeCards`, as the studio gives it: the routes through here
- * as RouteCards, edge to edge — at SM Fairview, Tala with its two ways out, in
+ * The routes through here as RouteCards, as the studio gives them, edge to edge — at SM Fairview, Tala with its two ways out, in
  * a colour drawn at random. The map lights every route they show; a tap on a
  * card off its rows narrows that to its own; a row opens its trip straight
  * away. No pesos on any card: the trip's Expected fare carries them. TODO: the
@@ -209,7 +200,6 @@ const talaRoutes = [
  */
 export const RouteCards: Story = {
   args: {
-    routeCards,
     hotspot: fairviewTeraccess,
     hotspots: fairviewBoxes,
     onPickSibling: fn(),
@@ -263,7 +253,6 @@ export const RouteCardsPhone: Story = {
 /**
  * The ways back not drawn yet: the RouteCards list drawn ways only, so the way
  * there is shown, and ⇄ is gone — there is nothing to turn round to.
- * Departures' rows would offer ⇄ and "Not mapped yet".
  */
 export const RouteCardsNothingTheOtherWay: Story = {
   args: {
@@ -275,11 +264,10 @@ export const RouteCardsNothingTheOtherWay: Story = {
 /** A terminal's card, "Routes that stage here": the same RouteCards. */
 export const RouteCardsTerminal: Story = {
   args: {
-    routeCards,
     linkedDirectionIds: talaRoutes.map((v) => v.id),
     directions: talaRoutes,
   },
 };
 
 /** Only slots are linked here yet: the RouteCards list drawn ways only, so there is nothing to list. */
-export const RouteCardsNothingDrawn: Story = { args: { routeCards } };
+export const RouteCardsNothingDrawn: Story = {};
