@@ -22,7 +22,7 @@ const CLEAN_SVG =
 const file = (name, text = DIRTY_SVG, type = 'image/svg+xml') => new File([text], name, { type });
 
 /** A client that lists whatever it is given back, and notes the order of everything it hears. */
-function script(order) {
+function echoing(order) {
   const fake = fakeSupabase((q) => {
     order.push(`${q.table} ${q.op}`);
     if (q.table === 'route_variant' && q.op === 'update')
@@ -44,7 +44,7 @@ function script(order) {
 
 test('a board is cleaned, sent to the signboards bucket as an SVG, and only then listed last', async () => {
   const order = [];
-  const { client, log, storage } = script(order);
+  const { client, log, storage } = echoing(order);
   setSupabase(client);
   const list = await addSignboard('v1', ['old.svg'], file('jeep.svg'));
   assert.equal(storage.calls.length, 1);
@@ -64,7 +64,7 @@ test('a board is cleaned, sent to the signboards bucket as an SVG, and only then
 });
 
 test('each board gets a fresh name, whatever the file was called', async () => {
-  const { client, storage } = script([]);
+  const { client, storage } = echoing([]);
   setSupabase(client);
   await addSignboard('v1', [], file('same.svg'));
   await addSignboard('v1', [], file('same.svg'));
@@ -72,7 +72,7 @@ test('each board gets a fresh name, whatever the file was called', async () => {
 });
 
 test('a file that is not an SVG by name or type is refused before anything is sent', async () => {
-  const { client, log, storage } = script([]);
+  const { client, log, storage } = echoing([]);
   setSupabase(client);
   await assert.rejects(
     addSignboard('v1', [], file('board.png', DIRTY_SVG, 'image/png')),
@@ -86,7 +86,7 @@ test('a file that is not an SVG by name or type is refused before anything is se
 });
 
 test("a board the cleaner refuses is named with the cleaner's words and nothing is sent", async () => {
-  const { client, log, storage } = script([]);
+  const { client, log, storage } = echoing([]);
   setSupabase(client);
   await assert.rejects(
     addSignboard('v1', [], file('bad.svg', 'not svg')),
@@ -96,7 +96,7 @@ test("a board the cleaner refuses is named with the cleaner's words and nothing 
 });
 
 test('an upload the bucket refuses is said with the file name, and the list is left alone', async () => {
-  const { client, log, storage } = script([]);
+  const { client, log, storage } = echoing([]);
   storage.uploaded = () => ({ error: { message: 'bucket full' } });
   setSupabase(client);
   await assert.rejects(
@@ -121,7 +121,7 @@ test('a list the database refuses is said, after the file went up', async () => 
 
 test('a board is unlisted first and its file deleted after', async () => {
   const order = [];
-  const { client, log, storage } = script(order);
+  const { client, log, storage } = echoing(order);
   setSupabase(client);
   const list = await removeSignboard('v1', ['a.svg', 'b.svg', 'c.svg'], 'b.svg');
   assert.deepEqual(log[0].payload, { signboards: ['a.svg', 'c.svg'] });
@@ -145,7 +145,7 @@ test('a board whose unlisting is refused keeps its file', async () => {
 });
 
 test('a board moves one place earlier, swapping with the one before it', async () => {
-  const { client, log } = script([]);
+  const { client, log } = echoing([]);
   setSupabase(client);
   const list = await moveSignboardEarlier('v1', ['a.svg', 'b.svg', 'c.svg'], 'c.svg');
   assert.deepEqual(log[0].payload, { signboards: ['a.svg', 'c.svg', 'b.svg'] });
@@ -154,7 +154,7 @@ test('a board moves one place earlier, swapping with the one before it', async (
 });
 
 test('the first board, or one not listed, does not move and writes nothing', async () => {
-  const { client, log } = script([]);
+  const { client, log } = echoing([]);
   setSupabase(client);
   const current = ['a.svg', 'b.svg'];
   assert.deepEqual(await moveSignboardEarlier('v1', current, 'a.svg'), ['a.svg', 'b.svg']);
@@ -170,4 +170,31 @@ test('with no client the editor says Supabase is not configured', async () => {
     moveSignboardEarlier('v1', ['a.svg', 'b.svg'], 'b.svg'),
     /Supabase is not configured\./,
   );
+});
+
+test("the list that comes back is the database's, not the one that was sent", async () => {
+  const { client } = fakeSupabase((q) => {
+    if (q.table === 'route_variant' && q.op === 'update')
+      return { data: { signboards: ['db-a.svg', 'db-b.svg'] } };
+    throw new Error(`unexpected ${q.op} on ${q.table}`);
+  });
+  setSupabase(client);
+  assert.deepEqual(await addSignboard('v1', ['old.svg'], file('jeep.svg')), [
+    'db-a.svg',
+    'db-b.svg',
+  ]);
+  assert.deepEqual(await removeSignboard('v1', ['a.svg'], 'a.svg'), ['db-a.svg', 'db-b.svg']);
+  assert.deepEqual(await moveSignboardEarlier('v1', ['a.svg', 'b.svg'], 'b.svg'), [
+    'db-a.svg',
+    'db-b.svg',
+  ]);
+});
+
+test('a file the bucket would not delete is left behind and the new list is still returned', async () => {
+  const { client, storage } = echoing([]);
+  storage.removed = () => ({ error: { message: 'bucket busy' } });
+  setSupabase(client);
+  const list = await removeSignboard('v1', ['a.svg', 'b.svg'], 'a.svg');
+  assert.deepEqual(list, ['b.svg']);
+  assert.equal(storage.calls.length, 1);
 });

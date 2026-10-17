@@ -135,7 +135,7 @@ test("the read of the claimed route being refused is thrown with the database's 
   assert.equal(log.length, 2);
 });
 
-test('the facts of an orphan being refused stops the save before any direction is written', async () => {
+test("a refused update of an orphan route's facts stops the save before any direction is written", async () => {
   const { client, log } = claiming({ data: { id: 'r6', route_variant: [] } }, (q) => {
     if (q.table === 'route' && q.op === 'update') return { error: { message: 'update denied' } };
   });
@@ -158,5 +158,46 @@ test('a new route whose directions come back without the one saved says it could
     /Saved the route but could not read the direction back/,
   );
   // The route is the save's own and stays: the directions are in.
+  assert.equal(log.filter((q) => q.op === 'delete').length, 0);
+});
+
+test('the claim looks the route up by its ends, with via null when it has none', async () => {
+  const { client, log } = claiming({ data: { id: 'r6', route_variant: [] } }, (q) => {
+    if (q.table === 'route' && q.op === 'update') return {};
+    if (q.table === 'route_variant' && q.op === 'insert')
+      return { data: [listed({ id: 'v13', route_id: 'r6' })] };
+  });
+  setSupabase(client);
+  await saveDirection(input);
+  assert.deepEqual(log[1].filters, [
+    ['eq', 'head_stop_id', 'tala'],
+    ['eq', 'tail_stop_id', 'fairview'],
+    ['is', 'via', null],
+  ]);
+});
+
+test('the claim looks the route up by its via when it has one', async () => {
+  const { client, log } = claiming({ data: { id: 'r6', route_variant: [] } }, (q) => {
+    if (q.table === 'route' && q.op === 'update') return {};
+    if (q.table === 'route_variant' && q.op === 'insert')
+      return { data: [listed({ id: 'v13', route_id: 'r6' })] };
+  });
+  setSupabase(client);
+  await saveDirection({ ...input, via: ' Zabarte ' });
+  assert.deepEqual(log[1].filters, [
+    ['eq', 'head_stop_id', 'tala'],
+    ['eq', 'tail_stop_id', 'fairview'],
+    ['eq', 'via', 'Zabarte'],
+  ]);
+});
+
+test("a claimed orphan's directions being refused leaves the route: it is another save's to finish", async () => {
+  const { client, log } = claiming({ data: { id: 'r6', route_variant: [] } }, (q) => {
+    if (q.table === 'route' && q.op === 'update') return {};
+    if (q.table === 'route_variant' && q.op === 'insert')
+      return { error: { code: '42501', message: 'row-level security' } };
+  });
+  setSupabase(client);
+  await assert.rejects(saveDirection(input), /row-level security/);
   assert.equal(log.filter((q) => q.op === 'delete').length, 0);
 });

@@ -8,7 +8,7 @@ export function fakeSupabase(answer) {
   const log = [];
   // The storage calls the studio makes, recorded as { bucket, op: 'upload' |
   // 'remove', path (upload) or paths (remove), body, options }; `uploaded`
-  // answers an upload, `{ error }` refusing it.
+  // answers an upload and `removed` a delete, `{ error }` refusing it.
   const storage = {
     calls: [],
     uploaded: () => ({ error: null }),
