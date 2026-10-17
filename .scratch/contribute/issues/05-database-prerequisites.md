@@ -1,6 +1,6 @@
 # 05: Database prerequisites: types, the ledger, 0014's index
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2, before any other migration
 Who: Sonnet
@@ -23,5 +23,9 @@ Blocked by: 02, 03
 - `npm run check` passes, with no new `any`, `!` or `as`.
 - The migration is written, not applied. After the owner applies it and runs the ledger SQL, `list_migrations` shows 0001 to 0016 under their files' names, and `pg_indexes` shows one terminal index.
 - The advisors show nothing new.
+
+## Answer
+
+Built in [PR #254](https://github.com/Roviicc/ParaPo/pull/254). The owner ran the ledger SQL and applied 0016 on 17 October. `list_migrations` shows 0001 to 0016 under their files' names, `pg_indexes` shows one terminal index (`stop_terminal_place_unique`), and the advisors show only the four notices already listed in `../database.md` and the blind-spot audit (leaked-password protection off, `private.editor` with no policies on purpose, one unindexed foreign key, one unused index).
 
 ## Comments
