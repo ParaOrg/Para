@@ -393,7 +393,7 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
     // A camera call made while another moves the map stops that one, which
     // says 'moveend', and says 'movestart' at once for its own (MapLibre's
     // easeTo: _stop, then _prepareEase): the compass camera eases at every
-    // turn of the phone of 3° or more (use-locator.ts), thirty times for a
+    // turn of the phone of 3° or more (use-compass.ts), thirty times for a
     // quarter turn made in a second. So the draw back to the view waits for
     // the next frame, and is dropped if a move starts first; and a move that
     // starts inside what is held, at its zoom, draws nothing. Back to back,
