@@ -50,6 +50,10 @@ end $$;
 --                                                         guard's own name
 --   { "code": "bad_payload" }                             not what the studio
 --                                                         writes; a bug
+--   { "code": "busy" }                                    a lock wait the
+--                                                         database broke off;
+--                                                         nothing changed, ask
+--                                                         again
 --
 -- The draft payload (version 1, written by the studio):
 --   route:   { "version": 1,
@@ -63,13 +67,19 @@ end $$;
 --                            direction_name, origin_terminal,
 --                            destination_terminal, confidence) and "links",
 --                            its full route_stop set ([{stop_id,
---                            stop_sequence}]). A direction emptied by the
---                            editor carries shape null and no links. }
+--                            stop_sequence}]), required: [] for none. A
+--                            direction emptied by the editor carries shape
+--                            null and links []. }
 --   hotspot: { "version": 1,
 --              "stop":       the stop's editable columns (name, informal,
 --                            aliases, kind, note, area, point, line),
 --              "links":      its full route_stop set ([{route_variant_id,
---                            stop_sequence}]) }
+--                            stop_sequence}]), required: [] for none }
+-- private.payload_ok checks that shape at claim and again at approve (a
+-- draft row may be edited after claim): every links an array, every link an
+-- object with a uuid string and an integer stop_sequence. A missing or wrong
+-- links is bad_payload and nothing is written — approve replaces each link
+-- set whole, so an absent list must never read as "no links".
 -- A payload is the whole subject, so approving it twice is the same write —
 -- and a draft approved against a lost response is safe to re-ask about:
 -- the second call finds no draft and answers no_draft.
@@ -81,20 +91,23 @@ end $$;
 -- approval and a take-down of the same row meet in one order, never
 -- interleaved.
 --
+-- Lock order: every function here takes its row locks in one order before it
+-- writes — the draft, then routes by id, then hotspots by id
+-- (private.lock_rows) — and the triggers' later writes (revision bumps, the
+-- end guard's share locks) land on rows already held. Without it a route
+-- approval (route, then a linked hotspot's revision) and a hotspot approval
+-- (hotspot, then a linked route's revision) deadlock, and two routes sharing
+-- a terminal deadlock upgrading the end guard's share lock to the bump
+-- (supabase/verify/deadlock-0022.sh shows both). A wait broken off anyway
+-- (deadlock_detected, lock_not_available) answers busy, with nothing changed.
+--
 -- Not applied by the session that wrote it: the owner applies it, as
 -- postgres, from the SQL editor with the ledger row (README, "Applying a
 -- file"), then regenerates the types. Safe to run twice. Verified on a
 -- throwaway Postgres (supabase/verify/).
 --
--- Reversible:
---   drop function if exists public.approve_draft(uuid);
---   drop function if exists public.claim_draft(text, uuid, boolean, bigint, jsonb, text);
---   drop function if exists public.submit_draft(uuid, integer);
---   drop function if exists public.send_back_draft(uuid, integer, text);
---   drop function if exists public.discard_draft(uuid, integer);
---   drop function if exists public.take_down(text, uuid);
---   drop function if exists public.put_back(text, uuid);
---   drop function if exists private.text_list(jsonb);
+-- Reversible: supabase/apply/0022_revert.sql drops every function and the
+-- trigger this adds, and touches no row.
 
 create or replace function private.require_editor()
 returns void
@@ -121,6 +134,93 @@ as $$
     (select array_agg(e) from jsonb_array_elements_text(case jsonb_typeof(v) when 'array' then v else '[]'::jsonb end) e),
     '{}'::text[]
   );
+$$;
+
+-- A uuid string, as the payload carries ids.
+create or replace function private.uuid_ok(v jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(jsonb_typeof(v) = 'string'
+    and (v #>> '{}') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', false);
+$$;
+
+-- One link: {<ref>: uuid, stop_sequence: integer}.
+create or replace function private.link_ok(l jsonb, ref text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(jsonb_typeof(l) = 'object' and private.uuid_ok(l -> ref)
+    and case when jsonb_typeof(l -> 'stop_sequence') = 'number'
+             then (l ->> 'stop_sequence')::numeric % 1 = 0
+                  and (l ->> 'stop_sequence')::numeric between -2147483648 and 2147483647
+             else false end, false);
+$$;
+
+-- The payload v1 shape (header). Field values are checked by their casts on
+-- approve; this guards what a cast can't: an absent or non-array list.
+create or replace function private.payload_ok(p_kind text, p jsonb)
+returns boolean
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  e jsonb;
+  l jsonb;
+begin
+  if jsonb_typeof(p) is distinct from 'object' or (p -> 'version') is distinct from '1'::jsonb then
+    return false;
+  end if;
+  if p_kind = 'route' then
+    if jsonb_typeof(p -> 'route') is distinct from 'object'
+       or jsonb_typeof(p -> 'directions') is distinct from 'array' then
+      return false;
+    end if;
+    for e in select * from jsonb_array_elements(p -> 'directions') loop
+      if jsonb_typeof(e) is distinct from 'object' or not private.uuid_ok(e -> 'id')
+         or jsonb_typeof(e -> 'links') is distinct from 'array' then
+        return false;
+      end if;
+      for l in select * from jsonb_array_elements(e -> 'links') loop
+        if not private.link_ok(l, 'stop_id') then
+          return false;
+        end if;
+      end loop;
+    end loop;
+  elsif p_kind = 'hotspot' then
+    if jsonb_typeof(p -> 'stop') is distinct from 'object'
+       or jsonb_typeof(p -> 'links') is distinct from 'array' then
+      return false;
+    end if;
+    for l in select * from jsonb_array_elements(p -> 'links') loop
+      if not private.link_ok(l, 'route_variant_id') then
+        return false;
+      end if;
+    end loop;
+  else
+    return false;
+  end if;
+  return true;
+end;
+$$;
+
+-- The lock order (header): routes by id, then hotspots by id. Called once
+-- per function, before any write.
+create or replace function private.lock_rows(p_routes uuid[], p_stops uuid[])
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform 1 from public.route where id = any(coalesce(p_routes, '{}')) order by id for no key update;
+  perform 1 from public.stop where id = any(coalesce(p_stops, '{}')) order by id for no key update;
+end;
 $$;
 
 -- A link write is content of both its subjects: the direction's route and
@@ -200,18 +300,9 @@ declare
   made boolean := false;
 begin
   perform private.require_editor();
-  -- Shape the payload must have before it is stored: version 1, and the
-  -- subject's aggregate under its key. Field-level checks happen on approve,
-  -- where a wrong cast answers bad_payload instead of raising.
-  if (p_payload -> 'version') is distinct from '1'::jsonb
-     or (p_kind = 'route' and (jsonb_typeof(p_payload -> 'route') <> 'object'
-                             or jsonb_typeof(p_payload -> 'directions') <> 'array'))
-     or (p_kind = 'hotspot' and (jsonb_typeof(p_payload -> 'stop') <> 'object'
-                               or (p_payload ? 'links' and jsonb_typeof(p_payload -> 'links') <> 'array')))
-  then
-    return jsonb_build_object('code', 'bad_payload');
-  end if;
-  if p_kind not in ('route', 'hotspot') then
+  -- The payload v1 shape before it is stored (private.payload_ok); field
+  -- values are checked on approve, where a wrong cast answers bad_payload.
+  if not private.payload_ok(p_kind, p_payload) then
     return jsonb_build_object('code', 'bad_payload');
   end if;
   insert into public.draft (kind, subject_id, is_new, base_revision, payload, note, editor_id)
@@ -326,8 +417,13 @@ declare
 begin
   perform private.require_editor();
   if p_kind = 'route' then
+    perform private.lock_rows(array[p_subject_id], null);
     update public.route set status = 'taken_down' where id = p_subject_id and status = 'approved';
   elsif p_kind = 'hotspot' then
+    -- The routes the end guard reads, then the hotspot (lock order).
+    perform private.lock_rows(
+      array(select id from public.route where p_subject_id in (head_stop_id, tail_stop_id)),
+      array[p_subject_id]);
     update public.stop set status = 'taken_down' where id = p_subject_id and status = 'approved';
   else
     return jsonb_build_object('code', 'bad_payload');
@@ -340,6 +436,8 @@ exception
   when check_violation or unique_violation or foreign_key_violation then
     get stacked diagnostics c = constraint_name;
     return private.refusal(c);
+  when deadlock_detected or lock_not_available then
+    return jsonb_build_object('code', 'busy');
 end;
 $$;
 
@@ -357,8 +455,13 @@ declare
 begin
   perform private.require_editor();
   if p_kind = 'route' then
+    -- The route, then the ends the guard share-locks (lock order).
+    perform private.lock_rows(array[p_subject_id], null);
+    perform private.lock_rows(null,
+      array(select unnest(array[head_stop_id, tail_stop_id]) from public.route where id = p_subject_id));
     update public.route set status = 'approved' where id = p_subject_id and status = 'taken_down';
   elsif p_kind = 'hotspot' then
+    perform private.lock_rows(null, array[p_subject_id]);
     update public.stop set status = 'approved' where id = p_subject_id and status = 'taken_down';
   else
     return jsonb_build_object('code', 'bad_payload');
@@ -371,6 +474,8 @@ exception
   when check_violation or unique_violation or foreign_key_violation then
     get stacked diagnostics c = constraint_name;
     return private.refusal(c);
+  when deadlock_detected or lock_not_available then
+    return jsonb_build_object('code', 'busy');
 end;
 $$;
 
@@ -404,12 +509,50 @@ begin
   if d.status <> 'pending' then
     return jsonb_build_object('code', 'not_pending');
   end if;
-  if (d.payload -> 'version') is distinct from '1'::jsonb then
+  if not private.payload_ok(d.kind, d.payload) then
     return jsonb_build_object('code', 'bad_payload');
   end if;
 
-  -- The subject's lock is the conflict check's: a take-down or another
-  -- approval of it waits for this transaction, or this for it.
+  -- Every row this approval writes or its triggers touch, locked in the
+  -- header's order before anything is written. The subject's lock is the
+  -- conflict check's: a take-down or another approval of it waits for this
+  -- transaction, or this for it.
+  if d.kind = 'route' then
+    select array_agg((e ->> 'id')::uuid) into dir_ids
+    from jsonb_array_elements(d.payload -> 'directions') e;
+    -- The route, and the routes whose directions borrow from its own (an
+    -- emptied direction clears their borrow, bumping their revision).
+    perform private.lock_rows(
+      array[d.subject_id] || array(
+        select distinct v.route_id from public.route_variant v
+        where v.borrowed_from = any(coalesce(dir_ids, '{}'::uuid[]))),
+      null);
+    -- Then its hotspots: linked now, linked by the payload, its ends.
+    perform private.lock_rows(null, array(
+      select l.stop_id from public.route_stop l
+      join public.route_variant v on v.id = l.route_variant_id
+      where v.route_id = d.subject_id
+      union
+      select (l ->> 'stop_id')::uuid
+      from jsonb_array_elements(d.payload -> 'directions') e, jsonb_array_elements(e -> 'links') l
+      union
+      select unnest(array[r0.head_stop_id, r0.tail_stop_id]) from public.route r0 where r0.id = d.subject_id
+      union
+      select (d.payload -> 'route' ->> k)::uuid from unnest(array['head_stop_id', 'tail_stop_id']) k
+      where jsonb_typeof(d.payload -> 'route' -> k) = 'string'));
+  else
+    -- The routes of its links now and in the payload, then the hotspot.
+    perform private.lock_rows(
+      array(
+        select v.route_id from public.route_stop l
+        join public.route_variant v on v.id = l.route_variant_id
+        where l.stop_id = d.subject_id
+        union
+        select v.route_id from public.route_variant v
+        where v.id in (select (l ->> 'route_variant_id')::uuid from jsonb_array_elements(d.payload -> 'links') l)),
+      array[d.subject_id]);
+  end if;
+
   if d.is_new then
     if d.kind = 'route' then
       if exists (select 1 from public.route where id = d.subject_id) then
@@ -421,7 +564,7 @@ begin
       end if;
     end if;
   elsif d.kind = 'route' then
-    select revision into current_revision from public.route where id = d.subject_id for update;
+    select revision into current_revision from public.route where id = d.subject_id;
     if not found then
       return jsonb_build_object('code', 'subject_gone');
     end if;
@@ -429,7 +572,7 @@ begin
       return jsonb_build_object('code', 'conflict', 'current_revision', current_revision);
     end if;
   else
-    select revision into current_revision from public.stop where id = d.subject_id for update;
+    select revision into current_revision from public.stop where id = d.subject_id;
     if not found then
       return jsonb_build_object('code', 'subject_gone');
     end if;
@@ -448,8 +591,6 @@ begin
     -- it. The base check means the set is what the drafter saw, so a missing
     -- id is a malformed draft, not a delete request.
     select array_agg(id) into existing from public.route_variant where route_id = d.subject_id;
-    select array_agg((e ->> 'id')::uuid) into dir_ids
-    from jsonb_array_elements(d.payload -> 'directions') e;
     if coalesce(existing, '{}'::uuid[]) <> coalesce(dir_ids, '{}'::uuid[])
        and not coalesce(existing, '{}'::uuid[]) <@ coalesce(dir_ids, '{}'::uuid[]) then
       return jsonb_build_object('code', 'payload_incomplete');
@@ -552,7 +693,7 @@ begin
 
   else  -- hotspot
     r := d.payload -> 'stop';
-    if r is null or jsonb_typeof(coalesce(d.payload -> 'links', '[]'::jsonb)) <> 'array' then
+    if r is null or jsonb_typeof(d.payload -> 'links') is distinct from 'array' then
       return jsonb_build_object('code', 'bad_payload');
     end if;
 
@@ -600,15 +741,24 @@ exception
   -- A cast that fails means the payload is not what the studio writes:
   -- bad_payload, not a bare error.
   when invalid_text_representation or numeric_value_out_of_range
-       or invalid_parameter_value or invalid_datetime_format then
+       or invalid_parameter_value or invalid_datetime_format or not_null_violation then
     return jsonb_build_object('code', 'bad_payload');
+  when deadlock_detected or lock_not_available then
+    return jsonb_build_object('code', 'busy');
 end;
 $$;
 
--- As 0005/0018: a new function is executable by PUBLIC until revoked.
-revoke all on function private.require_editor() from public, anon;
-revoke all on function private.text_list(jsonb) from public, anon;
-revoke all on function private.refusal(text) from public, anon;
+-- As 0005/0018: a new function is executable by PUBLIC until revoked. The
+-- helpers run only inside the definer functions above, as their owner, so no
+-- client role keeps them (0022_check.sql reads has_function_privilege).
+revoke all on function private.require_editor() from public, anon, authenticated;
+revoke all on function private.text_list(jsonb) from public, anon, authenticated;
+revoke all on function private.uuid_ok(jsonb) from public, anon, authenticated;
+revoke all on function private.link_ok(jsonb, text) from public, anon, authenticated;
+revoke all on function private.payload_ok(text, jsonb) from public, anon, authenticated;
+revoke all on function private.lock_rows(uuid[], uuid[]) from public, anon, authenticated;
+revoke all on function private.link_bumps_subjects() from public, anon, authenticated;
+revoke all on function private.refusal(text) from public, anon, authenticated;
 revoke all on function public.claim_draft(text, uuid, boolean, bigint, jsonb, text) from public, anon;
 revoke all on function public.submit_draft(uuid, integer) from public, anon;
 revoke all on function public.send_back_draft(uuid, integer, text) from public, anon;
@@ -617,9 +767,6 @@ revoke all on function public.take_down(text, uuid) from public, anon;
 revoke all on function public.put_back(text, uuid) from public, anon;
 revoke all on function public.approve_draft(uuid) from public, anon;
 
-grant execute on function private.require_editor() to authenticated;
-grant execute on function private.text_list(jsonb) to authenticated;
-grant execute on function private.refusal(text) to authenticated;
 grant execute on function public.claim_draft(text, uuid, boolean, bigint, jsonb, text) to authenticated;
 grant execute on function public.submit_draft(uuid, integer) to authenticated;
 grant execute on function public.send_back_draft(uuid, integer, text) to authenticated;
@@ -629,27 +776,38 @@ grant execute on function public.put_back(text, uuid) to authenticated;
 grant execute on function public.approve_draft(uuid) to authenticated;
 -- <<< end of 0022_draft_ops.sql
 
--- 2. After: the functions exist, callable by authenticated only.
+-- 2. After: every function exists; anon and PUBLIC can execute none of
+--    them, counting inherited grants (has_function_privilege); authenticated
+--    can execute the review functions only, not the helpers.
 do $$
 declare
   missing text;
+  leaked text;
 begin
   select string_agg(want.fname, ', ') into missing
   from (values
-    ('claim_draft'), ('submit_draft'), ('send_back_draft'), ('approve_draft'),
-    ('discard_draft'), ('take_down'), ('put_back')) want(fname)
+    ('public', 'claim_draft'), ('public', 'submit_draft'), ('public', 'send_back_draft'),
+    ('public', 'approve_draft'), ('public', 'discard_draft'), ('public', 'take_down'),
+    ('public', 'put_back'), ('private', 'require_editor'), ('private', 'text_list'),
+    ('private', 'uuid_ok'), ('private', 'link_ok'), ('private', 'payload_ok'),
+    ('private', 'lock_rows'), ('private', 'link_bumps_subjects'), ('private', 'refusal')
+  ) want(nsp, fname)
   where not exists (select 1 from pg_proc p
-                    where p.pronamespace = 'public'::regnamespace and p.proname = want.fname);
+                    where p.pronamespace = want.nsp::regnamespace and p.proname = want.fname);
   if missing is not null then
     raise exception '0022: missing functions: %. Nothing was changed.', missing;
   end if;
-  if exists (
-    select 1 from pg_proc p
-    where p.pronamespace = 'public'::regnamespace
-      and p.proname in ('claim_draft','submit_draft','send_back_draft','approve_draft','discard_draft','take_down','put_back')
-      and p.proacl::text like '%anon%'
-  ) then
-    raise exception '0022: a review function is still executable by anon. Nothing was changed.';
+  select string_agg(p.oid::regprocedure::text || ' to ' || who.r, ', ') into leaked
+  from pg_proc p
+  cross join (values ('anon'), ('public'), ('authenticated')) who(r)
+  where ((p.pronamespace = 'public'::regnamespace
+          and p.proname in ('claim_draft','submit_draft','send_back_draft','approve_draft','discard_draft','take_down','put_back')
+          and who.r <> 'authenticated')
+      or (p.pronamespace = 'private'::regnamespace
+          and p.proname in ('require_editor','text_list','uuid_ok','link_ok','payload_ok','lock_rows','link_bumps_subjects','refusal')))
+    and has_function_privilege(who.r, p.oid, 'EXECUTE');
+  if leaked is not null then
+    raise exception '0022: executable where it must not be: %. Nothing was changed.', leaked;
   end if;
 end $$;
 

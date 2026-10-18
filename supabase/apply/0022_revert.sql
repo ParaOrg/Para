@@ -1,7 +1,7 @@
 -- ParaPo — undo 0022_draft_ops.sql on the live project, in one run.
 --
 -- Paste the whole file into the SQL editor (role: postgres). One transaction:
--- it removes the seven review functions, the four private helpers and the
+-- it removes the seven review functions, the eight private helpers and the
 -- link trigger, and the ledger row; then regenerate the types. Data is not
 -- touched: drafts, takedowns and revisions are 0018's and stay as they are.
 -- Undo this before ever undoing 0018. Safe to run twice.
@@ -21,6 +21,10 @@ drop function if exists private.link_bumps_subjects();
 drop function if exists private.refusal(text);
 drop function if exists private.text_list(jsonb);
 drop function if exists private.require_editor();
+drop function if exists private.lock_rows(uuid[], uuid[]);
+drop function if exists private.payload_ok(text, jsonb);
+drop function if exists private.link_ok(jsonb, text);
+drop function if exists private.uuid_ok(jsonb);
 
 delete from supabase_migrations.schema_migrations where name = '0022_draft_ops';
 

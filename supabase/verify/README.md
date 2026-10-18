@@ -26,6 +26,15 @@ owner pastes), then checks it, and undoes it on a second database:
   edit of its route in both orders (edit first: `conflict`, nothing applied;
   approval first: it lands whole and the edit lands on top) and against a
   second approval of the same draft (`approved` / `no_draft`).
+- `deadlock-0022.sh`: a third session holds a direction row so one approval
+  stops part-way while a second starts: a route approval adding hotspot S
+  against S's approval linking that route (`approved` / `conflict`), two
+  route approvals sharing terminal T (both `approved`), and a route approval
+  against taking T down (`approved` / `blocked`). None may deadlock or raise.
+- `after-0022.sql` also refuses missing or wrong `links` (absent, null, an
+  object, a string, a bad link, a bad id) at claim and at approve, plus bad
+  values (unknown mode, no name, a link to no row): the approved links, both
+  revisions and the draft stay.
 - `../apply/0018_check.sql` must be all true after the apply, and
   `../apply/0018_revert.sql` must refuse over a takedown and, on a clean
   database, leave a schema dump identical to one 0018 never touched.

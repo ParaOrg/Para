@@ -45,13 +45,13 @@ each pasted whole into the SQL editor as `postgres`:
 | File | What it does |
 | --- | --- |
 | `0022_apply.sql` | One transaction: checks 0018 is applied, applies `migrations/0022_draft_ops.sql` (carried unchanged; `verify/run.sh` checks the copy), checks the seven review functions exist and `anon` cannot run them, then writes the ledger row `0022_draft_ops`. Any failed check raises and nothing is changed. Safe to run twice. Adds functions and one trigger only; no table or row changes. |
-| `0022_check.sql` | Read-only, 4 rows, all should be `t`. |
-| `0022_revert.sql` | One transaction: drops the seven functions, the four private helpers and the link trigger, and removes the ledger row. Touches no data. Safe to run twice. |
+| `0022_check.sql` | Read-only, 10 rows, all `ok` should be `t`. Privileges are read with `has_function_privilege`, which counts PUBLIC and inherited grants: `anon` and PUBLIC execute nothing, `authenticated` executes the seven review functions but none of the eight helpers. |
+| `0022_revert.sql` | One transaction: drops the seven functions, the eight private helpers and the link trigger, and removes the ledger row. Touches no data. Safe to run twice. |
 
 ## Steps
 
 1. Run `0022_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
-2. Run `0022_check.sql`: 4 rows, all `t`.
+2. Run `0022_check.sql`: 10 rows, all `ok = t`.
 3. Tell the session; it checks through the API that `anon` gets refused by the
    functions and the public row counts are unchanged, then regenerates
    `src/shared/types/database.types.ts` and records the ledger version.

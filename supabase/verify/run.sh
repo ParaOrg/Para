@@ -45,10 +45,11 @@ sed -n '/^-- >>> supabase\/migrations\/0022_draft_ops.sql/,/^-- <<< /p' ../apply
   || { echo 'FAILED: apply/0022_apply.sql does not carry 0022_draft_ops.sql unchanged'; exit 1; }
 apply < ../apply/0022_apply.sql
 apply < ../apply/0022_apply.sql
-bad=$($PSQL -d $DB -qAt < ../apply/0022_check.sql | grep -v '^t$' || true)
+bad=$($PSQL -d $DB -qAt -F ' | ' < ../apply/0022_check.sql | grep -v ' | t$' || true)
 [ -z "$bad" ] || { echo "FAILED: 0022_check.sql: $bad"; exit 1; }
 apply -o /dev/null < after-0022.sql
 PSQL="$PSQL" DB=$DB bash concurrency-0022.sh
+PSQL="$PSQL" DB=$DB bash deadlock-0022.sh
 echo '0022: applied twice, 0022_check.sql all true, after-0022.sql passed'
 out=$(apply < ../apply/0018_revert.sql || true)
 echo "$out" | grep -q 'is not undone' || { echo "FAILED: revert ran over taken-down rows: $out"; exit 1; }
@@ -76,6 +77,6 @@ diff /tmp/before-0022.dump /tmp/reverted-0022.dump || { echo 'FAILED: 0022 rever
 rows=$($PSQL -d $DB -qAt -c "select count(*) from supabase_migrations.schema_migrations where name = '0022_draft_ops'")
 [ "$rows" = 0 ] || { echo 'FAILED: 0022 revert left the ledger row'; exit 1; }
 apply < ../apply/0022_apply.sql
-bad=$($PSQL -d $DB -qAt < ../apply/0022_check.sql | grep -v '^t$' || true)
+bad=$($PSQL -d $DB -qAt -F ' | ' < ../apply/0022_check.sql | grep -v ' | t$' || true)
 [ -z "$bad" ] || { echo "FAILED: 0022_check.sql after re-apply: $bad"; exit 1; }
 echo '0022 revert: schema as before 0022 (twice), ledger row gone, re-apply passes 0022_check.sql'

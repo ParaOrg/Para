@@ -45,6 +45,7 @@ export type ReviewCode =
   | 'payload_incomplete'
   | 'blocked'
   | 'bad_payload'
+  | 'busy'
   | 'refused';
 
 const draftRowSchema = z.object({
