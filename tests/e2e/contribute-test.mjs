@@ -685,6 +685,50 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ------------------------------------------- saved recordings, still there after a reload
+{
+  const { page, errors } = await phone({ consented: true });
+  check(
+    'with nothing saved, the Ready screen lists no saved recordings',
+    (await page.getByRole('heading', { name: 'Saved recordings' }).count()) === 0,
+  );
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 100);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByLabel('Description').fill('Reload me');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  await page.getByRole('button', { name: 'Record again' }).click();
+  const rowDownloads = page.getByRole('button', { name: /^Download the recording of / });
+  await rowDownloads.first().waitFor();
+  check(
+    'the recording just saved is listed on the Ready screen',
+    (await rowDownloads.count()) === 1,
+  );
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'Saved recordings' }).waitFor({ timeout: 10000 });
+  check('after a reload it is still listed', (await rowDownloads.count()) === 1);
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    rowDownloads.first().click(),
+  ]);
+  const file = JSON.parse(
+    await (await import('node:fs/promises')).readFile(await download.path(), 'utf8'),
+  );
+  check(
+    '  and its Download hands over that recording, read back from the phone',
+    file.description === 'Reload me' && file.savedAt !== null,
+    file.description,
+  );
+  check(
+    '  the Start bar is still there below the list',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // --------------------------------------- the phone refusing writes, and saving anyway
 /** Makes IndexedDB refuse puts into a store while `window.__fail[store]` is set. */
 const FAIL_WRITES = () => {

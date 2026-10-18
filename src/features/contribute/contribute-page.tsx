@@ -38,7 +38,13 @@ export function ContributePage() {
       <p role="status" className="sr-only">
         {recording.announcement}
       </p>
-      {phase === 'ready' && <ReadyScreen onStart={handleStart} />}
+      {phase === 'ready' && (
+        <ReadyScreen
+          onStart={handleStart}
+          saved={recording.saved}
+          onDownloadSaved={recording.downloadSaved}
+        />
+      )}
       {phase === 'unfinished' && figures && (
         <UnfinishedScreen
           figures={figures}

@@ -2,6 +2,8 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
 import { ConsentPanel } from './consent-panel';
+import type { Recording } from './recording-schema';
+import { SavedRides } from './saved-rides';
 import { TrackingButton } from './tracking-button';
 import { useConsent } from './use-consent';
 import { useFocusHeading } from './use-focus-heading';
@@ -9,12 +11,14 @@ import { useStackRoom } from './use-stack-room';
 
 interface ReadyScreenProps {
   onStart: () => void;
+  saved: readonly Recording[];
+  onDownloadSaved: (recording: Recording) => void;
 }
 
 const goBackToMap = () => window.location.assign('/');
 
-/** Before a recording: back to the map, and one Start bar (or, on a first visit, what the page does). */
-export function ReadyScreen({ onStart }: ReadyScreenProps) {
+/** Before a recording: back to the map, the recordings kept here, and one Start bar (or, on a first visit, what the page does). */
+export function ReadyScreen({ onStart, saved, onDownloadSaved }: ReadyScreenProps) {
   const { hasConsent, giveConsent } = useConsent();
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
@@ -38,6 +42,7 @@ export function ReadyScreen({ onStart }: ReadyScreenProps) {
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
+          <SavedRides recordings={saved} onDownload={onDownloadSaved} />
           <TrackingButton variant="start" onClick={onStart} />
         </section>
       ) : (

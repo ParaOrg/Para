@@ -59,6 +59,8 @@ export interface RecordingState {
   way: Way;
   /** The recording just saved, until the contributor records again. */
   lastSaved: Recording | null;
+  /** Every recording saved on this phone, newest first. */
+  saved: readonly Recording[];
   /** Whether the screen is being kept awake. */
   isAwake: boolean;
   /** Something the contributor should know went wrong, in words. */
@@ -87,6 +89,8 @@ export interface RecordingState {
   downloadCurrent: () => void;
   /** Field test only: the file of the recording just saved. Goes at contribute/13. */
   downloadLastSaved: () => void;
+  /** Downloads a saved recording, read back from this phone. */
+  downloadSaved: (recording: Recording) => void;
 }
 
 const STORE_PROBLEM =
@@ -109,6 +113,7 @@ const toFix = (row: FixRow): Fix => ({
 export function useRecording(): RecordingState {
   const [phase, setPhase] = useState<Phase>('loading');
   const [lastSaved, setLastSaved] = useState<Recording | null>(null);
+  const [saved, setSaved] = useState<Recording[]>([]);
   const [current, setCurrent] = useState<Recording | null>(null);
   // The fixes and the ones that count, set together: the rules run once per fix, not once per render.
   const [{ fixes, kept }, setTrack] = useState<{ fixes: Fix[]; kept: Fix[] }>({
@@ -180,14 +185,16 @@ export function useRecording(): RecordingState {
     let isCancelled = false;
     const load = async () => {
       try {
-        if (!(await holdRecorderLock())) {
-          if (isCancelled) return;
+        const isOurs = await holdRecorderLock();
+        const all = await loadRecordings();
+        if (isCancelled) return;
+        setSaved(all.filter((r) => r.status === 'saved'));
+        if (!isOurs) {
           isOtherTab.current = true;
           setStorageProblem(OTHER_TAB_PROBLEM);
           setPhase('ready');
           return;
         }
-        const all = await loadRecordings();
         const open = all.find((r) => r.status !== 'saved') ?? null;
         const rows = open ? await loadFixes(open.id) : [];
         if (isCancelled) return;
@@ -389,6 +396,7 @@ export function useRecording(): RecordingState {
       await putRecording(kept);
       setStorageProblem(null);
       setLastSaved(kept);
+      setSaved((list) => [kept, ...list.filter((r) => r.id !== kept.id)]);
       forgetCurrent();
       setPhase('saved');
     } catch (error) {
@@ -421,16 +429,19 @@ export function useRecording(): RecordingState {
     downloadRecording(recordingFile(current, fixes, summary));
   }
 
-  function downloadLastSaved() {
-    if (!lastSaved) return;
-    loadFixes(lastSaved.id)
+  function downloadSaved(recording: Recording) {
+    loadFixes(recording.id)
       .then((rows) => {
         const recorded = rows.map(toFix);
-        const end = lastSaved.stoppedAt ?? lastSaved.savedAt ?? lastSaved.startedAt;
-        const summary = summarize(recorded, lastSaved.gaps, lastSaved.startedAt, end);
-        downloadRecording(recordingFile(lastSaved, recorded, summary));
+        const end = recording.stoppedAt ?? recording.savedAt ?? recording.startedAt;
+        const summary = summarize(recorded, recording.gaps, recording.startedAt, end);
+        downloadRecording(recordingFile(recording, recorded, summary));
       })
       .catch(reportStore);
+  }
+
+  function downloadLastSaved() {
+    if (lastSaved) downloadSaved(lastSaved);
   }
 
   // The totals come from the fixes alone (the fix-time `end`), so the 1 Hz clock only
@@ -466,6 +477,7 @@ export function useRecording(): RecordingState {
     figures,
     way: currentWay(current?.switches ?? []),
     lastSaved,
+    saved,
     isAwake,
     problem,
     announcement,
@@ -482,5 +494,6 @@ export function useRecording(): RecordingState {
     recordAgain,
     downloadCurrent,
     downloadLastSaved,
+    downloadSaved,
   };
 }
