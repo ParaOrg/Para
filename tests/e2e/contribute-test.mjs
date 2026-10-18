@@ -861,6 +861,20 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
       both.recordings.length === 1,
     JSON.stringify(both.recordings),
   );
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByLabel('Description').fill('From the first tab');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  await second
+    .getByRole('heading', { name: 'Saved recordings' })
+    .waitFor({ timeout: 5000 })
+    .catch(() => {});
+  check(
+    '  once the first tab saves, the second lists it without a reload',
+    (await second
+      .getByRole('button', { name: /^Download the recording of .*, From the first tab$/ })
+      .count()) === 1,
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }

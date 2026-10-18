@@ -18,3 +18,7 @@ export const dateTimeText = (time: number): string =>
     hour: 'numeric',
     minute: '2-digit',
   });
+
+/** A moment to the second, with its year, for telling two recordings apart. */
+export const fullDateTimeText = (time: number): string =>
+  new Date(time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'medium' });

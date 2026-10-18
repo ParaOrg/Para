@@ -95,6 +95,16 @@ export interface RecordingState {
 
 const STORE_PROBLEM =
   'This phone could not keep the recording. Close other tabs of this page and try again.';
+/** Tells this phone's other tabs a recording was saved, so their lists catch up. */
+const SAVED_CHANNEL = 'parapo-saved-recordings';
+
+function tellOtherTabs() {
+  if (typeof BroadcastChannel === 'undefined') return;
+  const channel = new BroadcastChannel(SAVED_CHANNEL);
+  channel.postMessage('saved');
+  channel.close();
+}
+
 const OTHER_TAB_PROBLEM =
   'ParaPo is open in another tab. Record in that tab, or close it and reload this one.';
 
@@ -218,6 +228,17 @@ export function useRecording(): RecordingState {
     return () => {
       isCancelled = true;
     };
+  }, [reportStore]);
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel(SAVED_CHANNEL);
+    channel.onmessage = () => {
+      loadRecordings()
+        .then((all) => setSaved(all.filter((r) => r.status === 'saved')))
+        .catch(reportStore);
+    };
+    return () => channel.close();
   }, [reportStore]);
 
   const isRecording = phase === 'recording';
@@ -397,6 +418,7 @@ export function useRecording(): RecordingState {
       setStorageProblem(null);
       setLastSaved(kept);
       setSaved((list) => [kept, ...list.filter((r) => r.id !== kept.id)]);
+      tellOtherTabs();
       forgetCurrent();
       setPhase('saved');
     } catch (error) {

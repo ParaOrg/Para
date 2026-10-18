@@ -1,4 +1,4 @@
-import { dateTimeText } from './format';
+import { dateTimeText, fullDateTimeText } from './format';
 import type { Recording } from './recording-schema';
 
 interface SavedRidesProps {
@@ -32,7 +32,7 @@ export function SavedRides({ recordings, onDownload }: SavedRidesProps) {
               </span>
               <button
                 type="button"
-                aria-label={`Download the recording of ${when}`}
+                aria-label={`Download the recording of ${fullDateTimeText(recording.startedAt)}${name ? `, ${name}` : ''}`}
                 onClick={() => onDownload(recording)}
                 className="min-h-11 shrink-0 text-content-quaternary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary"
               >
