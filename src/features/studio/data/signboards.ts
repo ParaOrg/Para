@@ -109,7 +109,9 @@ export async function removeSignboard(
     directionId,
     current.filter((n) => n !== name),
   );
-  await client.storage.from(BUCKET).remove([name]);
+  // With drafts on, the approved list still names the file until the draft is
+  // approved: it stays, an unlisted file once approved, which the publish never reads.
+  if (!STUDIO_DRAFTS) await client.storage.from(BUCKET).remove([name]);
   return next;
 }
 

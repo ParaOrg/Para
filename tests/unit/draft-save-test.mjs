@@ -409,3 +409,50 @@ test('draftRefusal: stored or taken down says nothing; every refusal says why', 
     assert.match(draftRefusal({ code }), /\w/, code);
   assert.match(draftRefusal({ code: 'conflict' }), /changed on the map/);
 });
+
+test('Edit route that changes the mode asks the hintuan rule with the new mode', async () => {
+  const { servedRouteOf } = await import('../../src/features/studio/data/draft-save.ts');
+  assert.equal(servedRouteOf(live(), { mode: 'bus', isLoop: false, writeRoute: true }).mode, 'bus');
+  assert.equal(
+    servedRouteOf(live(), { mode: 'bus', isLoop: false }).mode,
+    'jeepney',
+    'a return trip keeps it',
+  );
+});
+
+test('a new line is matched only against approved routes', async () => {
+  const f = fake({ route: () => ({ data: null }), rpc: claimed });
+  await saveRouteDraft(input, [], 'kept-id');
+  const lookup = f.log.find((q) => q.table === 'route');
+  assert.ok(lookup.filters.some((x) => x[0] === 'eq' && x[1] === 'status' && x[2] === 'approved'));
+  assert.equal(f.log.find((q) => q.table === 'rpc').payload.p_subject_id, 'kept-id');
+});
+
+test('a retry of a new subject whose claim answer was lost updates that draft', async () => {
+  const kept = keptDraft(
+    {},
+    {
+      kind: 'hotspot',
+      subject_id: 'kept-h',
+      is_new: true,
+      base_revision: null,
+      revision: 1,
+      status: 'draft',
+    },
+  );
+  const f = fake({
+    rpc: () => ({ data: { code: 'ok', created: false, draft: kept } }),
+    draft: () => ({ data: { ...kept, revision: 2 } }),
+  });
+  const { result, hotspotId } = await saveHotspotDraft(
+    { ...hotspotInput, hotspotId: null },
+    'kept-h',
+  );
+  assert.equal(hotspotId, 'kept-h');
+  assert.equal(result.code, 'ok');
+  const up = f.log.find((q) => q.table === 'draft' && q.op === 'update');
+  assert.deepEqual(up.filters, [
+    ['eq', 'id', 'd'],
+    ['eq', 'revision', 1],
+  ]);
+});

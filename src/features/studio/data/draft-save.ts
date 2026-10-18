@@ -208,11 +208,13 @@ export function routePayloadOf(state: RouteDraftState): Record<string, unknown> 
 /** The route as the hintuan rule asks it (servedBy, listedAlong). */
 export function servedRouteOf(
   state: RouteDraftState,
-  input?: Pick<SaveInput, 'mode' | 'isLoop'>,
+  input?: Pick<SaveInput, 'mode' | 'isLoop' | 'writeRoute'>,
 ): ServedRoute {
   const fresh = state.directions.length === 0 && input;
+  // The mode the payload stores: a new route's, or the one Edit route writes.
+  const mode = input && (fresh || input.writeRoute) ? input.mode : state.route.mode;
   return {
-    mode: (fresh ? input.mode : state.route.mode) as ServedRoute['mode'],
+    mode: mode as ServedRoute['mode'],
     routeCode: state.routeCode,
     isLoop: fresh ? input.isLoop : state.route.is_loop,
   };
@@ -430,18 +432,19 @@ export async function routeDraftState(routeId: string): Promise<RouteDraftState>
  * signboard and via) when there is one — its empty slot is filled, as
  * saveDirection's claim does — else a route of its own.
  */
-async function stateForNewLine(input: SaveInput): Promise<RouteDraftState> {
+async function stateForNewLine(input: SaveInput, newRouteId: string): Promise<RouteDraftState> {
   const client = requireSupabase();
   const via = blankToNull(input.via);
   if (input.isLoop) {
     const { data, error } = await client
       .from('route')
       .select('id, signboard, via')
-      .eq('is_loop', true);
+      .eq('is_loop', true)
+      .eq('status', 'approved');
     if (error) throw new Error(error.message);
     const key = foldLoopKey(blankToNull(input.signboard), via);
     const same = data.find((r) => foldLoopKey(r.signboard, r.via) === key);
-    return same ? routeDraftState(same.id) : newRouteState(crypto.randomUUID());
+    return same ? routeDraftState(same.id) : newRouteState(newRouteId);
   }
   if (!input.headHotspotId || !input.tailHotspotId)
     throw new Error('A route needs a place at each end.');
@@ -449,11 +452,13 @@ async function stateForNewLine(input: SaveInput): Promise<RouteDraftState> {
     .from('route')
     .select('id')
     .eq('head_stop_id', input.headHotspotId)
-    .eq('tail_stop_id', input.tailHotspotId);
+    .eq('tail_stop_id', input.tailHotspotId)
+    // As the uniqueness indexes: a taken-down route with these ends is not this one.
+    .eq('status', 'approved');
   query = via === null ? query.is('via', null) : query.eq('via', via);
   const { data, error } = await query.maybeSingle();
   if (error) throw new Error(error.message);
-  return data ? routeDraftState(data.id) : newRouteState(crypto.randomUUID());
+  return data ? routeDraftState(data.id) : newRouteState(newRouteId);
 }
 
 /**
@@ -469,8 +474,13 @@ async function storeDraft(
 ): Promise<ReviewResult> {
   if (base.draft) return updateDraft(base.draft.id, base.draft.revision, payload);
   const claimed = await claimDraft(kind, base.subjectId, base.isNew, base.baseRevision, payload);
-  if (claimed.code === 'ok' && claimed.created === false)
+  if (claimed.code === 'ok' && claimed.created === false) {
+    // A new subject's id is this form's own: a draft already under it is this
+    // form's earlier save whose answer was lost, so it is brought up to date.
+    if (base.isNew && claimed.draft)
+      return updateDraft(claimed.draft.id, claimed.draft.revision, payload);
     return { code: 'revision_mismatch', draft: claimed.draft };
+  }
   return claimed;
 }
 
@@ -484,8 +494,12 @@ export interface RouteDraftSaved {
 export async function saveRouteDraft(
   input: SaveInput,
   hotspots: readonly HotspotRow[],
+  /** A new route's id, kept by the form across retries. */
+  newRouteId: string = crypto.randomUUID(),
 ): Promise<RouteDraftSaved> {
-  const state = input.routeId ? await routeDraftState(input.routeId) : await stateForNewLine(input);
+  const state = input.routeId
+    ? await routeDraftState(input.routeId)
+    : await stateForNewLine(input, newRouteId);
   const loop = state.directions.length === 0 ? input.isLoop : state.route.is_loop;
   const { shape } = directionRows({ ...input, isLoop: loop }, state.subjectId);
   const links = hintuanLinksFor(shape.coordinates, hotspots, servedRouteOf(state, input));
@@ -520,9 +534,11 @@ export async function signboardsDraft(
  */
 export async function saveHotspotDraft(
   input: SaveHotspotInput,
+  /** A new hotspot's id, kept by the form across retries. */
+  newHotspotId: string = crypto.randomUUID(),
 ): Promise<{ result: ReviewResult; hotspotId: string }> {
   if (!input.hotspotId) {
-    const hotspotId = crypto.randomUUID();
+    const hotspotId = newHotspotId;
     const result = await storeDraft(
       'hotspot',
       { subjectId: hotspotId, isNew: true, baseRevision: null, draft: null },

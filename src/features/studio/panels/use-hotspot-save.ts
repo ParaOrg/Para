@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 
@@ -35,6 +35,9 @@ export function useHotspotSave({ onSaved, onWritten, onDrafted }: UseHotspotSave
     onWritten?.(id);
   };
 
+  // A new hotspot's id for its draft, the same on every retry (useRouteSave's newRouteId).
+  const newHotspotId = useRef<string | null>(null);
+
   /** Saves the form, `check` the refusal's view of it, `input` what is written. */
   async function submit(
     e: FormEvent,
@@ -51,7 +54,11 @@ export function useHotspotSave({ onSaved, onWritten, onDrafted }: UseHotspotSave
     setBusy(true);
     try {
       if (STUDIO_DRAFTS) {
-        const { result } = await saveHotspotDraft({ hotspotId: check.hotspotId, ...input });
+        newHotspotId.current ??= crypto.randomUUID();
+        const { result } = await saveHotspotDraft(
+          { hotspotId: check.hotspotId, ...input },
+          newHotspotId.current,
+        );
         const refusal = draftRefusal(result);
         if (refusal) throw new Error(refusal);
         if (onDrafted) onDrafted();

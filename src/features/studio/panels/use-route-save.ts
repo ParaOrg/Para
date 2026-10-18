@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
@@ -56,6 +56,10 @@ export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseR
   // TODO: one RPC per save would make this one transaction (saves are not transactional today).
   const [written, setWritten] = useState<WrittenDirection | null>(null);
 
+  // A new route's id for its draft, the same on every retry: a claim whose
+  // answer was lost then updates that draft instead of making a second one.
+  const newRouteId = useRef<string | null>(null);
+
   async function save(form: RouteSaveForm) {
     setBusy(true);
     setError(null);
@@ -73,7 +77,8 @@ export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseR
         borrowedMetres: borrowed > 0 ? Math.round(borrowed) : null,
       };
       if (STUDIO_DRAFTS) {
-        const { result } = await saveRouteDraft(input, hotspots);
+        newRouteId.current ??= crypto.randomUUID();
+        const { result } = await saveRouteDraft(input, hotspots, newRouteId.current);
         const refusal = draftRefusal(result);
         if (refusal) throw new Error(refusal);
         if (onDrafted) onDrafted();
