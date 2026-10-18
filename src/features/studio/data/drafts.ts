@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
-import { parsed } from './parse';
+import { parsed } from './read-all';
 import { requireSupabase } from './supabase';
 
 /**
