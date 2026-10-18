@@ -20,7 +20,7 @@ import { requireSupabase } from './supabase';
 
 const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
 
-interface SaveHotspotInput {
+export interface SaveHotspotInput {
   hotspotId: string | null;
   kind: HotspotKind;
   /** What is written on the ground. Required. */
@@ -38,20 +38,11 @@ interface SaveHotspotInput {
 }
 
 /**
- * Create or update a hotspot and replace its route links. Writes require a
- * signed-in editor; any editor may change any row (0015); RLS enforces it on
- * both tables.
- *
- * Two steps, not one transaction, as a direction's save is (save-route.ts):
- * `onWritten` hears of the row the moment it is in, so a retry after the
- * links failed updates that row instead of inserting a second box on the
- * same ground.
+ * The stop row a save writes, from the panel's input, and its ring as stored:
+ * names normalised, corners rounded, the point at the outline's middle. Pure,
+ * shared by the live save and the draft (draft-save.ts).
  */
-export async function saveHotspot(
-  input: SaveHotspotInput,
-  onWritten?: (hotspotId: string) => void,
-): Promise<HotspotRow> {
-  const client = requireSupabase();
+export function hotspotColumns(input: SaveHotspotInput) {
   if (input.ring.length < 3) throw new Error('A hotspot needs at least three corners');
 
   // Names are normalised here, not in the database: a stray double space
@@ -73,6 +64,42 @@ export async function saveHotspot(
     area: ringToPolygon(ring),
     point,
   };
+  return { row, ring };
+}
+
+/**
+ * A hotspot's route links, as saveHotspot works them out: computed for a
+ * hintuan, chosen for a terminal, except that an ikot's are computed for both
+ * (terminalLinks). Either way the sequence is where the direction first meets
+ * the outline (0 when a ticked terminal route never actually enters it — still
+ * a valid, ordered link).
+ */
+export function hotspotLinks(
+  input: SaveHotspotInput,
+  ring: Ring,
+  line: string | null,
+): { directionId: string; sequence: number }[] {
+  return input.kind === 'hintuan'
+    ? linksThrough(ring, input.directions, line)
+    : terminalLinks(ring, input.directionIds ?? [], input.directions);
+}
+
+/**
+ * Create or update a hotspot and replace its route links. Writes require a
+ * signed-in editor; any editor may change any row (0015); RLS enforces it on
+ * both tables.
+ *
+ * Two steps, not one transaction, as a direction's save is (save-route.ts):
+ * `onWritten` hears of the row the moment it is in, so a retry after the
+ * links failed updates that row instead of inserting a second box on the
+ * same ground.
+ */
+export async function saveHotspot(
+  input: SaveHotspotInput,
+  onWritten?: (hotspotId: string) => void,
+): Promise<HotspotRow> {
+  const client = requireSupabase();
+  const { row, ring } = hotspotColumns(input);
 
   const query = input.hotspotId
     ? client.from('stop').update(row).eq('id', input.hotspotId)
@@ -88,7 +115,7 @@ export async function saveHotspot(
         error.message.includes('stop_terminal_informal_unique'))
     ) {
       throw new Error(
-        `There is already a terminal at "${informal || name}". A place has one terminal; draw the others as hintuans under the same name.`,
+        `There is already a terminal at "${row.informal || row.name}". A place has one terminal; draw the others as hintuans under the same name.`,
       );
     }
     throw new Error(error.message);
@@ -105,15 +132,7 @@ export async function saveHotspot(
   const hotspot = read.data;
   onWritten?.(hotspot.id);
 
-  // Links: computed for a hintuan, chosen for a terminal, except that an
-  // ikot's are computed for both (terminalLinks). Either way the sequence is
-  // where the direction first meets the outline (0 when a ticked terminal
-  // route never actually enters it — still a valid, ordered link).
-  const links: RawHotspotLink[] = (
-    input.kind === 'hintuan'
-      ? linksThrough(ring, input.directions, hotspot.line ?? null)
-      : terminalLinks(ring, input.directionIds ?? [], input.directions)
-  )
+  const links: RawHotspotLink[] = hotspotLinks(input, ring, hotspot.line ?? null)
     .map((l) => ({ directionId: l.directionId, hotspotId: hotspot.id, sequence: l.sequence }))
     .map(toLinkRow);
 

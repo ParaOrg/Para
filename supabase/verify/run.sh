@@ -50,6 +50,7 @@ bad=$($PSQL -d $DB -qAt -F ' | ' < ../apply/0022_check.sql | grep -v ' | t$' || 
 apply -o /dev/null < after-0022.sql
 PSQL="$PSQL" DB=$DB bash concurrency-0022.sh
 PSQL="$PSQL" DB=$DB bash deadlock-0022.sh
+PSQL="$PSQL" DB=$DB bash studio-drafts.sh
 echo '0022: applied twice, 0022_check.sql all true, after-0022.sql passed'
 out=$(apply < ../apply/0018_revert.sql || true)
 echo "$out" | grep -q 'is not undone' || { echo "FAILED: revert ran over taken-down rows: $out"; exit 1; }
