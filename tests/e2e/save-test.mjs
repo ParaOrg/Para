@@ -2040,8 +2040,11 @@ await page.waitForTimeout(300);
     .getByLabel(/Ground name/)
     .fill(` ${(taken.informal ?? taken.name).toUpperCase()} `);
   let n = log.length;
+  // Enter is ignored while nearby lines are loading, just like the disabled
+  // Save place button. Exercise name validation only once saving is ready.
+  await waitFor(async () => form('Head').getByRole('button', { name: 'Save place' }).isEnabled());
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(600);
+  await form('Head').getByRole('alert').waitFor();
   check(
     'a ground name that is already a place is refused, however it is cased, and nothing is written',
     /is already a place: pick it from the list/.test(await form('Head').innerText()) &&
