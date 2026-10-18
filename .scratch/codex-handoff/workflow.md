@@ -124,3 +124,11 @@ All 5 threads replied; apply script rebuilt + re-run idempotent; `0022_check.sql
 - Result on 9f3b275 (disposable pg18): full `run.sh` passed. Negative control: flipping the conflict expectation makes the run stop at `FAILED: link change after drafting is a conflict`.
 - Not covered yet: two sessions racing `approve_draft` against a concurrent live edit (needs a `concurrency.sh`-style two-session test); PostgREST behaviour until 0022 is live.
 - Next: two-session approve race test; then rewire studio saves through `drafts.ts` (needs 0022 live to exercise end to end); UI waits on the owner's screenshot batch.
+
+## 0022 approval race test (commit fe1b546) — 2026-10-18
+- `supabase/verify/concurrency-0022.sh`, run by `run.sh`: two sessions race `approve_draft`:
+  1. live edit holds the route row first → approval waits, answers `conflict`, route keeps the live edit, draft kept;
+  2. approval holds the route first → it lands whole (fare note, new direction shape, signboards), the waiting live edit lands on top, draft gone;
+  3. two approvals of one draft → `approved` / `no_draft`.
+- Result on fe1b546 (disposable pg18): full `run.sh` passed.
+- Remaining before studio rewiring can be tested end to end: 0022 applied live (owner).
