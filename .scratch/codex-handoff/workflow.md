@@ -138,3 +138,12 @@ All 5 threads replied; apply script rebuilt + re-run idempotent; `0022_check.sql
 - `0022_apply.sql` ledger version is now max(now, last version + 1): `run.sh` caught 0018 and 0022 applied in the same second colliding on the version key.
 - `supabase/apply/README.md`: 0022 steps and recovery.
 - `run.sh` third database: 0018 → 0022 → revert twice → schema dump equals 0018 alone, ledger row gone → re-apply passes `0022_check.sql`. Full run passed on 1ac34d0.
+
+## 0022 hardening before apply (commit 8b8f383) — 2026-10-18
+Owner asked, before applying 0022: required links, link-survival tests, lock order + shared-terminal deadlock tests, has_function_privilege checks, corrected scripts.
+- **links required**: new `private.payload_ok` (+ `uuid_ok`, `link_ok`) runs at claim and again at approve (a draft row can be edited after claim). Every direction and the hotspot need a `links` array; every link an object with a uuid string and an integer `stop_sequence`. Before this, a hotspot draft without `links` (or a direction without one) was approved as "no links" and deleted every existing link.
+- **links survive rejection**: `after-0022.sql` runs 17 rejected payloads (absent/null/object/string links, bad link, bad ids, stop_sequence 1.5/"1"/null, unknown mode, null name, links to no row) at claim and at approve; links, both revisions and the draft are unchanged each time. `not_null_violation` now maps to `bad_payload`.
+- **lock order**: draft → routes by id → hotspots by id, all taken by `private.lock_rows` before any write in `approve_draft`, `take_down`, `put_back`. `deadlock-0022.sh` forces interleaving with a third session holding a direction row. **On the previous code (51c3162) scenario A (route approval vs hotspot approval) and B (two routes sharing terminal T) both raised `deadlock detected`**; now A = approved/conflict, B = approved/approved, C (approval vs take-down of T) = approved/blocked. A wait still broken off answers `busy` (added to `ReviewCode`).
+- **permissions**: `private.link_bumps_subjects` was executable by PUBLIC (missing revoke) — fixed. Helpers are now revoked from PUBLIC, anon and authenticated (only the definer functions call them). `0022_check.sql` (10 rows) and the apply post-check use `has_function_privilege` for anon, PUBLIC and authenticated; also security definer, `search_path=""`, trigger enabled, ledger once.
+- `0022_revert.sql` drops the 4 new helpers too.
+- Result on 8b8f383: full `supabase/verify/run.sh` passed on disposable pg18; typecheck + prettier pass.
