@@ -17,6 +17,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      draft: {
+        Row: {
+          base_revision: number | null
+          created_at: string
+          editor_id: string | null
+          id: string
+          is_new: boolean
+          kind: string
+          note: string | null
+          payload: Json
+          revision: number
+          status: string
+          subject_id: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_revision?: number | null
+          created_at?: string
+          editor_id?: string | null
+          id?: string
+          is_new?: boolean
+          kind: string
+          note?: string | null
+          payload?: Json
+          revision?: number
+          status?: string
+          subject_id: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_revision?: number | null
+          created_at?: string
+          editor_id?: string | null
+          id?: string
+          is_new?: boolean
+          kind?: string
+          note?: string | null
+          payload?: Json
+          revision?: number
+          status?: string
+          subject_id?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      editor_name: {
+        Row: {
+          name: string
+          user_id: string
+        }
+        Insert: {
+          name: string
+          user_id: string
+        }
+        Update: {
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gps_session: {
         Row: {
           id: string
@@ -63,9 +126,12 @@ export type Database = {
           long_name: string | null
           mode: Database["public"]["Enums"]["transport_mode"]
           owner_id: string
+          revision: number
           route_code: string | null
           short_name: string | null
           signboard: string | null
+          status: string
+          status_at: string
           tail_stop_id: string | null
           updated_at: string
           via: string | null
@@ -80,9 +146,12 @@ export type Database = {
           long_name?: string | null
           mode?: Database["public"]["Enums"]["transport_mode"]
           owner_id?: string
+          revision?: number
           route_code?: string | null
           short_name?: string | null
           signboard?: string | null
+          status?: string
+          status_at?: string
           tail_stop_id?: string | null
           updated_at?: string
           via?: string | null
@@ -97,9 +166,12 @@ export type Database = {
           long_name?: string | null
           mode?: Database["public"]["Enums"]["transport_mode"]
           owner_id?: string
+          revision?: number
           route_code?: string | null
           short_name?: string | null
           signboard?: string | null
+          status?: string
+          status_at?: string
           tail_stop_id?: string | null
           updated_at?: string
           via?: string | null
@@ -245,6 +317,10 @@ export type Database = {
           note: string | null
           owner_id: string
           point: Json
+          revision: number
+          status: string
+          status_at: string
+          updated_at: string
         }
         Insert: {
           aliases?: string[]
@@ -258,6 +334,10 @@ export type Database = {
           note?: string | null
           owner_id?: string
           point: Json
+          revision?: number
+          status?: string
+          status_at?: string
+          updated_at?: string
         }
         Update: {
           aliases?: string[]
@@ -271,6 +351,40 @@ export type Database = {
           note?: string | null
           owner_id?: string
           point?: Json
+          revision?: number
+          status?: string
+          status_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      takedown: {
+        Row: {
+          editor_id: string | null
+          id: number
+          kind: string
+          put_back_at: string | null
+          put_back_by: string | null
+          subject_id: string
+          taken_down_at: string
+        }
+        Insert: {
+          editor_id?: string | null
+          id?: never
+          kind: string
+          put_back_at?: string | null
+          put_back_by?: string | null
+          subject_id: string
+          taken_down_at?: string
+        }
+        Update: {
+          editor_id?: string | null
+          id?: never
+          kind?: string
+          put_back_at?: string | null
+          put_back_by?: string | null
+          subject_id?: string
+          taken_down_at?: string
         }
         Relationships: []
       }
