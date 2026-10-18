@@ -40,6 +40,15 @@ bad=$($PSQL -d $DB -qAt -F ' | ' < ../apply/0018_check.sql | grep -v '| t |' || 
 echo 'apply: once in the ledger, 0018_check.sql all true'
 apply -o /dev/null < after-0018.sql
 PSQL="$PSQL" DB=$DB bash concurrency.sh
+sed -n '/^-- >>> supabase\/migrations\/0022_draft_ops.sql/,/^-- <<< /p' ../apply/0022_apply.sql | sed '1d;$d' \
+  | diff -q - ../migrations/0022_draft_ops.sql >/dev/null \
+  || { echo 'FAILED: apply/0022_apply.sql does not carry 0022_draft_ops.sql unchanged'; exit 1; }
+apply < ../apply/0022_apply.sql
+apply < ../apply/0022_apply.sql
+bad=$($PSQL -d $DB -qAt < ../apply/0022_check.sql | grep -v '^t$' || true)
+[ -z "$bad" ] || { echo "FAILED: 0022_check.sql: $bad"; exit 1; }
+apply -o /dev/null < after-0022.sql
+echo '0022: applied twice, 0022_check.sql all true, after-0022.sql passed'
 out=$(apply < ../apply/0018_revert.sql || true)
 echo "$out" | grep -q 'is not undone' || { echo "FAILED: revert ran over taken-down rows: $out"; exit 1; }
 
