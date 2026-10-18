@@ -133,6 +133,8 @@ export function useRecording(): RecordingState {
   const pendingFixWrites = useRef(new Set<Promise<void>>());
   const unwrittenFixes = useRef<FixRow[]>([]);
   const isSaving = useRef(false);
+  // Another tab holds the recorder: this one shows why and starts nothing.
+  const isOtherTab = useRef(false);
 
   const reportStore = useCallback((error: unknown) => {
     console.error('IndexedDB failed.', error);
@@ -148,6 +150,17 @@ export function useRecording(): RecordingState {
     },
     [reportStore],
   );
+
+  /**
+   * Puts a fix write that failed after the Stop on the stopped recording too, so the
+   * form counts it and offers the download that still holds it.
+   */
+  const noteFailedWrites = useCallback(() => {
+    const recording = currentRef.current;
+    if (!recording || recording.status === 'recording') return;
+    if (recording.failedFixWrites === failedFixWrites.current) return;
+    keep({ ...recording, failedFixWrites: failedFixWrites.current });
+  }, [keep]);
 
   /** Makes this the list of fixes, and returns the ones that count. */
   function setFixList(list: Fix[]): Fix[] {
@@ -169,6 +182,7 @@ export function useRecording(): RecordingState {
       try {
         if (!(await holdRecorderLock())) {
           if (isCancelled) return;
+          isOtherTab.current = true;
           setStorageProblem(OTHER_TAB_PROBLEM);
           setPhase('ready');
           return;
@@ -220,6 +234,7 @@ export function useRecording(): RecordingState {
           failedFixWrites.current += 1;
           unwrittenFixes.current.push(row);
           reportStore(error);
+          noteFailedWrites();
         })
         .finally(() => pendingFixWrites.current.delete(write));
       pendingFixWrites.current.add(write);
@@ -254,6 +269,10 @@ export function useRecording(): RecordingState {
   useHiddenGaps(isRecording, currentRef, keep);
 
   function start() {
+    if (isOtherTab.current) {
+      setStorageProblem(OTHER_TAB_PROBLEM);
+      return;
+    }
     const startedAt = Date.now();
     nextSeq.current = 0;
     setFixList([]);
@@ -331,6 +350,8 @@ export function useRecording(): RecordingState {
   }
 
   function keepRecording() {
+    // A save under way has settled the fix writes it waits for; new ones would be dropped.
+    if (isSaving.current) return;
     resume();
     setFocusTarget('stop');
     setAnnouncement('Recording again');
@@ -372,6 +393,7 @@ export function useRecording(): RecordingState {
       setPhase('saved');
     } catch (error) {
       reportStore(error);
+      noteFailedWrites();
     } finally {
       isSaving.current = false;
     }
@@ -379,6 +401,7 @@ export function useRecording(): RecordingState {
   const save = (details: RecordingDetails | null) => void saveNow(details);
 
   function cancel() {
+    if (isSaving.current) return;
     const recording = currentRef.current;
     if (recording) deleteRecording(recording.id).catch(reportStore);
     forgetCurrent();
