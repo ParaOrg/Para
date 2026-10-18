@@ -99,3 +99,11 @@ Next recommended batch: Batch 4 — Playground drafts/review/approve/send-back/t
 - Verified on disposable `pg18`: apply script runs twice cleanly; `0022_check.sql` all `t`. Manual exercise: hotspot draft submitted→approved→row visible→retry `no_draft`; edit draft on concurrent change → `conflict` with `current_revision`; refusal leaves draft pending and subject unchanged; `take_down`/`put_back` codes and takedown logging work.
 - NOT applied live — owner applies `supabase/apply/0022_apply.sql` in SQL editor, then `0022_check.sql`.
 - Next: studio draft contract (data layer), save-path rewiring through drafts, review UI, Public view.
+
+## 0022 review fixes (commit 961ddb4) — 2026-10-18
+Devin Review findings on #279, all fixed and re-verified on disposable pg18:
+- `route_stop_bumps_subjects` trigger bumps stop.revision + route.revision on link writes → link edits after drafting now yield `conflict`.
+- All-emptied directions ⇒ route goes `taken_down` (logged), not approved-empty.
+- `claim_draft` validates payload shape (version==1, route/stop object, directions/links arrays); approve catches cast errors → `bad_payload`; jsonb `null` normalized to SQL NULL via `nullif` (shape/overview/area/point).
+- `discard_draft` locks `FOR UPDATE`.
+All 5 threads replied; apply script rebuilt + re-run idempotent; `0022_check.sql` all pass.
