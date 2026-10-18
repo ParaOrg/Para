@@ -4,6 +4,8 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 
 import type { useSaveFacts } from './use-save-facts';
+import { draftRefusal, saveRouteDraft } from '../data/draft-save';
+import { STUDIO_DRAFTS } from '../data/flags';
 import type { SaveInput } from '../data/routes-write';
 import { saveRouteAndLinks } from '../data/save-route';
 import type { Drawing } from '../drawing/use-drawing';
@@ -37,13 +39,15 @@ interface UseRouteSaveOptions {
   draw: Pick<Drawing, 'controlPoints' | 'segments'>;
   hotspots: HotspotRow[];
   onSaved: (direction: DirectionRow) => void;
+  /** With STUDIO_DRAFTS on: the save is a draft, and the map is unchanged. */
+  onDrafted?: () => void;
 }
 
 /**
  * The save panel's save: busy while it runs, its error as text, and the row
  * it wrote when the link sync after it failed.
  */
-export function useRouteSave({ facts, draw, hotspots, onSaved }: UseRouteSaveOptions) {
+export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseRouteSaveOptions) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // The direction as a save wrote it, when the link sync after it failed.
@@ -58,20 +62,25 @@ export function useRouteSave({ facts, draw, hotspots, onSaved }: UseRouteSaveOpt
     try {
       // The borrow on the parent's full line, read now if it has not come.
       const borrowed = await facts.borrowedForSave();
-      const named = await saveRouteAndLinks(
-        {
-          ...form,
-          reversed: facts.reversed,
-          controlPoints: draw.controlPoints,
-          segments: draw.segments,
-          // A parent deleted since, or a borrowed part redrawn away, borrows nothing.
-          borrowedFrom: facts.borrowParent && borrowed > 0 ? facts.borrowParent.id : null,
-          borrowedPart: facts.borrowPart,
-          borrowedMetres: borrowed > 0 ? Math.round(borrowed) : null,
-        },
-        hotspots,
-        setWritten,
-      );
+      const input: SaveInput = {
+        ...form,
+        reversed: facts.reversed,
+        controlPoints: draw.controlPoints,
+        segments: draw.segments,
+        // A parent deleted since, or a borrowed part redrawn away, borrows nothing.
+        borrowedFrom: facts.borrowParent && borrowed > 0 ? facts.borrowParent.id : null,
+        borrowedPart: facts.borrowPart,
+        borrowedMetres: borrowed > 0 ? Math.round(borrowed) : null,
+      };
+      if (STUDIO_DRAFTS) {
+        const { result } = await saveRouteDraft(input, hotspots);
+        const refusal = draftRefusal(result);
+        if (refusal) throw new Error(refusal);
+        if (onDrafted) onDrafted();
+        else setBusy(false);
+        return;
+      }
+      const named = await saveRouteAndLinks(input, hotspots, setWritten);
       onSaved(named);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

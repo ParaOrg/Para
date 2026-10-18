@@ -556,3 +556,31 @@ export async function saveHotspotDraft(
   const result = await storeDraft('hotspot', base, hotspotPayloadOf(input, line));
   return { result, hotspotId };
 }
+
+/** What a stored draft says: the map is unchanged until it is approved. */
+export const DRAFTED = 'Saved as a draft. The map changes once it is approved.';
+
+/** A draft save's or take-down's refusal in the editor's words; null when it went through. */
+export function draftRefusal(r: ReviewResult): string | null {
+  switch (r.code) {
+    case 'ok':
+    case 'taken_down':
+      return null;
+    case 'revision_mismatch':
+    case 'already_pending':
+      return 'Someone else changed this draft since you opened it. Close this and open it again to see their version.';
+    case 'conflict':
+      return 'This changed on the map since you opened it. Close this and open it again.';
+    case 'subject_gone':
+      return 'This was deleted since you opened it.';
+    case 'blocked':
+      return 'A route still ends here, so it cannot come off the map.';
+    case 'busy':
+      return 'Another save was in progress. Try again.';
+    case 'bad_payload':
+    case 'payload_incomplete':
+      return 'The draft was refused as incomplete. Nothing was saved.';
+    default:
+      return `Nothing was saved (${r.code}).`;
+  }
+}

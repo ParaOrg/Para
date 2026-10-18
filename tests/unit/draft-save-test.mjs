@@ -392,3 +392,20 @@ test('saveHotspotDraft: a new hotspot gets its id and no base', async () => {
   assert.equal(call.payload.p_is_new, true);
   assert.equal(call.payload.p_base_revision, null);
 });
+
+test('draftRefusal: stored or taken down says nothing; every refusal says why', async () => {
+  const { draftRefusal } = await import('../../src/features/studio/data/draft-save.ts');
+  assert.equal(draftRefusal({ code: 'ok' }), null);
+  assert.equal(draftRefusal({ code: 'taken_down' }), null);
+  for (const code of [
+    'revision_mismatch',
+    'conflict',
+    'subject_gone',
+    'blocked',
+    'busy',
+    'bad_payload',
+    'loop_taken',
+  ])
+    assert.match(draftRefusal({ code }), /\w/, code);
+  assert.match(draftRefusal({ code: 'conflict' }), /changed on the map/);
+});

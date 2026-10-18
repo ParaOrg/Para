@@ -100,13 +100,22 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   });
   // The save panels and the toast, one at a time, the newest: a save's, or a
   // problem (useSaveFlow).
-  const { isSaving, setIsSaving, toast, setToast, setNotice, justSaved, onSaved, onSavedHotspot } =
-    useSaveFlow({
-      recoveryError: recovery.error,
-      cancelDrawing: draw.cancel,
-      reloadRoutes: saved.reload,
-      reloadHotspots: hotspots.reload,
-    });
+  const {
+    isSaving,
+    setIsSaving,
+    toast,
+    setToast,
+    setNotice,
+    justSaved,
+    onSaved,
+    onSavedHotspot,
+    onDrafted,
+  } = useSaveFlow({
+    recoveryError: recovery.error,
+    cancelDrawing: draw.cancel,
+    reloadRoutes: saved.reload,
+    reloadHotspots: hotspots.reload,
+  });
   // The route list, a hotspot's card and the trip opened from either, as on
   // the public map (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
@@ -413,6 +422,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           target={target}
           onSaved={onSaved}
           onSavedHotspot={onSavedHotspot}
+          onDrafted={onDrafted}
           onCancel={() => setIsSaving(false)}
         />
       </div>
