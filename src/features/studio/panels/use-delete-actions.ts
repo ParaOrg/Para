@@ -1,9 +1,12 @@
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import type { DirectionRow } from '@/features/routes/model/routes';
+import { isLoop, LOOP_WORD, type DirectionRow } from '@/features/routes/model/routes';
 
 import { endsRefusal } from './hotspot-in-use';
+import { deleteDirectionDraft, draftRefusal, DRAFTED } from '../data/draft-save';
+import { takeDown } from '../data/drafts';
+import { STUDIO_DRAFTS } from '../data/flags';
 import { deleteHotspot } from '../data/hotspots-write';
 import { deleteDirection } from '../data/routes-write';
 
@@ -42,9 +45,16 @@ export function useDeleteActions({
       setNotice(refusal);
       return;
     }
-    if (!window.confirm(`Delete ${s.kind} "${hotspotLabel(s)}"?`)) return;
+    if (
+      !window.confirm(`${STUDIO_DRAFTS ? 'Take down' : 'Delete'} ${s.kind} "${hotspotLabel(s)}"?`)
+    )
+      return;
     try {
-      await deleteHotspot(s);
+      // With drafts on, a hotspot comes off the map by take-down, which Put back undoes.
+      if (STUDIO_DRAFTS) {
+        const refusal = draftRefusal(await takeDown('hotspot', s.id));
+        if (refusal) throw new Error(refusal);
+      } else await deleteHotspot(s);
       hotspots.select(null);
       await hotspots.reload();
     } catch (e) {
@@ -59,8 +69,18 @@ export function useDeleteActions({
       onSignInNeeded();
       return;
     }
-    if (!window.confirm(`Delete "${v.route?.name}" — ${v.name}?`)) return;
+    const confirmation = isLoop(v)
+      ? `Delete the ${LOOP_WORD.toLowerCase()} "${v.route?.name}"?`
+      : `Delete "${v.route?.name}" — ${v.name}?`;
+    if (!window.confirm(confirmation)) return;
     try {
+      if (STUDIO_DRAFTS) {
+        const refusal = draftRefusal(await deleteDirectionDraft(v));
+        if (refusal) throw new Error(refusal);
+        saved.select(null);
+        setNotice(DRAFTED);
+        return;
+      }
       await deleteDirection(v);
       saved.select(null);
       await saved.reload();

@@ -18,6 +18,9 @@ export function SaveNotices({
   borrowed,
   sameEnds,
   direction,
+  loop = [],
+  isLoop = false,
+  passedTwice = [],
 }: {
   /** The drawing's stretches, for the streets they run along. */
   segments: Drawing['segments'];
@@ -29,6 +32,12 @@ export function SaveNotices({
   borrowed: { metres: number; parent: DirectionRow } | null;
   sameEnds: { name: string; drawn: boolean } | null;
   direction: string;
+  /** Each end of a return trip that stops short of the other way's (loop-closing.ts). */
+  loop?: readonly string[];
+  /** The line is an ikot: no ends, so no hotspots are needed to end at. */
+  isLoop?: boolean;
+  /** An ikot's places the line passes more than once: only the first pass is listed. */
+  passedTwice?: readonly string[];
 }) {
   const streets = routeStreets(segments);
   return (
@@ -61,6 +70,24 @@ export function SaveNotices({
           {uTurns.length === 1 ? 'one point' : `${uTurns.length} points`}, ringed in amber on the
           map. Save anyway if the jeep really turns there; otherwise go back and drag the point to
           the corner.
+        </p>
+      )}
+      {loop.map((text) => (
+        <p
+          key={text}
+          data-testid="save-loop"
+          className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800"
+        >
+          {text}
+        </p>
+      ))}
+      {passedTwice.length > 0 && (
+        <p
+          data-testid="save-passed-twice"
+          className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800"
+        >
+          This ikot passes {passedTwice.join(', ')} more than once. Only the first pass is listed,
+          so a rider cannot pick the second.
         </p>
       )}
       {wrongWay && (
@@ -108,7 +135,7 @@ export function SaveNotices({
         </p>
       )}
 
-      {hotspotsCount === 0 && (
+      {!isLoop && hotspotsCount === 0 && (
         <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
           No hotspots yet. A route is named after the hotspots at its two ends, so draw a terminal
           at each end of this line first — then come back and save.

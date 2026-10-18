@@ -13,6 +13,8 @@ interface UseStudioTripOptions {
   hiddenDirectionId: string | null;
   /** The ride picked on the open trip (useRideTo's). */
   ride: { ridden: Ridden | null; startId: string | null };
+  /** An open ikot's tip (useLoopTip): the row its trip leaves from and comes back to. */
+  tipId: string | null;
 }
 
 /**
@@ -25,6 +27,7 @@ export function useStudioTrip({
   hotspots,
   hiddenDirectionId,
   ride,
+  tipId,
 }: UseStudioTripOptions) {
   // What the lit routes wear on the map, as on the public map (useLitRides);
   // none of the green stretches over the direction being redrawn.
@@ -35,6 +38,7 @@ export function useStudioTrip({
     hiddenDirectionId,
     ride.ridden,
     ride.startId,
+    tipId,
   );
 
   // The open trip's hintuans, as the public map works them out
@@ -42,7 +46,7 @@ export function useStudioTrip({
   // timeline, and the dots hang on its identity — a fresh `between` each
   // render would place every dot anew (StationLabels' rowStops memo) — so the
   // memo is load-bearing, not a saving.
-  const timeline = useTripTimeline(saved.selected, hotspots);
+  const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
   // The pill counts routes, not directions: a route is two rows, one of them
   // perhaps an empty slot, so counting rows would read five routes as "10 routes".

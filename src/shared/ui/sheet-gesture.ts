@@ -98,7 +98,7 @@ export const LOW_PX = 129;
  * the commuter keeps their place: the owner's pick.
  */
 export const MAX_STRIP_PX = 24;
-const MAX_GAP_CSS = `calc(env(safe-area-inset-top) + ${MAX_STRIP_PX}px)`;
+const MAX_GAP_CSS = `calc(var(--map-safe-top) + ${MAX_STRIP_PX}px)`;
 
 /**
  * The status bar's height as the page reads it (BottomSheet measures it): 0
@@ -112,16 +112,16 @@ function setSafeTop(px: number) {
 /** Whether measureSafeTop has read it: once a page. */
 let safeTopRead = false;
 /**
- * Reads the status bar's height, what Max leaves above its strip of map. 0
- * where the page does not run behind the bar.
+ * Reads the status bar's height, what Max leaves above its strip of map, as
+ * `sheet` sees it: inside the studio's map box the variable is 0. 0 where the
+ * page does not run behind the bar.
  */
-export function measureSafeTop() {
-  if (safeTopRead || typeof document === 'undefined') return;
+export function measureSafeTop(sheet: Element | null) {
+  if (safeTopRead || !sheet) return;
   safeTopRead = true;
   const probe = document.createElement('div');
-  probe.style.cssText =
-    'position:fixed;top:0;visibility:hidden;padding-top:env(safe-area-inset-top)';
-  document.body.appendChild(probe);
+  probe.style.cssText = 'position:fixed;top:0;visibility:hidden;padding-top:var(--map-safe-top)';
+  sheet.appendChild(probe);
   setSafeTop(parseFloat(getComputedStyle(probe).paddingTop) || 0);
   probe.remove();
 }

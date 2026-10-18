@@ -70,7 +70,11 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   saved: Routes<V>,
   hotspots: Hotspots<S>,
   cards: Cards,
-  opts: { camera?: boolean } = {},
+  opts: {
+    camera?: boolean;
+    /** A loop's tip (useLoopTip): where its trip leaves and comes back to, which a ride round it is measured from. */
+    tipId?: string | null;
+  } = {},
 ) {
   // The map the overviews and the camera kept from before move: none with
   // the camera off (see above).
@@ -85,6 +89,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const hotspotDock = useRef<HTMLDivElement>(null);
   const ride = useRideTo(map, saved.selected, hotspots.hotspots, {
     onGlide: () => cards.clearOf(tripDock)(),
+    tipId: opts.tipId ?? null,
   });
   useTripOverview(cam, saved.selected, tripDock, cards.snap);
   // The page, and the card's sheet on show in it, for what the camera keeps clear of.

@@ -4,7 +4,7 @@ import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots'
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { Livery } from '@/features/routes/model/liveries';
-import { isDrawn, type DirectionRow } from '@/features/routes/model/routes';
+import { isDrawn, isLoop, type DirectionRow } from '@/features/routes/model/routes';
 import type { Timeline } from '@/features/routes/model/timeline';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 
@@ -102,7 +102,8 @@ export function StudioTripCard({
             if (saved.selected) void onDelete(saved.selected);
           }}
           onExtend={
-            isDrawn(direction)
+            // An ikot has no end to go on from (use-follow.ts says so when one is picked).
+            isDrawn(direction) && !isLoop(direction)
               ? () => {
                   const v = saved.selected;
                   if (!v) return;

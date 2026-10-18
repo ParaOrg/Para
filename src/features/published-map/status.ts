@@ -1,8 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
+import { fetchIndex, indexIsStale } from '@/features/routes/published/fetch-index';
 import { noop } from '@/shared/utils/noop';
-
-import { fetchIndex, indexIsStale } from './api/fetch-index';
 
 /**
  * How the public map knows its own state: whether there is a network, and

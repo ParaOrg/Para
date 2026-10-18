@@ -3,12 +3,8 @@ import { useState } from 'react';
 
 import { CommuterLocation, useGazeHush } from '@/features/locator';
 import {
-  fetchLine,
   InstallPrompt,
-  loadDirectionsFromFile,
-  loadHotspotsFromFile,
   loadProblems,
-  openingDirections,
   reloadForNewerApp,
   reloadToUpdate,
   useNeedRefresh,
@@ -29,9 +25,17 @@ import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
+import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import { placeKey } from '@/features/routes/model/places';
+import {
+  loadDirectionsFromFile,
+  loadHotspotsFromFile,
+  openingDirections,
+} from '@/features/routes/published/fetch-index';
+import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
 import { useStatusBarColour } from './status-bar';
@@ -65,6 +69,12 @@ export function PublicMapApp() {
   // A load problem, and a published map too new for this app (loadProblems).
   const problems = loadProblems([saved, hotspots]);
 
+  // Where the commuter is, as CommuterLocation tells it (the first fix, then
+  // each 50 m), kept in memory only, for the tip of a loop's trip: where its
+  // timeline leaves from, chosen once as the trip opens (useLoopTip).
+  const [where, setWhere] = useState<CommuterWhere | null>(null);
+  const tipId = useLoopTip(saved.selected, hotspots, { where, openedFrom: hotspots.selected });
+
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
@@ -88,10 +98,10 @@ export function PublicMapApp() {
     backFromTrip,
     pickOnTrip,
     endOnTrip,
-  } = useCardCamera(map, saved, hotspots, cards);
+  } = useCardCamera(map, saved, hotspots, cards, { tipId });
   // What the lit routes wear on the map, their ends named (useLitRides): a
   // picked hintuan's ride flowing only as far as there.
-  const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden, ride.startId);
+  const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden, ride.startId, tipId);
 
   // The commuter's own position, the dot and the camera with them live in
   // CommuterLocation, so a fix, the phone's compass and the dot's moods
@@ -112,7 +122,7 @@ export function PublicMapApp() {
   const { tripLivery, litLivery, height } = cards;
 
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
-  const timeline = useTripTimeline(saved.selected, hotspots);
+  const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
   return (
     // `data-directions`: how many the index brought, for the suites on a
@@ -163,6 +173,7 @@ export function PublicMapApp() {
           litDirections: saved.litDirections,
         }}
         hushedAt={hushedAt}
+        onWhere={setWhere}
       />
       {/*
         Each lit ride's ends, named over their circles; with no trip open, a

@@ -35,3 +35,6 @@ Blocked by: contribute/02, contribute/05, contribute/06
 - The advisors show nothing new.
 
 ## Comments
+
+- **2026-10-17, from the loops work (0021_loops.sql):** a loop is a route with `is_loop` and no head or tail. When 0018 is written: make `route_loop_unique` (0021) partial on `status` as well, as the other partial unique indexes are, and let the "route is approved only with both ends approved" guard pass a loop, whose ends are null. 0021 is written but takes the next number after 0017 that was free of a reservation; 0018 to 0020 keep theirs.
+- **Also from 0021:** `private.loop_one_way` is `security invoker` (it is not `security definer`), so its read of `route` runs under the caller's own row rules. 0018's read rules must therefore keep a loop's route row visible to anyone who can write its direction, an editor included, or a loop's direction insert will find no loop and let a way back through.

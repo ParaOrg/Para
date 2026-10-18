@@ -17,9 +17,9 @@ type Props = {
    * The word on SWITCH, switchWord's for the directions on show: the way a
    * tap leads to, Pabalik over Papunta and back again, or a train's other
    * bound. Its name is the word on it, so "tap Pabalik" finds it by voice
-   * too.
+   * too. Null: no SWITCH at all, for a loop has no way back to turn to.
    */
-  way: string;
+  way: string | null;
   onClose: () => void;
 } & (
   | {
@@ -93,14 +93,16 @@ export function RouteCardHeader({
         </div>
       )}
       <div className="flex shrink-0 items-center gap-3">
-        <Button
-          variant="special"
-          label={way}
-          data-testid={routeCount !== undefined ? 'chooser-flip' : 'card-switch'}
-          data-back={back}
-          disabled={!switchable}
-          onClick={onSwitch}
-        />
+        {way !== null && (
+          <Button
+            variant="special"
+            label={way}
+            data-testid={routeCount !== undefined ? 'chooser-flip' : 'card-switch'}
+            data-back={back}
+            disabled={!switchable}
+            onClick={onSwitch}
+          />
+        )}
         <IconButton icon={<CloseIcon />} label="Close" tooltip="top" onClick={onClose} />
       </div>
     </div>

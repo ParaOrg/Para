@@ -6,6 +6,14 @@
 // studio uses are here; anything else fails loudly. Since 2026-10-03.
 export function fakeSupabase(answer) {
   const log = [];
+  // The storage calls the studio makes, recorded as { bucket, op: 'upload' |
+  // 'remove', path (upload) or paths (remove), body, options }; `uploaded`
+  // answers an upload and `removed` a delete, `{ error }` refusing it.
+  const storage = {
+    calls: [],
+    uploaded: () => ({ error: null }),
+    removed: () => ({ error: null }),
+  };
   const from = (table) => {
     const q = {
       table,
@@ -86,5 +94,24 @@ export function fakeSupabase(answer) {
     };
     return builder;
   };
-  return { client: { from }, log };
+  const bucket = (name) => ({
+    async upload(path, body, options) {
+      storage.calls.push({ bucket: name, op: 'upload', path, body, options });
+      return storage.uploaded(path);
+    },
+    async remove(paths) {
+      storage.calls.push({ bucket: name, op: 'remove', paths });
+      return storage.removed(paths);
+    },
+  });
+  // An RPC, recorded as { table: 'rpc', op: <function>, payload: <args> } and
+  // answered by `answer` like a query.
+  const rpc = (fn, args) => {
+    const q = { table: 'rpc', op: fn, payload: args, filters: [] };
+    log.push(q);
+    return Promise.resolve()
+      .then(() => answer(q))
+      .then((r) => ({ data: null, error: null, ...r }));
+  };
+  return { client: { from, rpc, storage: { from: bucket } }, log, storage };
 }

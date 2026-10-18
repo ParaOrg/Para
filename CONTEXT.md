@@ -11,12 +11,13 @@ existed, one was chosen.
 
 **Route**:
 A named pair of ends that jeeps run between, in both directions — `Tala – SM
-Fairview`. A route is its two ends; it has no name of its own.
+Fairview`. A route is its two ends; it has no name of its own. A loop is the
+exception: it has no ends at all, and its signboard is its name.
 _Avoid_: line, service
 
 **Direction**:
 One way of riding a route — `Tala → SM Fairview` or `SM Fairview → Tala`.
-Every route has exactly two. A direction owns its line; the route owns the ends.
+Every route has exactly two; a loop, one. A direction owns its line; the route owns the ends.
 _Avoid_: variant, leg; trip (a direction is a trip only while its card is open — see Trip)
 
 **Outbound** / **Return**:
@@ -27,9 +28,9 @@ LRT-1 and MRT-3, Eastbound or Westbound on LRT-2.
 _Avoid_: forward/backward, inbound (meaningless here)
 
 **Slot**:
-A direction that exists but has no line yet. Every route is born with its
-return as a slot, so the card can always be flipped and the studio always
-knows what is undrawn.
+A direction that exists but has no line yet. Every route but a loop is born
+with its return as a slot, so the card can always be flipped and the studio
+always knows what is undrawn.
 _Avoid_: missing direction, placeholder
 
 **Head** / **Tail**:
@@ -42,6 +43,26 @@ _Avoid_: origin/destination, start/end, from/to (those belong to a direction)
 **Via**:
 The one place that tells apart two routes sharing both ends by different
 roads — `Tala – Novaliches via Zabarte`. Absent unless needed.
+
+**Loop**:
+A route that goes round one way with no ends — `UP – Ikot`. Commuters and
+editors read it as **Ikot** (the owner's word, 2026-10-17, in a list's row and
+in a trip's header where "Papunta" would stand); the concept is Loop in code
+and here. It has one direction, its line closed on where it began, and no
+head, tail, return or SWITCH; every place on it is a stop, a terminal box on
+it counting as one. It is called by its signboard, which a loop must have. The
+same streets the other way round are another loop with a signboard of its own
+— `UP – Toki`.
+_Avoid_: paikot (said of two-ended routes whose two directions make a circle,
+as `loop-closing.ts` has it), circular route, ring
+
+**Tip** (of a loop's trip):
+Where a loop's timeline starts: the place whose card the trip was opened
+from, else the one nearest the commuter, else the first its line passes as
+drawn. A place, not only a hintuan: a terminal's box on a loop counts. Not an
+end: a ride goes on round past it, and it is chosen once, when the trip opens,
+so nothing moves under the rider.
+_Avoid_: start (a ride's), head, origin
 
 **Line**:
 The drawn geometry of one direction: the road it follows, snapped to the
@@ -56,9 +77,9 @@ _Avoid_: variant, branch
 
 **Signboard**:
 The short informal wording a jeep is called out by — `TALA – SM FAIRVIEW` —
-written by the editor in the jeepneys' own style. Optional. It is the
-editor's words, never the app's: the route name is generated, the signboard
-is not.
+written by the editor in the jeepneys' own style. Optional, except on a loop,
+which is called by it. It is the editor's words, never the app's: the route
+name is generated, the signboard is not.
 _Avoid_: route name, label
 
 ### Places
@@ -119,7 +140,8 @@ _Avoid_: east side, north side (compass sides change with the road)
 
 **Timeline**:
 A direction as its string of places in travel order: where it leaves from,
-every hintuan it passes, where it is going. What a signboard lists, generated.
+every hintuan it passes, where it is going; on a loop, from its tip round to
+the tip again. What a signboard lists, generated.
 A row is the place; when the place has several boxes and the box has a name
 of its own, the row reads both — `SM Fairview – Main Babaan`.
 _Avoid_: stop list, itinerary, sequence
@@ -133,7 +155,8 @@ there to there, priced between them, on
 the direction's own line; an end picked before the start is ridden back
 along it, its arrows turned to run from the start to the end. On the map a
 lit direction is drawn as its ride: its arrows, its ends named, the stretch
-between the picks.
+between the picks. On a loop a ride only goes forward, round past the tip if
+need be.
 _Avoid_: journey, leg, run; trip (that is the card a ride is shown on)
 
 **Start** / **End** (of a ride):
@@ -158,12 +181,39 @@ _Avoid_: admin, user
 
 **Commuter**:
 Anyone who opens the public map. Asks nothing of anyone: no account, no
-permission, no tracking.
+permission, no tracking. On the contributor page the same person may become a
+contributor, by choice
+([ADR 0004](docs/adr/0004-location-leaves-the-phone-only-by-choice.md)).
 _Avoid_: user, visitor
 
 **Studio**:
-The editor at `/studio/`: the map plus every drawing and saving tool.
+The editor at `/studio/`: three maps behind one switch, Contributors,
+Playground and Public, and every drawing and saving tool.
 _Avoid_: admin, dashboard, editor (that is a person)
+
+**Contributors map**:
+The studio's map of every contribution as it came: faint lines and hintos, for
+editors only.
+_Avoid_: Tracking map, heatmap
+
+**Playground**:
+The studio's map where editors draw. Every route and hotspot goes Draft →
+Pending → Approved there.
+_Avoid_: Drafts map, sandbox, staging
+
+**Draft** / **Pending** / **Approved**:
+A route or hotspot being drawn or changed, seen by editors only, one at a time
+per route or hotspot; a draft submitted for review; what commuters get at the
+next publish. Any editor approves, their own work included.
+_Avoid_: push, publish (the nightly publish is something else), staging
+
+**Send back**:
+Return a pending draft to its editor, with a note.
+
+**Take down** / **Put back**:
+Remove an approved route or hotspot from the public map at the next publish;
+undo it.
+_Avoid_: delete (a taken-down row is kept)
 
 **Public map**:
 The map at `/`, read by commuters from the published map.
@@ -202,8 +252,8 @@ switches the map behind it; ✕, Escape or a tap outside closes it.
 
 **Published map**:
 The set of files the public map reads, rebuilt nightly from the studio's
-data: the index, one line file per direction, and the signboards. Commuters
-never read the database.
+approved data: the index, one line file per direction, and the signboards.
+Commuters never read the database.
 _Avoid_: export, snapshot, API, published file (the word from when it was one
 file)
 
@@ -214,6 +264,43 @@ schema number; an app reads only the shape it knows.
 
 **Line file**:
 One direction's full line, read when the direction is lit or opened.
+
+### Contributors
+
+**Contributor**:
+Anyone who makes a contribution on the contributor page. The studio knows a
+contributor only as a phone, an anonymous identity made on the first Save,
+never by name. A commuter who taps the Contributor button and records becomes
+one, on that page only.
+_Avoid_: driver, user, reporter
+
+**Contribution**:
+One recording on the contributor page, from tapping Start to tapping Save, as
+it reaches the studio: its points (about one a second), its hintos and gaps, and what the
+contributor typed: a start point name, an end point name, a description, what
+was ridden. Never public.
+_Avoid_: trip and ride (both taken), ikot (said of a contribution it would be wrong: Ikot is the word shown for a loop, a route; see Loop), biyahe, session, track, trace
+
+**Hinto**:
+A time the phone stood still in one spot during a contribution: 8 seconds or
+more within 25 metres, for now. Many hintos at one spot, across many
+contributions, suggest a hintuan. The database uses the same word.
+_Avoid_: stop (the database's name for a hotspot), dwell, idle
+
+**Gap**:
+A stretch of a contribution with no location: the screen went off, a call came,
+another app was in front, no fix came for 5 seconds, or the page was reloaded.
+Not a Stop, which the contributor chose.
+_Avoid_: pause; lost signal (only one of its causes)
+
+**Contributor page**:
+The page at `/contribute/` where a contribution is recorded: Ready, Recording,
+Stopped, Saved. A page of its own, so the public map carries none of it.
+_Avoid_: driver app, driver link, tracker
+
+**Contributor button**:
+The button at the public map's top left: a plain link to the contributor page.
+Shown once the test period ends.
 
 ### Planned, decided, not built
 

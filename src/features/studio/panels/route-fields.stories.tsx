@@ -42,6 +42,16 @@ export const Jeepney: Story = {
   },
 };
 
+/** An ikot is called by its signboard: the field says it is required. */
+export const IkotSignboardRequired: Story = {
+  args: { isSignboardRequired: true },
+  play: async ({ canvasElement }) => {
+    const signboard = within(canvasElement).getByRole('textbox', { name: /Signboard/ });
+    await expect(signboard).toHaveAttribute('aria-required', 'true');
+    await expect(signboard).toHaveAttribute('placeholder', 'UP – Ikot');
+  },
+};
+
 /** A train line, imported with its line named: its Mode stays, the rest may change. */
 export const Train: Story = {
   args: { mode: 'lrt', signboard: 'LRT-1', fareNote: '₱15 to ₱35 by distance' },

@@ -5,6 +5,8 @@ date: 2026-09-22
 
 # A route's name is generated from its ends, with no override
 
+(A loop has no ends and is named by its signboard: ADR 0005.)
+
 A route is named from its head and tail places — `Tala – SM Fairview`, with
 `via X` only when two routes share both ends — and each direction from the
 same pair, `Tala → SM Fairview`. There is no field to type a route name, and

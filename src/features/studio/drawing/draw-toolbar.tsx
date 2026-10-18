@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { coarsePointer } from '@/features/routes/map/tap';
 
+import { whyCannotCloseLoop } from './loop-closing';
 import { PickBar } from './pick-bar';
 import { FollowChip, PointBar, PutBack } from './point-bar';
 import { TapDraw } from './tap-draw';
@@ -14,6 +15,7 @@ import {
 } from './toolbar-text';
 import { useDrawKeys } from './use-draw-keys';
 import type { Drawing } from './use-drawing';
+import type { LoopPlan } from './use-loop-closing';
 
 interface DrawToolbarProps {
   draw: Drawing;
@@ -26,6 +28,8 @@ interface DrawToolbarProps {
    * keep buttons can say which part they keep in the jeep's own order.
    */
   ends?: ExtendEnds | null;
+  /** While drawing a route's return trip: where the loop closes (use-loop-closing.ts). */
+  loop?: LoopPlan | null;
 }
 
 /**
@@ -42,12 +46,28 @@ interface DrawToolbarProps {
  * browser's own undo. Esc is deliberately unbound: cancel discards the whole
  * trace, and that should not be one stray key away.
  */
-export function DrawToolbar({ draw, onDone, keys = true, ends = null }: DrawToolbarProps) {
+export function DrawToolbar({
+  draw,
+  onDone,
+  keys = true,
+  ends = null,
+  loop = null,
+}: DrawToolbarProps) {
   if (draw.picking) return <PickBar draw={draw} ends={ends} />;
-  return <Toolbar draw={draw} onDone={onDone} keys={keys} />;
+  return <Toolbar draw={draw} onDone={onDone} keys={keys} loop={loop} />;
 }
 
-function Toolbar({ draw, onDone, keys }: { draw: Drawing; onDone: () => void; keys: boolean }) {
+function Toolbar({
+  draw,
+  onDone,
+  keys,
+  loop,
+}: {
+  draw: Drawing;
+  onDone: () => void;
+  keys: boolean;
+  loop: LoopPlan | null;
+}) {
   const points = draw.controlPoints.length;
   const freehandCount = draw.segments.filter((s) => s?.snap === 'freehand').length;
   const area = draw.area;
@@ -74,6 +94,7 @@ function Toolbar({ draw, onDone, keys }: { draw: Drawing; onDone: () => void; ke
     isFinger: finger,
     isArea: !!area,
     points,
+    loopOther: loop?.other ?? null,
   });
   const contextual = draw.selected !== null || draw.canPutBack || draw.followOffer !== null;
 
@@ -153,6 +174,8 @@ function Toolbar({ draw, onDone, keys }: { draw: Drawing; onDone: () => void; ke
               ↶ Undo
             </button>
 
+            {loop && <CloseLoop draw={draw} loop={loop} />}
+
             <button
               type="button"
               onClick={onDone}
@@ -184,3 +207,26 @@ function Toolbar({ draw, onDone, keys }: { draw: Drawing; onDone: () => void; ke
  */
 const TOOL =
   'rounded-full px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40';
+
+/**
+ * Ends a return trip on the first point of the way already drawn, routed like
+ * any click (or straight in freehand). Disabled, and saying why in its label,
+ * until there is a point to come from and while the loop is already closed.
+ */
+function CloseLoop({ draw, loop }: { draw: Drawing; loop: LoopPlan }) {
+  const reason = whyCannotCloseLoop(draw.controlPoints, loop.closeAt, loop.other === null);
+  const label = reason ? `Close the loop: ${reason}` : 'Close the loop';
+  return (
+    <button
+      type="button"
+      data-testid="close-loop"
+      onClick={() => void draw.addPoint(loop.closeAt)}
+      disabled={reason !== null}
+      aria-label={label}
+      title={reason ? label : `End the line where ${loop.other ?? 'it'} began`}
+      className={TOOL}
+    >
+      ⟲ Close the loop
+    </button>
+  );
+}

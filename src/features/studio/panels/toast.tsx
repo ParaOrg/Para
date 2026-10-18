@@ -34,7 +34,7 @@ export function Toast({
       data-testid="toast"
       className={
         'absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 rounded-full px-4 py-2 text-sm text-white shadow-lg ' +
-        'max-sm:inset-x-4 max-sm:top-[calc(4rem+env(safe-area-inset-top))] max-sm:bottom-auto max-sm:translate-x-0 max-sm:flex-wrap max-sm:rounded-2xl max-sm:py-3 ' +
+        'max-sm:inset-x-4 max-sm:top-[calc(4rem+var(--map-safe-top))] max-sm:bottom-auto max-sm:translate-x-0 max-sm:flex-wrap max-sm:rounded-2xl max-sm:py-3 ' +
         TONE[tone].box
       }
     >

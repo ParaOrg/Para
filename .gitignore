@@ -24,3 +24,4 @@ storybook-static
 # deploy (public/icons/ carries what the site needs).
 /*.png
 public/branding/
+supabase/.temp/

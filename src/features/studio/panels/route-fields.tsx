@@ -8,6 +8,8 @@ interface RouteFieldsProps {
   fareNote: string;
   /** The route's facts belong to the route: locked for a return trip and a retried new route. */
   isLocked: boolean;
+  /** An ikot is called by its signboard, so it is required there; elsewhere it is an observed fact. */
+  isSignboardRequired?: boolean;
   onSignboardChange: (signboard: string) => void;
   onModeChange: (mode: TransportMode) => void;
   onFareNoteChange: (fareNote: string) => void;
@@ -22,6 +24,7 @@ export function RouteFields({
   mode,
   fareNote,
   isLocked,
+  isSignboardRequired = false,
   onSignboardChange,
   onModeChange,
   onFareNoteChange,
@@ -29,12 +32,18 @@ export function RouteFields({
   return (
     <>
       <label className="block text-xs font-medium text-neutral-700">
-        Signboard <span className="text-neutral-400">(what is painted on the jeep — optional)</span>
+        Signboard{' '}
+        <span className="text-neutral-400">
+          {isSignboardRequired
+            ? "(the ikot's name, what is painted on the jeep — required)"
+            : '(what is painted on the jeep — optional)'}
+        </span>
         <input
+          aria-required={isSignboardRequired}
           disabled={isLocked}
           value={signboard}
           onChange={(e) => onSignboardChange(e.target.value)}
-          placeholder="Fairview – Tala"
+          placeholder={isSignboardRequired ? 'UP – Ikot' : 'Fairview – Tala'}
           className={FIELD}
         />
       </label>

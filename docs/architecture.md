@@ -8,9 +8,9 @@ This page is generated from the code, so it cannot go stale. It shows the struct
 
 A unit is a folder: an app, a feature (or a concern folder of a feature that has them), a kind of shared code, a design-system layer, or the styles.
 
-- **app**: `public-map`, `studio`
-- **features**: `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `studio`, `studio/auth`, `studio/data`, `studio/drawing`, `studio/panels`
-- **shared**: `hooks`, `ui`, `utils`
+- **app**: `contribute`, `public-map`, `studio`
+- **features**: `contribute`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/review`
+- **shared**: `hooks`, `lib`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
 
@@ -19,24 +19,31 @@ A unit is a folder: an app, a feature (or a concern folder of a feature that has
 ```mermaid
 flowchart TD
   subgraph app_layer["app"]
+    app_contribute["contribute"]
     app_public_map["public-map"]
     app_studio["studio"]
   end
   subgraph features_layer["features"]
+    features_contribute["contribute"]
     features_locator["locator"]
     features_published_map["published-map"]
     features_routes_cards["routes/cards"]
     features_routes_geo["routes/geo"]
     features_routes_map["routes/map"]
     features_routes_model["routes/model"]
+    features_routes_published["routes/published"]
     features_studio["studio"]
     features_studio_auth["studio/auth"]
     features_studio_data["studio/data"]
     features_studio_drawing["studio/drawing"]
+    features_studio_maps["studio/maps"]
     features_studio_panels["studio/panels"]
+    features_studio_review["studio/review"]
   end
   subgraph shared_layer["shared"]
     shared_hooks["hooks"]
+    shared_lib["lib"]
+    shared_types["types"]
     shared_ui["ui"]
     shared_utils["utils"]
   end
@@ -47,18 +54,29 @@ flowchart TD
   subgraph styles_layer["styles"]
     styles["styles"]
   end
+  app_contribute --> design_system_foundation
+  app_contribute --> features_contribute
+  app_contribute --> styles
   app_public_map --> features_locator
   app_public_map --> features_published_map
   app_public_map --> features_routes_cards
   app_public_map --> features_routes_map
   app_public_map --> features_routes_model
+  app_public_map --> features_routes_published
   app_public_map --> shared_hooks
   app_public_map --> styles
   app_studio --> features_routes_cards
   app_studio --> features_routes_map
   app_studio --> features_routes_model
   app_studio --> features_studio
+  app_studio --> shared_types
   app_studio --> styles
+  features_contribute --> design_system_primitives
+  features_contribute --> features_routes_cards
+  features_contribute --> features_routes_map
+  features_contribute --> features_routes_model
+  features_contribute --> shared_ui
+  features_contribute --> shared_utils
   features_locator --> features_routes_map
   features_locator --> features_routes_model
   features_locator --> shared_hooks
@@ -66,7 +84,7 @@ flowchart TD
   features_locator --> shared_utils
   features_published_map --> design_system_primitives
   features_published_map --> features_routes_map
-  features_published_map --> features_routes_model
+  features_published_map --> features_routes_published
   features_published_map --> shared_utils
   features_routes_cards --> design_system_primitives
   features_routes_cards --> features_routes_model
@@ -82,21 +100,28 @@ flowchart TD
   features_routes_map --> shared_utils
   features_routes_model --> features_routes_geo
   features_routes_model --> shared_utils
+  features_routes_published --> features_routes_model
   features_studio --> features_studio_auth
   features_studio --> features_studio_data
   features_studio --> features_studio_drawing
+  features_studio --> features_studio_maps
   features_studio --> features_studio_panels
+  features_studio --> features_studio_review
   features_studio_auth --> features_routes_map
   features_studio_auth --> features_studio_data
   features_studio_auth --> features_studio_panels
   features_studio_data --> features_routes_geo
   features_studio_data --> features_routes_model
+  features_studio_data --> features_routes_published
+  features_studio_data --> shared_types
   features_studio_data --> shared_utils
   features_studio_drawing --> design_system_foundation
   features_studio_drawing --> features_routes_map
   features_studio_drawing --> features_routes_model
   features_studio_drawing --> features_studio_data
   features_studio_drawing --> shared_utils
+  features_studio_maps --> design_system_primitives
+  features_studio_maps --> features_studio_data
   features_studio_panels --> design_system_primitives
   features_studio_panels --> features_routes_cards
   features_studio_panels --> features_routes_geo
@@ -106,6 +131,10 @@ flowchart TD
   features_studio_panels --> features_studio_drawing
   features_studio_panels --> shared_ui
   features_studio_panels --> shared_utils
+  features_studio_review --> design_system_primitives
+  features_studio_review --> features_studio_data
+  features_studio_review --> features_studio_maps
+  features_studio_review --> shared_lib
   shared_ui --> design_system_primitives
   shared_ui --> shared_hooks
   styles --> design_system_foundation
@@ -115,22 +144,29 @@ flowchart TD
 
 | Unit | Imports |
 | --- | --- |
-| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `styles` |
-| `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `styles` |
+| `app/contribute` | `design-system/foundation`, `features/contribute`, `styles` |
+| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `styles` |
+| `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
+| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/model`, `shared/utils` |
+| `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/geo` | `shared/utils` |
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
-| `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/panels` |
+| `features/routes/published` | `features/routes/model` |
+| `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/review` |
 | `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels` |
-| `features/studio/data` | `features/routes/geo`, `features/routes/model`, `shared/utils` |
+| `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
+| `features/studio/maps` | `design-system/primitives`, `features/studio/data` |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
+| `features/studio/review` | `design-system/primitives`, `features/studio/data`, `features/studio/maps`, `shared/lib` |
 | `shared/hooks` | — |
+| `shared/lib` | — |
+| `shared/types` | — |
 | `shared/ui` | `design-system/primitives`, `shared/hooks` |
 | `shared/utils` | — |
 | `styles` | `design-system/foundation` |
@@ -139,17 +175,21 @@ flowchart TD
 
 A feature's `index.ts` is the only door into it for code outside the feature. What each one exports:
 
+### `features/contribute`
+
+`ContributePage`
+
 ### `features/locator`
 
 `useGazeHush`, `CommuterLocation`
 
 ### `features/published-map`
 
-`fetchIndex`, `loadDirectionsFromFile`, `loadHotspotsFromFile`, `openingDirections`, `fetchLine`, `listenForInstallOffer`, `InstallPrompt`, `loadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
+`listenForInstallOffer`, `InstallPrompt`, `loadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
 
 ### `features/studio`
 
-`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `AccountPill`, `NewButtons`, `returnTripLeft`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`, `useStudioTrip`
+`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `MapPlaceholder`, `MapSwitch`, `useStudioMap`, `AccountPill`, `NewButtons`, `returnTripLeft`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`, `useStudioTrip`, `StudioReview`, `StudioPublicView`
 
 ## Entry points
 

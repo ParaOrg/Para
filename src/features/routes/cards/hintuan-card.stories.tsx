@@ -339,3 +339,28 @@ export const OverATrip: Story = {
     await expect(args.onBack).toHaveBeenCalledOnce();
   },
 };
+
+const ikot: Direction = {
+  ...fvOut,
+  id: 'ikot-out',
+  routeId: 'ikot',
+  name: 'UP – Ikot',
+  reversed: false,
+  route: fvOut.route && {
+    ...fvOut.route,
+    id: 'ikot',
+    signboard: 'UP – Ikot',
+    headHotspotId: null,
+    tailHotspotId: null,
+    name: 'UP – Ikot',
+    isLoop: true,
+  },
+};
+
+/** Only a loop passes: its card says Ikot where its way goes, and the counter has no SWITCH. */
+export const OnlyALoop: Story = {
+  args: {
+    directions: [ikot],
+    linkedDirectionIds: () => [ikot.id],
+  },
+};

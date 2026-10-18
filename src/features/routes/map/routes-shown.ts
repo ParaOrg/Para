@@ -1,4 +1,4 @@
-import { isDrawn, type Direction } from '../model/routes';
+import { isDrawn, isLoop, type Direction } from '../model/routes';
 
 /*
  * What the saved directions show and light, worked out from what the sheet
@@ -22,7 +22,8 @@ export function showingOf<T extends Direction>(
   cardShows: readonly string[] | null,
 ): T[] {
   if (cardShows) return directions.filter((v) => cardShows.includes(v.id) && isDrawn(v));
-  return candidates.filter((v) => v.reversed === back && isDrawn(v));
+  // A loop has one direction and no way back: it shows whichever way round the list is.
+  return candidates.filter((v) => (v.reversed === back || isLoop(v)) && isDrawn(v));
 }
 
 /**

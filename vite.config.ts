@@ -14,7 +14,7 @@ import { mapFileConstants } from './scripts/node/map-file-constants.ts';
 // and map-file.ts reaches the rest of the app through `@/` (2026-10-07, the
 // restructure). The same reader guards the build in check-build.mjs.
 const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
-  readFileSync(new URL('./src/features/published-map/map-file.ts', import.meta.url), 'utf8'),
+  readFileSync(new URL('./src/features/routes/published/map-file.ts', import.meta.url), 'utf8'),
 );
 
 /**
@@ -46,20 +46,24 @@ function chunkModules(): Plugin {
 
 /**
  * The PWA plugin writes its `<link rel="manifest">` into every page it builds
- * without looking at which page it is, so left alone /studio/ would install
- * as Para Po too. This runs after it (both are post-order; this one is later
- * in the list) and takes the link back out of the studio page. The manifest
- * belongs to / only; scripts/checks/check-build.mjs checks the built studio page.
+ * without looking at which page it is, so left alone /studio/ and /contribute/
+ * would install as Para Po too. This runs after it (both are post-order; this
+ * one is later in the list) and takes the link back out of those pages. The
+ * manifest belongs to / only; scripts/checks/check-build.mjs checks the built
+ * pages.
  */
-function studioWithoutManifest(): Plugin {
+function onlyTheMapHasAManifest(): Plugin {
   return {
-    name: 'parapo:studio-without-manifest',
+    name: 'parapo:only-the-map-has-a-manifest',
     apply: 'build',
     enforce: 'post',
     transformIndexHtml: {
       order: 'post',
       handler(html, ctx) {
-        if (!ctx.filename.replaceAll('\\', '/').endsWith('/studio/index.html')) return html;
+        const file = ctx.filename.replaceAll('\\', '/');
+        if (!file.endsWith('/studio/index.html') && !file.endsWith('/contribute/index.html')) {
+          return html;
+        }
         return html.replace(/<link rel="manifest"[^>]*>/g, '');
       },
     },
@@ -308,13 +312,13 @@ export default defineConfig({
         ],
         // The map has exactly one address, `/` (with any query), and only that is
         // answered from the stored page. Any other navigation goes to the
-        // server as it would without a worker — so `/studio` (with or without
-        // the slash) opens the studio, and `/data/index.v4.json` typed into a tab
-        // shows the data, not the app. The studio sits inside the installed
+        // server as it would without a worker — so `/studio` and `/contribute` (with
+        // or without the slash) open their own pages, and `/data/index.v5.json`
+        // typed into a tab shows the data, not the app. The studio sits inside the installed
         // app's scope regardless; the denylist is the belt to the allowlist.
         navigateFallback: 'index.html',
         navigateFallbackAllowlist: [/^\/(\?.*)?$/],
-        navigateFallbackDenylist: [/^\/studio(\/|$)/],
+        navigateFallbackDenylist: [/^\/studio(\/|$)/, /^\/contribute(\/|$)/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false,
@@ -323,14 +327,15 @@ export default defineConfig({
             // The published map's index: fresh when the network answers in
             // time, the last copy otherwise. Only GET, only this file — the
             // studio's database reads share the origin and must never come
-            // from here. (Shapes 1 to 3, /data/map.json, /data/index.json and
-            // /data/index.v3.json, are older apps', each read through its own
-            // worker; an older copy left in this store is the offline map
-            // until the new one is fetched, map-file.ts's STORED_OLD.)
+            // from here. (Shapes 1 to 4, /data/map.json, /data/index.json,
+            // /data/index.v3.json and /data/index.v4.json, are older apps', each
+            // read through its own worker; an older copy left in this store is
+            // the offline map until the new one is fetched, map-file.ts's
+            // STORED_OLD. maxEntries 1 drops it only when the new one is stored.)
             urlPattern: ({ url, request }) =>
               request.method === 'GET' &&
               url.origin === self.location.origin &&
-              url.pathname === '/data/index.v4.json',
+              url.pathname === '/data/index.v5.json',
             handler: 'NetworkFirst',
             options: {
               cacheName: 'map-file',
@@ -477,7 +482,7 @@ export default defineConfig({
         ],
       },
     }),
-    studioWithoutManifest(),
+    onlyTheMapHasAManifest(),
     stylesheetsFirst(),
   ],
   resolve: {
@@ -495,12 +500,14 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
-    // Two front doors, one build: the public map at / and the editor at
-    // /studio/. Each HTML file is its own entry point with its own <head>.
+    // Three front doors, one build: the public map at /, the editor at /studio/
+    // and the contributors' field test at /contribute/. Each HTML file is its own
+    // entry point with its own <head>.
     rolldownOptions: {
       input: {
         'public-map': 'index.html',
         studio: 'studio/index.html',
+        contribute: 'contribute/index.html',
       },
       // What both pages load, in chunks named for what they are (the
       // cheap-phone plan, step 12, 2026-10-05): MapLibre, React, and the

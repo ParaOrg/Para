@@ -1,10 +1,10 @@
 // The published map against itself: do its lines, links and ends agree?
 //
-//   npm run check:data                          public/data/index.v4.json and its lines/
+//   npm run check:data                          public/data/index.v5.json and its lines/
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/checks/check-map-data.mjs [file] [--markdown out.md]
 //
 // The file is the index (schema 2 since 2026-09-29; 3, the train lines in,
-// and 4, the ferry too, since 2026-10-03): each direction's line is read from lines/<id>.json beside it, and a direction whose line file is
+// 4, the ferry too, since 2026-10-03, and 5, loops too, since 2026-10-17): each direction's line is read from lines/<id>.json beside it, and a direction whose line file is
 // missing or is not its own is a problem. A schema 1 file (map.json, every
 // line in it) is read as it is.
 //
@@ -34,7 +34,7 @@
 // else to), are a problem. Stretches under another key, or unreadable, the
 // app does not take: it works them out itself, on the phone, as before
 // step 13. Against the index the app reads (MAP_FILE_SCHEMA's,
-// index.v4.json) that is a warning, so the owner's issue opens (the owner's
+// index.v5.json) that is a warning, so the owner's issue opens (the owner's
 // answer to question T of the cheap-phone report, 2026-10-06): the publish
 // writes every line file against that very index, so in its run only a
 // fault in the publish can make them differ; on the committed map (npm run
@@ -52,8 +52,11 @@ import { toHotspot, toHotspotLink } from '../../src/features/routes/model/hotspo
 import {
   FERRY_LINES,
   LINES,
+  LOOP_CLOSED_M,
   RAIL_LINES,
+  isClosedLine,
   isFerry,
+  isLoop,
   isRail,
   servedBy,
 } from '../../src/features/routes/model/routes.ts';
@@ -62,11 +65,11 @@ import { bboxOf, bboxesOverlap, haversine, lineLength } from '../../src/shared/u
 import { distanceToRingM } from '../../src/features/routes/geo/ring.ts';
 import { firstNearIndex } from '../../src/features/routes/geo/pass.ts';
 import { linePass, passBoxes, readablePass } from '../../src/features/routes/model/line-pass.ts';
-import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
+import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
 import {
   indexOutlineSchema,
   indexSchema,
-} from '../../src/features/published-map/schemas/index-schema.ts';
+} from '../../src/features/routes/published/index-schema.ts';
 
 /** How far a line's first or last point may sit from the hotspot it leaves from or arrives at. */
 export const END_WITHIN_M = 50;
@@ -176,9 +179,12 @@ export function checkMapData(file) {
     hotspotById.set(s.id, s);
   }
   const directionById = new Map();
+  /** The directions each loop route has: a loop is one way round. */
+  const loopDirections = new Map();
   for (const v of variants) {
     if (directionById.has(v.id)) problems.push(`direction id ${v.id} appears twice`);
     directionById.set(v.id, v);
+    if (isLoop(v)) loopDirections.set(v.routeId, (loopDirections.get(v.routeId) ?? 0) + 1);
   }
 
   for (const s of stops) {
@@ -234,16 +240,35 @@ export function checkMapData(file) {
   let unmapped = 0;
   for (const v of variants) {
     const name = `${v.route?.name ?? v.routeId} · ${v.name ?? v.id}`;
+    const loop = isLoop(v);
     const head = hotspotById.get(v.route?.headHotspotId);
     const tail = hotspotById.get(v.route?.tailHotspotId);
-    if (!head)
-      problems.push(
-        `${name}: its route's head hotspot ${v.route?.headHotspotId} is not in the file`,
-      );
-    if (!tail)
-      problems.push(
-        `${name}: its route's tail hotspot ${v.route?.tailHotspotId} is not in the file`,
-      );
+    if (loop) {
+      // A loop has neither end, one direction and a line that ends where it began (0021).
+      // An app reading an older shape refuses the whole index for the row.
+      if (typeof file.schema === 'number' && file.schema < MAP_FILE_SCHEMA)
+        problems.push(
+          `${name}: a loop in a shape-${file.schema} file, which an app reading it would refuse whole`,
+        );
+      if (v.route?.headHotspotId != null || v.route?.tailHotspotId != null)
+        problems.push(`${name}: a loop with an end hotspot; a loop has neither head nor tail`);
+      if (v.reversed || loopDirections.get(v.routeId) > 1)
+        problems.push(`${name}: a loop has one direction, the way it was drawn`);
+      const linkedPlaces = (linksOf.get(v.id) ?? []).filter((l) => hotspotById.has(l.hotspotId));
+      if (linkedPlaces.length < 2)
+        warnings.push(
+          `${name}: a loop with ${linkedPlaces.length} place(s) linked; its trip needs at least 2 to start somewhere and go somewhere`,
+        );
+    } else {
+      if (!head)
+        problems.push(
+          `${name}: its route's head hotspot ${v.route?.headHotspotId} is not in the file`,
+        );
+      if (!tail)
+        problems.push(
+          `${name}: its route's tail hotspot ${v.route?.tailHotspotId} is not in the file`,
+        );
+    }
     if (isFerry(v.route?.mode) && !FERRY_LINES.includes(v.route?.routeCode)) {
       problems.push(
         `${name}: a ferry route whose line ("${v.route?.routeCode ?? ''}") is not a ferry line, so it stops at no station`,
@@ -270,9 +295,13 @@ export function checkMapData(file) {
       continue;
     }
 
+    if (loop && !isClosedLine(line)) {
+      problems.push(`${name}: a loop's line must end within ${LOOP_CLOSED_M} m of where it began`);
+    }
+
     // The ends. A line may be drawn from the far end (the save panel allows
     // it, with a warning) and the app turns it round; that is a note.
-    if (head && tail && head.point?.coordinates && tail.point?.coordinates) {
+    if (!loop && head && tail && head.point?.coordinates && tail.point?.coordinates) {
       const [from, to] = v.reversed ? [tail, head] : [head, tail];
       const start = line[0];
       const end = line[line.length - 1];
@@ -415,6 +444,19 @@ export function markdownReport(file, result) {
   return lines.join('\n');
 }
 
+/** Fields only contributor data has (contribute/08): never in a published file. */
+export const CONTRIBUTOR_FIELDS = ['contribution_id', 'contributor_id', 'hinto'];
+
+/** Where in `value` a contributor-only field is, as paths; none when clean. */
+export function contributorFieldsIn(value, at = '') {
+  if (Array.isArray(value)) return value.flatMap((v, i) => contributorFieldsIn(v, `${at}[${i}]`));
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value).flatMap(([k, v]) => [
+    ...(CONTRIBUTOR_FIELDS.includes(k) ? [`${at}.${k}`] : []),
+    ...contributorFieldsIn(v, `${at}.${k}`),
+  ]);
+}
+
 /**
  * The published map with every line in full: an index's directions each take
  * their line from lines/<id>.json beside it; a schema 1 file has them already.
@@ -422,9 +464,11 @@ export function markdownReport(file, result) {
  */
 export function readPublished(path) {
   const file = JSON.parse(readFileSync(path, 'utf8'));
-  if (![2, 3, 4].includes(file.schema)) return { file, problems: [] };
+  if (![2, 3, 4, 5].includes(file.schema)) return { file, problems: [] };
   const problems = [];
-  // Read as the app reads it (src/features/published-map/schemas/index-schema.ts):
+  for (const where of contributorFieldsIn(file).slice(0, 5))
+    problems.push(`contributor data in a published file: ${where}`);
+  // Read as the app reads it (src/features/routes/published/index-schema.ts):
   // a row the reader would refuse is a problem, so the map is not published.
   const read = indexSchema.safeParse(file);
   if (!read.success) {
@@ -440,6 +484,8 @@ export function readPublished(path) {
       return { ...v, shape: overview };
     }
     const line = JSON.parse(readFileSync(linePath, 'utf8'));
+    for (const where of contributorFieldsIn(line).slice(0, 5))
+      problems.push(`contributor data in lines/${v.id}.json: ${where}`);
     if (line.id !== v.id || line.shape?.type !== 'LineString') {
       problems.push(`${v.direction_name ?? v.id}: lines/${v.id}.json is not this direction's line`);
       return { ...v, shape: overview };
@@ -469,7 +515,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const mdPath = mdAt >= 0 ? args[mdAt + 1] : null;
   const path =
     args.filter((a, i) => a !== '--markdown' && !(mdAt >= 0 && i === mdAt + 1))[0] ??
-    'public/data/index.v4.json';
+    'public/data/index.v5.json';
   let file;
   let reading = [];
   try {

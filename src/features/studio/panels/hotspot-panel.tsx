@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { coarse } from '@/features/routes/map/map-view';
 import { parseAliases, type HotspotRow } from '@/features/routes/model/hotspots';
-import type { DirectionRow } from '@/features/routes/model/routes';
+import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
 import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
 import { PassesThrough } from './passes-through';
@@ -27,6 +27,8 @@ interface HotspotPanelProps {
   onCancel: () => void;
   /** Hears the row a save wrote, the moment it is in, to keep it beyond this panel. */
   onWritten?: (hotspotId: string) => void;
+  /** A save stored as a draft (STUDIO_DRAFTS). */
+  onDrafted?: () => void;
 }
 
 const field =
@@ -51,6 +53,7 @@ export function HotspotPanel({
   onSaved,
   onCancel,
   onWritten,
+  onDrafted,
 }: HotspotPanelProps) {
   const area = draw.area;
   const kind = area?.kind ?? 'hintuan';
@@ -68,7 +71,11 @@ export function HotspotPanel({
     () => knownInformalNames(hotspots, existing?.id),
     [hotspots, existing?.id],
   );
-  const { busy, error, setError, writtenId, submit } = useHotspotSave({ onSaved, onWritten });
+  const { busy, error, setError, writtenId, submit } = useHotspotSave({
+    onSaved,
+    onWritten,
+    onDrafted,
+  });
   const hotspotId = writtenId ?? existing?.id ?? area?.hotspotId ?? null;
 
   // The directions the outline can reach, read in full; Save waits for them.
@@ -85,11 +92,20 @@ export function HotspotPanel({
   const [startTicks, setStartTicks] = useState<Set<string> | null>(() =>
     existing ? new Set(existingLinks) : null,
   );
-  if (lined && startTicks === null) setStartTicks(new Set(directionsStartingIn(ring, lined)));
+  if (lined && startTicks === null)
+    setStartTicks(
+      new Set(
+        directionsStartingIn(
+          ring,
+          lined.filter((v) => !isLoop(v)),
+        ),
+      ),
+    );
   const [chosen, setChosen] = useState<ReadonlyMap<string, boolean>>(() => new Map());
   const ticked = useMemo(() => tickedDirections(startTicks, chosen), [startTicks, chosen]);
 
-  const groups = useMemo(() => groupBySignboard(lines), [lines]);
+  // An ikot links the terminals on it by itself (terminalLinks), so it is not a choice here.
+  const groups = useMemo(() => groupBySignboard(lines.filter((v) => !isLoop(v))), [lines]);
   const hintuanGroups = useMemo(
     () => groupBySignboard(lines.filter((v) => throughIds.has(v.id))),
     [lines, throughIds],

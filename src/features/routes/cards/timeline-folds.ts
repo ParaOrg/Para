@@ -25,12 +25,17 @@ export interface TimelineFold {
  * folded above the destination, where Variant3 draws them, so Set as start
  * moves nothing. An end row picked with the start kept is the ride's end
  * (rideRows' `endRow`). A lone row is shown as it is, with nothing to fold.
+ *
+ * On a loop a ride can wrap, from its start down to the bottom and on from the
+ * top to its end: the rows outside it are then the ones between, one fold
+ * under the name `after`, just above the start.
  */
 export function timelineFolds(
   rows: readonly { id: string }[],
   startId: string | null,
   endId: string | null,
   endRow: 'from' | 'to' | null = null,
+  isLoop = false,
 ): TimelineFold[] {
   const fold = (part: FoldPart, rowIds: string[]): TimelineFold[] =>
     rowIds.length > 1 ? [{ part, rowIds }] : [];
@@ -38,8 +43,8 @@ export function timelineFolds(
   if (startId === null && endId === null) return fold('all', ids);
   const isStartAlone = endId === null && endRow === null;
   const outside = isStartAlone
-    ? rowsOutsideRide(rows, null, startId)
-    : rowsOutsideRide(rows, startId, endId, endRow);
+    ? rowsOutsideRide(rows, null, startId, null, isLoop)
+    : rowsOutsideRide(rows, startId, endId, endRow, isLoop);
   const firstIn = ids.findIndex((id) => !outside.has(id));
   if (firstIn < 0) return fold('all', ids);
   return [

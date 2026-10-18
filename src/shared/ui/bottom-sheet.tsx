@@ -126,14 +126,18 @@ export function BottomSheet({
   // A finger on it: the glide is off, and --sheet-y is the drag's, written
   // straight onto the sheet move by move rather than rendered.
   const [dragging, setDragging] = useState(false);
+  // The status bar's height as this sheet sees it, before anything asks for Max's height.
+  useLayoutEffect(() => measureSafeTop(own.current), []);
   // Where it first stands, drawn with it: a card opening over another (a
   // place's name tapped) is new, and without this it would show at Max for a
   // moment and glide down to its height. Never changed after, so React
   // leaves the drag's and the glide's --sheet-y alone.
-  measureSafeTop();
   const [opensAt] = useState(() => ({ '--sheet-y': slide(snap) }) as CSSProperties);
   useDialogFocus(own, hidden);
-  useEscape(onClose, !hidden);
+  // A sheet left open under an inert page (the studio's other maps) is out of reach, Escape too.
+  useEscape(() => {
+    if (!own.current?.closest('[inert]')) onClose();
+  }, !hidden);
 
   /**
    * Where the sheet slides to. The page's `[data-dock-host]` hears it too, as
@@ -251,7 +255,7 @@ export function BottomSheet({
         // of it under the screen's bottom: padded by that, its list scrolls to the end.
         style={
           snap === 'max'
-            ? { paddingBottom: 'calc(env(safe-area-inset-top) + ' + MAX_STRIP_PX + 'px)' }
+            ? { paddingBottom: 'calc(var(--map-safe-top) + ' + MAX_STRIP_PX + 'px)' }
             : undefined
         }
       >

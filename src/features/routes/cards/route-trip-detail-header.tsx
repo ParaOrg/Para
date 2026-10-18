@@ -1,3 +1,4 @@
+import { CARD_TEXT } from './livery-card';
 import { VehicleIcon } from './vehicle-icon';
 import type { Livery } from '../model/liveries';
 import type { RailLine } from '../model/routes';
@@ -12,6 +13,8 @@ interface RouteTripDetailHeaderProps {
   way: string | null;
   /** The card's colour, the words' on every vehicle but a train. */
   livery: Livery;
+  /** A loop's signboard, UP – Ikot, beside its word: what tells it from another loop, Toki, that reads the same. Absent on every route with ends. */
+  name?: string;
 }
 
 /**
@@ -62,7 +65,7 @@ const HALF = 'bg-content-inverse px-3.5 py-0.5 text-lg/7 font-bold whitespace-no
  * The icon is decorative; the halves read "LRT-1, Northbound", the comma there for the pause the
  * gap draws.
  */
-export function RouteTripDetailHeader({ vehicle, way, livery }: RouteTripDetailHeaderProps) {
+export function RouteTripDetailHeader({ vehicle, way, livery, name }: RouteTripDetailHeaderProps) {
   const words = isLine(vehicle) ? LINE_WORDS[vehicle] : CARD_WORDS[livery];
   return (
     <div
@@ -81,6 +84,14 @@ export function RouteTripDetailHeader({ vehicle, way, livery }: RouteTripDetailH
           </>
         )}
       </p>
+      {name && (
+        <p
+          data-testid="trip-name"
+          className={'min-w-0 truncate text-lg/7 font-bold ' + CARD_TEXT[livery]}
+        >
+          {name}
+        </p>
+      )}
     </div>
   );
 }
