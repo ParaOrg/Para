@@ -27,6 +27,8 @@ interface HotspotPanelProps {
   onCancel: () => void;
   /** Hears the row a save wrote, the moment it is in, to keep it beyond this panel. */
   onWritten?: (hotspotId: string) => void;
+  /** A save stored as a draft (STUDIO_DRAFTS). */
+  onDrafted?: () => void;
 }
 
 const field =
@@ -51,6 +53,7 @@ export function HotspotPanel({
   onSaved,
   onCancel,
   onWritten,
+  onDrafted,
 }: HotspotPanelProps) {
   const area = draw.area;
   const kind = area?.kind ?? 'hintuan';
@@ -68,7 +71,11 @@ export function HotspotPanel({
     () => knownInformalNames(hotspots, existing?.id),
     [hotspots, existing?.id],
   );
-  const { busy, error, setError, writtenId, submit } = useHotspotSave({ onSaved, onWritten });
+  const { busy, error, setError, writtenId, submit } = useHotspotSave({
+    onSaved,
+    onWritten,
+    onDrafted,
+  });
   const hotspotId = writtenId ?? existing?.id ?? area?.hotspotId ?? null;
 
   // The directions the outline can reach, read in full; Save waits for them.

@@ -51,3 +51,16 @@ and re-applying 0022 must pass `0022_check.sql` again.
 
 It ends with `0022 revert: schema as before 0022 (twice), ledger row gone,
 re-apply passes 0022_check.sql`, or stops at the first failure.
+
+## studio-drafts.sh
+
+The studio's draft saves (`src/features/studio/data/draft-save.ts`, behind
+`VITE_STUDIO_DRAFTS`) end to end. Each payload is built by the studio's own
+code (`studio-drafts.mjs`) from the rows as they stand, claimed as an editor,
+submitted and approved. It checks that a stored draft changes no approved row
+(a hash of every fixture row before and after each claim), and that approval
+applies exactly the payload: an edit that drops a hintuan the line no longer
+passes and keeps a ticked terminal, a signboard list, a direction emptied, the
+last one taking the route down, a new route with its empty slot, and a new
+hotspot. A live edit after drafting makes approval answer `conflict`, with the
+approved rows left as that edit made them. Needs `node` (24) on the PATH.

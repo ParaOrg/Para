@@ -46,6 +46,8 @@ interface SavePanelProps {
    */
   directions?: DirectionRow[];
   onSaved: (v: DirectionRow) => void;
+  /** A save stored as a draft (STUDIO_DRAFTS). */
+  onDrafted?: () => void;
   /** Hears of a place made from the pickers, so the map's own list is read again. */
   onPlaceSaved?: () => void;
   onCancel: () => void;
@@ -73,6 +75,7 @@ export function SavePanel({
   hotspots: savedHotspots,
   directions = [],
   onSaved,
+  onDrafted,
   onPlaceSaved,
   onCancel,
 }: SavePanelProps) {
@@ -160,7 +163,13 @@ export function SavePanel({
   const loop = existing
     ? []
     : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
-  const { busy, error, setError, written, save } = useRouteSave({ facts, draw, hotspots, onSaved });
+  const { busy, error, setError, written, save } = useRouteSave({
+    facts,
+    draw,
+    hotspots,
+    onSaved,
+    onDrafted,
+  });
 
   // A return trip fills its route's slot and leaves the route as it is; Edit
   // route may change the route's facts, for both its directions. A new

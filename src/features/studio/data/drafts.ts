@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 
+import { toJson } from './json';
 import { parsed } from './read-all';
 import { requireSupabase } from './supabase';
 
@@ -97,6 +98,8 @@ export interface RouteDraftDirection {
   /** SQL null — a slot with no line (deleteDirection's emptied direction). */
   shape: unknown;
   overview: unknown;
+  /** Carried over as the row has it: approve_draft writes 'drawn' when it is absent. */
+  confidence?: string;
   borrowed_from?: string | null;
   borrowed_part?: string | null;
   borrowed_m?: number | null;
@@ -156,6 +159,31 @@ export async function claimDraft(
     p_payload: payload,
     p_note: note ?? null,
   });
+}
+
+/**
+ * A draft's payload replaced, if nobody changed it since it was read
+ * (`revision`). Editing a draft takes it back out of review: a pending draft
+ * goes back to 'draft', so an approval cannot pass a payload the reviewer has
+ * not seen. approve_draft validates the payload again before it applies it.
+ */
+export async function updateDraft(
+  draftId: string,
+  revision: number,
+  payload: Record<string, unknown>,
+): Promise<ReviewResult> {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from('draft')
+    .update({ payload: toJson(payload), status: 'draft', submitted_at: null })
+    .eq('id', draftId)
+    .eq('revision', revision)
+    .select(DRAFT_LIST_SELECT)
+    .maybeSingle();
+  if (error) throw new Error(`draft ${draftId}: ${error.message}`);
+  if (!data) return { code: 'revision_mismatch' };
+  const [row] = parsed(draftRowSchema, [data], 'draft');
+  return { code: 'ok', created: false, draft: row };
 }
 
 export async function submitDraft(draftId: string, revision: number): Promise<ReviewResult> {

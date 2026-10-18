@@ -176,7 +176,7 @@ export const ENDS_TAKEN =
 export const LOOP_TAKEN =
   'Another ikot already has this signboard. Give one of them a via to tell them apart.';
 
-const DRAWN_ALREADY =
+export const DRAWN_ALREADY =
   'A route between these two places already has this direction drawn. To change it, open it and press Edit route.';
 
 export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionRow> {

@@ -12,6 +12,7 @@ import type { DirectionRow } from '@/features/routes/model/routes';
 import { hotspotRefusal } from './hotspot-checks';
 import { placeAlreadyNamed } from './places';
 import { useNearLines } from './use-near-lines';
+import { STUDIO_DRAFTS } from '../data/flags';
 import { saveHotspot } from '../data/hotspots-write';
 
 interface UseNewPlaceSaveOptions {
@@ -49,6 +50,11 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
     // out on them, and the overviews in their place would link the wrong stretch.
     if (isSaving.current || lined === null) return;
     setError(null);
+    // A draft place is not on the map, so no route can end at it until it is approved.
+    if (STUDIO_DRAFTS) {
+      setError('Draw the new place on the map first: a route can end at it once it is approved.');
+      return;
+    }
     if (name.trim() === '') {
       setError('Give the place the name written on the ground.');
       return;

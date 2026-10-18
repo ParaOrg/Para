@@ -104,5 +104,14 @@ export function fakeSupabase(answer) {
       return storage.removed(paths);
     },
   });
-  return { client: { from, storage: { from: bucket } }, log, storage };
+  // An RPC, recorded as { table: 'rpc', op: <function>, payload: <args> } and
+  // answered by `answer` like a query.
+  const rpc = (fn, args) => {
+    const q = { table: 'rpc', op: fn, payload: args, filters: [] };
+    log.push(q);
+    return Promise.resolve()
+      .then(() => answer(q))
+      .then((r) => ({ data: null, error: null, ...r }));
+  };
+  return { client: { from, rpc, storage: { from: bucket } }, log, storage };
 }

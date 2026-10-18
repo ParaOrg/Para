@@ -4,6 +4,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 
 import type { SaveToast } from './save-toasts';
+import { DRAFTED } from '../data/draft-save';
 
 interface UseSaveFlowOptions {
   /** A reset link's problem, read once on arrival: the first toast, if any. */
@@ -58,6 +59,13 @@ export function useSaveFlow({
     setToast({ kind: 'hotspot', s });
   };
 
+  // With STUDIO_DRAFTS on: the save is a draft, so nothing on the map is read again.
+  const onDrafted = () => {
+    setIsSaving(false);
+    cancelDrawing();
+    setNotice(DRAFTED);
+  };
+
   return {
     isSaving,
     setIsSaving,
@@ -68,5 +76,6 @@ export function useSaveFlow({
     justSaved: toast?.kind === 'route' ? toast.v : null,
     onSaved,
     onSavedHotspot,
+    onDrafted,
   };
 }

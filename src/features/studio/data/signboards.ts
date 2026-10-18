@@ -1,5 +1,7 @@
 import { cleanSignboardSvg } from '@/features/routes/model/signboard-svg';
 
+import { draftRefusal, signboardsDraft } from './draft-save';
+import { STUDIO_DRAFTS } from './flags';
 import { getSupabase, supabaseConfig } from './supabase';
 
 /**
@@ -26,6 +28,20 @@ export function signboardUrl(name: string): string {
 async function writeList(directionId: string, names: readonly string[]): Promise<string[]> {
   const client = getSupabase();
   if (!client) throw new Error('Supabase is not configured.');
+  // With drafts on, the list goes into the route's draft; the approved row stays.
+  if (STUDIO_DRAFTS) {
+    const { data: row, error: readError } = await client
+      .from('route_variant')
+      .select('route_id')
+      .eq('id', directionId)
+      .single();
+    if (readError) throw new Error(`The signboards were not saved: ${readError.message}`);
+    const refusal = draftRefusal(
+      await signboardsDraft({ id: directionId, routeId: row.route_id }, names),
+    );
+    if (refusal) throw new Error(`The signboards were not saved: ${refusal}`);
+    return [...names];
+  }
   const { data, error } = await client
     .from('route_variant')
     .update({ signboards: [...names] })
@@ -93,7 +109,9 @@ export async function removeSignboard(
     directionId,
     current.filter((n) => n !== name),
   );
-  await client.storage.from(BUCKET).remove([name]);
+  // With drafts on, the approved list still names the file until the draft is
+  // approved: it stays, an unlisted file once approved, which the publish never reads.
+  if (!STUDIO_DRAFTS) await client.storage.from(BUCKET).remove([name]);
   return next;
 }
 
