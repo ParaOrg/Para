@@ -2,7 +2,8 @@
 
 `run.sh` builds a fresh database from every migration in ledger order on a
 plain Postgres (no Supabase project), adds rows as the live project has them,
-applies `0018_review.sql` over them twice, then checks it:
+applies 0018 over them twice through `../apply/0018_apply.sql` (the file the
+owner pastes), then checks it, and undoes it on a second database:
 
 - `bootstrap.sql`: stand-ins for what the migrations expect of Supabase
   (`anon`, `authenticated`, `auth.users`, `auth.uid()`, `storage`). Only for a
@@ -13,6 +14,9 @@ applies `0018_review.sql` over them twice, then checks it:
   takedown log; the aggregate revision; drafts.
 - `concurrency.sh`: two sessions race an approval against a take-down of one
   of its ends, in both orders.
+- `../apply/0018_check.sql` must be all true after the apply, and
+  `../apply/0018_revert.sql` must refuse over a takedown and, on a clean
+  database, leave a schema dump identical to one 0018 never touched.
 
 ```sh
 docker run -d --name pg-verify -e POSTGRES_PASSWORD=pw postgres:17
@@ -20,5 +24,5 @@ PSQL="docker exec -i pg-verify psql -U postgres" supabase/verify/run.sh
 docker rm -f pg-verify
 ```
 
-It ends with `after-0018: all checks passed` and `concurrency: both orders
-refused`, or stops at the first failure.
+It ends with `revert: schema as before 0018, ledger row gone, refused over a
+takedown`, or stops at the first failure.

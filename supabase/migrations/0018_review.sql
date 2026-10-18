@@ -105,8 +105,9 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  -- A direction's write sets the route's revision itself; leave it.
-  if new.revision = old.revision then
+  -- A direction's write sets the route's revision itself; leave it. A
+  -- revision written by hand never goes back or stands still.
+  if new.revision <= old.revision then
     new.revision := old.revision + 1;
   end if;
   if new.status is distinct from old.status then

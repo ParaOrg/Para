@@ -110,8 +110,21 @@ update route_variant set signboards = array['X'] where id = '30000000-0000-0000-
 update route set fare_note = 'x' where id = '20000000-0000-0000-0000-000000000002';
 delete from route_stop where route_variant_id = '30000000-0000-0000-0000-000000000002';
 delete from route_variant where id = '30000000-0000-0000-0000-000000000002';
+update route set revision = 1 where id = '20000000-0000-0000-0000-000000000002';
 reset role;
-select pg_temp.check((select revision = :r0 + 4 from route where id = '20000000-0000-0000-0000-000000000002'), 'revision counts directions');
+select pg_temp.check((select revision = :r0 + 5 from route where id = '20000000-0000-0000-0000-000000000002'), 'revision counts directions, never goes back');
+
+-- An Ikot: approved with no ends, public with its direction, its direction counted.
+select revision as l0 from route where id = '20000000-0000-0000-0000-0000000000c2' \gset
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+insert into route_variant (id, route_id) values ('30000000-0000-0000-0000-0000000000c2', '20000000-0000-0000-0000-0000000000c2');
+reset role;
+select pg_temp.check((select revision = :l0 + 1 and status = 'approved' from route where id = '20000000-0000-0000-0000-0000000000c2'), 'loop approved, its direction counted');
+set role anon;
+select pg_temp.check((select count(*) = 1 from route where is_loop), 'anon sees the approved loop only');
+select pg_temp.check((select count(*) = 1 from route_variant v join route r on r.id = v.route_id where r.is_loop), 'anon sees its direction only');
+reset role;
 
 -- Drafts.
 set role authenticated;

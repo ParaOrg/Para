@@ -24,3 +24,7 @@ create table storage.buckets (
 );
 create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);
 alter table storage.objects enable row level security;
+
+create schema supabase_migrations;
+create table supabase_migrations.schema_migrations (version text primary key, statements text[], name text);
+insert into supabase_migrations.schema_migrations (version, name) values ('20261018020203', '0021_loops');
