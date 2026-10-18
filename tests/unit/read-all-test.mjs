@@ -9,7 +9,8 @@
 // row, whatever the server's cap, and asks once when one page is enough.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readAll, PAGE } from '../../src/features/studio/data/read-all.ts';
+import * as z from 'zod/mini';
+import { parsed, readAll, PAGE } from '../../src/features/studio/data/read-all.ts';
 
 /**
  * A table of `total` rows behind a server that answers at most `cap` rows a
@@ -128,5 +129,30 @@ test("the server's error is thrown with its message", async () => {
       error: { message: 'permission denied for table stop' },
     })),
     { message: 'permission denied for table stop' },
+  );
+});
+
+const rowSchema = z.object({ id: z.number(), name: z.string() });
+
+test('parsed passes rows the schema reads through, in order', () => {
+  const rows = [
+    { id: 1, name: 'a' },
+    { id: 2, name: 'b' },
+  ];
+  assert.deepEqual(parsed(rowSchema, rows, 'hotspot'), rows);
+});
+
+test('parsed names the row and the field the schema cannot read', () => {
+  assert.throws(
+    () =>
+      parsed(
+        rowSchema,
+        [
+          { id: 1, name: 'a' },
+          { id: 2, name: 7 },
+        ],
+        'hotspot',
+      ),
+    /^Error: A hotspot the studio cannot read \(row 1\): name /,
   );
 });

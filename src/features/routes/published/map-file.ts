@@ -10,15 +10,15 @@
  *
  * This file holds the names: where the index and the lines are, what shape
  * the app reads, the banner's message, the early request's name and the
- * worker's store. Reading is api/fetch-index.ts and api/fetch-line.ts; the
- * shape itself is schemas/index-schema.ts and schemas/line-file-schema.ts.
+ * worker's store. Reading is fetch-index.ts and fetch-line.ts; the shape
+ * itself is index-schema.ts and line-file-schema.ts.
  * vite.config.ts and scripts/checks/check-build.mjs read MAP_FILE_URL and
  * EARLY_MAP_FILE off this file's text (scripts/node/map-file-constants.ts), so each stays a
  * single-quoted string constant on a line of its own.
  */
 
 /** No hash in the name, so it keeps revalidating headers; never make it immutable. */
-export const MAP_FILE_URL = '/data/index.v4.json';
+export const MAP_FILE_URL = '/data/index.v5.json';
 /** A direction's full line: `${LINES_URL}${id}.json`. The worker keeps every one seen. */
 export const LINES_URL = '/data/lines/';
 
@@ -47,13 +47,16 @@ export const LINES_URL = '/data/lines/';
  *     shape-2 app would draw a jeep stopping at a station. Shape 4,
  *     `/data/index.v4.json`, is shape 3 with the ferry in: a shape-3 app
  *     knows only the trains as lines, and would draw the ferry stopping at
- *     every jeep hintuan by the river. The
- *     publish writes shape 3 without the ferry and shapes 1 and 2 without
- *     any line (scripts/publish/withoutLines.mjs), each a month at least
+ *     every jeep hintuan by the river. Shape 5, `/data/index.v5.json`, is
+ *     shape 4 with loops in: a loop's route has no head or tail, which the
+ *     shape-4 schema refuses, and one such row makes an installed app refuse
+ *     the whole map. The publish writes shape 4 without the loops, shape 3
+ *     without the ferry too and shapes 1 and 2 without any line
+ *     (scripts/publish/shapes.mjs, withoutLines.mjs), each a month at least
  *     after the next ships. The line files under `/data/lines/` are the
  *     same for all.
  */
-export const MAP_FILE_SCHEMA = 4;
+export const MAP_FILE_SCHEMA = 5;
 
 /** The load error for a file of a shape this app does not know. The banner reads it. */
 export const MAP_FILE_TOO_NEW = 'This map was published for a newer version of the app.';
@@ -66,14 +69,15 @@ export const MAP_FILE_TOO_NEW = 'This map was published for a newer version of t
 export const SERVED_FROM_HEADER = 'x-parapo-served-from';
 
 /**
- * The older indexes, newest first: shape 3, without the ferry, and shape 2,
- * without any line. An app updated from one kept its last copy in the
- * worker's store (the map-file rule matched that path then), and has no copy
- * of the new one until it reaches the network: offline, that copy is the
- * map, not the load error. Each older shape is a newer one with fewer lines,
- * so it reads as is.
+ * The older indexes, newest first: shape 4, without the loops, shape 3,
+ * without the ferry, and shape 2, without any line. An app updated from one
+ * kept its last copy in the worker's store (the map-file rule matched that
+ * path then), and has no copy of the new one until it reaches the network:
+ * offline, that copy is the map, not the load error. Each older shape is a
+ * newer one with fewer routes, so it reads as is.
  */
 export const STORED_OLD = [
+  { url: '/data/index.v4.json', schema: 4 },
   { url: '/data/index.v3.json', schema: 3 },
   { url: '/data/index.json', schema: 2 },
 ] as const;

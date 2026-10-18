@@ -34,8 +34,8 @@ if (!existsSync(join(root, 'dist', 'sw.js'))) {
   console.log('FAIL  dist/sw.js missing — run npm run build first');
   process.exit(1);
 }
-const published = JSON.parse(readFileSync(join(root, 'public', 'data', 'index.v4.json'), 'utf8'));
-/** One past the shape this app reads (src/features/published-map/map-file.ts, MAP_FILE_SCHEMA). */
+const published = JSON.parse(readFileSync(join(root, 'public', 'data', 'index.v5.json'), 'utf8'));
+/** One past the shape this app reads (src/features/routes/published/map-file.ts, MAP_FILE_SCHEMA). */
 const MAP_FILE_SCHEMA_NEXT = published.schema + 1;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const d = new Date(published.published_at);
@@ -305,8 +305,8 @@ try {
     names.join(', '),
   );
   check(
-    'map-file cache holds /data/index.v4.json',
-    !!mapFile && caches[mapFile].some((u) => u.endsWith('/data/index.v4.json')),
+    'map-file cache holds /data/index.v5.json',
+    !!mapFile && caches[mapFile].some((u) => u.endsWith('/data/index.v5.json')),
   );
   check(
     'basemap-meta holds the style and the TileJSON',
@@ -337,7 +337,7 @@ try {
     ['/', '/assets/public-map-', true],
     ['/studio', null, false],
     ['/studio/', 'ParaPo Studio', false],
-    ['/data/index.v4.json', '"published_at"', null],
+    ['/data/index.v5.json', '"published_at"', null],
     ['/manifest.webmanifest', '"short_name"', null],
   ]) {
     const r = await page.goto(`${base}${path}`, { waitUntil: 'load' });
@@ -432,7 +432,7 @@ try {
     await new Promise((r) => setTimeout(r, 6000));
     await route.continue().catch(() => {});
   };
-  await ctx.route('**/data/index.v4.json', slow);
+  await ctx.route('**/data/index.v5.json', slow);
   await page.reload({ waitUntil: 'load' });
   const slowMap = await arrived.waitFor({ state: 'attached', timeout: 20000 }).then(
     () => true,
@@ -449,7 +449,7 @@ try {
     slowMap && slowText === `Not refreshed · map as of ${expectedDate}`,
     slowText,
   );
-  await ctx.unroute('**/data/index.v4.json', slow);
+  await ctx.unroute('**/data/index.v5.json', slow);
   await page.reload({ waitUntil: 'load' });
   await page.waitForTimeout(2000);
   check('fast again: no notice', (await page.locator('[data-testid="offline"]').count()) === 0);
@@ -489,7 +489,7 @@ try {
       contentType: 'application/json',
       body: JSON.stringify({ ...published, schema: MAP_FILE_SCHEMA_NEXT }),
     });
-  await ctx.route('**/data/index.v4.json', newer);
+  await ctx.route('**/data/index.v5.json', newer);
   await page.reload({ waitUntil: 'load' });
   const banner = page.getByText('This map was published for a newer version of the app.');
   const bannerShown = await banner.waitFor({ timeout: 15000 }).then(
@@ -500,7 +500,7 @@ try {
     'a map published for a newer app: the banner says so, with Reload',
     bannerShown && (await page.getByRole('button', { name: 'Reload', exact: true }).count()) > 0,
   );
-  await ctx.unroute('**/data/index.v4.json', newer);
+  await ctx.unroute('**/data/index.v5.json', newer);
   if (bannerShown) {
     await Promise.all([
       page.waitForEvent('load', { timeout: 20000 }).catch(() => {}),

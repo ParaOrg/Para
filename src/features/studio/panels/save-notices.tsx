@@ -18,6 +18,7 @@ export function SaveNotices({
   borrowed,
   sameEnds,
   direction,
+  loop = [],
 }: {
   /** The drawing's stretches, for the streets they run along. */
   segments: Drawing['segments'];
@@ -29,6 +30,8 @@ export function SaveNotices({
   borrowed: { metres: number; parent: DirectionRow } | null;
   sameEnds: { name: string; drawn: boolean } | null;
   direction: string;
+  /** Each end of a return trip that stops short of the other way's (loop-closing.ts). */
+  loop?: readonly string[];
 }) {
   const streets = routeStreets(segments);
   return (
@@ -63,6 +66,15 @@ export function SaveNotices({
           the corner.
         </p>
       )}
+      {loop.map((text) => (
+        <p
+          key={text}
+          data-testid="save-loop"
+          className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800"
+        >
+          {text}
+        </p>
+      ))}
       {wrongWay && (
         <p
           data-testid="save-wrong-way"

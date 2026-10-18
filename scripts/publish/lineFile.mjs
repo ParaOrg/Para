@@ -7,14 +7,14 @@
 // rule (src/features/routes/model/line-pass.ts), with their key: the hintuans they were
 // worked out against. The app takes them only when the index it has gives
 // the same key, and works them out itself otherwise. An app from before
-// ignores both fields, which is not a new shape (src/features/published-map/map-file.ts has
+// ignores both fields, which is not a new shape (src/features/routes/published/map-file.ts has
 // the rules). The file's shape is the app's own schema
-// (src/features/published-map/schemas/line-file-schema.ts, since 2026-10-07):
+// (src/features/routes/published/line-file-schema.ts, since 2026-10-07):
 // each file is read back with it before it is written.
 import {
   LINE_FILE_SCHEMA,
   lineFileSchema,
-} from '../../src/features/published-map/schemas/line-file-schema.ts';
+} from '../../src/features/routes/published/line-file-schema.ts';
 import { linePass } from '../../src/features/routes/model/line-pass.ts';
 
 /** Shape 2's, which shapes 3 and 4 kept: every index reads the same files. */
@@ -22,8 +22,8 @@ export { LINE_FILE_SCHEMA };
 
 /**
  * The text of `v`'s line file: its id, its line as published, and its
- * stretches past `boxes` — passBoxes of the index the app reads (shape 4's,
- * every line in), so the key is the one the app works out. No date in it: a
+ * stretches past `boxes` — passBoxes of the index the app reads (the same
+ * stops in every shape; the app reads shape 5), so the key is the one the app works out. No date in it: a
  * file changes only when its line does, or a hintuan near it (its stretches
  * and their key). Key order is the file's contract; keep it fixed.
  */

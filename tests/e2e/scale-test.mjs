@@ -2,7 +2,7 @@
 // hotspots, made from today's map — 250 copies of its 20 directions and 5 of
 // its 102 hotspots, as many as make 500 (its counts on 2026-10-06; the suite
 // prints them), shifted across a 25 × 10 grid — and served to the app in
-// place of /data/index.v4.json and its lines. No tiles are fetched: a bare style
+// place of /data/index.v5.json and its lines. No tiles are fetched: a bare style
 // stands in, so this runs the same on a laptop, in this sandbox and on a
 // GitHub runner.
 //
@@ -49,7 +49,7 @@ const { check, tally } = harness();
 
 // ---------------------------------------------------------------- the map
 const data = fileURLToPath(new URL('../../public/data/', import.meta.url));
-const m = JSON.parse(readFileSync(join(data, 'index.v4.json'), 'utf8'));
+const m = JSON.parse(readFileSync(join(data, 'index.v5.json'), 'utf8'));
 const lineOf = (id) => JSON.parse(readFileSync(join(data, 'lines', `${id}.json`), 'utf8')).shape;
 const mv = (c, [dx, dy]) => [c[0] + dx, c[1] + dy];
 const moved = (line, d) => line && { ...line, coordinates: line.coordinates.map((c) => mv(c, d)) };
@@ -108,7 +108,7 @@ page.on('console', (msg) => {
   if (msg.type() === 'error') errors.push(msg.text().slice(0, 160));
 });
 await bareStyle(page);
-await page.route(/\/data\/index\.v4\.json/, (route) =>
+await page.route(/\/data\/index\.v5\.json/, (route) =>
   route.fulfill({ status: 200, contentType: 'application/json', body: file }),
 );
 await page.route(/\/data\/lines\/.+\.json/, (route) => {

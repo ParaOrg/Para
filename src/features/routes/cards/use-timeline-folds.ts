@@ -14,6 +14,7 @@ export function useTimelineFolds(
   start: string | null,
   picked: string | null,
   endPicked: EndRow | null,
+  isLoop = false,
 ) {
   const [isAllOpen, setIsAllOpen] = useState(false);
   // Whether the fold has ever been opened on this card: until then its rows
@@ -66,7 +67,7 @@ export function useTimelineFolds(
     // The first tap opens it (it starts folded): from then on, drawn.
     setEverOpened(true);
   };
-  const folds = timelineFolds(hintuans, start, picked, endPicked);
+  const folds = timelineFolds(hintuans, start, picked, endPicked, isLoop);
   const foldOf = new Map(folds.flatMap((f) => f.rowIds.map((id) => [id, f] as const)));
   const isShown = (id: string) => {
     const fold = foldOf.get(id);

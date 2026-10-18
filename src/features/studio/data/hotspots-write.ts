@@ -20,7 +20,7 @@ import { hintuansAlong } from '@/features/routes/model/timeline';
 import { roundLngLat } from '@/shared/utils/geo';
 
 import { linksThrough } from './hotspots-geometry';
-import { readAll } from './read-all';
+import { parsed, readAll } from './read-all';
 import { requireSupabase } from './supabase';
 
 const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
@@ -68,6 +68,7 @@ export async function saveHotspot(
   // Six decimals, about 0.1 m, as a direction's points are saved: a traced
   // corner carries 15 or more, and the publish script rounds them anyway.
   const ring = input.ring.map(roundLngLat);
+  const point: PointGeoJSON = { type: 'Point', coordinates: roundLngLat(ringCentroid(ring)) };
   const row = {
     name,
     informal: informal && informal.toLowerCase() !== name.toLowerCase() ? informal : null,
@@ -75,7 +76,7 @@ export async function saveHotspot(
     kind: input.kind,
     note: blankToNull(input.note),
     area: ringToPolygon(ring),
-    point: { type: 'Point', coordinates: roundLngLat(ringCentroid(ring)) } as PointGeoJSON,
+    point,
   };
 
   const query = input.hotspotId
@@ -183,8 +184,8 @@ export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
   // Paged, as every table read is (read-all.ts): past 1,000 hintuans one
   // request would silently see a subset.
-  const [hintuans, linked] = await Promise.all([
-    readAll<HotspotRow>((from, to) =>
+  const [hintuanRows, linked] = await Promise.all([
+    readAll<unknown>((from, to) =>
       client
         .from('stop')
         .select('*', { count: 'exact' })
@@ -203,6 +204,7 @@ export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
         .range(from, to),
     ),
   ]);
+  const hintuans = parsed(hotspotRowSchema, hintuanRows, 'hotspot');
   if (hintuans.length === 0) return;
 
   // The same rule the save panel showed before Save was pressed. A link to a

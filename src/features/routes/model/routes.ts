@@ -1,5 +1,5 @@
 import type { LngLat, Segment } from '@/shared/utils/geo';
-import { joinSegments } from '@/shared/utils/geo';
+import { haversine, joinSegments } from '@/shared/utils/geo';
 
 import type { Direction, RouteRow, TransportMode, UnnamedDirectionRow } from './direction-schema';
 import { hotspotLabel, type Hotspot } from './hotspots';
@@ -80,6 +80,33 @@ export const LINE_NOTES: Readonly<Record<string, string>> = {
 export interface ServedRoute {
   mode: TransportMode;
   routeCode?: string | null;
+  /** A loop (0021): its terminals are places on it like any hintuan. Absent on every other route. */
+  isLoop?: boolean;
+}
+
+/**
+ * The word a commuter and an editor read for a loop, where a two-ended
+ * route's direction would stand ("Papunta"): the owner's, 2026-10-17. The
+ * concept stays "loop" in code and the glossary.
+ */
+export const LOOP_WORD = 'Ikot';
+
+/**
+ * How far a loop's last point may stand from its first for the line to count
+ * as closed, in metres: the tolerance loop-closing.ts already uses, and what
+ * "Close the loop" closes to (0 m). 0021 cannot read geometry, so the save
+ * and the publish check it, not the database.
+ */
+export const LOOP_CLOSED_M = 15;
+
+/** Whether a line is a closed ring a loop can use: three points or more, ending where it began. */
+export function isClosedLine(line: readonly LngLat[]): boolean {
+  return line.length >= 3 && haversine(line[0], line[line.length - 1]) <= LOOP_CLOSED_M;
+}
+
+/** Whether a direction, or anything that carries its route, belongs to a loop. */
+export function isLoop(v: { route?: { isLoop?: boolean } | null }): boolean {
+  return v.route?.isLoop === true;
 }
 
 /**
@@ -107,6 +134,16 @@ const DASH = '–';
  */
 export function routeName(head: string, tail: string, via?: string | null): string {
   const base = `${head} ${DASH} ${tail}`;
+  return via && via.trim() ? `${base} via ${via.trim()}` : base;
+}
+
+/**
+ * A loop's name: its signboard, which it must have, and its via when another
+ * loop has the same signboard. A loop has no ends to read a name from, so the
+ * signboard is the name (`UP – Ikot`) and nothing is generated.
+ */
+export function loopName(signboard: string | null | undefined, via?: string | null): string {
+  const base = signboard?.trim() || '(unnamed)';
   return via && via.trim() ? `${base} via ${via.trim()}` : base;
 }
 
@@ -151,7 +188,9 @@ type HotspotName = Pick<Hotspot, 'id' | 'name' | 'informal'>;
 interface Unnamed {
   reversed: boolean;
   name: string | null;
-  route: Pick<RouteRow, 'signboard' | 'headHotspotId' | 'tailHotspotId' | 'via'>;
+  route: Pick<RouteRow, 'signboard' | 'headHotspotId' | 'tailHotspotId' | 'via'> & {
+    isLoop?: boolean;
+  };
 }
 
 /**
@@ -170,8 +209,13 @@ export function nameDirections<V extends Unnamed>(
 ): (V & { route: V['route'] & { name: string } })[] {
   const byId = new Map(hotspots.map((s) => [s.id, hotspotLabel(s)]));
   return directions.map((v) => {
-    const head = byId.get(v.route.headHotspotId);
-    const tail = byId.get(v.route.tailHotspotId);
+    // A loop is called by its signboard: there are no ends to read it from.
+    if (isLoop(v)) {
+      const loop = loopName(v.route.signboard, v.route.via);
+      return { ...v, name: loop, route: { ...v.route, name: loop } };
+    }
+    const head = v.route.headHotspotId === null ? undefined : byId.get(v.route.headHotspotId);
+    const tail = v.route.tailHotspotId === null ? undefined : byId.get(v.route.tailHotspotId);
     if (!head || !tail) {
       return { ...v, route: { ...v.route, name: v.route.signboard ?? '(unnamed)' } };
     }
@@ -195,6 +239,8 @@ export function isDrawn(v: Direction & { segments?: Segment[] | null }): boolean
  * row that has no direction name (a file from before names were generated).
  */
 export function directionEnds(v: Direction): { from: string; to: string } {
+  // A loop has no ends: the row reads its name, then the word for going round.
+  if (isLoop(v)) return { from: v.name ?? v.route?.name ?? '', to: LOOP_WORD };
   const [from, to] = (v.name ?? '').split(' → ');
   if (from && to) return { from, to };
   const [head = '', tail = ''] = (v.route?.name ?? '').replace(/ via .*$/, '').split(` ${DASH} `);

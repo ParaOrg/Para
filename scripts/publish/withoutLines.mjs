@@ -14,7 +14,7 @@ export const EVERY_LINE = { modes: LINE_MODES, lines: LINES };
  * The map with some lines left out: every direction of their modes, every
  * station of theirs (a stop whose `line` is one of them) and every link to
  * either — for the shapes an app installed before them reads
- * (src/features/published-map/map-file.ts). Such an app does not know their mode is a
+ * (src/features/routes/published/map-file.ts). Such an app does not know their mode is a
  * line's: it would draw a jeep stopping at one of their stations, and their
  * route at every jeep hintuan along its track or river. Shape 4 has them
  * all; shape 3 every line but the ferry; shapes 1 and 2 none. The owner's

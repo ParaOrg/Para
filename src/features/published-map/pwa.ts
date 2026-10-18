@@ -3,8 +3,7 @@ import { registerSW } from 'virtual:pwa-register';
 
 import { STYLE_URL } from '@/features/routes/map/map-view';
 import { takeTilesAsked } from '@/features/routes/map/tiles-asked';
-
-import { MAP_FILE_URL } from './map-file';
+import { MAP_FILE_URL } from '@/features/routes/published/map-file';
 
 /**
  * The service worker, registered from the public page only. The studio never

@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { DirectionTimeline, passesThrough } from '@/features/routes/cards/direction-timeline';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
 import type { RouteRow, TransportMode, DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
-import { PlacePicker } from './place-picker';
+import { NewPlaceForm } from './new-place-form';
+import { NEW_PLACE_KEY, PlacePicker } from './place-picker';
 import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
 import { RouteFields } from './route-fields';
 import { saveRefusal } from './save-checks';
@@ -13,6 +14,7 @@ import { SaveNotices } from './save-notices';
 import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
 import { useRouteSave } from './use-route-save';
 import { useSaveFacts } from './use-save-facts';
+import { returnTripNotices } from '../drawing/loop-closing';
 import type { Drawing } from '../drawing/use-drawing';
 
 interface SavePanelProps {
@@ -37,6 +39,8 @@ interface SavePanelProps {
    */
   directions?: DirectionRow[];
   onSaved: (v: DirectionRow) => void;
+  /** Hears of a place made from the pickers, so the map's own list is read again. */
+  onPlaceSaved?: () => void;
   onCancel: () => void;
 }
 
@@ -59,12 +63,22 @@ export function SavePanel({
   existing,
   route,
   slotReversed = null,
-  hotspots,
+  hotspots: savedHotspots,
   directions = [],
   onSaved,
+  onPlaceSaved,
   onCancel,
 }: SavePanelProps) {
   const parent = existing?.route ?? route;
+  // The places made here, kept beside the saved ones until the map's list has them.
+  const [made, setMade] = useState<HotspotRow[]>([]);
+  const hotspots = useMemo(
+    () => [...savedHotspots, ...made.filter((m) => !savedHotspots.some((s) => s.id === m.id))],
+    [savedHotspots, made],
+  );
+  const [making, setMaking] = useState<'Head' | 'Tail' | null>(null);
+  const headSelect = useRef<HTMLSelectElement>(null);
+  const tailSelect = useRef<HTMLSelectElement>(null);
   const line = draw.controlPoints;
   const places = useMemo(() => groupPlaces(hotspots), [hotspots]);
   // Where a picked end's box is looked for: the end of the line nearer the
@@ -123,6 +137,10 @@ export function SavePanel({
     direction,
     preview,
   } = facts;
+  // A return trip that stops short of where the other way began or ended says so, and saves anyway.
+  const loop = existing
+    ? []
+    : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
   const { busy, error, setError, written, save } = useRouteSave({ facts, draw, hotspots, onSaved });
 
   // A return trip fills its route's slot and leaves the route as it is; Edit
@@ -130,6 +148,26 @@ export function SavePanel({
   // route's are fixed once a save has written it: the retry finishes that
   // row and would ignore a changed end.
   const routeLocked = !existing && (!!parent || !!written);
+
+  /** Back to the picker that asked for the form. */
+  const closeMaking = () => {
+    const picker = making === 'Head' ? headSelect : tailSelect;
+    setMaking(null);
+    picker.current?.focus();
+  };
+
+  // The new place becomes that end: the box its place is reached by, as picking it would.
+  const handlePlaceSaved = (place: HotspotRow) => {
+    setMade((previous) => [...previous, place]);
+    const next = groupPlaces([...hotspots, place]);
+    const placeNow = placeOfBox(next, place.id);
+    const isHead = making === 'Head';
+    const box = placeNow ? boxFor(placeNow, isHead ? nearHead : nearTail) : place.id;
+    if (isHead) setHeadId(box);
+    else setTailId(box);
+    onPlaceSaved?.();
+    closeMaking();
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -166,6 +204,7 @@ export function SavePanel({
         <SaveNotices
           segments={draw.segments}
           uTurns={draw.uTurns}
+          loop={loop}
           hotspotsCount={hotspots.length}
           wrongWay={
             wrongWayRound && head && tail
@@ -190,7 +229,10 @@ export function SavePanel({
             places={places}
             value={headPlace?.key ?? ''}
             isDisabled={routeLocked}
-            onChange={(key) => setHeadId(pickPlace(key, nearHead))}
+            onChange={(key) =>
+              key === NEW_PLACE_KEY ? setMaking('Head') : setHeadId(pickPlace(key, nearHead))
+            }
+            ref={headSelect}
             testId="save-head"
           />
           <PlacePicker
@@ -199,10 +241,26 @@ export function SavePanel({
             places={places}
             value={tailPlace?.key ?? ''}
             isDisabled={routeLocked}
-            onChange={(key) => setTailId(pickPlace(key, nearTail))}
+            onChange={(key) =>
+              key === NEW_PLACE_KEY ? setMaking('Tail') : setTailId(pickPlace(key, nearTail))
+            }
+            ref={tailSelect}
             testId="save-tail"
           />
         </div>
+
+        {making && nearHead && nearTail && (
+          <NewPlaceForm
+            key={making}
+            end={making}
+            centre={making === 'Head' ? nearHead : nearTail}
+            defaultKind={making === 'Head' ? 'terminal' : 'hintuan'}
+            hotspots={hotspots}
+            directions={directions}
+            onSaved={handlePlaceSaved}
+            onCancel={closeMaking}
+          />
+        )}
 
         {/* What the line passes, by the rule the save will apply: seen first, stored the same. */}
         {head && tail && (

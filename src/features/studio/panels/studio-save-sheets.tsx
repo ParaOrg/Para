@@ -18,7 +18,7 @@ interface StudioSaveSheetsProps {
   isSaving: boolean;
   draw: Drawing;
   saved: Pick<Saved, 'directions'>;
-  hotspots: Pick<Hotspots, 'hotspots' | 'linkedDirectionIds'>;
+  hotspots: Pick<Hotspots, 'hotspots' | 'linkedDirectionIds' | 'reload'>;
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
   onSaved: ComponentProps<typeof SavePanel>['onSaved'];
   onSavedHotspot: ComponentProps<typeof HotspotPanel>['onSaved'];
@@ -70,6 +70,7 @@ export function StudioSaveSheets({
           hotspots={hotspots.hotspots}
           directions={saved.directions}
           onSaved={onSaved}
+          onPlaceSaved={() => void hotspots.reload()}
           onCancel={onCancel}
         />
       )}

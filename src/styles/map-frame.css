@@ -4,6 +4,20 @@
  * (global.css, and the contribute page's own stylesheet).
  */
 
+/*
+ * How far the map's top-anchored things stand clear of the status bar. The
+ * page's own inset where the map runs to the screen's top; 0 inside a map box
+ * (`data-map-box`), which starts below something that already clears the bar,
+ * so the inset is paid once. One rule, so the sheets' measuring and the CSS
+ * read the same value.
+ */
+:root {
+  --map-safe-top: env(safe-area-inset-top);
+}
+[data-map-box] {
+  --map-safe-top: 0px;
+}
+
 html,
 body,
 #root {
@@ -19,7 +33,7 @@ body,
  * home indicator. On a desktop every inset is 0, so nothing moves.
  */
 .maplibregl-ctrl-top-left {
-  top: env(safe-area-inset-top);
+  top: var(--map-safe-top);
   left: env(safe-area-inset-left);
 }
 /*
@@ -29,7 +43,7 @@ body,
  * take its taps. MapLibre's own 2 would put it under.
  */
 .maplibregl-ctrl-top-right {
-  top: env(safe-area-inset-top);
+  top: var(--map-safe-top);
   right: env(safe-area-inset-right);
   z-index: 10;
 }

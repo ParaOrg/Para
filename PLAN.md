@@ -2402,7 +2402,11 @@ first; M9–M12 each write a position.
 
 **M9 — Looping.**
 
-- Detect: first point within 50 m of last, so `route_variant.is_loop`.
+- Detect: first point within 15 m of last (not 50), and `is_loop` is on
+  `route`, not `route_variant`: the ends and the signboard are route columns
+  and a check can only read its own row. A loop has no ends, one direction and
+  a signboard; commuters read it as Ikot. Built as `.scratch/loops/plan.md`
+  has it (0021, ADR 0005).
 - A loop is one variant, not two. "Draw the return trip" is wrong for it and
   must not appear.
 - `allTouches` gives a stop one row per pass. A commuter at a hintuan on a loop

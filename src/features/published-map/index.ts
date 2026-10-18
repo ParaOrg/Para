@@ -1,13 +1,6 @@
 // The published map: the feature's public API, what the shells import. Add a line
 // when something outside the feature needs more; nothing outside imports its
 // inner files (.claude/CLAUDE.md, Import rules).
-export {
-  fetchIndex,
-  loadDirectionsFromFile,
-  loadHotspotsFromFile,
-  openingDirections,
-} from './api/fetch-index';
-export { fetchLine } from './api/fetch-line';
 export { listenForInstallOffer } from './install-offer';
 export { InstallPrompt } from './install-prompt';
 export { loadProblems } from './load-problems';

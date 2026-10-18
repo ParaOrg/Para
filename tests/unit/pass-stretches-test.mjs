@@ -564,7 +564,7 @@ test('step 13: the publish and the map data check import nothing from npm but zo
     'the check walked too',
   );
   assert.ok(
-    [...seen].some((u) => u.endsWith('/src/features/published-map/map-file.ts')),
+    [...seen].some((u) => u.endsWith('/src/features/routes/published/map-file.ts')),
     'they reach map-file.ts',
   );
   // zod reads the index's shape for them (ticket 08, 2026-10-07): the one package, and the
@@ -637,10 +637,10 @@ test('step 13: on a copy of public/data, every line file written with its stretc
       }
     };
     const { fetchIndex } = await import(
-      `../../src/features/published-map/api/fetch-index.ts?pass=${Date.now()}`
+      `../../src/features/routes/published/fetch-index.ts?pass=${Date.now()}`
     );
     const { fetchLine } = await import(
-      `../../src/features/published-map/api/fetch-line.ts?pass=${Date.now()}`
+      `../../src/features/routes/published/fetch-line.ts?pass=${Date.now()}`
     );
     const map = await fetchIndex();
     const appBoxes = passBoxes(map.hotspots);
@@ -693,10 +693,10 @@ test('step 13: the committed line files, with stretches or without, are painted 
     }
   };
   const { fetchIndex } = await import(
-    `../../src/features/published-map/api/fetch-index.ts?committed=${Date.now()}`
+    `../../src/features/routes/published/fetch-index.ts?committed=${Date.now()}`
   );
   const { fetchLine } = await import(
-    `../../src/features/published-map/api/fetch-line.ts?committed=${Date.now()}`
+    `../../src/features/routes/published/fetch-line.ts?committed=${Date.now()}`
   );
   const map = await fetchIndex();
   const boxes = passBoxes(map.hotspots);

@@ -1,7 +1,13 @@
+import type { Ref } from 'react';
+
 import type { Place } from './places';
 import { FIELD } from './sheet';
 
+/** The last option's value: not a place, the way to make one here. */
+export const NEW_PLACE_KEY = '+new-place';
+
 interface PlacePickerProps {
+  ref?: Ref<HTMLSelectElement>;
   /** 'Head' or 'Tail'. */
   label: string;
   /** What that end is, beside the label: '(where the jeeps wait)', '(the far end)'. */
@@ -17,9 +23,11 @@ interface PlacePickerProps {
 
 /**
  * One of the save panel's two ends: a place, not a box — the panel turns the
- * picked place into the box the route references.
+ * picked place into the box the route references. Its last option, NEW_PLACE_KEY,
+ * asks the panel for a form to make a place at that end of the line.
  */
 export function PlacePicker({
+  ref,
   label,
   hint,
   places,
@@ -32,6 +40,7 @@ export function PlacePicker({
     <label className="block text-xs font-medium text-neutral-700">
       {label} <span className="text-neutral-400">{hint}</span>
       <select
+        ref={ref}
         required
         disabled={isDisabled}
         value={value}
@@ -45,6 +54,7 @@ export function PlacePicker({
             {p.label}
           </option>
         ))}
+        {!isDisabled && <option value={NEW_PLACE_KEY}>+ New place here…</option>}
       </select>
     </label>
   );

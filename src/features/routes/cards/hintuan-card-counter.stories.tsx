@@ -37,3 +37,8 @@ export const NothingTheOtherWay: Story = { args: { canSwitch: false } };
 
 /** The way back showing. */
 export const TheWayBack: Story = { args: { isBack: true, word: 'Papunta' } };
+
+/** Only loops pass here: they have no way back, so no SWITCH at all. */
+export const OnlyLoops: Story = {
+  args: { count: '1 route passes here', word: null, canSwitch: false },
+};

@@ -11,6 +11,7 @@ import { drawnDepartures, switchWord } from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { boxTheOtherWay, placeBoxes } from '../model/places';
+import { isLoop } from '../model/routes';
 import type { Direction } from '../model/routes';
 
 interface Props {
@@ -112,7 +113,12 @@ export function HintuanCard({
       .map((v) => byId.get(v))
       .filter((v): v is Direction => !!v);
   /** Whether a box is passed `back` — the way back — or the way there, by a drawn direction. */
-  const passes = (id: string, back: boolean) => drawnDepartures(linked(id), back).length > 0;
+  // A loop is passed both ways round, so it never decides which way a box is passed.
+  const passes = (id: string, back: boolean) =>
+    drawnDepartures(
+      linked(id).filter((v) => !isLoop(v)),
+      back,
+    ).length > 0;
 
   // What the routes below are of: the Selected box, or with none, every box
   // of the place, each direction once.
@@ -122,8 +128,9 @@ export function HintuanCard({
 
   // The way round asked for; routes passing one way only show that way.
   const [flipped, setFlipped] = useState(false);
-  const there = drawnDepartures(routes, false).length > 0;
-  const backToo = drawnDepartures(routes, true).length > 0;
+  const twoEnded = routes.filter((v) => !isLoop(v));
+  const there = drawnDepartures(twoEnded, false).length > 0;
+  const backToo = drawnDepartures(twoEnded, true).length > 0;
   const back = there && backToo ? flipped : backToo;
   const showing = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v));
   const shown = showing.map((v) => v.id);
@@ -195,7 +202,7 @@ export function HintuanCard({
           />
           <HintuanCardCounter
             count={count}
-            word={switchWord(back, showing)}
+            word={showing.every(isLoop) ? null : switchWord(back, showing)}
             isBack={back}
             canSwitch={!!switchTo}
             onFlip={() => {

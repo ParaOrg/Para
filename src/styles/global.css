@@ -23,6 +23,8 @@
 @theme {
   --container-wide: 40rem;
   --container-float: 64rem;
+  /* The narrowest phones, where the studio's map switch drops its icons (`max-xs:`). */
+  --breakpoint-xs: 22.5rem;
 }
 
 /*

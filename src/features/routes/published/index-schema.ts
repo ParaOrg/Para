@@ -1,11 +1,11 @@
 import * as z from 'zod/mini';
 
-import { rawDirectionSchema, toDirection } from '@/features/routes/model/direction-schema';
-import { lineStringSchema } from '@/features/routes/model/geojson-schema';
-import { hotspotLinkSchema, hotspotSchema } from '@/features/routes/model/hotspot-schema';
+import { rawDirectionSchema, toDirection } from '../model/direction-schema';
+import { lineStringSchema } from '../model/geojson-schema';
+import { hotspotLinkSchema, hotspotSchema } from '../model/hotspot-schema';
 
 /**
- * The published index (shape 4, map-file.ts MAP_FILE_SCHEMA) as one
+ * The published index (shape 5, map-file.ts MAP_FILE_SCHEMA) as one
  * contract: the reader parses the file with it, the publish validates what
  * it writes with it, and the data check reads with it. The file says
  * `variants`, `stops`, `published_at` and a direction's `overview` and `route_id`, the database's

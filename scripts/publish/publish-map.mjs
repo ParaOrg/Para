@@ -3,13 +3,20 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/publish-map.mjs
 //                                                   writes public/data/
 //
-// Five things (shape A of docs/archive/review-2026-09-29.md, section 8, stage 7 of the
+// Six things (shape A of docs/archive/review-2026-09-29.md, section 8, stage 7 of the
 // clean-up; since 2026-09-29; the train lines' shape and the ferry's since
-// 2026-10-03):
-//   data/index.v4.json      schema 4, what the app reads (MAP_FILE_URL): the
-//                           index below with every line in, the trains and
-//                           the ferry — a line's `route_code`, a station's
-//                           `line` — read by servedBy (src/features/routes/model/routes.ts).
+// 2026-10-03; loops since 2026-10-17):
+//   data/index.v5.json      schema 5, what the app reads (MAP_FILE_URL): the
+//                           index below with every line and every loop in —
+//                           a loop's route has no ends and `is_loop: true`,
+//                           last in its row and on loops only.
+//   data/index.v4.json      schema 4: the same without the loops
+//                           (shapes.mjs), for an app that would refuse the
+//                           whole index for a route with no ends. Every line
+//                           in, the trains and the ferry — a line's
+//                           `route_code`, a station's `line` — read by
+//                           servedBy (src/features/routes/model/routes.ts).
+//                           Kept a month at least after shape 5 ships.
 //   data/index.v3.json      schema 3: the same without the ferry
 //                           (withoutLines.mjs), for an app that knows the
 //                           trains but would take the ferry for a jeep. Kept
@@ -34,7 +41,7 @@
 //                           any line, as the index), for one
 //                           release: an installed app that has not updated
 //                           reads it. Drop it a month at least after the
-//                           index ships (src/features/published-map/map-file.ts has the
+//                           index ships (src/features/routes/published/map-file.ts has the
 //                           rule), with its commit line in the workflow.
 // A line file of a direction that no longer exists is removed.
 //
@@ -55,6 +62,9 @@
 // order, and `published_at` is carried over from the previous file when
 // nothing else changed. So a run on unchanged data writes a byte-identical
 // file, and the workflow that runs this daily commits only real changes.
+//
+// Shapes 1 to 4 are asserted loop-free, and every shape is built and checked
+// before the first file is written (shapes.mjs).
 //
 // The script checks its own work before writing: every original point must
 // lie within half a metre of the thinned line, or it fails. And it refuses to
@@ -86,15 +96,18 @@ import {
   roundLngLat,
   simplifyLine,
 } from '../../src/shared/utils/geo.ts';
-import { directionName, isLineMode, routeName } from '../../src/features/routes/model/routes.ts';
+import {
+  directionName,
+  isLineMode,
+  loopName,
+  routeName,
+} from '../../src/features/routes/model/routes.ts';
 import { hotspotLabel } from '../../src/features/routes/model/hotspots.ts';
 import { toDirection } from '../../src/features/routes/model/direction-schema.ts';
 import { toHotspot } from '../../src/features/routes/model/hotspot-schema.ts';
 import { passBoxes } from '../../src/features/routes/model/line-pass.ts';
-import { MAP_FILE_SCHEMA } from '../../src/features/published-map/map-file.ts';
-import { indexSchema } from '../../src/features/published-map/schemas/index-schema.ts';
 import { cleanSignboardSvg } from '../../src/features/routes/model/signboard-svg.ts';
-import { EVERY_LINE, FERRY, withoutLines } from './withoutLines.mjs';
+import { ShapeError, buildFiles, indexRowsOf } from './shapes.mjs';
 import { boardsRefusal } from './boardGuard.mjs';
 import { lineFileText } from './lineFile.mjs';
 
@@ -118,6 +131,7 @@ const OUT = join(DATA, 'map.json');
 const INDEX = join(DATA, 'index.json');
 const INDEX_V3 = join(DATA, 'index.v3.json');
 const INDEX_V4 = join(DATA, 'index.v4.json');
+const INDEX_V5 = join(DATA, 'index.v5.json');
 const LINES = join(DATA, 'lines');
 const SIGNBOARDS = join(DATA, 'signboards');
 /** A board's name in the bucket, as the studio writes it (signboards.ts): a uuid. Anything else is not read. */
@@ -144,20 +158,6 @@ const MAX_SHRINK = 0.3;
 /** PostgREST answers at most this many rows per request; ask page by page. */
 const PAGE = 1000;
 const TIMEOUT_MS = 30_000;
-
-/** map.json's shape, the one before the index: fixed, since installed apps read it as it is (src/features/published-map/map-file.ts has the rules). */
-const SCHEMA = 1;
-/** The old index's shape, before the train lines: fixed, as map.json's, for installed apps. */
-const INDEX_SCHEMA = 2;
-/** The index with the trains but not the ferry: fixed, for installed apps. */
-const INDEX_V3_SCHEMA = 3;
-/** The index the app reads now: its own MAP_FILE_SCHEMA. */
-const INDEX_V4_SCHEMA = MAP_FILE_SCHEMA;
-/** The data's licence, written into the file itself. See README.md, "Data and licence". */
-const LICENSE = 'ODbL-1.0';
-const ATTRIBUTION =
-  'Route data © ParaPo contributors, ODbL (https://opendatacommons.org/licenses/odbl/1-0/). ' +
-  'Derived from OpenStreetMap, © OpenStreetMap contributors.';
 
 // ------------------------------------------------------------------ config
 
@@ -271,7 +271,7 @@ function maxDeviation(original, simplified) {
 const [directionRows, hotspotRows, linkRows] = await Promise.all([
   rest(
     'route_variant?select=id,route_id,direction_name,origin_terminal,destination_terminal,shape,confidence,reversed,signboards,' +
-      'route:route(id,signboard,route_code,long_name,mode,fare_note,head_stop_id,tail_stop_id,via)&order=id.asc',
+      'route:route(id,signboard,route_code,long_name,mode,fare_note,head_stop_id,tail_stop_id,via,is_loop)&order=id.asc',
   ),
   rest('stop?select=id,name,informal,aliases,kind,point,area,note,created_at,line&order=id.asc'),
   rest(
@@ -341,16 +341,32 @@ const variants = directionRows.map((v) => {
   if (!v.route) {
     fail(`FAIL  direction ${v.id} came without its route: is the route table still readable?`);
   }
-  const head = hotspotName.get(v.route.head_stop_id);
-  const tail = hotspotName.get(v.route.tail_stop_id);
-  if (!head || !tail) {
-    // The foreign keys make this impossible unless the stop table was not fully readable.
-    fail(
-      `FAIL  route ${v.route.id}: an end hotspot is missing from the stop rows (${v.route.head_stop_id}, ${v.route.tail_stop_id})`,
-    );
+  // A loop has no ends and is called by its signboard (0021); any other route
+  // has both ends, and a missing one is a stop table that was not fully readable.
+  const isLoop = v.route.is_loop === true;
+  let name;
+  let direction;
+  if (isLoop) {
+    if (v.route.head_stop_id != null || v.route.tail_stop_id != null) {
+      fail(`FAIL  loop ${v.route.id} has an end hotspot: a loop has neither head nor tail`);
+    }
+    if (!v.route.signboard?.trim()) {
+      fail(`FAIL  loop ${v.route.id} has no signboard: a loop is called by it`);
+    }
+    name = loopName(v.route.signboard, v.route.via);
+    direction = name;
+  } else {
+    const head = hotspotName.get(v.route.head_stop_id);
+    const tail = hotspotName.get(v.route.tail_stop_id);
+    if (!head || !tail) {
+      // The foreign keys make this impossible unless the stop table was not fully readable.
+      fail(
+        `FAIL  route ${v.route.id}: an end hotspot is missing from the stop rows (${v.route.head_stop_id}, ${v.route.tail_stop_id})`,
+      );
+    }
+    name = routeName(head, tail, v.route.via);
+    direction = directionName(head, tail, v.reversed);
   }
-  const name = routeName(head, tail, v.route.via);
-  const direction = directionName(head, tail, v.reversed);
   const coords = Array.isArray(v.shape?.coordinates) ? v.shape.coordinates : [];
   let shape = null;
   if (coords.length > 1) {
@@ -405,6 +421,8 @@ const variants = directionRows.map((v) => {
       // The line (0011, 0012), only on a train's or the ferry's: every other
       // route's file stays byte for byte what it was.
       ...(v.route.route_code && isLineMode(v.route.mode) ? { route_code: v.route.route_code } : {}),
+      // Last, and only on a loop (0021): every other route's row stays byte for byte what it was.
+      ...(isLoop ? { is_loop: true } : {}),
     },
   };
 });
@@ -429,24 +447,12 @@ const links = linkRows.map((l) => ({
   stop_sequence: l.stop_sequence,
 }));
 
-// The old shapes, for installed apps, without the lines they do not know
-// (withoutLines.mjs): an app from before servedBy would paint a jeep's
-// stretches at the stations over its road, and a line's at every jeep
-// hintuan under its track; one reading shape 3 takes the ferry for a jeep.
+// The old shapes, for installed apps, without what they do not know
+// (shapes.mjs, withoutLines.mjs): an app from before servedBy would paint a
+// jeep's stretches at the stations over its road, and a line's at every jeep
+// hintuan under its track; one reading shape 3 takes the ferry for a jeep;
+// one reading shape 4 refuses the whole index for a route with no ends.
 const all = { variants, stops, links };
-const v3 = withoutLines(all, FERRY);
-const old = withoutLines(all, EVERY_LINE);
-for (const [name, cut] of [
-  ['shape 3', v3],
-  ['shapes 1 and 2', old],
-]) {
-  if (cut.ids.variants.size || cut.ids.stops.size) {
-    console.log(
-      `Left out of ${name}: ${cut.ids.variants.size} line direction(s), ${cut.ids.stops.size} station(s).`,
-    );
-  }
-}
-const body = { variants: old.variants, stops: old.stops, links: old.links };
 
 const readJson = (path) => {
   try {
@@ -459,13 +465,15 @@ const readJson = (path) => {
 const { text: previousText, json: previous } = readJson(OUT);
 const { json: previousV3 } = readJson(INDEX_V3);
 const { json: previousV4 } = readJson(INDEX_V4);
+const { json: previousV5 } = readJson(INDEX_V5);
 
 // A map that shrank suddenly is far more likely a read that went wrong (a
 // policy change, a table made private) than a clear-out. Refuse it unless told.
-// The new index against its last copy, every line in; until it has one, the
-// newest older file against the whole map, which is never more than the whole.
+// The new index against its last copy, every line and loop in; until it has
+// one, the newest older file against the whole map, which is never more than
+// the whole.
 if (!FORCE) {
-  const was = previousV4 ?? previousV3 ?? previous;
+  const was = previousV5 ?? previousV4 ?? previousV3 ?? previous;
   const now = all;
   for (const key of was ? ['variants', 'stops', 'links'] : []) {
     const before = Array.isArray(was[key]) ? was[key].length : 0;
@@ -479,73 +487,56 @@ if (!FORCE) {
   }
 }
 
-// The index's rows: each line's overview in place of the line, under its
-// own key — the reader knows an overview when it sees one.
-const indexRows = (rows) => ({
-  variants: rows.variants.map(({ shape, ...v }) => {
-    const { route, ...rest } = v;
-    // Its signboards only when it has some: a direction without keeps the shape it had.
-    const signboards = boardsOf.get(v.id);
-    return {
-      ...rest,
-      overview: overviews.get(v.id) ?? null,
-      metres: shape ? Math.round(lineLength(shape.coordinates) * 100) / 100 : null,
-      ...(signboards ? { signboards } : {}),
-      route,
-    };
-  }),
-  stops: rows.stops,
-  links: rows.links,
-});
-
 // `published_at` is carried over when nothing else changed, so an unchanged
 // map is a byte-identical file and the daily workflow has nothing to commit.
-// Read off the new index, which has everything; until there is one, a new stamp.
-const indexV4Body = indexRows(all);
+// Read off the newest index, which has everything: shape 5, or, until it
+// exists, shape 4, which is the same map while no loop is saved.
 const sameText = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const indexContext = { overviews, boardsOf };
+const newestBody = indexRowsOf(all, indexContext);
+const prior = previousV5 ?? previousV4;
 const same =
-  previousV4 &&
-  sameText(
-    { variants: previousV4.variants, stops: previousV4.stops, links: previousV4.links },
-    indexV4Body,
-  );
-const published_at = same
-  ? previousV4.published_at
-  : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+  prior &&
+  sameText({ variants: prior.variants, stops: prior.stops, links: prior.links }, newestBody);
+const published_at = same ? prior.published_at : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-// The terms travel inside each file, so no copy can arrive without them. The
-// shape number first: an installed app reads whatever its path serves, and
-// checks the number against the one it knows (src/features/published-map/map-file.ts has the
-// rules for changing it — a new shape goes to a new path).
-const stamp = (schema, rows) => {
-  const file = { schema, published_at, license: LICENSE, attribution: ATTRIBUTION, ...rows };
-  // Read back as the app reads it (src/features/published-map/schemas/index-schema.ts)
-  // before it is written: a file the reader would refuse is never published.
-  // map.json (shape 1) carries whole lines as `shape`, the one shape the index
-  // schema does not describe; its rows are the index's own, checked there.
-  if (schema !== SCHEMA) {
-    const read = indexSchema.safeParse(file);
-    if (!read.success) {
-      const [issue] = read.error.issues;
-      fail(
-        `FAIL  shape ${schema}: not an index the app reads: ${issue.path.join('.')} ${issue.message}`,
-      );
-    }
+// Every file is built and checked before the first is written: a shape that
+// fails leaves the files already on disk as they were.
+let files;
+try {
+  files = buildFiles(all, published_at, indexContext);
+} catch (e) {
+  if (e instanceof ShapeError) fail(e.message);
+  throw e;
+}
+for (const [name, cut] of [
+  ['shape 4', files.left.v4],
+  ['shape 3', files.left.v3],
+  ['shapes 1 and 2', files.left.old],
+]) {
+  if (cut.ids.variants.size || cut.ids.stops.size) {
+    console.log(
+      `Left out of ${name}: ${cut.ids.variants.size} direction(s), ${cut.ids.stops.size} station(s).`,
+    );
   }
-  return JSON.stringify(file) + '\n';
-};
-const file = stamp(SCHEMA, body);
+}
+const body = files.left.old;
+
 mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, file);
-const indexFile = stamp(INDEX_SCHEMA, indexRows(body));
 const previousIndex = existsSync(INDEX) ? readFileSync(INDEX, 'utf8') : null;
-writeFileSync(INDEX, indexFile);
-const indexV3File = stamp(INDEX_V3_SCHEMA, indexRows(v3));
 const previousIndexV3 = existsSync(INDEX_V3) ? readFileSync(INDEX_V3, 'utf8') : null;
-writeFileSync(INDEX_V3, indexV3File);
-const indexV4File = stamp(INDEX_V4_SCHEMA, indexV4Body);
 const previousIndexV4 = existsSync(INDEX_V4) ? readFileSync(INDEX_V4, 'utf8') : null;
-writeFileSync(INDEX_V4, indexV4File);
+const previousIndexV5 = existsSync(INDEX_V5) ? readFileSync(INDEX_V5, 'utf8') : null;
+writeFileSync(OUT, files.map);
+writeFileSync(INDEX, files.v2);
+writeFileSync(INDEX_V3, files.v3);
+writeFileSync(INDEX_V4, files.v4);
+writeFileSync(INDEX_V5, files.v5);
+const file = files.map;
+const indexFile = files.v2;
+const indexV3File = files.v3;
+const indexV4File = files.v4;
+const indexV5File = files.v5;
 
 // A line per drawn direction, written only when it changed, and the files of
 // directions gone removed, so an unchanged map touches nothing.
@@ -555,7 +546,7 @@ writeFileSync(INDEX_V4, indexV4File);
 // 2026-10-05): by the app's own rule (src/features/routes/model/line-pass.ts: passBoxes,
 // passBounds, passStretches, hotspotRing, bboxOf, servedBy), on what the app
 // reads — the line as written and the hotspots as rounded in the index,
-// shape 4's, every line in — with the key the app checks them by.
+// the same stops in every shape, the app reads shape 5 — with the key the app checks them by.
 // The rows are the file's (the database's names); the app's rules read the
 // glossary's, so each is handed over translated (toHotspot, toDirection:
 // the same functions the reader uses).
@@ -623,8 +614,13 @@ console.log(
 );
 const indexV4Gz = gzipSync(Buffer.from(indexV4File)).length;
 console.log(
-  `${previousIndexV4 === indexV4File ? 'Unchanged' : 'Wrote'} public/data/index.v4.json: ${variants.length} direction(s), ` +
-    `${stops.length} hotspot(s), ${links.length} link(s); ${indexV4File.length} bytes, ${indexV4Gz} gzipped; ` +
+  `${previousIndexV4 === indexV4File ? 'Unchanged' : 'Wrote'} public/data/index.v4.json: ${indexV4File.length} bytes, ${indexV4Gz} gzipped`,
+);
+const indexV5Gz = gzipSync(Buffer.from(indexV5File)).length;
+const loopCount = variants.filter((v) => v.route.is_loop === true).length;
+console.log(
+  `${previousIndexV5 === indexV5File ? 'Unchanged' : 'Wrote'} public/data/index.v5.json: ${variants.length} direction(s) (${loopCount} loop(s)), ` +
+    `${stops.length} hotspot(s), ${links.length} link(s); ${indexV5File.length} bytes, ${indexV5Gz} gzipped; ` +
     `lines/: ${lineFiles.size} file(s), ${linesWritten} written, ${linesRemoved} removed`,
 );
 console.log(

@@ -1,4 +1,4 @@
-// The public map at /, on whatever the published index (public/data/index.v4.json)
+// The public map at /, on whatever the published index (public/data/index.v5.json)
 // holds today. The dev server serves that file straight from the working
 // tree, committed or not — so a passing run here says nothing about whether
 // the file was committed; `git status` does.
@@ -14,7 +14,7 @@
 // failing. Covers: the read-only public page carries none of the studio's
 // buttons or sign-in text, ships no draw-* (editor) layers, writes nothing
 // to localStorage, never calls the OSRM route snapper or the database (it
-// reads the published /data/index.v4.json, once), and tapping a route vs. a
+// reads the published /data/index.v5.json, once), and tapping a route vs. a
 // hotspot — including one hotspot with a route drawn through it — opens the
 // right card with the right content; and, since 2026-10-04, that the end
 // circles' GL program is compiled before any tap and a trip's tap compiles
@@ -177,7 +177,7 @@ page.on('request', (req) => {
 // Responses, not requests: a 404 is a request too, and would count as a load.
 // The pick checks read the file again for their sums, marked so as not to count.
 page.on('response', (res) => {
-  if (/\/data\/index\.v4\.json/.test(res.url()) && !res.request().headers()['x-parapo-test'])
+  if (/\/data\/index\.v5\.json/.test(res.url()) && !res.request().headers()['x-parapo-test'])
     mapFileStatuses.push(res.status());
 });
 
@@ -214,7 +214,7 @@ await page.waitForTimeout(1200);
   const { opening, want, now } = await page.evaluate(async () => {
     const m = window.__map;
     const f = await (
-      await fetch('/data/index.v4.json', { headers: { 'x-parapo-test': '1' } })
+      await fetch('/data/index.v5.json', { headers: { 'x-parapo-test': '1' } })
     ).json();
     let [w, s, e, n] = [Infinity, Infinity, -Infinity, -Infinity];
     for (const v of f.variants) {
@@ -1152,7 +1152,7 @@ if (PART === 1) {
       const [from = '', to = ''] = label.split(' → ');
       const row = (id) =>
         page
-          .locator(`[data-testid="${id}"]`)
+          .locator(`[data-testid="${id}"] [data-part="name"]`)
           .first()
           .innerText()
           .then(
@@ -1175,7 +1175,7 @@ if (PART === 1) {
           new Promise((done) => {
             const m = window.__map;
             const read = async () => {
-              const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
+              const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
               const { directionLine } = await import('/src/features/routes/model/routes.ts');
               const v = (await fetchIndex()).directions.find((x) => x.id === id);
               const line = v ? directionLine(v) : [];
@@ -1362,8 +1362,8 @@ if (PART === 1) {
                 import('/src/features/routes/model/ride.ts'),
                 import('/src/shared/utils/geo.ts'),
               ]);
-              const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
-              const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+              const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
+              const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
               const m = await fetchIndex();
               const found = m.directions.find((x) => x.id === id);
               const v = found && { ...found, shape: (await fetchLine(id)) ?? found.shape };
@@ -1594,8 +1594,8 @@ if (PART === 1) {
         const end = await page.evaluate(async (id) => {
           try {
             const { travelLine } = await import('/src/features/routes/model/ride.ts');
-            const { fetchIndex } = await import('/src/features/published-map/api/fetch-index.ts');
-            const { fetchLine } = await import('/src/features/published-map/api/fetch-line.ts');
+            const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
+            const { fetchLine } = await import('/src/features/routes/published/fetch-line.ts');
             const m = await fetchIndex();
             const found = m.directions.find((x) => x.id === id);
             const line = travelLine(
@@ -1683,7 +1683,7 @@ check('no request to router.project-osrm.org', !osrmHit);
 // Since step 5 the public map is one published map; the database is never asked.
 check('no request to the database (*.supabase.co)', !supabaseHit);
 check(
-  'the map came from /data/index.v4.json, fetched once and served',
+  'the map came from /data/index.v5.json, fetched once and served',
   mapFileStatuses.length === 1 && (mapFileStatuses[0] === 200 || mapFileStatuses[0] === 304),
   `${mapFileStatuses.length} response(s): ${mapFileStatuses.join(', ') || 'none'}`,
 );

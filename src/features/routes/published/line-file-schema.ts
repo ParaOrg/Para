@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 
-import { lineStringSchema } from '@/features/routes/model/geojson-schema';
+import { lineStringSchema } from '../model/geojson-schema';
 
 /**
  * A direction's line file, `/data/lines/<id>.json`: its full line, and its
