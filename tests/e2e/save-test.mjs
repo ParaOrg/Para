@@ -1121,6 +1121,24 @@ check(
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
 );
+await go(OUT[0], 19);
+await clickAt([OUT[0][0] - 0.00008, OUT[0][1]], 300);
+await waitFor(async () => (await pointsShown()) === OUT.length + 2);
+const closedEdit = await drawnPoints();
+await done();
+check(
+  '  closing an edited two-ended line keeps its route type and ends',
+  metresBetween(closedEdit[0], closedEdit.at(-1)) < 15 &&
+    !(await page.getByTestId('save-loop-toggle').isChecked()) &&
+    (await page.getByTestId('save-loop-toggle').isDisabled()) &&
+    (await page.getByTestId('save-head').count()) === 1 &&
+    (await page.getByTestId('save-tail').count()) === 1 &&
+    (await body()).includes('Update this direction'),
+);
+await page.getByRole('button', { name: 'Back to map' }).click();
+await page.keyboard.press('Control+z');
+await waitFor(async () => (await pointsShown()) === OUT.length + 1);
+await go(at(0, 0), 15);
 await done();
 check(
   '  the panel says it updates this direction',

@@ -102,7 +102,9 @@ export function SavePanel({
   // An ikot is made one or not and stays so (0021): an edit, a return trip or
   // a retried save keeps what the route is. A new line starts ticked when it
   // was closed on its own first point.
-  const [isLoop, setIsLoop] = useState(() => parent?.isLoop === true || isClosedLine(draw.line));
+  const [isLoop, setIsLoop] = useState(() =>
+    parent ? parent.isLoop === true : isClosedLine(draw.line),
+  );
   // The ends are the route's: a return trip takes them as they are, and Edit
   // route starts from them; a new route's are guessed from where the line
   // actually starts and finishes, once, and corrected by hand when the guess
