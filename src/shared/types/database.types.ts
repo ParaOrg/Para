@@ -57,15 +57,16 @@ export type Database = {
           created_at: string
           fare_as_of: string | null
           fare_note: string | null
-          head_stop_id: string
+          head_stop_id: string | null
           id: string
+          is_loop: boolean
           long_name: string | null
           mode: Database["public"]["Enums"]["transport_mode"]
           owner_id: string
           route_code: string | null
           short_name: string | null
           signboard: string | null
-          tail_stop_id: string
+          tail_stop_id: string | null
           updated_at: string
           via: string | null
         }
@@ -73,15 +74,16 @@ export type Database = {
           created_at?: string
           fare_as_of?: string | null
           fare_note?: string | null
-          head_stop_id: string
+          head_stop_id?: string | null
           id?: string
+          is_loop?: boolean
           long_name?: string | null
           mode?: Database["public"]["Enums"]["transport_mode"]
           owner_id?: string
           route_code?: string | null
           short_name?: string | null
           signboard?: string | null
-          tail_stop_id: string
+          tail_stop_id?: string | null
           updated_at?: string
           via?: string | null
         }
@@ -89,15 +91,16 @@ export type Database = {
           created_at?: string
           fare_as_of?: string | null
           fare_note?: string | null
-          head_stop_id?: string
+          head_stop_id?: string | null
           id?: string
+          is_loop?: boolean
           long_name?: string | null
           mode?: Database["public"]["Enums"]["transport_mode"]
           owner_id?: string
           route_code?: string | null
           short_name?: string | null
           signboard?: string | null
-          tail_stop_id?: string
+          tail_stop_id?: string | null
           updated_at?: string
           via?: string | null
         }
