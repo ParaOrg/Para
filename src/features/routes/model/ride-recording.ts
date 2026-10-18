@@ -256,6 +256,12 @@ export interface RideSummary {
  * neither lost nor paused, and moving is what is left of the recorded span
  * once standing, lost and paused time are taken out.
  */
+function overlapsWith(gap: Gap, within: readonly Gap[]): Gap[] {
+  return within
+    .map((w) => ({ ...gap, from: Math.max(gap.from, w.from), to: Math.min(gap.to, w.to) }))
+    .filter((g) => g.to > g.from);
+}
+
 export function summarize(
   fixes: readonly Fix[],
   logged: readonly Gap[],
@@ -267,9 +273,14 @@ export function summarize(
   const paused = mergeGaps(logged.filter((g) => g.reasons.includes('paused')).map(clip)).filter(
     inside,
   );
-  const others = logged.filter((g) => !g.reasons.includes('paused'));
+  const silent = silentGaps(fixes, from, now, paused);
+  // The page hidden is lost time only where no fix came in: a phone that kept
+  // locating in the background lost nothing.
+  const others = logged
+    .filter((g) => !g.reasons.includes('paused'))
+    .flatMap((g) => (g.reasons.every((r) => r === 'hidden') ? overlapsWith(g, silent) : [g]));
   const kept = keptFixes(fixes);
-  const gaps = mergeGaps([...others, ...silentGaps(fixes, from, now, paused)])
+  const gaps = mergeGaps([...others, ...silent])
     .map(clip)
     .filter(inside);
   const blocked = mergeGaps([...gaps, ...paused]);
