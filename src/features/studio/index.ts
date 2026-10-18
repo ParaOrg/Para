@@ -29,3 +29,5 @@ export { useDeleteActions } from './panels/use-delete-actions';
 export { useSaveFlow } from './panels/use-save-flow';
 export { useSaveTarget } from './panels/use-save-target';
 export { useStudioTrip } from './panels/use-studio-trip';
+export { StudioReview } from './review/studio-review';
+export { StudioPublicView } from './maps/studio-public-view';

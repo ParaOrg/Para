@@ -1,3 +1,5 @@
+import { LOOP_WORD } from '@/features/routes/model/routes';
+
 import type { SignboardGroup } from './hotspot-checks';
 
 interface TerminalChecklistProps {
@@ -47,6 +49,9 @@ export function TerminalChecklist({ groups, ticked, onToggle }: TerminalChecklis
           ))}
         </ul>
       )}
+      <p className="mt-2 text-xs text-neutral-500">
+        An {LOOP_WORD.toLowerCase()} links the terminals on it by itself.
+      </p>
     </fieldset>
   );
 }

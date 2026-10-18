@@ -197,7 +197,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.studio == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # save-test normally takes ~14 min; 15 left no margin for a slow runner,
+    # and a timeout-cancel fails the "The editor" aggregate.
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:

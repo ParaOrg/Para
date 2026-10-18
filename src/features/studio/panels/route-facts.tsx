@@ -8,7 +8,13 @@ import {
   ruleOn,
   fareFor,
 } from '@/features/routes/model/fares';
-import { MODES, directionLine, type Direction } from '@/features/routes/model/routes';
+import {
+  MODES,
+  directionLine,
+  isLoop,
+  LOOP_WORD,
+  type Direction,
+} from '@/features/routes/model/routes';
 import { lineLength } from '@/shared/utils/geo';
 
 /**
@@ -43,6 +49,14 @@ export function RouteFacts({ direction, actions }: { direction: Direction; actio
             {verified ? 'verified by riding' : 'drawn, not yet ridden'}
           </span>
         </dd>
+        {isLoop(direction) && (
+          <>
+            <dt className="text-content-tertiary">Route</dt>
+            <dd data-testid="facts-loop" className="text-content-primary">
+              {LOOP_WORD} · one way round, no ends
+            </dd>
+          </>
+        )}
         <dt className="text-content-tertiary">Mode</dt>
         <dd className="text-content-primary">{mode}</dd>
         {r?.signboard && (

@@ -9,6 +9,7 @@ import { MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
+import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { hotspotCount } from '@/features/routes/model/places';
@@ -30,6 +31,8 @@ import {
   STUDIO_BASEMAP_THUMBNAILS,
   StudioHotspotCard,
   StudioSaveSheets,
+  StudioReview,
+  StudioPublicView,
   StudioTripCard,
   type usePasswordRecovery,
   useAuthFlow,
@@ -99,16 +102,31 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   });
   // The save panels and the toast, one at a time, the newest: a save's, or a
   // problem (useSaveFlow).
-  const { isSaving, setIsSaving, toast, setToast, setNotice, justSaved, onSaved, onSavedHotspot } =
-    useSaveFlow({
-      recoveryError: recovery.error,
-      cancelDrawing: draw.cancel,
-      reloadRoutes: saved.reload,
-      reloadHotspots: hotspots.reload,
-    });
+  const {
+    isSaving,
+    setIsSaving,
+    toast,
+    setToast,
+    setNotice,
+    justSaved,
+    onSaved,
+    onSavedHotspot,
+    onDrafted,
+  } = useSaveFlow({
+    recoveryError: recovery.error,
+    cancelDrawing: draw.cancel,
+    reloadRoutes: saved.reload,
+    reloadHotspots: hotspots.reload,
+  });
   // The route list, a hotspot's card and the trip opened from either, as on
   // the public map (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
+  // Where an open ikot's trip leaves from: the place whose card it was opened
+  // from, else its first. The studio has no commuter's position to start from.
+  const tipId = useLoopTip(saved.selected, hotspots, {
+    where: null,
+    openedFrom: hotspots.selected,
+  });
   // The camera with the cards, as on the public map (useCardCamera), so the
   // studio has the public map's interaction. A hintuan picked on the trip
   // card, the camera gliding there clear of the card and a circle popping up
@@ -128,7 +146,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     backFromTrip,
     pickOnTrip,
     endOnTrip,
-  } = useCardCamera(map, saved, hotspots, cards);
+  } = useCardCamera(map, saved, hotspots, cards, { tipId });
 
   const { rides, timeline, routeCount } = useStudioTrip({
     map,
@@ -136,6 +154,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     hotspots,
     hiddenDirectionId: draw.target.directionId,
     ride,
+    tipId,
   });
 
   // Every editor edits every route and hotspot (migration 0015). There is no
@@ -208,12 +227,16 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           </div>
         )}
 
-        {!isPlayground && (
-          <MapPlaceholder
-            map={studioMap}
-            hasLine={draw.drawing}
-            onOpenPlayground={handleOpenPlayground}
-          />
+        {studioMap === 'public' ? (
+          <StudioPublicView hasLine={draw.drawing} onOpenPlayground={handleOpenPlayground} />
+        ) : (
+          !isPlayground && (
+            <MapPlaceholder
+              map={studioMap}
+              hasLine={draw.drawing}
+              onOpenPlayground={handleOpenPlayground}
+            />
+          )
         )}
 
         {/* Out of the page's reach, not unmounted, on the other maps. */}
@@ -345,6 +368,22 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             />
           )}
 
+          {isSignedIn &&
+            !draw.drawing &&
+            !isSaving &&
+            !isSigningIn &&
+            !isChangingPassword &&
+            !isResetting && (
+              <StudioReview
+                key={session?.user.id}
+                map={map}
+                onChanged={() => {
+                  void saved.reload();
+                  void hotspots.reload();
+                }}
+              />
+            )}
+
           <SaveToasts
             toast={toast}
             isDrawing={draw.drawing}
@@ -405,6 +444,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           target={target}
           onSaved={onSaved}
           onSavedHotspot={onSavedHotspot}
+          onDrafted={onDrafted}
           onCancel={() => setIsSaving(false)}
         />
       </div>

@@ -1,6 +1,6 @@
 # Migrations
 
-The files here are numbered (`0001` to `0017`, then `0021`; `0018` to `0020` are planned, `.scratch/contribute/database.md` §10). The project's ledger,
+The files here are numbered (`0001` to `0018`, then `0021`; `0019` and `0020` are planned, `.scratch/contribute/database.md` §10). The project's ledger,
 `supabase_migrations.schema_migrations`, is timestamped. This table says which
 ledger version each file is. Nothing here is applied by a session: the owner
 applies each file, one at a time, and regenerates `src/shared/types/database.types.ts`
@@ -25,11 +25,12 @@ after every one.
 | `0015_shared_editing.sql` | `20261014072047` | `0015_shared_editing` | Applied before 0013 and 0014 |
 | `0016_finish_terminal_index.sql` | `20261017052153` | `0016_finish_terminal_index` | Drops the index 0014 meant to drop |
 | `0017_anon_writes_revoked.sql` | `20261017091759` | `0017_anon_writes_revoked` | `anon` loses its writes; a new table grants nothing by default |
-| `0021_loops.sql` | not yet applied | | A loop: no head or tail, one direction, called by its signboard |
+| `0018_review.sql` | `20261018054405` | `0018_review` | Approved / taken-down rows, drafts, takedowns, editor names; public reads approved only. Checked with `supabase/verify/`; applied with `supabase/apply/` |
+| `0022_draft_ops.sql` | `20261018085951` | `0022_draft_ops` | Review operations RPCs: claim/submit/send-back/approve/discard drafts, take-down/put-back. Applied by the owner with `supabase/apply/0022_apply.sql`; do not reapply |
+| `20261018112757_reviewed_draft_approval.sql` | **not applied live** | `reviewed_draft_approval` | Revision-checked approval and explicit conflict resolution; verified only on disposable databases. Requires owner approval before live application |
+| `0021_loops.sql` | `20261018020203` | `0021_loops` | A loop: no head or tail, one direction, called by its signboard |
 
-A new file takes the next free number. Its ledger version is whatever
-timestamp the project gives it when the owner applies it; add the row here in
-the same change.
+Create new files with `supabase migration new <name>`; the CLI supplies a timestamped filename. Leave the existing numbered files unchanged. Record the ledger version the project actually assigns after the owner approves and applies a migration. Until then, mark its row **not applied live**.
 
 ## Applying a file from the SQL editor
 

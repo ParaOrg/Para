@@ -173,3 +173,17 @@ test('a file the app could not read is refused before anything is written', () =
     /not an index the app reads/,
   );
 });
+
+test('source versions travel only in shape 5 and leave older file formats unchanged', () => {
+  const { all, context } = committedRows();
+  const publishedAt = '2026-10-18T12:00:00Z';
+  const before = buildFiles(all, publishedAt, context);
+  const sourceRevisions = {
+    routes: { [all.variants[0].route.id]: 7 },
+    hotspots: { [all.stops[0].id]: 3 },
+  };
+  const after = buildFiles(all, publishedAt, { ...context, sourceRevisions });
+  assert.deepEqual(JSON.parse(after.v5).source_revisions, sourceRevisions);
+  for (const shape of ['map', 'v2', 'v3', 'v4']) assert.equal(after[shape], before[shape]);
+  assert.ok(!JSON.stringify(JSON.parse(after.v5).source_revisions).includes('editor'));
+});

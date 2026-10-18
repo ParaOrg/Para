@@ -35,3 +35,11 @@ test("another route's empty slot is not this route's", () => {
   const saved = direction('out', 'r1', LINE);
   assert.equal(returnTripLeft(saved, [saved, direction('back', 'r2')]), false);
 });
+
+test('an ikot has no slot, so no return trip is offered after saving it', () => {
+  // A loop is saved as one direction row: the list holds nothing else of its route.
+  const saved = direction('loop', 'r9', LINE);
+  assert.equal(returnTripLeft(saved, [saved]), false);
+  // And another route's undrawn slot is not its own.
+  assert.equal(returnTripLeft(saved, [saved, direction('back', 'r1')]), false);
+});

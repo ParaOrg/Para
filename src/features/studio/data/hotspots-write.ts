@@ -1,9 +1,4 @@
-import {
-  firstTouchIndex,
-  ringCentroid,
-  ringToPolygon,
-  type Ring,
-} from '@/features/routes/geo/ring';
+import { ringCentroid, ringToPolygon, type Ring } from '@/features/routes/geo/ring';
 import {
   hotspotRowSchema,
   toLinkRow,
@@ -15,17 +10,17 @@ import {
   type HotspotKind,
   type HotspotRow,
 } from '@/features/routes/model/hotspots';
-import { directionLine, type DirectionRow } from '@/features/routes/model/routes';
+import { directionLine, isLoop, type DirectionRow } from '@/features/routes/model/routes';
 import { hintuansAlong } from '@/features/routes/model/timeline';
 import { roundLngLat } from '@/shared/utils/geo';
 
-import { linksThrough } from './hotspots-geometry';
+import { linksThrough, terminalLinks } from './hotspots-geometry';
 import { parsed, readAll } from './read-all';
 import { requireSupabase } from './supabase';
 
 const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
 
-interface SaveHotspotInput {
+export interface SaveHotspotInput {
   hotspotId: string | null;
   kind: HotspotKind;
   /** What is written on the ground. Required. */
@@ -43,20 +38,11 @@ interface SaveHotspotInput {
 }
 
 /**
- * Create or update a hotspot and replace its route links. Writes require a
- * signed-in editor; any editor may change any row (0015); RLS enforces it on
- * both tables.
- *
- * Two steps, not one transaction, as a direction's save is (save-route.ts):
- * `onWritten` hears of the row the moment it is in, so a retry after the
- * links failed updates that row instead of inserting a second box on the
- * same ground.
+ * The stop row a save writes, from the panel's input, and its ring as stored:
+ * names normalised, corners rounded, the point at the outline's middle. Pure,
+ * shared by the live save and the draft (draft-save.ts).
  */
-export async function saveHotspot(
-  input: SaveHotspotInput,
-  onWritten?: (hotspotId: string) => void,
-): Promise<HotspotRow> {
-  const client = requireSupabase();
+export function hotspotColumns(input: SaveHotspotInput) {
   if (input.ring.length < 3) throw new Error('A hotspot needs at least three corners');
 
   // Names are normalised here, not in the database: a stray double space
@@ -78,6 +64,42 @@ export async function saveHotspot(
     area: ringToPolygon(ring),
     point,
   };
+  return { row, ring };
+}
+
+/**
+ * A hotspot's route links, as saveHotspot works them out: computed for a
+ * hintuan, chosen for a terminal, except that an ikot's are computed for both
+ * (terminalLinks). Either way the sequence is where the direction first meets
+ * the outline (0 when a ticked terminal route never actually enters it — still
+ * a valid, ordered link).
+ */
+export function hotspotLinks(
+  input: SaveHotspotInput,
+  ring: Ring,
+  line: string | null,
+): { directionId: string; sequence: number }[] {
+  return input.kind === 'hintuan'
+    ? linksThrough(ring, input.directions, line)
+    : terminalLinks(ring, input.directionIds ?? [], input.directions);
+}
+
+/**
+ * Create or update a hotspot and replace its route links. Writes require a
+ * signed-in editor; any editor may change any row (0015); RLS enforces it on
+ * both tables.
+ *
+ * Two steps, not one transaction, as a direction's save is (save-route.ts):
+ * `onWritten` hears of the row the moment it is in, so a retry after the
+ * links failed updates that row instead of inserting a second box on the
+ * same ground.
+ */
+export async function saveHotspot(
+  input: SaveHotspotInput,
+  onWritten?: (hotspotId: string) => void,
+): Promise<HotspotRow> {
+  const client = requireSupabase();
+  const { row, ring } = hotspotColumns(input);
 
   const query = input.hotspotId
     ? client.from('stop').update(row).eq('id', input.hotspotId)
@@ -93,7 +115,7 @@ export async function saveHotspot(
         error.message.includes('stop_terminal_informal_unique'))
     ) {
       throw new Error(
-        `There is already a terminal at "${informal || name}". A place has one terminal; draw the others as hintuans under the same name.`,
+        `There is already a terminal at "${row.informal || row.name}". A place has one terminal; draw the others as hintuans under the same name.`,
       );
     }
     throw new Error(error.message);
@@ -110,29 +132,9 @@ export async function saveHotspot(
   const hotspot = read.data;
   onWritten?.(hotspot.id);
 
-  // Links: computed for a hintuan, chosen for a terminal. Either way the
-  // sequence is where the direction first meets the outline (0 when a ticked
-  // terminal route never actually enters it — still a valid, ordered link).
-  const byId = new Map(input.directions.map((v) => [v.id, v]));
-  const links: RawHotspotLink[] = (
-    input.kind === 'hintuan'
-      ? linksThrough(ring, input.directions, hotspot.line ?? null).map((l) => ({
-          directionId: l.directionId,
-          hotspotId: hotspot.id,
-          sequence: l.sequence,
-        }))
-      : (input.directionIds ?? []).flatMap((id) => {
-          const direction = byId.get(id);
-          if (!direction) return [];
-          return [
-            {
-              directionId: id,
-              hotspotId: hotspot.id,
-              sequence: Math.max(0, firstTouchIndex(directionLine(direction), ring)),
-            },
-          ];
-        })
-  ).map(toLinkRow);
+  const links: RawHotspotLink[] = hotspotLinks(input, ring, hotspot.line ?? null)
+    .map((l) => ({ directionId: l.directionId, hotspotId: hotspot.id, sequence: l.sequence }))
+    .map(toLinkRow);
 
   try {
     await replaceLinks(hotspot.id, links);
@@ -178,22 +180,22 @@ export const NOTHING_CHANGED =
 /**
  * Keep every hintuan's list honest after a direction is saved: link it to each
  * hintuan it now passes under, unlink it from each it no longer does. Terminal
- * links are the owner's and are never touched here.
+ * links are the owner's and are never touched here, except on an ikot, whose
+ * terminals are places on it like any hintuan and are managed the same way.
  */
 export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
+  const loop = isLoop(direction);
   // Paged, as every table read is (read-all.ts): past 1,000 hintuans one
   // request would silently see a subset.
   const [hintuanRows, linked] = await Promise.all([
-    readAll<unknown>((from, to) =>
-      client
-        .from('stop')
-        .select('*', { count: 'exact' })
-        .eq('kind', 'hintuan')
+    readAll<unknown>((from, to) => {
+      const stops = client.from('stop').select('*', { count: 'exact' });
+      return (loop ? stops.in('kind', ['hintuan', 'terminal']) : stops.eq('kind', 'hintuan'))
         .not('area', 'is', null)
         .order('id')
-        .range(from, to),
-    ),
+        .range(from, to);
+    }),
     // This direction's links as they stand: one small request.
     readAll<{ stop_id: string }>((from, to) =>
       client
@@ -217,8 +219,8 @@ export async function syncHintuanLinks(direction: DirectionRow): Promise<void> {
   // Only the hintuan links this direction has and no longer earns — usually
   // none. Listing every hintuan the line does not pass would make a request
   // line that grows with the map past what the gateway accepts.
-  const isHintuan = new Set(hintuans.map((h) => h.id));
-  const drop = linked.map((l) => l.stop_id).filter((id) => isHintuan.has(id) && !kept.has(id));
+  const isManaged = new Set(hintuans.map((h) => h.id));
+  const drop = linked.map((l) => l.stop_id).filter((id) => isManaged.has(id) && !kept.has(id));
 
   if (drop.length > 0) {
     const del = await client

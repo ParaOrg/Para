@@ -4,8 +4,8 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/save-checks-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { saveRefusal } from '../../src/features/studio/panels/save-checks.ts';
-import { ENDS_TAKEN } from '../../src/features/studio/data/routes-write.ts';
+import { loopSaveRefusal, saveRefusal } from '../../src/features/studio/panels/save-checks.ts';
+import { ENDS_TAKEN, LOOP_TAKEN } from '../../src/features/studio/data/routes-write.ts';
 
 const tala = { key: 'tala', label: 'Tala', boxes: [], terminal: null };
 const fairview = { key: 'sm fairview', label: 'SM Fairview', boxes: [], terminal: null };
@@ -47,4 +47,39 @@ test('the order: no end, then the same place, then ends taken, then turned round
   assert.equal(saveRefusal(all), SAME_PLACE);
   assert.equal(saveRefusal({ ...all, tailPlace: fairview }), ENDS_TAKEN);
   assert.equal(saveRefusal({ ...all, tailPlace: fairview, endsTaken: false }), TURNED);
+});
+
+// ---------------------------------------------------------------- an ikot (0021)
+
+/** An ikot that may be saved: a signboard, a closed line, two places on it, nothing taken. */
+const okIkot = { signboard: 'UP – Ikot', gapM: 0, placesCount: 3, signboardTaken: false };
+
+test('an ikot with a signboard, a closed line and places goes ahead', () => {
+  assert.equal(loopSaveRefusal(okIkot), null);
+  // At the tolerance still closed; one metre past is not.
+  assert.equal(loopSaveRefusal({ ...okIkot, gapM: 15 }), null);
+});
+
+test('each ikot refusal in the words the panel shows', () => {
+  assert.equal(
+    loopSaveRefusal({ ...okIkot, signboard: '  ' }),
+    'An ikot is called by its signboard: write what the jeep says, like UP – Ikot.',
+  );
+  assert.equal(
+    loopSaveRefusal({ ...okIkot, gapM: 120.4 }),
+    'An ikot ends where it began. This line ends 120 m from its start: go back to the map and press ⟲ Close the loop.',
+  );
+  assert.equal(
+    loopSaveRefusal({ ...okIkot, placesCount: 1 }),
+    'An ikot needs at least two places on it, so its trip has somewhere to start and somewhere to go.',
+  );
+  assert.equal(loopSaveRefusal({ ...okIkot, signboardTaken: true }), LOOP_TAKEN);
+});
+
+test('the ikot refusals come in this order: signboard, closed, places, taken', () => {
+  const all = { signboard: '', gapM: 99, placesCount: 0, signboardTaken: true };
+  assert.match(loopSaveRefusal(all), /called by its signboard/);
+  assert.match(loopSaveRefusal({ ...all, signboard: 'x' }), /ends where it began/);
+  assert.match(loopSaveRefusal({ ...all, signboard: 'x', gapM: 0 }), /at least two places/);
+  assert.equal(loopSaveRefusal({ ...all, signboard: 'x', gapM: 0, placesCount: 2 }), LOOP_TAKEN);
 });

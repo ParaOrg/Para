@@ -75,6 +75,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** An ikot that goes by a place twice: only the first pass is listed, and the editor is told. */
+export const IkotPassesAPlaceTwice: Story = {
+  args: { isLoop: true, passedTwice: ['Katipunan'], hotspotsCount: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('save-passed-twice')).toHaveTextContent('Katipunan');
+    // An ikot has no ends to end at, so no hotspots is not the warning it is for a route.
+    await expect(canvas.queryByText(/No hotspots yet/)).toBeNull();
+  },
+};
+
 /** A clean line: only the streets it runs along. */
 export const Streets: Story = {
   play: async ({ canvasElement }) => {

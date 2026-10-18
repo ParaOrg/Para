@@ -276,9 +276,11 @@ function maxDeviation(original, simplified) {
 const [directionRows, hotspotRows, linkRows] = await Promise.all([
   rest(
     'route_variant?select=id,route_id,direction_name,origin_terminal,destination_terminal,shape,confidence,reversed,signboards,' +
-      'route:route(id,signboard,route_code,long_name,mode,fare_note,head_stop_id,tail_stop_id,via,is_loop)&order=id.asc',
+      'route:route(id,revision,signboard,route_code,long_name,mode,fare_note,head_stop_id,tail_stop_id,via,is_loop)&order=id.asc',
   ),
-  rest('stop?select=id,name,informal,aliases,kind,point,area,note,created_at,line&order=id.asc'),
+  rest(
+    'stop?select=id,revision,name,informal,aliases,kind,point,area,note,created_at,line&order=id.asc',
+  ),
   rest(
     'route_stop?select=route_variant_id,stop_id,stop_sequence&order=route_variant_id.asc,stop_sequence.asc,stop_id.asc',
   ),
@@ -523,12 +525,27 @@ if (!FORCE) {
 // Read off the newest index, which has everything: shape 5, or, until it
 // exists, shape 4, which is the same map while no loop is saved.
 const sameText = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const indexContext = { overviews, boardsOf };
+// These public counters identify the versions actually read, even if another
+// approval lands while this publication is running. No editor data is included.
+const sourceRevisions = {
+  routes: Object.fromEntries(
+    [
+      ...new Map(
+        directionRows.filter((row) => row.route).map((row) => [row.route.id, row.route.revision]),
+      ).entries(),
+    ].sort(([a], [b]) => a.localeCompare(b)),
+  ),
+  hotspots: Object.fromEntries(
+    hotspotRows.map((row) => [row.id, row.revision]).sort(([a], [b]) => a.localeCompare(b)),
+  ),
+};
+const indexContext = { overviews, boardsOf, sourceRevisions };
 const newestBody = indexRowsOf(all, indexContext);
 const prior = previousV5 ?? previousV4;
 const same =
   prior &&
-  sameText({ variants: prior.variants, stops: prior.stops, links: prior.links }, newestBody);
+  sameText({ variants: prior.variants, stops: prior.stops, links: prior.links }, newestBody) &&
+  sameText(prior.source_revisions, sourceRevisions);
 const published_at = same ? prior.published_at : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
 // Every file is built and checked before the first is written: a shape that

@@ -1,6 +1,9 @@
+import * as z from 'zod/mini';
+
 import { hotspotLinkSchema, hotspotRowSchema } from '@/features/routes/model/hotspot-schema';
 import type { HotspotLink, HotspotRow } from '@/features/routes/model/hotspots';
 
+import { STUDIO_DRAFTS } from './flags';
 import { parsed, readAll } from './read-all';
 import { getSupabase } from './supabase';
 
@@ -24,7 +27,18 @@ export function listHotspots(): Promise<HotspotRow[]> {
       .order('created_at', { ascending: false })
       .order('id')
       .range(from, to),
-  ).then((rows) => parsed(hotspotRowSchema, rows, 'hotspot'));
+  ).then((rows) =>
+    parsed(
+      hotspotRowSchema,
+      STUDIO_DRAFTS
+        ? rows.filter(
+            (row) =>
+              z.object({ status: z.optional(z.string()) }).parse(row).status !== 'taken_down',
+          )
+        : rows,
+      'hotspot',
+    ),
+  );
   hotspotsInFlight = read;
   const settle = () => {
     if (hotspotsInFlight === read) hotspotsInFlight = null;

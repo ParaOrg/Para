@@ -22,6 +22,8 @@ interface StudioSaveSheetsProps {
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
   onSaved: ComponentProps<typeof SavePanel>['onSaved'];
   onSavedHotspot: ComponentProps<typeof HotspotPanel>['onSaved'];
+  /** A save stored as a draft (STUDIO_DRAFTS). */
+  onDrafted?: () => void;
   onCancel: () => void;
 }
 
@@ -37,6 +39,7 @@ export function StudioSaveSheets({
   target,
   onSaved,
   onSavedHotspot,
+  onDrafted,
   onCancel,
 }: StudioSaveSheetsProps) {
   // The hotspot being edited, when the area trace came from a saved one.
@@ -54,6 +57,7 @@ export function StudioSaveSheets({
           directions={saved.directions}
           hotspots={hotspots.hotspots}
           onSaved={onSavedHotspot}
+          onDrafted={onDrafted}
           onCancel={onCancel}
           // A row written before its links failed becomes the outline's own
           // (adoptHotspot): ✕, Done and Save again, or a reload, update it.
@@ -70,6 +74,7 @@ export function StudioSaveSheets({
           hotspots={hotspots.hotspots}
           directions={saved.directions}
           onSaved={onSaved}
+          onDrafted={onDrafted}
           onPlaceSaved={() => void hotspots.reload()}
           onCancel={onCancel}
         />

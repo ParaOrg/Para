@@ -317,3 +317,64 @@ test('a station is linked to the train of its line, not to the jeep or the other
   const inserted = log.find((q) => q.table === 'route_stop' && q.op === 'insert');
   assert.deepEqual(inserted.payload, [{ route_variant_id: 'v2', stop_id: 's1', stop_sequence: 1 }]);
 });
+
+// ---------------------------------------------------------------- an ikot's terminals (0021)
+
+/** A direction row as the list holds it, with a line through the ring. */
+const through = (id, isLoop) => ({
+  id,
+  routeId: `r-${id}`,
+  shape: {
+    type: 'LineString',
+    coordinates: [
+      [121.0399, 14.70005],
+      [121.0402, 14.70005],
+    ],
+  },
+  route: { mode: 'jeepney', ...(isLoop ? { isLoop: true } : {}) },
+});
+
+test("a terminal's links are the ticked directions and every ikot through its outline", async () => {
+  const { client, log } = fakeSupabase((q) => {
+    if (q.table === 'stop' && (q.op === 'insert' || q.op === 'update'))
+      return { data: { ...row, kind: 'terminal' } };
+    if (q.table === 'route_stop') return {};
+    throw new Error(`unexpected ${q.op} on ${q.table}`);
+  });
+  setSupabase(client);
+  await saveHotspot({
+    ...input,
+    kind: 'terminal',
+    // 'ikot' is ticked as well (a link it already had): it is not the owner's to pick.
+    directionIds: ['plain', 'ikot'],
+    directions: [through('plain', false), through('ikot', true), through('other-ikot', true)],
+  });
+  const inserted = log.find((q) => q.table === 'route_stop' && q.op === 'insert');
+  assert.deepEqual(inserted.payload.map((l) => l.route_variant_id).sort(), [
+    'ikot',
+    'other-ikot',
+    'plain',
+  ]);
+});
+
+test('an ikot the outline no longer meets loses its link on a terminal save', async () => {
+  const away = {
+    ...through('ikot', true),
+    shape: {
+      type: 'LineString',
+      coordinates: [
+        [121.2, 14.9],
+        [121.21, 14.9],
+      ],
+    },
+  };
+  const { client, log } = fakeSupabase((q) => {
+    if (q.table === 'stop' && (q.op === 'insert' || q.op === 'update'))
+      return { data: { ...row, kind: 'terminal' } };
+    if (q.table === 'route_stop') return {};
+    throw new Error(`unexpected ${q.op} on ${q.table}`);
+  });
+  setSupabase(client);
+  await saveHotspot({ ...input, kind: 'terminal', directionIds: ['ikot'], directions: [away] });
+  assert.equal(log.filter((q) => q.table === 'route_stop' && q.op === 'insert').length, 0);
+});
