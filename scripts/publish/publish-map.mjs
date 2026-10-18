@@ -109,6 +109,8 @@ import { passBoxes } from '../../src/features/routes/model/line-pass.ts';
 import { cleanSignboardSvg } from '../../src/features/routes/model/signboard-svg.ts';
 import { ShapeError, buildFiles, indexRowsOf } from './shapes.mjs';
 import { boardsRefusal } from './boardGuard.mjs';
+import { privacyLeaks } from './privacyProbe.mjs';
+import { shrinkRefusals, takenDownSets } from './shrinkGuard.mjs';
 import { lineFileText } from './lineFile.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -265,6 +267,9 @@ function maxDeviation(original, simplified) {
 
 // ------------------------------------------------------------------- fetch
 
+// Approved rows only: since 0018 the read rules give the publishable key
+// approved routes, hotspots, their directions and links, and nothing taken
+// down, so these queries never name a status. Before 0018 every row is.
 // Rows ordered by id, not by when they were saved: re-saving a direction with
 // the same geometry must not reorder the file and commit a change nobody can
 // see. (The map draws them in file order, which nothing depends on.)
@@ -278,6 +283,41 @@ const [directionRows, hotspotRows, linkRows] = await Promise.all([
     'route_stop?select=route_variant_id,stop_id,stop_sequence&order=route_variant_id.asc,stop_sequence.asc,stop_id.asc',
   ),
 ]);
+
+// No contributor or editor-only row is readable with the key the files are
+// built from: checked before anything is written (privacyProbe.mjs).
+const leaks = await privacyLeaks(async (table) => {
+  const res = await fetch(`${URL_BASE}/rest/v1/${table}?select=*&limit=1`, {
+    headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  const text = await res.text();
+  let body = null;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    // Not JSON: the status decides.
+  }
+  return { status: res.status, body };
+});
+if (leaks.length) fail(leaks.map((l) => `FAIL  ${l}`).join('\n'));
+
+// What editors took down and haven't put back (0018), for the shrink guard.
+// Before 0018 there is no such table, and nothing is taken out of the count.
+let takedownRows = [];
+try {
+  takedownRows = await rest(
+    'takedown?select=kind,subject_id,taken_down_at,put_back_at&put_back_at=is.null',
+  );
+} catch (e) {
+  if (!(e instanceof Error && /HTTP 404|PGRST205|42P01/.test(e.message))) throw e;
+}
+const takenDown = takenDownSets(takedownRows);
+if (takenDown.routes.size || takenDown.hotspots.size) {
+  console.log(
+    `Taken down: ${takenDown.routes.size} route(s), ${takenDown.hotspots.size} hotspot(s).`,
+  );
+}
 
 // Each direction's signboards, in its order, as files (0010, the owner's ask
 // of 2026-10-01). One the bucket no longer holds is left out, said, and the
@@ -467,24 +507,15 @@ const { json: previousV3 } = readJson(INDEX_V3);
 const { json: previousV4 } = readJson(INDEX_V4);
 const { json: previousV5 } = readJson(INDEX_V5);
 
-// A map that shrank suddenly is far more likely a read that went wrong (a
-// policy change, a table made private) than a clear-out. Refuse it unless told.
-// The new index against its last copy, every line and loop in; until it has
-// one, the newest older file against the whole map, which is never more than
-// the whole.
+// A map that shrank suddenly is far more likely a read that went wrong than
+// a clear-out (shrinkGuard.mjs): refused unless told, less what editors took
+// down on purpose. The new index against its last copy, every line and loop
+// in; until it has one, the newest older file against the whole map, which is
+// never more than the whole.
 if (!FORCE) {
   const was = previousV5 ?? previousV4 ?? previousV3 ?? previous;
-  const now = all;
-  for (const key of was ? ['variants', 'stops', 'links'] : []) {
-    const before = Array.isArray(was[key]) ? was[key].length : 0;
-    const after = now[key].length;
-    if (before > 0 && after < before * (1 - MAX_SHRINK)) {
-      fail(
-        `FAIL  ${key}: ${before} → ${after} rows, more than ${MAX_SHRINK * 100}% fewer than the published map. ` +
-          'Not publishing. If the removal is deliberate, run with --force.',
-      );
-    }
-  }
+  const refusals = shrinkRefusals({ was, now: all, takenDown, maxShrink: MAX_SHRINK });
+  if (refusals.length) fail(refusals.map((r) => `FAIL  ${r}`).join('\n'));
 }
 
 // `published_at` is carried over when nothing else changed, so an unchanged

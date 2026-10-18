@@ -11,6 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   checkMapData,
+  contributorFieldsIn,
   markdownReport,
   END_WITHIN_M,
   readPublished,
@@ -732,4 +733,12 @@ test('a loop with a way back, or a second direction, is a problem; one with a si
   assert.deepEqual(lonely.problems, []);
   assert.equal(lonely.warnings.length, 2, lonely.warnings.join(' | '));
   assert.ok(lonely.warnings.some((w) => /1 place\(s\) linked/.test(w)));
+});
+
+test('a published file holding a contributor-only field is a problem', () => {
+  assert.deepEqual(contributorFieldsIn({ variants: [{ id: 'v', route_id: 'r' }], stops: [] }), []);
+  assert.deepEqual(
+    contributorFieldsIn({ variants: [{ id: 'v', contribution_id: 'c' }], stops: [{ hinto: {} }] }),
+    ['.variants[0].contribution_id', '.stops[0].hinto'],
+  );
 });
