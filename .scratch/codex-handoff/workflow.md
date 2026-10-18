@@ -112,3 +112,8 @@ All 5 threads replied; apply script rebuilt + re-run idempotent; `0022_check.sql
 - studio-suite timeout 15→25 min (save-test needs ~14:15; slow-runner cancels kept failing "The editor"). Same flake caused #274's red.
 - #279 CI fully green on `53e578f` (16 passed, drawing suites skipped). Devin Review threads all answered/resolved.
 - Next: studio drafts.ts + save rewiring; UI awaits owner's screenshot batch.
+
+## Recorders merged; 0022 green — 2026-10-18
+- #276, #277, #278 merged to staging by owner. #278 base retargeted to staging before merge.
+- #279 (`devin/draft-ops` @ `9a5cca3`): CI fully green; drafts.ts data layer added (typed RPC callers + payload v1 builders + listDrafts/draftOf); zod/mini fix; 2 late Devin Review flags on merged #278 answered (same-minute labels + missing story → handled in outbox pass).
+- Next: wire saves through drafts (needs 0022 live first), review UI, Public view — screenshots pending from owner.
