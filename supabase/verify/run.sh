@@ -48,6 +48,7 @@ apply < ../apply/0022_apply.sql
 bad=$($PSQL -d $DB -qAt < ../apply/0022_check.sql | grep -v '^t$' || true)
 [ -z "$bad" ] || { echo "FAILED: 0022_check.sql: $bad"; exit 1; }
 apply -o /dev/null < after-0022.sql
+PSQL="$PSQL" DB=$DB bash concurrency-0022.sh
 echo '0022: applied twice, 0022_check.sql all true, after-0022.sql passed'
 out=$(apply < ../apply/0018_revert.sql || true)
 echo "$out" | grep -q 'is not undone' || { echo "FAILED: revert ran over taken-down rows: $out"; exit 1; }

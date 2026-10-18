@@ -22,6 +22,10 @@ owner pastes), then checks it, and undoes it on a second database:
   drafting is a `conflict` that leaves the route and draft as they were;
   stale send-back/discard are `revision_mismatch`; emptying every direction
   takes the route down (logged); put back and take down refuse a repeat.
+- `concurrency-0022.sh`: two sessions race `approve_draft` against a live
+  edit of its route in both orders (edit first: `conflict`, nothing applied;
+  approval first: it lands whole and the edit lands on top) and against a
+  second approval of the same draft (`approved` / `no_draft`).
 - `../apply/0018_check.sql` must be all true after the apply, and
   `../apply/0018_revert.sql` must refuse over a takedown and, on a clean
   database, leave a schema dump identical to one 0018 never touched.
