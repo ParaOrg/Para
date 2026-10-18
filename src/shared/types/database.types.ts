@@ -393,7 +393,59 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      approve_draft: {
+        Args: {
+          p_draft: string
+        }
+        Returns: Json
+      }
+      claim_draft: {
+        Args: {
+          p_base_revision: number
+          p_is_new: boolean
+          p_kind: string
+          p_note?: string
+          p_payload: Json
+          p_subject_id: string
+        }
+        Returns: Json
+      }
+      discard_draft: {
+        Args: {
+          p_draft: string
+          p_revision?: number
+        }
+        Returns: Json
+      }
+      put_back: {
+        Args: {
+          p_kind: string
+          p_subject_id: string
+        }
+        Returns: Json
+      }
+      send_back_draft: {
+        Args: {
+          p_draft: string
+          p_note: string
+          p_revision: number
+        }
+        Returns: Json
+      }
+      submit_draft: {
+        Args: {
+          p_draft: string
+          p_revision: number
+        }
+        Returns: Json
+      }
+      take_down: {
+        Args: {
+          p_kind: string
+          p_subject_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       route_confidence: "drawn" | "verified"

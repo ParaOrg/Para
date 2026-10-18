@@ -26,7 +26,7 @@ after every one.
 | `0016_finish_terminal_index.sql` | `20261017052153` | `0016_finish_terminal_index` | Drops the index 0014 meant to drop |
 | `0017_anon_writes_revoked.sql` | `20261017091759` | `0017_anon_writes_revoked` | `anon` loses its writes; a new table grants nothing by default |
 | `0018_review.sql` | `20261018054405` | `0018_review` | Approved / taken-down rows, drafts, takedowns, editor names; public reads approved only. Checked with `supabase/verify/`; applied with `supabase/apply/` |
-| `0022_draft_ops.sql` | *(pending)* | `0022_draft_ops` | Review operations RPCs: claim/submit/send-back/approve/discard drafts, take-down/put-back. Checked on a disposable Postgres; apply with `supabase/apply/0022_apply.sql` |
+| `0022_draft_ops.sql` | `20261018085951` | `0022_draft_ops` | Review operations RPCs: claim/submit/send-back/approve/discard drafts, take-down/put-back. Applied by the owner with `supabase/apply/0022_apply.sql`; do not reapply |
 | `0021_loops.sql` | `20261018020203` | `0021_loops` | A loop: no head or tail, one direction, called by its signboard |
 
 A new file takes the next free number. Its ledger version is whatever
