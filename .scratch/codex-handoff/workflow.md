@@ -90,3 +90,12 @@ Next recommended batch: Batch 4 — Playground drafts/review/approve/send-back/t
 - Detailed next-batch risks and implementation order: [review-workflow-plan.md](review-workflow-plan.md).
 - Recheck branch heads and active session ownership first. Inspect existing PRs before implementing missing code.
 - Before pushes: `npm run check` and browser suites reached by the change. Record exact commit, checks, failures, blockers and next action here after each batch.
+
+## 0022_draft_ops (Batch 4, first piece) — 2026-10-18
+- Branch: `devin/draft-ops` (on `devin/review-0018`), commits `457f375`, `4481c96`.
+- Adds review RPCs, editor-only, security definer, jsonb codes: `claim_draft`, `submit_draft`, `send_back_draft`, `discard_draft`, `approve_draft`, `take_down`, `put_back`.
+- approve_draft: FOR UPDATE draft lock → subject row lock → `base_revision` vs `revision` conflict → atomic payload apply (route facts + full direction set + per-direction link replacement + emptied-direction borrow cleanup / stop + link replacement) → delete draft → `{"code":"approved"}`. Retry after lost response → `no_draft`. Unique/guard violations map to `ends_taken`, `loop_taken`, `terminal_place_taken`, `direction_clash`, `blocked`, `refused`.
+- Payload v1: `{version:1, route:{...}, directions:[{id,...,links:[{stop_id,stop_sequence}]}]}` or `{version:1, stop:{...}, links:[{route_variant_id,stop_sequence}]}`.
+- Verified on disposable `pg18`: apply script runs twice cleanly; `0022_check.sql` all `t`. Manual exercise: hotspot draft submitted→approved→row visible→retry `no_draft`; edit draft on concurrent change → `conflict` with `current_revision`; refusal leaves draft pending and subject unchanged; `take_down`/`put_back` codes and takedown logging work.
+- NOT applied live — owner applies `supabase/apply/0022_apply.sql` in SQL editor, then `0022_check.sql`.
+- Next: studio draft contract (data layer), save-path rewiring through drafts, review UI, Public view.
