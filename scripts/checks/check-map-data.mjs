@@ -444,6 +444,19 @@ export function markdownReport(file, result) {
   return lines.join('\n');
 }
 
+/** Fields only contributor data has (contribute/08): never in a published file. */
+export const CONTRIBUTOR_FIELDS = ['contribution_id', 'contributor_id', 'hinto'];
+
+/** Where in `value` a contributor-only field is, as paths; none when clean. */
+export function contributorFieldsIn(value, at = '') {
+  if (Array.isArray(value)) return value.flatMap((v, i) => contributorFieldsIn(v, `${at}[${i}]`));
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value).flatMap(([k, v]) => [
+    ...(CONTRIBUTOR_FIELDS.includes(k) ? [`${at}.${k}`] : []),
+    ...contributorFieldsIn(v, `${at}.${k}`),
+  ]);
+}
+
 /**
  * The published map with every line in full: an index's directions each take
  * their line from lines/<id>.json beside it; a schema 1 file has them already.
@@ -453,6 +466,8 @@ export function readPublished(path) {
   const file = JSON.parse(readFileSync(path, 'utf8'));
   if (![2, 3, 4, 5].includes(file.schema)) return { file, problems: [] };
   const problems = [];
+  for (const where of contributorFieldsIn(file).slice(0, 5))
+    problems.push(`contributor data in a published file: ${where}`);
   // Read as the app reads it (src/features/routes/published/index-schema.ts):
   // a row the reader would refuse is a problem, so the map is not published.
   const read = indexSchema.safeParse(file);
@@ -469,6 +484,8 @@ export function readPublished(path) {
       return { ...v, shape: overview };
     }
     const line = JSON.parse(readFileSync(linePath, 'utf8'));
+    for (const where of contributorFieldsIn(line).slice(0, 5))
+      problems.push(`contributor data in lines/${v.id}.json: ${where}`);
     if (line.id !== v.id || line.shape?.type !== 'LineString') {
       problems.push(`${v.direction_name ?? v.id}: lines/${v.id}.json is not this direction's line`);
       return { ...v, shape: overview };
