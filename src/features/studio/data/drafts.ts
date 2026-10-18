@@ -200,9 +200,7 @@ export async function listDrafts(): Promise<DraftRow[]> {
     .order('updated_at', { ascending: false });
   if (error) throw new Error(`draft list: ${error.message}`);
   const rows = parsed(draftRowSchema, data ?? [], 'draft');
-  return rows.sort((a, b) =>
-    a.status === b.status ? 0 : a.status === 'pending' ? -1 : 1,
-  );
+  return rows.sort((a, b) => (a.status === b.status ? 0 : a.status === 'pending' ? -1 : 1));
 }
 
 /** The draft a subject has, if any — one per (kind, subject). */
