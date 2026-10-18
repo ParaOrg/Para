@@ -147,3 +147,9 @@ Owner asked, before applying 0022: required links, link-survival tests, lock ord
 - **permissions**: `private.link_bumps_subjects` was executable by PUBLIC (missing revoke) — fixed. Helpers are now revoked from PUBLIC, anon and authenticated (only the definer functions call them). `0022_check.sql` (10 rows) and the apply post-check use `has_function_privilege` for anon, PUBLIC and authenticated; also security definer, `search_path=""`, trigger enabled, ledger once.
 - `0022_revert.sql` drops the 4 new helpers too.
 - Result on 8b8f383: full `supabase/verify/run.sh` passed on disposable pg18; typecheck + prettier pass.
+
+## 0022 live — 2026-10-18
+- Owner applied `0022_draft_ops` live: ledger version **20261018085951**. Do not reapply.
+- Independent check through the anon REST key: all seven RPCs exist and answer `401 / 42501 permission denied` to anon; `draft`, `takedown`, `editor_name` refuse anon (401); counts unchanged (10 routes, 20 directions, 103 hotspots, 256 links); no non-approved route visible to anon.
+- Types: `database.types.ts` Functions block carries the seven RPCs (generated from the disposable DB with 0022, applied by hand in the classic format) — commit adc01eb. Migration README row records the version.
+- Next: Batch 4 app side — save paths through drafts, then the review UI (needs the owner's screenshots).
