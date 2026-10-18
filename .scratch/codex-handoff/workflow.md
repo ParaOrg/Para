@@ -132,3 +132,9 @@ All 5 threads replied; apply script rebuilt + re-run idempotent; `0022_check.sql
   3. two approvals of one draft → `approved` / `no_draft`.
 - Result on fe1b546 (disposable pg18): full `run.sh` passed.
 - Remaining before studio rewiring can be tested end to end: 0022 applied live (owner).
+
+## 0022 recovery (commit 1ac34d0) — 2026-10-18
+- New `supabase/apply/0022_revert.sql`: drops the 7 public functions, 4 private helpers (`require_editor`, `text_list`, `refusal`, `link_bumps_subjects`) and trigger `route_stop_bumps_subjects`; deletes the ledger row. No data touched.
+- `0022_apply.sql` ledger version is now max(now, last version + 1): `run.sh` caught 0018 and 0022 applied in the same second colliding on the version key.
+- `supabase/apply/README.md`: 0022 steps and recovery.
+- `run.sh` third database: 0018 → 0022 → revert twice → schema dump equals 0018 alone, ledger row gone → re-apply passes `0022_check.sql`. Full run passed on 1ac34d0.
