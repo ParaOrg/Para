@@ -36,3 +36,32 @@ The `alter table` statements lock `route`, `route_variant`, `stop` and
 `route_stop` for a moment (small tables, no rewrite). The public map reads
 published files, not the database, so commuters see nothing; an editor saving
 at that moment waits for it.
+
+# Applying 0022 to the live project
+
+0018 must already be applied (it is, ledger `20261018054405`). Three files,
+each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `0022_apply.sql` | One transaction: checks 0018 is applied, applies `migrations/0022_draft_ops.sql` (carried unchanged; `verify/run.sh` checks the copy), checks the seven review functions exist and `anon` cannot run them, then writes the ledger row `0022_draft_ops`. Any failed check raises and nothing is changed. Safe to run twice. Adds functions and one trigger only; no table or row changes. |
+| `0022_check.sql` | Read-only, 4 rows, all should be `t`. |
+| `0022_revert.sql` | One transaction: drops the seven functions, the four private helpers and the link trigger, and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `0022_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `0022_check.sql`: 4 rows, all `t`.
+3. Tell the session; it checks through the API that `anon` gets refused by the
+   functions and the public row counts are unchanged, then regenerates
+   `src/shared/types/database.types.ts` and records the ledger version.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and something misbehaves: run `0022_revert.sql`. `verify/run.sh`
+  checks the schema afterwards matches 0018 alone and that 0022 re-applies.
+  Drafts and takedowns are 0018's tables and are kept. Undo 0022 before ever
+  undoing 0018.
+- The studio does not call these functions yet, so neither applying nor
+  reverting changes what an editor or commuter sees today.

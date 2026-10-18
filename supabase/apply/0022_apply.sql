@@ -6,8 +6,7 @@
 -- result, and writes the ledger row. If any check fails it raises, and
 -- nothing at all is changed, ledger included. Safe to run twice.
 -- Afterwards: supabase/apply/0022_check.sql (read-only), then regenerate the
--- types. Undo: drop the seven public functions and three private ones
--- (listed at the top of the migration).
+-- types. Undo: supabase/apply/0022_revert.sql.
 
 begin;
 
@@ -656,7 +655,10 @@ end $$;
 
 -- 3. The ledger row, once.
 insert into supabase_migrations.schema_migrations (version, name, statements)
-select to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'), '0022_draft_ops', '{}'
+select greatest(to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'),
+                (select (max(version)::bigint + 1)::text from supabase_migrations.schema_migrations
+                 where version ~ '^[0-9]{14}$')),
+       '0022_draft_ops', '{}'
 where not exists (
   select 1 from supabase_migrations.schema_migrations where name = '0022_draft_ops'
 );

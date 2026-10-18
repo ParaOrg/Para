@@ -63,3 +63,19 @@ diff /tmp/before-0018.dump /tmp/reverted-0018.dump || { echo 'FAILED: revert lef
 rows=$($PSQL -d $DB -qAt -c "select count(*) from supabase_migrations.schema_migrations where name = '0018_review'")
 [ "$rows" = 0 ] || { echo 'FAILED: revert left the ledger row'; exit 1; }
 echo 'revert: schema as before 0018, ledger row gone, refused over a takedown'
+
+DB=verify_0022_revert
+fresh
+apply < ../apply/0018_apply.sql
+$PG_DUMP -d $DB --schema-only --schema=public --schema=private | grep -Ev '^.(un)?restrict ' > /tmp/before-0022.dump
+apply < ../apply/0022_apply.sql
+apply < ../apply/0022_revert.sql
+apply < ../apply/0022_revert.sql
+$PG_DUMP -d $DB --schema-only --schema=public --schema=private | grep -Ev '^.(un)?restrict ' > /tmp/reverted-0022.dump
+diff /tmp/before-0022.dump /tmp/reverted-0022.dump || { echo 'FAILED: 0022 revert left the schema different'; exit 1; }
+rows=$($PSQL -d $DB -qAt -c "select count(*) from supabase_migrations.schema_migrations where name = '0022_draft_ops'")
+[ "$rows" = 0 ] || { echo 'FAILED: 0022 revert left the ledger row'; exit 1; }
+apply < ../apply/0022_apply.sql
+bad=$($PSQL -d $DB -qAt < ../apply/0022_check.sql | grep -v '^t$' || true)
+[ -z "$bad" ] || { echo "FAILED: 0022_check.sql after re-apply: $bad"; exit 1; }
+echo '0022 revert: schema as before 0022 (twice), ledger row gone, re-apply passes 0022_check.sql'

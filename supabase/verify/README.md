@@ -36,5 +36,9 @@ PSQL="docker exec -i pg-verify psql -U postgres" supabase/verify/run.sh
 docker rm -f pg-verify
 ```
 
-It ends with `revert: schema as before 0018, ledger row gone, refused over a
-takedown`, or stops at the first failure.
+A third database applies 0018, then 0022, then `../apply/0022_revert.sql`
+twice: the schema dump must match 0018 alone, the ledger row must be gone,
+and re-applying 0022 must pass `0022_check.sql` again.
+
+It ends with `0022 revert: schema as before 0022 (twice), ledger row gone,
+re-apply passes 0022_check.sql`, or stops at the first failure.
