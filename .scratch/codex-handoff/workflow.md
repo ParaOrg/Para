@@ -32,7 +32,7 @@ Updated: 2026-10-18. Goal: complete contributor-to-studio workflow, through appr
 
 ## Current PR batch (status 2026-10-18; owner merges, nothing applied live)
 
-Merge order: #273 → #274 (stacked); #275 any time; #276 → #277 (stacked). Merging #276 lands #249, #258 and #262 at once; close those three afterwards rather than merging them.
+Merge order: #273 → #274 (stacked); #275 any time; #276 → #277 → #278 (stacked). Merging #276 lands #249, #258 and #262 at once; close those three afterwards rather than merging them.
 
 | PR | Branch @ head | Base | CI on head | Review |
 | --- | --- | --- | --- | --- |
@@ -41,6 +41,7 @@ Merge order: #273 → #274 (stacked); #275 any time; #276 → #277 (stacked). Me
 | [#275](https://github.com/Roviicc/ParaPo/pull/275) publish guard | `devin/publish-guard` @ `19ef8b7` | staging | all passed | no comments |
 | [#276](https://github.com/Roviicc/ParaPo/pull/276) recorder reconcile | `devin/contribute-reconcile` @ `f255416` | staging | all passed | 6 bot findings: 5 fixed in #277 (resolved), 1 open by design (saved rides after reload) |
 | [#277](https://github.com/Roviicc/ParaPo/pull/277) recorder durability | `devin/recorder-durability` @ `ab606f0` | #276 | 17 passed, 0 failed, 1 skipped (`The drawing suites`, path filter) | 3 bot findings fixed in `02bcbc4` (resolved) |
+| [#278](https://github.com/Roviicc/ParaPo/pull/278) saved recordings list | `devin/saved-rides` @ `bbccb09` | #277 | pending | new; contribute-test 80/0 locally |
 
 Tests run for this batch, by head:
 - `b2b1101` (#273): `npm run check` (854 unit), Storybook build, save-test 148/0, gate-test 17/0, loop-test 35/0. The six live-router drawing suites were not run.
@@ -52,8 +53,8 @@ Tests run for this batch, by head:
 #273 `scale-test`: one threshold failed in CI run 39093331085, job 117574532352: "the main thread is busy under 5 s while opening: 5.6 s in long tasks" (map load 5.6 s). The same check on the same frontend code: #274 CI 2.4 s (its only difference from #273 is under `supabase/` plus this file), #275 2.0 s, #276 3.0 s, #277 3.7 s, staging (`80f5e4f`, job 117461621268) 4.0 s. Locally, three runs each: #273 1.9/2.7/2.7 s, staging 1.9/2.1/2.2 s. No regression measured; the CI variance on unchanged code is 2.0–5.6 s. Not fixed and the assertion not loosened. A re-run of the failed job (owner, or any new push to #273) is the remaining check.
 
 Blockers and owner decisions:
-- Apply 0018 live (owner approval for that concrete action; steps in `supabase/migrations/README.md`). Merging #274's SQL is a separate step. 0021 is already applied; do not reapply.
-- Saved rides after a reload: they stay in IndexedDB (`parapo-contribute`, stores `recordings` and `fixes`, status `saved`), but the Ready screen does not list them. The download exists only on the Saved screen in the same page session. To retrieve one now: DevTools → Application → IndexedDB. Owner decision: show an interim saved-rides list with a download on the Ready screen now, or wait for the upload work's unsent list (`contribute/13`).
+- Apply 0018 live: owner keeps it pending until its SQL and verification evidence are reviewed (owner approval for that concrete action; steps in `supabase/migrations/README.md`). Merging #274's SQL is a separate step. 0021 is already applied; do not reapply.
+- Saved rides after a reload: owner chose an interim list now (#278: Ready screen lists saved recordings, each with Download; reads only). Owner will supply the screenshot; at `contribute/13` extend each row with upload status rather than replacing the list.
 - A failed write of the recording itself shows the "could not keep" banner and keeps the form so Continue can retry. The form's download appears only when fixes were lost, which is current design.
 
 Remaining tasks toward record → save locally → upload → studio review → draft → approve → publish → public map: items 4–9 below. Batch 4 needs 0018 applied and the types regenerated. Contributor upload (item 7) needs 0018, then migration 0019, Turnstile keys and Supabase CAPTCHA/anonymous-auth settings (owner).
