@@ -117,3 +117,10 @@ All 5 threads replied; apply script rebuilt + re-run idempotent; `0022_check.sql
 - #276, #277, #278 merged to staging by owner. #278 base retargeted to staging before merge.
 - #279 (`devin/draft-ops` @ `9a5cca3`): CI fully green; drafts.ts data layer added (typed RPC callers + payload v1 builders + listDrafts/draftOf); zod/mini fix; 2 late Devin Review flags on merged #278 answered (same-minute labels + missing story → handled in outbox pass).
 - Next: wire saves through drafts (needs 0022 live first), review UI, Public view — screenshots pending from owner.
+
+## 0022 scripted verification (commit 9f3b275) — 2026-10-18
+- `supabase/verify/after-0022.sql` + `run.sh`: the manual container checks are now a repeatable script. `run.sh` checks `0022_apply.sql` carries the migration unchanged, applies it twice, requires `0022_check.sql` all `t`, then runs `after-0022.sql`.
+- Covers: anon / non-editor refused; `bad_payload` at claim; draft saves leave `route`/`stop` untouched; hotspot + loop route (direction, signboards, links) approved, retry `no_draft`; link changed after drafting → `conflict`, route and pending draft unchanged; stale send-back/discard → `revision_mismatch`; every direction emptied → route `taken_down` + takedown row; put back / take down refuse repeats.
+- Result on 9f3b275 (disposable pg18): full `run.sh` passed. Negative control: flipping the conflict expectation makes the run stop at `FAILED: link change after drafting is a conflict`.
+- Not covered yet: two sessions racing `approve_draft` against a concurrent live edit (needs a `concurrency.sh`-style two-session test); PostgREST behaviour until 0022 is live.
+- Next: two-session approve race test; then rewire studio saves through `drafts.ts` (needs 0022 live to exercise end to end); UI waits on the owner's screenshot batch.
