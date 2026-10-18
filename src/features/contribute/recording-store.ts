@@ -87,6 +87,14 @@ export function putFix(row: FixRow): Promise<void> {
 }
 
 /** The fixes of a recording, in the order they came. */
+/** Writes fixes whose own writes failed, all in one transaction. */
+export function putFixes(rows: readonly FixRow[]): Promise<void> {
+  return inTransaction([FIXES], 'readwrite', (tx) => {
+    const store = tx.objectStore(FIXES);
+    for (const row of rows) store.put(row);
+  });
+}
+
 export async function loadFixes(recordingId: string): Promise<FixRow[]> {
   const db = await openDatabase();
   const range = IDBKeyRange.bound([recordingId, 0], [recordingId, Number.MAX_SAFE_INTEGER]);

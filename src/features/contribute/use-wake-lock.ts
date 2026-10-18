@@ -12,10 +12,15 @@ export function useWakeLock(active: boolean): boolean {
   useEffect(() => {
     if (!active || !('wakeLock' in navigator)) return;
     let sentinel: WakeLockSentinel | null = null;
+    let isPending = false;
     let isStopped = false;
+    const handleRelease = () => setIsHeld(false);
 
+    // One request at a time: a page shown again while the first is pending must not
+    // win a second lock that the cleanup would never release.
     const request = async () => {
-      if (sentinel && !sentinel.released) return;
+      if (isPending || (sentinel && !sentinel.released)) return;
+      isPending = true;
       try {
         const granted = await navigator.wakeLock.request('screen');
         if (isStopped) {
@@ -24,11 +29,13 @@ export function useWakeLock(active: boolean): boolean {
         }
         sentinel = granted;
         setIsHeld(true);
-        granted.addEventListener('release', () => setIsHeld(false));
+        granted.addEventListener('release', handleRelease);
       } catch (error) {
         // Refused: the recording goes on, and the page tells the contributor the screen may sleep.
         console.warn('The screen could not be kept awake.', error);
         setIsHeld(false);
+      } finally {
+        isPending = false;
       }
     };
     const handleVisibility = () => {
@@ -40,6 +47,7 @@ export function useWakeLock(active: boolean): boolean {
     return () => {
       isStopped = true;
       document.removeEventListener('visibilitychange', handleVisibility);
+      sentinel?.removeEventListener('release', handleRelease);
       void sentinel?.release();
       setIsHeld(false);
     };

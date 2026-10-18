@@ -685,5 +685,199 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// --------------------------------------- the phone refusing writes, and saving anyway
+/** Makes IndexedDB refuse puts into a store while `window.__fail[store]` is set. */
+const FAIL_WRITES = () => {
+  const put = IDBObjectStore.prototype.put;
+  window.__fail = {};
+  IDBObjectStore.prototype.put = function (...args) {
+    if (window.__fail[this.name]) throw new DOMException('Full', 'QuotaExceededError');
+    return put.apply(this, args);
+  };
+};
+/** The recordings and the number of fixes IndexedDB holds. */
+const stored = (page) =>
+  page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open('parapo-contribute');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction(['recordings', 'fixes']);
+          const recordings = tx.objectStore('recordings').getAll();
+          const fixes = tx.objectStore('fixes').count();
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve({
+              recordings: recordings.result.map((r) => ({
+                status: r.status,
+                description: r.description,
+                failedFixWrites: r.failedFixWrites ?? 0,
+              })),
+              fixes: fixes.result,
+            });
+          };
+        };
+      }),
+  );
+const setFail = (page, store, on) => page.evaluate(([s, v]) => (window.__fail[s] = v), [store, on]);
+const STORE_PROBLEM = 'This phone could not keep the recording.';
+{
+  const { page, errors } = await phone({ consented: true });
+  await page.addInitScript(FAIL_WRITES);
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 100);
+  await setFail(page, 'fixes', true);
+  await ride(page, 110, 150);
+  await setFail(page, 'fixes', false);
+  await page.waitForTimeout(300);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  check(
+    'fix writes that failed are counted on the form, which offers the download',
+    (await page.getByRole('button', { name: 'Download this recording' }).count()) === 1,
+  );
+  for (
+    let tries = 0;
+    tries < 50 && (await stored(page)).recordings[0]?.status !== 'stopped';
+    tries++
+  ) {
+    await page.waitForTimeout(100);
+  }
+  await setFail(page, 'recordings', true);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.waitForTimeout(800);
+  const refused = await stored(page);
+  check(
+    'a save the phone refuses stays on the form, says so, and is not marked saved',
+    (await page.getByRole('heading', { name: 'About this route' }).count()) === 1 &&
+      (await page.getByText(STORE_PROBLEM).count()) > 0 &&
+      refused.recordings[0]?.status === 'stopped',
+    JSON.stringify(refused),
+  );
+  check(
+    '  the failed fixes were written again on the way, all 16 now stored',
+    refused.fixes === 16,
+    refused.fixes,
+  );
+  check(
+    '  so the form no longer warns of fixes it could not keep',
+    (await page.getByRole('button', { name: 'Download this recording' }).count()) === 0,
+  );
+  await setFail(page, 'recordings', false);
+  await page.getByLabel('Description').fill('Crowded');
+  // A tap and the form's own timeout landing together: one save, the first.
+  await page.evaluate(() => {
+    const byText = (t) =>
+      [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === t);
+    byText('Continue').click();
+    byText('Skip').click();
+  });
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor({ timeout: 5000 });
+  await page.waitForTimeout(300);
+  const saved = await stored(page);
+  check(
+    'tried again, it saves once, with what was typed, every fix and no failures left',
+    saved.recordings.length === 1 &&
+      saved.recordings[0].status === 'saved' &&
+      saved.recordings[0].description === 'Crowded' &&
+      saved.recordings[0].failedFixWrites === 0 &&
+      saved.fixes === 16,
+    JSON.stringify(saved),
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------------------------- a second tab
+{
+  const { page, context, errors } = await phone({ consented: true });
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 50);
+  const second = await context.newPage();
+  await nodeFetch(second);
+  await bareStyle(second);
+  await second.addInitScript(GPS);
+  await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await second.getByText('ParaPo is open in another tab').waitFor({ timeout: 10000 });
+  check(
+    'a second tab does not reopen the ride the first is recording',
+    (await second.getByRole('button', { name: 'Resume' }).count()) === 0,
+  );
+  await second.getByRole('button', { name: 'Start recording' }).click();
+  await second.waitForTimeout(500);
+  const both = await stored(page);
+  check(
+    '  and its Start records nothing: still one recording, and the warning stays',
+    (await second.getByRole('group', { name: 'Recording so far' }).count()) === 0 &&
+      (await second.getByText('ParaPo is open in another tab').count()) > 0 &&
+      both.recordings.length === 1,
+    JSON.stringify(both.recordings),
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await context.close();
+}
+
+// ------------------------------------------------- one wake lock, released on Stop
+const WAKE = () => {
+  window.__wake = { requests: 0, active: 0, pending: [] };
+  let visible = 'visible';
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visible });
+  window.__show = (state) => {
+    visible = state;
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
+  window.__grant = () => window.__wake.pending.splice(0).forEach((grant) => grant());
+  Object.defineProperty(navigator, 'wakeLock', {
+    configurable: true,
+    value: {
+      request: () => {
+        window.__wake.requests++;
+        return new Promise((resolve) =>
+          window.__wake.pending.push(() => {
+            const sentinel = new EventTarget();
+            sentinel.released = false;
+            sentinel.release = async () => {
+              if (sentinel.released) return;
+              sentinel.released = true;
+              window.__wake.active--;
+              sentinel.dispatchEvent(new Event('release'));
+            };
+            window.__wake.active++;
+            resolve(sentinel);
+          }),
+        );
+      },
+    },
+  });
+};
+{
+  const { page, errors } = await phone({ consented: true });
+  await page.addInitScript(WAKE);
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await page.evaluate(() => {
+    window.__show('hidden');
+    window.__show('visible');
+  });
+  await page.evaluate(() => window.__grant());
+  await page.waitForTimeout(200);
+  const held = await page.evaluate(() => ({ ...window.__wake, pending: undefined }));
+  check(
+    'the page shown again while the wake lock is being asked for asks no second time',
+    held.requests === 1 && held.active === 1,
+    JSON.stringify(held),
+  );
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.waitForTimeout(200);
+  check('  and Stop lets the one lock go', (await page.evaluate(() => window.__wake.active)) === 0);
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 await browser.close();
 tally();

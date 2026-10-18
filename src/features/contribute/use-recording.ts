@@ -8,6 +8,7 @@ import {
 } from '@/features/routes/model/ride-recording';
 
 import { locationProblem } from './location-problem';
+import { holdRecorderLock } from './recorder-lock';
 import { downloadRecording, recordingFile } from './recording-file';
 import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './recording-rules';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
@@ -16,6 +17,7 @@ import {
   loadFixes,
   loadRecordings,
   putFix,
+  putFixes,
   putRecording,
 } from './recording-store';
 import { useGeolocationWatch } from './use-geolocation-watch';
@@ -89,6 +91,8 @@ export interface RecordingState {
 
 const STORE_PROBLEM =
   'This phone could not keep the recording. Close other tabs of this page and try again.';
+const OTHER_TAB_PROBLEM =
+  'ParaPo is open in another tab. Record in that tab, or close it and reload this one.';
 
 const toFix = (row: FixRow): Fix => ({
   time: row.time,
@@ -124,6 +128,13 @@ export function useRecording(): RecordingState {
   const fixesRef = useRef<Fix[]>([]);
   const nextSeq = useRef(0);
   const failedFixWrites = useRef(0);
+  // Fix writes still in flight, and the rows whose own write failed: Save settles the
+  // first and writes the second again, so a late failure cannot drop a fix unnoticed.
+  const pendingFixWrites = useRef(new Set<Promise<void>>());
+  const unwrittenFixes = useRef<FixRow[]>([]);
+  const isSaving = useRef(false);
+  // Another tab holds the recorder: this one shows why and starts nothing.
+  const isOtherTab = useRef(false);
 
   const reportStore = useCallback((error: unknown) => {
     console.error('IndexedDB failed.', error);
@@ -139,6 +150,17 @@ export function useRecording(): RecordingState {
     },
     [reportStore],
   );
+
+  /**
+   * Puts a fix write that failed after the Stop on the stopped recording too, so the
+   * form counts it and offers the download that still holds it.
+   */
+  const noteFailedWrites = useCallback(() => {
+    const recording = currentRef.current;
+    if (!recording || recording.status === 'recording') return;
+    if (recording.failedFixWrites === failedFixWrites.current) return;
+    keep({ ...recording, failedFixWrites: failedFixWrites.current });
+  }, [keep]);
 
   /** Makes this the list of fixes, and returns the ones that count. */
   function setFixList(list: Fix[]): Fix[] {
@@ -158,6 +180,13 @@ export function useRecording(): RecordingState {
     let isCancelled = false;
     const load = async () => {
       try {
+        if (!(await holdRecorderLock())) {
+          if (isCancelled) return;
+          isOtherTab.current = true;
+          setStorageProblem(OTHER_TAB_PROBLEM);
+          setPhase('ready');
+          return;
+        }
         const all = await loadRecordings();
         const open = all.find((r) => r.status !== 'saved') ?? null;
         const rows = open ? await loadFixes(open.id) : [];
@@ -200,10 +229,15 @@ export function useRecording(): RecordingState {
         lat: position.coords.latitude,
         accuracyM: position.coords.accuracy,
       };
-      putFix(row).catch((error: unknown) => {
-        failedFixWrites.current += 1;
-        reportStore(error);
-      });
+      const write = putFix(row)
+        .catch((error: unknown) => {
+          failedFixWrites.current += 1;
+          unwrittenFixes.current.push(row);
+          reportStore(error);
+          noteFailedWrites();
+        })
+        .finally(() => pendingFixWrites.current.delete(write));
+      pendingFixWrites.current.add(write);
       const counted = setFixList([...fixesRef.current, toFix(row)]);
       setLocationError(null);
       if (isBackAtStart(counted)) {
@@ -235,6 +269,10 @@ export function useRecording(): RecordingState {
   useHiddenGaps(isRecording, currentRef, keep);
 
   function start() {
+    if (isOtherTab.current) {
+      setStorageProblem(OTHER_TAB_PROBLEM);
+      return;
+    }
     const startedAt = Date.now();
     nextSeq.current = 0;
     setFixList([]);
@@ -244,6 +282,7 @@ export function useRecording(): RecordingState {
     setAnnouncement('');
     setFocusTarget('heading');
     failedFixWrites.current = 0;
+    unwrittenFixes.current = [];
     keep({
       version: RECORDING_VERSION,
       id: crypto.randomUUID(),
@@ -311,6 +350,8 @@ export function useRecording(): RecordingState {
   }
 
   function keepRecording() {
+    // A save under way has settled the fix writes it waits for; new ones would be dropped.
+    if (isSaving.current) return;
     resume();
     setFocusTarget('stop');
     setAnnouncement('Recording again');
@@ -325,22 +366,42 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Switched to ${WAY_LABEL[to]}`);
   }
 
-  function save(details: RecordingDetails | null) {
+  /**
+   * Saves only once the phone holds the whole ride: the fix writes in flight are settled,
+   * failed ones written again, then the recording. Until that commits, the ride stays in
+   * hand on the form, where Continue tries again and the download still has every fix.
+   */
+  async function saveNow(details: RecordingDetails | null) {
     const recording = currentRef.current;
-    if (!recording) return;
-    const kept: Recording = {
-      ...recording,
-      ...details,
-      status: 'saved',
-      savedAt: Date.now(),
-    };
-    putRecording(kept).catch(reportStore);
-    setLastSaved(kept);
-    forgetCurrent();
-    setPhase('saved');
+    if (!recording || isSaving.current) return;
+    isSaving.current = true;
+    try {
+      await Promise.allSettled([...pendingFixWrites.current]);
+      const unwritten = unwrittenFixes.current;
+      if (unwritten.length > 0) {
+        await putFixes(unwritten);
+        failedFixWrites.current = Math.max(0, failedFixWrites.current - unwritten.length);
+        unwrittenFixes.current = [];
+      }
+      const kept: Recording = { ...recording, ...details, status: 'saved', savedAt: Date.now() };
+      delete kept.failedFixWrites;
+      if (failedFixWrites.current > 0) kept.failedFixWrites = failedFixWrites.current;
+      await putRecording(kept);
+      setStorageProblem(null);
+      setLastSaved(kept);
+      forgetCurrent();
+      setPhase('saved');
+    } catch (error) {
+      reportStore(error);
+      noteFailedWrites();
+    } finally {
+      isSaving.current = false;
+    }
   }
+  const save = (details: RecordingDetails | null) => void saveNow(details);
 
   function cancel() {
+    if (isSaving.current) return;
     const recording = currentRef.current;
     if (recording) deleteRecording(recording.id).catch(reportStore);
     forgetCurrent();

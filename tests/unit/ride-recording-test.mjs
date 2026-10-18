@@ -247,6 +247,16 @@ test('a hinto that spans a gap counts only the time the phone was recording', ()
   assert.equal(Math.round(summary.movingSeconds), 0);
 });
 
+test('the page hidden while fixes kept coming is recorded time, not lost', () => {
+  const fixes = [];
+  for (let s = 0; s <= 120; s += 1) fixes.push(fix(s, s * 10, 0));
+  const hidden = { from: T0 + 30_000, to: T0 + 90_000, reasons: ['hidden'] };
+  const summary = summarize(fixes, [hidden], T0, T0 + 120_000);
+  assert.equal(Math.round(summary.lostSeconds), 0);
+  assert.equal(summary.gaps.length, 0);
+  assert.equal(Math.round(summary.movingSeconds), 120);
+});
+
 test('a Stop and Resume is a pause, left out of the lost time and of moving', () => {
   const fixes = [fix(0), fix(4), fix(8), fix(10), fix(40), fix(44), fix(48), fix(50)];
   const pause = { from: T0 + 10_000, to: T0 + 40_000, reasons: ['paused'] };
