@@ -107,3 +107,8 @@ Devin Review findings on #279, all fixed and re-verified on disposable pg18:
 - `claim_draft` validates payload shape (version==1, route/stop object, directions/links arrays); approve catches cast errors → `bad_payload`; jsonb `null` normalized to SQL NULL via `nullif` (shape/overview/area/point).
 - `discard_draft` locks `FOR UPDATE`.
 All 5 threads replied; apply script rebuilt + re-run idempotent; `0022_check.sql` all pass.
+
+## 0022 CI fix (commit 53e578f) — 2026-10-18
+- studio-suite timeout 15→25 min (save-test needs ~14:15; slow-runner cancels kept failing "The editor"). Same flake caused #274's red.
+- #279 CI fully green on `53e578f` (16 passed, drawing suites skipped). Devin Review threads all answered/resolved.
+- Next: studio drafts.ts + save rewiring; UI awaits owner's screenshot batch.
