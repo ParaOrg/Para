@@ -45,7 +45,10 @@ export function useDeleteActions({
       setNotice(refusal);
       return;
     }
-    if (!window.confirm(`Delete ${s.kind} "${hotspotLabel(s)}"?`)) return;
+    if (
+      !window.confirm(`${STUDIO_DRAFTS ? 'Take down' : 'Delete'} ${s.kind} "${hotspotLabel(s)}"?`)
+    )
+      return;
     try {
       // With drafts on, a hotspot comes off the map by take-down, which Put back undoes.
       if (STUDIO_DRAFTS) {

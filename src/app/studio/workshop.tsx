@@ -31,6 +31,8 @@ import {
   STUDIO_BASEMAP_THUMBNAILS,
   StudioHotspotCard,
   StudioSaveSheets,
+  StudioReview,
+  StudioPublicView,
   StudioTripCard,
   type usePasswordRecovery,
   useAuthFlow,
@@ -225,12 +227,16 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           </div>
         )}
 
-        {!isPlayground && (
-          <MapPlaceholder
-            map={studioMap}
-            hasLine={draw.drawing}
-            onOpenPlayground={handleOpenPlayground}
-          />
+        {studioMap === 'public' ? (
+          <StudioPublicView hasLine={draw.drawing} onOpenPlayground={handleOpenPlayground} />
+        ) : (
+          !isPlayground && (
+            <MapPlaceholder
+              map={studioMap}
+              hasLine={draw.drawing}
+              onOpenPlayground={handleOpenPlayground}
+            />
+          )
         )}
 
         {/* Out of the page's reach, not unmounted, on the other maps. */}
@@ -361,6 +367,22 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               onSignOut={() => void getSupabase()?.auth.signOut()}
             />
           )}
+
+          {isSignedIn &&
+            !draw.drawing &&
+            !isSaving &&
+            !isSigningIn &&
+            !isChangingPassword &&
+            !isResetting && (
+              <StudioReview
+                key={session?.user.id}
+                map={map}
+                onChanged={() => {
+                  void saved.reload();
+                  void hotspots.reload();
+                }}
+              />
+            )}
 
           <SaveToasts
             toast={toast}

@@ -136,6 +136,9 @@ export function buildFiles(all, publishedAt, indexContext) {
     v2: stampFile(INDEX_V2_SCHEMA, publishedAt, indexRowsOf(old, indexContext)),
     v3: stampFile(INDEX_V3_SCHEMA, publishedAt, indexRowsOf(v3, indexContext)),
     v4: stampFile(INDEX_V4_SCHEMA, publishedAt, indexRowsOf(v4, indexContext)),
-    v5: stampFile(INDEX_V5_SCHEMA, publishedAt, indexRowsOf(all, indexContext)),
+    v5: stampFile(INDEX_V5_SCHEMA, publishedAt, {
+      ...indexRowsOf(all, indexContext),
+      ...(indexContext?.sourceRevisions ? { source_revisions: indexContext.sourceRevisions } : {}),
+    }),
   };
 }

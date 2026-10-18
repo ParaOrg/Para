@@ -12,6 +12,7 @@ import type { DirectionRow } from '@/features/routes/model/routes';
 import { hotspotRefusal } from './hotspot-checks';
 import { placeAlreadyNamed } from './places';
 import { useNearLines } from './use-near-lines';
+import { saveNewPlaceDraft } from '../data/draft-new-place';
 import { STUDIO_DRAFTS } from '../data/flags';
 import { saveHotspot } from '../data/hotspots-write';
 
@@ -43,6 +44,7 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
   const isSaving = useRef(false);
   // The row a save wrote when its links failed after: the retry updates it
   // rather than writing the box again (useHotspotSave's writtenId).
+  const draftId = useRef<string | null>(null);
   const writtenId = useRef<string | null>(null);
 
   async function save({ kind, name, informal }: NewPlaceFields) {
@@ -50,11 +52,6 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
     // out on them, and the overviews in their place would link the wrong stretch.
     if (isSaving.current || lined === null) return;
     setError(null);
-    // A draft place is not on the map, so no route can end at it until it is approved.
-    if (STUDIO_DRAFTS) {
-      setError('Draw the new place on the map first: a route can end at it once it is approved.');
-      return;
-    }
     if (name.trim() === '') {
       setError('Give the place the name written on the ground.');
       return;
@@ -83,23 +80,26 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
     isSaving.current = true;
     setIsBusy(true);
     try {
-      const place = await saveHotspot(
-        {
-          hotspotId: writtenId.current,
-          kind,
-          name,
-          informal,
-          aliases: parseAliases('', [name, informal]),
-          note: '',
-          ring,
-          // A terminal's routes are ticked by hand; none is drawn yet to tick.
-          directionIds: kind === 'terminal' ? [] : undefined,
-          directions: lined,
-        },
-        (id) => {
-          writtenId.current = id;
-        },
-      );
+      const input = {
+        hotspotId: writtenId.current,
+        kind,
+        name,
+        informal,
+        aliases: parseAliases('', [name, informal]),
+        note: '',
+        ring,
+        // A terminal's routes are ticked by hand; none is drawn yet to tick.
+        directionIds: kind === 'terminal' ? [] : undefined,
+        directions: lined,
+      };
+      if (STUDIO_DRAFTS) {
+        draftId.current ??= crypto.randomUUID();
+        onSaved(await saveNewPlaceDraft(input, draftId.current));
+        return;
+      }
+      const place = await saveHotspot(input, (id) => {
+        writtenId.current = id;
+      });
       onSaved(place);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

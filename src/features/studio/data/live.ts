@@ -13,6 +13,7 @@ import {
   type LineStringGeoJSON,
 } from '@/features/routes/model/routes';
 
+import { STUDIO_DRAFTS } from './flags';
 import { listHotspots } from './hotspots-read';
 import { parsed, readAll } from './read-all';
 import { getSupabase } from './supabase';
@@ -114,7 +115,14 @@ export async function listDirections(): Promise<DirectionRow[]> {
         .range(from, to),
     );
   const [listedRaw, hotspots] = await Promise.all([list(), listHotspots()]);
-  const listed: ListedRow[] = parsed(listedRowSchema, listedRaw, 'direction');
+  const visible = STUDIO_DRAFTS
+    ? listedRaw.filter(
+        (row) =>
+          z.object({ route: z.object({ status: z.optional(z.string()) }) }).parse(row).route
+            .status !== 'taken_down',
+      )
+    : listedRaw;
+  const listed: ListedRow[] = parsed(listedRowSchema, visible, 'direction');
   // A drawn row saved before 0009 and not backfilled has no overview yet: its
   // full line stands in, read for those rows alone.
   const missing = listed.some((r) => r.overview === null)

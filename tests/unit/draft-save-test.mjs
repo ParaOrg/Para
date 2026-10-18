@@ -103,7 +103,25 @@ function fake(answers) {
   return f;
 }
 const claimed = (q) => ({
-  data: { code: 'ok', created: true, draft: { id: 'd', payload: q.payload.p_payload } },
+  data: {
+    code: 'ok',
+    created: true,
+    draft: {
+      id: 'd',
+      kind: q.payload.p_kind,
+      subject_id: q.payload.p_subject_id,
+      is_new: q.payload.p_is_new,
+      base_revision: q.payload.p_base_revision,
+      revision: 1,
+      status: 'draft',
+      payload: q.payload.p_payload,
+      note: q.payload.p_note,
+      editor_id: null,
+      created_at: '',
+      updated_at: '',
+      submitted_at: null,
+    },
+  },
 });
 
 test('the flag is off unless VITE_STUDIO_DRAFTS=1', () => {

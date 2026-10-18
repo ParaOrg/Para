@@ -402,6 +402,11 @@ export function hotspotPayloadOf(
 export async function routeDraftState(routeId: string): Promise<RouteDraftState> {
   const kept = await draftOf('route', routeId);
   if (kept) return routeStateFromDraft(kept);
+  return routeApprovedState(routeId);
+}
+
+/** Approved rows only, for comparison; never substitutes a saved draft. */
+export async function routeApprovedState(routeId: string): Promise<RouteDraftState> {
   const client = requireSupabase();
   const route = await client.from('route').select(ROUTE_COLUMNS).eq('id', routeId).single();
   if (route.error) throw new Error(route.error.message);

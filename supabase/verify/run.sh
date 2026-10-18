@@ -51,6 +51,10 @@ apply -o /dev/null < after-0022.sql
 PSQL="$PSQL" DB=$DB bash concurrency-0022.sh
 PSQL="$PSQL" DB=$DB bash deadlock-0022.sh
 PSQL="$PSQL" DB=$DB bash studio-drafts.sh
+apply < ../migrations/20261018112757_reviewed_draft_approval.sql
+apply < ../migrations/20261018112757_reviewed_draft_approval.sql
+apply -o /dev/null < reviewed-draft.sql
+echo 'reviewed approval: stale review and base guards passed'
 echo '0022: applied twice, 0022_check.sql all true, after-0022.sql passed'
 out=$(apply < ../apply/0018_revert.sql || true)
 echo "$out" | grep -q 'is not undone' || { echo "FAILED: revert ran over taken-down rows: $out"; exit 1; }
@@ -81,3 +85,14 @@ apply < ../apply/0022_apply.sql
 bad=$($PSQL -d $DB -qAt -F ' | ' < ../apply/0022_check.sql | grep -v ' | t$' || true)
 [ -z "$bad" ] || { echo "FAILED: 0022_check.sql after re-apply: $bad"; exit 1; }
 echo '0022 revert: schema as before 0022 (twice), ledger row gone, re-apply passes 0022_check.sql'
+
+
+# New revision-checked entry points undo without changing the existing 0022 schema.
+$PG_DUMP -d $DB --schema-only --schema=public --schema=private | grep -Ev '^.(un)?restrict ' > /tmp/before-reviewed-approval.dump
+apply < ../migrations/20261018112757_reviewed_draft_approval.sql
+apply -o /dev/null < reviewed-draft.sql
+apply < ../apply/20261018112757_reviewed_draft_approval_revert.sql
+apply < ../apply/20261018112757_reviewed_draft_approval_revert.sql
+$PG_DUMP -d $DB --schema-only --schema=public --schema=private | grep -Ev '^.(un)?restrict ' > /tmp/reverted-reviewed-approval.dump
+diff /tmp/before-reviewed-approval.dump /tmp/reverted-reviewed-approval.dump || { echo 'FAILED: reviewed approval revert changed the baseline'; exit 1; }
+echo 'reviewed approval revert: schema unchanged, repeated recovery safe'

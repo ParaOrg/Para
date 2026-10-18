@@ -64,3 +64,14 @@ passes and keeps a ticked terminal, a signboard list, a direction emptied, the
 last one taking the route down, a new route with its empty slot, and a new
 hotspot. A live edit after drafting makes approval answer `conflict`, with the
 approved rows left as that edit made them. Needs `node` (24) on the PATH.
+
+
+## Reviewed approval entry points
+
+`run.sh` also applies `20261018112757_reviewed_draft_approval.sql` twice and runs
+`reviewed-draft.sql`. A stale reviewer is refused even after another editor
+changes and re-submits the draft. A stale approved-base comparison is refused;
+an explicit base refresh changes only the draft and requires resubmission.
+Anonymous and non-editor calls are refused. All test fixtures are rolled back.
+The new recovery script runs twice and restores the exact 0022 schema.
+This is disposable verification only; the new migration is not applied live.

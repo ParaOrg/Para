@@ -1,7 +1,13 @@
-import * as z from 'zod/mini';
-
 import { toJson } from './json';
-import { parsed } from './read-all';
+import { parsed, readAll } from './read-all';
+import { notifyReviewChange } from './review-events';
+import {
+  draftRowSchema,
+  reviewResultSchema,
+  type DraftKind,
+  type DraftRow,
+  type ReviewResult,
+} from './review-schema';
 import { requireSupabase } from './supabase';
 
 /**
@@ -17,72 +23,22 @@ import { requireSupabase } from './supabase';
  * is the whole subject, so approving it twice writes the same thing.
  */
 
-export type DraftKind = 'route' | 'hotspot';
-export type DraftStatus = 'draft' | 'pending';
+export type { DraftKind, DraftRow, DraftStatus, ReviewCode, ReviewResult } from './review-schema';
 
-/** The machine codes approve_draft and friends answer with (0022). */
-export type ReviewCode =
-  | 'ok'
-  | 'approved'
-  | 'submitted'
-  | 'sent_back'
-  | 'discarded'
-  | 'taken_down'
-  | 'put_back'
-  | 'already_pending'
-  | 'conflict'
-  | 'revision_mismatch'
-  | 'no_draft'
-  | 'not_pending'
-  | 'not_approved'
-  | 'not_taken_down'
-  | 'subject_exists'
-  | 'subject_gone'
-  | 'ends_taken'
-  | 'loop_taken'
-  | 'terminal_place_taken'
-  | 'direction_clash'
-  | 'direction_elsewhere'
-  | 'payload_incomplete'
-  | 'blocked'
-  | 'bad_payload'
-  | 'busy'
-  | 'refused';
-
-const draftRowSchema = z.object({
-  id: z.string(),
-  kind: z.enum(['route', 'hotspot']),
-  subject_id: z.string(),
-  is_new: z.boolean(),
-  base_revision: z.nullable(z.number()),
-  revision: z.number(),
-  status: z.enum(['draft', 'pending']),
-  payload: z.unknown(),
-  note: z.nullable(z.string()),
-  editor_id: z.nullable(z.string()),
-  created_at: z.string(),
-  updated_at: z.string(),
-  submitted_at: z.nullable(z.string()),
-});
-export type DraftRow = z.infer<typeof draftRowSchema>;
-
-const resultSchema = z.looseObject({ code: z.string() });
-
-export interface ReviewResult {
-  code: ReviewCode;
-  draft?: DraftRow;
-  current_revision?: number;
-  created?: boolean;
-}
-
-async function call(fn: string, args: Record<string, unknown>): Promise<ReviewResult> {
+export async function callReview(fn: string, args: Record<string, unknown>): Promise<ReviewResult> {
   const client = requireSupabase();
-  // 0022's functions are not in the generated types until the owner applies
-  // it and the types are regenerated; the code answers a string either way.
+  // SQL-null arguments are valid here, although the generated RPC Args
+  // describe those scalar inputs as non-null. Validate every response below.
   const { data, error } = await client.rpc(fn as never, args as never);
   if (error) throw new Error(`${fn}: ${error.message}`);
-  const [row] = parsed(resultSchema, [data], 'review result');
-  return row as ReviewResult;
+  const [row] = parsed(reviewResultSchema, [data], 'review result');
+  if (
+    ['ok', 'approved', 'submitted', 'sent_back', 'discarded', 'taken_down', 'put_back'].includes(
+      row.code,
+    )
+  )
+    notifyReviewChange();
+  return row;
 }
 
 // --- Payload builders: the subject's whole state, as the draft carries it.
@@ -151,7 +107,7 @@ export async function claimDraft(
   payload: Record<string, unknown>,
   note?: string,
 ): Promise<ReviewResult> {
-  return call('claim_draft', {
+  return callReview('claim_draft', {
     p_kind: kind,
     p_subject_id: subjectId,
     p_is_new: isNew,
@@ -183,11 +139,12 @@ export async function updateDraft(
   if (error) throw new Error(`draft ${draftId}: ${error.message}`);
   if (!data) return { code: 'revision_mismatch' };
   const [row] = parsed(draftRowSchema, [data], 'draft');
+  notifyReviewChange();
   return { code: 'ok', created: false, draft: row };
 }
 
 export async function submitDraft(draftId: string, revision: number): Promise<ReviewResult> {
-  return call('submit_draft', { p_draft: draftId, p_revision: revision });
+  return callReview('submit_draft', { p_draft: draftId, p_revision: revision });
 }
 
 export async function sendBackDraft(
@@ -195,23 +152,24 @@ export async function sendBackDraft(
   revision: number,
   note: string,
 ): Promise<ReviewResult> {
-  return call('send_back_draft', { p_draft: draftId, p_revision: revision, p_note: note });
+  return callReview('send_back_draft', { p_draft: draftId, p_revision: revision, p_note: note });
 }
 
 export async function discardDraft(draftId: string, revision?: number): Promise<ReviewResult> {
-  return call('discard_draft', { p_draft: draftId, p_revision: revision ?? null });
+  return callReview('discard_draft', { p_draft: draftId, p_revision: revision ?? null });
 }
 
-export async function approveDraft(draftId: string): Promise<ReviewResult> {
-  return call('approve_draft', { p_draft: draftId });
+export async function approveDraft(draftId: string, revision?: number): Promise<ReviewResult> {
+  if (revision === undefined) return callReview('approve_draft', { p_draft: draftId });
+  return callReview('approve_reviewed_draft', { p_draft: draftId, p_revision: revision });
 }
 
 export async function takeDown(kind: DraftKind, subjectId: string): Promise<ReviewResult> {
-  return call('take_down', { p_kind: kind, p_subject_id: subjectId });
+  return callReview('take_down', { p_kind: kind, p_subject_id: subjectId });
 }
 
 export async function putBack(kind: DraftKind, subjectId: string): Promise<ReviewResult> {
-  return call('put_back', { p_kind: kind, p_subject_id: subjectId });
+  return callReview('put_back', { p_kind: kind, p_subject_id: subjectId });
 }
 
 // --- Reading drafts for the review list and the playground markers.
@@ -222,13 +180,15 @@ const DRAFT_LIST_SELECT =
 /** Every draft, pending first then by recent activity: the review list. */
 export async function listDrafts(): Promise<DraftRow[]> {
   const client = requireSupabase();
-  const { data, error } = await client
-    .from('draft')
-    .select(DRAFT_LIST_SELECT)
-    .order('status', { ascending: false }) // 'pending' after 'draft' alphabetically? keep explicit below
-    .order('updated_at', { ascending: false });
-  if (error) throw new Error(`draft list: ${error.message}`);
-  const rows = parsed(draftRowSchema, data ?? [], 'draft');
+  const data = await readAll((from, to) =>
+    client
+      .from('draft')
+      .select(DRAFT_LIST_SELECT, { count: 'exact' })
+      .order('updated_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+  );
+  const rows = parsed(draftRowSchema, data, 'draft');
   return rows.sort((a, b) => (a.status === b.status ? 0 : a.status === 'pending' ? -1 : 1));
 }
 
