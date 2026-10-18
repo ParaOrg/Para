@@ -124,6 +124,38 @@ as $$
   );
 $$;
 
+-- A link write is content of both its subjects: the direction's route and
+-- the stop. 0018 counts row writes only — links were derived from geometry,
+-- but terminal links are owner-set through hotspot saves — so a link change
+-- must bump both revisions, or a draft's base check would let it be lost.
+create or replace function private.link_bumps_subjects()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op <> 'INSERT' then
+    update public.stop set revision = revision + 1 where id = old.stop_id;
+    update public.route r set revision = r.revision + 1
+    from public.route_variant v
+    where v.id = old.route_variant_id and r.id = v.route_id;
+  end if;
+  if tg_op <> 'DELETE' then
+    update public.stop set revision = revision + 1 where id = new.stop_id;
+    update public.route r set revision = r.revision + 1
+    from public.route_variant v
+    where v.id = new.route_variant_id and r.id = v.route_id;
+  end if;
+  return coalesce(new, old);
+end;
+$$;
+
+drop trigger if exists route_stop_bumps_subjects on public.route_stop;
+create trigger route_stop_bumps_subjects
+  after insert or update or delete on public.route_stop
+  for each row execute function private.link_bumps_subjects();
+
 -- Map a raised constraint to a refusal code. Guard triggers (0018) carry
 -- their names as `constraint` on errcode 23514, the unique indexes theirs on
 -- 23505.
@@ -169,6 +201,17 @@ declare
   made boolean := false;
 begin
   perform private.require_editor();
+  -- Shape the payload must have before it is stored: version 1, and the
+  -- subject's aggregate under its key. Field-level checks happen on approve,
+  -- where a wrong cast answers bad_payload instead of raising.
+  if (p_payload -> 'version') is distinct from '1'::jsonb
+     or (p_kind = 'route' and (jsonb_typeof(p_payload -> 'route') <> 'object'
+                             or jsonb_typeof(p_payload -> 'directions') <> 'array'))
+     or (p_kind = 'hotspot' and (jsonb_typeof(p_payload -> 'stop') <> 'object'
+                               or (p_payload ? 'links' and jsonb_typeof(p_payload -> 'links') <> 'array')))
+  then
+    return jsonb_build_object('code', 'bad_payload');
+  end if;
   if p_kind not in ('route', 'hotspot') then
     return jsonb_build_object('code', 'bad_payload');
   end if;
@@ -257,7 +300,9 @@ declare
   d public.draft;
 begin
   perform private.require_editor();
-  select * into d from public.draft where id = p_draft;
+  -- FOR UPDATE: a concurrent save must land before our revision read, or
+  -- wait for the delete — never be read stale and still deleted.
+  select * into d from public.draft where id = p_draft for update;
   if not found then
     return jsonb_build_object('code', 'no_draft');
   end if;
@@ -360,7 +405,7 @@ begin
   if d.status <> 'pending' then
     return jsonb_build_object('code', 'not_pending');
   end if;
-  if coalesce((d.payload ->> 'version')::int, 0) <> 1 then
+  if (d.payload -> 'version') is distinct from '1'::jsonb then
     return jsonb_build_object('code', 'bad_payload');
   end if;
 
@@ -457,8 +502,10 @@ begin
         dir ->> 'destination_terminal',
         coalesce(dir -> 'control_points', '[]'::jsonb),
         coalesce(dir -> 'segments', '[]'::jsonb),
-        dir -> 'shape',
-        dir -> 'overview',
+        -- jsonb 'null' is not SQL null: an emptied slot is SQL NULL as the
+        -- live writes store it.
+        nullif(dir -> 'shape', 'null'::jsonb),
+        nullif(dir -> 'overview', 'null'::jsonb),
         coalesce(dir ->> 'confidence', 'drawn')::public.route_confidence,
         coalesce((dir ->> 'reversed')::boolean, false),
         (dir ->> 'borrowed_from')::uuid,
@@ -487,12 +534,22 @@ begin
       from jsonb_array_elements(dir -> 'links') l;
 
       -- An emptied direction forgets who borrowed it, as deleteDirection does.
-      if dir ? 'shape' and dir -> 'shape' = 'null'::jsonb then
+      if coalesce(dir -> 'shape', 'null'::jsonb) = 'null'::jsonb then
         update public.route_variant
         set borrowed_from = null, borrowed_part = null, borrowed_m = null
         where borrowed_from = (dir ->> 'id')::uuid;
       end if;
     end loop;
+
+    -- Every direction emptied is how the editor deletes the route's last
+    -- line: as deleteDirection does, the route comes down — taken_down, so
+    -- the log records it and its ends stop counting — not approved empty.
+    if not exists (
+      select 1 from public.route_variant
+      where route_id = d.subject_id and shape is not null
+    ) then
+      update public.route set status = 'taken_down' where id = d.subject_id;
+    end if;
 
   else  -- hotspot
     r := d.payload -> 'stop';
@@ -506,9 +563,9 @@ begin
         d.subject_id,
         (select auth.uid()),
         r ->> 'name',
-        r -> 'point',
+        nullif(r -> 'point', 'null'::jsonb),
         coalesce(r ->> 'kind', 'hintuan')::public.stop_kind,
-        r -> 'area',
+        nullif(r -> 'area', 'null'::jsonb),
         r ->> 'note',
         r ->> 'informal',
         private.text_list(r -> 'aliases'),
@@ -518,9 +575,9 @@ begin
     else
       update public.stop set
         name = r ->> 'name',
-        point = r -> 'point',
+        point = nullif(r -> 'point', 'null'::jsonb),
         kind = coalesce(r ->> 'kind', 'hintuan')::public.stop_kind,
-        area = r -> 'area',
+        area = nullif(r -> 'area', 'null'::jsonb),
         note = r ->> 'note',
         informal = r ->> 'informal',
         aliases = private.text_list(r -> 'aliases'),
@@ -541,6 +598,11 @@ exception
   when check_violation or unique_violation or foreign_key_violation then
     get stacked diagnostics c = constraint_name;
     return private.refusal(c);
+  -- A cast that fails means the payload is not what the studio writes:
+  -- bad_payload, not a bare error.
+  when invalid_text_representation or numeric_value_out_of_range
+       or invalid_parameter_value or invalid_datetime_format then
+    return jsonb_build_object('code', 'bad_payload');
 end;
 $$;
 
@@ -566,7 +628,6 @@ grant execute on function public.discard_draft(uuid, integer) to authenticated;
 grant execute on function public.take_down(text, uuid) to authenticated;
 grant execute on function public.put_back(text, uuid) to authenticated;
 grant execute on function public.approve_draft(uuid) to authenticated;
-
 -- <<< end of 0022_draft_ops.sql
 
 -- 2. After: the functions exist, callable by authenticated only.
