@@ -1,7 +1,9 @@
 import { useState } from 'react';
 
 import { coarse } from '@/features/routes/map/map-view';
+import { Turnstile } from '@/shared/ui/turnstile';
 
+import { useCaptcha } from './use-captcha';
 import { getSupabase, supabaseConfigError } from '../data/supabase';
 import { FIELD_TEXT } from '../panels/sheet';
 
@@ -39,6 +41,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(notice);
+  const captcha = useCaptcha();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +56,11 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
     }
 
     if (mode === 'signin') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: captcha.takeToken(),
+      });
       if (error) {
         setError(
           error.message === 'Invalid login credentials'
@@ -69,6 +76,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       // Only the studio has the form that sets the new password.
       redirectTo: `${window.location.origin}/studio/`,
+      ...captcha.takeToken(),
     });
     if (error) {
       setError(error.message);
@@ -169,6 +177,16 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
 
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
+            {captcha.siteKey && (
+              <div className="mt-4">
+                <Turnstile
+                  key={captcha.round}
+                  siteKey={captcha.siteKey}
+                  onToken={captcha.setToken}
+                />
+              </div>
+            )}
+
             <div className="mt-4 flex gap-2">
               {onDismiss ? (
                 <button
@@ -188,7 +206,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
               )}
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || !captcha.isReady}
                 className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
               >
                 {submitLabel}
