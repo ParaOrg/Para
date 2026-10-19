@@ -54,7 +54,11 @@ function committedRows() {
   return {
     index,
     all: { variants, stops: index.stops, links: index.links },
-    context: { overviews, boardsOf },
+    context: {
+      overviews,
+      boardsOf,
+      ...(index.source_revisions ? { sourceRevisions: index.source_revisions } : {}),
+    },
   };
 }
 
