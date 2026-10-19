@@ -5,13 +5,20 @@ import { useFocusHeading } from './use-focus-heading';
 interface SavedScreenProps {
   /** Fixes the phone could not keep of the recording just saved. */
   failedFixWrites: number;
+  /** Where the recording's upload stands, in words. */
+  uploadText: string;
   onRecordAgain: () => void;
-  /** Field test only: hands over the recording's file. Goes at contribute/13, when it is sent to the studio. */
+  /** Hands over the recording's file. */
   onDownload: () => void;
 }
 
 /** After Save: the recording is kept on this phone, and Record again. */
-export function SavedScreen({ failedFixWrites, onRecordAgain, onDownload }: SavedScreenProps) {
+export function SavedScreen({
+  failedFixWrites,
+  uploadText,
+  onRecordAgain,
+  onDownload,
+}: SavedScreenProps) {
   const headingRef = useFocusHeading();
   return (
     <section
@@ -27,13 +34,15 @@ export function SavedScreen({ failedFixWrites, onRecordAgain, onDownload }: Save
         Successfully recorded
       </h1>
       <p className="text-base/6 text-content-quaternary">Your recording is kept on this phone.</p>
+      <p aria-live="polite" className="text-base/6">
+        {uploadText}
+      </p>
       {failedFixWrites > 0 && (
         <p className="text-base/6">
           The phone could not keep {failedFixWrites} fixes of this recording.
         </p>
       )}
       <Button variant="primary" label="Record again" onClick={onRecordAgain} />
-      {/* TODO: remove at contribute/13, when a saved recording is sent to the studio. Field test only: there is no database to read the recording from yet. */}
       <button
         type="button"
         onClick={onDownload}

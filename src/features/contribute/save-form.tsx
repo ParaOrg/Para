@@ -77,6 +77,7 @@ export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave 
         Start point name
         <input
           id={`${ids}-start`}
+          maxLength={80}
           className={FIELD}
           value={details.startPointName}
           onChange={(event) => setDetails({ ...details, startPointName: event.target.value })}
@@ -86,6 +87,7 @@ export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave 
         End point name
         <input
           id={`${ids}-end`}
+          maxLength={80}
           className={FIELD}
           value={details.endPointName}
           onChange={(event) => setDetails({ ...details, endPointName: event.target.value })}
@@ -95,6 +97,7 @@ export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave 
         Description
         <textarea
           id={`${ids}-description`}
+          maxLength={1000}
           className={FIELD}
           rows={3}
           value={details.description}

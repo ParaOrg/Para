@@ -1,46 +1,50 @@
-import { dateTimeText, fullDateTimeText } from './format';
 import type { Recording } from './recording-schema';
+import { SavedRideRow } from './saved-ride-row';
+import type { Uploads } from './use-uploads';
 
 interface SavedRidesProps {
   recordings: readonly Recording[];
+  uploads: Uploads;
   onDownload: (recording: Recording) => void;
+  onDeleteFromPhone: (recording: Recording) => void;
 }
 
-const rideName = (r: Recording): string =>
-  [r.startPointName, r.endPointName].filter(Boolean).join(' to ') || r.description;
-
 /**
- * The recordings saved on this phone, each with its download, so a reload does not hide them.
- * Interim until the owner's design; at contribute/13 each row gains its upload status.
+ * The recordings saved on this phone, each with its upload, so a reload hides nothing.
+ * Provisional layout until the owner's design.
  */
-export function SavedRides({ recordings, onDownload }: SavedRidesProps) {
+export function SavedRides({
+  recordings,
+  uploads,
+  onDownload,
+  onDeleteFromPhone,
+}: SavedRidesProps) {
   if (recordings.length === 0) return null;
+  const { waitingCount } = uploads;
   return (
     <div className="bg-surface px-4 pt-4 font-sn-pro text-content-primary">
       <h2 id="saved-rides-heading" className="text-base/6 font-bold">
         Saved recordings
+        {waitingCount > 0 && (
+          <span className="font-normal text-content-quaternary">
+            {' '}
+            · {waitingCount} not uploaded yet
+          </span>
+        )}
       </h2>
-      <ul aria-labelledby="saved-rides-heading" className="max-h-40 overflow-y-auto">
-        {recordings.map((recording) => {
-          const when = dateTimeText(recording.startedAt);
-          const name = rideName(recording);
-          return (
-            <li key={recording.id} className="flex items-center justify-between gap-2 text-base/6">
-              <span className="min-w-0 truncate">
-                {when}
-                {name && ` · ${name}`}
-              </span>
-              <button
-                type="button"
-                aria-label={`Download the recording of ${fullDateTimeText(recording.startedAt)}${name ? `, ${name}` : ''}`}
-                onClick={() => onDownload(recording)}
-                className="min-h-11 shrink-0 text-content-quaternary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary"
-              >
-                Download
-              </button>
-            </li>
-          );
-        })}
+      <ul aria-labelledby="saved-rides-heading" className="max-h-64 overflow-y-auto">
+        {recordings.map((recording) => (
+          <SavedRideRow
+            key={recording.id}
+            recording={recording}
+            status={uploads.statusOf(recording)}
+            canRemove={uploads.canRemove(recording)}
+            onDownload={() => onDownload(recording)}
+            onUpload={() => uploads.upload(recording)}
+            onRemoveUpload={() => uploads.removeUploaded(recording)}
+            onDeleteFromPhone={() => onDeleteFromPhone(recording)}
+          />
+        ))}
       </ul>
     </div>
   );

@@ -575,6 +575,15 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
               priority: 1,
             },
+            //  - supabase: the database client and what it brings. The studio and
+            //    the contributor page both import it, so left to `shared` it
+            //    would ride along on the public page, which never calls the
+            //    database (check-build.mjs proves it does not).
+            {
+              name: 'supabase',
+              test: /[\\/]node_modules[\\/](@supabase[\\/][^\\/]+|iceberg-js|tslib)[\\/]/,
+              priority: 1,
+            },
             { name: 'shared', minShareCount: 2 },
           ],
         },

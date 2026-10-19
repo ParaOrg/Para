@@ -91,6 +91,8 @@ export interface RecordingState {
   downloadLastSaved: () => void;
   /** Downloads a saved recording, read back from this phone. */
   downloadSaved: (recording: Recording) => void;
+  /** Deletes a saved recording and its fixes from this phone. An uploaded copy is not touched. */
+  deleteSaved: (recording: Recording) => void;
 }
 
 const STORE_PROBLEM =
@@ -117,8 +119,8 @@ const toFix = (row: FixRow): Fix => ({
 /**
  * The page's whole state: what phase it is in, the recording being made and
  * its fixes. Every fix goes to IndexedDB as it arrives; the hook only reads
- * it back on reopen. A saved recording stays in IndexedDB as the outbox the
- * studio will one day read; the page keeps no list of them.
+ * it back on reopen. A saved recording stays in IndexedDB until the
+ * contributor deletes it, uploaded or not (use-uploads.ts sends it).
  */
 export function useRecording(): RecordingState {
   const [phase, setPhase] = useState<Phase>('loading');
@@ -462,6 +464,15 @@ export function useRecording(): RecordingState {
       .catch(reportStore);
   }
 
+  function deleteSaved(recording: Recording) {
+    deleteRecording(recording.id)
+      .then(() => {
+        setSaved((list) => list.filter((r) => r.id !== recording.id));
+        tellOtherTabs();
+      })
+      .catch(reportStore);
+  }
+
   function downloadLastSaved() {
     if (lastSaved) downloadSaved(lastSaved);
   }
@@ -517,5 +528,6 @@ export function useRecording(): RecordingState {
     downloadCurrent,
     downloadLastSaved,
     downloadSaved,
+    deleteSaved,
   };
 }

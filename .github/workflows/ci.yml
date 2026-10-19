@@ -94,7 +94,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|src/shared/ui/turnstile.tsx|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs)
+              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/upload-test.mjs)
                 public=true ;;
               *) public=true; studio=true ;;
             esac
@@ -146,7 +146,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [gate-test, phone-test, where-test, scale-test, pwa-test, loop-test, contribute-test]
+        suite:
+          [
+            gate-test,
+            phone-test,
+            where-test,
+            scale-test,
+            pwa-test,
+            loop-test,
+            contribute-test,
+            upload-test,
+          ]
         include:
           - { suite: commuter-test, part: 1 }
           - { suite: commuter-test, part: 2 }
@@ -162,6 +172,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         run: cp .env.production .env.local
+      # Uploads are off in every deployed build until the owner turns them on;
+      # upload-test turns them on for its own dev server, against a stand-in.
+      - name: Turn uploads on, for upload-test
+        if: matrix.suite == 'upload-test'
+        run: echo VITE_CONTRIBUTIONS=1 >> .env.local
       # pwa-test starts and stops its own `vite preview` on :4173 from a build.
       - name: Build, for pwa-test
         if: matrix.suite == 'pwa-test'

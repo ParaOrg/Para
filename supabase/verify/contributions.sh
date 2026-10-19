@@ -42,6 +42,7 @@ out=$(apply -o /dev/null < after-contributions.sql || true)
 [ -z "$out" ] || { echo "$out"; exit 1; }
 echo 'contributions: applied (a second run stops whole), check all true, after-contributions.sql passed'
 bash contributions-race.sh
+bash contributions-pack.sh
 out=$(apply < ../apply/${NAME}_revert.sql || true)
 echo "$out" | grep -q 'is not undone' || { echo "FAILED: revert ran over stored contributions: $out"; exit 1; }
 checked

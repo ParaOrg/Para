@@ -79,6 +79,25 @@ export function putRecording(recording: Recording): Promise<void> {
   });
 }
 
+/**
+ * Changes a stored recording in one transaction, read and write together, so a
+ * save in another tab is never overwritten with an older copy. A recording no
+ * longer stored is left alone.
+ */
+export function updateRecording(
+  recordingId: string,
+  change: (recording: Recording) => Recording,
+): Promise<void> {
+  return inTransaction([RECORDINGS], 'readwrite', (tx) => {
+    const store = tx.objectStore(RECORDINGS);
+    const request = store.get(recordingId);
+    request.onsuccess = () => {
+      const read = recordingSchema.safeParse(request.result);
+      if (read.success) store.put(change(read.data));
+    };
+  });
+}
+
 /** Writes one fix at once, so closing the tab loses nothing already received. */
 export function putFix(row: FixRow): Promise<void> {
   return inTransaction([FIXES], 'readwrite', (tx) => {
