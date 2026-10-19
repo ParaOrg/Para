@@ -134,6 +134,7 @@ test("shared takes what two chunks import, but never the studio's or the contrib
     '/repo/src/features/studio/data/supabase.ts',
     '/repo/src/features/contribute/api/upload-contribution.ts',
     '/repo/src/app/studio/workshop.tsx',
+    '/repo/src/shared/ui/turnstile.tsx',
     'C:\\repo\\src\\features\\studio\\data\\supabase.ts',
   ]) {
     assert.equal(shared.test(id), false, id);

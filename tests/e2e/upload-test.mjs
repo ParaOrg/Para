@@ -61,6 +61,14 @@ async function phone({ studioSession = false } = {}) {
   await nodeFetch(page);
   await bareStyle(page);
   const fake = await fakeContributions(page);
+  // Cloudflare's Turnstile, standing in: the check passes at once. CI builds this suite with a site key.
+  await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/javascript',
+      body: 'window.turnstile={render(e,o){setTimeout(()=>o.callback("turnstile-token"),50);return "w"},remove(){}}',
+    }),
+  );
   await page.addInitScript(GPS);
   await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
   if (studioSession) {
@@ -193,6 +201,11 @@ const waitForStatus = (page, name, pattern) =>
   check(
     '  the phone keeps its copy, marked uploaded',
     (await storedUpload(page, stored.recording.id)) === 'uploaded',
+  );
+  check(
+    "  with a Turnstile site key, the first sign-in carried the check's token",
+    !process.env.PARAPO_TURNSTILE || fake.captchaTokens[0] === 'turnstile-token',
+    String(fake.captchaTokens[0]),
   );
   check(
     "  the phone signed in under its own key; the editor's studio session is untouched",
@@ -409,6 +422,11 @@ const waitForStatus = (page, name, pattern) =>
   await page.waitForFunction(
     (n) => ![...document.querySelectorAll('li')].some((li) => li.textContent.includes(n)),
     upName,
+  );
+  check(
+    '  two recordings waiting at once signed the phone in once',
+    fake.signIns === 1,
+    `${fake.signIns} sign-ins`,
   );
   check(
     "  the phone's copy is gone; ParaPo's is not",

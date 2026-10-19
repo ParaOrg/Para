@@ -5,6 +5,8 @@ export function uploadStatusText(status: UploadStatus, canRemove: boolean): stri
   switch (status.state) {
     case 'waiting':
       return 'Waiting to upload';
+    case 'checking':
+      return 'Waiting for the check that you are a person';
     case 'uploading':
       return 'Uploading…';
     case 'uploaded': {

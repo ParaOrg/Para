@@ -176,7 +176,9 @@ jobs:
       # upload-test turns them on for its own dev server, against a stand-in.
       - name: Turn uploads on, for upload-test
         if: matrix.suite == 'upload-test'
-        run: echo VITE_CONTRIBUTIONS=1 >> .env.local
+        run: |
+          echo VITE_CONTRIBUTIONS=1 >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       # pwa-test starts and stops its own `vite preview` on :4173 from a build.
       - name: Build, for pwa-test
         if: matrix.suite == 'pwa-test'
@@ -193,6 +195,7 @@ jobs:
       - name: ${{ matrix.suite }}
         run: node tests/e2e/${{ matrix.suite }}.mjs
         env:
+          PARAPO_TURNSTILE: ${{ matrix.suite == 'upload-test' && '1' || '' }}
           COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
       - name: Keep the screenshots and the dev server log
         if: failure()

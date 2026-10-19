@@ -297,8 +297,8 @@ check(
 // contributor page's first upload's): commuters never load its script.
 const TURNSTILE = 'challenges.cloudflare.com';
 check(
-  'public page loads no Turnstile; the studio carries it — the string search works',
-  !commuter.includes(TURNSTILE) && studio.includes(TURNSTILE),
+  'public page loads no Turnstile; the studio and the contributor page carry it — the string search works',
+  !commuter.includes(TURNSTILE) && studio.includes(TURNSTILE) && contribute.includes(TURNSTILE),
 );
 
 const missing = EDITOR_ONLY.filter((s) => !studio.includes(s));
