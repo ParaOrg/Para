@@ -39,6 +39,8 @@ const contributionRowSchema = z.pipe(
     south: z.nullable(z.number()),
     east: z.nullable(z.number()),
     north: z.nullable(z.number()),
+    hidden_at: z.nullable(z.string()),
+    hidden_note: z.nullable(z.string()),
   }),
   z.transform((row) => ({
     id: row.id,
@@ -61,12 +63,15 @@ const contributionRowSchema = z.pipe(
       row.west === null || row.south === null || row.east === null || row.north === null
         ? null
         : ([row.west, row.south, row.east, row.north] as const),
+    /** When an editor hid it; hidden is not deleted, and Show again undoes it. */
+    hiddenAt: row.hidden_at === null ? null : Date.parse(row.hidden_at),
+    hiddenNote: row.hidden_note ?? '',
   })),
 );
 export type Contribution = z.infer<typeof contributionRowSchema>;
 
 const LIST_COLUMNS =
-  'id, contributor_id, started_at, ended_at, received_at, vehicle, start_name, end_name, description, distance_m, moving_s, standing_s, lost_s, point_count, line, west, south, east, north';
+  'id, contributor_id, started_at, ended_at, received_at, vehicle, start_name, end_name, description, distance_m, moving_s, standing_s, lost_s, point_count, line, west, south, east, north, hidden_at, hidden_note';
 
 export interface ContributionList {
   contributions: Contribution[];
@@ -74,16 +79,21 @@ export interface ContributionList {
   isCut: boolean;
 }
 
-/** The uploads received in the last `days`, newest first. Editors only: anyone else reads none. */
+/**
+ * The uploads received in the last `days`, newest first, the hidden ones only
+ * when asked for. Editors only: anyone else reads none.
+ */
 export async function fetchContributions(
   days: ContributionPeriod,
+  showHidden: boolean,
   now = Date.now(),
 ): Promise<ContributionList> {
   const since = new Date(now - days * 86_400_000).toISOString();
-  const { data, error } = await requireSupabase()
+  const query = requireSupabase()
     .from('contribution')
     .select(LIST_COLUMNS)
-    .gte('received_at', since)
+    .gte('received_at', since);
+  const { data, error } = await (showHidden ? query : query.is('hidden_at', null))
     .order('received_at', { ascending: false })
     .order('id')
     .limit(CONTRIBUTION_LIMIT + 1);

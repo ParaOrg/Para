@@ -25,6 +25,8 @@ export const STORY_CONTRIBUTIONS: Contribution[] = [
       [121.05, 14.62],
     ],
     box: [121.05, 14.62, 121.07, 14.73],
+    hiddenAt: null,
+    hiddenNote: '',
   },
   {
     id: '11111111-0000-4000-8000-000000000002',
@@ -43,6 +45,8 @@ export const STORY_CONTRIBUTIONS: Contribution[] = [
     pointCount: 420,
     line: null,
     box: [121.0, 14.6, 121.01, 14.61],
+    hiddenAt: T0 - 3_600_000,
+    hiddenNote: 'Walked, not a ride',
   },
 ];
 

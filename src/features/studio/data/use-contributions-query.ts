@@ -6,13 +6,17 @@ import {
   fetchContributions,
   type ContributionPeriod,
 } from './contributions-read';
-import { deleteContribution } from './contributions-write';
+import { deleteContribution, hideContribution, showContribution } from './contributions-write';
 
 /** Asked only when signed in: row security answers no one else, and an empty list would mislead. */
-export function useContributionsQuery(days: ContributionPeriod, isSignedIn: boolean) {
+export function useContributionsQuery(
+  days: ContributionPeriod,
+  showHidden: boolean,
+  isSignedIn: boolean,
+) {
   return useQuery({
-    queryKey: contributionKeys.list(days),
-    queryFn: () => fetchContributions(days),
+    queryKey: contributionKeys.list(days, showHidden),
+    queryFn: () => fetchContributions(days, showHidden),
     enabled: isSignedIn,
   });
 }
@@ -34,5 +38,15 @@ export function useDeleteContributionMutation() {
       client.removeQueries({ queryKey: contributionKeys.detail(id) });
       return client.invalidateQueries({ queryKey: [...contributionKeys.all, 'list'] });
     },
+  });
+}
+
+/** Hides an upload with a note, or shows it again; every list is read again, the trail kept. */
+export function useHideContributionMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isHiding, note }: { id: string; isHiding: boolean; note: string }) =>
+      isHiding ? hideContribution(id, note) : showContribution(id),
+    onSuccess: () => client.invalidateQueries({ queryKey: [...contributionKeys.all, 'list'] }),
   });
 }

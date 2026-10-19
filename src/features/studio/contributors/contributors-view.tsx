@@ -6,6 +6,7 @@ import { ContributionDetails } from './contribution-details';
 import { ContributionList } from './contribution-list';
 import type { StudioContributorsProps } from './contributors-props';
 import { DeleteUpload } from './delete-upload';
+import { HideUpload } from './hide-upload';
 import { useContributionLayers } from './use-contribution-layers';
 import {
   CONTRIBUTION_LIMIT,
@@ -30,10 +31,12 @@ export function ContributorsView({
 }: StudioContributorsProps) {
   const headingId = useId();
   const periodId = useId();
+  const hiddenId = useId();
+  const [showHidden, setShowHidden] = useState(false);
   const [days, setDays] = useState<ContributionPeriod>(30);
   const [openedId, setOpenedId] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
-  const list = useContributionsQuery(days, isSignedIn);
+  const list = useContributionsQuery(days, showHidden, isSignedIn);
   const contributions = list.data?.contributions ?? [];
   const opened = contributions.find((c) => c.id === openedId) ?? null;
   const detail = useContributionDetailQuery(opened ? opened.id : null);
@@ -71,6 +74,18 @@ export function ContributorsView({
             ))}
           </select>
         </label>
+        <label
+          htmlFor={hiddenId}
+          className="flex items-center gap-2 text-sm text-content-secondary"
+        >
+          <input
+            id={hiddenId}
+            type="checkbox"
+            checked={showHidden}
+            onChange={(event) => setShowHidden(event.target.checked)}
+          />
+          Show hidden
+        </label>
       </header>
       <p role="status" className="px-4 pt-2 text-sm text-content-primary empty:hidden">
         {notice}
@@ -95,13 +110,25 @@ export function ContributorsView({
               detailError={detail.error?.message ?? null}
               onClose={() => setOpenedId(null)}
               actions={
-                <DeleteUpload
-                  contributionId={opened.id}
-                  onDeleted={() => {
-                    setOpenedId(null);
-                    setNotice('Upload deleted from ParaPo.');
-                  }}
-                />
+                <>
+                  <HideUpload
+                    contributionId={opened.id}
+                    hiddenAt={opened.hiddenAt}
+                    hiddenNote={opened.hiddenNote}
+                    onChanged={(message, isHidden) => {
+                      setNotice(message);
+                      // Out of the list it was opened from, so it closes too.
+                      if (isHidden && !showHidden) setOpenedId(null);
+                    }}
+                  />
+                  <DeleteUpload
+                    contributionId={opened.id}
+                    onDeleted={() => {
+                      setOpenedId(null);
+                      setNotice('Upload deleted from ParaPo.');
+                    }}
+                  />
+                </>
               }
             />
           ) : (

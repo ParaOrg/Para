@@ -41,6 +41,8 @@ const upload = (id, over = {}) => ({
   pointCount: 0,
   line: null,
   box: null,
+  hiddenAt: null,
+  hiddenNote: '',
   ...over,
 });
 
