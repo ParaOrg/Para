@@ -1,8 +1,76 @@
 # ParaPo workflow handoff
 
-Updated: 2026-10-18. Goal: complete contributor-to-studio workflow, through approval and publication.
+Updated: 2026-10-19. Current milestone (owner, 2026-10-19), and ONLY this: **save a recording on the phone → upload it → view it in the studio's Contributors map/list → delete it.** Not publishing, approval of contributions, conversion into drafts, backups or a redesign. Sections below "Contributor uploads milestone" are history.
 
-## Verified baseline
+## Release facts that supersede the older branch instructions below
+
+- #275, #281 (draft/review UI and its stack) merged into staging; #282 the same into main. Staging `e010f61` (unchanged on 2026-10-19), tree `edda779`. Main moved on to `ac285a5`, the nightly "Publish map" commit.
+- New work branches from **current staging**. Do not resume from `devin/draft-ops` / `devin/review-0018`. Open PRs #274 and #279 are stale stacks of work already merged through #281.
+- Only the owner merges staging and main.
+- `STUDIO_DRAFTS` stays OFF on deployed builds. `20261018112757_reviewed_draft_approval.sql` was **not applied live** at the last verified checkpoint. 0018, 0021, 0022 are live: never reapply.
+
+## Contributor uploads milestone — 2026-10-19 (Claude session)
+
+PRs (all draft, target staging through the stack; nothing merged, nothing applied live, no Auth setting changed):
+
+| PR | Branch @ head | Base | What |
+| --- | --- | --- | --- |
+| [#283](https://github.com/Roviicc/ParaPo/pull/283) | `claude/publish-test-source-revisions` @ `3111388` | staging | Test-only fix: main's nightly CI (run 39173347122) failed `publish-shapes-test` after the first real publish wrote `source_revisions`. CI green |
+| [#284](https://github.com/Roviicc/ParaPo/pull/284) | `claude/contribution-upload-db` @ `6168e20` | staging | Migration `20261019125900_contributions.sql` (the planned "0019"), apply/check/revert package, verify scripts, types. CI green |
+| [#285](https://github.com/Roviicc/ParaPo/pull/285) | `claude/contribution-upload-phone` @ `feb795c` | #284 | Phone upload: status, retry, Remove upload vs Delete from phone, `VITE_CONTRIBUTIONS` flag |
+| [#286](https://github.com/Roviicc/ParaPo/pull/286) | `claude/contribution-studio-view` @ `3891446` | #285 | Studio Contributors map + list + detail, isolated preview tooling |
+| [#287](https://github.com/Roviicc/ParaPo/pull/287) | `claude/contribution-editor-delete` @ `5b9e609` | #286 | **Owner decision:** editors may delete an upload in the studio (the approved plan had hide only) |
+
+Design as built:
+- **Tables (not applied):** `contributor`, `contribution`, `point_batch` (monthly pieces to 2028-12 + default), `hinto`.
+- **`save_contribution(jsonb)`:** invoker, one transaction. A resend answers `already saved`, checked *before* the insert so the day-cap trigger never counts a resend.
+- **Caps** in triggers: 150 km/h, PH box, time order, 14,400 points, 2,000 hintos, 20/day, 6 h.
+- **Row security:**
+  - phone: inserts and reads its own contributions and contributor row; deletes its own contributions
+  - editors: read (and delete, with #287)
+  - anon: nothing
+- **Deferred:** `contribution_use`, hide/block writes, retention, dropping `gps_session`.
+- **Phone:**
+  - **Client and sign-in.** Own client under `parapo.contributor-auth`, loaded only on first upload or removal; anonymous sign-in on first use.
+  - **Packing.** `pack-recording.ts` drops fixes the DB would refuse.
+  - **When it sends.** Auto-send on save/open; retry on online/visible; Try again; one send per recording in flight.
+  - **Local copy.** Never deleted by an upload; Remove upload (server copy, from the identity that made it only) is separate from Delete from phone, with different confirmation wording.
+- **Studio:**
+  - bounded reader (7/30/90 days, newest 500); TanStack Query; map and list from one query
+  - opened upload shows its whole trail and hintos
+  - with #287, Delete upload; the phone then reads "Removed from ParaPo by an editor"
+- **`VITE_CONTRIBUTIONS`** (default off): every deployed build, including Cloudflare branch previews built from `.env.production`, makes no contributions request and keeps the Contributors placeholder.
+- **Build:**
+  - Supabase and TanStack Query get their own chunk groups; `shared` never takes studio or contribute modules. Without this, the client and studio code had reached the public page's shared chunk; `check-build` caught it.
+  - Contribute page budget: opens at 16.5 kB of its own (≤30); upload chunk on demand 53 kB (≤60, new).
+
+Verification (exact):
+- **Disposable Postgres 17** (`public.ecr.aws/docker/library/postgres:17`; Docker Hub rate-limited this container): full `supabase/verify/run.sh` passed, now ending with `contributions.sh`. It covers:
+  - apply twice (the second stops whole); 9-row check all `t`
+  - `after-contributions.sql`; `contributions-race.sh` (two concurrent sends → `saved` / `already saved`, one row)
+  - `contributions-pack.sh` (rides packed by the phone's code, with jumps, repeats and out-of-country fixes, saved whole)
+  - revert: refused over data; schema round-trip; re-apply
+  - negative controls: the speed check removed, point reads opened, phone reads opened, hidden stamp removed, packer speed filter off; each fails as expected.
+- **`npm run check`:** 987 unit tests (#285) and 990 (#286/#287). Storybook builds.
+- **Browser suites:**
+  - `upload-test` (new, in CI): 27/0 on #285, 28/0 with #287
+  - `contribute-test`: 81/0 (now routes `*.supabase.co` to an in-memory stand-in)
+  - `contributions-preview-test` (new, local only, needs Docker): 23/0 on the isolated preview (real SQL, real PostgREST v12.2.3, auth stand-in)
+- **CI:** #283 and #284 green; #285 green on every finished job including save-test, contribute-test, upload-test.
+- **Local `save-test` is not reliable in a Claude container:** unmodified staging crashed at a flaky step after 82 passes (an older pre-installed Chromium than the pinned Playwright, shared CPU). Use CI or the owner's PC.
+
+Blockers and configuration still needed (owner):
+1. **Decide #287** (editors delete) vs the approved hide-only plan.
+2. **Review and apply** `supabase/apply/20261019125900_contributions_apply.sql`, then `_check.sql` (9 rows `t`). Regenerate the classic types and record the ledger version in `supabase/migrations/README.md`. The reviewed-draft migration is a separate decision.
+3. **Supabase Auth:** turn on anonymous sign-ins; CAPTCHA (Turnstile) only after the Turnstile PR ships for the studio's sign-in, reset, invite password and change-password (`signInWithPassword`) and the phone's first upload. The Turnstile PR is **not written yet**.
+4. **Turnstile keys:** a site key as `VITE_TURNSTILE_SITE_KEY` (public, `.env.production` or build env) and the secret in Supabase Auth settings only. Never in chat or the repo.
+5. **Turn uploads on** with `VITE_CONTRIBUTIONS=1` in the deploy's build, only after items 2–4.
+6. **No shareable live preview link yet.** The isolated preview runs on loopback (`scripts/preview/README.md`, "Contributions"). A hosted one needs either Cloudflare access for a static sample build, or a disposable Supabase branch (paid), so the owner must choose.
+
+Next: the Turnstile PR (item 3), then a signed-in check on the real project once items 2–5 are done.
+
+
+## Verified baseline (2026-10-18, historical)
 
 - Local `staging` and fetched `origin/staging`: `80f5e4f0e960713ad7da528e8efeb6ddb3f2635e` (merge #272, save-test race fix).
 - Fetched `origin/claude/loops-studio`: `c80a1f81519f52f84dfb83ad259899401daf741c`.
