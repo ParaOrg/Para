@@ -70,15 +70,15 @@ test('the plugin takes that one import, and emits the worker as a chunk of the b
 
 /**
  * The group Rolldown would put a module in by its test alone: the highest
- * priority first, the first listed of equals. Share counts are left out;
- * `shared` has no test and takes what two chunks import.
+ * priority first, the first listed of equals. Share counts are left out:
+ * `shared` takes what two chunks import, its test only narrowing which.
  */
 const groups = config.build.rolldownOptions.output.codeSplitting.groups;
 const groupOf = (id) =>
   [...groups]
     .map((g, i) => ({ ...g, i }))
     .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.i - b.i)
-    .find((g) => g.test && g.test.test(id))?.name ?? null;
+    .find((g) => g.test instanceof RegExp && !g.minShareCount && g.test.test(id))?.name ?? null;
 
 test("the worker's two imports have groups to themselves, ahead of the page's MapLibre; its own file and the stylesheet none", () => {
   const dist = (f) => `/repo/node_modules/maplibre-gl/dist/${f}`;
@@ -118,8 +118,30 @@ test('React has its group; our code, other packages and the runtime none', () =>
     assert.equal(groupOf(id), null, id);
   }
   const shared = groups.find((g) => g.name === 'shared');
-  assert.equal(shared.test, undefined);
   assert.equal(shared.minShareCount, 2);
+});
+
+test("shared takes what two chunks import, but never the studio's or the contributor page's own code", () => {
+  const shared = groups.find((g) => g.name === 'shared');
+  for (const id of [
+    '/repo/src/shared/utils/geo.ts',
+    '/repo/src/features/routes/map/map-view.tsx',
+    '/repo/src/design-system/primitives/button.tsx',
+  ]) {
+    assert.equal(shared.test(id), true, id);
+  }
+  for (const id of [
+    '/repo/src/features/studio/data/supabase.ts',
+    '/repo/src/features/contribute/api/upload-contribution.ts',
+    '/repo/src/app/studio/workshop.tsx',
+    'C:\\repo\\src\\features\\studio\\data\\supabase.ts',
+  ]) {
+    assert.equal(shared.test(id), false, id);
+  }
+  assert.equal(
+    groupOf('/repo/node_modules/@tanstack/react-query/build/modern/index.js'),
+    'tanstack-query',
+  );
 });
 
 test('the database client has its group, so the public page never shares a chunk with it', () => {

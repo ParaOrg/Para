@@ -31,3 +31,5 @@ export { useSaveTarget } from './panels/use-save-target';
 export { useStudioTrip } from './panels/use-studio-trip';
 export { StudioReview } from './review/studio-review';
 export { StudioPublicView } from './maps/studio-public-view';
+export { StudioContributors } from './contributors/studio-contributors';
+export { CONTRIBUTIONS } from './data/flags';
