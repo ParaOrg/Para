@@ -29,6 +29,7 @@ after every one.
 | `0022_draft_ops.sql` | `20261018085951` | `0022_draft_ops` | Review operations RPCs: claim/submit/send-back/approve/discard drafts, take-down/put-back. Applied by the owner with `supabase/apply/0022_apply.sql`; do not reapply |
 | `20261018112757_reviewed_draft_approval.sql` | **not applied live** | `reviewed_draft_approval` | Revision-checked approval and explicit conflict resolution; verified only on disposable databases. Requires owner approval before live application |
 | `0021_loops.sql` | `20261018020203` | `0021_loops` | A loop: no head or tail, one direction, called by its signboard |
+| `20261019125900_contributions.sql` | **not applied live** | `contributions` | Contributor uploads: `contributor`, `contribution`, `point_batch` (monthly pieces), `hinto`, `save_contribution`. The tables of `.scratch/contribute/database.md` §3 that the first upload needs (the planned "0019"). Verified only on disposable databases (`verify/contributions.sh`). Requires owner approval before live application |
 
 Create new files with `supabase migration new <name>`; the CLI supplies a timestamped filename. Leave the existing numbered files unchanged. Record the ledger version the project actually assigns after the owner approves and applies a migration. Until then, mark its row **not applied live**.
 
