@@ -46,7 +46,8 @@ end $$;
 --   the phone     inserts its own rows; reads only its own contributions (so it
 --                 can delete them and say what arrived); deletes its own
 --                 contributions, and their points and hintos go with them
---   editors       read everything here; write nothing yet
+--   editors       read everything here, and delete an upload (its points and
+--                 hintos go with it); write nothing else yet
 --   (a phone also reads its own contributor row, never another's)
 --   anon          nothing at all: the nightly publish can never see a contribution
 --
@@ -291,8 +292,10 @@ create policy "phone adds its own" on public.contribution for insert to authenti
   with check (contributor_id = (select auth.uid()) and (select private.can_contribute()));
 create policy "phone or editor reads" on public.contribution for select to authenticated
   using (contributor_id = (select auth.uid()) or (select private.is_editor()));
-create policy "phone deletes its own" on public.contribution for delete to authenticated
-  using (contributor_id = (select auth.uid()));
+-- An editor deleting an upload is the owner's call for this milestone; the plan
+-- had editors hide only (.scratch/contribute/database.md section 4).
+create policy "phone or editor deletes" on public.contribution for delete to authenticated
+  using (contributor_id = (select auth.uid()) or (select private.is_editor()));
 
 create policy "phone adds points to its own" on public.point_batch for insert to authenticated
   with check (

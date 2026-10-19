@@ -91,6 +91,19 @@ export async function uploadContribution(
   return answer.data;
 }
 
+/** The ids of this phone's own uploads still in ParaPo; row security answers no one else's. */
+export async function uploadsStillThere(): Promise<Set<string>> {
+  const client = await requireClient();
+  const { data, error } = await client.from('contribution').select('id');
+  if (error) throw new UploadError(problemOf(error), error.message);
+  return new Set(
+    z
+      .array(z.object({ id: z.string() }))
+      .parse(data)
+      .map((row) => row.id),
+  );
+}
+
 /**
  * Removes an uploaded recording from the database, with its points and hintos.
  * The phone's own copy is untouched. Removing one already gone is not an error.

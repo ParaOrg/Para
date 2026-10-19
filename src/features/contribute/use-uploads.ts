@@ -10,6 +10,7 @@ import {
   ensureSignedIn,
   removeUpload,
   uploadContribution,
+  uploadsStillThere,
   type UploadProblem,
 } from './api/upload-contribution';
 import type { Recording } from './recording-schema';
@@ -23,7 +24,7 @@ export type UploadStatus =
   | { state: 'uploaded'; at: number; by: string; problem?: string }
   | { state: 'failed'; message: string; willRetry: boolean }
   | { state: 'removing' }
-  | { state: 'removed' }
+  | { state: 'removed'; byEditor?: boolean }
   | { state: 'unavailable' };
 
 export interface Uploads {
@@ -103,7 +104,9 @@ export function useUploads(saved: readonly Recording[]): Uploads {
     const shown = overlay[recording.id];
     if (shown) return shown;
     if (recording.upload?.state === 'uploaded') return { ...recording.upload };
-    if (recording.upload?.state === 'removed') return { state: 'removed' };
+    if (recording.upload?.state === 'removed') {
+      return { state: 'removed', byEditor: recording.upload.byEditor === true };
+    }
     return isAvailable ? { state: 'waiting' } : { state: 'unavailable' };
   }
 
@@ -194,17 +197,34 @@ export function useUploads(saved: readonly Recording[]): Uploads {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
   }, [isAvailable]);
 
-  // Who this phone is, so the list can say which uploads it may remove. Only
-  // asked once something was uploaded: the client is loaded on first need.
+  // Who this phone is, so the list can say which uploads it may remove, and
+  // which of its uploads an editor has since deleted in the studio. Only asked
+  // once something was uploaded: the client is loaded on first need.
   const hasUploads = saved.some((r) => r.upload?.state === 'uploaded');
   useEffect(() => {
     if (!isAvailable || !hasUploads) return;
     let isCurrent = true;
-    currentIdentity()
-      .then((id) => {
-        if (isCurrent) setIdentity(id);
-      })
-      .catch((error: unknown) => console.warn('The phone could not read its identity.', error));
+    const settle = async () => {
+      const id = await currentIdentity();
+      if (!isCurrent) return;
+      setIdentity(id);
+      if (!id) return;
+      const there = await uploadsStillThere();
+      for (const recording of savedRef.current) {
+        const mark = recording.upload;
+        if (mark?.state !== 'uploaded' || mark.by !== id || there.has(recording.id)) continue;
+        if (inFlight.current.has(recording.id) || overlayRef.current[recording.id]) continue;
+        await updateRecording(recording.id, (stored) => ({
+          ...stored,
+          upload: { state: 'removed', at: Date.now(), byEditor: true },
+        }));
+        if (isCurrent) setStatus(recording.id, { state: 'removed', byEditor: true });
+      }
+    };
+    // With no signal the list stays as this phone last knew it.
+    settle().catch((error: unknown) =>
+      console.warn('The phone could not check its uploads.', error),
+    );
     return () => {
       isCurrent = false;
     };

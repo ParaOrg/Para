@@ -5,6 +5,7 @@ import { Button } from '@/design-system/primitives/button';
 import { ContributionDetails } from './contribution-details';
 import { ContributionList } from './contribution-list';
 import type { StudioContributorsProps } from './contributors-props';
+import { DeleteUpload } from './delete-upload';
 import { useContributionLayers } from './use-contribution-layers';
 import {
   CONTRIBUTION_LIMIT,
@@ -31,11 +32,15 @@ export function ContributorsView({
   const periodId = useId();
   const [days, setDays] = useState<ContributionPeriod>(30);
   const [openedId, setOpenedId] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
   const list = useContributionsQuery(days, isSignedIn);
   const contributions = list.data?.contributions ?? [];
   const opened = contributions.find((c) => c.id === openedId) ?? null;
   const detail = useContributionDetailQuery(opened ? opened.id : null);
-  const handleOpen = useCallback((id: string) => setOpenedId(id), []);
+  const handleOpen = useCallback((id: string) => {
+    setOpenedId(id);
+    setNotice('');
+  }, []);
   useContributionLayers(map, contributions, opened?.id ?? null, detail.data ?? null, handleOpen);
 
   return (
@@ -67,6 +72,9 @@ export function ContributorsView({
           </select>
         </label>
       </header>
+      <p role="status" className="px-4 pt-2 text-sm text-content-primary empty:hidden">
+        {notice}
+      </p>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <PanelBody
           isSignedIn={isSignedIn}
@@ -86,6 +94,15 @@ export function ContributorsView({
               isDetailLoading={detail.isPending}
               detailError={detail.error?.message ?? null}
               onClose={() => setOpenedId(null)}
+              actions={
+                <DeleteUpload
+                  contributionId={opened.id}
+                  onDeleted={() => {
+                    setOpenedId(null);
+                    setNotice('Upload deleted from ParaPo.');
+                  }}
+                />
+              }
             />
           ) : (
             <ContributionList
