@@ -18,6 +18,9 @@ select * from (values
   (5, 'authenticated reaches the monthly pieces only through point_batch',
    (select not bool_or(has_table_privilege('authenticated', c.oid, 'select'))
       from pg_class c where c.relname like 'point\_batch\_%' and c.relnamespace = 'public'::regnamespace)),
+  (10, 'every monthly piece and the default have row security on',
+   (select count(*) = 28 and bool_and(c.relrowsecurity) from pg_inherits i
+      join pg_class c on c.oid = i.inhrelid where i.inhparent = 'public.point_batch'::regclass)),
   (6, 'save_contribution: invoker, pinned path, authenticated only',
    (select not prosecdef and proconfig @> array['search_path=""']
       and has_function_privilege('authenticated', oid, 'execute')
