@@ -293,6 +293,14 @@ check(
   studioData.length ? 'missing: ' + studioData.join(', ') : '',
 );
 
+// Turnstile, Cloudflare's bot check, is the studio's sign-in's (and the
+// contributor page's first upload's): commuters never load its script.
+const TURNSTILE = 'challenges.cloudflare.com';
+check(
+  'public page loads no Turnstile; the studio carries it — the string search works',
+  !commuter.includes(TURNSTILE) && studio.includes(TURNSTILE),
+);
+
 const missing = EDITOR_ONLY.filter((s) => !studio.includes(s));
 check(
   'studio contains every marker — the string search works',
