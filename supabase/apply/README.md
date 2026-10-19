@@ -68,7 +68,7 @@ each pasted whole into the SQL editor as `postgres`:
 
 # Applying the contributions migration to the live project
 
-**Not applied live.** Needs the owner's approval. Applying it creates the
+**Applied live 2026-10-19** (ledger `20261019144009`, the paste file from #289's branch); the check returned 10/10 true. Do not reapply. Applying it creates the
 tables only: no phone can upload until anonymous sign-ins and CAPTCHA
 (Turnstile) are turned on in Supabase Auth, a separate owner step, and the studio's
 Turnstile sign-in must ship before CAPTCHA is turned on project-wide.
