@@ -172,6 +172,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         run: cp .env.production .env.local
+      # Uploads are off in every deployed build until the owner turns them on;
+      # upload-test turns them on for its own dev server, against a stand-in.
+      - name: Turn uploads on, for upload-test
+        if: matrix.suite == 'upload-test'
+        run: echo VITE_CONTRIBUTIONS=1 >> .env.local
       # pwa-test starts and stops its own `vite preview` on :4173 from a build.
       - name: Build, for pwa-test
         if: matrix.suite == 'pwa-test'

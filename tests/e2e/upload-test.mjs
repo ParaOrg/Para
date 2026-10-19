@@ -4,7 +4,8 @@
 // phone keeps its copy. Supabase is the in-memory stand-in
 // (lib/fake-contributions.mjs): nothing reaches a real project.
 //
-//   cp .env.production .env.local        (the dev server then has a project URL to stand in for)
+//   cp .env.production .env.local && echo VITE_CONTRIBUTIONS=1 >> .env.local
+//                                        (a project URL to stand in for, and uploads on)
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/upload-test.mjs
 //
