@@ -135,10 +135,14 @@ begin
       'create table public.%I partition of public.point_batch for values from (%L) to (%L)',
       'point_batch_' || to_char(m, 'YYYY_MM'), m, (m + interval '1 month')::date
     );
+    -- Reached only through point_batch, whose rules apply; on here too, so a
+    -- piece read by its own name answers no one.
+    execute format('alter table public.%I enable row level security', 'point_batch_' || to_char(m, 'YYYY_MM'));
     m := (m + interval '1 month')::date;
   end loop;
 end $$;
 create table public.point_batch_default partition of public.point_batch default;
+alter table public.point_batch_default enable row level security;
 
 create table public.hinto (
   contribution_id uuid not null references public.contribution (id) on delete cascade,

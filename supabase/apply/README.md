@@ -76,13 +76,13 @@ Turnstile sign-in must ship before CAPTCHA is turned on project-wide.
 | File | What it does |
 | --- | --- |
 | `20261019125900_contributions_apply.sql` | One transaction: checks the editor check (0005) exists, anon cannot write routes (0017), and it has not run; applies `migrations/20261019125900_contributions.sql` (carried unchanged; `verify/contributions.sh` checks the copy); checks row security and that anon reaches nothing; writes the ledger row `contributions`. A second run stops at the first check and changes nothing. Adds tables, functions and triggers; touches no route data. |
-| `20261019125900_contributions_check.sql` | Read-only, 9 rows, all `ok` should be `t`. |
+| `20261019125900_contributions_check.sql` | Read-only, 10 rows, all `ok` should be `t`. |
 | `20261019125900_contributions_revert.sql` | One transaction: drops the four tables, `save_contribution` and the five private helpers, and removes the ledger row. Refuses while any contribution is stored, since that would delete phones' recordings. Safe to run twice. |
 
 ## Steps
 
 1. Run `20261019125900_contributions_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
-2. Run `20261019125900_contributions_check.sql`: 9 rows, all `ok = t`.
+2. Run `20261019125900_contributions_check.sql`: 10 rows, all `ok = t`.
 3. Regenerate `src/shared/types/database.types.ts` in the classic format, and record the
    ledger version in `migrations/README.md`.
 
