@@ -4,6 +4,7 @@ import { RecordingScreen } from './recording-screen';
 import { SaveForm } from './save-form';
 import { SavedScreen } from './saved-screen';
 import { UnfinishedScreen } from './unfinished-screen';
+import { UploadCheck } from './upload-check';
 import { uploadStatusText } from './upload-status';
 import { useFollow } from './use-follow';
 import { useRecording } from './use-recording';
@@ -37,6 +38,9 @@ export function ContributePage() {
         >
           {recording.problem}
         </p>
+      )}
+      {uploads.check && (phase === 'ready' || phase === 'saved') && (
+        <UploadCheck check={uploads.check} />
       )}
       <p role="status" className="sr-only">
         {recording.announcement}

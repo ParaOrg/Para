@@ -592,13 +592,16 @@ export default defineConfig({
               priority: 1,
             },
             //  - shared never takes the studio's or the contributor page's own
-            //    modules: two of the studio's lazy chunks importing one would
-            //    otherwise put it on the public page.
+            //    modules, nor Turnstile, which only those two load: two of
+            //    their chunks importing one would otherwise put it on the
+            //    public page.
             {
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
-                !/[\\/]src[\\/](app|features)[\\/](studio|contribute)[\\/]/.test(id),
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile)/.test(
+                  id,
+                ),
             },
           ],
         },

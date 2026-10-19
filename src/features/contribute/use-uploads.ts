@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Fix } from '@/features/routes/model/ride-recording';
 
 import { canUpload } from './api/contribute-client';
+import { turnstileSiteKey } from './api/env';
 import { packRecording, type PackRefusal } from './api/pack-recording';
 import {
   UploadError,
@@ -20,6 +21,8 @@ import { CONSENT_VERSION } from './use-consent';
 /** Where a saved recording's upload stands. */
 export type UploadStatus =
   | { state: 'waiting' }
+  /** Waiting for the check that a person is uploading, before this phone's first upload. */
+  | { state: 'checking' }
   | { state: 'uploading' }
   | { state: 'uploaded'; at: number; by: string; problem?: string }
   | { state: 'failed'; message: string; willRetry: boolean }
@@ -37,6 +40,15 @@ export interface Uploads {
   removeUploaded: (recording: Recording) => void;
   /** Whether this phone's identity made the upload, so it may remove it. */
   canRemove: (recording: Recording) => boolean;
+  /** The bot check before this phone's first upload, while one is needed. */
+  check: UploadCheck | null;
+}
+
+export interface UploadCheck {
+  siteKey: string;
+  /** Bumped for a fresh widget after a refused check. */
+  round: number;
+  onToken: (token: string | null) => void;
 }
 
 const FAILED: Record<UploadProblem | PackRefusal, { message: string; willRetry: boolean }> = {
@@ -94,6 +106,28 @@ export function useUploads(saved: readonly Recording[]): Uploads {
   const savedRef = useRef(saved);
   const overlayRef = useRef(overlay);
   const isAvailable = canUpload();
+  const [isCheckNeeded, setIsCheckNeeded] = useState(false);
+  const [checkRound, setCheckRound] = useState(0);
+  const tokenRef = useRef<string | null>(null);
+  const signingIn = useRef<Promise<string> | null>(null);
+
+  /**
+   * This phone's identity, signing in once for every send waiting on it. Null
+   * when the first sign-in needs the bot check and no token is in hand yet.
+   */
+  async function identityForUpload(): Promise<string | null> {
+    if (signingIn.current) return signingIn.current;
+    const known = await currentIdentity();
+    if (known) return known;
+    if (signingIn.current) return signingIn.current;
+    if (turnstileSiteKey && !tokenRef.current) return null;
+    const token = tokenRef.current ?? undefined;
+    tokenRef.current = null;
+    signingIn.current = ensureSignedIn(token).finally(() => {
+      signingIn.current = null;
+    });
+    return signingIn.current;
+  }
 
   const setStatus = (id: string, status: UploadStatus) => {
     overlayRef.current = { ...overlayRef.current, [id]: status };
@@ -121,7 +155,12 @@ export function useUploads(saved: readonly Recording[]): Uploads {
         setStatus(recording.id, { state: 'failed', ...FAILED[packed.reason] });
         return;
       }
-      const by = await ensureSignedIn();
+      const by = await identityForUpload();
+      if (!by) {
+        setIsCheckNeeded(true);
+        setStatus(recording.id, { state: 'checking' });
+        return;
+      }
       setIdentity(by);
       await uploadContribution(packed.payload);
       const mark = { state: 'uploaded', at: Date.now(), by } as const;
@@ -130,7 +169,14 @@ export function useUploads(saved: readonly Recording[]): Uploads {
       setStatus(recording.id, { ...mark });
     } catch (error) {
       if (!(error instanceof UploadError)) console.error('An upload failed.', error);
-      setStatus(recording.id, { state: 'failed', ...FAILED[problemOfError(error)] });
+      if (problemOfError(error) === 'check-failed') {
+        // The token was refused: a fresh check, then this one waits on it again.
+        setCheckRound((round) => round + 1);
+        setIsCheckNeeded(true);
+        setStatus(recording.id, { state: 'checking' });
+      } else {
+        setStatus(recording.id, { state: 'failed', ...FAILED[problemOfError(error)] });
+      }
     } finally {
       inFlight.current.delete(recording.id);
     }
@@ -232,7 +278,9 @@ export function useUploads(saved: readonly Recording[]): Uploads {
 
   const waitingCount = saved.filter((r) => {
     const state = statusOf(r).state;
-    return state === 'waiting' || state === 'uploading' || state === 'failed';
+    return (
+      state === 'waiting' || state === 'checking' || state === 'uploading' || state === 'failed'
+    );
   }).length;
 
   return {
@@ -244,5 +292,20 @@ export function useUploads(saved: readonly Recording[]): Uploads {
       const status = statusOf(recording);
       return status.state === 'uploaded' && identity !== null && status.by === identity;
     },
+    check:
+      turnstileSiteKey && isCheckNeeded
+        ? {
+            siteKey: turnstileSiteKey,
+            round: checkRound,
+            onToken: (token) => {
+              tokenRef.current = token;
+              if (!token) return;
+              setIsCheckNeeded(false);
+              for (const recording of savedRef.current) {
+                if (overlayRef.current[recording.id]?.state === 'checking') void send(recording);
+              }
+            },
+          }
+        : null,
   };
 }
