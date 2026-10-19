@@ -12,6 +12,7 @@
 // no time. The 2-minute form timeout runs on Playwright's fake clock.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { fakeContributions } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
@@ -72,6 +73,8 @@ async function phone({ consented }) {
   }
   await nodeFetch(page);
   await bareStyle(page);
+  // Saved recordings upload: to the stand-in, never to a real project (upload-test covers it).
+  await fakeContributions(page);
   await page.addInitScript(GPS);
   if (consented) {
     await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));

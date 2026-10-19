@@ -75,6 +75,7 @@ flowchart TD
   features_contribute --> features_routes_cards
   features_contribute --> features_routes_map
   features_contribute --> features_routes_model
+  features_contribute --> shared_types
   features_contribute --> shared_ui
   features_contribute --> shared_utils
   features_locator --> features_routes_map
@@ -149,7 +150,7 @@ flowchart TD
 | `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
-| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/ui`, `shared/utils` |
+| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/types`, `shared/ui`, `shared/utils` |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
@@ -177,7 +178,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`
+`ContributePage`, `connectContributions`
 
 ### `features/locator`
 

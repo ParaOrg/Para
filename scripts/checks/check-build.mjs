@@ -1,7 +1,8 @@
 // Proves, from the production build, that the public page carries no editor.
 // Runs as the last step of `npm run build`, so a deploy that would leak fails.
 // The contributors' page (contribute/index.html) is held to the same: it loads
-// no editor and no Supabase, it draws its map with the chunks the public page
+// no editor, its Supabase client names no studio table and keeps its session
+// under its own key, it draws its map with the chunks the public page
 // loads (MapLibre, the shared code) and a copy of none, it is not installable,
 // and the public page loads none of its code.
 //
@@ -125,7 +126,7 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const modules = JSON.parse(readFileSync(modulesPath, 'utf8'));
 
 /** Every JS file an entry loads, following imports and dynamic imports. */
-function chunksOf(entryKey) {
+function chunksOf(entryKey, { isStaticOnly = false } = {}) {
   const seen = new Set();
   const files = new Set();
   const visit = (key) => {
@@ -134,7 +135,8 @@ function chunksOf(entryKey) {
     const chunk = manifest[key];
     if (!chunk) throw new Error(`manifest has no entry "${key}"`);
     if (chunk.file.endsWith('.js')) files.add(chunk.file);
-    for (const k of [...(chunk.imports ?? []), ...(chunk.dynamicImports ?? [])]) visit(k);
+    const next = [...(chunk.imports ?? []), ...(isStaticOnly ? [] : (chunk.dynamicImports ?? []))];
+    for (const k of next) visit(k);
   };
   visit(entryKey);
   return [...files];
@@ -246,13 +248,11 @@ check(
   'studio chunks carry the Supabase client — the package search works',
   packageModules(studioFiles).some((p) => p.startsWith('@supabase/')),
 );
-const supabaseInContribute = packageModules(contributeFiles).filter((p) =>
-  p.startsWith('@supabase/'),
-);
+// The contributor page uploads saved recordings, so it carries the client;
+// the strings below hold it to the contributions alone.
 check(
-  'contribute page carries no Supabase client',
-  supabaseInContribute.length === 0,
-  supabaseInContribute.join(', '),
+  'contribute page carries the Supabase client to upload with',
+  packageModules(contributeFiles).some((p) => p.startsWith('@supabase/')),
 );
 
 // ------------------------------------------------------------------ strings
@@ -267,11 +267,30 @@ const contribute = text(contributeFiles);
 const leaked = EDITOR_ONLY.filter((s) => commuter.includes(s));
 check('public page contains no editor-only string', leaked.length === 0, leaked.join(', '));
 
-const leakedToContribute = EDITOR_ONLY.filter((s) => contribute.includes(s));
+// Its own chunks, not the ones it shares with the public page, whose map reader
+// names route_variant in the published file's fields.
+const contributeOwn = text(contributeFiles.filter((f) => !commuterFiles.includes(f)));
+// The database's address is the one editor string the contributor page needs.
+// What it may not name are the studio's tables and operations.
+const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'approve_draft', 'take_down'];
+const leakedToContribute = [
+  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co'),
+  ...STUDIO_DATA,
+].filter((s) => contributeOwn.includes(s));
 check(
-  'contribute page contains no editor-only string',
+  'contribute page contains no editor-only string and names no studio table',
   leakedToContribute.length === 0,
   leakedToContribute.join(', '),
+);
+check(
+  'contribute page saves through save_contribution under its own session key — the string search works',
+  contribute.includes('save_contribution') && contribute.includes('parapo.contributor-auth'),
+);
+const studioData = STUDIO_DATA.filter((s) => !studio.includes(s));
+check(
+  'studio names every studio table and operation — the string search works',
+  studioData.length === 0,
+  studioData.length ? 'missing: ' + studioData.join(', ') : '',
 );
 
 const missing = EDITOR_ONLY.filter((s) => !studio.includes(s));
@@ -589,13 +608,28 @@ check(
 
 // The contribute page's own weight: what it loads beyond the public page's
 // chunks: its script only (its stylesheet is not counted), so it stays a page
-// for a phone in the field. The map it draws on is the public page's, already counted above.
+// for a phone in the field. The map it draws on is the public page's, already
+// counted above. What it opens with is held to one budget; the database client,
+// loaded only when a recording is uploaded or removed (with signal), to another.
 const CONTRIBUTE_OWN_MAX_GZ_KB = 30;
-const contributeOwnGz = gzipBytes(dist, contributeOnlyFiles);
+const CONTRIBUTE_UPLOAD_MAX_GZ_KB = 60;
+const contributeOpening = chunksOf('contribute/index.html', { isStaticOnly: true }).filter(
+  (f) => !commuterFiles.includes(f),
+);
+const contributeOnDemand = contributeOnlyFiles.filter((f) => !contributeOpening.includes(f));
+const contributeOwnGz = gzipBytes(dist, contributeOpening);
 check(
-  `the contribute page's own chunks are under ${CONTRIBUTE_OWN_MAX_GZ_KB} kB gzipped`,
-  contributeOnlyFiles.length > 0 && contributeOwnGz < CONTRIBUTE_OWN_MAX_GZ_KB * 1024,
-  `${contributeOnlyFiles.join(', ')}: ${(contributeOwnGz / 1024).toFixed(1)} kB`,
+  `the contribute page opens with under ${CONTRIBUTE_OWN_MAX_GZ_KB} kB gzipped of its own`,
+  contributeOpening.length > 0 && contributeOwnGz < CONTRIBUTE_OWN_MAX_GZ_KB * 1024,
+  `${contributeOpening.join(', ')}: ${(contributeOwnGz / 1024).toFixed(1)} kB`,
+);
+const contributeUploadGz = gzipBytes(dist, contributeOnDemand);
+check(
+  `the contribute page's upload, loaded on first need, is under ${CONTRIBUTE_UPLOAD_MAX_GZ_KB} kB gzipped and holds the client`,
+  packageModules(contributeOnDemand).some((p) => p.startsWith('@supabase/')) &&
+    !packageModules(contributeOpening).some((p) => p.startsWith('@supabase/')) &&
+    contributeUploadGz < CONTRIBUTE_UPLOAD_MAX_GZ_KB * 1024,
+  `${contributeOnDemand.join(', ')}: ${(contributeUploadGz / 1024).toFixed(1)} kB`,
 );
 
 // 6. Stylesheet order. The rules each page's stylesheets hold, in the order

@@ -111,7 +111,6 @@ test('React has its group; our code, other packages and the runtime none', () =>
   for (const id of [
     '/repo/node_modules/react-is/index.js',
     '/repo/node_modules/workbox-window/build/workbox-window.prod.es5.mjs',
-    '/repo/node_modules/@supabase/supabase-js/dist/index.mjs',
     '/repo/src/features/routes/map/map-view.tsx',
     '/repo/src/react/x.ts',
     '\0rolldown/runtime.js',
@@ -121,4 +120,23 @@ test('React has its group; our code, other packages and the runtime none', () =>
   const shared = groups.find((g) => g.name === 'shared');
   assert.equal(shared.test, undefined);
   assert.equal(shared.minShareCount, 2);
+});
+
+test('the database client has its group, so the public page never shares a chunk with it', () => {
+  for (const f of [
+    '@supabase/supabase-js/dist/index.mjs',
+    '@supabase/auth-js/dist/module/index.js',
+    '@supabase/postgrest-js/dist/index.mjs',
+    'iceberg-js/dist/index.mjs',
+    'tslib/tslib.es6.mjs',
+  ]) {
+    assert.equal(groupOf(`/repo/node_modules/${f}`), 'supabase', f);
+  }
+  assert.equal(
+    groupOf('C:\\repo\\node_modules\\@supabase\\supabase-js\\dist\\index.mjs'),
+    'supabase',
+    'Windows paths',
+  );
+  assert.equal(groupOf('/repo/src/features/contribute/api/upload-contribution.ts'), null);
+  assert.equal(groupOf('/repo/node_modules/@supabase-like/x/index.js'), null);
 });
