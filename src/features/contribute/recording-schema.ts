@@ -38,7 +38,12 @@ export type SwitchRow = z.infer<typeof switchSchema>;
  */
 export const uploadMarkSchema = z.union([
   z.object({ state: z.literal('uploaded'), at: z.number(), by: z.string() }),
-  z.object({ state: z.literal('removed'), at: z.number() }),
+  z.object({
+    state: z.literal('removed'),
+    at: z.number(),
+    /** Set when an editor deleted it in the studio, not the contributor here. */
+    byEditor: z.optional(z.boolean()),
+  }),
 ]);
 export type UploadMark = z.infer<typeof uploadMarkSchema>;
 

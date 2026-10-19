@@ -1,6 +1,7 @@
 // The contributor page's slice of Supabase, in memory, for the browser suites:
 // an anonymous sign-in, save_contribution and a phone deleting its own
-// contribution, answered as GoTrue and PostgREST answer. Every request to
+// contribution (and reading its own ids back), answered as GoTrue and
+// PostgREST answer. Every request to
 // *.supabase.co lands here, so no suite ever reaches the live project; one this
 // stand-in does not know is answered 501 and counted in `unknown`.
 //
@@ -39,7 +40,7 @@ const session = (userId) => ({
 /** Routes `page`'s Supabase requests to a fresh stand-in. Register after any other https route. */
 export async function fakeContributions(page) {
   const fake = {
-    /** The contributions stored, by id, each with the phone that sent it. */
+    /** The contributions stored, by id, each with the phone that sent it. Delete one to play an editor. */
     rows: new Map(),
     signIns: 0,
     saveRequests: 0,
@@ -111,6 +112,12 @@ export async function fakeContributions(page) {
       return json(route, 200, existing ? 'already saved' : 'saved');
     }
 
+    if (url.pathname === '/rest/v1/contribution' && method === 'GET') {
+      // Row security: a phone reads only its own.
+      const user = userOf(request);
+      const own = [...fake.rows].filter(([, row]) => row.by === user).map(([id]) => ({ id }));
+      return json(route, 200, own);
+    }
     if (url.pathname === '/rest/v1/contribution' && method === 'DELETE') {
       fake.deleteRequests += 1;
       const user = userOf(request);

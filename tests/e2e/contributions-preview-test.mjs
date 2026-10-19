@@ -258,6 +258,64 @@ check(
   (await studio.getByRole('list', { name: 'Uploads' }).count()) === 1,
 );
 
+// ---------------------------------------------- an editor deletes an upload
+const lagro = new RegExp(`^Lagro A ${RUN}`);
+const lagroId = (await phoneRead(a.page, 'contribution?select=id,start_name')).body.find((r) =>
+  r.start_name.startsWith('Lagro A'),
+).id;
+await studio.getByRole('button', { name: lagro }).click();
+await studio.getByRole('button', { name: 'Delete upload' }).click();
+check(
+  'Delete upload asks first: it goes for every editor, and the phone keeps its copy; focus on Keep it',
+  (await studio.getByRole('group', { name: /Delete this upload/ }).innerText()).includes(
+    "The contributor's phone keeps its own copy.",
+  ) && (await studio.evaluate(() => document.activeElement?.textContent)) === 'Keep it',
+);
+await shot(studio, '6-studio-delete-question');
+await studio.getByRole('button', { name: 'Keep it' }).click();
+check(
+  '  Keep it deletes nothing',
+  (await phoneRead(a.page, 'contribution?select=id')).body.some((r) => r.id === lagroId),
+);
+await studio.getByRole('button', { name: 'Delete upload' }).click();
+await studio
+  .getByRole('group', { name: /Delete this upload/ })
+  .getByRole('button', { name: 'Delete upload' })
+  .click();
+await studio.getByText('Upload deleted from ParaPo.').waitFor({ timeout: 15000 });
+await studio.getByRole('list', { name: 'Uploads' }).waitFor();
+await studio.waitForFunction(
+  (id) =>
+    !window.__map
+      .getSource('studio-contributions')
+      .serialize()
+      .data.features.some((f) => f.properties.id === id),
+  lagroId,
+);
+const afterRows = await studio
+  .getByRole('list', { name: 'Uploads' })
+  .getByRole('listitem')
+  .allInnerTexts();
+check(
+  '  deleted: gone from the list and the map together, and from the database',
+  !afterRows.some((r) => lagro.test(r)) &&
+    !(await phoneRead(a.page, 'contribution?select=id')).body.some((r) => r.id === lagroId),
+);
+await shot(studio, '7-studio-deleted');
+await a.page.reload({ waitUntil: 'load' });
+await a.page
+  .getByRole('listitem')
+  .filter({ hasText: `Lagro A ${RUN}` })
+  .getByText('Removed from ParaPo by an editor. Kept on this phone')
+  .waitFor({ timeout: 20000 });
+const lagroRow = a.page.getByRole('listitem').filter({ hasText: `Lagro A ${RUN}` });
+check(
+  '  the phone, reopened, says an editor removed it, keeps its copy, and offers Upload again',
+  (await lagroRow.getByRole('button', { name: /^Download / }).count()) === 1 &&
+    (await lagroRow.getByRole('button', { name: /^Upload / }).count()) === 1,
+);
+await shot(a.page, '8-phone-removed-by-editor');
+
 // The editor's session and the phone's, in one browser.
 const shared = await phone();
 await recordAndSave(shared.page, 'Same browser', 14.76);

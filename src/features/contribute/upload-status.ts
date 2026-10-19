@@ -18,7 +18,9 @@ export function uploadStatusText(status: UploadStatus, canRemove: boolean): stri
     case 'removing':
       return 'Removing the upload…';
     case 'removed':
-      return 'Upload removed. Kept on this phone';
+      return status.byEditor
+        ? 'Removed from ParaPo by an editor. Kept on this phone'
+        : 'Upload removed. Kept on this phone';
     case 'unavailable':
       return 'Kept on this phone';
   }

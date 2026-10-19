@@ -98,7 +98,7 @@ exception when insufficient_privilege then null; end $$;
 reset role;
 select pg_temp.check((select count(*) = 3 from public.contribution where contributor_id = '00000000-0000-0000-0000-0000000000a1'), 'A''s survive B');
 
--- The editor reads everything; writes nothing.
+-- The editor reads everything and writes nothing but a delete (checked below).
 set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
 select pg_temp.check((select count(*) = 3 from public.contribution), 'editor reads every contribution');
@@ -106,8 +106,8 @@ select pg_temp.check((select count(*) = 3 and sum(point_count) = 1300 from publi
   where contribution_id = '11111111-0000-0000-0000-000000000001'), 'editor reads 3 batches, 1300 points');
 select pg_temp.check((select count(*) = 1 from public.hinto where contribution_id = '11111111-0000-0000-0000-000000000001'), 'editor reads the hinto');
 select pg_temp.check((select count(*) = 1 from public.contributor), 'editor reads the one contributor');
-delete from public.contribution;
-select pg_temp.check((select count(*) = 3 from public.contribution), 'editor deletes nothing');
+do $$ begin update public.contribution set description = 'x'; raise exception 'FAILED: editor updated';
+exception when insufficient_privilege then null; end $$;
 
 -- Refused whole: too fast, outside the Philippines, too many points, bad totals, too long.
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b1', false);
@@ -166,10 +166,26 @@ reset role;
 select pg_temp.check((select count(*) = 0 from public.point_batch where contribution_id = '11111111-0000-0000-0000-000000000001'), 'points went with it');
 select pg_temp.check((select count(*) = 0 from public.hinto where contribution_id = '11111111-0000-0000-0000-000000000001'), 'hintos went with it');
 
+-- An editor deletes any upload, with its points and hintos; the phone's others stay.
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+delete from public.contribution where id = '22222222-0000-0000-0000-000000000001';
+reset role;
+select pg_temp.check((select count(*) = 0 from public.contribution where id = '22222222-0000-0000-0000-000000000001'), 'editor deleted it');
+select pg_temp.check((select count(*) = 0 from public.point_batch where contribution_id = '22222222-0000-0000-0000-000000000001'), 'its points went with it');
+select pg_temp.check((select count(*) = 19 from public.contribution where contributor_id = '00000000-0000-0000-0000-0000000000b1'), 'B''s others stay');
+-- A signed-in non-editor who is not the uploader deletes nothing.
+insert into auth.users (id, is_anonymous) values ('00000000-0000-0000-0000-0000000000c9', true) on conflict do nothing;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c9', false);
+delete from public.contribution;
+reset role;
+select pg_temp.check((select count(*) = 19 from public.contribution where contributor_id = '00000000-0000-0000-0000-0000000000b1'), 'a stranger deletes nothing');
+
 -- A deleted phone identity takes everything of its own with it.
 delete from auth.users where id = '00000000-0000-0000-0000-0000000000a1';
 select pg_temp.check((select count(*) = 0 from public.contribution where contributor_id = '00000000-0000-0000-0000-0000000000a1'), 'identity delete cascades');
-select pg_temp.check((select count(*) = 20 from public.contribution), 'B''s twenty remain');
+select pg_temp.check((select count(*) = 19 from public.contribution), 'B''s nineteen remain');
 
 -- Definer helpers are out of reach; the save is not a definer.
 select pg_temp.check(not has_function_privilege('anon', 'private.can_contribute()', 'execute'), 'anon cannot run can_contribute');

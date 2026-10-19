@@ -429,6 +429,23 @@ const waitForStatus = (page, name, pattern) =>
   check('  deleted from the phone', (await storedUpload(page, localId)) === 'gone');
 }
 
+// ------------------------------------- an upload an editor has deleted
+{
+  const id = 'aaaaaaaa-0000-4000-8000-000000000009';
+  const { page, fake } = await phone();
+  await seed(page, [savedRide(id, T0, { name: 'Editor deleted' })]);
+  await page.reload({ waitUntil: 'load' });
+  await waitForStatus(page, 'Editor deleted', /Uploaded to ParaPo/);
+  fake.rows.delete(id);
+  await page.reload({ waitUntil: 'load' });
+  await waitForStatus(page, 'Editor deleted', /Removed from ParaPo by an editor/);
+  await page.waitForTimeout(500);
+  check(
+    'an upload an editor deleted reads so on reopening, stays on the phone, and is not sent again',
+    fake.saveRequests === 1 && (await storedUpload(page, id)) === 'removed',
+  );
+}
+
 // ---------------------------------- an upload from an earlier identity
 {
   const id = 'aaaaaaaa-0000-4000-8000-000000000008';
