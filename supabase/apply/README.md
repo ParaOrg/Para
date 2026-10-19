@@ -65,3 +65,29 @@ each pasted whole into the SQL editor as `postgres`:
   undoing 0018.
 - The studio does not call these functions yet, so neither applying nor
   reverting changes what an editor or commuter sees today.
+
+# Applying the contributions migration to the live project
+
+**Applied live 2026-10-19** (ledger `20261019144009`, the paste file from #289's branch); the check returned 10/10 true. Do not reapply. Applying it creates the
+tables only: no phone can upload until anonymous sign-ins and CAPTCHA
+(Turnstile) are turned on in Supabase Auth, a separate owner step, and the studio's
+Turnstile sign-in must ship before CAPTCHA is turned on project-wide.
+
+| File | What it does |
+| --- | --- |
+| `20261019125900_contributions_apply.sql` | One transaction: checks the editor check (0005) exists, anon cannot write routes (0017), and it has not run; applies `migrations/20261019125900_contributions.sql` (carried unchanged; `verify/contributions.sh` checks the copy); checks row security and that anon reaches nothing; writes the ledger row `contributions`. A second run stops at the first check and changes nothing. Adds tables, functions and triggers; touches no route data. |
+| `20261019125900_contributions_check.sql` | Read-only, 10 rows, all `ok` should be `t`. |
+| `20261019125900_contributions_revert.sql` | One transaction: drops the four tables, `save_contribution` and the five private helpers, and removes the ledger row. Refuses while any contribution is stored, since that would delete phones' recordings. Safe to run twice. |
+
+## Steps
+
+1. Run `20261019125900_contributions_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261019125900_contributions_check.sql`: 10 rows, all `ok = t`.
+3. Regenerate `src/shared/types/database.types.ts` in the classic format, and record the
+   ledger version in `migrations/README.md`.
+
+## Recovery
+
+- Applied, and nothing has been uploaded: run `20261019125900_contributions_revert.sql`.
+  `verify/contributions.sh` checks the schema afterwards matches the schema before, and that it re-applies.
+- Applied, and phones have uploaded: the revert refuses. Decide with the owner what happens to those recordings first.

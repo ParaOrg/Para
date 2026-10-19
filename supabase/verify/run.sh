@@ -96,3 +96,4 @@ apply < ../apply/20261018112757_reviewed_draft_approval_revert.sql
 $PG_DUMP -d $DB --schema-only --schema=public --schema=private | grep -Ev '^.(un)?restrict ' > /tmp/reverted-reviewed-approval.dump
 diff /tmp/before-reviewed-approval.dump /tmp/reverted-reviewed-approval.dump || { echo 'FAILED: reviewed approval revert changed the baseline'; exit 1; }
 echo 'reviewed approval revert: schema unchanged, repeated recovery safe'
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributions.sh

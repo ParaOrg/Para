@@ -17,6 +17,131 @@ export type Database = {
   }
   public: {
     Tables: {
+      contribution: {
+        Row: {
+          consent_version: number
+          contributor_id: string | null
+          description: string | null
+          distance_m: number
+          east: number | null
+          end_name: string | null
+          ended_at: string
+          events: Json
+          format_version: number
+          gaps: Json
+          hidden_at: string | null
+          hidden_by: string | null
+          hidden_note: string | null
+          id: string
+          line: Json | null
+          lost_s: number
+          moving_s: number
+          north: number | null
+          point_count: number
+          received_at: string
+          rules_version: number
+          sent_at: string
+          south: number | null
+          standing_s: number
+          start_name: string | null
+          started_at: string
+          vehicle: string | null
+          west: number | null
+        }
+        Insert: {
+          consent_version: number
+          contributor_id?: string | null
+          description?: string | null
+          distance_m: number
+          east?: number | null
+          end_name?: string | null
+          ended_at: string
+          events: Json
+          format_version: number
+          gaps: Json
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_note?: string | null
+          id: string
+          line?: Json | null
+          lost_s: number
+          moving_s: number
+          north?: number | null
+          point_count: number
+          received_at?: string
+          rules_version: number
+          sent_at: string
+          south?: number | null
+          standing_s: number
+          start_name?: string | null
+          started_at: string
+          vehicle?: string | null
+          west?: number | null
+        }
+        Update: {
+          consent_version?: number
+          contributor_id?: string | null
+          description?: string | null
+          distance_m?: number
+          east?: number | null
+          end_name?: string | null
+          ended_at?: string
+          events?: Json
+          format_version?: number
+          gaps?: Json
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_note?: string | null
+          id?: string
+          line?: Json | null
+          lost_s?: number
+          moving_s?: number
+          north?: number | null
+          point_count?: number
+          received_at?: string
+          rules_version?: number
+          sent_at?: string
+          south?: number | null
+          standing_s?: number
+          start_name?: string | null
+          started_at?: string
+          vehicle?: string | null
+          west?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_contributor_id_fkey"
+            columns: ["contributor_id"]
+            isOneToOne: false
+            referencedRelation: "contributor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contributor: {
+        Row: {
+          block_note: string | null
+          blocked_at: string | null
+          blocked_by: string | null
+          first_seen_at: string
+          id: string
+        }
+        Insert: {
+          block_note?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          first_seen_at?: string
+          id: string
+        }
+        Update: {
+          block_note?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          first_seen_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       draft: {
         Row: {
           base_revision: number | null
@@ -111,6 +236,100 @@ export type Database = {
             columns: ["route_variant_id"]
             isOneToOne: false
             referencedRelation: "route_variant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hinto: {
+        Row: {
+          cell: number | null
+          contribution_id: string
+          lat: number
+          lng: number
+          rules_version: number
+          seconds: number
+          seq: number
+          started_at: string
+        }
+        Insert: {
+          cell?: never
+          contribution_id: string
+          lat: number
+          lng: number
+          rules_version: number
+          seconds: number
+          seq: number
+          started_at: string
+        }
+        Update: {
+          cell?: never
+          contribution_id?: string
+          lat?: number
+          lng?: number
+          rules_version?: number
+          seconds?: number
+          seq?: number
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hinto_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "contribution"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      point_batch: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "point_batch_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "contribution"
             referencedColumns: ["id"]
           },
         ]
@@ -423,6 +642,12 @@ export type Database = {
           p_subject_id: string
         }
         Returns: Json
+      }
+      save_contribution: {
+        Args: {
+          recording: Json
+        }
+        Returns: string
       }
       send_back_draft: {
         Args: {
