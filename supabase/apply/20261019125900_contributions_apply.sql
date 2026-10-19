@@ -46,8 +46,9 @@ end $$;
 --   the phone     inserts its own rows; reads only its own contributions (so it
 --                 can delete them and say what arrived); deletes its own
 --                 contributions, and their points and hintos go with them
---   editors       read everything here, and delete an upload (its points and
---                 hintos go with it); write nothing else yet
+--   editors       read everything here; hide an upload (and show it again)
+--                 with a note; delete one (its points and hintos go with it);
+--                 write nothing else yet
 --   (a phone also reads its own contributor row, never another's)
 --   anon          nothing at all: the nightly publish can never see a contribution
 --
@@ -260,6 +261,25 @@ revoke all on function private.contribution_stamp() from public, anon, authentic
 revoke all on function private.point_batch_stamp() from public, anon, authenticated;
 revoke all on function private.hinto_cap() from public, anon, authenticated;
 
+-- Hiding is stamped here: who and when come from the server, and showing an
+-- upload again clears all three. Only the hide columns can be written at all.
+create function private.contribution_hide_stamp()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if new.hidden_at is null then
+    new.hidden_by := null;
+    new.hidden_note := null;
+  elsif old.hidden_at is null then
+    new.hidden_at := now();
+    new.hidden_by := (select auth.uid());
+  else
+    new.hidden_at := old.hidden_at;
+    new.hidden_by := old.hidden_by;
+  end if;
+  return new;
+end $$;
+revoke all on function private.contribution_hide_stamp() from public, anon, authenticated;
+
 create trigger contributor_stamp before insert on public.contributor
   for each row execute function private.contributor_stamp();
 create trigger contribution_stamp before insert on public.contribution
@@ -268,6 +288,8 @@ create trigger point_batch_stamp before insert on public.point_batch
   for each row execute function private.point_batch_stamp();
 create trigger hinto_cap before insert on public.hinto
   for each row execute function private.hinto_cap();
+create trigger contribution_hide_stamp before update on public.contribution
+  for each row execute function private.contribution_hide_stamp();
 
 -- ------------------------------------------------------------ row security
 
@@ -280,6 +302,7 @@ revoke all on public.contributor, public.contribution, public.point_batch, publi
   from anon, authenticated;
 grant select, insert on public.contributor to authenticated;
 grant select, insert, delete on public.contribution to authenticated;
+grant update (hidden_at, hidden_note) on public.contribution to authenticated;
 grant select, insert on public.point_batch, public.hinto to authenticated;
 
 create policy "phone adds itself" on public.contributor for insert to authenticated
@@ -296,6 +319,9 @@ create policy "phone or editor reads" on public.contribution for select to authe
 -- had editors hide only (.scratch/contribute/database.md section 4).
 create policy "phone or editor deletes" on public.contribution for delete to authenticated
   using (contributor_id = (select auth.uid()) or (select private.is_editor()));
+-- Hidden is not deleted: the upload stays, out of the studio's default view.
+create policy "editors hide" on public.contribution for update to authenticated
+  using ((select private.is_editor())) with check ((select private.is_editor()));
 
 create policy "phone adds points to its own" on public.point_batch for insert to authenticated
   with check (
@@ -430,7 +456,8 @@ begin
     and (has_table_privilege('anon', c.oid, 'select') or has_table_privilege('anon', c.oid, 'insert'));
   if bad is not null then raise exception 'contributions: anon can reach %. Nothing was changed.', bad; end if;
   if has_function_privilege('anon', 'public.save_contribution(jsonb)', 'execute')
-     or has_function_privilege('authenticated', 'private.contribution_stamp()', 'execute') then
+     or has_function_privilege('authenticated', 'private.contribution_stamp()', 'execute')
+     or has_column_privilege('authenticated', 'public.contribution', 'description', 'update') then
     raise exception 'contributions: a function is executable where it must not be. Nothing was changed.';
   end if;
 end $$;

@@ -27,15 +27,15 @@ export function uploadsData(contributions: readonly Contribution[]) {
   const hasLine = (c: Contribution) => c.line !== null && c.line.length >= 2;
   const lines = contributions.filter(hasLine).map((c) => ({
     type: 'Feature' as const,
-    properties: { id: c.id },
+    properties: { id: c.id, hidden: c.hiddenAt !== null },
     geometry: { type: 'LineString' as const, coordinates: (c.line ?? []).map((p) => [...p]) },
   }));
   const dots = contributions
     .filter((c) => !hasLine(c))
-    .flatMap((c) => (c.box ? [{ id: c.id, at: centreOf(c.box) }] : []))
-    .map(({ id, at }) => ({
+    .flatMap((c) => (c.box ? [{ id: c.id, at: centreOf(c.box), hidden: c.hiddenAt !== null }] : []))
+    .map(({ id, at, hidden }) => ({
       type: 'Feature' as const,
-      properties: { id },
+      properties: { id, hidden },
       geometry: { type: 'Point' as const, coordinates: [...at] },
     }));
   return { type: 'FeatureCollection' as const, features: [...lines, ...dots] };
@@ -85,7 +85,14 @@ export function addContributionLayers(map: MapLibreMap): void {
         opened,
         MAP_COLOURS['Map/Trail/papunta'],
       ],
-      'line-opacity': ['case', ['boolean', ['feature-state', 'opened'], false], 0.9, 0.45],
+      'line-opacity': [
+        'case',
+        ['boolean', ['feature-state', 'opened'], false],
+        0.9,
+        ['get', 'hidden'],
+        0.2,
+        0.45,
+      ],
       'line-width': 4,
     },
   });

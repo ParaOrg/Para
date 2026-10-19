@@ -182,6 +182,33 @@ delete from public.contribution;
 reset role;
 select pg_temp.check((select count(*) = 19 from public.contribution where contributor_id = '00000000-0000-0000-0000-0000000000b1'), 'a stranger deletes nothing');
 
+-- Hide: an editor hides with a note, the server stamps who and when; nothing
+-- else can be written; the phone cannot show it again; showing it clears all three.
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+update public.contribution set hidden_at = '2001-01-01', hidden_note = 'Duplicate of a ride'
+  where id = '22222222-0000-0000-0000-000000000002';
+do $$ begin update public.contribution set hidden_by = gen_random_uuid(); raise exception 'FAILED: editor set hidden_by';
+exception when insufficient_privilege then null; end $$;
+do $$ begin update public.contribution set description = 'x'; raise exception 'FAILED: editor set a description';
+exception when insufficient_privilege then null; end $$;
+reset role;
+select pg_temp.check((select hidden_by = '00000000-0000-0000-0000-0000000000e1' and hidden_at > now() - interval '1 minute'
+  and hidden_note = 'Duplicate of a ride' from public.contribution where id = '22222222-0000-0000-0000-000000000002'),
+  'hidden: the server stamped who and when, the note kept');
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000b1', false);
+update public.contribution set hidden_at = null where id = '22222222-0000-0000-0000-000000000002';
+reset role;
+select pg_temp.check((select hidden_at is not null from public.contribution where id = '22222222-0000-0000-0000-000000000002'),
+  'the phone cannot show it again');
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000e1', false);
+update public.contribution set hidden_at = null where id = '22222222-0000-0000-0000-000000000002';
+reset role;
+select pg_temp.check((select hidden_at is null and hidden_by is null and hidden_note is null
+  from public.contribution where id = '22222222-0000-0000-0000-000000000002'), 'shown again: all three cleared');
+
 -- A deleted phone identity takes everything of its own with it.
 delete from auth.users where id = '00000000-0000-0000-0000-0000000000a1';
 select pg_temp.check((select count(*) = 0 from public.contribution where contributor_id = '00000000-0000-0000-0000-0000000000a1'), 'identity delete cascades');

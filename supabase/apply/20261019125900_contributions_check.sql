@@ -13,8 +13,11 @@ select * from (values
   (3, 'anon reads and writes none of it, pieces included',
    (select not bool_or(has_table_privilege('anon', oid, 'select') or has_table_privilege('anon', oid, 'insert')
       or has_table_privilege('anon', oid, 'delete')) from pieces)),
-  (4, 'authenticated cannot update any of it',
-   (select not bool_or(has_table_privilege('authenticated', oid, 'update')) from pieces)),
+  (4, 'authenticated updates nothing but the hide columns',
+   (select not bool_or(has_table_privilege('authenticated', oid, 'update')) from pieces)
+     and has_column_privilege('authenticated', 'public.contribution', 'hidden_at', 'update')
+     and not has_column_privilege('authenticated', 'public.contribution', 'description', 'update')
+     and not has_column_privilege('authenticated', 'public.contribution', 'hidden_by', 'update')),
   (5, 'authenticated reaches the monthly pieces only through point_batch',
    (select not bool_or(has_table_privilege('authenticated', c.oid, 'select'))
       from pg_class c where c.relname like 'point\_batch\_%' and c.relnamespace = 'public'::regnamespace)),
@@ -31,10 +34,11 @@ select * from (values
    (select count(*) = 5 and bool_and(prosecdef and proconfig @> array['search_path=""']
       and not has_function_privilege('anon', oid, 'execute'))
       from pg_proc where pronamespace = 'private'::regnamespace and proname in
-      ('can_contribute', 'contributor_stamp', 'contribution_stamp', 'point_batch_stamp', 'hinto_cap'))),
-  (8, 'the four insert triggers are enabled',
-   (select count(*) = 4 from pg_trigger where not tgisinternal and tgenabled = 'O' and tgname in
-      ('contributor_stamp', 'contribution_stamp', 'point_batch_stamp', 'hinto_cap')
+      ('can_contribute', 'contributor_stamp', 'contribution_stamp', 'point_batch_stamp', 'hinto_cap'))
+     and (select prosecdef from pg_proc where oid = 'private.contribution_hide_stamp()'::regprocedure)),
+  (8, 'the four insert triggers and the hide trigger are enabled',
+   (select count(*) = 5 from pg_trigger where not tgisinternal and tgenabled = 'O' and tgname in
+      ('contributor_stamp', 'contribution_stamp', 'point_batch_stamp', 'hinto_cap', 'contribution_hide_stamp')
       and tgrelid in (select oid from t))),
   (9, 'the ledger row is there once',
    (select count(*) = 1 from supabase_migrations.schema_migrations where name = 'contributions'))

@@ -16,5 +16,6 @@ drop function if exists private.contributor_stamp();
 drop function if exists private.contribution_stamp();
 drop function if exists private.point_batch_stamp();
 drop function if exists private.hinto_cap();
+drop function if exists private.contribution_hide_stamp();
 delete from supabase_migrations.schema_migrations where name = 'contributions';
 commit;

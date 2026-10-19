@@ -258,6 +258,48 @@ check(
   (await studio.getByRole('list', { name: 'Uploads' }).count()) === 1,
 );
 
+// ------------------------------------------------ an editor hides an upload
+const fairview = new RegExp(`^Fairview A ${RUN}`);
+const listed = async () =>
+  studio.getByRole('list', { name: 'Uploads' }).getByRole('listitem').allInnerTexts();
+await studio.getByRole('button', { name: fairview }).click();
+await studio.getByRole('button', { name: 'Hide', exact: true }).click();
+await studio.getByLabel('Why hide it? (optional)').fill('Test ride, not a route');
+await shot(studio, '6a-studio-hide-note');
+await studio.getByRole('button', { name: 'Hide upload' }).click();
+await studio.getByText('Upload hidden. Show hidden lists it again.').waitFor({ timeout: 15000 });
+await studio.getByRole('list', { name: 'Uploads' }).waitFor();
+check(
+  'Hide takes the upload out of the default list, and says how to get it back',
+  !(await listed()).some((r) => fairview.test(r)),
+);
+await studio.getByLabel('Show hidden').check();
+await studio
+  .getByRole('button', { name: new RegExp(`^Hidden · Fairview A ${RUN}`) })
+  .waitFor({ timeout: 15000 });
+check(
+  '  Show hidden lists it again, marked Hidden',
+  (await listed()).some((r) => r.startsWith(`Hidden · Fairview A ${RUN}`)),
+);
+await studio.getByRole('button', { name: new RegExp(`^Hidden · Fairview A ${RUN}`) }).click();
+await studio.getByText(/Hidden .*: Test ride, not a route/).waitFor();
+await shot(studio, '6b-studio-hidden-opened');
+check(
+  '  a phone still reads its hidden upload as there: hidden is not deleted',
+  (await phoneRead(a.page, 'contribution?select=start_name')).body.some(
+    (r) => r.start_name === `Fairview A ${RUN}`,
+  ),
+);
+await studio.getByRole('button', { name: 'Show again' }).click();
+await studio.getByText('Upload shown again.').waitFor({ timeout: 15000 });
+await studio.getByRole('button', { name: 'Close' }).click();
+await studio.getByLabel('Show hidden').uncheck();
+await studio.getByRole('button', { name: fairview }).waitFor({ timeout: 15000 });
+check(
+  '  Show again puts it back in the default list',
+  (await listed()).some((r) => fairview.test(r)),
+);
+
 // ---------------------------------------------- an editor deletes an upload
 const lagro = new RegExp(`^Lagro A ${RUN}`);
 const lagroId = (await phoneRead(a.page, 'contribution?select=id,start_name')).body.find((r) =>

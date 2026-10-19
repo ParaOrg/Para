@@ -30,7 +30,10 @@ export function ContributionList({ contributions, openedId, onOpen }: Contributi
               c.id === openedId && 'bg-surface-secondary',
             )}
           >
-            <span className="font-bold text-content-primary">{contributionName(c)}</span>
+            <span className="font-bold text-content-primary">
+              {c.hiddenAt !== null && 'Hidden · '}
+              {contributionName(c)}
+            </span>
             <span className="text-content-secondary">
               {manilaTime(c.startedAt)} · {vehicleName(c.vehicle)} · {kilometres(c.distanceM)} ·{' '}
               {minutes(c.movingSeconds + c.standingSeconds)}
