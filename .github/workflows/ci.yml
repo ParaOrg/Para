@@ -161,7 +161,11 @@ jobs:
       # Playwright's Chromium, at the version package-lock pins.
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
-        run: cp .env.production .env.local
+        # Cloudflare's always-pass Turnstile key in place of the real one, which
+        # answers only real browsers on ParaPo's own hostnames.
+        run: |
+          cp .env.production .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       # pwa-test starts and stops its own `vite preview` on :4173 from a build.
       - name: Build, for pwa-test
         if: matrix.suite == 'pwa-test'
@@ -213,7 +217,11 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
-        run: cp .env.production .env.local
+        # Cloudflare's always-pass Turnstile key in place of the real one, which
+        # answers only real browsers on ParaPo's own hostnames.
+        run: |
+          cp .env.production .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
         if: matrix.suite == 'turnstile-test'
@@ -256,7 +264,11 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
-        run: cp .env.production .env.local
+        # Cloudflare's always-pass Turnstile key in place of the real one, which
+        # answers only real browsers on ParaPo's own hostnames.
+        run: |
+          cp .env.production .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       - name: Start the dev server
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
