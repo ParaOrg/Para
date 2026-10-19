@@ -1,0 +1,128 @@
+import { useEffect, useRef, useState } from 'react';
+
+/** The part of Cloudflare's Turnstile script this page uses. */
+interface TurnstileApi {
+  render: (
+    container: HTMLElement,
+    options: {
+      sitekey: string;
+      callback: (token: string) => void;
+      'expired-callback': () => void;
+      'error-callback': () => void;
+    },
+  ) => string;
+  remove: (widgetId: string) => void;
+}
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
+
+const SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+
+const scriptLoads = new Map<string, Promise<TurnstileApi>>();
+
+/** Cloudflare's script, added once, on the first widget a page shows; after a failure the next widget tries again. */
+function loadTurnstile(url: string): Promise<TurnstileApi> {
+  const loading =
+    scriptLoads.get(url) ??
+    new Promise<TurnstileApi>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.async = true;
+      const fail = (reason: string) => {
+        scriptLoads.delete(url);
+        script.remove();
+        reject(new Error(reason));
+      };
+      script.onload = () => {
+        if (window.turnstile) resolve(window.turnstile);
+        else fail('Turnstile loaded without its API');
+      };
+      script.onerror = () => fail('Turnstile could not load');
+      document.head.append(script);
+    });
+  scriptLoads.set(url, loading);
+  return loading;
+}
+
+interface TurnstileProps {
+  siteKey: string;
+  /** The check's token once it passes, and null when it expires or fails. A token is good for one request. */
+  onToken: (token: string | null) => void;
+  /** Cloudflare's script; a story points it elsewhere to show loading and failing. */
+  scriptUrl?: string;
+}
+
+/**
+ * Cloudflare's check that a person, not a script, is at the page. Most people
+ * see a tick and nothing to do. Remount it (a new `key`) for a fresh token
+ * after each request, since Supabase accepts a token once.
+ */
+export function Turnstile({ siteKey, onToken, scriptUrl = SCRIPT_URL }: TurnstileProps) {
+  const container = useRef<HTMLDivElement>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [hasPassed, setHasPassed] = useState(false);
+  const onTokenRef = useRef(onToken);
+
+  useEffect(() => {
+    onTokenRef.current = onToken;
+  }, [onToken]);
+
+  useEffect(() => {
+    let widgetId: string | null = null;
+    let isCurrent = true;
+    loadTurnstile(scriptUrl)
+      .then((api) => {
+        if (!isCurrent || !container.current) return;
+        widgetId = api.render(container.current, {
+          sitekey: siteKey,
+          callback: (token) => {
+            setProblem(null);
+            setHasPassed(true);
+            onTokenRef.current(token);
+          },
+          'expired-callback': () => {
+            setHasPassed(false);
+            onTokenRef.current(null);
+          },
+          'error-callback': () => {
+            onTokenRef.current(null);
+            setProblem(
+              'The check that you are a person did not finish. Reload the page and try again.',
+            );
+          },
+        });
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setProblem(
+            'The check that you are a person could not load. Check your connection and reload.',
+          );
+        }
+      });
+    return () => {
+      isCurrent = false;
+      if (widgetId !== null) window.turnstile?.remove(widgetId);
+    };
+  }, [siteKey, scriptUrl]);
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div ref={container} aria-label="Check that you are a person" role="group" />
+      {problem ? (
+        <p role="alert" className="text-sm text-content-primary">
+          {problem}
+        </p>
+      ) : (
+        !hasPassed && (
+          <p aria-live="polite" className="text-sm text-content-secondary">
+            Checking that you are a person…
+          </p>
+        )
+      )}
+    </div>
+  );
+}
