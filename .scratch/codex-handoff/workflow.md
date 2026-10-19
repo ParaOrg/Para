@@ -19,7 +19,10 @@ PRs (all draft, target staging through the stack; nothing merged, nothing applie
 | [#284](https://github.com/Roviicc/ParaPo/pull/284) | `claude/contribution-upload-db` @ `6168e20` | staging | Migration `20261019125900_contributions.sql` (the planned "0019"), apply/check/revert package, verify scripts, types. CI green |
 | [#285](https://github.com/Roviicc/ParaPo/pull/285) | `claude/contribution-upload-phone` @ `feb795c` | #284 | Phone upload: status, retry, Remove upload vs Delete from phone, `VITE_CONTRIBUTIONS` flag |
 | [#286](https://github.com/Roviicc/ParaPo/pull/286) | `claude/contribution-studio-view` @ `3891446` | #285 | Studio Contributors map + list + detail, isolated preview tooling |
-| [#287](https://github.com/Roviicc/ParaPo/pull/287) | `claude/contribution-editor-delete` @ `5b9e609` | #286 | **Owner decision:** editors may delete an upload in the studio (the approved plan had hide only) |
+| [#287](https://github.com/Roviicc/ParaPo/pull/287) | `claude/contribution-editor-delete` | #286 | Editors delete an upload in the studio. **Owner approved 2026-10-19: editors may hide and delete** |
+| [#289](https://github.com/Roviicc/ParaPo/pull/289) | `claude/contribution-hide` | #287 | Editors hide an upload with a note, Show hidden, Show again. Its `supabase/apply/` holds the complete migration: tables, delete, hide, row security on every `point_batch` piece (10 check rows) |
+| [#290](https://github.com/Roviicc/ParaPo/pull/290) | `claude/turnstile` | staging | Shared Turnstile widget; Studio Sign in, Forgot password, Change password carry a token; turnstile-test 7/0. Merge before CAPTCHA is turned on |
+| [#291](https://github.com/Roviicc/ParaPo/pull/291) | `claude/contribution-turnstile` | #289 (+ merges #290) | Turnstile before the phone's first upload; upload-test 30/0 with and without a key |
 
 Design as built:
 - **Tables (not applied):** `contributor`, `contribution`, `point_batch` (monthly pieces to 2028-12 + default), `hinto`.
@@ -60,14 +63,14 @@ Verification (exact):
 - **Local `save-test` is not reliable in a Claude container:** unmodified staging crashed at a flaky step after 82 passes (an older pre-installed Chromium than the pinned Playwright, shared CPU). Use CI or the owner's PC.
 
 Blockers and configuration still needed (owner):
-1. **Decide #287** (editors delete) vs the approved hide-only plan.
-2. **Review and apply** `supabase/apply/20261019125900_contributions_apply.sql`, then `_check.sql` (9 rows `t`). Regenerate the classic types and record the ledger version in `supabase/migrations/README.md`. The reviewed-draft migration is a separate decision.
-3. **Supabase Auth:** turn on anonymous sign-ins; CAPTCHA (Turnstile) only after the Turnstile PR ships for the studio's sign-in, reset, invite password and change-password (`signInWithPassword`) and the phone's first upload. The Turnstile PR is **not written yet**.
+1. ~~Decide #287~~: decided 2026-10-19, editors hide and delete (#287, #289).
+2. **Apply** `supabase/apply/20261019125900_contributions_apply.sql` **from #289's branch** (`claude/contribution-hide`), then `_check.sql` (10 rows `t`). The SQL editor's first attempt warned that `point_batch_default` had no row security; the owner cancelled it, and every piece now enables it. Regenerate the classic types and record the ledger version in `supabase/migrations/README.md`. The reviewed-draft migration is a separate decision.
+3. **Supabase Auth:** turn on anonymous sign-ins; CAPTCHA (Turnstile) only after the Turnstile PR ships for the studio's sign-in, reset, invite password and change-password (`signInWithPassword`) and the phone's first upload. The Turnstile PRs are #290 (studio) and #291 (phone).
 4. **Turnstile keys:** a site key as `VITE_TURNSTILE_SITE_KEY` (public, `.env.production` or build env) and the secret in Supabase Auth settings only. Never in chat or the repo.
 5. **Turn uploads on** with `VITE_CONTRIBUTIONS=1` in the deploy's build, only after items 2–4.
 6. **No shareable live preview link yet.** The isolated preview runs on loopback (`scripts/preview/README.md`, "Contributions"). A hosted one needs either Cloudflare access for a static sample build, or a disposable Supabase branch (paid), so the owner must choose.
 
-Next: the Turnstile PR (item 3), then a signed-in check on the real project once items 2–5 are done.
+Next: owner merges the stack and #290, applies the migration (item 2), turns on anonymous sign-ins, adds the Turnstile keys and CAPTCHA (items 3–4), then `VITE_CONTRIBUTIONS=1` on staging; then a signed-in check on the real project.
 
 
 ## Verified baseline (2026-10-18, historical)
