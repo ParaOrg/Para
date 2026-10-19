@@ -14,6 +14,7 @@ import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { hotspotCount } from '@/features/routes/model/places';
 import {
+  CONTRIBUTIONS,
   lineOf,
   listDirections,
   loadHotspotsFromSupabase,
@@ -32,6 +33,7 @@ import {
   StudioHotspotCard,
   StudioSaveSheets,
   StudioReview,
+  StudioContributors,
   StudioPublicView,
   StudioTripCard,
   type usePasswordRecovery,
@@ -68,6 +70,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // basemap and a half-drawn line.
   const { studioMap, chooseStudioMap } = useStudioMap();
   const isPlayground = studioMap === 'playground';
+  // The Contributors map draws on the studio's own map, so it stays live there.
+  const isContributors = CONTRIBUTIONS && studioMap === 'contributors';
   const switchRef = useRef<HTMLDivElement>(null);
   const handleOpenPlayground = () => {
     chooseStudioMap('playground');
@@ -211,7 +215,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       </div>
       <div ref={root} data-map-box className="@container relative min-h-0 flex-1 overflow-clip">
         {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
-        <div inert={!isPlayground} className="contents">
+        <div inert={!isPlayground && !isContributors} className="contents">
           <MapView
             onReady={setMap}
             foldCredits
@@ -227,9 +231,19 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           </div>
         )}
 
+        {isContributors && (
+          <StudioContributors
+            key={session?.user.id}
+            map={map}
+            isSignedIn={isSignedIn}
+            onSignIn={() => setIsSigningIn(true)}
+            onOpenPlayground={handleOpenPlayground}
+          />
+        )}
         {studioMap === 'public' ? (
           <StudioPublicView hasLine={draw.drawing} onOpenPlayground={handleOpenPlayground} />
         ) : (
+          !isContributors &&
           !isPlayground && (
             <MapPlaceholder
               map={studioMap}
@@ -423,19 +437,19 @@ export function Workshop({ session, recovery }: WorkshopProps) {
         </div>
       </div>
       {/* Outside the map's box, so a full-screen panel covers the band too. */}
+      {/* On every map: the Contributors map asks for a sign-in too. */}
+      <AuthDialogs
+        signingIn={isSigningIn && !isSignedIn}
+        onSignInDismiss={() => setIsSigningIn(false)}
+        resetting={isResetting}
+        isInvite={recovery.isInvite}
+        onResetDone={recovery.done}
+        changingPasswordFor={
+          isChangingPassword && !isResetting ? (session?.user.email ?? null) : null
+        }
+        onPasswordDone={() => setIsChangingPassword(false)}
+      />
       <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
-        <AuthDialogs
-          signingIn={isSigningIn && !isSignedIn}
-          onSignInDismiss={() => setIsSigningIn(false)}
-          resetting={isResetting}
-          isInvite={recovery.isInvite}
-          onResetDone={recovery.done}
-          changingPasswordFor={
-            isChangingPassword && !isResetting ? (session?.user.email ?? null) : null
-          }
-          onPasswordDone={() => setIsChangingPassword(false)}
-        />
-
         <StudioSaveSheets
           isSaving={isSaving}
           draw={draw}

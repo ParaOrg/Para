@@ -584,7 +584,22 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/](@supabase[\\/][^\\/]+|iceberg-js|tslib)[\\/]/,
               priority: 1,
             },
-            { name: 'shared', minShareCount: 2 },
+            //  - tanstack-query: the studio's server state (the review queue
+            //    and the Contributors map), two lazy chunks of the studio's.
+            {
+              name: 'tanstack-query',
+              test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+              priority: 1,
+            },
+            //  - shared never takes the studio's or the contributor page's own
+            //    modules: two of the studio's lazy chunks importing one would
+            //    otherwise put it on the public page.
+            {
+              name: 'shared',
+              minShareCount: 2,
+              test: (id: string) =>
+                !/[\\/]src[\\/](app|features)[\\/](studio|contribute)[\\/]/.test(id),
+            },
           ],
         },
       },
