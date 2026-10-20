@@ -1,0 +1,26 @@
+/*
+ * Figma's VectorLine drawings, unedited, used as masks so each line is painted in the card's
+ * words' colour (currentColor) instead of the white the files carry: a card with dark words,
+ * MRT-3's, keeps legible lines, and the lines follow the pill beside them.
+ */
+.route-end-point-line {
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+
+.route-end-point-line-top-bottom {
+  mask-image: url('./vector-line-top-bottom.svg');
+}
+
+.route-end-point-line-middle {
+  mask-image: url('./vector-line-middle.svg');
+}
+
+.route-end-point-line-middle-bottom {
+  mask-image: url('./vector-line-middle-bottom.svg');
+}
+
+.route-end-point-line-arrow {
+  mask-image: url('./vector-line-arrow.svg');
+}

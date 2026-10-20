@@ -174,7 +174,7 @@ export const SelectedRowsOpen: Story = {
 };
 
 /**
- * A row's State=Pressed (RouteEndPointBar, 3848:11928): press and hold a row
+ * A row's State=Pressed (RouteCardEndPoint, 3848:11928): press and hold a row
  * — it wears Card/<livery>/Timeline/surface while the finger or the mouse is
  * down, and opens its trip as it lets go. A browser state, `:active`, so
  * there is nothing to set: hold it to see it, in each livery.
@@ -214,18 +214,41 @@ export const SixWaysOut: Story = {
 };
 
 /**
- * Each row its own route's vehicle: the owner keeps it so, though Figma's
- * RouteCardExample (3746:1238) draws the Jeep on every row.
+ * Each mode's pill heads its own rows, stacked down the card: Figma's RouteCardExample (3746:1238)
+ * draws one group, and a place can mix. Rail lines are all "Train"; a mode's rows keep their
+ * order, and the tree line ends at each group's last row.
  */
-export const MixedVehicles: Story = {
+export const MixedModes: Story = {
   args: {
     routeOrigin: 'Cubao',
     endPoints: [
       { id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' },
       { id: 'b', routeDirection: 'Taft Avenue', vehicle: 'MRT-3' },
-      { id: 'c', routeDirection: 'Antipolo', vehicle: 'LRT-2' },
+      { id: 'c', routeDirection: 'Lagro', vehicle: 'Jeepney' },
+      { id: 'd', routeDirection: 'Antipolo', vehicle: 'LRT-2' },
+      { id: 'e', routeDirection: 'Pier 4', vehicle: 'Bus' },
     ],
   },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByTestId('chooser-item');
+    // Jeepney's two rows, then Train's two, then Bus's one.
+    await expect(rows.map((r) => r.textContent)).toEqual([
+      'Tala',
+      'Lagro',
+      'Taft Avenue',
+      'Antipolo',
+      'Pier 4',
+    ]);
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Jeepney')).toBeVisible();
+    await expect(canvas.getByText('Train')).toBeVisible();
+    await expect(canvas.getByText('Bus')).toBeVisible();
+  },
+};
+
+/** A route with no drawn vehicle (UV Express, P2P, tricycle) has no pill; the rows stand alone. */
+export const NoMode: Story = {
+  args: { endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: null }] },
 };
 
 /** A place name too long for one line wraps; it is never cut. */
@@ -235,4 +258,16 @@ export const LongName: Story = {
     routeOrigin: 'Fairview Teraccess Transport Terminal',
     endPoints: [{ id: 'a', routeDirection: 'Novaliches (Bayan) via Zabarte', vehicle: 'Jeepney' }],
   },
+};
+
+/** The grouped card at a phone's width, 390 across, where it is seen. */
+export const MixedModesOnPhone: Story = {
+  args: MixedModes.args,
+  decorators: [
+    (Story) => (
+      <div className="w-97.5">
+        <Story />
+      </div>
+    ),
+  ],
 };

@@ -35,7 +35,6 @@ export function TripOtherRoutes({ routes, onRoute }: TripOtherRoutesProps) {
           <li key={r.id}>
             <RouteEndPointBar
               routeDirection={r.to}
-              on="surface"
               vehicle={r.vehicle}
               data-testid="trip-other-route"
               data-direction={r.id}

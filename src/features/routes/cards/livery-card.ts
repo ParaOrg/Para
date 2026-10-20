@@ -144,7 +144,7 @@ export const TIMELINE_SURFACE = {
 
 /**
  * A row Pressed, while the finger is down on it: the whole row in the card's
- * Card/<livery>/Timeline/surface — a RouteCard's row (RouteEndPointBar,
+ * Card/<livery>/Timeline/surface — a RouteCard's row (RouteCardEndPoint,
  * 3848:11928) and every row of the trip's timeline, where the rail runs into
  * it and only the dot's white shows (Timeline, 3716:1894). The phone's own
  * tap highlight is off, so the colour under the finger is the token's.
