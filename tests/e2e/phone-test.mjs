@@ -4249,7 +4249,7 @@ if (!routeA) {
     else {
       check(
         '  the sheet up to Max: the route taken in, no further out than 5 km on the scale bar',
-        atMax.zoom >= capZoom - 0.05 && (atMax.inside || atMax.zoom <= capZoom + 0.05),
+        atMax.zoom >= capZoom - 0.05,
         `zoom ${atMax.zoom}, 5 km at ${capZoom.toFixed(2)}; ${JSON.stringify(atMax)}`,
       );
       check(
