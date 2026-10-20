@@ -7,12 +7,9 @@ import { clearOfSheet } from '@/shared/ui/sheet-room';
 
 import {
   useCameraBefore,
-  useCardOverview,
   useHeightOverview,
-  useListOverview,
   useRideOverview,
   useSwitchOverview,
-  useTripOverview,
 } from './use-overviews';
 import { useRideTo } from './use-ride-to';
 import type { Highlight } from './use-saved-routes';
@@ -25,8 +22,6 @@ import type { Direction } from '../model/routes';
 interface Routes<V extends Direction> {
   directions: readonly V[];
   selected: V | null;
-  /** What the route list lists, if it is up. */
-  candidates: readonly V[];
   highlight: Highlight | null;
   litDirections: readonly V[];
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
@@ -53,10 +48,11 @@ interface Cards {
 
 /**
  * The camera with the cards, for both apps: a hintuan picked on a trip, the
- * map gliding there; the overviews of use-overviews.ts — a trip opened, a
- * RouteCard picked, SWITCH, the sheet settled at another height — and the
- * camera from before a RouteCard was picked on a hotspot's card, back as it
- * is let go; and the card buttons that move it. `root` goes on the page,
+ * map gliding there; the overviews of use-overviews.ts — SWITCH, an end
+ * picked, the sheet settled at another height — and the camera from before a
+ * RouteCard was picked on a hotspot's card, back as it is let go; and the card
+ * buttons that move it. Opening a trip, picking a RouteCard and opening the
+ * route list leave the camera where the commuter had it. `root` goes on the page,
  * `tripDock` on the trip card, `hotspotDock` on a hotspot's.
  *
  * `camera: false` turns those off: the overviews and the camera kept from
@@ -91,16 +87,11 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     onGlide: () => cards.clearOf(tripDock)(),
     tipId: opts.tipId ?? null,
   });
-  useTripOverview(cam, saved.selected, tripDock, cards.snap);
   // The page, and the card's sheet on show in it, for what the camera keeps clear of.
   const root = useRef<HTMLDivElement>(null);
   const openSheet = () =>
     root.current?.querySelector<HTMLElement>('[data-floats]:not([hidden])') ?? null;
-  // The route list opened: every route it lights, whole.
-  useListOverview(cam, saved.candidates, saved.litDirections, openSheet, cards.snap);
-  // A RouteCard picked, in the list or a hotspot's card: its routes whole.
-  useCardOverview(cam, saved.highlight, saved.directions, openSheet, cards.snap);
-  // …and on a hotspot's card, let go, the camera the commuter had before it.
+  // A RouteCard picked on a hotspot's card and let go: the camera the commuter had before it.
   const before = useCameraBefore(cam);
   // A trip opened from a card — a list's, a hotspot's, a tail's name — and
   // its ‹: the camera the commuter had as they tapped, back with the card
