@@ -3066,6 +3066,13 @@ if (routeA) {
   } else {
     const end = tappable[0];
     await jumpTo(page, end.at);
+    // The end sits in the map's middle after the jump, which the sheet at
+    // Middle now covers: moved up into the quarter of the map above it.
+    await page.evaluate((at) => {
+      const m = window.__map;
+      m.panBy([0, m.project(at).y - m.getContainer().clientHeight / 4], { duration: 0 });
+    }, end.at);
+    await page.waitForTimeout(300);
     await endButton(end.name).locator('[data-part="name"]').click();
     await page.waitForTimeout(300);
     await page
