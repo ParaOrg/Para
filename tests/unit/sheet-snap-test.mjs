@@ -20,13 +20,18 @@ test('a tap goes round: Low, Middle, Max, Low; from a free height, on up to Max'
 // A phone's map 800 tall: Low shows 80, Middle 320, Max 800.
 const heights = { low: 80, middle: 320, max: 800 };
 
-// The owner, 2026-10-21: "swiping up will now put it to max rather than stop
-// on the middle or max".
-test('any swipe up goes to Max, from Low or Middle alike, slow or fast', () => {
-  assert.equal(snapFor(150, 0, heights, 80), 'max');
-  assert.equal(snapFor(300, 0.1, heights, 80), 'max');
+// The owner, 2026-10-21: one height a swipe, "max, middle, low, then low,
+// middle and max"; only a flick skips to the end.
+test('a swipe up moves one height: Low to Middle, Middle to Max', () => {
+  assert.equal(snapFor(150, 0, heights, 80), 'middle');
+  assert.equal(snapFor(300, 0.1, heights, 80), 'middle');
   assert.equal(snapFor(350, 0, heights, 320), 'max');
   assert.equal(snapFor(600, 0.1, heights, 320), 'max');
+});
+
+test('from Low, let go above halfway between Middle and Max, it goes on to Max', () => {
+  assert.equal(snapFor(540, 0, heights, 80), 'middle');
+  assert.equal(snapFor(600, 0, heights, 80), 'max');
 });
 
 test('a move shorter than a tap lets go on the height nearest where it was let go', () => {
@@ -61,9 +66,9 @@ test('a flick up goes all the way to Max, from Low or Middle alike', () => {
 });
 
 // 1.25 px/ms since the owner's 4/10 (2026-09-30). A swipe under it is no flick,
-// so it goes by how far it travelled, not how fast: up, to Max; down, a step.
-test('a swipe under 1.25 px/ms is no flick: it goes by how far it travelled', () => {
-  assert.equal(snapFor(340, 1, heights, 80), 'max');
+// so it goes by how far it travelled, not how fast: one height up or down.
+test('a swipe under 1.25 px/ms is no flick: it moves one height by how far it travelled', () => {
+  assert.equal(snapFor(340, 1, heights, 80), 'middle');
   assert.equal(snapFor(780, -1, heights, 800), 'max');
   assert.equal(snapFor(500, -1, heights, 800), 'middle');
 });
@@ -88,7 +93,7 @@ test('a drag follows the finger, never above Max or below nothing', () => {
   assert.equal(f.move(1400, 48), 0);
 });
 
-test('held still before lifting it is a placement: a swipe up still goes to Max, a nudge stays', () => {
+test('held still before lifting it is a placement: a swipe up from Middle goes to Max, a nudge stays', () => {
   const f = follow(400, 0, 464, 844);
   for (let i = 1; i <= 8; i++) f.move(400 - i * 40, i * 16);
   // 784 shows, moving up fast — but held 150 ms, so it is no flick; it is a swipe up all the same.
@@ -113,8 +118,8 @@ test('lifted while moving fast it is a flick: to the end, down from Low it close
 
 // A swipe up from Middle (338 of 844) that starts fast and slows to a crawl
 // before the finger lifts: read over its last 100 ms, it is slow — no flick —
-// but it is a swipe up, so it goes to Max.
-test('a swipe that slows before lifting is no flick, but a swipe up still goes to Max', () => {
+// but it is a swipe up from Middle, so it goes to Max.
+test('a swipe that slows before lifting is no flick: from Middle, a swipe up goes to Max', () => {
   const f = follow(400, 0, heightsFor(844).middle, 844);
   let y = 400;
   let t = 0;

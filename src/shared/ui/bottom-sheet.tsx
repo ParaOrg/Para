@@ -91,9 +91,9 @@ const FLOATS_AT = {
  * (MAX_STRIP_PX), clear of a phone's notch. It is always the whole map tall
  * and slides (`--sheet-y`), so moving between heights is one smooth
  * `translate`: a drag on the handle or the header follows the finger and, let
- * go, glides to a height: any swipe up goes to Max, the owner's pick; a swipe
- * down steps down one height, or a flick goes to Low, like Google's and
- * Apple's maps; down from Low, it closes. Below Max the body does not scroll: a
+ * go, glides to a height: a swipe moves one height, up or down, the owner's
+ * pick; a flick goes to the end, Max or Low, like Google's and Apple's maps;
+ * down from Low, it closes. Below Max the body does not scroll: a
  * swipe on it moves the sheet, the owner's pick; at Max it scrolls, and a
  * pull down from its top takes hold of the sheet, as a drag does: let go,
  * it steps down to Middle; flicked, to Low (sheetGesture's snapFor). A tap on

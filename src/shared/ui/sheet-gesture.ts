@@ -191,13 +191,14 @@ export function follow(startY: number, t: number, from: number, h: number) {
  * finger. `shown` is how much of the sheet is on screen as the finger lifts,
  * `heights` what each magnet shows, `velocity` the finger's speed upwards in
  * px/ms (negative: downwards), `from` how much showed when it took hold.
- * Any swipe up goes to Max, from Low or Middle alike, never to rest on Middle
- * or between. A flick down goes to Low, from Max or Middle alike; a slower
- * swipe down steps down one height, Max to Middle, Middle to Low, and from
- * Max on to Low when let go below halfway between Middle and Low. A sheet
- * pulled below half of Low closes, however slowly, and so does a flick down
- * from Low. A move shorter than a tap's returns to the
- * height nearest where it was let go.
+ * A flick goes to the end in its direction: up, to Max, from Low or Middle
+ * alike; down, to Low, from Max or Middle alike. A slower swipe moves one
+ * height: up, Low to Middle and Middle to Max; down, Max to Middle and Middle
+ * to Low. It goes on a second height when let go past halfway to it: from Low
+ * to Max above halfway between Middle and Max, from Max to Low below halfway
+ * between Middle and Low. It never rests between heights. A sheet pulled below
+ * half of Low closes, however slowly, and so does a flick down from Low. A
+ * move shorter than a tap's returns to the height nearest where it was let go.
  */
 export function snapFor(
   shown: number,
@@ -209,7 +210,10 @@ export function snapFor(
   if (velocity <= -FLICK) return shown > heights.low + 1 ? 'low' : 'close';
   if (shown < heights.low / 2) return 'close';
   const travelled = shown - from;
-  if (travelled > DRAG_PX) return 'max';
+  if (travelled > DRAG_PX) {
+    if (from >= heights.middle - 1) return 'max';
+    return shown > (heights.middle + heights.max) / 2 ? 'max' : 'middle';
+  }
   if (travelled < -DRAG_PX) {
     if (from <= heights.middle + 1) return 'low';
     return shown < (heights.low + heights.middle) / 2 ? 'low' : 'middle';

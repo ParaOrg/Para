@@ -3942,9 +3942,9 @@ if (!hotspot) {
   // reached is itself a failure: the drag after it would prove nothing.
   const readyUp = await restore('low');
   const up = await dragHandle(await dragTo('low', 'middle'));
-  const upOpened = readyUp && (await sheetState()) === 'max';
+  const upOpened = readyUp && (await sheetState()) === 'middle';
   check(
-    'dragging the handle up from Low goes to Max, not Middle',
+    'dragging the handle up from Low settles at Middle',
     upOpened,
     `${readyUp ? '' : 'could not get to Low first; '}${up.how}; data-snap=${await sheetState()}${upOpened ? '' : `; ${await sheetDiag()}`}`,
   );
@@ -3955,6 +3955,14 @@ if (!hotspot) {
     'dragging it down from Middle settles at Low',
     readyDown && (await sheetState()) === 'low',
     `${readyDown ? '' : 'could not get to Middle first; '}${down.how}; data-snap=${await sheetState()}`,
+  );
+
+  const readyMax = await restore('middle');
+  const upMax = await dragHandle(await dragTo('middle', 'max'));
+  check(
+    'dragging it up from Middle goes to Max',
+    readyMax && (await sheetState()) === 'max',
+    `${readyMax ? '' : 'could not get to Middle first; '}${upMax.how}; data-snap=${await sheetState()}`,
   );
 
   const readyLow = await restore('low');
@@ -4018,9 +4026,9 @@ if (!hotspot) {
   };
   const readyMouseUp = await restore('low');
   const mouseUp = await mouseDrag(await dragTo('low', 'middle'));
-  const mouseOpened = readyMouseUp && mouseUp && (await sheetState()) === 'max';
+  const mouseOpened = readyMouseUp && mouseUp && (await sheetState()) === 'middle';
   check(
-    'a mouse dragging the handle up from Low leaves the sheet at Max',
+    'a mouse dragging the handle up from Low leaves the sheet at Middle',
     mouseOpened,
     `data-snap=${await sheetState()}${mouseOpened ? '' : `; ${await sheetDiag()}`}`,
   );
