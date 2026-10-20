@@ -1,17 +1,86 @@
 # ParaPo workflow handoff
 
-Updated: 2026-10-19. Current milestone (owner, 2026-10-19), and ONLY this: **save a recording on the phone → upload it → view it in the studio's Contributors map/list → delete it.** Not publishing, approval of contributions, conversion into drafts, backups or a redesign. Sections below "Contributor uploads milestone" are history.
+Updated: 2026-10-20 (Claude session). Sections from "Contributor uploads milestone — 2026-10-19" down are history; this top part is the state now.
 
-## Release facts that supersede the older branch instructions below
+## State now — 2026-10-20 (verified)
 
-- #275, #281 (draft/review UI and its stack) merged into staging; #282 the same into main. Staging `e010f61` (unchanged on 2026-10-19), tree `edda779`. Main moved on to `ac285a5`, the nightly "Publish map" commit.
-- New work branches from **current staging**. Do not resume from `devin/draft-ops` / `devin/review-0018`. Open PRs #274 and #279 are stale stacks of work already merged through #281.
-- Only the owner merges staging and main.
-- `STUDIO_DRAFTS` stays OFF on deployed builds. `20261018112757_reviewed_draft_approval.sql` was **not applied live** at the last verified checkpoint. 0018, 0021, 0022 are live: never reapply.
+**Branches.**
+
+- **Staging** `3ca352e` (merge of #297). Its CI was still running when this was written. The previous completed staging run (`5e21f62`, #296) failed only on the two known flakes: `save-test` ikot-delete, now at `save-test.mjs:1597`, and `scale-test` timing. The run on `d38d641` (#291) was fully green.
+- **Main** `b6fdff2`: the 04:00 UTC publish on top of hotfix #294 (`a33169f`). Otherwise it is still the #282 release, with **none** of the upload or draft work.
+- New work branches from current staging.
+- Only the owner merges into staging and main. Merges in this session were done on the owner's explicit say-so, after green CI, except #284 and #291. Those went in with only the known `save-test` flake failing; the owner was told and said go ahead.
+
+**Live database (shared by staging and production). Never reapply any of these.**
+
+| Migration | Ledger version | Check |
+| --- | --- | --- |
+| 0018_review | `20261018054405` | 13/13 |
+| 0021_loops | `20261018020203` | |
+| 0022_draft_ops | `20261018085951` | |
+| contributions (`20261019125900_contributions.sql`: tables, editor delete, hide, RLS on every `point_batch` piece) | `20261019144009` | 10/10 |
+| reviewed_draft_approval (`20261018112757_…`) | `20261020034722` | 6/6 |
+
+**Supabase Auth (owner, 2026-10-20).**
+- CAPTCHA is on: Turnstile, with the **rotated** secret. The first secret appeared in a screenshot and was rotated.
+- Anonymous sign-ins are on. "Allow new users to sign up" stays off.
+- Studio sign-in was checked by the owner after CAPTCHA went on, and works.
+
+**Switches in `.env.production`** (staging has them; production gets them only with a staging→main merge):
+
+| Setting | Value | Meaning |
+| --- | --- | --- |
+| `VITE_TURNSTILE_SITE_KEY` | `0x4AAAAAAFbtZb_Xw79jsru8` | Public. Widget "ParaPo": hostnames `villaralvorovic2.workers.dev`, `parapo.…`, `staging-parapo.…`, `localhost`; Managed mode |
+| `VITE_CONTRIBUTIONS` | `1` | Phones upload; the Studio's Contributors map is live |
+| `VITE_STUDIO_DRAFTS` | `1` | Studio saves are drafts; submit / send back / approve / take down / put back / Public view |
+
+CI's dev servers override these: Cloudflare's always-pass Turnstile test key, and `VITE_CONTRIBUTIONS=0` / `VITE_STUDIO_DRAFTS=0` for the suites written for the recorder and direct saves. `upload-test` turns uploads back on against its stand-in; the review suites run only on the isolated preview (Docker).
+
+**Owner's choice A for drafts:** staging first. While only staging has drafts, **edit routes only in the staging Studio**. Production's Studio still writes the approved rows directly, skipping review, and both Studios share one database. Approvals in the staging Studio reach commuters at the next production publish.
+
+## Merged 2026-10-19 → 20
+
+All into staging unless marked.
+
+- **The contributor uploads stack**, merged 2026-10-19:
+  - [#283](https://github.com/Roviicc/ParaPo/pull/283): publish test fix;
+  - [#290](https://github.com/Roviicc/ParaPo/pull/290): Turnstile on Studio sign-in;
+  - [#284](https://github.com/Roviicc/ParaPo/pull/284) → [#285](https://github.com/Roviicc/ParaPo/pull/285) → [#286](https://github.com/Roviicc/ParaPo/pull/286) → [#287](https://github.com/Roviicc/ParaPo/pull/287) → [#289](https://github.com/Roviicc/ParaPo/pull/289) → [#291](https://github.com/Roviicc/ParaPo/pull/291): uploads, Contributors map, editor delete and hide, Turnstile before the first upload;
+  - [#288](https://github.com/Roviicc/ParaPo/pull/288): handoff notes.
+  - #284 and #291 went in with the known `save-test` ikot-delete flake (`save-test.mjs:1595`, which also fails on untouched staging). The same code passed in #285–#289.
+- [#292](https://github.com/Roviicc/ParaPo/pull/292): Turnstile site key.
+  - It also fixed `save-test`: shared `tests/e2e/lib/fake-turnstile.mjs`, and Sign in waits for the check.
+- [#293](https://github.com/Roviicc/ParaPo/pull/293): `VITE_CONTRIBUTIONS=1`.
+- [#295](https://github.com/Roviicc/ParaPo/pull/295) on staging and [#294](https://github.com/Roviicc/ParaPo/pull/294) **hotfix into main**: the publish fix.
+  - Main's nightly publish (2026-10-19 23:19 UTC) had refused the map. New jeep routes Cogeo – Cubao and Antipolo – Cubao via Marcos Highway end at LRT-2 station hotspots. Shapes 1–2 strip stations but kept those routes, so `check-map-data` failed `index.json`.
+  - `withoutLines` now also drops a route whose head or tail is a stripped station.
+  - #294 also carries #283's test fix, so main's nightly CI is green again.
+  - Before merging, a dry run of the real publish against live data (read-only, publishable key) gave 0 problems in all four shapes.
+  - Owner-triggered publish at 04:00 UTC succeeded (25 directions, 106 hotspots, both routes included). Production served it at `published_at 2026-10-20T04:00:23Z`.
+- [#296](https://github.com/Roviicc/ParaPo/pull/296): reviewed_draft_approval paste file and check; `verify/run.sh` applies the migration through the paste file.
+  - On a disposable DB mirroring live, `review-test`, `review-route-picker-test` and `review-publication-test` passed on that day's staging code with drafts on.
+- [#297](https://github.com/Roviicc/ParaPo/pull/297): `VITE_STUDIO_DRAFTS=1`, plus the ledger row for reviewed_draft_approval.
+
+## Waiting on the owner
+
+1. **Phone test on staging:** record → save → "Uploaded to ParaPo". In the Studio: Contributors → open → Hide / Show hidden / Show again → Delete. Then the phone reads "Removed from ParaPo by an editor".
+2. **Drafts trial in the staging Studio:** edit → draft → Submit → compare → Send back → resubmit → Approve. Approved changes go out at the next publish.
+3. **Staging → main merge** when both trials are satisfactory. That brings uploads, drafts and Turnstile to production, since `.env.production` carries all three settings.
+4. **Contributor button on the public map** (`contribute/14`): needs the owner's go to end the test period, the National Privacy Commission check, and the button's Figma frame. Nothing is built yet.
+
+## Known issues and notes
+
+- **`save-test` ikot-delete flake** (`save-test.mjs:1597` since #292, "Delete on an ikot…"). It fails intermittently in CI and in Claude containers on untouched staging too. Not fixed.
+- **`scale-test` timing** ("main thread busy under 5 s"). CI varies 2.0–5.6 s on unchanged code; #295 needed a re-run at 5.4 s, and the `5e21f62` staging push run failed it too.
+- **Local `save-test` in Claude containers** is not reliable: the pre-installed Chromium is older than the pinned Playwright, so a symlinked `PLAYWRIGHT_BROWSERS_PATH` is needed, and the CPU is shared. Use CI.
+- **Hand-written database types.** The contribution tables' entries in `database.types.ts` were added in the classic format from the disposable schema's catalog. Regenerate them from live with a classic-compatible generator when convenient. The partitions are not listed.
+- **Out-of-date tickets** in `.scratch/*/issues/`. `contribute/07`, `/08`, `/13` and `studio-maps/08`, `/09` still say ready-for-agent but are built. `contribute/09` (anonymous sign-in) is done.
+- **Stale open drafts** #133, #258, #262, #274 and #279. #274 and #279 landed through #281.
+- **Review page** with screenshots and the upload/view/delete checklist: https://claude.ai/artifact/5Q91j3EdvaxxdLuxV2ucNU
 
 ## Contributor uploads milestone — 2026-10-19 (Claude session)
 
-PRs (all draft, target staging through the stack; nothing merged, nothing applied live, no Auth setting changed):
+PRs as opened on 2026-10-19 (**all merged since**; see the state above):
 
 | PR | Branch @ head | Base | What |
 | --- | --- | --- | --- |
