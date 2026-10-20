@@ -116,8 +116,9 @@ export function RouteCard({
           aria-label={vehicle ? MODE_LABEL[vehicle] : undefined}
           className="flex w-full flex-col"
         >
+          {/* The pill is 10.5 in from the card's edge, Figma's: that puts its icon over the tree line. */}
           {vehicle && (
-            <div className="flex px-2">
+            <div className="flex px-[10.5px]">
               <RouteModePill vehicle={vehicle} />
             </div>
           )}

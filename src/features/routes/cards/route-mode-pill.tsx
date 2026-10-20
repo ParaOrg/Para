@@ -13,7 +13,7 @@ interface RouteModePillProps {
  */
 export function RouteModePill({ vehicle }: RouteModePillProps) {
   return (
-    <span className="inline-flex items-center gap-0.5 rounded-full border border-current px-1.5 py-0.5 text-xs/4 font-medium whitespace-nowrap">
+    <span className="inline-flex items-center gap-0.5 rounded-full border border-current px-1 py-0.5 text-xs/4 font-medium whitespace-nowrap">
       <span aria-hidden className="size-4 shrink-0 *:size-full">
         <VehicleIcon vehicle={vehicle} />
       </span>
