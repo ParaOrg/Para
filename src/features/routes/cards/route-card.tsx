@@ -117,7 +117,7 @@ export function RouteCard({
           className="flex w-full flex-col"
         >
           {vehicle && (
-            <div className="px-2">
+            <div className="flex px-2">
               <RouteModePill vehicle={vehicle} />
             </div>
           )}
