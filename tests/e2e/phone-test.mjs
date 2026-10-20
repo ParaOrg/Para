@@ -470,6 +470,11 @@ const camNow = () =>
     const c = m.getCenter();
     return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
   });
+/** Whether two readings of camNow are one camera. */
+const sameCamera = (a, b) =>
+  Math.abs(a.zoom - b.zoom) < 0.01 &&
+  Math.abs(a.lng - b.lng) < 1e-6 &&
+  Math.abs(a.lat - b.lat) < 1e-6;
 
 check(
   'no zoom buttons on a touch screen',
@@ -1198,6 +1203,12 @@ const tripChecks = async () => {
     const pickButton = row.locator('button[data-testid="trip-hintuan-pick"]');
     const isPicked = async () => (await row.getAttribute('data-state')) === 'selected';
     await pickButton.scrollIntoViewIfNeeded();
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+      .catch(() => {});
+    // A trip opening no longer fits its route (the owner, 2026-10-21), so the
+    // pick starts from out at zoom 12, where the whole route used to leave it.
+    await page.evaluate(() => window.__map.jumpTo({ zoom: 12 }));
     await page
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
       .catch(() => {});
@@ -2869,6 +2880,7 @@ if (routeA) {
   const at = (px) => [box.x + anchor[0] + perp[0] * px, box.y + anchor[1] + perp[1] * px];
 
   const [tx, ty] = at(14);
+  const camBeforeLineTap = await camNow();
   await mapTap(tx, ty);
   await page.waitForTimeout(500);
 
@@ -2891,12 +2903,12 @@ if (routeA) {
     !!from && !!to && origin === from && end === to,
     `"${label}": top "${origin}", bottom "${end}"`,
   );
-  // Opened, the camera takes in the whole route, clear of the card.
-  const framed = await framedAboveCard(r.bbox);
+  // Opened, the camera stays where it was: nothing fits the route (the owner, 2026-10-21).
+  const camAfterLineTap = await camNow();
   check(
-    '  the camera takes in the whole route, above the card',
-    framed.inside,
-    JSON.stringify(framed),
+    '  the camera stays where it was: the route is not fitted',
+    sameCamera(camBeforeLineTap, camAfterLineTap),
+    JSON.stringify({ camBeforeLineTap, camAfterLineTap }),
   );
   const routeEnds = r.signboard.split(' – ').map((e) => e.replace(/ via .*$/, ''));
   check(
@@ -3260,6 +3272,7 @@ if (!shared) {
   const isPicked = async () =>
     (await wanted.count()) > 0 && (await wantedCard.getAttribute('data-state')) === 'selected';
   const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
+  const camBeforeCardPick = await camNow();
   await buttonTap(wantedName, isPicked);
   const pickedIds = (await wanted.count()) ? await directionsIn(wantedCard) : [];
   const litPicked = (await litIds(page)) ?? [];
@@ -3268,24 +3281,14 @@ if (!shared) {
     (await isPicked()) && (await trip().count()) === 0,
     `Selected ${await isPicked()}; trip open ${(await trip().count()) > 0}`,
   );
-  // The camera takes in its routes whole, as a trip's row does (the owner, 2026-10-01).
-  const pickedLines = snapshot.routes.filter((r) => pickedIds.includes(r.id));
-  if (pickedLines.length) {
-    const framedPick = await framedAboveCard(
-      bboxOf(pickedLines.flatMap((r) => r.coords)),
-      'chooser',
-    );
-    check(
-      '  and the camera takes in its routes whole, above the list',
-      framedPick.inside,
-      JSON.stringify(framedPick),
-    );
-  } else {
-    skip(
-      '  and the camera takes in its routes whole, above the list',
-      'no line on the map for its routes today',
-    );
-  }
+  // The camera stays where it was: a card picked fits nothing (the owner, 2026-10-21).
+  await page.waitForTimeout(500);
+  const camAfterCardPick = await camNow();
+  check(
+    '  and the camera stays where it was: its routes are not fitted',
+    sameCamera(camBeforeCardPick, camAfterCardPick),
+    JSON.stringify({ camBeforeCardPick, camAfterCardPick }),
+  );
   const seenPicked = await rideLook(page);
   const endsPicked = await endsWear(cardColour);
   check(
