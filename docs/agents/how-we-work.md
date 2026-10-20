@@ -19,6 +19,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 | Haiku  | Watching and scanning: CI, searching the code, inventories, checklists                                                  |
 
 - The cheaper the model, the clearer its brief: what to change, where, and how to prove it.
+- An agent runs on Sonnet unless its file names a model (`CLAUDE_CODE_SUBAGENT_MODEL` in `.claude/settings.json`). The CI watcher (`.claude/agents/ci-watcher.md`) runs on Haiku; brief an Opus agent only for planning, a hard bug or a review.
 - A stronger model reviews a cheaper one's work before the owner sees it.
 
 ## Sessions in parallel
