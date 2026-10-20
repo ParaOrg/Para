@@ -91,14 +91,13 @@ const FLOATS_AT = {
  * (MAX_STRIP_PX), clear of a phone's notch. It is always the whole map tall
  * and slides (`--sheet-y`), so moving between heights is one smooth
  * `translate`: a drag on the handle or the header follows the finger and, let
- * go slowly, glides to the nearest height; flicked, it goes to the end its
- * way, Max or Low, as the owner asked, like Google's and Apple's maps;
- * flicked down from Low, it closes. Below Max the body does not scroll: a
+ * go, glides to a height: a swipe moves one height, up or down, the owner's
+ * pick; a flick goes to the end, Max or Low, like Google's and Apple's maps;
+ * down from Low, it closes. Below Max the body does not scroll: a
  * swipe on it moves the sheet, the owner's pick; at Max it scrolls, and a
- * pull down from its top takes hold of the sheet, as a drag does: let go
- * slowly, it stays where it is; flicked, to Low. A tap on the handle goes
- * round, Low → Middle → Max. Between Middle and Max it stays where it is let
- * go, the owner's pick (sheetGesture's snapFor), its body still.
+ * pull down from its top takes hold of the sheet, as a drag does: let go,
+ * it steps down to Middle; flicked, to Low (sheetGesture's snapFor). A tap on
+ * the handle goes round, Low → Middle → Max → Low.
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
  * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse

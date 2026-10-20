@@ -309,7 +309,7 @@ const closeTrip = async (page) => {
 
   // Set as start on Math Building, then a row above it: the ride wraps.
   await pickRow(page, MATH.name);
-  await page.getByRole('button', { name: 'Set as start' }).tap();
+  await press(page.getByRole('button', { name: 'Set as start' }));
   await page.waitForTimeout(300);
   await pickRow(page, QUEZON.name);
   await page.waitForTimeout(500);
