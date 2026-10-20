@@ -470,6 +470,11 @@ const camNow = () =>
     const c = m.getCenter();
     return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
   });
+/** Whether two readings of camNow are one camera. */
+const sameCamera = (a, b) =>
+  Math.abs(a.zoom - b.zoom) < 0.01 &&
+  Math.abs(a.lng - b.lng) < 1e-6 &&
+  Math.abs(a.lat - b.lat) < 1e-6;
 
 check(
   'no zoom buttons on a touch screen',
@@ -936,6 +941,16 @@ const jumpTo = async (p, center, zoom = ZOOM) => {
   );
   await p.waitForTimeout(300);
 };
+// A jump leaves the place in the map's middle, which the sheet at Middle
+// covers: moved up into the quarter of the map above it, where a finger can tap.
+const jumpAboveSheet = async (p, center) => {
+  await jumpTo(p, center);
+  await p.evaluate((at) => {
+    const m = window.__map;
+    m.panBy([0, m.project(at).y - m.getContainer().clientHeight / 4], { duration: 0 });
+  }, center);
+  await p.waitForTimeout(300);
+};
 /**
  * How many features `layer` draws at canvas point `xy` once it draws any,
  * polled for up to `ms`; 0 if it never does, -1 if there is no such layer.
@@ -1198,6 +1213,12 @@ const tripChecks = async () => {
     const pickButton = row.locator('button[data-testid="trip-hintuan-pick"]');
     const isPicked = async () => (await row.getAttribute('data-state')) === 'selected';
     await pickButton.scrollIntoViewIfNeeded();
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+      .catch(() => {});
+    // A trip opening no longer fits its route (the owner, 2026-10-21), so the
+    // pick starts from out at zoom 12, where the whole route used to leave it.
+    await page.evaluate(() => window.__map.jumpTo({ zoom: 12 }));
     await page
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
       .catch(() => {});
@@ -1585,18 +1606,14 @@ const tripChecks = async () => {
       );
     }
     check('  and leaves no padding on the map for later moves', drawn.padding);
-    // In to where the scale bar reads 500 m; a second tap takes the camera
-    // back where it was before the pick (the owner's ask, 2026-10-02).
+    // The pick does not zoom (the owner, 2026-10-21); a second tap takes the
+    // camera back where it was before the pick (the owner's ask, 2026-10-02).
     if (pickWant) {
-      const zoomed = await camNow();
-      const want = await page.evaluate(
-        async (lat) => (await import('/src/shared/utils/geo.ts')).zoomForScale(500, lat),
-        zoomed.lat,
-      );
+      const kept = await camNow();
       check(
-        '  zoomed in to 500 m on the scale bar',
-        Math.abs(zoomed.zoom - want) < 0.05,
-        `zoom ${zoomed.zoom.toFixed(2)}, want ${want.toFixed(2)}`,
+        '  the zoom stays where the commuter had it',
+        Math.abs(kept.zoom - camBeforePick.zoom) < 0.01,
+        `zoom ${kept.zoom.toFixed(2)}, was ${camBeforePick.zoom.toFixed(2)}`,
       );
     }
     await buttonTap(pickButton, async () => !(await isPicked()));
@@ -2205,7 +2222,7 @@ const tripChecks = async () => {
             const m = window.__map;
             const c = m.getCanvas().getBoundingClientRect();
             const q = m.project(at);
-            return { y: c.top + q.y, top: c.top, cardTop: c.bottom - Math.round(c.height * 0.45) };
+            return { y: c.top + q.y, top: c.top, cardTop: c.bottom - Math.round(c.height * 0.55) };
           }, pickWant.at)
         : null;
       check(
@@ -2287,7 +2304,7 @@ const tripChecks = async () => {
           const m = window.__map;
           const c = m.getCanvas().getBoundingClientRect();
           const d = document.querySelector('[data-testid="card"]').getBoundingClientRect();
-          const floor = snap === 'max' ? c.bottom - Math.round(c.height * 0.45) : d.top;
+          const floor = snap === 'max' ? c.bottom - Math.round(c.height * 0.55) : d.top;
           const q = at && m.project(at);
           return {
             pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
@@ -2317,18 +2334,12 @@ const tripChecks = async () => {
           after.padding,
         `picked first ${wasPicked}; the destination ${destinationBefore} → ${destination}, the origin ${origin}; ${after.pins} circle(s), ${after.lit.length} lit; in the map above the card ${after.above ?? 'not measured'} (data-snap=${snapNow})`,
       );
-      if (ends?.[end]) {
-        const zoomed = await camNow();
-        const want = await page.evaluate(
-          async (lat) => (await import('/src/shared/utils/geo.ts')).zoomForScale(500, lat),
-          ends[end][1],
-        );
-        check(
-          '    in to 500 m on the scale bar, as a hintuan is',
-          Math.abs(zoomed.zoom - want) < 0.05,
-          `zoom ${zoomed.zoom.toFixed(2)}, want ${want.toFixed(2)}`,
-        );
-      }
+      const zoomed = await camNow();
+      check(
+        '    the zoom stays where the commuter had it, as for a hintuan',
+        Math.abs(zoomed.zoom - camBeforeEnds.zoom) < 0.01,
+        `zoom ${zoomed.zoom.toFixed(2)}, was ${camBeforeEnds.zoom.toFixed(2)}`,
+      );
     }
     await originRow.first().scrollIntoViewIfNeeded();
     await buttonTap(
@@ -2464,14 +2475,14 @@ const sheetState = async () =>
   (await card().count()) ? await card().first().getAttribute('data-snap') : null;
 /**
  * How far to drag the handle for the sheet to come to rest at `to` from
- * where it is, by the heights BottomSheet gives it: Low 129, Middle 45% of
+ * where it is, by the heights BottomSheet gives it: Low 129, Middle 55% of
  * the map, Max all of it but its 24 px strip at the top. Negative is up.
  */
 const dragTo = async (from, to) => {
   const h = await card()
     .first()
     .evaluate((el) => el.offsetHeight);
-  const shown = { low: 129, middle: Math.round(h * 0.45), max: h - 24 };
+  const shown = { low: 129, middle: Math.round(h * 0.55), max: h - 24 };
   return shown[from] - shown[to];
 };
 const closeCard = async () => {
@@ -2869,6 +2880,7 @@ if (routeA) {
   const at = (px) => [box.x + anchor[0] + perp[0] * px, box.y + anchor[1] + perp[1] * px];
 
   const [tx, ty] = at(14);
+  const camBeforeLineTap = await camNow();
   await mapTap(tx, ty);
   await page.waitForTimeout(500);
 
@@ -2891,12 +2903,12 @@ if (routeA) {
     !!from && !!to && origin === from && end === to,
     `"${label}": top "${origin}", bottom "${end}"`,
   );
-  // Opened, the camera takes in the whole route, clear of the card.
-  const framed = await framedAboveCard(r.bbox);
+  // Opened, the camera stays where it was: nothing fits the route (the owner, 2026-10-21).
+  const camAfterLineTap = await camNow();
   check(
-    '  the camera takes in the whole route, above the card',
-    framed.inside,
-    JSON.stringify(framed),
+    '  the camera stays where it was: the route is not fitted',
+    sameCamera(camBeforeLineTap, camAfterLineTap),
+    JSON.stringify({ camBeforeLineTap, camAfterLineTap }),
   );
   const routeEnds = r.signboard.split(' – ').map((e) => e.replace(/ via .*$/, ''));
   check(
@@ -3065,7 +3077,7 @@ if (routeA) {
     );
   } else {
     const end = tappable[0];
-    await jumpTo(page, end.at);
+    await jumpAboveSheet(page, end.at);
     await endButton(end.name).locator('[data-part="name"]').click();
     await page.waitForTimeout(300);
     await page
@@ -3260,6 +3272,7 @@ if (!shared) {
   const isPicked = async () =>
     (await wanted.count()) > 0 && (await wantedCard.getAttribute('data-state')) === 'selected';
   const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
+  const camBeforeCardPick = await camNow();
   await buttonTap(wantedName, isPicked);
   const pickedIds = (await wanted.count()) ? await directionsIn(wantedCard) : [];
   const litPicked = (await litIds(page)) ?? [];
@@ -3268,24 +3281,14 @@ if (!shared) {
     (await isPicked()) && (await trip().count()) === 0,
     `Selected ${await isPicked()}; trip open ${(await trip().count()) > 0}`,
   );
-  // The camera takes in its routes whole, as a trip's row does (the owner, 2026-10-01).
-  const pickedLines = snapshot.routes.filter((r) => pickedIds.includes(r.id));
-  if (pickedLines.length) {
-    const framedPick = await framedAboveCard(
-      bboxOf(pickedLines.flatMap((r) => r.coords)),
-      'chooser',
-    );
-    check(
-      '  and the camera takes in its routes whole, above the list',
-      framedPick.inside,
-      JSON.stringify(framedPick),
-    );
-  } else {
-    skip(
-      '  and the camera takes in its routes whole, above the list',
-      'no line on the map for its routes today',
-    );
-  }
+  // The camera stays where it was: a card picked fits nothing (the owner, 2026-10-21).
+  await page.waitForTimeout(500);
+  const camAfterCardPick = await camNow();
+  check(
+    '  and the camera stays where it was: its routes are not fitted',
+    sameCamera(camBeforeCardPick, camAfterCardPick),
+    JSON.stringify({ camBeforeCardPick, camAfterCardPick }),
+  );
   const seenPicked = await rideLook(page);
   const endsPicked = await endsWear(cardColour);
   check(
@@ -3444,7 +3447,7 @@ if (!shared) {
         page.locator('[data-testid="chooser"]').first().getAttribute('data-snap');
       if ((await listSnap()) === 'max')
         await buttonTap(listHandle, async () => (await listSnap()) !== 'max');
-      if (tailAt) await jumpTo(page, tailAt);
+      if (tailAt) await jumpAboveSheet(page, tailAt);
       const namePill = tail.locator('[data-part="name"]');
       const reachable = await namePill.evaluate((el) => {
         const r = el.getBoundingClientRect();
@@ -3649,7 +3652,7 @@ if (!inside) {
     const at = await project(page, centroidOf(otherPoly.ring));
     const edges = await page.evaluate(() => {
       const c = window.__map.getCanvas().getBoundingClientRect();
-      return { top: c.top, cardTop: c.bottom - Math.round(c.height * 0.45) };
+      return { top: c.top, cardTop: c.bottom - Math.round(c.height * 0.55) };
     });
     const y = edges.top + at[1];
     check(
@@ -3775,8 +3778,8 @@ const tapHandle = async () => {
 };
 /**
  * Drag the handle by dy CSS px. Touch first (CDP), mouse as a fallback. Held
- * still for a moment before letting go, so the sheet settles on the height
- * nearest where it was left (BottomSheet's snapFor), not a flick's.
+ * still for a moment before letting go, so the sheet settles by how far it was
+ * dragged (BottomSheet's snapFor), not by a flick's speed.
  */
 const dragHandle = async (dy) => {
   if ((await handle().count()) === 0) return { ok: false, how: 'no handle' };
@@ -3955,6 +3958,14 @@ if (!hotspot) {
     'dragging it down from Middle settles at Low',
     readyDown && (await sheetState()) === 'low',
     `${readyDown ? '' : 'could not get to Middle first; '}${down.how}; data-snap=${await sheetState()}`,
+  );
+
+  const readyMax = await restore('middle');
+  const upMax = await dragHandle(await dragTo('middle', 'max'));
+  check(
+    'dragging it up from Middle goes to Max',
+    readyMax && (await sheetState()) === 'max',
+    `${readyMax ? '' : 'could not get to Middle first; '}${upMax.how}; data-snap=${await sheetState()}`,
   );
 
   const readyLow = await restore('low');
@@ -4209,6 +4220,7 @@ if (!routeA) {
   const anchor = await project(page, routeA.point);
   const perp = await perpendicular(page, routeA.point, routeA.neighbour, routeA.route.coords, 40);
   const box = await canvasBox();
+  const camBeforeOpen = await camNow();
   await mapTap(box.x + anchor[0] + perp[0] * 14, box.y + anchor[1] + perp[1] * 14);
   await page.waitForTimeout(2000);
   check(
@@ -4225,23 +4237,13 @@ if (!routeA) {
       `no direction named "${await tripLabel()}" on the map`,
     );
   else {
-    const shareFramed = await framedAboveCard(r.bbox);
+    // Opened, the camera stays where it was (the owner, 2026-10-21); the
+    // sheet's height is what takes the route in.
+    const camAfterOpen = await camNow();
     check(
-      '  it frames the whole route, above the card',
-      shareFramed.inside,
-      JSON.stringify(shareFramed),
-    );
-    // Framed, not merely shown: the route fills the room the card leaves along
-    // one side or the other (its 48 px margins aside), however long it is.
-    const { box: fb } = shareFramed;
-    const fill = Math.max(
-      (fb.right - fb.left) / (shareFramed.width - 96),
-      (fb.bottom - fb.top) / (shareFramed.floor - shareFramed.map[0] - 96),
-    );
-    check(
-      '  zoomed to fit it: the route fills the room along one side',
-      fill > 0.8 && fill < 1.05,
-      `${Math.round(fill * 100)}% at zoom ${shareFramed.zoom}`,
+      '  the camera stays where it was: the route is not fitted',
+      sameCamera(camBeforeOpen, camAfterOpen),
+      JSON.stringify({ camBeforeOpen, camAfterOpen }),
     );
 
     // The sheet at another height: the camera takes the route in again, in the
@@ -4253,7 +4255,6 @@ if (!routeA) {
     const capZoom = Math.log2(
       (78271.51696 * Math.cos((((r.bbox[1] + r.bbox[3]) / 2) * Math.PI) / 180) * 100) / 5000,
     );
-    const raised = Math.max(shareFramed.zoom, capZoom);
     const toMax = await buttonTap(handle(), async () => (await sheetState()) === 'max');
     const atMax = await framedAboveCard(r.bbox);
     const toLow = toMax && (await buttonTap(handle(), async () => (await sheetState()) === 'low'));
@@ -4265,13 +4266,13 @@ if (!routeA) {
       );
     else {
       check(
-        '  the sheet up to Max: framed as at Middle, no further out than 5 km on the scale bar',
-        Math.abs(atMax.zoom - raised) < 0.05,
-        `zoom ${atMax.zoom}; at Middle ${shareFramed.zoom}, 5 km at ${capZoom.toFixed(2)}`,
+        '  the sheet up to Max: the route taken in, no further out than 5 km on the scale bar',
+        atMax.zoom >= capZoom - 0.05,
+        `zoom ${atMax.zoom}, 5 km at ${capZoom.toFixed(2)}; ${JSON.stringify(atMax)}`,
       );
       check(
         '  at Low: in closer, the whole route above the sheet',
-        atLow.inside && atLow.zoom > shareFramed.zoom + 0.1,
+        atLow.inside && atLow.zoom >= atMax.zoom - 0.05,
         JSON.stringify(atLow),
       );
     }
@@ -4314,7 +4315,7 @@ if (!routeA) {
       const back = await framedAboveCard(r.bbox);
       check(
         '  moved away, then up to Middle: the overview again, 5 km on the bar at the farthest',
-        Math.abs(back.zoom - raised) < 0.05 && (back.inside || capZoom > shareFramed.zoom),
+        back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
         JSON.stringify(back),
       );
     }

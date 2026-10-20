@@ -1062,50 +1062,34 @@ await dismissToasts();
 // ---- 5. Edit a direction
 async function openCard(ll) {
   await go(at(0, 0), 15);
+  const before = await page.evaluate(() => {
+    const m = window.__map;
+    const c = m.getCenter();
+    return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
+  });
   await clickAt(ll, 700);
+  return before;
 }
-await openCard(OUT[1]);
+const cameraBeforeOpen = await openCard(OUT[1]);
 check(
   'a tap on the line opens its card, with Edit route',
   (await page.getByRole('button', { name: 'Edit route' }).count()) === 1,
 );
-// The camera with the cards, as on the public map (the owner, 2026-09-30:
-// "most of the interaction of public map should be in studio"): the trip
-// opens on its whole route, every corner of it on the map beside the card
-// floating in the corner, in the middle of the room the card leaves. Tapped,
-// the route sat in the middle of the whole map: a camera that stays put fails.
+// The camera with the cards, as on the public map (the owner, 2026-10-21):
+// a trip opened by a tap leaves the camera where it was; the route is not
+// fitted to the room the card leaves.
 await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 }).catch(() => {});
-const framed = await page.evaluate((line) => {
+const cameraAfterOpen = await page.evaluate(() => {
   const m = window.__map;
-  const c = m.getCanvas().getBoundingClientRect();
-  const card = document.querySelector('[data-testid="card"]').getBoundingClientRect();
-  const pts = line.map((p) => m.project(p)).map((q) => ({ x: c.left + q.x, y: c.top + q.y }));
-  const box = {
-    left: Math.min(...pts.map((q) => q.x)),
-    right: Math.max(...pts.map((q) => q.x)),
-    top: Math.min(...pts.map((q) => q.y)),
-    bottom: Math.max(...pts.map((q) => q.y)),
-  };
-  const onMap =
-    box.left >= c.left - 2 &&
-    box.right <= c.right + 2 &&
-    box.top >= c.top - 2 &&
-    box.bottom <= c.bottom + 2;
-  const besideCard = box.left >= card.right - 2;
-  const centred = Math.abs((box.left + box.right) / 2 - (card.right + c.right) / 2) <= 20;
-  return {
-    onMap,
-    besideCard,
-    centred,
-    box: Object.fromEntries(Object.entries(box).map(([k, x]) => [k, Math.round(x)])),
-    cardRight: Math.round(card.right),
-    zoom: +m.getZoom().toFixed(2),
-  };
-}, OUT);
+  const c = m.getCenter();
+  return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
+});
 check(
-  '  the camera takes in the whole route, beside the card in the corner',
-  framed.onMap && framed.besideCard && framed.centred,
-  JSON.stringify(framed),
+  '  the camera stays where it was: the route is not fitted',
+  Math.abs(cameraAfterOpen.zoom - cameraBeforeOpen.zoom) < 0.01 &&
+    Math.abs(cameraAfterOpen.lng - cameraBeforeOpen.lng) < 1e-6 &&
+    Math.abs(cameraAfterOpen.lat - cameraBeforeOpen.lat) < 1e-6,
+  JSON.stringify({ cameraBeforeOpen, cameraAfterOpen }),
 );
 await page.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) === OUT.length);
@@ -1114,8 +1098,7 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
-// Back where the suite measured its ground: the trip's overview left the
-// camera beside a card that is gone now.
+// Back where the suite measured its ground.
 await go(at(0, 0), 15);
 await clickAt(at(0.0055, 0.0005), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 1);

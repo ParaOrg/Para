@@ -195,9 +195,8 @@ export function useRideTo(
     ],
   );
 
-  // Glide to where the rider would get off, in to where the scale bar reads
-  // 500 m (the owner's call; the stretch fitted whole zooms far out), or,
-  // closer in than 300 m, at the commuter's own zoom (glideFor). `offset`,
+  // Glide to where the rider would get off, at the commuter's own zoom and
+  // only when that place is not in view clear of the card (glideFor). `offset`,
   // never `padding`: MapLibre keeps a padding for every later move, and a
   // trip's fit or "Where am I" would land off centre ever after. An end
   // picked after a start, with a ride between them, does not glide: the

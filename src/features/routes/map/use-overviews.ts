@@ -1,19 +1,19 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { shownAt, type Snap } from '@/shared/ui/sheet-gesture';
 import { clearOfSheet, roomBeside } from '@/shared/ui/sheet-room';
 import { bboxOf, zoomForScale, type LngLat } from '@/shared/utils/geo';
 
 import { APP_MOVE } from './map-view';
-import type { Highlight } from './use-saved-routes';
 import type { Framed } from '../cards/card-stack';
 import { directionLine, type Direction } from '../model/routes';
 
 /*
- * The camera taking in routes whole — a trip opened, a RouteCard picked,
- * SWITCH pressed — zooming in or out, clear of the card's sheet: one fit for
- * all three (the owner's call).
+ * The camera taking in routes whole — SWITCH pressed, an end picked, the sheet
+ * settled at another height — zooming in or out, clear of the card's sheet.
+ * Opening a trip, picking a RouteCard and opening the route list move nothing
+ * (the owner's call, 2026-10-21).
  */
 
 /**
@@ -64,84 +64,6 @@ function overview(
     (padding.top - padding.bottom) / 2,
   ];
   map.easeTo({ center: [(w + e) / 2, (s + n) / 2], zoom: floor, offset, duration: 700 }, APP_MOVE);
-}
-
-/**
- * A trip opened — from a card, a tap on its line: the camera takes in its
- * whole route, zooming in or out, clear of the card (the owner's call). Keyed
- * on the route, so SWITCH, which covers the same ground the other way, does
- * not fire it (useSwitchOverview has its own), nor does the sheet's height
- * (useHeightOverview); the trip's own changes move nothing.
- */
-export function useTripOverview(
-  map: MapLibreMap | null,
-  trip: Direction | null,
-  dock: RefObject<HTMLDivElement | null>,
-  snap: Snap,
-): void {
-  const routeId = trip?.routeId;
-  useEffect(() => {
-    if (!map || !trip) return;
-    overview(map, [directionLine(trip)], dock.current, snap);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only as a trip opens (see above): its own changes move nothing
-  }, [map, routeId]);
-}
-
-/**
- * A RouteCard picked — in the route list or on a hotspot's card: the camera
- * takes in the routes it stands for, as a trip's row does for its trip (the
- * owner's call), clear of the sheet on show. Keyed on the card and what it
- * shows, so this moves nothing as a card is let go (on a hotspot's card,
- * useCameraBefore takes the camera back); SWITCH has its own
- * (useSwitchOverview).
- */
-export function useCardOverview(
-  map: MapLibreMap | null,
-  picked: Highlight | null,
-  directions: readonly Direction[],
-  dock: () => HTMLElement | null,
-  snap: Snap,
-): void {
-  const key = picked ? `${picked.where}\n${picked.from}\n${picked.ids.join()}` : null;
-  useEffect(() => {
-    if (!map || !picked) return;
-    const ids = new Set(picked.ids);
-    overview(map, directions.filter((v) => ids.has(v.id)).map(directionLine), dock(), snap);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only as a card is picked (see above): the key says which
-  }, [map, key]);
-}
-
-/**
- * The route list opened — a tap where routes share a road, or a trip's ‹
- * listing those sharing an end: the camera takes in every route it lights, in
- * the selected blue, as a picked card's do (the owner's call). Keyed on what
- * it lists, so a card picked and let go, or a trip opened from it and its ‹,
- * leave the view to those. What is lit is read a frame later, as for SWITCH.
- */
-export function useListOverview(
-  map: MapLibreMap | null,
-  listed: readonly Direction[],
-  lit: readonly Direction[],
-  dock: () => HTMLElement | null,
-  snap: Snap,
-): void {
-  const litRef = useRef(lit);
-  // Kept current as each render commits, for the frame below to read.
-  useLayoutEffect(() => {
-    litRef.current = lit;
-  });
-  const key = listed
-    .map((v) => v.id)
-    .sort()
-    .join();
-  useEffect(() => {
-    if (!map || !key) return;
-    const frame = requestAnimationFrame(() =>
-      overview(map, litRef.current.map(directionLine), dock(), snap),
-    );
-    return () => cancelAnimationFrame(frame);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only as the list opens on other routes (see above): the key says which
-  }, [map, key]);
 }
 
 /**
