@@ -13,7 +13,7 @@ const meta = {
         id: 'draft-a',
         label: 'UP Ikot',
         kind: 'route',
-        status: 'pending',
+        status: 'draft',
         isNew: false,
         revision: 3,
         note: null,
@@ -27,15 +27,14 @@ const meta = {
 } satisfies Meta<typeof ReviewList>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Pending: Story = {};
+export const Default: Story = {};
 export const Empty: Story = { args: { drafts: [] } };
 export const Busy: Story = { args: { isBusy: true } };
-export const SentBack: Story = {
+export const WithNote: Story = {
   args: {
     drafts: [
       {
         ...meta.args.drafts[0],
-        status: 'draft',
         note: 'Please check where the route passes Palma Hall.',
       },
     ],

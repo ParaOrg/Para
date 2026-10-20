@@ -42,14 +42,40 @@ test('approval sends the reviewed draft revision through the guarded RPC', async
   assert.equal(log[0].op, 'approve_reviewed_draft');
   assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3 });
 });
-test('approval of a draft that is not pending is refused before any request', async () => {
-  const { client, log } = fakeSupabase(() => ({}));
-  setSupabase(client);
-  await assert.rejects(
-    runReviewCommand({ action: 'approve', draft: { ...draft, status: 'draft' } }),
-    /not waiting/,
+test('Approve on a draft not yet submitted submits it, then approves the revision submitting gave it', async () => {
+  const { client, log } = fakeSupabase((query) =>
+    query.op === 'submit_draft'
+      ? { data: { code: 'submitted', draft: { ...draft, status: 'pending', revision: 4 } } }
+      : { data: { code: 'approved' } },
   );
-  assert.equal(log.length, 0);
+  setSupabase(client);
+  const result = await runReviewCommand({
+    action: 'approve',
+    draft: { ...draft, status: 'draft' },
+  });
+  assert.equal(result.code, 'approved');
+  assert.deepEqual(
+    log.map((entry) => [entry.op, entry.payload]),
+    [
+      ['submit_draft', { p_draft: 'd', p_revision: 3 }],
+      ['approve_reviewed_draft', { p_draft: 'd', p_revision: 4 }],
+    ],
+  );
+});
+test('a refused submit is the answer, and nothing is approved', async () => {
+  const { client, log } = fakeSupabase(() => ({
+    data: { code: 'revision_mismatch', current_revision: 5 },
+  }));
+  setSupabase(client);
+  const result = await runReviewCommand({
+    action: 'approve',
+    draft: { ...draft, status: 'draft' },
+  });
+  assert.equal(result.code, 'revision_mismatch');
+  assert.deepEqual(
+    log.map((entry) => entry.op),
+    ['submit_draft'],
+  );
 });
 test('editing sent-back facts preserves geometry and the complete link set', async () => {
   const { client, log } = fakeSupabase((query) => ({

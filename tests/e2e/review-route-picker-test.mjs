@@ -46,7 +46,7 @@ await tail.getByRole('button', { name: 'Save place', exact: true }).click();
 await tail.waitFor({ state: 'detached' });
 await page.getByRole('button', { name: 'Save', exact: true }).click();
 await page.getByRole('button', { name: 'Save', exact: true }).waitFor({ state: 'detached' });
-await page.getByRole('button', { name: /Drafts and review/ }).click();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 const text = await page.getByRole('dialog').innerText();
 assert.ok(text.includes('Preview route head'));
 assert.ok(text.includes('Preview route tail'));
@@ -65,14 +65,9 @@ const routeItem = page
   .getByRole('listitem')
   .filter({ hasText: 'Preview route head' })
   .filter({ hasText: 'Preview route tail' });
-await routeItem.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
 await routeItem.getByRole('button', { name: 'Review changes', exact: true }).click();
-await page.getByRole('button', { name: 'Approve reviewed changes', exact: true }).waitFor();
-assert.equal(
-  await page.getByRole('button', { name: 'Approve reviewed changes', exact: true }).isDisabled(),
-  true,
-);
+await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
+assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled(), true);
 for (const place of [head, tailDraft]) {
   const submitted = await api('rpc/submit_draft', {
     p_draft: place.id,
@@ -91,12 +86,12 @@ for (const place of [head, tailDraft]) {
 await page.getByRole('button', { name: 'Refresh comparison', exact: true }).click();
 await page.waitForFunction(() =>
   [...document.querySelectorAll('button')].some(
-    (button) => button.textContent.trim() === 'Approve reviewed changes' && !button.disabled,
+    (button) => button.textContent.trim() === 'Approve' && !button.disabled,
   ),
 );
-await page.getByRole('button', { name: 'Approve reviewed changes', exact: true }).click();
-await page.getByRole('button', { name: 'Approve draft', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Approved. Waiting' }).waitFor();
+await page.getByRole('button', { name: 'Approve', exact: true }).click();
+await page.getByRole('button', { name: 'Approve', exact: true }).click();
+await page.getByRole('status').filter({ hasText: 'Approved. The Studio map' }).waitFor();
 assert.equal((await api(`route?id=eq.${route.subject_id}`)).length, 1);
 assert.equal((await api('route?select=id')).length, beforeRoutes + 1);
 assert.equal((await api('stop?select=id')).length, beforePlaces + 2);
