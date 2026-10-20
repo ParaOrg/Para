@@ -100,7 +100,7 @@ export const Max: Story = {
   args: { height: { snap: 'max', onSnap: fn() }, children: <Rows count={30} /> },
 };
 
-/** Let go between Middle and Max: it stays where it was left, its body still, and the handle says so. */
+/** A free height between Middle and Max, set by a caller rather than a drag: its body still, and the handle says so. */
 export const Free: Story = {
   render: (args) => <Keeping {...args} startsAt={0.75} />,
   args: { height: { snap: 0.75, onSnap: fn() } },

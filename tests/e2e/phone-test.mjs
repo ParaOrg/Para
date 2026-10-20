@@ -2205,7 +2205,7 @@ const tripChecks = async () => {
             const m = window.__map;
             const c = m.getCanvas().getBoundingClientRect();
             const q = m.project(at);
-            return { y: c.top + q.y, top: c.top, cardTop: c.bottom - Math.round(c.height * 0.45) };
+            return { y: c.top + q.y, top: c.top, cardTop: c.bottom - Math.round(c.height * 0.4) };
           }, pickWant.at)
         : null;
       check(
@@ -2287,7 +2287,7 @@ const tripChecks = async () => {
           const m = window.__map;
           const c = m.getCanvas().getBoundingClientRect();
           const d = document.querySelector('[data-testid="card"]').getBoundingClientRect();
-          const floor = snap === 'max' ? c.bottom - Math.round(c.height * 0.45) : d.top;
+          const floor = snap === 'max' ? c.bottom - Math.round(c.height * 0.4) : d.top;
           const q = at && m.project(at);
           return {
             pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
@@ -2464,14 +2464,14 @@ const sheetState = async () =>
   (await card().count()) ? await card().first().getAttribute('data-snap') : null;
 /**
  * How far to drag the handle for the sheet to come to rest at `to` from
- * where it is, by the heights BottomSheet gives it: Low 129, Middle 45% of
+ * where it is, by the heights BottomSheet gives it: Low 129, Middle 40% of
  * the map, Max all of it but its 24 px strip at the top. Negative is up.
  */
 const dragTo = async (from, to) => {
   const h = await card()
     .first()
     .evaluate((el) => el.offsetHeight);
-  const shown = { low: 129, middle: Math.round(h * 0.45), max: h - 24 };
+  const shown = { low: 129, middle: Math.round(h * 0.4), max: h - 24 };
   return shown[from] - shown[to];
 };
 const closeCard = async () => {
@@ -3649,7 +3649,7 @@ if (!inside) {
     const at = await project(page, centroidOf(otherPoly.ring));
     const edges = await page.evaluate(() => {
       const c = window.__map.getCanvas().getBoundingClientRect();
-      return { top: c.top, cardTop: c.bottom - Math.round(c.height * 0.45) };
+      return { top: c.top, cardTop: c.bottom - Math.round(c.height * 0.4) };
     });
     const y = edges.top + at[1];
     check(
@@ -3775,8 +3775,8 @@ const tapHandle = async () => {
 };
 /**
  * Drag the handle by dy CSS px. Touch first (CDP), mouse as a fallback. Held
- * still for a moment before letting go, so the sheet settles on the height
- * nearest where it was left (BottomSheet's snapFor), not a flick's.
+ * still for a moment before letting go, so the sheet settles by how far it was
+ * dragged (BottomSheet's snapFor), not by a flick's speed.
  */
 const dragHandle = async (dy) => {
   if ((await handle().count()) === 0) return { ok: false, how: 'no handle' };
@@ -3942,9 +3942,9 @@ if (!hotspot) {
   // reached is itself a failure: the drag after it would prove nothing.
   const readyUp = await restore('low');
   const up = await dragHandle(await dragTo('low', 'middle'));
-  const upOpened = readyUp && (await sheetState()) === 'middle';
+  const upOpened = readyUp && (await sheetState()) === 'max';
   check(
-    'dragging the handle up from Low settles at Middle',
+    'dragging the handle up from Low goes to Max, not Middle',
     upOpened,
     `${readyUp ? '' : 'could not get to Low first; '}${up.how}; data-snap=${await sheetState()}${upOpened ? '' : `; ${await sheetDiag()}`}`,
   );
@@ -4018,9 +4018,9 @@ if (!hotspot) {
   };
   const readyMouseUp = await restore('low');
   const mouseUp = await mouseDrag(await dragTo('low', 'middle'));
-  const mouseOpened = readyMouseUp && mouseUp && (await sheetState()) === 'middle';
+  const mouseOpened = readyMouseUp && mouseUp && (await sheetState()) === 'max';
   check(
-    'a mouse dragging the handle up from Low leaves the sheet at Middle',
+    'a mouse dragging the handle up from Low leaves the sheet at Max',
     mouseOpened,
     `data-snap=${await sheetState()}${mouseOpened ? '' : `; ${await sheetDiag()}`}`,
   );

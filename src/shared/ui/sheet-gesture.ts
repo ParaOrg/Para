@@ -45,11 +45,10 @@ export function swallowTheTapsClick(x: number, y: number) {
 /**
  * The three heights of BottomSheetConfiguration (Figma 3815:5637), on a
  * phone: Low, the header and a trip's origin along the bottom (3814:3976);
- * Middle, about half the screen, where a trip opens (3813:3755, 3815:4040);
+ * Middle, two fifths of the screen, where a trip opens (3813:3755, 3815:4040);
  * Max, the whole screen, the header at the top and the rest scrolling under
- * it (3815:4306). Between Middle and Max there is no magnet, the owner's
- * pick: a sheet let go there stays, a number — the share of Max it shows,
- * over Middle's and under 1.
+ * it (3815:4306). A drag always lets go on one of the three; a number, the
+ * share of Max a sheet shows, is a height set some other way.
  */
 export type Snap = 'low' | 'middle' | 'max' | number;
 
@@ -71,19 +70,17 @@ export function snapAfterTap(snap: Snap): Snap {
 }
 
 /**
- * A flick faster than this, in pixels a millisecond, goes to the end its way:
- * 0.5 ÷ 0.4, the owner's pick from trying it. At 0.5 even a gentle scroll up
- * did not stay on Middle, and the owner keeps 4/10 of that sensitivity. With
- * the speed read over the last moves only, a gentle swipe settles on the
- * nearest height.
+ * A flick faster than this, in pixels a millisecond, goes to the end its way
+ * even down, where a slower swipe steps down one height: 0.5 ÷ 0.4, the
+ * owner's pick from trying it. The speed is read over the last moves only.
  */
 const FLICK = 1.25;
 
 /** How far back the speed at release is read: only the finger's last moves count. */
 const RECENT_MS = 100;
 
-/** Middle shows this much of the map: 45%, the owner's pick over the 55% the frames draw. */
-const MIDDLE = 0.45;
+/** Middle shows this much of the map: 40%, the owner's pick. */
+const MIDDLE = 0.4;
 
 /**
  * What Low shows, the same for every card, the owner's rule (Figma 3817:6007;
@@ -184,36 +181,46 @@ export function follow(startY: number, t: number, from: number, h: number) {
       const first = moves.find((m) => last - m.t <= RECENT_MS) ?? moves[moves.length - 1];
       const dt = last - first.t;
       const v = now - last > 80 || dt <= 0 ? 0 : (first.at - y) / dt;
-      return snapFor(shown(at), v, heights);
+      return snapFor(shown(at), v, heights, from);
     },
   };
 }
 
-/** Let go this close under Middle's top, it is Middle still; this close under Max's top, Max. */
-const MIDDLE_PULL_PX = 32;
-const MAX_PULL_PX = 64;
-
 /**
- * Where a drag lets go, as Google's and Apple's maps do: the sheet follows
- * the finger. `shown` is how much of the sheet is on screen as the finger
- * lifts, `heights` what each magnet shows, `velocity` the finger's speed
- * upwards in px/ms (negative: downwards). A flick goes to the end in its
- * direction: up, to Max, from Low or Middle alike; down, to Low, from Max or
- * Middle alike — and down from Low, it closes. Let go slowly between Middle
- * and Max, it stays where it is (the owner's pick), unless near enough either
- * end to be drawn in — up near the map's top, to Max. Below Middle it
- * settles on Middle or Low, the nearer, or closes when less than half of Low
- * still shows.
+ * Where a drag lets go, as Google's and Apple's maps do: the sheet follows the
+ * finger. `shown` is how much of the sheet is on screen as the finger lifts,
+ * `heights` what each magnet shows, `velocity` the finger's speed upwards in
+ * px/ms (negative: downwards), `from` how much showed when it took hold.
+ * Any swipe up goes to Max, from Low or Middle alike, never to rest on Middle
+ * or between. A flick down goes to Low, from Max or Middle alike; a slower
+ * swipe down steps down one height, Max to Middle, Middle to Low, and from
+ * Max on to Low when let go below halfway between Middle and Low. A sheet
+ * pulled below half of Low closes, however slowly, and so does a flick down
+ * from Low. A move shorter than a tap's returns to the
+ * height nearest where it was let go.
  */
 export function snapFor(
   shown: number,
   velocity: number,
   heights: ReturnType<typeof heightsFor>,
+  from: number,
 ): Snap | 'close' {
   if (velocity >= FLICK) return 'max';
   if (velocity <= -FLICK) return shown > heights.low + 1 ? 'low' : 'close';
-  if (shown >= heights.max - MAX_PULL_PX) return 'max';
-  if (shown > heights.middle + MIDDLE_PULL_PX) return shown / heights.max;
   if (shown < heights.low / 2) return 'close';
-  return Math.abs(heights.middle - shown) < Math.abs(heights.low - shown) ? 'middle' : 'low';
+  const travelled = shown - from;
+  if (travelled > DRAG_PX) return 'max';
+  if (travelled < -DRAG_PX) {
+    if (from <= heights.middle + 1) return 'low';
+    return shown < (heights.low + heights.middle) / 2 ? 'low' : 'middle';
+  }
+  return nearest(shown, heights);
+}
+
+/** The height that shows closest to `shown`: Low, Middle or Max. */
+function nearest(shown: number, heights: ReturnType<typeof heightsFor>): 'low' | 'middle' | 'max' {
+  const stops = ['low', 'middle', 'max'] as const;
+  return stops.reduce((best, stop) =>
+    Math.abs(heights[stop] - shown) < Math.abs(heights[best] - shown) ? stop : best,
+  );
 }
