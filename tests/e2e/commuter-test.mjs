@@ -225,13 +225,16 @@ await page.waitForTimeout(1200);
         if (y > n) n = y;
       }
     }
-    const c = m.cameraForBounds(
+    const fit = m.cameraForBounds(
       [
         [w, s],
         [e, n],
       ],
       { padding: 100, maxZoom: 13 },
     );
+    // The fit is held inside the map's maxBounds, which cameraForBounds
+    // ignores: MapLibre's own hold, read from its camera (phone-test says why).
+    const c = m._camera.transform.applyConstrain(fit.center, fit.zoom);
     return {
       opening: window.__opening,
       want: { lng: c.center.lng, lat: c.center.lat, zoom: c.zoom, bearing: 0, pitch: 0 },

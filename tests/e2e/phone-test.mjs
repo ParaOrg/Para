@@ -518,13 +518,19 @@ check(
           if (y > n) n = y;
         }
       }
-      const c = window.__map.cameraForBounds(
+      const m = window.__map;
+      const fit = m.cameraForBounds(
         [
           [w, s],
           [e, n],
         ],
         { padding: 100, maxZoom: 13 },
       );
+      // cameraForBounds ignores the map's maxBounds; the fit does not, as
+      // MapLibre holds the view inside them, so a box whose fit would show
+      // past Greater Manila's edge is framed pushed back inside it. MapLibre's
+      // own hold, read from its camera: there is no public way to it.
+      const c = m._camera.transform.applyConstrain(fit.center, fit.zoom);
       return { lng: c.center.lng, lat: c.center.lat, zoom: c.zoom, bearing: 0, pitch: 0 };
     });
   const camOf = (p) =>
@@ -912,6 +918,12 @@ const published = await page.evaluate(() =>
     .catch(() => null),
 );
 const fileDirections = published?.directions ?? [];
+/**
+ * The directions of loops: a loop's trip leaves from its tip and comes back
+ * there, with no two ends to check. loop-test holds them; the checks here
+ * that want a route's two ends pick a route that has them.
+ */
+const loopIds = new Set(fileDirections.filter((v) => v.route?.isLoop === true).map((v) => v.id));
 /**
  * What a trip on direction `id` lists behind its ‹ when it was opened on its
  * own (the owner's ask, 2026-09-29): the directions, drawn and the same way
@@ -2814,13 +2826,15 @@ async function openAlone(d) {
 
 // ------------------------------------------------ 2. a forgiving tap, ±20 px
 // Route A: the vertex with the most clearance from every other route's line,
-// and clear of the hotspot polygons, so only one thing can possibly be there.
+// and clear of the hotspot polygons, so only one thing can possibly be there;
+// on a route with two ends, never a loop, for the trip card's checks below.
 let routeA = null;
 if (snapshot.routes.length === 0) {
   skip('a tap 14 px beside a lone route line selects it', 'no saved routes on the map today');
 } else {
   let best = null;
   for (const [ri, r] of snapshot.routes.entries()) {
+    if (loopIds.has(r.id)) continue;
     for (const vi of sampleIndices(r.coords.length, 1500 / snapshot.routes.length)) {
       const p = r.coords[vi];
       const k = mPerDegLng(p[1]);
