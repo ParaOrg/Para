@@ -5,7 +5,7 @@ export type RouteEndPointPosition = 'top' | 'bottom';
 interface RouteEndPointLinesProps {
   /**
    * Figma's Property 1 (4235:12313): Top, a row with more rows below it, the line running on
-   * past its arrow; Bottom, the last row, the line ending at its arrow.
+   * past its stub; Bottom, the last row, the line ending at its stub.
    */
   position: RouteEndPointPosition;
 }

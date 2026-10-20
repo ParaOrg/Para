@@ -1,49 +1,51 @@
 import type { ComponentPropsWithoutRef } from 'react';
 
-import { CircleArrowRightIcon } from '@/shared/ui/route-icons';
-
-import { VehicleIcon } from './vehicle-icon';
-import type { Vehicle } from '../model/vehicles';
+import { ROW_PRESSED } from './livery-card';
+import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
+import type { Livery } from '../model/liveries';
 
 type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children'> & {
   /** Figma's routeDirection: the place the row's route goes to. */
   routeDirection: string;
   /**
-   * The row's route's vehicle, drawn at its right end (Figma's Jeep, 4197:13125–13128). Figma draws
-   * only the Jeep; the owner keeps each row's own route's vehicle, as a trip's header names it
-   * (vehicleOf). Null, a mode with no drawing: none.
+   * What the row sits on, Figma's variant: a RouteCard in its livery (RouteCard), the row pressing
+   * to the card's timeline colour (ROW_PRESSED); or the sheet's own surface, under a trip's tiles
+   * (RouteTripDetail), the row rounded and pressing grey as the fare tile does.
    */
-  vehicle: Vehicle | null;
+  on: Livery | 'surface';
+  /** Where the row sits among its rows, which decides how its tree line ends. */
+  position: RouteEndPointPosition;
 };
 
-// 10 above and below, 44 tall.
-const BAR = 'flex w-full items-center gap-1 px-4 py-2.5 text-left text-base/6 font-medium';
+const BAR = 'flex w-full items-center px-4 text-left text-base/6 font-medium';
 // Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed draws it. The hover is
 // tertiary too.
 const ON_SURFACE =
-  'rounded-full text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
+  'gap-2 rounded-full text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
+const ON_CARD = 'gap-1';
 
 /**
- * Figma's .RouteEndPointBar, variant RouteTripDetail (3848:11928): a trip's "Other routes" row on
- * the sheet's surface, a route by where it goes, the circled arrow before it and its vehicle at 75
- * after it, a button that opens it. A RouteCard's row is RouteCardEndPoint.
+ * Figma's .RouteEndPointBar (3848:11928): a route by where it goes, the tree line before it, a
+ * button that opens it. One component where Figma has one, so a change to the row is made once: a
+ * RouteCard's rows, 36 tall, and a trip's "Other routes", 40 tall.
  */
-export function RouteEndPointBar({ routeDirection, vehicle, className, ...rest }: Props) {
+export function RouteEndPointBar({ routeDirection, on, position, className, ...rest }: Props) {
+  const isOnSurface = on === 'surface';
   return (
     <button
       type="button"
       {...rest}
-      className={BAR + ' ' + ON_SURFACE + (className ? ' ' + className : '')}
+      className={
+        BAR +
+        ' ' +
+        (isOnSurface ? ON_SURFACE : ON_CARD + ' ' + ROW_PRESSED[on]) +
+        (className ? ' ' + className : '')
+      }
     >
-      <span aria-hidden className="size-6 shrink-0 *:size-full">
-        <CircleArrowRightIcon />
+      <RouteEndPointLines position={position} />
+      <span className={'min-w-0 flex-1 ' + (isOnSurface ? 'py-2' : 'py-1.5')}>
+        {routeDirection}
       </span>
-      <span className="min-w-0 flex-1">{routeDirection}</span>
-      {vehicle && (
-        <span aria-hidden className="size-6 shrink-0 opacity-75 *:size-full">
-          <VehicleIcon vehicle={vehicle} />
-        </span>
-      )}
     </button>
   );
 }
