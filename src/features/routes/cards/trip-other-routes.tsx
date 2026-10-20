@@ -1,12 +1,10 @@
 import { useId } from 'react';
 
 import { RouteEndPointBar } from './route-end-point-bar';
-import type { Vehicle } from '../model/vehicles';
 
 export interface OtherRoute {
   id: string;
   to: string;
-  vehicle: Vehicle | null;
 }
 
 interface TripOtherRoutesProps {
@@ -31,11 +29,12 @@ export function TripOtherRoutes({ routes, onRoute }: TripOtherRoutesProps) {
         Other routes
       </h3>
       <ul>
-        {routes.map((r) => (
+        {routes.map((r, index) => (
           <li key={r.id}>
             <RouteEndPointBar
               routeDirection={r.to}
-              vehicle={r.vehicle}
+              on="surface"
+              position={index === routes.length - 1 ? 'bottom' : 'top'}
               data-testid="trip-other-route"
               data-direction={r.id}
               onClick={() => onRoute?.(r.id)}

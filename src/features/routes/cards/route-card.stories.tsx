@@ -174,7 +174,7 @@ export const SelectedRowsOpen: Story = {
 };
 
 /**
- * A row's State=Pressed (RouteCardEndPoint, 3848:11928): press and hold a row
+ * A row's State=Pressed (RouteEndPointBar, 3848:11928): press and hold a row
  * — it wears Card/<livery>/Timeline/surface while the finger or the mouse is
  * down, and opens its trip as it lets go. A browser state, `:active`, so
  * there is nothing to set: hold it to see it, in each livery.
@@ -214,7 +214,7 @@ export const SixWaysOut: Story = {
 };
 
 /**
- * Each mode's pill heads its own rows, stacked down the card: Figma's RouteCardExample (3746:1238)
+ * Each mode's label heads its own rows, stacked down the card: Figma's RouteCardExample (3746:1238)
  * draws one group, and a place can mix. Rail lines are all "Train"; a mode's rows keep their
  * order, and the tree line ends at each group's last row.
  */
@@ -246,7 +246,7 @@ export const MixedModes: Story = {
   },
 };
 
-/** A route with no drawn vehicle (UV Express, P2P, tricycle) has no pill; the rows stand alone. */
+/** A route with no drawn vehicle (UV Express, P2P, tricycle) has no label; the rows stand alone. */
 export const NoMode: Story = {
   args: { endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: null }] },
 };

@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
-import { RouteModePill } from './route-mode-pill';
+import { RouteMode } from './route-mode';
 import { VEHICLES } from '../model/vehicles';
 
-/** Figma's Modes (4236:17040): what a card's routes ride, white on the card's colour (red here). */
+/** Figma's Modes (4236:17040): what a card's routes ride, in the card's words' colour (white on red here). */
 const meta = {
-  title: 'Features/Routes/RouteModePill',
-  component: RouteModePill,
+  title: 'Features/Routes/RouteMode',
+  component: RouteMode,
   args: { vehicle: 'Jeepney' },
   decorators: [
     (Story) => (
@@ -16,7 +16,7 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof RouteModePill>;
+} satisfies Meta<typeof RouteMode>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -36,20 +36,20 @@ export const EJeep: Story = { args: { vehicle: 'E-Jeep' } };
 /** Property 1=Bus. */
 export const Bus: Story = { args: { vehicle: 'Bus' } };
 
-/** Every vehicle the code draws, side by side as a card with mixed modes shows them. */
+/** Every vehicle the code draws, one under another as a card with mixed modes shows them. */
 export const EveryVehicle: Story = {
   render: () => (
-    <ul className="flex flex-wrap gap-1">
+    <ul className="flex flex-col gap-2">
       {VEHICLES.map((vehicle) => (
         <li key={vehicle}>
-          <RouteModePill vehicle={vehicle} />
+          <RouteMode vehicle={vehicle} />
         </li>
       ))}
     </ul>
   ),
 };
 
-/** On MRT-3's yellow the pill takes the card's dark words, as its place name does. */
+/** On MRT-3's yellow the label takes the card's dark words, as its place name does. */
 export const OnDarkWords: Story = {
   args: { vehicle: 'MRT-3' },
   decorators: [

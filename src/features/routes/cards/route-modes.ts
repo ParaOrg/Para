@@ -1,7 +1,7 @@
 import type { Vehicle } from '../model/vehicles';
 
 /**
- * What a RouteCard's mode pill says (Figma's Modes, 4236:17040): a train's line
+ * What a RouteCard's mode says (Figma's Modes, 4236:17040): a train's line
  * is one word on the card, "Train"; its code is the trip header's.
  */
 export const MODE_LABEL = {
@@ -15,14 +15,14 @@ export const MODE_LABEL = {
 } satisfies Record<Vehicle, string>;
 
 interface ModeGroup<T> {
-  /** The mode the group's pill names; null for rows that ride nothing the design draws. */
+  /** The mode the group's label names; null for rows that ride nothing the design draws. */
   vehicle: Vehicle | null;
   items: T[];
 }
 
 /**
  * A card's rows under the mode they ride, one group for each mode in the order it first appears,
- * the rows keeping their order inside it. Rows with no vehicle form a group with no pill.
+ * the rows keeping their order inside it. Rows with no vehicle form a group with no label.
  */
 export function groupByMode<T extends { vehicle: Vehicle | null }>(
   items: readonly T[],
