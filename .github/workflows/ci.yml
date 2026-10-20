@@ -176,8 +176,11 @@ jobs:
         run: |
           cp .env.production .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-      # Uploads are off in every deployed build until the owner turns them on;
-      # upload-test turns them on for its own dev server, against a stand-in.
+          # The suites written for the recorder and the editor run with uploads
+          # off; upload-test turns them on below, against its stand-in.
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+      # upload-test turns uploads back on for its own dev server, against a
+      # stand-in for Supabase.
       - name: Turn uploads on, for upload-test
         if: matrix.suite == 'upload-test'
         run: |
@@ -240,6 +243,9 @@ jobs:
         run: |
           cp .env.production .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          # The suites written for the recorder and the editor run with uploads
+          # off; upload-test turns them on below, against its stand-in.
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
         if: matrix.suite == 'turnstile-test'
@@ -287,6 +293,9 @@ jobs:
         run: |
           cp .env.production .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          # The suites written for the recorder and the editor run with uploads
+          # off; upload-test turns them on below, against its stand-in.
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
       - name: Start the dev server
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
