@@ -179,6 +179,9 @@ jobs:
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
           echo VITE_CONTRIBUTIONS=0 >> .env.local
+          # and with the studio saving straight to the approved rows, as they
+          # were written for; the review suites run on the isolated preview.
+          echo VITE_STUDIO_DRAFTS=0 >> .env.local
       # upload-test turns uploads back on for its own dev server, against a
       # stand-in for Supabase.
       - name: Turn uploads on, for upload-test
@@ -246,6 +249,9 @@ jobs:
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
           echo VITE_CONTRIBUTIONS=0 >> .env.local
+          # and with the studio saving straight to the approved rows, as they
+          # were written for; the review suites run on the isolated preview.
+          echo VITE_STUDIO_DRAFTS=0 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
         if: matrix.suite == 'turnstile-test'
@@ -296,6 +302,9 @@ jobs:
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
           echo VITE_CONTRIBUTIONS=0 >> .env.local
+          # and with the studio saving straight to the approved rows, as they
+          # were written for; the review suites run on the isolated preview.
+          echo VITE_STUDIO_DRAFTS=0 >> .env.local
       - name: Start the dev server
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
