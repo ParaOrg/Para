@@ -1,7 +1,9 @@
 import { useState } from 'react';
 
 import { coarse } from '@/features/routes/map/map-view';
+import { Turnstile } from '@/shared/ui/turnstile';
 
+import { useCaptcha } from './use-captcha';
 import { getSupabase, supabaseConfigError } from '../data/supabase';
 import { FIELD_TEXT } from '../panels/sheet';
 
@@ -20,6 +22,7 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const captcha = useCaptcha();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +44,11 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
 
     setBusy(true);
 
-    const check = await supabase.auth.signInWithPassword({ email, password: current });
+    const check = await supabase.auth.signInWithPassword({
+      email,
+      password: current,
+      options: captcha.takeToken(),
+    });
     if (check.error) {
       setError(
         check.error.message === 'Invalid login credentials'
@@ -121,6 +128,16 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
 
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
+            {captcha.siteKey && (
+              <div className="mt-4">
+                <Turnstile
+                  key={captcha.round}
+                  siteKey={captcha.siteKey}
+                  onToken={captcha.setToken}
+                />
+              </div>
+            )}
+
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
@@ -131,7 +148,7 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
               </button>
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || !captcha.isReady}
                 className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
               >
                 {busy ? 'Saving…' : 'Save password'}

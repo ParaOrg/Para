@@ -675,11 +675,16 @@ test('the committed older shapes are the index without the lines and loops they 
   assert.equal(v2.schema, 2);
   assert.equal(v1.schema, 1);
   const loops = new Set(v5.variants.filter((v) => v.route.is_loop === true).map((v) => v.id));
+  // A road route that starts or ends at a left-out station goes too: the old app would find no stop there.
   const cut = (modes, lines) => {
-    const gone = new Set(
-      v5.variants.filter((v) => loops.has(v.id) || modes.includes(v.route.mode)).map((v) => v.id),
-    );
     const stations = new Set(v5.stops.filter((s) => lines.includes(s.line)).map((s) => s.id));
+    const endsAtStation = (route) =>
+      stations.has(route.head_stop_id) || stations.has(route.tail_stop_id);
+    const gone = new Set(
+      v5.variants
+        .filter((v) => loops.has(v.id) || modes.includes(v.route.mode) || endsAtStation(v.route))
+        .map((v) => v.id),
+    );
     return { gone, stations };
   };
   for (const [old, { gone, stations }] of [

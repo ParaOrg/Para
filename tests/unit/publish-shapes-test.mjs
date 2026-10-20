@@ -130,8 +130,12 @@ test('a saved loop reaches shape 5 only: shapes 1 to 4 stay byte for byte what t
   assert.equal(files.map, text('map.json'));
   const v5 = JSON.parse(files.v5);
   assert.equal(v5.schema, 5);
-  const loops = v5.variants.filter((v) => v.route.is_loop === true);
-  assert.equal(loops.length, 1);
+  // The committed map may carry loops of its own; the one added here is the extra one.
+  const committedLoops = JSON.parse(text('index.v5.json')).variants.filter(
+    (v) => v.route.is_loop === true,
+  ).length;
+  assert.equal(v5.variants.filter((v) => v.route.is_loop === true).length, committedLoops + 1);
+  const loops = v5.variants.filter((v) => v.id === 'loop-direction');
   assert.equal(v5.variants.length, JSON.parse(text('index.v5.json')).variants.length + 1);
   assert.equal(v5.links.length, JSON.parse(text('index.v5.json')).links.length + 2);
   // A loop's route has no ends, and is_loop comes last; every other row has no such key.
@@ -140,15 +144,19 @@ test('a saved loop reaches shape 5 only: shapes 1 to 4 stay byte for byte what t
   assert.equal(Object.keys(loops[0].route).at(-1), 'is_loop');
   assert.equal(
     v5.variants.filter((v) => 'is_loop' in v.route).length,
-    1,
-    'only the loop carries the key',
+    committedLoops + 1,
+    'only the loops carry the key',
   );
 });
 
 test('withoutLoops drops a loop and its links and keeps every stop', () => {
   const { all } = withALoop(committedRows());
   const cut = withoutLoops(all);
-  assert.deepEqual([...cut.ids.variants], ['loop-direction']);
+  assert.deepEqual(
+    [...cut.ids.variants],
+    all.variants.filter(isLoopRow).map((v) => v.id),
+  );
+  assert.ok(cut.ids.variants.has('loop-direction'));
   assert.equal(cut.variants.some(isLoopRow), false);
   assert.equal(
     cut.links.some((l) => l.route_variant_id === 'loop-direction'),

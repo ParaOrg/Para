@@ -110,6 +110,7 @@ flowchart TD
   features_studio_auth --> features_routes_map
   features_studio_auth --> features_studio_data
   features_studio_auth --> features_studio_panels
+  features_studio_auth --> shared_ui
   features_studio_data --> features_routes_geo
   features_studio_data --> features_routes_model
   features_studio_data --> features_routes_published
@@ -158,7 +159,7 @@ flowchart TD
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
 | `features/studio` | `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/review` |
-| `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels` |
+| `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels`, `shared/ui` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
 | `features/studio/maps` | `design-system/primitives`, `features/studio/data` |

@@ -43,6 +43,7 @@ import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { readPublished } from './lib/big-map.mjs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 
 /** The project ref in VITE_SUPABASE_URL, which names the storage key. */
 const PROJECT_REF = 'smzwbqxttdyvohuizynl';
@@ -562,6 +563,7 @@ async function open(signedIn, path, phone = false) {
       body: JSON.stringify({ ...session, user }),
     }),
   );
+  await fakeTurnstile(page);
   await page.route(/router\.project-osrm\.org|routing\.openstreetmap\.de/, (r) =>
     r.fulfill({
       status: 200,
@@ -2179,6 +2181,8 @@ check(
 );
 await guest.getByPlaceholder('you@example.com').fill('owner@example.com');
 await guest.getByPlaceholder('Password').fill('stand-in');
+// With a Turnstile site key in the build, Sign in waits for the check.
+await guest.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
 await guest.getByPlaceholder('Password').press('Enter');
 await guest.waitForTimeout(1200);
 check(
