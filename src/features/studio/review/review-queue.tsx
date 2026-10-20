@@ -38,12 +38,12 @@ export function ReviewQueue({ onBusyChange, onChanged, initialDraftId = null }: 
     // Keep this exact revision through confirmation, even if the queue refreshes.
     setSelection({ action, draft });
   };
-  const handleConfirm = async (note?: string) => {
+  const handleConfirm = async () => {
     if (!selection || inFlight.current) return;
     inFlight.current = true;
     onBusyChange(true);
     try {
-      const result = await mutation.mutateAsync({ ...selection, note });
+      const result = await mutation.mutateAsync(selection);
       setNotice(reviewMessage(result));
       if (result.code === 'approved') onChanged();
       setSelection(null);
@@ -65,15 +65,14 @@ export function ReviewQueue({ onBusyChange, onChanged, initialDraftId = null }: 
     );
   const drafts = query.data.map((row) => reviewDraftOf(row, names));
   const reviewedDraft = query.data.find((draft) => draft.id === reviewId);
-  const pendingCount = drafts.filter((draft) => draft.status === 'pending').length;
   return (
     <div className="flex flex-col gap-4">
       <p>
-        {drafts.length} drafts · {pendingCount} waiting for review
+        {drafts.length} {drafts.length === 1 ? 'draft' : 'drafts'}
       </p>
       <p className="text-sm text-content-secondary">
-        Submitting sends a draft for review. The public map changes only after approval and
-        publication.
+        A draft changes nothing until you approve it. Approving changes the Studio map; the public
+        map changes at the next publish.
       </p>
       <Button
         variant="secondary"
@@ -97,7 +96,7 @@ export function ReviewQueue({ onBusyChange, onChanged, initialDraftId = null }: 
             setSelection(null);
             mutation.reset();
           }}
-          onConfirm={(note) => void handleConfirm(note)}
+          onConfirm={() => void handleConfirm()}
         />
       ) : reviewedDraft ? (
         <ReviewDetails

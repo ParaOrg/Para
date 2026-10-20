@@ -51,6 +51,61 @@ export const STORY_COMPARISON: ReviewComparison = {
   hasConflict: false,
   dependencies: [],
 };
+const LINE = {
+  type: 'LineString',
+  coordinates: [
+    [121.05, 14.71],
+    [121.06, 14.7],
+  ],
+};
+const ROUTE = {
+  signboard: 'Fairview – Capitol',
+  mode: 'jeepney',
+  fare_note: null,
+  via: null,
+  head_stop_id: 'preview-fairview',
+  tail_stop_id: 'preview-capitol',
+  is_loop: false,
+};
+const way = (id: string, reversed: boolean, isDrawn: boolean) => ({
+  id,
+  reversed,
+  shape: isDrawn ? LINE : null,
+  control_points: isDrawn ? LINE.coordinates : [],
+  segments: [],
+  links: [],
+});
+
+/** A route draft that takes away its Pabalik line, as Delete on that way saves it. */
+export const STORY_REMOVAL_DRAFT: DraftRow = {
+  ...STORY_DRAFT,
+  id: 'preview-removal',
+  kind: 'route',
+  subject_id: 'preview-route',
+  status: 'draft',
+  submitted_at: null,
+  payload: {
+    version: 1,
+    route: ROUTE,
+    directions: [way('papunta', false, true), way('pabalik', true, false)],
+  },
+};
+export const STORY_REMOVAL: ReviewComparison = {
+  approved: {
+    version: 1,
+    route: ROUTE,
+    directions: [way('papunta', false, true), way('pabalik', true, true)],
+  },
+  proposed: {
+    version: 1,
+    route: ROUTE,
+    directions: [way('papunta', false, true), way('pabalik', true, false)],
+  },
+  currentRevision: 3,
+  hasConflict: false,
+  dependencies: [],
+};
+
 const PUBLICATION = {
   publishedAt: '2026-10-18T09:00:00Z',
   subjects: [
@@ -81,17 +136,22 @@ export function ReviewStoryData({
   children,
   hasConflict = false,
   isEmpty = false,
+  draft = STORY_DRAFT,
+  comparison = STORY_COMPARISON,
 }: {
   children: ReactNode;
   hasConflict?: boolean;
   isEmpty?: boolean;
+  /** The draft whose comparison is preloaded, and that comparison. */
+  draft?: DraftRow;
+  comparison?: ReviewComparison;
 }) {
   const [client] = useState(() => {
     const next = new QueryClient({
       defaultOptions: { queries: { staleTime: Infinity, retry: false, refetchOnMount: false } },
     });
-    next.setQueryData(reviewKeys.comparison(STORY_DRAFT.id, STORY_DRAFT.revision), {
-      ...STORY_COMPARISON,
+    next.setQueryData(reviewKeys.comparison(draft.id, draft.revision), {
+      ...comparison,
       hasConflict,
     });
     next.setQueryData(

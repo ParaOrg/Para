@@ -147,14 +147,6 @@ export async function submitDraft(draftId: string, revision: number): Promise<Re
   return callReview('submit_draft', { p_draft: draftId, p_revision: revision });
 }
 
-export async function sendBackDraft(
-  draftId: string,
-  revision: number,
-  note: string,
-): Promise<ReviewResult> {
-  return callReview('send_back_draft', { p_draft: draftId, p_revision: revision, p_note: note });
-}
-
 export async function discardDraft(draftId: string, revision?: number): Promise<ReviewResult> {
   return callReview('discard_draft', { p_draft: draftId, p_revision: revision ?? null });
 }

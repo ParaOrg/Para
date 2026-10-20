@@ -8,7 +8,7 @@ const meta = {
   component: ReviewConfirmation,
   parameters: { layout: 'padded' },
   args: {
-    action: 'send-back',
+    action: 'approve',
     draft: {
       id: 'draft-a',
       label: 'UP Ikot',
@@ -26,9 +26,6 @@ const meta = {
 } satisfies Meta<typeof ReviewConfirmation>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const SendBack: Story = {};
+export const Approve: Story = {};
 export const Discard: Story = { args: { action: 'discard' } };
-export const Submit: Story = {
-  args: { action: 'submit', draft: { ...meta.args.draft, status: 'draft' } },
-};
 export const Busy: Story = { args: { isBusy: true } };

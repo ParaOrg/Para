@@ -22,32 +22,23 @@ await nodeFetch(page);
 await bareStyle(page);
 await page.goto(`${BASE}/review-guide.html`);
 await page.getByRole('link', { name: 'Open the functional preview' }).click();
-await page.getByRole('button', { name: /Drafts and review/ }).waitFor();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).waitFor();
 await page.getByRole('button', { name: 'Reset sample', exact: true }).click();
-await page.getByRole('button', { name: /Drafts and review/ }).click();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 let item = page
   .getByRole('listitem')
   .filter({ has: page.getByRole('heading', { name: 'Preview new place', exact: true }) });
 await item.getByRole('button', { name: 'Review changes' }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('button', { name: 'Send back', exact: true }).click();
-await page
-  .getByRole('textbox', { name: 'Reason for sending back' })
-  .fill('Correct this sample name.');
-await page.getByRole('button', { name: 'Send back', exact: true }).click();
 await page.getByRole('textbox', { name: 'Ground name', exact: true }).fill('Hosted reviewed place');
 await page.getByRole('button', { name: 'Save draft details', exact: true }).click();
 await page.waitForFunction(() =>
   [...document.querySelectorAll('button')].some(
-    (button) => button.textContent.trim() === 'Submit for review' && !button.disabled,
+    (button) => button.textContent.trim() === 'Approve' && !button.disabled,
   ),
 );
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('button', { name: 'Approve reviewed changes', exact: true }).click();
-await page.getByRole('button', { name: 'Approve draft', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Approved. Waiting' }).waitFor();
+await page.getByRole('button', { name: 'Approve', exact: true }).click();
+await page.getByRole('button', { name: 'Approve', exact: true }).click();
+await page.getByRole('status').filter({ hasText: 'Approved. The Studio map' }).waitFor();
 await page.getByRole('button', { name: 'Waiting for publication', exact: true }).click();
 await page.getByRole('listitem').filter({ hasText: 'Hosted reviewed place' }).waitFor();
 const snapshot = () =>
@@ -64,7 +55,7 @@ await page.getByTitle('Published ParaPo public map').waitFor();
 await page.frameLocator('iframe').locator('canvas').waitFor();
 await page.getByText('Playground', { exact: true }).click();
 const openSubjects = async () => {
-  await page.getByRole('button', { name: /Drafts and review/ }).click();
+  await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
   await page.getByRole('button', { name: 'Routes and places', exact: true }).click();
   await page.getByRole('textbox', { name: 'Find a route or place' }).fill('Hosted reviewed place');
 };
@@ -82,7 +73,7 @@ await page.getByRole('button', { name: 'Take down…' }).waitFor();
 await page.getByRole('button', { name: 'Close', exact: true }).click();
 await page.getByRole('button', { name: 'Publish sample', exact: true }).click();
 assert.ok((await snapshot()).stops.some((stop) => stop.name === 'Hosted reviewed place'));
-await page.getByRole('button', { name: /Drafts and review/ }).click();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 await page.getByRole('button', { name: 'Drafts', exact: true }).click();
 const count = await page.getByRole('button', { name: 'Review changes' }).count();
 for (let at = 0; at < count; at++) {
@@ -91,24 +82,21 @@ for (let at = 0; at < count; at++) {
   if (await page.getByRole('checkbox', { name: /I compared both/ }).count()) break;
   await page.getByRole('button', { name: 'Back to drafts' }).click();
 }
-assert.equal(
-  await page.getByRole('button', { name: 'Approve reviewed changes' }).isDisabled(),
-  true,
-);
+assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled(), true);
 await page.getByRole('checkbox', { name: /I compared both/ }).check();
 await page.getByRole('button', { name: 'Keep draft for a new review' }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).waitFor();
+await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
 await page.getByRole('button', { name: 'Discard…' }).click();
 await page.getByRole('button', { name: 'Discard draft', exact: true }).click();
 await page.getByRole('status').filter({ hasText: 'Draft discarded' }).waitFor();
 await page.getByRole('button', { name: 'Close', exact: true }).click();
 await page.setViewportSize({ width: 390, height: 844 });
 await page.getByRole('button', { name: 'Reset sample', exact: true }).click();
-await page.getByRole('button', { name: /Drafts and review/ }).click();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
 assert.deepEqual(errors, []);
 assert.deepEqual(liveRequests, []);
 console.log(
-  'PASS: hosted sample review, send-back/edit, approval, waiting, publication, Public view, take-down/restore, conflict, discard and phone; zero live Supabase requests',
+  'PASS: hosted sample review, edit, approval, waiting, publication, Public view, take-down/restore, conflict, discard and phone; zero live Supabase requests',
 );
 await browser.close();
