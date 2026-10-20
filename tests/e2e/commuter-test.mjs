@@ -641,8 +641,9 @@ for (const [i, p] of snapshot.polys.entries()) {
         sameView(camBack, camHome),
         JSON.stringify({ camHome, camBack }),
       );
-      // A row tapped with no card picked, the owner's own way in: its ‹
-      // brings the camera back to where the row was tapped.
+      // A row tapped with no card picked, the owner's own way in: the trip
+      // opens without moving the camera (the owner, 2026-10-21), and its ‹
+      // leaves it where the row was tapped.
       const camRow = await view();
       await rows.first().click();
       await page.waitForTimeout(350);
@@ -654,8 +655,8 @@ for (const [i, p] of snapshot.polys.entries()) {
       await settled();
       const camRowBack = await view();
       check(
-        `  a row tapped at rest: the trip's overview, and its ‹ back to where the row was tapped`,
-        opened2 && moved && sameView(camRowBack, camRow),
+        `  a row tapped at rest: the trip opens with the camera where it was, and its ‹ leaves it there`,
+        opened2 && !moved && sameView(camRowBack, camRow),
         JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
       );
       // Picked, a second tap lets it go — and the camera, after the pick's
@@ -1116,6 +1117,13 @@ if (PART === 1) {
     await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), clean);
     await page.waitForTimeout(700);
     const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
+    const readCamera = () =>
+      page.evaluate(() => {
+        const m = window.__map;
+        const c = m.getCenter();
+        return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
+      });
+    const camBeforeTap = await readCamera();
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await page.waitForTimeout(350);
     const state = await cardKind();
@@ -1149,53 +1157,16 @@ if (PART === 1) {
       );
       const litIds = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];
       check('  exactly one direction is lit', litIds.length === 1, JSON.stringify(litIds));
-      // On a desktop too, the trip opens on its whole route (the owner's ask,
-      // 2026-10-01): every corner of its line on the map, beside the card
-      // floating in the corner, none under it.
-      const framed = await page.evaluate(
-        (id) =>
-          new Promise((done) => {
-            const m = window.__map;
-            const read = async () => {
-              const { fetchIndex } = await import('/src/features/routes/published/fetch-index.ts');
-              const { directionLine } = await import('/src/features/routes/model/routes.ts');
-              const v = (await fetchIndex()).directions.find((x) => x.id === id);
-              const line = v ? directionLine(v) : [];
-              const c = m.getCanvas().getBoundingClientRect();
-              const card = document.querySelector('[data-testid="card"]').getBoundingClientRect();
-              const pts = line
-                .map((p) => m.project(p))
-                .map((q) => ({ x: c.left + q.x, y: c.top + q.y }));
-              const box = {
-                left: Math.min(...pts.map((q) => q.x)),
-                right: Math.max(...pts.map((q) => q.x)),
-                top: Math.min(...pts.map((q) => q.y)),
-                bottom: Math.max(...pts.map((q) => q.y)),
-              };
-              const onMap =
-                box.left >= c.left - 2 &&
-                box.right <= c.right + 2 &&
-                box.top >= c.top - 2 &&
-                box.bottom <= c.bottom + 2;
-              const besideCard = box.left >= card.right - 2;
-              done({
-                points: pts.length,
-                onMap,
-                besideCard,
-                box: Object.fromEntries(Object.entries(box).map(([k, x]) => [k, Math.round(x)])),
-                cardRight: Math.round(card.right),
-                zoom: +m.getZoom().toFixed(2),
-              });
-            };
-            if (m.isMoving()) m.once('moveend', () => setTimeout(read, 50));
-            else setTimeout(read, 800);
-          }),
-        litIds[0],
-      );
+      // On a desktop too, the trip opens with the camera where it was: nothing
+      // fits the route (the owner, 2026-10-21).
+      await page.waitForTimeout(800);
+      const camAfterTap = await readCamera();
       check(
-        '  the camera takes in the whole route, beside the card in the corner',
-        framed.points > 1 && framed.onMap && framed.besideCard,
-        JSON.stringify(framed),
+        '  the camera stays where it was: the route is not fitted',
+        Math.abs(camAfterTap.zoom - camBeforeTap.zoom) < 0.01 &&
+          Math.abs(camAfterTap.lng - camBeforeTap.lng) < 1e-6 &&
+          Math.abs(camAfterTap.lat - camBeforeTap.lat) < 1e-6,
+        JSON.stringify({ camBeforeTap, camAfterTap }),
       );
       // The chevrons: flowing along the lit direction, each cut to exactly
       // the lit line's width. Measured on screen, across the chevron's own
