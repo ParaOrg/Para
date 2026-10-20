@@ -67,8 +67,9 @@ for (let k = 0; k < COPIES; k++) {
       route: {
         ...v.route,
         id: `${v.route.id}-${k}`,
-        head_stop_id: `${v.route.head_stop_id}-${k}`,
-        tail_stop_id: `${v.route.tail_stop_id}-${k}`,
+        // A loop has no ends: a copied null must stay null, or the app refuses the index.
+        head_stop_id: v.route.head_stop_id && `${v.route.head_stop_id}-${k}`,
+        tail_stop_id: v.route.tail_stop_id && `${v.route.tail_stop_id}-${k}`,
       },
       overview: moved(v.overview, d),
     });

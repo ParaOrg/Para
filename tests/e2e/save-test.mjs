@@ -68,10 +68,11 @@ for (const v of m.variants) {
     mode: v.route.mode,
     fare_note: v.route.fare_note ?? null,
     fare_as_of: null,
-    head_stop_id: v.route.head_stop_id,
-    tail_stop_id: v.route.tail_stop_id,
+    // A loop's ends are left out of the published file: null in the table.
+    head_stop_id: v.route.head_stop_id ?? null,
+    tail_stop_id: v.route.tail_stop_id ?? null,
     via: v.route.via ?? null,
-    is_loop: false,
+    is_loop: v.route.is_loop === true,
     created_at: now,
     updated_at: now,
   });
@@ -1376,7 +1377,9 @@ await dismissToasts();
     at(0.002, -0.0025),
     at(-0.002, -0.0025),
   ];
-  const ikotLine = () => directionsOf(tables.route.find((r) => r.is_loop)?.id)[0];
+  // The ikots this section draws, not the ones the published map brings.
+  const drawnIkots = () => tables.route.filter((r) => r.is_loop && !route.has(r.id));
+  const ikotLine = () => directionsOf(drawnIkots()[0]?.id)[0];
   const toggle = () => page.getByTestId('save-loop-toggle');
   const dialogs = [];
   page.on('dialog', (d) => dialogs.push(d.message()));
@@ -1440,7 +1443,7 @@ await dismissToasts();
   await saveButton().click();
   await waitFor(async () => (await toast().count()) > 0);
   w = writesSince(n);
-  const ikot = tables.route.find((r) => r.is_loop);
+  const [ikot] = drawnIkots();
   const ikotV = ikot && directionsOf(ikot.id);
   check(
     'an ikot is one route row with is_loop and no ends, and one direction row: no slot',
@@ -1501,9 +1504,9 @@ await dismissToasts();
       await page.getByLabel(/^Via/).fill('Katipunan');
       await saveButton().click();
       await waitFor(async () => (await toast().count()) > 0);
-      return tables.route.filter((r) => r.is_loop).length === 2;
+      return drawnIkots().length === 2;
     })(),
-    `${tables.route.filter((r) => r.is_loop).length} ikots`,
+    `${drawnIkots().length} ikots`,
   );
   await dismissToasts();
 
@@ -1577,7 +1580,9 @@ await dismissToasts();
   await waitFor(
     async () => (await page.getByRole('button', { name: 'Save terminal' }).count()) === 0,
   );
-  await page.waitForTimeout(500);
+  // The panel goes before the save is done: its toast says when it is, and a
+  // tap on the map before then opens nothing.
+  await waitFor(async () => (await toast().count()) > 0);
   await dismissToasts();
   const ikotTerminal = tables.stop.find((x) => x.name === 'Stand-in Ikot Terminal');
   check(
@@ -1606,7 +1611,7 @@ await dismissToasts();
   );
   await dismissToasts();
   // The second ikot (with its via) is taken away too, so the sections after see what they saw before.
-  for (const r of tables.route.filter((x) => x.is_loop)) remove('route', [r]);
+  for (const r of drawnIkots()) remove('route', [r]);
 }
 
 // ---- 7. A route's end is refused a delete, in words
