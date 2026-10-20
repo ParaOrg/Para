@@ -936,6 +936,16 @@ const jumpTo = async (p, center, zoom = ZOOM) => {
   );
   await p.waitForTimeout(300);
 };
+// A jump leaves the place in the map's middle, which the sheet at Middle
+// covers: moved up into the quarter of the map above it, where a finger can tap.
+const jumpAboveSheet = async (p, center) => {
+  await jumpTo(p, center);
+  await p.evaluate((at) => {
+    const m = window.__map;
+    m.panBy([0, m.project(at).y - m.getContainer().clientHeight / 4], { duration: 0 });
+  }, center);
+  await p.waitForTimeout(300);
+};
 /**
  * How many features `layer` draws at canvas point `xy` once it draws any,
  * polled for up to `ms`; 0 if it never does, -1 if there is no such layer.
@@ -3065,14 +3075,7 @@ if (routeA) {
     );
   } else {
     const end = tappable[0];
-    await jumpTo(page, end.at);
-    // The end sits in the map's middle after the jump, which the sheet at
-    // Middle now covers: moved up into the quarter of the map above it.
-    await page.evaluate((at) => {
-      const m = window.__map;
-      m.panBy([0, m.project(at).y - m.getContainer().clientHeight / 4], { duration: 0 });
-    }, end.at);
-    await page.waitForTimeout(300);
+    await jumpAboveSheet(page, end.at);
     await endButton(end.name).locator('[data-part="name"]').click();
     await page.waitForTimeout(300);
     await page
@@ -3451,7 +3454,7 @@ if (!shared) {
         page.locator('[data-testid="chooser"]').first().getAttribute('data-snap');
       if ((await listSnap()) === 'max')
         await buttonTap(listHandle, async () => (await listSnap()) !== 'max');
-      if (tailAt) await jumpTo(page, tailAt);
+      if (tailAt) await jumpAboveSheet(page, tailAt);
       const namePill = tail.locator('[data-part="name"]');
       const reachable = await namePill.evaluate((el) => {
         const r = el.getBoundingClientRect();
