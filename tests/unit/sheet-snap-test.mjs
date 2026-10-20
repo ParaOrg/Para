@@ -81,8 +81,8 @@ test('a flick down goes all the way to Low, from Max or Middle alike, and from L
   assert.equal(snapFor(70, -3, heights, 80), 'close');
 });
 
-test('each height of a map 844 tall: Low 129, Middle 40%, Max all of it but a 24 px strip', () => {
-  assert.deepEqual(heightsFor(844), { low: LOW_PX, middle: 338, max: 820 });
+test('each height of a map 844 tall: Low 129, Middle 55%, Max all of it but a 24 px strip', () => {
+  assert.deepEqual(heightsFor(844), { low: LOW_PX, middle: 464, max: 820 });
 });
 
 // A finger taking hold of a sheet at Middle (464 of 844) at y 400.
@@ -116,7 +116,7 @@ test('lifted while moving fast it is a flick: to the end, down from Low it close
   assert.equal(down.release(64 + 16), 'close');
 });
 
-// A swipe up from Middle (338 of 844) that starts fast and slows to a crawl
+// A swipe up from Middle (464 of 844) that starts fast and slows to a crawl
 // before the finger lifts: read over its last 100 ms, it is slow — no flick —
 // but it is a swipe up from Middle, so it goes to Max.
 test('a swipe that slows before lifting is no flick: from Middle, a swipe up goes to Max', () => {

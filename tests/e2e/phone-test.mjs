@@ -2205,7 +2205,7 @@ const tripChecks = async () => {
             const m = window.__map;
             const c = m.getCanvas().getBoundingClientRect();
             const q = m.project(at);
-            return { y: c.top + q.y, top: c.top, cardTop: c.bottom - Math.round(c.height * 0.4) };
+            return { y: c.top + q.y, top: c.top, cardTop: c.bottom - Math.round(c.height * 0.55) };
           }, pickWant.at)
         : null;
       check(
@@ -2287,7 +2287,7 @@ const tripChecks = async () => {
           const m = window.__map;
           const c = m.getCanvas().getBoundingClientRect();
           const d = document.querySelector('[data-testid="card"]').getBoundingClientRect();
-          const floor = snap === 'max' ? c.bottom - Math.round(c.height * 0.4) : d.top;
+          const floor = snap === 'max' ? c.bottom - Math.round(c.height * 0.55) : d.top;
           const q = at && m.project(at);
           return {
             pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
@@ -2464,14 +2464,14 @@ const sheetState = async () =>
   (await card().count()) ? await card().first().getAttribute('data-snap') : null;
 /**
  * How far to drag the handle for the sheet to come to rest at `to` from
- * where it is, by the heights BottomSheet gives it: Low 129, Middle 40% of
+ * where it is, by the heights BottomSheet gives it: Low 129, Middle 55% of
  * the map, Max all of it but its 24 px strip at the top. Negative is up.
  */
 const dragTo = async (from, to) => {
   const h = await card()
     .first()
     .evaluate((el) => el.offsetHeight);
-  const shown = { low: 129, middle: Math.round(h * 0.4), max: h - 24 };
+  const shown = { low: 129, middle: Math.round(h * 0.55), max: h - 24 };
   return shown[from] - shown[to];
 };
 const closeCard = async () => {
@@ -3649,7 +3649,7 @@ if (!inside) {
     const at = await project(page, centroidOf(otherPoly.ring));
     const edges = await page.evaluate(() => {
       const c = window.__map.getCanvas().getBoundingClientRect();
-      return { top: c.top, cardTop: c.bottom - Math.round(c.height * 0.4) };
+      return { top: c.top, cardTop: c.bottom - Math.round(c.height * 0.55) };
     });
     const y = edges.top + at[1];
     check(

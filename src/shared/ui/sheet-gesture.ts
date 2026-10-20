@@ -79,8 +79,8 @@ const FLICK = 1.25;
 /** How far back the speed at release is read: only the finger's last moves count. */
 const RECENT_MS = 100;
 
-/** Middle shows this much of the map: 40%, the owner's pick. */
-const MIDDLE = 0.4;
+/** Middle shows this much of the map: 55%, the owner's pick. */
+const MIDDLE = 0.55;
 
 /**
  * What Low shows, the same for every card, the owner's rule (Figma 3817:6007;
