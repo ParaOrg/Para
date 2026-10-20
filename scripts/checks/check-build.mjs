@@ -44,7 +44,7 @@
 // 5. Weight (stage 6 of the clean-up, 2026-09-29): the fonts are under
 //    135 kB together (120 until SN Pro ExtraBold joined, the owner's call of
 //    2026-10-13), and what both pages share — MapLibre, React and the
-//    shared code — is under 400 kB gzipped, so neither creeps back
+//    shared code — is under 405 kB gzipped, so neither creeps back
 //    unnoticed. The fonts are precached. Since the cheap-phone plan's steps
 //    12 and 14 (2026-10-05) that is five chunks (`zod` since), named in vite.config.ts,
 //    each with a ceiling of its own: `maplibre`, `maplibre-gl-shared`,
