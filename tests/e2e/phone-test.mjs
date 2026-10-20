@@ -1596,18 +1596,14 @@ const tripChecks = async () => {
       );
     }
     check('  and leaves no padding on the map for later moves', drawn.padding);
-    // In to where the scale bar reads 500 m; a second tap takes the camera
-    // back where it was before the pick (the owner's ask, 2026-10-02).
+    // The pick does not zoom (the owner, 2026-10-21); a second tap takes the
+    // camera back where it was before the pick (the owner's ask, 2026-10-02).
     if (pickWant) {
-      const zoomed = await camNow();
-      const want = await page.evaluate(
-        async (lat) => (await import('/src/shared/utils/geo.ts')).zoomForScale(500, lat),
-        zoomed.lat,
-      );
+      const kept = await camNow();
       check(
-        '  zoomed in to 500 m on the scale bar',
-        Math.abs(zoomed.zoom - want) < 0.05,
-        `zoom ${zoomed.zoom.toFixed(2)}, want ${want.toFixed(2)}`,
+        '  the zoom stays where the commuter had it',
+        Math.abs(kept.zoom - camBeforePick.zoom) < 0.01,
+        `zoom ${kept.zoom.toFixed(2)}, was ${camBeforePick.zoom.toFixed(2)}`,
       );
     }
     await buttonTap(pickButton, async () => !(await isPicked()));
@@ -2328,18 +2324,12 @@ const tripChecks = async () => {
           after.padding,
         `picked first ${wasPicked}; the destination ${destinationBefore} → ${destination}, the origin ${origin}; ${after.pins} circle(s), ${after.lit.length} lit; in the map above the card ${after.above ?? 'not measured'} (data-snap=${snapNow})`,
       );
-      if (ends?.[end]) {
-        const zoomed = await camNow();
-        const want = await page.evaluate(
-          async (lat) => (await import('/src/shared/utils/geo.ts')).zoomForScale(500, lat),
-          ends[end][1],
-        );
-        check(
-          '    in to 500 m on the scale bar, as a hintuan is',
-          Math.abs(zoomed.zoom - want) < 0.05,
-          `zoom ${zoomed.zoom.toFixed(2)}, want ${want.toFixed(2)}`,
-        );
-      }
+      const zoomed = await camNow();
+      check(
+        '    the zoom stays where the commuter had it, as for a hintuan',
+        Math.abs(zoomed.zoom - camBeforeEnds.zoom) < 0.01,
+        `zoom ${zoomed.zoom.toFixed(2)}, was ${camBeforeEnds.zoom.toFixed(2)}`,
+      );
     }
     await originRow.first().scrollIntoViewIfNeeded();
     await buttonTap(
