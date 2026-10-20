@@ -38,6 +38,7 @@
 // (2026-10-04); and housekeeping.
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, takeHeldReload, waitForSource } from './lib/harness.mjs';
+import { routesFraming } from './lib/framing.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
   colourOf,
@@ -503,30 +504,6 @@ check(
 // 'load' when no route is drawn by then (the owner's answer to question A
 // of the cheap-phone report, 2026-10-06).
 {
-  /** The camera the routes' fit frames on page `p`'s map (useSavedRoutes, ROUTES_FRAMING). */
-  const fitCamera = (p) =>
-    p.evaluate(async () => {
-      const f = await (
-        await fetch('/data/index.v5.json', { headers: { 'x-parapo-test': '1' } })
-      ).json();
-      let [w, s, e, n] = [Infinity, Infinity, -Infinity, -Infinity];
-      for (const v of f.variants) {
-        for (const [x, y] of v.overview?.coordinates ?? []) {
-          if (x < w) w = x;
-          if (x > e) e = x;
-          if (y < s) s = y;
-          if (y > n) n = y;
-        }
-      }
-      const c = window.__map.cameraForBounds(
-        [
-          [w, s],
-          [e, n],
-        ],
-        { padding: 100, maxZoom: 13 },
-      );
-      return { lng: c.center.lng, lat: c.center.lat, zoom: c.zoom, bearing: 0, pitch: 0 };
-    });
   const camOf = (p) =>
     p.evaluate(() => {
       const m = window.__map;
@@ -547,7 +524,7 @@ check(
   const showCam = (c) =>
     c ? `${c.lng.toFixed(5)},${c.lat.toFixed(5)} z${c.zoom.toFixed(4)}` : 'none';
 
-  const want = await fitCamera(page);
+  const want = await routesFraming(page);
   const opening = await page.evaluate(() => window.__opening);
   const now = await camOf(page);
   check(
@@ -636,7 +613,7 @@ check(
     );
     await routesCome(p, release);
     const end = await camOf(p);
-    const fit = await fitCamera(p);
+    const fit = await routesFraming(p);
     check(
       "  the file still on its way: the map opens as it did (zoom 11), and the routes are framed as they come, the fit's camera",
       made?.zoom === 11 && sameCam(end, fit),
@@ -687,7 +664,7 @@ check(
     const dragged = await camOf(p);
     await routesCome(p, release);
     const end = await camOf(p);
-    const fit = await fitCamera(p);
+    const fit = await routesFraming(p);
     const moves = await p.evaluate(() => window.__opening.moves);
     check(
       '  a finger moving the map before they come keeps it where it took it: the fit does not take it back',
@@ -732,7 +709,7 @@ check(
       const moved = await camOf(p);
       await routesCome(p, release);
       const end = await camOf(p);
-      const fit = await fitCamera(p);
+      const fit = await routesFraming(p);
       const moves = await p.evaluate(() => window.__opening.moves);
       check(
         `  on a desktop, ${input} moving the map before they come keeps it where it took it`,
@@ -912,6 +889,12 @@ const published = await page.evaluate(() =>
     .catch(() => null),
 );
 const fileDirections = published?.directions ?? [];
+/**
+ * The directions of loops: a loop's trip leaves from its tip and comes back
+ * there, with no two ends to check. loop-test holds them; the checks here
+ * that want a route's two ends pick a route that has them.
+ */
+const loopIds = new Set(fileDirections.filter((v) => v.route?.isLoop === true).map((v) => v.id));
 /**
  * What a trip on direction `id` lists behind its ‹ when it was opened on its
  * own (the owner's ask, 2026-09-29): the directions, drawn and the same way
@@ -2814,13 +2797,15 @@ async function openAlone(d) {
 
 // ------------------------------------------------ 2. a forgiving tap, ±20 px
 // Route A: the vertex with the most clearance from every other route's line,
-// and clear of the hotspot polygons, so only one thing can possibly be there.
+// and clear of the hotspot polygons, so only one thing can possibly be there;
+// on a route with two ends, never a loop, for the trip card's checks below.
 let routeA = null;
 if (snapshot.routes.length === 0) {
   skip('a tap 14 px beside a lone route line selects it', 'no saved routes on the map today');
 } else {
   let best = null;
   for (const [ri, r] of snapshot.routes.entries()) {
+    if (loopIds.has(r.id)) continue;
     for (const vi of sampleIndices(r.coords.length, 1500 / snapshot.routes.length)) {
       const p = r.coords[vi];
       const k = mPerDegLng(p[1]);
