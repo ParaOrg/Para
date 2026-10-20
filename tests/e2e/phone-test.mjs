@@ -4212,6 +4212,7 @@ if (!routeA) {
   const anchor = await project(page, routeA.point);
   const perp = await perpendicular(page, routeA.point, routeA.neighbour, routeA.route.coords, 40);
   const box = await canvasBox();
+  const camBeforeOpen = await camNow();
   await mapTap(box.x + anchor[0] + perp[0] * 14, box.y + anchor[1] + perp[1] * 14);
   await page.waitForTimeout(2000);
   check(
@@ -4228,23 +4229,13 @@ if (!routeA) {
       `no direction named "${await tripLabel()}" on the map`,
     );
   else {
-    const shareFramed = await framedAboveCard(r.bbox);
+    // Opened, the camera stays where it was (the owner, 2026-10-21); the
+    // sheet's height is what takes the route in.
+    const camAfterOpen = await camNow();
     check(
-      '  it frames the whole route, above the card',
-      shareFramed.inside,
-      JSON.stringify(shareFramed),
-    );
-    // Framed, not merely shown: the route fills the room the card leaves along
-    // one side or the other (its 48 px margins aside), however long it is.
-    const { box: fb } = shareFramed;
-    const fill = Math.max(
-      (fb.right - fb.left) / (shareFramed.width - 96),
-      (fb.bottom - fb.top) / (shareFramed.floor - shareFramed.map[0] - 96),
-    );
-    check(
-      '  zoomed to fit it: the route fills the room along one side',
-      fill > 0.8 && fill < 1.05,
-      `${Math.round(fill * 100)}% at zoom ${shareFramed.zoom}`,
+      '  the camera stays where it was: the route is not fitted',
+      sameCamera(camBeforeOpen, camAfterOpen),
+      JSON.stringify({ camBeforeOpen, camAfterOpen }),
     );
 
     // The sheet at another height: the camera takes the route in again, in the
@@ -4256,7 +4247,6 @@ if (!routeA) {
     const capZoom = Math.log2(
       (78271.51696 * Math.cos((((r.bbox[1] + r.bbox[3]) / 2) * Math.PI) / 180) * 100) / 5000,
     );
-    const raised = Math.max(shareFramed.zoom, capZoom);
     const toMax = await buttonTap(handle(), async () => (await sheetState()) === 'max');
     const atMax = await framedAboveCard(r.bbox);
     const toLow = toMax && (await buttonTap(handle(), async () => (await sheetState()) === 'low'));
@@ -4268,13 +4258,13 @@ if (!routeA) {
       );
     else {
       check(
-        '  the sheet up to Max: framed as at Middle, no further out than 5 km on the scale bar',
-        Math.abs(atMax.zoom - raised) < 0.05,
-        `zoom ${atMax.zoom}; at Middle ${shareFramed.zoom}, 5 km at ${capZoom.toFixed(2)}`,
+        '  the sheet up to Max: the route taken in, no further out than 5 km on the scale bar',
+        atMax.zoom >= capZoom - 0.05 && (atMax.inside || atMax.zoom <= capZoom + 0.05),
+        `zoom ${atMax.zoom}, 5 km at ${capZoom.toFixed(2)}; ${JSON.stringify(atMax)}`,
       );
       check(
         '  at Low: in closer, the whole route above the sheet',
-        atLow.inside && atLow.zoom > shareFramed.zoom + 0.1,
+        atLow.inside && atLow.zoom >= atMax.zoom - 0.05,
         JSON.stringify(atLow),
       );
     }
@@ -4317,7 +4307,7 @@ if (!routeA) {
       const back = await framedAboveCard(r.bbox);
       check(
         '  moved away, then up to Middle: the overview again, 5 km on the bar at the farthest',
-        Math.abs(back.zoom - raised) < 0.05 && (back.inside || capZoom > shareFramed.zoom),
+        back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
         JSON.stringify(back),
       );
     }
