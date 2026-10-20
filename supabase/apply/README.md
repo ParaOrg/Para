@@ -91,3 +91,23 @@ Turnstile sign-in must ship before CAPTCHA is turned on project-wide.
 - Applied, and nothing has been uploaded: run `20261019125900_contributions_revert.sql`.
   `verify/contributions.sh` checks the schema afterwards matches the schema before, and that it re-applies.
 - Applied, and phones have uploaded: the revert refuses. Decide with the owner what happens to those recordings first.
+
+# Applying reviewed_draft_approval to the live project
+
+**Not applied live.** Needed before the studio's drafts are turned on
+(`STUDIO_DRAFTS`): the review screens approve with `approve_reviewed_draft`,
+which checks the reviewer approves exactly the draft version they compared, and
+settle a conflict with `refresh_draft_base`. Adds two functions; changes no
+table, row or existing function.
+
+| File | What it does |
+| --- | --- |
+| `20261018112757_reviewed_draft_approval_apply.sql` | One transaction: checks 0022 is applied; applies the migration (carried unchanged; `verify/run.sh` checks the copy); checks both functions are definers with a pinned path that only signed-in users can call; writes the ledger row `reviewed_draft_approval`. Safe to run twice. |
+| `20261018112757_reviewed_draft_approval_check.sql` | Read-only, 6 rows, all `ok` should be `t`. |
+| `20261018112757_reviewed_draft_approval_revert.sql` | Drops the two functions and the ledger row. No data touched. Safe to run twice. |
+
+## Steps
+
+1. Run `20261018112757_reviewed_draft_approval_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261018112757_reviewed_draft_approval_check.sql`: 6 rows, all `ok = t`.
+3. Send the ledger version (`select version from supabase_migrations.schema_migrations where name = 'reviewed_draft_approval'`) so it is recorded in `migrations/README.md`.
