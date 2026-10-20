@@ -1,5 +1,5 @@
 <svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="8" height="16" viewBox="0 0 8 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="VectorLineArrow">
-<path id="Vector 5" d="M0 8L0 8.5L5 8.5V8V7.5L0 7.5L0 8ZM5.35355 8.35355C5.54882 8.15829 5.54882 7.84171 5.35355 7.64645L2.17157 4.46447C1.97631 4.2692 1.65973 4.2692 1.46447 4.46447C1.2692 4.65973 1.2692 4.97631 1.46447 5.17157L4.29289 8L1.46447 10.8284C1.2692 11.0237 1.2692 11.3403 1.46447 11.5355C1.65973 11.7308 1.97631 11.7308 2.17157 11.5355L5.35355 8.35355Z" fill="white"/>
+<path id="Vector 5" d="M5 9C5.55228 9 6 8.55228 6 8C6 7.44772 5.55228 7 5 7V8V9ZM0 8L0 9L5 9V8V7L0 7L0 8Z" fill="white"/>
 </g>
 </svg>

@@ -195,7 +195,6 @@ export function TripCard({
       otherRoutes={others.map((v) => ({
         id: v.id,
         to: directionEnds(v).to,
-        vehicle: vehicleOf(v),
       }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);

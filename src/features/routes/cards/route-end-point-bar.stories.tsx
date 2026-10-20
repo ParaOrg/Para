@@ -1,20 +1,28 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteEndPointBar } from './route-end-point-bar';
-import { VEHICLES } from '../model/vehicles';
 
 /**
- * Figma's .RouteEndPointBar, variant RouteTripDetail (3848:11928), at Rest and Pressed, the route's
- * vehicle at the row's end. A RouteCard's row is RouteCardEndPoint.
+ * Figma's .RouteEndPointBar (3848:11928): RouteCard (on a card's colour, 36 tall) and
+ * RouteTripDetail (on the sheet's surface, rounded, 40 tall), each at Rest and Pressed, the tree
+ * line before the place. Pressed is a browser state, `:active`: hold a row to see it; the stories
+ * force it with the pressed fill.
  */
 const meta = {
   title: 'Features/Routes/RouteEndPointBar',
   component: RouteEndPointBar,
-  args: { routeDirection: 'SM Fairview', vehicle: 'Jeepney', onClick: fn() },
+  args: { routeDirection: 'SM Fairview', on: 'surface', position: 'top', onClick: fn() },
   decorators: [
-    (Story) => (
-      <div className="w-96 bg-surface p-3">
+    (Story, { args }) => (
+      <div
+        className={
+          args.on === 'surface'
+            ? 'w-96 bg-surface p-3'
+            : 'w-96 ' + CARD_SURFACE[args.on] + ' ' + CARD_TEXT[args.on]
+        }
+      >
         <Story />
       </div>
     ),
@@ -24,38 +32,43 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** RouteTripDetail at Rest, a trip's "Other routes" row: rounded, its Jeep at 75; a tap calls onClick. */
-export const Rest: Story = {
+/** RouteTripDetail at Rest, a trip's "Other routes" row: rounded, 40 tall; a tap calls onClick. */
+export const OnSurface: Story = {
   play: async ({ canvasElement, args }) => {
-    // The vehicle is hidden: the row's name is its route's direction alone.
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'SM Fairview' }));
+    const row = within(canvasElement).getByRole('button', { name: 'SM Fairview' });
+    await expect(row.getBoundingClientRect().height).toBe(40);
+    await userEvent.click(row);
     await expect(args.onClick).toHaveBeenCalled();
   },
 };
 
-/** RouteTripDetail Pressed: Background/surface-tertiary, as Figma draws it (forced here with the pressed fill). */
-export const Pressed: Story = { args: { className: 'bg-surface-tertiary' } };
+/** RouteTripDetail Pressed: Background/surface-tertiary, as Figma draws it. */
+export const OnSurfacePressed: Story = { args: { className: 'bg-surface-tertiary' } };
 
-/**
- * Every vehicle, each row its own route's (Figma draws the Jeep alone; the owner keeps each row's
- * own).
- */
-export const EveryVehicle: Story = {
-  render: (args) => (
-    <ul className="w-96">
-      {VEHICLES.map((vehicle) => (
-        <li key={vehicle}>
-          <RouteEndPointBar {...args} vehicle={vehicle} routeDirection={vehicle} />
-        </li>
-      ))}
-    </ul>
-  ),
+/** The last row of a trip's "Other routes": the line ends at its stub. */
+export const OnSurfaceLast: Story = { args: { position: 'bottom' } };
+
+/** RouteCard at Rest, on a red card: its words, 36 tall. */
+export const OnRed: Story = {
+  args: { on: 'red' },
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByRole('button', { name: 'SM Fairview' });
+    await expect(row.getBoundingClientRect().height).toBe(36);
+  },
 };
 
-/** A mode with no drawing (UV Express, P2P, tricycle): the row without a vehicle. */
-export const NoVehicle: Story = { args: { vehicle: null } };
+/** RouteCard Pressed: Card/red/Timeline/surface. */
+export const OnRedPressed: Story = {
+  args: { on: 'red', className: 'bg-card-red-timeline-surface' },
+};
 
-/** A long place wraps under itself, the arrow and the vehicle centred beside it. */
+/** The last row of a card's group: the line ends at its stub. */
+export const OnRedLast: Story = { args: { on: 'red', position: 'bottom' } };
+
+/** On MRT-3's yellow the row and its line take the card's dark words. */
+export const OnDarkWords: Story = { args: { on: 'metro-rail-way-three', position: 'bottom' } };
+
+/** A long place wraps under itself, the line stretching to the row's height. */
 export const LongName: Story = {
   args: { routeDirection: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },
 };

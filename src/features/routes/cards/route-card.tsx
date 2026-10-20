@@ -6,8 +6,8 @@ import {
   CARD_SURFACE,
   CARD_TEXT,
 } from './livery-card';
-import { RouteCardEndPoint } from './route-card-end-point';
-import { RouteModePill } from './route-mode-pill';
+import { RouteEndPointBar } from './route-end-point-bar';
+import { RouteMode } from './route-mode';
 import { MODE_LABEL, groupByMode } from './route-modes';
 import type { Livery } from '../model/liveries';
 import type { Vehicle } from '../model/vehicles';
@@ -16,8 +16,8 @@ import type { Vehicle } from '../model/vehicles';
  * A place and the routes that leave it, in a jeepney's livery — Figma's
  * RouteCard set (3665:2265): the place in SN Pro ExtraBold 20/28, the owner's
  * pick from the RouteCardExample (3746:1238), and a row for each place it
- * goes to (RouteCardEndPoint), joined to it by a tree line, under a pill for
- * the mode they ride (Modes, 4236:17040); rows of another mode stack below
+ * goes to (RouteEndPointBar), joined to it by a tree line, under the
+ * mode they ride (Modes, 4236:17040); rows of another mode stack below
  * as their own group. The Figma property Variants is `livery` here, the name
  * the tokens give these colours, because a variant in this codebase is a
  * direction. How each livery paints the card — surface, words, glow,
@@ -29,7 +29,7 @@ import type { Vehicle } from '../model/vehicles';
  * selects it, or lets it go. Which card is Selected, one at a time, is the
  * caller's to keep. The card carries no pesos: the trip's Expected fare does.
  *
- * A row's State (RouteCardEndPoint, 3848:11928): Rest, or Pressed — while the
+ * A row's State (RouteEndPointBar, 3848:11928): Rest, or Pressed — while the
  * finger is down on it, the row in the card's timeline colour,
  * Card/<livery>/Timeline/surface; the trip opens as it lets go (a tap's
  * feedback, not kept once the trip is open; ROW_PRESSED, shared with the
@@ -41,7 +41,7 @@ interface EndPoint {
   id: string;
   /** Figma's routeDirection: the place this direction goes to. */
   routeDirection: string;
-  /** What the direction rides: the pill it is grouped under (Modes). */
+  /** What the direction rides: the mode it is grouped under (Modes). */
   vehicle: Vehicle | null;
 }
 
@@ -75,7 +75,7 @@ export function RouteCard({
   testId,
 }: Props) {
   const selected = state === 'selected';
-  // Each mode's rows stand under its own pill, so rows of one mode can move up past another's.
+  // Each mode's rows stand under its own label, so rows of one mode can move up past another's.
   const groups = groupByMode(endPoints);
   return (
     <div
@@ -116,10 +116,10 @@ export function RouteCard({
           aria-label={vehicle ? MODE_LABEL[vehicle] : undefined}
           className="flex w-full flex-col"
         >
-          {/* The pill is 10.5 in from the card's edge, Figma's: that puts its icon over the tree line. */}
+          {/* 14 in and 8 below, Figma's: that puts the mode's icon over the tree line. */}
           {vehicle && (
-            <div className="flex px-[10.5px]">
-              <RouteModePill vehicle={vehicle} />
+            <div className="flex px-3.5 pb-2">
+              <RouteMode vehicle={vehicle} />
             </div>
           )}
           <ul className="flex w-full flex-col">
@@ -127,9 +127,9 @@ export function RouteCard({
               <li key={e.id}>
                 {/* `relative`: positioned after the name's stretched target, so
                     drawn over it. */}
-                <RouteCardEndPoint
+                <RouteEndPointBar
                   routeDirection={e.routeDirection}
-                  livery={livery}
+                  on={livery}
                   position={index === items.length - 1 ? 'bottom' : 'top'}
                   data-testid={`${testId}-item`}
                   data-direction={e.id}
