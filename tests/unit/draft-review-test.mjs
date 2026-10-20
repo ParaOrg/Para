@@ -5,7 +5,6 @@ import {
   approveDraft,
   discardDraft,
   listDrafts,
-  sendBackDraft,
   submitDraft,
 } from '../../src/features/studio/data/drafts.ts';
 import { reviewResultSchema } from '../../src/features/studio/data/review-schema.ts';
@@ -54,17 +53,6 @@ test('validates and retains draft and revision information on an RPC answer', as
   assert.deepEqual(await submitDraft('d', 3), { code: 'submitted', draft });
   assert.equal(log[0].op, 'submit_draft');
   assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3 });
-});
-
-test('send-back carries the reviewed revision and note', async () => {
-  const { client, log } = fakeSupabase(() => ({ data: { code: 'sent_back' } }));
-  setSupabase(client);
-  assert.deepEqual(await sendBackDraft('d', 3, 'Check the terminal'), { code: 'sent_back' });
-  assert.deepEqual(log[0].payload, {
-    p_draft: 'd',
-    p_revision: 3,
-    p_note: 'Check the terminal',
-  });
 });
 
 test('discard carries the revision when the reviewer supplies one', async () => {
@@ -151,43 +139,6 @@ const { runReviewCommand, reviewMessage } =
   await import('../../src/features/studio/data/review-commands.ts');
 const { reviewDraftOf } = await import('../../src/features/studio/data/review-label.ts');
 const { createQueryClient } = await import('../../src/shared/lib/query-client.ts');
-
-test('send-back refuses an empty or oversized note without a request', async () => {
-  const { client, log } = fakeSupabase(() => ({ data: { code: 'sent_back' } }));
-  setSupabase(client);
-  for (const note of [undefined, '', '  ', 'a'.repeat(4001)]) {
-    await assert.rejects(
-      runReviewCommand({ action: 'send-back', draft: row('d', 'pending'), note }),
-      /reason/,
-    );
-  }
-  assert.equal(log.length, 0);
-});
-
-test('a send-back note is trimmed and the reviewed revision is preserved', async () => {
-  const { client, log } = fakeSupabase(() => ({ data: { code: 'sent_back' } }));
-  setSupabase(client);
-  await runReviewCommand({
-    action: 'send-back',
-    draft: row('d', 'pending'),
-    note: '  Check the terminal  ',
-  });
-  assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3, p_note: 'Check the terminal' });
-});
-
-test('invalid lifecycle actions do not send requests', async () => {
-  const { client, log } = fakeSupabase(() => ({}));
-  setSupabase(client);
-  await assert.rejects(
-    runReviewCommand({ action: 'submit', draft: row('d', 'pending') }),
-    /Refresh/,
-  );
-  await assert.rejects(
-    runReviewCommand({ action: 'send-back', draft: row('d'), note: 'Reason' }),
-    /not waiting/,
-  );
-  assert.equal(log.length, 0);
-});
 
 test('discard from a pending draft always carries a revision guard', async () => {
   const { client, log } = fakeSupabase(() => ({ data: { code: 'discarded' } }));

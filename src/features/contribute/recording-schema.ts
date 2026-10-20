@@ -30,6 +30,23 @@ export const switchSchema = z.object({
 
 export type SwitchRow = z.infer<typeof switchSchema>;
 
+/**
+ * What became of a saved recording's upload, as this phone last knew it. Absent
+ * until the first upload goes through. `by` is the phone's identity at the time:
+ * a removal is only possible from that identity. `removed` keeps the phone's
+ * copy and stops it being sent again unless the contributor asks.
+ */
+export const uploadMarkSchema = z.union([
+  z.object({ state: z.literal('uploaded'), at: z.number(), by: z.string() }),
+  z.object({
+    state: z.literal('removed'),
+    at: z.number(),
+    /** Set when an editor deleted it in the studio, not the contributor here. */
+    byEditor: z.optional(z.boolean()),
+  }),
+]);
+export type UploadMark = z.infer<typeof uploadMarkSchema>;
+
 /** A recording as IndexedDB keeps it, apart from its fixes. */
 export const recordingSchema = z.object({
   version: z.literal(RECORDING_VERSION),
@@ -51,6 +68,7 @@ export const recordingSchema = z.object({
   endPointName: z.string(),
   description: z.string(),
   rideKind: z.nullable(z.enum(RIDE_KINDS)),
+  upload: z.optional(uploadMarkSchema),
 });
 export type Recording = z.infer<typeof recordingSchema>;
 

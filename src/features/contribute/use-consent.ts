@@ -2,6 +2,8 @@ import { useState } from 'react';
 import * as z from 'zod/mini';
 
 const CONSENT_KEY = 'parapo.contribute.consent';
+/** The consent text's version, sent with every upload; bump it when the consent panel's words change. */
+export const CONSENT_VERSION = 1;
 const consentSchema = z.literal('yes');
 
 function hasGivenConsent(): boolean {

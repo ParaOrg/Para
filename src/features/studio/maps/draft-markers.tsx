@@ -20,7 +20,7 @@ export function DraftMarkers({ map, drafts, places, onReview }: DraftMarkersProp
       if (!at) continue;
       const button = document.createElement('button');
       button.type = 'button';
-      button.textContent = `${draft.status === 'pending' ? 'Pending' : 'Draft'}: ${reviewDraftOf(draft, places).label}`;
+      button.textContent = `Draft: ${reviewDraftOf(draft, places).label}`;
       button.className =
         'max-w-48 truncate rounded-full border border-border-primary bg-surface px-3 py-2 text-sm font-bold text-content-primary shadow-lg';
       button.addEventListener('click', (event) => {

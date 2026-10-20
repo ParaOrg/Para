@@ -1,8 +1,148 @@
 # ParaPo workflow handoff
 
-Updated: 2026-10-18. Goal: complete contributor-to-studio workflow, through approval and publication.
+Updated: 2026-10-20 (Claude session). Sections from "Contributor uploads milestone — 2026-10-19" down are history; this top part is the state now.
 
-## Verified baseline
+## State now — 2026-10-20 (verified)
+
+**Branches.**
+
+- **Staging** `3ca352e` (merge of #297). Its CI was still running when this was written. The previous completed staging run (`5e21f62`, #296) failed only on the two known flakes: `save-test` ikot-delete, now at `save-test.mjs:1597`, and `scale-test` timing. The run on `d38d641` (#291) was fully green.
+- **Main** `b6fdff2`: the 04:00 UTC publish on top of hotfix #294 (`a33169f`). Otherwise it is still the #282 release, with **none** of the upload or draft work.
+- New work branches from current staging.
+- Only the owner merges into staging and main. Merges in this session were done on the owner's explicit say-so, after green CI, except #284 and #291. Those went in with only the known `save-test` flake failing; the owner was told and said go ahead.
+
+**Live database (shared by staging and production). Never reapply any of these.**
+
+| Migration | Ledger version | Check |
+| --- | --- | --- |
+| 0018_review | `20261018054405` | 13/13 |
+| 0021_loops | `20261018020203` | |
+| 0022_draft_ops | `20261018085951` | |
+| contributions (`20261019125900_contributions.sql`: tables, editor delete, hide, RLS on every `point_batch` piece) | `20261019144009` | 10/10 |
+| reviewed_draft_approval (`20261018112757_…`) | `20261020034722` | 6/6 |
+
+**Supabase Auth (owner, 2026-10-20).**
+- CAPTCHA is on: Turnstile, with the **rotated** secret. The first secret appeared in a screenshot and was rotated.
+- Anonymous sign-ins are on. "Allow new users to sign up" stays off.
+- Studio sign-in was checked by the owner after CAPTCHA went on, and works.
+
+**Switches in `.env.production`** (staging has them; production gets them only with a staging→main merge):
+
+| Setting | Value | Meaning |
+| --- | --- | --- |
+| `VITE_TURNSTILE_SITE_KEY` | `0x4AAAAAAFbtZb_Xw79jsru8` | Public. Widget "ParaPo": hostnames `villaralvorovic2.workers.dev`, `parapo.…`, `staging-parapo.…`, `localhost`; Managed mode |
+| `VITE_CONTRIBUTIONS` | `1` | Phones upload; the Studio's Contributors map is live |
+| `VITE_STUDIO_DRAFTS` | `1` | Studio saves are drafts; submit / send back / approve / take down / put back / Public view |
+
+CI's dev servers override these: Cloudflare's always-pass Turnstile test key, and `VITE_CONTRIBUTIONS=0` / `VITE_STUDIO_DRAFTS=0` for the suites written for the recorder and direct saves. `upload-test` turns uploads back on against its stand-in; the review suites run only on the isolated preview (Docker).
+
+**Owner's choice A for drafts:** staging first. While only staging has drafts, **edit routes only in the staging Studio**. Production's Studio still writes the approved rows directly, skipping review, and both Studios share one database. Approvals in the staging Studio reach commuters at the next production publish.
+
+## Merged 2026-10-19 → 20
+
+All into staging unless marked.
+
+- **The contributor uploads stack**, merged 2026-10-19:
+  - [#283](https://github.com/Roviicc/ParaPo/pull/283): publish test fix;
+  - [#290](https://github.com/Roviicc/ParaPo/pull/290): Turnstile on Studio sign-in;
+  - [#284](https://github.com/Roviicc/ParaPo/pull/284) → [#285](https://github.com/Roviicc/ParaPo/pull/285) → [#286](https://github.com/Roviicc/ParaPo/pull/286) → [#287](https://github.com/Roviicc/ParaPo/pull/287) → [#289](https://github.com/Roviicc/ParaPo/pull/289) → [#291](https://github.com/Roviicc/ParaPo/pull/291): uploads, Contributors map, editor delete and hide, Turnstile before the first upload;
+  - [#288](https://github.com/Roviicc/ParaPo/pull/288): handoff notes.
+  - #284 and #291 went in with the known `save-test` ikot-delete flake (`save-test.mjs:1595`, which also fails on untouched staging). The same code passed in #285–#289.
+- [#292](https://github.com/Roviicc/ParaPo/pull/292): Turnstile site key.
+  - It also fixed `save-test`: shared `tests/e2e/lib/fake-turnstile.mjs`, and Sign in waits for the check.
+- [#293](https://github.com/Roviicc/ParaPo/pull/293): `VITE_CONTRIBUTIONS=1`.
+- [#295](https://github.com/Roviicc/ParaPo/pull/295) on staging and [#294](https://github.com/Roviicc/ParaPo/pull/294) **hotfix into main**: the publish fix.
+  - Main's nightly publish (2026-10-19 23:19 UTC) had refused the map. New jeep routes Cogeo – Cubao and Antipolo – Cubao via Marcos Highway end at LRT-2 station hotspots. Shapes 1–2 strip stations but kept those routes, so `check-map-data` failed `index.json`.
+  - `withoutLines` now also drops a route whose head or tail is a stripped station.
+  - #294 also carries #283's test fix, so main's nightly CI is green again.
+  - Before merging, a dry run of the real publish against live data (read-only, publishable key) gave 0 problems in all four shapes.
+  - Owner-triggered publish at 04:00 UTC succeeded (25 directions, 106 hotspots, both routes included). Production served it at `published_at 2026-10-20T04:00:23Z`.
+- [#296](https://github.com/Roviicc/ParaPo/pull/296): reviewed_draft_approval paste file and check; `verify/run.sh` applies the migration through the paste file.
+  - On a disposable DB mirroring live, `review-test`, `review-route-picker-test` and `review-publication-test` passed on that day's staging code with drafts on.
+- [#297](https://github.com/Roviicc/ParaPo/pull/297): `VITE_STUDIO_DRAFTS=1`, plus the ledger row for reviewed_draft_approval.
+
+## Waiting on the owner
+
+1. **Phone test on staging:** record → save → "Uploaded to ParaPo". In the Studio: Contributors → open → Hide / Show hidden / Show again → Delete. Then the phone reads "Removed from ParaPo by an editor".
+2. **Drafts trial in the staging Studio:** edit → draft → Submit → compare → Send back → resubmit → Approve. Approved changes go out at the next publish.
+3. **Staging → main merge** when both trials are satisfactory. That brings uploads, drafts and Turnstile to production, since `.env.production` carries all three settings.
+4. **Contributor button on the public map** (`contribute/14`): needs the owner's go to end the test period, the National Privacy Commission check, and the button's Figma frame. Nothing is built yet.
+
+## Known issues and notes
+
+- **`save-test` ikot-delete flake** (`save-test.mjs:1597` since #292, "Delete on an ikot…"). It fails intermittently in CI and in Claude containers on untouched staging too. Not fixed.
+- **`scale-test` timing** ("main thread busy under 5 s"). CI varies 2.0–5.6 s on unchanged code; #295 needed a re-run at 5.4 s, and the `5e21f62` staging push run failed it too.
+- **Local `save-test` in Claude containers** is not reliable: the pre-installed Chromium is older than the pinned Playwright, so a symlinked `PLAYWRIGHT_BROWSERS_PATH` is needed, and the CPU is shared. Use CI.
+- **Hand-written database types.** The contribution tables' entries in `database.types.ts` were added in the classic format from the disposable schema's catalog. Regenerate them from live with a classic-compatible generator when convenient. The partitions are not listed.
+- **Out-of-date tickets** in `.scratch/*/issues/`. `contribute/07`, `/08`, `/13` and `studio-maps/08`, `/09` still say ready-for-agent but are built. `contribute/09` (anonymous sign-in) is done.
+- **Stale open drafts** #133, #258, #262, #274 and #279. #274 and #279 landed through #281.
+- **Review page** with screenshots and the upload/view/delete checklist: https://claude.ai/artifact/5Q91j3EdvaxxdLuxV2ucNU
+
+## Contributor uploads milestone — 2026-10-19 (Claude session)
+
+PRs as opened on 2026-10-19 (**all merged since**; see the state above):
+
+| PR | Branch @ head | Base | What |
+| --- | --- | --- | --- |
+| [#283](https://github.com/Roviicc/ParaPo/pull/283) | `claude/publish-test-source-revisions` @ `3111388` | staging | Test-only fix: main's nightly CI (run 39173347122) failed `publish-shapes-test` after the first real publish wrote `source_revisions`. CI green |
+| [#284](https://github.com/Roviicc/ParaPo/pull/284) | `claude/contribution-upload-db` @ `6168e20` | staging | Migration `20261019125900_contributions.sql` (the planned "0019"), apply/check/revert package, verify scripts, types. CI green |
+| [#285](https://github.com/Roviicc/ParaPo/pull/285) | `claude/contribution-upload-phone` @ `feb795c` | #284 | Phone upload: status, retry, Remove upload vs Delete from phone, `VITE_CONTRIBUTIONS` flag |
+| [#286](https://github.com/Roviicc/ParaPo/pull/286) | `claude/contribution-studio-view` @ `3891446` | #285 | Studio Contributors map + list + detail, isolated preview tooling |
+| [#287](https://github.com/Roviicc/ParaPo/pull/287) | `claude/contribution-editor-delete` | #286 | Editors delete an upload in the studio. **Owner approved 2026-10-19: editors may hide and delete** |
+| [#289](https://github.com/Roviicc/ParaPo/pull/289) | `claude/contribution-hide` | #287 | Editors hide an upload with a note, Show hidden, Show again. Its `supabase/apply/` holds the complete migration: tables, delete, hide, row security on every `point_batch` piece (10 check rows) |
+| [#290](https://github.com/Roviicc/ParaPo/pull/290) | `claude/turnstile` | staging | Shared Turnstile widget; Studio Sign in, Forgot password, Change password carry a token; turnstile-test 7/0. Merge before CAPTCHA is turned on |
+| [#291](https://github.com/Roviicc/ParaPo/pull/291) | `claude/contribution-turnstile` | #289 (+ merges #290) | Turnstile before the phone's first upload; upload-test 30/0 with and without a key |
+
+Design as built:
+- **Tables (not applied):** `contributor`, `contribution`, `point_batch` (monthly pieces to 2028-12 + default), `hinto`.
+- **`save_contribution(jsonb)`:** invoker, one transaction. A resend answers `already saved`, checked *before* the insert so the day-cap trigger never counts a resend.
+- **Caps** in triggers: 150 km/h, PH box, time order, 14,400 points, 2,000 hintos, 20/day, 6 h.
+- **Row security:**
+  - phone: inserts and reads its own contributions and contributor row; deletes its own contributions
+  - editors: read (and delete, with #287)
+  - anon: nothing
+- **Deferred:** `contribution_use`, hide/block writes, retention, dropping `gps_session`.
+- **Phone:**
+  - **Client and sign-in.** Own client under `parapo.contributor-auth`, loaded only on first upload or removal; anonymous sign-in on first use.
+  - **Packing.** `pack-recording.ts` drops fixes the DB would refuse.
+  - **When it sends.** Auto-send on save/open; retry on online/visible; Try again; one send per recording in flight.
+  - **Local copy.** Never deleted by an upload; Remove upload (server copy, from the identity that made it only) is separate from Delete from phone, with different confirmation wording.
+- **Studio:**
+  - bounded reader (7/30/90 days, newest 500); TanStack Query; map and list from one query
+  - opened upload shows its whole trail and hintos
+  - with #287, Delete upload; the phone then reads "Removed from ParaPo by an editor"
+- **`VITE_CONTRIBUTIONS`** (default off): every deployed build, including Cloudflare branch previews built from `.env.production`, makes no contributions request and keeps the Contributors placeholder.
+- **Build:**
+  - Supabase and TanStack Query get their own chunk groups; `shared` never takes studio or contribute modules. Without this, the client and studio code had reached the public page's shared chunk; `check-build` caught it.
+  - Contribute page budget: opens at 16.5 kB of its own (≤30); upload chunk on demand 53 kB (≤60, new).
+
+Verification (exact):
+- **Disposable Postgres 17** (`public.ecr.aws/docker/library/postgres:17`; Docker Hub rate-limited this container): full `supabase/verify/run.sh` passed, now ending with `contributions.sh`. It covers:
+  - apply twice (the second stops whole); 9-row check all `t`
+  - `after-contributions.sql`; `contributions-race.sh` (two concurrent sends → `saved` / `already saved`, one row)
+  - `contributions-pack.sh` (rides packed by the phone's code, with jumps, repeats and out-of-country fixes, saved whole)
+  - revert: refused over data; schema round-trip; re-apply
+  - negative controls: the speed check removed, point reads opened, phone reads opened, hidden stamp removed, packer speed filter off; each fails as expected.
+- **`npm run check`:** 987 unit tests (#285) and 990 (#286/#287). Storybook builds.
+- **Browser suites:**
+  - `upload-test` (new, in CI): 27/0 on #285, 28/0 with #287
+  - `contribute-test`: 81/0 (now routes `*.supabase.co` to an in-memory stand-in)
+  - `contributions-preview-test` (new, local only, needs Docker): 23/0 on the isolated preview (real SQL, real PostgREST v12.2.3, auth stand-in)
+- **CI:** #283 and #284 green; #285 green on every finished job including save-test, contribute-test, upload-test.
+- **Local `save-test` is not reliable in a Claude container:** unmodified staging crashed at a flaky step after 82 passes (an older pre-installed Chromium than the pinned Playwright, shared CPU). Use CI or the owner's PC.
+
+Blockers and configuration still needed (owner):
+1. ~~Decide #287~~: decided 2026-10-19, editors hide and delete (#287, #289).
+2. ~~Apply~~: **APPLIED LIVE 2026-10-19, ledger `20261019144009`**, check 10/10 true. Do not reapply. Applied from #289's branch. Merge #284 through #289 together: #284 alone carries an earlier copy of the file than what is live. Originally: apply `supabase/apply/20261019125900_contributions_apply.sql` from #289's branch (`claude/contribution-hide`), then `_check.sql` (10 rows `t`). The SQL editor's first attempt warned that `point_batch_default` had no row security; the owner cancelled it, and every piece now enables it. Regenerate the classic types and record the ledger version in `supabase/migrations/README.md`. The reviewed-draft migration is a separate decision.
+3. **Supabase Auth:** turn on anonymous sign-ins *together with* CAPTCHA, after #290 deploys (advised 2026-10-19; nothing uses anonymous sign-in until uploads are on). Keep "Allow new users to sign up" off; if anonymous sign-in is then refused with "Signups not allowed", decide then; CAPTCHA (Turnstile) only after the Turnstile PR ships for the studio's sign-in, reset, invite password and change-password (`signInWithPassword`) and the phone's first upload. The Turnstile PRs are #290 (studio) and #291 (phone).
+4. **Turnstile keys:** a site key as `VITE_TURNSTILE_SITE_KEY` (public, `.env.production` or build env) and the secret in Supabase Auth settings only. Never in chat or the repo.
+5. **Turn uploads on** with `VITE_CONTRIBUTIONS=1` in the deploy's build, only after items 2–4.
+6. **No shareable live preview link yet.** The isolated preview runs on loopback (`scripts/preview/README.md`, "Contributions"). A hosted one needs either Cloudflare access for a static sample build, or a disposable Supabase branch (paid), so the owner must choose.
+
+Next: owner merges the stack and #290, applies the migration (item 2), turns on anonymous sign-ins, adds the Turnstile keys and CAPTCHA (items 3–4), then `VITE_CONTRIBUTIONS=1` on staging; then a signed-in check on the real project.
+
+
+## Verified baseline (2026-10-18, historical)
 
 - Local `staging` and fetched `origin/staging`: `80f5e4f0e960713ad7da528e8efeb6ddb3f2635e` (merge #272, save-test race fix).
 - Fetched `origin/claude/loops-studio`: `c80a1f81519f52f84dfb83ad259899401daf741c`.

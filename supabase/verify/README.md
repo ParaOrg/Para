@@ -75,3 +75,33 @@ an explicit base refresh changes only the draft and requires resubmission.
 Anonymous and non-editor calls are refused. All test fixtures are rolled back.
 The new recovery script runs twice and restores the exact 0022 schema.
 This is disposable verification only; the new migration is not applied live.
+
+## contributions.sh
+
+The contributions migration (`migrations/20261019125900_contributions.sql`) on
+databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contributions.sh
+
+It applies the paste file twice (the second run must stop and change nothing),
+requires `20261019125900_contributions_check.sql` all `t`, then runs
+`after-contributions.sql`:
+
+- anon reaches no table and cannot save
+- a phone saves; a resend answers `already saved` and writes nothing
+- the server stamps the contributor and the times
+- a phone reads only its own contributions and its own contributor row, never points
+- phone B cannot read A's, save over A's id, delete A's or add points to them
+- the editor reads everything and deletes nothing
+- refused whole, with no row or point left behind: faster than 150 km/h, outside
+  the Philippines, more than 14,400 points, totals that disagree, longer than
+  6 hours, time not increasing, a description over 1,000 characters
+- the 21st save in 24 hours is refused, and a resend at the cap is still `already saved`
+- a blocked phone saves nothing and cannot delete its contributor row
+- deleting a contribution takes its points and hintos; deleting again is a no-op
+- deleting the auth user cascades
+
+`contributions-race.sh` sends one recording twice at once: `saved` and
+`already saved`, one row. The revert must refuse while contributions are
+stored; on a second database, apply then revert twice leaves the schema as
+before, and re-applying passes the check.

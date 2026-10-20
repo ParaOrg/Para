@@ -8,17 +8,26 @@ import { TrackingButton } from './tracking-button';
 import { useConsent } from './use-consent';
 import { useFocusHeading } from './use-focus-heading';
 import { useStackRoom } from './use-stack-room';
+import type { Uploads } from './use-uploads';
 
 interface ReadyScreenProps {
   onStart: () => void;
   saved: readonly Recording[];
+  uploads: Uploads;
   onDownloadSaved: (recording: Recording) => void;
+  onDeleteSaved: (recording: Recording) => void;
 }
 
 const goBackToMap = () => window.location.assign('/');
 
 /** Before a recording: back to the map, the recordings kept here, and one Start bar (or, on a first visit, what the page does). */
-export function ReadyScreen({ onStart, saved, onDownloadSaved }: ReadyScreenProps) {
+export function ReadyScreen({
+  onStart,
+  saved,
+  uploads,
+  onDownloadSaved,
+  onDeleteSaved,
+}: ReadyScreenProps) {
   const { hasConsent, giveConsent } = useConsent();
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
@@ -42,7 +51,12 @@ export function ReadyScreen({ onStart, saved, onDownloadSaved }: ReadyScreenProp
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          <SavedRides recordings={saved} onDownload={onDownloadSaved} />
+          <SavedRides
+            recordings={saved}
+            uploads={uploads}
+            onDownload={onDownloadSaved}
+            onDeleteFromPhone={onDeleteSaved}
+          />
           <TrackingButton variant="start" onClick={onStart} />
         </section>
       ) : (

@@ -10,6 +10,7 @@ import { ReviewSubjects } from './review-subjects';
 import { subscribeReviewChanges } from '../data/review-events';
 import { reviewKeys } from '../data/review-keys';
 import { useReviewNames, useReviewQuery } from '../data/use-review-query';
+import { DraftLines } from '../maps/draft-lines';
 import { DraftMarkers } from '../maps/draft-markers';
 
 type ReviewTab = 'drafts' | 'subjects' | 'publication';
@@ -44,20 +45,18 @@ export function ReviewWorkspaceContent({ map, onChanged }: StudioReviewProps) {
     if (isOpen && dialog && !dialog.open) dialog.showModal();
     return () => dialog?.close();
   }, [isOpen]);
-  const pending = query.data?.filter((draft) => draft.status === 'pending').length ?? 0;
   return (
     <>
       {query.data && (
-        <DraftMarkers map={map} drafts={query.data} places={names} onReview={openDraft} />
+        <>
+          <DraftLines map={map} drafts={query.data} onReview={openDraft} />
+          <DraftMarkers map={map} drafts={query.data} places={names} onReview={openDraft} />
+        </>
       )}
       <div className="absolute top-44 right-4 z-10 max-w-[calc(100%-2rem)]">
         <Button
           variant="secondary"
-          label={
-            query.data
-              ? `Drafts and review (${query.data.length} · ${pending} pending)`
-              : 'Drafts and review'
-          }
+          label={query.data ? `Drafts (${query.data.length})` : 'Drafts'}
           onClick={() => {
             setDraftId(null);
             setIsOpen(true);

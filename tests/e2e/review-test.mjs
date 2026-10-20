@@ -28,7 +28,7 @@ const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
 await bareStyle(page);
 await page.goto(`${BASE}/studio/`);
-await page.getByRole('button', { name: /Drafts and review/ }).waitFor();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).waitFor();
 const shot = (name) => page.screenshot({ path: `${out}/${name}.png` });
 // Draw and save through the real form: approved rows must remain unchanged.
 const beforeStops = (await api('stop?select=id')).length;
@@ -58,40 +58,34 @@ assert.ok(
   ),
 );
 await shot('01-playground-markers');
-await page.getByRole('button', { name: /Drafts and review/ }).click();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 await page.getByRole('button', { name: 'Review changes' }).first().waitFor();
 await shot('02-review-list');
 const li = page
   .getByRole('listitem')
   .filter({ has: page.getByRole('heading', { name: 'Preview new place', exact: true }) });
-await li.getByRole('button', { name: 'Submit for review' }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Submitted for review' }).waitFor();
 await li.getByRole('button', { name: 'Review changes' }).click();
-await page.getByRole('button', { name: 'Approve reviewed changes' }).waitFor();
-await shot('03-draft-comparison');
-await page.getByRole('button', { name: 'Send back', exact: true }).click();
 await page
-  .getByRole('textbox', { name: 'Reason for sending back' })
-  .fill('Check the place name before approving.');
-await shot('04-send-back');
-await page.getByRole('button', { name: 'Send back', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Sent back with your note' }).waitFor();
+  .getByRole('region', { name: 'What this draft does' })
+  .getByText('Adds this place')
+  .waitFor();
+await shot('03-draft-comparison');
 await page
   .getByRole('textbox', { name: 'Ground name', exact: true })
   .fill('Preview approved place');
 await page.getByRole('button', { name: 'Save draft details' }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).waitFor();
 await page.waitForFunction(() =>
   [...document.querySelectorAll('button')].some(
-    (button) => button.textContent.trim() === 'Submit for review' && !button.disabled,
+    (button) => button.textContent.trim() === 'Approve' && !button.disabled,
   ),
 );
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).click();
-await page.getByRole('button', { name: 'Approve reviewed changes' }).click();
-await page.getByRole('button', { name: 'Approve draft', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Approved. Waiting for publication' }).waitFor();
+await page.getByRole('button', { name: 'Approve', exact: true }).click();
+await shot('04-approve');
+await page.getByRole('button', { name: 'Approve', exact: true }).click();
+await page
+  .getByRole('status')
+  .filter({ hasText: 'Approved. The Studio map shows it now' })
+  .waitFor();
 const subjectId = '10000000-0000-4000-8000-000000000001';
 assert.equal((await api(`stop?id=eq.${subjectId}`))[0].name, 'Preview approved place');
 let publicIndex = await (await fetch(`${BASE}/data/index.v5.json`)).json();
@@ -119,7 +113,7 @@ await page.getByText('Public', { exact: true }).click();
 await page.getByTitle('Published ParaPo public map').waitFor();
 await shot('07-public-view');
 await page.getByText('Playground', { exact: true }).click();
-await page.getByRole('button', { name: /Drafts and review/ }).click();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 await page.getByRole('button', { name: 'Routes and places', exact: true }).click();
 await page.getByRole('textbox', { name: 'Find a route or place' }).fill('Preview approved place');
 await page.getByRole('button', { name: 'Take down…' }).click();
@@ -143,24 +137,21 @@ for (let at = 0; at < (await page.getByRole('button', { name: 'Review changes' }
   if (await page.getByRole('checkbox', { name: /I compared both/ }).count()) break;
   await page.getByRole('button', { name: 'Back to drafts' }).click();
 }
-assert.equal(
-  await page.getByRole('button', { name: 'Approve reviewed changes' }).isDisabled(),
-  true,
-);
+assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled(), true);
 await shot('09-conflict');
 await page.getByRole('checkbox', { name: /I compared both/ }).check();
 await page.getByRole('button', { name: 'Keep draft for a new review' }).click();
-await page.getByRole('button', { name: 'Submit for review', exact: true }).waitFor();
+await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
 await page.getByRole('button', { name: 'Discard…' }).click();
 await shot('05-discard');
 await page.getByRole('button', { name: 'Discard draft', exact: true }).click();
 await page.getByRole('status').filter({ hasText: 'Draft discarded' }).waitFor();
 await page.getByRole('button', { name: 'Close', exact: true }).click();
 await page.setViewportSize({ width: 390, height: 844 });
-await page.getByRole('button', { name: /Drafts and review/ }).click();
+await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 await shot('10-phone-review');
 assert.deepEqual(errors, []);
 console.log(
-  'PASS: submit → send back → edit → submit → approve → wait → publish → Public, take down/put back, conflict, discard, mobile; no page errors',
+  'PASS: draft → edit details → approve → wait → publish → Public, take down/put back, conflict, discard, mobile; no page errors',
 );
 await browser.close();

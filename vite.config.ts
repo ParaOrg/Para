@@ -575,7 +575,34 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
               priority: 1,
             },
-            { name: 'shared', minShareCount: 2 },
+            //  - supabase: the database client and what it brings. The studio and
+            //    the contributor page both import it, so left to `shared` it
+            //    would ride along on the public page, which never calls the
+            //    database (check-build.mjs proves it does not).
+            {
+              name: 'supabase',
+              test: /[\\/]node_modules[\\/](@supabase[\\/][^\\/]+|iceberg-js|tslib)[\\/]/,
+              priority: 1,
+            },
+            //  - tanstack-query: the studio's server state (the review queue
+            //    and the Contributors map), two lazy chunks of the studio's.
+            {
+              name: 'tanstack-query',
+              test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+              priority: 1,
+            },
+            //  - shared never takes the studio's or the contributor page's own
+            //    modules, nor Turnstile, which only those two load: two of
+            //    their chunks importing one would otherwise put it on the
+            //    public page.
+            {
+              name: 'shared',
+              minShareCount: 2,
+              test: (id: string) =>
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile)/.test(
+                  id,
+                ),
+            },
           ],
         },
       },

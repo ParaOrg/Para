@@ -11,7 +11,7 @@ interface ReviewListProps {
 }
 
 export function ReviewList({ drafts, isBusy, onAction, onReview }: ReviewListProps) {
-  if (drafts.length === 0) return <p>No drafts are waiting here.</p>;
+  if (drafts.length === 0) return <p>No drafts. Changes saved in the Playground appear here.</p>;
   return (
     <ul className="flex flex-col gap-3">
       {drafts.map((draft) => (
@@ -23,10 +23,10 @@ export function ReviewList({ drafts, isBusy, onAction, onReview }: ReviewListPro
             <h3 className="font-bold">{draft.label}</h3>
             <p className="text-sm text-content-secondary">
               {draft.isNew ? 'New ' : ''}
-              {draft.kind} · {draft.status === 'pending' ? 'Waiting for review' : 'Draft'}
+              {draft.kind} · Draft
             </p>
           </div>
-          {draft.note && <p className="text-sm">Reviewer note: {draft.note}</p>}
+          {draft.note && <p className="text-sm">Note: {draft.note}</p>}
           <div className="flex flex-wrap gap-2">
             <Button
               variant="secondary"
@@ -34,21 +34,6 @@ export function ReviewList({ drafts, isBusy, onAction, onReview }: ReviewListPro
               disabled={isBusy}
               onClick={() => onReview(draft.id)}
             />
-            {draft.status === 'draft' ? (
-              <Button
-                variant="primary"
-                label="Submit for review"
-                disabled={isBusy}
-                onClick={() => onAction('submit', draft.id)}
-              />
-            ) : (
-              <Button
-                variant="secondary"
-                label="Send back"
-                disabled={isBusy}
-                onClick={() => onAction('send-back', draft.id)}
-              />
-            )}
             <Button
               variant="secondary"
               label="Discard…"

@@ -4,13 +4,17 @@ import { RecordingScreen } from './recording-screen';
 import { SaveForm } from './save-form';
 import { SavedScreen } from './saved-screen';
 import { UnfinishedScreen } from './unfinished-screen';
+import { UploadCheck } from './upload-check';
+import { uploadStatusText } from './upload-status';
 import { useFollow } from './use-follow';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
+import { useUploads } from './use-uploads';
 
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage() {
   const recording = useRecording();
+  const uploads = useUploads(recording.saved);
   const follow = useFollow();
   const track = useRecordingTrack(recording.kept, recording.current?.switches);
   const { phase, figures } = recording;
@@ -35,6 +39,9 @@ export function ContributePage() {
           {recording.problem}
         </p>
       )}
+      {uploads.check && (phase === 'ready' || phase === 'saved') && (
+        <UploadCheck check={uploads.check} />
+      )}
       <p role="status" className="sr-only">
         {recording.announcement}
       </p>
@@ -42,7 +49,9 @@ export function ContributePage() {
         <ReadyScreen
           onStart={handleStart}
           saved={recording.saved}
+          uploads={uploads}
           onDownloadSaved={recording.downloadSaved}
+          onDeleteSaved={recording.deleteSaved}
         />
       )}
       {phase === 'unfinished' && figures && (
@@ -78,6 +87,14 @@ export function ContributePage() {
       {phase === 'saved' && (
         <SavedScreen
           failedFixWrites={recording.lastSaved?.failedFixWrites ?? 0}
+          uploadText={
+            recording.lastSaved
+              ? uploadStatusText(
+                  uploads.statusOf(recording.lastSaved),
+                  uploads.canRemove(recording.lastSaved),
+                )
+              : ''
+          }
           onRecordAgain={recording.recordAgain}
           onDownload={recording.downloadLastSaved}
         />

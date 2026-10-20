@@ -35,3 +35,29 @@ adapter are separate verification targets: the adapter is not proof of SQL behav
 asset-upload flow. Upload uses a short-lived, asset-scoped token supplied by the
 connected Cloudflare API. The sample preview is a separate static Worker; do not
 change the existing `parapo` service or any staging/production environment flags.
+
+## Contributions (upload → Studio Contributors)
+
+A separate loopback preview for contributor uploads, on the real SQL behind real
+PostgREST. It never reaches Supabase: the build's API address is the loopback
+server, which also stands in for Supabase Auth (a phone's anonymous sign-in adds
+an anonymous user to the disposable database; the editor signs in as
+`preview@parapo.test` with any password). Tokens are signed with the public demo
+key in `review-fixture.mjs`, which only the disposable PostgREST trusts.
+
+1. `docker network create parapo-preview`, then Postgres 17 as
+   `parapo-preview-db` on it, with no published port.
+2. `PSQL="docker exec -i parapo-preview-db psql -U postgres" bash scripts/preview/contributions-db.sh`:
+   every migration in ledger order, the contributions paste file, a login role for
+   PostgREST, the editor.
+3. PostgREST v12 as `parapo-preview-api` on the same network, published on
+   `127.0.0.1:4291` only: `PGRST_DB_URI=postgres://authenticator:preview@parapo-preview-db:5432/postgres`,
+   `PGRST_DB_ANON_ROLE=anon`, `PGRST_DB_SCHEMAS=public`, `PGRST_JWT_SECRET` the demo key.
+4. Build with `VITE_SUPABASE_URL=http://127.0.0.1:4280/api`,
+   `VITE_SUPABASE_PUBLISHABLE_KEY=isolated-preview-publishable`, `VITE_CONTRIBUTIONS=1`
+   and `VITE_EXPOSE_MAP=1` to `/tmp/parapo-contributions-preview`
+   (`npx vite build --outDir …`; never deploy it).
+5. `node scripts/preview/contributions-server.mjs`, then
+   `PARAPO_PREVIEW=http://127.0.0.1:4280 node tests/e2e/contributions-preview-test.mjs`.
+   The suite refuses anything but a loopback address and fails on any request to
+   a `supabase.co` host.

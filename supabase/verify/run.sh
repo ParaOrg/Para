@@ -51,10 +51,18 @@ apply -o /dev/null < after-0022.sql
 PSQL="$PSQL" DB=$DB bash concurrency-0022.sh
 PSQL="$PSQL" DB=$DB bash deadlock-0022.sh
 PSQL="$PSQL" DB=$DB bash studio-drafts.sh
-apply < ../migrations/20261018112757_reviewed_draft_approval.sql
-apply < ../migrations/20261018112757_reviewed_draft_approval.sql
+sed -n '/^-- >>> supabase\/migrations\/20261018112757_reviewed_draft_approval.sql/,/^-- <<< /p' \
+  ../apply/20261018112757_reviewed_draft_approval_apply.sql | sed '1d;$d' \
+  | diff -q - ../migrations/20261018112757_reviewed_draft_approval.sql >/dev/null \
+  || { echo 'FAILED: the reviewed approval paste file does not carry its migration unchanged'; exit 1; }
+apply < ../apply/20261018112757_reviewed_draft_approval_apply.sql
+apply < ../apply/20261018112757_reviewed_draft_approval_apply.sql
+bad=$($PSQL -d $DB -qAt -F ' | ' < ../apply/20261018112757_reviewed_draft_approval_check.sql | grep -v ' | t$' || true)
+[ -z "$bad" ] || { echo "FAILED: reviewed_draft_approval_check.sql: $bad"; exit 1; }
+rows=$($PSQL -d $DB -qAt -c "select count(*) from supabase_migrations.schema_migrations where name = 'reviewed_draft_approval'")
+[ "$rows" = 1 ] || { echo "FAILED: $rows ledger rows for reviewed_draft_approval"; exit 1; }
 apply -o /dev/null < reviewed-draft.sql
-echo 'reviewed approval: stale review and base guards passed'
+echo 'reviewed approval: paste file applied twice, check all true, stale review and base guards passed'
 echo '0022: applied twice, 0022_check.sql all true, after-0022.sql passed'
 out=$(apply < ../apply/0018_revert.sql || true)
 echo "$out" | grep -q 'is not undone' || { echo "FAILED: revert ran over taken-down rows: $out"; exit 1; }
@@ -96,3 +104,4 @@ apply < ../apply/20261018112757_reviewed_draft_approval_revert.sql
 $PG_DUMP -d $DB --schema-only --schema=public --schema=private | grep -Ev '^.(un)?restrict ' > /tmp/reverted-reviewed-approval.dump
 diff /tmp/before-reviewed-approval.dump /tmp/reverted-reviewed-approval.dump || { echo 'FAILED: reviewed approval revert changed the baseline'; exit 1; }
 echo 'reviewed approval revert: schema unchanged, repeated recovery safe'
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributions.sh
