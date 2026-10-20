@@ -23,6 +23,7 @@
 // framed it, and stays there (the owner's Q1).
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
+import { routesFraming } from './lib/framing.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
   colourOf,
@@ -211,33 +212,11 @@ await page.waitForTimeout(1200);
 // at most — and the fit no longer moves it. phone-test holds the same at a
 // phone's size, and a finger moving the map before the routes come.
 {
-  const { opening, want, now } = await page.evaluate(async () => {
+  const want = await routesFraming(page);
+  const { opening, now } = await page.evaluate(() => {
     const m = window.__map;
-    const f = await (
-      await fetch('/data/index.v5.json', { headers: { 'x-parapo-test': '1' } })
-    ).json();
-    let [w, s, e, n] = [Infinity, Infinity, -Infinity, -Infinity];
-    for (const v of f.variants) {
-      for (const [x, y] of v.overview?.coordinates ?? []) {
-        if (x < w) w = x;
-        if (x > e) e = x;
-        if (y < s) s = y;
-        if (y > n) n = y;
-      }
-    }
-    const fit = m.cameraForBounds(
-      [
-        [w, s],
-        [e, n],
-      ],
-      { padding: 100, maxZoom: 13 },
-    );
-    // The fit is held inside the map's maxBounds, which cameraForBounds
-    // ignores: MapLibre's own hold, read from its camera (phone-test says why).
-    const c = m._camera.transform.applyConstrain(fit.center, fit.zoom);
     return {
       opening: window.__opening,
-      want: { lng: c.center.lng, lat: c.center.lat, zoom: c.zoom, bearing: 0, pitch: 0 },
       now: {
         lng: m.getCenter().lng,
         lat: m.getCenter().lat,

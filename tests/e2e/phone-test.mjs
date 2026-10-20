@@ -38,6 +38,7 @@
 // (2026-10-04); and housekeeping.
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, takeHeldReload, waitForSource } from './lib/harness.mjs';
+import { routesFraming } from './lib/framing.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
   colourOf,
@@ -503,36 +504,6 @@ check(
 // 'load' when no route is drawn by then (the owner's answer to question A
 // of the cheap-phone report, 2026-10-06).
 {
-  /** The camera the routes' fit frames on page `p`'s map (useSavedRoutes, ROUTES_FRAMING). */
-  const fitCamera = (p) =>
-    p.evaluate(async () => {
-      const f = await (
-        await fetch('/data/index.v5.json', { headers: { 'x-parapo-test': '1' } })
-      ).json();
-      let [w, s, e, n] = [Infinity, Infinity, -Infinity, -Infinity];
-      for (const v of f.variants) {
-        for (const [x, y] of v.overview?.coordinates ?? []) {
-          if (x < w) w = x;
-          if (x > e) e = x;
-          if (y < s) s = y;
-          if (y > n) n = y;
-        }
-      }
-      const m = window.__map;
-      const fit = m.cameraForBounds(
-        [
-          [w, s],
-          [e, n],
-        ],
-        { padding: 100, maxZoom: 13 },
-      );
-      // cameraForBounds ignores the map's maxBounds; the fit does not, as
-      // MapLibre holds the view inside them, so a box whose fit would show
-      // past Greater Manila's edge is framed pushed back inside it. MapLibre's
-      // own hold, read from its camera: there is no public way to it.
-      const c = m._camera.transform.applyConstrain(fit.center, fit.zoom);
-      return { lng: c.center.lng, lat: c.center.lat, zoom: c.zoom, bearing: 0, pitch: 0 };
-    });
   const camOf = (p) =>
     p.evaluate(() => {
       const m = window.__map;
@@ -553,7 +524,7 @@ check(
   const showCam = (c) =>
     c ? `${c.lng.toFixed(5)},${c.lat.toFixed(5)} z${c.zoom.toFixed(4)}` : 'none';
 
-  const want = await fitCamera(page);
+  const want = await routesFraming(page);
   const opening = await page.evaluate(() => window.__opening);
   const now = await camOf(page);
   check(
@@ -642,7 +613,7 @@ check(
     );
     await routesCome(p, release);
     const end = await camOf(p);
-    const fit = await fitCamera(p);
+    const fit = await routesFraming(p);
     check(
       "  the file still on its way: the map opens as it did (zoom 11), and the routes are framed as they come, the fit's camera",
       made?.zoom === 11 && sameCam(end, fit),
@@ -693,7 +664,7 @@ check(
     const dragged = await camOf(p);
     await routesCome(p, release);
     const end = await camOf(p);
-    const fit = await fitCamera(p);
+    const fit = await routesFraming(p);
     const moves = await p.evaluate(() => window.__opening.moves);
     check(
       '  a finger moving the map before they come keeps it where it took it: the fit does not take it back',
@@ -738,7 +709,7 @@ check(
       const moved = await camOf(p);
       await routesCome(p, release);
       const end = await camOf(p);
-      const fit = await fitCamera(p);
+      const fit = await routesFraming(p);
       const moves = await p.evaluate(() => window.__opening.moves);
       check(
         `  on a desktop, ${input} moving the map before they come keeps it where it took it`,
