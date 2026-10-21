@@ -75,16 +75,16 @@ export const CARD_COLOURS = {
  * The RouteCards' Card/<livery>/surface-pale, in hex, for the map: the rest
  * of an open trip's line past a picked hintuan, from there to where the trip
  * goes, in the card's own hue paled. Each hex is the primitive its token
- * aliases, each hue's 200, held to tokens.css by
+ * aliases, each hue's 300, held to tokens.css by
  * tests/unit/map-colours-test.mjs as CARD_COLOURS is.
  */
 export const CARD_PALE_COLOURS = {
-  'Card/red/surface-pale': '#ffc9c9', // red/200
-  'Card/orange/surface-pale': '#ffd6a8', // orange/200
-  'Card/violet/surface-pale': '#ddd6ff', // violet/200
-  'Card/rose/surface-pale': '#ffccd3', // rose/200
-  'Card/fuchsia/surface-pale': '#f6cfff', // fuchsia/200
-  'Card/pink/surface-pale': '#fccee8', // pink/200
+  'Card/red/surface-pale': '#ffa2a2', // red/300
+  'Card/orange/surface-pale': '#ffb86a', // orange/300
+  'Card/violet/surface-pale': '#c4b4ff', // violet/300
+  'Card/rose/surface-pale': '#ffa1ad', // rose/300
+  'Card/fuchsia/surface-pale': '#f4a8ff', // fuchsia/300
+  'Card/pink/surface-pale': '#fda5d5', // pink/300
 } as const satisfies Record<`Card/${string}/surface-pale`, `#${string}`>;
 
 /**
