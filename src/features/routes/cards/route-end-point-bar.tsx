@@ -15,7 +15,7 @@ type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children' | 'slo
   on: Livery | 'surface';
   /** Where the row sits among its rows, which decides how its tree line ends. */
   position: RouteEndPointPosition;
-  /** Figma's ❄️ Slot, after the name: a station's code on a RouteCardRailway. Empty on every other row. */
+  /** Figma's ❄️ Slot, before the name: a station's code on a RouteCardRailway. Empty on every other row. */
   slot?: ReactNode;
 };
 
@@ -53,10 +53,12 @@ export function RouteEndPointBar({
       }
     >
       <RouteEndPointLines position={position} />
-      <span className={'min-w-0 flex-1 ' + (isOnSurface ? 'py-2' : 'py-1.5')}>
-        {routeDirection}
+      <span
+        className={'flex min-w-0 flex-1 items-center gap-1 ' + (isOnSurface ? 'py-2' : 'py-1.5')}
+      >
+        {slot}
+        <span className="min-w-0 flex-1">{routeDirection}</span>
       </span>
-      {slot}
     </button>
   );
 }
