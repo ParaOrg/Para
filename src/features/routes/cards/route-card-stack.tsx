@@ -6,7 +6,7 @@ import { routeCards } from '../model/departures';
 import { cardLiveries, type Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { directionEnds, railLineOf, type Direction } from '../model/routes';
-import { RAILWAY_VEHICLES, vehicleOf, type RailwayVehicle } from '../model/vehicles';
+import { isRailwayVehicle, vehicleOf } from '../model/vehicles';
 
 /** A card picked: which card it is, the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
 export interface PickedPlace {
@@ -55,7 +55,7 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
   // line and a bar ('' before it for a jeepney's): a train or ferry card
   // wears its line's colour, never a draw (cardLiveries). The ids are uuids, with
   // no space, bar or newline to split on. String(), because the React
-  // Compiler cannot tell what drawnDepartures' join gives is a string, and
+  // Compiler cannot tell what routeCards' join gives is a string, and
   // would otherwise drop the memo below as one that may change under it.
   const cardKey = String(
     places
@@ -67,7 +67,7 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
     const cards = cardKey.split('\n').map((card) => card.split('|'));
     return cardLiveries(
       cards.map(([, routes]) => routes.split(' ')),
-      cards.map(([line]) => (isRailway(line) ? line : null)),
+      cards.map(([line]) => (isRailwayVehicle(line) ? line : null)),
     );
   }, [cardKey]);
 
@@ -131,6 +131,3 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
     </>
   );
 }
-
-const isRailway = (line: string): line is RailwayVehicle =>
-  (RAILWAY_VEHICLES as readonly string[]).includes(line);

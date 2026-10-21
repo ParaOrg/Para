@@ -132,14 +132,20 @@ test("the public map's subjects: the same keys, gazed at the same places, as Pub
       ...nothing,
       candidates: [a, b],
       litDirections: [a],
-      highlight: { where: 'list', from: 'Tala', ids: ['a1'], livery: 'violet' },
+      highlight: { where: 'list', card: 'Tala', from: 'Tala', ids: ['a1'], livery: 'violet' },
     },
     {
       ...nothing,
       place,
       candidates: [],
       litDirections: [a, b],
-      highlight: { where: 'hotspot', from: 'SM Fairview', ids: ['a1'], livery: 'blue' },
+      highlight: {
+        where: 'hotspot',
+        card: 'SM Fairview',
+        from: 'SM Fairview',
+        ids: ['a1'],
+        livery: 'blue',
+      },
     },
     { ...nothing, trip: a2, litDirections: [a2], candidates: [a, a2, b] },
     {

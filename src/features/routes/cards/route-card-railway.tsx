@@ -50,7 +50,9 @@ const PILL_LABEL = {
 
 /**
  * The pills' fill and words: the line's surface on white, and on MRT-3's
- * yellow card its yellow on Content/primary, as Figma draws each.
+ * yellow card its yellow on Content/primary. Figma draws LRT-2's station code
+ * in #584a77, bound to no variable; it takes the line's surface here, as the
+ * line pill's words do.
  */
 const PILL = {
   'LRT-1': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
@@ -71,7 +73,7 @@ const HALF = 'px-2 py-0.5 text-sm/5 font-medium whitespace-nowrap';
  *
  * It behaves as RouteCard does: a row opens its trip; a tap anywhere else
  * selects the card, or lets it go, State=Selected pressing it in under the
- * Selected shadow (the owner's call, 2026-10-21). The test ids are
+ * Selected shadow. The test ids are
  * RouteCard's, so the suites find a train's card as they find a jeep's.
  */
 export function RouteCardRailway({
@@ -105,7 +107,7 @@ export function RouteCardRailway({
         className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
       />
       <div className="flex w-full items-center justify-between px-4 pt-2">
-        <p data-testid="railway-pill" className="flex gap-0.5">
+        <p data-testid={`${testId}-pill`} className="flex gap-0.5">
           {bound ? (
             <>
               <span className={HALF + ' rounded-l-full ' + PILL[railway]}>
@@ -145,13 +147,17 @@ export function RouteCardRailway({
                 position={index === endPoints.length - 1 ? 'bottom' : 'top'}
                 slot={
                   e.stationCode && (
-                    <span
-                      className={
-                        'shrink-0 rounded-full px-1.5 py-0.5 text-xs/4 font-medium ' + PILL[railway]
-                      }
-                    >
-                      {e.stationCode}
-                    </span>
+                    <>
+                      <span className="sr-only">, </span>
+                      <span
+                        className={
+                          'shrink-0 rounded-full px-1.5 py-0.5 text-xs/4 font-medium ' +
+                          PILL[railway]
+                        }
+                      >
+                        {e.stationCode}
+                      </span>
+                    </>
                   )
                 }
                 data-testid={`${testId}-item`}

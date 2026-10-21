@@ -33,8 +33,8 @@ type Story = StoryObj<typeof meta>;
 export const LightRailWayOne: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
-    await expect(card.getByTestId('railway-pill')).toHaveTextContent('LRT - 1, Southbound');
-    await expect(card.getByTestId('chooser-item')).toHaveTextContent('Dr. SantosGL26');
+    await expect(card.getByTestId('chooser-pill')).toHaveTextContent('LRT - 1, Southbound');
+    await expect(card.getByTestId('chooser-item')).toHaveTextContent('Dr. Santos, GL26');
   },
 };
 
@@ -68,7 +68,7 @@ export const Ferry: Story = {
   },
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
-    await expect(card.getByTestId('railway-pill')).toHaveTextContent(/^Ferry$/);
+    await expect(card.getByTestId('chooser-pill')).toHaveTextContent(/^Ferry$/);
     await expect(card.getByTestId('chooser-item')).toHaveTextContent(/^Pinagbuhatan$/);
   },
 };

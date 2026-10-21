@@ -76,7 +76,7 @@ export const Bus: Story = { args: { vehicle: 'Bus', way: 'Papunta', livery: 'ora
 export const EJeep: Story = { args: { vehicle: 'E-Jeep', way: 'Papunta', livery: 'pink' } };
 
 /** Variant5 (4189:11181). */
-export const Ferry: Story = { args: { vehicle: 'Ferry', way: 'Papunta', livery: 'fuchsia' } };
+export const Ferry: Story = { args: { vehicle: 'Ferry', way: 'Papunta', livery: 'ferry' } };
 
 /** Every jeepney colour, the words in each card's own. */
 export const EveryJeepneyLivery: Story = {

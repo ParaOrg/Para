@@ -294,7 +294,7 @@ export const Ferry: Story = {
     direction: direction('prfs', 'Escolta', 'Guadalupe', { mode: 'ferry', routeCode: 'PRFS' }),
     directions: [],
     timeline: timelineOf('Escolta', 'Guadalupe', ['Lawton', 'PUP', 'Lambingan', 'Valenzuela']),
-    livery: 'orange',
+    livery: 'ferry',
   },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('trip-note')).toHaveTextContent('MMDA');

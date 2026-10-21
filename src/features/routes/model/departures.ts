@@ -97,11 +97,10 @@ export interface RouteCardGroup<V extends Direction> extends Departures<V> {
 /**
  * The cards a list shows one way round: drawnDepartures, with every place's
  * train and ferry directions taken off to a RouteCardRailway each, one card
- * per line and bound (the owner's call, 2026-10-21): Recto's LRT-2 Eastbound
- * and its LRT-2 Westbound are two cards, both Recto. The road directions stay
- * the place's RouteCard, first, as its card has always stood; the line cards
- * follow in the order met. A road card is known by its place, as before; a
- * line card by its place, line and bound.
+ * per line and bound: Cubao's LRT-2 Eastbound and its LRT-2 Westbound are two
+ * cards, both Cubao. The road directions stay the place's RouteCard, first;
+ * the line cards follow in the order met. A road card is known by its place,
+ * a line card by its place, line and bound.
  */
 export function routeCards<V extends Direction>(
   directions: readonly V[],

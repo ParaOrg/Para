@@ -1,7 +1,6 @@
 // The cards a list shows (src/features/routes/model/departures.ts, routeCards):
 // a place's road directions on its RouteCard, and its train and ferry
-// directions on a RouteCardRailway each, one per line and bound (the owner's
-// call, 2026-10-21).
+// directions on a RouteCardRailway each, one per line and bound.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/route-cards-test.mjs
 import { test } from 'node:test';
