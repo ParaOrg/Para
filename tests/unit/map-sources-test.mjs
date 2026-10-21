@@ -374,7 +374,9 @@ test('the committed map is laid out as before: every direction with a line, ever
   assert.deepEqual(hotspotsData(stops), hotspotsBefore(stops));
   // A slot, a return not drawn yet, has no line, and is left out as before.
   const slot = { ...rows[0], id: 'slot', shape: null };
-  assert.equal(routesData([...rows, slot]).features.length, rows.length);
+  // The published map may hold such a slot itself: only the drawn ways are counted.
+  const drawn = rows.filter((v) => directionLine(v).length > 1);
+  assert.equal(routesData([...rows, slot]).features.length, drawn.length);
   assert.deepEqual(routesData([...rows, slot]), routesBefore([...rows, slot]));
   assert.deepEqual(routesData([]), { type: 'FeatureCollection', features: [] });
   assert.deepEqual(hotspotsData([]), { type: 'FeatureCollection', features: [] });
