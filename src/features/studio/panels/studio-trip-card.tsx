@@ -35,6 +35,8 @@ interface StudioTripCardProps {
   onDelete: ReturnType<typeof useDeleteActions>['onDelete'];
   onBackToList: Camera['backFromTrip'];
   onSwitch: Camera['switchTrip'];
+  /** The other way is not drawn yet: SWITCH starts drawing it, for an editor. */
+  onDrawOtherWay: () => void;
   onClose: () => void;
   onPick: Camera['pickOnTrip'];
   onEnd: Camera['endOnTrip'];
@@ -59,6 +61,7 @@ export function StudioTripCard({
   onDelete,
   onBackToList,
   onSwitch,
+  onDrawOtherWay,
   onClose,
   onPick,
   onEnd,
@@ -71,6 +74,7 @@ export function StudioTripCard({
       livery={livery}
       onBackToList={onBackToList}
       onSwitch={onSwitch}
+      onDrawOtherWay={canEdit ? onDrawOtherWay : undefined}
       onClose={onClose}
       picked={ride.pickedId}
       pickedMetres={saved.fullIds.has(direction.id) ? ride.rideTo?.metres : undefined}

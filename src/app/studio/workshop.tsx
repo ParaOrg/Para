@@ -361,6 +361,12 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               onDelete={onDelete}
               onBackToList={hush(backFromTrip)}
               onSwitch={switchTrip}
+              onDrawOtherWay={() => {
+                const routeId = saved.selected?.routeId;
+                if (!routeId) return;
+                closeAll();
+                startReturnTrip(routeId);
+              }}
               onClose={closeAll}
               onPick={pickOnTrip}
               onEnd={endOnTrip}
