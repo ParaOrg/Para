@@ -36,6 +36,9 @@ export const EJeep: Story = { args: { vehicle: 'E-Jeep' } };
 /** Property 1=Bus. */
 export const Bus: Story = { args: { vehicle: 'Bus' } };
 
+/** Property 1=UV Express. */
+export const UvExpress: Story = { args: { vehicle: 'UV Express' } };
+
 /** Violet: the chip's vehicle in Card/violet/surface. */
 export const OnViolet: Story = {
   args: { livery: 'violet' },
