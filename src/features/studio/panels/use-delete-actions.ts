@@ -8,6 +8,7 @@ import { deleteDirectionDraft, draftRefusal, DRAFTED } from '../data/draft-save'
 import { takeDown } from '../data/drafts';
 import { STUDIO_DRAFTS } from '../data/flags';
 import { deleteHotspot } from '../data/hotspots-write';
+import { reviewMessage, runReviewCommand } from '../data/review-commands';
 import { deleteDirection } from '../data/routes-write';
 
 interface DeleteActionsOptions {
@@ -22,7 +23,8 @@ interface DeleteActionsOptions {
 /**
  * Delete on a trip's card and on a hotspot's: who may, what is refused and
  * what is said. Each confirms first, then writes, closes the card and reloads;
- * a failure is a notice.
+ * a failure is a notice. With drafts on, a trip's delete is approved at once; if
+ * the approval is refused, the removal draft stays in Drafts and the notice says why.
  */
 export function useDeleteActions({
   signedIn,
@@ -75,10 +77,19 @@ export function useDeleteActions({
     if (!window.confirm(confirmation)) return;
     try {
       if (STUDIO_DRAFTS) {
-        const refusal = draftRefusal(await deleteDirectionDraft(v));
+        const stored = await deleteDirectionDraft(v);
+        const refusal = draftRefusal(stored);
         if (refusal) throw new Error(refusal);
         saved.select(null);
-        setNotice(DRAFTED);
+        // The confirm above is the review: a delete the editor asked for is approved in the
+        // same press, so it is gone and not parked in Drafts, where Discard would undo it.
+        const approved =
+          stored.draft && (await runReviewCommand({ action: 'approve', draft: stored.draft }));
+        if (approved?.code === 'approved') {
+          await saved.reload();
+          return;
+        }
+        setNotice(approved ? reviewMessage(approved) : DRAFTED);
         return;
       }
       await deleteDirection(v);
