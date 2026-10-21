@@ -246,7 +246,7 @@ export const MixedModes: Story = {
   },
 };
 
-/** A route with no drawn vehicle (UV Express, P2P, tricycle) has no label; the rows stand alone. */
+/** A route with no drawn vehicle (P2P, tricycle) has no label; the rows stand alone. */
 export const NoMode: Story = {
   args: { endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: null }] },
 };

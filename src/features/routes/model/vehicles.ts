@@ -4,8 +4,8 @@ import { isFerry, RAIL_LINES, railLineOf, type Direction } from './routes';
  * What a trip rides, as its header names it: a train's line by its code, or
  * the vehicle's own word. The owner's TimelineRouteDetail variants
  * (4181:10844): Default the LRT-1, Variant2 the Jeepney, Variant3 the Bus,
- * Variant4 the E-Jeep, Variant5 the Ferry; UV Express is Figma's Modes
- * (4236:17040), with no header variant drawn yet.
+ * Variant4 the E-Jeep, Variant5 the Ferry. UV Express is Figma's Modes
+ * (4236:17040) only: its trip shows no header until one is drawn (trip-card).
  */
 export const VEHICLES = [...RAIL_LINES, 'Jeepney', 'E-Jeep', 'Bus', 'Ferry', 'UV Express'] as const;
 export type Vehicle = (typeof VEHICLES)[number];
