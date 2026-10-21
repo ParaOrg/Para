@@ -71,23 +71,59 @@
   --color-taupe-900: #1d1816;
   --color-taupe-950: #0c0a09;
 
-  /* Primitive: the train lines' own colours, one family a line, only the four
-     steps its Map/Rail/… semantics use: 200 the pale, 600 the surface, 700 the
-     border, 800 the timeline. */
+  /* Primitive: the train lines' and the ferry's own colours, one family a line.
+     200, 600, 700 and 800 are the colours the Map/… semantics use: 200 the
+     pale, 600 the surface, 700 the border, 800 the timeline. The other steps
+     continue each family with the lightness and chroma spacing of the
+     Tailwind ramp nearest its hue (green, violet, yellow, blue). */
+
+  --color-light-rail-way-one-50: #f0fcf3;
+  --color-light-rail-way-one-100: #dbfbe4;
   --color-light-rail-way-one-200: #b7f5ca;
+  --color-light-rail-way-one-300: #79e69e;
+  --color-light-rail-way-one-400: #2dc76d;
+  --color-light-rail-way-one-500: #0ea651;
   --color-light-rail-way-one-600: #1d7739;
   --color-light-rail-way-one-700: #12612a;
   --color-light-rail-way-one-800: #0c5924;
+  --color-light-rail-way-one-900: #124820;
+  --color-light-rail-way-one-950: #06270e;
 
+  --color-light-rail-way-two-50: #f1ebff;
+  --color-light-rail-way-two-100: #e5dafe;
   --color-light-rail-way-two-200: #d0b9ff;
+  --color-light-rail-way-two-300: #b48efa;
+  --color-light-rail-way-two-400: #8c60d5;
+  --color-light-rail-way-two-500: #66459e;
   --color-light-rail-way-two-600: #4a3a6b;
   --color-light-rail-way-two-700: #382859;
   --color-light-rail-way-two-800: #372b4f;
+  --color-light-rail-way-two-900: #2c2340;
+  --color-light-rail-way-two-950: #1a1428;
 
+  --color-metro-rail-way-three-50: #fefcf1;
+  --color-metro-rail-way-three-100: #fff8dd;
   --color-metro-rail-way-three-200: #fff1b8;
+  --color-metro-rail-way-three-300: #ffea99;
+  --color-metro-rail-way-three-400: #ffe16d;
+  --color-metro-rail-way-three-500: #fad751;
   --color-metro-rail-way-three-600: #edc319;
   --color-metro-rail-way-three-700: #ac8b0b;
   --color-metro-rail-way-three-800: #967906;
+  --color-metro-rail-way-three-900: #7d6614;
+  --color-metro-rail-way-three-950: #483a05;
+
+  --color-ferry-50: #eef3ff;
+  --color-ferry-100: #d9e3fe;
+  --color-ferry-200: #bccfff;
+  --color-ferry-300: #8dacf7;
+  --color-ferry-400: #537cdd;
+  --color-ferry-500: #2655bf;
+  --color-ferry-600: #003399;
+  --color-ferry-700: #002a80;
+  --color-ferry-800: #002366;
+  --color-ferry-900: #061f4e;
+  --color-ferry-950: #05122d;
 }
 
 /*
@@ -220,6 +256,11 @@
   --map-rail-metro-rail-way-three-surface-pale: var(--color-metro-rail-way-three-200);
   --map-rail-metro-rail-way-three-border-primary: var(--color-metro-rail-way-three-700);
   --map-rail-metro-rail-way-three-timeline-surface: var(--color-metro-rail-way-three-800);
+  /* The Pasig River Ferry, in its own colour the way a train line is. */
+  --map-ferry-surface: var(--color-ferry-600);
+  --map-ferry-surface-pale: var(--color-ferry-200);
+  --map-ferry-border-primary: var(--color-ferry-700);
+  --map-ferry-timeline-surface: var(--color-ferry-800);
 }
 
 /* The semantics as utilities: text-content-primary, bg-surface, border-border-primary… */
@@ -331,6 +372,10 @@
   --color-map-rail-metro-rail-way-three-timeline-surface: var(
     --map-rail-metro-rail-way-three-timeline-surface
   );
+  --color-map-ferry-surface: var(--map-ferry-surface);
+  --color-map-ferry-surface-pale: var(--map-ferry-surface-pale);
+  --color-map-ferry-border-primary: var(--map-ferry-border-primary);
+  --color-map-ferry-timeline-surface: var(--map-ferry-timeline-surface);
 }
 
 /*
