@@ -1,7 +1,7 @@
 // The public map at scale: how it opens with 5,000 directions and 510
-// hotspots, made from today's map — 250 copies of its 20 directions and 5 of
-// its 102 hotspots, as many as make 500 (its counts on 2026-10-06; the suite
-// prints them), shifted across a 25 × 10 grid — and served to the app in
+// hotspots, made from today's map — as many copies of its directions as make
+// about 5,000 (copiesFor), and of its hotspots as make 500 (the suite prints
+// the counts), shifted across a grid 25 copies wide — and served to the app in
 // place of /data/index.v5.json and its lines. No tiles are fetched: a bare style
 // stands in, so this runs the same on a laptop, in this sandbox and on a
 // GitHub runner.
@@ -19,7 +19,7 @@ import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { COPIES, shift } from './lib/big-map.mjs';
+import { copiesFor, shift } from './lib/big-map.mjs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
 import { countLongTasks, startProfile, whereItWent } from './lib/profile.mjs';
 
@@ -53,6 +53,7 @@ const m = JSON.parse(readFileSync(join(data, 'index.v5.json'), 'utf8'));
 const lineOf = (id) => JSON.parse(readFileSync(join(data, 'lines', `${id}.json`), 'utf8')).shape;
 const mv = (c, [dx, dy]) => [c[0] + dx, c[1] + dy];
 const moved = (line, d) => line && { ...line, coordinates: line.coordinates.map((c) => mv(c, d)) };
+const COPIES = copiesFor(m.variants.length);
 const big = { ...m, variants: [], stops: [], links: [] };
 /** Each copy's full line, served at /data/lines/<id>.json. */
 const lines = new Map();
