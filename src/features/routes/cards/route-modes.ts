@@ -12,6 +12,7 @@ export const MODE_LABEL = {
   'E-Jeep': 'E-Jeep',
   Bus: 'Bus',
   Ferry: 'Ferry',
+  'UV Express': 'UV Express',
 } satisfies Record<Vehicle, string>;
 
 interface ModeGroup<T> {

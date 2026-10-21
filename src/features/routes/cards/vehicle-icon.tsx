@@ -1,6 +1,13 @@
 import type { ComponentType } from 'react';
 
-import { BusIcon, EJeepIcon, FerryIcon, JeepneyIcon, TrainIcon } from '@/shared/ui/route-icons';
+import {
+  BusIcon,
+  EJeepIcon,
+  FerryIcon,
+  JeepneyIcon,
+  TrainIcon,
+  UvExpressIcon,
+} from '@/shared/ui/route-icons';
 
 import type { Vehicle } from '../model/vehicles';
 
@@ -16,6 +23,7 @@ const ICON = {
   'E-Jeep': EJeepIcon,
   Bus: BusIcon,
   Ferry: FerryIcon,
+  'UV Express': UvExpressIcon,
 } satisfies Record<Vehicle, ComponentType>;
 
 /**
