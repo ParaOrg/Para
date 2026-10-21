@@ -67,24 +67,31 @@ export function useMapStyleCard(
 
   // The card may grow to the map's edge and no further: the map clips what
   // is past it (MapLibre's overflow). Read as it opens, wherever the button
-  // is then: under the open credits on a phone, or on the sheet.
+  // is then: under the open credits on a phone, or on the sheet, where the
+  // root's top is the pill's, the card not in it yet.
   const open = () => {
     const button = toggleButton()?.getBoundingClientRect();
+    const root = rootRef.current?.getBoundingClientRect();
     const edges = map?.getContainer().getBoundingClientRect();
     const room =
       direction === 'down'
         ? edges && button && edges.bottom - button.bottom
-        : edges && button && button.top - edges.top;
+        : edges && root && root.top - edges.top;
     setCardRoom(room === undefined ? undefined : room - CARD_GAP_PX - CARD_EDGE_PX);
     setCard('open');
   };
 
-  // A tap anywhere else closes the card, as a tap on the map closes a card.
-  // Focus stays where the tap put it.
+  // A tap anywhere but the card and its button closes the card, as a tap on
+  // the map closes a card: on the LocatorButton beside it too. Focus stays
+  // where the tap put it.
   useEffect(() => {
     if (!isOpen) return;
     const handlePointerDown = (e: PointerEvent) => {
-      if (e.target instanceof Node && rootRef.current?.contains(e.target)) return;
+      const inside =
+        e.target instanceof Element
+          ? e.target.closest('[role="dialog"], [aria-haspopup="dialog"]')
+          : null;
+      if (inside && rootRef.current?.contains(inside)) return;
       setCard(afterClose());
     };
     window.addEventListener('pointerdown', handlePointerDown);

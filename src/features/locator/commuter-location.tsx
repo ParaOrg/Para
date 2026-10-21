@@ -19,6 +19,8 @@ interface Props {
   snap: Snap;
   /** Where the commuter should sit from the map's centre, clear of the card on show (useCardCamera's clearOfOpen). */
   offset: () => [number, number];
+  /** The map's 'load' is in and it has not failed (MapView's onLoadedChange). */
+  isMapLoaded: boolean;
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
   /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
@@ -51,6 +53,7 @@ interface Props {
  */
 export function CommuterLocation({
   map,
+  isMapLoaded,
   snap,
   offset,
   docked,
@@ -86,7 +89,7 @@ export function CommuterLocation({
   const gazeAt = gazeSubjects(picks, locator.fix?.at ?? null);
   return (
     <>
-      {map && <Locator locator={locator} map={map} docked={docked} />}
+      {map && <Locator locator={locator} map={map} isMapLoaded={isMapLoaded} docked={docked} />}
       {map && locator.fix && (
         <LocatorOnMap
           map={map}

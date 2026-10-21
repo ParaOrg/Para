@@ -61,6 +61,8 @@ const openOnRoutes = () =>
  */
 export function PublicMapApp() {
   const [map, setMap] = useState<MapLibreMap | null>(null);
+  // Its 'load' in and not failed: the map-style button waits for it (LocationAndMapControl).
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   // One index, fetched once, shared by both hooks; a direction's full line
   // read as it is lit (fetch-line.ts).
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
@@ -148,6 +150,7 @@ export function PublicMapApp() {
       */}
       <MapView
         onReady={setMap}
+        onLoadedChange={setIsMapLoaded}
         zoomButtons={false}
         maxBounds={METRO_MANILA}
         openOn={openOnRoutes}
@@ -160,6 +163,7 @@ export function PublicMapApp() {
       */}
       <CommuterLocation
         map={map}
+        isMapLoaded={isMapLoaded}
         snap={cards.snap}
         offset={clearOfOpen}
         docked={cards.open}

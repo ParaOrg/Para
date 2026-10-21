@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
@@ -25,6 +25,7 @@ interface Args {
   snap: Snap | null;
   state: State;
   wide?: boolean;
+  isMapLoaded?: boolean;
 }
 
 /**
@@ -32,7 +33,7 @@ interface Args {
  * where its top is here. `wide`: 1280 × 800, past `@float:`, the card
  * floating in the corner.
  */
-function Specimen({ snap, state, wide = false }: Args) {
+function Specimen({ snap, state, wide = false, isMapLoaded = true }: Args) {
   return (
     <div
       data-dock-host
@@ -41,7 +42,7 @@ function Specimen({ snap, state, wide = false }: Args) {
         (wide ? 'h-[800px] w-[1280px]' : 'h-[852px] w-[393px]')
       }
     >
-      <Locator locator={state} map={null} docked={snap !== null} />
+      <Locator locator={state} map={null} isMapLoaded={isMapLoaded} docked={snap !== null} />
       {snap !== null && (
         <BottomSheet
           label="A trip"
@@ -101,6 +102,26 @@ export const Denied: Story = {
 export const MapStyleOpen: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
-    await expect(canvas.getByRole('dialog', { name: 'Map Style' })).toBeVisible();
+    // It pops in from clear (map-style.css): visible once the pop is under way.
+    await waitFor(() => expect(canvas.getByRole('dialog', { name: 'Map Style' })).toBeVisible());
+  },
+};
+
+/** A tap on the LocatorButton while the card is open closes the card. */
+export const LocatorTapClosesMapStyle: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
+    // It pops in from clear (map-style.css): visible once the pop is under way.
+    await waitFor(() => expect(canvas.getByRole('dialog', { name: 'Map Style' })).toBeVisible());
+    await userEvent.click(canvas.getByRole('button', { name: 'Show where I am' }));
+    await waitFor(() => expect(canvas.queryByRole('dialog', { name: 'Map Style' })).toBeNull());
+  },
+};
+
+/** The map still opening, or failed: the map-style half is disabled, the locator still works. */
+export const MapNotLoaded: Story = {
+  args: { isMapLoaded: false },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: 'Map design' })).toBeDisabled();
   },
 };

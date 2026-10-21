@@ -33,6 +33,7 @@ interface MapStyleButtonProps extends Omit<
  * The "MayLayers or Theme" button (Figma 4176:10679): a 48 px Special pill
  * holding `map-type`, that opens the Map Style card. Pressed is
  * InnerShadow/SpecialButtonPressed while touched, as on the LocatorButton.
+ * Disabled keeps its Rest look at opacity/60, as Button and IconButton do.
  */
 export function MapStyleButton({ corners = 'all', currentLabel, ...rest }: MapStyleButtonProps) {
   return (
@@ -46,6 +47,7 @@ export function MapStyleButton({ corners = 'all', currentLabel, ...rest }: MapSt
       className={
         'group relative grid size-12 shrink-0 place-items-center bg-surface-tertiary text-content-primary ' +
         'outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand-surface ' +
+        'disabled:opacity-60 ' +
         CORNERS[corners]
       }
     >

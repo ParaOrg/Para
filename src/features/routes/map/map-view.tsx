@@ -118,6 +118,8 @@ interface Props {
    * `openOn` as soon as its style is in.
    */
   onReady?: (map: MapLibreMap) => void;
+  /** Said when the map's 'load' comes, and again when a failure takes it back. */
+  onLoadedChange?: (isLoaded: boolean) => void;
   /**
    * MapLibre's +, − and compass, top right, for a mouse (never a finger:
    * `coarse`). The studio keeps them; the public map has none (the owner's
@@ -192,6 +194,7 @@ export const METRO_MANILA: [[number, number], [number, number]] = [
 
 export function MapView({
   onReady,
+  onLoadedChange,
   zoomButtons = true,
   maxBounds,
   foldCredits = false,
@@ -226,6 +229,15 @@ export function MapView({
   // a remembered choice never flashes gray first.
   const [basemap] = useState<Basemap>(() => readBasemap(basemaps));
   const [ready, setReady] = useState<MapLibreMap | null>(null);
+  const isLoaded = ready !== null && error === null;
+  const onLoadedChangeRef = useRef(onLoadedChange);
+  useEffect(() => {
+    onLoadedChangeRef.current = onLoadedChange;
+  });
+  // Told to the page, whose own controls wait for the 'load' as this one's do.
+  useEffect(() => {
+    onLoadedChangeRef.current?.(isLoaded);
+  }, [isLoaded]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -313,8 +325,8 @@ export function MapView({
       // "Loading map…" goes at the map's 'load'; on the public map at the
       // first frame that draws its routes, if that comes first: the routes
       // are drawn seconds before 'load', which waits for every basemap tile
-      // in view too. Only the text: the design button, the clock and the
-      // failure banner still go by 'load' (below).
+      // in view too. Only the text: the design buttons, the clock and the
+      // failure banner still go by 'load' (below; the page's by onLoadedChange).
       stopLift = loadingLifts(map, openOn ? routesDrawn : null, () => setLifted(true));
 
       // Record how far MapLibre gets, so a silent failure at least says
@@ -448,7 +460,7 @@ export function MapView({
       */}
       <div
         data-testid="map-view"
-        data-loaded={(ready && !error) || undefined}
+        data-loaded={isLoaded || undefined}
         className="absolute inset-0 bg-surface-secondary"
       >
         <div ref={containerRef} className="h-full w-full" />
