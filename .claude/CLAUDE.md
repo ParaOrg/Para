@@ -359,7 +359,7 @@ Never disable a lint rule for a whole file. A single-line disable needs a commen
 
 Before calling a change finished, confirm all of these:
 
-- [ ] `npm run check` passes: formatting, lint, the build with its guards and the unit checks.
+- [ ] For a medium or hard change, or whenever the owner asks, `npm run check` passes: formatting, lint, the build with its guards and the unit checks. A simple change relies on its PR's CI.
 - [ ] No new `any`, `!` or `as`.
 - [ ] New and changed files follow the naming and folder rules above.
 - [ ] Imports flow `app → pages → features → shared → design-system`, through a leaf feature's `index.ts` and routes' concern folders; `npm run build` proves it.
@@ -388,4 +388,4 @@ Read `docs/agents/how-we-work.md` before starting work. In short:
 
 - The owner owns the design. Never make up a look; batch questions for the owner.
 - Opus plans, designs the architecture and reviews; Sonnet builds from a clear plan; Haiku watches and scans.
-- At most about four sessions build at once, each owning its own folders. Only the owner merges into `staging` and `main`.
+- At most about four sessions build at once, each owning its own folders. Sessions merge their finished work into `staging`; only the owner merges into `main`.
