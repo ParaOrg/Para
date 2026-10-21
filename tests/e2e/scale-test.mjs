@@ -223,11 +223,9 @@ const s = (ms) => (ms == null ? 'never' : `${(ms / 1000).toFixed(1)} s`);
 console.log(
   `  map load ${s(marks['map load'])}; routes in the source ${s(marks['routes in the source'])}; hotspots ${s(marks['hotspots in the source'])}; the first line ${s(marks['lines on the screen'])}; idle ${s(marks.idle)}\n`,
 );
-check(
-  'every direction reached the map',
-  routes === big.variants.length,
-  `${routes} of ${big.variants.length}`,
-);
+// The published map may hold a way not drawn yet (a slot): it has no line to draw.
+const drawn = big.variants.filter((v) => v.overview).length;
+check('every drawn direction reached the map', routes === drawn, `${routes} of ${drawn}`);
 check(
   'no orange stretch is worked out at load: none is lit',
   stretchesAtLoad === 0,
