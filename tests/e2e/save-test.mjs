@@ -1699,6 +1699,8 @@ check(
     (await page.getByLabel(/Mode/).isEnabled()),
 );
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Phase' });
+// The form asks a jeepney for no signboard: the one the route has is kept.
+const signboardBefore = tables.route.find((r) => r.id === outRoute?.id)?.signboard ?? null;
 check(
   '  the panel says the change is to both directions',
   /a change here is a change to both directions/.test(await body()),
@@ -1715,9 +1717,9 @@ await waitFor(async () => (await toast().count()) > 0);
 w = writesSince(n);
 const edited = tables.route.find((r) => r.id === outRoute?.id);
 check(
-  '  Update writes the route row — its new head, its signboard — then the direction',
+  '  Update writes the route row — its new head, its signboard kept — then the direction',
   edited?.head_stop_id === phase?.id &&
-    edited?.signboard === 'Phase – Tail' &&
+    (edited?.signboard ?? null) === signboardBefore &&
     w.findIndex((x) => x.method === 'PATCH' && x.table === 'route') <
       w.findIndex((x) => x.method === 'PATCH' && x.table === 'route_variant'),
   said(w),
