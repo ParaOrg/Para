@@ -191,6 +191,21 @@ export const NoWayBack: Story = {
   },
 };
 
+/** In the studio, the way back still a slot: SWITCH is open, and a tap starts drawing it. */
+export const DrawTheWayBack: Story = {
+  args: {
+    directions: [talaToNovaliches, { ...novalichesToTala, shape: null }],
+    onDrawOtherWay: fn(),
+  },
+  play: async ({ args, canvasElement }) => {
+    const turn = within(canvasElement).getByTestId('card-switch');
+    await expect(turn).toBeEnabled();
+    await userEvent.click(turn);
+    await expect(args.onDrawOtherWay).toHaveBeenCalled();
+    await expect(args.onSwitch).not.toHaveBeenCalled();
+  },
+};
+
 /** Opened from a hotspot's card, not the list: no ‹ back to it. */
 export const NoList: Story = {
   render: (args) => <Keeping {...args} onBackToList={null} />,
