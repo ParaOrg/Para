@@ -13,11 +13,11 @@ interface RouteModeProps {
 /**
  * Figma's Modes (4236:17040): what a card's routes ride. The vehicle, 16, in the card's own
  * colour on a round white chip (Background/surface, 2 round it), then its word in Medium 14/20 in
- * the card's words' colour, 6 between them; all of it at 70% (Figma's opacity/70).
+ * the card's words' colour, 6 between them; all of it at 80% (Figma's opacity/80).
  */
 export function RouteMode({ vehicle, livery }: RouteModeProps) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm/5 font-medium whitespace-nowrap opacity-70">
+    <span className="inline-flex items-center gap-1.5 text-sm/5 font-medium whitespace-nowrap opacity-80">
       <span
         aria-hidden
         className={'shrink-0 rounded-full bg-surface p-0.5 ' + CARD_SURFACE_TEXT[livery]}
