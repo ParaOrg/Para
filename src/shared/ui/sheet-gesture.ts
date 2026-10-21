@@ -83,9 +83,9 @@ const RECENT_MS = 100;
 const MIDDLE = 0.55;
 
 /**
- * What Low shows, the same for every card, the owner's rule (Figma 3817:6007;
- * 133: 129 as 3869:5195 draws it, with the title at 24/32): the notch, the header and the top of the first
- * card, down past its title — cut to one line there (`sheet-low:`).
+ * What Low shows, the same for every card, the owner's rule (Figma 3817:6007,
+ * 3869:5195): the notch, the header and the top of the first card, down past
+ * its 24/32 title — cut to one line there (`sheet-low:`).
  */
 export const LOW_PX = 133;
 

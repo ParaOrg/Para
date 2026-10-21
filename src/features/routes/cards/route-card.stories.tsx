@@ -214,7 +214,7 @@ export const SixWaysOut: Story = {
 };
 
 /**
- * Each mode's label heads its own rows, stacked down the card: Figma's RouteCardExample (3746:1238)
+ * Each mode's label heads its own rows, stacked down the card: Figma's RouteCard (3665:2265)
  * draws one group, and a place can mix. Rail lines are all "Train"; a mode's rows keep their
  * order, and the tree line ends at each group's last row.
  */
@@ -257,6 +257,20 @@ export const LongName: Story = {
     livery: 'orange',
     routeOrigin: 'Fairview Teraccess Transport Terminal',
     endPoints: [{ id: 'a', routeDirection: 'Novaliches (Bayan) via Zabarte', vehicle: 'Jeepney' }],
+  },
+};
+
+/**
+ * Two routes between the same ends: each row says its via after the place
+ * (directionRowName), as the route's own name does.
+ */
+export const SameEndsByVia: Story = {
+  args: {
+    routeOrigin: 'Tala',
+    endPoints: [
+      { id: 'a', routeDirection: 'SM Fairview via Maligaya', vehicle: 'Jeepney' },
+      { id: 'b', routeDirection: 'SM Fairview via Zabarte', vehicle: 'Jeepney' },
+    ],
   },
 };
 
