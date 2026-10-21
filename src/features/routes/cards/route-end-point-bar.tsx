@@ -53,8 +53,6 @@ export function RouteEndPointBar({
       }
     >
       <RouteEndPointLines position={position} />
-      {/* TODO: Figma's RouteTripDetail variant ends in a chevron-right at opacity/60; it waits for a
-          colour that shows on the sheet's white (Figma draws it Content/inverse). */}
       <span className="flex min-w-0 flex-1 items-center gap-1 py-2">
         {slot}
         <span className="min-w-0 flex-1">{routeDirection}</span>
