@@ -207,6 +207,8 @@ const serve = (route) => {
   asked.push({
     table,
     select: u.searchParams.get('select') ?? '*',
+    // The lines of the drawn rows with no overview yet (live.ts's unsummarised): not the list.
+    isBackfill: u.searchParams.get('overview') === 'is.null',
     offset,
     one,
     bytes: body.length,
@@ -325,11 +327,9 @@ if (process.env.PARAPO_SCALE_DEBUG)
 console.log(
   `  map load ${s(marks['map load'])}; routes in the source ${s(marks['routes in the source'])}; hotspots ${s(marks['hotspots in the source'])}; idle ${s(marks.idle)}\n`,
 );
-check(
-  'every direction reached the map',
-  routes === variants.length,
-  `${routes} of ${variants.length}`,
-);
+// The published map may hold a way not drawn yet (a slot): it has no line to draw.
+const drawn = variants.filter((v) => v.shape).length;
+check('every drawn direction reached the map', routes === drawn, `${routes} of ${drawn}`);
 check('every hotspot reached the map', boxes === stops.length, `${boxes} of ${stops.length}`);
 check(
   'no orange stretch is worked out at load: none is lit',
@@ -349,7 +349,7 @@ check(
 
 // What was asked for: the list without its drawings or its lines, and the
 // pages together.
-const lists = asked.filter((r) => r.table === 'route_variant' && !r.one);
+const lists = asked.filter((r) => r.table === 'route_variant' && !r.one && !r.isBackfill);
 const drawingsInList = lists.filter((r) => {
   const cols = columnsOf(r.select);
   return (
