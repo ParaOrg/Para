@@ -76,6 +76,24 @@ export const CARD_TEXT = {
   ferry: 'text-content-inverse',
 } satisfies Record<Livery, string>;
 
+/**
+ * Words or a drawing in the card's own colour, Card/<livery>/surface, a train's
+ * or the ferry's Map/…/surface: what sits on a white chip on the card, a mode's
+ * vehicle (Modes, 4236:17040) as the line's on a RouteCardRailway.
+ */
+export const CARD_SURFACE_TEXT = {
+  red: 'text-card-red-surface',
+  orange: 'text-card-orange-surface',
+  violet: 'text-card-violet-surface',
+  rose: 'text-card-rose-surface',
+  fuchsia: 'text-card-fuchsia-surface',
+  pink: 'text-card-pink-surface',
+  'light-rail-way-one': 'text-map-rail-light-rail-way-one-surface',
+  'light-rail-way-two': 'text-map-rail-light-rail-way-two-surface',
+  'metro-rail-way-three': 'text-map-rail-metro-rail-way-three-surface',
+  ferry: 'text-map-ferry-surface',
+} satisfies Record<Livery, string>;
+
 // Drawn over the card, as Figma lays it: above the Blob and the words.
 export const CARD_SHADOW = {
   red: 'shadow-route-card-primary',

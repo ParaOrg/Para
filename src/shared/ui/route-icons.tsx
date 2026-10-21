@@ -4,9 +4,10 @@
  * card goes to; and the trip card's: ‹ (chevron-left) back to the list, and
  * the chevron down on the row that folds its hintuans, turned to point up
  * when they are open — the same drawing as Figma's chevron-up, so one icon
- * serves both; and › (chevron-right) at the end of a train card's row. Each is Figma's own path, filled with currentColor so it takes
- * the text colour of wherever it sits — the file draws them in
- * Content/primary or Content/inverse, never a colour of their own.
+ * serves both; and › (chevron-right) at the end of a card's row. Each is
+ * Figma's own path, filled with currentColor so it takes the text colour of
+ * wherever it sits — the file draws them in Content/primary or
+ * Content/inverse, never a colour of their own.
  */
 
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
@@ -172,8 +173,8 @@ export function RoutesIcon() {
 }
 
 /**
- * The vehicles at the top of a trip's card (RouteTripDetailHeader) and at the
- * end of each route's row (RouteEndPointBar), Figma's own drawings at 32
+ * The vehicles at the top of a trip's card (RouteTripDetailHeader), a card's
+ * modes (RouteMode) and a train card's chip, Figma's own drawings at 32
  * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
  * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156) and Ferry
  * (4189:11183). They live in one sprite the page fetches, not as paths in its
