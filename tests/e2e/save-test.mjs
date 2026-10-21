@@ -1696,10 +1696,9 @@ check(
   'Edit route unlocks the ends and the facts',
   (await page.getByTestId('save-head').isEnabled()) &&
     (await page.getByPlaceholder('Zabarte').isEnabled()) &&
-    (await page.getByPlaceholder('Fairview – Tala').isEnabled()),
+    (await page.getByLabel(/Mode/).isEnabled()),
 );
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Phase' });
-await page.getByPlaceholder('Fairview – Tala').fill('Phase – Tail');
 check(
   '  the panel says the change is to both directions',
   /a change here is a change to both directions/.test(await body()),
