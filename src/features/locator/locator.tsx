@@ -67,10 +67,12 @@ export function Locator({ locator, map, isMapLoaded, basemaps, basemapThumbnails
     return () => window.clearTimeout(t);
   }, [note]);
 
-  // Never above Middle's top; the map's foot, short of a phone's home bar, with no card.
+  // Never above Middle's top. With no card, the map's foot: short of a
+  // phone's home bar, and of what the page stands in the corner (`--dock-foot`,
+  // the studio's New buttons).
   const y = docked
     ? `max(var(--dock-y, 100%), ${slide('middle')})`
-    : 'calc(100% - env(safe-area-inset-bottom))';
+    : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
   return (
     <div
       data-testid="locator-dock"
@@ -81,7 +83,7 @@ export function Locator({ locator, map, isMapLoaded, basemaps, basemapThumbnails
       }
       style={{ translate: `0 ${y}` }}
     >
-      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-10 @float:mb-0">
+      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-[max(2.5rem,calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
         <LocationAndMapControl
           map={map}
           isMapLoaded={isMapLoaded}

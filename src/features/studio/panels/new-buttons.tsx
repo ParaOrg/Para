@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import type { HotspotKind } from '../drawing/drawing-types';
 
 /**
@@ -5,6 +7,11 @@ import type { HotspotKind } from '../drawing/drawing-types';
  * New hotspot with its menu — a terminal or a hintuan. Disabled until the
  * map is there to draw on. The menu's open state belongs to the workshop, which
  * keeps it while these buttons are away (a drawing, the list).
+ *
+ * They hold the map's bottom-right corner, so they say how tall they stand
+ * there as `--dock-foot` on the page's `[data-dock-host]`, from the map's foot
+ * to + New Route's top, and the LocationAndMap pill stands above them. The
+ * menu is left out: it opens over the pill for a moment, rather than moving it.
  */
 export function NewButtons({
   ready,
@@ -20,6 +27,24 @@ export function NewButtons({
   onNewRoute: () => void;
   onNewHotspot: (kind: HotspotKind) => void;
 }) {
+  const newRouteRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const button = newRouteRef.current;
+    const host = button?.closest<HTMLElement>('[data-dock-host]');
+    if (!button || !host) return;
+    const measure = () => {
+      const foot = host.getBoundingClientRect().bottom - button.getBoundingClientRect().top;
+      host.style.setProperty('--dock-foot', `${foot}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(host);
+    return () => {
+      observer.disconnect();
+      host.style.removeProperty('--dock-foot');
+    };
+  }, []);
+
   return (
     <div className="absolute right-[calc(1.5rem+env(safe-area-inset-right))] bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-10 flex flex-col items-end gap-2">
       {menu && (
@@ -60,6 +85,7 @@ export function NewButtons({
         </div>
       )}
       <button
+        ref={newRouteRef}
         type="button"
         disabled={!ready}
         onClick={onNewRoute}
