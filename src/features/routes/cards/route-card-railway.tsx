@@ -45,9 +45,9 @@ interface RouteCardRailwayProps {
 
 /** The line's name as Figma's pill writes it. */
 const PILL_LABEL = {
-  'LRT-1': 'LRT - 1',
-  'LRT-2': 'LRT - 2',
-  'MRT-3': 'MRT - 3',
+  'LRT-1': 'LRT 1',
+  'LRT-2': 'LRT 2',
+  'MRT-3': 'MRT 3',
   Ferry: 'Ferry',
 } satisfies Record<RailwayVehicle, string>;
 
@@ -66,10 +66,10 @@ const PILL = {
 /**
  * A station and the train or ferry directions that leave it one way —
  * Figma's RouteCardRailway (4261:15199): one card per line and bound, in the
- * line's own colours. Over the station's name, the line's pill, and its
- * vehicle at the right; under it a row per station it goes to
- * (RouteEndPointBar), each with its station code's pill in the row's slot,
- * before the name. The ferry has no codes.
+ * line's own colours. Over the station's name, its vehicle in a chip and the
+ * line's pill beside it, both in the pill's colours; under it a row per
+ * station it goes to (RouteEndPointBar), each with its station code's pill in
+ * the row's slot, before the name. The ferry has no codes.
  *
  * It behaves as RouteCard does: a row opens its trip; a tap anywhere else
  * selects the card, or lets it go, State=Selected pressing it in under the
@@ -106,7 +106,12 @@ export function RouteCardRailway({
         aria-hidden
         className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
       />
-      <div className="flex w-full items-center justify-between px-4 pt-2">
+      <div className="flex w-full items-center gap-2 px-4 pt-2">
+        <span aria-hidden className={'shrink-0 rounded-full p-0.5 ' + PILL[railway]}>
+          <span className="block size-7 *:size-full">
+            <VehicleIcon vehicle={railway} />
+          </span>
+        </span>
         <p
           data-testid={`${testId}-pill`}
           className={
@@ -116,9 +121,6 @@ export function RouteCardRailway({
           {PILL_LABEL[railway]}
           {bound && <span className="sr-only">, {bound}</span>}
         </p>
-        <span aria-hidden className="size-8 shrink-0 *:size-full">
-          <VehicleIcon vehicle={railway} />
-        </span>
       </div>
       <div className="flex w-full flex-col">
         <div className="flex w-full px-4">
@@ -129,7 +131,7 @@ export function RouteCardRailway({
             data-testid={`${testId}-select`}
             aria-pressed={isSelected}
             onClick={onSelect}
-            className="w-full text-left text-2xl/8 font-extrabold after:absolute after:inset-0 sheet-low:line-clamp-1"
+            className="w-full text-left text-2xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
           >
             {routeOrigin}
           </button>
