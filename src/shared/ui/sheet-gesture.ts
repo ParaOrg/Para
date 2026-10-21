@@ -84,10 +84,10 @@ const MIDDLE = 0.55;
 
 /**
  * What Low shows, the same for every card, the owner's rule (Figma 3817:6007;
- * 129 as 3869:5195 draws it): the notch, the header and the top of the first
+ * 133: 129 as 3869:5195 draws it, with the title at 24/32): the notch, the header and the top of the first
  * card, down past its title — cut to one line there (`sheet-low:`).
  */
-export const LOW_PX = 129;
+export const LOW_PX = 133;
 
 /**
  * What Max leaves of the map at the top, as Google Maps does: the status

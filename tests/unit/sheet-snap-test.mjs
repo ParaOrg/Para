@@ -81,7 +81,7 @@ test('a flick down goes all the way to Low, from Max or Middle alike, and from L
   assert.equal(snapFor(70, -3, heights, 80), 'close');
 });
 
-test('each height of a map 844 tall: Low 129, Middle 55%, Max all of it but a 24 px strip', () => {
+test('each height of a map 844 tall: Low 133, Middle 55%, Max all of it but a 24 px strip', () => {
   assert.deepEqual(heightsFor(844), { low: LOW_PX, middle: 464, max: 820 });
 });
 
