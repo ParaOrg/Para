@@ -44,6 +44,7 @@ const CARD_WORDS = {
   'light-rail-way-one': 'text-map-rail-light-rail-way-one-surface',
   'light-rail-way-two': 'text-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'text-content-primary',
+  ferry: 'text-map-ferry-surface',
 } satisfies Record<Livery, string>;
 
 const isLine = (vehicle: Vehicle): vehicle is RailLine => vehicle in LINE_WORDS;

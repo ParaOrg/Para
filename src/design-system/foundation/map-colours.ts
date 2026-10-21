@@ -38,6 +38,10 @@ export const MAP_COLOURS = {
   'Map/Rail/MetroRailWayThree/surface-pale': '#fff1b8', // metro-rail-way-three/200
   'Map/Rail/MetroRailWayThree/border-primary': '#ac8b0b', // metro-rail-way-three/700
   'Map/Rail/MetroRailWayThree/Timeline/surface': '#967906', // metro-rail-way-three/800
+  'Map/Ferry/surface': '#003399', // ferry/600
+  'Map/Ferry/surface-pale': '#bccfff', // ferry/200
+  'Map/Ferry/border-primary': '#002a80', // ferry/700
+  'Map/Ferry/Timeline/surface': '#002366', // ferry/800
 } as const satisfies Record<`Map/${string}`, `#${string}`>;
 
 /**

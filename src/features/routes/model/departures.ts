@@ -1,4 +1,4 @@
-import { otherBound, railBound } from './rail-codes';
+import { otherBound, railBound, type Bound } from './rail-codes';
 import {
   directionEndHotspots,
   directionEnds,
@@ -9,6 +9,7 @@ import {
   type RouteSummary,
   type Direction,
 } from './routes';
+import { railwayOf, type RailwayVehicle } from './vehicles';
 
 /*
  * Choosing among directions: a route's two, those under a tap grouped by
@@ -81,6 +82,54 @@ export function drawnDepartures<V extends Direction>(
   return departures(directions, back)
     .map((p) => ({ ...p, directions: p.directions.filter((d) => d.drawn) }))
     .filter((p) => p.directions.length > 0);
+}
+
+/** One RouteCard: a place, and the drawn directions it lists. */
+export interface RouteCardGroup<V extends Direction> extends Departures<V> {
+  /** What tells the card from the others in its list, and what a pick keeps as Selected. */
+  card: string;
+  /** A RouteCardRailway's line, a train's or Ferry; null for a road vehicle's RouteCard. */
+  railway: RailwayVehicle | null;
+  /** A train card's bound, railBound; null on the ferry, on a road card, or when a line's table does not know an end. */
+  bound: Bound | null;
+}
+
+/**
+ * The cards a list shows one way round: drawnDepartures, with every place's
+ * train and ferry directions taken off to a RouteCardRailway each, one card
+ * per line and bound (the owner's call, 2026-10-21): Recto's LRT-2 Eastbound
+ * and its LRT-2 Westbound are two cards, both Recto. The road directions stay
+ * the place's RouteCard, first, as its card has always stood; the line cards
+ * follow in the order met. A road card is known by its place, as before; a
+ * line card by its place, line and bound.
+ */
+export function routeCards<V extends Direction>(
+  directions: readonly V[],
+  back: boolean,
+): RouteCardGroup<V>[] {
+  return drawnDepartures(directions, back).flatMap((place) => {
+    const road: RouteCardGroup<V> = {
+      card: place.from,
+      from: place.from,
+      railway: null,
+      bound: null,
+      directions: [],
+    };
+    const lines = new Map<string, RouteCardGroup<V>>();
+    for (const d of place.directions) {
+      const railway = railwayOf(d.v);
+      if (!railway) {
+        road.directions.push(d);
+        continue;
+      }
+      const bound = railBound(d.v);
+      const card = `${place.from}|${railway}|${bound ?? ''}`;
+      const group = lines.get(card) ?? { card, from: place.from, railway, bound, directions: [] };
+      group.directions.push(d);
+      lines.set(card, group);
+    }
+    return [...(road.directions.length ? [road] : []), ...lines.values()];
+  });
 }
 
 /**

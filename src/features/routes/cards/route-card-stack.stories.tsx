@@ -52,6 +52,19 @@ const tala: Direction[] = [
   direction('sm', 'Tala – SM Fairview', 'SM Fairview → Tala', 11.2, true),
 ];
 
+/** A train or ferry route out of Araneta Center-Cubao, its mode and code its line's. */
+function line(route: string, dir: string, mode: 'lrt' | 'ferry', routeCode: string): Direction {
+  const v = direction(route, dir.replace(' → ', ' – '), dir, 5);
+  return { ...v, route: { ...v.route, mode, routeCode } };
+}
+const cubao: Direction[] = [
+  direction('aurora', 'Araneta Center-Cubao – Aurora', 'Araneta Center-Cubao → Aurora', 3),
+  line('lrt2-east', 'Araneta Center-Cubao → Antipolo', 'lrt', 'LRT-2'),
+  line('lrt2-west', 'Araneta Center-Cubao → Recto', 'lrt', 'LRT-2'),
+  line('lrt2-west-2', 'Araneta Center-Cubao → Legarda', 'lrt', 'LRT-2'),
+  line('ferry', 'Araneta Center-Cubao → Pinagbuhatan', 'ferry', 'PRFS'),
+];
+
 type Frame = 'list' | 'hotspot';
 /** The list's 384 in the top-left corner, and a hotspot card's 320 (BottomSheet's `floats="card"`, `@wide:w-80`). */
 const FRAME = { list: 'w-96', hotspot: 'w-80' } satisfies Record<Frame, string>;
@@ -107,6 +120,29 @@ export const InAHotspotCard: Story = { parameters: { frame: 'hotspot' } };
 
 /** The way back with SM Fairview's card Selected: pressed in, the other at rest. */
 export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview' } };
+
+/**
+ * A station: its jeeps on its RouteCard, then a RouteCardRailway per line and
+ * bound — LRT-2 Eastbound, LRT-2 Westbound with two stations — and the
+ * ferry's, each in its line's colours. Sample places, not the real map.
+ */
+export const AStation: Story = {
+  args: { routes: cubao },
+  play: async ({ canvasElement }) => {
+    const cards = within(canvasElement).getAllByTestId('chooser-origin');
+    await expect(cards.map((c) => c.dataset.livery)).toEqual([
+      expect.any(String),
+      'light-rail-way-two',
+      'light-rail-way-two',
+      'ferry',
+    ]);
+  },
+};
+
+/** The station with LRT-2 Westbound Selected: that card alone pressed in. */
+export const AStationLineSelected: Story = {
+  args: { routes: cubao, selected: 'Araneta Center-Cubao|LRT-2|Westbound' },
+};
 
 /**
  * Tapped through: a row opens its trip straight away and picks no card, since

@@ -380,6 +380,21 @@ function TokensPage() {
           token="…/MetroRailWayThree/Timeline"
           cls="bg-map-rail-metro-rail-way-three-timeline-surface"
         />
+        <Swatch
+          box="bg-map-ferry-surface border-3 border-map-ferry-border-primary"
+          token="Map/Ferry"
+          cls="bg-map-ferry-surface"
+        />
+        <Swatch
+          box="bg-map-ferry-surface-pale"
+          token="…/Ferry/surface-pale"
+          cls="bg-map-ferry-surface-pale"
+        />
+        <Swatch
+          box="bg-map-ferry-timeline-surface"
+          token="…/Ferry/Timeline"
+          cls="bg-map-ferry-timeline-surface"
+        />
       </Group>
 
       <Group title="Motion — hover a row to play it">
@@ -624,6 +639,15 @@ function TokensPage() {
               { step: '600', cls: 'bg-metro-rail-way-three-600' },
               { step: '700', cls: 'bg-metro-rail-way-three-700' },
               { step: '800', cls: 'bg-metro-rail-way-three-800' },
+            ]}
+          />
+          <Ramp
+            name="ferry"
+            boxes={[
+              { step: '200', cls: 'bg-ferry-200' },
+              { step: '600', cls: 'bg-ferry-600' },
+              { step: '700', cls: 'bg-ferry-700' },
+              { step: '800', cls: 'bg-ferry-800' },
             ]}
           />
           <Ramp

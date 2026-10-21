@@ -411,7 +411,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               hotspots={hotspots.candidates}
               back={saved.back}
               onFlip={flipList}
-              selected={saved.highlight?.where === 'list' ? saved.highlight.from : null}
+              selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
               onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
               onRoute={openTrip}
               onHotspot={(s) => cards.openHotspot(s.id)}
