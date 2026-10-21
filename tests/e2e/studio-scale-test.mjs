@@ -1,7 +1,7 @@
 // The editor at scale: how /studio/?e2e=1 opens with 5,000 directions and 510
-// hotspots, made from today's map — 250 copies of its 20 directions and 5 of
-// its 102 hotspots, as many as make 500 (its counts on 2026-10-06; the suite
-// prints them), shifted across a 25 × 10 grid — served by a stand-in for the
+// hotspots, made from today's map — as many copies of its directions as make
+// about 5,000 (copiesFor), and of its hotspots as make 500 (the suite prints
+// the counts), shifted across a grid 25 copies wide — served by a stand-in for the
 // database's REST API. The rows are as the database keeps them: a line with a
 // point every 20 m or so (what the router gives), the drawing beside it
 // (control_points, segments) and 15-decimal coordinates. No tiles, no router,
@@ -25,7 +25,7 @@
 // instead of the line: a lit direction's full line is read on its own, and
 // its orange stretches are worked out then.
 import { chromium } from 'playwright';
-import { COPIES, readPublished, shift } from './lib/big-map.mjs';
+import { copiesFor, readPublished, shift } from './lib/big-map.mjs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
 import { countLongTasks, startProfile, whereItWent } from './lib/profile.mjs';
 
@@ -42,6 +42,7 @@ const { check, tally } = harness();
 
 // ------------------------------------------------------------- the tables
 const m = readPublished();
+const COPIES = copiesFor(m.variants.length);
 // Shifted, and with the digits a save used to keep.
 const mv = (c, [dx, dy], j) => [
   c[0] + dx + (j % 9) * 1e-9 + 3e-12,
