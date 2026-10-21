@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import type { MapLibreMap } from 'maplibre-gl';
 import { useRef, useState } from 'react';
 
+import { CommuterLocation, useGazeHush } from '@/features/locator';
 import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
@@ -47,6 +48,7 @@ import {
   useDeleteActions,
   useStudioTrip,
 } from '@/features/studio';
+import { useTurn } from '@/shared/hooks/commit-turn';
 
 interface WorkshopProps {
   session: Session | null;
@@ -152,6 +154,13 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     endOnTrip,
   } = useCardCamera(map, saved, hotspots, cards, { tipId });
 
+  // The pill's camera moves at this page's turn, after the cards' camera
+  // (commit-turn.ts); the dot's gaze is hushed by ‹ and ✕ (dot-gaze.ts).
+  const locatorTurn = useTurn();
+  const { hush, hushedAt } = useGazeHush();
+  // Its 'load' in and not failed: the map-style button waits for it.
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+
   const { rides, timeline, routeCount } = useStudioTrip({
     map,
     saved,
@@ -213,14 +222,46 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
         <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
       </div>
-      <div ref={root} data-map-box className="@container relative min-h-0 flex-1 overflow-clip">
+      {/* `data-dock-host`: the open card's sheet says where its top is here, for the pill to follow (BottomSheet). */}
+      <div
+        ref={root}
+        data-map-box
+        data-dock-host
+        className="@container relative min-h-0 flex-1 overflow-clip"
+      >
         {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
         <div inert={!isPlayground && !isContributors} className="contents">
           <MapView
             onReady={setMap}
+            onLoadedChange={setIsMapLoaded}
             foldCredits
             basemaps={STUDIO_BASEMAPS}
             basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
+            hasMapStyleButton={false}
+          />
+          {/*
+            The commuter's own position and the map's design, one pill, as on
+            the public map: the studio sees the map the way a commuter does.
+          */}
+          <CommuterLocation
+            map={map}
+            isMapLoaded={isMapLoaded}
+            basemaps={STUDIO_BASEMAPS}
+            basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
+            snap={cards.snap}
+            offset={clearOfOpen}
+            docked={cards.open}
+            cameraTurn={locatorTurn}
+            picks={{
+              pickedId: ride.pickedId,
+              pinAt: ride.pinAt,
+              place: hotspots.selected,
+              trip: saved.selected,
+              highlight: saved.highlight,
+              candidates: saved.candidates,
+              litDirections: saved.litDirections,
+            }}
+            hushedAt={hushedAt}
           />
         </div>
 
@@ -318,7 +359,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               canEdit={canEdit}
               opening={opening}
               onDelete={onDelete}
-              onBackToList={backFromTrip}
+              onBackToList={hush(backFromTrip)}
               onSwitch={switchTrip}
               onClose={closeAll}
               onPick={pickOnTrip}
@@ -346,7 +387,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               onOpenTrip={openTrip}
               onDeleteHotspot={onDeleteHotspot}
               onCloseAll={closeAll}
-              onClose={cards.closeHotspot}
+              onClose={hush(cards.closeHotspot)}
             />
           )}
 
