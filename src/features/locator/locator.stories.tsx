@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 
+import { BASEMAPS } from '@/features/routes/map/basemap';
+import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 
@@ -42,7 +44,14 @@ function Specimen({ snap, state, wide = false, isMapLoaded = true }: Args) {
         (wide ? 'h-[800px] w-[1280px]' : 'h-[852px] w-[393px]')
       }
     >
-      <Locator locator={state} map={null} isMapLoaded={isMapLoaded} docked={snap !== null} />
+      <Locator
+        locator={state}
+        map={null}
+        isMapLoaded={isMapLoaded}
+        basemaps={BASEMAPS}
+        basemapThumbnails={BASEMAP_THUMBNAILS}
+        docked={snap !== null}
+      />
       {snap !== null && (
         <BottomSheet
           label="A trip"
@@ -123,5 +132,16 @@ export const MapNotLoaded: Story = {
   args: { isMapLoaded: false },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('button', { name: 'Map design' })).toBeDisabled();
+  },
+};
+
+/** The browser said no, then the card opened: the card takes the note's place. */
+export const DeniedWithMapStyleOpen: Story = {
+  args: { state: locator({ status: 'denied', fix: null, mode: 'LocationOff' }) },
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByTestId('where-note')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
+    await waitFor(() => expect(canvas.getByRole('dialog', { name: 'Map Style' })).toBeVisible());
+    await expect(canvas.queryByTestId('where-note')).toBeNull();
   },
 };

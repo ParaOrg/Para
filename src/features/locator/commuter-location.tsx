@@ -1,6 +1,8 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
+import { BASEMAPS, type Basemap } from '@/features/routes/map/basemap';
+import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
 import { coarse } from '@/features/routes/map/map-view';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import type { Turn } from '@/shared/hooks/commit-turn';
@@ -21,6 +23,9 @@ interface Props {
   offset: () => [number, number];
   /** The map's 'load' is in and it has not failed (MapView's onLoadedChange). */
   isMapLoaded: boolean;
+  /** The designs MapView was handed, for the pill's card: the public map's by default, the studio's its own. */
+  basemaps?: readonly Basemap[];
+  basemapThumbnails?: Readonly<Record<string, string>>;
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
   /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
@@ -54,6 +59,8 @@ interface Props {
 export function CommuterLocation({
   map,
   isMapLoaded,
+  basemaps = BASEMAPS,
+  basemapThumbnails = BASEMAP_THUMBNAILS,
   snap,
   offset,
   docked,
@@ -89,7 +96,16 @@ export function CommuterLocation({
   const gazeAt = gazeSubjects(picks, locator.fix?.at ?? null);
   return (
     <>
-      {map && <Locator locator={locator} map={map} isMapLoaded={isMapLoaded} docked={docked} />}
+      {map && (
+        <Locator
+          locator={locator}
+          map={map}
+          isMapLoaded={isMapLoaded}
+          basemaps={basemaps}
+          basemapThumbnails={basemapThumbnails}
+          docked={docked}
+        />
+      )}
       {map && locator.fix && (
         <LocatorOnMap
           map={map}

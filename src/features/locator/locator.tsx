@@ -1,6 +1,7 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useState } from 'react';
 
+import type { Basemap } from '@/features/routes/map/basemap';
 import { slide } from '@/shared/ui/sheet-gesture';
 
 import { LocationAndMapControl } from './location-and-map-control';
@@ -13,6 +14,9 @@ interface Props {
   map: MapLibreMap | null;
   /** The map's 'load' is in and it has not failed: the pill's top half waits for it. */
   isMapLoaded: boolean;
+  /** The designs the pill's card offers, and their pictures: MapView's. */
+  basemaps: readonly Basemap[];
+  basemapThumbnails: Readonly<Record<string, string>>;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
 }
@@ -48,7 +52,7 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  * Denied or unavailable: a short note above it, and the button stays as it
  * was, to try again once the browser's setting is changed.
  */
-export function Locator({ locator, map, isMapLoaded, docked }: Props) {
+export function Locator({ locator, map, isMapLoaded, basemaps, basemapThumbnails, docked }: Props) {
   const { status, noFix, mode, heading, compass, tap } = locator;
   const [note, setNote] = useState(() => noteFor(status, noFix));
   // Each change of the state says its note afresh, even one the timer below has hidden.
@@ -78,17 +82,24 @@ export function Locator({ locator, map, isMapLoaded, docked }: Props) {
       style={{ translate: `0 ${y}` }}
     >
       <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-10 @float:mb-0">
-        {/* No Figma design for the note yet, so it uses the raw palette. */}
-        {note && (
-          <p
-            role="status"
-            data-testid="where-note"
-            className="max-w-[14rem] rounded-lg bg-neutral-900/90 px-3 py-2 text-right text-xs text-content-inverse shadow backdrop-blur"
-          >
-            {note}
-          </p>
-        )}
-        <LocationAndMapControl map={map} isMapLoaded={isMapLoaded}>
+        <LocationAndMapControl
+          map={map}
+          isMapLoaded={isMapLoaded}
+          basemaps={basemaps}
+          thumbnails={basemapThumbnails}
+          note={
+            // No Figma design for the note yet, so it uses the raw palette.
+            note && (
+              <p
+                role="status"
+                data-testid="where-note"
+                className="max-w-[14rem] rounded-lg bg-neutral-900/90 px-3 py-2 text-right text-xs text-content-inverse shadow backdrop-blur"
+              >
+                {note}
+              </p>
+            )
+          }
+        >
           <LocatorButton
             mode={mode}
             corners="bottom"
