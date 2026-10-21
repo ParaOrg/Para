@@ -9,11 +9,23 @@ import type { ComponentPropsWithoutRef } from 'react';
 export type LocatorMode =
   'LocationOff' | 'TrackOwnLocation' | 'TrackedLocation' | 'TracksTheMapBasedOnCompassFacing';
 
+/**
+ * Round on its own (3870:5437); only its bottom when the map-style button
+ * sits on it in LocationAndMap (4245:1966).
+ */
+export type LocatorButtonCorners = 'all' | 'bottom';
+
+const CORNERS = {
+  all: 'rounded-full',
+  bottom: 'rounded-b-full',
+} satisfies Record<LocatorButtonCorners, string>;
+
 type Props = Omit<
   ComponentPropsWithoutRef<'button'>,
   'children' | 'className' | 'style' | 'dangerouslySetInnerHTML' | 'type' | 'aria-label'
 > & {
   mode: LocatorMode;
+  corners?: LocatorButtonCorners;
   /**
    * TrackedLocation's arrow turns the way the phone faces, on the screen
    * (Figma 3870:5408): degrees clockwise from the screen's up.
@@ -33,7 +45,13 @@ type Props = Omit<
  * InnerShadow/SpecialButtonPressed while touched, nothing else changing, as
  * drawn; no hover is drawn, so none.
  */
-export function LocatorButton({ mode, heading = null, 'aria-label': label, ...rest }: Props) {
+export function LocatorButton({
+  mode,
+  corners = 'all',
+  heading = null,
+  'aria-label': label,
+  ...rest
+}: Props) {
   return (
     <button
       type="button"
@@ -43,8 +61,9 @@ export function LocatorButton({ mode, heading = null, 'aria-label': label, ...re
       title={label}
       data-mode={mode}
       className={
-        'group relative grid size-12 shrink-0 place-items-center rounded-full bg-surface-tertiary ' +
-        'outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand-surface'
+        'group relative grid size-12 shrink-0 place-items-center bg-surface-tertiary ' +
+        'outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand-surface ' +
+        CORNERS[corners]
       }
     >
       {mode === 'LocationOff' ? (
@@ -67,7 +86,10 @@ export function LocatorButton({ mode, heading = null, 'aria-label': label, ...re
       {/* Figma's shadow lies over what the button holds, so its ring does not hide the inner light. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full shadow-special-button-rest group-active:shadow-special-button-pressed"
+        className={
+          'pointer-events-none absolute inset-0 shadow-special-button-rest group-active:shadow-special-button-pressed ' +
+          CORNERS[corners]
+        }
       />
     </button>
   );

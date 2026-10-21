@@ -1,12 +1,22 @@
+import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useState } from 'react';
 
+import type { Basemap } from '@/features/routes/map/basemap';
 import { slide } from '@/shared/ui/sheet-gesture';
 
+import { LocationAndMapControl } from './location-and-map-control';
 import { LocatorButton } from './locator-button';
 import type { Locator as State } from './use-locator';
 
 interface Props {
   locator: State;
+  /** The map the pill's top half switches the design of; null in a story, where a pick does nothing. */
+  map: MapLibreMap | null;
+  /** The map's 'load' is in and it has not failed: the pill's top half waits for it. */
+  isMapLoaded: boolean;
+  /** The designs the pill's card offers, and their pictures: MapView's. */
+  basemaps: readonly Basemap[];
+  basemapThumbnails: Readonly<Record<string, string>>;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
 }
@@ -29,7 +39,8 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
 }
 
 /**
- * The LocatorButton placed as ScreenLocationBehavior draws it (Figma
+ * LocationAndMap (4245:1966), the map-style button over the LocatorButton,
+ * placed as ScreenLocationBehavior draws the LocatorButton (Figma
  * 3870:5941): at the map's right edge, 12 above the card's sheet, following
  * it down from Middle to Low; up past Middle it stays where Middle left it,
  * and the sheet covers it. With no card open it sits at the map's foot. Where
@@ -41,7 +52,7 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  * Denied or unavailable: a short note above it, and the button stays as it
  * was, to try again once the browser's setting is changed.
  */
-export function Locator({ locator, docked }: Props) {
+export function Locator({ locator, map, isMapLoaded, basemaps, basemapThumbnails, docked }: Props) {
   const { status, noFix, mode, heading, compass, tap } = locator;
   const [note, setNote] = useState(() => noteFor(status, noFix));
   // Each change of the state says its note afresh, even one the timer below has hidden.
@@ -56,10 +67,12 @@ export function Locator({ locator, docked }: Props) {
     return () => window.clearTimeout(t);
   }, [note]);
 
-  // Never above Middle's top; the map's foot, short of a phone's home bar, with no card.
+  // Never above Middle's top. With no card, the map's foot: short of a
+  // phone's home bar, and of what the page stands in the corner (`--dock-foot`,
+  // the studio's New buttons).
   const y = docked
     ? `max(var(--dock-y, 100%), ${slide('middle')})`
-    : 'calc(100% - env(safe-area-inset-bottom))';
+    : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
   return (
     <div
       data-testid="locator-dock"
@@ -70,26 +83,38 @@ export function Locator({ locator, docked }: Props) {
       }
       style={{ translate: `0 ${y}` }}
     >
-      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-10 @float:mb-0">
-        {/* No Figma design for the note yet, so it uses the raw palette. */}
-        {note && (
-          <p
-            role="status"
-            data-testid="where-note"
-            className="max-w-[14rem] rounded-lg bg-neutral-900/90 px-3 py-2 text-right text-xs text-content-inverse shadow backdrop-blur"
-          >
-            {note}
-          </p>
-        )}
-        <LocatorButton
-          mode={mode}
-          // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
-          heading={mode === 'TrackedLocation' ? heading : null}
-          onClick={tap}
-          aria-label={mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]}
-          data-testid="where"
-          data-state={status}
-        />
+      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-[max(2.5rem,calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
+        <LocationAndMapControl
+          map={map}
+          isMapLoaded={isMapLoaded}
+          basemaps={basemaps}
+          thumbnails={basemapThumbnails}
+          note={
+            // No Figma design for the note yet, so it uses the raw palette.
+            note && (
+              <p
+                role="status"
+                data-testid="where-note"
+                className="max-w-[14rem] rounded-lg bg-neutral-900/90 px-3 py-2 text-right text-xs text-content-inverse shadow backdrop-blur"
+              >
+                {note}
+              </p>
+            )
+          }
+        >
+          <LocatorButton
+            mode={mode}
+            corners="bottom"
+            // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
+            heading={mode === 'TrackedLocation' ? heading : null}
+            onClick={tap}
+            aria-label={
+              mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]
+            }
+            data-testid="where"
+            data-state={status}
+          />
+        </LocationAndMapControl>
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import { railBound } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
+  directionRowName,
   isDrawn,
   isFerry,
   isLoop,
@@ -194,7 +195,7 @@ export function TripCard({
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       otherRoutes={others.map((v) => ({
         id: v.id,
-        to: directionEnds(v).to,
+        to: directionRowName(v),
       }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);

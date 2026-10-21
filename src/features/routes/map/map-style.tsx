@@ -4,6 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import type { Basemap } from './basemap';
+import type { MapStyleDirection } from './use-map-style-card';
 
 import './map-style.css';
 
@@ -16,6 +17,8 @@ interface MapStyleProps {
   thumbnails: Readonly<Record<string, string>>;
   /** How tall it may grow, in px: the room below the button, measured as it opens. Scrolls past it. */
   maxHeight?: number;
+  /** Down from a button above it, or up from one below it: it grows out of that corner. */
+  direction?: MapStyleDirection;
   /** Leaving: it shrinks back into the button, and takes no taps or keys meanwhile. */
   isClosing?: boolean;
   onSelect: (basemap: Basemap) => void;
@@ -40,6 +43,7 @@ export function MapStyle({
   selectedId,
   thumbnails,
   maxHeight,
+  direction = 'down',
   isClosing = false,
   onSelect,
   onClose,
@@ -98,6 +102,7 @@ export function MapStyle({
       aria-labelledby={titleId}
       data-testid="basemap-menu"
       data-closing={isClosing || undefined}
+      data-direction={direction}
       inert={isClosing}
       // Measured at runtime (CLAUDE.md's one use for `style`); the class is the cap without it.
       style={maxHeight === undefined ? undefined : { maxHeight }}

@@ -16,8 +16,10 @@ export const WORKER_MAX_GZ_KB = 20;
 // weighed 348.4). Each ceiling leaves some headroom and none for another
 // group's package: React in `shared` is +58, a half of MapLibre +135.
 // `packages` is what the chunk may hold from node_modules, `only` the files
-// it may hold; `vendor` chunks may import no chunk of ours.
-export const SHARED_MAX_GZ_KB = 405;
+// it may hold; `vendor` chunks may import no chunk of ours. The locator counts
+// here as both pages draw it: the public page's own chunk is that much lighter,
+// its download no heavier.
+export const SHARED_MAX_GZ_KB = 410;
 export const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
 export const GROUPS = [
   {

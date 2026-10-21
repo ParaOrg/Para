@@ -241,13 +241,9 @@ export default defineConfig([
             },
             {
               target: './src/app/studio',
-              from: [
-                './src/app/public-map',
-                './src/features/locator',
-                './src/features/published-map',
-              ],
+              from: ['./src/app/public-map', './src/features/published-map'],
               message:
-                'The studio shell imports studio, routes, shared, styles and the design system only.',
+                'The studio shell imports studio, routes, locator, shared, styles and the design system only.',
             },
           ],
         },

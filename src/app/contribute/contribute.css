@@ -16,6 +16,8 @@
 @source '../../features/contribute/';
 @source '../../features/routes/map/basemap-control.tsx';
 @source '../../features/routes/map/map-style.tsx';
+@source '../../features/routes/map/map-style-button.tsx';
+@source '../../features/routes/map/map-type-icon.tsx';
 @source '../../features/routes/map/map-view.tsx';
 @source '../../features/routes/map/recording-follow-controls.tsx';
 @source '../../features/routes/cards/livery-card.ts';

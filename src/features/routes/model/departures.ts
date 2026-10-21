@@ -2,6 +2,7 @@ import { otherBound, railBound } from './rail-codes';
 import {
   directionEndHotspots,
   directionEnds,
+  directionRowName,
   isDrawn,
   isLoop,
   LOOP_WORD,
@@ -36,6 +37,7 @@ function groupByRoute<V extends Direction>(directions: readonly V[]): RouteGroup
 /** One place in the chooser, and the directions shown leaving it. */
 export interface Departures<V extends Direction> {
   from: string;
+  /** `to` is the row's words: the place it goes to, with its route's via (directionRowName). */
   directions: { v: V; to: string; drawn: boolean }[];
 }
 
@@ -57,7 +59,8 @@ export function departures<V extends Direction>(
     // A loop has one direction and no way back: it is listed both ways round.
     const v = g.directions.find((d) => isLoop(d) || d.reversed === back);
     if (!v) continue;
-    const { from, to } = directionEnds(v);
+    const { from } = directionEnds(v);
+    const to = directionRowName(v);
     // A loop is its own place, never the one a route of the same name leaves from.
     const key = (isLoop(v) ? 'loop:' : '') + from.toLowerCase();
     const place = byPlace.get(key) ?? { from, directions: [] };

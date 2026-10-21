@@ -66,10 +66,12 @@ flowchart TD
   app_public_map --> features_routes_published
   app_public_map --> shared_hooks
   app_public_map --> styles
+  app_studio --> features_locator
   app_studio --> features_routes_cards
   app_studio --> features_routes_map
   app_studio --> features_routes_model
   app_studio --> features_studio
+  app_studio --> shared_hooks
   app_studio --> shared_types
   app_studio --> styles
   features_contribute --> design_system_primitives
@@ -157,7 +159,7 @@ flowchart TD
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `styles` |
 | `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `styles` |
-| `app/studio` | `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/types`, `styles` |
+| `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/types`, `shared/ui`, `shared/utils` |

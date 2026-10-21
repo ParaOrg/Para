@@ -477,14 +477,17 @@ test("the studio's map: \"Loading map…\" goes at its 'load', routes drawn or n
   assert.match(view, /map\.on\('load', \(\) => \{\s*isLoaded = true;?\s*setLoaded\(true\)/);
   assert.equal((view.match(/setLifted\(/g) ?? []).length, 1, 'lifted by loadingLifts alone');
   // The design button still comes with the map's 'load', never with the
-  // text: pwa-test reads it as the basemap's tiles in on a production build.
+  // text, and so does `data-loaded`, which pwa-test reads on a production build.
   assert.match(view, /map\.on\('load', \(\) => \{\n(?:(?!\n {6}\}\)).)*\n\s*setReady\(map\);?\n/s);
   assert.equal(
     (view.match(/setReady\(/g) ?? []).length,
     2,
     "set at the 'load', and let go as the map goes",
   );
-  assert.match(view, /\{ready && !error && \(\s*<BasemapControl/);
+  assert.match(view, /\{ready && !error && hasMapStyleButton && \(\s*<BasemapControl/);
+  // …and the 'load' said on the map's wrapper, for the suites, where the public map has no button there.
+  assert.match(view, /const isLoaded = ready !== null && error === null;/);
+  assert.match(view, /data-loaded=\{isLoaded \|\| undefined\}/);
 });
 
 test('"Loading map…" stopped (the map gone): never lifted', () => {

@@ -14,9 +14,8 @@ import type { Vehicle } from '../model/vehicles';
 
 /**
  * A place and the routes that leave it, in a jeepney's livery — Figma's
- * RouteCard set (3665:2265): the place in SN Pro ExtraBold 20/28, the owner's
- * pick from the RouteCardExample (3746:1238), and a row for each place it
- * goes to (RouteEndPointBar), joined to it by a tree line, under the
+ * RouteCard set (3665:2265): the place in SN Pro ExtraBold 24/32 and a row for each place
+ * it goes to (RouteEndPointBar), joined to it by a tree line, under the
  * mode they ride (Modes, 4236:17040); rows of another mode stack below
  * as their own group. The Figma property Variants is `livery` here, the name
  * the tokens give these colours, because a variant in this codebase is a
@@ -104,7 +103,7 @@ export function RouteCard({
           data-testid={`${testId}-select`}
           aria-pressed={selected}
           onClick={onSelect}
-          className="w-full text-left text-xl/7 font-extrabold after:absolute after:inset-0 sheet-low:line-clamp-1"
+          className="w-full text-left text-2xl/8 font-extrabold after:absolute after:inset-0 sheet-low:line-clamp-1"
         >
           {routeOrigin}
         </button>

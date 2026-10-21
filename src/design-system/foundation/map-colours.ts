@@ -21,8 +21,8 @@ export const MAP_COLOURS = {
   'Map/HotspotsCard/Hintuan/border-primary': '#0d542b', // green/900
   'Map/HotspotsCard/Terminal/surface': '#0069a8', // sky/700
   'Map/HotspotsCard/Terminal/border-primary': '#024a70', // sky/900
-  'Map/LocatorIndicatorOverlay/surface': '#8ec5ff', // blue/300, at 15%
-  'Map/LocatorIndicatorOverlay/border': '#155dfc', // blue/600, at 75%
+  'Map/LocatorIndicatorOverlay/surface': '#8b7aff', // parabrand/500, at 15%
+  'Map/LocatorIndicatorOverlay/border': '#4900be', // parabrand/800, at 75%
   // Provisional: not named in Figma yet. A contributor's trail, as /contribute/ draws it live.
   'Map/Trail/papunta': '#1447e6', // blue/700, the blue of brand-surface
   'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface

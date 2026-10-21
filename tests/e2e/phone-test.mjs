@@ -2475,14 +2475,14 @@ const sheetState = async () =>
   (await card().count()) ? await card().first().getAttribute('data-snap') : null;
 /**
  * How far to drag the handle for the sheet to come to rest at `to` from
- * where it is, by the heights BottomSheet gives it: Low 129, Middle 55% of
+ * where it is, by the heights BottomSheet gives it: Low 133, Middle 55% of
  * the map, Max all of it but its 24 px strip at the top. Negative is up.
  */
 const dragTo = async (from, to) => {
   const h = await card()
     .first()
     .evaluate((el) => el.offsetHeight);
-  const shown = { low: 129, middle: Math.round(h * 0.55), max: h - 24 };
+  const shown = { low: 133, middle: Math.round(h * 0.55), max: h - 24 };
   return shown[from] - shown[to];
 };
 const closeCard = async () => {

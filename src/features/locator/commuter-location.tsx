@@ -1,6 +1,8 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
+import { BASEMAPS, type Basemap } from '@/features/routes/map/basemap';
+import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
 import { coarse } from '@/features/routes/map/map-view';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import type { Turn } from '@/shared/hooks/commit-turn';
@@ -19,6 +21,11 @@ interface Props {
   snap: Snap;
   /** Where the commuter should sit from the map's centre, clear of the card on show (useCardCamera's clearOfOpen). */
   offset: () => [number, number];
+  /** The map's 'load' is in and it has not failed (MapView's onLoadedChange). */
+  isMapLoaded: boolean;
+  /** The designs MapView was handed, for the pill's card: the public map's by default, the studio's its own. */
+  basemaps?: readonly Basemap[];
+  basemapThumbnails?: Readonly<Record<string, string>>;
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
   /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
@@ -40,7 +47,8 @@ interface Props {
 /**
  * The commuter's own position, when they ask for it, and the camera with
  * them, kept clear of the card on show, as a picked hintuan is. The button,
- * and the dot on the map with its moods and its gaze.
+ * with the map-style button on it, and the dot on the map with its moods and
+ * its gaze.
  *
  * A child of PublicMapApp, not hooks of it: a fix, a turn of the phone and the
  * dot's moods, a second apart, render this alone. As hooks of the page they
@@ -50,6 +58,9 @@ interface Props {
  */
 export function CommuterLocation({
   map,
+  isMapLoaded,
+  basemaps = BASEMAPS,
+  basemapThumbnails = BASEMAP_THUMBNAILS,
   snap,
   offset,
   docked,
@@ -85,7 +96,16 @@ export function CommuterLocation({
   const gazeAt = gazeSubjects(picks, locator.fix?.at ?? null);
   return (
     <>
-      {map && <Locator locator={locator} docked={docked} />}
+      {map && (
+        <Locator
+          locator={locator}
+          map={map}
+          isMapLoaded={isMapLoaded}
+          basemaps={basemaps}
+          basemapThumbnails={basemapThumbnails}
+          docked={docked}
+        />
+      )}
       {map && locator.fix && (
         <LocatorOnMap
           map={map}

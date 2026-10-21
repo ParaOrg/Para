@@ -44,9 +44,8 @@ const routeCount = published.variants.length;
 
 /**
  * The map's 'load' on page `p`, as a production build shows it (it keeps
- * its map to itself): MapView's design button (BasemapControl,
- * data-testid="basemap"), which comes with the 'load' (framing-test holds
- * it to the 'load'); no failure banner, which shows in the button's place;
+ * its map to itself): MapView's `data-loaded`, set at the 'load'; no
+ * failure banner;
  * and "Loading map…" gone. Not that the basemap's tiles are in: MapLibre
  * (6.7, tile_manager.ts, loaded()) counts a tile that failed as one that
  * came, so 'load' comes once every tile in view has come or failed, and
@@ -63,7 +62,7 @@ const mapLoad = (p) =>
     () => {
       const text = document.body.innerText;
       return (
-        !!document.querySelector('[data-testid="basemap"]') &&
+        !!document.querySelector('[data-testid="map-view"][data-loaded]') &&
         !text.includes('The map failed to load') &&
         !text.includes('Loading map…')
       );

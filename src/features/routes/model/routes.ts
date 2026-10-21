@@ -247,6 +247,17 @@ export function directionEnds(v: Direction): { from: string; to: string } {
   return v.reversed ? { from: tail, to: head } : { from: head, to: tail };
 }
 
+/**
+ * A direction as a card's row says it: where it goes, then its route's via —
+ * `SM Fairview via Maligaya` — so two routes to the same place read apart. A
+ * loop's row already is its name, via included, so it gets none added.
+ */
+export function directionRowName(v: Direction): string {
+  const { to } = directionEnds(v);
+  const via = v.route?.via?.trim();
+  return via && !isLoop(v) ? `${to} via ${via}` : to;
+}
+
 /** The hotspots a direction runs from and to: its route's head and tail, the way it rides them. */
 export function directionEndHotspots(v: Direction): {
   fromHotspot: string | null;

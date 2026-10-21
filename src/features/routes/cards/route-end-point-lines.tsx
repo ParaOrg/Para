@@ -12,13 +12,13 @@ interface RouteEndPointLinesProps {
 
 /**
  * The tree line before a RouteCard's row, joining the rows to the place above them. Figma's own
- * VectorLine drawings in the card's words' colour, stretched to the row's height around a fixed
- * 16px middle.
+ * VectorLine drawings in the card's words' colour at Figma's opacity/70, as the mode's label
+ * above them, stretched to the row's height around a fixed 16px middle.
  */
 export function RouteEndPointLines({ position }: RouteEndPointLinesProps) {
   const isBottom = position === 'bottom';
   return (
-    <span aria-hidden className="flex w-6 shrink-0 flex-col items-start self-stretch">
+    <span aria-hidden className="flex w-6 shrink-0 flex-col items-start self-stretch opacity-70">
       <span className="route-end-point-line route-end-point-line-top-bottom min-h-px w-4 flex-1" />
       <span className="flex h-4 w-full items-center">
         <span

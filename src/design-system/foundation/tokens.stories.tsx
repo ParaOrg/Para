@@ -536,6 +536,22 @@ function TokensPage() {
             ]}
           />
           <Ramp
+            name="parabrand"
+            boxes={[
+              { step: '50', cls: 'bg-parabrand-50' },
+              { step: '100', cls: 'bg-parabrand-100' },
+              { step: '200', cls: 'bg-parabrand-200' },
+              { step: '300', cls: 'bg-parabrand-300' },
+              { step: '400', cls: 'bg-parabrand-400' },
+              { step: '500', cls: 'bg-parabrand-500' },
+              { step: '600', cls: 'bg-parabrand-600' },
+              { step: '700', cls: 'bg-parabrand-700' },
+              { step: '800', cls: 'bg-parabrand-800' },
+              { step: '900', cls: 'bg-parabrand-900' },
+              { step: '950', cls: 'bg-parabrand-950' },
+            ]}
+          />
+          <Ramp
             name="olive"
             boxes={[
               { step: '50', cls: 'bg-olive-50' },
