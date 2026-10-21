@@ -43,20 +43,23 @@ export function LocationAndMapControl({
     'up',
   );
   return (
-    <div ref={rootRef} className="flex flex-col items-end gap-2">
+    <div ref={rootRef} className="flex flex-col items-end gap-1">
       {card === 'closed' && note}
       {card !== 'closed' && (
-        <MapStyle
-          basemaps={basemaps}
-          selectedId={current.id}
-          thumbnails={thumbnails}
-          maxHeight={cardRoom}
-          direction="up"
-          onSelect={select}
-          isClosing={card === 'closing'}
-          onClose={close}
-          onClosed={letGo}
-        />
+        // 8 above the pill (CARD_GAP_PX), where the note keeps 4.
+        <div className="mb-1">
+          <MapStyle
+            basemaps={basemaps}
+            selectedId={current.id}
+            thumbnails={thumbnails}
+            maxHeight={cardRoom}
+            direction="up"
+            onSelect={select}
+            isClosing={card === 'closing'}
+            onClose={close}
+            onClosed={letGo}
+          />
+        </div>
       )}
       <LocationAndMap>
         <MapStyleButton

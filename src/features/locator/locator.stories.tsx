@@ -25,6 +25,8 @@ const locator = (over: Partial<State> = {}): State => ({
 
 interface Args {
   snap: Snap | null;
+  /** What the page stands in the corner, as the studio's New buttons say it: the pill keeps above. */
+  dockFootPx?: number;
   state: State;
   wide?: boolean;
   isMapLoaded?: boolean;
@@ -35,7 +37,7 @@ interface Args {
  * where its top is here. `wide`: 1280 × 800, past `@float:`, the card
  * floating in the corner.
  */
-function Specimen({ snap, state, wide = false, isMapLoaded = true }: Args) {
+function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx }: Args) {
   return (
     <div
       data-dock-host
@@ -43,6 +45,11 @@ function Specimen({ snap, state, wide = false, isMapLoaded = true }: Args) {
         '@container relative overflow-clip bg-neutral-200 ' +
         (wide ? 'h-[800px] w-[1280px]' : 'h-[852px] w-[393px]')
       }
+      // Set on the host at runtime, as NewButtons sets it.
+      ref={(host) => {
+        if (host && dockFootPx !== undefined)
+          host.style.setProperty('--dock-foot', `${dockFootPx}px`);
+      }}
     >
       <Locator
         locator={state}
@@ -143,5 +150,16 @@ export const DeniedWithMapStyleOpen: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
     await waitFor(() => expect(canvas.getByRole('dialog', { name: 'Map Style' })).toBeVisible());
     await expect(canvas.queryByTestId('where-note')).toBeNull();
+  },
+};
+
+/**
+ * The studio, no card: its + New Route and + New hotspot stand 120 tall in
+ * the corner (--dock-foot), and the pill stands 12 above them.
+ */
+export const AboveStudioButtons: Story = {
+  args: {
+    snap: null,
+    dockFootPx: 120,
   },
 };

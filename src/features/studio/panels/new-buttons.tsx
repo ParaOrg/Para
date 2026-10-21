@@ -39,6 +39,7 @@ export function NewButtons({
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(host);
+    observer.observe(button);
     return () => {
       observer.disconnect();
       host.style.removeProperty('--dock-foot');
