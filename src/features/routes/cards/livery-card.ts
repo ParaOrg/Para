@@ -23,7 +23,8 @@ import type { Livery } from '../model/liveries';
  * all three under Route/RouteCardPrimary and the Primary Blob. LRT-1 and
  * LRT-2 write in Content/inverse; MRT-3, on its yellow, in Content/primary —
  * dark words, but under the Primary shadow and Blob its frame draws, not the
- * Inverse ones.
+ * Inverse ones. The ferry wears Map/Ferry as a train its line's, its words in
+ * Content/inverse (RouteCardRailway, 4261:15199).
  */
 
 export const CARD_SURFACE = {
@@ -39,6 +40,7 @@ export const CARD_SURFACE = {
     'bg-map-rail-light-rail-way-two-surface border-map-rail-light-rail-way-two-border-primary',
   'metro-rail-way-three':
     'bg-map-rail-metro-rail-way-three-surface border-map-rail-metro-rail-way-three-border-primary',
+  ferry: 'bg-map-ferry-surface border-map-ferry-border-primary',
 } satisfies Record<Livery, string>;
 
 /**
@@ -58,6 +60,7 @@ export const CARD_SURFACE_PALE = {
   'light-rail-way-one': 'bg-map-rail-light-rail-way-one-surface-pale',
   'light-rail-way-two': 'bg-map-rail-light-rail-way-two-surface-pale',
   'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-surface-pale',
+  ferry: 'bg-map-ferry-surface-pale',
 } satisfies Record<Livery, string>;
 
 export const CARD_TEXT = {
@@ -70,6 +73,7 @@ export const CARD_TEXT = {
   'light-rail-way-one': 'text-content-inverse',
   'light-rail-way-two': 'text-content-inverse',
   'metro-rail-way-three': 'text-content-primary',
+  ferry: 'text-content-inverse',
 } satisfies Record<Livery, string>;
 
 // Drawn over the card, as Figma lays it: above the Blob and the words.
@@ -83,6 +87,7 @@ export const CARD_SHADOW = {
   'light-rail-way-one': 'shadow-route-card-primary',
   'light-rail-way-two': 'shadow-route-card-primary',
   'metro-rail-way-three': 'shadow-route-card-primary',
+  ferry: 'shadow-route-card-primary',
 } satisfies Record<Livery, string>;
 
 // A RouteCard's State=Selected: pressed in, and nothing else changes — the
@@ -97,6 +102,7 @@ export const CARD_SHADOW_SELECTED = {
   'light-rail-way-one': 'shadow-route-card-primary-selected',
   'light-rail-way-two': 'shadow-route-card-primary-selected',
   'metro-rail-way-three': 'shadow-route-card-primary-selected',
+  ferry: 'shadow-route-card-primary-selected',
 } satisfies Record<Livery, string>;
 
 // Figma's Blob, Primary and Inverse: a white glow over the card's top,
@@ -122,6 +128,7 @@ export const CARD_BLOB = {
   'light-rail-way-one': { src: blobPrimary, className: '' },
   'light-rail-way-two': { src: blobPrimary, className: '' },
   'metro-rail-way-three': { src: blobPrimary, className: '' },
+  ferry: { src: blobPrimary, className: '' },
 } satisfies Record<Livery, { src: string; className: string }>;
 
 // Pixels, all three, like the glow inside the file: the rem scale
@@ -140,6 +147,7 @@ export const TIMELINE_SURFACE = {
   'light-rail-way-one': 'bg-map-rail-light-rail-way-one-timeline-surface',
   'light-rail-way-two': 'bg-map-rail-light-rail-way-two-timeline-surface',
   'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-timeline-surface',
+  ferry: 'bg-map-ferry-timeline-surface',
 } satisfies Record<Livery, string>;
 
 /**
@@ -162,6 +170,7 @@ export const ROW_PRESSED = {
     'active:bg-map-rail-light-rail-way-two-timeline-surface [-webkit-tap-highlight-color:transparent]',
   'metro-rail-way-three':
     'active:bg-map-rail-metro-rail-way-three-timeline-surface [-webkit-tap-highlight-color:transparent]',
+  ferry: 'active:bg-map-ferry-timeline-surface [-webkit-tap-highlight-color:transparent]',
 } satisfies Record<Livery, string>;
 
 /**
@@ -185,6 +194,7 @@ export const TIMELINE_PILL = {
   'light-rail-way-one': 'bg-content-inverse text-map-rail-light-rail-way-one-timeline-surface',
   'light-rail-way-two': 'bg-content-inverse text-map-rail-light-rail-way-two-timeline-surface',
   'metro-rail-way-three': 'bg-content-inverse text-map-rail-metro-rail-way-three-timeline-surface',
+  ferry: 'bg-content-inverse text-map-ferry-timeline-surface',
 } satisfies Record<Livery, string>;
 
 /**
@@ -203,4 +213,5 @@ export const BUTTON_FILL = {
   'light-rail-way-one': 'map-rail-light-rail-way-one',
   'light-rail-way-two': 'map-rail-light-rail-way-two',
   'metro-rail-way-three': 'map-rail-metro-rail-way-three',
+  ferry: 'map-ferry',
 } as const satisfies Record<Livery, CardFill>;

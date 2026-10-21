@@ -58,7 +58,7 @@ export function StudioHotspotCard({
   return (
     <HotspotCard
       routeCards={{
-        selected: saved.highlight?.where === 'hotspot' ? saved.highlight.from : null,
+        selected: saved.highlight?.where === 'hotspot' ? saved.highlight.card : null,
         onSelect: onPickOnPlaceCard,
         onShown: saved.showCard,
       }}

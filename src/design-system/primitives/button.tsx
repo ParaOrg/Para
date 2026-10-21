@@ -95,6 +95,7 @@ const PRIMARY_FILL = {
     'bg-map-rail-light-rail-way-two-surface enabled:active:bg-map-rail-light-rail-way-two-timeline-surface',
   'map-rail-metro-rail-way-three':
     'bg-map-rail-metro-rail-way-three-surface enabled:active:bg-map-rail-metro-rail-way-three-timeline-surface',
+  'map-ferry': 'bg-map-ferry-surface enabled:active:bg-map-ferry-timeline-surface',
 } satisfies Record<string, string>;
 
 // The weight is each voice's own (VARIANT): Special's Small is bold; Secondary's and Primary's, medium.

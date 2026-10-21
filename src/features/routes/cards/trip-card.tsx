@@ -26,7 +26,7 @@ import {
   type Direction,
 } from '../model/routes';
 import type { Timeline } from '../model/timeline';
-import { vehicleOf } from '../model/vehicles';
+import { railwayOf, vehicleOf } from '../model/vehicles';
 
 /**
  * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
@@ -47,7 +47,7 @@ export function useTripLivery(
   if (open && !tripLivery) {
     tripLivery =
       (wornBehind && worn?.id === open.id ? worn.livery : undefined) ??
-      cardLiveries([[open.routeId]], [railLineOf(open)])[0];
+      cardLiveries([[open.routeId]], [railwayOf(open)])[0];
     setTripWears({ routeId: open.routeId, livery: tripLivery });
   } else if (!open && tripWears) {
     setTripWears(null);

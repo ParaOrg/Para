@@ -25,6 +25,8 @@ const FULL_LINES_FROM = 15;
 
 export interface Highlight {
   where: 'list' | 'hotspot';
+  /** Which card (PickedPlace's card): a place's own, or one of its train lines'. */
+  card: string;
   from: string;
   ids: readonly string[];
   livery: Livery;

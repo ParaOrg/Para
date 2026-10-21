@@ -148,6 +148,9 @@ export const HintuanPickedLightRailWayTwo: Story = {
 /** MRT-3: the rail in Map/Rail/MetroRailWayThree/Timeline/surface, Content/primary, dark, words (4080:4241). */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three', isTrain: true } };
 
+/** Ferry: the rail in Map/Ferry/Timeline/surface. Figma draws no ferry trip yet; the card's own colours carry over. */
+export const Ferry: Story = { args: { livery: 'ferry' } };
+
 /** Picked, MRT-3: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
 export const HintuanPickedMetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06', isTrain: true },
