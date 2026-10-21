@@ -68,6 +68,20 @@ export const OnRedLast: Story = { args: { on: 'red', position: 'bottom' } };
 /** On MRT-3's yellow the row and its line take the card's dark words. */
 export const OnDarkWords: Story = { args: { on: 'metro-rail-way-three', position: 'bottom' } };
 
+/** The ❄️ Slot filled, before the name: a station's code, as RouteCardRailway puts it. */
+export const WithSlot: Story = {
+  args: {
+    on: 'light-rail-way-two',
+    position: 'bottom',
+    routeDirection: 'Recto',
+    slot: (
+      <span className="rounded-full bg-content-inverse px-1.5 py-0.5 text-xs/4 font-medium text-map-rail-light-rail-way-two-surface">
+        PL01
+      </span>
+    ),
+  },
+};
+
 /** A long place wraps under itself, the line stretching to the row's height. */
 export const LongName: Story = {
   args: { routeDirection: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },

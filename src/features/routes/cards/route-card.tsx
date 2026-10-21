@@ -115,9 +115,10 @@ export function RouteCard({
           aria-label={vehicle ? MODE_LABEL[vehicle] : undefined}
           className="flex w-full flex-col"
         >
-          {/* 14 in and 8 below, Figma's: that puts the mode's icon over the tree line. */}
+          {/* 14 in, Figma's (RouteEndPointGroup, 4265:12930): that puts the mode's icon over the
+              tree line, the first row straight under it. */}
           {vehicle && (
-            <div className="flex px-3.5 pb-2">
+            <div className="flex px-3.5">
               <RouteMode vehicle={vehicle} />
             </div>
           )}
