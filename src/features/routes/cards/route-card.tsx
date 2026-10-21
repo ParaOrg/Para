@@ -119,7 +119,7 @@ export function RouteCard({
               tree line, the first row straight under it. */}
           {vehicle && (
             <div className="flex px-3.5">
-              <RouteMode vehicle={vehicle} />
+              <RouteMode vehicle={vehicle} livery={livery} />
             </div>
           )}
           <ul className="flex w-full flex-col">

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <!--
-    The vehicles at the top of a trip's card (RouteTripDetailHeader) and at the
-    end of each route's row (RouteEndPointBar), the owner's Figma drawings, 32
+    The vehicles at the top of a trip's card (RouteTripDetailHeader), a card's
+    modes (RouteMode) and a train card's chip, the owner's Figma drawings, 32
     across: one file the page fetches, not paths in its JS (the owner's pick:
     inline, they took the public page over its 400 kB). No fill: each <use>
     takes its <svg>'s currentColor.

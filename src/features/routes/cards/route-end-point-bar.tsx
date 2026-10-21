@@ -1,5 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
+import { ChevronRightIcon } from '@/shared/ui/route-icons';
+
 import { ROW_PRESSED } from './livery-card';
 import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
 import type { Livery } from '../model/liveries';
@@ -58,6 +60,14 @@ export function RouteEndPointBar({
       >
         {slot}
         <span className="min-w-0 flex-1">{routeDirection}</span>
+        {/* Figma's chevron-right, in the card's words at 60. TODO: the sheet's rows take it once
+            Figma gives it a colour that shows on white: its RouteTripDetail variant draws it in
+            Content/inverse. */}
+        {!isOnSurface && (
+          <span aria-hidden className="size-5 shrink-0 opacity-60 *:size-full">
+            <ChevronRightIcon />
+          </span>
+        )}
       </span>
     </button>
   );

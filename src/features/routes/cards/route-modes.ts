@@ -8,7 +8,7 @@ export const MODE_LABEL = {
   'LRT-1': 'Train',
   'LRT-2': 'Train',
   'MRT-3': 'Train',
-  Jeepney: 'Jeepney',
+  Jeepney: 'Jeep',
   'E-Jeep': 'E-Jeep',
   Bus: 'Bus',
   Ferry: 'Ferry',
