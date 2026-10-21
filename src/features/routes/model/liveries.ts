@@ -1,4 +1,4 @@
-import { RAIL_LINES, type RailLine } from './routes';
+import type { RailwayVehicle } from './vehicles';
 
 /**
  * The route cards' colours — the jeepney liveries of Figma's RouteCard set
@@ -30,18 +30,20 @@ type JeepneyLivery = (typeof JEEPNEY_LIVERIES)[number];
  * A train route's colour is its line's, never drawn (the owner's RouteCards
  * for them, 4074:7402 LRT-1, 4080:4124 LRT-2, 4080:4241 MRT-3): Figma's
  * Map/Rail/LightRailWayOne, LightRailWayTwo and MetroRailWayThree, by the
- * line its routeCode names.
+ * line its routeCode names. The ferry's is Map/Ferry, never drawn either
+ * (RouteCardRailway, 4261:15199).
  */
-const RAIL_LIVERY = {
+export const RAILWAY_LIVERY = {
   'LRT-1': 'light-rail-way-one',
   'LRT-2': 'light-rail-way-two',
   'MRT-3': 'metro-rail-way-three',
-} as const satisfies Record<RailLine, string>;
-type RailLivery = (typeof RAIL_LIVERY)[RailLine];
+  Ferry: 'ferry',
+} as const satisfies Record<RailwayVehicle, string>;
+type RailwayLivery = (typeof RAILWAY_LIVERY)[RailwayVehicle];
 
-/** Every colour a card may wear: a jeepney's drawn livery, or a train line's own. */
-export const LIVERIES = [...JEEPNEY_LIVERIES, ...RAIL_LINES.map((l) => RAIL_LIVERY[l])] as const;
-export type Livery = JeepneyLivery | RailLivery;
+/** Every colour a card may wear: a jeepney's drawn livery, or a train line's or the ferry's own. */
+export const LIVERIES = [...JEEPNEY_LIVERIES, ...Object.values(RAILWAY_LIVERY)] as const;
+export type Livery = JeepneyLivery | RailwayLivery;
 
 /** This visit's draws, by route id. A new visit draws again. */
 const visit = new Map<string, JeepneyLivery>();
@@ -103,16 +105,16 @@ export function liveriesFor(
 
 /**
  * The colours for a list of cards, in order, as liveriesFor's, with each
- * card's train line beside it (its first row's route's, railLineOf; null
- * for a jeepney's). A train card wears its line's (RAIL_LIVERY), and the
- * jeepney cards are drawn as if the train cards were not in the list: a
- * train never changes what a jeepney draws, takes none of the six from a
- * round, and keeps no draw for the visit. Two jeepney cards either side of
- * a train may match, then, but never side by side.
+ * card's line beside it (its first row's route's, railwayOf: a train line or
+ * Ferry; null for a jeepney's). A train or ferry card wears its line's
+ * (RAILWAY_LIVERY), and the jeepney cards are drawn as if those were not in
+ * the list: a line never changes what a jeepney draws, takes none of the six
+ * from a round, and keeps no draw for the visit. Two jeepney cards either
+ * side of a train may match, then, but never side by side.
  */
 export function cardLiveries(
   cards: readonly (readonly string[])[],
-  lines: readonly (RailLine | null)[],
+  lines: readonly (RailwayVehicle | null)[],
   random = Math.random,
   drawn = visit,
 ): Livery[] {
@@ -124,6 +126,6 @@ export function cardLiveries(
   let next = 0;
   return cards.map((_, i) => {
     const line = lines[i];
-    return line ? RAIL_LIVERY[line] : jeepneys[next++];
+    return line ? RAILWAY_LIVERY[line] : jeepneys[next++];
   });
 }

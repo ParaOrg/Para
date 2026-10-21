@@ -22,6 +22,19 @@
   /* Primitive: between neutral-100 and neutral-200; Figma's color/neutral/150. */
   --color-neutral-150: #f0f0f0;
 
+  /* Primitive: the brand's own violet, Figma's color/parabrand. */
+  --color-parabrand-50: #f6f7ff;
+  --color-parabrand-100: #ececff;
+  --color-parabrand-200: #dadaff;
+  --color-parabrand-300: #c1bfff;
+  --color-parabrand-400: #a39aff;
+  --color-parabrand-500: #8b7aff;
+  --color-parabrand-600: #724dff;
+  --color-parabrand-700: #5d00f1;
+  --color-parabrand-800: #4900be;
+  --color-parabrand-900: #3b009a;
+  --color-parabrand-950: #1c0058;
+
   /* Primitive: the desaturated families Figma adds beside Tailwind's. */
   --color-mauve-50: #fafafa;
   --color-mauve-100: #f3f1f3;
@@ -88,6 +101,11 @@
   --color-metro-rail-way-three-600: #edc319;
   --color-metro-rail-way-three-700: #ac8b0b;
   --color-metro-rail-way-three-800: #967906;
+
+  --color-ferry-200: #bccfff;
+  --color-ferry-600: #003399;
+  --color-ferry-700: #002a80;
+  --color-ferry-800: #002366;
 }
 
 /*
@@ -161,9 +179,9 @@
   --error-surface-secondary: var(--color-red-800);
 
   /* Brand. Figma: Brand/… */
-  --brand-surface: var(--color-blue-700);
-  --brand-surface-secondary: var(--color-blue-800);
-  --brand-border: var(--color-blue-800);
+  --brand-surface: var(--color-parabrand-900);
+  --brand-surface-secondary: var(--color-parabrand-950);
+  --brand-border: var(--color-parabrand-950);
 
   /* One component's own colour. Figma: Components/… (the Tooltip). */
   --components-tooltip-surface: var(--color-neutral-900);
@@ -197,9 +215,9 @@
      heading cone, and the LocatorButton's ring (3870:5247). Figma gives it
      15% opacity with the colour; here the colour, and `/15` where it is
      used. */
-  --map-locator-indicator-overlay-surface: var(--color-blue-300);
+  --map-locator-indicator-overlay-surface: var(--color-parabrand-500);
   /* Its circle's hairline, at 75%, and the beam's colour (3870:5247). */
-  --map-locator-indicator-overlay-border: var(--color-blue-600);
+  --map-locator-indicator-overlay-border: var(--color-parabrand-800);
   /* The trail a contributor's recording draws as they ride (/contribute/): papunta in the
      blue the brand surface wears, pabalik in the orange of Card/orange/surface, so the
      leg button and the line agree. Provisional: not named in Figma yet. */
@@ -220,6 +238,10 @@
   --map-rail-metro-rail-way-three-surface-pale: var(--color-metro-rail-way-three-200);
   --map-rail-metro-rail-way-three-border-primary: var(--color-metro-rail-way-three-700);
   --map-rail-metro-rail-way-three-timeline-surface: var(--color-metro-rail-way-three-800);
+  --map-ferry-surface: var(--color-ferry-600);
+  --map-ferry-surface-pale: var(--color-ferry-200);
+  --map-ferry-border-primary: var(--color-ferry-700);
+  --map-ferry-timeline-surface: var(--color-ferry-800);
 }
 
 /* The semantics as utilities: text-content-primary, bg-surface, border-border-primary… */
@@ -331,6 +353,10 @@
   --color-map-rail-metro-rail-way-three-timeline-surface: var(
     --map-rail-metro-rail-way-three-timeline-surface
   );
+  --color-map-ferry-surface: var(--map-ferry-surface);
+  --color-map-ferry-surface-pale: var(--map-ferry-surface-pale);
+  --color-map-ferry-border-primary: var(--map-ferry-border-primary);
+  --color-map-ferry-timeline-surface: var(--map-ferry-timeline-surface);
 }
 
 /*

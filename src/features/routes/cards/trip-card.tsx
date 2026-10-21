@@ -14,6 +14,7 @@ import { railBound } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
+  directionRowName,
   isDrawn,
   isFerry,
   isLoop,
@@ -25,7 +26,7 @@ import {
   type Direction,
 } from '../model/routes';
 import type { Timeline } from '../model/timeline';
-import { vehicleOf } from '../model/vehicles';
+import { railwayOf, vehicleOf } from '../model/vehicles';
 
 /**
  * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
@@ -46,7 +47,7 @@ export function useTripLivery(
   if (open && !tripLivery) {
     tripLivery =
       (wornBehind && worn?.id === open.id ? worn.livery : undefined) ??
-      cardLiveries([[open.routeId]], [railLineOf(open)])[0];
+      cardLiveries([[open.routeId]], [railwayOf(open)])[0];
     setTripWears({ routeId: open.routeId, livery: tripLivery });
   } else if (!open && tripWears) {
     setTripWears(null);
@@ -91,6 +92,7 @@ export function TripCard({
   onOtherRoute,
   signboardUrl = publishedSignboard,
   extras,
+  onDrawOtherWay,
 }: {
   direction: Direction;
   directions: readonly Direction[];
@@ -127,6 +129,11 @@ export function TripCard({
   signboardUrl?: (name: string) => string;
   /** Under the tiles, the studio's alone: its facts and its Edit, Extend and Delete. */
   extras?: ReactNode;
+  /**
+   * The studio's: with the other way not drawn yet, SWITCH starts drawing it
+   * instead of resting disabled. The public map passes none.
+   */
+  onDrawOtherWay?: () => void;
 }) {
   const loop = isLoop(direction);
   // A loop's trip leaves from its tip and comes back to it: both ends read the timeline's.
@@ -139,6 +146,7 @@ export function TripCard({
   const sibling = otherDirection(directions, direction);
   // A loop has no way back, so no SWITCH at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
+  const canDrawOtherWay = !loop && !!sibling && !isDrawn(sibling) && !!onDrawOtherWay;
   // The whole ride, measured once on its full line — the index's figure, so
   // an overview drawn while the line is read never prices it: its Distance
   // and its Expected fare.
@@ -182,11 +190,12 @@ export function TripCard({
           />
         )
       }
-      switchable={switchable}
+      switchable={switchable || canDrawOtherWay}
       back={direction.reversed}
       way={loop ? null : switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
+        else if (canDrawOtherWay) onDrawOtherWay?.();
       }}
       onBackToList={onBackToList}
       onClose={onClose}
@@ -194,7 +203,7 @@ export function TripCard({
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       otherRoutes={others.map((v) => ({
         id: v.id,
-        to: directionEnds(v).to,
+        to: directionRowName(v),
       }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);

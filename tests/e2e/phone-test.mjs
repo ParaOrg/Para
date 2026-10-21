@@ -1334,12 +1334,16 @@ const tripChecks = async () => {
       if (!pill || !trip) return null;
       const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
       // A train's pill is white with its words in the line's Timeline/surface,
-      // as the owner's train frames draw it (2026-10-13), not the card's swapped.
+      // as the owner's train frames draw it (2026-10-13), not the card's swapped;
+      // the ferry's in Map/Ferry/Timeline/surface, as a train's.
       const line = trip.dataset.livery;
-      if (/rail-way/.test(line)) {
+      if (/rail-way/.test(line) || line === 'ferry') {
         const probe = document.createElement('i');
         probe.style.backgroundColor = 'var(--content-inverse)';
-        probe.style.color = `var(--map-rail-${line}-timeline-surface)`;
+        probe.style.color =
+          line === 'ferry'
+            ? 'var(--map-ferry-timeline-surface)'
+            : `var(--map-rail-${line}-timeline-surface)`;
         document.body.append(probe);
         const want = getComputedStyle(probe);
         const seen = {
@@ -1402,7 +1406,9 @@ const tripChecks = async () => {
       const livery = trip?.dataset.livery ?? '';
       probe.style.backgroundColor = /rail-way/.test(livery)
         ? `var(--map-rail-${livery}-surface-pale)`
-        : `var(--card-${livery}-surface-pale)`;
+        : livery === 'ferry'
+          ? 'var(--map-ferry-surface-pale)'
+          : `var(--card-${livery}-surface-pale)`;
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
       probe.remove();
@@ -1519,7 +1525,9 @@ const tripChecks = async () => {
       const probe = document.createElement('i');
       probe.style.backgroundColor = isTrain
         ? `var(--map-rail-${livery}-surface)`
-        : `var(--card-${livery}-surface)`;
+        : livery === 'ferry'
+          ? 'var(--map-ferry-surface)'
+          : `var(--card-${livery}-surface)`;
       probe.style.color =
         livery === 'metro-rail-way-three'
           ? 'var(--map-route-line-arrow-inverse)'
@@ -2475,14 +2483,14 @@ const sheetState = async () =>
   (await card().count()) ? await card().first().getAttribute('data-snap') : null;
 /**
  * How far to drag the handle for the sheet to come to rest at `to` from
- * where it is, by the heights BottomSheet gives it: Low 129, Middle 55% of
+ * where it is, by the heights BottomSheet gives it: Low 133, Middle 55% of
  * the map, Max all of it but its 24 px strip at the top. Negative is up.
  */
 const dragTo = async (from, to) => {
   const h = await card()
     .first()
     .evaluate((el) => el.offsetHeight);
-  const shown = { low: 129, middle: Math.round(h * 0.55), max: h - 24 };
+  const shown = { low: 133, middle: Math.round(h * 0.55), max: h - 24 };
   return shown[from] - shown[to];
 };
 const closeCard = async () => {

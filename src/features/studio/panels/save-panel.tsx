@@ -100,7 +100,8 @@ export function SavePanel({
 
   const [signboard, setSignboard] = useState(parent?.signboard ?? '');
   const [mode, setMode] = useState<TransportMode>(parent?.mode ?? 'jeepney');
-  const [fareNote, setFareNote] = useState(parent?.fareNote ?? '');
+  // Kept as the route has it: the form no longer asks for one.
+  const fareNote = parent?.fareNote ?? '';
   const [via, setVia] = useState(parent?.via ?? '');
   // An ikot is made one or not and stays so (0021): an edit, a return trip or
   // a retried save keeps what the route is. A new line starts ticked when it
@@ -231,12 +232,10 @@ export function SavePanel({
     <RouteFields
       signboard={signboard}
       mode={mode}
-      fareNote={fareNote}
       isLocked={routeLocked}
       isSignboardRequired={isLoop}
       onSignboardChange={setSignboard}
       onModeChange={setMode}
-      onFareNoteChange={setFareNote}
     />
   );
 

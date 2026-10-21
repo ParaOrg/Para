@@ -25,7 +25,8 @@ export interface LineLook {
  * jeepney livery; and past a picked hintuan the rest of the trip's line in
  * Card/<livery>/surface-pale (the owner's call). A train's line wears its own
  * line's Map/Rail/<line>/surface and surface-pale, and MRT-3's yellow takes
- * …/Arrow/Inverse, near-black, as its card's words are dark.
+ * …/Arrow/Inverse, near-black, as its card's words are dark. The ferry's is
+ * Map/Ferry/surface and surface-pale.
  */
 export const LIVERY_LINE = {
   red: {
@@ -73,6 +74,11 @@ export const LIVERY_LINE = {
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Inverse'],
     pale: MAP_COLOURS['Map/Rail/MetroRailWayThree/surface-pale'],
   },
+  ferry: {
+    line: MAP_COLOURS['Map/Ferry/surface'],
+    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
+    pale: MAP_COLOURS['Map/Ferry/surface-pale'],
+  },
 } satisfies Record<Livery, LineLook>;
 
 /**
@@ -105,6 +111,7 @@ export const LINE_SURFACE = {
   'light-rail-way-one': 'bg-map-rail-light-rail-way-one-surface',
   'light-rail-way-two': 'bg-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-surface',
+  ferry: 'bg-map-ferry-surface',
   selected: 'bg-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -125,6 +132,7 @@ export const LINE_TEXT = {
   'light-rail-way-one': 'text-map-rail-light-rail-way-one-timeline-surface',
   'light-rail-way-two': 'text-map-rail-light-rail-way-two-timeline-surface',
   'metro-rail-way-three': 'text-content-primary',
+  ferry: 'text-map-ferry-timeline-surface',
   selected: 'text-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -139,6 +147,7 @@ export const LINE_FILL = {
   'light-rail-way-one': 'fill-map-rail-light-rail-way-one-surface',
   'light-rail-way-two': 'fill-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'fill-map-rail-metro-rail-way-three-surface',
+  ferry: 'fill-map-ferry-surface',
   selected: 'fill-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -157,6 +166,7 @@ export const LINE_WORDS = {
   'light-rail-way-one': 'text-content-inverse',
   'light-rail-way-two': 'text-content-inverse',
   'metro-rail-way-three': 'text-map-route-line-arrow-inverse',
+  ferry: 'text-content-inverse',
   selected: 'text-content-inverse',
 } satisfies Record<LineColour, string>;
 

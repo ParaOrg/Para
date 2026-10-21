@@ -111,7 +111,7 @@ export function gazeSubjects(p: Picks, from: LngLat | null): Subject[] {
     },
     { key: p.trip?.routeId ?? null, at: () => nearestLit(p.trip ? [directionLine(p.trip)] : []) },
     {
-      key: p.highlight && `${p.highlight.where}:${p.highlight.from}`,
+      key: p.highlight && `${p.highlight.where}:${p.highlight.card}`,
       at: () => nearestLit(p.litDirections.map(directionLine)),
     },
     { key: routesOf(p.candidates), at: () => nearestLit(p.litDirections.map(directionLine)) },

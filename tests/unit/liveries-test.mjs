@@ -163,16 +163,16 @@ test('a redraw clears every listed route, so the way round and back settles', ()
 // The owner's train RouteCards, 2026-10-13: a train route wears its line's
 // colour, never a draw, and the jeepneys around it draw as they would
 // without it.
-test("a train card wears its line's colour, whatever is drawn", () => {
+test("a train or ferry card wears its line's colour, whatever is drawn", () => {
   for (const x of [0, 0.5, 0.99]) {
     assert.deepEqual(
       cardLiveries(
-        [['lrt1'], ['lrt2'], ['mrt3']],
-        ['LRT-1', 'LRT-2', 'MRT-3'],
+        [['lrt1'], ['lrt2'], ['mrt3'], ['prfs']],
+        ['LRT-1', 'LRT-2', 'MRT-3', 'Ferry'],
         draws(x),
         new Map(),
       ),
-      ['light-rail-way-one', 'light-rail-way-two', 'metro-rail-way-three'],
+      ['light-rail-way-one', 'light-rail-way-two', 'metro-rail-way-three', 'ferry'],
     );
   }
 });

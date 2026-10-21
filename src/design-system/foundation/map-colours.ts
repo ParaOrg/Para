@@ -21,8 +21,8 @@ export const MAP_COLOURS = {
   'Map/HotspotsCard/Hintuan/border-primary': '#0d542b', // green/900
   'Map/HotspotsCard/Terminal/surface': '#0069a8', // sky/700
   'Map/HotspotsCard/Terminal/border-primary': '#024a70', // sky/900
-  'Map/LocatorIndicatorOverlay/surface': '#8ec5ff', // blue/300, at 15%
-  'Map/LocatorIndicatorOverlay/border': '#155dfc', // blue/600, at 75%
+  'Map/LocatorIndicatorOverlay/surface': '#8b7aff', // parabrand/500, at 15%
+  'Map/LocatorIndicatorOverlay/border': '#4900be', // parabrand/800, at 75%
   // Provisional: not named in Figma yet. A contributor's trail, as /contribute/ draws it live.
   'Map/Trail/papunta': '#1447e6', // blue/700, the blue of brand-surface
   'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface
@@ -38,6 +38,10 @@ export const MAP_COLOURS = {
   'Map/Rail/MetroRailWayThree/surface-pale': '#fff1b8', // metro-rail-way-three/200
   'Map/Rail/MetroRailWayThree/border-primary': '#ac8b0b', // metro-rail-way-three/700
   'Map/Rail/MetroRailWayThree/Timeline/surface': '#967906', // metro-rail-way-three/800
+  'Map/Ferry/surface': '#003399', // ferry/600
+  'Map/Ferry/surface-pale': '#bccfff', // ferry/200
+  'Map/Ferry/border-primary': '#002a80', // ferry/700
+  'Map/Ferry/Timeline/surface': '#002366', // ferry/800
 } as const satisfies Record<`Map/${string}`, `#${string}`>;
 
 /**

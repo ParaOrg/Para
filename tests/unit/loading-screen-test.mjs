@@ -76,7 +76,7 @@ test('it carries neither data-directions nor data-dock-host, nor a word of the r
 });
 
 test("its gray is MapView's: bg-surface-secondary, Tailwind's neutral-100, over the whole screen", () => {
-  assert.match(mapView, /<div className="absolute inset-0 bg-surface-secondary">/);
+  assert.match(mapView, /className="absolute inset-0 bg-surface-secondary"/);
   assert.match(tokens, /--surface-secondary: var\(--color-neutral-100\);/);
   const screen = declarations(root[1]);
   assert.equal(last(screen, 'background-color'), theme('--color-neutral-100'));

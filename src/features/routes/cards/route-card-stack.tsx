@@ -1,13 +1,17 @@
 import { useMemo } from 'react';
 
 import { RouteCard } from './route-card';
-import { drawnDepartures } from '../model/departures';
+import { RouteCardRailway } from './route-card-railway';
+import { routeCards } from '../model/departures';
 import { cardLiveries, type Livery } from '../model/liveries';
-import { isRailLine, railLineOf, type Direction } from '../model/routes';
-import { vehicleOf } from '../model/vehicles';
+import { stationCode } from '../model/rail-codes';
+import { directionEnds, railLineOf, type Direction } from '../model/routes';
+import { isRailwayVehicle, vehicleOf } from '../model/vehicles';
 
-/** A card picked: the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
+/** A card picked: which card it is, the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
 export interface PickedPlace {
+  /** The card's key (routeCards): a place has a card per train line and bound besides its own. */
+  card: string;
   from: string;
   ids: readonly string[];
   livery: Livery;
@@ -18,7 +22,7 @@ interface Props {
   routes: readonly Direction[];
   /** Whether they are shown the way back rather than outbound. */
   back: boolean;
-  /** The place whose card is Selected, by name; null when none is. */
+  /** The card that is Selected, by its key (PickedPlace's card); null when none is. */
   selected: string | null;
   /** A card was picked, or let go (null). */
   onSelect: (place: PickedPlace | null) => void;
@@ -30,7 +34,8 @@ interface Props {
 
 /**
  * Routes one way round as RouteCards: a card per place they leave from
- * (departures), each in its livery — liveries.ts: its first row's route's, at
+ * (departures), and per train line and bound or the ferry a RouteCardRailway
+ * besides (routeCards), each in its livery — liveries.ts: its first row's route's, at
  * random, kept for the visit, the same the other way round, never two alike
  * side by side; a train's, its line's own, never drawn — with a row per drawn
  * direction. One card at a time is Selected, and the map lights its
@@ -43,23 +48,18 @@ interface Props {
  * stage here" — edge to edge in all three.
  */
 export function RouteCardStack({ routes, back, selected, onSelect, onRoute, testId }: Props) {
-  const places = drawnDepartures(routes, back);
+  const places = routeCards(routes, back);
 
   // Drawn once per stack, not per render. Each card by its rows' routes,
-  // its first row's first (drawnDepartures leaves no card empty), after its
-  // train line and a bar ('' before it for a jeepney's): a train card wears
-  // its line's colour, never a draw (cardLiveries). The ids are uuids, with
+  // its first row's first (routeCards leaves no card empty), after its
+  // line and a bar ('' before it for a jeepney's): a train or ferry card
+  // wears its line's colour, never a draw (cardLiveries). The ids are uuids, with
   // no space, bar or newline to split on. String(), because the React
-  // Compiler cannot tell what drawnDepartures' join gives is a string, and
+  // Compiler cannot tell what routeCards' join gives is a string, and
   // would otherwise drop the memo below as one that may change under it.
   const cardKey = String(
     places
-      .map(
-        (p) =>
-          (railLineOf(p.directions[0].v) ?? '') +
-          '|' +
-          p.directions.map((d) => d.v.routeId).join(' '),
-      )
+      .map((p) => (p.railway ?? '') + '|' + p.directions.map((d) => d.v.routeId).join(' '))
       .join('\n'),
   );
   const liveries = useMemo(() => {
@@ -67,39 +67,67 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
     const cards = cardKey.split('\n').map((card) => card.split('|'));
     return cardLiveries(
       cards.map(([, routes]) => routes.split(' ')),
-      cards.map(([line]) => (isRailLine(line) ? line : null)),
+      cards.map(([line]) => (isRailwayVehicle(line) ? line : null)),
     );
   }, [cardKey]);
 
   const byId = new Map(places.flatMap((p) => p.directions.map((d) => [d.v.id, d.v] as const)));
 
+  const pick = (p: (typeof places)[number], i: number) =>
+    onSelect(
+      selected === p.card
+        ? null
+        : {
+            card: p.card,
+            from: p.from,
+            ids: p.directions.map((d) => d.v.id),
+            livery: liveries[i],
+          },
+    );
+  const open = (id: string, i: number) => {
+    const v = byId.get(id);
+    if (v) onRoute(v, liveries[i]);
+  };
+
   return (
     <>
-      {places.map((p, i) => (
-        <RouteCard
-          key={p.from}
-          testId={testId}
-          livery={liveries[i]}
-          state={selected === p.from ? 'selected' : 'rest'}
-          routeOrigin={p.from}
-          endPoints={p.directions.map((d) => ({
-            id: d.v.id,
-            routeDirection: d.to,
-            vehicle: vehicleOf(d.v),
-          }))}
-          onSelect={() =>
-            onSelect(
-              selected === p.from
-                ? null
-                : { from: p.from, ids: p.directions.map((d) => d.v.id), livery: liveries[i] },
-            )
-          }
-          onPick={(id) => {
-            const v = byId.get(id);
-            if (v) onRoute(v, liveries[i]);
-          }}
-        />
-      ))}
+      {places.map((p, i) =>
+        p.railway ? (
+          <RouteCardRailway
+            key={p.card}
+            testId={testId}
+            railway={p.railway}
+            bound={p.bound}
+            state={selected === p.card ? 'selected' : 'rest'}
+            routeOrigin={p.from}
+            endPoints={p.directions.map((d) => {
+              const line = railLineOf(d.v);
+              return {
+                id: d.v.id,
+                routeDirection: d.to,
+                stationCode: line && stationCode(line, directionEnds(d.v).to),
+              };
+            })}
+            onSelect={() => pick(p, i)}
+            onPick={(id) => open(id, i)}
+          />
+        ) : (
+          <RouteCard
+            key={p.card}
+            testId={testId}
+            livery={liveries[i]}
+            state={selected === p.card ? 'selected' : 'rest'}
+            routeOrigin={p.from}
+            endPoints={p.directions.map((d) => ({
+              id: d.v.id,
+              routeDirection: d.to,
+              vehicle: vehicleOf(d.v),
+            }))}
+            onSelect={() => pick(p, i)}
+            onPick={(id) => open(id, i)}
+          />
+        ),
+      )}
     </>
   );
 }

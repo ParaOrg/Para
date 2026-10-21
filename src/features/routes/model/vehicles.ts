@@ -1,4 +1,4 @@
-import { RAIL_LINES, railLineOf, type Direction } from './routes';
+import { isFerry, RAIL_LINES, railLineOf, type Direction } from './routes';
 
 /**
  * What a trip rides, as its header names it: a train's line by its code, or
@@ -8,6 +8,18 @@ import { RAIL_LINES, railLineOf, type Direction } from './routes';
  */
 export const VEHICLES = [...RAIL_LINES, 'Jeepney', 'E-Jeep', 'Bus', 'Ferry'] as const;
 export type Vehicle = (typeof VEHICLES)[number];
+
+/** What rides a line of its own, a train or the ferry: a RouteCardRailway's Property 1 (4261:15199). */
+export const RAILWAY_VEHICLES = [...RAIL_LINES, 'Ferry'] as const;
+export type RailwayVehicle = (typeof RAILWAY_VEHICLES)[number];
+
+export const isRailwayVehicle = (word: string): word is RailwayVehicle =>
+  (RAILWAY_VEHICLES as readonly string[]).includes(word);
+
+/** A direction's train line, or Ferry; null for a road vehicle's. */
+export function railwayOf(direction: Direction): RailwayVehicle | null {
+  return railLineOf(direction) ?? (isFerry(direction.route?.mode) ? 'Ferry' : null);
+}
 
 /**
  * A direction's vehicle, by its line's code or its route's mode; null for a
