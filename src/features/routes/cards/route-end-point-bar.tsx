@@ -1,7 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-import { ChevronRightIcon } from '@/shared/ui/route-icons';
-
 import { ROW_PRESSED } from './livery-card';
 import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
 import type { Livery } from '../model/liveries';
@@ -21,18 +19,18 @@ type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children' | 'slo
   slot?: ReactNode;
 };
 
-const BAR = 'flex w-full items-center px-4 text-left text-base/6';
+// SemiBold 17/24 on both variants, Figma's text-base/semibold.
+const BAR = 'flex w-full items-center px-4 text-left text-base/6 font-semibold';
 // Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed draws it. The hover is
 // tertiary too.
 const ON_SURFACE =
-  'gap-2 rounded-full font-medium text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
-// Figma's Variant=RouteCard names its place in SemiBold.
-const ON_CARD = 'gap-1 font-semibold';
+  'gap-2 rounded-full text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
+const ON_CARD = 'gap-1';
 
 /**
  * Figma's .RouteEndPointBar (3848:11928): a route by where it goes, the tree line before it, a
  * button that opens it. One component where Figma has one, so a change to the row is made once: a
- * RouteCard's rows, 36 tall, and a trip's "Other routes", 40 tall.
+ * RouteCard's rows and a trip's "Other routes", both 40 tall.
  */
 export function RouteEndPointBar({
   routeDirection,
@@ -55,19 +53,11 @@ export function RouteEndPointBar({
       }
     >
       <RouteEndPointLines position={position} />
-      <span
-        className={'flex min-w-0 flex-1 items-center gap-1 ' + (isOnSurface ? 'py-2' : 'py-1.5')}
-      >
+      {/* TODO: Figma's RouteTripDetail variant ends in a chevron-right at opacity/60; it waits for a
+          colour that shows on the sheet's white (Figma draws it Content/inverse). */}
+      <span className="flex min-w-0 flex-1 items-center gap-1 py-2">
         {slot}
         <span className="min-w-0 flex-1">{routeDirection}</span>
-        {/* Figma's chevron-right, in the card's words at 60. TODO: the sheet's rows take it once
-            Figma gives it a colour that shows on white: its RouteTripDetail variant draws it in
-            Content/inverse. */}
-        {!isOnSurface && (
-          <span aria-hidden className="size-5 shrink-0 opacity-60 *:size-full">
-            <ChevronRightIcon />
-          </span>
-        )}
       </span>
     </button>
   );

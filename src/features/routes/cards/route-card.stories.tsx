@@ -31,7 +31,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Red: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
- * place in SN Pro ExtraBold 24/32, as the RouteCard set draws it (3665:2265).
+ * place in SN Pro Bold 24/32, as the RouteCard set draws it (3665:2265).
  */
 export const Red: Story = {
   play: async ({ canvasElement }) => {
@@ -39,7 +39,7 @@ export const Red: Story = {
     const type = getComputedStyle(place);
     await expect(type.fontSize).toBe('24px');
     await expect(type.lineHeight).toBe('32px');
-    await expect(type.fontWeight).toBe('800');
+    await expect(type.fontWeight).toBe('700');
   },
 };
 

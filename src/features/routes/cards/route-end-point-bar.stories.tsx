@@ -5,7 +5,7 @@ import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteEndPointBar } from './route-end-point-bar';
 
 /**
- * Figma's .RouteEndPointBar (3848:11928): RouteCard (on a card's colour, 36 tall) and
+ * Figma's .RouteEndPointBar (3848:11928): RouteCard (on a card's colour, 40 tall) and
  * RouteTripDetail (on the sheet's surface, rounded, 40 tall), each at Rest and Pressed, the tree
  * line before the place. Pressed is a browser state, `:active`: hold a row to see it; the stories
  * force it with the pressed fill.
@@ -48,12 +48,12 @@ export const OnSurfacePressed: Story = { args: { className: 'bg-surface-tertiary
 /** The last row of a trip's "Other routes": the line ends at its stub. */
 export const OnSurfaceLast: Story = { args: { position: 'bottom' } };
 
-/** RouteCard at Rest, on a red card: its words, 36 tall. */
+/** RouteCard at Rest, on a red card: its words, 40 tall. */
 export const OnRed: Story = {
   args: { on: 'red' },
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByRole('button', { name: 'SM Fairview' });
-    await expect(row.getBoundingClientRect().height).toBe(36);
+    await expect(row.getBoundingClientRect().height).toBe(40);
   },
 };
 
