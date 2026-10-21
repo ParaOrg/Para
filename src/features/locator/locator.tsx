@@ -1,12 +1,21 @@
+import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useState } from 'react';
 
+import { BASEMAPS, readBasemap } from '@/features/routes/map/basemap';
+import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
+import { MapStyle } from '@/features/routes/map/map-style';
+import { MapStyleButton } from '@/features/routes/map/map-style-button';
+import { useMapStyleCard } from '@/features/routes/map/use-map-style-card';
 import { slide } from '@/shared/ui/sheet-gesture';
 
+import { LocationAndMap } from './location-and-map';
 import { LocatorButton } from './locator-button';
 import type { Locator as State } from './use-locator';
 
 interface Props {
   locator: State;
+  /** The map the pill's top half switches the design of; null in a story, where a pick does nothing. */
+  map: MapLibreMap | null;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
 }
@@ -29,7 +38,8 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
 }
 
 /**
- * The LocatorButton placed as ScreenLocationBehavior draws it (Figma
+ * LocationAndMap (4245:1966), the map-style button over the LocatorButton,
+ * placed as ScreenLocationBehavior draws the LocatorButton (Figma
  * 3870:5941): at the map's right edge, 12 above the card's sheet, following
  * it down from Middle to Low; up past Middle it stays where Middle left it,
  * and the sheet covers it. With no card open it sits at the map's foot. Where
@@ -38,11 +48,25 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  * BottomSheet says where its top is as `--dock-y` on the page; this layer
  * slides the same way, by the same length.
  *
+ * The Map Style card opens up from the pill, right-aligned with it: below it
+ * is the sheet.
+ *
  * Denied or unavailable: a short note above it, and the button stays as it
  * was, to try again once the browser's setting is changed.
  */
-export function Locator({ locator, docked }: Props) {
+export function Locator({ locator, map, docked }: Props) {
   const { status, noFix, mode, heading, compass, tap } = locator;
+  // The design MapView opened on: both read the one remembered.
+  const {
+    current: basemap,
+    card,
+    cardRoom,
+    rootRef,
+    toggle,
+    close,
+    select,
+    letGo,
+  } = useMapStyleCard(map, () => readBasemap(BASEMAPS), 'up');
   const [note, setNote] = useState(() => noteFor(status, noFix));
   // Each change of the state says its note afresh, even one the timer below has hidden.
   const [noted, setNoted] = useState({ status, noFix });
@@ -70,7 +94,26 @@ export function Locator({ locator, docked }: Props) {
       }
       style={{ translate: `0 ${y}` }}
     >
-      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-10 @float:mb-0">
+      <div
+        ref={rootRef}
+        className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-10 @float:mb-0"
+      >
+        {card !== 'closed' && (
+          // 8 above the pill, as the corner's card is below its button.
+          <div className="mb-1">
+            <MapStyle
+              basemaps={BASEMAPS}
+              selectedId={basemap.id}
+              thumbnails={BASEMAP_THUMBNAILS}
+              maxHeight={cardRoom}
+              direction="up"
+              onSelect={select}
+              isClosing={card === 'closing'}
+              onClose={close}
+              onClosed={letGo}
+            />
+          </div>
+        )}
         {/* No Figma design for the note yet, so it uses the raw palette. */}
         {note && (
           <p
@@ -81,15 +124,27 @@ export function Locator({ locator, docked }: Props) {
             {note}
           </p>
         )}
-        <LocatorButton
-          mode={mode}
-          // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
-          heading={mode === 'TrackedLocation' ? heading : null}
-          onClick={tap}
-          aria-label={mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]}
-          data-testid="where"
-          data-state={status}
-        />
+        <LocationAndMap>
+          <MapStyleButton
+            corners="top"
+            currentLabel={basemap.label}
+            onClick={toggle}
+            aria-expanded={card === 'open'}
+            data-testid="basemap"
+          />
+          <LocatorButton
+            mode={mode}
+            corners="bottom"
+            // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
+            heading={mode === 'TrackedLocation' ? heading : null}
+            onClick={tap}
+            aria-label={
+              mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]
+            }
+            data-testid="where"
+            data-state={status}
+          />
+        </LocationAndMap>
       </div>
     </div>
   );

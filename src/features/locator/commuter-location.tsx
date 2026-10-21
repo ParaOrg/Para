@@ -40,7 +40,8 @@ interface Props {
 /**
  * The commuter's own position, when they ask for it, and the camera with
  * them, kept clear of the card on show, as a picked hintuan is. The button,
- * and the dot on the map with its moods and its gaze.
+ * with the map-style button on it, and the dot on the map with its moods and
+ * its gaze.
  *
  * A child of PublicMapApp, not hooks of it: a fix, a turn of the phone and the
  * dot's moods, a second apart, render this alone. As hooks of the page they
@@ -85,7 +86,7 @@ export function CommuterLocation({
   const gazeAt = gazeSubjects(picks, locator.fix?.at ?? null);
   return (
     <>
-      {map && <Locator locator={locator} docked={docked} />}
+      {map && <Locator locator={locator} map={map} docked={docked} />}
       {map && locator.fix && (
         <LocatorOnMap
           map={map}

@@ -484,7 +484,9 @@ test("the studio's map: \"Loading map…\" goes at its 'load', routes drawn or n
     2,
     "set at the 'load', and let go as the map goes",
   );
-  assert.match(view, /\{ready && !error && \(\s*<BasemapControl/);
+  assert.match(view, /\{ready && !error && hasMapStyleButton && \(\s*<BasemapControl/);
+  // …and the 'load' said on the map's wrapper, for the suites, where the public map has no button there.
+  assert.match(view, /data-loaded=\{\(ready && !error\) \|\| undefined\}/);
 });
 
 test('"Loading map…" stopped (the map gone): never lifted', () => {

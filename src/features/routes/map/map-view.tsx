@@ -65,7 +65,7 @@ prewarm();
  * polygons we paint on top carry all the colour on the screen. It serves the
  * same `/planet` tiles, sprite and fonts as Liberty from half the layers, so
  * it draws a little cheaper and shares Liberty's cached tiles. A commuter can
- * pick another design from the control at the top right (basemap.ts);
+ * pick another design from the map-style button (basemap.ts);
  * this is the one the map starts with when nothing has been chosen.
  */
 export const STYLE_URL = DEFAULT_BASEMAP.url;
@@ -168,6 +168,11 @@ interface Props {
    */
   buttonStyle?: MapButtonStyle;
   /**
+   * False where the page puts the map-style button elsewhere: the public
+   * map's sits on the locator (LocationAndMap).
+   */
+  hasMapStyleButton?: boolean;
+  /**
    * The credits always at the bottom right, where a phone would put them top
    * right, under the button: the contributor page keeps that corner for
    * Figma's button. Read once, as the map is made.
@@ -194,6 +199,7 @@ export function MapView({
   basemaps = BASEMAPS,
   basemapThumbnails = BASEMAP_THUMBNAILS,
   buttonStyle = 'round',
+  hasMapStyleButton = true,
   creditsAtBottom = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -436,12 +442,19 @@ export function MapView({
         A white page, no errors, `load` firing normally.
 
         So: size the WRAPPER, and hand MapLibre a plain child to restyle.
+
+        `data-loaded`: the map's 'load', for the headless suites on a
+        production build, where the map itself is out of their reach.
       */}
-      <div className="absolute inset-0 bg-surface-secondary">
+      <div
+        data-testid="map-view"
+        data-loaded={(ready && !error) || undefined}
+        className="absolute inset-0 bg-surface-secondary"
+      >
         <div ref={containerRef} className="h-full w-full" />
       </div>
 
-      {ready && !error && (
+      {ready && !error && hasMapStyleButton && (
         <BasemapControl
           map={ready}
           basemaps={basemaps}

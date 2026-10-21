@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
@@ -41,7 +41,7 @@ function Specimen({ snap, state, wide = false }: Args) {
         (wide ? 'h-[800px] w-[1280px]' : 'h-[852px] w-[393px]')
       }
     >
-      <Locator locator={state} docked={snap !== null} />
+      <Locator locator={state} map={null} docked={snap !== null} />
       {snap !== null && (
         <BottomSheet
           label="A trip"
@@ -95,4 +95,12 @@ export const NoCard: Story = {
 /** The browser said no: a short note above the button. */
 export const Denied: Story = {
   args: { state: locator({ status: 'denied', fix: null, mode: 'LocationOff' }) },
+};
+
+/** The map-style half tapped: the Map Style card opens up from the pill, the sheet below it. */
+export const MapStyleOpen: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
+    await expect(canvas.getByRole('dialog', { name: 'Map Style' })).toBeVisible();
+  },
 };

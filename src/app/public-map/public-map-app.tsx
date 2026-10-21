@@ -152,6 +152,7 @@ export function PublicMapApp() {
         maxBounds={METRO_MANILA}
         openOn={openOnRoutes}
         foldCredits
+        hasMapStyleButton={false}
       />
       {/*
         The commuter's own position, and the camera with them, kept clear of
