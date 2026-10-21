@@ -24,7 +24,10 @@ interface RailwayEndPoint {
 interface RouteCardRailwayProps {
   /** Figma's Property 1: the line, LRT 1, LRT 2, MRT 3, or the Ferry. It sets the card's colours. */
   railway: RailwayVehicle;
-  /** Which way the line's trains run, the pill's second half; null on the ferry, or when it is not known. */
+  /**
+   * Which way the line's trains run; null on the ferry, or when it is not known. Figma draws no
+   * bound on the card, so it is read out, not shown: the rows say where the trains go.
+   */
   bound: Bound | null;
   /** Figma's State, as a RouteCard's. */
   state: 'rest' | 'selected';
@@ -48,12 +51,7 @@ const PILL_LABEL = {
   Ferry: 'Ferry',
 } satisfies Record<RailwayVehicle, string>;
 
-/**
- * The pills' fill and words: the line's surface on white, and on MRT-3's
- * yellow card its yellow on Content/primary. Figma draws LRT-2's station code
- * in #584a77, bound to no variable; it takes the line's surface here, as the
- * line pill's words do.
- */
+/** The pill's fill and words: the line's surface on white, and on MRT-3's yellow its yellow on Content/primary. */
 const PILL = {
   'LRT-1': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
   'LRT-2': 'bg-content-inverse text-map-rail-light-rail-way-two-surface',
@@ -61,20 +59,18 @@ const PILL = {
   Ferry: 'bg-content-inverse text-map-ferry-surface',
 } satisfies Record<RailwayVehicle, string>;
 
-const HALF = 'px-2 py-0.5 text-sm/5 font-medium whitespace-nowrap';
-
 /**
  * A station and the train or ferry directions that leave it one way —
  * Figma's RouteCardRailway (4261:15199): one card per line and bound, in the
- * line's own colours. Over the station's name, the line and its bound as two
- * halves 2 px apart (the ferry's one pill, with no bound), and the vehicle at
- * the right; under it a row per station it goes to (RouteEndPointBar), each
- * with its station code in the row's slot. The ferry has no codes.
+ * line's own colours. Over the station's name, the line's pill and its
+ * vehicle beside it at 70; under it a row per station it goes to
+ * (RouteEndPointBar), each with its station code in the row's slot, ExtraBold
+ * at 60, in the card's words' colour. The ferry has no codes.
  *
  * It behaves as RouteCard does: a row opens its trip; a tap anywhere else
  * selects the card, or lets it go, State=Selected pressing it in under the
- * Selected shadow. The test ids are
- * RouteCard's, so the suites find a train's card as they find a jeep's.
+ * Selected shadow. The test ids are RouteCard's, so the suites find a
+ * train's card as they find a jeep's.
  */
 export function RouteCardRailway({
   railway,
@@ -94,7 +90,7 @@ export function RouteCardRailway({
       data-livery={livery}
       data-state={state}
       className={
-        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
+        'relative isolate flex w-full flex-col items-start gap-0.5 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
         CARD_SURFACE[livery] +
         ' ' +
         CARD_TEXT[livery]
@@ -106,21 +102,17 @@ export function RouteCardRailway({
         aria-hidden
         className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
       />
-      <div className="flex w-full items-center justify-between px-4 pt-2">
-        <p data-testid={`${testId}-pill`} className="flex gap-0.5">
-          {bound ? (
-            <>
-              <span className={HALF + ' rounded-l-full ' + PILL[railway]}>
-                {PILL_LABEL[railway]}
-              </span>
-              <span className="sr-only">, </span>
-              <span className={HALF + ' rounded-r-full ' + PILL[railway]}>{bound}</span>
-            </>
-          ) : (
-            <span className={HALF + ' rounded-full ' + PILL[railway]}>{PILL_LABEL[railway]}</span>
-          )}
+      <div className="flex w-full items-center gap-1 px-4 pt-2">
+        <p
+          data-testid={`${testId}-pill`}
+          className={
+            'rounded-full px-1.5 py-0.5 text-sm/5 font-medium whitespace-nowrap ' + PILL[railway]
+          }
+        >
+          {PILL_LABEL[railway]}
+          {bound && <span className="sr-only">, {bound}</span>}
         </p>
-        <span aria-hidden className="size-6 shrink-0 *:size-full">
+        <span aria-hidden className="size-6 shrink-0 opacity-70 *:size-full">
           <VehicleIcon vehicle={railway} />
         </span>
       </div>
@@ -149,12 +141,7 @@ export function RouteCardRailway({
                   e.stationCode && (
                     <>
                       <span className="sr-only">, </span>
-                      <span
-                        className={
-                          'shrink-0 rounded-full px-1.5 py-0.5 text-xs/4 font-medium ' +
-                          PILL[railway]
-                        }
-                      >
+                      <span className="shrink-0 text-base/6 font-extrabold opacity-60">
                         {e.stationCode}
                       </span>
                     </>

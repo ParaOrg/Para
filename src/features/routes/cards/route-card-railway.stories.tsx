@@ -29,7 +29,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** LRT 1: Map/Rail/LightRailWayOne, the line and its bound in two white halves. */
+/** LRT 1: Map/Rail/LightRailWayOne, the line's white pill with the train beside it; the bound read out, not shown. */
 export const LightRailWayOne: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
@@ -48,7 +48,7 @@ export const LightRailWayTwo: Story = {
   },
 };
 
-/** MRT 3: dark words on its yellow, the pills Content/primary with yellow words. */
+/** MRT 3: dark words on its yellow, the pill Content/primary with yellow words. */
 export const MetroRailWayThree: Story = {
   args: {
     railway: 'MRT-3',
@@ -97,7 +97,7 @@ export const ManyStations: Story = {
   },
 };
 
-/** A bound the line's table does not know: the line alone, rounded both ends. */
+/** A bound the line's table does not know: nothing more is read out after the line. */
 export const NoBound: Story = {
   args: { bound: null, endPoints: [{ id: 'a', routeDirection: 'Somewhere', stationCode: null }] },
 };
