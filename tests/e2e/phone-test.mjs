@@ -1334,12 +1334,16 @@ const tripChecks = async () => {
       if (!pill || !trip) return null;
       const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
       // A train's pill is white with its words in the line's Timeline/surface,
-      // as the owner's train frames draw it (2026-10-13), not the card's swapped.
+      // as the owner's train frames draw it (2026-10-13), not the card's swapped;
+      // the ferry's in Map/Ferry/Timeline/surface, as a train's.
       const line = trip.dataset.livery;
-      if (/rail-way/.test(line)) {
+      if (/rail-way/.test(line) || line === 'ferry') {
         const probe = document.createElement('i');
         probe.style.backgroundColor = 'var(--content-inverse)';
-        probe.style.color = `var(--map-rail-${line}-timeline-surface)`;
+        probe.style.color =
+          line === 'ferry'
+            ? 'var(--map-ferry-timeline-surface)'
+            : `var(--map-rail-${line}-timeline-surface)`;
         document.body.append(probe);
         const want = getComputedStyle(probe);
         const seen = {
@@ -1402,7 +1406,9 @@ const tripChecks = async () => {
       const livery = trip?.dataset.livery ?? '';
       probe.style.backgroundColor = /rail-way/.test(livery)
         ? `var(--map-rail-${livery}-surface-pale)`
-        : `var(--card-${livery}-surface-pale)`;
+        : livery === 'ferry'
+          ? 'var(--map-ferry-surface-pale)'
+          : `var(--card-${livery}-surface-pale)`;
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
       probe.remove();
@@ -1519,7 +1525,9 @@ const tripChecks = async () => {
       const probe = document.createElement('i');
       probe.style.backgroundColor = isTrain
         ? `var(--map-rail-${livery}-surface)`
-        : `var(--card-${livery}-surface)`;
+        : livery === 'ferry'
+          ? 'var(--map-ferry-surface)'
+          : `var(--card-${livery}-surface)`;
       probe.style.color =
         livery === 'metro-rail-way-three'
           ? 'var(--map-route-line-arrow-inverse)'
