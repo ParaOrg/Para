@@ -67,16 +67,15 @@ export function useMapStyleCard(
 
   // The card may grow to the map's edge and no further: the map clips what
   // is past it (MapLibre's overflow). Read as it opens, wherever the button
-  // is then: under the open credits on a phone, or on the sheet, where the
-  // root's top is the pill's, the card not in it yet.
+  // is then: under the open credits on a phone, or on the sheet, the top of
+  // the pill. From the button, not the root: a card still leaving is in it.
   const open = () => {
     const button = toggleButton()?.getBoundingClientRect();
-    const root = rootRef.current?.getBoundingClientRect();
     const edges = map?.getContainer().getBoundingClientRect();
     const room =
       direction === 'down'
         ? edges && button && edges.bottom - button.bottom
-        : edges && root && root.top - edges.top;
+        : edges && button && button.top - edges.top;
     setCardRoom(room === undefined ? undefined : room - CARD_GAP_PX - CARD_EDGE_PX);
     setCard('open');
   };

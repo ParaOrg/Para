@@ -27,6 +27,7 @@ interface LocationAndMapControlProps {
  * a page that hands MapView others would hand them here too.
  */
 export function LocationAndMapControl({ map, isMapLoaded, children }: LocationAndMapControlProps) {
+  // The design MapView opened on: both read the one remembered.
   const { current, card, cardRoom, rootRef, toggle, close, select, letGo } = useMapStyleCard(
     map,
     () => readBasemap(BASEMAPS),

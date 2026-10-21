@@ -50,7 +50,6 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  */
 export function Locator({ locator, map, isMapLoaded, docked }: Props) {
   const { status, noFix, mode, heading, compass, tap } = locator;
-  // The design MapView opened on: both read the one remembered.
   const [note, setNote] = useState(() => noteFor(status, noFix));
   // Each change of the state says its note afresh, even one the timer below has hidden.
   const [noted, setNoted] = useState({ status, noFix });
