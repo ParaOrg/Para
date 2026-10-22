@@ -191,7 +191,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `connectContributions`
+`ContributePage`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`
 
 ### `features/locator`
 
