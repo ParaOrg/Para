@@ -11,8 +11,10 @@
 --                          key on subject_id, on purpose: a direction exists
 --                          only as a draft until approved, and a discarded
 --                          draft leaves a link to nothing that the export skips.
---   private.block_contributor / private.unblock_contributor
+--   public.block_contributor / public.unblock_contributor
 --                          an editor sets or clears blocked_at, with a note.
+--                          In public so the studio can call them through the
+--                          API (private is not exposed), as 0022's functions.
 --                          A blocked phone fails private.can_contribute(), so
 --                          it adds nothing.
 --   private.retire_month / private.add_months
@@ -25,15 +27,15 @@
 --             block columns on any insert). Deleting its recordings still
 --             removes its uses: they cascade from contribution.
 --   editors   read, add and delete contribution_use. Block and unblock a phone
---             through the two helpers; each checks private.is_editor() itself.
+--             through the two functions; each checks private.is_editor() itself.
 --   anon      nothing at all.
 --   the owner (SQL editor, as postgres) alone runs retire_month and add_months;
 --             no API role can execute them.
 --
 -- The owner's steps:
 --   Monthly, from November 2028 (24 months after the first uploads):
---     select private.retire_month(date '2028-11-01');
---   It drops that month's piece of point_batch, cuts 200 m off each end of the
+--     select private.retire_month(date '2026-10-01');
+--   (the first month; run it in November 2028, then each month after). It drops that month's piece of point_batch, cuts 200 m off each end of the
 --   month's lines, deletes the hintos within 200 m of the old ends, clears the
 --   start name, end name and description, and unlinks the contributions from
 --   their phones. The line, times, totals, hintos, vehicle and contribution_use
@@ -76,7 +78,7 @@ create policy "editors delete uses" on public.contribution_use for delete to aut
 
 -- ------------------------------------------------------ block and unblock
 
-create function private.block_contributor(target uuid, note text default null)
+create function public.block_contributor(target uuid, note text default null)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
   if not (select private.is_editor()) then
@@ -90,7 +92,7 @@ begin
   end if;
 end $$;
 
-create function private.unblock_contributor(target uuid)
+create function public.unblock_contributor(target uuid)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
   if not (select private.is_editor()) then
@@ -104,10 +106,10 @@ begin
   end if;
 end $$;
 
-revoke all on function private.block_contributor(uuid, text) from public, anon;
-revoke all on function private.unblock_contributor(uuid) from public, anon;
-grant execute on function private.block_contributor(uuid, text) to authenticated;
-grant execute on function private.unblock_contributor(uuid) to authenticated;
+revoke all on function public.block_contributor(uuid, text) from public, anon;
+revoke all on function public.unblock_contributor(uuid) from public, anon;
+grant execute on function public.block_contributor(uuid, text) to authenticated;
+grant execute on function public.unblock_contributor(uuid) to authenticated;
 
 -- --------------------------------------------------------------- retention
 
@@ -188,7 +190,7 @@ begin
   end if;
   m := coalesce(
     (private.last_piece_month() + interval '1 month')::date,
-    date_trunc('month', now())::date
+    date_trunc('month', now() at time zone 'UTC')::date
   );
   for i in 1 .. n loop
     execute format(
@@ -220,13 +222,16 @@ begin
   if target_month <> first_day then
     raise exception 'bad_month: pass the first day of a month' using errcode = 'P0001';
   end if;
-  if first_day > (date_trunc('month', now()) - make_interval(months => min_age_months))::date then
+  if first_day > (date_trunc('month', now() at time zone 'UTC') - make_interval(months => min_age_months))::date then
     raise exception 'too_soon: % is newer than % months', first_day, min_age_months using errcode = 'P0001';
   end if;
 
   for r in
     select id, line from public.contribution
-    where received_at >= first_day and received_at < next_day
+    where (received_at at time zone 'UTC') >= first_day
+      and (received_at at time zone 'UTC') < next_day
+      -- Only retirement nulls contributor_id, so a second run skips a done month.
+      and contributor_id is not null
     for update
   loop
     if r.line is not null and jsonb_typeof(r.line -> 'coordinates') = 'array' then
@@ -260,10 +265,10 @@ begin
   -- Anything that landed in the default piece for this month.
   delete from public.point_batch_default where point_batch_default.month = first_day;
 
-  months_ahead := (
+  months_ahead := coalesce((
     extract(year from private.last_piece_month()) * 12 + extract(month from private.last_piece_month())
-    - extract(year from now()) * 12 - extract(month from now())
-  )::integer;
+    - extract(year from now() at time zone 'UTC') * 12 - extract(month from now() at time zone 'UTC')
+  )::integer, 0);
   if months_ahead < 6 then
     raise warning 'fewer than six monthly pieces ahead: run private.add_months(12)';
   end if;
