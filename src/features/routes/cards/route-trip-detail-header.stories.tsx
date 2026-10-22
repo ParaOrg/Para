@@ -57,13 +57,13 @@ export const Mrt3Southbound: Story = {
 /**
  * A train on a jeep-coloured card, opened from a hotspot's card: its words keep the line's colour.
  */
-export const TrainOnAJeepCard: Story = { args: { livery: 'red' } };
+export const TrainOnAJeepCard: Story = { args: { livery: 'orange' } };
 
 /** An end the line's table does not know: no bound, the line's code alone, rounded both ends. */
 export const NoBound: Story = { args: { way: null } };
 
 /** A jeep's trip (Variant2, 4181:10845): the Jeepney and the way showing, in its card's colour. */
-export const Jeepney: Story = { args: { vehicle: 'Jeepney', way: 'Papunta', livery: 'red' } };
+export const Jeepney: Story = { args: { vehicle: 'Jeepney', way: 'Papunta', livery: 'orange' } };
 
 export const JeepneyPabalik: Story = {
   args: { vehicle: 'Jeepney', way: 'Pabalik', livery: 'violet' },
@@ -116,8 +116,8 @@ export const LoopOnViolet: Story = {
   args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'violet', name: 'UP – Ikot' },
 };
 
-export const LoopOnRed: Story = {
-  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'red', name: 'UP – Toki' },
+export const LoopOnOrange: Story = {
+  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'orange', name: 'UP – Toki' },
 };
 
 /** On MRT-3's yellow the words are dark, as the card's are. */

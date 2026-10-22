@@ -1,12 +1,7 @@
 import type { ComponentPropsWithoutRef } from 'react';
 
-import {
-  BLOB_PLACE,
-  CARD_BLOB,
-  CARD_SHADOW,
-  CARD_SHADOW_SELECTED,
-  CARD_SURFACE,
-} from '@/features/routes/cards/livery-card';
+import { BLOB_PLACE, CARD_SURFACE } from '@/features/routes/cards/livery-card';
+import blobPrimary from '@/features/routes/cards/route-card-blob-primary.svg';
 import { cn } from '@/shared/utils/cn';
 
 import { PauseIcon, PlayIcon } from './tracking-icons';
@@ -36,6 +31,13 @@ interface Look {
 // directly and there is no card-green token.
 const GREEN = 'bg-green-700 border-green-800';
 
+// Red means End or stop, so it is no route livery either: the bars take the red tokens directly.
+const RED = 'bg-card-red-surface border-card-red-border-primary';
+
+// Route/RouteCardPrimary, and its Selected press, under every bar whatever its colour.
+const SHADOW = 'shadow-route-card-primary';
+const SHADOW_SELECTED = 'shadow-route-card-primary-selected';
+
 const LOOK = {
   start: {
     text: 'Start',
@@ -56,7 +58,7 @@ const LOOK = {
   stop: {
     text: 'Stop',
     name: 'Stop',
-    surface: CARD_SURFACE.red,
+    surface: RED,
     icon: 'pause',
     size: 'bar',
     width: 'w-full',
@@ -72,7 +74,7 @@ const LOOK = {
   cancel: {
     text: 'Cancel',
     name: 'Cancel',
-    surface: CARD_SURFACE.red,
+    surface: RED,
     icon: null,
     size: 'row',
     width: 'shrink-0',
@@ -123,8 +125,8 @@ export function TrackingButton({
 }: TrackingButtonProps) {
   const look = LOOK[variant];
   const shadow = isActive
-    ? CARD_SHADOW_SELECTED.red
-    : cn(CARD_SHADOW.red, 'group-active:shadow-route-card-primary-selected');
+    ? SHADOW_SELECTED
+    : cn(SHADOW, 'group-active:shadow-route-card-primary-selected');
   return (
     <button
       {...rest}
@@ -138,7 +140,7 @@ export function TrackingButton({
         SIZE[look.size],
       )}
     >
-      <img src={CARD_BLOB.red.src} alt="" aria-hidden className={BLOB_PLACE} />
+      <img src={blobPrimary} alt="" aria-hidden className={BLOB_PLACE} />
       {look.icon && (
         <span aria-hidden className="size-6 shrink-0 *:size-full">
           {look.icon === 'play' ? <PlayIcon /> : <PauseIcon />}

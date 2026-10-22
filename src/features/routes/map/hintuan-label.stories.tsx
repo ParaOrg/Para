@@ -155,7 +155,7 @@ export const LongName: Story = {
 };
 
 /** A trip in each card colour. */
-export const Red: Story = { args: { variant: 'hintuan-end', livery: 'red' } };
+export const OrangeEnd: Story = { args: { variant: 'hintuan-end', livery: 'orange' } };
 export const Orange: Story = { args: { variant: 'hintuan', livery: 'orange' } };
 export const Violet: Story = { args: { variant: 'hintuan-end', livery: 'violet' } };
 export const Fuchsia: Story = { args: { variant: 'hintuan', livery: 'fuchsia' } };
@@ -179,7 +179,7 @@ export const MetroRailWayThreeStart: Story = {
 export const MetroRailWayThreeCodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
 };
-export const RedStart: Story = { args: { variant: 'hintuan-start', livery: 'red' } };
+export const OrangeStart: Story = { args: { variant: 'hintuan-start', livery: 'orange' } };
 
 /** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it. */
 export const MetroRailWayThreeHintuan: Story = {

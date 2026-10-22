@@ -3,14 +3,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteEndPointLines } from './route-end-point-lines';
 
-/** Figma's Lines (4235:12313): the tree line before a RouteCard's row, white, drawn here on red at a row's 40. */
+/** Figma's Lines (4235:12313): the tree line before a RouteCard's row, white, drawn here on orange at a row's 40. */
 const meta = {
   title: 'Features/Routes/RouteEndPointLines',
   component: RouteEndPointLines,
   args: { position: 'top' },
   decorators: [
     (Story) => (
-      <div className="flex h-10 w-12 bg-card-red-surface text-content-inverse">
+      <div className="flex h-10 w-12 bg-card-orange-surface text-content-inverse">
         <Story />
       </div>
     ),

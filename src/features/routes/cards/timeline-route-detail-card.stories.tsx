@@ -270,13 +270,10 @@ export const NoHintuan: Story = {
   },
 };
 
-/** In red, the Timeline set's own colour, with Content/inverse words. */
-export const Red: Story = { args: { livery: 'red' } };
-
-/** Orange, with Content/inverse words, like red. */
+/** Orange (Figma draws the Timeline set in red), with Content/inverse words. */
 export const Orange: Story = { args: { livery: 'orange' } };
 
-/** Fuchsia, with Content/inverse words, like red. */
+/** Fuchsia, with Content/inverse words, like orange. */
 export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
 
 /** Pink (4071:7014), with Content/inverse words, like fuchsia. */
@@ -354,19 +351,16 @@ export const FloatingOpened: Story = { parameters: { frame: 'wide' }, play: open
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /**
- * A hintuan picked, red — the Timeline set's Selected row on Figma's card (3769:2895, 3778:3183):
- * Amparo's dot a white ring round the rail's red, its name ExtraBold, and a white pill with the
- * pesos from Tala to there in the card's red. Opened, since the fold keeps it.
+ * A hintuan picked, orange — the Timeline set's Selected row, drawn on Figma's red card (3769:2895, 3778:3183):
+ * Amparo's dot a white ring round the rail's orange, its name ExtraBold, and a white pill with the
+ * pesos from Tala to there in the card's orange. Opened, since the fold keeps it.
  */
-export const PickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: pickedAsDrawn };
-
-/** Orange, as red: Figma draws no orange trip. */
 export const PickedOrange: Story = {
   args: { livery: 'orange', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** Fuchsia, as red: the pill white, its pesos in the card's fuchsia. */
+/** Fuchsia, as orange: the pill white, its pesos in the card's fuchsia. */
 export const PickedFuchsia: Story = {
   args: { livery: 'fuchsia', picked: 'h3' },
   play: pickedAsDrawn,
@@ -473,10 +467,10 @@ export const EndsShowTheWhole: Story = {
 };
 
 /** Where the trip leaves from, picked: its dot a white ring round the rail's colour, as a picked hintuan's; its name and the tiles as they were. */
-export const OriginPicked: Story = { args: { livery: 'red', endPicked: 'from' } };
+export const OriginPicked: Story = { args: { livery: 'orange', endPicked: 'from' } };
 
 /** Where the trip goes, picked, the same way. */
-export const DestinationPicked: Story = { args: { livery: 'red', endPicked: 'to' } };
+export const DestinationPicked: Story = { args: { livery: 'orange', endPicked: 'to' } };
 
 /**
  * A pick is in the ride, so it never folds away: View less folds only the rows after it, and opened

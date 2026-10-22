@@ -115,7 +115,6 @@ export const TailRouteSelectedBlue: Story = {
 };
 
 /** Tail Route in each other card colour. */
-export const TailRouteRed: Story = { args: { variant: 'tail', livery: 'red' } };
 export const TailRouteOrange: Story = { args: { variant: 'tail', livery: 'orange' } };
 export const TailRouteViolet: Story = { args: { variant: 'tail', livery: 'violet' } };
 export const TailRouteFuchsia: Story = { args: { variant: 'tail', livery: 'fuchsia' } };
@@ -222,8 +221,8 @@ export const HeadRouteCodeSignMetroRailWayThree: Story = {
   },
 };
 
-/** Head Route on each train line and a jeep's red. */
-export const HeadRouteRed: Story = { args: { variant: 'head', livery: 'red' } };
+/** Head Route on each train line and a jeep's orange. */
+export const HeadRouteOrange: Story = { args: { variant: 'head', livery: 'orange' } };
 export const HeadRouteCodeSignLightRailWayOne: Story = {
   args: { variant: 'head', codeSign: 'GL05', livery: 'light-rail-way-one' },
 };
