@@ -127,9 +127,9 @@ interface RideSpan {
  * The ride on `v` from the start row to the end row. A null start is where
  * the direction leaves, and a null end is where it goes. Each pick sits where
  * its row's dot does, at the middle of the stretch past its place's last box
- * (rideCut's `at`, rowStops), so the S and E on the map sit on the dots. An
- * end before the start is ridden back along the trip's own line, the S and
- * the E left where they were picked, rather than switched, which would
+ * (rideCut's `at`, rowStops), so the Start and End on the map sit on the dots. An
+ * end before the start is ridden back along the trip's own line, the Start and
+ * the End left where they were picked, rather than switched, which would
  * confuse a commuter (the owner's call).
  *
  * Null when nothing is picked, or when the line misses a picked row's box

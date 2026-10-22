@@ -230,7 +230,7 @@ export function PublicMapApp() {
           onPick={() => ride.pick(ride.pickedId)}
         />
       )}
-      {/* The ride's start, picked by Set as start: its own circle, Start's S beside it. */}
+      {/* The ride's start, picked by Set as start: its own circle, Start's pill beside it. */}
       {map && ride.startPinAt && tripLivery && (
         <HintuanPin
           key={`start:${ride.startId}`}

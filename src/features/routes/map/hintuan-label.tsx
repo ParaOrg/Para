@@ -8,7 +8,7 @@ import './hintuan-label.css';
 /**
  * Figma's Property 1: Hintuan, a hintuan along a trip; HintuanEnd, the picked
  * one, where the ride now ends (CodeSign, given a `codeSign`). HintuanStart,
- * a picked start, is HintuanEnd with Start's S on Head Route's green: Figma
+ * a picked start, is HintuanEnd with Start's pill on Head Route's green: Figma
  * draws no start.
  */
 type HintuanLabelVariant = 'hintuan' | 'hintuan-end' | 'hintuan-start';

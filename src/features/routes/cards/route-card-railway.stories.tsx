@@ -19,8 +19,7 @@ const meta = {
     bound: 'Southbound',
     state: 'rest',
     routeOrigin: 'Fernando Poe Jr.',
-    originCode: 'GL02',
-    endPoints: [{ id: 'a', routeDirection: 'Dr. Santos', stationCode: 'GL26' }],
+    endPoints: [{ id: 'a', routeDirection: 'Dr. Santos' }],
     onSelect: fn(),
     onPick: fn(),
     testId: 'chooser',
@@ -30,13 +29,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The origin's Start and the row's End, on a line's card. */
+const expectSigns = async (canvasElement: HTMLElement) => {
+  const card = within(canvasElement);
+  await expect(card.getByText('Start')).toBeVisible();
+  await expect(card.getByTestId('chooser-item')).toHaveTextContent(/, End$/);
+};
+
 /** LRT 1: Map/Rail/LightRailWayOne, the train in a white chip, then the line's pill; the bound read out, not shown. */
 export const LightRailWayOne: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.getByTestId('chooser-pill')).toHaveTextContent('LRT 1, Southbound');
-    await expect(card.getByTestId('chooser-item')).toHaveTextContent('Dr. Santos, GL26');
-    await expect(card.getByTestId('chooser-select').parentElement).toHaveTextContent('GL02');
+    await expect(card.getByTestId('chooser-item')).toHaveTextContent('Dr. Santos, End');
+    await expect(card.getByTestId('chooser-select').parentElement).toHaveTextContent('Start');
   },
 };
 
@@ -46,8 +52,10 @@ export const LightRailWayTwo: Story = {
     railway: 'LRT-2',
     bound: 'Westbound',
     routeOrigin: 'Antipolo',
-    originCode: 'PL13',
-    endPoints: [{ id: 'a', routeDirection: 'Recto', stationCode: 'PL01' }],
+    endPoints: [{ id: 'a', routeDirection: 'Recto' }],
+  },
+  play: async ({ canvasElement }) => {
+    await expectSigns(canvasElement);
   },
 };
 
@@ -57,24 +65,27 @@ export const MetroRailWayThree: Story = {
     railway: 'MRT-3',
     bound: 'Southbound',
     routeOrigin: 'North Avenue',
-    originCode: 'YL01',
-    endPoints: [{ id: 'a', routeDirection: 'Taft Avenue', stationCode: 'YL13' }],
+    endPoints: [{ id: 'a', routeDirection: 'Taft Avenue' }],
+  },
+  play: async ({ canvasElement }) => {
+    await expectSigns(canvasElement);
   },
 };
 
-/** Ferry: Map/Ferry, one pill with no bound, and no station codes. */
+/** Ferry: Map/Ferry, one pill with no bound, and no Start or End. */
 export const Ferry: Story = {
   args: {
     railway: 'Ferry',
     bound: null,
     routeOrigin: 'Escolta',
-    originCode: null,
-    endPoints: [{ id: 'a', routeDirection: 'Pinagbuhatan', stationCode: null }],
+    endPoints: [{ id: 'a', routeDirection: 'Pinagbuhatan' }],
   },
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.getByTestId('chooser-pill')).toHaveTextContent(/^Ferry$/);
     await expect(card.getByTestId('chooser-item')).toHaveTextContent(/^Pinagbuhatan$/);
+    await expect(card.queryByText('Start')).toBeNull();
+    await expect(card.queryByText('End')).toBeNull();
   },
 };
 
@@ -94,11 +105,10 @@ export const ManyStations: Story = {
     railway: 'LRT-2',
     bound: 'Eastbound',
     routeOrigin: 'Recto',
-    originCode: 'PL01',
     endPoints: [
-      { id: 'a', routeDirection: 'Araneta Center-Cubao', stationCode: 'PL09' },
-      { id: 'b', routeDirection: 'Santolan', stationCode: 'PL11' },
-      { id: 'c', routeDirection: 'Antipolo', stationCode: 'PL13' },
+      { id: 'a', routeDirection: 'Araneta Center-Cubao' },
+      { id: 'b', routeDirection: 'Santolan' },
+      { id: 'c', routeDirection: 'Antipolo' },
     ],
   },
 };
@@ -107,8 +117,7 @@ export const ManyStations: Story = {
 export const NoBound: Story = {
   args: {
     bound: null,
-    originCode: null,
-    endPoints: [{ id: 'a', routeDirection: 'Somewhere', stationCode: null }],
+    endPoints: [{ id: 'a', routeDirection: 'Somewhere' }],
   },
 };
 
@@ -120,7 +129,6 @@ export const LongContent: Story = {
       {
         id: 'a',
         routeDirection: 'Fernando Poe Jr. via Monumento and Balintawak',
-        stationCode: 'GL02',
       },
     ],
   },

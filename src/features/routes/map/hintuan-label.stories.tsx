@@ -60,7 +60,7 @@ export const Hintuan: Story = {
   },
 };
 
-/** HintuanEnd (4068:4878): the picked hintuan, its dot filled, End's E before its name. */
+/** HintuanEnd (4068:4878): the picked hintuan, its dot filled, a white End pill before its name on red. */
 export const HintuanEnd: Story = {
   args: { variant: 'hintuan-end' },
   play: async ({ canvasElement }) => {
@@ -70,7 +70,7 @@ export const HintuanEnd: Story = {
   },
 };
 
-/** CodeSign (4068:4792): a picked train station, the E in its own disc, the code in a white chip. */
+/** CodeSign (4068:4792): a picked train station, End and the code in white segments of one red pill, the name in another. */
 export const CodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL06' },
   play: async ({ canvasElement }) => {
@@ -80,8 +80,8 @@ export const CodeSign: Story = {
 };
 
 /**
- * HintuanStart: a ride's picked start, its dot filled, Start's S before its
- * name on Head Route's green. Figma draws no HintuanStart: HintuanEnd's shape
+ * HintuanStart: a ride's picked start, its dot filled, a white Start pill before
+ * its name on Head Route's green. Figma draws no HintuanStart: HintuanEnd's shape
  * in RouteLineEndingsLabels' start.
  */
 export const HintuanStart: Story = {
@@ -93,7 +93,7 @@ export const HintuanStart: Story = {
   },
 };
 
-/** A picked start station: the S in its own green disc, the code in a white chip. */
+/** A picked start station: Start and the code in white segments of one green pill, the name in another. */
 export const CodeSignStart: Story = {
   args: { variant: 'hintuan-start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
@@ -134,7 +134,7 @@ export const NameAsButton: Story = {
 
 /**
  * A name longer than its marker allows: the label hangs off a 24 px marker
- * at most 256 wide, cut short with an ellipsis, the disc and code whole.
+ * at most 256 wide, cut short with an ellipsis, the End sign and code whole.
  */
 export const LongName: Story = {
   args: {
