@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 
+import { TextField } from '@/design-system/primitives/text-field';
 import { DirectionTimeline, passesThrough } from '@/features/routes/cards/direction-timeline';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
 import {
@@ -18,7 +19,7 @@ import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places
 import { RouteFields } from './route-fields';
 import { loopSaveRefusal, saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
-import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
+import { FOOTER, OVERLAY, PANEL } from './sheet';
 import { useRouteSave } from './use-route-save';
 import { useSaveFacts } from './use-save-facts';
 import { returnTripNotices } from '../drawing/loop-closing';
@@ -342,21 +343,25 @@ export function SavePanel({
           </div>
         )}
 
-        <label className="mt-3 block text-xs font-medium text-neutral-700">
-          Via{' '}
-          <span className="text-neutral-400">
-            {isLoop
-              ? '(only if another ikot has this signboard)'
-              : '(only if another route shares both ends)'}
-          </span>
-          <input
+        <div className="mt-3">
+          <TextField
+            label={
+              <>
+                Via{' '}
+                <span className="text-content-disabled">
+                  {isLoop
+                    ? '(only if another ikot has this signboard)'
+                    : '(only if another route shares both ends)'}
+                </span>
+              </>
+            }
             disabled={routeLocked}
             value={via}
             onChange={(e) => setVia(e.target.value)}
+            onClear={() => setVia('')}
             placeholder="Zabarte"
-            className={FIELD}
           />
-        </label>
+        </div>
 
         {isLoop ? (
           <p className="mt-3 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-600">

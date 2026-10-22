@@ -14,7 +14,7 @@ import type { Vehicle } from '../model/vehicles';
 
 /**
  * A place and the routes that leave it, in a jeepney's livery — Figma's
- * RouteCard set (3665:2265): the place in SN Pro ExtraBold 24/32 and a row for each place
+ * RouteCard set (3665:2265): the place in SN Pro Bold 24/32 and a row for each place
  * it goes to (RouteEndPointBar), joined to it by a tree line, under the
  * mode they ride (Modes, 4236:17040); rows of another mode stack below
  * as their own group. The Figma property Variants is `livery` here, the name
@@ -82,7 +82,7 @@ export function RouteCard({
       data-livery={livery}
       data-state={state}
       className={
-        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
+        'relative isolate flex w-full flex-col items-start gap-2 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
         CARD_SURFACE[livery] +
         ' ' +
         CARD_TEXT[livery]
@@ -103,7 +103,7 @@ export function RouteCard({
           data-testid={`${testId}-select`}
           aria-pressed={selected}
           onClick={onSelect}
-          className="w-full text-left text-2xl/8 font-extrabold after:absolute after:inset-0 sheet-low:line-clamp-1"
+          className="w-full text-left text-2xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
         >
           {routeOrigin}
         </button>
@@ -119,7 +119,7 @@ export function RouteCard({
               tree line, the first row straight under it. */}
           {vehicle && (
             <div className="flex px-3.5">
-              <RouteMode vehicle={vehicle} />
+              <RouteMode vehicle={vehicle} livery={livery} />
             </div>
           )}
           <ul className="flex w-full flex-col">

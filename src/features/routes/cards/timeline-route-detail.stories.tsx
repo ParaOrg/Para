@@ -74,10 +74,7 @@ export const NoHintuan: Story = {
   args: { routeOrigin: 'Lagro', hintuans: [], routeDirection: 'SM Fairview' },
 };
 
-/** Red, the Timeline set's own colour. */
-export const Red: Story = { args: { livery: 'red' } };
-
-/** Orange. */
+/** Orange (Figma draws the Timeline set in red). */
 export const Orange: Story = { args: { livery: 'orange' } };
 
 /** Fuchsia. */
@@ -106,16 +103,13 @@ export const HintuanPickedFolded: Story = { args: { picked: 'h3' } };
 /** The last hintuan picked: the rail runs to it, nothing after it to fold, and only the destination is left without a rail. */
 export const LastHintuanPicked: Story = { args: { picked: 'h9' } };
 
-/** Picked, red: the pill in the card's own colours, swapped. */
-export const HintuanPickedRed: Story = { args: { livery: 'red', picked: 'h3' }, play: openFold };
-
-/** Picked, orange. */
+/** Picked, orange: the pill in the card's own colours, swapped. */
 export const HintuanPickedOrange: Story = {
   args: { livery: 'orange', picked: 'h3' },
   play: openFold,
 };
 
-/** Picked, fuchsia: the pill white, as red's. */
+/** Picked, fuchsia: the pill white, as orange's. */
 export const HintuanPickedFuchsia: Story = {
   args: { livery: 'fuchsia', picked: 'h3' },
   play: openFold,
@@ -371,7 +365,7 @@ export const RideStartAndEndJeep: Story = {
 
 /**
  * Figma's frames for a fold next to the ride carrying no rail, on LRT-2
- * from Antipolo to Recto, in the red the frames draw it in, YL60 for every
+ * from Antipolo to Recto, in orange, YL60 for every
  * pick as they write it.
  */
 const lrt2 = hintuans(
@@ -388,7 +382,7 @@ const lrt2 = hintuans(
 );
 const [katipunan, jRuiz, vMapa] = ['h2', 'h6', 'h7'];
 const onLrt2 = {
-  livery: 'red',
+  livery: 'orange',
   routeOrigin: 'Antipolo',
   hintuans: lrt2,
   routeDirection: 'Recto',

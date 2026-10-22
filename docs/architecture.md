@@ -58,6 +58,7 @@ flowchart TD
   app_contribute --> design_system_foundation
   app_contribute --> features_contribute
   app_contribute --> styles
+  app_public_map --> design_system_primitives
   app_public_map --> features_locator
   app_public_map --> features_published_map
   app_public_map --> features_routes_cards
@@ -65,6 +66,7 @@ flowchart TD
   app_public_map --> features_routes_model
   app_public_map --> features_routes_published
   app_public_map --> shared_hooks
+  app_public_map --> shared_ui
   app_public_map --> styles
   app_studio --> features_locator
   app_studio --> features_routes_cards
@@ -112,9 +114,9 @@ flowchart TD
   features_studio --> features_studio_maps
   features_studio --> features_studio_panels
   features_studio --> features_studio_review
+  features_studio_auth --> design_system_primitives
   features_studio_auth --> features_routes_map
   features_studio_auth --> features_studio_data
-  features_studio_auth --> features_studio_panels
   features_studio_auth --> shared_ui
   features_studio_contributors --> design_system_foundation
   features_studio_contributors --> design_system_primitives
@@ -158,7 +160,7 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `styles` |
-| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `styles` |
+| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `styles` |
 | `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
@@ -171,7 +173,7 @@ flowchart TD
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
 | `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/review` |
-| `features/studio/auth` | `features/routes/map`, `features/studio/data`, `features/studio/panels`, `shared/ui` |
+| `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/ui` |
 | `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `shared/lib`, `shared/utils` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
@@ -191,7 +193,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `connectContributions`
+`ContributePage`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`
 
 ### `features/locator`
 

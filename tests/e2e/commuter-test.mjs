@@ -1361,9 +1361,12 @@ if (PART === 1) {
           const probe = document.createElement('span');
           // A train's is its line's, Map/Rail/<line>/surface-pale (2026-10-13).
           const livery = trip?.dataset.livery ?? '';
+          // The ferry's is Map/Ferry/surface-pale.
           probe.style.backgroundColor = /rail-way/.test(livery)
             ? `var(--map-rail-${livery}-surface-pale)`
-            : `var(--card-${livery}-surface-pale)`;
+            : livery === 'ferry'
+              ? 'var(--map-ferry-surface-pale)'
+              : `var(--card-${livery}-surface-pale)`;
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
           probe.remove();

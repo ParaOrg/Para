@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 
+import { TextField } from '@/design-system/primitives/text-field';
 import { coarse } from '@/features/routes/map/map-view';
 import { parseAliases, type HotspotRow } from '@/features/routes/model/hotspots';
 import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
 import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
 import { PassesThrough } from './passes-through';
-import { FIELD_TEXT, FOOTER, OVERLAY, PANEL } from './sheet';
+import { FOOTER, OVERLAY, PANEL } from './sheet';
 import { TerminalChecklist } from './terminal-checklist';
 import { useHotspotSave } from './use-hotspot-save';
 import { useNearLines } from './use-near-lines';
@@ -30,10 +31,6 @@ interface HotspotPanelProps {
   /** A save stored as a draft (STUDIO_DRAFTS). */
   onDrafted?: () => void;
 }
-
-const field =
-  `mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 ${FIELD_TEXT} outline-none ` +
-  'focus:border-neutral-900';
 
 /**
  * The save form for a hotspot outline. Name is the only required field.
@@ -145,39 +142,50 @@ export function HotspotPanel({
         </h2>
         <p className="mt-1 text-xs text-neutral-500">{ring.length} corners</p>
 
-        <label className="mt-4 block text-xs font-medium text-neutral-700">
-          Ground name <span className="text-neutral-400">(as written on the ground)</span>
-          <input
+        <div className="mt-4">
+          <TextField
+            label={
+              <>
+                Ground name{' '}
+                <span className="text-content-disabled">(as written on the ground)</span>
+              </>
+            }
             required
             // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
             autoFocus={!coarse}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onClear={() => setName('')}
             placeholder={kind === 'terminal' ? 'SM Fairview Terminal A' : 'SM Fairview Ilalim'}
-            className={field}
           />
-        </label>
+        </div>
 
-        <label className="mt-3 block text-xs font-medium text-neutral-700">
-          Stop name <span className="text-neutral-400">(what people say — optional)</span>
-          <input
+        <div className="mt-3">
+          <TextField
+            label={
+              <>
+                Stop name{' '}
+                <span className="text-content-disabled">(what people say — optional)</span>
+              </>
+            }
             value={informal}
             onChange={(e) => setInformal(e.target.value)}
+            onClear={() => setInformal('')}
             list="parapo-informal-names"
+            aria-describedby="parapo-stop-name-hint"
             placeholder="SM Fairview"
-            className={field}
           />
           <datalist id="parapo-informal-names">
             {knownInformal.map((n) => (
               <option key={n} value={n} />
             ))}
           </datalist>
-          <span className="mt-1 block text-[11px] font-normal text-neutral-400">
+          <p id="parapo-stop-name-hint" className="mt-1 text-[11px] text-content-disabled">
             Boxes that share a hotspot name are one hotspot, whatever is written on each. Route
             names read it
             {kind === 'terminal' ? '; a hotspot has one terminal.' : '.'}
-          </span>
-        </label>
+          </p>
+        </div>
 
         {kind === 'terminal' ? (
           <TerminalChecklist groups={groups} ticked={ticked} onToggle={toggle} />

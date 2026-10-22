@@ -143,6 +143,9 @@ export function TripCard({
       : directionEnds(direction);
   const line = railLineOf(direction);
   const vehicle = vehicleOf(direction);
+  // A UV Express trip has no header: Figma draws its Modes label, but no
+  // RouteTripDetailHeader variant for it yet.
+  const headerVehicle = vehicle === 'UV Express' ? null : vehicle;
   const sibling = otherDirection(directions, direction);
   // A loop has no way back, so no SWITCH at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
@@ -180,9 +183,9 @@ export function TripCard({
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
       header={
-        vehicle && (
+        headerVehicle && (
           <RouteTripDetailHeader
-            vehicle={vehicle}
+            vehicle={headerVehicle}
             // A train's bound alone: with none, its line alone, never Papunta.
             way={line ? railBound(direction) : wayWord(direction.reversed, [direction])}
             livery={livery}

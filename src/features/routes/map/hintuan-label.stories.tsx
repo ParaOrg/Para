@@ -36,6 +36,16 @@ const dotOf = (root: HTMLElement): HTMLElement => {
   return dot;
 };
 
+/** The colour a token class paints, read off a probe wearing it. */
+const wornBy = (className: string) => {
+  const probe = document.createElement('i');
+  probe.className = className;
+  document.body.append(probe);
+  const colour = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return colour;
+};
+
 /** The label's pop (hintuan-label.css) run out: sizes are read through its scale. */
 const settled = (root: HTMLElement) =>
   Promise.all(root.getAnimations({ subtree: true }).map((animation) => animation.finished));
@@ -60,17 +70,20 @@ export const Hintuan: Story = {
   },
 };
 
-/** HintuanEnd (4068:4878): the picked hintuan, its dot filled, End's E before its name. */
+/** HintuanEnd (4068:4878): the picked hintuan, its dot filled in End's red, a white End pill before its name on red. */
 export const HintuanEnd: Story = {
   args: { variant: 'hintuan-end' },
   play: async ({ canvasElement }) => {
     await expectBesideTheDot(canvasElement);
     await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'end'))).toBe(true);
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+    await expect(getComputedStyle(dotOf(canvasElement)).backgroundColor).toBe(
+      wornBy('bg-card-red-surface'),
+    );
   },
 };
 
-/** CodeSign (4068:4792): a picked train station, the E in its own disc, the code in a white chip. */
+/** CodeSign (4068:4792): a picked train station, End and the code in white segments of one red pill, the name in another. */
 export const CodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL06' },
   play: async ({ canvasElement }) => {
@@ -80,8 +93,8 @@ export const CodeSign: Story = {
 };
 
 /**
- * HintuanStart: a ride's picked start, its dot filled, Start's S before its
- * name on Head Route's green. Figma draws no HintuanStart: HintuanEnd's shape
+ * HintuanStart: a ride's picked start, its dot filled, a white Start pill before
+ * its name on Head Route's green. Figma draws no HintuanStart: HintuanEnd's shape
  * in RouteLineEndingsLabels' start.
  */
 export const HintuanStart: Story = {
@@ -93,7 +106,7 @@ export const HintuanStart: Story = {
   },
 };
 
-/** A picked start station: the S in its own green disc, the code in a white chip. */
+/** A picked start station: Start and the code in white segments of one green pill, the name in another. */
 export const CodeSignStart: Story = {
   args: { variant: 'hintuan-start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
@@ -134,7 +147,7 @@ export const NameAsButton: Story = {
 
 /**
  * A name longer than its marker allows: the label hangs off a 24 px marker
- * at most 256 wide, cut short with an ellipsis, the disc and code whole.
+ * at most 256 wide, cut short with an ellipsis, the End sign and code whole.
  */
 export const LongName: Story = {
   args: {
@@ -155,7 +168,7 @@ export const LongName: Story = {
 };
 
 /** A trip in each card colour. */
-export const Red: Story = { args: { variant: 'hintuan-end', livery: 'red' } };
+export const OrangeEnd: Story = { args: { variant: 'hintuan-end', livery: 'orange' } };
 export const Orange: Story = { args: { variant: 'hintuan', livery: 'orange' } };
 export const Violet: Story = { args: { variant: 'hintuan-end', livery: 'violet' } };
 export const Fuchsia: Story = { args: { variant: 'hintuan', livery: 'fuchsia' } };
@@ -179,7 +192,7 @@ export const MetroRailWayThreeStart: Story = {
 export const MetroRailWayThreeCodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
 };
-export const RedStart: Story = { args: { variant: 'hintuan-start', livery: 'red' } };
+export const OrangeStart: Story = { args: { variant: 'hintuan-start', livery: 'orange' } };
 
 /** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it. */
 export const MetroRailWayThreeHintuan: Story = {

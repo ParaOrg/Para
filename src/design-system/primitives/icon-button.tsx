@@ -18,10 +18,10 @@ import { Tooltip } from './tooltip';
  * off the button, and leaves over duration/quick with ease/exit.
  */
 
-type Size = 'large' | 'base' | 'small';
+export type Size = 'large' | 'base' | 'small';
 
 /** Tooltip's Position: the side its arrow is on, so Bottom sits above the button. */
-type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
+export type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
 
 // No `title` either: the Tooltip replaces the browser's, and both
 // at once would show two bubbles, perhaps saying different things.
@@ -54,7 +54,7 @@ type Props = Omit<
 
 type Variant = NonNullable<Props['variant']>;
 
-const VARIANT = {
+export const VARIANT = {
   special:
     'bg-surface-tertiary text-content-primary shadow-special-button-rest ' +
     'enabled:hover:shadow-special-button-hover ' +
@@ -69,13 +69,13 @@ const VARIANT = {
 // Small 32px (6px around 20px).
 // The size is pinned as well as padded, so a parent that stretches its children
 // cannot make the pill oval; the size-fit wrapper below does the same.
-const SIZE = {
+export const SIZE = {
   large: 'size-12 p-2.5',
   base: 'size-10 p-2',
   small: 'size-8 p-1.5',
 } satisfies Record<Size, string>;
 
-const ICON = {
+export const ICON = {
   large: 'size-7',
   base: 'size-6',
   small: 'size-5',
@@ -84,7 +84,7 @@ const ICON = {
 // The bubble beside the button, its arrow's tip 4px off it (the arrow
 // sticks out 7px, so 11px from the pill), and where it rises from: 4px
 // nearer the button, settling away from it.
-const TOOLTIP = {
+export const TOOLTIP = {
   bottom: 'bottom-full mb-2.75 left-1/2 -translate-x-1/2 translate-y-1',
   top: 'top-full mt-2.75 left-1/2 -translate-x-1/2 -translate-y-1',
   left: 'left-full ml-2.75 top-1/2 -translate-y-1/2 -translate-x-1',
@@ -92,7 +92,7 @@ const TOOLTIP = {
 } satisfies Record<TooltipPosition, string>;
 
 // Shown: settled, over the enter timing. Written out whole for Tailwind.
-const SHOWN = {
+export const SHOWN = {
   bottom: 'group-hover/icon:translate-y-0',
   top: 'group-hover/icon:translate-y-0',
   left: 'group-hover/icon:translate-x-0',

@@ -173,7 +173,7 @@ const expectCircleOn = async (root: HTMLElement, end: HTMLElement, at: LngLat) =
   await expect(circle.top + circle.height / 2 - map.top).toBeCloseTo(point.y, 0);
 };
 
-/** Both ends of a lit ride, marked: Start's S on the head in green, End's E on the tail in the line's colour. */
+/** Both ends of a lit ride, marked: Start's pill on the head in green, End's on the tail in red. */
 export const BothEnds: Story = {
   play: async ({ canvasElement }) => {
     const ends = await endsOf(canvasElement, 2);
@@ -190,7 +190,7 @@ export const BothEnds: Story = {
       wornBy('bg-map-hotspots-card-hintuan-surface'),
     );
     await expect(getComputedStyle(partOf(tail, 'name')).backgroundColor).toBe(
-      wornBy(CARD_SURFACE.rose),
+      wornBy('bg-card-red-surface'),
     );
     await expect(getComputedStyle(partOf(head, 'name')).opacity).toBe('1');
     await expect(head).not.toHaveAttribute('data-paled');
@@ -208,7 +208,7 @@ export const BothEnds: Story = {
 
 /**
  * A ride picked backwards, its end tapped above its start on the trip
- * (`isBackwards`): the head, where the trip leaves, is the ride's E and
+ * (`isBackwards`): the head, where the trip leaves, is the ride's End and
  * stays marked; the tail lies on the pale past the ride and loses its mark.
  */
 export const RidePickedBackwards: Story = {
@@ -257,7 +257,7 @@ export const PillsAsButtons: Story = {
   },
 };
 
-/** The list's lines carry no card's colour: the circles and the tail's pill wear the selected blue. */
+/** The list's lines carry no card's colour: the circles wear the selected blue, and the tail's pill is still End's red. */
 export const SelectedBlue: Story = {
   args: { livery: null },
   play: async ({ canvasElement }) => {
@@ -265,7 +265,7 @@ export const SelectedBlue: Story = {
     const blue = wornBy('bg-map-route-line-surface-selected');
     await expect(
       getComputedStyle(partOf(endOf(ends, 'Novaliches', 'tail'), 'name')).backgroundColor,
-    ).toBe(blue);
+    ).toBe(wornBy('bg-card-red-surface'));
     await expect(circleColour(endOf(ends, 'Tala', 'head'))).toBe(blue);
     await expect(circleColour(endOf(ends, 'Novaliches', 'tail'))).toBe(blue);
   },
@@ -304,8 +304,8 @@ export const EndsOnThePale: Story = {
 
 /**
  * A start picked alone, no ride yet (`isUnmarked`): the whole line is on the
- * pale, and both of the trip's ends lose their S and E, the start's pin the
- * one S.
+ * pale, and both of the trip's ends lose their Start and End, the start's pin the
+ * one Start.
  */
 export const StartAlone: Story = {
   args: { rides: [rideOf({ isUnmarked: true, pale: [talaToNovaliches] })] },
@@ -322,7 +322,7 @@ export const StartAlone: Story = {
   },
 };
 
-/** A train ride: both ends are stations, named with their sign codes, each end's disc beside its pill. */
+/** A train ride: both ends are stations, named with their sign codes in a second white segment after Start and End. */
 export const TrainRide: Story = {
   args: {
     livery: 'light-rail-way-one',
@@ -344,13 +344,9 @@ export const TrainRide: Story = {
     await expect(partOf(tail, 'code').textContent).toBe('GL04');
     await expect(iconOf(head)).toBe('start');
     await expect(iconOf(tail)).toBe('end');
-    // With a code the S and the E leave the pill for a disc of their own, to its left.
-    await expect(partOf(head, 'start').getBoundingClientRect().right).toBeLessThanOrEqual(
-      partOf(head, 'name').getBoundingClientRect().left,
-    );
-    await expect(partOf(tail, 'end').getBoundingClientRect().right).toBeLessThanOrEqual(
-      partOf(tail, 'name').getBoundingClientRect().left,
-    );
+    // With a code the word and the code are two white segments in the pill, before the name.
+    await expect(partOf(head, 'name').contains(partOf(head, 'start'))).toBe(true);
+    await expect(partOf(tail, 'name').contains(partOf(tail, 'end'))).toBe(true);
     await expect(circleColour(tail)).toBe(wornBy(CARD_SURFACE['light-rail-way-one']));
   },
 };

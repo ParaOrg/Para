@@ -157,8 +157,15 @@ const storedUpload = (page, id) =>
 
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
 const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
-const waitForStatus = (page, name, pattern) =>
-  page.waitForFunction(
+/** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
+const openHistory = async (page) => {
+  const history = page.getByRole('button', { name: 'History' });
+  await history.waitFor({ timeout: 10000 });
+  if ((await history.getAttribute('aria-expanded')) !== 'true') await history.click();
+};
+const waitForStatus = async (page, name, pattern) => {
+  await openHistory(page);
+  return page.waitForFunction(
     ([n, p]) =>
       [...document.querySelectorAll('li')].some(
         (li) => li.textContent.includes(n) && new RegExp(p).test(li.textContent),
@@ -166,6 +173,7 @@ const waitForStatus = (page, name, pattern) =>
     [name, pattern.source],
     { timeout: 15000 },
   );
+};
 
 // ------------------------------------------------- record, save, uploaded
 {

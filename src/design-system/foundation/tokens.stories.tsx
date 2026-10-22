@@ -140,6 +140,16 @@ function TokensPage() {
           token="…/surface-transparent"
           cls="bg-surface-transparent"
         />
+        <Swatch
+          box="bg-surface-transparent-inverse"
+          token="…/surface-transparent-inverse"
+          cls="bg-surface-transparent-inverse"
+        />
+        <Swatch
+          box="bg-surface-transparent-secondary"
+          token="…/surface-transparent-secondary"
+          cls="bg-surface-transparent-secondary"
+        />
       </Group>
 
       <Group title="Card — the jeepney liveries">
@@ -528,6 +538,12 @@ function TokensPage() {
           <p className="mt-1 font-mono text-[11px] text-content-quaternary">
             font-sn-pro · font-medium · font-semibold · font-bold · font-extrabold · font-black
           </p>
+          <p className="mt-3 font-sn-pro text-base/6 font-semibold text-content-primary">
+            text-base/6 — font/size/base, 17 on 24: a route card&rsquo;s rows
+          </p>
+          <p className="font-sn-pro text-3xl font-bold text-content-primary">
+            text-3xl — font/size/3xl, 28
+          </p>
         </div>
       </Group>
 
@@ -617,37 +633,65 @@ function TokensPage() {
           <Ramp
             name="light-rail-way-one"
             boxes={[
+              { step: '50', cls: 'bg-light-rail-way-one-50' },
+              { step: '100', cls: 'bg-light-rail-way-one-100' },
               { step: '200', cls: 'bg-light-rail-way-one-200' },
+              { step: '300', cls: 'bg-light-rail-way-one-300' },
+              { step: '400', cls: 'bg-light-rail-way-one-400' },
+              { step: '500', cls: 'bg-light-rail-way-one-500' },
               { step: '600', cls: 'bg-light-rail-way-one-600' },
               { step: '700', cls: 'bg-light-rail-way-one-700' },
               { step: '800', cls: 'bg-light-rail-way-one-800' },
+              { step: '900', cls: 'bg-light-rail-way-one-900' },
+              { step: '950', cls: 'bg-light-rail-way-one-950' },
             ]}
           />
           <Ramp
             name="light-rail-way-two"
             boxes={[
+              { step: '50', cls: 'bg-light-rail-way-two-50' },
+              { step: '100', cls: 'bg-light-rail-way-two-100' },
               { step: '200', cls: 'bg-light-rail-way-two-200' },
+              { step: '300', cls: 'bg-light-rail-way-two-300' },
+              { step: '400', cls: 'bg-light-rail-way-two-400' },
+              { step: '500', cls: 'bg-light-rail-way-two-500' },
               { step: '600', cls: 'bg-light-rail-way-two-600' },
               { step: '700', cls: 'bg-light-rail-way-two-700' },
               { step: '800', cls: 'bg-light-rail-way-two-800' },
+              { step: '900', cls: 'bg-light-rail-way-two-900' },
+              { step: '950', cls: 'bg-light-rail-way-two-950' },
             ]}
           />
           <Ramp
             name="metro-rail-way-three"
             boxes={[
+              { step: '50', cls: 'bg-metro-rail-way-three-50' },
+              { step: '100', cls: 'bg-metro-rail-way-three-100' },
               { step: '200', cls: 'bg-metro-rail-way-three-200' },
+              { step: '300', cls: 'bg-metro-rail-way-three-300' },
+              { step: '400', cls: 'bg-metro-rail-way-three-400' },
+              { step: '500', cls: 'bg-metro-rail-way-three-500' },
               { step: '600', cls: 'bg-metro-rail-way-three-600' },
               { step: '700', cls: 'bg-metro-rail-way-three-700' },
               { step: '800', cls: 'bg-metro-rail-way-three-800' },
+              { step: '900', cls: 'bg-metro-rail-way-three-900' },
+              { step: '950', cls: 'bg-metro-rail-way-three-950' },
             ]}
           />
           <Ramp
             name="ferry"
             boxes={[
+              { step: '50', cls: 'bg-ferry-50' },
+              { step: '100', cls: 'bg-ferry-100' },
               { step: '200', cls: 'bg-ferry-200' },
+              { step: '300', cls: 'bg-ferry-300' },
+              { step: '400', cls: 'bg-ferry-400' },
+              { step: '500', cls: 'bg-ferry-500' },
               { step: '600', cls: 'bg-ferry-600' },
               { step: '700', cls: 'bg-ferry-700' },
               { step: '800', cls: 'bg-ferry-800' },
+              { step: '900', cls: 'bg-ferry-900' },
+              { step: '950', cls: 'bg-ferry-950' },
             ]}
           />
           <Ramp

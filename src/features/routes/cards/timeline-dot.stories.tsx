@@ -4,17 +4,17 @@ import { TIMELINE_SURFACE } from './livery-card';
 import { TimelineDot } from './timeline-dot';
 
 /**
- * Figma's TimelineDot, in red, the Timeline set's own colour (3716:1894):
+ * Figma's TimelineDot, in orange (3716:1894; Figma draws the set in red):
  * at rest, Selected, and untucked as the map's hintuans and ride ends wear
- * it (HintuanLabel, EndTitles), on the red card.
+ * it (HintuanLabel, EndTitles), on the orange card.
  */
 const meta = {
   title: 'Features/Routes/TimelineDot',
   component: TimelineDot,
-  args: { rail: TIMELINE_SURFACE.red },
+  args: { rail: TIMELINE_SURFACE.orange },
   decorators: [
     (Story) => (
-      <div className="flex w-12 justify-center bg-card-red-surface py-3">
+      <div className="flex w-12 justify-center bg-card-orange-surface py-3">
         <Story />
       </div>
     ),

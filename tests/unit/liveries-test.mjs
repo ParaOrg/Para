@@ -61,25 +61,25 @@ test('two cards side by side are never alike, even when every draw is the same',
 
 test('two routes that met apart in the same colour, now side by side: the second draws again, and keeps it', () => {
   const visit = new Map([
-    ['Tala', 'red'],
-    ['Lagro', 'red'],
+    ['Tala', 'pink'],
+    ['Lagro', 'pink'],
   ]);
   const shown = liveriesFor([['Tala'], ['Lagro']], draws(0), visit);
-  assert.equal(shown[0], 'red');
-  assert.notEqual(shown[1], 'red');
+  assert.equal(shown[0], 'pink');
+  assert.notEqual(shown[1], 'pink');
   // …and keeps what it drew (the owner's ask, 2026-10-12: nothing changes
-  // colour at random): apart again, the same; it went back to red until then.
+  // colour at random): apart again, the same; it went back to pink until then.
   assert.equal(liveriesFor([['Lagro']], draws(0.99), visit)[0], shown[1]);
 });
 
 test('a new route avoids the colour of a kept neighbour on either side', () => {
   const visit = new Map([
-    ['Tala', 'red'],
+    ['Tala', 'pink'],
     ['Lagro', 'orange'],
   ]);
   for (const x of [0, 0.3, 0.6, 0.99]) {
     const [, middle] = liveriesFor([['Tala'], ['Fatima'], ['Lagro']], draws(x), new Map(visit));
-    assert.ok(middle !== 'red' && middle !== 'orange', `draw ${x} gave ${middle}`);
+    assert.ok(middle !== 'pink' && middle !== 'orange', `draw ${x} gave ${middle}`);
   }
 });
 
@@ -116,11 +116,11 @@ test('no colour twice in a list until every colour has come once', () => {
 
 test('two routes kept in one colour, in one list: the second draws again, and keeps it', () => {
   const visit = new Map([
-    ['Tala', 'red'],
-    ['Lagro', 'red'],
+    ['Tala', 'pink'],
+    ['Lagro', 'pink'],
   ]);
   const shown = liveriesFor([['Tala'], ['Fatima'], ['Lagro']], draws(0), visit);
-  assert.equal(shown[0], 'red');
+  assert.equal(shown[0], 'pink');
   assert.equal(new Set(shown).size, 3);
   assert.equal(liveriesFor([['Lagro']], draws(0.99), visit)[0], shown[2]);
 });
@@ -140,17 +140,17 @@ test('a new route leaves the colours kept further down the list', () => {
 test('a redraw clears every listed route, so the way round and back settles', () => {
   const visit = new Map([
     ['P', 'violet'],
-    ['X', 'red'],
+    ['X', 'pink'],
     ['Q', 'rose'],
     ['Y', 'orange'],
-    ['R', 'red'],
+    ['R', 'pink'],
   ]);
   const papunta = [['P', 'X'], ['Q'], ['Y'], ['R']];
   const pabalik = [['P'], ['X'], ['Q', 'Y'], ['R']];
-  assert.deepEqual(liveriesFor(papunta, draws(0), visit), ['violet', 'rose', 'orange', 'red']);
+  assert.deepEqual(liveriesFor(papunta, draws(0), visit), ['violet', 'rose', 'orange', 'pink']);
   // R clashes with X's red on the way back: it draws again, clear of Y's orange too.
   const turned = liveriesFor(pabalik, draws(0), visit);
-  assert.deepEqual(turned, ['violet', 'red', 'rose', 'fuchsia']);
+  assert.deepEqual(turned, ['violet', 'pink', 'rose', 'fuchsia']);
   assert.deepEqual(liveriesFor(papunta, draws(0.99), visit), [
     'violet',
     'rose',
@@ -198,4 +198,9 @@ test('a train card changes nothing the jeepneys draw, and keeps no draw for the 
     ]);
     assert.ok(!visit.has('lrt1') && !visit.has('mrt3'), `draw ${x}`);
   }
+});
+
+// Green, blue and red carry meanings (Start, selected, End), so no route wears them.
+test('no route is drawn in red', () => {
+  assert.deepEqual([...JEEPNEY_LIVERIES], ['orange', 'violet', 'rose', 'fuchsia', 'pink']);
 });

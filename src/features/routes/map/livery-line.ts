@@ -29,11 +29,6 @@ export interface LineLook {
  * Map/Ferry/surface and surface-pale.
  */
 export const LIVERY_LINE = {
-  red: {
-    line: CARD_COLOURS['Card/red/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
-    pale: CARD_PALE_COLOURS['Card/red/surface-pale'],
-  },
   orange: {
     line: CARD_COLOURS['Card/orange/surface'],
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
@@ -102,7 +97,6 @@ type LineColour = Livery | 'selected';
 
 /** A label's fill in the line's colour (the owner's call). */
 export const LINE_SURFACE = {
-  red: 'bg-card-red-surface',
   orange: 'bg-card-orange-surface',
   violet: 'bg-card-violet-surface',
   rose: 'bg-card-rose-surface',
@@ -115,30 +109,8 @@ export const LINE_SURFACE = {
   selected: 'bg-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
-/**
- * Words in the line's colour, on white: a station's sign code
- * (RouteLineLabel's CodeSignEnd, RouteLineEndingsLabel's CodeSign). A train's
- * are its line's Timeline/surface, as the white pill on its trip card has
- * them (the owner's train frames) — but MRT-3's are Content/primary, black:
- * its yellow does not read on white (the owner's call).
- */
-export const LINE_TEXT = {
-  red: 'text-card-red-surface',
-  orange: 'text-card-orange-surface',
-  violet: 'text-card-violet-surface',
-  rose: 'text-card-rose-surface',
-  fuchsia: 'text-card-fuchsia-surface',
-  pink: 'text-card-pink-surface',
-  'light-rail-way-one': 'text-map-rail-light-rail-way-one-timeline-surface',
-  'light-rail-way-two': 'text-map-rail-light-rail-way-two-timeline-surface',
-  'metro-rail-way-three': 'text-content-primary',
-  ferry: 'text-map-ferry-timeline-surface',
-  selected: 'text-map-route-line-surface-selected',
-} satisfies Record<LineColour, string>;
-
 /** The pointer under an end's label, in the line's colour (RouteLineEndingsLabel). */
 export const LINE_FILL = {
-  red: 'fill-card-red-surface',
   orange: 'fill-card-orange-surface',
   violet: 'fill-card-violet-surface',
   rose: 'fill-card-rose-surface',
@@ -157,7 +129,6 @@ export const LINE_FILL = {
  * as its chevrons and its card's words are.
  */
 export const LINE_WORDS = {
-  red: 'text-content-inverse',
   orange: 'text-content-inverse',
   violet: 'text-content-inverse',
   rose: 'text-content-inverse',
@@ -169,26 +140,3 @@ export const LINE_WORDS = {
   ferry: 'text-content-inverse',
   selected: 'text-content-inverse',
 } satisfies Record<LineColour, string>;
-
-/** What a label on the map wears: its fill, its pointer, a station code's words on white, its own words. */
-export interface LabelLook {
-  surface: string;
-  pointer: string;
-  code: string;
-  words: string;
-}
-
-/**
- * Figma's Head Route (RouteLineEndingsLabels, 3848:12135): a ride's start
- * wears Map/HotspotsCard/Hintuan/surface, the green, whatever the line — the
- * pill and pointer green, the words white, a station's code green on its
- * white chip. RouteLineEndingsLabel's Head Route and RouteLineLabel's Start,
- * a picked start (the owner's call: the green start pill, not the line's
- * colour).
- */
-export const HEAD_ROUTE: LabelLook = {
-  surface: 'bg-map-hotspots-card-hintuan-surface',
-  pointer: 'fill-map-hotspots-card-hintuan-surface',
-  code: 'text-map-hotspots-card-hintuan-surface',
-  words: 'text-content-inverse',
-};

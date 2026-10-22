@@ -1,6 +1,6 @@
+import { SelectField } from '@/design-system/primitives/select-field';
+import { TextField } from '@/design-system/primitives/text-field';
 import { isLineMode, MODES, type TransportMode } from '@/features/routes/model/routes';
-
-import { FIELD } from './sheet';
 
 interface RouteFieldsProps {
   signboard: string;
@@ -29,42 +29,43 @@ export function RouteFields({
   return (
     <>
       {isSignboardRequired && (
-        <label className="mb-3 block text-xs font-medium text-neutral-700">
-          Signboard{' '}
-          <span className="text-neutral-400">
-            (the ikot&apos;s name, what is painted on the jeep — required)
-          </span>
-          <input
+        <div className="mb-3">
+          <TextField
+            label={
+              <>
+                Signboard{' '}
+                <span className="text-content-disabled">
+                  (the ikot&apos;s name, what is painted on the jeep — required)
+                </span>
+              </>
+            }
             aria-required
             disabled={isLocked}
             value={signboard}
             onChange={(e) => onSignboardChange(e.target.value)}
+            onClear={() => onSignboardChange('')}
             placeholder="UP – Ikot"
-            className={FIELD}
           />
-        </label>
+        </div>
       )}
 
-      <label className="block text-xs font-medium text-neutral-700">
-        Mode
-        {/* A line, a train's or the ferry's, comes in by its import, with
-            its line named; one drawn here would have none and stop
-            nowhere. And a line stays one: its mode decides which hintuans
-            both directions hotspot at, and a save re-links only the
-            direction saved (servedBy). */}
-        <select
-          disabled={isLocked || isLineMode(mode)}
-          value={mode}
-          onChange={(e) => onModeChange(e.target.value as TransportMode)}
-          className={FIELD}
-        >
-          {MODES.filter((m) => !isLineMode(m.value) || m.value === mode).map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      {/* A line, a train's or the ferry's, comes in by its import, with
+          its line named; one drawn here would have none and stop
+          nowhere. And a line stays one: its mode decides which hintuans
+          both directions hotspot at, and a save re-links only the
+          direction saved (servedBy). */}
+      <SelectField
+        label="Mode"
+        disabled={isLocked || isLineMode(mode)}
+        value={mode}
+        onChange={(e) => onModeChange(e.target.value as TransportMode)}
+      >
+        {MODES.filter((m) => !isLineMode(m.value) || m.value === mode).map((m) => (
+          <option key={m.value} value={m.value}>
+            {m.label}
+          </option>
+        ))}
+      </SelectField>
     </>
   );
 }
