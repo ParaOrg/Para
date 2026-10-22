@@ -3,18 +3,18 @@ import type { CardFill } from '@/design-system/primitives/button';
 import blobInverse from './route-card-blob-inverse.svg';
 import blobPrimary from './route-card-blob-primary.svg';
 import type { Livery } from '../model/liveries';
+import type { RailwayVehicle } from '../model/vehicles';
 
 /**
  * How a livery paints a card — Figma's RouteCard set (3665:2265) — for the
  * list's cards and a trip's card alike (TimelineRouteDetailCard), so a trip
  * opens in the colours of the card it was picked from.
  *
- * Red and orange write in Content/inverse under Route/RouteCardPrimary.
+ * Orange writes in Content/inverse under Route/RouteCardPrimary.
  * Violet, rose, fuchsia and pink (4071:7014) write the same white words under
  * Route/RouteCardInverse, its Blob brighter and softened 2px more. The
  * Inverse shadow and Blob were drawn for dark words (Content/primary).
- * Figma's trip frames drawn under them, yellow's (3762:3546), wear the red
- * card's; the trip wears the card's own instead, so the card and the trip it
+ * Figma's trip frames drawn under them, yellow's (3762:3546), wear the red card's, a colour no route wears; the trip wears the card's own instead, so the card and the trip it
  * opens match.
  *
  * A train route wears its line's colours (Figma's RouteCards for them,
@@ -28,7 +28,6 @@ import type { Livery } from '../model/liveries';
  */
 
 export const CARD_SURFACE = {
-  red: 'bg-card-red-surface border-card-red-border-primary',
   orange: 'bg-card-orange-surface border-card-orange-border-primary',
   violet: 'bg-card-violet-surface border-card-violet-border-primary',
   rose: 'bg-card-rose-surface border-card-rose-border-primary',
@@ -51,7 +50,6 @@ export const CARD_SURFACE = {
  * (StationLabels).
  */
 export const CARD_SURFACE_PALE = {
-  red: 'bg-card-red-surface-pale',
   orange: 'bg-card-orange-surface-pale',
   violet: 'bg-card-violet-surface-pale',
   rose: 'bg-card-rose-surface-pale',
@@ -64,7 +62,6 @@ export const CARD_SURFACE_PALE = {
 } satisfies Record<Livery, string>;
 
 export const CARD_TEXT = {
-  red: 'text-content-inverse',
   orange: 'text-content-inverse',
   violet: 'text-content-inverse',
   rose: 'text-content-inverse',
@@ -76,9 +73,25 @@ export const CARD_TEXT = {
   ferry: 'text-content-inverse',
 } satisfies Record<Livery, string>;
 
+/**
+ * Words or a drawing in the card's own colour, Card/<livery>/surface, a train's
+ * or the ferry's Map/…/surface: what sits on a white chip on the card, a mode's
+ * vehicle (Modes, 4236:17040) as the line's on a RouteCardRailway.
+ */
+export const CARD_SURFACE_TEXT = {
+  orange: 'text-card-orange-surface',
+  violet: 'text-card-violet-surface',
+  rose: 'text-card-rose-surface',
+  fuchsia: 'text-card-fuchsia-surface',
+  pink: 'text-card-pink-surface',
+  'light-rail-way-one': 'text-map-rail-light-rail-way-one-surface',
+  'light-rail-way-two': 'text-map-rail-light-rail-way-two-surface',
+  'metro-rail-way-three': 'text-map-rail-metro-rail-way-three-surface',
+  ferry: 'text-map-ferry-surface',
+} satisfies Record<Livery, string>;
+
 // Drawn over the card, as Figma lays it: above the Blob and the words.
 export const CARD_SHADOW = {
-  red: 'shadow-route-card-primary',
   orange: 'shadow-route-card-primary',
   violet: 'shadow-route-card-inverse',
   rose: 'shadow-route-card-inverse',
@@ -93,7 +106,6 @@ export const CARD_SHADOW = {
 // A RouteCard's State=Selected: pressed in, and nothing else changes — the
 // fill, the words, the Blob stay the Rest card's.
 export const CARD_SHADOW_SELECTED = {
-  red: 'shadow-route-card-primary-selected',
   orange: 'shadow-route-card-primary-selected',
   violet: 'shadow-route-card-inverse-selected',
   rose: 'shadow-route-card-inverse-selected',
@@ -119,7 +131,6 @@ export const CARD_SHADOW_SELECTED = {
 // list at 640, a tablet) — widened to the whole image, as the inner blur and
 // the Inverse file already are.
 export const CARD_BLOB = {
-  red: { src: blobPrimary, className: '' },
   orange: { src: blobPrimary, className: '' },
   violet: { src: blobInverse, className: 'blur-[2px]' },
   rose: { src: blobInverse, className: 'blur-[2px]' },
@@ -138,7 +149,6 @@ export const BLOB_PLACE =
 
 /** A trip's rail and its dots' rings: Figma's Card/<livery>/Timeline/surface. */
 export const TIMELINE_SURFACE = {
-  red: 'bg-card-red-timeline-surface',
   orange: 'bg-card-orange-timeline-surface',
   violet: 'bg-card-violet-timeline-surface',
   rose: 'bg-card-rose-timeline-surface',
@@ -158,7 +168,6 @@ export const TIMELINE_SURFACE = {
  * tap highlight is off, so the colour under the finger is the token's.
  */
 export const ROW_PRESSED = {
-  red: 'active:bg-card-red-timeline-surface [-webkit-tap-highlight-color:transparent]',
   orange: 'active:bg-card-orange-timeline-surface [-webkit-tap-highlight-color:transparent]',
   violet: 'active:bg-card-violet-timeline-surface [-webkit-tap-highlight-color:transparent]',
   rose: 'active:bg-card-rose-timeline-surface [-webkit-tap-highlight-color:transparent]',
@@ -177,7 +186,7 @@ export const ROW_PRESSED = {
  * A picked hintuan's pill, with the pesos to it (Figma's Timeline
  * State=Selected, 3769:2847): the card's own colour on Content/inverse, the
  * words being white on every jeepney livery. Figma draws no trip for orange,
- * violet, rose, fuchsia and pink; they follow red. A train's pill is white
+ * violet, rose, fuchsia and pink; they follow Figma's red one. A train's pill is white
  * too, on every line, its words in the line's Timeline/surface, not its
  * surface: Figma's three train frames draw it so, MRT-3's dark words
  * included. The ride's E (RideMark) wears it too, its disc in the pill's
@@ -185,7 +194,6 @@ export const ROW_PRESSED = {
  * restyles the E.
  */
 export const TIMELINE_PILL = {
-  red: 'bg-content-inverse text-card-red-surface',
   orange: 'bg-content-inverse text-card-orange-surface',
   violet: 'bg-content-inverse text-card-violet-surface',
   rose: 'bg-content-inverse text-card-rose-surface',
@@ -204,7 +212,6 @@ export const TIMELINE_PILL = {
  * its line's.
  */
 export const BUTTON_FILL = {
-  red: 'card-red',
   orange: 'card-orange',
   violet: 'card-violet',
   rose: 'card-rose',
@@ -215,3 +222,14 @@ export const BUTTON_FILL = {
   'metro-rail-way-three': 'map-rail-metro-rail-way-three',
   ferry: 'map-ferry',
 } as const satisfies Record<Livery, CardFill>;
+
+/**
+ * A railway card's chips and pill, and its station badges: the line's surface on white, and on
+ * MRT-3's yellow its yellow on Content/primary (RouteCardRailway, 4261:15199).
+ */
+export const RAILWAY_PILL = {
+  'LRT-1': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
+  'LRT-2': 'bg-content-inverse text-map-rail-light-rail-way-two-surface',
+  'MRT-3': 'bg-content-primary text-map-rail-metro-rail-way-three-surface',
+  Ferry: 'bg-content-inverse text-map-ferry-surface',
+} satisfies Record<RailwayVehicle, string>;

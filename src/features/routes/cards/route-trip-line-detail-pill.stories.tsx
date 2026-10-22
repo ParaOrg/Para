@@ -33,8 +33,8 @@ export const Two: Story = {
   },
 };
 
-/** One (4161:8300), on a jeep: the pesos alone. Red, the livery Figma draws it in. */
-export const One: Story = { args: { livery: 'red', code: null, pesos: '₱13' } };
+/** One (4161:8300), on a jeep: the pesos alone. Orange. */
+export const One: Story = { args: { livery: 'orange', code: null, pesos: '₱13' } };
 
 /**
  * A train's start alone (Figma Variant3, 4148:12161): no end picked, no ride to price, the
@@ -46,7 +46,7 @@ export const CodeAlone: Story = { args: { code: 'YL07', pesos: undefined } };
 export const TwoRange: Story = { args: { pesos: '₱13–24' } };
 
 /** One with a range. */
-export const OneRange: Story = { args: { livery: 'red', code: null, pesos: '₱13–24' } };
+export const OneRange: Story = { args: { livery: 'orange', code: null, pesos: '₱13–24' } };
 
 /** Every livery: One on each, and Two on each, each on its own card's colour. */
 export const EveryLivery: Story = {

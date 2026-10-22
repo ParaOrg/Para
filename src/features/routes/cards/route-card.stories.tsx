@@ -16,7 +16,7 @@ const meta = {
     ),
   ],
   args: {
-    livery: 'red',
+    livery: 'orange',
     state: 'rest',
     routeOrigin: 'Novaliches (Bayan)',
     endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' }],
@@ -30,32 +30,24 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Red: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
- * place in SN Pro ExtraBold 24/32, as the RouteCard set draws it (3665:2265).
+ * Orange: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
+ * place in SN Pro Bold 24/32, as the RouteCard set draws it (3665:2265).
  */
-export const Red: Story = {
+export const Orange: Story = {
   play: async ({ canvasElement }) => {
     const place = within(canvasElement).getByTestId('chooser-select');
     const type = getComputedStyle(place);
     await expect(type.fontSize).toBe('24px');
     await expect(type.lineHeight).toBe('32px');
-    await expect(type.fontWeight).toBe('800');
+    await expect(type.fontWeight).toBe('700');
   },
 };
 
-/** Orange, the Card/orange tokens. */
-export const Orange: Story = { args: { livery: 'orange', routeOrigin: 'SM Fairview' } };
-
-/** State=Selected, red: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
-export const RedSelected: Story = { args: { state: 'selected' } };
-
-/** Selected, orange: the same Primary shadow. */
-export const OrangeSelected: Story = {
-  args: { state: 'selected', livery: 'orange', routeOrigin: 'SM Fairview' },
-};
+/** State=Selected, orange: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
+export const OrangeSelected: Story = { args: { state: 'selected' } };
 
 /**
- * Violet: white words, as Red, under Route/RouteCardInverse's shadow and
+ * Violet: white words, as Orange, under Route/RouteCardInverse's shadow and
  * Blob.
  */
 export const Violet: Story = { args: { livery: 'violet', routeOrigin: 'Fairview' } };
@@ -216,7 +208,8 @@ export const SixWaysOut: Story = {
 /**
  * Each mode's label heads its own rows, stacked down the card: Figma's RouteCard (3665:2265)
  * draws one group, and a place can mix. Rail lines are all "Train"; a mode's rows keep their
- * order, and the tree line ends at each group's last row.
+ * order, and the tree line ends at each group's last row. Train and Ferry close the card, after
+ * every road mode.
  */
 export const MixedModes: Story = {
   args: {
@@ -231,13 +224,13 @@ export const MixedModes: Story = {
   },
   play: async ({ canvasElement }) => {
     const rows = within(canvasElement).getAllByTestId('chooser-item');
-    // Jeepney's two rows, then Train's two, then Bus's one.
+    // Jeepney's two rows, then Bus's one, then Train's two at the bottom.
     await expect(rows.map((r) => r.textContent)).toEqual([
       'Tala',
       'Lagro',
+      'Pier 4',
       'Taft Avenue',
       'Antipolo',
-      'Pier 4',
     ]);
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Jeepney')).toBeVisible();
@@ -246,7 +239,23 @@ export const MixedModes: Story = {
   },
 };
 
-/** A route with no drawn vehicle (UV Express, P2P, tricycle) has no label; the rows stand alone. */
+/** A train row first in the data still shows at the bottom, after the road modes. */
+export const TrainFirstInData: Story = {
+  args: {
+    routeOrigin: 'Cubao',
+    endPoints: [
+      { id: 'a', routeDirection: 'Taft Avenue', vehicle: 'MRT-3' },
+      { id: 'b', routeDirection: 'Tala', vehicle: 'Jeepney' },
+      { id: 'c', routeDirection: 'Pier 4', vehicle: 'Bus' },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByTestId('chooser-item');
+    await expect(rows.map((r) => r.textContent)).toEqual(['Tala', 'Pier 4', 'Taft Avenue']);
+  },
+};
+
+/** A route with no drawn vehicle (P2P, tricycle) has no label; the rows stand alone. */
 export const NoMode: Story = {
   args: { endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: null }] },
 };

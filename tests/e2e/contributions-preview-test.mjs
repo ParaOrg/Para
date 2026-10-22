@@ -85,6 +85,13 @@ async function phone() {
 }
 
 /** Records `seconds` of a ride north from `lat`, a fix a second, and saves it with a start name. */
+/** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
+async function openHistory(page) {
+  const history = page.getByRole('button', { name: 'History' });
+  await history.waitFor({ timeout: 10000 });
+  if ((await history.getAttribute('aria-expanded')) !== 'true') await history.click();
+}
+
 async function recordAndSave(page, name, lat, seconds = 40) {
   await page.getByRole('button', { name: 'Start recording' }).click();
   for (let s = 0; s < seconds; s += 1) {
@@ -130,6 +137,7 @@ check(
   (await recordAndSave(a.page, 'Lagro A', 14.72)) === 1,
 );
 await a.page.getByRole('button', { name: 'Record again' }).click();
+await openHistory(a.page);
 await a.page.getByText('Saved recordings').waitFor();
 await shot(a.page, '2-phone-list');
 
@@ -345,6 +353,7 @@ check(
 );
 await shot(studio, '7-studio-deleted');
 await a.page.reload({ waitUntil: 'load' });
+await openHistory(a.page);
 await a.page
   .getByRole('listitem')
   .filter({ hasText: `Lagro A ${RUN}` })

@@ -1,6 +1,13 @@
 import type { ComponentType } from 'react';
 
-import { BusIcon, EJeepIcon, FerryIcon, JeepneyIcon, TrainIcon } from '@/shared/ui/route-icons';
+import {
+  BusIcon,
+  EJeepIcon,
+  FerryIcon,
+  JeepneyIcon,
+  TrainIcon,
+  UvExpressIcon,
+} from '@/shared/ui/route-icons';
 
 import type { Vehicle } from '../model/vehicles';
 
@@ -16,11 +23,12 @@ const ICON = {
   'E-Jeep': EJeepIcon,
   Bus: BusIcon,
   Ferry: FerryIcon,
+  'UV Express': UvExpressIcon,
 } satisfies Record<Vehicle, ComponentType>;
 
 /**
- * A vehicle's drawing from the sprite, in currentColor: a trip's header (RouteTripDetailHeader) and
- * each route's row (RouteEndPointBar). The size and the opacity are the caller's.
+ * A vehicle's drawing from the sprite, in currentColor: a trip's header (RouteTripDetailHeader), a
+ * card's modes (RouteMode) and a train card's chip. The size and the opacity are the caller's.
  */
 export function VehicleIcon({ vehicle }: VehicleIconProps) {
   const Icon = ICON[vehicle];

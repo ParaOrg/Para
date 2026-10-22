@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
+import { PasswordField } from '@/design-system/primitives/password-field';
 import { coarse } from '@/features/routes/map/map-view';
 
 import { getSupabase, supabaseConfigError } from '../data/supabase';
-import { FIELD_TEXT } from '../panels/sheet';
 
 interface ResetPasswordProps {
   onDone: () => void;
@@ -63,28 +63,30 @@ export function ResetPassword({ onDone, isInvite = false }: ResetPasswordProps) 
               : 'You are signed in from your reset link. Set a password to finish.'}
           </p>
 
-          <input
-            type="password"
-            required
-            // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
-            autoFocus={!coarse}
-            minLength={12}
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="New password"
-            className={`mt-4 w-full rounded-lg border border-neutral-300 px-3 py-2.5 ${FIELD_TEXT} outline-none focus:border-neutral-900`}
-          />
-          <input
-            type="password"
-            required
-            minLength={12}
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Confirm new password"
-            className={`mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2.5 ${FIELD_TEXT} outline-none focus:border-neutral-900`}
-          />
+          <div className="mt-4">
+            <PasswordField
+              label="New password"
+              required
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
+              autoFocus={!coarse}
+              minLength={12}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="New password"
+            />
+          </div>
+          <div className="mt-2">
+            <PasswordField
+              label="Confirm new password"
+              required
+              minLength={12}
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Confirm new password"
+            />
+          </div>
           <p className="mt-2 text-xs text-neutral-500">
             At least 12 characters, with upper- and lowercase letters, a number and a symbol.
           </p>

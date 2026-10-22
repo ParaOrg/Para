@@ -116,6 +116,12 @@ const storedStatus = (page) =>
       }),
   );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
+/** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
+const openHistory = async (page) => {
+  const history = page.getByRole('button', { name: 'History' });
+  await history.waitFor({ timeout: 10000 });
+  if ((await history.getAttribute('aria-expanded')) !== 'true') await history.click();
+};
 const buttons = (page) =>
   page
     .getByRole('button')
@@ -153,6 +159,34 @@ const buttons = (page) =>
       (await page.getByText('Saved on this phone').count()) === 0 &&
       (await page.getByText('No saved recordings yet.').count()) === 0,
   );
+  {
+    const history = page.getByRole('button', { name: 'History' });
+    const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
+    const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
+    check(
+      '  History is a button beside Back, closed: nothing but the Start bar covers the map',
+      (await history.count()) === 1 &&
+        (await history.getAttribute('aria-expanded')) === 'false' &&
+        (await page.getByRole('heading', { name: 'Saved recordings' }).count()) === 0 &&
+        !!start &&
+        !!stack &&
+        Math.abs(stack.y - start.y) <= 1 &&
+        Math.abs(stack.y + stack.height - (start.y + start.height)) <= 1,
+      JSON.stringify([stack, start]),
+    );
+    await history.click();
+    check(
+      '  History opened: expanded, and with nothing kept it says so',
+      (await history.getAttribute('aria-expanded')) === 'true' &&
+        (await page.getByText('No saved recordings yet.').count()) === 1,
+    );
+    await history.click();
+    check(
+      '  a second press closes it again',
+      (await history.getAttribute('aria-expanded')) === 'false' &&
+        (await page.getByText('No saved recordings yet.').count()) === 0,
+    );
+  }
   check(
     "  the map-style button is the map's own, top right",
     (await page.getByRole('button', { name: 'Map design' }).count()) === 1,
@@ -703,6 +737,7 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await page.getByRole('button', { name: 'Record again' }).click();
+  await openHistory(page);
   const rowDownloads = page.getByRole('button', { name: /^Download the recording of / });
   await rowDownloads.first().waitFor();
   check(
@@ -710,6 +745,7 @@ const buttons = (page) =>
     (await rowDownloads.count()) === 1,
   );
   await page.reload({ waitUntil: 'load' });
+  await openHistory(page);
   await page.getByRole('heading', { name: 'Saved recordings' }).waitFor({ timeout: 10000 });
   check('after a reload it is still listed', (await rowDownloads.count()) === 1);
   const [download] = await Promise.all([
@@ -864,6 +900,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
       both.recordings.length === 1,
     JSON.stringify(both.recordings),
   );
+  await openHistory(second);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.getByLabel('Description').fill('From the first tab');
   await page.getByRole('button', { name: 'Continue' }).click();

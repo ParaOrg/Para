@@ -1,11 +1,11 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 
+import { TextField } from '@/design-system/primitives/text-field';
 import type { HotspotKind, HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { NEW_PLACE_SIDE_M, squareBox } from './new-place';
-import { FIELD } from './sheet';
 import { useNewPlaceSave } from './use-new-place-save';
 
 interface NewPlaceFormProps {
@@ -84,30 +84,35 @@ export function NewPlaceForm({
         {end === 'Head' ? 'first' : 'last'} point. Reshape it later like any hotspot.
       </p>
 
-      <label htmlFor={`${ids}-name`} className="mt-3 block text-xs font-medium text-neutral-700">
-        Ground name <span className="text-neutral-400">(as written on the ground)</span>
-      </label>
-      <input
-        id={`${ids}-name`}
-        ref={nameRef}
-        required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className={FIELD}
-      />
+      <div className="mt-3">
+        <TextField
+          id={`${ids}-name`}
+          ref={nameRef}
+          label={
+            <>
+              Ground name <span className="text-content-disabled">(as written on the ground)</span>
+            </>
+          }
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onClear={() => setName('')}
+        />
+      </div>
 
-      <label
-        htmlFor={`${ids}-informal`}
-        className="mt-3 block text-xs font-medium text-neutral-700"
-      >
-        Stop name <span className="text-neutral-400">(what people say — optional)</span>
-      </label>
-      <input
-        id={`${ids}-informal`}
-        value={informal}
-        onChange={(e) => setInformal(e.target.value)}
-        className={FIELD}
-      />
+      <div className="mt-3">
+        <TextField
+          id={`${ids}-informal`}
+          label={
+            <>
+              Stop name <span className="text-content-disabled">(what people say — optional)</span>
+            </>
+          }
+          value={informal}
+          onChange={(e) => setInformal(e.target.value)}
+          onClear={() => setInformal('')}
+        />
+      </div>
 
       <fieldset className="mt-3">
         <legend className="text-xs font-medium text-neutral-700">Kind</legend>

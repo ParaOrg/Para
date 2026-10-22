@@ -43,7 +43,7 @@ export function rowsOutsideStartAlone(
  * whichever of the start and the end is above (an end tapped above the start
  * stays the end, ridden back along the line: rideSpan). -1 is the origin, a
  * start left there. Null with no end picked — nothing, or a start alone, no
- * ride yet until its end is picked (the owner's Variant3: the S stands alone,
+ * ride yet until its end is picked (the owner's Variant3: the Start stands alone,
  * so a start alone does not read as a ride) — or with a pick that is no row
  * of these (another trip's, a moment before it goes): the whole ride.
  * `endRow`, an end row picked with the start kept (rideToEnd): the ride from
