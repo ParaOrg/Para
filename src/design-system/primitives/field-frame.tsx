@@ -16,7 +16,7 @@ interface FieldFrameProps {
   isDisabled: boolean;
   /** A textarea's box: the same look, grown to its rows instead of 44 tall. */
   isMultiline?: boolean;
-  /** The input or select, filling the box. */
+  /** The input, select or textarea, filling the box. */
   children: ReactNode;
   /** Figma's 🙏 Icon Instance: the eye, the clear, the chevron; none for a bare field. */
   trailing?: ReactNode;
@@ -42,9 +42,10 @@ const HEIGHT = {
 } satisfies Record<'single' | 'multiline', string>;
 
 /**
- * PalimosPoDesignSystem's InputField frame (Figma 4295:20567): the label, the 44-tall box with the
- * control and its trailing icon, and an inline error under it. TextField, PasswordField and
- * SelectField are this frame around their control.
+ * PalimosPoDesignSystem's InputField frame (Figma 4295:20567): the label, the box with the control
+ * and its trailing icon (44 tall, or as tall as its rows when isMultiline), and an inline error
+ * under it. TextField, PasswordField, SelectField and TextAreaField are this frame around their
+ * control.
  */
 export function FieldFrame({
   id,
