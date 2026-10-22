@@ -29,7 +29,7 @@ interface HotspotPanelProps {
   /** Hears the row a save wrote, the moment it is in, to keep it beyond this panel. */
   onWritten?: (hotspotId: string) => void;
   /** A save stored as a draft (STUDIO_DRAFTS). */
-  onDrafted?: () => void;
+  onDrafted?: (hotspotId: string) => void;
 }
 
 /**

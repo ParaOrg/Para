@@ -50,6 +50,7 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     load: fn(),
     metres: 480,
     start: fn(),
+    startWithPoints: fn(),
     startArea: fn(),
     loadArea: fn(),
     adoptHotspot: fn(),

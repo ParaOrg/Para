@@ -3,11 +3,11 @@ import { useCallback, useId, useState, type ReactNode } from 'react';
 import { Button } from '@/design-system/primitives/button';
 import { SelectField } from '@/design-system/primitives/select-field';
 
+import { OpenedActions } from './actions/opened-actions';
+import { OpenedExtras } from './actions/opened-extras';
 import { ContributionDetails } from './contribution-details';
 import { ContributionList } from './contribution-list';
 import type { StudioContributorsProps } from './contributors-props';
-import { DeleteUpload } from './delete-upload';
-import { HideUpload } from './hide-upload';
 import { useContributionLayers } from './use-contribution-layers';
 import {
   CONTRIBUTION_LIMIT,
@@ -29,6 +29,7 @@ export function ContributorsView({
   isSignedIn,
   onSignIn,
   onOpenPlayground,
+  onStart,
 }: StudioContributorsProps) {
   const headingId = useId();
   const periodId = useId();
@@ -107,26 +108,15 @@ export function ContributorsView({
               detailError={detail.error?.message ?? null}
               onClose={() => setOpenedId(null)}
               actions={
-                <>
-                  <HideUpload
-                    contributionId={opened.id}
-                    hiddenAt={opened.hiddenAt}
-                    hiddenNote={opened.hiddenNote}
-                    onChanged={(message, isHidden) => {
-                      setNotice(message);
-                      // Out of the list it was opened from, so it closes too.
-                      if (isHidden && !showHidden) setOpenedId(null);
-                    }}
-                  />
-                  <DeleteUpload
-                    contributionId={opened.id}
-                    onDeleted={() => {
-                      setOpenedId(null);
-                      setNotice('Upload deleted from ParaPo.');
-                    }}
-                  />
-                </>
+                <OpenedActions
+                  contribution={opened}
+                  showHidden={showHidden}
+                  onClose={() => setOpenedId(null)}
+                  onNotice={setNotice}
+                  onStart={onStart}
+                />
               }
+              extras={<OpenedExtras contribution={opened} detail={detail.data} onStart={onStart} />}
             />
           ) : (
             <ContributionList

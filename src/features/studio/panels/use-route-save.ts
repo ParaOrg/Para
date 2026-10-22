@@ -40,7 +40,8 @@ interface UseRouteSaveOptions {
   hotspots: HotspotRow[];
   onSaved: (direction: DirectionRow) => void;
   /** With STUDIO_DRAFTS on: the save is a draft, and the map is unchanged. */
-  onDrafted?: () => void;
+  /** Hears the direction the draft holds, for what was made from it. */
+  onDrafted?: (directionId: string) => void;
 }
 
 /**
@@ -78,10 +79,10 @@ export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseR
       };
       if (STUDIO_DRAFTS) {
         newRouteId.current ??= crypto.randomUUID();
-        const { result } = await saveRouteDraft(input, hotspots, newRouteId.current);
+        const { result, directionId } = await saveRouteDraft(input, hotspots, newRouteId.current);
         const refusal = draftRefusal(result);
         if (refusal) throw new Error(refusal);
-        if (onDrafted) onDrafted();
+        if (onDrafted) onDrafted(directionId);
         else setBusy(false);
         return;
       }
