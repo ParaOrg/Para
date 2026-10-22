@@ -36,6 +36,8 @@ import {
   StudioSaveSheets,
   StudioReview,
   StudioContributors,
+  ContributionHint,
+  type ContributionStart,
   StudioPublicView,
   StudioTripCard,
   type usePasswordRecovery,
@@ -46,6 +48,7 @@ import {
   useSaveFlow,
   useSaveTarget,
   useStudioMap,
+  useContributionStart,
   useDeleteActions,
   useStudioTrip,
 } from '@/features/studio';
@@ -125,6 +128,13 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     reloadRoutes: saved.reload,
     reloadHotspots: hotspots.reload,
   });
+  // A drawing begun from an upload (Use this line, Draw a hintuan here), and the
+  // record of which uploads its save came from (contributors/actions).
+  const contribution = useContributionStart({ map, draw, setNotice });
+  const handleContributionStart = (start: ContributionStart) => {
+    chooseStudioMap('playground');
+    contribution.begin(start);
+  };
   // The route list, a hotspot's card and the trip opened from either, as on
   // the public map (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
@@ -283,6 +293,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             isSignedIn={isSignedIn}
             onSignIn={() => setIsSigningIn(true)}
             onOpenPlayground={handleOpenPlayground}
+            onStart={handleContributionStart}
           />
         )}
         {studioMap === 'public' ? (
@@ -449,6 +460,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               />
             )}
 
+          {contribution.start && (
+            <ContributionHint start={contribution.start} onForget={contribution.forget} />
+          )}
+
           <SaveToasts
             toast={toast}
             isDrawing={draw.drawing}
@@ -507,9 +522,18 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           saved={saved}
           hotspots={hotspots}
           target={target}
-          onSaved={onSaved}
-          onSavedHotspot={onSavedHotspot}
-          onDrafted={onDrafted}
+          onSaved={(v) => {
+            void contribution.recordSaved(v.id, draw.controlPoints);
+            onSaved(v);
+          }}
+          onSavedHotspot={(s) => {
+            void contribution.recordSaved(s.id, draw.controlPoints);
+            onSavedHotspot(s);
+          }}
+          onDrafted={(subjectId) => {
+            void contribution.recordSaved(subjectId, draw.controlPoints);
+            onDrafted();
+          }}
           onCancel={() => setIsSaving(false)}
         />
       </div>

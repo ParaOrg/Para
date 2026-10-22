@@ -19,6 +19,8 @@ interface ContributionDetailsProps {
   onClose: () => void;
   /** What may be done with the upload, such as deleting it. */
   actions?: ReactNode;
+  /** More about the upload, under its trail: its hintos and its phone. */
+  extras?: ReactNode;
 }
 
 /** One upload, opened: what the phone saved about it, and its trail on the map. */
@@ -29,6 +31,7 @@ export function ContributionDetails({
   detailError,
   onClose,
   actions,
+  extras,
 }: ContributionDetailsProps) {
   const titleId = useId();
   const rows: [string, string][] = [
@@ -63,6 +66,7 @@ export function ContributionDetails({
         ))}
       </dl>
       <TrailSummary detail={detail} isLoading={isDetailLoading} error={detailError} />
+      {extras}
       <div className="flex flex-wrap gap-2">
         {actions}
         <Button variant="secondary" label="Close" onClick={onClose} />

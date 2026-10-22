@@ -44,6 +44,8 @@ const contributionRowSchema = z.pipe(
   }),
   z.transform((row) => ({
     id: row.id,
+    /** The phone's whole identity: for blocking it, never shown. */
+    contributorId: row.contributor_id,
     /** The phone, as the studio shows it: the first six characters of its identity, never more. */
     phoneCode: row.contributor_id?.slice(0, 6) ?? null,
     startedAt: Date.parse(row.started_at),

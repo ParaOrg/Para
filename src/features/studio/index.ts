@@ -32,4 +32,7 @@ export { useStudioTrip } from './panels/use-studio-trip';
 export { StudioReview } from './review/studio-review';
 export { StudioPublicView } from './maps/studio-public-view';
 export { StudioContributors } from './contributors/studio-contributors';
+export { ContributionHint } from './contributors/actions/contribution-hint';
+export { useContributionStart } from './contributors/actions/use-contribution-start';
+export type { ContributionStart } from './contributors/actions/contribution-start';
 export { CONTRIBUTIONS } from './data/flags';
