@@ -58,6 +58,7 @@ flowchart TD
   app_contribute --> design_system_foundation
   app_contribute --> features_contribute
   app_contribute --> styles
+  app_public_map --> design_system_primitives
   app_public_map --> features_locator
   app_public_map --> features_published_map
   app_public_map --> features_routes_cards
@@ -65,6 +66,7 @@ flowchart TD
   app_public_map --> features_routes_model
   app_public_map --> features_routes_published
   app_public_map --> shared_hooks
+  app_public_map --> shared_ui
   app_public_map --> styles
   app_studio --> features_locator
   app_studio --> features_routes_cards
@@ -158,7 +160,7 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `styles` |
-| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `styles` |
+| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `styles` |
 | `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
@@ -191,7 +193,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `connectContributions`
+`ContributePage`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`
 
 ### `features/locator`
 

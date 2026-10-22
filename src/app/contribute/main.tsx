@@ -4,9 +4,10 @@ import { createRoot } from 'react-dom/client';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './contribute.css';
 
-import { connectContributions } from '@/features/contribute';
+import { askForPersistentStorage, connectContributions } from '@/features/contribute';
 
 import { ContributeApp } from './contribute-app.tsx';
+import { registerContributeWorker } from './register-worker.ts';
 
 // This page's own Supabase client, under its own auth storage key, so the
 // phone's anonymous identity never replaces an editor's studio session. No
@@ -21,3 +22,8 @@ createRoot(root).render(
     <ContributeApp />
   </StrictMode>,
 );
+
+// The page's own offline setup, apart from the public map's worker, and a request that the
+// browser keep its recordings. The answer waits in the feature for the Ready screen.
+registerContributeWorker();
+void askForPersistentStorage();
