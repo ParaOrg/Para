@@ -216,7 +216,8 @@ export const SixWaysOut: Story = {
 /**
  * Each mode's label heads its own rows, stacked down the card: Figma's RouteCard (3665:2265)
  * draws one group, and a place can mix. Rail lines are all "Train"; a mode's rows keep their
- * order, and the tree line ends at each group's last row.
+ * order, and the tree line ends at each group's last row. Train and Ferry close the card, after
+ * every road mode.
  */
 export const MixedModes: Story = {
   args: {
@@ -231,18 +232,34 @@ export const MixedModes: Story = {
   },
   play: async ({ canvasElement }) => {
     const rows = within(canvasElement).getAllByTestId('chooser-item');
-    // Jeepney's two rows, then Train's two, then Bus's one.
+    // Jeepney's two rows, then Bus's one, then Train's two at the bottom.
     await expect(rows.map((r) => r.textContent)).toEqual([
       'Tala',
       'Lagro',
+      'Pier 4',
       'Taft Avenue',
       'Antipolo',
-      'Pier 4',
     ]);
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Jeepney')).toBeVisible();
     await expect(canvas.getByText('Train')).toBeVisible();
     await expect(canvas.getByText('Bus')).toBeVisible();
+  },
+};
+
+/** A train row first in the data still shows at the bottom, after the road modes. */
+export const TrainFirstInData: Story = {
+  args: {
+    routeOrigin: 'Cubao',
+    endPoints: [
+      { id: 'a', routeDirection: 'Taft Avenue', vehicle: 'MRT-3' },
+      { id: 'b', routeDirection: 'Tala', vehicle: 'Jeepney' },
+      { id: 'c', routeDirection: 'Pier 4', vehicle: 'Bus' },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByTestId('chooser-item');
+    await expect(rows.map((r) => r.textContent)).toEqual(['Tala', 'Pier 4', 'Taft Avenue']);
   },
 };
 
