@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 import { Tooltip } from './tooltip';
 
@@ -26,7 +26,7 @@ type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
 // No `title` either: the Tooltip replaces the browser's, and both
 // at once would show two bubbles, perhaps saying different things.
 type Props = Omit<
-  ComponentPropsWithoutRef<'button'>,
+  ComponentProps<'button'>,
   | 'children'
   | 'className'
   | 'style'
