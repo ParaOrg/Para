@@ -216,3 +216,22 @@ export function FerryIcon() {
 export function UvExpressIcon() {
   return <SpriteIcon id="uv-express" />;
 }
+
+/**
+ * A plus, for the Contributor button. Drawn in code: Figma has no icon for it
+ * yet (TODO: swap in the owner's once they send the button's frame).
+ */
+export function PlusIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
