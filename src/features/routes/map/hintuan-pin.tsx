@@ -47,8 +47,7 @@ interface Props {
  * Beside it, its name: Figma's HintuanLabel, HintuanEnd (4068:4791), a white
  * "End" pill before the name on red, 8 right of the circle and centred on
  * it; on a train line, CodeSignEnd, the station's code — GL02, PL08, YL13 —
- * in a second white segment after End's, in a red pill of its own beside the
- * name's. The code
+ * in a red pill of its own before the name's. The code
  * shows on the picked station's label alone; the other stations keep their
  * dots, where Figma's LRTHintuanCodes (4051:6426) draws codes (StationLabels;
  * the owner's call). Picked as the end, the hintuan is where the ride ends,

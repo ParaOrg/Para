@@ -35,7 +35,7 @@ export const Start: Story = {
 /** End: a white Badge reading "End" in the red. */
 export const End: Story = { args: { kind: 'end' } };
 
-/** The code at a train station: its own Badge, in the name's pill (SignCode). */
+/** The code at a train station: its own Badge, in a pill of its own (SignCode). */
 export const Code: Story = {
   render: ({ kind }) => <SignCode kind={kind} code="YL06" />,
   play: async ({ canvasElement }) => {

@@ -83,7 +83,7 @@ export const HintuanEnd: Story = {
   },
 };
 
-/** CodeSign (4068:4792): a picked train station, End and the code in white segments of one red pill, the name in another. */
+/** CodeSign (4068:4792): a picked train station, the code in one red pill, End and the name in another. */
 export const CodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL06' },
   play: async ({ canvasElement }) => {
@@ -109,7 +109,7 @@ export const HintuanStart: Story = {
   },
 };
 
-/** A picked start station: Start and the code in white segments of one green pill, the name in another. */
+/** A picked start station: the code in one green pill, Start and the name in another. */
 export const CodeSignStart: Story = {
   args: { variant: 'hintuan-start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
@@ -166,7 +166,11 @@ export const LongName: Story = {
     );
     const words = partOf(canvasElement, 'words');
     await expect(words.scrollWidth).toBeGreaterThan(words.clientWidth);
-    await expect(partOf(canvasElement, 'end').getBoundingClientRect().width).toBe(28);
+    // The name gives way; End and the code stay whole.
+    for (const part of ['end', 'code']) {
+      const badge = partOf(canvasElement, part);
+      await expect(badge.scrollWidth).toBe(badge.clientWidth);
+    }
   },
 };
 

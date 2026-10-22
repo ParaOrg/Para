@@ -325,7 +325,7 @@ export const StartAlone: Story = {
   },
 };
 
-/** A train ride: both ends are stations, named with their sign codes in a second white segment after Start and End. */
+/** A train ride: both ends are stations, their sign codes in a pill of their own before the Start or End pill. */
 export const TrainRide: Story = {
   args: {
     livery: 'light-rail-way-one',
@@ -347,7 +347,7 @@ export const TrainRide: Story = {
     await expect(partOf(tail, 'code').textContent).toBe('GL04');
     await expect(iconOf(head)).toBe('start');
     await expect(iconOf(tail)).toBe('end');
-    // With a code the word and the code are two white segments in the pill, before the name.
+    // With a code, the word stays in the name's pill; the code has a pill of its own.
     await expect(partOf(head, 'name').contains(partOf(head, 'start'))).toBe(true);
     await expect(partOf(tail, 'name').contains(partOf(tail, 'end'))).toBe(true);
     await expect(circleColour(tail)).toBe(wornBy('bg-card-red-surface'));

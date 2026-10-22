@@ -166,15 +166,16 @@ export const Start: Story = {
   },
 };
 
-/** A train line's station picked as the end: End and the code in white segments of one red pill, the name in another. */
+/** A train line's station picked as the end: the code in one red pill, End and the name in another. */
 export const TrainStation: Story = {
   args: { label: 'Balintawak', code: 'GL03', livery: 'light-rail-way-one' },
   play: async ({ canvasElement }) => {
     const pin = await pinOf(canvasElement);
     await expect(pin.dataset.livery).toBe('light-rail-way-one');
     await expect(partOf(pin, 'code').textContent).toBe('GL03');
-    // With a code the End sign leaves the name's pill for one of its own beside it.
-    await expect(partOf(pin, 'name').contains(partOf(pin, 'end'))).toBe(false);
+    // With a code, End stays in the name's pill and the code has a pill of its own.
+    await expect(partOf(pin, 'name').contains(partOf(pin, 'end'))).toBe(true);
+    await expect(partOf(pin, 'name').contains(partOf(pin, 'code'))).toBe(false);
     await expect(partOf(pin, 'words').textContent).toBe('Balintawak');
     await expect(getComputedStyle(circleOf(pin)).backgroundColor).toBe(
       wornBy('bg-card-red-surface'),

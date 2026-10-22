@@ -17,8 +17,8 @@ interface RouteLineLabelProps {
   /** The line's colour, which Default and Unselected wear: the open trip's card's. */
   livery: Livery;
   /**
-   * Figma's `codeSign`: a train station's sign code, YL06, before the name
-   * (CodeSignEnd), End's word in a pill of its own beside it. Drawn on End and Start alone: a station shows its code once picked.
+   * Figma's `codeSign`: a train station's sign code, YL06, in a pill of its
+   * own before the name's (CodeSignEnd). Drawn on End and Start alone: a station shows its code once picked.
    */
   codeSign?: string | null;
 }
@@ -39,7 +39,7 @@ const KIND = {
  * in SN Pro Medium 14/20, 28 tall, drawn flat — near-black on MRT-3's yellow
  * (LINE_WORDS). End is red and Start green, whatever the line: a white Badge
  * reads the word before the name, the name 16/24. CodeSignEnd is two pills, 6
- * apart: the word's Badge in one, the code's Badge and the name in the other.
+ * apart: the code's Badge in one, the word's Badge and the name in the other.
  *
  * The font is set here, not inherited: every label sits in a DOM marker
  * inside MapLibre's container, whose stylesheet sets Helvetica Neue on all of
@@ -61,10 +61,10 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
         (variant === 'unselected' ? ' opacity-60' : '')
       }
     >
-      {/* CodeSignEnd: the word in a pill of its own, beside the name's. */}
+      {/* CodeSignEnd: the code in a pill of its own, before the name's. */}
       {kind && code && (
         <span className={'flex shrink-0 rounded-full p-1 ' + surface}>
-          <EndSign kind={kind} />
+          <SignCode kind={kind} code={code} />
         </span>
       )}
       <span
@@ -73,12 +73,10 @@ export function RouteLineLabel({ variant, name, livery, codeSign = null }: Route
           'flex max-w-full min-w-0 items-center rounded-full ' +
           surface +
           ' ' +
-          (kind ? 'py-0.5 pr-2 pl-1 text-base/6 ' : 'px-2 py-1 text-sm/5 ') +
-          (code ? 'gap-1.5' : 'gap-1')
+          (kind ? 'gap-1 py-0.5 pr-2 pl-1 text-base-lower/6' : 'px-2 py-1 text-sm/5')
         }
       >
-        {kind && !code && <EndSign kind={kind} />}
-        {kind && code && <SignCode kind={kind} code={code} />}
+        {kind && <EndSign kind={kind} />}
         <span data-part="words" className="min-w-0 truncate">
           {name}
         </span>

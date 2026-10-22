@@ -36,7 +36,7 @@ const partOf = (root: HTMLElement, part: string): HTMLElement => {
   return el;
 };
 
-/** The word segment's text: Start, End, or none. */
+/** The word Badge's text: Start, End, or none. */
 const signOf = (el: HTMLElement) =>
   el.querySelector('[data-part="start"]')?.textContent ??
   el.querySelector('[data-part="end"]')?.textContent ??
@@ -89,7 +89,7 @@ export const HeadRoute: Story = {
     await expect(getComputedStyle(sign).color).toBe(
       wornBy('text-map-hotspots-card-hintuan-surface', 'color'),
     );
-    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(2);
+    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(4);
   },
 };
 
@@ -176,7 +176,7 @@ export const DefaultMetroRailWayThree: Story = {
   },
 };
 
-/** Head Route's Railway property (4320:14176): "Start" in a pill of its own, 4 left of the name's, which holds the code. */
+/** Head Route's Railway property (4320:14176): the code in a pill of its own, 4 left of the name's, which reads "Start". */
 export const HeadRouteRailway: Story = {
   args: { variant: 'head', codeSign: 'YL06', livery: 'metro-rail-way-three' },
   play: async ({ canvasElement }) => {
@@ -191,17 +191,17 @@ export const HeadRouteRailway: Story = {
     await expect(getComputedStyle(code).color).toBe(
       wornBy('text-map-hotspots-card-hintuan-surface', 'color'),
     );
-    // The word's pill 28 tall, 4 left of the name's, which holds the code before the name.
-    const signPill = partOf(pill, 'start').parentElement;
-    await expect(signPill?.getBoundingClientRect().height).toBe(28);
+    // The code's pill 28 tall, 4 left of the name's, which holds Start before the name.
+    const codePill = code.parentElement;
+    await expect(codePill?.getBoundingClientRect().height).toBe(28);
     await expect(
-      pill.getBoundingClientRect().left - (signPill?.getBoundingClientRect().right ?? 0),
+      pill.getBoundingClientRect().left - (codePill?.getBoundingClientRect().right ?? 0),
     ).toBe(4);
-    await expect(code.parentElement).toBe(pill);
+    await expect(partOf(pill, 'start').parentElement).toBe(pill);
   },
 };
 
-/** Tail Route's Railway property (4320:14181): "End" in its own pill, the code in the name's, red whatever the line. */
+/** Tail Route's Railway property (4320:14181): the code in its own pill, "End" in the name's, red whatever the line. */
 export const TailRouteRailway: Story = {
   args: { variant: 'tail', codeSign: 'GL02', livery: 'light-rail-way-one' },
   play: async ({ canvasElement }) => {

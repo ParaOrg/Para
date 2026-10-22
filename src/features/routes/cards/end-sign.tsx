@@ -29,8 +29,8 @@ const BADGE = 'shrink-0 rounded-full bg-content-inverse px-1.5 text-sm/5';
 
 /**
  * Figma's Badge that says which end a place is (RouteLineEndingsLabels, 3848:12135): "Start" or
- * "End" in the colour of the pill it sits in. At a train station it has a pill of its own, the
- * name's pill beside it holding the code (SignCode).
+ * "End" in the colour of the pill it sits in, before the name. At a train station the code's
+ * Badge (SignCode) has a pill of its own before the name's.
  */
 export function EndSign({ kind }: EndSignProps) {
   const look = END_SIGN_LOOK[kind];
@@ -51,7 +51,7 @@ interface SignCodeProps {
   code: string;
 }
 
-/** A train station's code in the same Badge, before the name in the name's pill (Railway). */
+/** A train station's code in the same Badge, in a pill of its own before the name's (Railway). */
 export function SignCode({ kind, code }: SignCodeProps) {
   return (
     <span data-part="code" className={BADGE + ' ' + END_SIGN_LOOK[kind].words}>

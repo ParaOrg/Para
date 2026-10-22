@@ -95,7 +95,7 @@ export const End: Story = {
     await expect(sign.textContent).toBe('End');
     await expect(getComputedStyle(sign).backgroundColor).toBe(wornBy('bg-content-inverse'));
     await expect(getComputedStyle(sign).color).toBe(wornBy('text-card-red-surface', 'color'));
-    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(2);
+    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(4);
   },
 };
 
@@ -110,7 +110,7 @@ export const EndMetroRailWayThree: Story = {
 };
 
 /**
- * CodeSignEnd (4068:4792): two red pills, 6 apart: "End" in one, the station's code and the
+ * CodeSignEnd (4068:4792): two red pills, 6 apart: the station's code in one, "End" and the
  * name in the other.
  */
 export const CodeSignEnd: Story = {
@@ -120,16 +120,16 @@ export const CodeSignEnd: Story = {
     const sign = partOf(canvasElement, 'end');
     const code = partOf(canvasElement, 'code');
     await expectFigmaType(pill);
-    await expect(pill.contains(sign)).toBe(false);
+    await expect(pill.contains(sign)).toBe(true);
     await expect(sign.textContent).toBe('End');
     await expect(code.textContent).toBe('YL06');
-    const signPill = sign.parentElement;
-    await expect(signPill?.getBoundingClientRect().height).toBe(28);
+    const codePill = code.parentElement;
+    await expect(codePill?.getBoundingClientRect().height).toBe(28);
     await expect(
-      pill.getBoundingClientRect().left - (signPill?.getBoundingClientRect().right ?? 0),
+      pill.getBoundingClientRect().left - (codePill?.getBoundingClientRect().right ?? 0),
     ).toBe(6);
     await expect(getComputedStyle(code).backgroundColor).toBe(wornBy('bg-content-inverse'));
-    await expect(pill.contains(code)).toBe(true);
+    await expect(pill.contains(code)).toBe(false);
     await expect(getComputedStyle(code).color).toBe(wornBy('text-card-red-surface', 'color'));
     await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-red-surface'));
   },
@@ -154,13 +154,14 @@ export const Start: Story = {
   },
 };
 
-/** CodeSignStart: a picked start station, "Start" in its own green pill, the code with the name. */
+/** CodeSignStart: a picked start station, the code in its own green pill, "Start" with the name. */
 export const CodeSignStart: Story = {
   args: { variant: 'start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     const green = wornBy('bg-map-hotspots-card-hintuan-surface');
-    await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(false);
+    await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(true);
+    await expect(pill.contains(partOf(canvasElement, 'code'))).toBe(false);
     await expect(getComputedStyle(pill).backgroundColor).toBe(green);
     await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
     await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(
