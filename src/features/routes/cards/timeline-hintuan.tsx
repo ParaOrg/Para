@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { Button } from '@/design-system/primitives/button';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
+import { END_SIGN_LOOK } from './end-sign';
 import { BUTTON_FILL } from './livery-card';
 import { RideMark } from './ride-mark';
 import {
@@ -111,9 +112,11 @@ export function TimelineHintuan({
               variant={piece}
               connection={connection}
               rail={rail}
-              dot={<TimelineDot rail={rail} selected={selected} />}
+              dot={
+                <TimelineDot rail={mark ? END_SIGN_LOOK[mark].surface : rail} selected={selected} />
+              }
             />
-            {mark && <RideMark mark={mark} livery={livery} isSmall />}
+            {mark && <RideMark mark={mark} isSmall />}
             <span
               className={
                 'flex min-w-0 flex-1 items-center gap-2 py-2.5 ' + (mark ? 'pl-1.5' : 'pl-3')

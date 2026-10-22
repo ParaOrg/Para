@@ -86,3 +86,20 @@ test('two bounds of a line from one station are two cards', () => {
     ],
   );
 });
+
+test('every road card comes first, then the train cards, then the ferry’s, each kind in the order met', () => {
+  const cards = routeCards(
+    [
+      direction('ferry', 'Escolta', 'Pinagbuhatan', 'ferry', 'PRFS'),
+      direction('jeep', 'Antipolo', 'Cubao', 'jeepney'),
+      direction('lrt', 'Antipolo', 'Recto', 'lrt', 'LRT-2'),
+      direction('mrt', 'Shaw Boulevard', 'Taft Avenue', 'mrt', 'MRT-3'),
+      direction('jeep2', 'Cogeo', 'Cubao', 'jeepney'),
+    ],
+    false,
+  );
+  assert.deepEqual(
+    summary(cards).map((c) => c.ids),
+    [['jeep'], ['jeep2'], ['lrt'], ['mrt'], ['ferry']],
+  );
+});

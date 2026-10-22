@@ -310,13 +310,13 @@ const LOOKS = await page.evaluate(async () => {
 /** Whether the lit line wears `want` (a LineLook), chevrons too; true when the looks cannot be read. */
 const wears = (seen, want) =>
   !LOOKS || (!!want && seen.line === want.line && seen.arrow === want.arrow);
-/** Whether the end circles ring in `livery`'s surface, or the selected blue for null (EndTitles), as the page computes them. */
+/** Whether the unsigned end circles ring in `livery`'s surface, or the selected blue for null, and the signed ones in Start's green or End's red (EndTitles), as the page computes them. */
 const endsWear = async (livery) => {
   const rings = await endRings(page);
   const want = await colourOf(page, ringVar(livery));
   return {
     ok: ringed(rings, want),
-    detail: `${rings.circles} circle(s) ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
+    detail: `${rings.circles} circle(s), ${rings.signed} signed (in their sign's colour: ${rings.signsWorn}), the rest ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
   };
 };
 
@@ -1482,16 +1482,17 @@ if (PART === 1) {
           `${paled.length} dot(s) along the rest for ${rowsAfter} row(s) past the pick, ringed ${rings(paled)} (the pale ${seen.pale}); ${before.length} before it for ${pickedIndex} row(s), ringed ${rings(before)} (the line ${seen.line})`,
         );
         // The circle where the trip goes sits at the rest's end, in the pale
-        // too; the one where it starts keeps the line's colour (EndTitles).
+        // too; the one where it starts wears Start's green, as its pill does (EndTitles).
         const endsPicked = await endRings(page);
         check(
-          "  and the circle where the trip goes, at the rest's end, ringed in the pale too, the start's in the line's colour",
+          "  and the circle where the trip goes, at the rest's end, ringed in the pale too, the start's in Start's green",
           endsPicked.circles === 2 &&
             endsPicked.paledRings.length === 1 &&
             endsPicked.paledRings[0] === seen.pale &&
-            endsPicked.rings.length === 1 &&
-            endsPicked.rings[0] === seen.line,
-          `${endsPicked.circles} circle(s): paled ${endsPicked.paledRings.join(', ') || 'none'} (the pale ${seen.pale}), the rest ringed ${endsPicked.rings.join(', ') || 'none'} (the line ${seen.line})`,
+            endsPicked.signed === 1 &&
+            endsPicked.signsWorn &&
+            endsPicked.rings.length === 0,
+          `${endsPicked.circles} circle(s): paled ${endsPicked.paledRings.join(', ') || 'none'} (the pale ${seen.pale}), ${endsPicked.signed} signed, in their sign's colour: ${endsPicked.signsWorn}; unsigned ringed ${endsPicked.rings.join(', ') || 'none'}`,
         );
         // Their names too: outside the ride the Label's Unselected, at 60%,
         // inside it whole (Figma 4200:13645, the owner's ask of 2026-10-16).

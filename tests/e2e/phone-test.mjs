@@ -2596,13 +2596,13 @@ const LOOKS = await page.evaluate(async () => {
 /** Whether the lit line wears `want` (a LineLook), chevrons too; true when the looks cannot be read. */
 const wears = (seen, want) =>
   !LOOKS || (!!want && seen.line === want.line && seen.arrow === want.arrow);
-/** Whether the end circles ring in `livery`'s surface, or the selected blue for null (EndTitles), as the page computes them. */
+/** Whether the unsigned end circles ring in `livery`'s surface, or the selected blue for null, and the signed ones in Start's green or End's red (EndTitles), as the page computes them. */
 const endsWear = async (livery) => {
   const rings = await endRings(page);
   const want = await colourOf(page, ringVar(livery));
   return {
     ok: ringed(rings, want),
-    detail: `${rings.circles} circle(s) ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
+    detail: `${rings.circles} circle(s), ${rings.signed} signed (in their sign's colour: ${rings.signsWorn}), the rest ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
   };
 };
 /** The directions lit now, by id. */
