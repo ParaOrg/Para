@@ -3,3 +3,5 @@
 // files (.claude/CLAUDE.md, Import rules).
 export { ContributePage } from './contribute-page';
 export { connectContributions } from './api/contribute-client';
+export { hasOpenRecording } from './open-recording';
+export { askForPersistentStorage } from './persistent-storage';
