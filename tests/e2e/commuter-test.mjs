@@ -246,12 +246,8 @@ await page.waitForTimeout(1200);
 
 // 1. No editor chrome on the public map.
 check(
-  'no + New Route button',
-  (await page.getByRole('button', { name: '+ New Route' }).count()) === 0,
-);
-check(
-  'no + New hotspot button',
-  (await page.getByRole('button', { name: '+ New hotspot' }).count()) === 0,
+  'no + New button',
+  (await page.getByRole('button', { name: 'New route, terminal or hintuan' }).count()) === 0,
 );
 check('no Done button', (await page.getByRole('button', { name: 'Done' }).count()) === 0);
 check('no "Sign in" text or button', (await page.getByText('Sign in').count()) === 0);
