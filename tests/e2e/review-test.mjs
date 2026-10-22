@@ -32,7 +32,7 @@ await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).waitFor();
 const shot = (name) => page.screenshot({ path: `${out}/${name}.png` });
 // Draw and save through the real form: approved rows must remain unchanged.
 const beforeStops = (await api('stop?select=id')).length;
-await page.getByRole('button', { name: '+ New hotspot' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Hintuan/ }).click();
 for (const [x, y] of [
   [180, 300],

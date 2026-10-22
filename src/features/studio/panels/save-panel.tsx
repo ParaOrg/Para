@@ -48,7 +48,7 @@ interface SavePanelProps {
   directions?: DirectionRow[];
   onSaved: (v: DirectionRow) => void;
   /** A save stored as a draft (STUDIO_DRAFTS). */
-  onDrafted?: () => void;
+  onDrafted?: (directionId: string) => void;
   /** Hears of a place made from the pickers, so the map's own list is read again. */
   onPlaceSaved?: () => void;
   onCancel: () => void;

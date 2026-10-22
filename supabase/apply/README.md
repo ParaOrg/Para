@@ -111,3 +111,44 @@ table, row or existing function.
 1. Run `20261018112757_reviewed_draft_approval_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
 2. Run `20261018112757_reviewed_draft_approval_check.sql`: 6 rows, all `ok = t`.
 3. Send the ledger version (`select version from supabase_migrations.schema_migrations where name = 'reviewed_draft_approval'`) so it is recorded in `migrations/README.md`.
+
+# Applying contribution_use to the live project
+
+**Not applied live.** The contributions migration must already be applied (it
+is, ledger `20261019144009`). It adds one table and the block, unblock and
+retention functions; no route data and no stored contribution is touched. Three
+files, each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261022090000_contribution_use_apply.sql` | One transaction: checks `contributions` is in the ledger and this has not run; applies `migrations/20261022090000_contribution_use.sql` (carried unchanged; `verify/contribution-use.sh` checks the copy); checks row security is on, `anon` holds nothing, `public.block_contributor` / `unblock_contributor` are definers with a pinned path that only signed-in users can run, and the five private helpers are run by no API role; writes the ledger row `contribution_use`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261022090000_contribution_use_check.sql` | Read-only, 8 rows, all `ok` should be `t`. Privileges are read with `has_table_privilege` / `has_function_privilege`, which count PUBLIC and inherited grants. `authenticated` holds select, insert and delete on `contribution_use` (the three policies only let an editor through) and never update. |
+| `20261022090000_contribution_use_revert.sql` | One transaction: drops the two public functions, the five private helpers and the table, and removes the ledger row. Refuses, changing nothing, while `contribution_use` has rows or any contributor is blocked. Monthly pieces made by `add_months` are left. Safe to run twice. |
+
+## Steps
+
+1. Run `20261022090000_contribution_use_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261022090000_contribution_use_check.sql`: 8 rows, all `ok = t`.
+3. Regenerate `src/shared/types/database.types.ts` in the classic format, and record the
+   ledger version (`select version from supabase_migrations.schema_migrations where name = 'contribution_use'`) in `migrations/README.md`.
+4. The ticket-08 phone checklist, with two test phones A and B and the publishable key
+   (anonymous sign-in on, `.scratch/contribute/issues/08-contributor-tables.md`):
+   a save, a resend (`already saved`), B cannot read A's, over-cap and out-of-range
+   recordings refused, the 21st in 24 hours refused; an editor blocks A
+   (`select public.block_contributor('<id>', 'note')` as an editor) and A's next save is refused,
+   A cannot unblock itself; A deletes its recordings and its contributions, points, hintos
+   and uses are gone; `private.retire_month(month, 0)` on a test month inside `begin; … rollback;`.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and nothing is stored in `contribution_use`: run `20261022090000_contribution_use_revert.sql`.
+  `verify/contribution-use.sh` checks the schema afterwards matches the schema before, and that it re-applies.
+- Uses stored, or a phone blocked: the revert refuses. Unblock the phone, and decide with the owner what happens to the labels first.
+
+## Monthly and yearly steps
+
+The retention functions are run by hand in the SQL editor, never by a phone or an editor:
+`select private.retire_month(date '2026-10-01');` from November 2028, then each month;
+`select private.add_months(12);` once a year. See the migration's header.
+

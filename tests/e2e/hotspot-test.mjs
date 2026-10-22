@@ -99,7 +99,7 @@ await recentre();
 await page.waitForTimeout(300);
 
 // ---- Hotspot: open menu, choose Hintuan
-await page.getByRole('button', { name: '+ New hotspot' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Hintuan/ }).click();
 check(
   'toolbar shows Hintuan mode',
@@ -195,7 +195,8 @@ await page.screenshot({ path: 'hotspot-trace.png' });
 await page.getByRole('button', { name: '✕' }).click();
 
 // ---- Regression: a 2-point route still snaps to roads
-await page.getByRole('button', { name: '+ New Route' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(200);
 // Two clicks on the centred saved route's own vertices (savedLine, the same
 // route the view is centred on), each at least 120 px from every earlier pick
