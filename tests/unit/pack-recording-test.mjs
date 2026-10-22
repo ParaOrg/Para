@@ -6,7 +6,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { UPLOAD_LIMITS, packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { UPLOAD_LIMITS } from '../../src/features/contribute/recording-limits.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';
 import { problemOf } from '../../src/features/contribute/api/upload-contribution.ts';
 
