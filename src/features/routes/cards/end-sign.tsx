@@ -4,8 +4,6 @@ interface EndSignProps {
   kind: EndSignKind;
   /** A train station's sign code, YL06, in a second white segment after the word. */
   code?: string | null;
-  /** The sign leads a name, so a screen reader hears a comma after it; false where nothing follows. */
-  isFollowedByName?: boolean;
 }
 
 /**
@@ -32,12 +30,12 @@ export const END_SIGN_LOOK = {
  * Figma's white inner pill that says which end a place is (RouteLineEndingsLabels, 3848:12135):
  * "Start" or "End" in SN Pro Medium 14/20 in the outer pill's colour. At a train station a second
  * segment holds the code, 2 apart: the word's segment is round on the left and 2 on its top right,
- * the code's round on the right. It sits inside a pill of the end's own colour (EndSignPill, or a
- * label's).
+ * the code's round on the right. It sits inside a pill of the end's own colour, a map label's.
  */
-export function EndSign({ kind, code = null, isFollowedByName = true }: EndSignProps) {
+export function EndSign({ kind, code = null }: EndSignProps) {
   const look = END_SIGN_LOOK[kind];
-  const comma = isFollowedByName && <span className="sr-only">, </span>;
+  // The sign leads a name, so a screen reader hears a comma after it.
+  const comma = <span className="sr-only">, </span>;
   if (!code) {
     return (
       <>
