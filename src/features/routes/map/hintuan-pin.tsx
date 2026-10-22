@@ -22,7 +22,7 @@ interface Props {
    * the table does not know.
    */
   code?: string | null;
-  /** The trip's colour: the circle is ringed in its line's, the card's surface. */
+  /** The trip's colour: a picked start's circle is ringed in its line's, the card's surface; a picked end's is red. */
   livery: Livery;
   /** Given, the name is a button: the public map's lets the pick go. */
   onPick?: () => void;
@@ -36,11 +36,11 @@ interface Props {
 /**
  * The picked hintuan on the map: a circle that pops up where it is, the route
  * left whole, not cut there (the owner's call). It is the timeline's own
- * TimelineDot, Selected, ringed in the lit line's colour, the card's surface
- * (the owner's call: match the line), so the map and the card point at the
- * same place the same way, and the circle is one colour with the line it sits
- * on and the dots before it (StationLabels; past it, the line and its dots
- * are the card's pale, useRideRest).
+ * TimelineDot, Selected: a picked start ringed in the lit line's colour, the
+ * card's surface, one colour with the line it sits on and the dots before it
+ * (StationLabels; past it, the line and its dots are the card's pale,
+ * useRideRest); a picked end in End's red, as Figma's HintuanEnd draws it and
+ * as its pill is.
  *
  * A DOM marker, like the commuter's own (LocatorIndicatorOverlay): the pop is
  * a CSS animation that costs the map nothing, and it takes no taps, so a tap

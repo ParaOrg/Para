@@ -1429,6 +1429,9 @@ const tripChecks = async () => {
           : `var(--card-${livery}-surface-pale)`;
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
+      // The picked end's circle is End's red, whatever the line.
+      probe.style.backgroundColor = 'var(--card-red-surface)';
+      const endRed = getComputedStyle(probe).backgroundColor;
       probe.remove();
       return {
         lit: (await window.__lit('saved-routes')) ?? [],
@@ -1459,7 +1462,9 @@ const tripChecks = async () => {
         // The line's colour is the card's surface (livery-line.ts): the card's own background.
         line: trip ? getComputedStyle(trip).backgroundColor : null,
         pale: cardPale,
+        endRed,
         livery: pin?.dataset.livery ?? null,
+        marks: pin?.dataset.marks ?? null,
         tripLivery: trip?.dataset.livery ?? null,
         taps: pin ? getComputedStyle(pin).pointerEvents : null,
         dots: document.querySelectorAll('[data-testid="ride-dot"]').length,
@@ -1479,14 +1484,15 @@ const tripChecks = async () => {
       `${drawn.lit.length} lit; ${drawn.rest} stretch(es) at rest, the rest layer ${drawn.restLayer ? 'there' : 'never added'}, in ${drawn.restColour}${LOOKS ? ` (the ${drawn.tripLivery} card's pale ${pale})` : ''}`,
     );
     check(
-      "  a circle pops up at the hintuan, ringed in the line's colour, taking no taps",
+      "  a circle pops up at the hintuan, ringed in End's red, taking no taps",
       drawn.pins === 1 &&
         (!pickWant || (drawn.off !== null && drawn.off < 2)) &&
         drawn.livery === drawn.tripLivery &&
+        drawn.marks === 'end' &&
         !!drawn.ring &&
-        drawn.ring === drawn.line &&
+        drawn.ring === drawn.endRed &&
         drawn.taps === 'none',
-      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} ring ${drawn.ring}, the line ${drawn.line}; pointer-events ${drawn.taps}`,
+      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan, marking the ${drawn.marks}; ${drawn.livery} line, ring ${drawn.ring}, End's red ${drawn.endRed}; pointer-events ${drawn.taps}`,
     );
     // The dots along the rest ring in its pale, the ones before the pick in
     // the line's colour (the owner's ask, 2026-10-12, with a screenshot of

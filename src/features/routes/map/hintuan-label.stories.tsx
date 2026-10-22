@@ -36,6 +36,16 @@ const dotOf = (root: HTMLElement): HTMLElement => {
   return dot;
 };
 
+/** The colour a token class paints, read off a probe wearing it. */
+const wornBy = (className: string) => {
+  const probe = document.createElement('i');
+  probe.className = className;
+  document.body.append(probe);
+  const colour = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return colour;
+};
+
 /** The label's pop (hintuan-label.css) run out: sizes are read through its scale. */
 const settled = (root: HTMLElement) =>
   Promise.all(root.getAnimations({ subtree: true }).map((animation) => animation.finished));
@@ -60,13 +70,16 @@ export const Hintuan: Story = {
   },
 };
 
-/** HintuanEnd (4068:4878): the picked hintuan, its dot filled, a white End pill before its name on red. */
+/** HintuanEnd (4068:4878): the picked hintuan, its dot filled in End's red, a white End pill before its name on red. */
 export const HintuanEnd: Story = {
   args: { variant: 'hintuan-end' },
   play: async ({ canvasElement }) => {
     await expectBesideTheDot(canvasElement);
     await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'end'))).toBe(true);
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+    await expect(getComputedStyle(dotOf(canvasElement)).backgroundColor).toBe(
+      wornBy('bg-card-red-surface'),
+    );
   },
 };
 
