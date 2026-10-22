@@ -34,23 +34,25 @@ type Props = Omit<
   | 'aria-label'
   | 'aria-labelledby'
   | 'title'
-> & {
-  variant?: 'special' | 'brand';
-  size?: Size;
-  /** Figma's 🙏 Icon Instance: a square SVG drawing in currentColor. */
-  icon: ReactNode;
-  /**
-   * Not in the Figma set: with no words on it, this is what a screen reader
-   * says the button does, and what its tooltip reads.
-   */
-  label: string;
-  /**
-   * Where the tooltip points from, as the Tooltip set names it. The screen
-   * picks: a control at the bottom of the map wants the bubble above it,
-   * Bottom; one along a card's top edge wants it below, Top.
-   */
-  tooltip?: TooltipPosition;
-};
+> &
+  // Only the pairs the set draws: Brand comes at Large alone.
+  ({ variant?: 'special'; size?: Size } | { variant: 'brand'; size: 'large' }) & {
+    /** Figma's 🙏 Icon Instance: a square SVG drawing in currentColor. */
+    icon: ReactNode;
+    /**
+     * Not in the Figma set: with no words on it, this is what a screen reader
+     * says the button does, and what its tooltip reads.
+     */
+    label: string;
+    /**
+     * Where the tooltip points from, as the Tooltip set names it. The screen
+     * picks: a control at the bottom of the map wants the bubble above it,
+     * Bottom; one along a card's top edge wants it below, Top.
+     */
+    tooltip?: TooltipPosition;
+  };
+
+type Variant = NonNullable<Props['variant']>;
 
 const VARIANT = {
   special:
@@ -61,7 +63,7 @@ const VARIANT = {
   brand:
     'bg-brand-surface text-content-inverse shadow-primary-button-rest ' +
     'enabled:hover:shadow-primary-button-hover enabled:active:shadow-primary-button-pressed',
-} satisfies Record<NonNullable<Props['variant']>, string>;
+} satisfies Record<Variant, string>;
 
 // Large is 48px round (10px around a 28px icon); Base 40px (8px around 24px);
 // Small 32px (6px around 20px).
