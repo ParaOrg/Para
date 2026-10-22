@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { TextField } from '@/design-system/primitives/text-field';
 
 import { putBack, takeDown } from '../data/drafts';
 import type { PublicationSubject } from '../data/publication';
@@ -98,14 +99,13 @@ export function ReviewSubjects({ onChanged, onBusyChange }: ReviewSubjectsProps)
         </div>
       ) : (
         <>
-          <label className="text-sm">
-            Find a route or place
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-border-primary bg-surface p-3 text-base"
-            />
-          </label>
+          <TextField
+            label="Find a route or place"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            onClear={() => setSearch('')}
+          />
           <Button
             variant="secondary"
             label="Refresh approved data"

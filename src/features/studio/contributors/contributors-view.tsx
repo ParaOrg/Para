@@ -1,6 +1,7 @@
 import { useCallback, useId, useState, type ReactNode } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { SelectField } from '@/design-system/primitives/select-field';
 
 import { ContributionDetails } from './contribution-details';
 import { ContributionList } from './contribution-list';
@@ -52,28 +53,24 @@ export function ContributorsView({
         <h2 id={headingId} className="text-base font-bold text-content-primary">
           Contributors
         </h2>
-        <label
-          htmlFor={periodId}
-          className="flex items-center gap-2 text-sm text-content-secondary"
-        >
-          Uploaded in the last
-          <select
+        <div className="w-44">
+          <SelectField
             id={periodId}
+            label="Uploaded in the last"
             value={days}
             onChange={(event) => {
               const next = CONTRIBUTION_PERIODS.find((d) => String(d) === event.target.value);
               if (next) setDays(next);
               setOpenedId(null);
             }}
-            className="rounded-md border border-border-primary bg-surface px-2 py-1 text-content-primary"
           >
             {CONTRIBUTION_PERIODS.map((d) => (
               <option key={d} value={d}>
                 {d} days
               </option>
             ))}
-          </select>
-        </label>
+          </SelectField>
+        </div>
         <label
           htmlFor={hiddenId}
           className="flex items-center gap-2 text-sm text-content-secondary"

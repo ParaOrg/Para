@@ -18,14 +18,3 @@ export const PANEL =
 export const FOOTER =
   'mt-5 flex gap-2 max-sm:sticky max-sm:-bottom-6 max-sm:-mx-6 max-sm:border-t max-sm:border-neutral-200 ' +
   'max-sm:bg-white max-sm:px-6 max-sm:pt-3 max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]';
-
-/**
- * A field's text: 16 px on a phone, under which iOS zooms the page in when
- * the field is focused; 14 px wider.
- */
-export const FIELD_TEXT = 'text-base sm:text-sm';
-
-/** A long form's input or select: full width, greyed while locked (SavePanel). */
-export const FIELD =
-  `mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 ${FIELD_TEXT} outline-none ` +
-  'focus:border-neutral-900 disabled:bg-neutral-100 disabled:text-neutral-500';
