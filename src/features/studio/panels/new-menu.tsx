@@ -2,8 +2,9 @@ import { useId } from 'react';
 import type { ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { HintuanIcon, RoutesIcon, TerminalIcon } from '@/shared/ui/route-icons';
+import { HintuanIcon, TerminalIcon } from '@/shared/ui/route-icons';
 
+import { AddIcon, RouteLetterIcon } from './new-menu-icons';
 import { useNewMenu } from './use-new-menu';
 import type { HotspotKind } from '../drawing/drawing-types';
 
@@ -23,7 +24,7 @@ const CHOICES: Choice[] = [
     choice: 'route',
     title: 'Routes',
     description: 'Lines you can ride by jeep, e-jeep, UV Express or bus.',
-    icon: <RoutesIcon />,
+    icon: <RouteLetterIcon />,
     iconClassName: 'text-blue-700',
   },
   {
@@ -42,6 +43,13 @@ const CHOICES: Choice[] = [
   },
 ];
 
+/**
+ * What the + takes from the map's corner, for the locator's controls to
+ * stand on (`--dock-foot`): its 2.5rem off the foot, clear of the map's ⓘ as
+ * the controls are, and its 3rem. The workshop sets it while the menu shows.
+ */
+export const NEW_MENU_DOCK_FOOT = '[--dock-foot:5.5rem]';
+
 interface NewMenuProps {
   /** Whether the map is there to draw on. */
   isReady: boolean;
@@ -54,8 +62,8 @@ interface NewMenuProps {
 
 /**
  * The studio's one way to start, at the map's bottom right (Figma 4300:20889):
- * a Brand + that opens LineSelection (4304:21611) beside it — a route, a
- * terminal or a hintuan. Disabled until the map is there to draw on.
+ * a Brand + under the locator's controls that opens LineSelection
+ * (4304:21611) beside it — a route, a terminal or a hintuan. Disabled until the map is there to draw on.
  */
 export function NewMenu({ isReady, isOpen, onOpenChange, onNewRoute, onNewHotspot }: NewMenuProps) {
   const menuId = useId();
@@ -70,7 +78,7 @@ export function NewMenu({ isReady, isOpen, onOpenChange, onNewRoute, onNewHotspo
   return (
     <div
       ref={rootRef}
-      className="absolute right-[calc(1.25rem+env(safe-area-inset-right))] bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-10 flex items-end gap-3"
+      className="absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-[calc(2.5rem+env(safe-area-inset-bottom))] z-10 flex items-end gap-3"
     >
       {isOpen && (
         <div
@@ -115,14 +123,5 @@ export function NewMenu({ isReady, isOpen, onOpenChange, onNewRoute, onNewHotspo
         aria-controls={isOpen ? menuId : undefined}
       />
     </div>
-  );
-}
-
-/** Figma's add, 28 across (4300:20976). */
-function AddIcon() {
-  return (
-    <svg viewBox="0 0 28 28" fill="currentColor" aria-hidden>
-      <path d="M12.9507 22.169V15.0528H5.83331C5.25341 15.0528 4.78285 14.5822 4.78285 14.0023C4.78286 13.4224 5.25342 12.9519 5.83331 12.9519H12.9507V5.83337C12.9507 5.25349 13.4212 4.78294 14.0011 4.78291C14.581 4.78291 15.0516 5.25347 15.0516 5.83337V12.9519H22.1689C22.7488 12.9519 23.2194 13.4224 23.2194 14.0023C23.2194 14.5822 22.7488 15.0528 22.1689 15.0528H15.0516V22.169C15.0516 22.7489 14.581 23.2194 14.0011 23.2194C13.4212 23.2194 12.9507 22.7489 12.9507 22.169Z" />
-    </svg>
   );
 }
