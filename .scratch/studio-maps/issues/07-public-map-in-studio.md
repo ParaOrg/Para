@@ -1,6 +1,6 @@
 # 07: The Public map in the studio
 
-Status: claimed
+Status: resolved
 Type: task
 Wave: 3
 Who: Sonnet
