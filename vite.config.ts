@@ -594,6 +594,15 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
               priority: 1,
             },
+            //  - fields: the design system's input fields, which only the
+            //    studio and the contributor page draw. Both import them, so left
+            //    to `shared` they would ride along on the public page, which has
+            //    no form.
+            {
+              name: 'fields',
+              test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-icons|text-field|text-area-field|password-field|select-field)\.tsx$/,
+              priority: 1,
+            },
             //  - shared never takes the studio's or the contributor page's own
             //    modules, nor Turnstile, which only those two load: two of
             //    their chunks importing one would otherwise put it on the

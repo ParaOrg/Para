@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { TextAreaField } from '@/design-system/primitives/text-area-field';
 
 import { manilaTime } from './contribution-format';
 import { useHideContributionMutation } from '../data/use-contributions-query';
@@ -59,11 +60,9 @@ export function HideUpload({ contributionId, hiddenAt, hiddenNote, onChanged }: 
     return <Button variant="secondary" label="Hide" onClick={() => setIsAsking(true)} />;
   return (
     <div className="flex w-full flex-col gap-2 rounded-xl border border-border-primary p-3">
-      <label htmlFor={noteId} className="font-bold text-content-primary">
-        Why hide it? (optional)
-      </label>
-      <textarea
+      <TextAreaField
         id={noteId}
+        label="Why hide it? (optional)"
         // The question opens on a tap, so its field takes the focus.
         // eslint-disable-next-line jsx-a11y/no-autofocus -- opened by the editor's own tap
         autoFocus
@@ -71,7 +70,6 @@ export function HideUpload({ contributionId, hiddenAt, hiddenNote, onChanged }: 
         maxLength={500}
         value={note}
         onChange={(event) => setNote(event.target.value)}
-        className="rounded-md border border-border-primary bg-surface p-2 text-content-primary"
       />
       {change.error && <p role="alert">{change.error.message}</p>}
       <div className="flex flex-wrap gap-2">

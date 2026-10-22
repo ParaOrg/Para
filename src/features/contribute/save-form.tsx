@@ -1,6 +1,9 @@
 import { useId, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { SelectField } from '@/design-system/primitives/select-field';
+import { TextAreaField } from '@/design-system/primitives/text-area-field';
+import { TextField } from '@/design-system/primitives/text-field';
 
 import { countdownText } from './format';
 import { RIDE_KINDS, type RideKind } from './recording-schema';
@@ -17,9 +20,6 @@ interface SaveFormProps {
   /** Continue, and the form's two minutes running out, save what was said; Skip saves without. */
   onSave: (details: RecordingDetails | null) => void;
 }
-
-const FIELD =
-  'rounded-lg border border-border-secondary bg-surface px-3 py-2 text-base/6 font-normal text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary';
 
 const isRideKind = (value: string): value is RideKind => RIDE_KINDS.some((kind) => kind === value);
 
@@ -73,58 +73,47 @@ export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave 
           <Button variant="secondary" label="Download this recording" onClick={onDownload} />
         </div>
       )}
-      <label className="flex flex-col gap-1 text-base/6 font-bold" htmlFor={`${ids}-start`}>
-        Start point name
-        <input
-          id={`${ids}-start`}
-          maxLength={80}
-          className={FIELD}
-          value={details.startPointName}
-          onChange={(event) => setDetails({ ...details, startPointName: event.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-base/6 font-bold" htmlFor={`${ids}-end`}>
-        End point name
-        <input
-          id={`${ids}-end`}
-          maxLength={80}
-          className={FIELD}
-          value={details.endPointName}
-          onChange={(event) => setDetails({ ...details, endPointName: event.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-base/6 font-bold" htmlFor={`${ids}-description`}>
-        Description
-        <textarea
-          id={`${ids}-description`}
-          maxLength={1000}
-          className={FIELD}
-          rows={3}
-          value={details.description}
-          onChange={(event) => setDetails({ ...details, description: event.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-base/6 font-bold" htmlFor={`${ids}-kind`}>
-        What did you ride?
-        <select
-          id={`${ids}-kind`}
-          className={FIELD}
-          value={details.rideKind ?? ''}
-          onChange={(event) =>
-            setDetails({
-              ...details,
-              rideKind: isRideKind(event.target.value) ? event.target.value : null,
-            })
-          }
-        >
-          <option value="">Not said</option>
-          {RIDE_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {kind}
-            </option>
-          ))}
-        </select>
-      </label>
+      <TextField
+        id={`${ids}-start`}
+        label="Start point name"
+        maxLength={80}
+        value={details.startPointName}
+        onChange={(event) => setDetails({ ...details, startPointName: event.target.value })}
+        onClear={() => setDetails({ ...details, startPointName: '' })}
+      />
+      <TextField
+        id={`${ids}-end`}
+        label="End point name"
+        maxLength={80}
+        value={details.endPointName}
+        onChange={(event) => setDetails({ ...details, endPointName: event.target.value })}
+        onClear={() => setDetails({ ...details, endPointName: '' })}
+      />
+      <TextAreaField
+        id={`${ids}-description`}
+        label="Description"
+        maxLength={1000}
+        value={details.description}
+        onChange={(event) => setDetails({ ...details, description: event.target.value })}
+      />
+      <SelectField
+        id={`${ids}-kind`}
+        label="What did you ride?"
+        value={details.rideKind ?? ''}
+        onChange={(event) =>
+          setDetails({
+            ...details,
+            rideKind: isRideKind(event.target.value) ? event.target.value : null,
+          })
+        }
+      >
+        <option value="">Not said</option>
+        {RIDE_KINDS.map((kind) => (
+          <option key={kind} value={kind}>
+            {kind}
+          </option>
+        ))}
+      </SelectField>
       <div className="mt-auto flex flex-col gap-2">
         <Button variant="primary" type="submit" label="Continue" />
         <Button variant="secondary" label="Skip" onClick={() => onSave(null)} />

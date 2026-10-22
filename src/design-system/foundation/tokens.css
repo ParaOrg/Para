@@ -135,10 +135,15 @@
   --color-ferry-900: #061f4e;
   --color-ferry-950: #05122d;
 
-  /* Type: Figma's font/size, where it is not Tailwind's own. Base is 17 (Tailwind's 16) and 3xl
-     28 (Tailwind's 30); each keeps Tailwind's line height in pixels, 24 and 36. */
+  /* Type: Figma's font/size, where it is not Tailwind's own. Base is base-upper, 17 (Tailwind's
+     16), sm is sm-upper, 14; base-lower is 16 and sm-lower 13; 3xl is 28 (Tailwind's 30). Each
+     keeps Tailwind's line height in pixels: 24 for both bases, 20 for both sms, 36 for 3xl. */
   --text-base: 1.0625rem;
   --text-base--line-height: calc(1.5 / 1.0625);
+  --text-base-lower: 1rem;
+  --text-base-lower--line-height: calc(1.5 / 1);
+  --text-sm-lower: 0.8125rem;
+  --text-sm-lower--line-height: calc(1.25 / 0.8125);
   --text-3xl: 1.75rem;
   --text-3xl--line-height: calc(2.25 / 1.75);
 }
