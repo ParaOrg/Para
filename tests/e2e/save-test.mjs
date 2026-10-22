@@ -1406,12 +1406,7 @@ await dismissToasts();
     '  its places are listed from the first drawn, the signboard asked for',
     (await page.getByTestId('save-timeline').innerText()).includes('Stand-in Head') &&
       (await page.getByTestId('save-timeline').innerText()).includes('Stand-in Tail') &&
-      /required/.test(
-        await page
-          .getByLabel(/Signboard/)
-          .locator('..')
-          .innerText(),
-      ),
+      (await page.getByLabel(/Signboard.*required/).count()) === 1,
     (await page.getByTestId('save-timeline').innerText()).replace(/\s+/g, ' '),
   );
   n = log.length;

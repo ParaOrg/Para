@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { TextField } from '@/design-system/primitives/text-field';
 
 import { draftFacts, saveDraftFacts } from '../data/draft-facts';
 import { reviewKeys } from '../data/review-keys';
@@ -79,17 +80,16 @@ export function DraftFactsForm({ draft, onBusyChange }: DraftFactsFormProps) {
         Drawing and links are kept. Save these details before submitting for review.
       </p>
       {fields.map((field) => (
-        <label key={field.key} className="text-sm">
-          {field.label}
-          <input
-            value={values[field.key] ?? ''}
-            required={field.key === 'name'}
-            disabled={mutation.isPending}
-            maxLength={4000}
-            onChange={(event) => setValues({ ...values, [field.key]: event.target.value })}
-            className="mt-1 w-full rounded-lg border border-border-primary bg-surface p-3 text-base"
-          />
-        </label>
+        <TextField
+          key={field.key}
+          label={field.label}
+          value={values[field.key] ?? ''}
+          required={field.key === 'name'}
+          disabled={mutation.isPending}
+          maxLength={4000}
+          onChange={(event) => setValues({ ...values, [field.key]: event.target.value })}
+          onClear={() => setValues({ ...values, [field.key]: '' })}
+        />
       ))}
       {mutation.isError && <p role="alert">{mutation.error.message}</p>}
       {mutation.data && mutation.data.code !== 'ok' && (
