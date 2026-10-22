@@ -1,6 +1,6 @@
 # 04: The switch: Contributors | Playground | Public
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 3
 Who: Sonnet

@@ -1,6 +1,6 @@
 # 07: Turnstile on the studio's sign-in
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2
 Who: Sonnet

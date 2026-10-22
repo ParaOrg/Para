@@ -1,6 +1,6 @@
 # 02: The publish: approved only, takedowns against the guard, no contributor data
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2
 Who: Sonnet

@@ -1,6 +1,6 @@
 # 11: The contributor page opens with no signal
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 4
 Who: Sonnet

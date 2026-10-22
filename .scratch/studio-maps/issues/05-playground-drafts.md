@@ -1,6 +1,6 @@
 # 05: The Playground saves drafts
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 3
 Who: Sonnet

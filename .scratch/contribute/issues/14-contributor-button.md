@@ -1,6 +1,6 @@
 # 14: The Contributor button on the public map
 
-Status: needs-info
+Status: resolved
 Type: task
 Wave: 4, at the end of the test period
 Who: Sonnet, or Opus with the owner if the button is a new component

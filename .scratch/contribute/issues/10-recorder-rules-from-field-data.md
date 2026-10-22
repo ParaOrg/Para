@@ -1,6 +1,6 @@
 # 10: The recorder's rules, from the field data
 
-Status: ready-for-agent
+Status: claimed
 Type: task
 Wave: 4
 Who: Sonnet

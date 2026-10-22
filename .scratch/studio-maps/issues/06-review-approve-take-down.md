@@ -1,6 +1,6 @@
 # 06: Submit, Approve, Send back, Take down, Put back
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 3
 Who: Sonnet
