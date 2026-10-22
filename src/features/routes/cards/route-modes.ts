@@ -21,9 +21,14 @@ interface ModeGroup<T> {
   items: T[];
 }
 
+/** Groups that close a card, in this order, after every road group. */
+const LAST_LABELS = ['Train', 'Ferry'];
+
 /**
- * A card's rows under the mode they ride, one group for each mode in the order it first appears,
- * the rows keeping their order inside it. Rows with no vehicle form a group with no label.
+ * A card's rows under the mode they ride, one group for each mode, the rows keeping their order
+ * inside it. Road groups come first, in the order each first appears; the Train group and then the
+ * Ferry group close the card, wherever their rows sit in the data. Rows with no vehicle form a
+ * group with no label, among the road groups.
  */
 export function groupByMode<T extends { vehicle: Vehicle | null }>(
   items: readonly T[],
@@ -35,5 +40,7 @@ export function groupByMode<T extends { vehicle: Vehicle | null }>(
     if (group) group.items.push(item);
     else groups.set(key, { vehicle: item.vehicle, items: [item] });
   }
-  return [...groups.values()];
+  const road = [...groups].filter(([key]) => !LAST_LABELS.includes(key));
+  const last = LAST_LABELS.flatMap((key) => groups.get(key) ?? []);
+  return [...road.map(([, group]) => group), ...last];
 }

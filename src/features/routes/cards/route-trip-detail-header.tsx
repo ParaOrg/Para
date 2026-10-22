@@ -35,7 +35,6 @@ const LINE_WORDS = {
  * these words is not confirmed.
  */
 const CARD_WORDS = {
-  red: 'text-card-red-surface',
   orange: 'text-card-orange-surface',
   violet: 'text-card-violet-surface',
   rose: 'text-card-rose-surface',

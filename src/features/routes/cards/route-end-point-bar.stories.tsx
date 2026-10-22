@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
+import { RailwayBadge } from './railway-badge';
 import { RouteEndPointBar } from './route-end-point-bar';
 
 /**
@@ -48,37 +49,34 @@ export const OnSurfacePressed: Story = { args: { className: 'bg-surface-tertiary
 /** The last row of a trip's "Other routes": the line ends at its stub. */
 export const OnSurfaceLast: Story = { args: { position: 'bottom' } };
 
-/** RouteCard at Rest, on a red card: its words, 40 tall. */
-export const OnRed: Story = {
-  args: { on: 'red' },
+/** RouteCard at Rest, on an orange card: its words, 40 tall. */
+export const OnOrange: Story = {
+  args: { on: 'orange' },
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByRole('button', { name: 'SM Fairview' });
     await expect(row.getBoundingClientRect().height).toBe(40);
   },
 };
 
-/** RouteCard Pressed: Card/red/Timeline/surface. */
-export const OnRedPressed: Story = {
-  args: { on: 'red', className: 'bg-card-red-timeline-surface' },
+/** RouteCard Pressed: Card/orange/Timeline/surface. */
+export const OnOrangePressed: Story = {
+  args: { on: 'orange', className: 'bg-card-orange-timeline-surface' },
 };
 
 /** The last row of a card's group: the line ends at its stub. */
-export const OnRedLast: Story = { args: { on: 'red', position: 'bottom' } };
+export const OnOrangeLast: Story = { args: { on: 'orange', position: 'bottom' } };
 
 /** On MRT-3's yellow the row and its line take the card's dark words. */
 export const OnDarkWords: Story = { args: { on: 'metro-rail-way-three', position: 'bottom' } };
 
-/** The ❄️ Slot filled, before the name: a station's code, as RouteCardRailway puts it. */
+/** The ❄️ Slot filled, after the name: a station's badge, as RouteCardRailway puts it. */
 export const WithSlot: Story = {
   args: {
     on: 'light-rail-way-two',
     position: 'bottom',
     routeDirection: 'Recto',
-    slot: (
-      <span className="rounded-full bg-content-inverse px-1.5 py-0.5 text-xs/4 font-medium text-map-rail-light-rail-way-two-surface">
-        PL01
-      </span>
-    ),
+    size: 'xl',
+    slot: <RailwayBadge kind="end" railway="LRT-2" code="PL01" />,
   },
 };
 

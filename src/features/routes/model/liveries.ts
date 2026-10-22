@@ -2,8 +2,9 @@ import type { RailwayVehicle } from './vehicles';
 
 /**
  * The route cards' colours — the jeepney liveries of Figma's RouteCard set
- * (3665:2265): red, orange, violet, rose, fuchsia and pink (Card/pink,
- * 4071:7014). The owner's rule: shown at random, but kept for the whole
+ * (3665:2265): orange, violet, rose, fuchsia and pink (Card/pink,
+ * 4071:7014). Green, blue and red are reserved for meanings (green is Start, red is End, blue is
+ * selected), so no route is drawn in them. The owner's rule: shown at random, but kept for the whole
  * visit, the same in the list and on the trip's own card, and two cards side
  * by side never alike.
  *
@@ -23,7 +24,7 @@ import type { RailwayVehicle } from './vehicles';
  * (the owner's call; `useTripLivery` in trip-card.tsx, since its line wears
  * the colour too).
  */
-export const JEEPNEY_LIVERIES = ['red', 'orange', 'violet', 'rose', 'fuchsia', 'pink'] as const;
+export const JEEPNEY_LIVERIES = ['orange', 'violet', 'rose', 'fuchsia', 'pink'] as const;
 type JeepneyLivery = (typeof JEEPNEY_LIVERIES)[number];
 
 /**

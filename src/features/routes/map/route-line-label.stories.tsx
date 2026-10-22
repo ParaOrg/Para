@@ -76,45 +76,61 @@ export const Unselected: Story = {
   },
 };
 
-/** End (4068:4865): End's circled E, 24 across, 2 in from the pill's edge, before the name. */
+/** End (4068:4865): a white "End" pill before the name, on red whatever the line. */
 export const End: Story = {
   args: { variant: 'end' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     await expectFigmaType(pill);
-    await expect(pill.contains(partOf(canvasElement, 'end'))).toBe(true);
-    const icon = partOf(canvasElement, 'end').getBoundingClientRect();
-    await expect(icon.width).toBe(24);
-    await expect(icon.left - pill.getBoundingClientRect().left).toBe(2);
-    await expect(pill.querySelector('.sr-only')?.textContent).toBe('End, ');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-red-surface'));
+    await expect(getComputedStyle(pill).color).toBe(wornBy('text-content-inverse', 'color'));
+    const sign = partOf(canvasElement, 'end');
+    await expect(pill.contains(sign)).toBe(true);
+    await expect(sign.textContent).toBe('End');
+    await expect(getComputedStyle(sign).backgroundColor).toBe(wornBy('bg-content-inverse'));
+    await expect(getComputedStyle(sign).color).toBe(wornBy('text-card-red-surface', 'color'));
+    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(2);
+  },
+};
+
+/** End on a train line's colour, MRT-3's yellow included: still red. */
+export const EndMetroRailWayThree: Story = {
+  args: { variant: 'end', livery: 'metro-rail-way-three' },
+  play: async ({ canvasElement }) => {
+    await expect(getComputedStyle(partOf(canvasElement, 'name')).backgroundColor).toBe(
+      wornBy('bg-card-red-surface'),
+    );
   },
 };
 
 /**
- * CodeSignEnd (4068:4800): the E in a 28 disc of its own, 8 before the pill;
- * in the pill, the station's code in a white chip, its words the line's colour.
+ * CodeSignEnd (4068:4800): two red pills, 6 apart: "End" and the station's code in white
+ * segments inside one, the name in the other.
  */
 export const CodeSignEnd: Story = {
   args: { variant: 'end', codeSign: 'YL06' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
-    const disc = partOf(canvasElement, 'end');
+    const sign = partOf(canvasElement, 'end');
     const code = partOf(canvasElement, 'code');
     await expectFigmaType(pill);
-    await expect(pill.contains(disc)).toBe(false);
-    await expect(disc.getBoundingClientRect().height).toBe(28);
-    await expect(disc.getBoundingClientRect().width).toBe(28);
-    await expect(pill.getBoundingClientRect().left - disc.getBoundingClientRect().right).toBe(8);
+    await expect(pill.contains(sign)).toBe(false);
+    await expect(sign.textContent).toBe('End');
     await expect(code.textContent).toBe('YL06');
+    const signPill = sign.parentElement?.parentElement;
+    await expect(signPill?.getBoundingClientRect().height).toBe(28);
+    await expect(
+      pill.getBoundingClientRect().left - (signPill?.getBoundingClientRect().right ?? 0),
+    ).toBe(6);
     await expect(getComputedStyle(code).backgroundColor).toBe(wornBy('bg-content-inverse'));
-    await expect(getComputedStyle(code).color).toBe(wornBy('text-card-rose-surface', 'color'));
+    await expect(getComputedStyle(code).color).toBe(wornBy('text-card-red-surface', 'color'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-red-surface'));
   },
 };
 
 /**
- * Start: a ride's picked start, End's shape with Start's circled S in Head
- * Route's green, whatever the line (3848:12135; the owner's call: the start
- * pill, not the yellow).
+ * Start: a ride's picked start, End's shape with a white "Start" pill on Head Route's green,
+ * whatever the line (3848:12135).
  */
 export const Start: Story = {
   args: { variant: 'start' },
@@ -126,41 +142,24 @@ export const Start: Story = {
     );
     await expect(getComputedStyle(pill).color).toBe(wornBy('text-content-inverse', 'color'));
     await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(true);
+    await expect(partOf(canvasElement, 'start').textContent).toBe('Start');
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
-    await expect(pill.querySelector('.sr-only')?.textContent).toBe('Start, ');
   },
 };
 
-/** CodeSignStart: a picked start station, the S in a green disc of its own, the code green on white. */
+/** CodeSignStart: a picked start station, "Start" and its code in white segments on green. */
 export const CodeSignStart: Story = {
   args: { variant: 'start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
-    const disc = partOf(canvasElement, 'start');
     const green = wornBy('bg-map-hotspots-card-hintuan-surface');
-    await expect(pill.contains(disc)).toBe(false);
-    await expect(disc.getBoundingClientRect().width).toBe(28);
-    await expect(getComputedStyle(disc).backgroundColor).toBe(green);
+    await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(false);
+    await expect(getComputedStyle(pill).backgroundColor).toBe(green);
     await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
-    await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(green);
-  },
-};
-
-/** Start on MRT-3's yellow line: green, never the line's yellow. */
-export const CodeSignStartMetroRailWayThree: Story = {
-  args: { variant: 'start', codeSign: 'YL07', livery: 'metro-rail-way-three' },
-  play: async ({ canvasElement }) => {
-    await expect(getComputedStyle(partOf(canvasElement, 'name')).backgroundColor).toBe(
-      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(
+      wornBy('text-map-hotspots-card-hintuan-surface', 'color'),
     );
   },
-};
-export const StartRed: Story = { args: { variant: 'start', livery: 'red' } };
-export const CodeSignStartLightRailWayOne: Story = {
-  args: { variant: 'start', codeSign: 'GL05', livery: 'light-rail-way-one' },
-};
-export const CodeSignStartLightRailWayTwo: Story = {
-  args: { variant: 'start', codeSign: 'PL05', livery: 'light-rail-way-two' },
 };
 
 /** A code given to Default draws nothing: Figma shows a station's code once it is picked. */
@@ -171,62 +170,14 @@ export const DefaultIgnoresCode: Story = {
   },
 };
 
-/** In each other card colour. */
-export const CodeSignEndRed: Story = { args: { variant: 'end', codeSign: 'GL02', livery: 'red' } };
-export const CodeSignEndOrange: Story = {
-  args: { variant: 'end', codeSign: 'PL08', livery: 'orange' },
-};
-export const CodeSignEndViolet: Story = {
-  args: { variant: 'end', codeSign: 'YL13', livery: 'violet' },
-};
-export const CodeSignEndFuchsia: Story = {
-  args: { variant: 'end', codeSign: 'YL06', livery: 'fuchsia' },
-};
-export const CodeSignEndPink: Story = {
-  args: { variant: 'end', codeSign: 'GL05', livery: 'pink' },
-};
-export const CodeSignEndLightRailWayOne: Story = {
-  args: { variant: 'end', codeSign: 'GL05', livery: 'light-rail-way-one' },
-};
-export const CodeSignEndLightRailWayTwo: Story = {
-  args: { variant: 'end', codeSign: 'PL05', livery: 'light-rail-way-two' },
-};
-/**
- * MRT-3: its yellow pill and disc, the words and the E near-black
- * (Map/RouteLine/Arrow/Inverse, as its chevrons), and the code black on white
- * (Content/primary, the owner's call).
- */
-export const CodeSignEndMetroRailWayThree: Story = {
-  args: { variant: 'end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
+/** A name longer than the marker: cut short with an ellipsis, the End pill whole. */
+export const LongName: Story = {
+  args: { variant: 'end', name: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
-    await expect(getComputedStyle(pill).backgroundColor).toBe(
-      wornBy('bg-map-rail-metro-rail-way-three-surface'),
-    );
-    const dark = wornBy('text-map-route-line-arrow-inverse', 'color');
-    await expect(getComputedStyle(partOf(canvasElement, 'words')).color).toBe(dark);
-    await expect(getComputedStyle(partOf(canvasElement, 'end')).color).toBe(dark);
-    await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(
-      wornBy('text-content-primary', 'color'),
-    );
-  },
-};
-
-/** A name longer than the room: cut short with an ellipsis, the disc and the code whole. */
-export const LongName: Story = {
-  args: {
-    variant: 'end',
-    codeSign: 'YL06',
-    name: 'North Caloocan City Hall Station Northbound Platform',
-  },
-  play: async ({ canvasElement }) => {
-    const root = partOf(canvasElement, 'label');
-    await expect(root.getBoundingClientRect().width).toBeLessThanOrEqual(256);
+    await expect(pill.getBoundingClientRect().width).toBeLessThanOrEqual(256);
     const words = partOf(canvasElement, 'words');
     await expect(words.scrollWidth).toBeGreaterThan(words.clientWidth);
-    await expect(partOf(canvasElement, 'end').getBoundingClientRect().width).toBe(28);
-    await expect(partOf(canvasElement, 'code').scrollWidth).toBe(
-      partOf(canvasElement, 'code').clientWidth,
-    );
+    await expect(partOf(canvasElement, 'end').textContent).toBe('End');
   },
 };

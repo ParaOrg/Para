@@ -105,7 +105,7 @@ const wornBy = (className: string) => {
   return colour;
 };
 
-/** The circle: the first thing in the marker, ringed in the line's colour. */
+/** The circle: the first thing in the marker, ringed in the line's colour, End's red once picked as the end. */
 const circleOf = (pin: HTMLElement): HTMLElement => {
   const dot = pin.querySelector<HTMLElement>(':scope > span:first-child');
   if (!dot) throw new Error('no circle rendered');
@@ -129,7 +129,7 @@ const expectOnThePoint = async (root: HTMLElement, pin: HTMLElement) => {
   await expect(circle.top + circle.height / 2).toBeCloseTo(map.top + map.height / 2, 0);
 };
 
-/** The picked hintuan as the ride's end: End's E before the name, the circle filled in the line's colour. */
+/** The picked hintuan as the ride's end: a white End pill before the name on red, the circle filled in the same red. */
 export const End: Story = {
   play: async ({ canvasElement }) => {
     const pin = await pinOf(canvasElement);
@@ -138,16 +138,18 @@ export const End: Story = {
     await expect(partOf(pin, 'name').contains(partOf(pin, 'end'))).toBe(true);
     await expect(pin.querySelector('[data-part="start"]')).toBeNull();
     await expect(partOf(pin, 'words').textContent).toBe('Novaliches Terminal');
-    await expect(getComputedStyle(circleOf(pin)).backgroundColor).toBe(wornBy(CARD_SURFACE.rose));
+    await expect(getComputedStyle(circleOf(pin)).backgroundColor).toBe(
+      wornBy('bg-card-red-surface'),
+    );
     await expect(getComputedStyle(partOf(pin, 'name')).backgroundColor).toBe(
-      wornBy(CARD_SURFACE.rose),
+      wornBy('bg-card-red-surface'),
     );
     await expect(getComputedStyle(partOf(pin, 'label')).opacity).toBe('1');
     await expectOnThePoint(canvasElement, pin);
   },
 };
 
-/** The picked start: Start's S before the name on Head Route's green, the circle still the line's colour. */
+/** The picked start: a white Start pill before the name on Head Route's green, the circle still the line's colour, not End's red. */
 export const Start: Story = {
   args: { marks: 'start' },
   play: async ({ canvasElement }) => {
@@ -163,18 +165,18 @@ export const Start: Story = {
   },
 };
 
-/** A train line's station picked as the end: the E in a disc of its own, the code in a white chip. */
+/** A train line's station picked as the end: End and the code in white segments of one red pill, the name in another. */
 export const TrainStation: Story = {
   args: { label: 'Balintawak', code: 'GL03', livery: 'light-rail-way-one' },
   play: async ({ canvasElement }) => {
     const pin = await pinOf(canvasElement);
     await expect(pin.dataset.livery).toBe('light-rail-way-one');
     await expect(partOf(pin, 'code').textContent).toBe('GL03');
-    // With a code the E leaves the pill for a disc beside it.
+    // With a code the End sign leaves the name's pill for one of its own beside it.
     await expect(partOf(pin, 'name').contains(partOf(pin, 'end'))).toBe(false);
     await expect(partOf(pin, 'words').textContent).toBe('Balintawak');
     await expect(getComputedStyle(circleOf(pin)).backgroundColor).toBe(
-      wornBy(CARD_SURFACE['light-rail-way-one']),
+      wornBy('bg-card-red-surface'),
     );
     await expectOnThePoint(canvasElement, pin);
   },
@@ -189,8 +191,8 @@ export const LongName: Story = {
     await expect(partOf(pin, 'label').getBoundingClientRect().width).toBeLessThanOrEqual(256);
     const words = partOf(pin, 'words');
     await expect(words.scrollWidth).toBeGreaterThan(words.clientWidth);
-    // The E stays whole, before the name.
-    await expect(partOf(pin, 'end').getBoundingClientRect().width).toBe(24);
+    // The End sign stays whole, before the name.
+    await expect(partOf(pin, 'end').textContent).toBe('End');
   },
 };
 
