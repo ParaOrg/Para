@@ -5,8 +5,8 @@
  * the chevron down on the row that folds its hintuans, turned to point up
  * when they are open — the same drawing as Figma's chevron-up, so one icon
  * serves both. Each is Figma's own path, filled with currentColor so it takes
- * the text colour of wherever it sits — the file draws them in
- * Content/primary or Content/inverse, never a colour of their own.
+ * the text colour of wherever it sits — the file draws them in Content/primary or
+ * Content/inverse, never a colour of their own.
  */
 
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
@@ -163,17 +163,17 @@ export function RoutesIcon() {
 }
 
 /**
- * The vehicles at the top of a trip's card (RouteTripDetailHeader) and at the
- * end of each route's row (RouteEndPointBar), Figma's own drawings at 32
+ * The vehicles at the top of a trip's card (RouteTripDetailHeader), a card's
+ * modes (RouteMode) and a train card's chip, Figma's own drawings at 32
  * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
- * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156) and Ferry
- * (4189:11183). They live in one sprite the page fetches, not as paths in its
+ * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry
+ * (4189:11183) and UV Express (4236:17067, drawn at 24). They live in one sprite the page fetches, not as paths in its
  * JS, the owner's pick (inline, they took the public page over its 400 kB),
  * so Figma's paths keep their full precision. Its file is hashed, and the
  * offline precache holds it. Each draws in currentColor; the opacity is the
  * caller's.
  */
-type SpriteId = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry';
+type SpriteId = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry' | 'uv-express';
 
 interface SpriteIconProps {
   id: SpriteId;
@@ -210,4 +210,9 @@ export function BusIcon() {
 /** The ferry, from the vehicle sprite. */
 export function FerryIcon() {
   return <SpriteIcon id="ferry" />;
+}
+
+/** The UV Express van, from the vehicle sprite. */
+export function UvExpressIcon() {
+  return <SpriteIcon id="uv-express" />;
 }

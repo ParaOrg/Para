@@ -29,11 +29,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** LRT 1: Map/Rail/LightRailWayOne, the line's white pill and the train at the right; the bound read out, not shown. */
+/** LRT 1: Map/Rail/LightRailWayOne, the train in a white chip, then the line's pill; the bound read out, not shown. */
 export const LightRailWayOne: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
-    await expect(card.getByTestId('chooser-pill')).toHaveTextContent('LRT - 1, Southbound');
+    await expect(card.getByTestId('chooser-pill')).toHaveTextContent('LRT 1, Southbound');
     await expect(card.getByTestId('chooser-item')).toHaveTextContent('GL26, Dr. Santos');
   },
 };

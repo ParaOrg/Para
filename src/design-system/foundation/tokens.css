@@ -84,28 +84,63 @@
   --color-taupe-900: #1d1816;
   --color-taupe-950: #0c0a09;
 
-  /* Primitive: the train lines' own colours, one family a line, only the four
-     steps its Map/Rail/… semantics use: 200 the pale, 600 the surface, 700 the
-     border, 800 the timeline. */
+  /* Primitive: the train lines' and the ferry's own colours, a family each,
+     every step Figma has. Their Map/… semantics use four: 200 the pale, 600
+     the surface, 700 the border, 800 the timeline. */
+  --color-light-rail-way-one-50: #f0fcf3;
+  --color-light-rail-way-one-100: #dbfbe4;
   --color-light-rail-way-one-200: #b7f5ca;
+  --color-light-rail-way-one-300: #79e69e;
+  --color-light-rail-way-one-400: #2dc76d;
+  --color-light-rail-way-one-500: #0ea651;
   --color-light-rail-way-one-600: #1d7739;
   --color-light-rail-way-one-700: #12612a;
   --color-light-rail-way-one-800: #0c5924;
+  --color-light-rail-way-one-900: #124820;
+  --color-light-rail-way-one-950: #06270e;
 
+  --color-light-rail-way-two-50: #f1ebff;
+  --color-light-rail-way-two-100: #e5dafe;
   --color-light-rail-way-two-200: #d0b9ff;
+  --color-light-rail-way-two-300: #b48efa;
+  --color-light-rail-way-two-400: #8c60d5;
+  --color-light-rail-way-two-500: #66459e;
   --color-light-rail-way-two-600: #4a3a6b;
   --color-light-rail-way-two-700: #382859;
   --color-light-rail-way-two-800: #372b4f;
+  --color-light-rail-way-two-900: #2c2340;
+  --color-light-rail-way-two-950: #1a1428;
 
+  --color-metro-rail-way-three-50: #fefcf1;
+  --color-metro-rail-way-three-100: #fff8dd;
   --color-metro-rail-way-three-200: #fff1b8;
+  --color-metro-rail-way-three-300: #ffea99;
+  --color-metro-rail-way-three-400: #ffe16d;
+  --color-metro-rail-way-three-500: #fad751;
   --color-metro-rail-way-three-600: #edc319;
   --color-metro-rail-way-three-700: #ac8b0b;
   --color-metro-rail-way-three-800: #967906;
+  --color-metro-rail-way-three-900: #7d6614;
+  --color-metro-rail-way-three-950: #483a05;
 
+  --color-ferry-50: #eef3ff;
+  --color-ferry-100: #d9e3fe;
   --color-ferry-200: #bccfff;
+  --color-ferry-300: #8dacf7;
+  --color-ferry-400: #537cdd;
+  --color-ferry-500: #2655bf;
   --color-ferry-600: #003399;
   --color-ferry-700: #002a80;
   --color-ferry-800: #002366;
+  --color-ferry-900: #061f4e;
+  --color-ferry-950: #05122d;
+
+  /* Type: Figma's font/size, where it is not Tailwind's own. Base is 17 (Tailwind's 16) and 3xl
+     28 (Tailwind's 30); each keeps Tailwind's line height in pixels, 24 and 36. */
+  --text-base: 1.0625rem;
+  --text-base--line-height: calc(1.5 / 1.0625);
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: calc(2.25 / 1.75);
 }
 
 /*
@@ -143,33 +178,35 @@
      (opacity/60); here it is in the value, since the token means the
      see-through colour itself. */
   --surface-transparent: color-mix(in srgb, var(--color-black) 60%, transparent);
+  --surface-transparent-inverse: color-mix(in srgb, var(--color-white) 60%, transparent);
+  --surface-transparent-secondary: color-mix(in srgb, var(--color-white) 70%, transparent);
 
   /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia
      and pink (pink: RouteCard 4071:7014); no yellow livery, as it is not good on
      the eyes. Each livery's surface-pale is the rest of a lit line past a picked
      hintuan. */
   --card-red-surface: var(--color-red-800);
-  --card-red-surface-pale: var(--color-red-200);
+  --card-red-surface-pale: var(--color-red-300);
   --card-red-border-primary: var(--color-red-900);
   --card-red-timeline-surface: var(--color-red-900);
   --card-orange-surface: var(--color-orange-700);
-  --card-orange-surface-pale: var(--color-orange-200);
+  --card-orange-surface-pale: var(--color-orange-300);
   --card-orange-border-primary: var(--color-orange-800);
   --card-orange-timeline-surface: var(--color-orange-900);
   --card-violet-surface: var(--color-violet-700);
-  --card-violet-surface-pale: var(--color-violet-200);
+  --card-violet-surface-pale: var(--color-violet-300);
   --card-violet-border-primary: var(--color-violet-800);
   --card-violet-timeline-surface: var(--color-violet-900);
   --card-rose-surface: var(--color-rose-700);
-  --card-rose-surface-pale: var(--color-rose-200);
+  --card-rose-surface-pale: var(--color-rose-300);
   --card-rose-border-primary: var(--color-rose-800);
   --card-rose-timeline-surface: var(--color-rose-900);
   --card-fuchsia-surface: var(--color-fuchsia-700);
-  --card-fuchsia-surface-pale: var(--color-fuchsia-200);
+  --card-fuchsia-surface-pale: var(--color-fuchsia-300);
   --card-fuchsia-border-primary: var(--color-fuchsia-800);
   --card-fuchsia-timeline-surface: var(--color-fuchsia-800);
   --card-pink-surface: var(--color-pink-700);
-  --card-pink-surface-pale: var(--color-pink-200);
+  --card-pink-surface-pale: var(--color-pink-300);
   --card-pink-border-primary: var(--color-pink-800);
   --card-pink-timeline-surface: var(--color-pink-900);
 
@@ -269,6 +306,8 @@
   --color-surface-error: var(--surface-error);
   --color-surface-success: var(--surface-success);
   --color-surface-transparent: var(--surface-transparent);
+  --color-surface-transparent-inverse: var(--surface-transparent-inverse);
+  --color-surface-transparent-secondary: var(--surface-transparent-secondary);
 
   --color-card-red-surface: var(--card-red-surface);
   --color-card-red-surface-pale: var(--card-red-surface-pale);

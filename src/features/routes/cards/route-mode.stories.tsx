@@ -4,11 +4,11 @@ import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteMode } from './route-mode';
 import { VEHICLES } from '../model/vehicles';
 
-/** Figma's Modes (4236:17040): what a card's routes ride, in the card's words' colour (white on red here). */
+/** Figma's Modes (4236:17040): the vehicle in the card's red on a white chip, the word in the card's white. */
 const meta = {
   title: 'Features/Routes/RouteMode',
   component: RouteMode,
-  args: { vehicle: 'Jeepney' },
+  args: { vehicle: 'Jeepney', livery: 'red' },
   decorators: [
     (Story) => (
       <div className="w-96 bg-card-red-surface p-3 text-content-inverse">
@@ -21,7 +21,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Property 1=Jeepney. */
+/** Property 1=Jeepney, which the card calls Jeep. */
 export const Jeepney: Story = {};
 
 /** Property 1=Train: every rail line says "Train" on a card. */
@@ -36,13 +36,28 @@ export const EJeep: Story = { args: { vehicle: 'E-Jeep' } };
 /** Property 1=Bus. */
 export const Bus: Story = { args: { vehicle: 'Bus' } };
 
+/** Property 1=UV Express. */
+export const UvExpress: Story = { args: { vehicle: 'UV Express' } };
+
+/** Violet: the chip's vehicle in Card/violet/surface. */
+export const OnViolet: Story = {
+  args: { livery: 'violet' },
+  decorators: [
+    (Story) => (
+      <div className={'w-96 p-3 ' + CARD_SURFACE.violet + ' ' + CARD_TEXT.violet}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
 /** Every vehicle the code draws, one under another as a card with mixed modes shows them. */
 export const EveryVehicle: Story = {
   render: () => (
     <ul className="flex flex-col gap-2">
       {VEHICLES.map((vehicle) => (
         <li key={vehicle}>
-          <RouteMode vehicle={vehicle} />
+          <RouteMode vehicle={vehicle} livery="red" />
         </li>
       ))}
     </ul>
@@ -51,7 +66,7 @@ export const EveryVehicle: Story = {
 
 /** On MRT-3's yellow the label takes the card's dark words, as its place name does. */
 export const OnDarkWords: Story = {
-  args: { vehicle: 'MRT-3' },
+  args: { vehicle: 'MRT-3', livery: 'metro-rail-way-three' },
   decorators: [
     (Story) => (
       <div
