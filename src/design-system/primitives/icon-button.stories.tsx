@@ -22,6 +22,12 @@ type Story = StoryObj<typeof meta>;
 /** Special, 40px: Button's jeepney pill with only the icon. Hover and press wear the Special shadows. */
 export const Special: Story = {};
 
+/** Brand, 48px: Button's Primary pill with only the icon, the studio's + over the map. */
+export const Brand: Story = { args: { variant: 'brand', size: 'large', label: 'Add' } };
+
+/** 48px, a 28px icon. */
+export const Large: Story = { args: { size: 'large' } };
+
 /** 32px, a 20px icon. */
 export const Small: Story = { args: { size: 'small' } };
 
@@ -31,6 +37,7 @@ export const Disabled: Story = {
     <div className="flex items-center gap-3">
       <IconButton icon={NavIcon} label="Go" disabled />
       <IconButton icon={NavIcon} label="Go" size="small" disabled />
+      <IconButton icon={NavIcon} label="Add" variant="brand" size="large" disabled />
     </div>
   ),
 };

@@ -6,8 +6,9 @@ import { Tooltip } from './tooltip';
  * PalimosPoDesignSystem's IconButton, from the Figma set (node 3668:2815):
  * Button's Special voice with the words taken out — a round pill holding one
  * icon, on the same surfaces and the same InnerShadow/SpecialButton… effect
- * styles, state for state (see Button).
- * Special is the only variant the set draws, so it is the only one here.
+ * styles, state for state (see Button). Brand is Button's Primary the same way:
+ * Brand/surface under the PrimaryButton/… effect styles.
+ * The set draws Plain too; nothing uses it yet, so it is not here.
  *
  * With no words on it, its label shows as the Tooltip on hover — every
  * IconButton, so none can forget it, a disabled one too (it still says what
@@ -17,7 +18,7 @@ import { Tooltip } from './tooltip';
  * off the button, and leaves over duration/quick with ease/exit.
  */
 
-type Size = 'base' | 'small';
+type Size = 'large' | 'base' | 'small';
 
 /** Tooltip's Position: the side its arrow is on, so Bottom sits above the button. */
 type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
@@ -34,7 +35,7 @@ type Props = Omit<
   | 'aria-labelledby'
   | 'title'
 > & {
-  variant?: 'special';
+  variant?: 'special' | 'brand';
   size?: Size;
   /** Figma's 🙏 Icon Instance: a square SVG drawing in currentColor. */
   icon: ReactNode;
@@ -56,17 +57,24 @@ const VARIANT = {
     'bg-surface-tertiary text-content-primary shadow-special-button-rest ' +
     'enabled:hover:shadow-special-button-hover ' +
     'enabled:active:bg-surface-quaternary enabled:active:shadow-special-button-pressed',
+  // Pressed keeps Brand/surface: the set darkens only the shadow.
+  brand:
+    'bg-brand-surface text-content-inverse shadow-primary-button-rest ' +
+    'enabled:hover:shadow-primary-button-hover enabled:active:shadow-primary-button-pressed',
 } satisfies Record<NonNullable<Props['variant']>, string>;
 
-// Base is 40px round (8px around a 24px icon); Small 32px (6px around 20px).
+// Large is 48px round (10px around a 28px icon); Base 40px (8px around 24px);
+// Small 32px (6px around 20px).
 // The size is pinned as well as padded, so a parent that stretches its children
 // cannot make the pill oval; the size-fit wrapper below does the same.
 const SIZE = {
+  large: 'size-12 p-2.5',
   base: 'size-10 p-2',
   small: 'size-8 p-1.5',
 } satisfies Record<Size, string>;
 
 const ICON = {
+  large: 'size-7',
   base: 'size-6',
   small: 'size-5',
 } satisfies Record<Size, string>;
