@@ -26,7 +26,8 @@ import {
   AccountPill,
   MapPlaceholder,
   MapSwitch,
-  NewButtons,
+  NewMenu,
+  NEW_MENU_DOCK_FOOT,
   DrawToolbar,
   SaveToasts,
   STUDIO_BASEMAPS,
@@ -66,7 +67,7 @@ interface WorkshopProps {
  */
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
-  const [hotspotMenu, setHotspotMenu] = useState(false);
+  const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   // Which of the three maps is shown. Only the Playground has tools: the others
   // stay behind the one map and its state, so a switch keeps the camera, the
   // basemap and a half-drawn line.
@@ -222,12 +223,15 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
         <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
       </div>
-      {/* `data-dock-host`: the open card's sheet says where its top is here, for the pill to follow (BottomSheet). */}
+      {/* `data-dock-host`: the open card's sheet says where its top is here, for the pill to follow (BottomSheet); the New + says what it stands in the corner. */}
       <div
         ref={root}
         data-map-box
         data-dock-host
-        className="@container relative min-h-0 flex-1 overflow-clip"
+        className={
+          '@container relative min-h-0 flex-1 overflow-clip' +
+          (!draw.drawing && !choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
+        }
       >
         {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
         <div inert={!isPlayground && !isContributors} className="contents">
@@ -473,10 +477,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           1024 px wide the list docks along the bottom, and these would stand
           on its corner.
         */
-            <NewButtons
-              ready={!!map}
-              menu={hotspotMenu}
-              setMenu={setHotspotMenu}
+            <NewMenu
+              isReady={!!map}
+              isOpen={isNewMenuOpen}
+              onOpenChange={setIsNewMenuOpen}
               onNewRoute={() => draw.start()}
               onNewHotspot={(kind) => draw.startArea(kind)}
             />

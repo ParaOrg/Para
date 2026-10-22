@@ -19,7 +19,7 @@ export { MapPlaceholder } from './maps/map-placeholder';
 export { MapSwitch } from './maps/map-switch';
 export { useStudioMap } from './maps/use-studio-map';
 export { AccountPill } from './panels/account-pill';
-export { NewButtons } from './panels/new-buttons';
+export { NEW_MENU_DOCK_FOOT, NewMenu } from './panels/new-menu';
 export { returnTripLeft } from './panels/return-trip';
 export { SaveToasts } from './panels/save-toasts';
 export { StudioHotspotCard } from './panels/studio-hotspot-card';
