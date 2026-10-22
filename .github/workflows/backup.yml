@@ -169,10 +169,13 @@ jobs:
             exit 1
           fi
 
+          # --enable-row-security: by default pg_dump turns row security off and
+          # errors for a role without BYPASSRLS; backup_reader's read policies
+          # (the migration) then return every row.
           # point_batch* takes the parent, every monthly piece and the default:
           # the data lives in the pieces.
           "$pg_bin/pg_dump" "$BACKUP_DATABASE_URL" \
-            --no-owner --no-privileges --no-comments \
+            --no-owner --no-privileges --no-comments --enable-row-security \
             --table='public.contributor' --table='public.contribution' \
             --table='public.point_batch*' --table='public.hinto' \
             --table='public.contribution_use' \

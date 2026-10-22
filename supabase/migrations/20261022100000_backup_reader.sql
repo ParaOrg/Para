@@ -4,8 +4,10 @@
 -- backup workflow (.github/workflows/backup.yml) runs pg_dump as this role,
 -- so the first database secret in GitHub holds as little as possible: SELECT
 -- on the contributor tables and the route tables, and a read policy on each
--- (row security is on, and pg_dump runs with it on, so a table without a
--- policy for the role makes the dump fail instead of leaving rows out).
+-- (row security is on, and the workflow runs pg_dump with
+-- --enable-row-security, since by default it turns row security off and
+-- errors for a role without BYPASSRLS; so a table without a policy for the
+-- role makes the dump fail instead of leaving rows out).
 --
 -- Never private.editor: who the editors are is not part of the backup, and
 -- the role has no grant on schema private at all. editor_name is left out for
@@ -43,13 +45,15 @@ alter role backup_reader set statement_timeout = '10min';
 grant usage on schema public to backup_reader;
 
 -- Grants and a read policy for every table the backup covers, the pieces of
--- point_batch included. Safe to run again.
+-- point_batch included, and SELECT on the sequence of any identity column
+-- (takedown.id today), which pg_dump reads. Safe to run again.
 create or replace function private.grant_backup_reader() returns void
 language plpgsql
 set search_path = ''
 as $$
 declare
   t record;
+  s text;
 begin
   for t in
     select c.oid::regclass as tbl, c.relname
@@ -67,6 +71,13 @@ begin
       )
   loop
     execute format('grant select on %s to backup_reader', t.tbl);
+    for s in
+      select pg_get_serial_sequence(t.tbl::text, a.attname)
+      from pg_attribute a
+      where a.attrelid = t.tbl and a.attnum > 0 and not a.attisdropped and a.attidentity <> ''
+    loop
+      execute format('grant select on sequence %s to backup_reader', s);
+    end loop;
     execute format('drop policy if exists backup_reader_read on %s', t.tbl);
     execute format(
       'create policy backup_reader_read on %s for select to backup_reader using (true)', t.tbl
