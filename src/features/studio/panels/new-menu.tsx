@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { HintuanIcon, TerminalIcon } from '@/shared/ui/route-icons';
+import { cn } from '@/shared/utils/cn';
 
 import { AddIcon, RouteLetterIcon } from './new-menu-icons';
 import { useNewMenu } from './use-new-menu';
@@ -15,7 +16,7 @@ interface Choice {
   title: string;
   description: string;
   icon: ReactNode;
-  /** Figma draws each letter disc in its own colour: blue-700, sky-700, green-700. */
+  /** Figma's letter colours: blue-700 for routes; a terminal's and a hintuan's own colours. */
   iconClassName: string;
 }
 
@@ -25,6 +26,7 @@ const CHOICES: Choice[] = [
     title: 'Routes',
     description: 'Lines you can ride by jeep, e-jeep, UV Express or bus.',
     icon: <RouteLetterIcon />,
+    // No token holds the route letter's blue yet.
     iconClassName: 'text-blue-700',
   },
   {
@@ -32,14 +34,14 @@ const CHOICES: Choice[] = [
     title: 'Terminal',
     description: 'Where rides start, wait and fill up with passengers.',
     icon: <TerminalIcon />,
-    iconClassName: 'text-sky-700',
+    iconClassName: 'text-map-hotspots-card-terminal-surface',
   },
   {
     choice: 'hintuan',
     title: 'Hintuan',
     description: 'Places along the way where you can wait and get on.',
     icon: <HintuanIcon />,
-    iconClassName: 'text-green-700',
+    iconClassName: 'text-map-hotspots-card-hintuan-surface',
   },
 ];
 
@@ -88,18 +90,19 @@ export function NewMenu({ isReady, isOpen, onOpenChange, onNewRoute, onNewHotspo
           tabIndex={-1}
           aria-label="New"
           onKeyDown={handleMenuKeyDown}
-          className="flex w-80 max-w-[calc(100vw-6rem)] flex-col gap-1 rounded-2xl bg-surface p-1.5 shadow-sm"
+          className="flex w-80 max-w-[calc(100cqw-5.25rem)] flex-col gap-1 rounded-2xl bg-surface p-1.5 shadow-sm"
         >
           {CHOICES.map(({ choice, title, description, icon, iconClassName }) => (
             <button
               key={choice}
               type="button"
               role="menuitem"
+              tabIndex={-1}
               onClick={() => handleChoose(choice)}
               className="flex w-full flex-col rounded-xl p-2 text-left font-sn-pro text-sm/5 hover:bg-surface-secondary focus-visible:bg-surface-secondary"
             >
               <span className="flex w-full items-center gap-1">
-                <span aria-hidden className={'size-5 shrink-0 *:size-full ' + iconClassName}>
+                <span aria-hidden className={cn('size-5 shrink-0 *:size-full', iconClassName)}>
                   {icon}
                 </span>
                 <span className="flex-1 font-semibold text-content-primary">{title}</span>
@@ -115,7 +118,7 @@ export function NewMenu({ isReady, isOpen, onOpenChange, onNewRoute, onNewHotspo
         size="large"
         icon={<AddIcon />}
         label="New route, terminal or hintuan"
-        tooltip="right"
+        tooltip="bottom"
         disabled={!isReady}
         onClick={() => onOpenChange(!isOpen)}
         aria-haspopup="menu"

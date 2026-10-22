@@ -8,15 +8,15 @@ import { NewMenu } from './new-menu';
 const meta = {
   title: 'Features/Studio/NewMenu',
   component: NewMenu,
-  // The menu sits at the map's bottom right. The `phone` parameter gives it a
-  // handset's width, as card-actions.stories.tsx does.
+  // The menu sits at the map's bottom right, in the workshop's @container. The
+  // `phone` parameter gives it a handset's width, as card-actions.stories.tsx does.
   decorators: [
     (Story, ctx) => (
       <div
         className={
           ctx.parameters.phone
-            ? 'relative h-96 w-[390px] bg-surface-quaternary'
-            : 'relative h-96 bg-surface-quaternary'
+            ? '@container relative h-96 w-[390px] bg-surface-quaternary'
+            : '@container relative h-96 bg-surface-quaternary'
         }
       >
         <Story />
@@ -79,6 +79,16 @@ export const PickTerminal: Story = {
   },
 };
 
+/** Hintuan picked: the menu closes and a hintuan's outline starts. */
+export const PickHintuan: Story = {
+  args: { isOpen: true },
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(within(canvasElement).getByRole('menuitem', { name: /Hintuan/ }));
+    await expect(args.onOpenChange).toHaveBeenCalledWith(false);
+    await expect(args.onNewHotspot).toHaveBeenCalledWith('hintuan');
+  },
+};
+
 /**
  * By keyboard, with the workshop's state: Enter opens, the arrows move, Enter
  * picks; Escape closes and hands focus back to the +.
@@ -111,8 +121,15 @@ export const NotReady: Story = {
   },
 };
 
-/** At phone width, open: the menu narrows to fit beside the +. */
-export const Phone: Story = { args: { isOpen: true }, parameters: { phone: true } };
+/** At phone width, open: the menu narrows to the map's width beside the +. */
+export const Phone: Story = {
+  args: { isOpen: true },
+  parameters: { phone: true },
+  play: async ({ canvasElement }) => {
+    const menu = within(canvasElement).getByRole('menu');
+    await expect(menu.getBoundingClientRect().width).toBeLessThanOrEqual(390 - 5.25 * 16);
+  },
+};
 
 /** NewMenu holding its own open state, as the workshop does. */
 function StatefulNewMenu(props: ComponentProps<typeof NewMenu>) {
