@@ -29,7 +29,8 @@ await page.route(/router\.project-osrm\.org|routing\.openstreetmap\.de/, (r) =>
   r.fulfill({ status: 200, json: { code: 'NoRoute', routes: [] } }),
 );
 await page.goto('http://127.0.0.1:4180/studio/');
-await page.getByRole('button', { name: '+ New Route', exact: true }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.mouse.click(180, 400);
 await page.mouse.click(250, 450);
 await page.mouse.click(300, 420);

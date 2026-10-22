@@ -227,12 +227,15 @@ const view = async (points) => {
   await page.waitForTimeout(300);
 };
 const newRoute = async () => {
-  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 5000 });
 };
 const discard = async () => {
   await page.getByRole('button', { name: '✕' }).click();
-  await page.getByRole('button', { name: '+ New Route' }).waitFor({ timeout: 5000 });
+  await page
+    .getByRole('button', { name: 'New route, terminal or hintuan' })
+    .waitFor({ timeout: 5000 });
 };
 const drawRoute = async (points) => {
   await newRoute();

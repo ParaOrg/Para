@@ -6,6 +6,7 @@ const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
 export const STORY_CONTRIBUTIONS: Contribution[] = [
   {
     id: '11111111-0000-4000-8000-000000000001',
+    contributorId: 'a697d4aa-0000-4000-8000-000000000001',
     phoneCode: 'a697d4',
     startedAt: T0,
     endedAt: T0 + 1_800_000,
@@ -30,6 +31,7 @@ export const STORY_CONTRIBUTIONS: Contribution[] = [
   },
   {
     id: '11111111-0000-4000-8000-000000000002',
+    contributorId: 'd542b6aa-0000-4000-8000-000000000002',
     phoneCode: 'd542b6',
     startedAt: T0 - 86_400_000,
     endedAt: T0 - 86_400_000 + 600_000,

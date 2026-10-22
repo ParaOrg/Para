@@ -15,7 +15,8 @@ interface UseHotspotSaveOptions {
   /** Hears the row a save wrote, the moment it is in, to keep it beyond the panel. */
   onWritten?: (hotspotId: string) => void;
   /** With STUDIO_DRAFTS on: the save is a draft, and the map is unchanged. */
-  onDrafted?: () => void;
+  /** Hears the hotspot the draft holds, for what was made from it. */
+  onDrafted?: (hotspotId: string) => void;
 }
 
 /**
@@ -55,13 +56,13 @@ export function useHotspotSave({ onSaved, onWritten, onDrafted }: UseHotspotSave
     try {
       if (STUDIO_DRAFTS) {
         newHotspotId.current ??= crypto.randomUUID();
-        const { result } = await saveHotspotDraft(
+        const { result, hotspotId } = await saveHotspotDraft(
           { hotspotId: check.hotspotId, ...input },
           newHotspotId.current,
         );
         const refusal = draftRefusal(result);
         if (refusal) throw new Error(refusal);
-        if (onDrafted) onDrafted();
+        if (onDrafted) onDrafted(hotspotId);
         else setBusy(false);
         return;
       }

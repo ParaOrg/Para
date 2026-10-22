@@ -30,12 +30,8 @@ check(
   (await page.getByText('Sign in to ParaPo Studio').count()) === 1,
 );
 check(
-  '  no + New Route button',
-  (await page.getByRole('button', { name: '+ New Route' }).count()) === 0,
-);
-check(
-  '  no + New hotspot button',
-  (await page.getByRole('button', { name: '+ New hotspot' }).count()) === 0,
+  '  no + New button',
+  (await page.getByRole('button', { name: 'New route, terminal or hintuan' }).count()) === 0,
 );
 check('  no map behind the door', (await page.locator('canvas.maplibregl-canvas').count()) === 0);
 check(
@@ -64,9 +60,9 @@ await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { 
 await page.waitForTimeout(800);
 check(
   '?e2e=1 shows the tools in development',
-  (await page.getByRole('button', { name: '+ New hotspot' }).count()) === 1,
+  (await page.getByRole('button', { name: 'New route, terminal or hintuan' }).count()) === 1,
 );
-await page.getByRole('button', { name: '+ New hotspot' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Terminal/ }).click();
 const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
 const cx = box.x + box.width / 2;

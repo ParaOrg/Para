@@ -1,25 +1,12 @@
 import { keptFixes, summarize, type Fix } from '@/features/routes/model/ride-recording';
 import { overviewOf, type LngLat } from '@/shared/utils/geo';
 
+import { UPLOAD_LIMITS } from '../recording-limits';
 import { RECORDING_VERSION, type Recording } from '../recording-schema';
 import type { ContributionPayload, PointBatch } from './contribution-payload-schema';
 
 /** The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them. */
 export const RULES_VERSION = 1;
-
-/** The limits the database holds every upload to (migration 20261019125900_contributions). */
-export const UPLOAD_LIMITS = {
-  points: 14_400,
-  pointsPerBatch: 600,
-  hintos: 2_000,
-  listEntries: 500,
-  hours: 6,
-  nameLength: 80,
-  descriptionLength: 1_000,
-  lineBytes: 200_000,
-  /** The database refuses 150 km/h; points are dropped a little below it, so rounding never trips it. */
-  speedKmh: 140,
-} as const;
 
 /** The Philippines, as the database checks it. */
 const BOX = { south: 4, north: 22, west: 116, east: 127 } as const;

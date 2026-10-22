@@ -45,7 +45,7 @@ function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx }:
         '@container relative overflow-clip bg-neutral-200 ' +
         (wide ? 'h-[800px] w-[1280px]' : 'h-[852px] w-[393px]')
       }
-      // Set on the host at runtime, as NewButtons sets it.
+      // Set on the host at runtime, as the studio's workshop sets it for NewMenu.
       ref={(host) => {
         if (host && dockFootPx !== undefined)
           host.style.setProperty('--dock-foot', `${dockFootPx}px`);
@@ -154,12 +154,12 @@ export const DeniedWithMapStyleOpen: Story = {
 };
 
 /**
- * The studio, no card: its + New Route and + New hotspot stand 120 tall in
- * the corner (--dock-foot), and the pill stands 12 above them.
+ * The studio, no card: its New + stands 88 tall in the corner (--dock-foot,
+ * NEW_MENU_DOCK_FOOT's 5.5rem), and the pill stands 12 above it.
  */
 export const AboveStudioButtons: Story = {
   args: {
     snap: null,
-    dockFootPx: 120,
+    dockFootPx: 88,
   },
 };

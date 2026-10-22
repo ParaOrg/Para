@@ -92,7 +92,7 @@ jobs:
             case "$f" in
               docs/architecture.md) public=true; studio=true ;;
               docs/*|*.md) ;;
-              src/app/studio/*|src/features/studio/*|src/shared/ui/turnstile.tsx|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              src/app/studio/*|src/features/studio/*|src/shared/ui/turnstile.tsx|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
               src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs)
                 public=true ;;
@@ -219,8 +219,9 @@ jobs:
           if-no-files-found: ignore
 
   # The editor against stand-ins for the database, no router: studio-scale
-  # (5,000 directions, what the editor asks for and how soon it opens) and
-  # save-test (the save flows, signed in). No retry needed.
+  # (5,000 directions, what the editor asks for and how soon it opens; and the
+  # Contributors map with 1,000 uploads), save-test (the save flows, signed in)
+  # and studio-contributors (the Contributors map's actions). No retry needed.
   studio-suite:
     name: ${{ matrix.suite }}
     needs: changes
@@ -232,7 +233,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [studio-scale-test, save-test, turnstile-test, studio-public-view-test]
+        suite:
+          [
+            studio-scale-test,
+            studio-contributors-test,
+            save-test,
+            turnstile-test,
+            studio-public-view-test,
+          ]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -253,15 +261,20 @@ jobs:
           # and with the studio saving straight to the approved rows, as they
           # were written for; the review suites run on the isolated preview.
           echo VITE_STUDIO_DRAFTS=0 >> .env.local
+      # The two suites that open the Contributors map read uploads from their
+      # own stand-in, so they run with uploads on.
+      - name: Turn uploads on, for the Contributors map's suites
+        if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
+        run: echo VITE_CONTRIBUTIONS=1 >> .env.local
+      # The Public map view exists only with drafts on; the later line wins.
+      - name: Turn the studio's drafts on for studio-public-view-test
+        if: matrix.suite == 'studio-public-view-test'
+        run: echo VITE_STUDIO_DRAFTS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
         if: matrix.suite == 'turnstile-test'
         run: echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       - name: Start the dev server
-        # The Public map view exists only with drafts on; a variable in the
-        # environment wins over .env.local.
-        env:
-          VITE_STUDIO_DRAFTS: ${{ matrix.suite == 'studio-public-view-test' && '1' || '0' }}
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
           for i in $(seq 1 60); do

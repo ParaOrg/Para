@@ -30,6 +30,8 @@ after every one.
 | `20261018112757_reviewed_draft_approval.sql` | `20261020034722` | `reviewed_draft_approval` | Revision-checked approval and explicit conflict resolution. Applied by the owner on 2026-10-20 with `supabase/apply/20261018112757_reviewed_draft_approval_apply.sql`; `_check.sql` 6/6 true. Do not reapply |
 | `0021_loops.sql` | `20261018020203` | `0021_loops` | A loop: no head or tail, one direction, called by its signboard |
 | `20261019125900_contributions.sql` | `20261019144009` | `contributions` | Contributor uploads: `contributor`, `contribution`, `point_batch` (monthly pieces), `hinto`, `save_contribution`. The tables of `.scratch/contribute/database.md` §3 that the first upload needs (the planned "0019"). Applied by the owner on 2026-10-19 from #289's paste file (with editor delete, hide and row security on every piece); `_check.sql` 10/10 true. Do not reapply |
+| `20261022090000_contribution_use.sql` | — | — | **Not applied live.** `contribution_use`, editor `public.block_contributor` / `unblock_contributor`, `private.retire_month` and `private.add_months`. Finishes ticket contribute/08 |
+| `20261022100000_backup_reader.sql` | — | — | **Not applied live.** Login role `backup_reader` (SELECT and a read policy on the contributor and route tables, never `private.editor`) for the weekly R2 backup; `private.grant_backup_reader()` covers new monthly pieces. The owner sets its password. Ticket contribute/15 |
 
 Create new files with `supabase migration new <name>`; the CLI supplies a timestamped filename. Leave the existing numbered files unchanged. Record the ledger version the project actually assigns after the owner approves and applies a migration. Until then, mark its row **not applied live**.
 

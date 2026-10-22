@@ -254,6 +254,21 @@ export function useDrawing(
     [reset],
   );
 
+  /**
+   * Begin a new direction from points that are not the editor's clicks, such
+   * as an upload's line: they become the control points, and the router is
+   * asked for every gap, the stand-ins showing meanwhile.
+   */
+  const startWithPoints = useCallback(
+    (points: LngLat[]) => {
+      start();
+      writePoints(points);
+      if (points.length > 1)
+        void resolveGaps(0, new Array<SnapMode>(points.length - 1).fill('snapped'));
+    },
+    [start, writePoints, resolveGaps],
+  );
+
   /** Open a saved direction for editing: its row with its drawing (live.ts withDrawing). */
   const load = useCallback(
     (v: DirectionDrawing) => {
@@ -334,9 +349,9 @@ export function useDrawing(
     areaRef.current = next;
   }, []);
 
-  /** Open a saved hotspot's outline for editing. */
+  /** Open an outline for editing: a saved hotspot's, or (no id) a new one's first corners. */
   const loadArea = useCallback(
-    (kind: HotspotKind, hotspotId: string, ring: LngLat[]) => {
+    (kind: HotspotKind, hotspotId: string | null, ring: LngLat[]) => {
       reset();
       const a = { kind, hotspotId };
       setArea(a);
@@ -469,6 +484,7 @@ export function useDrawing(
     load,
     metres: useMemo(() => lineLength(line), [line]),
     start,
+    startWithPoints,
     startArea,
     loadArea,
     adoptHotspot,

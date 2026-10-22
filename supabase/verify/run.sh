@@ -105,3 +105,4 @@ $PG_DUMP -d $DB --schema-only --schema=public --schema=private | grep -Ev '^.(un
 diff /tmp/before-reviewed-approval.dump /tmp/reverted-reviewed-approval.dump || { echo 'FAILED: reviewed approval revert changed the baseline'; exit 1; }
 echo 'reviewed approval revert: schema unchanged, repeated recovery safe'
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributions.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contribution-use.sh
