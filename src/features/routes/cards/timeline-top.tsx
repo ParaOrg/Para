@@ -1,4 +1,5 @@
 import { EndRowPill } from './end-row-pill';
+import { END_SIGN_LOOK } from './end-sign';
 import { RideMark } from './ride-mark';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
 import { TimelineDot } from './timeline-dot';
@@ -51,10 +52,10 @@ export function TimelineTop({
           variant="top"
           connection={connection}
           rail={rail}
-          dot={<TimelineDot rail={rail} selected={selected} />}
+          dot={<TimelineDot rail={mark ? END_SIGN_LOOK[mark].surface : rail} selected={selected} />}
         />
         <span className="flex min-w-0 flex-1 items-start gap-1 pb-3 pl-2">
-          {mark && <RideMark mark={mark} livery={livery} />}
+          {mark && <RideMark mark={mark} />}
           {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
           <span
             data-part="name"

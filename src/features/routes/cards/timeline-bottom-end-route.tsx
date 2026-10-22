@@ -1,4 +1,5 @@
 import { EndRowPill } from './end-row-pill';
+import { END_SIGN_LOOK } from './end-sign';
 import { RideMark } from './ride-mark';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
 import { TimelineDot } from './timeline-dot';
@@ -49,10 +50,10 @@ export function TimelineBottomEndRoute({
           variant="bottom"
           connection={connection}
           rail={rail}
-          dot={<TimelineDot rail={rail} selected={selected} />}
+          dot={<TimelineDot rail={isEnd ? END_SIGN_LOOK.end.surface : rail} selected={selected} />}
         />
         <span className={'flex min-w-0 flex-1 items-start gap-1 pt-3 ' + (isEnd ? 'pl-2' : 'pl-3')}>
-          {isEnd && <RideMark mark="end" livery={livery} />}
+          {isEnd && <RideMark mark="end" />}
           {/* Bold, Figma's text-xl/bold, as the trip frame (3778:3183) draws it.
               The Timeline set (3716:1894) draws it Medium, ExtraBold picked;
               the trip frame's Bold is kept. */}

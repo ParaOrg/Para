@@ -25,7 +25,7 @@ interface HintuanLabelProps {
   variant: HintuanLabelVariant;
   /** The hintuan's name; null, the dot alone (further out than the names show). */
   name: string | null;
-  /** The trip's colour, the line's: the dot's ring and the label; the picked end wears red instead. */
+  /** The trip's colour, the line's: the dot's ring and the label; a pick's dot wears its sign's colour instead, Start's green or End's red. */
   livery: Livery;
   /** A train station's sign code, YL06, on the picked one's label (RouteLineLabel). */
   codeSign?: string | null;
@@ -43,9 +43,10 @@ interface HintuanLabelProps {
   nameButtonLabel?: string;
 }
 
-/** The dot's colour: the picked end's is End's red, as Figma's HintuanEnd draws it; the rest follow the line. */
+/** The dot's colour: a picked end's is End's red, as Figma's HintuanEnd draws it, a picked start's Start's green; the rest follow the line. */
 function railOf(variant: HintuanLabelVariant, livery: Livery, isOutsideRide: boolean): string {
   if (variant === 'hintuan-end') return END_SIGN_LOOK.end.surface;
+  if (variant === 'hintuan-start') return END_SIGN_LOOK.start.surface;
   return isOutsideRide ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery];
 }
 

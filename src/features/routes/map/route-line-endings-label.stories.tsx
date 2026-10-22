@@ -36,7 +36,7 @@ const partOf = (root: HTMLElement, part: string): HTMLElement => {
   return el;
 };
 
-/** The word segment's text: Start, End, or none. */
+/** The word Badge's text: Start, End, or none. */
 const signOf = (el: HTMLElement) =>
   el.querySelector('[data-part="start"]')?.textContent ??
   el.querySelector('[data-part="end"]')?.textContent ??
@@ -59,11 +59,15 @@ const knobbFill = (pill: HTMLElement) => {
   return getComputedStyle(knobb).fill;
 };
 
-/** Figma's text-sm/medium in SN Pro, 28 tall: never MapLibre's Helvetica Neue. */
+/**
+ * SN Pro Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
+ * Figma's text-base/Lower/medium, 16, an unsigned one's text-sm/medium, 14.
+ */
 const expectFigmaType = async (pill: HTMLElement) => {
   const style = getComputedStyle(pill);
+  const isSigned = !!pill.querySelector('[data-part="start"], [data-part="end"]');
   await expect(style.fontFamily).toMatch(/^"?SN Pro/);
-  await expect(style.fontSize).toBe('14px');
+  await expect(style.fontSize).toBe(isSigned ? '16px' : '14px');
   await expect(style.fontWeight).toBe('500');
   await expect(pill.getBoundingClientRect().height).toBe(28);
 };
@@ -85,7 +89,7 @@ export const HeadRoute: Story = {
     await expect(getComputedStyle(sign).color).toBe(
       wornBy('text-map-hotspots-card-hintuan-surface', 'color'),
     );
-    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(2);
+    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(4);
   },
 };
 
@@ -172,7 +176,7 @@ export const DefaultMetroRailWayThree: Story = {
   },
 };
 
-/** Head Route's Railway property (4307:26078): a train station's start, "Start" and its code in two white segments. */
+/** Head Route's Railway property (4320:14176): the code in a pill of its own, 4 left of the name's, which reads "Start". */
 export const HeadRouteRailway: Story = {
   args: { variant: 'head', codeSign: 'YL06', livery: 'metro-rail-way-three' },
   play: async ({ canvasElement }) => {
@@ -187,13 +191,17 @@ export const HeadRouteRailway: Story = {
     await expect(getComputedStyle(code).color).toBe(
       wornBy('text-map-hotspots-card-hintuan-surface', 'color'),
     );
-    // 2 between the segments.
-    const start = partOf(pill, 'start').getBoundingClientRect();
-    await expect(code.getBoundingClientRect().left - start.right).toBe(2);
+    // The code's pill 28 tall, 4 left of the name's, which holds Start before the name.
+    const codePill = code.parentElement;
+    await expect(codePill?.getBoundingClientRect().height).toBe(28);
+    await expect(
+      pill.getBoundingClientRect().left - (codePill?.getBoundingClientRect().right ?? 0),
+    ).toBe(4);
+    await expect(partOf(pill, 'start').parentElement).toBe(pill);
   },
 };
 
-/** Tail Route's Railway property (4307:26096): "End" and the code, red whatever the line. */
+/** Tail Route's Railway property (4320:14181): the code in its own pill, "End" in the name's, red whatever the line. */
 export const TailRouteRailway: Story = {
   args: { variant: 'tail', codeSign: 'GL02', livery: 'light-rail-way-one' },
   play: async ({ canvasElement }) => {
