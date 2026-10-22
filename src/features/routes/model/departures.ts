@@ -98,15 +98,16 @@ export interface RouteCardGroup<V extends Direction> extends Departures<V> {
  * The cards a list shows one way round: drawnDepartures, with every place's
  * train and ferry directions taken off to a RouteCardRailway each, one card
  * per line and bound: Cubao's LRT-2 Eastbound and its LRT-2 Westbound are two
- * cards, both Cubao. The road directions stay the place's RouteCard, first;
- * the line cards follow in the order met. A road card is known by its place,
- * a line card by its place, line and bound.
+ * cards, both Cubao. Every road card comes first, then every train card, then
+ * the ferry's, each kind in the order met: the lines sit under the road
+ * routes, never between them (the owner's call). A road card is known by its
+ * place, a line card by its place, line and bound.
  */
 export function routeCards<V extends Direction>(
   directions: readonly V[],
   back: boolean,
 ): RouteCardGroup<V>[] {
-  return drawnDepartures(directions, back).flatMap((place) => {
+  const cards = drawnDepartures(directions, back).flatMap((place) => {
     const road: RouteCardGroup<V> = {
       card: place.from,
       from: place.from,
@@ -129,6 +130,14 @@ export function routeCards<V extends Direction>(
     }
     return [...(road.directions.length ? [road] : []), ...lines.values()];
   });
+  // A stable sort: each kind keeps the order met.
+  return cards.sort((a, b) => cardRank(a.railway) - cardRank(b.railway));
+}
+
+/** Where a card's kind sits in its list: road, then train, then ferry. */
+function cardRank(railway: RailwayVehicle | null): number {
+  if (!railway) return 0;
+  return railway === 'Ferry' ? 2 : 1;
 }
 
 /**
