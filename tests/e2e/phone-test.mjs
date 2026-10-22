@@ -1464,6 +1464,7 @@ const tripChecks = async () => {
         pale: cardPale,
         endRed,
         livery: pin?.dataset.livery ?? null,
+        marks: pin?.dataset.marks ?? null,
         tripLivery: trip?.dataset.livery ?? null,
         taps: pin ? getComputedStyle(pin).pointerEvents : null,
         dots: document.querySelectorAll('[data-testid="ride-dot"]').length,
@@ -1487,10 +1488,11 @@ const tripChecks = async () => {
       drawn.pins === 1 &&
         (!pickWant || (drawn.off !== null && drawn.off < 2)) &&
         drawn.livery === drawn.tripLivery &&
+        drawn.marks === 'end' &&
         !!drawn.ring &&
         drawn.ring === drawn.endRed &&
         drawn.taps === 'none',
-      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} line, ring ${drawn.ring}, End's red ${drawn.endRed}; pointer-events ${drawn.taps}`,
+      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan, marking the ${drawn.marks}; ${drawn.livery} line, ring ${drawn.ring}, End's red ${drawn.endRed}; pointer-events ${drawn.taps}`,
     );
     // The dots along the rest ring in its pale, the ones before the pick in
     // the line's colour (the owner's ask, 2026-10-12, with a screenshot of

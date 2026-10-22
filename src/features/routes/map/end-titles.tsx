@@ -25,7 +25,7 @@ import './end-titles.css';
  *
  * The circle is the hintuan's own — the card timeline's TimelineDot, as the
  * dots along the line (StationLabels) and the picked hintuan's circle
- * (HintuanPin) are — ringed in what the line wears: the card's colour
+ * (HintuanPin, though a picked end's is End's red) are — ringed in what the line wears: the card's colour
  * (`livery`), the selected blue with none, and the card's pale at the far
  * end of a ride past a picked hintuan, along the rest drawn in it (Ride.pale,
  * useRideRest), as the dots along the rest are; and at the start too, since
