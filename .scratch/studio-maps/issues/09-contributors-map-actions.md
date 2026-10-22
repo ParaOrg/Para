@@ -1,6 +1,6 @@
 # 09: Use this line, Draw a hintuan here, Hide, Block
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 5
 Who: Sonnet

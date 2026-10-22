@@ -1,6 +1,6 @@
 # 08: The Contributors map
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 5
 Who: Sonnet

@@ -1,6 +1,6 @@
 # 15: The weekly backup to Cloudflare R2
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 4, before the Contributor button goes public
 Who: Sonnet, with the owner's setup

@@ -1,6 +1,6 @@
 # 08: The contributor tables
 
-Status: claimed
+Status: resolved
 Type: task
 Wave: 3
 Who: Sonnet; Opus reviews before the owner sees it
