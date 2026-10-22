@@ -9,7 +9,7 @@ This page is generated from the code, so it cannot go stale. It shows the struct
 A unit is a folder: an app, a feature (or a concern folder of a feature that has them), a kind of shared code, a design-system layer, or the styles.
 
 - **app**: `contribute`, `public-map`, `studio`
-- **features**: `contribute`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/review`
+- **features**: `contribute`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`, `studio/review`
 - **shared**: `hooks`, `lib`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
@@ -39,6 +39,7 @@ flowchart TD
     features_studio_drawing["studio/drawing"]
     features_studio_maps["studio/maps"]
     features_studio_panels["studio/panels"]
+    features_studio_public_view["studio/public-view"]
     features_studio_review["studio/review"]
   end
   subgraph shared_layer["shared"]
@@ -113,6 +114,7 @@ flowchart TD
   features_studio --> features_studio_drawing
   features_studio --> features_studio_maps
   features_studio --> features_studio_panels
+  features_studio --> features_studio_public_view
   features_studio --> features_studio_review
   features_studio_auth --> design_system_primitives
   features_studio_auth --> features_routes_map
@@ -147,6 +149,10 @@ flowchart TD
   features_studio_panels --> features_studio_drawing
   features_studio_panels --> shared_ui
   features_studio_panels --> shared_utils
+  features_studio_public_view --> design_system_primitives
+  features_studio_public_view --> features_studio_data
+  features_studio_public_view --> features_studio_maps
+  features_studio_public_view --> shared_lib
   features_studio_review --> design_system_primitives
   features_studio_review --> features_studio_data
   features_studio_review --> features_studio_maps
@@ -173,13 +179,14 @@ flowchart TD
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
-| `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/review` |
+| `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view`, `features/studio/review` |
 | `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/ui` |
 | `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `features/studio/drawing`, `shared/lib`, `shared/utils` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
 | `features/studio/maps` | `design-system/foundation`, `design-system/primitives`, `features/routes/map`, `features/studio/data` |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
+| `features/studio/public-view` | `design-system/primitives`, `features/studio/data`, `features/studio/maps`, `shared/lib` |
 | `features/studio/review` | `design-system/primitives`, `features/studio/data`, `features/studio/maps`, `shared/lib` |
 | `shared/hooks` | — |
 | `shared/lib` | — |

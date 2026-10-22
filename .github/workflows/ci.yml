@@ -92,7 +92,7 @@ jobs:
             case "$f" in
               docs/architecture.md) public=true; studio=true ;;
               docs/*|*.md) ;;
-              src/app/studio/*|src/features/studio/*|src/shared/ui/turnstile.tsx|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              src/app/studio/*|src/features/studio/*|src/shared/ui/turnstile.tsx|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
               src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs)
                 public=true ;;
@@ -233,7 +233,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [studio-scale-test, studio-contributors-test, save-test, turnstile-test]
+        suite:
+          [
+            studio-scale-test,
+            studio-contributors-test,
+            save-test,
+            turnstile-test,
+            studio-public-view-test,
+          ]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -259,6 +266,10 @@ jobs:
       - name: Turn uploads on, for the Contributors map's suites
         if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
         run: echo VITE_CONTRIBUTIONS=1 >> .env.local
+      # The Public map view exists only with drafts on; the later line wins.
+      - name: Turn the studio's drafts on for studio-public-view-test
+        if: matrix.suite == 'studio-public-view-test'
+        run: echo VITE_STUDIO_DRAFTS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
         if: matrix.suite == 'turnstile-test'
