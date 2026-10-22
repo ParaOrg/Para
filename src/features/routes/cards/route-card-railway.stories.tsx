@@ -19,6 +19,7 @@ const meta = {
     bound: 'Southbound',
     state: 'rest',
     routeOrigin: 'Fernando Poe Jr.',
+    originCode: 'GL02',
     endPoints: [{ id: 'a', routeDirection: 'Dr. Santos', stationCode: 'GL26' }],
     onSelect: fn(),
     onPick: fn(),
@@ -34,7 +35,7 @@ export const LightRailWayOne: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.getByTestId('chooser-pill')).toHaveTextContent('LRT 1, Southbound');
-    await expect(card.getByTestId('chooser-item')).toHaveTextContent('GL26, Dr. Santos');
+    await expect(card.getByTestId('chooser-item')).toHaveTextContent('Dr. Santos, GL26');
   },
 };
 
@@ -44,6 +45,7 @@ export const LightRailWayTwo: Story = {
     railway: 'LRT-2',
     bound: 'Westbound',
     routeOrigin: 'Antipolo',
+    originCode: 'PL13',
     endPoints: [{ id: 'a', routeDirection: 'Recto', stationCode: 'PL01' }],
   },
 };
@@ -54,6 +56,7 @@ export const MetroRailWayThree: Story = {
     railway: 'MRT-3',
     bound: 'Southbound',
     routeOrigin: 'North Avenue',
+    originCode: 'YL01',
     endPoints: [{ id: 'a', routeDirection: 'Taft Avenue', stationCode: 'YL13' }],
   },
 };
@@ -64,6 +67,7 @@ export const Ferry: Story = {
     railway: 'Ferry',
     bound: null,
     routeOrigin: 'Escolta',
+    originCode: null,
     endPoints: [{ id: 'a', routeDirection: 'Pinagbuhatan', stationCode: null }],
   },
   play: async ({ canvasElement }) => {
@@ -89,6 +93,7 @@ export const ManyStations: Story = {
     railway: 'LRT-2',
     bound: 'Eastbound',
     routeOrigin: 'Recto',
+    originCode: 'PL01',
     endPoints: [
       { id: 'a', routeDirection: 'Araneta Center-Cubao', stationCode: 'PL09' },
       { id: 'b', routeDirection: 'Santolan', stationCode: 'PL11' },
@@ -99,7 +104,11 @@ export const ManyStations: Story = {
 
 /** A bound the line's table does not know: nothing more is read out after the line. */
 export const NoBound: Story = {
-  args: { bound: null, endPoints: [{ id: 'a', routeDirection: 'Somewhere', stationCode: null }] },
+  args: {
+    bound: null,
+    originCode: null,
+    endPoints: [{ id: 'a', routeDirection: 'Somewhere', stationCode: null }],
+  },
 };
 
 /** A long station name wraps under the pill row; at a sheet's Low it keeps one line. */

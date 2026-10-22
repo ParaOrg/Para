@@ -4,6 +4,8 @@ import { ROW_PRESSED } from './livery-card';
 import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
 import type { Livery } from '../model/liveries';
 
+type RouteEndPointBarSize = 'base' | 'xl';
+
 type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children' | 'slot'> & {
   /** Figma's routeDirection: the place the row's route goes to. */
   routeDirection: string;
@@ -15,12 +17,17 @@ type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children' | 'slo
   on: Livery | 'surface';
   /** Where the row sits among its rows, which decides how its tree line ends. */
   position: RouteEndPointPosition;
-  /** Figma's ❄️ Slot, before the name: a station's code on a RouteCardRailway. Empty on every other row. */
+  /** Figma's ❄️ Slot, after the name: a station's badge on a RouteCardRailway. Empty on every other row. */
   slot?: ReactNode;
+  /** The row's words: base, SemiBold 17/24 (RouteCard); xl, Medium 20/28 (RouteCardRailway). */
+  size?: RouteEndPointBarSize;
 };
 
-// SemiBold 17/24 on both variants, Figma's text-base/semibold.
-const BAR = 'flex w-full items-center px-4 text-left text-base/6 font-semibold';
+const BAR = 'flex w-full items-center px-4 text-left';
+const SIZE_CLASSES = {
+  base: 'text-base/6 font-semibold',
+  xl: 'text-xl/7 font-medium',
+} satisfies Record<RouteEndPointBarSize, string>;
 // Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed draws it. The hover is
 // tertiary too.
 const ON_SURFACE =
@@ -37,6 +44,7 @@ export function RouteEndPointBar({
   on,
   position,
   slot,
+  size = 'base',
   className,
   ...rest
 }: Props) {
@@ -48,14 +56,16 @@ export function RouteEndPointBar({
       className={
         BAR +
         ' ' +
+        SIZE_CLASSES[size] +
+        ' ' +
         (isOnSurface ? ON_SURFACE : ON_CARD + ' ' + ROW_PRESSED[on]) +
         (className ? ' ' + className : '')
       }
     >
       <RouteEndPointLines position={position} />
       <span className="flex min-w-0 flex-1 items-center gap-1 py-2">
-        {slot}
         <span className="min-w-0 flex-1">{routeDirection}</span>
+        {slot}
       </span>
     </button>
   );

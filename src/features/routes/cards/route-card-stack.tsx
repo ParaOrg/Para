@@ -32,6 +32,13 @@ interface Props {
   testId: 'chooser' | 'card';
 }
 
+/** The station a train card's directions leave, as its line's table codes it; null on the ferry or an unknown station. */
+function originCodeOf(directions: readonly { v: Direction }[]): string | null {
+  const [first] = directions;
+  const line = first && railLineOf(first.v);
+  return first && line ? stationCode(line, directionEnds(first.v).from) : null;
+}
+
 /**
  * Routes one way round as RouteCards: a card per place they leave from
  * (departures), and per train line and bound or the ferry a RouteCardRailway
@@ -100,6 +107,7 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
             bound={p.bound}
             state={selected === p.card ? 'selected' : 'rest'}
             routeOrigin={p.from}
+            originCode={originCodeOf(p.directions)}
             endPoints={p.directions.map((d) => {
               const line = railLineOf(d.v);
               return {
