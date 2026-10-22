@@ -172,6 +172,7 @@ export function HotspotPanel({
             onChange={(e) => setInformal(e.target.value)}
             onClear={() => setInformal('')}
             list="parapo-informal-names"
+            aria-describedby="parapo-stop-name-hint"
             placeholder="SM Fairview"
           />
           <datalist id="parapo-informal-names">
@@ -179,7 +180,7 @@ export function HotspotPanel({
               <option key={n} value={n} />
             ))}
           </datalist>
-          <p className="mt-1 text-[11px] text-content-disabled">
+          <p id="parapo-stop-name-hint" className="mt-1 text-[11px] text-content-disabled">
             Boxes that share a hotspot name are one hotspot, whatever is written on each. Route
             names read it
             {kind === 'terminal' ? '; a hotspot has one terminal.' : '.'}

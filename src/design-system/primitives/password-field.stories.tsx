@@ -54,5 +54,22 @@ export const Placeholder: Story = { args: { value: '', placeholder: 'Password' }
 /** Property 1=Variant3. */
 export const WithError: Story = { args: { error: 'Wrong email or password.' } };
 
+/** An error with focus: the box takes Active's border, the message stays. */
+export const WithErrorFocused: Story = {
+  args: { error: 'Wrong email or password.' },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByLabelText('Password'));
+  },
+};
+
+/** Shown: the password in plain text, the eye turned to eye-closed. */
+export const Shown: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show password' }));
+    await expect(canvas.getByLabelText('Password')).toHaveAttribute('type', 'text');
+  },
+};
+
 /** Property 1=Disabled: the eye cannot be pressed. */
 export const Disabled: Story = { args: { disabled: true } };

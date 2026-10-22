@@ -71,6 +71,42 @@ export const WithError: Story = {
   },
 };
 
+/** An error with focus: the box takes Active's border, the message stays. */
+export const WithErrorFocused: Story = {
+  args: { error: 'Enter an email address.', onClear: fn() },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByLabelText('Email'));
+  },
+};
+
+/** The caller's own description is read before the error. */
+export const WithDescription: Story = {
+  args: { error: 'Enter an email address.', 'aria-describedby': 'email-note' },
+  render: (args) => (
+    <>
+      <Controlled {...args} />
+      <p id="email-note" className="mt-1 text-xs text-content-disabled">
+        We only use it to sign you in.
+      </p>
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByLabelText('Email')).toHaveAccessibleDescription(
+      'We only use it to sign you in. Enter an email address.',
+    );
+  },
+};
+
+/** Disabled with an error: the error is neither shown nor read. */
+export const DisabledWithError: Story = {
+  args: { disabled: true, error: 'Enter an email address.' },
+  play: async ({ canvasElement }) => {
+    const field = within(canvasElement).getByLabelText('Email');
+    await expect(field).not.toHaveAttribute('aria-invalid');
+    await expect(field).not.toHaveAttribute('aria-describedby');
+  },
+};
+
 /** Property 1=Disabled: no clear. */
 export const Disabled: Story = { args: { disabled: true, onClear: fn() } };
 

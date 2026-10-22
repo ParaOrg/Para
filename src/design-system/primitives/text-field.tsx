@@ -1,16 +1,16 @@
 import { useId, useRef, type ComponentPropsWithoutRef, type ReactNode, type Ref } from 'react';
 
-import { FIELD_CONTROL, FIELD_TRAILING_BUTTON, FieldFrame } from './field-frame';
+import { FIELD_CONTROL, FIELD_TRAILING_BUTTON, FieldFrame, describedBy } from './field-frame';
 import { ClearIcon } from './field-icons';
 
 type TextFieldProps = Omit<
   ComponentPropsWithoutRef<'input'>,
-  'className' | 'style' | 'type' | 'children' | 'dangerouslySetInnerHTML' | 'value'
+  'className' | 'style' | 'type' | 'children' | 'dangerouslySetInnerHTML' | 'value' | 'aria-invalid'
 > & {
   /** Figma's ✏️ Label. */
   label: ReactNode;
   value: string;
-  type?: 'text' | 'email' | 'search' | 'tel' | 'url';
+  type?: 'text' | 'email' | 'tel' | 'url';
   /** Figma's Variant3: the message shown under the field. */
   error?: string;
   /**
@@ -32,12 +32,14 @@ export function TextField({
   onClear,
   disabled = false,
   id,
+  'aria-describedby': ownDescription,
   ref,
   ...input
 }: TextFieldProps) {
   const ownId = useId();
   const fieldId = id ?? ownId;
   const errorId = `${fieldId}-error`;
+  const isErrorShown = !!error && !disabled;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const setRef = (node: HTMLInputElement | null) => {
     inputRef.current = node;
@@ -58,6 +60,7 @@ export function TextField({
           <button
             type="button"
             aria-label="Clear"
+            title="Clear"
             onClick={() => {
               onClear();
               inputRef.current?.focus();
@@ -77,8 +80,8 @@ export function TextField({
         id={fieldId}
         type={type}
         disabled={disabled}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-invalid={isErrorShown || undefined}
+        aria-describedby={describedBy(ownDescription, isErrorShown ? errorId : undefined)}
         className={FIELD_CONTROL + (canClear ? '' : ' pr-3')}
       />
     </FieldFrame>

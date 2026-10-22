@@ -51,6 +51,14 @@ export const NothingPicked: Story = { args: { defaultValue: '' } };
 /** Property 1=Variant3. */
 export const WithError: Story = { args: { error: 'Pick what you rode.' } };
 
+/** An error with focus: the box takes Active's border, the message stays. */
+export const WithErrorFocused: Story = {
+  args: { error: 'Pick what you rode.' },
+  play: async ({ canvasElement }) => {
+    within(canvasElement).getByLabelText('What did you ride?').focus();
+  },
+};
+
 /** Property 1=Disabled. */
 export const Disabled: Story = { args: { disabled: true } };
 

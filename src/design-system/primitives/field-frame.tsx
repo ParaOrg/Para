@@ -14,6 +14,8 @@ interface FieldFrameProps {
   /** The id the control's aria-describedby names, so a screen reader reads the error with it. */
   errorId: string;
   isDisabled: boolean;
+  /** A textarea's box: the same look, grown to its rows instead of 44 tall. */
+  isMultiline?: boolean;
   /** The input or select, filling the box. */
   children: ReactNode;
   /** Figma's 🙏 Icon Instance: the eye, the clear, the chevron; none for a bare field. */
@@ -28,9 +30,16 @@ interface FieldFrameProps {
 const BOX = {
   default:
     'border-transparent bg-surface-secondary text-content-primary focus-within:border-brand-surface',
-  error: 'border-error-surface bg-surface-error text-content-primary',
+  // Focused, the error box takes Active's border: Figma draws no focused error state yet.
+  error:
+    'border-error-surface bg-surface-error text-content-primary focus-within:border-brand-surface',
   disabled: 'border-transparent bg-surface-tertiary text-content-disabled',
 } satisfies Record<FieldState, string>;
+
+const HEIGHT = {
+  single: 'h-11 items-center',
+  multiline: 'items-start',
+} satisfies Record<'single' | 'multiline', string>;
 
 /**
  * PalimosPoDesignSystem's InputField frame (Figma 4295:20567): the label, the 44-tall box with the
@@ -43,6 +52,7 @@ export function FieldFrame({
   error,
   errorId,
   isDisabled,
+  isMultiline = false,
   children,
   trailing,
 }: FieldFrameProps) {
@@ -52,7 +62,14 @@ export function FieldFrame({
       <label htmlFor={id} className="text-sm/5 text-content-quaternary">
         {label}
       </label>
-      <div className={'relative flex h-11 w-full items-center rounded-xl border ' + BOX[state]}>
+      <div
+        className={
+          'relative flex w-full rounded-xl border ' +
+          HEIGHT[isMultiline ? 'multiline' : 'single'] +
+          ' ' +
+          BOX[state]
+        }
+      >
         {children}
         {trailing}
       </div>
@@ -66,6 +83,16 @@ export function FieldFrame({
       )}
     </div>
   );
+}
+
+/**
+ * The control's aria-describedby: the caller's own description, then the error while it shows.
+ */
+export function describedBy(
+  own: string | undefined,
+  errorId: string | undefined,
+): string | undefined {
+  return [own, errorId].filter(Boolean).join(' ') || undefined;
 }
 
 /** The control's own classes, inside the frame: Figma's FieldContent, 16/24 Regular, 12 in. */

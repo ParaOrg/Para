@@ -101,7 +101,7 @@ export function ReviewSubjects({ onChanged, onBusyChange }: ReviewSubjectsProps)
         <>
           <TextField
             label="Find a route or place"
-            type="search"
+            type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             onClear={() => setSearch('')}

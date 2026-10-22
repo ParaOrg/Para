@@ -1,11 +1,11 @@
 import { useId, useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { FIELD_CONTROL, FIELD_TRAILING_BUTTON, FieldFrame } from './field-frame';
+import { FIELD_CONTROL, FIELD_TRAILING_BUTTON, FieldFrame, describedBy } from './field-frame';
 import { EyeClosedIcon, EyeOpenIcon } from './field-icons';
 
 type PasswordFieldProps = Omit<
   ComponentPropsWithoutRef<'input'>,
-  'className' | 'style' | 'type' | 'children' | 'dangerouslySetInnerHTML' | 'value'
+  'className' | 'style' | 'type' | 'children' | 'dangerouslySetInnerHTML' | 'value' | 'aria-invalid'
 > & {
   /** Figma's ✏️ Label. */
   label: ReactNode;
@@ -23,11 +23,13 @@ export function PasswordField({
   error,
   disabled = false,
   id,
+  'aria-describedby': ownDescription,
   ...input
 }: PasswordFieldProps) {
   const ownId = useId();
   const fieldId = id ?? ownId;
   const errorId = `${fieldId}-error`;
+  const isErrorShown = !!error && !disabled;
   const [isShown, setIsShown] = useState(false);
 
   return (
@@ -41,6 +43,7 @@ export function PasswordField({
         <button
           type="button"
           aria-label={isShown ? 'Hide password' : 'Show password'}
+          title={isShown ? 'Hide password' : 'Show password'}
           aria-controls={fieldId}
           disabled={disabled}
           onClick={() => setIsShown((shown) => !shown)}
@@ -57,8 +60,8 @@ export function PasswordField({
         id={fieldId}
         type={isShown ? 'text' : 'password'}
         disabled={disabled}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-invalid={isErrorShown || undefined}
+        aria-describedby={describedBy(ownDescription, isErrorShown ? errorId : undefined)}
         className={FIELD_CONTROL}
       />
     </FieldFrame>

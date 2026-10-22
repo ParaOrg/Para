@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { SelectField } from '@/design-system/primitives/select-field';
+import { TextAreaField } from '@/design-system/primitives/text-area-field';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import { countdownText } from './format';
@@ -19,13 +20,6 @@ interface SaveFormProps {
   /** Continue, and the form's two minutes running out, save what was said; Skip saves without. */
   onSave: (details: RecordingDetails | null) => void;
 }
-
-/**
- * The description's box. TODO: the InputField set draws one line only; this keeps its own look
- * until Figma draws a multi-line field.
- */
-const TEXTAREA =
-  'rounded-lg border border-border-secondary bg-surface px-3 py-2 text-base/6 font-normal text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary';
 
 const isRideKind = (value: string): value is RideKind => RIDE_KINDS.some((kind) => kind === value);
 
@@ -95,20 +89,13 @@ export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave 
         onChange={(event) => setDetails({ ...details, endPointName: event.target.value })}
         onClear={() => setDetails({ ...details, endPointName: '' })}
       />
-      <label
-        className="flex flex-col gap-1.5 text-sm/5 text-content-quaternary"
-        htmlFor={`${ids}-description`}
-      >
-        Description
-        <textarea
-          id={`${ids}-description`}
-          maxLength={1000}
-          className={TEXTAREA}
-          rows={3}
-          value={details.description}
-          onChange={(event) => setDetails({ ...details, description: event.target.value })}
-        />
-      </label>
+      <TextAreaField
+        id={`${ids}-description`}
+        label="Description"
+        maxLength={1000}
+        value={details.description}
+        onChange={(event) => setDetails({ ...details, description: event.target.value })}
+      />
       <SelectField
         id={`${ids}-kind`}
         label="What did you ride?"

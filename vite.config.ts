@@ -597,7 +597,7 @@ export default defineConfig({
             //    no form.
             {
               name: 'fields',
-              test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-icons|text-field|password-field|select-field)\.tsx$/,
+              test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-icons|text-field|text-area-field|password-field|select-field)\.tsx$/,
               priority: 1,
             },
             //  - shared never takes the studio's or the contributor page's own

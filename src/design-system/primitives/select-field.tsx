@@ -1,11 +1,11 @@
 import { useId, type ComponentPropsWithoutRef, type ReactNode, type Ref } from 'react';
 
-import { FIELD_CONTROL, FIELD_TRAILING, FieldFrame } from './field-frame';
+import { FIELD_CONTROL, FIELD_TRAILING, FieldFrame, describedBy } from './field-frame';
 import { ChevronDownIcon } from './field-icons';
 
 type SelectFieldProps = Omit<
   ComponentPropsWithoutRef<'select'>,
-  'className' | 'style' | 'dangerouslySetInnerHTML' | 'multiple'
+  'className' | 'style' | 'dangerouslySetInnerHTML' | 'multiple' | 'aria-invalid'
 > & {
   /** Figma's ✏️ Label. */
   label: ReactNode;
@@ -27,12 +27,14 @@ export function SelectField({
   error,
   disabled = false,
   id,
+  'aria-describedby': ownDescription,
   ref,
   ...select
 }: SelectFieldProps) {
   const ownId = useId();
   const fieldId = id ?? ownId;
   const errorId = `${fieldId}-error`;
+  const isErrorShown = !!error && !disabled;
 
   return (
     <FieldFrame
@@ -57,8 +59,8 @@ export function SelectField({
         ref={ref}
         id={fieldId}
         disabled={disabled}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-invalid={isErrorShown || undefined}
+        aria-describedby={describedBy(ownDescription, isErrorShown ? errorId : undefined)}
         className={FIELD_CONTROL + ' w-full cursor-pointer appearance-none truncate pr-11'}
       >
         {children}
