@@ -49,9 +49,9 @@ interface RouteCardRailwayProps {
 
 /** The line's name as Figma's pill writes it. */
 const PILL_LABEL = {
-  'LRT-1': 'LRT 1',
-  'LRT-2': 'LRT 2',
-  'MRT-3': 'MRT 3',
+  'LRT-1': 'LRT Line 1',
+  'LRT-2': 'LRT Line 2',
+  'MRT-3': 'MRT Line 3',
   Ferry: 'Ferry',
 } satisfies Record<RailwayVehicle, string>;
 

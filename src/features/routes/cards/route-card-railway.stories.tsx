@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 export const LightRailWayOne: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
-    await expect(card.getByTestId('chooser-pill')).toHaveTextContent('LRT 1, Southbound');
+    await expect(card.getByTestId('chooser-pill')).toHaveTextContent('LRT Line 1, Southbound');
     await expect(card.getByTestId('chooser-item')).toHaveTextContent('Dr. Santos, GL26');
     await expect(card.getByTestId('chooser-select').parentElement).toHaveTextContent('GL02');
   },
