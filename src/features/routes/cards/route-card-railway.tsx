@@ -5,6 +5,7 @@ import {
   CARD_SHADOW_SELECTED,
   CARD_SURFACE,
   CARD_TEXT,
+  RAILWAY_PILL,
 } from './livery-card';
 import { RailwayBadge } from './railway-badge';
 import { RouteEndPointBar } from './route-end-point-bar';
@@ -54,14 +55,6 @@ const PILL_LABEL = {
   Ferry: 'Ferry',
 } satisfies Record<RailwayVehicle, string>;
 
-/** The chip's and pill's fill and words: the line's surface on white, and on MRT-3's yellow its yellow on Content/primary. */
-const PILL = {
-  'LRT-1': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
-  'LRT-2': 'bg-content-inverse text-map-rail-light-rail-way-two-surface',
-  'MRT-3': 'bg-content-primary text-map-rail-metro-rail-way-three-surface',
-  Ferry: 'bg-content-inverse text-map-ferry-surface',
-} satisfies Record<RailwayVehicle, string>;
-
 /**
  * A station and the train or ferry directions that leave it one way —
  * Figma's RouteCardRailway (4261:15199): one card per line and bound, in the
@@ -88,6 +81,8 @@ export function RouteCardRailway({
 }: RouteCardRailwayProps) {
   const livery = RAILWAY_LIVERY[railway];
   const isSelected = state === 'selected';
+  // The ferry has no station badges: Figma's Ferry card draws none.
+  const railLine = railway === 'Ferry' ? null : railway;
   return (
     <div
       data-testid={`${testId}-origin`}
@@ -107,7 +102,7 @@ export function RouteCardRailway({
         className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
       />
       <div className="flex w-full items-center gap-2 px-4 pt-2">
-        <span aria-hidden className={'shrink-0 rounded-md p-1 ' + PILL[railway]}>
+        <span aria-hidden className={'shrink-0 rounded-md p-1 ' + RAILWAY_PILL[railway]}>
           <span className="block size-6 *:size-full">
             <VehicleIcon vehicle={railway} />
           </span>
@@ -115,7 +110,8 @@ export function RouteCardRailway({
         <p
           data-testid={`${testId}-pill`}
           className={
-            'rounded-full px-2.5 py-0.5 text-xl/7 font-semibold whitespace-nowrap ' + PILL[railway]
+            'rounded-full px-2.5 py-0.5 text-xl/7 font-semibold whitespace-nowrap ' +
+            RAILWAY_PILL[railway]
           }
         >
           {PILL_LABEL[railway]}
@@ -135,7 +131,9 @@ export function RouteCardRailway({
           >
             {routeOrigin}
           </button>
-          {originCode && <RailwayBadge kind="start" railway={railway} code={originCode} />}
+          {railLine && originCode && (
+            <RailwayBadge kind="start" railway={railLine} code={originCode} />
+          )}
         </div>
         <ul className="flex w-full flex-col">
           {endPoints.map((e, index) => (
@@ -146,10 +144,11 @@ export function RouteCardRailway({
                 position={index === endPoints.length - 1 ? 'bottom' : 'top'}
                 size="xl"
                 slot={
+                  railLine &&
                   e.stationCode && (
                     <>
                       <span className="sr-only">, </span>
-                      <RailwayBadge kind="end" railway={railway} code={e.stationCode} />
+                      <RailwayBadge kind="end" railway={railLine} code={e.stationCode} />
                     </>
                   )
                 }

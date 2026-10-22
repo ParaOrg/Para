@@ -12,7 +12,7 @@ const meta = {
     (Story, { args }) => {
       const livery = RAILWAY_LIVERY[args.railway];
       return (
-        <div className={'flex p-4 ' + CARD_SURFACE[livery] + ' ' + CARD_TEXT[livery]}>
+        <div className={'flex p-4 font-sn-pro ' + CARD_SURFACE[livery] + ' ' + CARD_TEXT[livery]}>
           <Story />
         </div>
       );
@@ -39,6 +39,3 @@ export const MetroRailWayThree: Story = { args: { railway: 'MRT-3', code: 'YL01'
 export const MetroRailWayThreeEnd: Story = {
   args: { railway: 'MRT-3', kind: 'end', code: 'YL13' },
 };
-
-/** The ferry has no codes, so the card never draws this; it takes the ferry's surface if one is given. */
-export const Ferry: Story = { args: { railway: 'Ferry', code: 'FR01' } };

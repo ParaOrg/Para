@@ -104,11 +104,24 @@ export const ManyStations: Story = {
 };
 
 /** A bound the line's table does not know: nothing more is read out after the line. */
-export const NoBound: Story = {
+export const NoBound: Story = { args: { bound: null } };
+
+/** Stations the line's table does not know go without a badge; a row it knows keeps its own. */
+export const UnknownStation: Story = {
   args: {
-    bound: null,
+    routeOrigin: 'Somewhere',
     originCode: null,
-    endPoints: [{ id: 'a', routeDirection: 'Somewhere', stationCode: null }],
+    endPoints: [
+      { id: 'a', routeDirection: 'Nowhere', stationCode: null },
+      { id: 'b', routeDirection: 'Dr. Santos', stationCode: 'GL26' },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const card = within(canvasElement);
+    await expect(card.getByTestId('chooser-select').parentElement).not.toHaveTextContent('GL');
+    const [unknown, known] = card.getAllByTestId('chooser-item');
+    await expect(unknown).toHaveTextContent(/^Nowhere$/);
+    await expect(known).toHaveTextContent('Dr. Santos, GL26');
   },
 };
 
