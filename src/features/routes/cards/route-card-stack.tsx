@@ -4,8 +4,7 @@ import { RouteCard } from './route-card';
 import { RouteCardRailway } from './route-card-railway';
 import { routeCards } from '../model/departures';
 import { cardLiveries, type Livery } from '../model/liveries';
-import { stationCode } from '../model/rail-codes';
-import { directionEnds, railLineOf, type Direction } from '../model/routes';
+import type { Direction } from '../model/routes';
 import { isRailwayVehicle, vehicleOf } from '../model/vehicles';
 
 /** A card picked: which card it is, the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
@@ -30,13 +29,6 @@ interface Props {
   onRoute: (v: Direction, livery: Livery) => void;
   /** What the suites call each card and row (RouteCard). */
   testId: 'chooser' | 'card';
-}
-
-/** The station a train card's directions leave, as its line's table codes it; null on the ferry or an unknown station. */
-function originCodeOf(directions: readonly { v: Direction }[]): string | null {
-  const [first] = directions;
-  const line = first && railLineOf(first.v);
-  return first && line ? stationCode(line, directionEnds(first.v).from) : null;
 }
 
 /**
@@ -107,15 +99,7 @@ export function RouteCardStack({ routes, back, selected, onSelect, onRoute, test
             bound={p.bound}
             state={selected === p.card ? 'selected' : 'rest'}
             routeOrigin={p.from}
-            originCode={originCodeOf(p.directions)}
-            endPoints={p.directions.map((d) => {
-              const line = railLineOf(d.v);
-              return {
-                id: d.v.id,
-                routeDirection: d.to,
-                stationCode: line && stationCode(line, directionEnds(d.v).to),
-              };
-            })}
+            endPoints={p.directions.map((d) => ({ id: d.v.id, routeDirection: d.to }))}
             onSelect={() => pick(p, i)}
             onPick={(id) => open(id, i)}
           />

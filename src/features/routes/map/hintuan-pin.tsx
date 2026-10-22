@@ -27,8 +27,8 @@ interface Props {
   /** Given, the name is a button: the public map's lets the pick go. */
   onPick?: () => void;
   /**
-   * Which pick it marks: the ride's end, End's E before the name, or its
-   * start, Start's S (the owner's TimelineRouteDetail).
+   * Which pick it marks: the ride's end, End's pill before the name, or its
+   * start, Start's pill (the owner's TimelineRouteDetail).
    */
   marks?: 'end' | 'start';
 }
@@ -47,15 +47,16 @@ interface Props {
  * on it reaches the line or the box beneath. The caller keys it on the pick,
  * so another hintuan pops a fresh circle.
  *
- * Beside it, its name: Figma's HintuanLabel, HintuanEnd (4068:4791), End's E
- * before the name in the line's colour, 8 right of the circle and centred on
+ * Beside it, its name: Figma's HintuanLabel, HintuanEnd (4068:4791), a white
+ * "End" pill before the name on red, 8 right of the circle and centred on
  * it; on a train line, CodeSignEnd, the station's code — GL02, PL08, YL13 —
- * in a white chip before the name and the E in a disc of its own. The code
+ * in a second white segment after End's, in a red pill of its own beside the
+ * name's. The code
  * shows on the picked station's label alone; the other stations keep their
  * dots, where Figma's LRTHintuanCodes (4051:6426) draws codes (StationLabels;
  * the owner's call). Picked as the end, the hintuan is where the ride ends,
  * the line on from here in the card's pale (useLitRides) and the route's own
- * tail keeps its name without an E (EndTitles). Given `onPick`, the name is a
+ * tail keeps its name without an End pill (EndTitles). Given `onPick`, the name is a
  * button: it lets the pick go, the camera back (the owner's call); the circle
  * still takes no taps. The code is only on the map, so the name's button says
  * it too.

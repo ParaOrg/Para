@@ -33,17 +33,16 @@ import './end-titles.css';
  * consistent and reusable (the owner's call). 24 across at every zoom, since
  * the pills show at every zoom.
  *
- * Each name says which end it is: a Head Route, Start's green with its
- * circled S, where a ride starts; a Tail Route, End's circled E in the line's
- * colour, where it goes; white words on both (a Tail Route's near-black on
- * MRT-3's yellow, LINE_WORDS), and the pointer the same
- * (RouteLineEndingsLabel). They read as the RouteCard does: where a ride
+ * Each name says which end it is: a Head Route, Start's green with a white
+ * "Start" pill, where a ride starts; a Tail Route, End's red with a white
+ * "End" pill, where it goes, whatever the line; white words on both, and the
+ * pointer the same (RouteLineEndingsLabel). They read as the RouteCard does: where a ride
  * starts, the top of its timeline, is the card's title; where it goes is one
  * of the card's rows. Every lit line's ends are marked, a list's in the
  * selected blue too (the owner's call). A ride a picked hintuan stops short
- * ends there, End's E before the hintuan's name (HintuanPin), so its own tail
+ * ends there, End's pill before the hintuan's name (HintuanPin), so its own tail
  * keeps its name without one (the owner's call); a ride started at a picked
- * hintuan, Start's S on its pin, leaves its head the same way. Either is an
+ * hintuan, Start's pill on its pin, leaves its head the same way. Either is an
  * end on the pale (`paled`), so it wears the label's Unselected, its pill at
  * 60%, as the names along the pale are (the Label's Unselected, Figma
  * 4200:13645; the owner's call). A start picked alone, no ride yet, leaves
@@ -169,9 +168,9 @@ function EndTitle({
   named: boolean;
   /** Where the ride starts (Head Route), or where it goes (Tail Route). */
   head: boolean;
-  /** Start's S or End's E before the name: a Head or a Tail Route; else Default, or Unselected when `paled`. */
+  /** Start's or End's pill before the name: a Head or a Tail Route; else Default, or Unselected when `paled`. */
   marked: boolean;
-  /** Which it wears when marked: the S, or the E (rideEnds' `mark`). */
+  /** Which it wears when marked: Start's, or End's (rideEnds' `mark`). */
   mark: 'start' | 'end';
   livery: Livery | null;
   /** A train station's sign code, before its name (RouteLineEndingsLabel's CodeSign). */

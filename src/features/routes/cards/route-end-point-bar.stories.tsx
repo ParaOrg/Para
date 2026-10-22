@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { EndSignPill } from './end-sign-pill';
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
-import { RailwayBadge } from './railway-badge';
 import { RouteEndPointBar } from './route-end-point-bar';
 
 /**
@@ -69,14 +69,14 @@ export const OnOrangeLast: Story = { args: { on: 'orange', position: 'bottom' } 
 /** On MRT-3's yellow the row and its line take the card's dark words. */
 export const OnDarkWords: Story = { args: { on: 'metro-rail-way-three', position: 'bottom' } };
 
-/** The ❄️ Slot filled, after the name: a station's badge, as RouteCardRailway puts it. */
+/** The ❄️ Slot filled, after the name: an End sign, as RouteCardRailway puts it. */
 export const WithSlot: Story = {
   args: {
     on: 'light-rail-way-two',
     position: 'bottom',
     routeDirection: 'Recto',
     size: 'xl',
-    slot: <RailwayBadge kind="end" railway="LRT-2" code="PL01" />,
+    slot: <EndSignPill kind="end" />,
   },
 };
 
