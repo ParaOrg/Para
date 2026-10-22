@@ -105,3 +105,28 @@ requires `20261019125900_contributions_check.sql` all `t`, then runs
 `already saved`, one row. The revert must refuse while contributions are
 stored; on a second database, apply then revert twice leaves the schema as
 before, and re-applying passes the check.
+
+## contribution-use.sh
+
+`migrations/20261022090000_contribution_use.sql` on databases of its own, run
+last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contribution-use.sh
+
+It applies every earlier migration, contributions through its paste file, then
+applies `../apply/20261022090000_contribution_use_apply.sql` twice (the second
+run must stop and change nothing), requires `…_check.sql` all `t`, then runs
+`after-contribution-use.sql`:
+
+- anon reaches nothing and blocks no one
+- a phone reads and adds no uses, blocks no one, and cannot unblock itself or touch its contributor row
+- an editor adds, reads and deletes uses; a duplicate link, a bad kind and a forged `editor_id` are refused; nothing is updated
+- block stamps who, when and why, and a blocked phone fails `can_contribute()`; unblock clears all three; an unknown phone is refused
+- `retire_month` refuses a recent month and a non-month, then cuts 200 m off each end, drops the hintos near the ends, clears the text, unlinks the phone and drops the piece; the use stays; a second run changes nothing
+- `add_months` makes the next pieces
+
+The revert must refuse over a blocked contributor and over a stored use; on a
+second database, apply then revert twice leaves the schema as before, and
+re-applying passes the check. The script needs a server that has `anon`,
+`authenticated` and `service_role` already, like `contributions.sh`.
+
