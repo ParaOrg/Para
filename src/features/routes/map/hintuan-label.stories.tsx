@@ -103,6 +103,9 @@ export const HintuanStart: Story = {
     await expectBesideTheDot(canvasElement);
     await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'start'))).toBe(true);
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+    await expect(getComputedStyle(dotOf(canvasElement)).backgroundColor).toBe(
+      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    );
   },
 };
 
@@ -183,7 +186,7 @@ export const MetroRailWayThree: Story = {
   args: { variant: 'hintuan-end', livery: 'metro-rail-way-three' },
 };
 
-/** A picked start on MRT-3: the dot the line's yellow, the label green. */
+/** A picked start on MRT-3: the dot and the label Start's green, whatever the line. */
 export const MetroRailWayThreeStart: Story = {
   args: { variant: 'hintuan-start', codeSign: 'YL07', livery: 'metro-rail-way-three' },
 };

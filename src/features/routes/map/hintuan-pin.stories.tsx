@@ -7,7 +7,6 @@ import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { HintuanPin } from './hintuan-pin';
-import { CARD_SURFACE } from '../cards/livery-card';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -149,7 +148,7 @@ export const End: Story = {
   },
 };
 
-/** The picked start: a white Start pill before the name on Head Route's green, the circle still the line's colour, not End's red. */
+/** The picked start: a white Start pill before the name on Head Route's green, the circle Start's green too. */
 export const Start: Story = {
   args: { marks: 'start' },
   play: async ({ canvasElement }) => {
@@ -160,7 +159,9 @@ export const Start: Story = {
     await expect(getComputedStyle(partOf(pin, 'name')).backgroundColor).toBe(
       wornBy('bg-map-hotspots-card-hintuan-surface'),
     );
-    await expect(getComputedStyle(circleOf(pin)).backgroundColor).toBe(wornBy(CARD_SURFACE.rose));
+    await expect(getComputedStyle(circleOf(pin)).backgroundColor).toBe(
+      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    );
     await expectOnThePoint(canvasElement, pin);
   },
 };

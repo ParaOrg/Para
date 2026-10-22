@@ -8,7 +8,7 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import type { Ride } from './direction-arrows';
 import { EndTitles } from './end-titles';
-import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
+import { CARD_SURFACE_PALE } from '../cards/livery-card';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -195,9 +195,9 @@ export const BothEnds: Story = {
     await expect(getComputedStyle(partOf(head, 'name')).opacity).toBe('1');
     await expect(head).not.toHaveAttribute('data-paled');
     await expect(tail).not.toHaveAttribute('data-paled');
-    // Both circles ringed in the card's colour, and neither takes a tap.
-    await expect(circleColour(head)).toBe(wornBy(CARD_SURFACE.rose));
-    await expect(circleColour(tail)).toBe(wornBy(CARD_SURFACE.rose));
+    // Each circle in its pill's colour, Start's green and End's red, and neither takes a tap.
+    await expect(circleColour(head)).toBe(wornBy('bg-map-hotspots-card-hintuan-surface'));
+    await expect(circleColour(tail)).toBe(wornBy('bg-card-red-surface'));
     await expect(getComputedStyle(head).pointerEvents).toBe('none');
     await expectPillOverCircle(head);
     await expectPillOverCircle(tail);
@@ -257,17 +257,20 @@ export const PillsAsButtons: Story = {
   },
 };
 
-/** The list's lines carry no card's colour: the circles wear the selected blue, and the tail's pill is still End's red. */
+/** The list's lines carry no card's colour, but a marked end's circle and pill still wear Start's green or End's red. */
 export const SelectedBlue: Story = {
   args: { livery: null },
   play: async ({ canvasElement }) => {
     const ends = await endsOf(canvasElement, 2);
-    const blue = wornBy('bg-map-route-line-surface-selected');
     await expect(
       getComputedStyle(partOf(endOf(ends, 'Novaliches', 'tail'), 'name')).backgroundColor,
     ).toBe(wornBy('bg-card-red-surface'));
-    await expect(circleColour(endOf(ends, 'Tala', 'head'))).toBe(blue);
-    await expect(circleColour(endOf(ends, 'Novaliches', 'tail'))).toBe(blue);
+    await expect(circleColour(endOf(ends, 'Tala', 'head'))).toBe(
+      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    );
+    await expect(circleColour(endOf(ends, 'Novaliches', 'tail'))).toBe(
+      wornBy('bg-card-red-surface'),
+    );
   },
 };
 
@@ -347,7 +350,7 @@ export const TrainRide: Story = {
     // With a code the word and the code are two white segments in the pill, before the name.
     await expect(partOf(head, 'name').contains(partOf(head, 'start'))).toBe(true);
     await expect(partOf(tail, 'name').contains(partOf(tail, 'end'))).toBe(true);
-    await expect(circleColour(tail)).toBe(wornBy(CARD_SURFACE['light-rail-way-one']));
+    await expect(circleColour(tail)).toBe(wornBy('bg-card-red-surface'));
   },
 };
 
