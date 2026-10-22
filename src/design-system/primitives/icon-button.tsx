@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 import { Tooltip } from './tooltip';
 
@@ -6,8 +6,9 @@ import { Tooltip } from './tooltip';
  * PalimosPoDesignSystem's IconButton, from the Figma set (node 3668:2815):
  * Button's Special voice with the words taken out — a round pill holding one
  * icon, on the same surfaces and the same InnerShadow/SpecialButton… effect
- * styles, state for state (see Button).
- * Special is the only variant the set draws, so it is the only one here.
+ * styles, state for state (see Button). Brand is Button's Primary the same way:
+ * Brand/surface under the PrimaryButton/… effect styles.
+ * The set draws Plain too; nothing uses it yet, so it is not here.
  *
  * With no words on it, its label shows as the Tooltip on hover — every
  * IconButton, so none can forget it, a disabled one too (it still says what
@@ -17,7 +18,7 @@ import { Tooltip } from './tooltip';
  * off the button, and leaves over duration/quick with ease/exit.
  */
 
-export type Size = 'base' | 'small';
+export type Size = 'large' | 'base' | 'small';
 
 /** Tooltip's Position: the side its arrow is on, so Bottom sits above the button. */
 export type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
@@ -25,7 +26,7 @@ export type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
 // No `title` either: the Tooltip replaces the browser's, and both
 // at once would show two bubbles, perhaps saying different things.
 type Props = Omit<
-  ComponentPropsWithoutRef<'button'>,
+  ComponentProps<'button'>,
   | 'children'
   | 'className'
   | 'style'
@@ -33,40 +34,49 @@ type Props = Omit<
   | 'aria-label'
   | 'aria-labelledby'
   | 'title'
-> & {
-  variant?: 'special';
-  size?: Size;
-  /** Figma's 🙏 Icon Instance: a square SVG drawing in currentColor. */
-  icon: ReactNode;
-  /**
-   * Not in the Figma set: with no words on it, this is what a screen reader
-   * says the button does, and what its tooltip reads.
-   */
-  label: string;
-  /**
-   * Where the tooltip points from, as the Tooltip set names it. The screen
-   * picks: a control at the bottom of the map wants the bubble above it,
-   * Bottom; one along a card's top edge wants it below, Top.
-   */
-  tooltip?: TooltipPosition;
-};
+> &
+  // Only the pairs the set draws: Brand comes at Large alone.
+  ({ variant?: 'special'; size?: Size } | { variant: 'brand'; size: 'large' }) & {
+    /** Figma's 🙏 Icon Instance: a square SVG drawing in currentColor. */
+    icon: ReactNode;
+    /**
+     * Not in the Figma set: with no words on it, this is what a screen reader
+     * says the button does, and what its tooltip reads.
+     */
+    label: string;
+    /**
+     * Where the tooltip points from, as the Tooltip set names it. The screen
+     * picks: a control at the bottom of the map wants the bubble above it,
+     * Bottom; one along a card's top edge wants it below, Top.
+     */
+    tooltip?: TooltipPosition;
+  };
+
+type Variant = NonNullable<Props['variant']>;
 
 export const VARIANT = {
   special:
     'bg-surface-tertiary text-content-primary shadow-special-button-rest ' +
     'enabled:hover:shadow-special-button-hover ' +
     'enabled:active:bg-surface-quaternary enabled:active:shadow-special-button-pressed',
-} satisfies Record<NonNullable<Props['variant']>, string>;
+  // Pressed keeps Brand/surface: the set darkens only the shadow.
+  brand:
+    'bg-brand-surface text-content-inverse shadow-primary-button-rest ' +
+    'enabled:hover:shadow-primary-button-hover enabled:active:shadow-primary-button-pressed',
+} satisfies Record<Variant, string>;
 
-// Base is 40px round (8px around a 24px icon); Small 32px (6px around 20px).
+// Large is 48px round (10px around a 28px icon); Base 40px (8px around 24px);
+// Small 32px (6px around 20px).
 // The size is pinned as well as padded, so a parent that stretches its children
 // cannot make the pill oval; the size-fit wrapper below does the same.
 export const SIZE = {
+  large: 'size-12 p-2.5',
   base: 'size-10 p-2',
   small: 'size-8 p-1.5',
 } satisfies Record<Size, string>;
 
 export const ICON = {
+  large: 'size-7',
   base: 'size-6',
   small: 'size-5',
 } satisfies Record<Size, string>;
