@@ -1337,7 +1337,7 @@ await waitFor(
 );
 w = writesSince(n);
 check(
-  '+ New Route with the same ends fills the slot again, not "already drawn" (3)',
+  '+ then Routes with the same ends fills the slot again, not "already drawn" (3)',
   (await toast().count()) === 1 && !/already has this direction drawn/.test(await body()),
   (await body()).slice(-160),
 );
