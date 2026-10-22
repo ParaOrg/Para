@@ -1,4 +1,3 @@
-import { EndSignPill } from './end-sign-pill';
 import {
   BLOB_PLACE,
   CARD_BLOB,
@@ -7,6 +6,7 @@ import {
   CARD_SURFACE,
   CARD_TEXT,
 } from './livery-card';
+import { RailwayBadge } from './railway-badge';
 import { RouteEndPointBar } from './route-end-point-bar';
 import { VehicleIcon } from './vehicle-icon';
 import { RAILWAY_LIVERY } from '../model/liveries';
@@ -18,6 +18,8 @@ interface RailwayEndPoint {
   id: string;
   /** Figma's routeDirection: the station this direction goes to. */
   routeDirection: string;
+  /** The station's code, `PL01`, in the row's slot after the name; null on the ferry, or a station the line's table does not know. */
+  stationCode: string | null;
 }
 
 interface RouteCardRailwayProps {
@@ -32,6 +34,8 @@ interface RouteCardRailwayProps {
   state: 'rest' | 'selected';
   /** Figma's Route Origin: the station the card's directions leave from. */
   routeOrigin: string;
+  /** The origin's station code, `GL02`, in the badge beside its name; null on the ferry, or a station the line's table does not know. */
+  originCode: string | null;
   /** One row per direction leaving it, in the order given. */
   endPoints: readonly RailwayEndPoint[];
   /** A tap on the card outside its rows: select it, or let it go. */
@@ -76,6 +80,7 @@ export function RouteCardRailway({
   bound,
   state,
   routeOrigin,
+  originCode,
   endPoints,
   onSelect,
   onPick,
@@ -83,8 +88,6 @@ export function RouteCardRailway({
 }: RouteCardRailwayProps) {
   const livery = RAILWAY_LIVERY[railway];
   const isSelected = state === 'selected';
-  // The ferry draws no Start or End, as Figma's Ferry card has none.
-  const hasSigns = railway !== 'Ferry';
   return (
     <div
       data-testid={`${testId}-origin`}
@@ -132,7 +135,7 @@ export function RouteCardRailway({
           >
             {routeOrigin}
           </button>
-          {hasSigns && <EndSignPill kind="start" />}
+          {originCode && <RailwayBadge kind="start" railway={railway} code={originCode} />}
         </div>
         <ul className="flex w-full flex-col">
           {endPoints.map((e, index) => (
@@ -143,10 +146,10 @@ export function RouteCardRailway({
                 position={index === endPoints.length - 1 ? 'bottom' : 'top'}
                 size="xl"
                 slot={
-                  hasSigns && (
+                  e.stationCode && (
                     <>
                       <span className="sr-only">, </span>
-                      <EndSignPill kind="end" />
+                      <RailwayBadge kind="end" railway={railway} code={e.stationCode} />
                     </>
                   )
                 }

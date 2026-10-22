@@ -194,6 +194,11 @@
   --card-red-surface-pale: var(--color-red-300);
   --card-red-border-primary: var(--color-red-900);
   --card-red-timeline-surface: var(--color-red-900);
+  /* Card/red/surface-light and Card/green/surface -light: the brighter End and
+     Start a railway badge wears on MRT-3's dark chip (RouteCardRailway, 4261:15196),
+     where the surfaces' own shades are too dark to read. No green livery exists. */
+  --card-red-surface-light: var(--color-red-600);
+  --card-green-surface-light: var(--color-green-500);
   --card-orange-surface: var(--color-orange-700);
   --card-orange-surface-pale: var(--color-orange-300);
   --card-orange-border-primary: var(--color-orange-800);
@@ -318,6 +323,8 @@
   --color-card-red-surface-pale: var(--card-red-surface-pale);
   --color-card-red-border-primary: var(--card-red-border-primary);
   --color-card-red-timeline-surface: var(--card-red-timeline-surface);
+  --color-card-red-surface-light: var(--card-red-surface-light);
+  --color-card-green-surface-light: var(--card-green-surface-light);
   --color-card-orange-surface: var(--card-orange-surface);
   --color-card-orange-surface-pale: var(--card-orange-surface-pale);
   --color-card-orange-border-primary: var(--card-orange-border-primary);

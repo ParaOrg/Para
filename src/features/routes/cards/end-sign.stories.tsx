@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { EndSign } from './end-sign';
-import { EndSignPill } from './end-sign-pill';
 
 const meta = {
   title: 'Features/Routes/EndSign',
@@ -48,13 +47,3 @@ export const WithCode: Story = {
 
 /** End with its code. */
 export const EndWithCode: Story = { args: { kind: 'end', code: 'GL02' } };
-
-/** The pill a railway card puts beside its station names: the sign alone in the end's colour. */
-export const InAPill: Story = {
-  render: () => (
-    <div className="flex gap-2 bg-surface p-2">
-      <EndSignPill kind="start" />
-      <EndSignPill kind="end" />
-    </div>
-  ),
-};
