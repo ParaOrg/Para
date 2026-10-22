@@ -4,14 +4,14 @@ import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteMode } from './route-mode';
 import { VEHICLES } from '../model/vehicles';
 
-/** Figma's Modes (4236:17040): the vehicle in the card's red on a white chip, the word in the card's white. */
+/** Figma's Modes (4236:17040): the vehicle in the card's orange on a white chip, the word in the card's white. */
 const meta = {
   title: 'Features/Routes/RouteMode',
   component: RouteMode,
-  args: { vehicle: 'Jeepney', livery: 'red' },
+  args: { vehicle: 'Jeepney', livery: 'orange' },
   decorators: [
     (Story) => (
-      <div className="w-96 bg-card-red-surface p-3 text-content-inverse">
+      <div className="w-96 bg-card-orange-surface p-3 text-content-inverse">
         <Story />
       </div>
     ),
@@ -57,7 +57,7 @@ export const EveryVehicle: Story = {
     <ul className="flex flex-col gap-2">
       {VEHICLES.map((vehicle) => (
         <li key={vehicle}>
-          <RouteMode vehicle={vehicle} livery="red" />
+          <RouteMode vehicle={vehicle} livery="orange" />
         </li>
       ))}
     </ul>

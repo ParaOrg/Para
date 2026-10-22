@@ -16,7 +16,7 @@ const meta = {
     ),
   ],
   args: {
-    livery: 'red',
+    livery: 'orange',
     state: 'rest',
     routeOrigin: 'Novaliches (Bayan)',
     endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' }],
@@ -30,10 +30,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Red: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
+ * Orange: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
  * place in SN Pro Bold 24/32, as the RouteCard set draws it (3665:2265).
  */
-export const Red: Story = {
+export const Orange: Story = {
   play: async ({ canvasElement }) => {
     const place = within(canvasElement).getByTestId('chooser-select');
     const type = getComputedStyle(place);
@@ -43,19 +43,11 @@ export const Red: Story = {
   },
 };
 
-/** Orange, the Card/orange tokens. */
-export const Orange: Story = { args: { livery: 'orange', routeOrigin: 'SM Fairview' } };
-
-/** State=Selected, red: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
-export const RedSelected: Story = { args: { state: 'selected' } };
-
-/** Selected, orange: the same Primary shadow. */
-export const OrangeSelected: Story = {
-  args: { state: 'selected', livery: 'orange', routeOrigin: 'SM Fairview' },
-};
+/** State=Selected, orange: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
+export const OrangeSelected: Story = { args: { state: 'selected' } };
 
 /**
- * Violet: white words, as Red, under Route/RouteCardInverse's shadow and
+ * Violet: white words, as Orange, under Route/RouteCardInverse's shadow and
  * Blob.
  */
 export const Violet: Story = { args: { livery: 'violet', routeOrigin: 'Fairview' } };

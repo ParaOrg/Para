@@ -7,11 +7,11 @@ import { TimelineStick } from './timeline-stick';
 
 /**
  * Figma's TimelineStick set (3716:1759): every piece, Connected and
- * Disconnected, in red, the set's own colour, each in a row as tall as
+ * Disconnected, in orange (Figma draws the set in red), each in a row as tall as
  * Figma draws it (40; Top 62, Bottom 38). The rail breaks where a ride
  * starts and where it ends, and a start alone wears Disconnected.
  */
-const rail = TIMELINE_SURFACE.red;
+const rail = TIMELINE_SURFACE.orange;
 const dot = <TimelineDot rail={rail} />;
 
 const ROW_HEIGHT = {
@@ -20,10 +20,10 @@ const ROW_HEIGHT = {
   bottom: 'h-9.5',
 } as const;
 
-/** The piece in a row of its Figma height, on the red card. */
+/** The piece in a row of its Figma height, on the orange card. */
 function Row({ height, children }: { height: keyof typeof ROW_HEIGHT; children: ReactNode }) {
   return (
-    <div className={'flex w-12 bg-card-red-surface px-3 ' + ROW_HEIGHT[height]}>{children}</div>
+    <div className={'flex w-12 bg-card-orange-surface px-3 ' + ROW_HEIGHT[height]}>{children}</div>
   );
 }
 

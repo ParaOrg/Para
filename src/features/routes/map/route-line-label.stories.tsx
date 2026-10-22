@@ -155,7 +155,7 @@ export const CodeSignStartMetroRailWayThree: Story = {
     );
   },
 };
-export const StartRed: Story = { args: { variant: 'start', livery: 'red' } };
+export const StartOrange: Story = { args: { variant: 'start', livery: 'orange' } };
 export const CodeSignStartLightRailWayOne: Story = {
   args: { variant: 'start', codeSign: 'GL05', livery: 'light-rail-way-one' },
 };
@@ -172,7 +172,6 @@ export const DefaultIgnoresCode: Story = {
 };
 
 /** In each other card colour. */
-export const CodeSignEndRed: Story = { args: { variant: 'end', codeSign: 'GL02', livery: 'red' } };
 export const CodeSignEndOrange: Story = {
   args: { variant: 'end', codeSign: 'PL08', livery: 'orange' },
 };

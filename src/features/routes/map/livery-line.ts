@@ -29,11 +29,6 @@ export interface LineLook {
  * Map/Ferry/surface and surface-pale.
  */
 export const LIVERY_LINE = {
-  red: {
-    line: CARD_COLOURS['Card/red/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
-    pale: CARD_PALE_COLOURS['Card/red/surface-pale'],
-  },
   orange: {
     line: CARD_COLOURS['Card/orange/surface'],
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
@@ -102,7 +97,6 @@ type LineColour = Livery | 'selected';
 
 /** A label's fill in the line's colour (the owner's call). */
 export const LINE_SURFACE = {
-  red: 'bg-card-red-surface',
   orange: 'bg-card-orange-surface',
   violet: 'bg-card-violet-surface',
   rose: 'bg-card-rose-surface',
@@ -123,7 +117,6 @@ export const LINE_SURFACE = {
  * its yellow does not read on white (the owner's call).
  */
 export const LINE_TEXT = {
-  red: 'text-card-red-surface',
   orange: 'text-card-orange-surface',
   violet: 'text-card-violet-surface',
   rose: 'text-card-rose-surface',
@@ -138,7 +131,6 @@ export const LINE_TEXT = {
 
 /** The pointer under an end's label, in the line's colour (RouteLineEndingsLabel). */
 export const LINE_FILL = {
-  red: 'fill-card-red-surface',
   orange: 'fill-card-orange-surface',
   violet: 'fill-card-violet-surface',
   rose: 'fill-card-rose-surface',
@@ -157,7 +149,6 @@ export const LINE_FILL = {
  * as its chevrons and its card's words are.
  */
 export const LINE_WORDS = {
-  red: 'text-content-inverse',
   orange: 'text-content-inverse',
   violet: 'text-content-inverse',
   rose: 'text-content-inverse',
