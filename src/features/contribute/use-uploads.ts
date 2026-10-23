@@ -6,14 +6,13 @@ import { canUpload } from './api/contribute-client';
 import { turnstileSiteKey } from './api/env';
 import { packRecording, type PackRefusal } from './api/pack-recording';
 import {
-  UploadError,
   currentIdentity,
   ensureSignedIn,
   removeUpload,
   uploadContribution,
   uploadsStillThere,
-  type UploadProblem,
 } from './api/upload-contribution';
+import { UploadError, type UploadProblem } from './api/upload-problem';
 import type { Recording } from './recording-schema';
 import { loadFixes, updateRecording } from './recording-store';
 import { CONSENT_VERSION } from './use-consent';
@@ -70,6 +69,10 @@ const FAILED: Record<UploadProblem | PackRefusal, { message: string; willRetry: 
     willRetry: false,
   },
   unavailable: { message: 'Uploading is not available on this page.', willRetry: false },
+  'not-accepting': {
+    message: 'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone.',
+    willRetry: true,
+  },
   'too-long': {
     message: 'Longer than 6 hours, so it cannot be uploaded. It stays on this phone.',
     willRetry: false,
@@ -220,8 +223,9 @@ export function useUploads(saved: readonly Recording[]): Uploads {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
   }, [saved, isAvailable]);
 
-  // One that failed for want of signal (or the day's limit) is tried again when
-  // the phone comes back online or the page comes back to the front.
+  // One that failed for want of signal (or the day's limit, or ParaPo not taking
+  // uploads) is tried again when the phone comes back online or the page comes
+  // back to the front.
   useEffect(() => {
     if (!isAvailable) return;
     const sendAgain = () => {
