@@ -3,8 +3,12 @@ import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { cn } from '@/shared/utils/cn';
+
+import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
+import type { Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';
 
 /** Sample data only, shaped like the published map. Not the real map. */
@@ -303,16 +307,42 @@ export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 /** Only a loop: no way back to turn to, so no SWITCH. */
 export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };
 
-/** The `end` slot, handed the last card's livery: drawn after it, here a plain stand-in. */
-export const WithAnEnd: Story = {
-  args: {
-    end: (livery) => (
-      <p data-testid="end" className="p-4 text-content-primary">
-        After the last card: {livery}
-      </p>
-    ),
+/**
+ * The `end` slot, handed the last card's livery: drawn after it. A stand-in
+ * that grows, as the contribute card does, to fill what the list leaves of the sheet.
+ */
+const growingEnd = (livery: Livery) => (
+  <p data-testid="end" className={cn('grow p-4', CARD_SURFACE[livery], CARD_TEXT[livery])}>
+    After the last card: {livery}
+  </p>
+);
+
+export const WithAnEnd: Story = { args: { end: growingEnd } };
+
+/** Short list, Low: the end fills what the sheet shows. */
+export const WithAnEndLow: Story = {
+  args: { end: growingEnd },
+  play: async ({ canvasElement }) => {
+    await tapHandle(canvasElement, 2);
   },
 };
+
+/** Short list, Max: the end fills to the bottom of the screen. */
+export const WithAnEndMax: Story = {
+  args: { end: growingEnd },
+  play: async ({ canvasElement }) => {
+    await tapHandle(canvasElement, 1);
+  },
+};
+
+/** From 1024 wide, floating in the corner. */
+export const WithAnEndFloating: Story = {
+  args: { end: growingEnd },
+  parameters: { frame: 'wide' },
+};
+
+/** Taller than the sheet: the end keeps its own height and the list scrolls. */
+export const WithAnEndLongList: Story = { args: { routes: many, end: growingEnd } };
 
 /** With no route card listed, only hotspots, the slot is never called. */
 export const NoEndWithoutRouteCards: Story = {

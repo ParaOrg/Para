@@ -18,7 +18,8 @@ interface ContributionCardProps {
 
 /**
  * Figma's ContributionCTA (4343:13485): the invitation at the end of the route list, in the colours
- * of the last route card. It is only a link; the contributor page is another address with its own
+ * of the last route card, growing down to fill what a short list leaves of the sheet (its words
+ * stay at the top, the blob where it is). It is only a link; the contributor page is another address with its own
  * bundle, so the public page carries none of its code (scripts/checks/check-build.mjs).
  */
 export function ContributionCard({ livery }: ContributionCardProps) {
@@ -27,7 +28,7 @@ export function ContributionCard({ livery }: ContributionCardProps) {
       data-testid="contribution-card"
       data-livery={livery}
       className={cn(
-        'relative isolate flex w-full flex-col items-center gap-2 overflow-clip px-4 pt-6 pb-8 font-sn-pro',
+        'relative isolate flex w-full grow flex-col items-center gap-2 overflow-clip px-4 pt-6 pb-8 font-sn-pro',
         CARD_SURFACE[livery],
         CARD_TEXT[livery],
       )}
