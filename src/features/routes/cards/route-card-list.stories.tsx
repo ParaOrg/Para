@@ -302,3 +302,26 @@ export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
 /** Only a loop: no way back to turn to, so no SWITCH. */
 export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };
+
+/** The `end` slot, handed the last card's livery: drawn after it, here a plain stand-in. */
+export const WithAnEnd: Story = {
+  args: {
+    end: (livery) => (
+      <p data-testid="end" className="p-4 text-content-primary">
+        After the last card: {livery}
+      </p>
+    ),
+  },
+};
+
+/** With no route card listed, only hotspots, the slot is never called. */
+export const NoEndWithoutRouteCards: Story = {
+  args: {
+    routes: [],
+    hotspots: twoBoxes,
+    end: () => <p data-testid="end">Never drawn</p>,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByTestId('end')).toBeNull();
+  },
+};
