@@ -19,14 +19,14 @@ const CONSENT_LINES: readonly ConsentLine[] = [
   {
     id: 'recorded',
     label: 'What is recorded',
-    text: "Your phone's location about once a second while you record, the times, and what you type.",
+    text: "Your phone's location about once a second while you record, the times, the gaps, and what you type.",
   },
   {
     id: 'purpose',
     label: 'What for',
     text: 'Drawing and checking routes and hintuans, studying how people ride, and machine learning.',
   },
-  { id: 'who', label: 'Who sees it', text: "ParaPo's editors. Never the public." },
+  { id: 'who', label: 'Who sees it', text: "ParaPo's editors, in the studio. Never the public." },
   {
     id: 'how-long',
     label: 'How long',
@@ -40,7 +40,7 @@ const CONSENT_LINES: readonly ConsentLine[] = [
   {
     id: 'deleting',
     label: 'Deleting',
-    text: 'Remove an upload from History, or ask the owner.',
+    text: 'Remove upload in History while this phone holds it, or ask the owner.',
   },
   { id: 'responsible', label: 'Who is responsible', text: 'The owner: [owner contact].' },
 ];

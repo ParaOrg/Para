@@ -4,17 +4,10 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
 import { ConsentPanel } from './consent-panel';
-import { EarlierRecordingsPanel } from './earlier-recordings-panel';
+import { EarlierRecordingsPanel, type EarlierQuestion } from './earlier-recordings-panel';
 import { TrackingButton } from './tracking-button';
 import { HistoryIcon } from './tracking-icons';
 import { useStackRoom } from './use-stack-room';
-
-/** The question about recordings made before the current consent text; absent when none is open. */
-export interface EarlierQuestion {
-  count: number;
-  onSend: () => void;
-  onKeep: () => void;
-}
 
 interface ReadyScreenProps {
   hasConsent: boolean;

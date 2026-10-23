@@ -3,15 +3,16 @@ import { Button } from '@/design-system/primitives/button';
 import { useFocusHeading } from './use-focus-heading';
 import { useStackRoom } from './use-stack-room';
 
-interface EarlierRecordingsPanelProps {
-  /** Recordings made before the current consent text, not yet sent. */
+/** The question about recordings made before the current consent text, and what answers it. */
+export interface EarlierQuestion {
+  /** Recordings made before the current text, not yet sent. */
   count: number;
   onSend: () => void;
   onKeep: () => void;
 }
 
 /** Asked once, after the person agrees to the current text: whether recordings made before it may go too. */
-export function EarlierRecordingsPanel({ count, onSend, onKeep }: EarlierRecordingsPanelProps) {
+export function EarlierRecordingsPanel({ count, onSend, onKeep }: EarlierQuestion) {
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
   const noun = count === 1 ? 'recording' : 'recordings';
@@ -19,7 +20,7 @@ export function EarlierRecordingsPanel({ count, onSend, onKeep }: EarlierRecordi
     <section
       ref={stackRef}
       aria-labelledby="earlier-heading"
-      className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-4 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary shadow-bottom-sheet-top-shadow"
+      className="absolute inset-x-0 bottom-0 z-10 flex max-h-dvh flex-col gap-4 overflow-y-auto bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary shadow-bottom-sheet-top-shadow"
     >
       <h1
         id="earlier-heading"

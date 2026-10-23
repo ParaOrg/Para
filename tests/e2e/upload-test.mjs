@@ -92,10 +92,20 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
     );
   }
   const errors = [];
+  const asked = watchDatabase(page);
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
   await SCREENS[opens](page).waitFor({ timeout: 30000 });
-  return { page, context, fake, errors };
+  return { page, context, fake, errors, asked };
+}
+
+/** Counts every request the page makes to the database (sign-in, identity, reads or sends). */
+function watchDatabase(page) {
+  const watch = { count: 0 };
+  page.on('request', (request) => {
+    if (/\/(auth|rest)\/v1\//.test(request.url())) watch.count += 1;
+  });
+  return watch;
 }
 
 const SCREENS = {
@@ -563,7 +573,7 @@ const groupOf = (page, name) =>
 
 // ------------------------------------------ no consent, nothing is sent
 {
-  const { page, fake } = await phone({ consent: null, opens: 'consent' });
+  const { page, fake, asked } = await phone({ consent: null, opens: 'consent' });
   const id = 'aaaaaaaa-0000-4000-8000-000000000011';
   await seed(page, [savedRide(id, T0, { name: 'No consent' })]);
   await page.reload({ waitUntil: 'load' });
@@ -571,8 +581,11 @@ const groupOf = (page, name) =>
   await page.waitForTimeout(2000);
   check(
     'with no consent, a saved recording is not sent and the consent screen shows',
-    fake.saveRequests === 0 && (await storedUpload(page, id)) === 'none',
-    `${fake.saveRequests} sends`,
+    fake.saveRequests === 0 &&
+      fake.signIns === 0 &&
+      asked.count === 0 &&
+      (await storedUpload(page, id)) === 'none',
+    `${fake.saveRequests} sends, ${fake.signIns} sign-ins, ${asked.count} requests`,
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
@@ -589,12 +602,18 @@ const groupOf = (page, name) =>
 
 // -------------------- version-1 consent is not consent to the new text
 {
-  const { page, fake } = await phone({ consent: 'yes', opens: 'consent' });
+  const { page, fake, asked } = await phone({ consent: 'yes', opens: 'consent' });
   const earlier = 'aaaaaaaa-0000-4000-8000-000000000012';
   const stamped = 'aaaaaaaa-0000-4000-8000-000000000013';
   await seed(page, [
     savedRide(earlier, T0, { name: 'Under one', isEarlier: true }),
     savedRide(stamped, T0 + 600_000, { name: 'Stamped' }),
+    // An upload made under version 1: the identity check it would set off must wait for consent too.
+    savedRide('aaaaaaaa-0000-4000-8000-000000000018', T0 + 1_200_000, {
+      name: 'Already up',
+      isEarlier: true,
+      upload: { state: 'uploaded', at: T0, by: 'ffffffff-0000-4000-8000-000000000000' },
+    }),
   ]);
   await page.reload({ waitUntil: 'load' });
   await SCREENS.consent(page).waitFor();
@@ -603,6 +622,8 @@ const groupOf = (page, name) =>
     'with version-1 consent, the new text shows, with no Start and nothing sent',
     (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
       fake.saveRequests === 0 &&
+      fake.signIns === 0 &&
+      asked.count === 0 &&
       (await storedUpload(page, earlier)) === 'none' &&
       (await storedUpload(page, stamped)) === 'none',
     `${fake.saveRequests} sends`,

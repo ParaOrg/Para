@@ -296,7 +296,8 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
   // once something was uploaded: the client is loaded on first need.
   const hasUploads = saved.some((r) => r.upload?.state === 'uploaded');
   useEffect(() => {
-    if (!isAvailable || !hasUploads) return;
+    // Nothing is asked of the database before consent to the current text.
+    if (!isAvailable || !hasUploads || !gate.hasConsent) return;
     let isCurrent = true;
     const settle = async () => {
       const id = await currentIdentity();
@@ -322,7 +323,7 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
     return () => {
       isCurrent = false;
     };
-  }, [isAvailable, hasUploads]);
+  }, [isAvailable, hasUploads, gate.hasConsent]);
 
   const waitingCount = saved.filter((r) => {
     const state = statusOf(r).state;

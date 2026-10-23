@@ -1,5 +1,6 @@
+import { canUpload } from './api/contribute-client';
 import { isEarlierRecording, shouldAskAboutEarlier } from './consent-version';
-import type { EarlierQuestion } from './ready-screen';
+import type { EarlierQuestion } from './earlier-recordings-panel';
 import type { Recording } from './recording-schema';
 import { useEarlierChoice, type EarlierChoice } from './use-earlier-choice';
 
@@ -19,8 +20,9 @@ export function useEarlierQuestion(
   const count = saved.filter(
     (recording) => recording.upload === undefined && isEarlierRecording(recording.consentVersion),
   ).length;
+  // Where nothing can be sent there is nothing to ask.
   const isAsked = shouldAskAboutEarlier({
-    hasConsent,
+    hasConsent: hasConsent && canUpload(),
     hasAnswered: choice !== null,
     unsentEarlierCount: count,
   });

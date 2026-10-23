@@ -1,14 +1,21 @@
+import * as z from 'zod/mini';
+
 /** The consent text's version, sent with every upload; bump it when the consent panel's words change. */
 export const CONSENT_VERSION = 2;
 
 /** The first consent text stored a plain 'yes'; every later one stores its version number. */
 const FIRST_VERSION_MARK = 'yes';
 
+const storedConsentSchema = z.union([
+  z.literal(FIRST_VERSION_MARK),
+  z.string().check(z.regex(/^[1-9]\d*$/)),
+]);
+
 /** The version of the consent text a stored value says was agreed to, or null when there is none. */
 export function agreedVersionOf(stored: string | null): number | null {
-  if (stored === FIRST_VERSION_MARK) return 1;
-  if (stored === null || !/^[1-9]\d*$/.test(stored)) return null;
-  return Number(stored);
+  const parsed = storedConsentSchema.safeParse(stored);
+  if (!parsed.success) return null;
+  return parsed.data === FIRST_VERSION_MARK ? 1 : Number(parsed.data);
 }
 
 /** Whether the agreed version is the current text: an older one no longer counts as consent. */
