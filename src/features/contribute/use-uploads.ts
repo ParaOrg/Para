@@ -70,7 +70,7 @@ const FAILED: Record<UploadProblem | PackRefusal, { message: string; willRetry: 
   },
   unavailable: { message: 'Uploading is not available on this page.', willRetry: false },
   'not-accepting': {
-    message: 'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone.',
+    message: 'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
     willRetry: true,
   },
   'too-long': {

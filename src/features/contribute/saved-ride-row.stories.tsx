@@ -67,7 +67,7 @@ export const NotAccepting: Story = {
   args: {
     status: {
       state: 'failed',
-      message: 'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone.',
+      message: 'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
       willRetry: true,
     },
   },
