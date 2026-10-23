@@ -10,10 +10,43 @@ const ArrowIcon = (
   </svg>
 );
 
+const PlusIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
 const meta = {
   title: 'DesignSystem/Primitives/ButtonLink',
   component: ButtonLink,
-  args: { label: 'Contribute', href: '#', fill: 'card-orange', lastIcon: ArrowIcon },
+  args: { label: 'Contribute', href: '#', variant: 'special', firstIcon: PlusIcon },
+} satisfies Meta<typeof ButtonLink>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+/** Button's Special pill as a link, its icon before the word (the map's Contribute). */
+export const Special: Story = {};
+
+export const SpecialWithoutIcon: Story = { args: { firstIcon: undefined } };
+
+/** Secondary: Special's surface in Medium. */
+export const Secondary: Story = { args: { variant: 'secondary' } };
+
+/** Primary, brand blue. */
+export const Primary: Story = {
+  args: { variant: 'primary', firstIcon: undefined, lastIcon: ArrowIcon },
+};
+
+/** Primary Small in a card's fill, on the card it sits on (4147:11947). */
+export const OnACard: Story = {
+  args: {
+    variant: 'primary',
+    size: 'small',
+    fill: 'card-orange',
+    firstIcon: undefined,
+    lastIcon: ArrowIcon,
+  },
   decorators: [
     (Story) => (
       <div className="bg-card-orange-surface p-4 text-content-inverse">
@@ -21,17 +54,17 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof ButtonLink>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-/** Button's Primary Small as a link, on the card it sits on. */
-export const Default: Story = {};
+};
 
 /** On MRT-3's yellow the words are the card's dark ones. */
 export const OnDarkWords: Story = {
-  args: { fill: 'map-rail-metro-rail-way-three' },
+  args: {
+    variant: 'primary',
+    size: 'small',
+    fill: 'map-rail-metro-rail-way-three',
+    firstIcon: undefined,
+    lastIcon: ArrowIcon,
+  },
   decorators: [
     (Story) => (
       <div className="bg-map-rail-metro-rail-way-three-surface p-4 text-content-primary">
@@ -41,4 +74,14 @@ export const OnDarkWords: Story = {
   ],
 };
 
-export const WithoutIcon: Story = { args: { lastIcon: undefined } };
+/** A longer word, at a phone's width. */
+export const Phone: Story = {
+  args: { label: 'Contribute a missing route' },
+  decorators: [
+    (Story) => (
+      <div className="@container w-97.5">
+        <Story />
+      </div>
+    ),
+  ],
+};

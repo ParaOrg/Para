@@ -1,5 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
+import { ICON, buttonClasses, type VariantAndSize } from './button-look';
+
 /**
  * PalimosPoDesignSystem's Button, from the Figma set (node 3668:2812): a pill
  * in four voices. Special is the jeepney one — SN Pro Bold on the quiet
@@ -18,24 +20,6 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
  * until the owner draws one.
  */
 
-type Size = 'base' | 'small';
-
-/**
- * Small exists only where the set draws it — the types keep code from
- * getting ahead of the design: Special, Secondary and Primary (Default, Hover,
- * Pressed and Disabled: 3742:1196, for the timeline's "Set as start",
- * 4147:11947); Primary Small is Primary's fills and shadows at Small's sizes.
- * `size="small"` on error is a compile error until it is designed.
- */
-type VariantAndSize =
-  | { variant: 'special' | 'secondary'; size?: Size; fill?: never }
-  | { variant: 'primary'; size?: Size; fill?: 'brand' }
-  // A card's fill only as the design draws it, Primary Small and enabled
-  // (4147:11947): its Base and its Disabled are compile errors until they are
-  // designed.
-  | { variant: 'primary'; size: 'small'; fill: CardFill; disabled?: never }
-  | { variant: 'error'; size?: 'base'; fill?: never };
-
 type Props = Omit<
   ComponentPropsWithoutRef<'button'>,
   'children' | 'className' | 'style' | 'dangerouslySetInnerHTML'
@@ -48,70 +32,6 @@ type Props = Omit<
     lastIcon?: ReactNode;
   };
 
-const VARIANT = {
-  special:
-    'bg-surface-tertiary font-sn-pro font-bold text-content-primary shadow-special-button-rest ' +
-    'enabled:hover:shadow-special-button-hover ' +
-    'enabled:active:bg-surface-quaternary enabled:active:shadow-special-button-pressed',
-  secondary:
-    'bg-surface-tertiary font-sn-pro font-medium text-content-primary shadow-special-button-rest ' +
-    'enabled:hover:shadow-special-button-hover ' +
-    'enabled:active:bg-surface-quaternary enabled:active:shadow-special-button-pressed',
-  // Primary's fill and words are its PRIMARY_FILL's.
-  primary:
-    'font-sn-pro font-medium shadow-primary-button-rest ' +
-    'enabled:hover:shadow-primary-button-hover enabled:active:shadow-primary-button-pressed',
-  error:
-    'bg-error-surface font-sn-pro font-medium text-content-inverse shadow-primary-button-rest ' +
-    'enabled:hover:shadow-primary-button-hover ' +
-    'enabled:active:bg-error-surface-secondary enabled:active:shadow-primary-button-pressed',
-} satisfies Record<Props['variant'], string>;
-
-/**
- * Primary's fill: brand blue, or the card it sits on (for the timeline's Set
- * as start, which sits on top of its card: the Figma instance, 4147:11947,
- * overrides the fill to Card/red/surface). On a card it is the card's
- * surface, pressed down to the card's Timeline/surface as a pressed row of it
- * is, a train's line's own Map/Rail/<line>/… on its card. A card's fill sets
- * no words: they are the card's own, inherited (white, and dark on MRT-3's
- * yellow), so they read as the card's do.
- */
-type PrimaryFill = keyof typeof PRIMARY_FILL;
-
-/** The cards' fills: every PRIMARY_FILL but brand blue. */
-export type CardFill = Exclude<PrimaryFill, 'brand'>;
-
-// ButtonLink keeps these without `enabled:`; change the two together.
-const PRIMARY_FILL = {
-  brand: 'bg-brand-surface text-content-inverse enabled:active:bg-brand-surface-secondary',
-  'card-red': 'bg-card-red-surface enabled:active:bg-card-red-timeline-surface',
-  'card-orange': 'bg-card-orange-surface enabled:active:bg-card-orange-timeline-surface',
-  'card-violet': 'bg-card-violet-surface enabled:active:bg-card-violet-timeline-surface',
-  'card-rose': 'bg-card-rose-surface enabled:active:bg-card-rose-timeline-surface',
-  'card-fuchsia': 'bg-card-fuchsia-surface enabled:active:bg-card-fuchsia-timeline-surface',
-  'card-pink': 'bg-card-pink-surface enabled:active:bg-card-pink-timeline-surface',
-  'map-rail-light-rail-way-one':
-    'bg-map-rail-light-rail-way-one-surface enabled:active:bg-map-rail-light-rail-way-one-timeline-surface',
-  'map-rail-light-rail-way-two':
-    'bg-map-rail-light-rail-way-two-surface enabled:active:bg-map-rail-light-rail-way-two-timeline-surface',
-  'map-rail-metro-rail-way-three':
-    'bg-map-rail-metro-rail-way-three-surface enabled:active:bg-map-rail-metro-rail-way-three-timeline-surface',
-  'map-ferry': 'bg-map-ferry-surface enabled:active:bg-map-ferry-timeline-surface',
-} satisfies Record<string, string>;
-
-// The weight is each voice's own (VARIANT): Special's Small is bold; Secondary's and Primary's, medium.
-/** Shared with ButtonLink. */
-export const SIZE = {
-  base: 'gap-1 px-4 py-2 text-base/6',
-  small: 'gap-1 px-3 py-1.5 text-sm/5',
-} satisfies Record<Size, string>;
-
-/** Shared with ButtonLink. */
-export const ICON = {
-  base: 'size-5',
-  small: 'size-4',
-} satisfies Record<Size, string>;
-
 export function Button({
   variant,
   size = 'base',
@@ -123,17 +43,7 @@ export function Button({
   ...rest
 }: Props) {
   return (
-    <button
-      {...rest}
-      type={type}
-      className={
-        'inline-flex items-center justify-center rounded-full disabled:opacity-60 ' +
-        VARIANT[variant] +
-        ' ' +
-        (variant === 'primary' ? PRIMARY_FILL[fill] + ' ' : '') +
-        SIZE[size]
-      }
-    >
+    <button {...rest} type={type} className={buttonClasses({ variant, size, fill })}>
       {/* The label is the accessible name; icons only decorate it. */}
       {firstIcon && (
         <span aria-hidden className={ICON[size] + ' *:size-full'}>
