@@ -13,7 +13,11 @@ interface ConsentLine {
   id: string;
   label: string;
   text: string;
+  /** A way to reach someone, after the text. */
+  link?: { href: string; label: string };
 }
+
+const OWNER_PAGE = 'https://www.facebook.com/share/19sSyeiLFk/';
 
 const CONSENT_LINES: readonly ConsentLine[] = [
   {
@@ -42,7 +46,12 @@ const CONSENT_LINES: readonly ConsentLine[] = [
     label: 'Deleting',
     text: 'Remove upload in History while this phone holds it, or ask the owner.',
   },
-  { id: 'responsible', label: 'Who is responsible', text: 'The owner: [owner contact].' },
+  {
+    id: 'responsible',
+    label: 'Who is responsible',
+    text: 'The owner of ParaPo.',
+    link: { href: OWNER_PAGE, label: 'Message the owner on Facebook' },
+  },
 ];
 
 /** The first visit: what the page records and where it goes, before anything is asked of the phone. */
@@ -68,10 +77,25 @@ export function ConsentPanel({ onAgree, onDecline }: ConsentPanelProps) {
         a recording, it is sent to ParaPo.
       </p>
       <dl className="flex flex-col gap-2 text-sm/5">
-        {CONSENT_LINES.map(({ id, label, text }) => (
+        {CONSENT_LINES.map(({ id, label, text, link }) => (
           <div key={id}>
             <dt className="font-bold">{label}</dt>
-            <dd className="text-content-quaternary">{text}</dd>
+            <dd className="text-content-quaternary">
+              {text}
+              {link && (
+                <>
+                  {' '}
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-content-primary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary"
+                  >
+                    {link.label}
+                  </a>
+                </>
+              )}
+            </dd>
           </div>
         ))}
       </dl>

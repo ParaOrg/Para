@@ -631,7 +631,7 @@ const groupOf = (page, name) =>
   check(
     '  the new text names machine learning and who is responsible',
     (await page.getByText(/machine learning/).count()) === 1 &&
-      (await page.getByText('[owner contact]').count()) === 1,
+      (await page.getByRole('link', { name: 'Message the owner on Facebook' }).count()) === 1,
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await SCREENS.earlier(page).waitFor();
