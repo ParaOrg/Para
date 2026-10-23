@@ -40,6 +40,7 @@ export function ContributionCard({ livery }: ContributionCardProps) {
       />
       <p className="text-center text-lg/7 font-bold">Want to contribute a missing route?</p>
       <ButtonLink
+        data-testid="contribution-link"
         href="/contribute/"
         variant="primary"
         size="small"
