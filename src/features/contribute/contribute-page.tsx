@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
+
 import { ContributeMap } from './contribute-map';
+import { HistoryScreen } from './history-screen';
 import { ReadyScreen } from './ready-screen';
 import { RecordingScreen } from './recording-screen';
 import { SaveForm } from './save-form';
@@ -6,7 +9,9 @@ import { SavedScreen } from './saved-screen';
 import { UnfinishedScreen } from './unfinished-screen';
 import { UploadCheck } from './upload-check';
 import { uploadStatusText } from './upload-status';
+import { useConsent } from './use-consent';
 import { useFollow } from './use-follow';
+import { useHistoryView } from './use-history-view';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 import { useUploads } from './use-uploads';
@@ -17,7 +22,15 @@ export function ContributePage() {
   const uploads = useUploads(recording.saved);
   const follow = useFollow();
   const track = useRecordingTrack(recording.kept, recording.current?.switches);
+  const { hasConsent, giveConsent } = useConsent();
+  const history = useHistoryView();
   const { phase, figures } = recording;
+  const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
+
+  // A stale #history (a reload mid-recording, then Record again) must not reopen History later.
+  useEffect(() => {
+    if (phase !== 'loading' && phase !== 'ready' && history.isOpen) history.close();
+  }, [phase, history]);
 
   const handleStart = () => {
     follow.recentre();
@@ -26,15 +39,18 @@ export function ContributePage() {
 
   return (
     <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
-      <ContributeMap
-        track={track}
-        follow={follow}
-        hasRecording={phase === 'recording' || phase === 'paused'}
-      />
+      {/* inert while History covers it: no map control can be tabbed to behind the screen. */}
+      <div inert={isHistoryShown} className="contents">
+        <ContributeMap
+          track={track}
+          follow={follow}
+          hasRecording={phase === 'recording' || phase === 'paused'}
+        />
+      </div>
       {recording.problem && (
         <p
           role="alert"
-          className="absolute inset-x-4 top-[max(4.5rem,env(safe-area-inset-top))] z-10 bg-surface p-2 text-sm/5 text-content-primary"
+          className="absolute inset-x-4 top-[max(4.5rem,env(safe-area-inset-top))] z-30 bg-surface p-2 text-sm/5 text-content-primary"
         >
           {recording.problem}
         </p>
@@ -45,13 +61,21 @@ export function ContributePage() {
       <p role="status" className="sr-only">
         {recording.announcement}
       </p>
-      {phase === 'ready' && (
+      {phase === 'ready' && !isHistoryShown && (
         <ReadyScreen
+          hasConsent={hasConsent}
+          onConsent={giveConsent}
           onStart={handleStart}
-          saved={recording.saved}
+          onOpenHistory={history.open}
+        />
+      )}
+      {isHistoryShown && (
+        <HistoryScreen
+          recordings={recording.saved}
           uploads={uploads}
-          onDownloadSaved={recording.downloadSaved}
-          onDeleteSaved={recording.deleteSaved}
+          onBack={history.close}
+          onDownload={recording.downloadSaved}
+          onDeleteFromPhone={recording.deleteSaved}
         />
       )}
       {phase === 'unfinished' && figures && (

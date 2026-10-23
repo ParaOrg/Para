@@ -1,6 +1,12 @@
 /** Whole minutes of a span, the way the stats strip says them: `42`. */
 export const minutesText = (seconds: number): string => String(Math.floor(seconds / 60));
 
+/** A ride's length as the card says it: `42 min`, or `<1 min`. */
+export const durationText = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  return minutes < 1 ? '<1 min' : `${minutes} min`;
+};
+
 /** Metres as kilometres to one decimal: `4.2`. */
 export const kilometresText = (metres: number): string => (metres / 1000).toFixed(1);
 

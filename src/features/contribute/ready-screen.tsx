@@ -1,44 +1,28 @@
-import { useState } from 'react';
-
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
 import { ConsentPanel } from './consent-panel';
-import type { Recording } from './recording-schema';
-import { SAVED_RIDES_ID, SavedRides } from './saved-rides';
 import { TrackingButton } from './tracking-button';
 import { HistoryIcon } from './tracking-icons';
-import { useConsent } from './use-consent';
 import { useFocusHeading } from './use-focus-heading';
 import { useStackRoom } from './use-stack-room';
-import type { Uploads } from './use-uploads';
 
 interface ReadyScreenProps {
+  hasConsent: boolean;
+  onConsent: () => void;
   onStart: () => void;
-  saved: readonly Recording[];
-  uploads: Uploads;
-  onDownloadSaved: (recording: Recording) => void;
-  onDeleteSaved: (recording: Recording) => void;
+  onOpenHistory: () => void;
 }
 
 const goBackToMap = () => window.location.assign('/');
 
 /**
  * Before a recording: back to the map, History, and one Start bar (or, on a first visit, what the
- * page does). History is closed at first, so only the Start bar covers the map; its button shows
- * the recordings kept on this phone above Start, and a second press hides them.
+ * page does). History is a screen of its own, so nothing of it shows here.
  */
-export function ReadyScreen({
-  onStart,
-  saved,
-  uploads,
-  onDownloadSaved,
-  onDeleteSaved,
-}: ReadyScreenProps) {
-  const { hasConsent, giveConsent } = useConsent();
+export function ReadyScreen({ hasConsent, onConsent, onStart, onOpenHistory }: ReadyScreenProps) {
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   return (
     <>
@@ -54,9 +38,7 @@ export function ReadyScreen({
             tooltip="top"
             label="History"
             icon={<HistoryIcon />}
-            aria-expanded={isHistoryOpen}
-            aria-controls={SAVED_RIDES_ID}
-            onClick={() => setIsHistoryOpen((isOpen) => !isOpen)}
+            onClick={onOpenHistory}
           />
         )}
       </div>
@@ -69,18 +51,10 @@ export function ReadyScreen({
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          {isHistoryOpen && (
-            <SavedRides
-              recordings={saved}
-              uploads={uploads}
-              onDownload={onDownloadSaved}
-              onDeleteFromPhone={onDeleteSaved}
-            />
-          )}
           <TrackingButton variant="start" onClick={onStart} />
         </section>
       ) : (
-        <ConsentPanel onAgree={giveConsent} onDecline={goBackToMap} />
+        <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />
       )}
     </>
   );
