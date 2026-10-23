@@ -118,6 +118,41 @@ export type Database = {
           },
         ]
       }
+      contribution_use: {
+        Row: {
+          contribution_id: string
+          created_at: string
+          editor_id: string | null
+          id: string
+          kind: string
+          subject_id: string
+        }
+        Insert: {
+          contribution_id: string
+          created_at?: string
+          editor_id?: string | null
+          id?: string
+          kind: string
+          subject_id: string
+        }
+        Update: {
+          contribution_id?: string
+          created_at?: string
+          editor_id?: string | null
+          id?: string
+          kind?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_use_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "contribution"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contributor: {
         Row: {
           block_note: string | null
@@ -618,6 +653,13 @@ export type Database = {
         }
         Returns: Json
       }
+      block_contributor: {
+        Args: {
+          note?: string
+          target: string
+        }
+        Returns: undefined
+      }
       claim_draft: {
         Args: {
           p_base_revision: number
@@ -670,6 +712,12 @@ export type Database = {
           p_subject_id: string
         }
         Returns: Json
+      }
+      unblock_contributor: {
+        Args: {
+          target: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
