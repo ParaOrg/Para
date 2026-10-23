@@ -54,8 +54,11 @@ const GPS = () => {
 
 const browser = await chromium.launch();
 
-/** A phone-sized page with the stand-in GPS; `consented` skips the first-visit question. */
-async function phone({ consented }) {
+/**
+ * A phone-sized page with the stand-in GPS; `consented` skips the first-visit question.
+ * `earlierConsent` stores the first text's agreement instead, which the page no longer accepts.
+ */
+async function phone({ consented, earlierConsent = false }) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -77,6 +80,9 @@ async function phone({ consented }) {
   await fakeContributions(page);
   await page.addInitScript(GPS);
   if (consented) {
+    await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', '2'));
+  }
+  if (earlierConsent) {
     await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
   }
   const errors = [];
@@ -127,6 +133,21 @@ const buttons = (page) =>
     .getByRole('button')
     .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? e.textContent));
 
+// ----------------------------------- consent to the first text is not enough
+{
+  const { page, errors } = await phone({ consented: false, earlierConsent: true });
+  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
+  check(
+    'a phone that agreed to the first text is asked again: the new text shows, with no Start or History',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 1,
+  );
+  await page.getByRole('button', { name: 'Okay, I understand' }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check('  after agreeing, Start shows', errors.length === 0, errors.join(' | '));
+}
+
 // ---------------------------------------------------------------- the loop
 {
   const { page, errors } = await phone({ consented: false });
@@ -140,8 +161,28 @@ const buttons = (page) =>
     '  focus is on the consent heading',
     await page.evaluate(() => document.activeElement?.textContent === 'Before you record'),
   );
+  {
+    const text = await page.locator('section[aria-labelledby="consent-heading"]').innerText();
+    check(
+      '  it says what is recorded, what for (machine learning), who sees it, how long, where, deleting and who is responsible',
+      ['What is recorded', 'What for', 'Who sees it', 'How long', 'Where', 'Deleting'].every(
+        (label) => text.includes(label),
+      ) &&
+        /machine learning/.test(text) &&
+        /24 months/.test(text) &&
+        text.includes('Who is responsible'),
+    );
+    check(
+      '  it no longer says nothing is sent',
+      !/Nothing is sent anywhere/.test(text) && /sent to ParaPo/.test(text),
+    );
+  }
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check(
+    '  agreeing stores the version of the text agreed to',
+    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '2',
+  );
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   {
     const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();

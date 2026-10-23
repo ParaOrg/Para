@@ -80,6 +80,9 @@ export const EarlierIdentity: Story = {
   args: { status: { state: 'uploaded', at: T0, by: 'earlier' }, canRemove: false },
 };
 
+/** Made before the current consent text and kept on the phone: nothing is sent until Upload is pressed. */
+export const Held: Story = { args: { status: { state: 'held' } } };
+
 /** A build with no database: recordings stay on the phone. */
 export const Unavailable: Story = { args: { status: { state: 'unavailable' } } };
 

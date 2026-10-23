@@ -89,7 +89,7 @@ const phone = {
 try {
   const context = await browser.newContext(phone);
   await context.addInitScript(() => {
-    localStorage.setItem('parapo.contribute.consent', 'yes');
+    localStorage.setItem('parapo.contribute.consent', '2');
     window.__persistAsked = false;
     const persist = StorageManager.prototype.persist;
     StorageManager.prototype.persist = function () {

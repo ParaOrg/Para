@@ -21,6 +21,11 @@ type Asking = 'remove-upload' | 'delete-from-phone' | null;
 const rideName = (r: Recording): string =>
   [r.startPointName, r.endPointName].filter(Boolean).join(' to ') || r.description;
 
+const UPLOAD_LABEL: Partial<Record<UploadStatus['state'], string>> = {
+  removed: 'Upload again',
+  held: 'Upload',
+};
+
 const LINK =
   'min-h-11 shrink-0 text-content-quaternary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary';
 
@@ -38,7 +43,8 @@ export function SavedRideRow({
   const name = rideName(recording);
   const fullName = `the recording of ${fullDateTimeText(recording.startedAt)}${name ? `, ${name}` : ''}`;
   const isBusy = status.state === 'uploading' || status.state === 'removing';
-  const canUploadNow = status.state === 'failed' || status.state === 'removed';
+  const canUploadNow =
+    status.state === 'failed' || status.state === 'removed' || status.state === 'held';
 
   const confirm = () => {
     if (asking === 'remove-upload') onRemoveUpload();
@@ -81,7 +87,7 @@ export function SavedRideRow({
               onClick={onUpload}
               className={LINK}
             >
-              {status.state === 'removed' ? 'Upload again' : 'Try again'}
+              {UPLOAD_LABEL[status.state] ?? 'Try again'}
             </button>
           )}
           {canRemove && (

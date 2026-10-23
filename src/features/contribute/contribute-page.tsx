@@ -1,3 +1,4 @@
+import { isEarlierRecording, shouldAskAboutEarlier } from './consent-version';
 import { ContributeMap } from './contribute-map';
 import { ReadyScreen } from './ready-screen';
 import { RecordingScreen } from './recording-screen';
@@ -6,6 +7,8 @@ import { SavedScreen } from './saved-screen';
 import { UnfinishedScreen } from './unfinished-screen';
 import { UploadCheck } from './upload-check';
 import { uploadStatusText } from './upload-status';
+import { useConsent } from './use-consent';
+import { useEarlierChoice } from './use-earlier-choice';
 import { useFollow } from './use-follow';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
@@ -14,7 +17,20 @@ import { useUploads } from './use-uploads';
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage() {
   const recording = useRecording();
-  const uploads = useUploads(recording.saved);
+  const consent = useConsent();
+  const earlierChoice = useEarlierChoice();
+  const uploads = useUploads(recording.saved, {
+    hasConsent: consent.hasConsent,
+    earlier: earlierChoice.choice,
+  });
+  const earlierCount = recording.saved.filter(
+    (r) => r.upload === undefined && isEarlierRecording(r.consentVersion),
+  ).length;
+  const isEarlierAsked = shouldAskAboutEarlier({
+    hasConsent: consent.hasConsent,
+    hasAnswered: earlierChoice.choice !== null,
+    unsentEarlierCount: earlierCount,
+  });
   const follow = useFollow();
   const track = useRecordingTrack(recording.kept, recording.current?.switches);
   const { phase, figures } = recording;
@@ -47,6 +63,16 @@ export function ContributePage() {
       </p>
       {phase === 'ready' && (
         <ReadyScreen
+          consent={consent}
+          earlierQuestion={
+            isEarlierAsked
+              ? {
+                  count: earlierCount,
+                  onSend: () => earlierChoice.choose('send'),
+                  onKeep: () => earlierChoice.choose('keep'),
+                }
+              : null
+          }
           onStart={handleStart}
           saved={recording.saved}
           uploads={uploads}

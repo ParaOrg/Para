@@ -4,16 +4,26 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
 import { ConsentPanel } from './consent-panel';
+import { EarlierRecordingsPanel } from './earlier-recordings-panel';
 import type { Recording } from './recording-schema';
 import { SAVED_RIDES_ID, SavedRides } from './saved-rides';
 import { TrackingButton } from './tracking-button';
 import { HistoryIcon } from './tracking-icons';
-import { useConsent } from './use-consent';
+import type { Consent } from './use-consent';
 import { useFocusHeading } from './use-focus-heading';
 import { useStackRoom } from './use-stack-room';
 import type { Uploads } from './use-uploads';
 
+/** The question about recordings made before the current consent text; absent when none is open. */
+export interface EarlierQuestion {
+  count: number;
+  onSend: () => void;
+  onKeep: () => void;
+}
+
 interface ReadyScreenProps {
+  consent: Consent;
+  earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
   saved: readonly Recording[];
   uploads: Uploads;
@@ -29,13 +39,15 @@ const goBackToMap = () => window.location.assign('/');
  * the recordings kept on this phone above Start, and a second press hides them.
  */
 export function ReadyScreen({
+  consent,
+  earlierQuestion,
   onStart,
   saved,
   uploads,
   onDownloadSaved,
   onDeleteSaved,
 }: ReadyScreenProps) {
-  const { hasConsent, giveConsent } = useConsent();
+  const { hasConsent, giveConsent } = consent;
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -60,7 +72,8 @@ export function ReadyScreen({
           />
         )}
       </div>
-      {hasConsent ? (
+      {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+      {hasConsent && !earlierQuestion && (
         <section
           ref={stackRef}
           aria-labelledby="ready-heading"
@@ -79,9 +92,8 @@ export function ReadyScreen({
           )}
           <TrackingButton variant="start" onClick={onStart} />
         </section>
-      ) : (
-        <ConsentPanel onAgree={giveConsent} onDecline={goBackToMap} />
       )}
+      {!hasConsent && <ConsentPanel onAgree={giveConsent} onDecline={goBackToMap} />}
     </>
   );
 }
