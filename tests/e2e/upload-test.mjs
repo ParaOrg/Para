@@ -263,6 +263,29 @@ const waitForStatus = async (page, name, pattern) => {
   );
 }
 
+// ------------------------- sign-ups turned off: an answer, not no signal
+{
+  const { page, fake } = await phone();
+  fake.next.signIn = 'signupDisabled';
+  await seed(page, [
+    savedRide('aaaaaaaa-0000-4000-8000-000000000009', T0, { name: 'Turned away' }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await waitForStatus(page, 'Turned away', /cannot take uploads right now/);
+  const status = await statusOf(page, 'Turned away');
+  check(
+    'a sign-in ParaPo refuses says uploads cannot be taken, not no signal, and keeps the copy',
+    fake.rows.size === 0 &&
+      !/no signal/.test(status) &&
+      /stays on this phone/.test(status) &&
+      (await storedUpload(page, 'aaaaaaaa-0000-4000-8000-000000000009')) === 'none',
+    status,
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await waitForStatus(page, 'Turned away', /Uploaded to ParaPo/);
+  check('  once ParaPo takes uploads again, it is sent on its own', fake.rows.size === 1);
+}
+
 // ------------------------------------ the answer lost after storing
 {
   const { page, fake } = await phone();
