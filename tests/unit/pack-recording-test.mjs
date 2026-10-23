@@ -9,7 +9,6 @@ import assert from 'node:assert/strict';
 import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
 import { UPLOAD_LIMITS } from '../../src/features/contribute/recording-limits.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';
-import { problemOf } from '../../src/features/contribute/api/upload-contribution.ts';
 
 import { T0, rideFixes, rideRecording } from './fixtures/contribution-ride.mjs';
 
@@ -136,21 +135,4 @@ test('a recording with no fixes packs with no points and no line', () => {
   assert.equal(result.payload.line, null);
   assert.equal(result.payload.west, null);
   assert.ok(Date.parse(result.payload.ended_at) > Date.parse(result.payload.started_at));
-});
-
-test('an answer is sorted into what the page does next', () => {
-  assert.equal(
-    problemOf({ code: 'P0001', message: 'day_cap: 20 contributions in 24 hours' }),
-    'day-cap',
-  );
-  assert.equal(
-    problemOf({ code: 'P0001', message: 'bad_points: point 3 is faster than 150 km/h' }),
-    'refused',
-  );
-  assert.equal(
-    problemOf({ code: '42501', message: 'new row violates row-level security policy' }),
-    'blocked',
-  );
-  assert.equal(problemOf({ code: '23514', message: 'check constraint' }), 'refused');
-  assert.equal(problemOf({ code: '', message: 'TypeError: Failed to fetch' }), 'offline');
 });

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { RouteCardHeader } from './route-card-header';
@@ -30,6 +32,8 @@ interface Props {
   hidden?: boolean;
   /** Its height, shared with the trip opened from it (BottomSheet). */
   height?: SheetHeight;
+  /** Drawn after the last route card, handed its livery: the public map's invitation to contribute. */
+  end?: (livery: Livery) => ReactNode;
 }
 
 /**
@@ -68,6 +72,7 @@ export function RouteCardList({
   onClose,
   hidden,
   height,
+  end,
 }: Props) {
   const places = drawnDepartures(routes, back);
   const switchable = otherWayHasRoutes(routes, back);
@@ -131,6 +136,7 @@ export function RouteCardList({
         onSelect={onSelect}
         onRoute={onRoute}
         testId="chooser"
+        end={end}
       />
     </BottomSheet>
   );

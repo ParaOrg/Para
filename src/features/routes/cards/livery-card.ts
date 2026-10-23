@@ -1,4 +1,4 @@
-import type { CardFill } from '@/design-system/primitives/button';
+import type { CardFill } from '@/design-system/primitives/button-look';
 
 import blobInverse from './route-card-blob-inverse.svg';
 import blobPrimary from './route-card-blob-primary.svg';

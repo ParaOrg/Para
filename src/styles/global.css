@@ -28,6 +28,12 @@
 }
 
 /*
+ * `usable:` is the state of anything not disabled: Button's `enabled:`, which a link
+ * (ButtonLink) is as well, since only a form control can be :enabled.
+ */
+@custom-variant usable (&:not(:disabled));
+
+/*
  * BottomSheet (src/shared/ui/bottom-sheet.tsx) stops being a sheet once
  * the map is wide enough for what it floats as: its `corner` kind at
  * --container-float, its `card` kind at --container-wide (the widths are
