@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ContributeMap } from './contribute-map';
 import { HistoryScreen } from './history-screen';
@@ -27,10 +27,20 @@ export function ContributePage() {
   const { phase, figures } = recording;
   const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
 
-  // A stale #history (a reload mid-recording, then Record again) must not reopen History later.
+  // A stale #history (a reload mid-recording, or before consent was given) must not open History
+  // later, when Record again or Okay is pressed.
   useEffect(() => {
-    if (phase !== 'loading' && phase !== 'ready' && history.isOpen) history.close();
-  }, [phase, history]);
+    if (history.isOpen && (!hasConsent || (phase !== 'loading' && phase !== 'ready'))) {
+      history.close();
+    }
+  }, [phase, hasConsent, history]);
+
+  // Once History has been opened from Ready's button, Ready hands focus back to that button.
+  const [hasOpenedHistory, setHasOpenedHistory] = useState(false);
+  const handleOpenHistory = () => {
+    setHasOpenedHistory(true);
+    history.open();
+  };
 
   const handleStart = () => {
     follow.recentre();
@@ -66,7 +76,8 @@ export function ContributePage() {
           hasConsent={hasConsent}
           onConsent={giveConsent}
           onStart={handleStart}
-          onOpenHistory={history.open}
+          onOpenHistory={handleOpenHistory}
+          shouldFocusHistoryButton={hasOpenedHistory}
         />
       )}
       {isHistoryShown && (

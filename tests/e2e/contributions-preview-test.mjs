@@ -364,10 +364,11 @@ await a.page
   .getByText('Removed by an editor')
   .waitFor({ timeout: 20000 });
 const lagroRow = a.page.getByRole('listitem').filter({ hasText: `Lagro A ${RUN}` });
+await lagroRow.getByRole('button', { name: /^More actions / }).click();
 check(
   '  the phone, reopened, says an editor removed it, keeps its copy, and offers Upload again',
-  (await lagroRow.getByRole('button', { name: /^(Try again|Upload again)/ }).count()) === 1 &&
-    (await lagroRow.getByRole('button', { name: /^More actions / }).count()) === 1,
+  (await lagroRow.getByRole('button', { name: /^Download/ }).count()) === 1 &&
+    (await lagroRow.getByRole('button', { name: /^(Try again|Upload again)/ }).count()) === 1,
 );
 await shot(a.page, '8-phone-removed-by-editor');
 

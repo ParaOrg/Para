@@ -1,10 +1,11 @@
+import { useEffect, useRef, useState } from 'react';
+
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
 import { ConsentPanel } from './consent-panel';
 import { TrackingButton } from './tracking-button';
 import { HistoryIcon } from './tracking-icons';
-import { useFocusHeading } from './use-focus-heading';
 import { useStackRoom } from './use-stack-room';
 
 interface ReadyScreenProps {
@@ -12,6 +13,8 @@ interface ReadyScreenProps {
   onConsent: () => void;
   onStart: () => void;
   onOpenHistory: () => void;
+  /** Set when History was open before this screen: focus goes back to the button that opened it. */
+  shouldFocusHistoryButton: boolean;
 }
 
 const goBackToMap = () => window.location.assign('/');
@@ -20,8 +23,20 @@ const goBackToMap = () => window.location.assign('/');
  * Before a recording: back to the map, History, and one Start bar (or, on a first visit, what the
  * page does). History is a screen of its own, so nothing of it shows here.
  */
-export function ReadyScreen({ hasConsent, onConsent, onStart, onOpenHistory }: ReadyScreenProps) {
-  const headingRef = useFocusHeading();
+export function ReadyScreen({
+  hasConsent,
+  onConsent,
+  onStart,
+  onOpenHistory,
+  shouldFocusHistoryButton,
+}: ReadyScreenProps) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const historyRef = useRef<HTMLButtonElement>(null);
+  // Decided once, as the screen opens: a later change must not move focus again.
+  const [shouldFocusButton] = useState(shouldFocusHistoryButton);
+  useEffect(() => {
+    (shouldFocusButton ? historyRef.current : headingRef.current)?.focus();
+  }, [shouldFocusButton]);
   const stackRef = useStackRoom();
 
   return (
@@ -35,6 +50,7 @@ export function ReadyScreen({ hasConsent, onConsent, onStart, onOpenHistory }: R
         />
         {hasConsent && (
           <IconButton
+            ref={historyRef}
             tooltip="top"
             label="History"
             icon={<HistoryIcon />}

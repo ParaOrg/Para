@@ -286,6 +286,29 @@ const UPLOADED = /^Uploaded \|/;
   );
 }
 
+// ------------------------- sign-ups turned off: an answer, not no signal
+{
+  const { page, fake } = await phone();
+  fake.next.signIn = 'signupDisabled';
+  await seed(page, [
+    savedRide('aaaaaaaa-0000-4000-8000-000000000009', T0, { name: 'Turned away' }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await waitForStatus(page, 'Turned away', /isn't taking uploads now/);
+  const status = await statusOf(page, 'Turned away');
+  check(
+    'a sign-in ParaPo refuses says uploads cannot be taken, not no signal, and keeps the copy',
+    fake.rows.size === 0 &&
+      !/no signal/i.test(status) &&
+      /Will retry/.test(status) &&
+      (await storedUpload(page, 'aaaaaaaa-0000-4000-8000-000000000009')) === 'none',
+    status,
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await waitForStatus(page, 'Turned away', UPLOADED);
+  check('  once ParaPo takes uploads again, it is sent on its own', fake.rows.size === 1);
+}
+
 // ------------------------------------ the answer lost after storing
 {
   const { page, fake } = await phone();
@@ -457,6 +480,10 @@ const UPLOADED = /^Uploaded \|/;
   );
   await row(page, localName).getByRole('button', { name: 'Delete', exact: true }).click();
   await page.waitForFunction(() => document.querySelectorAll('li').length === 0);
+  check(
+    "  focus lands on History's heading, not the page",
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'History',
+  );
   check('  deleted from the phone', (await storedUpload(page, localId)) === 'gone');
 }
 
@@ -490,8 +517,19 @@ const UPLOADED = /^Uploaded \|/;
   await page.reload({ waitUntil: 'load' });
   await waitForStatus(page, 'Old identity', UPLOADED);
   check(
-    'an upload made by an earlier identity on this phone sits under Uploaded with no Remove upload',
-    (await countOf(page, 'Old identity', /^Remove upload/)) === 0,
+    'an upload made by an earlier identity on this phone offers no Remove upload, and says why',
+    (await countOf(page, 'Old identity', /^Remove upload/)) === 0 &&
+      (await statusOf(page, 'Old identity')).includes('Uploaded from an earlier sign-in'),
+  );
+  await page.keyboard.press('Escape');
+  check(
+    "  Escape closes the card's actions and puts focus back on its dots",
+    (await row(page, 'Old identity')
+      .getByRole('button', { name: /^More actions/ })
+      .getAttribute('aria-expanded')) === 'false' &&
+      (
+        await page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
+      ).startsWith('More actions'),
   );
 }
 

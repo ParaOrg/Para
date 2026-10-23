@@ -150,6 +150,20 @@ const buttons = (page) =>
     '  focus is on the consent heading',
     await page.evaluate(() => document.activeElement?.textContent === 'Before you record'),
   );
+  // A reload on #history before consent must not send the visitor to History once they agree.
+  await page.evaluate(() => {
+    location.hash = 'history';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
+  check(
+    '  #history before consent is let go of, and the consent panel shows',
+    (await page.evaluate(() => location.hash)) === '' ||
+      (await page
+        .waitForFunction(() => location.hash === '', null, { timeout: 5000 })
+        .then(() => true)
+        .catch(() => false)),
+  );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
@@ -176,6 +190,16 @@ const buttons = (page) =>
       (await history.count()) === 1 &&
         (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
         (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+    );
+    const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
+    const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
+    check(
+      '  nothing but the Start bar covers the map',
+      !!start &&
+        !!stack &&
+        Math.abs(stack.y - start.y) <= 1 &&
+        Math.abs(stack.y + stack.height - (start.y + start.height)) <= 1,
+      JSON.stringify([stack, start]),
     );
     await history.click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
@@ -219,8 +243,16 @@ const buttons = (page) =>
     await page.goBack();
     await page.getByRole('button', { name: 'Start recording' }).waitFor();
     check(
-      "  the browser's Back returns to Ready too",
-      (await page.getByRole('heading', { name: 'History' }).count()) === 0,
+      "  the browser's Back returns to Ready too, with focus back on the History button that opened it",
+      (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
+        (await page
+          .waitForFunction(
+            () => document.activeElement?.getAttribute('aria-label') === 'History',
+            null,
+            { timeout: 5000 },
+          )
+          .then(() => true)
+          .catch(() => false)),
     );
   }
   check(

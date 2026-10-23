@@ -2,7 +2,7 @@ import { Button } from '@/design-system/primitives/button';
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
-import { groupRecordings } from './history-groups';
+import { HISTORY_HEADING_ID, groupRecordings } from './history-groups';
 import type { Recording } from './recording-schema';
 import { SavedRideRow } from './saved-ride-row';
 import { useFocusHeading } from './use-focus-heading';
@@ -32,13 +32,13 @@ export function HistoryScreen({
 
   return (
     <section
-      aria-labelledby="history-heading"
+      aria-labelledby={HISTORY_HEADING_ID}
       className="absolute inset-0 z-20 flex flex-col bg-surface-secondary font-sn-pro text-content-primary"
     >
       <header className="flex items-center gap-3 pt-[max(1rem,env(safe-area-inset-top))] pr-4 pb-3 pl-[max(1rem,env(safe-area-inset-left))]">
         <IconButton tooltip="top" label="Back" icon={<ChevronLeftIcon />} onClick={onBack} />
         <h1
-          id="history-heading"
+          id={HISTORY_HEADING_ID}
           ref={headingRef}
           tabIndex={-1}
           className="text-2xl/8 font-extrabold focus:outline-none"

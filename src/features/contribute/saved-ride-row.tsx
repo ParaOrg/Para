@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { useEscape } from '@/shared/hooks/use-escape';
 import { cn } from '@/shared/utils/cn';
 
 import { ConfirmDelete } from './confirm-delete';
 import { dateTimeText, durationText, fullDateTimeText } from './format';
-import { statusLineOf } from './history-groups';
+import { HISTORY_HEADING_ID, statusLineOf } from './history-groups';
 import { MoreIcon } from './history-icons';
 import type { Recording } from './recording-schema';
 import { RideActions } from './ride-actions';
@@ -43,7 +44,7 @@ export function SavedRideRow({
 }: SavedRideRowProps) {
   const [asking, setAsking] = useState<Asking>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const moreId = useId();
+  const moreRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
   const shouldReturnFocus = useRef(false);
   const name = rideName(recording);
@@ -55,13 +56,21 @@ export function SavedRideRow({
   useEffect(() => {
     if (asking || !shouldReturnFocus.current) return;
     shouldReturnFocus.current = false;
-    document.getElementById(moreId)?.focus();
-  }, [asking, moreId]);
+    moreRef.current?.focus();
+  }, [asking]);
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    moreRef.current?.focus();
+  };
+  useEscape(closeMenu, isMenuOpen);
 
   const handleConfirm = () => {
     if (asking === 'remove-upload') onRemoveUpload();
     if (asking === 'delete-from-phone') onDeleteFromPhone();
     setAsking(null);
+    // The question and, for a delete, the card are gone: History's heading is the nearest steady place.
+    document.getElementById(HISTORY_HEADING_ID)?.focus();
   };
 
   const handleKeep = () => {
@@ -86,7 +95,7 @@ export function SavedRideRow({
             <p className="text-sm/5 text-content-quaternary">{durationText(seconds)}</p>
           </div>
           <IconButton
-            id={moreId}
+            ref={moreRef}
             size="small"
             tooltip="top"
             label={`More actions for ${fullName}`}
@@ -97,9 +106,9 @@ export function SavedRideRow({
             onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
           />
         </div>
+        <RideStatusLine line={statusLineOf(status, canRemove)} />
         {!asking && (
           <>
-            <RideStatusLine line={statusLineOf(status)} />
             <RideActions
               fullName={fullName}
               status={status}

@@ -1,6 +1,9 @@
 import type { Recording } from './recording-schema';
 import type { UploadStatus } from './use-uploads';
 
+/** The id of History's heading, which focus returns to after a card is deleted from it. */
+export const HISTORY_HEADING_ID = 'history-heading';
+
 export type HistoryGroupKey = 'not-uploaded' | 'uploaded' | 'on-phone';
 
 interface HistoryGroup {
@@ -62,14 +65,15 @@ export interface StatusLine {
 }
 
 /**
- * The one line a card shows for an upload that is not settled, or whose last action failed. A
- * settled upload has none: its group says it.
+ * The one line a card shows for an upload that is not settled, whose last action failed, or that
+ * this phone cannot take back. A plainly settled upload has none: its group says it.
  */
-export function statusLineOf(status: UploadStatus): StatusLine | null {
+export function statusLineOf(status: UploadStatus, canRemove: boolean): StatusLine | null {
   switch (status.state) {
     case 'waiting':
-    case 'checking':
       return { icon: 'clock', word: 'Waiting', isError: false };
+    case 'checking':
+      return { icon: 'clock', word: 'Waiting', reason: 'Person check', isError: false };
     case 'uploading':
       return { icon: 'reload', word: 'Uploading', isError: false };
     case 'removing':
@@ -79,7 +83,10 @@ export function statusLineOf(status: UploadStatus): StatusLine | null {
         ? { icon: 'clock', word: 'Will retry', reason: status.brief, isError: false }
         : { icon: 'alert', word: 'Failed', reason: status.brief, isError: true };
     case 'uploaded':
-      return status.problem ? { icon: 'alert', word: status.problem, isError: true } : null;
+      if (status.problem) return { icon: 'alert', word: status.problem, isError: true };
+      return canRemove
+        ? null
+        : { icon: 'alert', word: 'Uploaded from an earlier sign-in', isError: false };
     case 'removed':
       return status.byEditor
         ? { icon: 'alert', word: 'Removed by an editor', isError: false }

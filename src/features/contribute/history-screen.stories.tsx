@@ -31,6 +31,13 @@ const OFFLINE: UploadStatus = {
   brief: 'No signal',
   willRetry: true,
 };
+const NOT_ACCEPTING: UploadStatus = {
+  state: 'failed',
+  message:
+    'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
+  brief: "ParaPo isn't taking uploads now",
+  willRetry: true,
+};
 const REFUSED: UploadStatus = {
   state: 'failed',
   message: "ParaPo's checks refused this recording. It stays on this phone.",
@@ -103,7 +110,11 @@ export const Offline: Story = {
   args: { uploads: uploadsOf({ [rides[0].id]: WAITING, [rides[1].id]: OFFLINE }, OFFLINE) },
 };
 
-export const NotAccepting: Story = { args: { uploads: allOf(REFUSED) } };
+/** ParaPo is not taking uploads right now: it will retry on its own. */
+export const NotAccepting: Story = { args: { uploads: allOf(NOT_ACCEPTING) } };
+
+/** ParaPo's checks will never take it: Failed. */
+export const Refused: Story = { args: { uploads: allOf(REFUSED) } };
 
 export const Uploaded: Story = { args: { uploads: allOf(UPLOADED) } };
 

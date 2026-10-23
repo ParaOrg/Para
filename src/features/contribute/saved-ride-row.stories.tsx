@@ -66,8 +66,21 @@ export const WillRetry: Story = {
   },
 };
 
-/** ParaPo will not take it: Failed, in the error colour with its own icon. */
+/** ParaPo answered but turned the upload away, such as with sign-ups off: not a signal problem. */
 export const NotAccepting: Story = {
+  args: {
+    status: {
+      state: 'failed',
+      message:
+        'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
+      brief: "ParaPo isn't taking uploads now",
+      willRetry: true,
+    },
+  },
+};
+
+/** ParaPo will never take it as it is: Failed, in the error colour with its own icon. */
+export const Refused: Story = {
   args: {
     status: {
       state: 'failed',
