@@ -375,7 +375,7 @@ await page.waitForTimeout(1200);
 
 {
   // The way to the contributor page: a plain link at the top left, with no card open.
-  const contribute = page.getByRole('link', { name: 'Contribute', exact: true });
+  const contribute = page.getByTestId('contributor-button');
   const box = (await contribute.count()) === 1 ? await contribute.boundingBox() : null;
   check(
     'a Contributor link to /contribute/ sits at the top left, with no card open',
@@ -1061,7 +1061,7 @@ const tripRow = async (id) => {
 const tripChecks = async () => {
   check(
     'the Contributor link steps aside while a trip card is open',
-    (await page.getByRole('link', { name: 'Contribute', exact: true }).count()) === 0,
+    (await page.getByTestId('contributor-button').count()) === 0,
   );
   // Two tiles under the card: the whole ride's length and pesos, as the app's
   // own sums give them on the published line (read from the dev server's

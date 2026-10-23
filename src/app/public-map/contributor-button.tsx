@@ -1,4 +1,4 @@
-import { SpecialButtonLink } from '@/design-system/primitives/special-button-link';
+import { ButtonLink } from '@/design-system/primitives/button-link';
 import { PlusIcon } from '@/shared/ui/route-icons';
 
 /**
@@ -10,7 +10,13 @@ import { PlusIcon } from '@/shared/ui/route-icons';
 export function ContributorButton() {
   return (
     <div className="absolute top-0 left-0 z-10 pt-[max(1rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))]">
-      <SpecialButtonLink href="/contribute/" label="Contribute" firstIcon={<PlusIcon />} />
+      <ButtonLink
+        data-testid="contributor-button"
+        href="/contribute/"
+        variant="special"
+        label="Contribute"
+        firstIcon={<PlusIcon />}
+      />
     </div>
   );
 }
