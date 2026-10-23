@@ -186,7 +186,7 @@ test('the S on white with a green disc, the E on white with a red disc, the butt
     html,
   )?.[1];
   assert.match(button, /\bbg-card-violet-surface\b/);
-  assert.match(button, /\benabled:active:bg-card-violet-timeline-surface\b/);
+  assert.match(button, /\busable:active:bg-card-violet-timeline-surface\b/);
   assert.doesNotMatch(button, /\bbg-brand-surface\b/);
   // Set as start, under an end alone, wears them too.
   const choosing = render(5, { picked: 'h2', onSetStart() {} });
