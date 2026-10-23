@@ -130,3 +130,20 @@ second database, apply then revert twice leaves the schema as before, and
 re-applying passes the check. The script needs a server that has `anon`,
 `authenticated` and `service_role` already, like `contributions.sh`.
 
+## signup-hook.sh
+
+`migrations/20261023090000_signup_hook.sql` on databases of its own, run last
+by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/signup-hook.sh
+
+It applies every earlier migration, then `../apply/20261023090000_signup_hook_apply.sql`
+twice (the second run must stop and change nothing), requires `…_check.sql` all
+`t`, and calls the hook with each of the three roles:
+
+- as `supabase_auth_admin`: an anonymous event returns `{}`; an email event and an event with no anonymous flag return the 403 error object
+- as `anon` and `authenticated`: permission denied
+
+On a second database, apply then revert twice leaves the schema as before, and
+re-applying passes the check. The script creates `supabase_auth_admin` when the
+server lacks it (a real Supabase project has it).

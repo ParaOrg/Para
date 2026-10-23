@@ -106,3 +106,4 @@ diff /tmp/before-reviewed-approval.dump /tmp/reverted-reviewed-approval.dump || 
 echo 'reviewed approval revert: schema unchanged, repeated recovery safe'
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributions.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contribution-use.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash signup-hook.sh
