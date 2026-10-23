@@ -1,6 +1,6 @@
 # 09: Switch on anonymous sign-in and Turnstile
 
-Status: ready-for-human
+Status: resolved
 Type: task
 Wave: 3
 Who: the owner, in the Supabase and Cloudflare dashboards; a session writes the hook if it is needed
@@ -24,5 +24,18 @@ Blocked by: 07, 08
 
 - The four checks above, noted under `## Answer`, with the date.
 - `Status: resolved`.
+
+## Answer
+
+2026-10-23, the owner, on production:
+
+- **Sign-ups:** "Allow new users to sign up" was off, so GoTrue answered every anonymous sign-in with 422 (`signup_disabled`) and the contributor page wrongly said "no signal" (fixed in #357). The owner applied `20261023090000_signup_hook` (#356; ledger `20261023035741`, `_check.sql` 8/8 true), selected it under Authentication, Hooks, Before User Created, and only then turned sign-ups on.
+- **Turnstile:** CAPTCHA on, provider Turnstile, secret set in Supabase.
+- **Anonymous sign-ins:** on.
+- **Checks:**
+  - studio sign-in through Turnstile works;
+  - an email sign-up is refused: proved by the check file's call of the hook with an email event (403). A live curl is stopped by CAPTCHA before the hook runs;
+  - an anonymous sign-in from the contributor page works: a recording held on the owner's phone uploaded on Try again;
+  - Security Advisor: 0 errors. 26 warnings, all expected now that anonymous sign-ins are on: "Anonymous Sign-Ins Allowed" on the RLS tables, and "Signed-In Users Can Execute SECURITY DEFINER Function" on the studio's draft, takedown and block functions, each of which calls `private.require_editor()` / `private.is_editor()` first, so an anonymous phone is refused. The audit query (§13) was not run.
 
 ## Comments
