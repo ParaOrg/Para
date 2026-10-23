@@ -62,6 +62,18 @@ export const NoSignal: Story = {
   },
 };
 
+/** ParaPo answered but turned the upload away, such as with sign-ups off: not a signal problem. */
+export const NotAccepting: Story = {
+  args: {
+    status: {
+      state: 'failed',
+      message:
+        'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
+      willRetry: true,
+    },
+  },
+};
+
 export const Refused: Story = {
   args: {
     status: {
