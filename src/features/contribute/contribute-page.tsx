@@ -1,5 +1,7 @@
-import { isEarlierRecording, shouldAskAboutEarlier } from './consent-version';
+import { useEffect, useState } from 'react';
+
 import { ContributeMap } from './contribute-map';
+import { HistoryScreen } from './history-screen';
 import { ReadyScreen } from './ready-screen';
 import { RecordingScreen } from './recording-screen';
 import { SaveForm } from './save-form';
@@ -8,8 +10,9 @@ import { UnfinishedScreen } from './unfinished-screen';
 import { UploadCheck } from './upload-check';
 import { uploadStatusText } from './upload-status';
 import { useConsent } from './use-consent';
-import { useEarlierChoice } from './use-earlier-choice';
+import { useEarlierQuestion } from './use-earlier-question';
 import { useFollow } from './use-follow';
+import { useHistoryView } from './use-history-view';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 import { useUploads } from './use-uploads';
@@ -17,23 +20,29 @@ import { useUploads } from './use-uploads';
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage() {
   const recording = useRecording();
-  const consent = useConsent();
-  const earlierChoice = useEarlierChoice();
-  const uploads = useUploads(recording.saved, {
-    hasConsent: consent.hasConsent,
-    earlier: earlierChoice.choice,
-  });
-  const earlierCount = recording.saved.filter(
-    (r) => r.upload === undefined && isEarlierRecording(r.consentVersion),
-  ).length;
-  const isEarlierAsked = shouldAskAboutEarlier({
-    hasConsent: consent.hasConsent,
-    hasAnswered: earlierChoice.choice !== null,
-    unsentEarlierCount: earlierCount,
-  });
+  const { hasConsent, giveConsent } = useConsent();
+  const earlier = useEarlierQuestion(recording.saved, hasConsent);
+  const uploads = useUploads(recording.saved, { hasConsent, earlier: earlier.choice });
   const follow = useFollow();
   const track = useRecordingTrack(recording.kept, recording.current?.switches);
+  const history = useHistoryView();
   const { phase, figures } = recording;
+  const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
+
+  // A stale #history (a reload mid-recording, or before consent was given) must not open History
+  // later, when Record again or Okay is pressed.
+  useEffect(() => {
+    if (history.isOpen && (!hasConsent || (phase !== 'loading' && phase !== 'ready'))) {
+      history.close();
+    }
+  }, [phase, hasConsent, history]);
+
+  // Once History has been opened from Ready's button, Ready hands focus back to that button.
+  const [hasOpenedHistory, setHasOpenedHistory] = useState(false);
+  const handleOpenHistory = () => {
+    setHasOpenedHistory(true);
+    history.open();
+  };
 
   const handleStart = () => {
     follow.recentre();
@@ -42,15 +51,18 @@ export function ContributePage() {
 
   return (
     <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
-      <ContributeMap
-        track={track}
-        follow={follow}
-        hasRecording={phase === 'recording' || phase === 'paused'}
-      />
+      {/* inert while History covers it: no map control can be tabbed to behind the screen. */}
+      <div inert={isHistoryShown} className="contents">
+        <ContributeMap
+          track={track}
+          follow={follow}
+          hasRecording={phase === 'recording' || phase === 'paused'}
+        />
+      </div>
       {recording.problem && (
         <p
           role="alert"
-          className="absolute inset-x-4 top-[max(4.5rem,env(safe-area-inset-top))] z-10 bg-surface p-2 text-sm/5 text-content-primary"
+          className="absolute inset-x-4 top-[max(4.5rem,env(safe-area-inset-top))] z-30 bg-surface p-2 text-sm/5 text-content-primary"
         >
           {recording.problem}
         </p>
@@ -61,23 +73,23 @@ export function ContributePage() {
       <p role="status" className="sr-only">
         {recording.announcement}
       </p>
-      {phase === 'ready' && (
+      {phase === 'ready' && !isHistoryShown && (
         <ReadyScreen
-          consent={consent}
-          earlierQuestion={
-            isEarlierAsked
-              ? {
-                  count: earlierCount,
-                  onSend: () => earlierChoice.choose('send'),
-                  onKeep: () => earlierChoice.choose('keep'),
-                }
-              : null
-          }
+          hasConsent={hasConsent}
+          onConsent={giveConsent}
+          earlierQuestion={earlier.question}
           onStart={handleStart}
-          saved={recording.saved}
+          onOpenHistory={handleOpenHistory}
+          shouldFocusHistoryButton={hasOpenedHistory}
+        />
+      )}
+      {isHistoryShown && (
+        <HistoryScreen
+          recordings={recording.saved}
           uploads={uploads}
-          onDownloadSaved={recording.downloadSaved}
-          onDeleteSaved={recording.deleteSaved}
+          onBack={history.close}
+          onDownload={recording.downloadSaved}
+          onDeleteFromPhone={recording.deleteSaved}
         />
       )}
       {phase === 'unfinished' && figures && (
