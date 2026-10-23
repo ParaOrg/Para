@@ -1,21 +1,19 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 
-import { MapPlaceholder } from './map-placeholder';
-import { STUDIO_DRAFTS } from '../data/flags';
+import { PublicWaiting } from './public-waiting';
+import { reviewKeys } from '../data/review-keys';
 
-/** The actual published map, in its own read-only page and data context. */
-export function StudioPublicView({
-  hasLine,
-  onOpenPlayground,
-}: {
-  hasLine: boolean;
-  onOpenPlayground: () => void;
-}) {
+export function PublicViewContent() {
   const [version, setVersion] = useState(0);
-  if (!STUDIO_DRAFTS)
-    return <MapPlaceholder map="public" hasLine={hasLine} onOpenPlayground={onOpenPlayground} />;
+  const client = useQueryClient();
+  // The list is read against the published index, so a reload re-reads both.
+  const handleReload = () => {
+    setVersion((value) => value + 1);
+    void client.invalidateQueries({ queryKey: reviewKeys.publication() });
+  };
   return (
     <section
       aria-label="Published public view"
@@ -29,7 +27,7 @@ export function StudioPublicView({
           variant="secondary"
           size="small"
           label="Reload published map"
-          onClick={() => setVersion((value) => value + 1)}
+          onClick={handleReload}
         />
       </div>
       <iframe
@@ -38,6 +36,9 @@ export function StudioPublicView({
         title="Published ParaPo public map"
         className="min-h-0 w-full flex-1 border-0"
       />
+      <div className="max-h-1/3 overflow-y-auto border-t border-border-primary p-3">
+        <PublicWaiting />
+      </div>
     </section>
   );
 }

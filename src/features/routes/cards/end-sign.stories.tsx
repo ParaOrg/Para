@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
-import { EndSign } from './end-sign';
+import { EndSign, SignCode } from './end-sign';
 
 const meta = {
   title: 'Features/Routes/EndSign',
@@ -11,7 +11,7 @@ const meta = {
     (Story, { args }) => (
       <div
         className={
-          'flex w-fit items-center rounded-full p-0.5 font-sn-pro text-sm/5 font-medium ' +
+          'flex w-fit items-center rounded-full p-1 font-sn-pro font-medium ' +
           (args.kind === 'start' ? 'bg-map-hotspots-card-hintuan-surface' : 'bg-card-red-surface')
         }
       >
@@ -25,25 +25,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Start: a white pill reading "Start" in the green. */
+/** Start: a white Badge reading "Start" in the green. */
 export const Start: Story = {
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByText('Start')).toBeVisible();
   },
 };
 
-/** End: a white pill reading "End" in the red. */
+/** End: a white Badge reading "End" in the red. */
 export const End: Story = { args: { kind: 'end' } };
 
-/** At a train station: the word and the code in two white segments, 2 apart. */
-export const WithCode: Story = {
-  args: { kind: 'start', code: 'YL06' },
+/** The code at a train station: its own Badge, in a pill of its own (SignCode). */
+export const Code: Story = {
+  render: ({ kind }) => <SignCode kind={kind} code="YL06" />,
   play: async ({ canvasElement }) => {
-    const card = within(canvasElement);
-    await expect(card.getByText('Start')).toBeVisible();
-    await expect(card.getByText('YL06')).toBeVisible();
+    await expect(within(canvasElement).getByText('YL06')).toBeVisible();
   },
 };
-
-/** End with its code. */
-export const EndWithCode: Story = { args: { kind: 'end', code: 'GL02' } };

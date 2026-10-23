@@ -22,6 +22,12 @@ type Story = StoryObj<typeof meta>;
 /** Special, 40px: Button's jeepney pill with only the icon. Hover and press wear the Special shadows. */
 export const Special: Story = {};
 
+/** Brand, 48px: Button's Primary pill with only the icon, the studio's + over the map. */
+export const Brand: Story = { args: { variant: 'brand', size: 'large', label: 'Add' } };
+
+/** 48px, a 28px icon. */
+export const Large: Story = { args: { size: 'large' } };
+
 /** 32px, a 20px icon. */
 export const Small: Story = { args: { size: 'small' } };
 
@@ -31,6 +37,7 @@ export const Disabled: Story = {
     <div className="flex items-center gap-3">
       <IconButton icon={NavIcon} label="Go" disabled />
       <IconButton icon={NavIcon} label="Go" size="small" disabled />
+      <IconButton icon={NavIcon} label="Add" variant="brand" size="large" disabled />
     </div>
   ),
 };
@@ -52,9 +59,10 @@ export const TooltipSides: Story = {
 };
 
 /**
- * A real specimen: a round control floating on the map at phone width, the
- * way "Where am I" sits over it today. At the screen's edge the screen picks
- * the side facing away from it — Right, so the bubble opens to the left.
+ * A real specimen: round controls floating on the map at phone width, the
+ * way "Where am I" and the studio's Brand + sit over it. At the screen's edge
+ * the screen picks the side facing away from it — Right, so the bubble opens
+ * to the left.
  */
 export const MapSpecimen: Story = {
   render: () => (
@@ -62,6 +70,7 @@ export const MapSpecimen: Story = {
       <div className="absolute right-3 bottom-3 flex flex-col items-end gap-2">
         <IconButton icon={NavIcon} label="Where am I" tooltip="right" />
         <IconButton icon={NavIcon} label="Where am I" size="small" tooltip="right" />
+        <IconButton icon={NavIcon} label="Add" variant="brand" size="large" tooltip="right" />
       </div>
     </div>
   ),

@@ -78,6 +78,13 @@ export function lookReaders() {
         named: e.dataset.testid === 'end-title',
         at: e.dataset.at.split(',').map(Number),
         paled: e.hasAttribute('data-paled'),
+        // The sign its pill wears, Start's or End's; null with none. A signed
+        // circle wears the sign's colour, not the line's (EndTitles).
+        sign: e.querySelector('[data-part="name"] [data-part="start"]')
+          ? 'start'
+          : e.querySelector('[data-part="name"] [data-part="end"]')
+            ? 'end'
+            : null,
         ring: getComputedStyle(e.querySelector('[data-part="circle"] > span')).backgroundColor,
         // The pill's opacity, 0.6 outside the ride (Label's Unselected); null with no pill.
         fade:
@@ -115,18 +122,27 @@ export const rideLook = (page) =>
   });
 
 /**
- * The end circles now (window.__ends): how many, the rings they wear, bare
- * and paled, as the DOM computes them, and their pills' opacities likewise.
+ * The end circles now (window.__ends): how many, the rings the unsigned ones
+ * wear, bare and paled, as the DOM computes them, whether every signed one
+ * wears its sign's colour (Start's green, End's red), and the pills'
+ * opacities.
  */
 export const endRings = (page) =>
   page.evaluate(() => {
     const ends = window.__ends();
+    const unsigned = ends.filter((e) => !e.sign);
+    const signColour = {
+      start: window.__colour('var(--map-hotspots-card-hintuan-surface)'),
+      end: window.__colour('var(--card-red-surface)'),
+    };
     const worn = (list) => [...new Set(list.map((e) => e.ring))];
     const fades = (list) => [...new Set(list.filter((e) => e.fade !== null).map((e) => e.fade))];
     return {
       circles: ends.length,
-      rings: worn(ends.filter((e) => !e.paled)),
-      paledRings: worn(ends.filter((e) => e.paled)),
+      signed: ends.length - unsigned.length,
+      signsWorn: ends.every((e) => !e.sign || e.ring === signColour[e.sign]),
+      rings: worn(unsigned.filter((e) => !e.paled)),
+      paledRings: worn(unsigned.filter((e) => e.paled)),
       fades: fades(ends.filter((e) => !e.paled)),
       paledFades: fades(ends.filter((e) => e.paled)),
     };
@@ -148,12 +164,15 @@ export const ringVar = (livery) =>
       ? `var(--map-rail-${livery}-surface)`
       : `var(--card-${livery}-surface)`;
 
-/** Whether every end circle (endRings) rings in `want`, none paled: one colour, the one asked. */
+/**
+ * Whether the end circles (endRings) are lit as asked: every signed one in its
+ * sign's colour, every other in `want`, none paled.
+ */
 export const ringed = (rings, want) =>
   rings.circles > 0 &&
+  rings.signsWorn &&
   rings.paledRings.length === 0 &&
-  rings.rings.length === 1 &&
-  rings.rings[0] === want;
+  rings.rings.every((r) => r === want);
 
 /**
  * The GL programs the map has compiled, by MapLibre's keys (window.__programs,

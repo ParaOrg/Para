@@ -189,9 +189,7 @@ export const ROW_PRESSED = {
  * violet, rose, fuchsia and pink; they follow Figma's red one. A train's pill is white
  * too, on every line, its words in the line's Timeline/surface, not its
  * surface: Figma's three train frames draw it so, MRT-3's dark words
- * included. The ride's E (RideMark) wears it too, its disc in the pill's
- * words' colour on the same white (Figma's RouteSigns): a pill restyled
- * restyles the E.
+ * included.
  */
 export const TIMELINE_PILL = {
   orange: 'bg-content-inverse text-card-orange-surface',

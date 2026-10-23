@@ -16,7 +16,8 @@
 //    the editor has —
 //      router.project-osrm.org   the route snapper
 //      parapo.draft              the drawing-draft key
-//      Sign in to save, Forgot password?, + New Route, Draw the return trip
+//      Sign in to save, Forgot password?, New route, terminal or hintuan,
+//      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
 //                                published map and never call it
 //
@@ -110,7 +111,7 @@ const EDITOR_ONLY = [
   'parapo.draft',
   'Sign in to save',
   'Forgot password?',
-  '+ New Route',
+  'New route, terminal or hintuan',
   'Draw the return trip',
   '.supabase.co',
 ];
