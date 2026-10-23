@@ -81,6 +81,7 @@ type PrimaryFill = keyof typeof PRIMARY_FILL;
 /** The cards' fills: every PRIMARY_FILL but brand blue. */
 export type CardFill = Exclude<PrimaryFill, 'brand'>;
 
+// ButtonLink keeps these without `enabled:`; change the two together.
 const PRIMARY_FILL = {
   brand: 'bg-brand-surface text-content-inverse enabled:active:bg-brand-surface-secondary',
   'card-red': 'bg-card-red-surface enabled:active:bg-card-red-timeline-surface',
@@ -99,12 +100,14 @@ const PRIMARY_FILL = {
 } satisfies Record<string, string>;
 
 // The weight is each voice's own (VARIANT): Special's Small is bold; Secondary's and Primary's, medium.
-const SIZE = {
+/** Shared with ButtonLink. */
+export const SIZE = {
   base: 'gap-1 px-4 py-2 text-base/6',
   small: 'gap-1 px-3 py-1.5 text-sm/5',
 } satisfies Record<Size, string>;
 
-const ICON = {
+/** Shared with ButtonLink. */
+export const ICON = {
   base: 'size-5',
   small: 'size-4',
 } satisfies Record<Size, string>;
