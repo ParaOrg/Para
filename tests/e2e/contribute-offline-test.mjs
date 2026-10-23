@@ -98,7 +98,17 @@ try {
     };
   });
   const errors = [];
-  const watch = (p) => p.on('pageerror', (e) => errors.push(String(e)));
+  // Errors from Cloudflare's own Turnstile frame are not the page's: its script throws now and then
+  // under this suite's fake clock (also on staging), and the page cannot catch an error in a frame it embeds.
+  const watch = (p) =>
+    p.on('pageerror', (e) => {
+      const frames = String(e.stack)
+        .split('\n')
+        .filter((line) => line.trim().startsWith('at '));
+      const isCloudflareOnly =
+        frames.length > 0 && frames.every((line) => line.includes('challenges.cloudflare.com'));
+      if (!isCloudflareOnly) errors.push(String(e));
+    });
 
   // ------------------------------------------------------------- one visit
   const first = await context.newPage();

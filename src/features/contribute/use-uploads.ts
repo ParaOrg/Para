@@ -24,7 +24,8 @@ export type UploadStatus =
   | { state: 'checking' }
   | { state: 'uploading' }
   | { state: 'uploaded'; at: number; by: string; problem?: string }
-  | { state: 'failed'; message: string; willRetry: boolean }
+  /** `message` is the whole sentence; `brief` is its reason alone, for History, whose layout says the rest. */
+  | { state: 'failed'; message: string; brief: string; willRetry: boolean }
   | { state: 'removing' }
   | { state: 'removed'; byEditor?: boolean }
   | { state: 'unavailable' };
@@ -50,40 +51,59 @@ export interface UploadCheck {
   onToken: (token: string | null) => void;
 }
 
-const FAILED: Record<UploadProblem | PackRefusal, { message: string; willRetry: boolean }> = {
+const FAILED: Record<
+  UploadProblem | PackRefusal,
+  { message: string; brief: string; willRetry: boolean }
+> = {
   offline: {
     message: 'Not uploaded yet: no signal. It tries again when the phone is back online.',
+    brief: 'No signal',
     willRetry: true,
   },
   'day-cap': {
     message: 'Not uploaded yet: this phone has sent 20 recordings today. It tries again later.',
+    brief: '20 recordings sent today',
     willRetry: true,
   },
   refused: {
     message: "ParaPo's checks refused this recording. It stays on this phone.",
+    brief: "Refused by ParaPo's checks",
     willRetry: false,
   },
-  blocked: { message: 'This phone cannot upload recordings.', willRetry: false },
+  blocked: {
+    message: 'This phone cannot upload recordings.',
+    brief: 'This phone cannot upload',
+    willRetry: false,
+  },
   'check-failed': {
     message: 'The check that you are a person did not pass. Try again.',
+    brief: 'Person check not passed',
     willRetry: false,
   },
-  unavailable: { message: 'Uploading is not available on this page.', willRetry: false },
+  unavailable: {
+    message: 'Uploading is not available on this page.',
+    brief: 'Uploading is not available here',
+    willRetry: false,
+  },
   'not-accepting': {
     message:
       'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
+    brief: "ParaPo isn't taking uploads now",
     willRetry: true,
   },
   'too-long': {
     message: 'Longer than 6 hours, so it cannot be uploaded. It stays on this phone.',
+    brief: 'Longer than 6 hours',
     willRetry: false,
   },
   'too-many-points': {
     message: 'Too large to upload. It stays on this phone.',
+    brief: 'Too large to upload',
     willRetry: false,
   },
   'line-too-large': {
     message: 'Too large to upload. It stays on this phone.',
+    brief: 'Too large to upload',
     willRetry: false,
   },
 };
@@ -200,8 +220,8 @@ export function useUploads(saved: readonly Recording[]): Uploads {
       setStatus(recording.id, { state: 'removed' });
     } catch (error) {
       if (!(error instanceof UploadError)) console.error('Removing an upload failed.', error);
-      const { message } = FAILED[problemOfError(error)];
-      setStatus(recording.id, { ...before, problem: `Not removed. ${message}` });
+      const { brief } = FAILED[problemOfError(error)];
+      setStatus(recording.id, { ...before, problem: `Not removed. ${brief}` });
     } finally {
       inFlight.current.delete(recording.id);
     }

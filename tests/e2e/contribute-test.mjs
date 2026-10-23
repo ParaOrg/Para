@@ -116,11 +116,21 @@ const storedStatus = (page) =>
       }),
   );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
-/** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
+/** The History screen, opened through its button on Ready unless it is already showing. */
 const openHistory = async (page) => {
+  const heading = page.getByRole('heading', { level: 1, name: 'History' });
   const history = page.getByRole('button', { name: 'History' });
-  await history.waitFor({ timeout: 10000 });
-  if ((await history.getAttribute('aria-expanded')) !== 'true') await history.click();
+  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
+  await heading.or(history).waitFor({ timeout: 10000 });
+  if (await heading.isVisible()) return;
+  await history.click();
+  await heading.waitFor();
+};
+/** Every card's actions opened, so its Download is there to press. */
+const openCardMenus = async (page) => {
+  for (const more of await page.getByRole('button', { name: /^More actions/ }).all()) {
+    if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
+  }
 };
 const buttons = (page) =>
   page
@@ -139,6 +149,20 @@ const buttons = (page) =>
   check(
     '  focus is on the consent heading',
     await page.evaluate(() => document.activeElement?.textContent === 'Before you record'),
+  );
+  // A reload on #history before consent must not send the visitor to History once they agree.
+  await page.evaluate(() => {
+    location.hash = 'history';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
+  check(
+    '  #history before consent is let go of, and the consent panel shows',
+    (await page.evaluate(() => location.hash)) === '' ||
+      (await page
+        .waitForFunction(() => location.hash === '', null, { timeout: 5000 })
+        .then(() => true)
+        .catch(() => false)),
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
@@ -161,30 +185,74 @@ const buttons = (page) =>
   );
   {
     const history = page.getByRole('button', { name: 'History' });
+    check(
+      '  History is a button beside Back; nothing of it shows above the Start bar',
+      (await history.count()) === 1 &&
+        (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
+        (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+    );
     const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
     const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
     check(
-      '  History is a button beside Back, closed: nothing but the Start bar covers the map',
-      (await history.count()) === 1 &&
-        (await history.getAttribute('aria-expanded')) === 'false' &&
-        (await page.getByRole('heading', { name: 'Saved recordings' }).count()) === 0 &&
-        !!start &&
+      '  nothing but the Start bar covers the map',
+      !!start &&
         !!stack &&
         Math.abs(stack.y - start.y) <= 1 &&
         Math.abs(stack.y + stack.height - (start.y + start.height)) <= 1,
       JSON.stringify([stack, start]),
     );
     await history.click();
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+    await page
+      .waitForFunction(() => document.activeElement?.textContent === 'History', null, {
+        timeout: 5000,
+      })
+      .catch(() => {});
+    const opened = {
+      hash: await page.evaluate(() => location.hash),
+      focus: await page.evaluate(() => document.activeElement?.textContent),
+      starts: await page.getByRole('button', { name: 'Start recording' }).count(),
+      historyButtons: await page.getByRole('button', { name: 'History' }).count(),
+      // Inert, not removed: the map stays mounted, but nothing in it can be focused or pressed.
+      isMapInert: await page.evaluate(
+        () => !!document.querySelector('button[aria-label="Map design"]')?.closest('[inert]'),
+      ),
+      empty: await page.getByText('No recordings yet.').count(),
+    };
     check(
-      '  History opened: expanded, and with nothing kept it says so',
-      (await history.getAttribute('aria-expanded')) === 'true' &&
-        (await page.getByText('No saved recordings yet.').count()) === 1,
+      '  History opened is a screen of its own: #history, focus on its heading, no Start, no map controls reachable',
+      opened.hash === '#history' &&
+        opened.focus === 'History' &&
+        opened.starts === 0 &&
+        opened.historyButtons === 0 &&
+        opened.isMapInert &&
+        opened.empty === 1,
+      JSON.stringify(opened),
     );
-    await history.click();
+    await page.reload({ waitUntil: 'load' });
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 10000 });
+    check('  a reload stays on History', (await page.evaluate(() => location.hash)) === '#history');
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await page.getByRole('button', { name: 'Start recording' }).waitFor();
     check(
-      '  a second press closes it again',
-      (await history.getAttribute('aria-expanded')) === 'false' &&
-        (await page.getByText('No saved recordings yet.').count()) === 0,
+      '  its own back button returns to Ready, and the hash is gone',
+      (await page.evaluate(() => location.hash)) === '',
+    );
+    await page.getByRole('button', { name: 'History' }).click();
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+    await page.goBack();
+    await page.getByRole('button', { name: 'Start recording' }).waitFor();
+    check(
+      "  the browser's Back returns to Ready too, with focus back on the History button that opened it",
+      (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
+        (await page
+          .waitForFunction(
+            () => document.activeElement?.getAttribute('aria-label') === 'History',
+            null,
+            { timeout: 5000 },
+          )
+          .then(() => true)
+          .catch(() => false)),
     );
   }
   check(
@@ -726,8 +794,8 @@ const buttons = (page) =>
 {
   const { page, errors } = await phone({ consented: true });
   check(
-    'with nothing saved, the Ready screen lists no saved recordings',
-    (await page.getByRole('heading', { name: 'Saved recordings' }).count()) === 0,
+    'with nothing saved, Ready shows no History',
+    (await page.getByRole('heading', { name: 'History' }).count()) === 0,
   );
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
@@ -738,15 +806,13 @@ const buttons = (page) =>
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await page.getByRole('button', { name: 'Record again' }).click();
   await openHistory(page);
-  const rowDownloads = page.getByRole('button', { name: /^Download the recording of / });
+  await openCardMenus(page);
+  const rowDownloads = page.getByRole('button', { name: /^Download, the recording of / });
   await rowDownloads.first().waitFor();
-  check(
-    'the recording just saved is listed on the Ready screen',
-    (await rowDownloads.count()) === 1,
-  );
+  check('the recording just saved is listed in History', (await rowDownloads.count()) === 1);
   await page.reload({ waitUntil: 'load' });
   await openHistory(page);
-  await page.getByRole('heading', { name: 'Saved recordings' }).waitFor({ timeout: 10000 });
+  await openCardMenus(page);
   check('after a reload it is still listed', (await rowDownloads.count()) === 1);
   const [download] = await Promise.all([
     page.waitForEvent('download'),
@@ -761,9 +827,11 @@ const buttons = (page) =>
     file.description,
   );
   check(
-    '  the Start bar is still there below the list',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+    '  History has no Start bar',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
   );
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -906,13 +974,14 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await second
-    .getByRole('heading', { name: 'Saved recordings' })
+    .getByRole('heading', { level: 1, name: 'History' })
     .waitFor({ timeout: 5000 })
     .catch(() => {});
+  await openCardMenus(second);
   check(
     '  once the first tab saves, the second lists it without a reload',
     (await second
-      .getByRole('button', { name: /^Download the recording of .*, From the first tab$/ })
+      .getByRole('button', { name: /^Download, the recording of .*, From the first tab$/ })
       .count()) === 1,
   );
   check('no page errors', errors.length === 0, errors.join('; '));
