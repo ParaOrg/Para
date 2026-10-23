@@ -154,7 +154,7 @@ The retention functions are run by hand in the SQL editor, never by a phone or a
 
 # Applying signup_hook to the live project
 
-**Not applied live.** Anonymous sign-ins fail with 422 on `/auth/v1/signup`
+**Applied live on 2026-10-23** (ledger `20261023035741`, check 8/8 true). Anonymous sign-ins fail with 422 on `/auth/v1/signup`
 while "Allow new users to sign up" is off, so a phone cannot sign in. Sign-ups
 must go on, but first this hook must refuse every sign-up that is not
 anonymous, or anyone could make an email account. It adds one function in
