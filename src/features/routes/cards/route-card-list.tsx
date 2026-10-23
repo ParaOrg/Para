@@ -106,38 +106,41 @@ export function RouteCardList({
         />
       }
     >
-      {hotspots.length > 0 && (
-        // Full-bleed rows: a whole row is the target, not the words inside it.
-        <ul className="border-t border-border-primary">
-          {hotspots.map((s) => (
-            <li key={s.id} className="border-b border-border-primary last:border-b-0">
-              <button
-                type="button"
-                data-testid="chooser-item"
-                onClick={() => onHotspot(s)}
-                className="block w-full px-4 py-2.5 text-left hover:bg-surface-secondary"
-              >
-                <span className="block truncate font-medium text-content-primary">
-                  {hotspotLabel(s)}
-                </span>
-                <span className="block truncate text-xs text-content-quaternary">
-                  {s.kind === 'terminal' ? 'Terminal' : 'Hintuan'}
-                  {hotspotLabel(s) !== s.name && ` · ${s.name}`}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <RouteCardStack
-        routes={routes}
-        back={back}
-        selected={selected}
-        onSelect={onSelect}
-        onRoute={onRoute}
-        testId="chooser"
-        end={end}
-      />
+      {/* At least the sheet's height, so what `end` draws can grow into the room a short list leaves. */}
+      <div className="flex min-h-full flex-col">
+        {hotspots.length > 0 && (
+          // Full-bleed rows: a whole row is the target, not the words inside it.
+          <ul className="border-t border-border-primary">
+            {hotspots.map((s) => (
+              <li key={s.id} className="border-b border-border-primary last:border-b-0">
+                <button
+                  type="button"
+                  data-testid="chooser-item"
+                  onClick={() => onHotspot(s)}
+                  className="block w-full px-4 py-2.5 text-left hover:bg-surface-secondary"
+                >
+                  <span className="block truncate font-medium text-content-primary">
+                    {hotspotLabel(s)}
+                  </span>
+                  <span className="block truncate text-xs text-content-quaternary">
+                    {s.kind === 'terminal' ? 'Terminal' : 'Hintuan'}
+                    {hotspotLabel(s) !== s.name && ` · ${s.name}`}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <RouteCardStack
+          routes={routes}
+          back={back}
+          selected={selected}
+          onSelect={onSelect}
+          onRoute={onRoute}
+          testId="chooser"
+          end={end}
+        />
+      </div>
     </BottomSheet>
   );
 }
