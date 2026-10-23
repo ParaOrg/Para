@@ -45,9 +45,17 @@ function curveAt(stops: Stops, zoom: number): number {
   return stops[stops.length - 1][1];
 }
 
-const road = (extra: number): Stops => [
-  [Z0, W0 + extra],
-  [Z1, W1 + extra],
+/**
+ * The unlit line is drawn 12/10 of that half-road (the owner's call, from a
+ * phone zoomed out over the whole city, where the resting lines read too thin
+ * to find). The lit direction is measured from the half-road itself, so it
+ * keeps its own widths.
+ */
+const UNLIT_BOOST = 1.2;
+
+const road = (extra: number, boost = UNLIT_BOOST): Stops => [
+  [Z0, W0 * boost + extra],
+  [Z1, W1 * boost + extra],
 ];
 
 /** The style expression: `extra` pixels wider than the line, at every zoom. */
@@ -55,12 +63,12 @@ export function roadWidth(extra: number) {
   return curve(road(extra));
 }
 
-/** The same curve as a number. */
-function roadWidthAt(zoom: number, extra: number): number {
-  return curveAt(road(extra), zoom);
+/** The half-road itself, unboosted, as a number: what the lit direction is measured from. */
+function halfRoadAt(zoom: number, extra: number): number {
+  return curveAt(road(extra, 1), zoom);
 }
 
-/** How much wider than the rest the lit direction is drawn: 9 px to the line's 6 at zoom 18, the owner's numbers. */
+/** How much wider than the half-road the lit direction is drawn: 9 px to its 6 at zoom 18 (the unlit line, boosted, is 7.2), the owner's numbers. */
 const LIT_EXTRA = 3;
 
 /**
@@ -74,7 +82,7 @@ const [BOOST_FULL_TO, BOOST_GONE_AT] = [16, 18];
 
 /** The lit line's stops, `extra` pixels wider: a casing keeps its pixel a side, boost or not. */
 function lit(extra: number): Stops {
-  const at = (z: number, k: number): [number, number] => [z, roadWidthAt(z, LIT_EXTRA) * k + extra];
+  const at = (z: number, k: number): [number, number] => [z, halfRoadAt(z, LIT_EXTRA) * k + extra];
   return [at(Z0, LIT_BOOST), at(BOOST_FULL_TO, LIT_BOOST), at(BOOST_GONE_AT, 1), at(Z1, 1)];
 }
 
