@@ -1,6 +1,6 @@
 # 01: The database: profile and claim
 
-Status: claimed
+Status: ready-for-human (owner applies)
 Type: task
 Who: a session writes it; the owner applies it
 Blocked by: —

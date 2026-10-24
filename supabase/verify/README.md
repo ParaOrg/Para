@@ -147,3 +147,21 @@ twice (the second run must stop and change nothing), requires `…_check.sql` al
 On a second database, apply then revert twice leaves the schema as before, and
 re-applying passes the check. The script creates `supabase_auth_admin` when the
 server lacks it (a real Supabase project has it).
+
+## contributor-accounts.sh
+
+`migrations/20261024090000_contributor_accounts.sql` on databases of its own, run last
+by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contributor-accounts.sh
+
+It applies every earlier migration, the contributions and contribution_use paste files, then
+`../apply/20261024090000_contributor_accounts_apply.sql` twice (the second run must stop and change
+nothing), requires `…_check.sql` all `t`, and runs `after-contributor-accounts.sql` as the real roles:
+
+- `set_profile` refuses a signed-out and an anonymous caller, a bad number and a bad name, trims, and edits
+- a contributor cannot select the phone, insert a name or update its profile; an editor reads names, not phones; `anon` reads nothing and calls nothing
+- a claim moves exactly the anonymous identity's contributions (with their hintos), nobody else's; a newer `begin_claim` replaces the earlier token; a repeat is 0; another account's reuse, an expired token, an unknown token and a token of an upgraded identity do nothing; a block carries over
+
+The revert refuses over a stored name. On a second database, apply then revert twice leaves the
+schema as before, and re-applying passes the check.
