@@ -11,6 +11,7 @@ export type ContributeLocatorSlot = (
   map: MapLibreMap,
   isMapLoaded: boolean,
   isRecording: boolean,
+  mark: ReactNode,
 ) => ReactNode;
 
 interface ContributeMapProps {
@@ -18,6 +19,8 @@ interface ContributeMapProps {
   /** Whether a recording is on the screen. */
   isRecording: boolean;
   locator?: ContributeLocatorSlot;
+  /** The mark button, for the locator's column: null when nothing is recording. */
+  mark: ReactNode;
 }
 
 /**
@@ -25,7 +28,7 @@ interface ContributeMapProps {
  * trail drawn on it and the shell's locator (the dot, and the button with the
  * map-style picker) on top.
  */
-export function ContributeMap({ track, isRecording, locator }: ContributeMapProps) {
+export function ContributeMap({ track, isRecording, locator, mark }: ContributeMapProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
@@ -41,7 +44,7 @@ export function ContributeMap({ track, isRecording, locator }: ContributeMapProp
         hasMapStyleButton={false}
         creditsAtBottom
       />
-      {map && locator?.(map, isMapLoaded, isRecording)}
+      {map && locator?.(map, isMapLoaded, isRecording, mark)}
     </>
   );
 }

@@ -136,3 +136,42 @@ test('a recording with no fixes packs with no points and no line', () => {
   assert.equal(result.payload.west, null);
   assert.ok(Date.parse(result.payload.ended_at) > Date.parse(result.payload.started_at));
 });
+
+test('marks go up as mark events among the switches, in time order', () => {
+  const fixes = rideFixes(20);
+  const recording = {
+    ...rideRecording(ID, fixes),
+    switches: [{ time: T0 + 10_000, to: 'return' }],
+    marks: [{ time: T0 + 15_000 }, { time: T0 + 5_000 }],
+  };
+  const { payload } = packed(fixes, recording);
+  assert.deepEqual(payload.events.slice(1, -2), [
+    { kind: 'mark', at: new Date(T0 + 5_000).toISOString() },
+    { kind: 'switch', at: new Date(T0 + 10_000).toISOString(), to: 'return' },
+    { kind: 'mark', at: new Date(T0 + 15_000).toISOString() },
+  ]);
+  assert.ok(contributionPayloadSchema.safeParse(payload).success);
+});
+
+test('too many marks give way to the start, stop and save, and the events stay within the limit', () => {
+  const fixes = rideFixes(20);
+  const switches = Array.from({ length: 100 }, (_, i) => ({
+    time: T0 + 1000 + i * 100,
+    to: i % 2 === 0 ? 'return' : 'outbound',
+  }));
+  const marks = Array.from({ length: 600 }, (_, i) => ({ time: T0 + 100_000 + i }));
+  const { payload } = packed(fixes, { ...rideRecording(ID, fixes), switches, marks });
+  assert.equal(payload.events.length, UPLOAD_LIMITS.listEntries);
+  assert.equal(payload.events[0].kind, 'start');
+  assert.deepEqual(
+    payload.events.slice(-2).map((e) => e.kind),
+    ['stop', 'save'],
+  );
+  assert.equal(payload.events.filter((e) => e.kind === 'switch').length, 100);
+  assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 500 - 3 - 100);
+});
+
+test('a recording made before marks packs with none', () => {
+  const { payload } = packed();
+  assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 0);
+});

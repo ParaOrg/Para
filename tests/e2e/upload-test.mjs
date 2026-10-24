@@ -246,6 +246,7 @@ const groupOf = (page, name) =>
       [T0 + s * 1000, 14.7 + (s * 8) / 111_320],
     );
   }
+  await page.getByRole('button', { name: 'Mark this place' }).click();
   await page.getByRole('button', { name: 'Save' }).click();
   await page.getByLabel('Start point name').fill('SM Fairview');
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -259,6 +260,14 @@ const groupOf = (page, name) =>
       stored.recording.start_name === 'SM Fairview' &&
       stored.recording.consent_version === 2,
     `${fake.rows.size} stored, ${fake.saveRequests} sends`,
+  );
+  const markEvents = stored.recording.events.filter((e) => e.kind === 'mark');
+  check(
+    'the upload carries the mark as a mark event: a time and no position, between start and stop',
+    markEvents.length === 1 &&
+      Object.keys(markEvents[0]).sort().join() === 'at,kind' &&
+      stored.recording.events.map((e) => e.kind).join() === 'start,mark,stop,save',
+    JSON.stringify(stored.recording.events),
   );
   check(
     '  it went whole: its points, in batches, and the ride kind left blank',

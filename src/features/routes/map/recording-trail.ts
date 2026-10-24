@@ -18,18 +18,25 @@ export interface TrailMarker {
   way: Way;
 }
 
+/** A pin where the contributor marked the place they were. */
+export interface TrailMark {
+  at: LngLat;
+}
+
 /** What the contributor's recording has drawn so far. */
 export interface RecordingTrail {
   lines: readonly TrailLine[];
   markers: readonly TrailMarker[];
+  marks: readonly TrailMark[];
 }
 
 export const TRAIL_SRC = 'recording-trail';
 const CASING = 'recording-trail-casing';
 const LINE = 'recording-trail-line';
 const MARKERS = 'recording-trail-markers';
+const MARKS = 'recording-trail-marks';
 
-/** The trail as its source takes it: a line per run, and a point per switch. */
+/** The trail as its source takes it: a line per run, a point per switch, and a point per mark. */
 export function trailData(trail: RecordingTrail) {
   return {
     type: 'FeatureCollection' as const,
@@ -46,6 +53,11 @@ export function trailData(trail: RecordingTrail) {
         properties: { kind: 'switch', way: marker.way },
         geometry: { type: 'Point' as const, coordinates: [...marker.at] },
       })),
+      ...trail.marks.map((mark) => ({
+        type: 'Feature' as const,
+        properties: { kind: 'mark' },
+        geometry: { type: 'Point' as const, coordinates: [...mark.at] },
+      })),
     ],
   };
 }
@@ -55,7 +67,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
   if (map.getSource(TRAIL_SRC)) return;
   map.addSource(TRAIL_SRC, {
     type: 'geojson',
-    data: trailData({ lines: [], markers: [] }),
+    data: trailData({ lines: [], markers: [], marks: [] }),
   });
   const isLine: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
   map.addLayer({
@@ -99,6 +111,18 @@ export function addRecordingTrail(map: MapLibreMap): void {
         MAP_COLOURS['Map/Trail/papunta'],
       ],
       'circle-stroke-width': 3,
+    },
+  });
+  map.addLayer({
+    id: MARKS,
+    type: 'circle',
+    source: TRAIL_SRC,
+    filter: ['==', ['get', 'kind'], 'mark'],
+    paint: {
+      'circle-radius': litRadius(CASING_EXTRA),
+      'circle-color': MAP_COLOURS['Map/Trail/mark'],
+      'circle-stroke-color': MAP_PAINT['Paint/casing'],
+      'circle-stroke-width': 2,
     },
   });
 }

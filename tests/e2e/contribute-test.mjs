@@ -451,6 +451,43 @@ const buttons = (page) =>
   );
   await shot(page, '3-recording-pabalik');
 
+  // Mark this place: a pin where the trail is, a polite "Marked", and nothing to answer.
+  const markButton = page.getByRole('button', { name: 'Mark this place' });
+  const markBox = await markButton.boundingBox();
+  const locatorBox = await locate(page).boundingBox();
+  const styleBox = await page.getByRole('button', { name: 'Map design' }).boundingBox();
+  check(
+    'while recording, "Mark this place" is a round 48 px button directly above the locator column',
+    markBox?.width === 48 &&
+      markBox.height === 48 &&
+      Math.abs(markBox.x - locatorBox.x) < 1 &&
+      markBox.y + markBox.height <= styleBox.y,
+    JSON.stringify([markBox, locatorBox]),
+  );
+  await markButton.click();
+  await page.getByTestId('marked-note').waitFor();
+  check(
+    '  a tap says "Marked" on the screen and politely in the status line, with no dialog',
+    (await page.getByTestId('marked-note').innerText()) === 'Marked' &&
+      (await page.getByRole('status').filter({ hasText: 'Marked, 1' }).count()) === 1 &&
+      (await page.getByRole('dialog').count()) === 0,
+  );
+  await shot(page, '3b-marked');
+  const marked = await mapSource(page);
+  check(
+    '  a pin is left on the trail, in the mark colour, above the line',
+    marked?.features.filter((f) => f.properties.kind === 'mark').length === 1 &&
+      (await page.evaluate(() =>
+        window.__map.getPaintProperty('recording-trail-marks', 'circle-color'),
+      )) === '#8200db' &&
+      (await page.evaluate(() => {
+        const ids = window.__map.getStyle().layers.map((l) => l.id);
+        return ids.indexOf('recording-trail-marks') > ids.indexOf('recording-trail-line');
+      })),
+  );
+  await page.getByTestId('marked-note').waitFor({ state: 'detached', timeout: 5000 });
+  check('  "Marked" goes away by itself', true);
+
   // The locator's cycle: turn with the compass, north up again, a pan lets go, a tap follows.
   await face(page, 270);
   await locate(page).click();
@@ -563,9 +600,13 @@ const buttons = (page) =>
       file.savedAt !== null,
     `${file.switches.length} switch, ${file.fixes.length} fixes`,
   );
+  check('  and its mark', file.marks.length === 1 && !Number.isNaN(Date.parse(file.marks[0].time)));
   await page.getByRole('button', { name: 'Record again' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
-  check('Record again is Ready, with nothing kept on the screen', true);
+  check(
+    'Record again is Ready, with nothing kept on the screen, and no mark button',
+    (await page.getByRole('button', { name: 'Mark this place' }).count()) === 0,
+  );
   check('no page errors on the loop', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

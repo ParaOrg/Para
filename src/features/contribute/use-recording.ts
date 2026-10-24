@@ -11,6 +11,7 @@ import { CONSENT_VERSION } from './consent-version';
 import { locationProblem } from './location-problem';
 import { holdRecorderLock } from './recorder-lock';
 import { downloadRecording, recordingFile } from './recording-file';
+import { withMark } from './recording-marks';
 import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './recording-rules';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
 import {
@@ -75,6 +76,8 @@ export interface RecordingState {
   stopAtLastFix: () => void;
   resume: () => void;
   switchWay: () => void;
+  /** Marks the place the ride is at: the time of the tap, nothing more. */
+  markPlace: () => void;
   /** Stops a running recording, then opens the Save form. */
   openSave: () => void;
   /** From the Save form, back to recording as Resume does: the time on the form is a gap. */
@@ -323,6 +326,7 @@ export function useRecording(): RecordingState {
       savedAt: null,
       gaps: [],
       switches: [],
+      marks: [],
       startPointName: '',
       endPointName: '',
       description: '',
@@ -396,6 +400,16 @@ export function useRecording(): RecordingState {
     const to = OTHER_WAY[currentWay(switches)];
     keep({ ...recording, switches: [...switches, { time: Date.now(), to }] });
     setAnnouncement(`Switched to ${WAY_LABEL[to]}`);
+  }
+
+  function markPlace() {
+    const recording = currentRef.current;
+    if (!recording || recording.status !== 'recording') return;
+    const marks = recording.marks ?? [];
+    const next = withMark(marks, Date.now());
+    if (next === marks) return;
+    keep({ ...recording, marks: next });
+    setAnnouncement(`Marked, ${next.length}`);
   }
 
   /**
@@ -521,6 +535,7 @@ export function useRecording(): RecordingState {
     stopAtLastFix,
     resume,
     switchWay,
+    markPlace,
     openSave,
     keepRecording,
     focusTarget,
