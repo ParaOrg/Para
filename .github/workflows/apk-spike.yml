@@ -61,3 +61,71 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+  # By hand only: runs the app on an emulator and rides a scripted route with the screen off
+  # (scripts/apk/emulator-test.sh). Its APK is built with the test's autostart hook, so it is not
+  # the APK the owner installs.
+  emulator-test:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install the Android platform and build tools
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+
+      - name: Build the page with the autostart hook, and the APK
+        env:
+          VITE_SPIKE_AUTOSTART: '1'
+        run: |
+          npx vite build -c vite.apk.config.ts --mode apk
+          npx cap sync android
+          cd android && ./gradlew assembleDebug --no-daemon
+
+      # The emulator needs hardware acceleration.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Ride with the screen off
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/apk/emulator-test.sh android/app/build/outputs/apk/debug/app-debug.apk emulator-out
+
+      - name: Show the result
+        if: always()
+        run: |
+          cat emulator-out/summary.txt >> "$GITHUB_STEP_SUMMARY" || true
+          grep -E "PARAPO_" emulator-out/logcat.txt | tail -40 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-test
+          path: emulator-out
+          if-no-files-found: warn
+          retention-days: 14

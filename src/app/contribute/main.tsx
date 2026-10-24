@@ -8,6 +8,7 @@ import {
   askForPersistentStorage,
   connectContributions,
   prepareNativeApp,
+  runSpikeAutostart,
 } from '@/features/contribute';
 
 import { ContributeApp } from './contribute-app.tsx';
@@ -35,6 +36,9 @@ void prepareNativeApp()
     // The page's own offline setup, apart from the public map's worker (the app has none), and a
     // request that the browser keep its recordings. The answer waits in the feature for the
     // Ready screen.
+    if (import.meta.env.MODE === 'apk' && import.meta.env.VITE_SPIKE_AUTOSTART === '1') {
+      void runSpikeAutostart().catch((error: unknown) => console.error('Autostart failed.', error));
+    }
     registerContributeWorker();
     void askForPersistentStorage();
   });

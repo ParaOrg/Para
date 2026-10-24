@@ -8,3 +8,4 @@ export { hasOpenRecording } from './open-recording';
 export { askForPersistentStorage } from './persistent-storage';
 export { NativeSpikeSlot } from './native-spike-slot';
 export { isNativeApp, prepareNativeApp } from './native-app';
+export { runSpikeAutostart } from './native-spike-autostart';
