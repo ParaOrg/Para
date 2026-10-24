@@ -1,8 +1,9 @@
 import * as z from 'zod/mini';
 
 /**
- * /app/latest.json, written by the release workflow (scripts/publish/app-release.mjs): the newest
- * signed APK, and the oldest version that may still record.
+ * latest.json, a GitHub Release asset written by the release workflow
+ * (scripts/publish/app-release.mjs): the newest signed APK, and the oldest version that may still
+ * record.
  */
 export const latestReleaseSchema = z.object({
   version: z.string().check(z.minLength(1)),

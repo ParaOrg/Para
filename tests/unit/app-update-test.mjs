@@ -13,7 +13,7 @@ import { latestReleaseText } from '../../scripts/publish/app-release-file.mjs';
 const RELEASE = {
   version: '1.2.3',
   versionCode: 1002003,
-  url: 'https://parapo.example/app/parapo-contributor-1.2.3.apk',
+  url: 'https://github.com/o/r/releases/latest/download/parapo-contributor.apk',
   minVersion: '1.0.0',
 };
 
@@ -56,10 +56,10 @@ test('the workflow writes a file the app reads, and refuses a contradictory one'
     version: '1.2.3',
     versionCode: 1002003,
     minVersion: '1.0.0',
-    baseUrl: 'https://parapo.example',
+    apkUrl: 'https://github.com/o/r/releases/latest/download/parapo-contributor.apk',
   };
   assert.deepEqual(JSON.parse(latestReleaseText(input)), RELEASE);
   assert.throws(() => latestReleaseText({ ...input, versionCode: 5 }), /has code 1002003/);
   assert.throws(() => latestReleaseText({ ...input, minVersion: '2.0.0' }), /newer than/);
-  assert.throws(() => latestReleaseText({ ...input, baseUrl: 'nope' }), /not a release file/);
+  assert.throws(() => latestReleaseText({ ...input, apkUrl: 'nope' }), /not a release file/);
 });

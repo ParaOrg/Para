@@ -542,10 +542,10 @@ if (existsSync(swPath)) {
     (u) =>
       studioOnly.includes(u) ||
       contributeOnly.includes(u) ||
-      /^(studio\/|contribute\/|app\/|\.vite\/|data\/|branding\/|_headers)/.test(u),
+      /^(studio\/|contribute\/|\.vite\/|data\/|branding\/|_headers)/.test(u),
   );
   check(
-    `precache holds no studio or contribute chunk (${studioOnly.length + contributeOnly.length} to keep out), nothing from studio/, contribute/, app/, .vite/, data/, branding/, no _headers`,
+    `precache holds no studio or contribute chunk (${studioOnly.length + contributeOnly.length} to keep out), nothing from studio/, contribute/, .vite/, data/, branding/, no _headers`,
     studioOnly.length > 0 && contributeOnly.length > 0 && leakedPrecache.length === 0,
     leakedPrecache.join(', '),
   );
@@ -625,11 +625,10 @@ if (existsSync(contributeSwPath)) {
     publicLeak.join(', '),
   );
   const studioLeak = stored.filter(
-    (u) =>
-      studioOnlyHere.includes(u.slice(1)) || /^\/(studio\/|app\/|\.vite\/|data\/|_headers)/.test(u),
+    (u) => studioOnlyHere.includes(u.slice(1)) || /^\/(studio\/|\.vite\/|data\/|_headers)/.test(u),
   );
   check(
-    `contribute worker's precache holds no studio chunk (${studioOnlyHere.length} to keep out), nothing from studio/, app/, .vite/, data/, and no _headers`,
+    `contribute worker's precache holds no studio chunk (${studioOnlyHere.length} to keep out), nothing from studio/, .vite/, data/, and no _headers`,
     studioOnlyHere.length > 0 && studioLeak.length === 0,
     studioLeak.join(', '),
   );

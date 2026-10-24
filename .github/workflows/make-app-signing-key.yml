@@ -1,0 +1,92 @@
+# Makes the contributor app's release signing key, once (docs/adr/0006).
+#
+# "Run workflow" on the default branch. It generates a PKCS12 keystore (RSA 4096, about 30 years,
+# alias `parapo`) whose password is derived from the repository secret PARAPO_KEY_PASSPHRASE
+# (scripts/android/store-password.sh), encrypts it with that passphrase (AES-256-CBC, PBKDF2,
+# 600,000 rounds) and uploads ONLY the encrypted file as the artifact `app-signing-key`. The
+# coordinator commits it as android/release-key.p12.enc; the release build decrypts it with the same
+# secret (contributor-app.yml).
+#
+# THE REPOSITORY IS PUBLIC, so the committed key's safety rests on the passphrase alone: anyone can
+# download the file and try passphrases offline. Use at least 24 characters, ideally six or more
+# random words, kept in a password manager. Lose the passphrase and the key is gone; testers must
+# uninstall (and lose unsent recordings) to take an update signed with a new one.
+#
+# It refuses to run when android/release-key.p12.enc is already on this ref or on the default
+# branch, so a key can never be replaced. The plain keystore is never printed or uploaded and is
+# shredded at the end.
+name: Make the app signing key
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  make-key:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      KEY_FILE: android/release-key.p12.enc
+      PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check the passphrase is there and long enough
+        run: |
+          if [[ -z "$PARAPO_KEY_PASSPHRASE" ]]; then
+            echo "::error::The repository secret PARAPO_KEY_PASSPHRASE is missing."
+            exit 1
+          fi
+          if (( ${#PARAPO_KEY_PASSPHRASE} < 24 )); then
+            echo "::error::PARAPO_KEY_PASSPHRASE must be at least 24 characters."
+            exit 1
+          fi
+
+      - name: Check there is no key yet
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [[ -e "$KEY_FILE" ]]; then
+            echo "::error::$KEY_FILE already exists on this ref. A key is never replaced."
+            exit 1
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/contents/$KEY_FILE?ref=$DEFAULT_BRANCH" > /dev/null 2>&1; then
+            echo "::error::$KEY_FILE already exists on $DEFAULT_BRANCH. A key is never replaced."
+            exit 1
+          fi
+
+      - name: Make the key and encrypt it
+        run: |
+          plain="$RUNNER_TEMP/release-key.p12"
+          export PARAPO_KEYSTORE_PASSWORD
+          PARAPO_KEYSTORE_PASSWORD="$(scripts/android/store-password.sh)"
+          keytool -genkeypair -keystore "$plain" -storetype PKCS12 \
+            -alias parapo -keyalg RSA -keysize 4096 -validity 10950 \
+            -dname "CN=ParaPo Contributor, O=ParaPo, C=PH" \
+            -storepass:env PARAPO_KEYSTORE_PASSWORD -keypass:env PARAPO_KEYSTORE_PASSWORD
+          mkdir -p out
+          openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
+            -pass env:PARAPO_KEY_PASSPHRASE -in "$plain" -out out/release-key.p12.enc
+
+          # Prove the file opens with the passphrase before it is handed over. Only the
+          # certificate's public fingerprint is printed.
+          check="$RUNNER_TEMP/release-key.check.p12"
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+            -pass env:PARAPO_KEY_PASSPHRASE -in out/release-key.p12.enc -out "$check"
+          keytool -list -keystore "$check" -storetype PKCS12 \
+            -storepass:env PARAPO_KEYSTORE_PASSWORD | grep -i "parapo\|SHA-256\|Certificate fingerprint"
+          shred -u "$check"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-signing-key
+          path: out/release-key.p12.enc
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Shred the plain keystore
+        if: always()
+        run: shred -u "$RUNNER_TEMP/release-key.p12" "$RUNNER_TEMP/release-key.check.p12" 2>/dev/null || true

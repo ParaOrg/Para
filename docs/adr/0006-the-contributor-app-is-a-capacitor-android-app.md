@@ -29,10 +29,27 @@ service with a visible "ParaPo is recording" notification.
 - The app's build reads `.env.apk`, which holds only public values, like
   `.env.production`. Turnstile passes at the app's own origin,
   `https://localhost`, with no Cloudflare change.
-- A GitHub workflow builds a debug APK on pull requests that touch the app and
-  an unsigned release APK on a tag `app-v*`, on the runner's own Android SDK.
-  Signing, the download link and the update check are separate work
-  (`.scratch/contributor-app/`, ticket 04).
+- A GitHub workflow builds a debug APK on pull requests that touch the app and,
+  on a tag `app-v*`, a signed release APK on the runner's own Android SDK. The
+  tag's run publishes a GitHub Release with two assets, `parapo-contributor.apk`
+  and `latest.json`; nothing is deployed to the website.
+- **Signing.** A one-time workflow, "Make the app signing key", generates the
+  release keystore from the repository secret `PARAPO_KEY_PASSPHRASE` and
+  uploads it encrypted (AES-256-CBC, PBKDF2) as `android/release-key.p12.enc`,
+  which is committed. The release build decrypts it with the same secret into a
+  temp file and deletes it. **The repository is public, so the passphrase is all
+  that protects the key**: anyone can download the file and guess offline. It
+  must be at least 24 characters, ideally six or more random words, kept in a
+  password manager. A release run with no passphrase fails; it never publishes
+  an unsigned APK.
+- **Updates.** The app reads
+  `https://github.com/Roviicc/ParaPo/releases/latest/download/latest.json` at
+  start (`version`, `versionCode`, `url`, `minVersion`). A newer `versionCode`
+  shows a quiet "A new version is ready" with a Download link; below
+  `minVersion` the app asks to update before Start; offline it shows nothing.
+  `minVersion` is set in `android/min-version.txt`. GitHub sends no CORS
+  headers on release assets, so a WebView `fetch` from `https://localhost` is
+  blocked: see the update check's fallback in the pull request.
 - A downloaded APK does not update itself. The signing key must never change
   and never be lost: a new key means testers uninstall and lose unsent
   recordings.
