@@ -1,6 +1,6 @@
 # 05: Public map: empty card, no button
 
-Status: ready-for-agent
+Status: claimed
 Type: task
 Who: a session
 Blocked by: —

@@ -373,19 +373,10 @@ await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { 
 await waitForSource(page, 'saved-routes');
 await page.waitForTimeout(1200);
 
-{
-  // The way to the contributor page: a plain link at the top left, with no card open.
-  const contribute = page.getByTestId('contributor-button');
-  const box = (await contribute.count()) === 1 ? await contribute.boundingBox() : null;
-  check(
-    'a Contributor link to /contribute/ sits at the top left, with no card open',
-    box !== null &&
-      (await contribute.getAttribute('href')) === '/contribute/' &&
-      box.x < 40 &&
-      box.y < 60,
-    JSON.stringify(box),
-  );
-}
+check(
+  'no Contributor button is on the public map',
+  (await page.getByTestId('contributor-button').count()) === 0,
+);
 
 /**
  * A finger on the map at page point (x, y). A real touch first; when the map
@@ -1059,10 +1050,6 @@ const tripRow = async (id) => {
  * of the route list — as today's data allows.
  */
 const tripChecks = async () => {
-  check(
-    'the Contributor link steps aside while a trip card is open',
-    (await page.getByTestId('contributor-button').count()) === 0,
-  );
   // Two tiles under the card: the whole ride's length and pesos, as the app's
   // own sums give them on the published line (read from the dev server's
   // modules; a server that cannot serve them skips the check). The pesos

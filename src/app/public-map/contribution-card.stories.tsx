@@ -6,7 +6,7 @@ import type { Livery } from '@/features/routes/model/liveries';
 
 import { ContributionCard } from './contribution-card';
 
-/** The invitation as it sits in the list: right after the last route card, in that card's livery. */
+/** The card as it sits in the list: right after the last route card, in that card's livery. */
 function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) {
   return (
     <div className="w-97.5">
@@ -34,15 +34,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** After a red jeepney card (orange is the livery's name): white words, the Primary blob. The other jeepney liveries and LRT lines reuse these words and blobs. */
+/** After a red jeepney card (orange is the livery's name): the Primary blob. The other jeepney liveries and LRT lines reuse these blobs. The card is empty and hidden from assistive technology. */
 export const AfterJeepneyCard: Story = {
   play: async ({ canvasElement }) => {
-    const link = within(canvasElement).getByRole('link', { name: 'Contribute' });
-    await expect(link).toHaveAttribute('href', '/contribute/');
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('link')).toBeNull();
+    await expect(canvas.getByTestId('contribution-card')).toHaveAttribute('aria-hidden', 'true');
   },
 };
 
-/** After MRT-3's yellow card: the card's dark words, and a dark arrow with them. */
+/** After MRT-3's yellow card. */
 export const AfterMetroRailWayThreeCard: Story = {
   args: { livery: 'metro-rail-way-three' },
   render: ({ livery }) => <AfterRouteCard livery={livery} origin="Taft Avenue" />,
