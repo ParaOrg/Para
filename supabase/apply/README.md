@@ -152,3 +152,35 @@ The retention functions are run by hand in the SQL editor, never by a phone or a
 `select private.retire_month(date '2026-10-01');` from November 2028, then each month;
 `select private.add_months(12);` once a year. See the migration's header.
 
+# Applying signup_hook to the live project
+
+**Applied live on 2026-10-23** (ledger `20261023035741`, check 8/8 true). Anonymous sign-ins fail with 422 on `/auth/v1/signup`
+while "Allow new users to sign up" is off, so a phone cannot sign in. Sign-ups
+must go on, but first this hook must refuse every sign-up that is not
+anonymous, or anyone could make an email account. It adds one function in
+`private` and a schema grant; no table or row is touched. Three files, each
+pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261023090000_signup_hook_apply.sql` | One transaction: checks it has not run and `supabase_auth_admin` exists; applies `migrations/20261023090000_signup_hook.sql` (carried unchanged; `verify/signup-hook.sh` checks the copy); calls the function with an anonymous and an email event and checks only `supabase_auth_admin` can run it; writes the ledger row `signup_hook`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261023090000_signup_hook_check.sql` | Read-only, 8 rows, all `ok` should be `t`. Includes calling the function with two sample events. |
+| `20261023090000_signup_hook_revert.sql` | One transaction: drops the function, the schema grant and the ledger row. Touches no data. Safe to run twice. |
+
+## Steps, in this order
+
+1. Run `20261023090000_signup_hook_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261023090000_signup_hook_check.sql`: 8 rows, all `ok = t`.
+3. Dashboard, Authentication, Hooks: add a "Before User Created" hook, type Postgres, function `private.before_user_created`, then save.
+4. Only then: Authentication, Sign In / Providers, turn on "Allow new users to sign up" and save.
+5. Test:
+   - a contributor save works from the contributor page (anonymous sign-in succeeds);
+   - an email sign-up is refused. With CAPTCHA on, the call needs a Turnstile token, so this one is refused for want of it even without the hook; the hook is proved by step 2's check and by the phone signing in. To exercise the hook alone, test on a project with CAPTCHA off, or read the Auth logs. The call, expecting 403 and "Sign-ups are closed. Contributors sign in anonymously.":
+
+         curl -s -X POST "$SUPABASE_URL/auth/v1/signup" -H "apikey: $PUBLISHABLE_KEY" -H "Content-Type: application/json" -d '{"email":"nobody@example.com","password":"a-long-test-password-1"}'
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and something misbehaves: turn "Allow new users to sign up" off, remove the hook under Authentication, Hooks, then run `20261023090000_signup_hook_revert.sql`. Do not run the revert while the hook is still selected: with the function gone every sign-up fails.
+- Never turn sign-ups on before the hook is saved: until then an email account can be made.
