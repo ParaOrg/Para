@@ -51,7 +51,11 @@ interface Placed {
   fix: Fix;
   x: number;
   y: number;
-  /** A switch happened on this fix: it is never dropped, held or moved, so the markers stay put. */
+  /**
+   * Never dropped, held or moved: the fix a switch or a mark sits on (so the
+   * markers lie on the line), the last fix (so the live line reaches the
+   * contributor), and a held stop's point (already an average).
+   */
   isPinned: boolean;
 }
 
@@ -75,14 +79,11 @@ function steadier(points: readonly Placed[]): Placed[] {
     skipped = [];
     drawn.push(point);
   }
-  const last = drawn[drawn.length - 1];
-  const end = skipped[skipped.length - 1];
-  if (end && (!last || gapM(last, end) > DISPLAY_MAX_GAP_M)) push(drawn, skipped);
   return drawn;
 }
 
 /** The point of a run of fixes: their average, the more accurate counting for more. */
-function holdOf(run: readonly Placed[]): Placed {
+function holdOf(run: readonly Placed[], metresPerDegreeLng: number): Placed {
   let weight = 0;
   let x = 0;
   let y = 0;
@@ -94,17 +95,23 @@ function holdOf(run: readonly Placed[]): Placed {
     y += point.y * w;
     accuracyM = Math.min(accuracyM, point.fix.accuracyM);
   }
-  const first = run[0].fix;
+  const [first] = run;
+  const centre = { x: x / weight, y: y / weight };
+  const dx = centre.x - first.x;
+  const dy = centre.y - first.y;
   return {
-    fix: { time: first.time, at: first.at, accuracyM },
-    x: x / weight,
-    y: y / weight,
-    isPinned: false,
+    fix: {
+      time: first.fix.time,
+      at: [first.fix.at[0] + dx / metresPerDegreeLng, first.fix.at[1] + dy / METRES_PER_DEGREE],
+      accuracyM,
+    },
+    ...centre,
+    isPinned: true,
   };
 }
 
 /** A run of fixes that never leaves its first fix's accuracy circle (up to HOLD_MAX_RADIUS_M) for HOLD_MIN_SECONDS becomes one point. */
-function held(points: readonly Placed[]): Placed[] {
+function held(points: readonly Placed[], metresPerDegreeLng: number): Placed[] {
   const out: Placed[] = [];
   let i = 0;
   while (i < points.length) {
@@ -126,7 +133,7 @@ function held(points: readonly Placed[]): Placed[] {
       i++;
       continue;
     }
-    out.push(holdOf(points.slice(i, end)));
+    out.push(holdOf(points.slice(i, end), metresPerDegreeLng));
     i = end;
   }
   return out;
@@ -195,19 +202,20 @@ function smoothed(points: readonly Placed[], metresPerDegreeLng: number): Fix[] 
 /**
  * The fixes to draw, in time order, for the fixes that count (keptFixes).
  * `pinned` are indexes into `kept` of fixes that must stay exactly as they are
- * (where a way switch is placed), so the line still breaks at each marker.
+ * (where a way switch or a mark is placed), so each marker lies on the line.
  */
 export function displayFixes(kept: readonly Fix[], pinned: readonly number[] = []): Fix[] {
   const first = kept[0];
   if (!first) return [];
   const [lng0, lat0] = first.at;
   const metresPerDegreeLng = METRES_PER_DEGREE * Math.cos((lat0 * Math.PI) / 180);
-  const pins = new Set(pinned);
+  // The last fix is where the contributor is: the line always reaches it.
+  const pins = new Set([...pinned, kept.length - 1]);
   const placed = kept.map((fix, i): Placed => ({
     fix,
     x: (fix.at[0] - lng0) * metresPerDegreeLng,
     y: (fix.at[1] - lat0) * METRES_PER_DEGREE,
     isPinned: pins.has(i),
   }));
-  return smoothed(withoutReversals(held(steadier(placed))), metresPerDegreeLng);
+  return smoothed(withoutReversals(held(steadier(placed), metresPerDegreeLng)), metresPerDegreeLng);
 }

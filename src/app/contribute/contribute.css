@@ -14,12 +14,12 @@
 @import '../../styles/map-frame.css';
 @source './';
 @source '../../features/contribute/';
+@source '../../features/locator/';
 @source '../../features/routes/map/basemap-control.tsx';
 @source '../../features/routes/map/map-style.tsx';
 @source '../../features/routes/map/map-style-button.tsx';
 @source '../../features/routes/map/map-type-icon.tsx';
 @source '../../features/routes/map/map-view.tsx';
-@source '../../features/routes/map/recording-follow-controls.tsx';
 @source '../../features/routes/cards/livery-card.ts';
 @source '../../design-system/primitives/';
 @source not '../../**/*.stories.tsx';
@@ -32,4 +32,12 @@
 .maplibregl-ctrl-bottom-left,
 .maplibregl-ctrl-bottom-right {
   bottom: var(--stack-room, env(safe-area-inset-bottom));
+}
+
+/*
+ * The locator's button stands at the map's foot, above the stack of bars: it
+ * keeps clear of what the page stands there (`--dock-foot`, locator.tsx).
+ */
+:root {
+  --dock-foot: var(--stack-room, 0px);
 }

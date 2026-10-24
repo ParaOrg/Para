@@ -38,6 +38,7 @@ import {
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
+import { ContributionCard } from './contribution-card';
 import { ContributorButton } from './contributor-button';
 import { useStatusBarColour } from './status-bar';
 
@@ -364,6 +365,7 @@ export function PublicMapApp() {
           onRoute={openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={cards.closeAll}
+          end={(livery) => <ContributionCard livery={livery} />}
         />
       )}
     </div>

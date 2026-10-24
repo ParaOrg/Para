@@ -30,6 +30,11 @@ export const switchSchema = z.object({
 
 export type SwitchRow = z.infer<typeof switchSchema>;
 
+/** A tap on the mark button: when it was. Where it was is worked out from the fixes. */
+export const markSchema = z.object({ time: z.number() });
+
+export type MarkRow = z.infer<typeof markSchema>;
+
 /**
  * What became of a saved recording's upload, as this phone last knew it. Absent
  * until the first upload goes through. `by` is the phone's identity at the time:
@@ -60,6 +65,8 @@ export const recordingSchema = z.object({
   gaps: z.array(gapSchema),
   /** Each tap on the leg button, in order: the first is the start of pabalik. */
   switches: z.optional(z.array(switchSchema)),
+  /** Each tap on the mark button, in order; absent on a recording made before marks. */
+  marks: z.optional(z.array(markSchema)),
   /** Set when the ride stopped itself on coming back to its start, so a Resume does not stop it again. */
   hasAutoStopped: z.optional(z.boolean()),
   /** Fixes the phone reported but could not write to IndexedDB; absent when none failed. */
@@ -68,6 +75,8 @@ export const recordingSchema = z.object({
   endPointName: z.string(),
   description: z.string(),
   rideKind: z.nullable(z.enum(RIDE_KINDS)),
+  /** The consent text's version agreed to when it began; absent on one made before consent version 2. */
+  consentVersion: z.optional(z.number()),
   upload: z.optional(uploadMarkSchema),
 });
 export type Recording = z.infer<typeof recordingSchema>;

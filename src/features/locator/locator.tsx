@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import type { Basemap } from '@/features/routes/map/basemap';
 import { slide } from '@/shared/ui/sheet-gesture';
@@ -19,6 +19,8 @@ interface Props {
   basemapThumbnails: Readonly<Record<string, string>>;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
+  /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
+  above?: ReactNode;
 }
 
 /** What each look says it will do, for a screen reader. */
@@ -52,7 +54,15 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  * Denied or unavailable: a short note above it, and the button stays as it
  * was, to try again once the browser's setting is changed.
  */
-export function Locator({ locator, map, isMapLoaded, basemaps, basemapThumbnails, docked }: Props) {
+export function Locator({
+  locator,
+  map,
+  isMapLoaded,
+  basemaps,
+  basemapThumbnails,
+  docked,
+  above,
+}: Props) {
   const { status, noFix, mode, heading, compass, tap } = locator;
   const [note, setNote] = useState(() => noteFor(status, noFix));
   // Each change of the state says its note afresh, even one the timer below has hidden.
@@ -89,6 +99,7 @@ export function Locator({ locator, map, isMapLoaded, basemaps, basemapThumbnails
           isMapLoaded={isMapLoaded}
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
+          above={above}
           note={
             // No Figma design for the note yet, so it uses the raw palette.
             note && (

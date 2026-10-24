@@ -30,8 +30,8 @@ const GPS = () => {
   Object.defineProperty(navigator, 'geolocation', {
     configurable: true,
     value: {
-      watchPosition: (ok) => {
-        watchers.set(++nextId, ok);
+      watchPosition: (ok, _error, options) => {
+        watchers.set(++nextId, { ok, options });
         return nextId;
       },
       clearWatch: (id) => watchers.delete(id),
@@ -43,19 +43,28 @@ const GPS = () => {
   Date.now = () => now;
   window.__advance = (ms) => (now += ms);
   window.__fix = (lng, lat, t) =>
-    watchers.forEach((ok) =>
+    watchers.forEach(({ ok }) =>
       ok({
         timestamp: t,
         coords: { longitude: lng, latitude: lat, accuracy: 5, heading: null, speed: null },
       }),
     );
-  window.__watchers = () => watchers.size;
+  // The recording's watch asks for no cached fix (maximumAge 0); the locator's takes one a second old.
+  const count = (isRecording) =>
+    [...watchers.values()].filter(({ options }) => (options?.maximumAge === 0) === isRecording)
+      .length;
+  window.__watchers = () => count(true);
+  window.__locatorWatchers = () => count(false);
 };
 
 const browser = await chromium.launch();
 
-/** A phone-sized page with the stand-in GPS; `consented` skips the first-visit question. */
-async function phone({ consented }) {
+/**
+ * A phone-sized page with the stand-in GPS; `consented` skips the first-visit question.
+ * `earlierConsent` stores the first text's agreement instead, which the page no longer accepts.
+ * `granted` is a browser that already lets the page read the location.
+ */
+async function phone({ consented, earlierConsent = false, granted = false }) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -63,6 +72,8 @@ async function phone({ consented }) {
     isMobile: true,
     acceptDownloads: true,
   });
+  // The browser already lets the page read the location, as it does after a first visit's yes.
+  if (granted) await context.grantPermissions(['geolocation']);
   const page = await context.newPage();
   // PARAPO_CPU_THROTTLE=4 runs the page at a quarter of the container's speed, as a slow CI runner is.
   if (process.env.PARAPO_CPU_THROTTLE) {
@@ -77,6 +88,9 @@ async function phone({ consented }) {
   await fakeContributions(page);
   await page.addInitScript(GPS);
   if (consented) {
+    await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', '2'));
+  }
+  if (earlierConsent) {
     await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
   }
   const errors = [];
@@ -115,17 +129,63 @@ const storedStatus = (page) =>
         };
       }),
   );
+/** A phone's compass, facing `heading`: Chrome's absolute orientation, alpha counter-clockwise from north. */
+const face = (page, heading) =>
+  page.evaluate((h) => {
+    window.dispatchEvent(
+      new DeviceOrientationEvent('deviceorientationabsolute', {
+        alpha: (360 - h) % 360,
+        beta: 0,
+        gamma: 0,
+        absolute: true,
+      }),
+    );
+  }, heading);
+/** The locator's button, and the look it wears (LocatorButton's Property 1). */
+const locate = (page) => page.locator('[data-testid="where"]');
+const locatorMode = (page) => locate(page).getAttribute('data-mode');
+/** How far the map's centre is from `metres` east of the start, in metres. */
+const centreOff = (page, metres) =>
+  page.evaluate(
+    ([lng, mPerDeg]) => Math.abs(window.__map.getCenter().lng - lng) * mPerDeg,
+    [eastOf(metres)[0], M_PER_DEG_LNG],
+  );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
-/** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
+/** The History screen, opened through its button on Ready unless it is already showing. */
 const openHistory = async (page) => {
+  const heading = page.getByRole('heading', { level: 1, name: 'History' });
   const history = page.getByRole('button', { name: 'History' });
-  await history.waitFor({ timeout: 10000 });
-  if ((await history.getAttribute('aria-expanded')) !== 'true') await history.click();
+  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
+  await heading.or(history).waitFor({ timeout: 10000 });
+  if (await heading.isVisible()) return;
+  await history.click();
+  await heading.waitFor();
+};
+/** Every card's actions opened, so its Download is there to press. */
+const openCardMenus = async (page) => {
+  for (const more of await page.getByRole('button', { name: /^More actions/ }).all()) {
+    if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
+  }
 };
 const buttons = (page) =>
   page
     .getByRole('button')
     .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? e.textContent));
+
+// ----------------------------------- consent to the first text is not enough
+{
+  const { page, errors } = await phone({ consented: false, earlierConsent: true });
+  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
+  check(
+    'a phone that agreed to the first text is asked again: the new text shows, with no Start or History',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 1,
+  );
+  await page.getByRole('button', { name: 'Okay, I understand' }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check('  after agreeing, Start shows', errors.length === 0, errors.join(' | '));
+}
 
 // ---------------------------------------------------------------- the loop
 {
@@ -140,8 +200,42 @@ const buttons = (page) =>
     '  focus is on the consent heading',
     await page.evaluate(() => document.activeElement?.textContent === 'Before you record'),
   );
+  {
+    const text = await page.locator('section[aria-labelledby="consent-heading"]').innerText();
+    check(
+      '  it says what is recorded, what for (machine learning), who sees it, how long, where, deleting and who is responsible',
+      ['What is recorded', 'What for', 'Who sees it', 'How long', 'Where', 'Deleting'].every(
+        (label) => text.includes(label),
+      ) &&
+        /machine learning/.test(text) &&
+        /24 months/.test(text) &&
+        text.includes('Who is responsible'),
+    );
+    check(
+      '  it no longer says nothing is sent',
+      !/Nothing is sent anywhere/.test(text) && /sent to ParaPo/.test(text),
+    );
+  }
+  // A reload on #history before consent must not send the visitor to History once they agree.
+  await page.evaluate(() => {
+    location.hash = 'history';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
+  check(
+    '  #history before consent is let go of, and the consent panel shows',
+    (await page.evaluate(() => location.hash)) === '' ||
+      (await page
+        .waitForFunction(() => location.hash === '', null, { timeout: 5000 })
+        .then(() => true)
+        .catch(() => false)),
+  );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check(
+    '  agreeing stores the version of the text agreed to',
+    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '2',
+  );
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   {
     const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
@@ -161,34 +255,78 @@ const buttons = (page) =>
   );
   {
     const history = page.getByRole('button', { name: 'History' });
+    check(
+      '  History is a button beside Back; nothing of it shows above the Start bar',
+      (await history.count()) === 1 &&
+        (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
+        (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+    );
     const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
     const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
     check(
-      '  History is a button beside Back, closed: nothing but the Start bar covers the map',
-      (await history.count()) === 1 &&
-        (await history.getAttribute('aria-expanded')) === 'false' &&
-        (await page.getByRole('heading', { name: 'Saved recordings' }).count()) === 0 &&
-        !!start &&
+      '  nothing but the Start bar covers the map',
+      !!start &&
         !!stack &&
         Math.abs(stack.y - start.y) <= 1 &&
         Math.abs(stack.y + stack.height - (start.y + start.height)) <= 1,
       JSON.stringify([stack, start]),
     );
     await history.click();
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+    await page
+      .waitForFunction(() => document.activeElement?.textContent === 'History', null, {
+        timeout: 5000,
+      })
+      .catch(() => {});
+    const opened = {
+      hash: await page.evaluate(() => location.hash),
+      focus: await page.evaluate(() => document.activeElement?.textContent),
+      starts: await page.getByRole('button', { name: 'Start recording' }).count(),
+      historyButtons: await page.getByRole('button', { name: 'History' }).count(),
+      // Inert, not removed: the map stays mounted, but nothing in it can be focused or pressed.
+      isMapInert: await page.evaluate(
+        () => !!document.querySelector('button[aria-label="Map design"]')?.closest('[inert]'),
+      ),
+      empty: await page.getByText('No recordings yet.').count(),
+    };
     check(
-      '  History opened: expanded, and with nothing kept it says so',
-      (await history.getAttribute('aria-expanded')) === 'true' &&
-        (await page.getByText('No saved recordings yet.').count()) === 1,
+      '  History opened is a screen of its own: #history, focus on its heading, no Start, no map controls reachable',
+      opened.hash === '#history' &&
+        opened.focus === 'History' &&
+        opened.starts === 0 &&
+        opened.historyButtons === 0 &&
+        opened.isMapInert &&
+        opened.empty === 1,
+      JSON.stringify(opened),
     );
-    await history.click();
+    await page.reload({ waitUntil: 'load' });
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 10000 });
+    check('  a reload stays on History', (await page.evaluate(() => location.hash)) === '#history');
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await page.getByRole('button', { name: 'Start recording' }).waitFor();
     check(
-      '  a second press closes it again',
-      (await history.getAttribute('aria-expanded')) === 'false' &&
-        (await page.getByText('No saved recordings yet.').count()) === 0,
+      '  its own back button returns to Ready, and the hash is gone',
+      (await page.evaluate(() => location.hash)) === '',
+    );
+    await page.getByRole('button', { name: 'History' }).click();
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+    await page.goBack();
+    await page.getByRole('button', { name: 'Start recording' }).waitFor();
+    check(
+      "  the browser's Back returns to Ready too, with focus back on the History button that opened it",
+      (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
+        (await page
+          .waitForFunction(
+            () => document.activeElement?.getAttribute('aria-label') === 'History',
+            null,
+            { timeout: 5000 },
+          )
+          .then(() => true)
+          .catch(() => false)),
     );
   }
   check(
-    "  the map-style button is the map's own, top right",
+    '  the map-style button is on the locator button',
     (await page.getByRole('button', { name: 'Map design' }).count()) === 1,
   );
   check(
@@ -235,10 +373,23 @@ const buttons = (page) =>
     /1\.2\s*km/.test(outDistance),
     outDistance.replace(/\n/g, ' '),
   );
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
   check(
-    'the map follows: course-up turns east, the way the ride goes',
-    Math.abs((await bearing(page)) - 90) < 10,
-    String(await bearing(page)),
+    "Start puts the locator on the ride: the camera follows it, north up, and the dot is the locator's",
+    (await locatorMode(page)) === 'TrackedLocation' &&
+      (await centreOff(page, 1200)) < 15 &&
+      Math.abs((await bearing(page)) % 360) < 1 &&
+      (await page.locator('[data-testid="locator-overlay"]').count()) === 1,
+    `${await locatorMode(page)}, ${(await centreOff(page, 1200)).toFixed(1)} m off, bearing ${await bearing(page)}`,
+  );
+  const lift = await page.evaluate(([lng, lat]) => {
+    const stack = parseFloat(document.documentElement.style.getPropertyValue('--stack-room'));
+    return { y: window.__map.project([lng, lat]).y, mid: (innerHeight - stack) / 2, stack };
+  }, eastOf(1200));
+  check(
+    '  and it sits lifted clear of the bottom bars, in the middle of the map above them',
+    lift.stack > 0 && Math.abs(lift.y - lift.mid) < 3,
+    JSON.stringify(lift),
   );
   const outData = await mapSource(page);
   check(
@@ -304,63 +455,103 @@ const buttons = (page) =>
         JSON.stringify(lineOf('outbound')[0].geometry.coordinates.at(-1)),
   );
   check(
-    '  the map turned with the ride: course-up now heads west',
-    Math.abs((await bearing(page)) - 270) < 10,
-    String(await bearing(page)),
+    '  no dot of the recording is drawn: the locator is the one dot',
+    pabalikData.features.every((f) => f.properties.kind !== 'here'),
   );
   await shot(page, '3-recording-pabalik');
 
-  // North-up, a pan that lets the camera go, and the recentre.
-  await page.getByRole('button', { name: 'Keep north at the top' }).click();
+  // Mark this place: a pin where the trail is, a polite "Marked", and nothing to answer.
+  const markButton = page.getByRole('button', { name: 'Mark this place' });
+  const markBox = await markButton.boundingBox();
+  const locatorBox = await locate(page).boundingBox();
+  const styleBox = await page.getByRole('button', { name: 'Map design' }).boundingBox();
+  check(
+    'while recording, "Mark this place" is a round 48 px button directly above the locator column',
+    markBox?.width === 48 &&
+      markBox.height === 48 &&
+      Math.abs(markBox.x - locatorBox.x) < 1 &&
+      markBox.y + markBox.height <= styleBox.y,
+    JSON.stringify([markBox, locatorBox]),
+  );
+  await markButton.click();
+  await page.getByTestId('marked-note').waitFor();
+  check(
+    '  a tap says "Marked" on the screen and politely in the status line, with no dialog',
+    (await page.getByTestId('marked-note').innerText()) === 'Marked' &&
+      (await page.getByRole('status').filter({ hasText: 'Marked, 1' }).count()) === 1 &&
+      (await page.getByRole('dialog').count()) === 0,
+  );
+  await shot(page, '3b-marked');
+  const marked = await mapSource(page);
+  check(
+    '  a pin is left on the trail, in the mark colour, above the line',
+    marked?.features.filter((f) => f.properties.kind === 'mark').length === 1 &&
+      (await page.evaluate(() =>
+        window.__map.getPaintProperty('recording-trail-marks', 'circle-color'),
+      )) === '#8200db' &&
+      (await page.evaluate(() => {
+        const ids = window.__map.getStyle().layers.map((l) => l.id);
+        return ids.indexOf('recording-trail-marks') > ids.indexOf('recording-trail-line');
+      })),
+  );
+  await page.getByTestId('marked-note').waitFor({ state: 'detached', timeout: 5000 });
+  check('  "Marked" goes away by itself', true);
+
+  // The locator's cycle: turn with the compass, north up again, a pan lets go, a tap follows.
+  await face(page, 270);
+  await locate(page).click();
+  await page.waitForFunction(
+    () => Math.abs(((window.__map.getBearing() + 360) % 360) - 270) < 5,
+    null,
+    {
+      timeout: 30000,
+    },
+  );
+  check(
+    'a tap on the locator turns the map the way the phone faces: west, as the ride goes',
+    (await locatorMode(page)) === 'TracksTheMapBasedOnCompassFacing',
+    `${await locatorMode(page)}, bearing ${await bearing(page)}`,
+  );
+  check(
+    '  its label has become "Put north up"',
+    (await locate(page).getAttribute('aria-label')) === 'Put north up',
+  );
+  await locate(page).click();
   await page.waitForFunction(
     () => Math.abs(window.__map.getBearing()) < 1 || Math.abs(window.__map.getBearing()) > 359,
+    null,
+    { timeout: 30000 },
   );
-  check('the north-up button turns the map north and offers the way back', true);
   check(
-    '  its label has become "Turn the map with your direction"',
-    (await page.getByRole('button', { name: 'Turn the map with your direction' }).count()) === 1,
-  );
-  await page.getByRole('button', { name: 'Turn the map with your direction' }).click();
-  await page.waitForFunction(() => Math.abs(((window.__map.getBearing() + 360) % 360) - 270) < 10);
-  check(
-    'a pan lets the camera go until a recentre',
-    (await page.getByRole('button', { name: 'Follow me again' }).count()) === 0,
+    'the next tap puts north up again, still following',
+    (await locatorMode(page)) === 'TrackedLocation',
+    await locatorMode(page),
   );
   await page.mouse.move(200, 300);
   await page.mouse.down();
   await page.mouse.move(120, 360, { steps: 6 });
   await page.mouse.up();
-  await page.getByRole('button', { name: 'Follow me again' }).waitFor();
-  // The drag's glide has to be over before the centre is read; then a fix arrives, and
-  // the check waits for the map to have it (the trail's dot is there) before looking.
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
+  check(
+    'a pan lets the camera go: the locator button offers the way back',
+    (await locatorMode(page)) === 'TrackOwnLocation' &&
+      (await locate(page).getAttribute('aria-label')) === 'Show where I am',
+    await locatorMode(page),
+  );
+  // The drag's glide is over; then a fix arrives, and the camera must not follow it.
   const centreBefore = await page.evaluate(() => window.__map.getCenter().lng);
   await ride(page, 690, 640);
-  await page.waitForFunction(
-    (lng) =>
-      window.__map
-        .getSource('recording-trail')
-        ?.serialize()
-        .data.features.some(
-          (f) => f.properties.kind === 'here' && Math.abs(f.geometry.coordinates[0] - lng) < 1e-7,
-        ),
-    eastOf(640)[0],
-    { timeout: 30000 },
-  );
   await page.waitForTimeout(1500);
   check(
     '  a new fix does not move a map the finger took',
     Math.abs((await page.evaluate(() => window.__map.getCenter().lng)) - centreBefore) < 1e-6,
   );
-  await page.getByRole('button', { name: 'Follow me again' }).click();
-  await page.waitForFunction(
-    (lng) => Math.abs(window.__map.getCenter().lng - lng) < 1e-4 && !window.__map.isMoving(),
-    eastOf(640)[0],
-    { timeout: 30000 },
-  );
+  await locate(page).click();
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
   check(
-    '  Follow me again brings the camera back to the ride',
-    (await page.getByRole('button', { name: 'Follow me again' }).count()) === 0,
+    '  a tap brings the camera back to the ride',
+    (await locatorMode(page)) === 'TrackedLocation' && (await centreOff(page, 640)) < 15,
+    `${await locatorMode(page)}, ${(await centreOff(page, 640)).toFixed(1)} m off`,
   );
 
   // Back within 300 m of the start: the recording ends itself and the form opens.
@@ -418,9 +609,13 @@ const buttons = (page) =>
       file.savedAt !== null,
     `${file.switches.length} switch, ${file.fixes.length} fixes`,
   );
+  check('  and its mark', file.marks.length === 1 && !Number.isNaN(Date.parse(file.marks[0].time)));
   await page.getByRole('button', { name: 'Record again' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
-  check('Record again is Ready, with nothing kept on the screen', true);
+  check(
+    'Record again is Ready, with nothing kept on the screen, and no mark button',
+    (await page.getByRole('button', { name: 'Mark this place' }).count()) === 0,
+  );
   check('no page errors on the loop', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -606,19 +801,104 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ----------------- the locator before Start: on its own when the browser allows it, else on a tap
+{
+  const { page, errors } = await phone({ consented: true, granted: true });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__locatorWatchers() === 1, null, { timeout: 10000 });
+  check(
+    'with location already allowed, the locator starts on open, and the recording has not',
+    (await page.evaluate(() => window.__watchers())) === 0,
+  );
+  await emit(page, 0);
+  await page.waitForFunction(
+    (lng) => Math.abs(window.__map.getCenter().lng - lng) < 1e-4 && !window.__map.isMoving(),
+    eastOf(0)[0],
+    { timeout: 30000 },
+  );
+  check(
+    '  its dot shows on the first fix, and the camera is on it, before Start',
+    (await page.locator('[data-testid="locator-overlay"]').count()) === 1 &&
+      (await locatorMode(page)) === 'TrackedLocation' &&
+      (await centreOff(page, 0)) < 15,
+    `${await locatorMode(page)}, ${(await centreOff(page, 0)).toFixed(1)} m off`,
+  );
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  check(
+    'Start leaves the locator following, with its own watch beside the recording',
+    (await locatorMode(page)) === 'TrackedLocation' &&
+      (await page.evaluate(() => [window.__watchers(), window.__locatorWatchers()])).join() ===
+        '1,1',
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+{
+  const { page, errors } = await phone({ consented: true });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  await page.waitForTimeout(500);
+  check(
+    'without it, nothing asks until a tap: no watch, no dot, the button offers location',
+    (await page.evaluate(() => window.__locatorWatchers())) === 0 &&
+      (await locatorMode(page)) === 'LocationOff' &&
+      (await locate(page).getAttribute('aria-label')) === 'Turn on my location',
+  );
+  await locate(page).click();
+  check(
+    '  a tap on the button asks, as on the public map',
+    (await page.evaluate(() => window.__locatorWatchers())) === 1,
+  );
+  await emit(page, 0);
+  await page.waitForFunction(
+    (lng) => Math.abs(window.__map.getCenter().lng - lng) < 1e-4 && !window.__map.isMoving(),
+    eastOf(0)[0],
+    { timeout: 30000 },
+  );
+  await page.mouse.move(200, 300);
+  await page.mouse.down();
+  await page.mouse.move(120, 360, { steps: 6 });
+  await page.mouse.up();
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
+  check('  a drag lets the camera go', (await locatorMode(page)) === 'TrackOwnLocation');
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
+  check(
+    'Start with the camera let go brings it back to the contributor',
+    (await locatorMode(page)) === 'TrackedLocation',
+    await locatorMode(page),
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ----------------- where the buttons are, standing still, and Stop on an unfinished one
 {
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  // The locator's dock slides up as the stack is measured: let it settle.
+  await page.waitForTimeout(800);
   const box = await page.getByRole('button', { name: 'Map design' }).boundingBox();
+  const locatorBox = await locate(page).boundingBox();
+  const bars = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
   check(
-    "the map-style button is Figma's 40 px IconButton, 16 px from the top and right",
+    "the map-style button sits on the locator button, the public map's 48 px pair, 12 px from the right",
     box &&
-      Math.abs(box.width - 40) < 0.5 &&
-      Math.abs(box.y - 16) < 0.5 &&
-      Math.abs(393 - (box.x + box.width) - 16) < 0.5,
-    JSON.stringify(box),
+      locatorBox &&
+      Math.abs(box.width - 48) < 0.5 &&
+      Math.abs(393 - (box.x + box.width) - 12) < 0.5 &&
+      Math.abs(locatorBox.x - box.x) < 0.5 &&
+      box.y + box.height <= locatorBox.y + 0.5,
+    JSON.stringify([box, locatorBox]),
+  );
+  check(
+    '  and above the Start bar, not under it',
+    bars && locatorBox && locatorBox.y + locatorBox.height <= bars.y + 0.5,
+    JSON.stringify([locatorBox, bars]),
   );
   check(
     '  the credits are not in that corner: they are bottom right',
@@ -726,8 +1006,8 @@ const buttons = (page) =>
 {
   const { page, errors } = await phone({ consented: true });
   check(
-    'with nothing saved, the Ready screen lists no saved recordings',
-    (await page.getByRole('heading', { name: 'Saved recordings' }).count()) === 0,
+    'with nothing saved, Ready shows no History',
+    (await page.getByRole('heading', { name: 'History' }).count()) === 0,
   );
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
@@ -738,15 +1018,13 @@ const buttons = (page) =>
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await page.getByRole('button', { name: 'Record again' }).click();
   await openHistory(page);
-  const rowDownloads = page.getByRole('button', { name: /^Download the recording of / });
+  await openCardMenus(page);
+  const rowDownloads = page.getByRole('button', { name: /^Download, the recording of / });
   await rowDownloads.first().waitFor();
-  check(
-    'the recording just saved is listed on the Ready screen',
-    (await rowDownloads.count()) === 1,
-  );
+  check('the recording just saved is listed in History', (await rowDownloads.count()) === 1);
   await page.reload({ waitUntil: 'load' });
   await openHistory(page);
-  await page.getByRole('heading', { name: 'Saved recordings' }).waitFor({ timeout: 10000 });
+  await openCardMenus(page);
   check('after a reload it is still listed', (await rowDownloads.count()) === 1);
   const [download] = await Promise.all([
     page.waitForEvent('download'),
@@ -761,9 +1039,11 @@ const buttons = (page) =>
     file.description,
   );
   check(
-    '  the Start bar is still there below the list',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+    '  History has no Start bar',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
   );
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -906,13 +1186,14 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await second
-    .getByRole('heading', { name: 'Saved recordings' })
+    .getByRole('heading', { level: 1, name: 'History' })
     .waitFor({ timeout: 5000 })
     .catch(() => {});
+  await openCardMenus(second);
   check(
     '  once the first tab saves, the second lists it without a reload',
     (await second
-      .getByRole('button', { name: /^Download the recording of .*, From the first tab$/ })
+      .getByRole('button', { name: /^Download, the recording of .*, From the first tab$/ })
       .count()) === 1,
   );
   check('no page errors', errors.length === 0, errors.join('; '));
@@ -973,6 +1254,49 @@ const WAKE = () => {
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await page.waitForTimeout(200);
   check('  and Stop lets the one lock go', (await page.evaluate(() => window.__wake.active)) === 0);
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------- Back to the map on every screen, and a ride kept
+{
+  const { page, errors } = await phone({ consented: true });
+  const back = page.getByRole('button', { name: 'Back to the map' });
+  const hasOneBack = async () => (await back.count()) === 1;
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check('Ready has Back to the map', await hasOneBack());
+
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  check('Recording has Back to the map', await hasOneBack());
+  // Fixes are written as they arrive; Back waits for any still in flight.
+  const distanceOf = async () =>
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText())
+      .match(/Distance\s+(\S+\s*\S*)/)?.[1]
+      .trim();
+  const distanceBefore = await distanceOf();
+  await back.click();
+  await page.waitForURL((url) => url.pathname === '/');
+  check('  pressing it leaves for the public map', new URL(page.url()).pathname === '/');
+
+  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
+  check(
+    '  coming back shows the ride as left open, with the distance it had',
+    Boolean(distanceBefore) && (await distanceOf()) === distanceBefore,
+    `${distanceBefore} / ${await distanceOf()}`,
+  );
+  check('Unfinished has Back to the map', await hasOneBack());
+
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  check('Saved has Back to the map, in front of the screen', await hasOneBack());
+  await back.click();
+  await page.waitForURL((url) => url.pathname === '/');
+  check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

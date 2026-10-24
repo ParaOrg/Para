@@ -3,3 +3,4 @@
 // inner files (.claude/CLAUDE.md, Import rules).
 export { useGazeHush } from './dot-gaze';
 export { CommuterLocation } from './commuter-location';
+export { ContributorLocation } from './contributor-location';

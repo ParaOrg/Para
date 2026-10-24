@@ -152,7 +152,40 @@ test('the way switches keep the fix they were placed on, and the line still brea
   );
   assert.deepEqual(trail.lines[0].path.at(-1), before.markers[0].at);
   assert.deepEqual(trail.lines[1].path[0], before.markers[0].at);
-  assert.deepEqual(trail.here, raw.at(-1).at);
+});
+
+test('each mark sits on a drawn vertex of the line', () => {
+  const raw = noisyStraightRide(20, false);
+  const marks = [{ time: T0 + 20_500 }, { time: T0 + 61_000 }, { time: T0 + 100_000 }];
+  const trail = trailOf(raw, [], marks);
+  const vertices = trail.lines.flatMap((line) => line.path.map(String));
+  assert.equal(trail.marks.length, 3);
+  for (const { at } of trail.marks) assert.ok(vertices.includes(String(at)), 'pin off the line');
+  assert.deepEqual(
+    trail.marks.map((m) => m.at),
+    [raw[20].at, raw[61].at, raw[100].at],
+  );
+});
+
+test('the live line reaches the last fix even when the fixes at its end are vague', () => {
+  const ride = [
+    ...Array.from({ length: 10 }, (_, s) => fix(s, 0, s * 8)),
+    ...Array.from({ length: 10 }, (_, s) => fix(10 + s, 0, 80 + s * 8, 40)),
+  ];
+  const drawn = displayFixes(ride);
+  assert.equal(drawn.at(-1), ride.at(-1));
+  assert.ok(metres(drawn.at(-1), fix(0, 0, 80 + 9 * 8)) < 0.01);
+});
+
+test('a held stop is not moved past the accuracy circle it was held in', () => {
+  const wander = noise(5);
+  const ride = [
+    ...Array.from({ length: 6 }, (_, s) => fix(s, 0, s * 8)),
+    ...Array.from({ length: 20 }, (_, s) => fix(6 + s, wander() * 4, 40 + wander() * 4)),
+    ...Array.from({ length: 6 }, (_, s) => fix(26 + s, 0, 48 + s * 8)),
+  ];
+  const stop = displayFixes(ride).find((f) => f.time === ride[5].time);
+  assert.ok(metres(stop, ride[5]) <= 10 + SLACK_M);
 });
 
 test('an empty or one-fix ride draws what there is', () => {

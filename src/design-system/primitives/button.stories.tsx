@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
-import { Button, type CardFill } from './button';
+import { Button } from './button';
+import type { CardFill } from './button-look';
 
 /** The set's default icon is a navigation arrow; any square SVG in currentColor works. */
 const NavIcon = (

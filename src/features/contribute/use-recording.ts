@@ -7,9 +7,11 @@ import {
   type GapReason,
 } from '@/features/routes/model/ride-recording';
 
+import { CONSENT_VERSION } from './consent-version';
 import { locationProblem } from './location-problem';
 import { holdRecorderLock } from './recorder-lock';
 import { downloadRecording, recordingFile } from './recording-file';
+import { withMark } from './recording-marks';
 import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './recording-rules';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
 import {
@@ -74,6 +76,8 @@ export interface RecordingState {
   stopAtLastFix: () => void;
   resume: () => void;
   switchWay: () => void;
+  /** Marks the place the ride is at: the time of the tap, nothing more. */
+  markPlace: () => void;
   /** Stops a running recording, then opens the Save form. */
   openSave: () => void;
   /** From the Save form, back to recording as Resume does: the time on the form is a gap. */
@@ -83,6 +87,8 @@ export interface RecordingState {
   /** Saves the recording; with no details, as it is. */
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
+  /** Settles the fix writes in flight and writes again the ones that failed, as far as the phone allows. */
+  flushFixes: () => Promise<void>;
   /** Back to Ready after a save. */
   recordAgain: () => void;
   /** Downloads the recording in hand from memory, for when the phone could not keep its fixes. */
@@ -322,10 +328,12 @@ export function useRecording(): RecordingState {
       savedAt: null,
       gaps: [],
       switches: [],
+      marks: [],
       startPointName: '',
       endPointName: '',
       description: '',
       rideKind: null,
+      consentVersion: CONSENT_VERSION,
     });
     setPhase('recording');
   }
@@ -394,6 +402,29 @@ export function useRecording(): RecordingState {
     const to = OTHER_WAY[currentWay(switches)];
     keep({ ...recording, switches: [...switches, { time: Date.now(), to }] });
     setAnnouncement(`Switched to ${WAY_LABEL[to]}`);
+  }
+
+  function markPlace() {
+    const recording = currentRef.current;
+    if (!recording || recording.status !== 'recording') return;
+    const marks = recording.marks ?? [];
+    const next = withMark(marks, Date.now());
+    if (next === marks) return;
+    keep({ ...recording, marks: next });
+    setAnnouncement(`Marked, ${next.length}`);
+  }
+
+  async function flushFixes() {
+    try {
+      await Promise.allSettled([...pendingFixWrites.current]);
+      const unwritten = unwrittenFixes.current;
+      if (unwritten.length === 0) return;
+      await putFixes(unwritten);
+      failedFixWrites.current = Math.max(0, failedFixWrites.current - unwritten.length);
+      unwrittenFixes.current = [];
+    } catch (error) {
+      reportStore(error);
+    }
   }
 
   /**
@@ -519,11 +550,13 @@ export function useRecording(): RecordingState {
     stopAtLastFix,
     resume,
     switchWay,
+    markPlace,
     openSave,
     keepRecording,
     focusTarget,
     save,
     cancel,
+    flushFixes,
     recordAgain,
     downloadCurrent,
     downloadLastSaved,
