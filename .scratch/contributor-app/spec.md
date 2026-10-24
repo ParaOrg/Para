@@ -1,6 +1,6 @@
 # The contributor app (Android APK)
 
-Planned with the owner on 2026-10-24. Status: **plan only** — no tickets started, nothing built. The owner said "let's plan only, don't create first".
+Planned with the owner on 2026-10-24. Status: **go** (the owner, 2026-10-24, after the spike). The spike is PR #385 (a draft, never merged).
 
 ## What the owner asked
 
@@ -81,7 +81,17 @@ A hidden URL on our Cloudflare site, such as `/app/parapo-contributor-<version>.
 - It's not secret, but unlisted, which matches "closed for us".
 - A tester's phone asks once to allow installs from their browser.
 
-## Tickets (to write when the owner says go)
+## The spike's results (2026-10-24, the owner's phone)
+
+- **Native app:** detected after importing `@capacitor/core` in the app build only (Android injects only `window.androidBridge`; `registerPlugin` comes from `@capacitor/core`'s JS). The web bundle carries none of it.
+- **Turnstile inside the app:** passes at origin `https://localhost` with no Cloudflare change (risk 1). Still to confirm: Supabase accepting that token at a real sign-in.
+- **Permissions:** the notice, location and "all the time" were all granted through the in-app steps.
+- **Screen off:** the owner's phone kept recording with the screen locked. That was 91 fixes in 7 minutes, indoors, at 5 m accuracy, and the ride was saved.
+- **Fix rate:** that is about one fix every 4–5 s while still, not one a second. Ticket 03 sets the plugin's interval and checks the rate while moving.
+- **Build:** a debug APK in about 2½ minutes on GitHub's runner, using the runner's own Android SDK (`android-actions/setup-android` failed).
+- **Emulator ride:** an automated screen-off ride on API 34 is in the spike's workflow.
+
+## Tickets
 
 | # | Ticket | Notes |
 | --- | --- | --- |
