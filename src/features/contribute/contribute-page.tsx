@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
-import { AccountGate } from './account/account-gate';
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountQuery } from './api/use-account-query';
 import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
@@ -20,6 +19,12 @@ import { useHistoryView } from './use-history-view';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 import { useUploads } from './use-uploads';
+
+// Sign-in, sign-up and the profile step show only to a phone with no finished account, and bring
+// the form fields and their checks with them: after the first sign-in the page never opens them.
+const AccountGate = lazy(() =>
+  import('./account/account-gate').then((module) => ({ default: module.AccountGate })),
+);
 
 interface ContributePageProps {
   /** The locator on the map: the shell's, since this feature may not import the locator's. */
@@ -81,7 +86,9 @@ export function ContributePage({ locator }: ContributePageProps) {
         />
       </div>
       {(accountGate === 'needs-account' || accountGate === 'needs-profile') && (
-        <AccountGate needsProfile={accountGate === 'needs-profile'} />
+        <Suspense fallback={null}>
+          <AccountGate needsProfile={accountGate === 'needs-profile'} />
+        </Suspense>
       )}
       {accountGate === 'ready' && (
         <>
