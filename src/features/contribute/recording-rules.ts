@@ -1,5 +1,6 @@
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { waysOf, type Fix, type Way, type WaySwitch } from '@/features/routes/model/ride-recording';
+import type { LngLat } from '@/shared/utils/geo';
 
 /*
  * The one place the page calls the rules for the way a recording is on: lines,
@@ -22,8 +23,12 @@ export const WAY_LABEL = { outbound: 'Papunta', return: 'Pabalik' } satisfies Re
 /** The way a tap on the way button switches TO. */
 export const OTHER_WAY = { outbound: 'return', return: 'outbound' } satisfies Record<Way, Way>;
 
-/** What the map draws of the fixes that count: a blue line per outbound run, an orange one per return run, a dot per switch. */
-export function trailOf(kept: readonly Fix[], switches: readonly WaySwitch[]): RecordingTrail {
+/** What the map draws of the fixes that count: a blue line per outbound run, an orange one per return run, a dot per switch, and a pin per mark. */
+export function trailOf(
+  kept: readonly Fix[],
+  switches: readonly WaySwitch[],
+  marks: readonly LngLat[] = [],
+): RecordingTrail {
   const ways = waysOf(kept, switches);
   return {
     lines: [
@@ -31,5 +36,6 @@ export function trailOf(kept: readonly Fix[], switches: readonly WaySwitch[]): R
       ...ways.returnLines.map((path) => ({ way: 'return' as const, path })),
     ],
     markers: ways.markers.map((marker) => ({ at: marker.at, way: marker.to })),
+    marks: marks.map((at) => ({ at })),
   };
 }

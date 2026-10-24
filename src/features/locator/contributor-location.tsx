@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 import { BASEMAPS } from '@/features/routes/map/basemap';
 import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
@@ -17,6 +17,8 @@ interface ContributorLocationProps {
   isMapLoaded: boolean;
   /** A recording is on: the camera follows the contributor from its start. */
   isRecording: boolean;
+  /** What stands above the button in its column; the contributor's mark button. */
+  above?: ReactNode;
 }
 
 /**
@@ -40,7 +42,12 @@ function clearOfBars(): [number, number] {
  * otherwise waits for a tap. When a recording starts it follows the
  * contributor if the camera is not already on them.
  */
-export function ContributorLocation({ map, isMapLoaded, isRecording }: ContributorLocationProps) {
+export function ContributorLocation({
+  map,
+  isMapLoaded,
+  isRecording,
+  above,
+}: ContributorLocationProps) {
   const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
   const { tap, status, camera } = locator;
@@ -83,6 +90,7 @@ export function ContributorLocation({ map, isMapLoaded, isRecording }: Contribut
           basemaps={BASEMAPS}
           basemapThumbnails={BASEMAP_THUMBNAILS}
           docked={false}
+          above={above}
         />
       )}
       {map && locator.fix && (

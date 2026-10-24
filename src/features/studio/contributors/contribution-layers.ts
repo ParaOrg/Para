@@ -158,7 +158,7 @@ export function addContributionLayers(map: MapLibreMap): void {
     filter: ['==', ['get', 'kind'], 'mark'],
     paint: {
       'circle-radius': 7,
-      'circle-color': MAP_PAINT['Paint/casing'],
+      'circle-color': MAP_COLOURS['Map/Trail/mark'],
       'circle-stroke-color': opened,
       'circle-stroke-width': 3,
     },

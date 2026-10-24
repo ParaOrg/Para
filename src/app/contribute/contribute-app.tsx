@@ -5,8 +5,13 @@ import { ContributorLocation } from '@/features/locator';
 export function ContributeApp() {
   return (
     <ContributePage
-      locator={(map, isMapLoaded, isRecording) => (
-        <ContributorLocation map={map} isMapLoaded={isMapLoaded} isRecording={isRecording} />
+      locator={(map, isMapLoaded, isRecording, mark) => (
+        <ContributorLocation
+          map={map}
+          isMapLoaded={isMapLoaded}
+          isRecording={isRecording}
+          above={mark}
+        />
       )}
     />
   );

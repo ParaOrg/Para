@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
 import { HistoryScreen } from './history-screen';
+import { MarkButton } from './mark-button';
 import { ReadyScreen } from './ready-screen';
+import { MAX_MARKS } from './recording-marks';
 import { RecordingScreen } from './recording-screen';
 import { SaveForm } from './save-form';
 import { SavedScreen } from './saved-screen';
@@ -27,7 +29,11 @@ export function ContributePage({ locator }: ContributePageProps) {
   const { hasConsent, giveConsent } = useConsent();
   const earlier = useEarlierQuestion(recording.saved, hasConsent);
   const uploads = useUploads(recording.saved, { hasConsent, earlier: earlier.choice });
-  const track = useRecordingTrack(recording.kept, recording.current?.switches);
+  const track = useRecordingTrack(
+    recording.kept,
+    recording.current?.switches,
+    recording.current?.marks,
+  );
   const history = useHistoryView();
   const { phase, figures } = recording;
   const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
@@ -55,6 +61,14 @@ export function ContributePage({ locator }: ContributePageProps) {
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
+          mark={
+            phase === 'recording' ? (
+              <MarkButton
+                canMark={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
+                onMark={recording.markPlace}
+              />
+            ) : null
+          }
         />
       </div>
       {recording.problem && (

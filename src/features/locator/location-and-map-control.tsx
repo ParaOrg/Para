@@ -19,6 +19,8 @@ interface LocationAndMapControlProps {
   thumbnails: Readonly<Record<string, string>>;
   /** The locator's note, above the pill; hidden while the card is open, which takes its place. */
   note: ReactNode;
+  /** Directly above the pill, under the note; hidden while the card is open. */
+  above?: ReactNode;
   /** The LocatorButton, the pill's bottom half. */
   children: ReactNode;
 }
@@ -34,6 +36,7 @@ export function LocationAndMapControl({
   basemaps,
   thumbnails,
   note,
+  above,
   children,
 }: LocationAndMapControlProps) {
   // The design MapView opened on: both read the one remembered.
@@ -45,6 +48,7 @@ export function LocationAndMapControl({
   return (
     <div ref={rootRef} className="flex flex-col items-end gap-1">
       {card === 'closed' && note}
+      {card === 'closed' && above}
       {card !== 'closed' && (
         // 8 above the pill (CARD_GAP_PX), where the note keeps 4.
         <div className="mb-1">

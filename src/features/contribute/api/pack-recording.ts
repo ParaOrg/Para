@@ -2,6 +2,7 @@ import { keptFixes, summarize, type Fix } from '@/features/routes/model/ride-rec
 import { overviewOf, type LngLat } from '@/shared/utils/geo';
 
 import { UPLOAD_LIMITS } from '../recording-limits';
+import { marksThatFit } from '../recording-marks';
 import { RECORDING_VERSION, type Recording } from '../recording-schema';
 import type { ContributionPayload, PointBatch } from './contribution-payload-schema';
 
@@ -125,9 +126,23 @@ export function packRecording(
     return { ok: false, reason: 'line-too-large' };
   }
 
+  const switches = (recording.switches ?? []).map((s) => ({
+    time: s.time,
+    kind: 'switch',
+    to: s.to,
+  }));
+  // The start, stop and save always go in, so marks are what yields to the limit.
+  const marks = marksThatFit(recording.marks ?? [], switches.length + 3).map((m) => ({
+    time: m.time,
+    kind: 'mark',
+  }));
+  // Array.sort is stable: a switch and a mark tapped in the same millisecond keep that order.
+  const between = [...switches, ...marks]
+    .sort((a, b) => a.time - b.time)
+    .map(({ time, kind, ...rest }) => ({ kind, at: iso(time), ...rest }));
   const events = [
     { kind: 'start', at: iso(recording.startedAt) },
-    ...(recording.switches ?? []).map((s) => ({ kind: 'switch', at: iso(s.time), to: s.to })),
+    ...between,
     ...(recording.stoppedAt === null ? [] : [{ kind: 'stop', at: iso(recording.stoppedAt) }]),
     ...(recording.savedAt === null ? [] : [{ kind: 'save', at: iso(recording.savedAt) }]),
   ].slice(0, UPLOAD_LIMITS.listEntries);
