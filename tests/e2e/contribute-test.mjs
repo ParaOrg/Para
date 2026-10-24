@@ -1218,15 +1218,23 @@ const WAKE = () => {
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
   check('Recording has Back to the map', await hasOneBack());
-  // Fixes are written as they arrive; wait for the last, as a person's tap comes long after.
-  await page.waitForTimeout(500);
+  // Fixes are written as they arrive; Back waits for any still in flight.
+  const distanceOf = async () =>
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText())
+      .match(/Distance\s+(\S+\s*\S*)/)?.[1]
+      .trim();
+  const distanceBefore = await distanceOf();
   await back.click();
   await page.waitForURL((url) => url.pathname === '/');
   check('  pressing it leaves for the public map', new URL(page.url()).pathname === '/');
 
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
   await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
-  check('  coming back shows the ride as left open', true);
+  check(
+    '  coming back shows the ride as left open, with the distance it had',
+    Boolean(distanceBefore) && (await distanceOf()) === distanceBefore,
+    `${distanceBefore} / ${await distanceOf()}`,
+  );
   check('Unfinished has Back to the map', await hasOneBack());
 
   await page.getByRole('button', { name: 'Stop', exact: true }).click();

@@ -22,6 +22,8 @@ interface RecordingScreenProps {
   onWaySwitch: () => void;
   onSave: () => void;
   onCancel: () => void;
+  /** Before Back leaves the page: the fixes still unwritten are written. */
+  onLeave: () => Promise<void>;
 }
 
 /** The leg button's variant: named for the way a tap switches TO. */
@@ -42,6 +44,7 @@ export function RecordingScreen({
   onWaySwitch,
   onSave,
   onCancel,
+  onLeave,
 }: RecordingScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const stackRef = useStackRoom();
@@ -68,7 +71,7 @@ export function RecordingScreen({
 
   return (
     <>
-      <BackToMapButton />
+      <BackToMapButton onBeforeLeave={onLeave} />
       <section
         ref={stackRef}
         aria-labelledby="recording-heading"

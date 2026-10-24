@@ -60,7 +60,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       {recording.problem && (
         <p
           role="alert"
-          className="absolute inset-x-4 top-[max(4.5rem,env(safe-area-inset-top))] z-30 bg-surface p-2 text-sm/5 text-content-primary"
+          className="absolute inset-x-4 top-[calc(max(1rem,env(safe-area-inset-top))+3.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
         >
           {recording.problem}
         </p>
@@ -110,6 +110,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           onWaySwitch={recording.switchWay}
           onSave={recording.openSave}
           onCancel={recording.cancel}
+          onLeave={recording.flushFixes}
         />
       )}
       {phase === 'form' && (

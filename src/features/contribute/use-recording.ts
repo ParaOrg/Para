@@ -84,6 +84,8 @@ export interface RecordingState {
   /** Saves the recording; with no details, as it is. */
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
+  /** Settles the fix writes in flight and writes again the ones that failed, as far as the phone allows. */
+  flushFixes: () => Promise<void>;
   /** Back to Ready after a save. */
   recordAgain: () => void;
   /** Downloads the recording in hand from memory, for when the phone could not keep its fixes. */
@@ -398,6 +400,19 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Switched to ${WAY_LABEL[to]}`);
   }
 
+  async function flushFixes() {
+    try {
+      await Promise.allSettled([...pendingFixWrites.current]);
+      const unwritten = unwrittenFixes.current;
+      if (unwritten.length === 0) return;
+      await putFixes(unwritten);
+      failedFixWrites.current = Math.max(0, failedFixWrites.current - unwritten.length);
+      unwrittenFixes.current = [];
+    } catch (error) {
+      reportStore(error);
+    }
+  }
+
   /**
    * Saves only once the phone holds the whole ride: the fix writes in flight are settled,
    * failed ones written again, then the recording. Until that commits, the ride stays in
@@ -526,6 +541,7 @@ export function useRecording(): RecordingState {
     focusTarget,
     save,
     cancel,
+    flushFixes,
     recordAgain,
     downloadCurrent,
     downloadLastSaved,
