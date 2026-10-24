@@ -184,3 +184,50 @@ pasted whole into the SQL editor as `postgres`:
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and something misbehaves: turn "Allow new users to sign up" off, remove the hook under Authentication, Hooks, then run `20261023090000_signup_hook_revert.sql`. Do not run the revert while the hook is still selected: with the function gone every sign-up fails.
 - Never turn sign-ups on before the hook is saved: until then an email account can be made.
+
+# Applying contributor_accounts to the live project
+
+A phone's anonymous user becomes an account with the same id, so its uploads are the account's at
+once; a phone that signs in to an account made elsewhere hands its anonymous uploads over. This adds
+three columns to `contributor` (name, number, when the profile was set), four public functions and a
+private token table. No existing row changes, and nothing in the app calls the new functions until the
+accounts code ships (`.scratch/contributor-accounts/`). Three files, each pasted whole into the SQL
+editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261024090000_contributor_accounts_apply.sql` | One transaction: checks `contribution_use` is in the ledger and none of this exists yet; applies `migrations/20261024090000_contributor_accounts.sql` (carried unchanged; `verify/contributor-accounts.sh` checks the copy); checks `authenticated` cannot select or insert the phone or insert a name, the four functions are definers with a pinned path that only `authenticated` can run, and `private.claim_token` is closed to the API roles; writes the ledger row `contributor_accounts`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261024090000_contributor_accounts_check.sql` | Read-only, 9 rows, all `ok` should be `t`. |
+| `20261024090000_contributor_accounts_revert.sql` | One transaction: drops the functions, the token table and the columns, and puts the table-wide grants back. Refuses, changing nothing, while any contributor has a name or number. Contributions already moved by a claim stay where they moved. Safe to run twice. |
+
+The functions (the contract tickets 02 and 04 code against; all raise with the message first):
+
+| Call | Who may call | Answers | Errors |
+| --- | --- | --- | --- |
+| `set_profile(name, phone)` | an account | nothing; the name is trimmed, 1 to 80 characters; the phone is `+639` and nine digits | `not_signed_in`, `not_an_account` (anonymous caller), `bad_name`, `bad_phone` |
+| `get_profile()` | any signed-in user | one row `name, phone, profile_updated_at` (nulls before `set_profile`); zero rows without a contributor row | none |
+| `begin_claim()` | an anonymous user | a token (uuid), good 10 minutes; its earlier unused tokens stop working | `not_signed_in`, `not_anonymous` (an account called it) |
+| `finish_claim(token)` | an account | how many contributions moved; the same token again by the same account answers 0 | `not_signed_in`, `not_an_account`, `bad_token` (unknown, used by another account, or its anonymous user has since become an account), `token_expired` |
+
+Name and phone: an editor's reads of `contributor` show the name and never the phone (column
+privileges); an account reads its own phone only through `get_profile()`. The weekly backup role
+reads the whole table, phone included, as it reads all of it (encrypted, `backup.yml`).
+
+## Steps, in this order
+
+1. Run `20261024090000_contributor_accounts_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261024090000_contributor_accounts_check.sql`: 9 rows, all `ok = t`.
+3. Regenerate `src/shared/types/database.types.ts` in the classic format, and record the
+   ledger version (`select version from supabase_migrations.schema_migrations where name = 'contributor_accounts'`) in `migrations/README.md`.
+4. Dashboard, Authentication, Sign In / Providers, Email: on, **Confirm email off** (closed testing,
+   no verification). Authentication, Policies: minimum password length 8. Keep anonymous sign-ins and
+   CAPTCHA on: the upgrade path needs both.
+
+Applying this alone changes nothing a phone can see. The accounts code (tickets 02 to 04 and 06) goes to
+`main` only after steps 1 to 4.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and nobody has a name or number yet: run `20261024090000_contributor_accounts_revert.sql`. `verify/contributor-accounts.sh` checks the schema afterwards matches the schema before, and that it re-applies.
+- Profiles stored: the revert refuses. Decide with the owner what happens to the names and numbers first.
