@@ -7,4 +7,4 @@ export { connectContributions } from './api/contribute-client';
 export { hasOpenRecording } from './open-recording';
 export { askForPersistentStorage } from './persistent-storage';
 export { NativeSpikeSlot } from './native-spike-slot';
-export { isNativeApp } from './native-app';
+export { isNativeApp, prepareNativeApp } from './native-app';

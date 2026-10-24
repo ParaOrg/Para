@@ -1,31 +1,31 @@
 import type { CapacitorGlobal } from '@capacitor/core';
 
-function isCapacitor(value: unknown): value is CapacitorGlobal {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof Reflect.get(value, 'isNativePlatform') === 'function' &&
-    typeof Reflect.get(value, 'registerPlugin') === 'function'
-  );
-}
+let capacitor: CapacitorGlobal | null = null;
 
 /**
- * Capacitor's global, set before the page loads inside the Android app and absent on the web.
- * Read from `window` rather than imported, so the web build carries no Capacitor code.
+ * Loads Capacitor's JavaScript in the Android app's build (`--mode apk`) and does nothing on
+ * the web, whose bundle then carries none of it. Android injects only the low-level bridge
+ * (`window.androidBridge`); `window.Capacitor` and `registerPlugin` come from this import, so the
+ * entry point waits for it before the page renders.
  */
-function capacitor(): CapacitorGlobal | null {
-  const value: unknown = Reflect.get(window, 'Capacitor');
-  return isCapacitor(value) ? value : null;
+export async function prepareNativeApp(): Promise<void> {
+  if (import.meta.env.MODE !== 'apk') return;
+  capacitor = (await import('@capacitor/core')).Capacitor;
 }
 
 /** Whether the page runs inside the Android app. */
 export function isNativeApp(): boolean {
-  return capacitor()?.isNativePlatform() === true;
+  return capacitor?.isNativePlatform() === true;
+}
+
+/** What the page found of the native bridge, in words, for the spike's panel. */
+export function describeNativeBridge(): string {
+  const bridge = typeof Reflect.get(window, 'androidBridge');
+  return `Capacitor loaded: ${capacitor ? 'yes' : 'no'}, platform: ${capacitor?.getPlatform() ?? '-'}, androidBridge: ${bridge}`;
 }
 
 /** A native plugin's bridge, by the name it registers under. Only inside the app. */
 export function nativePlugin<T>(name: string): T {
-  const cap = capacitor();
-  if (!cap) throw new Error('This page is not running inside the Android app.');
-  return cap.registerPlugin<T>(name);
+  if (!capacitor) throw new Error('This page is not running inside the Android app.');
+  return capacitor.registerPlugin<T>(name);
 }

@@ -1,6 +1,6 @@
 import { Component, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 
-import { isNativeApp } from './native-app';
+import { describeNativeBridge, isNativeApp } from './native-app';
 import {
   readNativeWatchStats,
   RECORDING_NOTIFICATION,
@@ -115,10 +115,11 @@ function PanelBody() {
     <>
       <p>
         <strong>
-          Spike panel v3 · Native app detected: {isNativeApp() ? 'yes' : 'NO'} · origin:{' '}
+          Spike panel v4 · Native app detected: {isNativeApp() ? 'yes' : 'NO'} · origin:{' '}
           {window.location.origin}
         </strong>
       </p>
+      <p>{describeNativeBridge()}</p>
       <p>Test build, it cannot upload. Notice: “{RECORDING_NOTIFICATION.title}”.</p>
       <h2 style={{ fontSize: 16 }}>Native fixes</h2>
       <p>
