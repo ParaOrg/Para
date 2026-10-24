@@ -399,6 +399,11 @@ function placeSwitches(fixes: readonly Fix[], switches: readonly WaySwitch[]): P
   });
 }
 
+/** The index, among these fixes, of the fix each way switch happened on: where its marker sits. */
+export function switchFixIndexes(fixes: readonly Fix[], switches: readonly WaySwitch[]): number[] {
+  return placeSwitches(fixes, switches).map((placed) => placed.index);
+}
+
 /**
  * The fixes split into outbound and return lines. The fix a switch happened on
  * ends the old line and begins the new one, so the two trails meet there with
