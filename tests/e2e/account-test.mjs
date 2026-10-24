@@ -72,9 +72,20 @@ const TESTER = {
   Password: 'hunter2hunter2',
 };
 
-/** What signing out does to the phone: its stored session is gone, its recordings stay. */
+/** No signal: the browser says it is offline, and the stand-in drops what the page sends. */
+async function setOffline(context, fake, isOffline) {
+  fake.isOffline = isOffline;
+  await context.setOffline(isOffline);
+}
+
+/**
+ * Signs out through the page's own signOut (the dev server serves its module, the one the page
+ * uses), then reloads: there is no Sign out button until the profile screen has one.
+ */
 async function signOut(page) {
-  await page.evaluate((key) => localStorage.removeItem(key), AUTH_KEY);
+  await page.evaluate(() =>
+    import('/src/features/contribute/api/account.ts').then((account) => account.signOut()),
+  );
   await page.reload({ waitUntil: 'load' });
 }
 
@@ -176,10 +187,23 @@ const shared = {};
 // ---------------------------------------- sign out, then sign in
 {
   const { page, fake, errors } = await phone({ fake: shared });
-  await SCREENS.start(page).or(SCREENS.signIn(page)).waitFor({ timeout: 30000 });
+  await SCREENS.signIn(page).waitFor({ timeout: 30000 });
+  await field(page, 'Email').fill('juan@example.com');
+  await field(page, 'Password').fill(TESTER.Password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await SCREENS.start(page).waitFor({ timeout: 15000 });
   await signOut(page);
   await SCREENS.signIn(page).waitFor({ timeout: 15000 });
-  check('signed out, the page asks for Sign in again', (await SCREENS.start(page).count()) === 0);
+  check(
+    'signed out, the page asks for Sign in again',
+    (await SCREENS.start(page).count()) === 0 &&
+      (await page.evaluate((key) => localStorage.getItem(key), AUTH_KEY)) === null,
+  );
+  check(
+    '  it signed out this phone only: the call carried the local scope',
+    fake.logouts.join() === 'local',
+    fake.logouts.join(),
+  );
 
   await field(page, 'Email').fill('juan@example.com');
   await field(page, 'Password').fill('not-the-password');
@@ -189,7 +213,7 @@ const shared = {};
     'a wrong password is refused in one line, and the page stays on Sign in',
     (await alertText(page)) === 'Wrong email or password' &&
       (await SCREENS.start(page).count()) === 0 &&
-      fake.passwordSignIns === 1,
+      fake.passwordSignIns === 2,
     await alertText(page),
   );
   await shot(page, '4-wrong-password');
@@ -200,7 +224,7 @@ const shared = {};
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), AUTH_KEY);
   check(
     'the right password signs in to the same account and opens Ready',
-    fake.passwordSignIns === 2 &&
+    fake.passwordSignIns === 3 &&
       stored.user.id === shared.id &&
       stored.user.is_anonymous === false,
     `${fake.passwordSignIns} tries, ${stored.user.id}`,
@@ -211,23 +235,55 @@ const shared = {};
 
 // ---------------------------------------- refused and offline tries
 {
-  const { page, fake } = await phone({ fake: shared });
+  const { page, context, fake } = await phone({ fake: shared });
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   await field(page, 'Email').fill('juan@example.com');
   await field(page, 'Password').fill(TESTER.Password);
-  fake.next.passwordSignIn = 'offline';
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.getByRole('alert').waitFor();
+  const signInButton = page.getByRole('button', { name: 'Sign in', exact: true });
+  await signInButton.waitFor();
+  await page.waitForFunction(
+    () =>
+      ![...document.querySelectorAll('button')].find((b) => b.textContent === 'Sign in')?.disabled,
+  );
+  await setOffline(context, fake, true);
+  await signInButton.click();
+  await page.getByRole('alert').waitFor({ timeout: 15000 });
+  // A new bot check is drawn after each try; the button is usable once it passes.
+  await page.waitForFunction(
+    () =>
+      ![...document.querySelectorAll('button')].find((b) => b.textContent === 'Sign in')?.disabled,
+    undefined,
+    { timeout: 5000 },
+  );
   check(
-    'with no signal, Sign in says so, in one line, and keeps what was typed',
+    'with the browser offline, Sign in says so in one line, and its buttons are usable again',
     (await alertText(page)) === "No signal — try again when you're online" &&
+      (await signInButton.isEnabled()) &&
       (await field(page, 'Email').inputValue()) === 'juan@example.com',
     await alertText(page),
   );
   await shot(page, '5-sign-in-offline');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await setOffline(context, fake, false);
+  await page.waitForFunction(
+    () =>
+      ![...document.querySelectorAll('button')].find((b) => b.textContent === 'Sign in')?.disabled,
+  );
+  await signInButton.click();
   await SCREENS.start(page).waitFor({ timeout: 15000 });
   check('  trying again, back online, signs in', true);
+  await setOffline(context, fake, true);
+  const signedOut = await page.evaluate(() =>
+    import('/src/features/contribute/api/account.ts')
+      .then((account) => account.signOut())
+      .then(
+        () => true,
+        () => false,
+      ),
+  );
+  check(
+    '  signing out with no signal still works: the phone forgets the account',
+    signedOut && (await page.evaluate((key) => localStorage.getItem(key), AUTH_KEY)) === null,
+  );
 }
 
 {
@@ -262,20 +318,34 @@ const shared = {};
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.getByRole('alert').waitFor();
   check(
-    'if only the name and number fail to save, it says so and stays on Create account',
-    (await alertText(page)).startsWith('No signal') && (await SCREENS.start(page).count()) === 0,
+    'if only the name and number fail to save, the page asks for just those two, and says why',
+    (await alertText(page)).startsWith('No signal') &&
+      (await SCREENS.start(page).count()) === 0 &&
+      (await page.locator('input').count()) === 2 &&
+      (await field(page, 'Email').count()) === 0,
     await alertText(page),
   );
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await shot(page, '7-profile-step');
+  await page.reload({ waitUntil: 'load' });
+  await field(page, 'Name').waitFor({ timeout: 15000 });
+  check(
+    '  a reload lands on the same step: the account is not let in without its name',
+    (await SCREENS.start(page).count()) === 0 && (await field(page, 'Number').count()) === 1,
+  );
+  await field(page, 'Name').fill('Ana Reyes');
+  await field(page, 'Number').fill('09181234567');
+  await page.getByRole('button', { name: 'Save' }).click();
   await SCREENS.start(page).waitFor({ timeout: 15000 });
   const mine = [...fake.users.values()].find((user) => user.email === 'ana@example.com');
   check(
-    '  trying again finishes it on the same user: no second account, the profile stored',
+    '  saving them finishes it on the same user: one account, only the profile sent again',
     fake.profileRequests === 2 &&
-      mine?.profile?.phone === '+639171234567' &&
-      [...fake.users.values()].filter((user) => user.isAccount).length === 1,
+      fake.users.size === 1 &&
+      mine?.profile?.name === 'Ana Reyes' &&
+      mine?.profile?.phone === '+639181234567',
     JSON.stringify(mine),
   );
+  check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
 }
 
 await browser.close();

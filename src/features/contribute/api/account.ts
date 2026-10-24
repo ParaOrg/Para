@@ -12,6 +12,8 @@ import { UploadError } from './upload-problem';
 export interface Account {
   id: string;
   email: string;
+  /** Whether the account's name is stored; an account made but not finished has none. */
+  hasProfile: boolean;
 }
 
 export interface SignUpInput {
@@ -38,34 +40,62 @@ const userSchema = z.object({
 const storedSessionSchema = z.object({ user: userSchema });
 
 /** The account a user is, or null for an anonymous user: an anonymous phone is not signed in to one. */
-function accountOf(user: unknown): Account | null {
+function accountOf(user: unknown, hasProfile: boolean): Account | null {
   const parsed = userSchema.safeParse(user);
   if (!parsed.success || parsed.data.is_anonymous || !parsed.data.email) return null;
-  return { id: parsed.data.id, email: parsed.data.email };
+  return { id: parsed.data.id, email: parsed.data.email, hasProfile };
 }
 
 /**
- * The session as the phone last stored it. Supabase answers no session while its token is
- * expired and cannot be renewed for want of signal; a signed-in contributor can still record then.
+ * The session as the phone last stored it, for when Supabase cannot answer: its token is expired
+ * and cannot be renewed for want of signal, or its code did not load. A signed-in contributor can
+ * still record then. Whether the profile is stored is not known, so it is taken as stored.
  */
-function storedAccount(): Account | null {
+export function storedAccount(): Account | null {
   const raw = window.localStorage.getItem(CONTRIBUTOR_AUTH_KEY);
   if (!raw) return null;
   try {
     const parsed = storedSessionSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? accountOf(parsed.data.user) : null;
+    return parsed.success ? accountOf(parsed.data.user, true) : null;
   } catch {
     // Unreadable storage is no session; signing in again replaces it.
     return null;
   }
 }
 
-/** Who is signed in to an account on this phone, or null. Reads the stored session; asks no one. */
+const profileRowsSchema = z.array(z.object({ name: z.nullable(z.string()) }));
+
+/**
+ * Whether the signed-in account's name is stored. Unknown without an answer (no signal, or the
+ * database not having get_profile yet): then yes, so a phone is not shut out of recording for it.
+ */
+async function hasProfileOf(client: ContributeClient): Promise<boolean> {
+  // Not in the generated types until ticket 01 is applied and they are regenerated.
+  const untyped: SupabaseClient = client;
+  const { data, error, status } = await untyped.rpc('get_profile');
+  if (error) {
+    if (status !== 0)
+      console.warn(`ParaPo did not give the profile (HTTP ${status}):`, error.message);
+    return true;
+  }
+  const rows = profileRowsSchema.safeParse(data);
+  return rows.success ? Boolean(rows.data[0]?.name) : true;
+}
+
+/** Who is signed in to an account on this phone, or null. */
 export async function fetchAccount(): Promise<Account | null> {
-  const client = await requireClient();
+  let client: ContributeClient;
+  try {
+    client = await requireClient();
+  } catch (error) {
+    // The client's code did not load: no signal. The stored session still says who this is.
+    if (error instanceof UploadError && error.problem === 'offline') return storedAccount();
+    throw error;
+  }
   const { data, error } = await client.auth.getSession();
   if (error) return storedAccount();
-  return accountOf(data.session?.user);
+  const account = accountOf(data.session?.user, true);
+  return account && { ...account, hasProfile: await hasProfileOf(client) };
 }
 
 /** The error to throw for a failed Auth call, logging one the page does not know. */
@@ -91,14 +121,12 @@ function accountErrorOf(error: unknown): AccountError {
   throw error;
 }
 
-/** The profile's name and number, stored on the contributor row. Needs a permanent user's token. */
-async function saveProfile(
+/** The profile's name and number, stored on the contributor row. Needs an account's session. */
+async function sendProfile(
   client: ContributeClient,
   { name, phone }: Pick<SignUpInput, 'name' | 'phone'>,
 ): Promise<void> {
-  // The generated types do not know set_profile until ticket 01's migration is applied and they
-  // are regenerated; until then the call goes through the client's untyped face. Its answer is
-  // void, so nothing needs parsing.
+  // TODO: typed rpc once 01 is applied and database types are regenerated.
   const untyped: SupabaseClient = client;
   const { error, status } = await untyped.rpc('set_profile', { name, phone });
   if (error) {
@@ -108,30 +136,41 @@ async function saveProfile(
   }
 }
 
+/** The account now signed in, with its profile stored. */
+async function signedInAccount(client: ContributeClient): Promise<Account> {
+  const { data } = await client.auth.getSession();
+  const account = accountOf(data.session?.user, true);
+  if (!account) throw new AccountError('not-accepting', 'There is no account after signing in.');
+  return account;
+}
+
 /**
  * Makes an account of this phone: its anonymous user becomes a permanent one with the same id, so
- * every upload the phone already sent is the account's at once. Safe to repeat after a failure.
+ * every upload the phone already sent is the account's at once. If only the profile then fails,
+ * the account stays and `saveProfile` finishes it.
  */
 export async function signUp(input: SignUpInput): Promise<Account> {
   try {
     await ensureSignedIn(input.captchaToken);
     const client = await requireClient();
-    const { data: current } = await client.auth.getSession();
-    // A repeat after the upgrade went through but the profile did not: only the profile is left.
-    if (current.session?.user.is_anonymous !== false) {
-      const { error } = await client.auth.updateUser({
-        email: input.email,
-        password: input.password,
-      });
-      if (error) throw authError(error);
-    }
-    // The token still says anonymous until it is renewed, and set_profile refuses an anonymous one.
-    const { data, error } = await client.auth.refreshSession();
+    const { error } = await client.auth.updateUser({
+      email: input.email,
+      password: input.password,
+    });
     if (error) throw authError(error);
-    await saveProfile(client, input);
-    const account = accountOf(data.user);
-    if (!account) throw new AccountError('not-accepting', 'The new account has no email.');
-    return account;
+    await sendProfile(client, input);
+    return await signedInAccount(client);
+  } catch (error) {
+    throw accountErrorOf(error);
+  }
+}
+
+/** Finishes an account that has none: stores the name and number. Its email is already set. */
+export async function saveProfile(input: Pick<SignUpInput, 'name' | 'phone'>): Promise<Account> {
+  try {
+    const client = await requireClient();
+    await sendProfile(client, input);
+    return await signedInAccount(client);
   } catch (error) {
     throw accountErrorOf(error);
   }
@@ -149,7 +188,7 @@ export async function signIn(input: SignInInput): Promise<Account> {
       }),
     );
     if (error) throw authError(error);
-    const account = accountOf(data.user);
+    const account = accountOf(data.user, await hasProfileOf(client));
     if (!account) throw new AccountError('not-accepting', 'The account has no email.');
     return account;
   } catch (error) {
@@ -157,12 +196,16 @@ export async function signIn(input: SignInInput): Promise<Account> {
   }
 }
 
-/** Signs out. The phone's own recordings stay on it, to be sent after the next sign-in. */
+/**
+ * Signs out this phone only: another phone signed in to the account stays signed in. The phone's
+ * own recordings stay on it, to be sent after the next sign-in.
+ */
 export async function signOut(): Promise<void> {
   try {
     const client = await requireClient();
-    const { error } = await client.auth.signOut();
-    if (error) throw authError(error);
+    const { error } = await client.auth.signOut({ scope: 'local' });
+    // Without signal the server is not told, but the phone's own session is gone all the same.
+    if (error && accountProblemOf(error) !== 'offline') throw authError(error);
   } catch (error) {
     throw accountErrorOf(error);
   }

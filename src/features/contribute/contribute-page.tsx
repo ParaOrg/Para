@@ -78,7 +78,9 @@ export function ContributePage({ locator }: ContributePageProps) {
           }
         />
       </div>
-      {accountGate === 'needs-account' && <AccountGate />}
+      {(accountGate === 'needs-account' || accountGate === 'needs-profile') && (
+        <AccountGate needsProfile={accountGate === 'needs-profile'} />
+      )}
       {accountGate === 'ready' && (
         <>
           {recording.problem && (

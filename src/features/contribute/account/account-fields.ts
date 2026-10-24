@@ -27,10 +27,12 @@ export interface SignInFields {
   password: string;
 }
 
-export interface SignUpFields extends SignInFields {
+export interface ProfileFields {
   name: string;
   phone: string;
 }
+
+export interface SignUpFields extends SignInFields, ProfileFields {}
 
 type FieldErrors<TFields> = Partial<Record<keyof TFields, string>>;
 
@@ -81,5 +83,15 @@ export function checkSignUp(fields: SignUpFields): Checked<SignUpFields> {
       phone: problemOf(phoneSchema, trimmed.phone),
       password: problemOf(newPasswordSchema, trimmed.password),
     },
+  );
+}
+
+/** The name and number alone: what is left of Create account once its email and password are set. */
+export function checkProfile(fields: ProfileFields): Checked<ProfileFields> {
+  const name = fields.name.trim();
+  const phone = fields.phone.trim();
+  return collect(
+    { name, phone: normalisePhoneNumber(phone) ?? phone },
+    { name: problemOf(nameSchema, name), phone: problemOf(phoneSchema, phone) },
   );
 }

@@ -13,7 +13,8 @@ interface AccountPanelProps {
   children: ReactNode;
   /** One line under the fields: what went wrong. */
   error: string | null;
-  captcha: Captcha;
+  /** The bot check, for the screens that sign in or make a user; none for the one that does neither. */
+  captcha?: Captcha;
   /** The buttons: the main one first. */
   actions: ReactNode;
   onSubmit: () => void;
@@ -54,7 +55,7 @@ export function AccountPanel({
             {error}
           </p>
         )}
-        {captcha.siteKey && (
+        {captcha?.siteKey && (
           <Turnstile key={captcha.round} siteKey={captcha.siteKey} onToken={captcha.onToken} />
         )}
         <div className="flex flex-col gap-2">{actions}</div>

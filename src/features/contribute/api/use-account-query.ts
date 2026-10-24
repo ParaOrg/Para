@@ -16,5 +16,7 @@ export function useAccountQuery() {
     enabled: canUpload(),
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+    // Reads the stored session first; with no signal it must still answer, not pause.
+    networkMode: 'always',
   });
 }

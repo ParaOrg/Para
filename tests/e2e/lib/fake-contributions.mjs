@@ -7,8 +7,9 @@
 //
 // The accounts of the contributor page, too: an anonymous user made an account of (PUT /user,
 // which keeps its id), the token renewed (a renewed token is the one that no longer says
-// anonymous, as in GoTrue), a password sign-in, a sign-out, and set_profile, which refuses a
-// token that still says anonymous. `fake.users` holds them, by id.
+// anonymous, as in GoTrue), a password sign-in, a sign-out (the scopes it was asked for are in
+// `fake.logouts`), get_profile, and set_profile, which refuses a user that is not an account,
+// as migration 01 does. `fake.users` holds them, by id.
 //
 // Faults, set on `fake.next` before the request they are for:
 //   signupDisabled the sign-in is answered 422, as with sign-ups turned off
@@ -60,9 +61,13 @@ export async function fakeContributions(page) {
     users: new Map(),
     signIns: 0,
     passwordSignIns: 0,
+    /** The scope of each sign-out the page sent: 'local' signs out this phone only. */
+    logouts: [],
     profileRequests: 0,
     saveRequests: 0,
     deleteRequests: 0,
+    /** Set with `context.setOffline(true)`: Playwright does not stop requests a route answers. */
+    isOffline: false,
     unknown: [],
     captchaTokens: [],
     next: {},
@@ -98,6 +103,8 @@ export async function fakeContributions(page) {
         },
       });
     }
+
+    if (fake.isOffline) return route.abort('internetdisconnected');
 
     if (url.pathname === '/auth/v1/signup' && method === 'POST') {
       fake.signIns += 1;
@@ -167,16 +174,24 @@ export async function fakeContributions(page) {
       }
     }
     if (url.pathname === '/auth/v1/logout' && method === 'POST') {
+      fake.logouts.push(url.searchParams.get('scope'));
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    if (url.pathname === '/rest/v1/rpc/get_profile' && method === 'POST') {
+      const known = fake.users.get(userOf(request) ?? '');
+      if (!known?.isAccount) return json(route, 200, []);
+      return json(route, 200, [
+        { name: known.profile?.name ?? null, phone: known.profile?.phone ?? null },
+      ]);
     }
     if (url.pathname === '/rest/v1/rpc/set_profile' && method === 'POST') {
       fake.profileRequests += 1;
       const token = tokenOf(request);
-      // As the database does: only a signed-in, non-anonymous user's token.
-      if (!token?.isAccount) {
-        return json(route, 400, {
-          code: 'P0001',
-          message: 'not_signed_in',
+      // As migration 01 does: the user must be an account in the database, whatever the token says.
+      if (!token || !fake.users.get(token.id)?.isAccount) {
+        return json(route, 403, {
+          code: '42501',
+          message: 'not_an_account',
           details: null,
           hint: null,
         });

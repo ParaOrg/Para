@@ -5,8 +5,11 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/account-fields-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-
-import { checkSignIn, checkSignUp } from '../../src/features/contribute/account/account-fields.ts';
+import {
+  checkProfile,
+  checkSignIn,
+  checkSignUp,
+} from '../../src/features/contribute/account/account-fields.ts';
 import { normalisePhoneNumber } from '../../src/features/contribute/account/phone-number.ts';
 import {
   ACCOUNT_MESSAGES,
@@ -143,4 +146,14 @@ test('every problem has one short line, with no raw error in it', () => {
   }
   assert.equal(ACCOUNT_MESSAGES['wrong-credentials'], 'Wrong email or password');
   assert.equal(ACCOUNT_MESSAGES['email-taken'], 'That email already has an account');
+});
+
+test('the profile step checks the name and the number alone', () => {
+  assert.deepEqual(checkProfile({ name: ' Ana ', phone: '0918 123 4567' }), {
+    isValid: true,
+    value: { name: 'Ana', phone: '+639181234567' },
+  });
+  const checked = checkProfile({ name: '', phone: '1' });
+  assert.equal(checked.isValid, false);
+  assert.deepEqual(Object.keys(checked.errors).sort(), ['name', 'phone']);
 });

@@ -67,6 +67,13 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
   await nodeFetch(page);
   await bareStyle(page);
   const fake = await fakeContributions(page);
+  // The seeded account is in the database with its name stored: the page opens on Ready.
+  fake.users.set(ACCOUNT_ID, {
+    email: 'tester@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Tester', phone: '+639171234567' },
+  });
   // Cloudflare's Turnstile, standing in: the check passes at once. CI builds this suite with a site key.
   await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) =>
     route.fulfill({
@@ -110,11 +117,15 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
   return { page, context, fake, errors, asked };
 }
 
-/** Counts every request the page makes to the database (sign-in, identity, reads or sends). */
+/**
+ * Counts every request the page makes to the database (sign-in, identity, reads or sends), but not
+ * the account's own profile read: the page asks that before consent, to know the account is done.
+ */
 function watchDatabase(page) {
   const watch = { count: 0 };
   page.on('request', (request) => {
-    if (/\/(auth|rest)\/v1\//.test(request.url())) watch.count += 1;
+    const url = request.url();
+    if (/\/(auth|rest)\/v1\//.test(url) && !/\/rpc\/get_profile/.test(url)) watch.count += 1;
   });
   return watch;
 }
