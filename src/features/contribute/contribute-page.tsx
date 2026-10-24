@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { AccountGate } from './account/account-gate';
+import { useAccountGate } from './account/use-account-gate';
 import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
 import { HistoryScreen } from './history-screen';
 import { MarkButton } from './mark-button';
@@ -28,7 +30,12 @@ export function ContributePage({ locator }: ContributePageProps) {
   const recording = useRecording();
   const { hasConsent, giveConsent } = useConsent();
   const earlier = useEarlierQuestion(recording.saved, hasConsent);
-  const uploads = useUploads(recording.saved, { hasConsent, earlier: earlier.choice });
+  const accountGate = useAccountGate();
+  // Nothing is sent until an account is signed in: recordings made before wait on the phone.
+  const uploads = useUploads(recording.saved, {
+    hasConsent: hasConsent && accountGate === 'ready',
+    earlier: earlier.choice,
+  });
   const track = useRecordingTrack(
     recording.kept,
     recording.current?.switches,
@@ -71,84 +78,89 @@ export function ContributePage({ locator }: ContributePageProps) {
           }
         />
       </div>
-      {recording.problem && (
-        <p
-          role="alert"
-          className="absolute inset-x-4 top-[calc(max(1rem,env(safe-area-inset-top))+3.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
-        >
-          {recording.problem}
-        </p>
-      )}
-      {uploads.check && (phase === 'ready' || phase === 'saved') && (
-        <UploadCheck check={uploads.check} />
-      )}
-      <p role="status" className="sr-only">
-        {recording.announcement}
-      </p>
-      {phase === 'ready' && !isHistoryShown && (
-        <ReadyScreen
-          hasConsent={hasConsent}
-          onConsent={giveConsent}
-          earlierQuestion={earlier.question}
-          onStart={recording.start}
-          onOpenHistory={handleOpenHistory}
-          shouldFocusHistoryButton={hasOpenedHistory}
-        />
-      )}
-      {isHistoryShown && (
-        <HistoryScreen
-          recordings={recording.saved}
-          uploads={uploads}
-          onBack={history.close}
-          onDownload={recording.downloadSaved}
-          onDeleteFromPhone={recording.deleteSaved}
-        />
-      )}
-      {phase === 'unfinished' && figures && (
-        <UnfinishedScreen
-          figures={figures}
-          way={recording.way}
-          onResume={recording.resume}
-          onStop={recording.stopAtLastFix}
-        />
-      )}
-      {(phase === 'recording' || phase === 'paused') && figures && (
-        <RecordingScreen
-          figures={figures}
-          way={recording.way}
-          isPaused={phase === 'paused'}
-          isAwake={recording.isAwake}
-          shouldFocusStop={recording.focusTarget === 'stop'}
-          onStop={recording.stop}
-          onResume={recording.resume}
-          onWaySwitch={recording.switchWay}
-          onSave={recording.openSave}
-          onCancel={recording.cancel}
-          onLeave={recording.flushFixes}
-        />
-      )}
-      {phase === 'form' && (
-        <SaveForm
-          failedFixWrites={recording.current?.failedFixWrites ?? 0}
-          onDownload={recording.downloadCurrent}
-          onKeepRecording={recording.keepRecording}
-          onSave={recording.save}
-        />
-      )}
-      {phase === 'saved' && (
-        <SavedScreen
-          failedFixWrites={recording.lastSaved?.failedFixWrites ?? 0}
-          uploadText={
-            recording.lastSaved
-              ? uploadStatusText(
-                  uploads.statusOf(recording.lastSaved),
-                  uploads.canRemove(recording.lastSaved),
-                )
-              : ''
-          }
-          onRecordAgain={recording.recordAgain}
-          onDownload={recording.downloadLastSaved}
-        />
+      {accountGate === 'needs-account' && <AccountGate />}
+      {accountGate === 'ready' && (
+        <>
+          {recording.problem && (
+            <p
+              role="alert"
+              className="absolute inset-x-4 top-[calc(max(1rem,env(safe-area-inset-top))+3.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
+            >
+              {recording.problem}
+            </p>
+          )}
+          {uploads.check && (phase === 'ready' || phase === 'saved') && (
+            <UploadCheck check={uploads.check} />
+          )}
+          <p role="status" className="sr-only">
+            {recording.announcement}
+          </p>
+          {phase === 'ready' && !isHistoryShown && (
+            <ReadyScreen
+              hasConsent={hasConsent}
+              onConsent={giveConsent}
+              earlierQuestion={earlier.question}
+              onStart={recording.start}
+              onOpenHistory={handleOpenHistory}
+              shouldFocusHistoryButton={hasOpenedHistory}
+            />
+          )}
+          {isHistoryShown && (
+            <HistoryScreen
+              recordings={recording.saved}
+              uploads={uploads}
+              onBack={history.close}
+              onDownload={recording.downloadSaved}
+              onDeleteFromPhone={recording.deleteSaved}
+            />
+          )}
+          {phase === 'unfinished' && figures && (
+            <UnfinishedScreen
+              figures={figures}
+              way={recording.way}
+              onResume={recording.resume}
+              onStop={recording.stopAtLastFix}
+            />
+          )}
+          {(phase === 'recording' || phase === 'paused') && figures && (
+            <RecordingScreen
+              figures={figures}
+              way={recording.way}
+              isPaused={phase === 'paused'}
+              isAwake={recording.isAwake}
+              shouldFocusStop={recording.focusTarget === 'stop'}
+              onStop={recording.stop}
+              onResume={recording.resume}
+              onWaySwitch={recording.switchWay}
+              onSave={recording.openSave}
+              onCancel={recording.cancel}
+              onLeave={recording.flushFixes}
+            />
+          )}
+          {phase === 'form' && (
+            <SaveForm
+              failedFixWrites={recording.current?.failedFixWrites ?? 0}
+              onDownload={recording.downloadCurrent}
+              onKeepRecording={recording.keepRecording}
+              onSave={recording.save}
+            />
+          )}
+          {phase === 'saved' && (
+            <SavedScreen
+              failedFixWrites={recording.lastSaved?.failedFixWrites ?? 0}
+              uploadText={
+                recording.lastSaved
+                  ? uploadStatusText(
+                      uploads.statusOf(recording.lastSaved),
+                      uploads.canRemove(recording.lastSaved),
+                    )
+                  : ''
+              }
+              onRecordAgain={recording.recordAgain}
+              onDownload={recording.downloadLastSaved}
+            />
+          )}
+        </>
       )}
     </main>
   );

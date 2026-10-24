@@ -9,7 +9,7 @@ This page is generated from the code, so it cannot go stale. It shows the struct
 A unit is a folder: an app, a feature (or a concern folder of a feature that has them), a kind of shared code, a design-system layer, or the styles.
 
 - **app**: `contribute`, `public-map`, `studio`
-- **features**: `contribute`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`, `studio/review`
+- **features**: `contribute`, `contribute/account`, `contribute/api`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`, `studio/review`
 - **shared**: `hooks`, `lib`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
@@ -25,6 +25,8 @@ flowchart TD
   end
   subgraph features_layer["features"]
     features_contribute["contribute"]
+    features_contribute_account["contribute/account"]
+    features_contribute_api["contribute/api"]
     features_locator["locator"]
     features_published_map["published-map"]
     features_routes_cards["routes/cards"]
@@ -59,6 +61,7 @@ flowchart TD
   app_contribute --> design_system_foundation
   app_contribute --> features_contribute
   app_contribute --> features_locator
+  app_contribute --> shared_lib
   app_contribute --> styles
   app_public_map --> design_system_primitives
   app_public_map --> features_locator
@@ -80,13 +83,22 @@ flowchart TD
   app_studio --> shared_types
   app_studio --> styles
   features_contribute --> design_system_primitives
+  features_contribute --> features_contribute_account
+  features_contribute --> features_contribute_api
   features_contribute --> features_routes_cards
   features_contribute --> features_routes_map
   features_contribute --> features_routes_model
   features_contribute --> shared_hooks
-  features_contribute --> shared_types
   features_contribute --> shared_ui
   features_contribute --> shared_utils
+  features_contribute_account --> design_system_primitives
+  features_contribute_account --> features_contribute
+  features_contribute_account --> features_contribute_api
+  features_contribute_account --> shared_ui
+  features_contribute_api --> features_contribute
+  features_contribute_api --> features_routes_model
+  features_contribute_api --> shared_types
+  features_contribute_api --> shared_utils
   features_locator --> features_routes_map
   features_locator --> features_routes_model
   features_locator --> shared_hooks
@@ -169,12 +181,14 @@ flowchart TD
 
 | Unit | Imports |
 | --- | --- |
-| `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `styles` |
+| `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `styles` |
 | `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `shared/utils`, `styles` |
 | `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
-| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/types`, `shared/ui`, `shared/utils` |
+| `features/contribute` | `design-system/primitives`, `features/contribute/account`, `features/contribute/api`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
+| `features/contribute/account` | `design-system/primitives`, `features/contribute`, `features/contribute/api`, `shared/ui` |
+| `features/contribute/api` | `features/contribute`, `features/routes/model`, `shared/types`, `shared/utils` |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
