@@ -33,8 +33,13 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # Installs the Android SDK (platform 36 and build tools) the runner image may not carry.
-      - uses: android-actions/setup-android@v3
+      # The runner image carries the Android SDK; android-actions/setup-android failed on it
+      # ("Failed to find package 'tools'"). Make sure the platform and build tools Capacitor 8
+      # asks for are there.
+      - name: Install the Android platform and build tools
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
 
