@@ -5,6 +5,7 @@ import { Button } from '@/design-system/primitives/button';
 import {
   contributionName,
   kilometres,
+  manilaClock,
   manilaTime,
   minutes,
   vehicleName,
@@ -89,6 +90,13 @@ function TrailSummary({ detail, isLoading, error }: TrailSummaryProps) {
     <p aria-live="polite">
       On the map: the whole trail, {detail.trail.length} points, and {detail.hintos.length}{' '}
       {detail.hintos.length === 1 ? 'hinto' : 'hintos'} ({minutes(standing)} standing).
+      {detail.marks.length > 0 && (
+        <>
+          {' '}
+          {detail.marks.length} {detail.marks.length === 1 ? 'mark' : 'marks'}. Marked at{' '}
+          {detail.marks.map(manilaClock).join(', ')}.
+        </>
+      )}
     </p>
   );
 }

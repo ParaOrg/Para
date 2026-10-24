@@ -58,4 +58,11 @@ export const STORY_DETAIL: ContributionDetail = {
     { time: T0 + 1_800_000, at: [121.05, 14.62] },
   ],
   hintos: [{ seq: 0, startedAt: T0 + 600_000, seconds: 240, at: [121.07, 14.68] }],
+  marks: [],
+};
+
+/** The same ride with two Mark presses, 8:14 and 8:31 in Manila. */
+export const STORY_DETAIL_MARKED: ContributionDetail = {
+  ...STORY_DETAIL,
+  marks: [Date.UTC(2026, 9, 19, 0, 14), Date.UTC(2026, 9, 19, 0, 31)],
 };
