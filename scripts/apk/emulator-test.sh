@@ -35,6 +35,13 @@ route() {
   }'
 }
 
+# The emulator reports booted while Play Services is still updating and restarting. The first run
+# lost the app to that (Android killed it: "depends on provider ... in dying proc
+# com.google.android.gms.persistent"), so wait for the boot and for things to settle.
+adb wait-for-device
+until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
+sleep 90
+
 adb install -r "$APK" || { echo "install failed" | tee "$OUT/summary.txt"; exit 1; }
 for permission in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS; do
   adb shell pm grant "$PKG" "android.permission.$permission" || echo "could not grant $permission"
@@ -62,6 +69,7 @@ adb shell dumpsys power | grep -m1 mWakefulness | tee "$OUT/wakefulness-off.txt"
 
 sleep $((TOTAL / 2 - OFF_AFTER))
 adb shell dumpsys activity services "$PKG" > "$OUT/services.txt"
+adb shell pidof "$PKG" > "$OUT/pid-mid.txt" || echo "no process" > "$OUT/pid-mid.txt"
 adb shell dumpsys notification --noredact > "$OUT/notification.txt"
 sleep $((TOTAL / 2))
 
@@ -98,6 +106,7 @@ lines = [
     f"native fixes while off: first {off[0][1] if off else '-'}, last {off[-1][1] if off else '-'}, gained {gained} (about {gained / seconds:.2f}/s)",
     f"IndexedDB rows while off: first {off[0][2] if off else '-'}, last {off[-1][2] if off else '-'}; write failures {off[-1][3] if off else '-'}",
     f"count grew at every 30 s report: {grows}",
+    f"app process while off (pidof): {open(f'{out}/pid-mid.txt').read().strip()}",
     f"foreground service running (isForeground=true): {is_foreground}",
     f"notification 'ParaPo is recording' present: {has_notice}",
     f"all reports: {rows}",
