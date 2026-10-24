@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
+import { BackToMapButton, goBackToMap } from './back-to-map-button';
 import { ConsentPanel } from './consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from './earlier-recordings-panel';
 import { TrackingButton } from './tracking-button';
@@ -18,8 +18,6 @@ interface ReadyScreenProps {
   /** Set when History was open before this screen: focus goes back to the button that opened it. */
   shouldFocusHistoryButton: boolean;
 }
-
-const goBackToMap = () => window.location.assign('/');
 
 /**
  * Before a recording: back to the map, History, and one Start bar (or, on a first visit, what the
@@ -44,13 +42,7 @@ export function ReadyScreen({
 
   return (
     <>
-      <div className="absolute top-0 left-0 z-10 flex gap-2 pt-[max(1rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))]">
-        <IconButton
-          tooltip="top"
-          label="Back to the map"
-          icon={<ChevronLeftIcon />}
-          onClick={goBackToMap}
-        />
+      <BackToMapButton>
         {hasConsent && (
           <IconButton
             ref={historyRef}
@@ -60,7 +52,7 @@ export function ReadyScreen({
             onClick={onOpenHistory}
           />
         )}
-      </div>
+      </BackToMapButton>
       {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
       {hasConsent && !earlierQuestion && (
         <section
