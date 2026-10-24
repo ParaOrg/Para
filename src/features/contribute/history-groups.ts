@@ -31,6 +31,7 @@ export function groupOf(status: UploadStatus): HistoryGroupKey {
     case 'removing':
       return 'uploaded';
     case 'removed':
+    case 'held':
     case 'unavailable':
       return 'on-phone';
   }
@@ -91,6 +92,7 @@ export function statusLineOf(status: UploadStatus, canRemove: boolean): StatusLi
       return status.byEditor
         ? { icon: 'alert', word: 'Removed by an editor', isError: false }
         : null;
+    case 'held':
     case 'unavailable':
       return null;
   }

@@ -1,37 +1,36 @@
 import { useState } from 'react';
-import * as z from 'zod/mini';
+
+import { CONSENT_VERSION, agreedVersionOf, isCurrentConsent } from './consent-version';
 
 const CONSENT_KEY = 'parapo.contribute.consent';
-/** The consent text's version, sent with every upload; bump it when the consent panel's words change. */
-export const CONSENT_VERSION = 1;
-const consentSchema = z.literal('yes');
 
-function hasGivenConsent(): boolean {
+function storedAgreedVersion(): number | null {
   try {
-    return consentSchema.safeParse(localStorage.getItem(CONSENT_KEY)).success;
+    return agreedVersionOf(localStorage.getItem(CONSENT_KEY));
   } catch {
     // Storage blocked (a private window): the contributor is asked again next visit.
-    return false;
+    return null;
   }
 }
 
-interface Consent {
+export interface Consent {
+  /** Whether this phone has agreed to the current text; an older text's agreement does not count. */
   hasConsent: boolean;
   giveConsent: () => void;
 }
 
-/** Whether this phone has already been told what the page does, and a way to say it has. */
+/** Whether this phone has agreed to what the page does, and a way to say it has. */
 export function useConsent(): Consent {
-  const [hasConsent, setHasConsent] = useState(hasGivenConsent);
+  const [agreedVersion, setAgreedVersion] = useState(storedAgreedVersion);
 
   const giveConsent = () => {
     try {
-      localStorage.setItem(CONSENT_KEY, 'yes');
+      localStorage.setItem(CONSENT_KEY, String(CONSENT_VERSION));
     } catch (error) {
       console.warn('The page could not remember the consent.', error);
     }
-    setHasConsent(true);
+    setAgreedVersion(CONSENT_VERSION);
   };
 
-  return { hasConsent, giveConsent };
+  return { hasConsent: isCurrentConsent(agreedVersion), giveConsent };
 }

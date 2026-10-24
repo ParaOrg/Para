@@ -4,6 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
 import { ConsentPanel } from './consent-panel';
+import { EarlierRecordingsPanel, type EarlierQuestion } from './earlier-recordings-panel';
 import { TrackingButton } from './tracking-button';
 import { HistoryIcon } from './tracking-icons';
 import { useStackRoom } from './use-stack-room';
@@ -11,6 +12,7 @@ import { useStackRoom } from './use-stack-room';
 interface ReadyScreenProps {
   hasConsent: boolean;
   onConsent: () => void;
+  earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
   onOpenHistory: () => void;
   /** Set when History was open before this screen: focus goes back to the button that opened it. */
@@ -26,6 +28,7 @@ const goBackToMap = () => window.location.assign('/');
 export function ReadyScreen({
   hasConsent,
   onConsent,
+  earlierQuestion,
   onStart,
   onOpenHistory,
   shouldFocusHistoryButton,
@@ -58,7 +61,8 @@ export function ReadyScreen({
           />
         )}
       </div>
-      {hasConsent ? (
+      {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+      {hasConsent && !earlierQuestion && (
         <section
           ref={stackRef}
           aria-labelledby="ready-heading"
@@ -69,9 +73,8 @@ export function ReadyScreen({
           </h1>
           <TrackingButton variant="start" onClick={onStart} />
         </section>
-      ) : (
-        <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />
       )}
+      {!hasConsent && <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />}
     </>
   );
 }

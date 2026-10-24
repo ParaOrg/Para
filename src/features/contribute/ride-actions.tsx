@@ -4,6 +4,12 @@ import type { UploadStatus } from './use-uploads';
 
 export type Asking = 'remove-upload' | 'delete-from-phone' | null;
 
+/** What the out-in-the-open button says where it is not Try again. */
+const UPLOAD_LABEL: Partial<Record<UploadStatus['state'], string>> = {
+  removed: 'Upload again',
+  held: 'Upload',
+};
+
 interface RideActionsProps {
   /** The card's recording in words, so each button's name says which one it acts on. */
   fullName: string;
@@ -18,7 +24,7 @@ interface RideActionsProps {
 }
 
 /**
- * What a card can do: Try again or Upload again out in the open where it would help, and Download
+ * What a card can do: Try again, Upload again or Upload out in the open where it would help, and Download
  * and the two deletes behind the card's dots, quiet until asked for.
  */
 export function RideActions({
@@ -32,7 +38,9 @@ export function RideActions({
   onAsk,
 }: RideActionsProps) {
   const isBusy = status.state === 'uploading' || status.state === 'removing';
-  const canUploadNow = status.state === 'failed' || status.state === 'removed';
+  const canUploadNow =
+    status.state === 'failed' || status.state === 'removed' || status.state === 'held';
+  const uploadLabel = UPLOAD_LABEL[status.state] ?? 'Try again';
 
   return (
     <>
@@ -41,8 +49,8 @@ export function RideActions({
           <Button
             variant="secondary"
             size="small"
-            label={status.state === 'removed' ? 'Upload again' : 'Try again'}
-            aria-label={`${status.state === 'removed' ? 'Upload again' : 'Try again'}, ${fullName}`}
+            label={uploadLabel}
+            aria-label={`${uploadLabel}, ${fullName}`}
             onClick={onUpload}
           />
         </div>

@@ -115,6 +115,9 @@ export const Removed: Story = { args: { status: { state: 'removed' } } };
 
 export const RemovedByEditor: Story = { args: { status: { state: 'removed', byEditor: true } } };
 
+/** Made before the current consent text and kept on the phone: nothing is sent until Upload is pressed. */
+export const Held: Story = { args: { status: { state: 'held' } } };
+
 /** A build with no database: recordings stay on the phone. */
 export const OnPhoneOnly: Story = { args: { status: { state: 'unavailable' } } };
 

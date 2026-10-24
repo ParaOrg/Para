@@ -49,8 +49,12 @@ const GPS = () => {
 
 const browser = await chromium.launch();
 
-/** A consented phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same site. */
-async function phone({ studioSession = false } = {}) {
+/**
+ * A phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same
+ * site. `consent` is what the phone has stored: '2' (the current text) unless given, 'yes' (the
+ * first text) or null (never asked). `opens` is the screen the page is waited on.
+ */
+async function phone({ studioSession = false, consent = '2', opens = 'start' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -70,7 +74,15 @@ async function phone({ studioSession = false } = {}) {
     }),
   );
   await page.addInitScript(GPS);
-  await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
+  if (consent !== null) {
+    await page.addInitScript((stored) => {
+      // Only a first load seeds it, so a reload keeps what the page itself stored.
+      if (!sessionStorage.getItem('seeded')) {
+        localStorage.setItem('parapo.contribute.consent', stored);
+        sessionStorage.setItem('seeded', 'yes');
+      }
+    }, consent);
+  }
   if (studioSession) {
     await page.addInitScript(
       ([key]) => {
@@ -80,11 +92,27 @@ async function phone({ studioSession = false } = {}) {
     );
   }
   const errors = [];
+  const asked = watchDatabase(page);
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 30000 });
-  return { page, context, fake, errors };
+  await SCREENS[opens](page).waitFor({ timeout: 30000 });
+  return { page, context, fake, errors, asked };
 }
+
+/** Counts every request the page makes to the database (sign-in, identity, reads or sends). */
+function watchDatabase(page) {
+  const watch = { count: 0 };
+  page.on('request', (request) => {
+    if (/\/(auth|rest)\/v1\//.test(request.url())) watch.count += 1;
+  });
+  return watch;
+}
+
+const SCREENS = {
+  start: (page) => page.getByRole('button', { name: 'Start recording' }),
+  consent: (page) => page.getByRole('heading', { name: 'Before you record' }),
+  earlier: (page) => page.getByRole('heading', { name: /earlier recordings? too\?/ }),
+};
 
 /** Puts saved recordings straight into the phone's database, as an earlier visit would have left them. */
 async function seed(page, recordings) {
@@ -111,7 +139,11 @@ async function seed(page, recordings) {
 }
 
 /** A saved recording of `count` fixes heading north from Fairview, a fix a second, 8 m apart. */
-function savedRide(id, startedAt, { count = 30, upload, name = 'Fairview' } = {}) {
+function savedRide(
+  id,
+  startedAt,
+  { count = 30, upload, name = 'Fairview', isEarlier = false } = {},
+) {
   const fixes = Array.from({ length: count }, (_, seq) => ({
     recordingId: id,
     seq,
@@ -133,6 +165,8 @@ function savedRide(id, startedAt, { count = 30, upload, name = 'Fairview' } = {}
     endPointName: 'Cubao',
     description: '',
     rideKind: 'Jeep',
+    // A recording made under the current consent text carries its version; an earlier one has none.
+    ...(isEarlier ? {} : { consentVersion: 2 }),
     ...(upload ? { upload } : {}),
   };
   return { recording, fixes };
@@ -197,6 +231,9 @@ const waitForStatus = async (page, name, pattern) => {
   );
 };
 const UPLOADED = /^Uploaded \|/;
+/** The heading of the History group a card sits in. */
+const groupOf = (page, name) =>
+  row(page, name).evaluate((li) => li.closest('section')?.querySelector('h2')?.textContent ?? '');
 
 // ------------------------------------------------- record, save, uploaded
 {
@@ -219,7 +256,8 @@ const UPLOADED = /^Uploaded \|/;
     'a saved recording is uploaded on its own, and Successfully recorded says so',
     fake.rows.size === 1 &&
       fake.saveRequests === 1 &&
-      stored.recording.start_name === 'SM Fairview',
+      stored.recording.start_name === 'SM Fairview' &&
+      stored.recording.consent_version === 2,
     `${fake.rows.size} stored, ${fake.saveRequests} sends`,
   );
   check(
@@ -531,6 +569,163 @@ const UPLOADED = /^Uploaded \|/;
         await page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
       ).startsWith('More actions'),
   );
+}
+
+// ------------------------------------------ no consent, nothing is sent
+{
+  const { page, fake, asked } = await phone({ consent: null, opens: 'consent' });
+  const id = 'aaaaaaaa-0000-4000-8000-000000000011';
+  await seed(page, [savedRide(id, T0, { name: 'No consent' })]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.consent(page).waitFor();
+  await page.waitForTimeout(2000);
+  check(
+    'with no consent, a saved recording is not sent and the consent screen shows',
+    fake.saveRequests === 0 &&
+      fake.signIns === 0 &&
+      asked.count === 0 &&
+      (await storedUpload(page, id)) === 'none',
+    `${fake.saveRequests} sends, ${fake.signIns} sign-ins, ${asked.count} requests`,
+  );
+  await page.getByRole('button', { name: 'Okay, I understand' }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await waitForStatus(page, 'No consent', UPLOADED);
+  check(
+    '  agreeing to the current text sends it, with the text' + "'" + 's version',
+    fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 2,
+  );
+  check(
+    '  the phone remembers the version agreed to',
+    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '2',
+  );
+}
+
+// -------------------- version-1 consent is not consent to the new text
+{
+  const { page, fake, asked } = await phone({ consent: 'yes', opens: 'consent' });
+  const earlier = 'aaaaaaaa-0000-4000-8000-000000000012';
+  const stamped = 'aaaaaaaa-0000-4000-8000-000000000013';
+  await seed(page, [
+    savedRide(earlier, T0, { name: 'Under one', isEarlier: true }),
+    savedRide(stamped, T0 + 600_000, { name: 'Stamped' }),
+    // An upload made under version 1: the identity check it would set off must wait for consent too.
+    savedRide('aaaaaaaa-0000-4000-8000-000000000018', T0 + 1_200_000, {
+      name: 'Already up',
+      isEarlier: true,
+      upload: { state: 'uploaded', at: T0, by: 'ffffffff-0000-4000-8000-000000000000' },
+    }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.consent(page).waitFor();
+  await page.waitForTimeout(2000);
+  check(
+    'with version-1 consent, the new text shows, with no Start and nothing sent',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+      fake.saveRequests === 0 &&
+      fake.signIns === 0 &&
+      asked.count === 0 &&
+      (await storedUpload(page, earlier)) === 'none' &&
+      (await storedUpload(page, stamped)) === 'none',
+    `${fake.saveRequests} sends`,
+  );
+  check(
+    '  the new text names machine learning and who is responsible',
+    (await page.getByText(/machine learning/).count()) === 1 &&
+      (await page.getByRole('link', { name: 'Message the owner on Facebook' }).count()) === 1,
+  );
+  await page.getByRole('button', { name: 'Okay, I understand' }).click();
+  await SCREENS.earlier(page).waitFor();
+  await page.waitForTimeout(1500);
+  check(
+    '  after agreeing, only the recording made under the current text goes; the earlier one is asked about',
+    fake.rows.size === 1 &&
+      fake.rows.has(stamped) &&
+      (await storedUpload(page, earlier)) === 'none' &&
+      (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
+    [...fake.rows.keys()].join(),
+  );
+}
+
+// ------------------------ earlier recordings: asked about, Keep on phone
+{
+  const a = 'aaaaaaaa-0000-4000-8000-000000000014';
+  const b = 'aaaaaaaa-0000-4000-8000-000000000015';
+  const { page, fake } = await phone();
+  await seed(page, [
+    savedRide(a, T0, { name: 'Earlier one', isEarlier: true }),
+    savedRide(b, T0 + 600_000, { name: 'Earlier two', isEarlier: true }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.earlier(page).waitFor();
+  await page.waitForTimeout(1500);
+  await shot(page, 'earlier-question');
+  check(
+    'earlier recordings are asked about once, by number, and nothing is sent meanwhile',
+    (await page.getByRole('heading', { name: 'Send your 2 earlier recordings too?' }).count()) ===
+      1 &&
+      (await page.getByRole('button', { name: 'Send', exact: true }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Keep on phone' }).count()) === 1 &&
+      fake.saveRequests === 0,
+  );
+  await page.getByRole('button', { name: 'Keep on phone' }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await openHistory(page);
+  await page.waitForTimeout(1500);
+  check(
+    '  Keep on phone sends nothing, and History files it under Only on this phone',
+    fake.saveRequests === 0 &&
+      (await storedUpload(page, a)) === 'none' &&
+      (await groupOf(page, 'Earlier one')) === 'Only on this phone',
+  );
+  // Back on Ready: a reload on #history would land on History instead.
+  await page.evaluate(() => {
+    location.hash = '';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForTimeout(1000);
+  check(
+    '  after a reload it is not asked again and still not sent',
+    (await SCREENS.earlier(page).count()) === 0 && fake.saveRequests === 0,
+  );
+  await openHistory(page);
+  await row(page, 'Earlier one')
+    .getByRole('button', { name: /^Upload,/ })
+    .click();
+  await waitForStatus(page, 'Earlier one', UPLOADED);
+  check(
+    '  it can still be sent from History, one at a time',
+    fake.rows.size === 1 &&
+      fake.rows.has(a) &&
+      (await groupOf(page, 'Earlier two')) === 'Only on this phone',
+  );
+}
+
+// ------------------------------- earlier recordings: Send goes through
+{
+  const a = 'aaaaaaaa-0000-4000-8000-000000000016';
+  const b = 'aaaaaaaa-0000-4000-8000-000000000017';
+  const { page, fake } = await phone();
+  await seed(page, [
+    savedRide(a, T0, { name: 'Sent one', isEarlier: true }),
+    savedRide(b, T0 + 600_000, { name: 'Sent two', isEarlier: true }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.earlier(page).waitFor();
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await waitForStatus(page, 'Sent two', UPLOADED);
+  await waitForStatus(page, 'Sent one', UPLOADED);
+  check(
+    'Send uploads the earlier recordings, each with the current text' + "'" + 's version',
+    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 2),
+  );
+  await page.evaluate(() => {
+    location.hash = '';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check('  and it is not asked again', (await SCREENS.earlier(page).count()) === 0);
 }
 
 await browser.close();

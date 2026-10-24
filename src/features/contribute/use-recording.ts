@@ -7,6 +7,7 @@ import {
   type GapReason,
 } from '@/features/routes/model/ride-recording';
 
+import { CONSENT_VERSION } from './consent-version';
 import { locationProblem } from './location-problem';
 import { holdRecorderLock } from './recorder-lock';
 import { downloadRecording, recordingFile } from './recording-file';
@@ -326,6 +327,7 @@ export function useRecording(): RecordingState {
       endPointName: '',
       description: '',
       rideKind: null,
+      consentVersion: CONSENT_VERSION,
     });
     setPhase('recording');
   }

@@ -10,6 +10,7 @@ import { UnfinishedScreen } from './unfinished-screen';
 import { UploadCheck } from './upload-check';
 import { uploadStatusText } from './upload-status';
 import { useConsent } from './use-consent';
+import { useEarlierQuestion } from './use-earlier-question';
 import { useFollow } from './use-follow';
 import { useHistoryView } from './use-history-view';
 import { useRecording } from './use-recording';
@@ -19,10 +20,11 @@ import { useUploads } from './use-uploads';
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage() {
   const recording = useRecording();
-  const uploads = useUploads(recording.saved);
+  const { hasConsent, giveConsent } = useConsent();
+  const earlier = useEarlierQuestion(recording.saved, hasConsent);
+  const uploads = useUploads(recording.saved, { hasConsent, earlier: earlier.choice });
   const follow = useFollow();
   const track = useRecordingTrack(recording.kept, recording.current?.switches);
-  const { hasConsent, giveConsent } = useConsent();
   const history = useHistoryView();
   const { phase, figures } = recording;
   const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
@@ -75,6 +77,7 @@ export function ContributePage() {
         <ReadyScreen
           hasConsent={hasConsent}
           onConsent={giveConsent}
+          earlierQuestion={earlier.question}
           onStart={handleStart}
           onOpenHistory={handleOpenHistory}
           shouldFocusHistoryButton={hasOpenedHistory}
