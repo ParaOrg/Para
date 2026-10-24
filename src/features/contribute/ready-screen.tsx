@@ -48,7 +48,7 @@ export function ReadyScreen({
   return (
     <>
       <BackToMapButton>
-        {hasConsent && onOpenProfile && (
+        {onOpenProfile && (
           <IconButton
             ref={profileRef}
             tooltip="top"

@@ -23,6 +23,17 @@ export interface HistoryItems {
   load: HistoryLoad;
 }
 
+/** A build with no database never asks (the query is idle), so there is nothing to wait for. */
+function loadStateOf(query: {
+  isError: boolean;
+  isPending: boolean;
+  fetchStatus: string;
+}): HistoryLoad['state'] {
+  if (query.isError) return 'error';
+  if (query.isPending && query.fetchStatus !== 'idle') return 'loading';
+  return 'ready';
+}
+
 const loadMessageOf = (error: unknown): string =>
   error instanceof UploadError && error.problem === 'offline'
     ? "No signal — can't load your uploads"
@@ -75,12 +86,7 @@ export function useHistoryItems(saved: readonly Recording[], uploads: Uploads): 
     uploads: { ...uploads, statusOf, canRemove, removeUploaded },
     isOnPhone,
     load: {
-      // A build with no database never asks, so there is nothing to wait for.
-      state: query.isError
-        ? 'error'
-        : query.isPending && query.fetchStatus !== 'idle'
-          ? 'loading'
-          : 'ready',
+      state: loadStateOf(query),
       message: query.isError ? loadMessageOf(query.error) : null,
       onRetry: () => void query.refetch(),
     },

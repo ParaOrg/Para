@@ -54,8 +54,20 @@ function uploadedRow(id, hoursIn, startName) {
   });
 }
 
-/** A phone signed in to the account, on the shared database; `signedIn: false` has no session. */
-async function phone({ signedIn = true } = {}) {
+const EDITOR_ID = 'eeeeeeee-0000-4000-8000-0000000000ee';
+database.users.set(EDITOR_ID, {
+  email: 'editor@example.com',
+  password: 'hunter2hunter2',
+  isAccount: true,
+  isEditor: true,
+  profile: { name: 'Editor', phone: '+639170000000' },
+});
+
+/**
+ * A phone signed in to the account, on the shared database; `signedIn: false` has no session,
+ * `userId` signs in as another user (the editor), and `consent: null` has never been asked.
+ */
+async function phone({ signedIn = true, userId = ACCOUNT_ID, consent = '2' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -70,14 +82,20 @@ async function phone({ signedIn = true } = {}) {
   fake.rows = database.rows;
   await fakeTurnstile(page);
   await page.addInitScript(
-    ([key, stored]) => {
+    ([key, stored, agreed]) => {
       if (stored && !localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(stored));
-      if (!sessionStorage.getItem('seeded')) {
-        localStorage.setItem('parapo.contribute.consent', '2');
+      if (agreed && !sessionStorage.getItem('seeded')) {
+        localStorage.setItem('parapo.contribute.consent', agreed);
         sessionStorage.setItem('seeded', 'yes');
       }
     },
-    [AUTH_KEY, signedIn ? session(ACCOUNT_ID, { email: ACCOUNT.email, isAccount: true }) : null],
+    [
+      AUTH_KEY,
+      signedIn
+        ? session(userId, { email: database.users.get(userId).email, isAccount: true })
+        : null,
+      consent,
+    ],
   );
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -346,6 +364,55 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       (await groupOf(page, 'Only here')) === 'Uploaded',
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
+}
+
+// ------------------- an editor's session sees and removes only its own
+{
+  const mine = 'dddddddd-0000-4000-8000-0000000000ed';
+  database.rows.set(mine, {
+    by: EDITOR_ID,
+    recording: {
+      id: mine,
+      started_at: new Date(T0).toISOString(),
+      ended_at: new Date(T0 + 600_000).toISOString(),
+      start_name: 'Editor ride',
+      end_name: 'Cubao',
+      description: '',
+    },
+  });
+  const { page, errors } = await phone({ userId: EDITOR_ID });
+  await start(page).waitFor({ timeout: 30000 });
+  await button(page, 'History').click();
+  await row(page, 'Editor ride').waitFor({ timeout: 15000 });
+  check(
+    "an editor signed in here sees only its own uploads in History, not everyone's",
+    (await page.getByRole('listitem').count()) === 1,
+    String(await page.getByRole('listitem').count()),
+  );
+  const others = [...database.rows.keys()].filter((id) => id !== mine);
+  await page.evaluate(
+    (ids) =>
+      import('/src/features/contribute/api/upload-contribution.ts').then((upload) =>
+        Promise.all(ids.map((id) => upload.removeUpload(id))),
+      ),
+    others,
+  );
+  check(
+    "  and removing someone else's upload does nothing, though the session could delete it",
+    others.length > 0 && others.every((id) => database.rows.has(id)),
+    `${others.length} others`,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+}
+
+// ---------- a new account can reach Profile before agreeing to anything
+{
+  const { page } = await phone({ consent: null });
+  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 30000 });
+  await button(page, 'Profile').click();
+  await button(page, 'Sign out').click();
+  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+  check('before consent, Profile is there and signs the account out', true);
 }
 
 // ----------------------------------------------------- Sign out

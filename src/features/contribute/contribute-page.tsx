@@ -55,7 +55,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   const { phase, figures } = recording;
   const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
   const isProfileShown =
-    phase === 'ready' && hasConsent && accountGate === 'ready' && canUpload() && profile.isOpen;
+    phase === 'ready' && accountGate === 'ready' && canUpload() && profile.isOpen;
 
   // A stale #history (a reload mid-recording, or before consent was given) must not open History
   // later, when Record again or Okay is pressed.
@@ -67,10 +67,9 @@ export function ContributePage({ locator }: ContributePageProps) {
 
   // Signing out, or leaving Ready, must not leave #profile to reopen Profile after the next sign-in.
   useEffect(() => {
-    const isUsable =
-      hasConsent && accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
+    const isUsable = accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
     if (profile.isOpen && !isUsable && accountGate !== 'loading') profile.close();
-  }, [phase, hasConsent, accountGate, profile]);
+  }, [phase, accountGate, profile]);
 
   // Once History or Profile has been opened from Ready's button, Ready hands focus back to it.
   const [lastOpened, setLastOpened] = useState<'history' | 'profile' | null>(null);

@@ -84,9 +84,17 @@ export async function uploadsStillThere(): Promise<Set<string>> {
 /**
  * Removes an uploaded recording from the database, with its points and hintos.
  * The phone's own copy is untouched. Removing one already gone is not an error.
+ * Only the signed-in contributor's own: an editor's session can delete anyone's, so the filter is
+ * here and not left to row security.
  */
 export async function removeUpload(contributionId: string): Promise<void> {
   const client = await requireClient();
-  const { error, status } = await client.from('contribution').delete().eq('id', contributionId);
+  const { data } = await client.auth.getSession();
+  if (!data.session) throw new UploadError('blocked', 'Removing needs a signed-in contributor.');
+  const { error, status } = await client
+    .from('contribution')
+    .delete()
+    .eq('id', contributionId)
+    .eq('contributor_id', data.session.user.id);
   if (error) throw answerError(error, status);
 }

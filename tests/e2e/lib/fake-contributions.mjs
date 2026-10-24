@@ -21,6 +21,7 @@
 //   hold          the save waits until `fake.release()` (an upload in flight)
 //   refuse        the save is refused: 'bad_points' (never taken) or 'day_cap'
 //   removeOffline the delete fails as with no signal
+//   `isEditor` on a user: row security lets it read and delete every contribution, as an editor's.
 //   list = 'offline' | 'hold'   reading the account's contributions fails as with no signal (until
 //                 `delete fake.next.list`), or waits until `fake.release()`
 
@@ -251,12 +252,15 @@ export async function fakeContributions(page) {
       if (isList && fault !== 'offline') delete fake.next.list;
       if (fault === 'offline') return route.abort('internetdisconnected');
       if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
-      // Row security: an account reads only its own, from whichever phone it sent them.
+      // Row security: a contributor reads only its own, from whichever phone sent them; an editor
+      // (a user with `isEditor`) reads everyone's. The page's own `contributor_id` filter narrows.
       const user = userOf(request);
+      const isEditor = fake.users.get(user ?? '')?.isEditor === true;
       const columns = (url.searchParams.get('select') ?? 'id').split(',').map((c) => c.trim());
+      const wanted = /^eq\.(.+)$/.exec(url.searchParams.get('contributor_id') ?? '')?.[1];
       const own = [...fake.rows]
-        .filter(([, row]) => row.by === user)
-        .map(([id, row]) => ({ id, ...row.recording }))
+        .filter(([, row]) => (isEditor || row.by === user) && (!wanted || row.by === wanted))
+        .map(([id, row]) => ({ id, contributor_id: row.by, ...row.recording }))
         .sort((a, b) => (b.started_at ?? '').localeCompare(a.started_at ?? ''))
         .map((recording) => Object.fromEntries(columns.map((c) => [c, recording[c] ?? null])));
       return json(route, 200, own);
@@ -268,8 +272,14 @@ export async function fakeContributions(page) {
       delete fake.next.remove;
       if (fault === 'removeOffline') return route.abort('internetdisconnected');
       const id = /^eq\.(.+)$/.exec(url.searchParams.get('id') ?? '')?.[1];
-      // Row security: a phone deletes only its own; anyone else's is silently not there.
-      if (id && fake.rows.get(id)?.by === user) fake.rows.delete(id);
+      const wanted = /^eq\.(.+)$/.exec(url.searchParams.get('contributor_id') ?? '')?.[1];
+      // Row security: a phone deletes only its own; an editor's session can delete anyone's, so
+      // what keeps it to its own is the page's `contributor_id` filter. Others' are silently not there.
+      const isEditor = fake.users.get(user ?? '')?.isEditor === true;
+      const row = id ? fake.rows.get(id) : undefined;
+      if (row && (isEditor || row.by === user) && (!wanted || row.by === wanted)) {
+        fake.rows.delete(id);
+      }
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
     }
 
