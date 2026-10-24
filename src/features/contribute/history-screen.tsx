@@ -36,7 +36,13 @@ export function HistoryScreen({
       className="absolute inset-0 z-20 flex flex-col bg-surface-secondary font-sn-pro text-content-primary"
     >
       <header className="flex items-center gap-3 pt-[max(1rem,env(safe-area-inset-top))] pr-4 pb-3 pl-[max(1rem,env(safe-area-inset-left))]">
-        <IconButton tooltip="top" label="Back" icon={<ChevronLeftIcon />} onClick={onBack} />
+        <IconButton
+          tooltip="top"
+          size="large"
+          label="Back"
+          icon={<ChevronLeftIcon />}
+          onClick={onBack}
+        />
         <h1
           id={HISTORY_HEADING_ID}
           ref={headingRef}

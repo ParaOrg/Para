@@ -47,6 +47,7 @@ export function ReadyScreen({
           <IconButton
             ref={historyRef}
             tooltip="top"
+            size="large"
             label="History"
             icon={<HistoryIcon />}
             onClick={onOpenHistory}

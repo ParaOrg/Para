@@ -18,6 +18,7 @@ export function BackToMapButton({ children }: BackToMapButtonProps) {
     <div className="absolute top-0 left-0 z-30 flex gap-2 pt-[max(1rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))]">
       <IconButton
         tooltip="top"
+        size="large"
         label="Back to the map"
         icon={<ChevronLeftIcon />}
         onClick={goBackToMap}
