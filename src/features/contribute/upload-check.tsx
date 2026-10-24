@@ -11,7 +11,7 @@ export function UploadCheck({ check }: UploadCheckProps) {
   return (
     <section
       aria-label="Check before the first upload"
-      className="absolute inset-x-4 top-[max(4.5rem,env(safe-area-inset-top))] z-30 flex flex-col gap-2 rounded-xl bg-surface p-3 font-sn-pro text-content-primary shadow-lg"
+      className="absolute inset-x-4 top-[calc(max(1rem,env(safe-area-inset-top))+3.5rem)] z-30 flex flex-col gap-2 rounded-xl bg-surface p-3 font-sn-pro text-content-primary shadow-lg"
     >
       <p className="text-base/6">Before your first upload: a quick check that you are a person.</p>
       <Turnstile key={check.round} siteKey={check.siteKey} onToken={check.onToken} />

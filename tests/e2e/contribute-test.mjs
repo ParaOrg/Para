@@ -1217,5 +1217,48 @@ const WAKE = () => {
   await page.context().close();
 }
 
+// ------------------------------------------- Back to the map on every screen, and a ride kept
+{
+  const { page, errors } = await phone({ consented: true });
+  const back = page.getByRole('button', { name: 'Back to the map' });
+  const hasOneBack = async () => (await back.count()) === 1;
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check('Ready has Back to the map', await hasOneBack());
+
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  check('Recording has Back to the map', await hasOneBack());
+  // Fixes are written as they arrive; Back waits for any still in flight.
+  const distanceOf = async () =>
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText())
+      .match(/Distance\s+(\S+\s*\S*)/)?.[1]
+      .trim();
+  const distanceBefore = await distanceOf();
+  await back.click();
+  await page.waitForURL((url) => url.pathname === '/');
+  check('  pressing it leaves for the public map', new URL(page.url()).pathname === '/');
+
+  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
+  check(
+    '  coming back shows the ride as left open, with the distance it had',
+    Boolean(distanceBefore) && (await distanceOf()) === distanceBefore,
+    `${distanceBefore} / ${await distanceOf()}`,
+  );
+  check('Unfinished has Back to the map', await hasOneBack());
+
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  check('Saved has Back to the map, in front of the screen', await hasOneBack());
+  await back.click();
+  await page.waitForURL((url) => url.pathname === '/');
+  check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 await browser.close();
 tally();
