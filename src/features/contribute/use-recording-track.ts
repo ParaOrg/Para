@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import type { Fix } from '@/features/routes/model/ride-recording';
 
-import { markPlaces } from './recording-marks';
 import { trailOf } from './recording-rules';
 import type { MarkRow, SwitchRow } from './recording-schema';
 
@@ -22,10 +21,7 @@ export function useRecordingTrack(
 ): RecordingTrack {
   const switches = recorded ?? NO_SWITCHES;
   const marks = recordedMarks ?? NO_MARKS;
-  const trail = useMemo(
-    () => trailOf(kept, switches, markPlaces(kept, marks)),
-    [kept, switches, marks],
-  );
+  const trail = useMemo(() => trailOf(kept, switches, marks), [kept, switches, marks]);
 
   return { trail };
 }

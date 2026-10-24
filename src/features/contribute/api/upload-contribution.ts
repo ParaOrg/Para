@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 
-import { contributeClient, type ContributeClient } from './contribute-client';
 import type { ContributionPayload } from './contribution-payload-schema';
+import { requireClient } from './require-client';
 import { UploadError, problemOf, signInProblemOf, type DatabaseError } from './upload-problem';
 
 /** The error to throw for a database answer, logging one the page does not know. */
@@ -11,17 +11,6 @@ function answerError(error: DatabaseError, status: number): UploadError {
     console.warn(`ParaPo did not accept the request (HTTP ${status}):`, error.message);
   }
   return new UploadError(problem, error.message);
-}
-
-async function requireClient(): Promise<ContributeClient> {
-  const client = contributeClient();
-  if (!client) throw new UploadError('unavailable', 'This page has no database to upload to.');
-  try {
-    return await client;
-  } catch (error) {
-    // The client's own code did not load: no signal, most likely.
-    throw new UploadError('offline', `The upload code did not load: ${String(error)}`);
-  }
 }
 
 /**

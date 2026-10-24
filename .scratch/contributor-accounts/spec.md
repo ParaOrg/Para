@@ -43,7 +43,7 @@ The layout explains itself (the owner): no helper text, no descriptions under fi
 
 ### Who sees what
 
-Proposed, for the owner to approve with the consent text (06):
+Approved by the owner with the consent text, 2026-10-24:
 
 - **Editors** in the studio see a ride's contributor **name**.
 - **Email and number** are seen only by the owner (in Supabase), to contact testers. They never reach the studio's screens.
@@ -55,7 +55,7 @@ Proposed, for the owner to approve with the consent text (06):
 - The map's "+ Contribute" button (`contributor-button.tsx`) is not shown.
 - The public page still never loads contribute code (`check-build.mjs`).
 
-## Consent version 3 (draft, for the owner)
+## Consent version 3 (approved by the owner, 2026-10-24)
 
 Uploads now carry who the person is, so the consent changes and `CONSENT_VERSION` becomes 3. A recording agreed under 2 is still sent; one agreed under 1 still is not. The changed lines (the others stay):
 
@@ -78,6 +78,10 @@ The consent is asked once per account, after Create account and before the first
 | 06 | [Consent v3 and the studio's name](issues/06-consent-v3-and-studio-name.md) | a session, after the owner approves the text | 01 |
 
 **Release order:** 05 can ship on its own. 02–04 and 06 reach `main` together, and only after the owner has applied 01 and switched email confirmation off: code that signs up against a database without 01 would fail.
+
+## Decisions so far
+
+- 05 resolved (#382): the public map's end card is empty and `aria-hidden`, the "+ Contribute" button is gone. See [05](issues/05-public-map-entry-hidden.md).
 
 ## The owner's steps (Supabase dashboard, when 01 is ready)
 

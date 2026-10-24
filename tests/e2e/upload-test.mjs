@@ -13,7 +13,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
-import { fakeContributions } from './lib/fake-contributions.mjs';
+import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
@@ -22,6 +22,7 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
 const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
+const ACCOUNT_ID = 'cccccccc-0000-4000-8000-000000000001';
 const STUDIO_KEY = 'sb-smzwbqxttdyvohuizynl-auth-token';
 
 const GPS = () => {
@@ -52,7 +53,8 @@ const browser = await chromium.launch();
 /**
  * A phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same
  * site. `consent` is what the phone has stored: '2' (the current text) unless given, 'yes' (the
- * first text) or null (never asked). `opens` is the screen the page is waited on.
+ * first text) or null (never asked). `opens` is the screen the page is waited on. The phone is
+ * already signed in to an account: the page shows nothing else until one is.
  */
 async function phone({ studioSession = false, consent = '2', opens = 'start' } = {}) {
   const context = await browser.newContext({
@@ -65,6 +67,13 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
   await nodeFetch(page);
   await bareStyle(page);
   const fake = await fakeContributions(page);
+  // The seeded account is in the database with its name stored: the page opens on Ready.
+  fake.users.set(ACCOUNT_ID, {
+    email: 'tester@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Tester', phone: '+639171234567' },
+  });
   // Cloudflare's Turnstile, standing in: the check passes at once. CI builds this suite with a site key.
   await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) =>
     route.fulfill({
@@ -74,6 +83,15 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
     }),
   );
   await page.addInitScript(GPS);
+  await page.addInitScript(
+    ([key, signedIn]) => {
+      if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(signedIn));
+    },
+    [
+      'parapo.contributor-auth',
+      session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true }),
+    ],
+  );
   if (consent !== null) {
     await page.addInitScript((stored) => {
       // Only a first load seeds it, so a reload keeps what the page itself stored.
@@ -99,11 +117,15 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
   return { page, context, fake, errors, asked };
 }
 
-/** Counts every request the page makes to the database (sign-in, identity, reads or sends). */
+/**
+ * Counts every request the page makes to the database (sign-in, identity, reads or sends), but not
+ * the account's own profile read: the page asks that before consent, to know the account is done.
+ */
 function watchDatabase(page) {
   const watch = { count: 0 };
   page.on('request', (request) => {
-    if (/\/(auth|rest)\/v1\//.test(request.url())) watch.count += 1;
+    const url = request.url();
+    if (/\/(auth|rest)\/v1\//.test(url) && !/\/rpc\/get_profile/.test(url)) watch.count += 1;
   });
   return watch;
 }
@@ -281,13 +303,8 @@ const groupOf = (page, name) =>
     (await storedUpload(page, stored.recording.id)) === 'uploaded',
   );
   check(
-    "  with a Turnstile site key, the first sign-in carried the check's token",
-    !process.env.PARAPO_TURNSTILE || fake.captchaTokens[0] === 'turnstile-token',
-    String(fake.captchaTokens[0]),
-  );
-  check(
-    "  the phone signed in under its own key; the editor's studio session is untouched",
-    fake.signIns === 1 &&
+    "  the phone sent as its account, under its own key; the editor's studio session is untouched",
+    fake.signIns === 0 &&
       (await page.evaluate((k) => localStorage.getItem(k), STUDIO_KEY)) === studioBefore &&
       (await page.evaluate(() => localStorage.getItem('parapo.contributor-auth'))) !== null,
   );
@@ -299,7 +316,7 @@ const groupOf = (page, name) =>
   await page.waitForTimeout(500);
   check(
     'after a reload it still reads as uploaded and is not sent again',
-    fake.saveRequests === 1 && fake.signIns === 1,
+    fake.saveRequests === 1 && fake.signIns === 0,
     `${fake.saveRequests} sends`,
   );
   check(
@@ -331,29 +348,6 @@ const groupOf = (page, name) =>
     '  back online, it is sent on its own, once',
     fake.rows.size === 1 && fake.saveRequests === 2,
   );
-}
-
-// ------------------------- sign-ups turned off: an answer, not no signal
-{
-  const { page, fake } = await phone();
-  fake.next.signIn = 'signupDisabled';
-  await seed(page, [
-    savedRide('aaaaaaaa-0000-4000-8000-000000000009', T0, { name: 'Turned away' }),
-  ]);
-  await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Turned away', /isn't taking uploads now/);
-  const status = await statusOf(page, 'Turned away');
-  check(
-    'a sign-in ParaPo refuses says uploads cannot be taken, not no signal, and keeps the copy',
-    fake.rows.size === 0 &&
-      !/no signal/i.test(status) &&
-      /Will retry/.test(status) &&
-      (await storedUpload(page, 'aaaaaaaa-0000-4000-8000-000000000009')) === 'none',
-    status,
-  );
-  await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await waitForStatus(page, 'Turned away', UPLOADED);
-  check('  once ParaPo takes uploads again, it is sent on its own', fake.rows.size === 1);
 }
 
 // ------------------------------------ the answer lost after storing
@@ -509,8 +503,8 @@ const groupOf = (page, name) =>
     upName,
   );
   check(
-    '  two recordings waiting at once signed the phone in once',
-    fake.signIns === 1,
+    '  two recordings waiting at once sent as the account, with no sign-in of their own',
+    fake.signIns === 0,
     `${fake.signIns} sign-ins`,
   );
   check(

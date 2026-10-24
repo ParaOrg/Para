@@ -9,6 +9,8 @@
 //   - the browser is asked to keep the page's data
 //   - with the network off, a new page opens /contribute/ and records: Start, then fixes
 //     from a stand-in GPS reach IndexedDB, and Stop and Save still work
+//   - the phone is signed in to an account (the page shows nothing else without one), stored
+//     with its name; offline with no account, the page shows Sign in, not a broken page
 //   - an update (a changed worker) found with a recording open waits, and the page is not
 //     reloaded; once the recording is saved it takes over and the page reloads once
 //
@@ -18,6 +20,7 @@ import { createRequire } from 'node:module';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { harness } from './lib/harness.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -41,6 +44,27 @@ if (!base) {
   base = server.resolvedUrls.local[0].replace(/\/$/, '');
 }
 console.log(`preview at ${base}`);
+
+const ACCOUNT_ID = 'cccccccc-0000-4000-8000-000000000001';
+const AUTH_KEY = 'parapo.contributor-auth';
+
+/** Supabase, in memory: the account's session is stored on the phone and its name is in the database. */
+async function standInDatabase(page) {
+  const fake = await fakeContributions(page);
+  fake.users.set(ACCOUNT_ID, {
+    email: 'tester@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Tester', phone: '+639171234567' },
+  });
+  return fake;
+}
+
+/** No signal for the browser and for the stand-in, which Playwright's offline mode does not stop. */
+async function setOffline(context, fake, isOffline) {
+  fake.isOffline = isOffline;
+  await context.setOffline(isOffline);
+}
 
 const START = { latitude: 14.6, longitude: 121.0 };
 /** One fix of the ride, `metres` east of the start. */
@@ -88,6 +112,15 @@ const phone = {
 
 try {
   const context = await browser.newContext(phone);
+  await context.addInitScript(
+    ([key, signedIn]) => {
+      // Once only: the end of the suite signs the phone out, and a reload must not sign it back in.
+      if (localStorage.getItem('seeded')) return;
+      localStorage.setItem('seeded', 'yes');
+      localStorage.setItem(key, JSON.stringify(signedIn));
+    },
+    [AUTH_KEY, session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true })],
+  );
   await context.addInitScript(() => {
     localStorage.setItem('parapo.contribute.consent', '2');
     window.__persistAsked = false;
@@ -112,6 +145,7 @@ try {
 
   // ------------------------------------------------------------- one visit
   const first = await context.newPage();
+  await standInDatabase(first);
   watch(first);
   await first.goto(`${base}/contribute/`, { waitUntil: 'load' });
   await first.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
@@ -166,6 +200,8 @@ try {
   // ---------------------------------------------------- no signal: record
   await context.setOffline(true);
   const page = await context.newPage();
+  const fake = await standInDatabase(page);
+  fake.isOffline = true;
   watch(page);
   await page.goto(`${base}/contribute/`, { waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
@@ -210,7 +246,7 @@ try {
   );
 
   // ----------------------------------------- an update waits for the ride
-  await context.setOffline(false);
+  await setOffline(context, fake, false);
   await page.clock.install();
   await page.evaluate(() => {
     window.__marker = 'same page';
@@ -265,6 +301,19 @@ try {
       stores[0] !== firstStores[0] &&
       (await storedFixes(page)) >= 3,
     JSON.stringify({ stores, firstStores }),
+  );
+
+  // ------------------------------------------ no signal, and no account
+  await setOffline(context, fake, true);
+  await page.evaluate((key) => localStorage.removeItem(key), AUTH_KEY);
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 20000 });
+  check(
+    'with no signal and no account, the page opens on Sign in, with no Start and no page error',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Create account' }).count()) === 1 &&
+      errors.length === 0,
+    errors.slice(0, 3).join(' | '),
   );
 
   check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
