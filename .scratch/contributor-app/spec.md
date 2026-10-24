@@ -95,12 +95,12 @@ A hidden URL on our Cloudflare site, such as `/app/parapo-contributor-<version>.
 
 | # | Ticket | Notes |
 | --- | --- | --- |
-| 01 | Spike: Capacitor app, background location, sign-in and Turnstile on the owner's phone | A throwaway test APK; settles the four risks; go/no-go |
-| 02 | The Android project and building the APK in CI | `android/`, `capacitor.config.ts`, a GitHub workflow that builds a signed APK on a tag |
-| 03 | Native location in the recorder | Plugin fixes in the app, `watchPosition` on the web (kept for dev and tests); the notification; the permission steps; the battery-restriction help |
-| 04 | Signing, the download link and the update check | The key in secrets, the owner's backup, `/app/latest.json`, the "new version" prompt |
-| 05 | Close the web contributor page | `/contribute/` stops serving the recorder; the service worker; `check-build.mjs` |
-| 06 | Docs | CLAUDE.md (stack, folders, `android/`), an ADR for the native app, the consent line "while you record, even with the screen off" (with consent v3) |
+| 01 | Spike (done, #385): Capacitor app, background location, sign-in and Turnstile on the owner's phone | A throwaway test APK; settles the four risks; go/no-go |
+| 02 | [The Android project and building the APK in CI](issues/02-android-project-and-ci.md) | `android/`, `capacitor.config.ts`, a GitHub workflow that builds a signed APK on a tag |
+| 03 | [Native location in the recorder](issues/03-native-location-in-the-recorder.md) | Plugin fixes in the app, `watchPosition` on the web (kept for dev and tests); the notification; the permission steps; the battery-restriction help |
+| 04 | [Signing, the download link and the update check](issues/04-signing-download-and-updates.md) | The key in secrets, the owner's backup, `/app/latest.json`, the "new version" prompt |
+| 05 | [Close the web contributor page](issues/05-close-the-web-contributor-page.md) | `/contribute/` stops serving the recorder; the service worker; `check-build.mjs` |
+| 06 | Docs | Folded into 02 (CLAUDE.md lines and the ADR) and the accounts consent work |
 
 **Order:** 01 first; 02–04 after a "go"; 05 only once testers have the APK.
 
