@@ -91,6 +91,11 @@ export function litWidth(extra = 0) {
   return curve(lit(extra));
 }
 
+/** Half the lit direction's width, `extra` pixels wider: the radius of a dot that sits on the line. */
+export function litRadius(extra = 0) {
+  return curve(lit(extra).map(([zoom, width]): [number, number] => [zoom, width / 2]));
+}
+
 /** The same as a number: what the chevrons are cut to. */
 export function litWidthAt(zoom: number, extra = 0): number {
   return curveAt(lit(extra), zoom);

@@ -3,6 +3,7 @@ import type { FilterSpecification, GeoJSONSource, MapLibreMap } from 'maplibre-g
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
+import { CASING_EXTRA, litRadius, litWidth } from './line-style';
 import type { Way } from '../model/ride-recording';
 
 /** A run of the trail on one way: outbound is papunta, return is pabalik. */
@@ -75,7 +76,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
     source: TRAIL_SRC,
     filter: isLine,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': 9 },
+    paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': litWidth(CASING_EXTRA) },
   });
   map.addLayer({
     id: LINE,
@@ -91,7 +92,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
         MAP_COLOURS['Map/Trail/pabalik'],
         MAP_COLOURS['Map/Trail/papunta'],
       ],
-      'line-width': 5,
+      'line-width': litWidth(),
     },
   });
   map.addLayer({
@@ -100,7 +101,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
     source: TRAIL_SRC,
     filter: ['==', ['get', 'kind'], 'switch'],
     paint: {
-      'circle-radius': 6,
+      'circle-radius': litRadius(CASING_EXTRA),
       'circle-color': MAP_PAINT['Paint/casing'],
       'circle-stroke-color': [
         'match',
