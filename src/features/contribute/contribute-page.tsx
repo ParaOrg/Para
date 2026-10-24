@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { AccountGate } from './account/account-gate';
 import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-client';
+import { useAccountQuery } from './api/use-account-query';
 import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
 import { MarkButton } from './mark-button';
 import { ReadyScreen } from './ready-screen';
@@ -37,8 +38,9 @@ interface ContributePageProps {
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage({ locator }: ContributePageProps) {
   const recording = useRecording();
-  const { hasConsent, giveConsent } = useConsent();
-  const earlier = useEarlierQuestion(recording.saved, hasConsent);
+  const accountId = useAccountQuery().data?.id ?? null;
+  const { hasConsent, giveConsent } = useConsent(accountId);
+  const earlier = useEarlierQuestion(recording.saved, hasConsent, accountId);
   const accountGate = useAccountGate();
   // Nothing is sent until an account is signed in: recordings made before wait on the phone.
   const uploads = useUploads(recording.saved, {

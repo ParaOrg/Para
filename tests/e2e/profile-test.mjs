@@ -415,6 +415,83 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check('before consent, Profile is there and signs the account out', true);
 }
 
+// ------------- a claim that moves uploads in refreshes an open History
+{
+  const claimed = 'dddddddd-0000-4000-8000-0000000000c1';
+  const earlier = 'bbbbbbbb-0000-4000-8000-0000000000b1';
+  const token = 'cccccccc-1111-4000-8000-0000000000c1';
+  const { page, fake } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  // An earlier anonymous identity of this phone holds an upload, and its claim is waiting.
+  database.users.set(earlier, { email: null, password: null, isAccount: false, profile: null });
+  database.rows.set(claimed, {
+    by: earlier,
+    recording: {
+      id: claimed,
+      started_at: new Date(T0).toISOString(),
+      ended_at: new Date(T0 + 600_000).toISOString(),
+      start_name: 'Claimed ride',
+      end_name: 'Cubao',
+      description: '',
+    },
+  });
+  fake.tokens.set(token, { anonymousId: earlier, usedBy: null });
+  await button(page, 'History').click();
+  await row(page, 'Also phone A').waitFor({ timeout: 15000 });
+  check(
+    "before the claim, History does not list the earlier identity's upload",
+    (await row(page, 'Claimed ride').count()) === 0,
+  );
+  await page.evaluate(
+    ([id, claim]) =>
+      localStorage.setItem(
+        'parapo.contributor-claim',
+        JSON.stringify({ token: claim, accountId: id, wasTried: false }),
+      ),
+    [ACCOUNT_ID, token],
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await row(page, 'Claimed ride').waitFor({ timeout: 15000 });
+  check(
+    '  a claim finished while History is open adds the moved upload to it',
+    fake.claims.includes('finish_claim') && (await groupOf(page, 'Claimed ride')) === 'Uploaded',
+    fake.claims.join(),
+  );
+  database.rows.delete(claimed);
+  database.users.delete(earlier);
+}
+
+// ------------ signing out leaves a claim waiting for its own account
+{
+  const { page, fake } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  await page.evaluate(
+    ([id]) =>
+      localStorage.setItem(
+        'parapo.contributor-claim',
+        JSON.stringify({
+          token: 'cccccccc-2222-4000-8000-0000000000c2',
+          accountId: id,
+          wasTried: true,
+        }),
+      ),
+    [ACCOUNT_ID],
+  );
+  await button(page, 'Profile').click();
+  await button(page, 'Sign out').click();
+  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await page.waitForTimeout(500);
+  const kept = JSON.parse(
+    await page.evaluate(() => localStorage.getItem('parapo.contributor-claim')),
+  );
+  check(
+    'Sign out keeps a waiting claim, still bound to its account, and finishes nothing',
+    kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
+    JSON.stringify(kept),
+  );
+}
+
 // ----------------------------------------------------- Sign out
 {
   const { page, fake } = await phone();
