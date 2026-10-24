@@ -57,7 +57,7 @@ async function register(): Promise<void> {
     const registration = await navigator.serviceWorker.register(WORKER_URL, { scope: SCOPE });
     watchForUpdates(registration);
   } catch (error) {
-    console.error('Offline setup failed.', error);
+    console.error('The contributor page could not be set up to open with no signal.', error);
   }
 }
 
