@@ -21,8 +21,17 @@ interface ContributorLocationProps {
   above?: ReactNode;
 }
 
-/** No card on the contributor page: the commuter sits at the map's centre. */
-const NO_OFFSET = (): [number, number] => [0, 0];
+/**
+ * Where the contributor sits from the map's centre: lifted clear of the bars
+ * along the bottom, by half of what the page stands there (`--dock-foot`, as
+ * Locator keeps its button clear of them), so they sit in the middle of what shows.
+ */
+function clearOfBars(): [number, number] {
+  const foot = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--dock-foot'),
+  );
+  return [0, Number.isFinite(foot) ? -foot / 2 : 0];
+}
 
 /**
  * The public map's locator for the contributor's map: the button with the
@@ -39,7 +48,7 @@ export function ContributorLocation({
   isRecording,
   above,
 }: ContributorLocationProps) {
-  const locator = useLocator(map, { compass: coarse, snap: 'low', offset: NO_OFFSET });
+  const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
   const { tap, status, camera } = locator;
 

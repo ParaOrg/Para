@@ -382,6 +382,15 @@ const buttons = (page) =>
       (await page.locator('[data-testid="locator-overlay"]').count()) === 1,
     `${await locatorMode(page)}, ${(await centreOff(page, 1200)).toFixed(1)} m off, bearing ${await bearing(page)}`,
   );
+  const lift = await page.evaluate(([lng, lat]) => {
+    const stack = parseFloat(document.documentElement.style.getPropertyValue('--stack-room'));
+    return { y: window.__map.project([lng, lat]).y, mid: (innerHeight - stack) / 2, stack };
+  }, eastOf(1200));
+  check(
+    '  and it sits lifted clear of the bottom bars, in the middle of the map above them',
+    lift.stack > 0 && Math.abs(lift.y - lift.mid) < 3,
+    JSON.stringify(lift),
+  );
   const outData = await mapSource(page);
   check(
     'the trail is drawn live: one papunta line, no switch dot yet',
@@ -871,6 +880,8 @@ const buttons = (page) =>
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  // The locator's dock slides up as the stack is measured: let it settle.
+  await page.waitForTimeout(800);
   const box = await page.getByRole('button', { name: 'Map design' }).boundingBox();
   const locatorBox = await locate(page).boundingBox();
   const bars = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
@@ -1243,6 +1254,49 @@ const WAKE = () => {
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await page.waitForTimeout(200);
   check('  and Stop lets the one lock go', (await page.evaluate(() => window.__wake.active)) === 0);
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------- Back to the map on every screen, and a ride kept
+{
+  const { page, errors } = await phone({ consented: true });
+  const back = page.getByRole('button', { name: 'Back to the map' });
+  const hasOneBack = async () => (await back.count()) === 1;
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check('Ready has Back to the map', await hasOneBack());
+
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  check('Recording has Back to the map', await hasOneBack());
+  // Fixes are written as they arrive; Back waits for any still in flight.
+  const distanceOf = async () =>
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText())
+      .match(/Distance\s+(\S+\s*\S*)/)?.[1]
+      .trim();
+  const distanceBefore = await distanceOf();
+  await back.click();
+  await page.waitForURL((url) => url.pathname === '/');
+  check('  pressing it leaves for the public map', new URL(page.url()).pathname === '/');
+
+  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
+  check(
+    '  coming back shows the ride as left open, with the distance it had',
+    Boolean(distanceBefore) && (await distanceOf()) === distanceBefore,
+    `${distanceBefore} / ${await distanceOf()}`,
+  );
+  check('Unfinished has Back to the map', await hasOneBack());
+
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  check('Saved has Back to the map, in front of the screen', await hasOneBack());
+  await back.click();
+  await page.waitForURL((url) => url.pathname === '/');
+  check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

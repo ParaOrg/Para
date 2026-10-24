@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 
 import type { LngLat } from '@/shared/utils/geo';
 
+import { marksOf } from './contribution-events';
 import { requireSupabase } from './supabase';
 
 /** How far back the Contributors map looks, in days. */
@@ -162,12 +163,14 @@ export function decodeTrail(batches: readonly Batch[]): TrailPoint[] {
 export interface ContributionDetail {
   trail: TrailPoint[];
   hintos: ContributionHinto[];
+  /** The times the contributor pressed Mark, oldest first; each is placed on the trail by its time. */
+  marks: number[];
 }
 
-/** One upload's whole trail and its hintos. */
+/** One upload's whole trail, its hintos and its marks. */
 export async function fetchContributionDetail(id: string): Promise<ContributionDetail> {
   const client = requireSupabase();
-  const [batches, hintos] = await Promise.all([
+  const [batches, hintos, events] = await Promise.all([
     client
       .from('point_batch')
       .select('seq, first_at, first_lat, first_lng, dt_ms, dlat, dlng')
@@ -178,11 +181,14 @@ export async function fetchContributionDetail(id: string): Promise<ContributionD
       .select('seq, started_at, seconds, lat, lng')
       .eq('contribution_id', id)
       .order('seq'),
+    client.from('contribution').select('id, events').eq('id', id),
   ]);
   if (batches.error) throw new Error(`The trail could not be read: ${batches.error.message}`);
   if (hintos.error) throw new Error(`The hintos could not be read: ${hintos.error.message}`);
+  if (events.error) throw new Error(`The marks could not be read: ${events.error.message}`);
   return {
     trail: decodeTrail(z.array(batchSchema).parse(batches.data)),
     hintos: z.array(hintoSchema).parse(hintos.data),
+    marks: marksOf(events.data[0]?.events),
   };
 }

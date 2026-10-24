@@ -28,6 +28,8 @@ export function MarkButton({ canMark, onMark }: MarkButtonProps) {
   }, [markedTaps]);
 
   const handleClick = () => {
+    // aria-disabled, not disabled: focus stays on the button on the tap that fills the ride.
+    if (!canMark) return;
     onMark();
     setMarkedTaps((taps) => taps + 1);
   };
@@ -46,13 +48,13 @@ export function MarkButton({ canMark, onMark }: MarkButtonProps) {
       <button
         type="button"
         onClick={handleClick}
-        disabled={!canMark}
+        aria-disabled={!canMark}
         aria-label="Mark this place"
         title={canMark ? 'Mark this place' : 'This ride has the most marks it can hold'}
         className={
           'group relative grid size-12 shrink-0 place-items-center rounded-full bg-surface-tertiary text-content-primary ' +
           'outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand-surface ' +
-          'disabled:opacity-60'
+          'aria-disabled:opacity-60'
         }
       >
         <MapPinIcon />
