@@ -1,21 +1,10 @@
-import { useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { accountKeys } from './account-keys';
 import { readPendingClaim } from './claim-token';
 import { finishPendingClaim } from './earlier-identity';
 import { requireClient } from './require-client';
-
-/**
- * Where the account's list of uploads is refreshed once a claim moved uploads into it.
- * TODO: ticket 03's `accountKeys.uploads()` is under key [..., 'uploads']; this matches it by
- * that name until it is on staging, so no key is invented here.
- */
-function invalidateAccountUploads(queryClient: QueryClient): Promise<void> {
-  return queryClient.invalidateQueries({
-    predicate: ({ queryKey }) => queryKey[0] === accountKeys.all[0] && queryKey[1] === 'uploads',
-  });
-}
 
 /**
  * Finishes a claim the sign-in could not, whenever the phone comes back online or to the front,
@@ -29,7 +18,12 @@ export function useClaimRetry(): void {
       if (!readPendingClaim()) return;
       requireClient()
         .then(finishPendingClaim)
-        .then((moved) => (moved > 0 ? invalidateAccountUploads(queryClient) : undefined))
+        .then((moved) =>
+          // The account's uploads now include the ones the claim moved.
+          moved > 0
+            ? queryClient.invalidateQueries({ queryKey: accountKeys.uploads() })
+            : undefined,
+        )
         .catch((error: unknown) => console.warn('The claim could not be retried.', error));
     };
     const handleVisible = () => {

@@ -722,7 +722,8 @@ check(
 // chunks: its script only (its stylesheet is not counted), so it stays a page
 // for a phone in the field. The map it draws on is the public page's, already
 // counted above. What it opens with is held to one budget; the database client,
-// loaded only when a recording is uploaded or removed (with signal), to another.
+// loaded only when a recording is uploaded or removed (with signal), to another. The screens the
+// page opens by a tap (sign-in, Profile, History) are chunks of their own and count toward neither.
 const CONTRIBUTE_OWN_MAX_GZ_KB = 30;
 const CONTRIBUTE_UPLOAD_MAX_GZ_KB = 60;
 const contributeOpening = chunksOf('contribute/index.html', { isStaticOnly: true }).filter(
@@ -735,13 +736,26 @@ check(
   contributeOpening.length > 0 && contributeOwnGz < CONTRIBUTE_OWN_MAX_GZ_KB * 1024,
   `${contributeOpening.join(', ')}: ${(contributeOwnGz / 1024).toFixed(1)} kB`,
 );
-const contributeUploadGz = gzipBytes(dist, contributeOnDemand);
+// What the upload loads on first need is the database client's chunk and what that chunk imports,
+// not every chunk the page can load later: the sign-in, Profile and History screens are loaded
+// by being opened, so they are not part of an upload.
+const clientFiles = contributeOnDemand.filter((f) =>
+  packageModules([f]).some((p) => p.startsWith('@supabase/')),
+);
+const contributeUploadFiles = [
+  ...new Set(
+    Object.entries(manifest)
+      .filter(([, chunk]) => clientFiles.includes(chunk.file))
+      .flatMap(([key]) => chunksOf(key, { isStaticOnly: true })),
+  ),
+].filter((f) => !contributeOpening.includes(f) && !commuterFiles.includes(f));
+const contributeUploadGz = gzipBytes(dist, contributeUploadFiles);
 check(
   `the contribute page's upload, loaded on first need, is under ${CONTRIBUTE_UPLOAD_MAX_GZ_KB} kB gzipped and holds the client`,
-  packageModules(contributeOnDemand).some((p) => p.startsWith('@supabase/')) &&
+  clientFiles.length > 0 &&
     !packageModules(contributeOpening).some((p) => p.startsWith('@supabase/')) &&
     contributeUploadGz < CONTRIBUTE_UPLOAD_MAX_GZ_KB * 1024,
-  `${contributeOnDemand.join(', ')}: ${(contributeUploadGz / 1024).toFixed(1)} kB`,
+  `${contributeUploadFiles.join(', ')}: ${(contributeUploadGz / 1024).toFixed(1)} kB`,
 );
 
 // 6. Stylesheet order. The rules each page's stylesheets hold, in the order
