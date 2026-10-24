@@ -1,4 +1,4 @@
-import { ContributeMap } from './contribute-map';
+import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
 import { ReadyScreen } from './ready-screen';
 import { RecordingScreen } from './recording-screen';
 import { SaveForm } from './save-form';
@@ -6,30 +6,28 @@ import { SavedScreen } from './saved-screen';
 import { UnfinishedScreen } from './unfinished-screen';
 import { UploadCheck } from './upload-check';
 import { uploadStatusText } from './upload-status';
-import { useFollow } from './use-follow';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 import { useUploads } from './use-uploads';
 
+interface ContributePageProps {
+  /** The locator on the map: the shell's, since this feature may not import the locator's. */
+  locator?: ContributeLocatorSlot;
+}
+
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
-export function ContributePage() {
+export function ContributePage({ locator }: ContributePageProps) {
   const recording = useRecording();
   const uploads = useUploads(recording.saved);
-  const follow = useFollow();
   const track = useRecordingTrack(recording.kept, recording.current?.switches);
   const { phase, figures } = recording;
-
-  const handleStart = () => {
-    follow.recentre();
-    recording.start();
-  };
 
   return (
     <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
       <ContributeMap
         track={track}
-        follow={follow}
-        hasRecording={phase === 'recording' || phase === 'paused'}
+        isRecording={phase === 'recording' || phase === 'paused'}
+        locator={locator}
       />
       {recording.problem && (
         <p
@@ -47,7 +45,7 @@ export function ContributePage() {
       </p>
       {phase === 'ready' && (
         <ReadyScreen
-          onStart={handleStart}
+          onStart={recording.start}
           saved={recording.saved}
           uploads={uploads}
           onDownloadSaved={recording.downloadSaved}

@@ -58,6 +58,7 @@ flowchart TD
   end
   app_contribute --> design_system_foundation
   app_contribute --> features_contribute
+  app_contribute --> features_locator
   app_contribute --> styles
   app_public_map --> design_system_primitives
   app_public_map --> features_locator
@@ -166,7 +167,7 @@ flowchart TD
 
 | Unit | Imports |
 | --- | --- |
-| `app/contribute` | `design-system/foundation`, `features/contribute`, `styles` |
+| `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `styles` |
 | `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `styles` |
 | `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
@@ -201,11 +202,11 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`
+`ContributePage`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`
 
 ### `features/locator`
 
-`useGazeHush`, `CommuterLocation`
+`useGazeHush`, `CommuterLocation`, `ContributorLocation`
 
 ### `features/published-map`
 

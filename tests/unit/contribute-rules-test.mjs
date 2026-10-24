@@ -31,7 +31,7 @@ test('the leg button switches to the other way, and the ways read as papunta and
   assert.equal(WAY_LABEL.return, 'Pabalik');
 });
 
-test('the trail is a papunta line, a pabalik line joined to it at the switch, a dot there, and the contributor', () => {
+test('the trail is a papunta line, a pabalik line joined to it at the switch, and a dot there', () => {
   const kept = [fix(0, 0), fix(10, 100), fix(20, 200), fix(30, 100), fix(40, 0)];
   const trail = trailOf(kept, [{ time: T0 + 20_000, to: 'return' }]);
   assert.deepEqual(
@@ -40,12 +40,10 @@ test('the trail is a papunta line, a pabalik line joined to it at the switch, a 
   );
   assert.deepEqual(trail.lines[0].path.at(-1), trail.lines[1].path[0]);
   assert.deepEqual(trail.markers, [{ at: kept[2].at, way: 'return' }]);
-  assert.deepEqual(trail.here, kept[4].at);
 });
 
-test('before a switch there is no dot, and before a fix no contributor', () => {
+test('before a switch there is no dot', () => {
   assert.equal(trailOf([fix(0, 0), fix(10, 100)], []).markers.length, 0);
-  assert.equal(trailOf([], []).here, null);
 });
 
 test('the stats strip and the countdown say their figures the way the design reads them', () => {

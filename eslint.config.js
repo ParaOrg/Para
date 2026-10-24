@@ -226,12 +226,11 @@ export default defineConfig([
               from: [
                 './src/app/public-map',
                 './src/app/studio',
-                './src/features/locator',
                 './src/features/published-map',
                 './src/features/studio',
               ],
               message:
-                'The contribute shell imports contribute, routes, shared, styles and the design system only.',
+                'The contribute shell imports contribute, the locator, routes, shared, styles and the design system only.',
             },
             {
               target: './src/app/public-map',

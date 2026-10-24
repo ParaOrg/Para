@@ -30,8 +30,8 @@ const GPS = () => {
   Object.defineProperty(navigator, 'geolocation', {
     configurable: true,
     value: {
-      watchPosition: (ok) => {
-        watchers.set(++nextId, ok);
+      watchPosition: (ok, _error, options) => {
+        watchers.set(++nextId, { ok, options });
         return nextId;
       },
       clearWatch: (id) => watchers.delete(id),
@@ -43,19 +43,24 @@ const GPS = () => {
   Date.now = () => now;
   window.__advance = (ms) => (now += ms);
   window.__fix = (lng, lat, t) =>
-    watchers.forEach((ok) =>
+    watchers.forEach(({ ok }) =>
       ok({
         timestamp: t,
         coords: { longitude: lng, latitude: lat, accuracy: 5, heading: null, speed: null },
       }),
     );
-  window.__watchers = () => watchers.size;
+  // The recording's watch asks for no cached fix (maximumAge 0); the locator's takes one a second old.
+  const count = (isRecording) =>
+    [...watchers.values()].filter(({ options }) => (options?.maximumAge === 0) === isRecording)
+      .length;
+  window.__watchers = () => count(true);
+  window.__locatorWatchers = () => count(false);
 };
 
 const browser = await chromium.launch();
 
 /** A phone-sized page with the stand-in GPS; `consented` skips the first-visit question. */
-async function phone({ consented }) {
+async function phone({ consented, granted = false }) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -63,6 +68,8 @@ async function phone({ consented }) {
     isMobile: true,
     acceptDownloads: true,
   });
+  // The browser already lets the page read the location, as it does after a first visit's yes.
+  if (granted) await context.grantPermissions(['geolocation']);
   const page = await context.newPage();
   // PARAPO_CPU_THROTTLE=4 runs the page at a quarter of the container's speed, as a slow CI runner is.
   if (process.env.PARAPO_CPU_THROTTLE) {
@@ -114,6 +121,27 @@ const storedStatus = (page) =>
           };
         };
       }),
+  );
+/** A phone's compass, facing `heading`: Chrome's absolute orientation, alpha counter-clockwise from north. */
+const face = (page, heading) =>
+  page.evaluate((h) => {
+    window.dispatchEvent(
+      new DeviceOrientationEvent('deviceorientationabsolute', {
+        alpha: (360 - h) % 360,
+        beta: 0,
+        gamma: 0,
+        absolute: true,
+      }),
+    );
+  }, heading);
+/** The locator's button, and the look it wears (LocatorButton's Property 1). */
+const locate = (page) => page.locator('[data-testid="where"]');
+const locatorMode = (page) => locate(page).getAttribute('data-mode');
+/** How far the map's centre is from `metres` east of the start, in metres. */
+const centreOff = (page, metres) =>
+  page.evaluate(
+    ([lng, mPerDeg]) => Math.abs(window.__map.getCenter().lng - lng) * mPerDeg,
+    [eastOf(metres)[0], M_PER_DEG_LNG],
   );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
 /** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
@@ -188,7 +216,7 @@ const buttons = (page) =>
     );
   }
   check(
-    "  the map-style button is the map's own, top right",
+    '  the map-style button is on the locator button',
     (await page.getByRole('button', { name: 'Map design' }).count()) === 1,
   );
   check(
@@ -235,10 +263,14 @@ const buttons = (page) =>
     /1\.2\s*km/.test(outDistance),
     outDistance.replace(/\n/g, ' '),
   );
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
   check(
-    'the map follows: course-up turns east, the way the ride goes',
-    Math.abs((await bearing(page)) - 90) < 10,
-    String(await bearing(page)),
+    "Start puts the locator on the ride: the camera follows it, north up, and the dot is the locator's",
+    (await locatorMode(page)) === 'TrackedLocation' &&
+      (await centreOff(page, 1200)) < 15 &&
+      Math.abs((await bearing(page)) % 360) < 1 &&
+      (await page.locator('[data-testid="locator-overlay"]').count()) === 1,
+    `${await locatorMode(page)}, ${(await centreOff(page, 1200)).toFixed(1)} m off, bearing ${await bearing(page)}`,
   );
   const outData = await mapSource(page);
   check(
@@ -304,63 +336,66 @@ const buttons = (page) =>
         JSON.stringify(lineOf('outbound')[0].geometry.coordinates.at(-1)),
   );
   check(
-    '  the map turned with the ride: course-up now heads west',
-    Math.abs((await bearing(page)) - 270) < 10,
-    String(await bearing(page)),
+    '  no dot of the recording is drawn: the locator is the one dot',
+    pabalikData.features.every((f) => f.properties.kind !== 'here'),
   );
   await shot(page, '3-recording-pabalik');
 
-  // North-up, a pan that lets the camera go, and the recentre.
-  await page.getByRole('button', { name: 'Keep north at the top' }).click();
+  // The locator's cycle: turn with the compass, north up again, a pan lets go, a tap follows.
+  await face(page, 270);
+  await locate(page).click();
+  await page.waitForFunction(
+    () => Math.abs(((window.__map.getBearing() + 360) % 360) - 270) < 5,
+    null,
+    {
+      timeout: 30000,
+    },
+  );
+  check(
+    'a tap on the locator turns the map the way the phone faces: west, as the ride goes',
+    (await locatorMode(page)) === 'TracksTheMapBasedOnCompassFacing',
+    `${await locatorMode(page)}, bearing ${await bearing(page)}`,
+  );
+  check(
+    '  its label has become "Put north up"',
+    (await locate(page).getAttribute('aria-label')) === 'Put north up',
+  );
+  await locate(page).click();
   await page.waitForFunction(
     () => Math.abs(window.__map.getBearing()) < 1 || Math.abs(window.__map.getBearing()) > 359,
+    null,
+    { timeout: 30000 },
   );
-  check('the north-up button turns the map north and offers the way back', true);
   check(
-    '  its label has become "Turn the map with your direction"',
-    (await page.getByRole('button', { name: 'Turn the map with your direction' }).count()) === 1,
-  );
-  await page.getByRole('button', { name: 'Turn the map with your direction' }).click();
-  await page.waitForFunction(() => Math.abs(((window.__map.getBearing() + 360) % 360) - 270) < 10);
-  check(
-    'a pan lets the camera go until a recentre',
-    (await page.getByRole('button', { name: 'Follow me again' }).count()) === 0,
+    'the next tap puts north up again, still following',
+    (await locatorMode(page)) === 'TrackedLocation',
+    await locatorMode(page),
   );
   await page.mouse.move(200, 300);
   await page.mouse.down();
   await page.mouse.move(120, 360, { steps: 6 });
   await page.mouse.up();
-  await page.getByRole('button', { name: 'Follow me again' }).waitFor();
-  // The drag's glide has to be over before the centre is read; then a fix arrives, and
-  // the check waits for the map to have it (the trail's dot is there) before looking.
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
+  check(
+    'a pan lets the camera go: the locator button offers the way back',
+    (await locatorMode(page)) === 'TrackOwnLocation' &&
+      (await locate(page).getAttribute('aria-label')) === 'Show where I am',
+    await locatorMode(page),
+  );
+  // The drag's glide is over; then a fix arrives, and the camera must not follow it.
   const centreBefore = await page.evaluate(() => window.__map.getCenter().lng);
   await ride(page, 690, 640);
-  await page.waitForFunction(
-    (lng) =>
-      window.__map
-        .getSource('recording-trail')
-        ?.serialize()
-        .data.features.some(
-          (f) => f.properties.kind === 'here' && Math.abs(f.geometry.coordinates[0] - lng) < 1e-7,
-        ),
-    eastOf(640)[0],
-    { timeout: 30000 },
-  );
   await page.waitForTimeout(1500);
   check(
     '  a new fix does not move a map the finger took',
     Math.abs((await page.evaluate(() => window.__map.getCenter().lng)) - centreBefore) < 1e-6,
   );
-  await page.getByRole('button', { name: 'Follow me again' }).click();
-  await page.waitForFunction(
-    (lng) => Math.abs(window.__map.getCenter().lng - lng) < 1e-4 && !window.__map.isMoving(),
-    eastOf(640)[0],
-    { timeout: 30000 },
-  );
+  await locate(page).click();
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
   check(
-    '  Follow me again brings the camera back to the ride',
-    (await page.getByRole('button', { name: 'Follow me again' }).count()) === 0,
+    '  a tap brings the camera back to the ride',
+    (await locatorMode(page)) === 'TrackedLocation' && (await centreOff(page, 640)) < 15,
+    `${await locatorMode(page)}, ${(await centreOff(page, 640)).toFixed(1)} m off`,
   );
 
   // Back within 300 m of the start: the recording ends itself and the form opens.
@@ -606,19 +641,102 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ----------------- the locator before Start: on its own when the browser allows it, else on a tap
+{
+  const { page, errors } = await phone({ consented: true, granted: true });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__locatorWatchers() === 1, null, { timeout: 10000 });
+  check(
+    'with location already allowed, the locator starts on open, and the recording has not',
+    (await page.evaluate(() => window.__watchers())) === 0,
+  );
+  await emit(page, 0);
+  await page.waitForFunction(
+    (lng) => Math.abs(window.__map.getCenter().lng - lng) < 1e-4 && !window.__map.isMoving(),
+    eastOf(0)[0],
+    { timeout: 30000 },
+  );
+  check(
+    '  its dot shows on the first fix, and the camera is on it, before Start',
+    (await page.locator('[data-testid="locator-overlay"]').count()) === 1 &&
+      (await locatorMode(page)) === 'TrackedLocation' &&
+      (await centreOff(page, 0)) < 15,
+    `${await locatorMode(page)}, ${(await centreOff(page, 0)).toFixed(1)} m off`,
+  );
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  check(
+    'Start leaves the locator following, with its own watch beside the recording',
+    (await locatorMode(page)) === 'TrackedLocation' &&
+      (await page.evaluate(() => [window.__watchers(), window.__locatorWatchers()])).join() ===
+        '1,1',
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+{
+  const { page, errors } = await phone({ consented: true });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  await page.waitForTimeout(500);
+  check(
+    'without it, nothing asks until a tap: no watch, no dot, the button offers location',
+    (await page.evaluate(() => window.__locatorWatchers())) === 0 &&
+      (await locatorMode(page)) === 'LocationOff' &&
+      (await locate(page).getAttribute('aria-label')) === 'Turn on my location',
+  );
+  await locate(page).click();
+  check(
+    '  a tap on the button asks, as on the public map',
+    (await page.evaluate(() => window.__locatorWatchers())) === 1,
+  );
+  await emit(page, 0);
+  await page.waitForFunction(
+    (lng) => Math.abs(window.__map.getCenter().lng - lng) < 1e-4 && !window.__map.isMoving(),
+    eastOf(0)[0],
+    { timeout: 30000 },
+  );
+  await page.mouse.move(200, 300);
+  await page.mouse.down();
+  await page.mouse.move(120, 360, { steps: 6 });
+  await page.mouse.up();
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
+  check('  a drag lets the camera go', (await locatorMode(page)) === 'TrackOwnLocation');
+  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
+  check(
+    'Start with the camera let go brings it back to the contributor',
+    (await locatorMode(page)) === 'TrackedLocation',
+    await locatorMode(page),
+  );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ----------------- where the buttons are, standing still, and Stop on an unfinished one
 {
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   const box = await page.getByRole('button', { name: 'Map design' }).boundingBox();
+  const locatorBox = await locate(page).boundingBox();
+  const bars = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
   check(
-    "the map-style button is Figma's 40 px IconButton, 16 px from the top and right",
+    "the map-style button sits on the locator button, the public map's 48 px pair, 12 px from the right",
     box &&
-      Math.abs(box.width - 40) < 0.5 &&
-      Math.abs(box.y - 16) < 0.5 &&
-      Math.abs(393 - (box.x + box.width) - 16) < 0.5,
-    JSON.stringify(box),
+      locatorBox &&
+      Math.abs(box.width - 48) < 0.5 &&
+      Math.abs(393 - (box.x + box.width) - 12) < 0.5 &&
+      Math.abs(locatorBox.x - box.x) < 0.5 &&
+      box.y + box.height <= locatorBox.y + 0.5,
+    JSON.stringify([box, locatorBox]),
+  );
+  check(
+    '  and above the Start bar, not under it',
+    bars && locatorBox && locatorBox.y + locatorBox.height <= bars.y + 0.5,
+    JSON.stringify([locatorBox, bars]),
   );
   check(
     '  the credits are not in that corner: they are bottom right',

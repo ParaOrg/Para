@@ -31,6 +31,5 @@ export function trailOf(kept: readonly Fix[], switches: readonly WaySwitch[]): R
       ...ways.returnLines.map((path) => ({ way: 'return' as const, path })),
     ],
     markers: ways.markers.map((marker) => ({ at: marker.at, way: marker.to })),
-    here: kept[kept.length - 1]?.at ?? null,
   };
 }
