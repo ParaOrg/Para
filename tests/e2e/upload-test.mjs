@@ -52,11 +52,11 @@ const browser = await chromium.launch();
 
 /**
  * A phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same
- * site. `consent` is what the phone has stored: '2' (the current text) unless given, 'yes' (the
+ * site. `consent` is what the phone has stored: '3' (the current text) unless given, 'yes' (the
  * first text) or null (never asked). `opens` is the screen the page is waited on. The phone is
  * already signed in to an account: the page shows nothing else until one is.
  */
-async function phone({ studioSession = false, consent = '2', opens = 'start' } = {}) {
+async function phone({ studioSession = false, consent = '3', opens = 'start' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -595,7 +595,7 @@ const groupOf = (page, name) =>
   await waitForStatus(page, 'No consent', UPLOADED);
   check(
     '  agreeing to the current text sends it, with the text' + "'" + 's version',
-    fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 2,
+    fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 3,
   );
   check(
     '  the phone remembers the version agreed to',
@@ -725,7 +725,7 @@ const groupOf = (page, name) =>
   await waitForStatus(page, 'Sent one', UPLOADED);
   check(
     'Send uploads the earlier recordings, each with the current text' + "'" + 's version',
-    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 2),
+    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 3),
   );
   await page.evaluate(() => {
     location.hash = '';

@@ -19,8 +19,6 @@ const lineSchema = z.object({
   coordinates: z.array(z.tuple([z.number(), z.number()])),
 });
 
-const NO_NAME: string | null = null;
-
 const contributionRowSchema = z.pipe(
   z.object({
     id: z.string(),
@@ -51,8 +49,6 @@ const contributionRowSchema = z.pipe(
     contributorId: row.contributor_id,
     /** The phone, as the studio shows it: the first six characters of its identity, never more. */
     phoneCode: row.contributor_id?.slice(0, 6) ?? null,
-    /** The account's name, filled in by fetchContributions; never the number or the email. */
-    contributorName: NO_NAME,
     startedAt: Date.parse(row.started_at),
     endedAt: Date.parse(row.ended_at),
     receivedAt: Date.parse(row.received_at),
@@ -75,7 +71,12 @@ const contributionRowSchema = z.pipe(
     hiddenNote: row.hidden_note ?? '',
   })),
 );
-export type Contribution = z.infer<typeof contributionRowSchema>;
+type ContributionRow = z.infer<typeof contributionRowSchema>;
+
+export interface Contribution extends ContributionRow {
+  /** The account's name, read from the contributor row; never the number or the email. */
+  contributorName: string | null;
+}
 
 const LIST_COLUMNS =
   'id, contributor_id, started_at, ended_at, received_at, vehicle, start_name, end_name, description, distance_m, moving_s, standing_s, lost_s, point_count, line, west, south, east, north, hidden_at, hidden_note';

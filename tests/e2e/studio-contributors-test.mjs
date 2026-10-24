@@ -125,7 +125,7 @@ const db = await fakeStudioDb(page, {
       blocked_at: null,
       block_note: null,
     },
-    { id: PHONE_B, blocked_at: null, block_note: null },
+    { id: PHONE_B, name: null, blocked_at: null, block_note: null },
   ],
   contribution: [
     upload(C1, PHONE_A, {
