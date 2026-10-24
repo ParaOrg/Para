@@ -69,6 +69,7 @@ flowchart TD
   app_public_map --> features_routes_published
   app_public_map --> shared_hooks
   app_public_map --> shared_ui
+  app_public_map --> shared_utils
   app_public_map --> styles
   app_studio --> features_locator
   app_studio --> features_routes_cards
@@ -82,6 +83,7 @@ flowchart TD
   features_contribute --> features_routes_cards
   features_contribute --> features_routes_map
   features_contribute --> features_routes_model
+  features_contribute --> shared_hooks
   features_contribute --> shared_types
   features_contribute --> shared_ui
   features_contribute --> shared_utils
@@ -168,11 +170,11 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `styles` |
-| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `styles` |
+| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `shared/utils`, `styles` |
 | `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
-| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/types`, `shared/ui`, `shared/utils` |
+| `features/contribute` | `design-system/primitives`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/types`, `shared/ui`, `shared/utils` |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |

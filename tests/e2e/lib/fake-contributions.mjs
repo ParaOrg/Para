@@ -6,6 +6,7 @@
 // stand-in does not know is answered 501 and counted in `unknown`.
 //
 // Faults, set on `fake.next` before the request they are for:
+//   signupDisabled the sign-in is answered 422, as with sign-ups turned off
 //   offline       the save request fails as with no signal
 //   lostAnswer    the save is stored, then the answer is lost on the way back
 //   hold          the save waits until `fake.release()` (an upload in flight)
@@ -80,6 +81,15 @@ export async function fakeContributions(page) {
       fake.signIns += 1;
       const body = request.postDataJSON() ?? {};
       fake.captchaTokens.push(body.gotrue_meta_security?.captcha_token ?? null);
+      const fault = fake.next.signIn;
+      delete fake.next.signIn;
+      if (fault === 'signupDisabled') {
+        return json(route, 422, {
+          code: 422,
+          error_code: 'signup_disabled',
+          msg: 'Signups not allowed for this instance',
+        });
+      }
       return json(route, 200, session(crypto.randomUUID()));
     }
     if (url.pathname === '/auth/v1/user' && method === 'GET') {

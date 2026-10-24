@@ -2,39 +2,15 @@ import * as z from 'zod/mini';
 
 import { contributeClient, type ContributeClient } from './contribute-client';
 import type { ContributionPayload } from './contribution-payload-schema';
+import { UploadError, problemOf, signInProblemOf, type DatabaseError } from './upload-problem';
 
-/**
- * Why an upload or a delete did not go through.
- * - `offline`: no answer; the same request will be tried again.
- * - `day-cap`: 20 uploads in 24 hours; tried again later.
- * - `refused`: the database will never take this recording as it is.
- * - `blocked`: this phone may not upload.
- * - `check-failed`: the bot check was not passed; tried again on the next attempt.
- * - `unavailable`: this build has no database to upload to.
- */
-export type UploadProblem =
-  'offline' | 'day-cap' | 'refused' | 'blocked' | 'check-failed' | 'unavailable';
-
-export class UploadError extends Error {
-  readonly problem: UploadProblem;
-  constructor(problem: UploadProblem, detail: string) {
-    super(detail);
-    this.name = 'UploadError';
-    this.problem = problem;
+/** The error to throw for a database answer, logging one the page does not know. */
+function answerError(error: DatabaseError, status: number): UploadError {
+  const problem = problemOf(error, status);
+  if (problem === 'not-accepting') {
+    console.warn(`ParaPo did not accept the request (HTTP ${status}):`, error.message);
   }
-}
-
-interface DatabaseError {
-  code?: string;
-  message: string;
-}
-
-/** Sorts an answer's error into what the page does next. Anything unknown is treated as no signal. */
-export function problemOf(error: DatabaseError): UploadProblem {
-  if (error.code === 'P0001') return error.message.startsWith('day_cap') ? 'day-cap' : 'refused';
-  if (error.code === '42501') return 'blocked';
-  if (error.code === '23514' || error.code === '22P02' || error.code === '22023') return 'refused';
-  return 'offline';
+  return new UploadError(problem, error.message);
 }
 
 async function requireClient(): Promise<ContributeClient> {
@@ -59,10 +35,19 @@ export async function ensureSignedIn(captchaToken?: string): Promise<string> {
   const signedIn = await client.auth.signInAnonymously(
     captchaToken ? { options: { captchaToken } } : undefined,
   );
-  if (signedIn.error || !signedIn.data.user) {
-    const message = signedIn.error?.message ?? 'no user';
-    const problem = /captcha/i.test(message) ? 'check-failed' : 'offline';
-    throw new UploadError(problem, `Signing in failed: ${message}`);
+  if (signedIn.error) {
+    const problem = signInProblemOf(signedIn.error);
+    if (problem === 'not-accepting') {
+      console.warn(
+        `Signing in was refused (HTTP ${signedIn.error.status}):`,
+        signedIn.error.message,
+      );
+    }
+    throw new UploadError(problem, `Signing in failed: ${signedIn.error.message}`);
+  }
+  if (!signedIn.data.user) {
+    console.warn('Signing in answered with no user.');
+    throw new UploadError('not-accepting', 'Signing in failed: no user');
   }
   return signedIn.data.user.id;
 }
@@ -84,18 +69,21 @@ export async function uploadContribution(
   payload: ContributionPayload,
 ): Promise<'saved' | 'already saved'> {
   const client = await requireClient();
-  const { data, error } = await client.rpc('save_contribution', { recording: payload });
-  if (error) throw new UploadError(problemOf(error), error.message);
+  const { data, error, status } = await client.rpc('save_contribution', { recording: payload });
+  if (error) throw answerError(error, status);
   const answer = saveAnswerSchema.safeParse(data);
-  if (!answer.success) throw new UploadError('offline', `Unexpected answer: ${String(data)}`);
+  if (!answer.success) {
+    console.warn('ParaPo gave an unexpected answer to an upload:', data);
+    throw new UploadError('not-accepting', `Unexpected answer: ${String(data)}`);
+  }
   return answer.data;
 }
 
 /** The ids of this phone's own uploads still in ParaPo; row security answers no one else's. */
 export async function uploadsStillThere(): Promise<Set<string>> {
   const client = await requireClient();
-  const { data, error } = await client.from('contribution').select('id');
-  if (error) throw new UploadError(problemOf(error), error.message);
+  const { data, error, status } = await client.from('contribution').select('id');
+  if (error) throw answerError(error, status);
   return new Set(
     z
       .array(z.object({ id: z.string() }))
@@ -110,6 +98,6 @@ export async function uploadsStillThere(): Promise<Set<string>> {
  */
 export async function removeUpload(contributionId: string): Promise<void> {
   const client = await requireClient();
-  const { error } = await client.from('contribution').delete().eq('id', contributionId);
-  if (error) throw new UploadError(problemOf(error), error.message);
+  const { error, status } = await client.from('contribution').delete().eq('id', contributionId);
+  if (error) throw answerError(error, status);
 }

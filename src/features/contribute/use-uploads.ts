@@ -6,17 +6,17 @@ import { canUpload } from './api/contribute-client';
 import { turnstileSiteKey } from './api/env';
 import { packRecording, type PackRefusal } from './api/pack-recording';
 import {
-  UploadError,
   currentIdentity,
   ensureSignedIn,
   removeUpload,
   uploadContribution,
   uploadsStillThere,
-  type UploadProblem,
 } from './api/upload-contribution';
+import { UploadError, type UploadProblem } from './api/upload-problem';
+import { CONSENT_VERSION, isEarlierRecording } from './consent-version';
 import type { Recording } from './recording-schema';
 import { loadFixes, updateRecording } from './recording-store';
-import { CONSENT_VERSION } from './use-consent';
+import type { EarlierChoice } from './use-earlier-choice';
 
 /** Where a saved recording's upload stands. */
 export type UploadStatus =
@@ -25,10 +25,19 @@ export type UploadStatus =
   | { state: 'checking' }
   | { state: 'uploading' }
   | { state: 'uploaded'; at: number; by: string; problem?: string }
-  | { state: 'failed'; message: string; willRetry: boolean }
+  /** `message` is the whole sentence; `brief` is its reason alone, for History, whose layout says the rest. */
+  | { state: 'failed'; message: string; brief: string; willRetry: boolean }
   | { state: 'removing' }
   | { state: 'removed'; byEditor?: boolean }
+  /** Not sent on its own: made before the current consent text, and the person kept it on the phone. */
+  | { state: 'held' }
   | { state: 'unavailable' };
+
+/** What lets a recording go: consent to the current text, and for earlier recordings the person's answer. */
+export interface UploadGate {
+  hasConsent: boolean;
+  earlier: EarlierChoice | null;
+}
 
 export interface Uploads {
   statusOf: (recording: Recording) => UploadStatus;
@@ -51,35 +60,59 @@ export interface UploadCheck {
   onToken: (token: string | null) => void;
 }
 
-const FAILED: Record<UploadProblem | PackRefusal, { message: string; willRetry: boolean }> = {
+const FAILED: Record<
+  UploadProblem | PackRefusal,
+  { message: string; brief: string; willRetry: boolean }
+> = {
   offline: {
     message: 'Not uploaded yet: no signal. It tries again when the phone is back online.',
+    brief: 'No signal',
     willRetry: true,
   },
   'day-cap': {
     message: 'Not uploaded yet: this phone has sent 20 recordings today. It tries again later.',
+    brief: '20 recordings sent today',
     willRetry: true,
   },
   refused: {
     message: "ParaPo's checks refused this recording. It stays on this phone.",
+    brief: "Refused by ParaPo's checks",
     willRetry: false,
   },
-  blocked: { message: 'This phone cannot upload recordings.', willRetry: false },
+  blocked: {
+    message: 'This phone cannot upload recordings.',
+    brief: 'This phone cannot upload',
+    willRetry: false,
+  },
   'check-failed': {
     message: 'The check that you are a person did not pass. Try again.',
+    brief: 'Person check not passed',
     willRetry: false,
   },
-  unavailable: { message: 'Uploading is not available on this page.', willRetry: false },
+  unavailable: {
+    message: 'Uploading is not available on this page.',
+    brief: 'Uploading is not available here',
+    willRetry: false,
+  },
+  'not-accepting': {
+    message:
+      'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
+    brief: "ParaPo isn't taking uploads now",
+    willRetry: true,
+  },
   'too-long': {
     message: 'Longer than 6 hours, so it cannot be uploaded. It stays on this phone.',
+    brief: 'Longer than 6 hours',
     willRetry: false,
   },
   'too-many-points': {
     message: 'Too large to upload. It stays on this phone.',
+    brief: 'Too large to upload',
     willRetry: false,
   },
   'line-too-large': {
     message: 'Too large to upload. It stays on this phone.',
+    brief: 'Too large to upload',
     willRetry: false,
   },
 };
@@ -99,11 +132,12 @@ const toFix = (row: { time: number; lng: number; lat: number; accuracyM: number 
  * comes back online or to the front; one that failed for want of signal is
  * tried again then too. The phone's copy is never deleted here.
  */
-export function useUploads(saved: readonly Recording[]): Uploads {
+export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploads {
   const [overlay, setOverlay] = useState<Record<string, UploadStatus>>({});
   const [identity, setIdentity] = useState<string | null>(null);
   const inFlight = useRef(new Set<string>());
   const savedRef = useRef(saved);
+  const gateRef = useRef(gate);
   const overlayRef = useRef(overlay);
   const isAvailable = canUpload();
   const [isCheckNeeded, setIsCheckNeeded] = useState(false);
@@ -134,6 +168,12 @@ export function useUploads(saved: readonly Recording[]): Uploads {
     setOverlay(overlayRef.current);
   };
 
+  /** Whether this recording is sent without being asked for: only under consent to the current text. */
+  function isSentOnItsOwn(recording: Recording): boolean {
+    if (!gate.hasConsent) return false;
+    return !isEarlierRecording(recording.consentVersion) || gate.earlier === 'send';
+  }
+
   function statusOf(recording: Recording): UploadStatus {
     const shown = overlay[recording.id];
     if (shown) return shown;
@@ -141,11 +181,13 @@ export function useUploads(saved: readonly Recording[]): Uploads {
     if (recording.upload?.state === 'removed') {
       return { state: 'removed', byEditor: recording.upload.byEditor === true };
     }
-    return isAvailable ? { state: 'waiting' } : { state: 'unavailable' };
+    if (!isAvailable) return { state: 'unavailable' };
+    return isSentOnItsOwn(recording) ? { state: 'waiting' } : { state: 'held' };
   }
 
   async function send(recording: Recording) {
-    if (inFlight.current.has(recording.id)) return;
+    // Nothing leaves the phone without consent to the current text, whoever asks.
+    if (!gateRef.current.hasConsent || inFlight.current.has(recording.id)) return;
     inFlight.current.add(recording.id);
     setStatus(recording.id, { state: 'uploading' });
     try {
@@ -196,8 +238,8 @@ export function useUploads(saved: readonly Recording[]): Uploads {
       setStatus(recording.id, { state: 'removed' });
     } catch (error) {
       if (!(error instanceof UploadError)) console.error('Removing an upload failed.', error);
-      const { message } = FAILED[problemOfError(error)];
-      setStatus(recording.id, { ...before, problem: `Not removed. ${message}` });
+      const { brief } = FAILED[problemOfError(error)];
+      setStatus(recording.id, { ...before, problem: `Not removed. ${brief}` });
     } finally {
       inFlight.current.delete(recording.id);
     }
@@ -208,20 +250,26 @@ export function useUploads(saved: readonly Recording[]): Uploads {
     savedRef.current = saved;
   }, [saved]);
 
+  useEffect(() => {
+    gateRef.current = { hasConsent: gate.hasConsent, earlier: gate.earlier };
+  }, [gate.hasConsent, gate.earlier]);
+
   // A recording not tried yet is sent as soon as the list holds it: the page
-  // opened, or one was just saved. A change to the list for any other reason
-  // (a delete) retries nothing.
+  // opened, or one was just saved, or consent or the answer about earlier ones
+  // arrived. A change to the list for any other reason (a delete) retries nothing.
   useEffect(() => {
     if (!isAvailable) return;
     for (const recording of saved) {
-      if (recording.upload === undefined && !overlayRef.current[recording.id]) void send(recording);
+      const isNew = recording.upload === undefined && !overlayRef.current[recording.id];
+      if (isNew && isSentOnItsOwn(recording)) void send(recording);
     }
-    // send reads only refs and setters; a new list is what should send.
+    // send reads only refs and setters; a new list or gate is what should send.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
-  }, [saved, isAvailable]);
+  }, [saved, isAvailable, gate.hasConsent, gate.earlier]);
 
-  // One that failed for want of signal (or the day's limit) is tried again when
-  // the phone comes back online or the page comes back to the front.
+  // One that failed for want of signal (or the day's limit, or ParaPo not taking
+  // uploads) is tried again when the phone comes back online or the page comes
+  // back to the front.
   useEffect(() => {
     if (!isAvailable) return;
     const sendAgain = () => {
@@ -248,7 +296,8 @@ export function useUploads(saved: readonly Recording[]): Uploads {
   // once something was uploaded: the client is loaded on first need.
   const hasUploads = saved.some((r) => r.upload?.state === 'uploaded');
   useEffect(() => {
-    if (!isAvailable || !hasUploads) return;
+    // Nothing is asked of the database before consent to the current text.
+    if (!isAvailable || !hasUploads || !gate.hasConsent) return;
     let isCurrent = true;
     const settle = async () => {
       const id = await currentIdentity();
@@ -274,7 +323,7 @@ export function useUploads(saved: readonly Recording[]): Uploads {
     return () => {
       isCurrent = false;
     };
-  }, [isAvailable, hasUploads]);
+  }, [isAvailable, hasUploads, gate.hasConsent]);
 
   const waitingCount = saved.filter((r) => {
     const state = statusOf(r).state;

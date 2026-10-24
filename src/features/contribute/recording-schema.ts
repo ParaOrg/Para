@@ -68,6 +68,8 @@ export const recordingSchema = z.object({
   endPointName: z.string(),
   description: z.string(),
   rideKind: z.nullable(z.enum(RIDE_KINDS)),
+  /** The consent text's version agreed to when it began; absent on one made before consent version 2. */
+  consentVersion: z.optional(z.number()),
   upload: z.optional(uploadMarkSchema),
 });
 export type Recording = z.infer<typeof recordingSchema>;
