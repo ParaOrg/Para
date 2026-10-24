@@ -21,19 +21,24 @@ connectContributions();
 const root = document.getElementById('root');
 if (!root) throw new Error('contribute/index.html has no #root element to mount the page in.');
 
-const mountingPoint = root;
-
 // In the Android app the page waits for Capacitor's script, which tells it whether it is native.
-void prepareNativeApp()
-  .catch((error: unknown) => console.error('Capacitor could not load.', error))
-  .finally(() => {
-    createRoot(mountingPoint).render(
-      <StrictMode>
-        <ContributeApp />
-      </StrictMode>,
-    );
-    // The page's own offline setup, apart from the public map's worker, and a request that the
-    // browser keep its recordings. The answer waits in the feature for the Ready screen.
-    registerContributeWorker();
-    void askForPersistentStorage();
-  });
+// The mode check is repeated here so the web build drops the call, and the feature's native code
+// with it.
+if (import.meta.env.MODE === 'apk') {
+  try {
+    await prepareNativeApp();
+  } catch (error) {
+    console.error('Capacitor could not load.', error);
+  }
+}
+
+createRoot(root).render(
+  <StrictMode>
+    <ContributeApp />
+  </StrictMode>,
+);
+
+// The page's own offline setup, apart from the public map's worker, and a request that the
+// browser keep its recordings. The answer waits in the feature for the Ready screen.
+registerContributeWorker();
+void askForPersistentStorage();

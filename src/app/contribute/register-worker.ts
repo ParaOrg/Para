@@ -57,7 +57,7 @@ async function register(): Promise<void> {
     const registration = await navigator.serviceWorker.register(WORKER_URL, { scope: SCOPE });
     watchForUpdates(registration);
   } catch (error) {
-    console.error('The contributor page could not be set up to open with no signal.', error);
+    console.error('Offline setup failed.', error);
   }
 }
 
@@ -70,7 +70,12 @@ async function register(): Promise<void> {
  */
 export function registerContributeWorker(): void {
   // The app carries its own files, so it has no worker.
-  if (!import.meta.env.PROD || isNativeApp() || !('serviceWorker' in navigator)) return;
+  if (
+    !import.meta.env.PROD ||
+    (import.meta.env.MODE === 'apk' && isNativeApp()) ||
+    !('serviceWorker' in navigator)
+  )
+    return;
   listenForTakeover();
   if (document.readyState === 'complete') {
     void register();
