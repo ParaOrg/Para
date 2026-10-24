@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { AccountGate } from './account/account-gate';
-import { ProfileView } from './account/profile-view';
 import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-client';
 import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
-import { HistoryView } from './history-view';
 import { MarkButton } from './mark-button';
 import { ReadyScreen } from './ready-screen';
 import { MAX_MARKS } from './recording-marks';
@@ -22,6 +20,14 @@ import { useProfileView } from './use-profile-view';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 import { useUploads } from './use-uploads';
+
+// Opened from buttons, so the page's first load does not carry them.
+const HistoryView = lazy(() =>
+  import('./history-view').then((module) => ({ default: module.HistoryView })),
+);
+const ProfileView = lazy(() =>
+  import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
+);
 
 interface ContributePageProps {
   /** The locator on the map: the shell's, since this feature may not import the locator's. */
@@ -125,15 +131,21 @@ export function ContributePage({ locator }: ContributePageProps) {
               returnFocusTo={lastOpened}
             />
           )}
-          {isProfileShown && <ProfileView onBack={profile.close} />}
+          {isProfileShown && (
+            <Suspense fallback={null}>
+              <ProfileView onBack={profile.close} />
+            </Suspense>
+          )}
           {isHistoryShown && (
-            <HistoryView
-              recordings={recording.saved}
-              uploads={uploads}
-              onBack={history.close}
-              onDownload={recording.downloadSaved}
-              onDeleteFromPhone={recording.deleteSaved}
-            />
+            <Suspense fallback={null}>
+              <HistoryView
+                recordings={recording.saved}
+                uploads={uploads}
+                onBack={history.close}
+                onDownload={recording.downloadSaved}
+                onDeleteFromPhone={recording.deleteSaved}
+              />
+            </Suspense>
           )}
           {phase === 'unfinished' && figures && (
             <UnfinishedScreen
