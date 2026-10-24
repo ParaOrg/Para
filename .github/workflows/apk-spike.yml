@@ -1,0 +1,63 @@
+# The contributor app spike's test APK (.scratch/contributor-app/, ticket 01): builds a DEBUG
+# APK and uploads it as an artifact. Throwaway: it runs only on the spike branch or by hand,
+# has no signing key, and its web build cannot upload anything (.env.apk).
+name: APK spike
+
+on:
+  push:
+    branches: [claude/apk-spike]
+  workflow_dispatch:
+
+concurrency:
+  group: apk-spike-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Capacitor 8 needs Java 21.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # The runner image carries the Android SDK; android-actions/setup-android failed on it
+      # ("Failed to find package 'tools'"). Make sure the platform and build tools Capacitor 8
+      # asks for are there.
+      - name: Install the Android platform and build tools
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+
+      - name: Build the contributor page for the app
+        run: npx vite build -c vite.apk.config.ts --mode apk
+
+      - name: Copy it into the Android project
+        run: npx cap sync android
+
+      - name: Build the debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parapo-contributor-spike-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
