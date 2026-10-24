@@ -12,19 +12,24 @@ export function withMark(marks: MarkRow[], time: number): MarkRow[] {
   return marks.length >= MAX_MARKS ? marks : [...marks, { time }];
 }
 
-/** Where each mark is on the map: the latest fix at or before the tap, or the first fix when the tap came first. */
-export function markPlaces(kept: readonly Fix[], marks: readonly MarkRow[]): LngLat[] {
-  const places: LngLat[] = [];
-  for (const mark of marks) {
-    let place: Fix | undefined;
-    for (const fix of kept) {
-      if (fix.time > mark.time) break;
-      place = fix;
+/** The fix each mark sits on: the latest at or before the tap, or the first when the tap came first. */
+export function markFixIndexes(kept: readonly Fix[], marks: readonly MarkRow[]): number[] {
+  if (kept.length === 0) return [];
+  return marks.map((mark) => {
+    let low = 0;
+    let high = kept.length - 1;
+    while (low < high) {
+      const middle = Math.ceil((low + high) / 2);
+      if (kept[middle].time <= mark.time) low = middle;
+      else high = middle - 1;
     }
-    const at = (place ?? kept[0])?.at;
-    if (at) places.push(at);
-  }
-  return places;
+    return low;
+  });
+}
+
+/** Where each mark is on the map: the fix it sits on. */
+export function markPlaces(kept: readonly Fix[], marks: readonly MarkRow[]): LngLat[] {
+  return markFixIndexes(kept, marks).map((index) => kept[index].at);
 }
 
 /**
