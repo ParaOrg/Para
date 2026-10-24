@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { ContributeMap } from './contribute-map';
+import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
 import { HistoryScreen } from './history-screen';
 import { ReadyScreen } from './ready-screen';
 import { RecordingScreen } from './recording-screen';
@@ -11,19 +11,22 @@ import { UploadCheck } from './upload-check';
 import { uploadStatusText } from './upload-status';
 import { useConsent } from './use-consent';
 import { useEarlierQuestion } from './use-earlier-question';
-import { useFollow } from './use-follow';
 import { useHistoryView } from './use-history-view';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 import { useUploads } from './use-uploads';
 
+interface ContributePageProps {
+  /** The locator on the map: the shell's, since this feature may not import the locator's. */
+  locator?: ContributeLocatorSlot;
+}
+
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
-export function ContributePage() {
+export function ContributePage({ locator }: ContributePageProps) {
   const recording = useRecording();
   const { hasConsent, giveConsent } = useConsent();
   const earlier = useEarlierQuestion(recording.saved, hasConsent);
   const uploads = useUploads(recording.saved, { hasConsent, earlier: earlier.choice });
-  const follow = useFollow();
   const track = useRecordingTrack(recording.kept, recording.current?.switches);
   const history = useHistoryView();
   const { phase, figures } = recording;
@@ -44,19 +47,14 @@ export function ContributePage() {
     history.open();
   };
 
-  const handleStart = () => {
-    follow.recentre();
-    recording.start();
-  };
-
   return (
     <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
       {/* inert while History covers it: no map control can be tabbed to behind the screen. */}
       <div inert={isHistoryShown} className="contents">
         <ContributeMap
           track={track}
-          follow={follow}
-          hasRecording={phase === 'recording' || phase === 'paused'}
+          isRecording={phase === 'recording' || phase === 'paused'}
+          locator={locator}
         />
       </div>
       {recording.problem && (
@@ -78,7 +76,7 @@ export function ContributePage() {
           hasConsent={hasConsent}
           onConsent={giveConsent}
           earlierQuestion={earlier.question}
-          onStart={handleStart}
+          onStart={recording.start}
           onOpenHistory={handleOpenHistory}
           shouldFocusHistoryButton={hasOpenedHistory}
         />
