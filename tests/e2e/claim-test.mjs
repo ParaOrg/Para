@@ -119,7 +119,7 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
   }
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('parapo.contribute.consent', '2');
+      localStorage.setItem('parapo.contribute.consent', '3');
       sessionStorage.setItem('seeded', 'yes');
     }
   });
@@ -178,6 +178,13 @@ async function signInAs(page) {
     owners(fake).join(),
   );
   check('  the finished claim leaves no token on the phone', (await claimOf(page)) === null);
+  await page.goto(`${BASE}/contribute/#history`, { waitUntil: 'load' });
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(1500);
+  check(
+    '  reloading on #history with the account signed in keeps History open',
+    (await page.getByRole('heading', { name: 'History', level: 1 }).count()) === 1,
+  );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
@@ -291,9 +298,11 @@ async function signInAs(page) {
   await field(page, 'Email').fill('ana@example.com');
   await field(page, 'Password').fill(ACCOUNT.password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await start(page).waitFor({ timeout: 15000 });
+  // Consent is each account's own: the second one is asked for it, so Ready is not reached.
+  const signedIn = page.getByRole('heading', { name: 'Before you record' });
+  await signedIn.waitFor({ timeout: 15000 });
   await page.reload({ waitUntil: 'load' });
-  await start(page).waitFor({ timeout: 15000 });
+  await signedIn.waitFor({ timeout: 15000 });
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(1000);
   check(

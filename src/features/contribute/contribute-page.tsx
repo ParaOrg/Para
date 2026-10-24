@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 
-import { AccountGate } from './account/account-gate';
 import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
@@ -28,6 +27,11 @@ const HistoryView = lazy(() =>
 );
 const ProfileView = lazy(() =>
   import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
+);
+// Sign-in, sign-up and the profile step show only to a phone with no finished account, and bring
+// the form fields and their checks with them: after the first sign-in the page never opens them.
+const AccountGate = lazy(() =>
+  import('./account/account-gate').then((module) => ({ default: module.AccountGate })),
 );
 
 interface ContributePageProps {
@@ -60,12 +64,14 @@ export function ContributePage({ locator }: ContributePageProps) {
     phase === 'ready' && accountGate === 'ready' && canUpload() && profile.isOpen;
 
   // A stale #history (a reload mid-recording, or before consent was given) must not open History
-  // later, when Record again or Okay is pressed.
+  // later, when Record again or Okay is pressed. Consent is the account's, so it is unknown until
+  // the account has loaded; closing then would shut History on every reload.
   useEffect(() => {
+    if (accountGate === 'loading') return;
     if (history.isOpen && (!hasConsent || (phase !== 'loading' && phase !== 'ready'))) {
       history.close();
     }
-  }, [phase, hasConsent, history]);
+  }, [accountGate, phase, hasConsent, history]);
 
   // Signing out, or leaving Ready, must not leave #profile to reopen Profile after the next sign-in.
   useEffect(() => {
@@ -103,7 +109,9 @@ export function ContributePage({ locator }: ContributePageProps) {
         />
       </div>
       {(accountGate === 'needs-account' || accountGate === 'needs-profile') && (
-        <AccountGate needsProfile={accountGate === 'needs-profile'} />
+        <Suspense fallback={null}>
+          <AccountGate needsProfile={accountGate === 'needs-profile'} />
+        </Suspense>
       )}
       {accountGate === 'ready' && (
         <>
