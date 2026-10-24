@@ -5,7 +5,7 @@ import { requireClient } from './require-client';
 import { UploadError, problemOf, signInProblemOf, type DatabaseError } from './upload-problem';
 
 /** The error to throw for a database answer, logging one the page does not know. */
-function answerError(error: DatabaseError, status: number): UploadError {
+export function answerError(error: DatabaseError, status: number): UploadError {
   const problem = problemOf(error, status);
   if (problem === 'not-accepting') {
     console.warn(`ParaPo did not accept the request (HTTP ${status}):`, error.message);
