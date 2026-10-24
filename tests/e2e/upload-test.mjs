@@ -164,7 +164,7 @@ async function seed(page, recordings) {
 function savedRide(
   id,
   startedAt,
-  { count = 30, upload, name = 'Fairview', isEarlier = false } = {},
+  { count = 30, upload, name = 'Fairview', isEarlier = false, consentVersion = 3 } = {},
 ) {
   const fixes = Array.from({ length: count }, (_, seq) => ({
     recordingId: id,
@@ -187,8 +187,8 @@ function savedRide(
     endPointName: 'Cubao',
     description: '',
     rideKind: 'Jeep',
-    // A recording made under the current consent text carries its version; an earlier one has none.
-    ...(isEarlier ? {} : { consentVersion: 2 }),
+    // A recording carries the version of the consent text it was made under; one from the first text has none.
+    ...(isEarlier ? {} : { consentVersion }),
     ...(upload ? { upload } : {}),
   };
   return { recording, fixes };
@@ -280,7 +280,7 @@ const groupOf = (page, name) =>
     fake.rows.size === 1 &&
       fake.saveRequests === 1 &&
       stored.recording.start_name === 'SM Fairview' &&
-      stored.recording.consent_version === 2,
+      stored.recording.consent_version === 3,
     `${fake.rows.size} stored, ${fake.saveRequests} sends`,
   );
   const markEvents = stored.recording.events.filter((e) => e.kind === 'mark');
@@ -599,7 +599,7 @@ const groupOf = (page, name) =>
   );
   check(
     '  the phone remembers the version agreed to',
-    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '2',
+    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '3',
   );
 }
 
@@ -608,9 +608,11 @@ const groupOf = (page, name) =>
   const { page, fake, asked } = await phone({ consent: 'yes', opens: 'consent' });
   const earlier = 'aaaaaaaa-0000-4000-8000-000000000012';
   const stamped = 'aaaaaaaa-0000-4000-8000-000000000013';
+  const underTwo = 'aaaaaaaa-0000-4000-8000-000000000019';
   await seed(page, [
     savedRide(earlier, T0, { name: 'Under one', isEarlier: true }),
     savedRide(stamped, T0 + 600_000, { name: 'Stamped' }),
+    savedRide(underTwo, T0 + 900_000, { name: 'Under two', consentVersion: 2 }),
     // An upload made under version 1: the identity check it would set off must wait for consent too.
     savedRide('aaaaaaaa-0000-4000-8000-000000000018', T0 + 1_200_000, {
       name: 'Already up',
@@ -628,7 +630,8 @@ const groupOf = (page, name) =>
       fake.signIns === 0 &&
       asked.count === 0 &&
       (await storedUpload(page, earlier)) === 'none' &&
-      (await storedUpload(page, stamped)) === 'none',
+      (await storedUpload(page, stamped)) === 'none' &&
+      (await storedUpload(page, underTwo)) === 'none',
     `${fake.saveRequests} sends`,
   );
   check(
@@ -640,9 +643,10 @@ const groupOf = (page, name) =>
   await SCREENS.earlier(page).waitFor();
   await page.waitForTimeout(1500);
   check(
-    '  after agreeing, only the recording made under the current text goes; the earlier one is asked about',
-    fake.rows.size === 1 &&
+    '  after agreeing, the recordings made under text 2 or 3 go; the one under text 1 is asked about',
+    fake.rows.size === 2 &&
       fake.rows.has(stamped) &&
+      fake.rows.has(underTwo) &&
       (await storedUpload(page, earlier)) === 'none' &&
       (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
     [...fake.rows.keys()].join(),

@@ -88,7 +88,7 @@ async function phone({ consented, earlierConsent = false, granted = false }) {
   await fakeContributions(page);
   await page.addInitScript(GPS);
   if (consented) {
-    await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', '2'));
+    await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', '3'));
   }
   if (earlierConsent) {
     await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
@@ -234,7 +234,7 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   check(
     '  agreeing stores the version of the text agreed to',
-    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '2',
+    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '3',
   );
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   {

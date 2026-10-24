@@ -19,6 +19,8 @@ const lineSchema = z.object({
   coordinates: z.array(z.tuple([z.number(), z.number()])),
 });
 
+const NO_NAME: string | null = null;
+
 const contributionRowSchema = z.pipe(
   z.object({
     id: z.string(),
@@ -49,6 +51,8 @@ const contributionRowSchema = z.pipe(
     contributorId: row.contributor_id,
     /** The phone, as the studio shows it: the first six characters of its identity, never more. */
     phoneCode: row.contributor_id?.slice(0, 6) ?? null,
+    /** The account's name, filled in by fetchContributions; never the number or the email. */
+    contributorName: NO_NAME,
     startedAt: Date.parse(row.started_at),
     endedAt: Date.parse(row.ended_at),
     receivedAt: Date.parse(row.received_at),
@@ -76,6 +80,27 @@ export type Contribution = z.infer<typeof contributionRowSchema>;
 const LIST_COLUMNS =
   'id, contributor_id, started_at, ended_at, received_at, vehicle, start_name, end_name, description, distance_m, moving_s, standing_s, lost_s, point_count, line, west, south, east, north, hidden_at, hidden_note';
 
+const NAME_BATCH = 100;
+
+const contributorNamesSchema = z.array(z.object({ id: z.string(), name: z.nullable(z.string()) }));
+
+/** The names of the accounts behind some uploads: name only, the number and email are never asked for. */
+async function fetchContributorNames(ids: string[]): Promise<Map<string, string>> {
+  const names = new Map<string, string>();
+  // In pieces: a request line holding hundreds of ids is longer than the server reads.
+  for (let start = 0; start < ids.length; start += NAME_BATCH) {
+    const { data, error } = await requireSupabase()
+      .from('contributor')
+      .select('id, name')
+      .in('id', ids.slice(start, start + NAME_BATCH));
+    if (error) throw new Error(`Contributor names could not be read: ${error.message}`);
+    for (const { id, name } of contributorNamesSchema.parse(data)) {
+      if (name) names.set(id, name);
+    }
+  }
+  return names;
+}
+
 export interface ContributionList {
   contributions: Contribution[];
   /** Whether the period held more than the newest CONTRIBUTION_LIMIT. */
@@ -101,10 +126,16 @@ export async function fetchContributions(
     .order('id')
     .limit(CONTRIBUTION_LIMIT + 1);
   if (error) throw new Error(`Uploads could not be read: ${error.message}`);
-  const rows = z.array(contributionRowSchema).parse(data);
+  const allRows = z.array(contributionRowSchema).parse(data);
+  const rows = allRows.slice(0, CONTRIBUTION_LIMIT);
+  const ids = [...new Set(rows.flatMap((row) => (row.contributorId ? [row.contributorId] : [])))];
+  const names = await fetchContributorNames(ids);
   return {
-    contributions: rows.slice(0, CONTRIBUTION_LIMIT),
-    isCut: rows.length > CONTRIBUTION_LIMIT,
+    contributions: rows.map((row) => ({
+      ...row,
+      contributorName: (row.contributorId && names.get(row.contributorId)) || null,
+    })),
+    isCut: allRows.length > CONTRIBUTION_LIMIT,
   };
 }
 

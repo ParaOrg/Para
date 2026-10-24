@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import * as z from 'zod/mini';
 
-import { CONSENT_VERSION } from './consent-version';
+import { EARLIEST_SENT_VERSION } from './consent-version';
 
-// Keyed by the text's version: an answer given about one text says nothing about the next.
-const CHOICE_KEY = `parapo.contribute.earlier.${CONSENT_VERSION}`;
+// Keyed by the first text that sends unasked: the answer is about recordings older than it.
+const CHOICE_KEY = `parapo.contribute.earlier.${EARLIEST_SENT_VERSION}`;
 const choiceSchema = z.enum(['send', 'keep']);
 
 /** What the person said about recordings made before they agreed to the current text. */
