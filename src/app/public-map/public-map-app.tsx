@@ -263,8 +263,6 @@ export function PublicMapApp() {
       {install.shouldShow && (
         <InstallPrompt onInstall={install.install} onLater={install.postpone} />
       )}
-      {/* Out of the way of an open card, which floats at the top left on a wide screen. */}
-
       {saved.selected && tripLivery && timeline && (
         // One card for as long as a trip is open: SWITCH, and another
         // route from its "Other routes", leave the hintuans open or folded

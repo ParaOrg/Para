@@ -79,6 +79,10 @@ The consent is asked once per account, after Create account and before the first
 
 **Release order:** 05 can ship on its own. 02–04 and 06 reach `main` together, and only after the owner has applied 01 and switched email confirmation off: code that signs up against a database without 01 would fail.
 
+## Decisions so far
+
+- 05 resolved (#382): the public map's end card is empty and `aria-hidden`, the "+ Contribute" button is gone. See [05](issues/05-public-map-entry-hidden.md).
+
 ## The owner's steps (Supabase dashboard, when 01 is ready)
 
 1. Apply 01 (`supabase/apply/README.md` gets its section), run its check file.
