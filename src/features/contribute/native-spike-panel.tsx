@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
+import { isNativeApp } from './native-app';
 import {
   readNativeWatchStats,
   RECORDING_NOTIFICATION,
@@ -50,50 +51,63 @@ export function NativeSpikePanel() {
   const watch = useSyncExternalStore(subscribeToNativeWatch, readNativeWatchStats);
 
   useEffect(() => {
-    if (isOpen) void checkNativePermissions().then(setStates);
+    if (isOpen)
+      checkNativePermissions()
+        .then(setStates)
+        .catch(() => setStates(null));
   }, [isOpen]);
 
   const handleAsk = (permission: NativePermission) =>
-    void requestNativePermission(permission).then(setStates);
+    requestNativePermission(permission)
+      .then(setStates)
+      .catch(() => setStates(null));
 
   return (
-    <div className="absolute top-2 right-2 z-50 font-sn-pro text-sm text-content-primary">
-      <button
-        type="button"
-        onClick={() => setIsOpen((was) => !was)}
-        aria-expanded={isOpen}
-        className="rounded-md bg-surface px-2 py-1 shadow-lg"
-      >
-        Spike
-      </button>
-      {isOpen && (
-        <section
-          aria-label="Spike tools"
-          className="mt-1 flex max-h-[80dvh] w-[calc(100vw-1rem)] flex-col gap-3 overflow-y-auto rounded-xl bg-surface p-3 shadow-lg"
+    <>
+      <p className="fixed bottom-2 left-2 z-[1000] rounded-md bg-content-primary px-2 py-1 font-sn-pro text-sm text-content-inverse">
+        Test build · Spike ↑
+      </p>
+      <div className="fixed top-1/3 left-2 z-[1000] font-sn-pro text-sm text-content-primary">
+        <button
+          type="button"
+          onClick={() => setIsOpen((was) => !was)}
+          aria-expanded={isOpen}
+          className="min-h-12 min-w-24 rounded-lg bg-content-primary px-4 py-2 text-base font-bold text-content-inverse shadow-lg"
         >
-          <p>Test build. It cannot upload. Notice: “{RECORDING_NOTIFICATION.title}”.</p>
-          <h2 className="font-bold">Native fixes</h2>
-          <p>
-            Count {watch.fixCount}, last{' '}
-            {watch.lastFixAt ? new Date(watch.lastFixAt).toLocaleTimeString() : 'none'}, accuracy{' '}
-            {watch.lastAccuracyM === null ? '-' : `${Math.round(watch.lastAccuracyM)} m`}
-            {watch.lastError ? `, error ${watch.lastError}` : ''}.
-          </p>
-          <h2 className="font-bold">Permissions</h2>
-          <ul className="flex flex-col gap-2">
-            {ORDER.map((permission) => (
-              <PermissionRow
-                key={permission}
-                permission={permission}
-                state={states?.[permission] ?? 'unknown'}
-                onAsk={handleAsk}
-              />
-            ))}
-          </ul>
-          <h2 className="font-bold">Turnstile</h2>
-          <NativeTurnstileCheck />
-        </section>
-      )}
-    </div>
+          Spike
+        </button>
+        {isOpen && (
+          <section
+            aria-label="Spike tools"
+            className="mt-1 flex max-h-[80dvh] w-[calc(100vw-1rem)] flex-col gap-3 overflow-y-auto rounded-xl bg-surface p-3 shadow-lg"
+          >
+            <p>
+              Native app detected: {isNativeApp() ? 'yes' : 'NO'}. Test build. It cannot upload.
+              Notice: “{RECORDING_NOTIFICATION.title}”.
+            </p>
+            <h2 className="font-bold">Native fixes</h2>
+            <p>
+              Count {watch.fixCount}, last{' '}
+              {watch.lastFixAt ? new Date(watch.lastFixAt).toLocaleTimeString() : 'none'}, accuracy{' '}
+              {watch.lastAccuracyM === null ? '-' : `${Math.round(watch.lastAccuracyM)} m`}
+              {watch.lastError ? `, error ${watch.lastError}` : ''}.
+            </p>
+            <h2 className="font-bold">Permissions</h2>
+            <ul className="flex flex-col gap-2">
+              {ORDER.map((permission) => (
+                <PermissionRow
+                  key={permission}
+                  permission={permission}
+                  state={states?.[permission] ?? 'unknown'}
+                  onAsk={handleAsk}
+                />
+              ))}
+            </ul>
+            <h2 className="font-bold">Turnstile</h2>
+            <NativeTurnstileCheck />
+          </section>
+        )}
+      </div>
+    </>
   );
 }
