@@ -2,8 +2,8 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { accountKeys } from './account-keys';
-import { finishPendingClaim } from './earlier-identity';
 import { readPendingClaim } from './claim-token';
+import { finishPendingClaim } from './earlier-identity';
 import { requireClient } from './require-client';
 
 /**
