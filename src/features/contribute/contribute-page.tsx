@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
-import { AccountGate } from './account/account-gate';
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountQuery } from './api/use-account-query';
 import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
@@ -20,6 +19,12 @@ import { useHistoryView } from './use-history-view';
 import { useRecording } from './use-recording';
 import { useRecordingTrack } from './use-recording-track';
 import { useUploads } from './use-uploads';
+
+// Sign-in, sign-up and the profile step show only to a phone with no finished account, and bring
+// the form fields and their checks with them: after the first sign-in the page never opens them.
+const AccountGate = lazy(() =>
+  import('./account/account-gate').then((module) => ({ default: module.AccountGate })),
+);
 
 interface ContributePageProps {
   /** The locator on the map: the shell's, since this feature may not import the locator's. */
@@ -48,12 +53,14 @@ export function ContributePage({ locator }: ContributePageProps) {
   const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
 
   // A stale #history (a reload mid-recording, or before consent was given) must not open History
-  // later, when Record again or Okay is pressed.
+  // later, when Record again or Okay is pressed. Consent is the account's, so it is unknown until
+  // the account has loaded; closing then would shut History on every reload.
   useEffect(() => {
+    if (accountGate === 'loading') return;
     if (history.isOpen && (!hasConsent || (phase !== 'loading' && phase !== 'ready'))) {
       history.close();
     }
-  }, [phase, hasConsent, history]);
+  }, [accountGate, phase, hasConsent, history]);
 
   // Once History has been opened from Ready's button, Ready hands focus back to that button.
   const [hasOpenedHistory, setHasOpenedHistory] = useState(false);
@@ -81,7 +88,9 @@ export function ContributePage({ locator }: ContributePageProps) {
         />
       </div>
       {(accountGate === 'needs-account' || accountGate === 'needs-profile') && (
-        <AccountGate needsProfile={accountGate === 'needs-profile'} />
+        <Suspense fallback={null}>
+          <AccountGate needsProfile={accountGate === 'needs-profile'} />
+        </Suspense>
       )}
       {accountGate === 'ready' && (
         <>
