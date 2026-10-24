@@ -22,17 +22,14 @@ export interface TrailMarker {
 export interface RecordingTrail {
   lines: readonly TrailLine[];
   markers: readonly TrailMarker[];
-  /** Where the contributor is now, or null before the first fix. */
-  here: LngLat | null;
 }
 
 export const TRAIL_SRC = 'recording-trail';
 const CASING = 'recording-trail-casing';
 const LINE = 'recording-trail-line';
 const MARKERS = 'recording-trail-markers';
-const HERE = 'recording-trail-here';
 
-/** The trail as its source takes it: a line per run, a point per switch, and the contributor. */
+/** The trail as its source takes it: a line per run, and a point per switch. */
 export function trailData(trail: RecordingTrail) {
   return {
     type: 'FeatureCollection' as const,
@@ -49,15 +46,6 @@ export function trailData(trail: RecordingTrail) {
         properties: { kind: 'switch', way: marker.way },
         geometry: { type: 'Point' as const, coordinates: [...marker.at] },
       })),
-      ...(trail.here
-        ? [
-            {
-              type: 'Feature' as const,
-              properties: { kind: 'here' },
-              geometry: { type: 'Point' as const, coordinates: [...trail.here] },
-            },
-          ]
-        : []),
     ],
   };
 }
@@ -67,7 +55,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
   if (map.getSource(TRAIL_SRC)) return;
   map.addSource(TRAIL_SRC, {
     type: 'geojson',
-    data: trailData({ lines: [], markers: [], here: null }),
+    data: trailData({ lines: [], markers: [] }),
   });
   const isLine: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
   map.addLayer({
@@ -110,18 +98,6 @@ export function addRecordingTrail(map: MapLibreMap): void {
         MAP_COLOURS['Map/Trail/pabalik'],
         MAP_COLOURS['Map/Trail/papunta'],
       ],
-      'circle-stroke-width': 3,
-    },
-  });
-  map.addLayer({
-    id: HERE,
-    type: 'circle',
-    source: TRAIL_SRC,
-    filter: ['==', ['get', 'kind'], 'here'],
-    paint: {
-      'circle-radius': 8,
-      'circle-color': MAP_COLOURS['Map/LocatorIndicatorOverlay/border'],
-      'circle-stroke-color': MAP_PAINT['Paint/casing'],
       'circle-stroke-width': 3,
     },
   });
