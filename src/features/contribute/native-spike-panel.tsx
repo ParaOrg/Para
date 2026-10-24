@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { Component, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 
 import { isNativeApp } from './native-app';
 import {
@@ -15,96 +15,161 @@ import {
 } from './native-permissions';
 import { NativeTurnstileCheck } from './native-turnstile-check';
 
+// Plain colours and inline styles on purpose: this throwaway panel must stay readable in a
+// phone's dark mode and whatever the page's stylesheet does or does not carry.
+const PANEL_STYLE = {
+  background: '#fff',
+  color: '#000',
+  fontSize: 14,
+  lineHeight: 1.4,
+  padding: 12,
+  borderRadius: 8,
+  maxHeight: '70vh',
+  overflow: 'auto',
+  marginTop: 4,
+  width: 'calc(100vw - 16px)',
+  boxSizing: 'border-box',
+  border: '2px solid #000',
+} as const;
+const BUTTON_STYLE = {
+  background: '#000',
+  color: '#fff',
+  border: 0,
+  borderRadius: 8,
+  padding: '8px 16px',
+  minHeight: 48,
+  fontSize: 16,
+  fontWeight: 700,
+} as const;
+
 const ORDER: NativePermission[] = ['notifications', 'location', 'backgroundLocation'];
 
-function PermissionRow({
-  permission,
-  state,
-  onAsk,
-}: {
-  permission: NativePermission;
-  state: string;
-  onAsk: (permission: NativePermission) => void;
-}) {
-  const { title, reason } = PERMISSION_REASONS[permission];
+interface CatchProps {
+  children: ReactNode;
+}
+interface CatchState {
+  error: Error | null;
+}
+
+// The one class component outside shared/ui: a throwaway, so a thrown error prints in the panel
+// instead of leaving it blank. Not for merging.
+class ShowErrors extends Component<CatchProps, CatchState> {
+  state: CatchState = { error: null };
+  static getDerivedStateFromError(error: Error): CatchState {
+    return { error };
+  }
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    return (
+      <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+        {error.message}
+        {'\n'}
+        {error.stack}
+      </pre>
+    );
+  }
+}
+
+function Permissions() {
+  const [states, setStates] = useState<NativePermissionStates | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  const handleDone = (next: NativePermissionStates) => {
+    setStates(next);
+    setProblem(null);
+  };
+  const handleFail = (error: unknown) =>
+    setProblem(error instanceof Error ? error.message : 'unknown error');
+
+  useEffect(() => {
+    checkNativePermissions().then(handleDone).catch(handleFail);
+  }, []);
+
+  if (problem) return <p>Permissions error: {problem}</p>;
+  if (!states) return <p>Permissions: loading…</p>;
   return (
-    <li className="flex flex-col gap-1 rounded-lg bg-surface-secondary p-2">
+    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+      {ORDER.map((permission) => (
+        <li key={permission} style={{ marginBottom: 8, padding: 8, background: '#eee' }}>
+          <strong>{PERMISSION_REASONS[permission].title}</strong>: {states[permission]}
+          <br />
+          {PERMISSION_REASONS[permission].reason}
+          <br />
+          <button
+            type="button"
+            style={{ ...BUTTON_STYLE, minHeight: 40, fontSize: 14 }}
+            onClick={() => requestNativePermission(permission).then(handleDone).catch(handleFail)}
+          >
+            Ask
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PanelBody() {
+  const watch = useSyncExternalStore(subscribeToNativeWatch, readNativeWatchStats);
+  return (
+    <>
       <p>
-        <strong>{title}</strong>: {state}
+        <strong>
+          Spike panel v3 · Native app detected: {isNativeApp() ? 'yes' : 'NO'} · origin:{' '}
+          {window.location.origin}
+        </strong>
       </p>
-      <p>{reason}</p>
-      <button
-        type="button"
-        onClick={() => onAsk(permission)}
-        className="self-start rounded-md bg-surface-tertiary px-3 py-1"
-      >
-        Ask
-      </button>
-    </li>
+      <p>Test build, it cannot upload. Notice: “{RECORDING_NOTIFICATION.title}”.</p>
+      <h2 style={{ fontSize: 16 }}>Native fixes</h2>
+      <p>
+        Count {watch.fixCount}, last{' '}
+        {watch.lastFixAt ? new Date(watch.lastFixAt).toLocaleTimeString() : 'none'}, accuracy{' '}
+        {watch.lastAccuracyM === null ? '-' : `${Math.round(watch.lastAccuracyM)} m`}
+        {watch.lastError ? `, error ${watch.lastError}` : ''}.
+      </p>
+      <h2 style={{ fontSize: 16 }}>Permissions</h2>
+      <Permissions />
+      <h2 style={{ fontSize: 16 }}>Turnstile</h2>
+      <NativeTurnstileCheck />
+    </>
   );
 }
 
 /** The throwaway test app's tools: permissions, what the native watch has delivered, Turnstile. */
 export function NativeSpikePanel() {
-  const [states, setStates] = useState<NativePermissionStates | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const watch = useSyncExternalStore(subscribeToNativeWatch, readNativeWatchStats);
-
-  useEffect(() => {
-    if (isOpen)
-      checkNativePermissions()
-        .then(setStates)
-        .catch(() => setStates(null));
-  }, [isOpen]);
-
-  const handleAsk = (permission: NativePermission) =>
-    requestNativePermission(permission)
-      .then(setStates)
-      .catch(() => setStates(null));
-
   return (
     <>
-      <p className="fixed bottom-2 left-2 z-[1000] rounded-md bg-content-primary px-2 py-1 font-sn-pro text-sm text-content-inverse">
+      <p
+        style={{
+          position: 'fixed',
+          bottom: 8,
+          left: 8,
+          zIndex: 1000,
+          margin: 0,
+          padding: '4px 8px',
+          background: '#000',
+          color: '#fff',
+          fontSize: 14,
+          borderRadius: 6,
+        }}
+      >
         Test build · Spike ↑
       </p>
-      <div className="fixed top-1/3 left-2 z-[1000] font-sn-pro text-sm text-content-primary">
+      <div style={{ position: 'fixed', top: '33%', left: 8, zIndex: 1000 }}>
         <button
           type="button"
-          onClick={() => setIsOpen((was) => !was)}
+          style={BUTTON_STYLE}
           aria-expanded={isOpen}
-          className="min-h-12 min-w-24 rounded-lg bg-content-primary px-4 py-2 text-base font-bold text-content-inverse shadow-lg"
+          onClick={() => setIsOpen((was) => !was)}
         >
           Spike
         </button>
         {isOpen && (
-          <section
-            aria-label="Spike tools"
-            className="mt-1 flex max-h-[80dvh] w-[calc(100vw-1rem)] flex-col gap-3 overflow-y-auto rounded-xl bg-surface p-3 shadow-lg"
-          >
-            <p>
-              Native app detected: {isNativeApp() ? 'yes' : 'NO'}. Test build. It cannot upload.
-              Notice: “{RECORDING_NOTIFICATION.title}”.
-            </p>
-            <h2 className="font-bold">Native fixes</h2>
-            <p>
-              Count {watch.fixCount}, last{' '}
-              {watch.lastFixAt ? new Date(watch.lastFixAt).toLocaleTimeString() : 'none'}, accuracy{' '}
-              {watch.lastAccuracyM === null ? '-' : `${Math.round(watch.lastAccuracyM)} m`}
-              {watch.lastError ? `, error ${watch.lastError}` : ''}.
-            </p>
-            <h2 className="font-bold">Permissions</h2>
-            <ul className="flex flex-col gap-2">
-              {ORDER.map((permission) => (
-                <PermissionRow
-                  key={permission}
-                  permission={permission}
-                  state={states?.[permission] ?? 'unknown'}
-                  onAsk={handleAsk}
-                />
-              ))}
-            </ul>
-            <h2 className="font-bold">Turnstile</h2>
-            <NativeTurnstileCheck />
+          <section aria-label="Spike tools" style={PANEL_STYLE}>
+            <ShowErrors>
+              <PanelBody />
+            </ShowErrors>
           </section>
         )}
       </div>

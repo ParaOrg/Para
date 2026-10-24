@@ -32,12 +32,12 @@ export const PERMISSION_REASONS: Record<NativePermission, { title: string; reaso
   },
 };
 
-export function checkNativePermissions(): Promise<NativePermissionStates> {
+export async function checkNativePermissions(): Promise<NativePermissionStates> {
   return getPlugin().checkPermissions();
 }
 
 /** Asks for one permission. Android wants location first, then "all the time" by itself. */
-export function requestNativePermission(
+export async function requestNativePermission(
   permission: NativePermission,
 ): Promise<NativePermissionStates> {
   return getPlugin().requestPermissions({ permissions: [permission] });

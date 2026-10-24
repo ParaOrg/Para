@@ -23,7 +23,7 @@ function isRenderable(value: unknown): value is RenderableTurnstile {
  */
 export function NativeTurnstileCheck() {
   const container = useRef<HTMLDivElement>(null);
-  const [steps, setSteps] = useState<string[]>([]);
+  const [steps, setSteps] = useState<string[]>(['Loading the script…']);
 
   useEffect(() => {
     if (!turnstileSiteKey || !container.current) return;
@@ -40,26 +40,28 @@ export function NativeTurnstileCheck() {
         return;
       }
       note('Script loaded. Rendering the widget.');
-      api.render(mount, {
-        sitekey: turnstileSiteKey,
-        callback: (token: string) => note(`Passed. Token of ${token.length} characters.`),
-        'error-callback': (code: unknown) => note(`Error callback, code ${String(code)}.`),
-        'timeout-callback': () => note('Timed out.'),
-        'unsupported-callback': () => note('Browser unsupported.'),
-      });
+      try {
+        api.render(mount, {
+          sitekey: turnstileSiteKey,
+          callback: (token: string) => note(`Passed. Token of ${token.length} characters.`),
+          'error-callback': (code: unknown) => note(`Error callback, code ${String(code)}.`),
+          'timeout-callback': () => note('Timed out.'),
+          'unsupported-callback': () => note('Browser unsupported.'),
+        });
+      } catch (error) {
+        note(`render() threw: ${error instanceof Error ? error.message : String(error)}`);
+      }
     };
     document.head.append(script);
     return () => script.remove();
   }, []);
 
-  if (!turnstileSiteKey) return <p>No Turnstile site key in this build.</p>;
   return (
-    <div className="flex flex-col gap-1">
-      <p>
-        Page origin: <code>{window.location.origin}</code>
-      </p>
+    <div>
+      <p>Page origin: {window.location.origin}</p>
+      {!turnstileSiteKey && <p>No Turnstile site key in this build.</p>}
       <div ref={container} />
-      <ol className="list-decimal pl-5">
+      <ol style={{ paddingLeft: 20 }}>
         {steps.map((step, index) => (
           // Steps only ever append, so the position is stable.
           <li key={index}>{step}</li>
