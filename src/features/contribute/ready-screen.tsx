@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
+import { AppUpdateNotice } from './app-update/app-update-notice';
+import { useAppUpdate } from './app-update/use-app-update';
 import { BackToMapButton, goBackToMap } from './back-to-map-button';
 import { ConsentPanel } from './consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from './earlier-recordings-panel';
@@ -39,6 +41,7 @@ export function ReadyScreen({
     (shouldFocusButton ? historyRef.current : headingRef.current)?.focus();
   }, [shouldFocusButton]);
   const stackRef = useStackRoom();
+  const { update, downloadUrl } = useAppUpdate();
 
   return (
     <>
@@ -64,7 +67,8 @@ export function ReadyScreen({
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          <TrackingButton variant="start" onClick={onStart} />
+          {update !== 'current' && <AppUpdateNotice update={update} downloadUrl={downloadUrl} />}
+          {update !== 'required' && <TrackingButton variant="start" onClick={onStart} />}
         </section>
       )}
       {!hasConsent && <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />}

@@ -1,10 +1,22 @@
 # Builds the contributor app, the Android APK (docs/adr/0006, .scratch/contributor-app/).
 #
 #   - A pull request that touches the app builds a DEBUG APK and attaches it as an artifact.
-#   - A tag `app-v*` (app-v1.2.3) builds a RELEASE APK, UNSIGNED and not published: signing, the
-#     download page and the update file come with ticket 04. The tag sets the version.
+#   - A tag `app-v*` (app-v1.2.3) builds a RELEASE APK, signed with the key in the repository's
+#     secrets (below), checks the signature, and lays out what the site serves: app/
+#     parapo-contributor-<version>.apk and app/latest.json, as the artifact `parapo-contributor-
+#     <version>`. The tag sets the version. A release run with no key fails; it never produces an
+#     unsigned APK. Putting that folder on the site is NOT done here: see the pull request.
 #   - "Run workflow" builds a debug APK from any branch; with `release` ticked it takes the same
-#     unsigned release path as a tag, with the version name and code typed in.
+#     signed release path as a tag, with the version name and code typed in.
+#   - Pull requests never see the secrets: their release build, locally too, is unsigned.
+#
+# Secrets (Settings > Secrets and variables > Actions), all four needed for a release:
+#   PARAPO_KEYSTORE_B64       the release keystore file, base64 on one line
+#   PARAPO_KEYSTORE_PASSWORD  the keystore's password
+#   PARAPO_KEY_ALIAS          the key's alias in it
+#   PARAPO_KEY_PASSWORD       the key's password
+# The keystore is written to a temp file for the job and deleted at its end. Lose the key and
+# testers must uninstall to update (docs/adr/0006).
 #
 # The runner's own Android SDK is used: android-actions/setup-android failed on it.
 name: Contributor app
@@ -33,7 +45,7 @@ on:
   workflow_dispatch:
     inputs:
       release:
-        description: Build the unsigned release APK, as a tag does
+        description: Build the signed release APK, as a tag does
         type: boolean
         default: false
       version_name:
@@ -56,7 +68,29 @@ jobs:
     timeout-minutes: 30
     env:
       IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/app-v') || inputs.release == true }}
+      # Where latest.json points the app's download link: the production site (.env.apk reads
+      # latest.json from the same place).
+      SITE_URL: https://parapo.villaralvorovic2.workers.dev
     steps:
+      # A release with no key stops here, before anything is built.
+      - name: Check the signing secrets are there
+        if: env.IS_RELEASE == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.PARAPO_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.PARAPO_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PARAPO_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PARAPO_KEY_PASSWORD }}
+        run: |
+          missing=""
+          [[ -n "$KEYSTORE_B64" ]] || missing="$missing PARAPO_KEYSTORE_B64"
+          [[ -n "$KEYSTORE_PASSWORD" ]] || missing="$missing PARAPO_KEYSTORE_PASSWORD"
+          [[ -n "$KEY_ALIAS" ]] || missing="$missing PARAPO_KEY_ALIAS"
+          [[ -n "$KEY_PASSWORD" ]] || missing="$missing PARAPO_KEY_PASSWORD"
+          if [[ -n "$missing" ]]; then
+            echo "::error::Not publishing an unsigned APK. Missing repository secrets:$missing"
+            exit 1
+          fi
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
@@ -106,7 +140,11 @@ jobs:
             fi
           fi
           echo "GRADLE_VERSION=-PappVersionName=$version -PappVersionCode=$code" >> "$GITHUB_ENV"
-          echo "APK_NAME=parapo-contributor-$version-unsigned" >> "$GITHUB_ENV"
+          echo "APK_NAME=parapo-contributor-$version" >> "$GITHUB_ENV"
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "APP_VERSION_CODE=$code" >> "$GITHUB_ENV"
+          # The page reads its own version code to compare with latest.json (api/env.ts).
+          echo "VITE_APP_VERSION_CODE=$code" >> "$GITHUB_ENV"
 
       - name: Build the contributor page for the app
         run: npx vite build -c vite.apk.config.ts --mode apk
@@ -119,10 +157,47 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Build the release APK (unsigned)
+      # The keystore only ever exists as this temp file; the last step deletes it. The secrets
+      # are masked in the log and never echoed.
+      - name: Write the keystore
+        if: env.IS_RELEASE == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.PARAPO_KEYSTORE_B64 }}
+        run: |
+          keystore="$RUNNER_TEMP/parapo-release.jks"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$keystore"
+          echo "PARAPO_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
+
+      - name: Build the release APK (signed)
         if: env.IS_RELEASE == 'true'
         working-directory: android
+        env:
+          PARAPO_KEYSTORE_PASSWORD: ${{ secrets.PARAPO_KEYSTORE_PASSWORD }}
+          PARAPO_KEY_ALIAS: ${{ secrets.PARAPO_KEY_ALIAS }}
+          PARAPO_KEY_PASSWORD: ${{ secrets.PARAPO_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon $GRADLE_VERSION
+
+      # Gradle falls back to an unsigned APK when it cannot sign; that file name, or a failed
+      # verify, stops the release.
+      - name: Check the APK is signed
+        if: env.IS_RELEASE == 'true'
+        run: |
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          if [[ ! -f "$apk" ]]; then
+            echo "::error::No signed APK was built."
+            exit 1
+          fi
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk" | head -5
+
+      - name: Lay out what the site serves
+        if: env.IS_RELEASE == 'true'
+        run: |
+          node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs \
+            scripts/publish/app-release.mjs \
+            --apk android/app/build/outputs/apk/release/app-release.apk \
+            --version "$APP_VERSION" --code "$APP_VERSION_CODE" \
+            --min "$(tr -d '[:space:]' < android/min-version.txt)" \
+            --base-url "$SITE_URL" --out app-publish
 
       - uses: actions/upload-artifact@v4
         if: env.IS_RELEASE != 'true'
@@ -136,6 +211,10 @@ jobs:
         if: env.IS_RELEASE == 'true'
         with:
           name: ${{ env.APK_NAME }}
-          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: app-publish/app
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 90
+
+      - name: Delete the keystore
+        if: always() && env.IS_RELEASE == 'true'
+        run: rm -f "$RUNNER_TEMP/parapo-release.jks"
