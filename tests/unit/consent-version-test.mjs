@@ -13,7 +13,7 @@ import {
   shouldAskAboutEarlier,
 } from '../../src/features/contribute/consent-version.ts';
 
-test('the current text is version 2', () => {
+test('the current text is version 3', () => {
   assert.equal(CONSENT_VERSION, 3);
 });
 

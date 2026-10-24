@@ -598,8 +598,28 @@ const groupOf = (page, name) =>
     fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 3,
   );
   check(
-    '  the phone remembers the version agreed to',
-    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '3',
+    '  the phone remembers the version agreed to, for this account',
+    (await page.evaluate(
+      (id) => localStorage.getItem(`parapo.contribute.consent.${id}`),
+      ACCOUNT_ID,
+    )) === '3',
+  );
+  const other = 'cccccccc-0000-4000-8000-000000000002';
+  fake.users.set(other, {
+    email: 'second@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Second', phone: '+639181234567' },
+  });
+  await page.evaluate(
+    ([key, signedIn]) => localStorage.setItem(key, JSON.stringify(signedIn)),
+    ['parapo.contributor-auth', session(other, { email: 'second@example.com', isAccount: true })],
+  );
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.consent(page).waitFor();
+  check(
+    "a second account on the same phone is asked about the text itself; the first one's answer is not theirs",
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
   );
 }
 

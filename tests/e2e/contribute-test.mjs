@@ -234,7 +234,11 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   check(
     '  agreeing stores the version of the text agreed to',
-    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '3',
+    await page.evaluate(() =>
+      Object.keys(localStorage).some(
+        (key) => key.startsWith('parapo.contribute.consent') && localStorage.getItem(key) === '3',
+      ),
+    ),
   );
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   {

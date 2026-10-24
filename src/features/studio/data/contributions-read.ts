@@ -85,7 +85,10 @@ const NAME_BATCH = 100;
 
 const contributorNamesSchema = z.array(z.object({ id: z.string(), name: z.nullable(z.string()) }));
 
-/** The names of the accounts behind some uploads: name only, the number and email are never asked for. */
+/**
+ * The names of the accounts behind some uploads: name only, the number and email are never asked
+ * for. A failed read leaves the uploads unnamed rather than failing the list.
+ */
 async function fetchContributorNames(ids: string[]): Promise<Map<string, string>> {
   const names = new Map<string, string>();
   // In pieces: a request line holding hundreds of ids is longer than the server reads.
@@ -94,7 +97,10 @@ async function fetchContributorNames(ids: string[]): Promise<Map<string, string>
       .from('contributor')
       .select('id, name')
       .in('id', ids.slice(start, start + NAME_BATCH));
-    if (error) throw new Error(`Contributor names could not be read: ${error.message}`);
+    if (error) {
+      console.warn(`Contributor names could not be read: ${error.message}`);
+      return new Map();
+    }
     for (const { id, name } of contributorNamesSchema.parse(data)) {
       if (name) names.set(id, name);
     }
