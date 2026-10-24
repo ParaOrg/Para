@@ -16,6 +16,8 @@ const config: CapacitorConfig = {
       // The page draws edge to edge (viewport-fit=cover) and keeps clear of the status and
       // navigation bars with env(safe-area-inset-*), as it does in a phone's browser.
       insetsHandling: 'native',
+      // Dark icons: the page is light, whatever the phone's own theme.
+      style: 'LIGHT',
       initialViewportFitValueHint: 'cover',
     },
   },

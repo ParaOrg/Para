@@ -1,4 +1,6 @@
-let isNative = false;
+import type { CapacitorGlobal } from '@capacitor/core';
+
+let capacitor: CapacitorGlobal | null = null;
 
 /**
  * Loads Capacitor's JavaScript in the Android app's build (`--mode apk`) and does nothing on
@@ -8,11 +10,10 @@ let isNative = false;
  */
 export async function prepareNativeApp(): Promise<void> {
   if (import.meta.env.MODE !== 'apk') return;
-  const { Capacitor } = await import('@capacitor/core');
-  isNative = Capacitor.isNativePlatform();
+  capacitor = (await import('@capacitor/core')).Capacitor;
 }
 
 /** Whether the page runs inside the Android app. */
 export function isNativeApp(): boolean {
-  return isNative;
+  return capacitor?.isNativePlatform() === true;
 }

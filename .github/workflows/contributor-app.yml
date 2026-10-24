@@ -3,7 +3,8 @@
 #   - A pull request that touches the app builds a DEBUG APK and attaches it as an artifact.
 #   - A tag `app-v*` (app-v1.2.3) builds a RELEASE APK, UNSIGNED and not published: signing, the
 #     download page and the update file come with ticket 04. The tag sets the version.
-#   - "Run workflow" builds a debug APK from any branch.
+#   - "Run workflow" builds a debug APK from any branch; with `release` ticked it takes the same
+#     unsigned release path as a tag, with the version name and code typed in.
 #
 # The runner's own Android SDK is used: android-actions/setup-android failed on it.
 name: Contributor app
@@ -25,9 +26,22 @@ on:
       - 'src/features/routes/**'
       - 'src/shared/**'
       - 'src/design-system/**'
+      - 'src/styles/**'
+      - 'tsconfig.json'
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
+    inputs:
+      release:
+        description: Build the unsigned release APK, as a tag does
+        type: boolean
+        default: false
+      version_name:
+        description: Release only, the version name, such as 1.2.3
+        default: 0.0.0-dev
+      version_code:
+        description: Release only, the version code, such as 1002003
+        default: '1'
 
 concurrency:
   group: contributor-app-${{ github.ref }}
@@ -41,11 +55,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/app-v') }}
+      IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/app-v') || inputs.release == true }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -68,16 +82,29 @@ jobs:
       - run: npm ci
 
       # app-v1.2.3 gives versionName 1.2.3 and versionCode 1002003 (major * 1,000,000 +
-      # minor * 1,000 + patch), so a newer tag is always a higher code.
-      - name: Read the version from the tag
+      # minor * 1,000 + patch), so a newer tag is always a higher code. A manual release run
+      # takes both from its inputs.
+      - name: Read the version
         if: env.IS_RELEASE == 'true'
+        env:
+          INPUT_NAME: ${{ inputs.version_name }}
+          INPUT_CODE: ${{ inputs.version_code }}
         run: |
-          version="${GITHUB_REF_NAME#app-v}"
-          if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "::error::The tag $GITHUB_REF_NAME is not app-v<major>.<minor>.<patch>."
-            exit 1
+          if [[ "$GITHUB_REF" == refs/tags/app-v* ]]; then
+            version="${GITHUB_REF_NAME#app-v}"
+            if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "::error::The tag $GITHUB_REF_NAME is not app-v<major>.<minor>.<patch>."
+              exit 1
+            fi
+            code=$(( BASH_REMATCH[1] * 1000000 + BASH_REMATCH[2] * 1000 + BASH_REMATCH[3] ))
+          else
+            version="$INPUT_NAME"
+            code="$INPUT_CODE"
+            if [[ ! "$version" =~ ^[0-9A-Za-z._-]+$ || ! "$code" =~ ^[0-9]+$ ]]; then
+              echo "::error::Give a version name (letters, digits, . _ -) and a numeric version code."
+              exit 1
+            fi
           fi
-          code=$(( BASH_REMATCH[1] * 1000000 + BASH_REMATCH[2] * 1000 + BASH_REMATCH[3] ))
           echo "GRADLE_VERSION=-PappVersionName=$version -PappVersionCode=$code" >> "$GITHUB_ENV"
           echo "APK_NAME=parapo-contributor-$version-unsigned" >> "$GITHUB_ENV"
 

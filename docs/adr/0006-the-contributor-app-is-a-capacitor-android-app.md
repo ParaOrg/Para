@@ -32,7 +32,7 @@ service with a visible "ParaPo is recording" notification.
 - A GitHub workflow builds a debug APK on pull requests that touch the app and
   an unsigned release APK on a tag `app-v*`, on the runner's own Android SDK.
   Signing, the download link and the update check are separate work
-  (`.scratch/contributor-app/`, tickets 04 and 05).
+  (`.scratch/contributor-app/`, ticket 04).
 - A downloaded APK does not update itself. The signing key must never change
   and never be lost: a new key means testers uninstall and lose unsent
   recordings.
