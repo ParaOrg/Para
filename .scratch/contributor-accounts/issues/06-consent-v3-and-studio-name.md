@@ -3,7 +3,7 @@
 Status: blocked
 Type: task
 Who: a session, after the owner approves the text
-Blocked by: 01; the owner's approval of the consent v3 lines in the spec
+Blocked by: 01 (the owner approved the consent v3 lines and the "who sees what" rule, 2026-10-24)
 
 - `CONSENT_VERSION` 3 and the approved lines; asked once per account, after Create account. A v2 recording still sends; v1 still doesn't.
 - The studio shows a ride's contributor name (not phone, not email) where it shows the ride.
