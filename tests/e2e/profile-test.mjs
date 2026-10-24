@@ -67,7 +67,7 @@ database.users.set(EDITOR_ID, {
  * A phone signed in to the account, on the shared database; `signedIn: false` has no session,
  * `userId` signs in as another user (the editor), and `consent: null` has never been asked.
  */
-async function phone({ signedIn = true, userId = ACCOUNT_ID, consent = '2' } = {}) {
+async function phone({ signedIn = true, userId = ACCOUNT_ID, consent = '3' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -129,7 +129,7 @@ async function seed(page, id, name, upload) {
     endPointName: 'Cubao',
     description: '',
     rideKind: 'Jeep',
-    consentVersion: 2,
+    consentVersion: 3,
     ...(upload ? { upload } : {}),
   };
   await page.evaluate(
@@ -331,9 +331,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await row(page, 'Also phone A').waitFor();
   check('  and the rest arrive', (await page.getByText('Loading…').count()) === 0);
 
-  // The page stays on #history through the reload, and asks for the list as it opens.
   fake.next.list = 'offline';
   await page.reload({ waitUntil: 'load' });
+  await start(page).waitFor();
+  await button(page, 'History').click();
   await page.getByRole('alert').filter({ hasText: "can't load your uploads" }).waitFor();
   check(
     "with no signal History says so in one line with Try again, and still lists this phone's own",
