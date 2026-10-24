@@ -5,8 +5,17 @@
 // *.supabase.co lands here, so no suite ever reaches the live project; one this
 // stand-in does not know is answered 501 and counted in `unknown`.
 //
+// The accounts of the contributor page, too: an anonymous user made an account of (PUT /user,
+// which keeps its id), the token renewed (a renewed token is the one that no longer says
+// anonymous, as in GoTrue), a password sign-in, a sign-out (the scopes it was asked for are in
+// `fake.logouts`), get_profile, and set_profile, which refuses a user that is not an account,
+// as migration 01 does. `fake.users` holds them, by id.
+//
 // Faults, set on `fake.next` before the request they are for:
 //   signupDisabled the sign-in is answered 422, as with sign-ups turned off
+//   passwordSignIn = 'offline'  the password sign-in fails as with no signal
+//   updateUser = 'emailTaken'   the upgrade to an account is answered 422 email_exists
+//   profile = 'offline'         set_profile fails as with no signal
 //   offline       the save request fails as with no signal
 //   lostAnswer    the save is stored, then the answer is lost on the way back
 //   hold          the save waits until `fake.release()` (an upload in flight)
@@ -21,8 +30,12 @@ const json = (route, status, body) =>
     body: JSON.stringify(body),
   });
 
-const session = (userId) => ({
-  access_token: `fake-${userId}`,
+/**
+ * A GoTrue session. Its token says anonymous (`fake-<id>`) until it is renewed
+ * (`fake-<id>.account`), the way a real token's claim does.
+ */
+export const session = (userId, { email = null, isAccount = false } = {}) => ({
+  access_token: isAccount ? `fake-${userId}.account` : `fake-${userId}`,
   token_type: 'bearer',
   expires_in: 3600,
   expires_at: Math.floor(Date.now() / 1000) + 3600,
@@ -31,7 +44,8 @@ const session = (userId) => ({
     id: userId,
     aud: 'authenticated',
     role: 'authenticated',
-    is_anonymous: true,
+    is_anonymous: !isAccount,
+    ...(email ? { email } : {}),
     app_metadata: {},
     user_metadata: {},
     created_at: new Date().toISOString(),
@@ -43,9 +57,17 @@ export async function fakeContributions(page) {
   const fake = {
     /** The contributions stored, by id, each with the phone that sent it. Delete one to play an editor. */
     rows: new Map(),
+    /** Accounts and anonymous users, by id: { email, password, isAccount, profile }. */
+    users: new Map(),
     signIns: 0,
+    passwordSignIns: 0,
+    /** The scope of each sign-out the page sent: 'local' signs out this phone only. */
+    logouts: [],
+    profileRequests: 0,
     saveRequests: 0,
     deleteRequests: 0,
+    /** Set with `context.setOffline(true)`: Playwright does not stop requests a route answers. */
+    isOffline: false,
     unknown: [],
     captchaTokens: [],
     next: {},
@@ -56,11 +78,16 @@ export async function fakeContributions(page) {
     },
   };
 
-  const userOf = (request) => {
+  const tokenOf = (request) => {
     const auth = request.headers()['authorization'] ?? '';
-    const match = /^Bearer fake-(.+)$/.exec(auth);
-    return match ? match[1] : null;
+    const match = /^Bearer fake-([0-9a-f-]{36})(\.account)?$/.exec(auth);
+    return match ? { id: match[1], isAccount: match[2] !== undefined } : null;
   };
+  const userOf = (request) => tokenOf(request)?.id ?? null;
+  const accountByEmail = (email) =>
+    [...fake.users].find(([, user]) => user.isAccount && user.email === email);
+  const authError = (route, status, code, message) =>
+    json(route, status, { code: status, error_code: code, msg: message });
 
   await page.route(/^https:\/\/[^/]+\.supabase\.co\//, async (route) => {
     const request = route.request();
@@ -77,6 +104,8 @@ export async function fakeContributions(page) {
       });
     }
 
+    if (fake.isOffline) return route.abort('internetdisconnected');
+
     if (url.pathname === '/auth/v1/signup' && method === 'POST') {
       fake.signIns += 1;
       const body = request.postDataJSON() ?? {};
@@ -90,11 +119,99 @@ export async function fakeContributions(page) {
           msg: 'Signups not allowed for this instance',
         });
       }
-      return json(route, 200, session(crypto.randomUUID()));
+      const id = crypto.randomUUID();
+      fake.users.set(id, { email: null, password: null, isAccount: false, profile: null });
+      return json(route, 200, session(id));
     }
     if (url.pathname === '/auth/v1/user' && method === 'GET') {
       const user = userOf(request);
       return user ? json(route, 200, session(user).user) : json(route, 401, { msg: 'no session' });
+    }
+    if (url.pathname === '/auth/v1/user' && method === 'PUT') {
+      const id = userOf(request);
+      const known = id && fake.users.get(id);
+      if (!known) return authError(route, 401, 'bad_jwt', 'no session');
+      const body = request.postDataJSON() ?? {};
+      const fault = fake.next.updateUser;
+      delete fake.next.updateUser;
+      const taken = accountByEmail(body.email);
+      if (fault === 'emailTaken' || (taken && taken[0] !== id)) {
+        return authError(
+          route,
+          422,
+          'email_exists',
+          'A user with this email address has already been registered',
+        );
+      }
+      if (typeof body.password === 'string' && body.password.length < 8) {
+        return authError(route, 422, 'weak_password', 'Password should be at least 8 characters.');
+      }
+      // The same id, now an account: every upload already made stays its own.
+      Object.assign(known, { email: body.email, password: body.password, isAccount: true });
+      return json(route, 200, session(id, { email: known.email, isAccount: true }).user);
+    }
+    if (url.pathname === '/auth/v1/token' && method === 'POST') {
+      const grant = url.searchParams.get('grant_type');
+      const body = request.postDataJSON() ?? {};
+      if (grant === 'refresh_token') {
+        const id = /^refresh-(.+)$/.exec(body.refresh_token ?? '')?.[1];
+        const known = id && fake.users.get(id);
+        if (!known)
+          return authError(route, 400, 'refresh_token_not_found', 'Invalid Refresh Token');
+        return json(route, 200, session(id, { email: known.email, isAccount: known.isAccount }));
+      }
+      if (grant === 'password') {
+        fake.passwordSignIns += 1;
+        fake.captchaTokens.push(body.gotrue_meta_security?.captcha_token ?? null);
+        const fault = fake.next.passwordSignIn;
+        delete fake.next.passwordSignIn;
+        if (fault === 'offline') return route.abort('internetdisconnected');
+        const found = accountByEmail(body.email);
+        if (!found || found[1].password !== body.password) {
+          return authError(route, 400, 'invalid_credentials', 'Invalid login credentials');
+        }
+        return json(route, 200, session(found[0], { email: found[1].email, isAccount: true }));
+      }
+    }
+    if (url.pathname === '/auth/v1/logout' && method === 'POST') {
+      fake.logouts.push(url.searchParams.get('scope'));
+      return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    if (url.pathname === '/rest/v1/rpc/get_profile' && method === 'POST') {
+      const known = fake.users.get(userOf(request) ?? '');
+      if (!known?.isAccount) return json(route, 200, []);
+      return json(route, 200, [
+        { name: known.profile?.name ?? null, phone: known.profile?.phone ?? null },
+      ]);
+    }
+    if (url.pathname === '/rest/v1/rpc/set_profile' && method === 'POST') {
+      fake.profileRequests += 1;
+      const token = tokenOf(request);
+      // As migration 01 does: the user must be an account in the database, whatever the token says.
+      if (!token || !fake.users.get(token.id)?.isAccount) {
+        return json(route, 403, {
+          code: '42501',
+          message: 'not_an_account',
+          details: null,
+          hint: null,
+        });
+      }
+      if (fake.next.profile === 'offline') {
+        delete fake.next.profile;
+        return route.abort('internetdisconnected');
+      }
+      const { name, phone } = request.postDataJSON();
+      if (!/^\+639[0-9]{9}$/.test(phone) || name.length < 1 || name.length > 80) {
+        return json(route, 400, {
+          code: '23514',
+          message: 'bad_profile',
+          details: null,
+          hint: null,
+        });
+      }
+      const known = fake.users.get(token.id);
+      if (known) known.profile = { name, phone };
+      return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
     }
 
     if (url.pathname === '/rest/v1/rpc/save_contribution' && method === 'POST') {
