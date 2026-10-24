@@ -331,10 +331,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await row(page, 'Also phone A').waitFor();
   check('  and the rest arrive', (await page.getByText('Loading…').count()) === 0);
 
+  // The page stays on #history through the reload, and asks for the list as it opens.
   fake.next.list = 'offline';
   await page.reload({ waitUntil: 'load' });
-  await start(page).waitFor();
-  await button(page, 'History').click();
   await page.getByRole('alert').filter({ hasText: "can't load your uploads" }).waitFor();
   check(
     "with no signal History says so in one line with Try again, and still lists this phone's own",
