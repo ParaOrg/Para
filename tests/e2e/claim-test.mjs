@@ -178,6 +178,13 @@ async function signInAs(page) {
     owners(fake).join(),
   );
   check('  the finished claim leaves no token on the phone', (await claimOf(page)) === null);
+  await page.goto(`${BASE}/contribute/#history`, { waitUntil: 'load' });
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(1500);
+  check(
+    '  reloading on #history with the account signed in keeps History open',
+    (await page.getByRole('heading', { name: 'History', level: 1 }).count()) === 1,
+  );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
