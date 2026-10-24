@@ -8,8 +8,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // The release workflow passes both from the tag (app-v1.2.3 gives "1.2.3" and 1002003).
-        versionCode (project.findProperty('appVersionCode') ?: '1').toInteger()
-        versionName project.findProperty('appVersionName') ?: '0.0.0-dev'
+        versionCode = (project.findProperty('appVersionCode') ?: '1').toString().toInteger()
+        versionName = project.findProperty('appVersionName') ?: '0.0.0-dev'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
