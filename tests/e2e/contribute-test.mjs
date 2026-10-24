@@ -382,6 +382,15 @@ const buttons = (page) =>
       (await page.locator('[data-testid="locator-overlay"]').count()) === 1,
     `${await locatorMode(page)}, ${(await centreOff(page, 1200)).toFixed(1)} m off, bearing ${await bearing(page)}`,
   );
+  const lift = await page.evaluate(([lng, lat]) => {
+    const stack = parseFloat(document.documentElement.style.getPropertyValue('--stack-room'));
+    return { y: window.__map.project([lng, lat]).y, mid: (innerHeight - stack) / 2, stack };
+  }, eastOf(1200));
+  check(
+    '  and it sits lifted clear of the bottom bars, in the middle of the map above them',
+    lift.stack > 0 && Math.abs(lift.y - lift.mid) < 3,
+    JSON.stringify(lift),
+  );
   const outData = await mapSource(page);
   check(
     'the trail is drawn live: one papunta line, no switch dot yet',
@@ -830,6 +839,8 @@ const buttons = (page) =>
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  // The locator's dock slides up as the stack is measured: let it settle.
+  await page.waitForTimeout(800);
   const box = await page.getByRole('button', { name: 'Map design' }).boundingBox();
   const locatorBox = await locate(page).boundingBox();
   const bars = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
