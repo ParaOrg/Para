@@ -14,6 +14,7 @@ import {
 } from '../../src/features/contribute/api/claim-token.ts';
 
 const TOKEN = '3f2c1d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
+const ACCOUNT = 'cccccccc-0000-4000-8000-000000000001';
 const P0001 = (message) => ({ code: 'P0001', message });
 
 test('a used token the server no longer has, after an earlier try, is the earlier success', () => {
@@ -65,8 +66,8 @@ beforeEach(() => stored.clear());
 
 test('a kept claim is read back until it is dropped', () => {
   assert.equal(readPendingClaim(), null);
-  keepPendingClaim({ token: TOKEN, wasTried: false });
-  assert.deepEqual(readPendingClaim(), { token: TOKEN, wasTried: false });
+  keepPendingClaim({ token: TOKEN, wasTried: false, accountId: ACCOUNT });
+  assert.deepEqual(readPendingClaim(), { token: TOKEN, wasTried: false, accountId: ACCOUNT });
   dropPendingClaim();
   assert.equal(readPendingClaim(), null);
 });
@@ -75,7 +76,8 @@ test('stored claims that are not a token and a flag are dropped, not trusted', (
   for (const raw of [
     'nope',
     '{}',
-    JSON.stringify({ token: 'x', wasTried: false }),
+    JSON.stringify({ token: TOKEN, wasTried: false }),
+    JSON.stringify({ token: 'x', wasTried: false, accountId: ACCOUNT }),
     '"' + TOKEN + '"',
   ]) {
     stored.set(CLAIM_TOKEN_KEY, raw);

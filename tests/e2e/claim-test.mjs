@@ -109,6 +109,9 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
     fake.users.set(ANON_ID, { email: null, password: null, isAccount: false, profile: null });
     await page.addInitScript(
       ([key, anonymous]) => {
+        // Only a first load seeds it, so a sign-out then a reload leaves the phone with no user.
+        if (sessionStorage.getItem('seeded-user')) return;
+        sessionStorage.setItem('seeded-user', 'yes');
         if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(anonymous));
       },
       [AUTH_KEY, session(ANON_ID)],
@@ -260,6 +263,82 @@ async function signInAs(page) {
   check(
     'token_expired means nothing to claim: the token is dropped, not retried',
     fake.claims.filter((c) => c === 'finish_claim').length === 1 && owners(fake)[0] === ANON_ID,
+    fake.claims.join(),
+  );
+}
+
+// ---------- a claim is the account's that signed in, never another's; retried when online
+{
+  const shared = database();
+  shared.users.set('bbbbbbbb-0000-4000-8000-000000000002', {
+    email: 'ana@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Ana', phone: '+639181234567' },
+  });
+  const { page, fake } = await phone({ shared, uploaded: ['up-1'] });
+  const signOut = async () => {
+    await page.evaluate(() =>
+      import('/src/features/contribute/api/account.ts').then((account) => account.signOut()),
+    );
+    await page.reload({ waitUntil: 'load' });
+    await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+  };
+  fake.next.finishClaim = 'offline';
+  await signInAs(page);
+  await start(page).waitFor({ timeout: 15000 });
+  await signOut();
+  await field(page, 'Email').fill('ana@example.com');
+  await field(page, 'Password').fill(ACCOUNT.password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await start(page).waitFor({ timeout: 15000 });
+  await page.reload({ waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 15000 });
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await page.waitForTimeout(1000);
+  check(
+    "another account signing in never finishes the first account's claim, not at sign-in, a start or online",
+    owners(fake)[0] === ANON_ID &&
+      fake.claims.filter((c) => c === 'finish_claim').length === 1 &&
+      (await claimOf(page)) !== null,
+    fake.claims.join(),
+  );
+  await signOut();
+  await signInAs(page);
+  await start(page).waitFor({ timeout: 15000 });
+  await page.waitForFunction((key) => localStorage.getItem(key) === null, CLAIM_KEY);
+  check(
+    '  signing in again as the first account finishes it for that account',
+    owners(fake)[0] === ACCOUNT_ID,
+    owners(fake).join(),
+  );
+}
+
+// ------------------------------ the page retries a kept claim when the phone is back online
+{
+  const { page, fake } = await phone({ uploaded: ['up-1'] });
+  fake.next.finishClaim = 'offline';
+  await signInAs(page);
+  await start(page).waitFor({ timeout: 15000 });
+  check('a claim kept after a failure waits', owners(fake)[0] === ANON_ID);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await page.waitForFunction((key) => localStorage.getItem(key) === null, CLAIM_KEY);
+  check(
+    '  coming back online finishes it without a reload',
+    owners(fake)[0] === ACCOUNT_ID && fake.claims.filter((c) => c === 'finish_claim').length === 2,
+    fake.claims.join(),
+  );
+}
+
+// ------------------- a stale session: begin_claim says not_anonymous, the sign-in goes on
+{
+  const { page, fake } = await phone({ uploaded: ['up-1'] });
+  fake.next.beginClaim = 'notAnonymous';
+  await signInAs(page);
+  await start(page).waitFor({ timeout: 15000 });
+  check(
+    'a begin_claim refused with 42501 does not stop the sign-in, and nothing is kept',
+    fake.claims.join() === 'begin_claim,password' && (await claimOf(page)) === null,
     fake.claims.join(),
   );
 }

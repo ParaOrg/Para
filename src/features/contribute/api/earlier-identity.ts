@@ -26,11 +26,18 @@ async function isAnonymous(client: ContributeClient): Promise<boolean> {
   return data.session?.user.is_anonymous === true;
 }
 
-/** One-time token for this anonymous identity's claim; it is good for 10 minutes. */
-async function beginClaim(client: ContributeClient): Promise<string> {
+/**
+ * One-time token for this anonymous identity's claim; it is good for 10 minutes. Null when the
+ * database says the phone is not anonymous after all (a stale session): there is nothing to claim.
+ */
+async function beginClaim(client: ContributeClient): Promise<string | null> {
   const { data, error, status } = await untyped(client).rpc('begin_claim');
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
+    if (error.code === '42501') {
+      console.warn(`ParaPo did not begin a claim (${error.message}); signing in without one.`);
+      return null;
+    }
     console.warn(`ParaPo did not begin the claim (HTTP ${status}):`, error.message);
     throw new AccountError('not-accepting', error.message);
   }
@@ -58,13 +65,24 @@ async function finishClaim(client: ContributeClient, claim: PendingClaim): Promi
 let finishing: Promise<number> | null = null;
 
 /**
- * Finishes the claim this phone kept, if any, as the account now signed in. Never throws: a
- * claim that cannot finish now stays for the next start. Answers how many uploads moved.
+ * Finishes the claim this phone kept, if any, as the account it is bound to. Another account
+ * signed in leaves it alone, and no account leaves it for later. Never throws: a claim that
+ * cannot finish now stays for the next start. Answers how many uploads moved.
  */
 export function finishPendingClaim(client: ContributeClient): Promise<number> {
   finishing ??= (async () => {
     const claim = readPendingClaim();
     if (!claim) return 0;
+    const { data } = await client.auth.getSession();
+    const user = data.session?.user;
+    if (!user || user.is_anonymous) return 0;
+    if (claim.accountId === null) {
+      // The sign-in answered but the phone never learned who it was: it cannot say whose this is.
+      console.warn('The pending claim has no account; dropping it.');
+      dropPendingClaim();
+      return 0;
+    }
+    if (claim.accountId !== user.id) return 0;
     const outcome = await finishClaim(client, claim);
     if (outcome.kind === 'retry') return 0;
     dropPendingClaim();
@@ -80,22 +98,42 @@ export function finishPendingClaim(client: ContributeClient): Promise<number> {
   return finishing;
 }
 
+/** A sign-in's answer, after finishing a claim an earlier sign-in left for this account. */
+async function finishedAfter<T extends { error: unknown }>(
+  client: ContributeClient,
+  result: T,
+): Promise<T> {
+  if (!result.error) await finishPendingClaim(client);
+  return result;
+}
+
 /**
  * Runs a password sign-in around the phone's own anonymous identity, if it has one: while the
- * phone is still anonymous it asks `begin_claim()` for a token, signs in, then keeps the token
- * and calls `finish_claim(token)` as the account. A claim that fails then does not fail the
- * sign-in; the token stays and the next start finishes it. A phone with no identity of its own,
- * or none that is anonymous, has nothing to claim.
+ * phone is still anonymous it asks `begin_claim()` for a token and keeps it, signs in, binds the
+ * token to the account that signed in and calls `finish_claim(token)` as it. A failed sign-in
+ * drops the token. A claim that fails after it does not fail the sign-in; the token stays and
+ * is finished later. A sign-in on a phone with no anonymous identity finishes only a claim kept for that account.
  */
 export async function aroundEarlierIdentity<T extends { error: unknown }>(
   client: ContributeClient,
   signIn: () => Promise<T>,
 ): Promise<T> {
-  if (!(await isAnonymous(client))) return signIn();
-  const token = await beginClaim(client);
-  const result = await signIn();
-  if (result.error) return result;
-  keepPendingClaim({ token, wasTried: false });
+  const token = (await isAnonymous(client)) ? await beginClaim(client) : null;
+  if (!token) return finishedAfter(client, await signIn());
+  keepPendingClaim({ token, wasTried: false, accountId: null });
+  let result: T;
+  try {
+    result = await signIn();
+  } catch (error) {
+    dropPendingClaim();
+    throw error;
+  }
+  const { data } = await client.auth.getSession();
+  if (result.error || !data.session) {
+    dropPendingClaim();
+    return result;
+  }
+  keepPendingClaim({ token, wasTried: false, accountId: data.session.user.id });
   await finishPendingClaim(client);
   return result;
 }

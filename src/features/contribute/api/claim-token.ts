@@ -5,6 +5,11 @@ export const CLAIM_TOKEN_KEY = 'parapo.contributor-claim';
 
 const pendingClaimSchema = z.object({
   token: z.uuid(),
+  /**
+   * The account the claim is for: it is finished only while that account is signed in, so one
+   * person's uploads never land on another's account. Null until the sign-in has answered.
+   */
+  accountId: z.nullable(z.string()),
   /** Whether `finish_claim` was sent with it at least once, so a lost answer may have succeeded. */
   wasTried: z.boolean(),
 });

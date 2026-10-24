@@ -28,6 +28,7 @@
 //   hold          the save waits until `fake.release()` (an upload in flight)
 //   refuse        the save is refused: 'bad_points' (never taken) or 'day_cap'
 //   removeOffline the delete fails as with no signal
+//   beginClaim = 'notAnonymous' begin_claim is answered 42501 not_anonymous, as for a stale token
 //   finishClaim = 'offline'    finish_claim fails as with no signal, before it acts
 //   finishClaim = 'lostAnswer' finish_claim acts, then the answer is lost on the way back
 //   finishClaim = 'expired'    finish_claim is answered token_expired
@@ -233,6 +234,9 @@ export async function fakeContributions(page) {
       const token = tokenOf(request);
       const claimError = (code, message) =>
         json(route, 403, { code, message, details: null, hint: null });
+      const fault = fake.next.beginClaim;
+      delete fake.next.beginClaim;
+      if (fault === 'notAnonymous') return claimError('42501', 'not_anonymous');
       if (!token || !fake.users.get(token.id)) return claimError('42501', 'not_signed_in');
       if (fake.users.get(token.id).isAccount) return claimError('42501', 'not_anonymous');
       for (const [value, made] of fake.tokens) {
