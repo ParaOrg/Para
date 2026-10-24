@@ -1,15 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
-import { AppUpdateNotice } from './app-update/app-update-notice';
-import { useAppUpdate } from './app-update/use-app-update';
 import { BackToMapButton, goBackToMap } from './back-to-map-button';
 import { ConsentPanel } from './consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from './earlier-recordings-panel';
 import { TrackingButton } from './tracking-button';
 import { HistoryIcon } from './tracking-icons';
 import { useStackRoom } from './use-stack-room';
+
+// The update gate exists in the Android app's build only: on the web this is null and the chunk is
+// never built, so the page's first load does not carry it.
+const AppUpdateGate =
+  import.meta.env.MODE === 'apk'
+    ? lazy(() =>
+        import('./app-update/app-update-gate').then((module) => ({
+          default: module.AppUpdateGate,
+        })),
+      )
+    : null;
 
 interface ReadyScreenProps {
   hasConsent: boolean;
@@ -41,7 +50,7 @@ export function ReadyScreen({
     (shouldFocusButton ? historyRef.current : headingRef.current)?.focus();
   }, [shouldFocusButton]);
   const stackRef = useStackRoom();
-  const { update, downloadUrl } = useAppUpdate();
+  const startBar = <TrackingButton variant="start" onClick={onStart} />;
 
   return (
     <>
@@ -67,8 +76,13 @@ export function ReadyScreen({
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          {update !== 'current' && <AppUpdateNotice update={update} downloadUrl={downloadUrl} />}
-          {update !== 'required' && <TrackingButton variant="start" onClick={onStart} />}
+          {AppUpdateGate ? (
+            <Suspense fallback={startBar}>
+              <AppUpdateGate>{startBar}</AppUpdateGate>
+            </Suspense>
+          ) : (
+            startBar
+          )}
         </section>
       )}
       {!hasConsent && <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />}

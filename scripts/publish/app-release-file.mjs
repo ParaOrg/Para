@@ -2,7 +2,7 @@
 // check can hold the very text (tests/unit/app-update-test.mjs) without a build. The file's
 // shape is the app's own schema (src/features/contribute/app-update/latest-release-schema.ts):
 // it is read back with it before it is written.
-import { versionCodeOf } from '../../src/features/contribute/app-update/app-version.ts';
+import { versionCodeOf } from '../../src/features/contribute/app-update/version-code.ts';
 import { latestReleaseSchema } from '../../src/features/contribute/app-update/latest-release-schema.ts';
 
 /**

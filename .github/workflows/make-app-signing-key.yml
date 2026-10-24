@@ -1,20 +1,25 @@
 # Makes the contributor app's release signing key, once (docs/adr/0006).
 #
-# "Run workflow" on the default branch. It generates a PKCS12 keystore (RSA 4096, about 30 years,
-# alias `parapo`) whose password is derived from the repository secret PARAPO_KEY_PASSPHRASE
-# (scripts/android/store-password.sh), encrypts it with that passphrase (AES-256-CBC, PBKDF2,
-# 600,000 rounds) and uploads ONLY the encrypted file as the artifact `app-signing-key`. The
-# coordinator commits it as android/release-key.p12.enc; the release build decrypts it with the same
-# secret (contributor-app.yml).
+# "Run workflow" on `main`. It generates a PKCS12 keystore (RSA 4096, about 30 years, alias
+# `parapo`) whose password is derived from the secret PARAPO_KEY_PASSPHRASE
+# (scripts/android/store-password.sh), encrypts it with that passphrase (AES-256-CBC, SHA-256,
+# PBKDF2, 600,000 rounds), and uploads ONLY the encrypted file and the certificate's public SHA-256
+# fingerprint as the artifact `app-signing-key`. The coordinator commits both as
+# android/release-key.p12.enc and android/release-key.sha256. The release build decrypts the first
+# with the same secret (contributor-app.yml) and refuses an APK whose certificate is not the second.
+#
+# The secret lives in the GitHub Environment `app-release`, shared with the release build: the
+# environment allows the branch `main` and the tags `app-v*`, so one secret in one place serves
+# both, and no pull request or other branch can read it. This job also refuses to run off `main`.
 #
 # THE REPOSITORY IS PUBLIC, so the committed key's safety rests on the passphrase alone: anyone can
 # download the file and try passphrases offline. Use at least 24 characters, ideally six or more
 # random words, kept in a password manager. Lose the passphrase and the key is gone; testers must
 # uninstall (and lose unsent recordings) to take an update signed with a new one.
 #
-# It refuses to run when android/release-key.p12.enc is already on this ref or on the default
-# branch, so a key can never be replaced. The plain keystore is never printed or uploaded and is
-# shredded at the end.
+# It refuses to run when android/release-key.p12.enc is already on this ref, `main` or `staging`,
+# so a key can never be replaced. The plain keystore is never printed or uploaded and is shredded
+# at the end.
 name: Make the app signing key
 
 on:
@@ -23,20 +28,27 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   make-key:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment: app-release
     env:
       KEY_FILE: android/release-key.p12.enc
-      PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
     steps:
       - uses: actions/checkout@v5
 
       - name: Check the passphrase is there and long enough
+        env:
+          PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
         run: |
           if [[ -z "$PARAPO_KEY_PASSPHRASE" ]]; then
-            echo "::error::The repository secret PARAPO_KEY_PASSPHRASE is missing."
+            echo "::error::The secret PARAPO_KEY_PASSPHRASE is missing from the app-release environment."
             exit 1
           fi
           if (( ${#PARAPO_KEY_PASSPHRASE} < 24 )); then
@@ -44,46 +56,68 @@ jobs:
             exit 1
           fi
 
+      # Only a 404 means "no key there"; any other answer (rate limit, outage, no access) stops
+      # the run rather than reading as absent.
       - name: Check there is no key yet
         env:
           GH_TOKEN: ${{ github.token }}
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           if [[ -e "$KEY_FILE" ]]; then
             echo "::error::$KEY_FILE already exists on this ref. A key is never replaced."
             exit 1
           fi
-          if gh api "repos/$GITHUB_REPOSITORY/contents/$KEY_FILE?ref=$DEFAULT_BRANCH" > /dev/null 2>&1; then
-            echo "::error::$KEY_FILE already exists on $DEFAULT_BRANCH. A key is never replaced."
-            exit 1
-          fi
+          for branch in main staging; do
+            if answer="$(gh api "repos/$GITHUB_REPOSITORY/contents/$KEY_FILE?ref=$branch" 2>&1)"; then
+              echo "::error::$KEY_FILE already exists on $branch. A key is never replaced."
+              exit 1
+            fi
+            if ! grep -q "HTTP 404" <<< "$answer"; then
+              echo "::error::Could not tell whether $branch has $KEY_FILE: $answer"
+              exit 1
+            fi
+          done
 
       - name: Make the key and encrypt it
+        env:
+          PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
         run: |
           plain="$RUNNER_TEMP/release-key.p12"
-          export PARAPO_KEYSTORE_PASSWORD
           PARAPO_KEYSTORE_PASSWORD="$(scripts/android/store-password.sh)"
+          echo "::add-mask::$PARAPO_KEYSTORE_PASSWORD"
+          export PARAPO_KEYSTORE_PASSWORD
           keytool -genkeypair -keystore "$plain" -storetype PKCS12 \
             -alias parapo -keyalg RSA -keysize 4096 -validity 10950 \
             -dname "CN=ParaPo Contributor, O=ParaPo, C=PH" \
             -storepass:env PARAPO_KEYSTORE_PASSWORD -keypass:env PARAPO_KEYSTORE_PASSWORD
           mkdir -p out
-          openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
+          openssl enc -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 -salt \
             -pass env:PARAPO_KEY_PASSPHRASE -in "$plain" -out out/release-key.p12.enc
 
-          # Prove the file opens with the passphrase before it is handed over. Only the
-          # certificate's public fingerprint is printed.
+          # The certificate's public SHA-256, as apksigner prints it (lowercase hex): the release
+          # build refuses an APK signed with anything else.
+          keytool -exportcert -alias parapo -keystore "$plain" -storetype PKCS12 \
+            -storepass:env PARAPO_KEYSTORE_PASSWORD | openssl dgst -sha256 -r | cut -d' ' -f1 \
+            > out/release-key.sha256
+          cat out/release-key.sha256
+
+          # Prove the file opens with the passphrase and holds the same certificate.
           check="$RUNNER_TEMP/release-key.check.p12"
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+          openssl enc -d -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 \
             -pass env:PARAPO_KEY_PASSPHRASE -in out/release-key.p12.enc -out "$check"
-          keytool -list -keystore "$check" -storetype PKCS12 \
-            -storepass:env PARAPO_KEYSTORE_PASSWORD | grep -i "parapo\|SHA-256\|Certificate fingerprint"
+          again="$(keytool -exportcert -alias parapo -keystore "$check" -storetype PKCS12 \
+            -storepass:env PARAPO_KEYSTORE_PASSWORD | openssl dgst -sha256 -r | cut -d' ' -f1)"
           shred -u "$check"
+          if [[ "$again" != "$(cat out/release-key.sha256)" ]]; then
+            echo "::error::The encrypted key does not open to the same certificate."
+            exit 1
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
           name: app-signing-key
-          path: out/release-key.p12.enc
+          path: |
+            out/release-key.p12.enc
+            out/release-key.sha256
           if-no-files-found: error
           retention-days: 14
 

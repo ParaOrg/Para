@@ -12,9 +12,7 @@ export function AppUpdateNotice({ update, downloadUrl }: AppUpdateNoticeProps) {
   const text = update === 'required' ? 'Update ParaPo to record' : 'A new version is ready';
   return (
     <div className="flex items-center justify-between gap-3 bg-surface p-3 font-sn-pro text-content-primary">
-      <p role="status" className="text-base/6">
-        {text}
-      </p>
+      <p className="text-base/6">{text}</p>
       <ButtonLink
         variant="secondary"
         href={downloadUrl}

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { appUpdateConfig } from '../api/env';
+import { appUpdateConfig } from '../api/app-update-env';
 import { isNativeApp } from '../native-app';
 import { appUpdateKeys } from './app-update-keys';
 import { updateOf, type AppUpdate } from './app-version';

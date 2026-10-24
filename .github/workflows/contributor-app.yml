@@ -1,19 +1,23 @@
 # Builds the contributor app, the Android APK (docs/adr/0006, .scratch/contributor-app/).
 #
-#   - A pull request that touches the app builds a DEBUG APK and attaches it as an artifact.
-#   - A tag `app-v*` (app-v1.2.3) builds a RELEASE APK, signs it, checks the signature, and the
-#     `release` job publishes a GitHub Release with two assets: parapo-contributor.apk and
-#     latest.json (the app's update check reads it). The tag sets the version.
-#   - "Run workflow" builds a debug APK from any branch; with `release` ticked it builds and signs
-#     the release APK the same way, with the version name and code typed in, and attaches it as an
-#     artifact but publishes no Release.
-#   - A release run with no key fails; it never produces an unsigned APK. Pull requests never see
-#     the secrets: their release build, locally too, is unsigned.
+#   - A pull request that touches the app, or "Run workflow", builds a DEBUG APK and attaches it as
+#     an artifact. These jobs never see a secret.
+#   - A tag `app-v*` (app-v1.2.3) runs three jobs. `build-release` builds the RELEASE APK, signs it,
+#     and checks the signature against the key's recorded fingerprint. `publish` creates a GitHub
+#     Release with two assets, parapo-contributor.apk and latest.json (the app's update check reads
+#     it). The tag sets the version.
+#   - A release with no key fails; it never produces an unsigned APK. Locally, and in pull
+#     requests, a release build is unsigned.
 #
 # The key: android/release-key.p12.enc, made once by "Make the app signing key"
-# (make-app-signing-key.yml), is decrypted here with the one repository secret
-# PARAPO_KEY_PASSPHRASE into a temp file that the last step deletes. The repository is public, so
-# the passphrase is all that protects the key. Lose the key and testers must uninstall to update.
+# (make-app-signing-key.yml), is decrypted here with the secret PARAPO_KEY_PASSPHRASE into a temp
+# file that the last step deletes. The repository is public, so the passphrase is all that protects
+# the key. Lose the key and testers must uninstall to update.
+#
+# The secret lives in the GitHub Environment `app-release`, which the owner restricts to the tags
+# `app-v*` and the branch `main`: no pull request, branch or other tag can read it. Only
+# `build-release` (and the key-making workflow) names that environment. Only `publish` can write to
+# the repository, and it has no secret and builds nothing.
 #
 # The runner's own Android SDK is used: android-actions/setup-android failed on it.
 name: Contributor app
@@ -24,7 +28,10 @@ on:
   pull_request:
     paths:
       - '.github/workflows/contributor-app.yml'
+      - '.github/actions/prepare-app-build/**'
       - 'android/**'
+      - 'scripts/android/**'
+      - 'scripts/publish/app-release*'
       - 'capacitor.config.ts'
       - 'vite.apk.config.ts'
       - '.env.apk'
@@ -40,17 +47,6 @@ on:
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
-    inputs:
-      release:
-        description: Build the signed release APK, as a tag does (no GitHub Release)
-        type: boolean
-        default: false
-      version_name:
-        description: Release only, the version name, such as 1.2.3
-        default: 0.0.0-dev
-      version_code:
-        description: Release only, the version code, such as 1002003
-        default: '1'
 
 concurrency:
   group: contributor-app-${{ github.ref }}
@@ -59,77 +55,80 @@ concurrency:
 permissions:
   contents: read
 
+# `shell: bash` declared, not left to the default: GitHub then runs every step as
+# `bash --noprofile --norc -eo pipefail {0}`, so a failure inside a pipe fails the step.
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  apk:
+  debug:
+    name: apk
+    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare-app-build
+
+      - name: Build the contributor page for the app
+        run: npx vite build -c vite.apk.config.ts --mode apk
+
+      - name: Copy it into the Android project
+        run: npx cap sync android
+
+      - name: Build the debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parapo-contributor-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  build-release:
+    if: startsWith(github.ref, 'refs/tags/app-v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: app-release
     env:
-      IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/app-v') || inputs.release == true }}
       PARAPO_KEY_ALIAS: parapo
     steps:
       - uses: actions/checkout@v5
 
-      # A release with no key stops here, before anything is built.
+      # The secret is named only in the steps that use it. A release with no key stops here,
+      # before anything is built.
       - name: Check the signing key is there
-        if: env.IS_RELEASE == 'true'
         env:
           PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
         run: |
           if [[ -z "$PARAPO_KEY_PASSPHRASE" ]]; then
-            echo "::error::Not publishing an unsigned APK. The repository secret PARAPO_KEY_PASSPHRASE is missing."
+            echo "::error::Not publishing an unsigned APK. The secret PARAPO_KEY_PASSPHRASE is missing from the app-release environment."
             exit 1
           fi
-          if [[ ! -f android/release-key.p12.enc ]]; then
-            echo "::error::Not publishing an unsigned APK. android/release-key.p12.enc is missing: run \"Make the app signing key\" first."
-            exit 1
-          fi
+          for file in android/release-key.p12.enc android/release-key.sha256; do
+            if [[ ! -f "$file" ]]; then
+              echo "::error::Not publishing an unsigned APK. $file is missing: run \"Make the app signing key\" first."
+              exit 1
+            fi
+          done
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-
-      # Capacitor 8 needs Java 21.
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      # The runner image carries the SDK; make sure the platform and build tools Capacitor 8
-      # asks for are there.
-      - name: Install the Android platform and build tools
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
-
-      - uses: gradle/actions/setup-gradle@v4
-
-      - run: npm ci
+      - uses: ./.github/actions/prepare-app-build
 
       # app-v1.2.3 gives versionName 1.2.3 and versionCode 1002003 (major * 1,000,000 +
-      # minor * 1,000 + patch), so a newer tag is always a higher code. A manual release run
-      # takes both from its inputs.
+      # minor * 1,000 + patch), so a newer tag is always a higher code. The major stops at 2100
+      # and the minor and patch at 999, which keeps the code under Android's limit of 2,147,483,647
+      # (src/features/contribute/app-update/version-code.ts holds the same rule).
       - name: Read the version
-        if: env.IS_RELEASE == 'true'
-        env:
-          INPUT_NAME: ${{ inputs.version_name }}
-          INPUT_CODE: ${{ inputs.version_code }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/app-v* ]]; then
-            version="${GITHUB_REF_NAME#app-v}"
-            if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-              echo "::error::The tag $GITHUB_REF_NAME is not app-v<major>.<minor>.<patch>."
-              exit 1
-            fi
-            code=$(( BASH_REMATCH[1] * 1000000 + BASH_REMATCH[2] * 1000 + BASH_REMATCH[3] ))
-          else
-            version="$INPUT_NAME"
-            code="$INPUT_CODE"
-            if [[ ! "$version" =~ ^[0-9A-Za-z._-]+$ || ! "$code" =~ ^[0-9]+$ ]]; then
-              echo "::error::Give a version name (letters, digits, . _ -) and a numeric version code."
-              exit 1
-            fi
+          version="${GITHUB_REF_NAME#app-v}"
+          if [[ ! "$version" =~ ^([0-9]{1,4})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || (( 10#${BASH_REMATCH[1]} > 2100 )); then
+            echo "::error::The tag $GITHUB_REF_NAME is not app-v<major up to 2100>.<minor up to 999>.<patch up to 999>."
+            exit 1
           fi
+          code=$(( 10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]} ))
           echo "GRADLE_VERSION=-PappVersionName=$version -PappVersionCode=$code" >> "$GITHUB_ENV"
           echo "APK_NAME=parapo-contributor-$version" >> "$GITHUB_ENV"
           echo "APP_VERSION=$version" >> "$GITHUB_ENV"
@@ -143,67 +142,60 @@ jobs:
       - name: Copy it into the Android project
         run: npx cap sync android
 
-      - name: Build the debug APK
-        if: env.IS_RELEASE != 'true'
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
-
-      # The keystore only ever exists as this temp file; the last step deletes it. The secret is
-      # masked in the log and never echoed.
+      # The keystore only ever exists as this temp file; the last step deletes it.
       - name: Decrypt the keystore
-        if: env.IS_RELEASE == 'true'
         env:
           PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
         run: |
           keystore="$RUNNER_TEMP/parapo-release.p12"
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+          openssl enc -d -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 \
             -pass env:PARAPO_KEY_PASSPHRASE -in android/release-key.p12.enc -out "$keystore"
           echo "PARAPO_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
 
+      # Gradle reads the keystore password from its environment; the passphrase itself is dropped
+      # before Gradle (and the build scripts and plugins it runs) starts.
       - name: Build the release APK (signed)
-        if: env.IS_RELEASE == 'true'
         working-directory: android
         env:
           PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
         run: |
           PARAPO_KEYSTORE_PASSWORD="$(../scripts/android/store-password.sh)"
+          echo "::add-mask::$PARAPO_KEYSTORE_PASSWORD"
+          unset PARAPO_KEY_PASSPHRASE
           export PARAPO_KEYSTORE_PASSWORD
           export PARAPO_KEY_PASSWORD="$PARAPO_KEYSTORE_PASSWORD"
           ./gradlew assembleRelease --no-daemon $GRADLE_VERSION
 
-      # Gradle falls back to an unsigned APK when it cannot sign; that file name, or a failed
-      # verify, stops the release.
-      - name: Check the APK is signed
-        if: env.IS_RELEASE == 'true'
+      # Gradle falls back to an unsigned APK when it cannot sign; a missing file, a failed verify
+      # or a certificate that is not the recorded key's stops the release.
+      - name: Check the APK is signed with our key
         run: |
           apk=android/app/build/outputs/apk/release/app-release.apk
           if [[ ! -f "$apk" ]]; then
             echo "::error::No signed APK was built."
             exit 1
           fi
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk" | head -5
+          apksigner="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          "$apksigner" verify "$apk"
+          certs="$("$apksigner" verify --print-certs "$apk")"
+          actual="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$certs")"
+          expected="$(tr -d '[:space:]' < android/release-key.sha256)"
+          if [[ -z "$actual" || "$actual" != "$expected" ]]; then
+            echo "::error::The APK is not signed with the recorded key (certificate SHA-256 $actual, expected $expected)."
+            exit 1
+          fi
 
       - name: Lay out the release files
-        if: env.IS_RELEASE == 'true'
         run: |
           node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs \
             scripts/publish/app-release.mjs \
             --apk android/app/build/outputs/apk/release/app-release.apk \
             --version "$APP_VERSION" --code "$APP_VERSION_CODE" \
             --min "$(tr -d '[:space:]' < android/min-version.txt)" \
-            --apk-url "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/parapo-contributor.apk" \
+            --apk-url "https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/parapo-contributor.apk" \
             --out app-publish
 
       - uses: actions/upload-artifact@v4
-        if: env.IS_RELEASE != 'true'
-        with:
-          name: parapo-contributor-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
-
-      - uses: actions/upload-artifact@v4
-        if: env.IS_RELEASE == 'true'
         with:
           name: ${{ env.APK_NAME }}
           path: app-publish
@@ -211,14 +203,14 @@ jobs:
           retention-days: 90
 
       - name: Delete the keystore
-        if: always() && env.IS_RELEASE == 'true'
+        if: always()
         run: shred -u "$RUNNER_TEMP/parapo-release.p12" 2>/dev/null || rm -f "$RUNNER_TEMP/parapo-release.p12"
 
-  # The only job that can write to the repository, and only on a tag. It publishes what the signed
-  # build made; it builds nothing. `releases/latest/download/...` then always names the newest.
-  release:
-    needs: apk
-    if: startsWith(github.ref, 'refs/tags/app-v')
+  # The only job that can write to the repository. It has no secret and builds nothing: it
+  # publishes what `build-release` signed. `releases/latest/download/latest.json` (what the app
+  # reads) always names the newest Release, so any other Release must be made with --latest=false.
+  publish:
+    needs: build-release
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
