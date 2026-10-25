@@ -1,6 +1,6 @@
 # 04: Signing, the download link and updates
 
-Status: in review (PR #393)
+Status: resolved
 Type: task
 Who: a session; the owner keeps the passphrase
 Blocked by: 02

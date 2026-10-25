@@ -1,6 +1,6 @@
 # 02: Sign up and sign in
 
-Status: claimed
+Status: resolved
 Type: task
 Who: a session
 Blocked by: 01's contract (build against it; it needn't be applied)

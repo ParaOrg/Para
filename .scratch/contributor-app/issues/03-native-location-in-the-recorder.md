@@ -1,6 +1,6 @@
 # 03: Native location in the recorder
 
-Status: blocked
+Status: ready-for-agent
 Type: task
 Who: a session
 Blocked by: 02
