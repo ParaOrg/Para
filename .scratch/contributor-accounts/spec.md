@@ -76,6 +76,7 @@ The consent, and the earlier-recordings answer, are kept per account on the phon
 | 04 | [Linking earlier recordings](issues/04-link-earlier-recordings.md) | a session | 02 |
 | 05 | [Public map: empty card, no button](issues/05-public-map-entry-hidden.md) | a session | — |
 | 06 | [Consent v3 and the studio's name](issues/06-consent-v3-and-studio-name.md) | a session, after the owner approves the text | 01 |
+| 07 | [Forgot password](issues/07-forgot-password.md) | a session; the owner sets up email sending | 02 |
 
 **Release order:** 05 can ship on its own. 02–04 and 06 reach `main` together, and only after the owner has applied 01 and switched email confirmation off: code that signs up against a database without 01 would fail.
 
@@ -92,7 +93,7 @@ The consent, and the earlier-recordings answer, are kept per account on the phon
 
 ## Not now
 
-- Email verification, password reset by email (the owner resets a tester by hand in Supabase), phone verification.
+- Email verification, phone verification. (Password reset moved in on 2026-10-26: [07](issues/07-forgot-password.md).)
 - Showing the card's content again, and the map button: a later decision.
 - Snapping (a separate plan); the cleaner drawn line is its own PR.
 
