@@ -6,11 +6,12 @@ import { useSignUpMutation } from '../api/use-sign-up-mutation';
 import { BackToMapButton } from '../back-to-map-button';
 import { messageOf } from './account-message';
 import { CreateAccountScreen } from './create-account-screen';
+import { PasswordResetFlow } from './password-reset-flow';
 import { ProfileStepScreen } from './profile-step-screen';
 import { SignInScreen } from './sign-in-screen';
 import { useCaptcha } from './use-captcha';
 
-type Mode = 'sign-in' | 'create-account';
+type Mode = 'sign-in' | 'create-account' | 'forgot-password';
 
 interface AccountGateProps {
   /** The phone is signed in to an account whose name and number are not stored yet. */
@@ -18,8 +19,8 @@ interface AccountGateProps {
 }
 
 /**
- * What a phone with no account sees: Sign in, with Create account beside it, and the way back to
- * the map. An account whose name and number did not save sees only those two fields.
+ * What a phone with no account sees: Sign in, with Create account and Forgot password beside it,
+ * and the way back to the map. An account whose name and number did not save sees only those two fields.
  */
 export function AccountGate({ needsProfile }: AccountGateProps) {
   const [mode, setMode] = useState<Mode>('sign-in');
@@ -57,6 +58,7 @@ export function AccountGate({ needsProfile }: AccountGateProps) {
           captcha={captcha}
           onSubmit={(fields) => signIn.mutate({ ...fields, captchaToken: captcha.takeToken() })}
           onCreateAccount={() => switchTo('create-account')}
+          onForgotPassword={() => switchTo('forgot-password')}
         />
       )}
       {mode === 'create-account' && (
@@ -67,6 +69,9 @@ export function AccountGate({ needsProfile }: AccountGateProps) {
           onSubmit={(fields) => signUp.mutate({ ...fields, captchaToken: captcha.takeToken() })}
           onSignIn={() => switchTo('sign-in')}
         />
+      )}
+      {mode === 'forgot-password' && (
+        <PasswordResetFlow captcha={captcha} onBack={() => switchTo('sign-in')} />
       )}
     </>
   );

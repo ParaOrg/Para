@@ -296,11 +296,11 @@ check('public page contains no editor-only string', leaked.length === 0, leaked.
 // Its own chunks, not the ones it shares with the public page, whose map reader
 // names route_variant in the published file's fields.
 const contributeOwn = text(contributeFiles.filter((f) => !commuterFiles.includes(f)));
-// The database's address is the one editor string the contributor page needs.
-// What it may not name are the studio's tables and operations.
+// The database's address and "Forgot password?" (its own Sign in button) are the editor strings the
+// contributor page needs. What it may not name are the studio's tables and operations.
 const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'approve_draft', 'take_down'];
 const leakedToContribute = [
-  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co'),
+  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co' && s !== 'Forgot password?'),
   ...STUDIO_DATA,
 ].filter((s) => contributeOwn.includes(s));
 check(
