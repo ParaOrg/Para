@@ -68,6 +68,30 @@ service with a visible "ParaPo is recording" notification.
   `CapacitorHttp` setting, because it patches `fetch` for every call, Supabase's
   included; and `api.github.com`, whose limit is 60 requests an hour per IP,
   which carriers' shared addresses would exhaust.
+- **Recording with the screen off.** Android freezes the page's JavaScript about five minutes
+  after the screen goes off, even with `useLegacyBridge: true` (the plugin's known problem, seen in
+  the spike's emulator ride), so the page cannot be the only place a fix is written. The app's own
+  `ParaPoApplication` listens to the broadcast the plugin's foreground service sends for each fix
+  and appends it to a small file (`FixLog.java`, JSON lines, in the service's own process); the
+  `FixLog` plugin lets the page start it for a recording, read it and clear it. The page imports
+  what it has not stored yet, de-duplicated by time (a fix at or before the last stored one is
+  skipped), when it is shown again and when the app reopens, before anything reads the ride, so a
+  ride Android killed comes back as Unfinished with every fix up to the kill. The plugin is not
+  forked; the broadcast is its in-process contract, and the version is pinned by the lockfile.
+  **Auto-stop "back at the start" runs when the page wakes**, over what it imports, and stops the
+  ride at the first fix that satisfies it, so the ride is cut there but the stop itself is seen
+  only on waking. The fix rate is the plugin's one a second (its request interval is fixed at
+  1000 ms); the emulator ride checks it while moving.
+- **Permissions and battery.** The Start bar in the app (`native/start-gate.tsx`) asks in order for
+  notifications (Android 13+), location, then "Allow all the time" (Android 10+), each after a plain
+  reason; a refusal says what still works and opens the phone's Settings, and Start goes on without
+  any but location. On makers known to stop background apps (Xiaomi, Oppo, Vivo, Samsung, Huawei,
+  Realme) the first Start shows once how to allow ParaPo to run in the background, with that
+  maker's steps, unless Android already says it is unrestricted.
+- The CI job `emulator-ride` runs a scripted twenty-minute ride with the screen off on an emulator,
+  kills the app's process at fifteen minutes and reopens it, and fails unless every fix the service
+  had kept is in the ride. Its APK holds a driver (`VITE_EMULATOR_RIDE`) that the release build
+  refuses to contain.
 - A downloaded APK does not update itself. The signing key must never change
   and never be lost: a new key means testers uninstall and lose unsent
   recordings.

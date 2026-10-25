@@ -26,6 +26,15 @@ export function isNativeApp(): boolean {
 }
 
 /**
+ * A native plugin's bridge, by the name it registers under. Only inside the app. Capacitor warns
+ * each time a name is registered again, so a caller asks once and keeps the answer.
+ */
+export function nativePlugin<T>(name: string): T {
+  if (!capacitor) throw new Error('This page is not running inside the Android app.');
+  return capacitor.registerPlugin<T>(name);
+}
+
+/**
  * Reads a text file through the phone's own HTTP client, which follows redirects and is not held
  * to CORS: a WebView `fetch` from https://localhost cannot read GitHub's release assets. Only for
  * single requests; Capacitor's global fetch patch stays off, so Supabase's calls are untouched.
