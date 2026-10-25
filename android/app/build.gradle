@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// The release key comes from the environment, never from the repo. Without all four the release
+// build is unsigned, which is what a local or pull request build wants; the release workflow
+// refuses to publish one.
+def keystorePath = System.getenv('PARAPO_KEYSTORE_PATH')
+def hasReleaseKey = ['PARAPO_KEYSTORE_PATH', 'PARAPO_KEYSTORE_PASSWORD', 'PARAPO_KEY_ALIAS', 'PARAPO_KEY_PASSWORD']
+    .every { !(System.getenv(it) ?: '').isEmpty() }
+
 android {
     namespace = "ph.parapo.contributor"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -17,8 +24,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasReleaseKey) {
+            release {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv('PARAPO_KEYSTORE_PASSWORD')
+                keyAlias = System.getenv('PARAPO_KEY_ALIAS')
+                keyPassword = System.getenv('PARAPO_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseKey) signingConfig = signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

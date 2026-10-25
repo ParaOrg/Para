@@ -64,18 +64,17 @@ They replace nothing. The web stack can't record with the screen off.
    - On Android 13 and up, notifications.
 4. **Building an APK in GitHub Actions:** Java and the Android SDK on the runner, and how long a build takes.
 
-## The signing key (the owner keeps it)
+## The signing key (the owner keeps the passphrase)
 
 An Android app is signed with a key. **Lose it, and testers must uninstall, losing their unsent recordings, to install the next version.**
 
-- A session generates the key once.
-- It goes into GitHub Actions secrets.
-- The owner keeps a backup in a password manager.
-- It is never committed.
+- A one-time workflow generates the key from a passphrase the owner stores as the secret `PARAPO_KEY_PASSPHRASE`.
+- Only the encrypted keystore leaves the workflow; it is committed as `android/release-key.p12.enc`.
+- The repository is public, so the passphrase (24+ characters) is all that protects it. The owner keeps it in a password manager.
 
 ## Where the download lives
 
-A hidden URL on our Cloudflare site, such as `/app/parapo-contributor-<version>.apk`, together with `/app/latest.json` (version, link, minimum version), that the owner sends to testers.
+A GitHub Release per tag `app-v*`, with `parapo-contributor.apk` and `latest.json` as assets, that the owner sends to testers. The app reads `https://github.com/Roviicc/ParaPo/releases/latest/download/latest.json`.
 
 - It's linked from nowhere.
 - It's not secret, but unlisted, which matches "closed for us".
@@ -98,7 +97,7 @@ A hidden URL on our Cloudflare site, such as `/app/parapo-contributor-<version>.
 | 01 | Spike (done, #385): Capacitor app, background location, sign-in and Turnstile on the owner's phone | A throwaway test APK; settles the four risks; go/no-go |
 | 02 | [The Android project and building the APK in CI](issues/02-android-project-and-ci.md) | `android/`, `capacitor.config.ts`, a GitHub workflow that builds a signed APK on a tag |
 | 03 | [Native location in the recorder](issues/03-native-location-in-the-recorder.md) | Plugin fixes in the app, `watchPosition` on the web (kept for dev and tests); the notification; the permission steps; the battery-restriction help |
-| 04 | [Signing, the download link and the update check](issues/04-signing-download-and-updates.md) | The key in secrets, the owner's backup, `/app/latest.json`, the "new version" prompt |
+| 04 | [Signing, the download link and the update check](issues/04-signing-download-and-updates.md) | The key from a passphrase secret, a GitHub Release with `latest.json`, the "new version" prompt |
 | 05 | [Close the web contributor page](issues/05-close-the-web-contributor-page.md) | `/contribute/` stops serving the recorder; the service worker; `check-build.mjs` |
 | 06 | Docs | Folded into 02 (CLAUDE.md lines and the ADR) and the accounts consent work |
 
