@@ -265,6 +265,22 @@ check(
   capacitorPackages.length === 0,
   capacitorPackages.join(', '),
 );
+// The app's native modules (src/features/contribute/native/) are reached only behind the same mode
+// check, so none may be in a web chunk, whatever their imports are.
+const nativeModules = allChunks.filter((f) =>
+  (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/native/')),
+);
+check(
+  "no web chunk holds a module of the app's native folder",
+  nativeModules.length === 0,
+  nativeModules.join(', '),
+);
+check(
+  "the contribute feature's own modules are found by that path search",
+  allChunks.some((f) =>
+    (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/recording-')),
+  ),
+);
 const bridgeMentions = allChunks.filter((f) =>
   readFileSync(join(dist, f), 'utf8').includes('androidBridge'),
 );

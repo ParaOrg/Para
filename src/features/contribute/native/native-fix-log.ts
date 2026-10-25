@@ -6,25 +6,54 @@ import type { WatchedFix } from '../use-geolocation-watch';
 /** The accuracy a fix with none gets: far past what the recorder keeps, so it never draws. */
 export const NO_ACCURACY_M = 1_000;
 
-const fixLogSchema = z.object({
-  recordingId: z.nullable(z.string()),
-  fixes: z.array(
-    z.object({
-      time: z.number(),
-      lng: z.number(),
-      lat: z.number(),
-      accuracyM: z.optional(z.number()),
-    }),
-  ),
+const fixSchema = z.object({
+  time: z.number(),
+  lng: z.number(),
+  lat: z.number(),
+  accuracyM: z.optional(z.number()),
 });
+
+const logSchema = z.object({
+  recordingId: z.nullable(z.string()),
+  fixes: z.array(z.unknown()),
+});
+
+export interface FixLog {
+  recordingId: string | null;
+  fixes: WatchedFix[];
+}
+
+/**
+ * What the plugin returned, as a log. A fix that does not read is left out and said: one bad line
+ * must not lose the ride.
+ */
+export function parseFixLog(raw: unknown): FixLog {
+  const log = logSchema.parse(raw);
+  const fixes: WatchedFix[] = [];
+  for (const item of log.fixes) {
+    const read = fixSchema.safeParse(item);
+    if (!read.success) {
+      console.warn('A fix in the native log could not be read and was left out.', read.error);
+      continue;
+    }
+    const fix = read.data;
+    fixes.push({
+      timestamp: fix.time,
+      coords: { longitude: fix.lng, latitude: fix.lat, accuracy: fix.accuracyM ?? NO_ACCURACY_M },
+    });
+  }
+  return { recordingId: log.recordingId, fixes };
+}
 
 interface FixLogPlugin {
   begin: (options: { recordingId: string }) => Promise<void>;
   read: () => Promise<unknown>;
+  end: (options: { time: number }) => Promise<void>;
   clear: () => Promise<void>;
 }
 
-const getPlugin = () => nativePlugin<FixLogPlugin>('FixLog');
+let plugin: FixLogPlugin | null = null;
+const getPlugin = () => (plugin ??= nativePlugin<FixLogPlugin>('FixLog'));
 
 /** Starts the native fix log for a recording: the fixes the foreground service reports are kept. */
 export function beginFixLog(recordingId: string): Promise<void> {
@@ -35,15 +64,13 @@ export function beginFixLog(recordingId: string): Promise<void> {
  * The fixes the service kept for the recording being logged, in order, whether or not the page
  * was awake to hear them. Null recording id when nothing is being logged.
  */
-export async function readFixLog(): Promise<{ recordingId: string | null; fixes: WatchedFix[] }> {
-  const log = fixLogSchema.parse(await getPlugin().read());
-  return {
-    recordingId: log.recordingId,
-    fixes: log.fixes.map((fix) => ({
-      timestamp: fix.time,
-      coords: { longitude: fix.lng, latitude: fix.lat, accuracy: fix.accuracyM ?? NO_ACCURACY_M },
-    })),
-  };
+export async function readFixLog(): Promise<FixLog> {
+  return parseFixLog(await getPlugin().read());
+}
+
+/** Ends the log at a Stop: fixes after `time` are dropped and none are taken until begin. */
+export function endFixLog(time: number): Promise<void> {
+  return getPlugin().end({ time });
 }
 
 /** Stops the log and forgets its fixes, once the recording is saved or cancelled. */

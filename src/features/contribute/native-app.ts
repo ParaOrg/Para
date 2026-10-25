@@ -25,7 +25,10 @@ export function isNativeApp(): boolean {
   return capacitor?.isNativePlatform() === true;
 }
 
-/** A native plugin's bridge, by the name it registers under. Only inside the app. */
+/**
+ * A native plugin's bridge, by the name it registers under. Only inside the app. Capacitor warns
+ * each time a name is registered again, so a caller asks once and keeps the answer.
+ */
 export function nativePlugin<T>(name: string): T {
   if (!capacitor) throw new Error('This page is not running inside the Android app.');
   return capacitor.registerPlugin<T>(name);

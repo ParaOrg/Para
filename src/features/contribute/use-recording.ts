@@ -9,12 +9,18 @@ import {
 
 import { CONSENT_VERSION } from './consent-version';
 import { locationProblem } from './location-problem';
-import { clearNativeFixes, importNativeFixes, keepsRecordingInBackground } from './native-fixes';
+import {
+  clearNativeFixes,
+  endNativeFixes,
+  importNativeFixes,
+  keepsRecordingInBackground,
+  readNativeFixes,
+} from './native-fixes';
 import { holdRecorderLock } from './recorder-lock';
 import { downloadRecording, recordingFile } from './recording-file';
-import { firstCountWhere, fixesAfter } from './recording-fixes';
+import { backAtStartCount, fixesAfter, fixOfRow, fixOfWatched, rowOfFix } from './recording-fixes';
 import { withMark } from './recording-marks';
-import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './recording-rules';
+import { OTHER_WAY, WAY_LABEL, currentWay, type Way } from './recording-rules';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
 import {
   deleteRecording,
@@ -117,12 +123,6 @@ function tellOtherTabs() {
 const OTHER_TAB_PROBLEM =
   'ParaPo is open in another tab. Record in that tab, or close it and reload this one.';
 
-const toFix = (row: FixRow): Fix => ({
-  time: row.time,
-  at: [row.lng, row.lat],
-  accuracyM: row.accuracyM,
-});
-
 /**
  * The page's whole state: what phase it is in, the recording being made and
  * its fixes. Every fix goes to IndexedDB as it arrives; the hook only reads
@@ -157,6 +157,10 @@ export function useRecording(): RecordingState {
   const pendingFixWrites = useRef(new Set<Promise<void>>());
   const unwrittenFixes = useRef<FixRow[]>([]);
   const isSaving = useRef(false);
+  // The native log could not be read or imported: it is kept, not cleared, when the ride is saved.
+  const hasNativeLogProblem = useRef(false);
+  // A Stop is waiting for the native log; fixes after it are not part of the ride.
+  const isFinishing = useRef(false);
   // Another tab holds the recorder: this one shows why and starts nothing.
   const isOtherTab = useRef(false);
 
@@ -219,14 +223,24 @@ export function useRecording(): RecordingState {
           setPhase('ready');
           return;
         }
-        const open = all.find((r) => r.status !== 'saved') ?? null;
-        if (open) await importNativeFixes(open.id).catch(reportNativeLog);
+        let open = all.find((r) => r.status !== 'saved') ?? null;
+        if (open) {
+          try {
+            const imported = await importNativeFixes(open);
+            if (imported !== open) await putRecording(imported);
+            open = imported;
+          } catch (error) {
+            // The log stays on the phone, so a Save does not clear fixes that were never stored.
+            hasNativeLogProblem.current = true;
+            reportNativeLog(error);
+          }
+        }
         const rows = open ? await loadFixes(open.id) : [];
         if (isCancelled) return;
         if (open) {
           currentRef.current = open;
           setCurrent(open);
-          setFixList(rows.map(toFix));
+          setFixList(rows.map(fixOfRow));
           nextSeq.current = rows.length > 0 ? rows[rows.length - 1].seq + 1 : 0;
           failedFixWrites.current = open.failedFixWrites ?? 0;
           setPhase(open.status === 'stopped' ? 'paused' : 'unfinished');
@@ -263,34 +277,25 @@ export function useRecording(): RecordingState {
    * Takes the fixes the watch hands over: those after the last one held, stored in one write and
    * counted as one step. The app hands over a whole stretch at once when the page wakes from the
    * screen being off; a ride that came back to its start inside it stops at that fix, and the
-   * ones after it are left out.
+   * ones after it are left out. `until` is a Stop's time: later fixes are not taken, and the
+   * ride is not checked for coming back to its start.
    */
-  function takeFixes(watched: WatchedFix[]) {
+  function takeFixes(watched: WatchedFix[], until?: number) {
     const recording = currentRef.current;
     // Fixes that land after the ride stopped itself, before the watch lets go.
     if (!recording || recording.status !== 'recording') return;
+    if (isFinishing.current && until === undefined) return;
     const lastTime = fixesRef.current[fixesRef.current.length - 1]?.time ?? null;
-    const fresh = fixesAfter(watched, lastTime);
+    const fresh = fixesAfter(watched, lastTime)
+      .filter((fix) => until === undefined || fix.timestamp <= until)
+      .map(fixOfWatched);
     if (fresh.length === 0) return;
-    const candidates = fresh.map((fix): Fix => ({
-      time: fix.timestamp,
-      at: [fix.coords.longitude, fix.coords.latitude],
-      accuracyM: fix.coords.accuracy,
-    }));
-    const stopCount = recording.hasAutoStopped
-      ? null
-      : firstCountWhere(candidates, (some) =>
-          shouldAutoStop(keptFixes([...fixesRef.current, ...some]), recording.switches ?? []),
-        );
-    const taken = candidates.slice(0, stopCount ?? candidates.length);
-    const rows: FixRow[] = taken.map((fix) => ({
-      recordingId: recording.id,
-      seq: nextSeq.current++,
-      time: fix.time,
-      lng: fix.at[0],
-      lat: fix.at[1],
-      accuracyM: fix.accuracyM,
-    }));
+    const stopCount =
+      recording.hasAutoStopped || until !== undefined
+        ? null
+        : backAtStartCount(fixesRef.current, fresh, recording.switches ?? []);
+    const taken = fresh.slice(0, stopCount ?? fresh.length);
+    const rows = taken.map((fix) => rowOfFix(recording.id, nextSeq.current++, fix));
     const write = putFixes(rows)
       .catch((error: unknown) => {
         failedFixWrites.current += rows.length;
@@ -338,6 +343,7 @@ export function useRecording(): RecordingState {
     setFocusTarget('heading');
     failedFixWrites.current = 0;
     unwrittenFixes.current = [];
+    hasNativeLogProblem.current = false;
     keep({
       version: RECORDING_VERSION,
       id: crypto.randomUUID(),
@@ -357,7 +363,33 @@ export function useRecording(): RecordingState {
     setPhase('recording');
   }
 
+  /**
+   * Stops the recording at `at`. In the app the fixes the service kept up to then are taken first,
+   * so a Stop right after the screen was off loses none, and the native log is ended after: it
+   * takes no fixes past the Stop until Resume.
+   */
   function finish(at: number, next: 'paused' | 'form', extra?: Pick<Recording, 'hasAutoStopped'>) {
+    if (!keepsRecordingInBackground()) {
+      settle(at, next, extra);
+      return;
+    }
+    if (isFinishing.current) return;
+    isFinishing.current = true;
+    const id = currentRef.current?.id;
+    const pull = id ? readNativeFixes(id).then((kept) => takeFixes(kept, at)) : Promise.resolve();
+    pull
+      .catch((error: unknown) => {
+        hasNativeLogProblem.current = true;
+        reportNativeLog(error);
+      })
+      .finally(() => {
+        isFinishing.current = false;
+        settle(at, next, extra);
+        endNativeFixes(at).catch(reportNativeLog);
+      });
+  }
+
+  function settle(at: number, next: 'paused' | 'form', extra?: Pick<Recording, 'hasAutoStopped'>) {
     const recording = currentRef.current;
     if (!recording) return;
     const failed = failedFixWrites.current;
@@ -472,7 +504,7 @@ export function useRecording(): RecordingState {
       setSaved((list) => [kept, ...list.filter((r) => r.id !== kept.id)]);
       tellOtherTabs();
       forgetCurrent();
-      void clearNativeFixes().catch(reportNativeLog);
+      if (!hasNativeLogProblem.current) void clearNativeFixes().catch(reportNativeLog);
       setPhase('saved');
     } catch (error) {
       reportStore(error);
@@ -489,6 +521,7 @@ export function useRecording(): RecordingState {
     if (recording) deleteRecording(recording.id).catch(reportStore);
     forgetCurrent();
     void clearNativeFixes().catch(reportNativeLog);
+    hasNativeLogProblem.current = false;
     setStorageProblem(null);
     setPhase('ready');
   }
@@ -508,7 +541,7 @@ export function useRecording(): RecordingState {
   function downloadSaved(recording: Recording) {
     loadFixes(recording.id)
       .then((rows) => {
-        const recorded = rows.map(toFix);
+        const recorded = rows.map(fixOfRow);
         const end = recording.stoppedAt ?? recording.savedAt ?? recording.startedAt;
         const summary = summarize(recorded, recording.gaps, recording.startedAt, end);
         downloadRecording(recordingFile(recording, recorded, summary));

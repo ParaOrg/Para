@@ -7,6 +7,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { firstCountWhere, fixesAfter } from '../../src/features/contribute/recording-fixes.ts';
+import { parseFixLog } from '../../src/features/contribute/native/native-fix-log.ts';
+import { watchErrorOf } from '../../src/features/contribute/native/watch-error.ts';
 import { batteryHelpFor } from '../../src/features/contribute/native/battery-steps.ts';
 import {
   canRecordWithout,
@@ -101,4 +103,34 @@ test('battery help goes to the makers known to stop background apps, by any casi
   for (const maker of ['google', 'motorola', 'nokia', '']) {
     assert.equal(batteryHelpFor(maker), null, maker);
   }
+});
+
+test('one fix in the native log that does not read is left out, not the ride', () => {
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const log = parseFixLog({
+      recordingId: 'r1',
+      fixes: [
+        { time: 1000, lng: 121, lat: 14, accuracyM: 5 },
+        { time: 'soon', lng: 121, lat: 14 },
+        { time: 3000, lng: 121, lat: 14 },
+      ],
+    });
+    assert.equal(log.recordingId, 'r1');
+    assert.deepEqual(times(log.fixes), [1000, 3000]);
+    assert.equal(log.fixes[1].coords.accuracy, 1000);
+  } finally {
+    console.warn = warn;
+  }
+  assert.throws(() => parseFixLog({ fixes: [] }));
+});
+
+test('the plugin refusing because location is switched off is not a denied permission', () => {
+  assert.equal(watchErrorOf({ code: 'NOT_AUTHORIZED', message: 'Permission denied.' }).code, 1);
+  assert.equal(
+    watchErrorOf({ code: 'NOT_AUTHORIZED', message: 'Location services disabled.' }).code,
+    2,
+  );
+  assert.equal(watchErrorOf({ message: 'Service not running.' }).code, 2);
 });

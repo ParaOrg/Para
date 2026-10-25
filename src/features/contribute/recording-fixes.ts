@@ -1,3 +1,7 @@
+import { keptFixes, type Fix } from '@/features/routes/model/ride-recording';
+
+import { shouldAutoStop, type WaySwitch } from './recording-rules';
+import type { FixRow } from './recording-schema';
 import type { WatchedFix } from './use-geolocation-watch';
 
 /**
@@ -33,3 +37,38 @@ export function firstCountWhere<T>(
   }
   return low;
 }
+
+/**
+ * How many of the fresh fixes it takes, added to the ones held, for the ride to have come back to
+ * its start; null when it has not. The rule stays true once it has fired, so the count is the
+ * first fix that fired it and the ones after it are not part of the ride.
+ */
+export function backAtStartCount(
+  held: readonly Fix[],
+  fresh: readonly Fix[],
+  switches: readonly WaySwitch[],
+): number | null {
+  return firstCountWhere(fresh, (some) => shouldAutoStop(keptFixes([...held, ...some]), switches));
+}
+
+export const fixOfRow = (row: FixRow): Fix => ({
+  time: row.time,
+  at: [row.lng, row.lat],
+  accuracyM: row.accuracyM,
+});
+
+export const fixOfWatched = (fix: WatchedFix): Fix => ({
+  time: fix.timestamp,
+  at: [fix.coords.longitude, fix.coords.latitude],
+  accuracyM: fix.coords.accuracy,
+});
+
+/** The row IndexedDB keeps for a fix, at its place in the recording. */
+export const rowOfFix = (recordingId: string, seq: number, fix: Fix): FixRow => ({
+  recordingId,
+  seq,
+  time: fix.time,
+  lng: fix.at[0],
+  lat: fix.at[1],
+  accuracyM: fix.accuracyM,
+});

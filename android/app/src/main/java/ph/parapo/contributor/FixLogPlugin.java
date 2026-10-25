@@ -10,7 +10,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 
-/** The page's way to the native fix log (FixLog): start it for a recording, read it, clear it. */
+/** The page's way to the native fix log (FixLog): start it for a recording, read it, end it at a Stop, clear it. */
 @CapacitorPlugin(name = "FixLog")
 public class FixLogPlugin extends Plugin {
     @PluginMethod
@@ -34,6 +34,21 @@ public class FixLogPlugin extends Plugin {
             call.resolve(JSObject.fromJSONObject(FixLog.read(getContext())));
         } catch (IOException | JSONException error) {
             call.reject("The fix log could not be read.", error);
+        }
+    }
+
+    @PluginMethod
+    public void end(PluginCall call) {
+        Long time = call.getLong("time");
+        if (time == null) {
+            call.reject("time is required.");
+            return;
+        }
+        try {
+            FixLog.end(getContext(), time);
+            call.resolve();
+        } catch (IOException | JSONException error) {
+            call.reject("The fix log could not be ended.", error);
         }
     }
 

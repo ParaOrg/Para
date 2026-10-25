@@ -27,7 +27,8 @@ interface NativePermissionsPlugin {
   openAppSettings: () => Promise<void>;
 }
 
-const getPlugin = () => nativePlugin<NativePermissionsPlugin>('NativePermissions');
+let plugin: NativePermissionsPlugin | null = null;
+const getPlugin = () => (plugin ??= nativePlugin<NativePermissionsPlugin>('NativePermissions'));
 
 export async function checkNativePermissions(): Promise<NativePermissionStates> {
   return statesSchema.parse(await getPlugin().checkPermissions());
