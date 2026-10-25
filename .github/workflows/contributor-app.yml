@@ -226,9 +226,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+        # The owner usually makes the tag through GitHub's "Draft a new release" page, which
+        # creates the Release with the tag; a tag pushed on its own has none yet. Fill whichever.
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            release-files/parapo-contributor.apk release-files/latest.json \
-            --verify-tag --latest --prerelease=false \
-            --title "ParaPo Contributor ${GITHUB_REF_NAME#app-v}" \
-            --notes "Install over the previous version to keep your recordings."
+          files=(release-files/parapo-contributor.apk release-files/latest.json)
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+            gh release edit "$GITHUB_REF_NAME" --latest --prerelease=false --draft=false
+          else
+            gh release create "$GITHUB_REF_NAME" "${files[@]}" \
+              --verify-tag --latest --prerelease=false \
+              --title "ParaPo Contributor ${GITHUB_REF_NAME#app-v}" \
+              --notes "Install over the previous version to keep your recordings."
+          fi
