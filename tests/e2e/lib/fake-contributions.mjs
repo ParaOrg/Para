@@ -18,7 +18,15 @@
 // `fake.claims` lists the calls in order ('begin_claim', 'password', 'finish_claim') and
 // `fake.tokens` holds the tokens by value.
 //
+// A password reset by emailed code, as GoTrue answers: POST /recover sends a code to an account's
+// email (and, to give nothing away, answers the same for an address with none), POST /verify with
+// type 'recovery' signs in with the newest unused code, and a password-only PUT /user changes the
+// password (the same one again is 422 same_password). `fake.codes` maps an email to its newest
+// code, `fake.recoveries` counts the sends.
+//
 // Faults, set on `fake.next` before the request they are for:
+//   recover = 'rateLimit'      POST /recover is answered 429 over_email_send_rate_limit
+//   verify = 'expired'         POST /verify is answered 403 otp_expired whatever the code
 //   signupDisabled the sign-in is answered 422, as with sign-ups turned off
 //   passwordSignIn = 'offline'  the password sign-in fails as with no signal
 //   updateUser = 'emailTaken'   the upgrade to an account is answered 422 email_exists
@@ -80,6 +88,10 @@ export async function fakeContributions(page) {
     logouts: [],
     profileRequests: 0,
     claims: [],
+    /** begin_claim, verify, update_password, finish_claim and logout, in the order they came. */
+    order: [],
+    codes: new Map(),
+    recoveries: 0,
     tokens: new Map(),
     saveRequests: 0,
     deleteRequests: 0,
@@ -164,6 +176,19 @@ export async function fakeContributions(page) {
       if (typeof body.password === 'string' && body.password.length < 8) {
         return authError(route, 422, 'weak_password', 'Password should be at least 8 characters.');
       }
+      if (known.isAccount && body.email === undefined && typeof body.password === 'string') {
+        fake.order.push('update_password');
+        if (body.password === known.password) {
+          return authError(
+            route,
+            422,
+            'same_password',
+            'New password should be different from the old password.',
+          );
+        }
+        known.password = body.password;
+        return json(route, 200, session(id, { email: known.email, isAccount: true }).user);
+      }
       // The same id, now an account: every upload already made stays its own.
       Object.assign(known, { email: body.email, password: body.password, isAccount: true });
       return json(route, 200, session(id, { email: known.email, isAccount: true }).user);
@@ -192,8 +217,38 @@ export async function fakeContributions(page) {
         return json(route, 200, session(found[0], { email: found[1].email, isAccount: true }));
       }
     }
+    if (url.pathname === '/auth/v1/recover' && method === 'POST') {
+      fake.recoveries += 1;
+      const body = request.postDataJSON() ?? {};
+      fake.captchaTokens.push(body.gotrue_meta_security?.captcha_token ?? null);
+      const fault = fake.next.recover;
+      delete fake.next.recover;
+      if (fault === 'rateLimit') {
+        return authError(route, 429, 'over_email_send_rate_limit', 'Email rate limit exceeded');
+      }
+      if (accountByEmail(body.email)) {
+        fake.codes.set(body.email, String(100000 + fake.recoveries).slice(-6));
+      }
+      return json(route, 200, {});
+    }
+    if (url.pathname === '/auth/v1/verify' && method === 'POST') {
+      const body = request.postDataJSON() ?? {};
+      fake.captchaTokens.push(body.gotrue_meta_security?.captcha_token ?? null);
+      const fault = fake.next.verify;
+      delete fake.next.verify;
+      const found = accountByEmail(body.email);
+      if (fault === 'expired' || !found || fake.codes.get(body.email) !== body.token) {
+        return authError(route, 403, 'otp_expired', 'Token has expired or is invalid');
+      }
+      if (body.type !== 'recovery') return authError(route, 400, 'validation_failed', 'bad type');
+      fake.codes.delete(body.email);
+      fake.claims.push('verify');
+      fake.order.push('verify');
+      return json(route, 200, session(found[0], { email: found[1].email, isAccount: true }));
+    }
     if (url.pathname === '/auth/v1/logout' && method === 'POST') {
       fake.logouts.push(url.searchParams.get('scope'));
+      fake.order.push('logout');
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
     }
     if (url.pathname === '/rest/v1/rpc/get_profile' && method === 'POST') {
@@ -235,6 +290,7 @@ export async function fakeContributions(page) {
 
     if (url.pathname === '/rest/v1/rpc/begin_claim' && method === 'POST') {
       fake.claims.push('begin_claim');
+      fake.order.push('begin_claim');
       const token = tokenOf(request);
       const claimError = (code, message) =>
         json(route, 403, { code, message, details: null, hint: null });
@@ -252,6 +308,7 @@ export async function fakeContributions(page) {
     }
     if (url.pathname === '/rest/v1/rpc/finish_claim' && method === 'POST') {
       fake.claims.push('finish_claim');
+      fake.order.push('finish_claim');
       const caller = tokenOf(request);
       const claimError = (status, code, message) =>
         json(route, status, { code, message, details: null, hint: null });

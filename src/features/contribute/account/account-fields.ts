@@ -19,11 +19,27 @@ const phoneSchema = z
       'Enter a mobile number like 09171234567',
     ),
   );
-const newPasswordSchema = z.string().check(z.minLength(8, 'Use at least 8 characters'));
+// Supabase hashes with bcrypt, which reads no further than 72 bytes: a longer one is cut short.
+const newPasswordSchema = z.string().check(
+  z.minLength(8, 'Use at least 8 characters'),
+  z.refine((text) => text.length <= 72, 'Use 72 characters or fewer'),
+);
+const codeSchema = z
+  .string()
+  .check(z.refine((text) => /^[0-9]{6}$/.test(text), 'Enter the 6-digit code'));
 const passwordSchema = z.string().check(z.minLength(1, 'Enter your password'));
 
 export interface SignInFields {
   email: string;
+  password: string;
+}
+
+export interface ForgotPasswordFields {
+  email: string;
+}
+
+export interface ResetPasswordFields {
+  code: string;
   password: string;
 }
 
@@ -93,5 +109,20 @@ export function checkProfile(fields: ProfileFields): Checked<ProfileFields> {
   return collect(
     { name, phone: normalisePhoneNumber(phone) ?? phone },
     { name: problemOf(nameSchema, name), phone: problemOf(phoneSchema, phone) },
+  );
+}
+
+/** The email a code is sent to, trimmed. */
+export function checkForgotPassword(fields: ForgotPasswordFields): Checked<ForgotPasswordFields> {
+  const email = fields.email.trim();
+  return collect({ email }, { email: problemOf(emailSchema, email) });
+}
+
+/** The emailed code, with the spaces a person types or pastes taken out, and the new password. */
+export function checkResetPassword(fields: ResetPasswordFields): Checked<ResetPasswordFields> {
+  const code = fields.code.replace(/\s/g, '');
+  return collect(
+    { code, password: fields.password },
+    { code: problemOf(codeSchema, code), password: problemOf(newPasswordSchema, fields.password) },
   );
 }

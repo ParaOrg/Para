@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 import { Turnstile } from '@/shared/ui/turnstile';
 
@@ -13,6 +13,8 @@ interface AccountPanelProps {
   children: ReactNode;
   /** One line under the fields: what went wrong. */
   error: string | null;
+  /** One line above the fields that is not a problem: what just happened. */
+  notice?: string;
   /** The bot check, for the screens that sign in or make a user; none for the one that does neither. */
   captcha?: Captcha;
   /** The buttons: the main one first. */
@@ -25,12 +27,17 @@ export function AccountPanel({
   title,
   children,
   error,
+  notice,
   captcha,
   actions,
   onSubmit,
 }: AccountPanelProps) {
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
+  const onToken = captcha?.onToken;
+
+  // The widget goes with the screen; its token must not outlive it.
+  useEffect(() => () => onToken?.(null), [onToken]);
 
   return (
     <section
@@ -49,6 +56,11 @@ export function AccountPanel({
         }}
         className="flex flex-col gap-4"
       >
+        {notice && (
+          <p role="status" className="text-sm/5 text-content-primary">
+            {notice}
+          </p>
+        )}
         {children}
         {error && (
           <p role="alert" className="text-sm/5 text-content-primary">
