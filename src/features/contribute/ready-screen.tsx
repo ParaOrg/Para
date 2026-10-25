@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
+import { BackToMapButton, goBackToMap } from './back-to-map-button';
 import { ConsentPanel } from './consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from './earlier-recordings-panel';
 import { TrackingButton } from './tracking-button';
-import { HistoryIcon } from './tracking-icons';
+import { HistoryIcon, ProfileIcon } from './tracking-icons';
 import { useStackRoom } from './use-stack-room';
 
 interface ReadyScreenProps {
@@ -15,14 +15,14 @@ interface ReadyScreenProps {
   earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
   onOpenHistory: () => void;
-  /** Set when History was open before this screen: focus goes back to the button that opened it. */
-  shouldFocusHistoryButton: boolean;
+  /** Absent when this build has no accounts, so no Profile. */
+  onOpenProfile?: () => void;
+  /** The screen that was open before this one: focus goes back to the button that opened it. */
+  returnFocusTo: 'history' | 'profile' | null;
 }
 
-const goBackToMap = () => window.location.assign('/');
-
 /**
- * Before a recording: back to the map, History, and one Start bar (or, on a first visit, what the
+ * Before a recording: back to the map, Profile and History, and one Start bar (or, on a first visit, what the
  * page does). History is a screen of its own, so nothing of it shows here.
  */
 export function ReadyScreen({
@@ -31,36 +31,44 @@ export function ReadyScreen({
   earlierQuestion,
   onStart,
   onOpenHistory,
-  shouldFocusHistoryButton,
+  onOpenProfile,
+  returnFocusTo,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const historyRef = useRef<HTMLButtonElement>(null);
+  const profileRef = useRef<HTMLButtonElement>(null);
   // Decided once, as the screen opens: a later change must not move focus again.
-  const [shouldFocusButton] = useState(shouldFocusHistoryButton);
+  const [focusTarget] = useState(returnFocusTo);
   useEffect(() => {
-    (shouldFocusButton ? historyRef.current : headingRef.current)?.focus();
-  }, [shouldFocusButton]);
+    const buttons = { history: historyRef.current, profile: profileRef.current };
+    (focusTarget ? buttons[focusTarget] : headingRef.current)?.focus();
+  }, [focusTarget]);
   const stackRef = useStackRoom();
 
   return (
     <>
-      <div className="absolute top-0 left-0 z-10 flex gap-2 pt-[max(1rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))]">
-        <IconButton
-          tooltip="top"
-          label="Back to the map"
-          icon={<ChevronLeftIcon />}
-          onClick={goBackToMap}
-        />
+      <BackToMapButton>
+        {onOpenProfile && (
+          <IconButton
+            ref={profileRef}
+            tooltip="top"
+            size="large"
+            label="Profile"
+            icon={<ProfileIcon />}
+            onClick={onOpenProfile}
+          />
+        )}
         {hasConsent && (
           <IconButton
             ref={historyRef}
             tooltip="top"
+            size="large"
             label="History"
             icon={<HistoryIcon />}
             onClick={onOpenHistory}
           />
         )}
-      </div>
+      </BackToMapButton>
       {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
       {hasConsent && !earlierQuestion && (
         <section

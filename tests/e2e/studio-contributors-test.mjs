@@ -1,6 +1,6 @@
 // The Contributors map's actions, signed in as an editor, against a stand-in
 // for the database: Use this line, Draw a hintuan here, Hide and Show again,
-// Block and Unblock. The reader and the writer are the stand-in's
+// Block and Unblock, and the opened upload's marks. The reader and the writer are the stand-in's
 // (lib/fake-studio-db.mjs); no router, no tiles, no account, nothing reaches
 // the live project.
 //
@@ -34,6 +34,7 @@ const LINE = [START, [121.0505, 14.7035], [121.049, 14.707], END];
 const HINTO = [121.0502, 14.7035];
 const HOUR = 3_600_000;
 const iso = (ms) => new Date(ms).toISOString();
+const RIDE_START = Date.now() - 3 * HOUR;
 const upload = (id, phone, over) => ({
   id,
   contributor_id: phone,
@@ -58,6 +59,20 @@ const upload = (id, phone, over) => ({
   hidden_note: null,
   ...over,
 });
+/** C1's trail, one fix a minute along its line, as the phone packs it (degrees × 1e6). */
+const trailBatch = (contribution) => {
+  const at = (n) => LINE[n];
+  return {
+    contribution_id: contribution,
+    seq: 0,
+    first_at: iso(RIDE_START),
+    first_lat: Math.round(at(0)[1] * 1e6),
+    first_lng: Math.round(at(0)[0] * 1e6),
+    dt_ms: [0, 60_000, 60_000, 60_000],
+    dlat: [0, 3500, 3500, 3000],
+    dlng: [0, 500, -1500, 100],
+  };
+};
 const hinto = (contribution, lng, lat, seconds) => ({
   contribution_id: contribution,
   seq: 0,
@@ -103,11 +118,26 @@ await bareStyle(page);
 await signInAsEditor(page);
 const db = await fakeStudioDb(page, {
   contributor: [
-    { id: PHONE_A, blocked_at: null, block_note: null },
-    { id: PHONE_B, blocked_at: null, block_note: null },
+    {
+      id: PHONE_A,
+      name: 'Maria Santos',
+      phone: '+639171234567',
+      blocked_at: null,
+      block_note: null,
+    },
+    { id: PHONE_B, name: null, blocked_at: null, block_note: null },
   ],
   contribution: [
-    upload(C1, PHONE_A, { start_name: 'SM Fairview', end_name: 'Cubao' }),
+    upload(C1, PHONE_A, {
+      start_name: 'SM Fairview',
+      end_name: 'Cubao',
+      started_at: iso(RIDE_START),
+      events: [
+        { kind: 'mark', at: iso(RIDE_START + 30_000) },
+        { kind: 'switch', at: iso(RIDE_START + 90_000), to: 'return' },
+        { kind: 'mark', at: iso(RIDE_START + 150_000) },
+      ],
+    }),
     upload(C2, PHONE_B, {
       start_name: 'Fairview',
       end_name: 'Cubao',
@@ -116,6 +146,7 @@ const db = await fakeStudioDb(page, {
     upload(C3, PHONE_A, { description: 'Far away', received_at: iso(Date.now() - 3 * HOUR) }),
   ],
   // C2's hinto is 7 m from C1's, inside a box round it; C3's is 600 m north, outside.
+  point_batch: [trailBatch(C1)],
   hinto: [
     hinto(C1, ...HINTO, 240),
     hinto(C2, HINTO[0] + 0.00006, HINTO[1], 120),
@@ -166,10 +197,29 @@ check(
   (await body()).match(/Phone aaaaaa[^.]*\./)?.[0],
 );
 check(
+  "  and shows the contributor's name, never their number",
+  (await body()).includes('Maria Santos') &&
+    !(await body()).includes('09171234567') &&
+    !(await body()).includes('639171234567') &&
+    db.log.every((r) => r.table !== 'contributor' || !/phone|email/.test(r.query)),
+);
+check(
   '  and lists its hintos as text, each with Draw a hintuan here',
   (await body()).includes('Hinto 1: 4 min') &&
     (await page.getByRole('button', { name: 'Draw a hintuan here' }).count()) === 1,
 );
+check(
+  '  and lists its two marks as text, the way switch left out',
+  (await body()).includes('2 marks. Marked at'),
+  (await body()).match(/.{20}Marked at.{40}/)?.[0],
+);
+const pinCount = () =>
+  page.evaluate(async () => {
+    const data = await window.__src('studio-contribution-opened');
+    return data?.features.filter((f) => f.properties.kind === 'mark').length ?? 0;
+  });
+check('  and draws two pins on its ride', await waitFor(async () => (await pinCount()) === 2));
+await shot('marks-pins');
 await page.getByRole('button', { name: 'Block phone' }).click();
 check(
   'Block asks why, the note focused and optional',

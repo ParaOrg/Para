@@ -18,9 +18,9 @@ let isConnected = false;
 let client: Promise<ContributeClient> | null = null;
 
 /**
- * Called by the page's entry point: this page may upload. The client itself is
- * made on the first upload or removal, so the recorder opens without it; an
- * upload needs signal anyway, and the page needs none to record.
+ * Called by the page's entry point: this page may sign in and upload. The client itself is
+ * made when the page first asks who is signed in, and its code is precached, so a signed-in
+ * phone opens and records with no signal; only signing in and uploading need it.
  */
 export function connectContributions(): void {
   isConnected = contributeConfig !== null;

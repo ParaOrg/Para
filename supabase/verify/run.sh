@@ -107,3 +107,4 @@ echo 'reviewed approval revert: schema unchanged, repeated recovery safe'
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributions.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contribution-use.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash signup-hook.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributor-accounts.sh

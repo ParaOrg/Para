@@ -1,61 +1,50 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { MapView } from '@/features/routes/map/map-view';
-import { RecordingFollowControls } from '@/features/routes/map/recording-follow-controls';
-import type { FollowMode } from '@/features/routes/map/use-recording-follow';
-import { useRecordingFollow } from '@/features/routes/map/use-recording-follow';
 import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
 
-import type { Follow } from './use-follow';
 import type { RecordingTrack } from './use-recording-track';
+
+/** What the page draws on the map besides the trail: the shell's locator, which this feature may not import. */
+export type ContributeLocatorSlot = (
+  map: MapLibreMap,
+  isMapLoaded: boolean,
+  isRecording: boolean,
+  mark: ReactNode,
+) => ReactNode;
 
 interface ContributeMapProps {
   track: RecordingTrack;
-  follow: Follow;
-  /** Whether a recording is on the screen, which is when the follow controls show. */
-  hasRecording: boolean;
+  /** Whether a recording is on the screen. */
+  isRecording: boolean;
+  locator?: ContributeLocatorSlot;
+  /** The mark button, for the locator's column: null when nothing is recording. */
+  mark: ReactNode;
 }
 
-const NEXT_MODE = { 'course-up': 'north-up', 'north-up': 'course-up' } satisfies Record<
-  FollowMode,
-  FollowMode
->;
-
 /**
- * The map under every screen: the public map's own view and map-style button,
- * with the recording's trail drawn on it and the camera following the recording.
+ * The map under every screen: the public map's own view, with the recording's
+ * trail drawn on it and the shell's locator (the dot, and the button with the
+ * map-style picker) on top.
  */
-export function ContributeMap({ track, follow, hasRecording }: ContributeMapProps) {
+export function ContributeMap({ track, isRecording, locator, mark }: ContributeMapProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   useRecordingTrail(map, track.trail);
-  useRecordingFollow(map, {
-    here: track.trail.here,
-    bearing: track.bearing,
-    mode: follow.mode,
-    isFollowing: follow.isFollowing,
-    onLetGo: follow.letGo,
-  });
 
   return (
     <>
       <MapView
         onReady={setMap}
+        onLoadedChange={setIsMapLoaded}
         zoomButtons={false}
         foldCredits
-        buttonStyle="icon-button"
+        hasMapStyleButton={false}
         creditsAtBottom
       />
-      {map && hasRecording && (
-        <RecordingFollowControls
-          map={map}
-          mode={follow.mode}
-          isFollowing={follow.isFollowing}
-          onModeToggle={() => follow.setMode(NEXT_MODE[follow.mode])}
-          onRecentre={follow.recentre}
-        />
-      )}
+      {map && locator?.(map, isMapLoaded, isRecording, mark)}
     </>
   );
 }

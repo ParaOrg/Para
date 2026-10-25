@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 
 import { ContributionDetails } from './contribution-details';
-import { STORY_CONTRIBUTIONS, STORY_DETAIL } from './contributor-story-data';
+import { STORY_CONTRIBUTIONS, STORY_DETAIL, STORY_DETAIL_MARKED } from './contributor-story-data';
 
 const [named, bare] = STORY_CONTRIBUTIONS;
 if (!named || !bare) throw new Error('The stories need two uploads.');
@@ -40,3 +40,13 @@ export const TrailFailed: Story = {
 
 /** Nothing said about the ride: the fields say so. */
 export const NothingSaid: Story = { args: { contribution: bare } };
+
+/** Two marks: the text lists their times for screen readers, and the map shows two pins. */
+export const Marked: Story = {
+  args: { detail: STORY_DETAIL_MARKED },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByText(/2 marks\. Marked at 08:14, 08:31\./),
+    ).toBeVisible();
+  },
+};

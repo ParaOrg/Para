@@ -11,6 +11,16 @@ const MANILA_DATE_TIME = new Intl.DateTimeFormat('en-PH', {
 /** A time as the studio reads it, in Manila: "Oct 19, 8:00 AM". */
 export const manilaTime = (ms: number): string => MANILA_DATE_TIME.format(ms);
 
+const MANILA_CLOCK = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Manila',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+/** A time of day in Manila, 24-hour: "08:14". */
+export const manilaClock = (ms: number): string => MANILA_CLOCK.format(ms);
+
 export const kilometres = (metres: number): string => `${(metres / 1000).toFixed(1)} km`;
 
 export const minutes = (seconds: number): string => `${Math.round(seconds / 60)} min`;

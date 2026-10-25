@@ -45,8 +45,8 @@ export interface Uploads {
   waitingCount: number;
   /** Sends one now: a retry after a failure, or again after its upload was removed. */
   upload: (recording: Recording) => void;
-  /** Removes the uploaded copy from ParaPo. The phone's copy stays. */
-  removeUploaded: (recording: Recording) => void;
+  /** Removes the uploaded copy from ParaPo. The phone's copy stays. Settles whether or not it worked. */
+  removeUploaded: (recording: Recording) => Promise<void>;
   /** Whether this phone's identity made the upload, so it may remove it. */
   canRemove: (recording: Recording) => boolean;
   /** The bot check before this phone's first upload, while one is needed. */
@@ -192,7 +192,14 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
     setStatus(recording.id, { state: 'uploading' });
     try {
       const rows = await loadFixes(recording.id);
-      const packed = packRecording(recording, rows.map(toFix), CONSENT_VERSION, Date.now());
+      const packed = packRecording(
+        recording,
+        rows.map(toFix),
+        // Sent under the text it was made with; an earlier recording the person chose to send is
+        // sent under the current one they agreed to.
+        recording.consentVersion ?? CONSENT_VERSION,
+        Date.now(),
+      );
       if (!packed.ok) {
         setStatus(recording.id, { state: 'failed', ...FAILED[packed.reason] });
         return;
@@ -336,7 +343,7 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
     statusOf,
     waitingCount,
     upload: (recording) => void send(recording),
-    removeUploaded: (recording) => void remove(recording),
+    removeUploaded: (recording) => remove(recording),
     canRemove: (recording) => {
       const status = statusOf(recording);
       return status.state === 'uploaded' && identity !== null && status.by === identity;

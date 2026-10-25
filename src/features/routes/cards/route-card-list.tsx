@@ -32,7 +32,7 @@ interface Props {
   hidden?: boolean;
   /** Its height, shared with the trip opened from it (BottomSheet). */
   height?: SheetHeight;
-  /** Drawn after the last route card, handed its livery: the public map's invitation to contribute. */
+  /** Drawn after the last route card, handed its livery: the public map's contribute card. */
   end?: (livery: Livery) => ReactNode;
 }
 

@@ -13,7 +13,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
-import { fakeContributions } from './lib/fake-contributions.mjs';
+import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
@@ -22,6 +22,7 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
 const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
+const ACCOUNT_ID = 'cccccccc-0000-4000-8000-000000000001';
 const STUDIO_KEY = 'sb-smzwbqxttdyvohuizynl-auth-token';
 
 const GPS = () => {
@@ -51,10 +52,11 @@ const browser = await chromium.launch();
 
 /**
  * A phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same
- * site. `consent` is what the phone has stored: '2' (the current text) unless given, 'yes' (the
- * first text) or null (never asked). `opens` is the screen the page is waited on.
+ * site. `consent` is what the phone has stored: '3' (the current text) unless given, 'yes' (the
+ * first text) or null (never asked). `opens` is the screen the page is waited on. The phone is
+ * already signed in to an account: the page shows nothing else until one is.
  */
-async function phone({ studioSession = false, consent = '2', opens = 'start' } = {}) {
+async function phone({ studioSession = false, consent = '3', opens = 'start' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -65,6 +67,13 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
   await nodeFetch(page);
   await bareStyle(page);
   const fake = await fakeContributions(page);
+  // The seeded account is in the database with its name stored: the page opens on Ready.
+  fake.users.set(ACCOUNT_ID, {
+    email: 'tester@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Tester', phone: '+639171234567' },
+  });
   // Cloudflare's Turnstile, standing in: the check passes at once. CI builds this suite with a site key.
   await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) =>
     route.fulfill({
@@ -74,6 +83,15 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
     }),
   );
   await page.addInitScript(GPS);
+  await page.addInitScript(
+    ([key, signedIn]) => {
+      if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(signedIn));
+    },
+    [
+      'parapo.contributor-auth',
+      session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true }),
+    ],
+  );
   if (consent !== null) {
     await page.addInitScript((stored) => {
       // Only a first load seeds it, so a reload keeps what the page itself stored.
@@ -99,11 +117,15 @@ async function phone({ studioSession = false, consent = '2', opens = 'start' } =
   return { page, context, fake, errors, asked };
 }
 
-/** Counts every request the page makes to the database (sign-in, identity, reads or sends). */
+/**
+ * Counts every request the page makes to the database (sign-in, identity, reads or sends), but not
+ * the account's own profile read: the page asks that before consent, to know the account is done.
+ */
 function watchDatabase(page) {
   const watch = { count: 0 };
   page.on('request', (request) => {
-    if (/\/(auth|rest)\/v1\//.test(request.url())) watch.count += 1;
+    const url = request.url();
+    if (/\/(auth|rest)\/v1\//.test(url) && !/\/rpc\/get_profile/.test(url)) watch.count += 1;
   });
   return watch;
 }
@@ -142,7 +164,7 @@ async function seed(page, recordings) {
 function savedRide(
   id,
   startedAt,
-  { count = 30, upload, name = 'Fairview', isEarlier = false } = {},
+  { count = 30, upload, name = 'Fairview', isEarlier = false, consentVersion = 3 } = {},
 ) {
   const fixes = Array.from({ length: count }, (_, seq) => ({
     recordingId: id,
@@ -165,8 +187,8 @@ function savedRide(
     endPointName: 'Cubao',
     description: '',
     rideKind: 'Jeep',
-    // A recording made under the current consent text carries its version; an earlier one has none.
-    ...(isEarlier ? {} : { consentVersion: 2 }),
+    // A recording carries the version of the consent text it was made under; one from the first text has none.
+    ...(isEarlier ? {} : { consentVersion }),
     ...(upload ? { upload } : {}),
   };
   return { recording, fixes };
@@ -246,6 +268,7 @@ const groupOf = (page, name) =>
       [T0 + s * 1000, 14.7 + (s * 8) / 111_320],
     );
   }
+  await page.getByRole('button', { name: 'Mark this place' }).click();
   await page.getByRole('button', { name: 'Save' }).click();
   await page.getByLabel('Start point name').fill('SM Fairview');
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -257,8 +280,16 @@ const groupOf = (page, name) =>
     fake.rows.size === 1 &&
       fake.saveRequests === 1 &&
       stored.recording.start_name === 'SM Fairview' &&
-      stored.recording.consent_version === 2,
+      stored.recording.consent_version === 3,
     `${fake.rows.size} stored, ${fake.saveRequests} sends`,
+  );
+  const markEvents = stored.recording.events.filter((e) => e.kind === 'mark');
+  check(
+    'the upload carries the mark as a mark event: a time and no position, between start and stop',
+    markEvents.length === 1 &&
+      Object.keys(markEvents[0]).sort().join() === 'at,kind' &&
+      stored.recording.events.map((e) => e.kind).join() === 'start,mark,stop,save',
+    JSON.stringify(stored.recording.events),
   );
   check(
     '  it went whole: its points, in batches, and the ride kind left blank',
@@ -272,13 +303,8 @@ const groupOf = (page, name) =>
     (await storedUpload(page, stored.recording.id)) === 'uploaded',
   );
   check(
-    "  with a Turnstile site key, the first sign-in carried the check's token",
-    !process.env.PARAPO_TURNSTILE || fake.captchaTokens[0] === 'turnstile-token',
-    String(fake.captchaTokens[0]),
-  );
-  check(
-    "  the phone signed in under its own key; the editor's studio session is untouched",
-    fake.signIns === 1 &&
+    "  the phone sent as its account, under its own key; the editor's studio session is untouched",
+    fake.signIns === 0 &&
       (await page.evaluate((k) => localStorage.getItem(k), STUDIO_KEY)) === studioBefore &&
       (await page.evaluate(() => localStorage.getItem('parapo.contributor-auth'))) !== null,
   );
@@ -290,7 +316,7 @@ const groupOf = (page, name) =>
   await page.waitForTimeout(500);
   check(
     'after a reload it still reads as uploaded and is not sent again',
-    fake.saveRequests === 1 && fake.signIns === 1,
+    fake.saveRequests === 1 && fake.signIns === 0,
     `${fake.saveRequests} sends`,
   );
   check(
@@ -322,29 +348,6 @@ const groupOf = (page, name) =>
     '  back online, it is sent on its own, once',
     fake.rows.size === 1 && fake.saveRequests === 2,
   );
-}
-
-// ------------------------- sign-ups turned off: an answer, not no signal
-{
-  const { page, fake } = await phone();
-  fake.next.signIn = 'signupDisabled';
-  await seed(page, [
-    savedRide('aaaaaaaa-0000-4000-8000-000000000009', T0, { name: 'Turned away' }),
-  ]);
-  await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Turned away', /isn't taking uploads now/);
-  const status = await statusOf(page, 'Turned away');
-  check(
-    'a sign-in ParaPo refuses says uploads cannot be taken, not no signal, and keeps the copy',
-    fake.rows.size === 0 &&
-      !/no signal/i.test(status) &&
-      /Will retry/.test(status) &&
-      (await storedUpload(page, 'aaaaaaaa-0000-4000-8000-000000000009')) === 'none',
-    status,
-  );
-  await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await waitForStatus(page, 'Turned away', UPLOADED);
-  check('  once ParaPo takes uploads again, it is sent on its own', fake.rows.size === 1);
 }
 
 // ------------------------------------ the answer lost after storing
@@ -495,13 +498,22 @@ const groupOf = (page, name) =>
   );
   await shot(page, '4-delete-question');
   await row(page, upName).getByRole('button', { name: 'Delete', exact: true }).click();
+  // ParaPo's copy is still the account's, so its card stays, now without a copy on this phone.
   await page.waitForFunction(
-    (n) => ![...document.querySelectorAll('li')].some((li) => li.textContent.includes(n)),
+    (n) =>
+      [...document.querySelectorAll('li')].some(
+        (li) => li.textContent.includes(n) && !li.textContent.includes('Delete this recording'),
+      ),
     upName,
   );
   check(
-    '  two recordings waiting at once signed the phone in once',
-    fake.signIns === 1,
+    "  and its card stays as the account's upload, with only Remove upload behind its dots",
+    (await countOf(page, upName, /^Delete from phone|^Download/)) === 0 &&
+      (await countOf(page, upName, /^Remove upload/)) === 1,
+  );
+  check(
+    '  two recordings waiting at once sent as the account, with no sign-in of their own',
+    fake.signIns === 0,
     `${fake.signIns} sign-ins`,
   );
   check(
@@ -517,7 +529,7 @@ const groupOf = (page, name) =>
     localQuestion,
   );
   await row(page, localName).getByRole('button', { name: 'Delete', exact: true }).click();
-  await page.waitForFunction(() => document.querySelectorAll('li').length === 0);
+  await page.waitForFunction(() => document.querySelectorAll('li').length === 1);
   check(
     "  focus lands on History's heading, not the page",
     (await page.evaluate(() => document.activeElement?.textContent)) === 'History',
@@ -592,11 +604,31 @@ const groupOf = (page, name) =>
   await waitForStatus(page, 'No consent', UPLOADED);
   check(
     '  agreeing to the current text sends it, with the text' + "'" + 's version',
-    fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 2,
+    fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 3,
   );
   check(
-    '  the phone remembers the version agreed to',
-    (await page.evaluate(() => localStorage.getItem('parapo.contribute.consent'))) === '2',
+    '  the phone remembers the version agreed to, for this account',
+    (await page.evaluate(
+      (id) => localStorage.getItem(`parapo.contribute.consent.${id}`),
+      ACCOUNT_ID,
+    )) === '3',
+  );
+  const other = 'cccccccc-0000-4000-8000-000000000002';
+  fake.users.set(other, {
+    email: 'second@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Second', phone: '+639181234567' },
+  });
+  await page.evaluate(
+    ([key, signedIn]) => localStorage.setItem(key, JSON.stringify(signedIn)),
+    ['parapo.contributor-auth', session(other, { email: 'second@example.com', isAccount: true })],
+  );
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.consent(page).waitFor();
+  check(
+    "a second account on the same phone is asked about the text itself; the first one's answer is not theirs",
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
   );
 }
 
@@ -605,9 +637,11 @@ const groupOf = (page, name) =>
   const { page, fake, asked } = await phone({ consent: 'yes', opens: 'consent' });
   const earlier = 'aaaaaaaa-0000-4000-8000-000000000012';
   const stamped = 'aaaaaaaa-0000-4000-8000-000000000013';
+  const underTwo = 'aaaaaaaa-0000-4000-8000-000000000019';
   await seed(page, [
     savedRide(earlier, T0, { name: 'Under one', isEarlier: true }),
     savedRide(stamped, T0 + 600_000, { name: 'Stamped' }),
+    savedRide(underTwo, T0 + 900_000, { name: 'Under two', consentVersion: 2 }),
     // An upload made under version 1: the identity check it would set off must wait for consent too.
     savedRide('aaaaaaaa-0000-4000-8000-000000000018', T0 + 1_200_000, {
       name: 'Already up',
@@ -625,7 +659,8 @@ const groupOf = (page, name) =>
       fake.signIns === 0 &&
       asked.count === 0 &&
       (await storedUpload(page, earlier)) === 'none' &&
-      (await storedUpload(page, stamped)) === 'none',
+      (await storedUpload(page, stamped)) === 'none' &&
+      (await storedUpload(page, underTwo)) === 'none',
     `${fake.saveRequests} sends`,
   );
   check(
@@ -637,9 +672,10 @@ const groupOf = (page, name) =>
   await SCREENS.earlier(page).waitFor();
   await page.waitForTimeout(1500);
   check(
-    '  after agreeing, only the recording made under the current text goes; the earlier one is asked about',
-    fake.rows.size === 1 &&
+    '  after agreeing, the recordings made under text 2 or 3 go; the one under text 1 is asked about',
+    fake.rows.size === 2 &&
       fake.rows.has(stamped) &&
+      fake.rows.has(underTwo) &&
       (await storedUpload(page, earlier)) === 'none' &&
       (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
     [...fake.rows.keys()].join(),
@@ -718,7 +754,7 @@ const groupOf = (page, name) =>
   await waitForStatus(page, 'Sent one', UPLOADED);
   check(
     'Send uploads the earlier recordings, each with the current text' + "'" + 's version',
-    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 2),
+    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 3),
   );
   await page.evaluate(() => {
     location.hash = '';
