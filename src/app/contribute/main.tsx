@@ -8,6 +8,7 @@ import {
   askForPersistentStorage,
   connectContributions,
   prepareNativeApp,
+  runEmulatorRide,
 } from '@/features/contribute';
 
 import { ContributeApp } from './contribute-app.tsx';
@@ -30,6 +31,12 @@ if (import.meta.env.MODE === 'apk') {
   } catch (error) {
     console.error('Capacitor could not load.', error);
   }
+}
+
+// The CI emulator ride's driver: only in the build made for it (contributor-app.yml), never in the
+// APK a tester installs.
+if (import.meta.env.MODE === 'apk' && import.meta.env.VITE_EMULATOR_RIDE === '1') {
+  void runEmulatorRide();
 }
 
 createRoot(root).render(

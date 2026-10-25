@@ -25,6 +25,12 @@ export function isNativeApp(): boolean {
   return capacitor?.isNativePlatform() === true;
 }
 
+/** A native plugin's bridge, by the name it registers under. Only inside the app. */
+export function nativePlugin<T>(name: string): T {
+  if (!capacitor) throw new Error('This page is not running inside the Android app.');
+  return capacitor.registerPlugin<T>(name);
+}
+
 /**
  * Reads a text file through the phone's own HTTP client, which follows redirects and is not held
  * to CORS: a WebView `fetch` from https://localhost cannot read GitHub's release assets. Only for

@@ -9,8 +9,10 @@ import {
 
 import { CONSENT_VERSION } from './consent-version';
 import { locationProblem } from './location-problem';
+import { clearNativeFixes, importNativeFixes, keepsRecordingInBackground } from './native-fixes';
 import { holdRecorderLock } from './recorder-lock';
 import { downloadRecording, recordingFile } from './recording-file';
+import { firstCountWhere, fixesAfter } from './recording-fixes';
 import { withMark } from './recording-marks';
 import { OTHER_WAY, WAY_LABEL, currentWay, shouldAutoStop, type Way } from './recording-rules';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
@@ -18,11 +20,10 @@ import {
   deleteRecording,
   loadFixes,
   loadRecordings,
-  putFix,
   putFixes,
   putRecording,
 } from './recording-store';
-import { useGeolocationWatch } from './use-geolocation-watch';
+import { useGeolocationWatch, type WatchedFix } from './use-geolocation-watch';
 import { useHiddenGaps } from './use-hidden-gaps';
 import { useWakeLock } from './use-wake-lock';
 
@@ -164,6 +165,11 @@ export function useRecording(): RecordingState {
     setStorageProblem(STORE_PROBLEM);
   }, []);
 
+  // A native log that cannot be read leaves the ride with the fixes the page already holds.
+  const reportNativeLog = useCallback((error: unknown) => {
+    console.error('The fixes kept by the app could not be imported.', error);
+  }, []);
+
   /** Makes this the recording in hand and writes it to the phone. */
   const keep = useCallback(
     (recording: Recording) => {
@@ -214,6 +220,7 @@ export function useRecording(): RecordingState {
           return;
         }
         const open = all.find((r) => r.status !== 'saved') ?? null;
+        if (open) await importNativeFixes(open.id).catch(reportNativeLog);
         const rows = open ? await loadFixes(open.id) : [];
         if (isCancelled) return;
         if (open) {
@@ -236,7 +243,7 @@ export function useRecording(): RecordingState {
     return () => {
       isCancelled = true;
     };
-  }, [reportStore]);
+  }, [reportStore, reportNativeLog]);
 
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
@@ -252,48 +259,59 @@ export function useRecording(): RecordingState {
   const isRecording = phase === 'recording';
   const isAwake = useWakeLock(isRecording);
 
-  useGeolocationWatch(isRecording, {
-    onFix: (position) => {
-      const recording = currentRef.current;
-      // A fix that lands after the ride stopped itself, before the watch lets go.
-      if (!recording || recording.status !== 'recording') return;
-      const row: FixRow = {
-        recordingId: recording.id,
-        seq: nextSeq.current++,
-        time: position.timestamp,
-        lng: position.coords.longitude,
-        lat: position.coords.latitude,
-        accuracyM: position.coords.accuracy,
-      };
-      const write = putFix(row)
-        .catch((error: unknown) => {
-          failedFixWrites.current += 1;
-          unwrittenFixes.current.push(row);
-          reportStore(error);
-          noteFailedWrites();
-        })
-        .finally(() => pendingFixWrites.current.delete(write));
-      pendingFixWrites.current.add(write);
-      const counted = setFixList([...fixesRef.current, toFix(row)]);
-      setLocationError(null);
-      if (isBackAtStart(counted)) {
-        setAnnouncement('Back at the start. The recording stopped.');
-        finish(position.timestamp, 'form', { hasAutoStopped: true });
-      }
-    },
+  /**
+   * Takes the fixes the watch hands over: those after the last one held, stored in one write and
+   * counted as one step. The app hands over a whole stretch at once when the page wakes from the
+   * screen being off; a ride that came back to its start inside it stops at that fix, and the
+   * ones after it are left out.
+   */
+  function takeFixes(watched: WatchedFix[]) {
+    const recording = currentRef.current;
+    // Fixes that land after the ride stopped itself, before the watch lets go.
+    if (!recording || recording.status !== 'recording') return;
+    const lastTime = fixesRef.current[fixesRef.current.length - 1]?.time ?? null;
+    const fresh = fixesAfter(watched, lastTime);
+    if (fresh.length === 0) return;
+    const candidates = fresh.map((fix): Fix => ({
+      time: fix.timestamp,
+      at: [fix.coords.longitude, fix.coords.latitude],
+      accuracyM: fix.coords.accuracy,
+    }));
+    const stopCount = recording.hasAutoStopped
+      ? null
+      : firstCountWhere(candidates, (some) =>
+          shouldAutoStop(keptFixes([...fixesRef.current, ...some]), recording.switches ?? []),
+        );
+    const taken = candidates.slice(0, stopCount ?? candidates.length);
+    const rows: FixRow[] = taken.map((fix) => ({
+      recordingId: recording.id,
+      seq: nextSeq.current++,
+      time: fix.time,
+      lng: fix.at[0],
+      lat: fix.at[1],
+      accuracyM: fix.accuracyM,
+    }));
+    const write = putFixes(rows)
+      .catch((error: unknown) => {
+        failedFixWrites.current += rows.length;
+        unwrittenFixes.current.push(...rows);
+        reportStore(error);
+        noteFailedWrites();
+      })
+      .finally(() => pendingFixWrites.current.delete(write));
+    pendingFixWrites.current.add(write);
+    setFixList([...fixesRef.current, ...taken]);
+    setLocationError(null);
+    if (stopCount !== null) {
+      setAnnouncement('Back at the start. The recording stopped.');
+      finish(taken[taken.length - 1].time, 'form', { hasAutoStopped: true });
+    }
+  }
+
+  useGeolocationWatch(isRecording, current?.id ?? null, {
+    onFixes: takeFixes,
     onError: (error) => setLocationError(locationProblem(error)),
   });
-
-  /**
-   * Whether the ride has gone out, turned back and come home. The rule is pure
-   * and stays true once it has fired, so a recording that stopped itself is
-   * marked and never asked again: a Resume must not stop it a second time.
-   */
-  function isBackAtStart(counted: readonly Fix[]): boolean {
-    const recording = currentRef.current;
-    if (!recording || recording.hasAutoStopped) return false;
-    return shouldAutoStop(counted, recording.switches ?? []);
-  }
 
   // The clock the live totals and the open silence run on.
   useEffect(() => {
@@ -302,7 +320,8 @@ export function useRecording(): RecordingState {
     return () => clearInterval(timer);
   }, [isRecording]);
 
-  useHiddenGaps(isRecording, currentRef, keep);
+  // In the app a hidden page loses nothing: the foreground service goes on and its fixes are kept.
+  useHiddenGaps(isRecording && !keepsRecordingInBackground(), currentRef, keep);
 
   function start() {
     if (isOtherTab.current) {
@@ -453,6 +472,7 @@ export function useRecording(): RecordingState {
       setSaved((list) => [kept, ...list.filter((r) => r.id !== kept.id)]);
       tellOtherTabs();
       forgetCurrent();
+      void clearNativeFixes().catch(reportNativeLog);
       setPhase('saved');
     } catch (error) {
       reportStore(error);
@@ -468,6 +488,7 @@ export function useRecording(): RecordingState {
     const recording = currentRef.current;
     if (recording) deleteRecording(recording.id).catch(reportStore);
     forgetCurrent();
+    void clearNativeFixes().catch(reportNativeLog);
     setStorageProblem(null);
     setPhase('ready');
   }

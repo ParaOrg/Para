@@ -31,6 +31,7 @@ on:
       - '.github/actions/prepare-app-build/**'
       - 'android/**'
       - 'scripts/android/**'
+      - 'scripts/apk/**'
       - 'scripts/publish/app-release*'
       - 'capacitor.config.ts'
       - 'vite.apk.config.ts'
@@ -88,6 +89,56 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # The screen-off ride on an emulator (scripts/apk/emulator-ride.sh): twenty minutes with the screen
+  # off, the app's process killed at fifteen, and every fix up to the kill still in the ride. Its APK
+  # is built with the ride's driver (VITE_EMULATOR_RIDE), so it is not the APK a tester installs.
+  emulator-ride:
+    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare-app-build
+
+      - name: Build the page with the ride's driver, and the debug APK
+        env:
+          VITE_EMULATOR_RIDE: '1'
+        run: |
+          npx vite build -c vite.apk.config.ts --mode apk
+          npx cap sync android
+          cd android && ./gradlew assembleDebug --no-daemon
+
+      # The emulator needs hardware acceleration.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Ride with the screen off
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/apk/emulator-ride.sh android/app/build/outputs/apk/debug/app-debug.apk emulator-out
+
+      - name: Show the result
+        if: always()
+        run: |
+          cat emulator-out/summary.txt | tee -a "$GITHUB_STEP_SUMMARY" || true
+          grep -a "PARAPO_RIDE" emulator-out/logcat.txt | tail -40 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-ride
+          path: emulator-out
+          if-no-files-found: warn
+          retention-days: 14
+
   build-release:
     if: startsWith(github.ref, 'refs/tags/app-v')
     runs-on: ubuntu-latest
@@ -138,6 +189,13 @@ jobs:
 
       - name: Build the contributor page for the app
         run: npx vite build -c vite.apk.config.ts --mode apk
+
+      - name: Check the page carries no test driver
+        run: |
+          if grep -rl "PARAPO_RIDE" dist-apk; then
+            echo "::error::The release page holds the emulator ride's driver."
+            exit 1
+          fi
 
       - name: Copy it into the Android project
         run: npx cap sync android
