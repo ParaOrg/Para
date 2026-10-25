@@ -221,7 +221,9 @@ export async function requestPasswordCode(input: PasswordCodeInput): Promise<voi
     const { error } = await client.auth.resetPasswordForEmail(input.email, {
       captchaToken: input.captchaToken,
     });
-    if (error) throw authError(error);
+    // The cool-down answers only for an address that has an account: said as a send, it gives
+    // nothing away.
+    if (error && error.code !== 'over_email_send_rate_limit') throw authError(error);
   } catch (error) {
     throw accountErrorOf(error);
   }
@@ -246,7 +248,14 @@ export async function resetPassword(input: ResetPasswordInput): Promise<Account>
       });
       if (verified.error) return verified;
       // Kept for after the claim: failing here would drop it, and the earlier uploads with it.
-      after.passwordError = (await client.auth.updateUser({ password: input.password })).error;
+      try {
+        after.passwordError = (await client.auth.updateUser({ password: input.password })).error;
+      } catch (thrown) {
+        after.passwordError = {
+          name: thrown instanceof Error ? thrown.name : 'Error',
+          message: String(thrown),
+        };
+      }
       return verified;
     });
     if (error) throw authError(error);

@@ -31,14 +31,9 @@ export const Default: Story = {};
 /** While the reset is out: every button waits. */
 export const Resetting: Story = { args: { isBusy: true } };
 
-/** A code the project did not issue. */
-export const WrongCode: Story = {
-  args: { error: "That code isn't right. Check it, or send a new code." },
-};
-
-/** The code ran out, or a newer one replaced it. */
-export const CodeExpired: Story = {
-  args: { error: 'That code has expired. Send a new code.' },
+/** A mistyped code and one that ran out get the same line: the project answers both alike. */
+export const CodeWrongOrExpired: Story = {
+  args: { error: 'That code is wrong or has expired. Check it, or send a new code.' },
 };
 
 /** The code worked but the new password is the old one: the code is spent. */

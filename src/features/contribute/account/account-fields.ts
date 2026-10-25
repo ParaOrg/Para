@@ -19,7 +19,11 @@ const phoneSchema = z
       'Enter a mobile number like 09171234567',
     ),
   );
-const newPasswordSchema = z.string().check(z.minLength(8, 'Use at least 8 characters'));
+// Supabase hashes with bcrypt, which reads no further than 72 bytes: a longer one is cut short.
+const newPasswordSchema = z.string().check(
+  z.minLength(8, 'Use at least 8 characters'),
+  z.refine((text) => text.length <= 72, 'Use 72 characters or fewer'),
+);
 const codeSchema = z
   .string()
   .check(z.refine((text) => /^[0-9]{6}$/.test(text), 'Enter the 6-digit code'));

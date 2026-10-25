@@ -164,12 +164,7 @@ test('a password reset is sorted into its own lines, never "Wrong email or passw
   const cases = [
     [
       { name: 'AuthApiError', message: 'expired', status: 403, code: 'otp_expired' },
-      'code-expired',
-    ],
-    [{ name: 'AuthApiError', message: 'bad', status: 400, code: 'otp_invalid' }, 'code-wrong'],
-    [
-      { name: 'AuthApiError', message: 'bad', status: 400, code: 'validation_failed' },
-      'code-wrong',
+      'code-rejected',
     ],
     [
       { name: 'AuthApiError', message: 'same', status: 422, code: 'same_password' },
@@ -218,4 +213,14 @@ test('the reset code is 6 digits, spaces ignored, and the new password at least 
   }
   const short = checkResetPassword({ code: '123456', password: 'short' });
   assert.deepEqual(short.errors, { password: 'Use at least 8 characters' });
+});
+
+test('a password is held to 72 characters, which is as far as the project reads', () => {
+  const fields = { name: 'Juan', email: 'juan@example.com', phone: '09171234567' };
+  assert.equal(checkSignUp({ ...fields, password: 'a'.repeat(72) }).isValid, true);
+  const long = checkSignUp({ ...fields, password: 'a'.repeat(73) });
+  assert.deepEqual(long.errors, { password: 'Use 72 characters or fewer' });
+  assert.deepEqual(checkResetPassword({ code: '123456', password: 'a'.repeat(73) }).errors, {
+    password: 'Use 72 characters or fewer',
+  });
 });

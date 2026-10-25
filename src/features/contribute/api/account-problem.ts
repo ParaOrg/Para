@@ -6,8 +6,7 @@
  * - `offline`: no answer; the same request can be sent again.
  * - `check-failed`: the bot check was not passed.
  * - `profile-not-saved`: the account was made but its name and number were not stored.
- * - `code-wrong`: the 6-digit code is not one the project issued.
- * - `code-expired`: the code was good once; it ran out, or a newer one replaced it.
+ * - `code-rejected`: the 6-digit code is wrong or has expired; the project answers both the same.
  * - `same-password`: the new password is the one the account already has.
  * - `rate-limited`: too many emails or tries; waiting is the only fix.
  * - `unavailable`: this build has no database to sign in to.
@@ -20,8 +19,7 @@ export type AccountProblem =
   | 'offline'
   | 'check-failed'
   | 'profile-not-saved'
-  | 'code-wrong'
-  | 'code-expired'
+  | 'code-rejected'
   | 'same-password'
   | 'rate-limited'
   | 'unavailable'
@@ -44,8 +42,7 @@ export const ACCOUNT_MESSAGES: Record<AccountProblem, string> = {
   offline: "No signal — try again when you're online",
   'check-failed': 'The check that you are a person did not pass. Try again.',
   'profile-not-saved': "Your account is made, but your name and number didn't save. Try again.",
-  'code-wrong': "That code isn't right. Check it, or send a new code.",
-  'code-expired': 'That code has expired. Send a new code.',
+  'code-rejected': 'That code is wrong or has expired. Check it, or send a new code.',
   'same-password': "That's already your password. Sign in with it, or send a new code.",
   'rate-limited': 'Too many tries. Wait a few minutes, then try again.',
   unavailable: 'Accounts are not available on this page.',
@@ -75,8 +72,7 @@ export function accountProblemOf(error: AuthFailure): AccountProblem {
   if (error.code === 'invalid_credentials') return 'wrong-credentials';
   if (error.code && EMAIL_TAKEN_CODES.has(error.code)) return 'email-taken';
   if (error.code === 'weak_password') return 'weak-password';
-  if (error.code === 'otp_expired') return 'code-expired';
-  if (error.code === 'otp_invalid' || error.code === 'validation_failed') return 'code-wrong';
+  if (error.code === 'otp_expired') return 'code-rejected';
   if (error.code === 'same_password') return 'same-password';
   if (error.code && RATE_LIMIT_CODES.has(error.code)) return 'rate-limited';
   if (error.code === 'captcha_failed' || /captcha/i.test(error.message)) return 'check-failed';

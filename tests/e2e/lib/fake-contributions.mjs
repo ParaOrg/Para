@@ -88,6 +88,8 @@ export async function fakeContributions(page) {
     logouts: [],
     profileRequests: 0,
     claims: [],
+    /** begin_claim, verify, update_password, finish_claim and logout, in the order they came. */
+    order: [],
     codes: new Map(),
     recoveries: 0,
     tokens: new Map(),
@@ -175,6 +177,7 @@ export async function fakeContributions(page) {
         return authError(route, 422, 'weak_password', 'Password should be at least 8 characters.');
       }
       if (known.isAccount && body.email === undefined && typeof body.password === 'string') {
+        fake.order.push('update_password');
         if (body.password === known.password) {
           return authError(
             route,
@@ -240,10 +243,12 @@ export async function fakeContributions(page) {
       if (body.type !== 'recovery') return authError(route, 400, 'validation_failed', 'bad type');
       fake.codes.delete(body.email);
       fake.claims.push('verify');
+      fake.order.push('verify');
       return json(route, 200, session(found[0], { email: found[1].email, isAccount: true }));
     }
     if (url.pathname === '/auth/v1/logout' && method === 'POST') {
       fake.logouts.push(url.searchParams.get('scope'));
+      fake.order.push('logout');
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
     }
     if (url.pathname === '/rest/v1/rpc/get_profile' && method === 'POST') {
@@ -285,6 +290,7 @@ export async function fakeContributions(page) {
 
     if (url.pathname === '/rest/v1/rpc/begin_claim' && method === 'POST') {
       fake.claims.push('begin_claim');
+      fake.order.push('begin_claim');
       const token = tokenOf(request);
       const claimError = (code, message) =>
         json(route, 403, { code, message, details: null, hint: null });
@@ -302,6 +308,7 @@ export async function fakeContributions(page) {
     }
     if (url.pathname === '/rest/v1/rpc/finish_claim' && method === 'POST') {
       fake.claims.push('finish_claim');
+      fake.order.push('finish_claim');
       const caller = tokenOf(request);
       const claimError = (status, code, message) =>
         json(route, status, { code, message, details: null, hint: null });

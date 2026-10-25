@@ -15,7 +15,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
-import { fakeContributions } from './lib/fake-contributions.mjs';
+import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
@@ -44,8 +44,13 @@ const accounts = new Map([
   ],
 ]);
 
-/** A phone with nothing stored but its consent to the current text, and the stand-in Supabase. */
-async function phone() {
+const ANON_ID = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+/**
+ * A phone with nothing stored but its consent to the current text, and the stand-in Supabase. With
+ * `anonymousWith` it already has its own anonymous user, and those uploads sent as it.
+ */
+async function phone({ users = accounts, anonymousWith = [] } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -56,7 +61,17 @@ async function phone() {
   await nodeFetch(page);
   await bareStyle(page);
   const fake = await fakeContributions(page);
-  fake.users = accounts;
+  fake.users = users;
+  if (anonymousWith.length) {
+    users.set(ANON_ID, { email: null, password: null, isAccount: false, profile: null });
+    for (const id of anonymousWith) fake.rows.set(id, { by: ANON_ID, recording: { id } });
+    await page.addInitScript(
+      ([key, anonymous]) => {
+        if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(anonymous));
+      },
+      [AUTH_KEY, session(ANON_ID)],
+    );
+  }
   await fakeTurnstile(page);
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('seeded')) {
@@ -131,7 +146,8 @@ async function sendCode(page, email) {
   await page.getByRole('alert').waitFor();
   check(
     '  a code for it is refused in its own line, never "Wrong email or password"',
-    (await alertText(page)) === 'That code has expired. Send a new code.' &&
+    (await alertText(page)) ===
+      'That code is wrong or has expired. Check it, or send a new code.' &&
       (await start(page).count()) === 0,
     await alertText(page),
   );
@@ -177,7 +193,7 @@ async function sendCode(page, email) {
   await page.getByRole('alert').waitFor();
   check(
     '  a code that is not the one sent is refused in one line, and the old password stands',
-    (await alertText(page)).startsWith('That code has expired') &&
+    (await alertText(page)).startsWith('That code is wrong or has expired') &&
       accounts.values().next().value.password === OLD_PASSWORD,
     await alertText(page),
   );
@@ -265,14 +281,52 @@ async function sendCode(page, email) {
   fake.next.recover = 'rateLimit';
   await sendEnabled(page, 'Send code');
   await button(page, 'Send code').click();
-  await page.getByRole('alert').waitFor();
+  await heading(page, 'Reset password').waitFor();
   check(
-    'too many sends is said in one line, on the email step',
-    (await alertText(page)) === 'Too many tries. Wait a few minutes, then try again.' &&
-      (await heading(page, 'Forgot password').count()) === 1,
-    await alertText(page),
+    "the cool-down's answer is said as a send, so it gives away no account: the same line, the code step",
+    (await page.getByText(NOTICE).count()) === 1 && (await page.getByRole('alert').count()) === 0,
   );
-  await shot(page, '6-too-many-tries');
+  check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
+}
+
+// ------------------------------------------------ a phone with uploads of its own claims them first
+for (const isSamePassword of [false, true]) {
+  const users = new Map([
+    [
+      crypto.randomUUID(),
+      {
+        email: EMAIL,
+        password: OLD_PASSWORD,
+        isAccount: true,
+        profile: { name: 'Juan dela Cruz', phone: '+639171234567' },
+      },
+    ],
+  ]);
+  const [[accountId]] = [...users];
+  const { page, fake } = await phone({ users, anonymousWith: ['up-1', 'up-2'] });
+  await openForgot(page);
+  await sendCode(page, EMAIL);
+  await field(page, 'Code').fill(fake.codes.get(EMAIL));
+  await field(page, 'New password').fill(isSamePassword ? OLD_PASSWORD : NEW_PASSWORD);
+  await button(page, 'Reset password').click();
+  if (isSamePassword) await page.getByRole('alert').waitFor();
+  else await start(page).waitFor({ timeout: 15000 });
+  const owners = [...fake.rows.values()].map((row) => row.by);
+  const expected = isSamePassword
+    ? 'begin_claim,verify,update_password,finish_claim,logout'
+    : 'begin_claim,verify,update_password,finish_claim';
+  check(
+    isSamePassword
+      ? 'with the same password refused, the claim still finishes before the phone signs out'
+      : 'on a phone with uploads of its own: begin_claim, the code, the password, then finish_claim',
+    fake.order.join() === expected,
+    fake.order.join(),
+  );
+  check(
+    "  the uploads are the account's, and none stays on the anonymous user",
+    owners.length === 2 && owners.every((by) => by === accountId),
+    owners.join(),
+  );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
 }
 

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 import { Turnstile } from '@/shared/ui/turnstile';
 
@@ -34,6 +34,10 @@ export function AccountPanel({
 }: AccountPanelProps) {
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
+  const onToken = captcha?.onToken;
+
+  // The widget goes with the screen; its token must not outlive it.
+  useEffect(() => () => onToken?.(null), [onToken]);
 
   return (
     <section
