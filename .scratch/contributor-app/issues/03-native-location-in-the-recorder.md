@@ -1,6 +1,6 @@
 # 03: Native location in the recorder
 
-Status: claimed
+Status: ready-for-human (owner: approve the copy, phone ride test)
 Type: task
 Who: a session
 Blocked by: 02

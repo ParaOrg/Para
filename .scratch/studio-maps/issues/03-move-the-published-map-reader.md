@@ -1,6 +1,6 @@
 # 03: Move the published map's reader where the studio may use it
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2
 Who: Sonnet

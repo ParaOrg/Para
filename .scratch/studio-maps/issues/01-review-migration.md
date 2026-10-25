@@ -1,6 +1,6 @@
 # 01: The database for the review step
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2
 Who: Sonnet; Opus reviews before the owner sees it
