@@ -33,15 +33,18 @@
 # The dev server reads .env.local, which is gitignored; here it is a copy of
 # .env.production, whose two values are public by design (see that file).
 #
-# A commit the publish-map workflow pushes with GITHUB_TOKEN starts no other
-# workflow, by GitHub's rule, so the nightly map file is not checked here —
-# it changes only public/data/ (the index, its lines and map.json), which the
-# suites read as data anyway.
+# A commit the publish-map workflow pushes (with a deploy key, which does start
+# workflows) changes only public/data/, so a push of that alone skips CI:
+# the drawing suites would run nightly through the shared OSRM router for a
+# file the publish has already checked, and the nightly run at 05:00 covers
+# main right after it anyway.
 name: CI
 
 on:
   push:
     branches: [main, staging]
+    paths-ignore:
+      - 'public/data/**'
   pull_request:
   workflow_dispatch:
   schedule:
