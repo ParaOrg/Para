@@ -195,7 +195,8 @@ const saved = await page.evaluate(async () =>
     coords: f.geometry.coordinates,
   })),
 );
-await page.locator('button[title="Draw a route"]').click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(300);
 const A = line[Math.floor(line.length * 0.1)];
 const B = line[Math.floor(line.length * 0.3)];

@@ -39,11 +39,17 @@ const wornBy = (className: string, property: 'backgroundColor' | 'color' = 'back
   return colour;
 };
 
-/** Figma's text-sm/medium in SN Pro, 28 tall: never MapLibre's Helvetica Neue. */
+/**
+ * SN Pro Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
+ * Figma's text-base/Lower/medium, 16, an unsigned one's text-sm/medium, 14.
+ */
 const expectFigmaType = async (pill: HTMLElement) => {
   const style = getComputedStyle(pill);
+  const isSigned = !!(pill.closest('[data-part="label"]') ?? pill).querySelector(
+    '[data-part="start"], [data-part="end"]',
+  );
   await expect(style.fontFamily).toMatch(/^"?SN Pro/);
-  await expect(style.fontSize).toBe('14px');
+  await expect(style.fontSize).toBe(isSigned ? '16px' : '14px');
   await expect(style.fontWeight).toBe('500');
   await expect(pill.getBoundingClientRect().height).toBe(28);
 };
@@ -89,7 +95,7 @@ export const End: Story = {
     await expect(sign.textContent).toBe('End');
     await expect(getComputedStyle(sign).backgroundColor).toBe(wornBy('bg-content-inverse'));
     await expect(getComputedStyle(sign).color).toBe(wornBy('text-card-red-surface', 'color'));
-    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(2);
+    await expect(sign.getBoundingClientRect().left - pill.getBoundingClientRect().left).toBe(4);
   },
 };
 
@@ -104,8 +110,8 @@ export const EndMetroRailWayThree: Story = {
 };
 
 /**
- * CodeSignEnd (4068:4800): two red pills, 6 apart: "End" and the station's code in white
- * segments inside one, the name in the other.
+ * CodeSignEnd (4068:4792): two red pills, 6 apart: the station's code in one, "End" and the
+ * name in the other.
  */
 export const CodeSignEnd: Story = {
   args: { variant: 'end', codeSign: 'YL06' },
@@ -114,15 +120,16 @@ export const CodeSignEnd: Story = {
     const sign = partOf(canvasElement, 'end');
     const code = partOf(canvasElement, 'code');
     await expectFigmaType(pill);
-    await expect(pill.contains(sign)).toBe(false);
+    await expect(pill.contains(sign)).toBe(true);
     await expect(sign.textContent).toBe('End');
     await expect(code.textContent).toBe('YL06');
-    const signPill = sign.parentElement?.parentElement;
-    await expect(signPill?.getBoundingClientRect().height).toBe(28);
+    const codePill = code.parentElement;
+    await expect(codePill?.getBoundingClientRect().height).toBe(28);
     await expect(
-      pill.getBoundingClientRect().left - (signPill?.getBoundingClientRect().right ?? 0),
+      pill.getBoundingClientRect().left - (codePill?.getBoundingClientRect().right ?? 0),
     ).toBe(6);
     await expect(getComputedStyle(code).backgroundColor).toBe(wornBy('bg-content-inverse'));
+    await expect(pill.contains(code)).toBe(false);
     await expect(getComputedStyle(code).color).toBe(wornBy('text-card-red-surface', 'color'));
     await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-red-surface'));
   },
@@ -147,13 +154,14 @@ export const Start: Story = {
   },
 };
 
-/** CodeSignStart: a picked start station, "Start" and its code in white segments on green. */
+/** CodeSignStart: a picked start station, the code in its own green pill, "Start" with the name. */
 export const CodeSignStart: Story = {
   args: { variant: 'start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     const green = wornBy('bg-map-hotspots-card-hintuan-surface');
-    await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(false);
+    await expect(pill.contains(partOf(canvasElement, 'start'))).toBe(true);
+    await expect(pill.contains(partOf(canvasElement, 'code'))).toBe(false);
     await expect(getComputedStyle(pill).backgroundColor).toBe(green);
     await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
     await expect(getComputedStyle(partOf(canvasElement, 'code')).color).toBe(

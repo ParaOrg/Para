@@ -105,3 +105,63 @@ requires `20261019125900_contributions_check.sql` all `t`, then runs
 `already saved`, one row. The revert must refuse while contributions are
 stored; on a second database, apply then revert twice leaves the schema as
 before, and re-applying passes the check.
+
+## contribution-use.sh
+
+`migrations/20261022090000_contribution_use.sql` on databases of its own, run
+last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contribution-use.sh
+
+It applies every earlier migration, contributions through its paste file, then
+applies `../apply/20261022090000_contribution_use_apply.sql` twice (the second
+run must stop and change nothing), requires `…_check.sql` all `t`, then runs
+`after-contribution-use.sql`:
+
+- anon reaches nothing and blocks no one
+- a phone reads and adds no uses, blocks no one, and cannot unblock itself or touch its contributor row
+- an editor adds, reads and deletes uses; a duplicate link, a bad kind and a forged `editor_id` are refused; nothing is updated
+- block stamps who, when and why, and a blocked phone fails `can_contribute()`; unblock clears all three; an unknown phone is refused
+- `retire_month` refuses a recent month and a non-month, then cuts 200 m off each end, drops the hintos near the ends, clears the text, unlinks the phone and drops the piece; the use stays; a second run changes nothing
+- `add_months` makes the next pieces
+
+The revert must refuse over a blocked contributor and over a stored use; on a
+second database, apply then revert twice leaves the schema as before, and
+re-applying passes the check. The script needs a server that has `anon`,
+`authenticated` and `service_role` already, like `contributions.sh`.
+
+## signup-hook.sh
+
+`migrations/20261023090000_signup_hook.sql` on databases of its own, run last
+by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/signup-hook.sh
+
+It applies every earlier migration, then `../apply/20261023090000_signup_hook_apply.sql`
+twice (the second run must stop and change nothing), requires `…_check.sql` all
+`t`, and calls the hook with each of the three roles:
+
+- as `supabase_auth_admin`: an anonymous event returns `{}`; an email event and an event with no anonymous flag return the 403 error object
+- as `anon` and `authenticated`: permission denied
+
+On a second database, apply then revert twice leaves the schema as before, and
+re-applying passes the check. The script creates `supabase_auth_admin` when the
+server lacks it (a real Supabase project has it).
+
+## contributor-accounts.sh
+
+`migrations/20261024090000_contributor_accounts.sql` on databases of its own, run last
+by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contributor-accounts.sh
+
+It applies every earlier migration, the contributions and contribution_use paste files, then
+`../apply/20261024090000_contributor_accounts_apply.sql` twice (the second run must stop and change
+nothing), requires `…_check.sql` all `t`, and runs `after-contributor-accounts.sql` as the real roles:
+
+- `set_profile` refuses a signed-out and an anonymous caller, a bad number and a bad name, trims, and edits
+- a contributor cannot select the phone, insert a name or update its profile; an editor reads names, not phones; `anon` reads nothing and calls nothing
+- a claim moves exactly the anonymous identity's contributions (with their hintos), nobody else's; a newer `begin_claim` replaces the earlier token; a repeat is 0; another account's reuse, an expired token, an unknown token and a token of an upgraded identity do nothing; a block carries over
+
+The revert refuses over a stored name. On a second database, apply then revert twice leaves the
+schema as before, and re-applying passes the check.

@@ -1,4 +1,5 @@
 import { RouteLineLabel, type RouteLineLabelVariant } from './route-line-label';
+import { END_SIGN_LOOK } from '../cards/end-sign';
 import { CARD_SURFACE, CARD_SURFACE_PALE } from '../cards/livery-card';
 import { TimelineDot } from '../cards/timeline-dot';
 import type { Livery } from '../model/liveries';
@@ -24,7 +25,7 @@ interface HintuanLabelProps {
   variant: HintuanLabelVariant;
   /** The hintuan's name; null, the dot alone (further out than the names show). */
   name: string | null;
-  /** The trip's colour, the line's: the dot's ring and the label. */
+  /** The trip's colour, the line's: the dot's ring and the label; a pick's dot wears its sign's colour instead, Start's green or End's red. */
   livery: Livery;
   /** A train station's sign code, YL06, on the picked one's label (RouteLineLabel). */
   codeSign?: string | null;
@@ -40,6 +41,13 @@ interface HintuanLabelProps {
    * the tap (useMapMarker). The picked hintuan's lets the pick go.
    */
   nameButtonLabel?: string;
+}
+
+/** The dot's colour: a picked end's is End's red, as Figma's HintuanEnd draws it, a picked start's Start's green; the rest follow the line. */
+function railOf(variant: HintuanLabelVariant, livery: Livery, isOutsideRide: boolean): string {
+  if (variant === 'hintuan-end') return END_SIGN_LOOK.end.surface;
+  if (variant === 'hintuan-start') return END_SIGN_LOOK.start.surface;
+  return isOutsideRide ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery];
 }
 
 /**
@@ -67,7 +75,7 @@ export function HintuanLabel({
   // A pick's dot, the start's as the end's: filled, and never on the pale.
   const isPicked = variant !== 'hintuan';
   const isOutsideRide = isPaled && !isPicked;
-  const rail = isOutsideRide ? CARD_SURFACE_PALE[livery] : CARD_SURFACE[livery];
+  const rail = railOf(variant, livery, isOutsideRide);
   const labelVariant = isOutsideRide ? 'unselected' : LABEL_VARIANT[variant];
   const Name = nameButtonLabel ? 'button' : 'span';
   return (

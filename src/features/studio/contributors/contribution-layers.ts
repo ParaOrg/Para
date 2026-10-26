@@ -3,6 +3,7 @@ import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
+import { placeMark } from './mark-placement';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
 export const UPLOADS_SRC = 'studio-contributions';
@@ -13,7 +14,8 @@ const UPLOADS_DOT = 'studio-contributions-dot';
 const OPENED_CASING = 'studio-contribution-casing';
 const OPENED_LINE = 'studio-contribution-line';
 const OPENED_HINTOS = 'studio-contribution-hintos';
-const LAYERS = [OPENED_HINTOS, OPENED_LINE, OPENED_CASING, UPLOADS_DOT, UPLOADS_LINE];
+const OPENED_MARKS = 'studio-contribution-marks';
+const LAYERS = [OPENED_MARKS, OPENED_HINTOS, OPENED_LINE, OPENED_CASING, UPLOADS_DOT, UPLOADS_LINE];
 
 const centreOf = ([west, south, east, north]: readonly [
   number,
@@ -41,7 +43,7 @@ export function uploadsData(contributions: readonly Contribution[]) {
   return { type: 'FeatureCollection' as const, features: [...lines, ...dots] };
 }
 
-/** The opened upload: every point the phone sent, and a circle per hinto sized by its minutes. */
+/** The opened upload: every point the phone sent, a circle per hinto sized by its minutes, and a pin per mark. */
 export function openedData(detail: ContributionDetail | null) {
   if (!detail) return { type: 'FeatureCollection' as const, features: [] };
   const trail = detail.trail.map((p) => [...p.at]);
@@ -62,6 +64,18 @@ export function openedData(detail: ContributionDetail | null) {
         properties: { kind: 'hinto', minutes: Math.round(h.seconds / 60) },
         geometry: { type: 'Point' as const, coordinates: [...h.at] },
       })),
+      ...detail.marks.flatMap((time) => {
+        const at = placeMark(detail.trail, time);
+        return at
+          ? [
+              {
+                type: 'Feature' as const,
+                properties: { kind: 'mark', time },
+                geometry: { type: 'Point' as const, coordinates: [...at] },
+              },
+            ]
+          : [];
+      }),
     ],
   };
 }
@@ -135,6 +149,18 @@ export function addContributionLayers(map: MapLibreMap): void {
       'circle-opacity': 0.7,
       'circle-stroke-color': MAP_PAINT['Paint/casing'],
       'circle-stroke-width': 2,
+    },
+  });
+  map.addLayer({
+    id: OPENED_MARKS,
+    type: 'circle',
+    source: OPENED_SRC,
+    filter: ['==', ['get', 'kind'], 'mark'],
+    paint: {
+      'circle-radius': 7,
+      'circle-color': MAP_COLOURS['Map/Trail/mark'],
+      'circle-stroke-color': opened,
+      'circle-stroke-width': 3,
     },
   });
 }

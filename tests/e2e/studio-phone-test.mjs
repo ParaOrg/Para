@@ -145,7 +145,8 @@ const roadPixels = (n, gap) =>
 const startRoute = async (n) => {
   await discard();
   await recentre();
-  await tapButton(page.getByRole('button', { name: '+ New Route' }));
+  await tapButton(page.getByRole('button', { name: 'New route, terminal or hintuan' }));
+  await tapButton(page.getByRole('menuitem', { name: /Routes/ }));
   for (const [x, y] of await roadPixels(n, 70)) {
     await tap(x, y);
     await page.waitForTimeout(150);
@@ -654,7 +655,7 @@ if (onLine) {
 // ---------------------------------------------------------------- hotspot
 await discard();
 await recentre(16);
-await tapButton(page.getByRole('button', { name: '+ New hotspot' }));
+await tapButton(page.getByRole('button', { name: 'New route, terminal or hintuan' }));
 await tapButton(page.getByRole('menuitem', { name: /Terminal/ }));
 const cx = W / 2,
   cy = H / 2 - 80;

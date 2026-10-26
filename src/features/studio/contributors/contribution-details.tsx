@@ -5,6 +5,7 @@ import { Button } from '@/design-system/primitives/button';
 import {
   contributionName,
   kilometres,
+  manilaClock,
   manilaTime,
   minutes,
   vehicleName,
@@ -19,6 +20,8 @@ interface ContributionDetailsProps {
   onClose: () => void;
   /** What may be done with the upload, such as deleting it. */
   actions?: ReactNode;
+  /** More about the upload, under its trail: its hintos and its phone. */
+  extras?: ReactNode;
 }
 
 /** One upload, opened: what the phone saved about it, and its trail on the map. */
@@ -29,6 +32,7 @@ export function ContributionDetails({
   detailError,
   onClose,
   actions,
+  extras,
 }: ContributionDetailsProps) {
   const titleId = useId();
   const rows: [string, string][] = [
@@ -43,6 +47,7 @@ export function ContributionDetails({
     ['Standing', minutes(c.standingSeconds)],
     ['No signal', minutes(c.lostSeconds)],
     ['Points', String(c.pointCount)],
+    ['Contributor', c.contributorName ?? 'No name'],
     ['Phone', c.phoneCode ?? 'unknown'],
   ];
   return (
@@ -63,6 +68,7 @@ export function ContributionDetails({
         ))}
       </dl>
       <TrailSummary detail={detail} isLoading={isDetailLoading} error={detailError} />
+      {extras}
       <div className="flex flex-wrap gap-2">
         {actions}
         <Button variant="secondary" label="Close" onClick={onClose} />
@@ -85,6 +91,13 @@ function TrailSummary({ detail, isLoading, error }: TrailSummaryProps) {
     <p aria-live="polite">
       On the map: the whole trail, {detail.trail.length} points, and {detail.hintos.length}{' '}
       {detail.hintos.length === 1 ? 'hinto' : 'hintos'} ({minutes(standing)} standing).
+      {detail.marks.length > 0 && (
+        <>
+          {' '}
+          {detail.marks.length} {detail.marks.length === 1 ? 'mark' : 'marks'}. Marked at{' '}
+          {detail.marks.map(manilaClock).join(', ')}.
+        </>
+      )}
     </p>
   );
 }

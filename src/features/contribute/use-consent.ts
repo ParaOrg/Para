@@ -1,37 +1,40 @@
 import { useState } from 'react';
-import * as z from 'zod/mini';
+
+import { readAccountAnswer, writeAccountAnswer } from './account-storage';
+import { CONSENT_VERSION, agreedVersionOf, isCurrentConsent } from './consent-version';
 
 const CONSENT_KEY = 'parapo.contribute.consent';
-/** The consent text's version, sent with every upload; bump it when the consent panel's words change. */
-export const CONSENT_VERSION = 1;
-const consentSchema = z.literal('yes');
 
-function hasGivenConsent(): boolean {
+function storedAgreedVersion(accountId: string | null): number | null {
   try {
-    return consentSchema.safeParse(localStorage.getItem(CONSENT_KEY)).success;
+    return agreedVersionOf(readAccountAnswer(CONSENT_KEY, accountId));
   } catch {
     // Storage blocked (a private window): the contributor is asked again next visit.
-    return false;
+    return null;
   }
 }
 
-interface Consent {
+export interface Consent {
+  /** Whether the signed-in account has agreed to the current text; an older text's agreement does not count. */
   hasConsent: boolean;
   giveConsent: () => void;
 }
 
-/** Whether this phone has already been told what the page does, and a way to say it has. */
-export function useConsent(): Consent {
-  const [hasConsent, setHasConsent] = useState(hasGivenConsent);
+/** Whether this account has agreed to what the page does, and a way to say it has. */
+export function useConsent(accountId: string | null): Consent {
+  // Kept in memory too, for when storage is blocked.
+  const [given, setGiven] = useState<{ accountId: string | null } | null>(null);
+  const agreedVersion =
+    given && given.accountId === accountId ? CONSENT_VERSION : storedAgreedVersion(accountId);
 
   const giveConsent = () => {
     try {
-      localStorage.setItem(CONSENT_KEY, 'yes');
+      writeAccountAnswer(CONSENT_KEY, accountId, String(CONSENT_VERSION));
     } catch (error) {
       console.warn('The page could not remember the consent.', error);
     }
-    setHasConsent(true);
+    setGiven({ accountId });
   };
 
-  return { hasConsent, giveConsent };
+  return { hasConsent: isCurrentConsent(agreedVersion), giveConsent };
 }

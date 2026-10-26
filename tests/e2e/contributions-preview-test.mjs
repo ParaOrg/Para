@@ -78,20 +78,24 @@ async function phone() {
   });
   const page = await newPage(context);
   await page.addInitScript(GPS);
-  await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
+  await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', '3'));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 30000 });
   return { context, page };
 }
 
-/** Records `seconds` of a ride north from `lat`, a fix a second, and saves it with a start name. */
-/** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
+/** The History screen, opened through its button on Ready unless it is already showing. */
 async function openHistory(page) {
+  const heading = page.getByRole('heading', { level: 1, name: 'History' });
   const history = page.getByRole('button', { name: 'History' });
-  await history.waitFor({ timeout: 10000 });
-  if ((await history.getAttribute('aria-expanded')) !== 'true') await history.click();
+  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
+  await heading.or(history).waitFor({ timeout: 10000 });
+  if (await heading.isVisible()) return;
+  await history.click();
+  await heading.waitFor();
 }
 
+/** Records `seconds` of a ride north from `lat`, a fix a second, and saves it with a start name. */
 async function recordAndSave(page, name, lat, seconds = 40) {
   await page.getByRole('button', { name: 'Start recording' }).click();
   for (let s = 0; s < seconds; s += 1) {
@@ -138,7 +142,7 @@ check(
 );
 await a.page.getByRole('button', { name: 'Record again' }).click();
 await openHistory(a.page);
-await a.page.getByText('Saved recordings').waitFor();
+await a.page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
 await shot(a.page, '2-phone-list');
 
 const b = await phone();
@@ -357,13 +361,14 @@ await openHistory(a.page);
 await a.page
   .getByRole('listitem')
   .filter({ hasText: `Lagro A ${RUN}` })
-  .getByText('Removed from ParaPo by an editor. Kept on this phone')
+  .getByText('Removed by an editor')
   .waitFor({ timeout: 20000 });
 const lagroRow = a.page.getByRole('listitem').filter({ hasText: `Lagro A ${RUN}` });
+await lagroRow.getByRole('button', { name: /^More actions / }).click();
 check(
   '  the phone, reopened, says an editor removed it, keeps its copy, and offers Upload again',
-  (await lagroRow.getByRole('button', { name: /^Download / }).count()) === 1 &&
-    (await lagroRow.getByRole('button', { name: /^Upload / }).count()) === 1,
+  (await lagroRow.getByRole('button', { name: /^Download/ }).count()) === 1 &&
+    (await lagroRow.getByRole('button', { name: /^(Try again|Upload again)/ }).count()) === 1,
 );
 await shot(a.page, '8-phone-removed-by-editor');
 

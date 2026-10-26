@@ -1,66 +1,98 @@
-import { useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
+import { BackToMapButton, goBackToMap } from './back-to-map-button';
 import { ConsentPanel } from './consent-panel';
-import type { Recording } from './recording-schema';
-import { SAVED_RIDES_ID, SavedRides } from './saved-rides';
+import { EarlierRecordingsPanel, type EarlierQuestion } from './earlier-recordings-panel';
 import { TrackingButton } from './tracking-button';
-import { HistoryIcon } from './tracking-icons';
-import { useConsent } from './use-consent';
-import { useFocusHeading } from './use-focus-heading';
+import { HistoryIcon, ProfileIcon } from './tracking-icons';
 import { useStackRoom } from './use-stack-room';
-import type { Uploads } from './use-uploads';
+
+// The update gate exists in the Android app's build only: on the web this is null and the chunk is
+// never built, so the page's first load does not carry it.
+const AppUpdateGate =
+  import.meta.env.MODE === 'apk'
+    ? lazy(() =>
+        import('./app-update/app-update-gate').then((module) => ({
+          default: module.AppUpdateGate,
+        })),
+      )
+    : null;
+
+// Start in the app asks for the permissions first; the web build never builds it.
+const StartGate =
+  import.meta.env.MODE === 'apk'
+    ? lazy(() => import('./native/start-gate').then((module) => ({ default: module.StartGate })))
+    : null;
 
 interface ReadyScreenProps {
+  hasConsent: boolean;
+  onConsent: () => void;
+  earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
-  saved: readonly Recording[];
-  uploads: Uploads;
-  onDownloadSaved: (recording: Recording) => void;
-  onDeleteSaved: (recording: Recording) => void;
+  onOpenHistory: () => void;
+  /** Absent when this build has no accounts, so no Profile. */
+  onOpenProfile?: () => void;
+  /** The screen that was open before this one: focus goes back to the button that opened it. */
+  returnFocusTo: 'history' | 'profile' | null;
 }
 
-const goBackToMap = () => window.location.assign('/');
-
 /**
- * Before a recording: back to the map, History, and one Start bar (or, on a first visit, what the
- * page does). History is closed at first, so only the Start bar covers the map; its button shows
- * the recordings kept on this phone above Start, and a second press hides them.
+ * Before a recording: back to the map, Profile and History, and one Start bar (or, on a first visit, what the
+ * page does). History is a screen of its own, so nothing of it shows here.
  */
 export function ReadyScreen({
+  hasConsent,
+  onConsent,
+  earlierQuestion,
   onStart,
-  saved,
-  uploads,
-  onDownloadSaved,
-  onDeleteSaved,
+  onOpenHistory,
+  onOpenProfile,
+  returnFocusTo,
 }: ReadyScreenProps) {
-  const { hasConsent, giveConsent } = useConsent();
-  const headingRef = useFocusHeading();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const historyRef = useRef<HTMLButtonElement>(null);
+  const profileRef = useRef<HTMLButtonElement>(null);
+  // Decided once, as the screen opens: a later change must not move focus again.
+  const [focusTarget] = useState(returnFocusTo);
+  useEffect(() => {
+    const buttons = { history: historyRef.current, profile: profileRef.current };
+    (focusTarget ? buttons[focusTarget] : headingRef.current)?.focus();
+  }, [focusTarget]);
   const stackRef = useStackRoom();
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const startBar = StartGate ? (
+    <StartGate onStart={onStart} />
+  ) : (
+    <TrackingButton variant="start" onClick={onStart} />
+  );
 
   return (
     <>
-      <div className="absolute top-0 left-0 z-10 flex gap-2 pt-[max(1rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))]">
-        <IconButton
-          tooltip="top"
-          label="Back to the map"
-          icon={<ChevronLeftIcon />}
-          onClick={goBackToMap}
-        />
-        {hasConsent && (
+      <BackToMapButton>
+        {onOpenProfile && (
           <IconButton
+            ref={profileRef}
             tooltip="top"
-            label="History"
-            icon={<HistoryIcon />}
-            aria-expanded={isHistoryOpen}
-            aria-controls={SAVED_RIDES_ID}
-            onClick={() => setIsHistoryOpen((isOpen) => !isOpen)}
+            size="large"
+            label="Profile"
+            icon={<ProfileIcon />}
+            onClick={onOpenProfile}
           />
         )}
-      </div>
-      {hasConsent ? (
+        {hasConsent && (
+          <IconButton
+            ref={historyRef}
+            tooltip="top"
+            size="large"
+            label="History"
+            icon={<HistoryIcon />}
+            onClick={onOpenHistory}
+          />
+        )}
+      </BackToMapButton>
+      {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+      {hasConsent && !earlierQuestion && (
         <section
           ref={stackRef}
           aria-labelledby="ready-heading"
@@ -69,19 +101,17 @@ export function ReadyScreen({
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          {isHistoryOpen && (
-            <SavedRides
-              recordings={saved}
-              uploads={uploads}
-              onDownload={onDownloadSaved}
-              onDeleteFromPhone={onDeleteSaved}
-            />
+          {/* Nothing stands in for Start while the app's gates load: a plain Start would skip the permissions. */}
+          {AppUpdateGate ? (
+            <Suspense fallback={null}>
+              <AppUpdateGate>{startBar}</AppUpdateGate>
+            </Suspense>
+          ) : (
+            startBar
           )}
-          <TrackingButton variant="start" onClick={onStart} />
         </section>
-      ) : (
-        <ConsentPanel onAgree={giveConsent} onDecline={goBackToMap} />
       )}
+      {!hasConsent && <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />}
     </>
   );
 }

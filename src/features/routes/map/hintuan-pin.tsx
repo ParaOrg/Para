@@ -22,7 +22,7 @@ interface Props {
    * the table does not know.
    */
   code?: string | null;
-  /** The trip's colour: the circle is ringed in its line's, the card's surface. */
+  /** The trip's colour, for its label's name; the circle is Start's green or End's red. */
   livery: Livery;
   /** Given, the name is a button: the public map's lets the pick go. */
   onPick?: () => void;
@@ -36,11 +36,8 @@ interface Props {
 /**
  * The picked hintuan on the map: a circle that pops up where it is, the route
  * left whole, not cut there (the owner's call). It is the timeline's own
- * TimelineDot, Selected, ringed in the lit line's colour, the card's surface
- * (the owner's call: match the line), so the map and the card point at the
- * same place the same way, and the circle is one colour with the line it sits
- * on and the dots before it (StationLabels; past it, the line and its dots
- * are the card's pale, useRideRest).
+ * TimelineDot, Selected, in its pill's colour: a picked start in Start's
+ * green, a picked end in End's red, as Figma's HintuanLabel draws them.
  *
  * A DOM marker, like the commuter's own (LocatorIndicatorOverlay): the pop is
  * a CSS animation that costs the map nothing, and it takes no taps, so a tap
@@ -50,8 +47,7 @@ interface Props {
  * Beside it, its name: Figma's HintuanLabel, HintuanEnd (4068:4791), a white
  * "End" pill before the name on red, 8 right of the circle and centred on
  * it; on a train line, CodeSignEnd, the station's code — GL02, PL08, YL13 —
- * in a second white segment after End's, in a red pill of its own beside the
- * name's. The code
+ * in a red pill of its own before the name's. The code
  * shows on the picked station's label alone; the other stations keep their
  * dots, where Figma's LRTHintuanCodes (4051:6426) draws codes (StationLabels;
  * the owner's call). Picked as the end, the hintuan is where the ride ends,

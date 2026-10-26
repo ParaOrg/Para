@@ -175,18 +175,18 @@ test('a start and an end: the start’s pill its code alone, the end’s its cod
   assert.match(origin, /data-part="code"[^>]*>YL01<\/span> <span data-part="pesos"[^>]*>₱13</);
 });
 
-test('the S on white with a green disc, the E on white in the card’s colour, the buttons in the card’s', () => {
+test('the S on white with a green disc, the E on white with a red disc, the buttons in the card’s', () => {
   const html = render(10, { start: 'h3', picked: 'h6', onRemoveStart() {} });
   const mark = (part) => new RegExp(`data-part="${part}" class="([^"]*)"`).exec(html)?.[1] ?? '';
   assert.match(mark('start'), /\bbg-content-inverse\b/);
   assert.match(mark('start'), /\btext-map-hotspots-card-hintuan-surface\b/);
   assert.match(mark('end'), /\bbg-content-inverse\b/);
-  assert.match(mark('end'), /\btext-card-violet-surface\b/);
+  assert.match(mark('end'), /\btext-card-red-surface\b/);
   const button = /<button[^>]*class="([^"]*)"[^>]*>(?:(?!<\/button>).)*Remove as start/s.exec(
     html,
   )?.[1];
   assert.match(button, /\bbg-card-violet-surface\b/);
-  assert.match(button, /\benabled:active:bg-card-violet-timeline-surface\b/);
+  assert.match(button, /\busable:active:bg-card-violet-timeline-surface\b/);
   assert.doesNotMatch(button, /\bbg-brand-surface\b/);
   // Set as start, under an end alone, wears them too.
   const choosing = render(5, { picked: 'h2', onSetStart() {} });
@@ -506,4 +506,12 @@ test('no hintuans: no rows, no fold, nothing hidden', () => {
   assert.equal(rows(html).length, 0);
   assert.ok(!html.includes('trip-fold'));
   assert.equal(askers(html).length, 0);
+});
+
+test('a marked row’s dot wears its mark’s colour: Start’s green, End’s red', () => {
+  const html = render(10, { start: 'h3', picked: 'h6', onRemoveStart() {} });
+  const row = (part) =>
+    new RegExp(`<button(?:(?!</button>).)*data-part="${part}"`, 's').exec(html)?.[0] ?? '';
+  assert.match(row('start'), /\bbg-map-hotspots-card-hintuan-surface\b/);
+  assert.match(row('end'), /\bbg-card-red-surface\b/);
 });

@@ -373,19 +373,10 @@ await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { 
 await waitForSource(page, 'saved-routes');
 await page.waitForTimeout(1200);
 
-{
-  // The way to the contributor page: a plain link at the top left, with no card open.
-  const contribute = page.getByRole('link', { name: 'Contribute a route' });
-  const box = (await contribute.count()) === 1 ? await contribute.boundingBox() : null;
-  check(
-    'a Contributor link to /contribute/ sits at the top left, with no card open',
-    box !== null &&
-      (await contribute.getAttribute('href')) === '/contribute/' &&
-      box.x < 40 &&
-      box.y < 60,
-    JSON.stringify(box),
-  );
-}
+check(
+  'no Contributor button is on the public map',
+  (await page.getByTestId('contributor-button').count()) === 0,
+);
 
 /**
  * A finger on the map at page point (x, y). A real touch first; when the map
@@ -1059,10 +1050,6 @@ const tripRow = async (id) => {
  * of the route list — as today's data allows.
  */
 const tripChecks = async () => {
-  check(
-    'the Contributor link steps aside while a trip card is open',
-    (await page.getByRole('link', { name: 'Contribute a route' }).count()) === 0,
-  );
   // Two tiles under the card: the whole ride's length and pesos, as the app's
   // own sums give them on the published line (read from the dev server's
   // modules; a server that cannot serve them skips the check). The pesos
@@ -1429,6 +1416,9 @@ const tripChecks = async () => {
           : `var(--card-${livery}-surface-pale)`;
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
+      // The picked end's circle is End's red, whatever the line.
+      probe.style.backgroundColor = 'var(--card-red-surface)';
+      const endRed = getComputedStyle(probe).backgroundColor;
       probe.remove();
       return {
         lit: (await window.__lit('saved-routes')) ?? [],
@@ -1459,7 +1449,9 @@ const tripChecks = async () => {
         // The line's colour is the card's surface (livery-line.ts): the card's own background.
         line: trip ? getComputedStyle(trip).backgroundColor : null,
         pale: cardPale,
+        endRed,
         livery: pin?.dataset.livery ?? null,
+        marks: pin?.dataset.marks ?? null,
         tripLivery: trip?.dataset.livery ?? null,
         taps: pin ? getComputedStyle(pin).pointerEvents : null,
         dots: document.querySelectorAll('[data-testid="ride-dot"]').length,
@@ -1479,14 +1471,15 @@ const tripChecks = async () => {
       `${drawn.lit.length} lit; ${drawn.rest} stretch(es) at rest, the rest layer ${drawn.restLayer ? 'there' : 'never added'}, in ${drawn.restColour}${LOOKS ? ` (the ${drawn.tripLivery} card's pale ${pale})` : ''}`,
     );
     check(
-      "  a circle pops up at the hintuan, ringed in the line's colour, taking no taps",
+      "  a circle pops up at the hintuan, ringed in End's red, taking no taps",
       drawn.pins === 1 &&
         (!pickWant || (drawn.off !== null && drawn.off < 2)) &&
         drawn.livery === drawn.tripLivery &&
+        drawn.marks === 'end' &&
         !!drawn.ring &&
-        drawn.ring === drawn.line &&
+        drawn.ring === drawn.endRed &&
         drawn.taps === 'none',
-      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan; ${drawn.livery} ring ${drawn.ring}, the line ${drawn.line}; pointer-events ${drawn.taps}`,
+      `${drawn.pins} circle(s), ${drawn.off === null ? 'not measured' : Math.round(drawn.off) + ' px'} off the hintuan, marking the ${drawn.marks}; ${drawn.livery} line, ring ${drawn.ring}, End's red ${drawn.endRed}; pointer-events ${drawn.taps}`,
     );
     // The dots along the rest ring in its pale, the ones before the pick in
     // the line's colour (the owner's ask, 2026-10-12, with a screenshot of
@@ -2590,13 +2583,13 @@ const LOOKS = await page.evaluate(async () => {
 /** Whether the lit line wears `want` (a LineLook), chevrons too; true when the looks cannot be read. */
 const wears = (seen, want) =>
   !LOOKS || (!!want && seen.line === want.line && seen.arrow === want.arrow);
-/** Whether the end circles ring in `livery`'s surface, or the selected blue for null (EndTitles), as the page computes them. */
+/** Whether the unsigned end circles ring in `livery`'s surface, or the selected blue for null, and the signed ones in Start's green or End's red (EndTitles), as the page computes them. */
 const endsWear = async (livery) => {
   const rings = await endRings(page);
   const want = await colourOf(page, ringVar(livery));
   return {
     ok: ringed(rings, want),
-    detail: `${rings.circles} circle(s) ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
+    detail: `${rings.circles} circle(s), ${rings.signed} signed (in their sign's colour: ${rings.signsWorn}), the rest ringed ${rings.rings.join(', ') || 'none'}${rings.paledRings.length ? `, paled ${rings.paledRings.join(', ')}` : ''} (asked ${want})`,
   };
 };
 /** The directions lit now, by id. */

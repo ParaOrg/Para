@@ -170,9 +170,9 @@ test('every layer drawn from it reaches less than 32 px from its geometry, and e
       `${l.id} reaches ${r} px`,
     );
   }
-  // The widest: the routes' hit area, 24 px at zoom 20 and up; the lit
+  // The widest: the routes' hit area, 26 px at zoom 20 and up; the lit
   // line's casing, 15 px.
-  assert.equal(reaches['saved-routes-hit'], 12.5);
+  assert.equal(reaches['saved-routes-hit'], 13.5);
   assert.equal(reaches['saved-routes-selected-casing'], 8);
   assert.equal(reaches['direction-arrow-chevrons'], 1);
   assert.deepEqual(

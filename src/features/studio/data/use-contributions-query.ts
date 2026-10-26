@@ -36,6 +36,8 @@ export function useDeleteContributionMutation() {
     mutationFn: deleteContribution,
     onSuccess: (_, id) => {
       client.removeQueries({ queryKey: contributionKeys.detail(id) });
+      // The phone's count of uploads drops with it.
+      void client.invalidateQueries({ queryKey: [...contributionKeys.all, 'phone'] });
       return client.invalidateQueries({ queryKey: [...contributionKeys.all, 'list'] });
     },
   });

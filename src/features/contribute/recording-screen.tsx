@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { BackToMapButton } from './back-to-map-button';
 import { ConfirmDelete } from './confirm-delete';
 import { OTHER_WAY, type Way } from './recording-rules';
 import { StatsStrip } from './stats-strip';
@@ -21,6 +22,8 @@ interface RecordingScreenProps {
   onWaySwitch: () => void;
   onSave: () => void;
   onCancel: () => void;
+  /** Before Back leaves the page: the fixes still unwritten are written. */
+  onLeave: () => Promise<void>;
 }
 
 /** The leg button's variant: named for the way a tap switches TO. */
@@ -41,6 +44,7 @@ export function RecordingScreen({
   onWaySwitch,
   onSave,
   onCancel,
+  onLeave,
 }: RecordingScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const stackRef = useStackRoom();
@@ -66,43 +70,46 @@ export function RecordingScreen({
   }, [isAsking]);
 
   return (
-    <section
-      ref={stackRef}
-      aria-labelledby="recording-heading"
-      className="absolute inset-x-0 bottom-0 z-10 flex flex-col pb-[env(safe-area-inset-bottom)]"
-    >
-      <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
-        {isPaused ? 'Recording stopped' : 'Recording a route'}
-      </h1>
-      {!isAwake && !isPaused && (
-        <p className="mx-4 mb-2 bg-surface p-2 font-sn-pro text-sm/5 text-content-primary">
-          The screen could not be kept awake, so it may sleep and the location may stop.
-        </p>
-      )}
-      <StatsStrip
-        elapsedSeconds={figures.elapsedSeconds}
-        distanceM={figures.distanceM}
-        way={way}
-        isPaused={isPaused}
-      />
-      {isPaused ? (
-        <TrackingButton variant="resume" onClick={onResume} />
-      ) : (
-        <TrackingButton variant="stop" isActive onClick={onStop} />
-      )}
-      {isAsking ? (
-        <ConfirmDelete
-          question="Throw this recording away?"
-          onConfirm={onCancel}
-          onKeep={() => setIsAsking(false)}
+    <>
+      <BackToMapButton onBeforeLeave={onLeave} />
+      <section
+        ref={stackRef}
+        aria-labelledby="recording-heading"
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col pb-[env(safe-area-inset-bottom)]"
+      >
+        <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
+          {isPaused ? 'Recording stopped' : 'Recording a route'}
+        </h1>
+        {!isAwake && !isPaused && (
+          <p className="mx-4 mb-2 bg-surface p-2 font-sn-pro text-sm/5 text-content-primary">
+            The screen could not be kept awake, so it may sleep and the location may stop.
+          </p>
+        )}
+        <StatsStrip
+          elapsedSeconds={figures.elapsedSeconds}
+          distanceM={figures.distanceM}
+          way={way}
+          isPaused={isPaused}
         />
-      ) : (
-        <div ref={cancelRef} className="flex">
-          <TrackingButton variant={NEXT_WAY[OTHER_WAY[way]]} onClick={onWaySwitch} />
-          <TrackingButton variant="save" onClick={onSave} />
-          <TrackingButton variant="cancel" onClick={() => setIsAsking(true)} />
-        </div>
-      )}
-    </section>
+        {isPaused ? (
+          <TrackingButton variant="resume" onClick={onResume} />
+        ) : (
+          <TrackingButton variant="stop" isActive onClick={onStop} />
+        )}
+        {isAsking ? (
+          <ConfirmDelete
+            question="Throw this recording away?"
+            onConfirm={onCancel}
+            onKeep={() => setIsAsking(false)}
+          />
+        ) : (
+          <div ref={cancelRef} className="flex">
+            <TrackingButton variant={NEXT_WAY[OTHER_WAY[way]]} onClick={onWaySwitch} />
+            <TrackingButton variant="save" onClick={onSave} />
+            <TrackingButton variant="cancel" onClick={() => setIsAsking(true)} />
+          </div>
+        )}
+      </section>
+    </>
   );
 }

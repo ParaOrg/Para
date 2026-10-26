@@ -16,7 +16,8 @@
 //    the editor has —
 //      router.project-osrm.org   the route snapper
 //      parapo.draft              the drawing-draft key
-//      Sign in to save, Forgot password?, + New Route, Draw the return trip
+//      Sign in to save, Forgot password?, New route, terminal or hintuan,
+//      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
 //                                published map and never call it
 //
@@ -110,7 +111,7 @@ const EDITOR_ONLY = [
   'parapo.draft',
   'Sign in to save',
   'Forgot password?',
-  '+ New Route',
+  'New route, terminal or hintuan',
   'Draw the return trip',
   '.supabase.co',
 ];
@@ -253,6 +254,42 @@ check(
   'studio chunks carry the Supabase client — the package search works',
   packageModules(studioFiles).some((p) => p.startsWith('@supabase/')),
 );
+// The Android app's build (vite.apk.config.ts) is the only one that carries Capacitor, behind
+// `import.meta.env.MODE === 'apk'` in features/contribute/native-app.ts. No web chunk may hold a
+// Capacitor package, nor the bridge's own name ('androidBridge', which only Capacitor's JavaScript
+// mentions), on any page.
+const allChunks = Object.keys(modules);
+const capacitorPackages = packageModules(allChunks).filter((p) => p.startsWith('@capacitor'));
+check(
+  'no web chunk carries a Capacitor package',
+  capacitorPackages.length === 0,
+  capacitorPackages.join(', '),
+);
+// The app's native modules (src/features/contribute/native/) are reached only behind the same mode
+// check, so none may be in a web chunk, whatever their imports are.
+const nativeModules = allChunks.filter((f) =>
+  (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/native/')),
+);
+check(
+  "no web chunk holds a module of the app's native folder",
+  nativeModules.length === 0,
+  nativeModules.join(', '),
+);
+check(
+  "the contribute feature's own modules are found by that path search",
+  allChunks.some((f) =>
+    (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/recording-')),
+  ),
+);
+const bridgeMentions = allChunks.filter((f) =>
+  readFileSync(join(dist, f), 'utf8').includes('androidBridge'),
+);
+check(
+  'no web chunk mentions the Android bridge',
+  bridgeMentions.length === 0,
+  bridgeMentions.join(', '),
+);
+
 // The contributor page uploads saved recordings, so it carries the client;
 // the strings below hold it to the contributions alone.
 check(
@@ -275,11 +312,11 @@ check('public page contains no editor-only string', leaked.length === 0, leaked.
 // Its own chunks, not the ones it shares with the public page, whose map reader
 // names route_variant in the published file's fields.
 const contributeOwn = text(contributeFiles.filter((f) => !commuterFiles.includes(f)));
-// The database's address is the one editor string the contributor page needs.
-// What it may not name are the studio's tables and operations.
+// The database's address and "Forgot password?" (its own Sign in button) are the editor strings the
+// contributor page needs. What it may not name are the studio's tables and operations.
 const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'approve_draft', 'take_down'];
 const leakedToContribute = [
-  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co'),
+  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co' && s !== 'Forgot password?'),
   ...STUDIO_DATA,
 ].filter((s) => contributeOwn.includes(s));
 check(
@@ -701,7 +738,8 @@ check(
 // chunks: its script only (its stylesheet is not counted), so it stays a page
 // for a phone in the field. The map it draws on is the public page's, already
 // counted above. What it opens with is held to one budget; the database client,
-// loaded only when a recording is uploaded or removed (with signal), to another.
+// loaded only when a recording is uploaded or removed (with signal), to another. The screens the
+// page opens by a tap (sign-in, Profile, History) are chunks of their own and count toward neither.
 const CONTRIBUTE_OWN_MAX_GZ_KB = 30;
 const CONTRIBUTE_UPLOAD_MAX_GZ_KB = 60;
 const contributeOpening = chunksOf('contribute/index.html', { isStaticOnly: true }).filter(
@@ -714,13 +752,26 @@ check(
   contributeOpening.length > 0 && contributeOwnGz < CONTRIBUTE_OWN_MAX_GZ_KB * 1024,
   `${contributeOpening.join(', ')}: ${(contributeOwnGz / 1024).toFixed(1)} kB`,
 );
-const contributeUploadGz = gzipBytes(dist, contributeOnDemand);
+// What the upload loads on first need is the database client's chunk and what that chunk imports,
+// not every chunk the page can load later: the sign-in, Profile and History screens are loaded
+// by being opened, so they are not part of an upload.
+const clientFiles = contributeOnDemand.filter((f) =>
+  packageModules([f]).some((p) => p.startsWith('@supabase/')),
+);
+const contributeUploadFiles = [
+  ...new Set(
+    Object.entries(manifest)
+      .filter(([, chunk]) => clientFiles.includes(chunk.file))
+      .flatMap(([key]) => chunksOf(key, { isStaticOnly: true })),
+  ),
+].filter((f) => !contributeOpening.includes(f) && !commuterFiles.includes(f));
+const contributeUploadGz = gzipBytes(dist, contributeUploadFiles);
 check(
   `the contribute page's upload, loaded on first need, is under ${CONTRIBUTE_UPLOAD_MAX_GZ_KB} kB gzipped and holds the client`,
-  packageModules(contributeOnDemand).some((p) => p.startsWith('@supabase/')) &&
+  clientFiles.length > 0 &&
     !packageModules(contributeOpening).some((p) => p.startsWith('@supabase/')) &&
     contributeUploadGz < CONTRIBUTE_UPLOAD_MAX_GZ_KB * 1024,
-  `${contributeOnDemand.join(', ')}: ${(contributeUploadGz / 1024).toFixed(1)} kB`,
+  `${contributeUploadFiles.join(', ')}: ${(contributeUploadGz / 1024).toFixed(1)} kB`,
 );
 
 // 6. Stylesheet order. The rules each page's stylesheets hold, in the order

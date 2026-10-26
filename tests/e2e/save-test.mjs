@@ -685,7 +685,7 @@ check(
 // ---- 2. Two hintuans, traced and saved
 async function hintuan(c, name) {
   await go(c, 17);
-  await page.getByRole('button', { name: '+ New hotspot' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
   await page.getByRole('menuitem', { name: /Hintuan/ }).click();
   await page.waitForTimeout(200);
   for (const [dx, dy] of [
@@ -761,7 +761,8 @@ check(
   await page.waitForTimeout(500);
   const basemapBefore = await basemapPicked();
   await go(at(0, 0), 15);
-  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   await clickAt(OUT[0], 300);
   await clickAt(OUT[1], 300);
@@ -867,7 +868,8 @@ check(
 // ---- 3. A route between them, saved with its slot
 async function drawLine(points) {
   await go(at(0, 0), 15);
-  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   if (!newRouteChecked) {
     newRouteChecked = true;
@@ -1335,7 +1337,7 @@ await waitFor(
 );
 w = writesSince(n);
 check(
-  '+ New Route with the same ends fills the slot again, not "already drawn" (3)',
+  '+ then Routes with the same ends fills the slot again, not "already drawn" (3)',
   (await toast().count()) === 1 && !/already has this direction drawn/.test(await body()),
   (await body()).slice(-160),
 );
@@ -1368,7 +1370,8 @@ await dismissToasts();
   page.on('dialog', (d) => dialogs.push(d.message()));
 
   await go(at(0, 0), 15);
-  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   await clickAt(IKOT[0], 300);
   check(
@@ -1462,7 +1465,8 @@ await dismissToasts();
     at(-0.002, -0.005),
   ];
   await go(at(0, 0), 15);
-  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of WIDER) await clickAt(p, 300);
   await closeLoop().click();
@@ -1536,7 +1540,7 @@ await dismissToasts();
   // checklist does not offer the ikot.
   const TERMINAL_AT = at(0, 0.0025);
   await go(TERMINAL_AT, 17);
-  await page.getByRole('button', { name: '+ New hotspot' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
   await page.getByRole('menuitem', { name: /Terminal/ }).click();
   await page.waitForTimeout(200);
   for (const [dx, dy] of [
@@ -1624,7 +1628,8 @@ await page.keyboard.press('Escape');
 
 // ---- 8. Undo to no points leaves no draft
 await go(at(0, 0), 15);
-await page.getByRole('button', { name: '+ New Route' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
 await clickAt(OUT[0], 300);
 await clickAt(OUT[1], 300);
 await idle();
@@ -1853,7 +1858,8 @@ await page.waitForTimeout(300);
   const NEW = '+new-place';
   const L = [at(-0.003, 0.02), at(0, 0.0212), at(0.003, 0.02)];
   await go(at(0, 0.02), 15);
-  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of L) await clickAt(p, 300);
   await idle();
@@ -2001,7 +2007,8 @@ await page.waitForTimeout(300);
   // A short line out of P1's corner, among the saved lines, so the lines near its ends are read.
   const L = [at(-0.004, 0.0004), at(-0.0035, 0.002)];
   await go(at(-0.004, 0.001), 15);
-  await page.getByRole('button', { name: '+ New Route' }).click();
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of L) await clickAt(p, 300);
   await idle();
@@ -2148,7 +2155,8 @@ const guestBody = async () => (await guest.locator('body').innerText()).replace(
 const gbox = await guest.locator('canvas.maplibregl-canvas').boundingBox();
 await guest.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 15 }), [at(0, 0)]);
 await guest.waitForTimeout(400);
-await guest.getByRole('button', { name: '+ New Route' }).click();
+await guest.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await guest.getByRole('menuitem', { name: /Routes/ }).click();
 for (const p of OUT) {
   const q = await guest.evaluate((ll) => {
     const r = window.__map.project(ll);
@@ -2236,16 +2244,16 @@ check(
     ctrlBox.y - 95 <= 16,
   JSON.stringify({ bandBox, pillBox, ctrlBox }),
 );
-const newRoute = await rect(phone.getByRole('button', { name: '+ New Route' }));
-const newHotspot = await rect(phone.getByRole('button', { name: '+ New hotspot' }));
+const newPlus = await rect(phone.getByRole('button', { name: 'New route, terminal or hintuan' }));
 check(
-  'phone: the New buttons are above the home bar',
-  !!newHotspot && newHotspot.y + newHotspot.height <= 844 - 34,
-  JSON.stringify(newHotspot),
+  'phone: the New + is above the home bar',
+  !!newPlus && newPlus.y + newPlus.height <= 844 - 34,
+  JSON.stringify(newPlus),
 );
 await phone.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 15 }), [at(0, 0)]);
 await phone.waitForTimeout(400);
-await phone.getByRole('button', { name: '+ New Route' }).tap();
+await phone.getByRole('button', { name: 'New route, terminal or hintuan' }).tap();
+await phone.getByRole('menuitem', { name: /Routes/ }).tap();
 const pbox = await phone.locator('canvas.maplibregl-canvas').boundingBox();
 for (const p of [P1, at(0, -0.003), P2]) {
   const q = await phone.evaluate((ll) => {
@@ -2310,10 +2318,7 @@ check(
   !!toastAt && toastAt.x >= 0 && toastAt.x + toastAt.width <= 390 && toastAt.y >= 47,
   JSON.stringify(toastAt),
 );
-check(
-  '  and covers neither New button',
-  !overlap(toastAt, newRoute) && !overlap(toastAt, newHotspot),
-);
+check('  and does not cover the New +', !overlap(toastAt, newPlus));
 // The owner dropped the 44 px floor (2026-10-16): the toast's buttons are
 // sized by their padding and text, the same under a finger as under a mouse.
 const floored = await phone.evaluate(

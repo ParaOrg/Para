@@ -1,8 +1,9 @@
-import type { CardFill } from '@/design-system/primitives/button';
+import type { CardFill } from '@/design-system/primitives/button-look';
 
 import blobInverse from './route-card-blob-inverse.svg';
 import blobPrimary from './route-card-blob-primary.svg';
 import type { Livery } from '../model/liveries';
+import type { RailwayVehicle } from '../model/vehicles';
 
 /**
  * How a livery paints a card — Figma's RouteCard set (3665:2265) — for the
@@ -188,9 +189,7 @@ export const ROW_PRESSED = {
  * violet, rose, fuchsia and pink; they follow Figma's red one. A train's pill is white
  * too, on every line, its words in the line's Timeline/surface, not its
  * surface: Figma's three train frames draw it so, MRT-3's dark words
- * included. The ride's E (RideMark) wears it too, its disc in the pill's
- * words' colour on the same white (Figma's RouteSigns): a pill restyled
- * restyles the E.
+ * included.
  */
 export const TIMELINE_PILL = {
   orange: 'bg-content-inverse text-card-orange-surface',
@@ -221,3 +220,14 @@ export const BUTTON_FILL = {
   'metro-rail-way-three': 'map-rail-metro-rail-way-three',
   ferry: 'map-ferry',
 } as const satisfies Record<Livery, CardFill>;
+
+/**
+ * A railway card's chips and pill, and its station badges: the line's surface on white, and on
+ * MRT-3's yellow its yellow on Content/primary (RouteCardRailway, 4261:15199).
+ */
+export const RAILWAY_PILL = {
+  'LRT-1': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
+  'LRT-2': 'bg-content-inverse text-map-rail-light-rail-way-two-surface',
+  'MRT-3': 'bg-content-primary text-map-rail-metro-rail-way-three-surface',
+  Ferry: 'bg-content-inverse text-map-ferry-surface',
+} satisfies Record<RailwayVehicle, string>;

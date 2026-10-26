@@ -36,6 +36,16 @@ const dotOf = (root: HTMLElement): HTMLElement => {
   return dot;
 };
 
+/** The colour a token class paints, read off a probe wearing it. */
+const wornBy = (className: string) => {
+  const probe = document.createElement('i');
+  probe.className = className;
+  document.body.append(probe);
+  const colour = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return colour;
+};
+
 /** The label's pop (hintuan-label.css) run out: sizes are read through its scale. */
 const settled = (root: HTMLElement) =>
   Promise.all(root.getAnimations({ subtree: true }).map((animation) => animation.finished));
@@ -60,17 +70,20 @@ export const Hintuan: Story = {
   },
 };
 
-/** HintuanEnd (4068:4878): the picked hintuan, its dot filled, a white End pill before its name on red. */
+/** HintuanEnd (4068:4878): the picked hintuan, its dot filled in End's red, a white End pill before its name on red. */
 export const HintuanEnd: Story = {
   args: { variant: 'hintuan-end' },
   play: async ({ canvasElement }) => {
     await expectBesideTheDot(canvasElement);
     await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'end'))).toBe(true);
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+    await expect(getComputedStyle(dotOf(canvasElement)).backgroundColor).toBe(
+      wornBy('bg-card-red-surface'),
+    );
   },
 };
 
-/** CodeSign (4068:4792): a picked train station, End and the code in white segments of one red pill, the name in another. */
+/** CodeSign (4068:4792): a picked train station, the code in one red pill, End and the name in another. */
 export const CodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL06' },
   play: async ({ canvasElement }) => {
@@ -90,10 +103,13 @@ export const HintuanStart: Story = {
     await expectBesideTheDot(canvasElement);
     await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'start'))).toBe(true);
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+    await expect(getComputedStyle(dotOf(canvasElement)).backgroundColor).toBe(
+      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    );
   },
 };
 
-/** A picked start station: Start and the code in white segments of one green pill, the name in another. */
+/** A picked start station: the code in one green pill, Start and the name in another. */
 export const CodeSignStart: Story = {
   args: { variant: 'hintuan-start', codeSign: 'YL07' },
   play: async ({ canvasElement }) => {
@@ -150,7 +166,11 @@ export const LongName: Story = {
     );
     const words = partOf(canvasElement, 'words');
     await expect(words.scrollWidth).toBeGreaterThan(words.clientWidth);
-    await expect(partOf(canvasElement, 'end').getBoundingClientRect().width).toBe(28);
+    // The name gives way; End and the code stay whole.
+    for (const part of ['end', 'code']) {
+      const badge = partOf(canvasElement, part);
+      await expect(badge.scrollWidth).toBe(badge.clientWidth);
+    }
   },
 };
 
@@ -170,7 +190,7 @@ export const MetroRailWayThree: Story = {
   args: { variant: 'hintuan-end', livery: 'metro-rail-way-three' },
 };
 
-/** A picked start on MRT-3: the dot the line's yellow, the label green. */
+/** A picked start on MRT-3: the dot and the label Start's green, whatever the line. */
 export const MetroRailWayThreeStart: Story = {
   args: { variant: 'hintuan-start', codeSign: 'YL07', livery: 'metro-rail-way-three' },
 };

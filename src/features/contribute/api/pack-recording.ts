@@ -1,25 +1,13 @@
 import { keptFixes, summarize, type Fix } from '@/features/routes/model/ride-recording';
 import { overviewOf, type LngLat } from '@/shared/utils/geo';
 
+import { UPLOAD_LIMITS } from '../recording-limits';
+import { marksThatFit } from '../recording-marks';
 import { RECORDING_VERSION, type Recording } from '../recording-schema';
 import type { ContributionPayload, PointBatch } from './contribution-payload-schema';
 
 /** The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them. */
 export const RULES_VERSION = 1;
-
-/** The limits the database holds every upload to (migration 20261019125900_contributions). */
-export const UPLOAD_LIMITS = {
-  points: 14_400,
-  pointsPerBatch: 600,
-  hintos: 2_000,
-  listEntries: 500,
-  hours: 6,
-  nameLength: 80,
-  descriptionLength: 1_000,
-  lineBytes: 200_000,
-  /** The database refuses 150 km/h; points are dropped a little below it, so rounding never trips it. */
-  speedKmh: 140,
-} as const;
 
 /** The Philippines, as the database checks it. */
 const BOX = { south: 4, north: 22, west: 116, east: 127 } as const;
@@ -138,9 +126,23 @@ export function packRecording(
     return { ok: false, reason: 'line-too-large' };
   }
 
+  const switches = (recording.switches ?? []).map((s) => ({
+    time: s.time,
+    kind: 'switch',
+    to: s.to,
+  }));
+  // The start, stop and save always go in, so marks are what yields to the limit.
+  const marks = marksThatFit(recording.marks ?? [], switches.length + 3).map((m) => ({
+    time: m.time,
+    kind: 'mark',
+  }));
+  // Array.sort is stable: a switch and a mark tapped in the same millisecond keep that order.
+  const between = [...switches, ...marks]
+    .sort((a, b) => a.time - b.time)
+    .map(({ time, kind, ...rest }) => ({ kind, at: iso(time), ...rest }));
   const events = [
     { kind: 'start', at: iso(recording.startedAt) },
-    ...(recording.switches ?? []).map((s) => ({ kind: 'switch', at: iso(s.time), to: s.to })),
+    ...between,
     ...(recording.stoppedAt === null ? [] : [{ kind: 'stop', at: iso(recording.stoppedAt) }]),
     ...(recording.savedAt === null ? [] : [{ kind: 'save', at: iso(recording.savedAt) }]),
   ].slice(0, UPLOAD_LIMITS.listEntries);

@@ -3,6 +3,7 @@ import type { FilterSpecification, GeoJSONSource, MapLibreMap } from 'maplibre-g
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
+import { CASING_EXTRA, litRadius, litWidth } from './line-style';
 import type { Way } from '../model/ride-recording';
 
 /** A run of the trail on one way: outbound is papunta, return is pabalik. */
@@ -17,21 +18,25 @@ export interface TrailMarker {
   way: Way;
 }
 
+/** A pin where the contributor marked the place they were. */
+export interface TrailMark {
+  at: LngLat;
+}
+
 /** What the contributor's recording has drawn so far. */
 export interface RecordingTrail {
   lines: readonly TrailLine[];
   markers: readonly TrailMarker[];
-  /** Where the contributor is now, or null before the first fix. */
-  here: LngLat | null;
+  marks: readonly TrailMark[];
 }
 
 export const TRAIL_SRC = 'recording-trail';
 const CASING = 'recording-trail-casing';
 const LINE = 'recording-trail-line';
 const MARKERS = 'recording-trail-markers';
-const HERE = 'recording-trail-here';
+const MARKS = 'recording-trail-marks';
 
-/** The trail as its source takes it: a line per run, a point per switch, and the contributor. */
+/** The trail as its source takes it: a line per run, a point per switch, and a point per mark. */
 export function trailData(trail: RecordingTrail) {
   return {
     type: 'FeatureCollection' as const,
@@ -48,15 +53,11 @@ export function trailData(trail: RecordingTrail) {
         properties: { kind: 'switch', way: marker.way },
         geometry: { type: 'Point' as const, coordinates: [...marker.at] },
       })),
-      ...(trail.here
-        ? [
-            {
-              type: 'Feature' as const,
-              properties: { kind: 'here' },
-              geometry: { type: 'Point' as const, coordinates: [...trail.here] },
-            },
-          ]
-        : []),
+      ...trail.marks.map((mark) => ({
+        type: 'Feature' as const,
+        properties: { kind: 'mark' },
+        geometry: { type: 'Point' as const, coordinates: [...mark.at] },
+      })),
     ],
   };
 }
@@ -66,7 +67,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
   if (map.getSource(TRAIL_SRC)) return;
   map.addSource(TRAIL_SRC, {
     type: 'geojson',
-    data: trailData({ lines: [], markers: [], here: null }),
+    data: trailData({ lines: [], markers: [], marks: [] }),
   });
   const isLine: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
   map.addLayer({
@@ -75,7 +76,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
     source: TRAIL_SRC,
     filter: isLine,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': 9 },
+    paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': litWidth(CASING_EXTRA) },
   });
   map.addLayer({
     id: LINE,
@@ -91,7 +92,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
         MAP_COLOURS['Map/Trail/pabalik'],
         MAP_COLOURS['Map/Trail/papunta'],
       ],
-      'line-width': 5,
+      'line-width': litWidth(),
     },
   });
   map.addLayer({
@@ -100,7 +101,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
     source: TRAIL_SRC,
     filter: ['==', ['get', 'kind'], 'switch'],
     paint: {
-      'circle-radius': 6,
+      'circle-radius': litRadius(CASING_EXTRA),
       'circle-color': MAP_PAINT['Paint/casing'],
       'circle-stroke-color': [
         'match',
@@ -113,15 +114,15 @@ export function addRecordingTrail(map: MapLibreMap): void {
     },
   });
   map.addLayer({
-    id: HERE,
+    id: MARKS,
     type: 'circle',
     source: TRAIL_SRC,
-    filter: ['==', ['get', 'kind'], 'here'],
+    filter: ['==', ['get', 'kind'], 'mark'],
     paint: {
-      'circle-radius': 8,
-      'circle-color': MAP_COLOURS['Map/LocatorIndicatorOverlay/border'],
+      'circle-radius': litRadius(CASING_EXTRA),
+      'circle-color': MAP_COLOURS['Map/Trail/mark'],
       'circle-stroke-color': MAP_PAINT['Paint/casing'],
-      'circle-stroke-width': 3,
+      'circle-stroke-width': 2,
     },
   });
 }

@@ -13,7 +13,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
-import { fakeContributions } from './lib/fake-contributions.mjs';
+import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
@@ -22,6 +22,7 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
 const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
+const ACCOUNT_ID = 'cccccccc-0000-4000-8000-000000000001';
 const STUDIO_KEY = 'sb-smzwbqxttdyvohuizynl-auth-token';
 
 const GPS = () => {
@@ -49,8 +50,13 @@ const GPS = () => {
 
 const browser = await chromium.launch();
 
-/** A consented phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same site. */
-async function phone({ studioSession = false } = {}) {
+/**
+ * A phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same
+ * site. `consent` is what the phone has stored: '3' (the current text) unless given, 'yes' (the
+ * first text) or null (never asked). `opens` is the screen the page is waited on. The phone is
+ * already signed in to an account: the page shows nothing else until one is.
+ */
+async function phone({ studioSession = false, consent = '3', opens = 'start' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -61,6 +67,13 @@ async function phone({ studioSession = false } = {}) {
   await nodeFetch(page);
   await bareStyle(page);
   const fake = await fakeContributions(page);
+  // The seeded account is in the database with its name stored: the page opens on Ready.
+  fake.users.set(ACCOUNT_ID, {
+    email: 'tester@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Tester', phone: '+639171234567' },
+  });
   // Cloudflare's Turnstile, standing in: the check passes at once. CI builds this suite with a site key.
   await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) =>
     route.fulfill({
@@ -70,7 +83,24 @@ async function phone({ studioSession = false } = {}) {
     }),
   );
   await page.addInitScript(GPS);
-  await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
+  await page.addInitScript(
+    ([key, signedIn]) => {
+      if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(signedIn));
+    },
+    [
+      'parapo.contributor-auth',
+      session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true }),
+    ],
+  );
+  if (consent !== null) {
+    await page.addInitScript((stored) => {
+      // Only a first load seeds it, so a reload keeps what the page itself stored.
+      if (!sessionStorage.getItem('seeded')) {
+        localStorage.setItem('parapo.contribute.consent', stored);
+        sessionStorage.setItem('seeded', 'yes');
+      }
+    }, consent);
+  }
   if (studioSession) {
     await page.addInitScript(
       ([key]) => {
@@ -80,11 +110,31 @@ async function phone({ studioSession = false } = {}) {
     );
   }
   const errors = [];
+  const asked = watchDatabase(page);
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 30000 });
-  return { page, context, fake, errors };
+  await SCREENS[opens](page).waitFor({ timeout: 30000 });
+  return { page, context, fake, errors, asked };
 }
+
+/**
+ * Counts every request the page makes to the database (sign-in, identity, reads or sends), but not
+ * the account's own profile read: the page asks that before consent, to know the account is done.
+ */
+function watchDatabase(page) {
+  const watch = { count: 0 };
+  page.on('request', (request) => {
+    const url = request.url();
+    if (/\/(auth|rest)\/v1\//.test(url) && !/\/rpc\/get_profile/.test(url)) watch.count += 1;
+  });
+  return watch;
+}
+
+const SCREENS = {
+  start: (page) => page.getByRole('button', { name: 'Start recording' }),
+  consent: (page) => page.getByRole('heading', { name: 'Before you record' }),
+  earlier: (page) => page.getByRole('heading', { name: /earlier recordings? too\?/ }),
+};
 
 /** Puts saved recordings straight into the phone's database, as an earlier visit would have left them. */
 async function seed(page, recordings) {
@@ -111,7 +161,11 @@ async function seed(page, recordings) {
 }
 
 /** A saved recording of `count` fixes heading north from Fairview, a fix a second, 8 m apart. */
-function savedRide(id, startedAt, { count = 30, upload, name = 'Fairview' } = {}) {
+function savedRide(
+  id,
+  startedAt,
+  { count = 30, upload, name = 'Fairview', isEarlier = false, consentVersion = 3 } = {},
+) {
   const fixes = Array.from({ length: count }, (_, seq) => ({
     recordingId: id,
     seq,
@@ -133,6 +187,8 @@ function savedRide(id, startedAt, { count = 30, upload, name = 'Fairview' } = {}
     endPointName: 'Cubao',
     description: '',
     rideKind: 'Jeep',
+    // A recording carries the version of the consent text it was made under; one from the first text has none.
+    ...(isEarlier ? {} : { consentVersion }),
     ...(upload ? { upload } : {}),
   };
   return { recording, fixes };
@@ -157,23 +213,49 @@ const storedUpload = (page, id) =>
 
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
 const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
-/** Ready's History, opened if it is closed: the saved recordings show only once it is pressed. */
+/** The History screen, opened through its button on Ready unless it is already showing. */
 const openHistory = async (page) => {
+  const heading = page.getByRole('heading', { level: 1, name: 'History' });
   const history = page.getByRole('button', { name: 'History' });
-  await history.waitFor({ timeout: 10000 });
-  if ((await history.getAttribute('aria-expanded')) !== 'true') await history.click();
+  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
+  await heading.or(history).waitFor({ timeout: 10000 });
+  if (await heading.isVisible()) return;
+  await history.click();
+  await heading.waitFor();
 };
+/** A card's actions, opened from its dots unless they are open, then the one named by `pattern`. */
+const openMenu = async (page, name) => {
+  const more = row(page, name).getByRole('button', { name: /^More actions/ });
+  if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
+};
+const act = async (page, name, pattern) => {
+  await openMenu(page, name);
+  await row(page, name).getByRole('button', { name: pattern }).click();
+};
+const countOf = async (page, name, pattern) => {
+  await openMenu(page, name);
+  return row(page, name).getByRole('button', { name: pattern }).count();
+};
+/**
+ * Waits for a card whose group heading and text together match `pattern`: "Uploaded | ..." for a
+ * card under Uploaded, "Not uploaded | ... No signal" for one that met no signal.
+ */
 const waitForStatus = async (page, name, pattern) => {
   await openHistory(page);
   return page.waitForFunction(
     ([n, p]) =>
-      [...document.querySelectorAll('li')].some(
-        (li) => li.textContent.includes(n) && new RegExp(p).test(li.textContent),
-      ),
+      [...document.querySelectorAll('li')].some((li) => {
+        const group = li.closest('section')?.querySelector('h2')?.textContent ?? '';
+        return li.textContent.includes(n) && new RegExp(p).test(`${group} | ${li.textContent}`);
+      }),
     [name, pattern.source],
     { timeout: 15000 },
   );
 };
+const UPLOADED = /^Uploaded \|/;
+/** The heading of the History group a card sits in. */
+const groupOf = (page, name) =>
+  row(page, name).evaluate((li) => li.closest('section')?.querySelector('h2')?.textContent ?? '');
 
 // ------------------------------------------------- record, save, uploaded
 {
@@ -186,6 +268,7 @@ const waitForStatus = async (page, name, pattern) => {
       [T0 + s * 1000, 14.7 + (s * 8) / 111_320],
     );
   }
+  await page.getByRole('button', { name: 'Mark this place' }).click();
   await page.getByRole('button', { name: 'Save' }).click();
   await page.getByLabel('Start point name').fill('SM Fairview');
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -196,8 +279,17 @@ const waitForStatus = async (page, name, pattern) => {
     'a saved recording is uploaded on its own, and Successfully recorded says so',
     fake.rows.size === 1 &&
       fake.saveRequests === 1 &&
-      stored.recording.start_name === 'SM Fairview',
+      stored.recording.start_name === 'SM Fairview' &&
+      stored.recording.consent_version === 3,
     `${fake.rows.size} stored, ${fake.saveRequests} sends`,
+  );
+  const markEvents = stored.recording.events.filter((e) => e.kind === 'mark');
+  check(
+    'the upload carries the mark as a mark event: a time and no position, between start and stop',
+    markEvents.length === 1 &&
+      Object.keys(markEvents[0]).sort().join() === 'at,kind' &&
+      stored.recording.events.map((e) => e.kind).join() === 'start,mark,stop,save',
+    JSON.stringify(stored.recording.events),
   );
   check(
     '  it went whole: its points, in batches, and the ride kind left blank',
@@ -211,25 +303,20 @@ const waitForStatus = async (page, name, pattern) => {
     (await storedUpload(page, stored.recording.id)) === 'uploaded',
   );
   check(
-    "  with a Turnstile site key, the first sign-in carried the check's token",
-    !process.env.PARAPO_TURNSTILE || fake.captchaTokens[0] === 'turnstile-token',
-    String(fake.captchaTokens[0]),
-  );
-  check(
-    "  the phone signed in under its own key; the editor's studio session is untouched",
-    fake.signIns === 1 &&
+    "  the phone sent as its account, under its own key; the editor's studio session is untouched",
+    fake.signIns === 0 &&
       (await page.evaluate((k) => localStorage.getItem(k), STUDIO_KEY)) === studioBefore &&
       (await page.evaluate(() => localStorage.getItem('parapo.contributor-auth'))) !== null,
   );
   await page.getByRole('button', { name: 'Record again' }).click();
-  await waitForStatus(page, 'SM Fairview', /Uploaded to ParaPo/);
+  await waitForStatus(page, 'SM Fairview', UPLOADED);
   await shot(page, '1-uploaded');
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'SM Fairview', /Uploaded to ParaPo/);
+  await waitForStatus(page, 'SM Fairview', UPLOADED);
   await page.waitForTimeout(500);
   check(
     'after a reload it still reads as uploaded and is not sent again',
-    fake.saveRequests === 1 && fake.signIns === 1,
+    fake.saveRequests === 1 && fake.signIns === 0,
     `${fake.saveRequests} sends`,
   );
   check(
@@ -248,15 +335,15 @@ const waitForStatus = async (page, name, pattern) => {
     savedRide('aaaaaaaa-0000-4000-8000-000000000001', T0, { name: 'Offline ride' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Offline ride', /no signal/);
+  await waitForStatus(page, 'Offline ride', /No signal/);
   await shot(page, '2-no-signal');
   check(
-    'with no signal it says so, keeps the copy and counts it as not uploaded yet',
+    'with no signal it says so, keeps the copy and files it under Not uploaded',
     fake.rows.size === 0 &&
-      (await page.getByRole('heading', { name: /1 not uploaded yet/ }).count()) === 1,
+      (await page.getByRole('heading', { level: 2, name: 'Not uploaded' }).count()) === 1,
   );
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await waitForStatus(page, 'Offline ride', /Uploaded to ParaPo/);
+  await waitForStatus(page, 'Offline ride', UPLOADED);
   check(
     '  back online, it is sent on its own, once',
     fake.rows.size === 1 && fake.saveRequests === 2,
@@ -271,16 +358,16 @@ const waitForStatus = async (page, name, pattern) => {
     savedRide('aaaaaaaa-0000-4000-8000-000000000002', T0, { name: 'Lost answer' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Lost answer', /no signal/);
+  await waitForStatus(page, 'Lost answer', /No signal/);
   check(
     'an answer lost on the way back reads as not uploaded, though ParaPo has it',
     fake.rows.size === 1 &&
       (await storedUpload(page, 'aaaaaaaa-0000-4000-8000-000000000002')) === 'none',
   );
   await row(page, 'Lost answer')
-    .getByRole('button', { name: /^Upload / })
+    .getByRole('button', { name: /^(Try again|Upload again)/ })
     .click();
-  await waitForStatus(page, 'Lost answer', /Uploaded to ParaPo/);
+  await waitForStatus(page, 'Lost answer', UPLOADED);
   check(
     '  Try again answers "already saved": uploaded, and stored once',
     fake.rows.size === 1 && fake.saveRequests === 2,
@@ -305,16 +392,12 @@ const waitForStatus = async (page, name, pattern) => {
   check(
     'while an upload is in flight, coming online or to the front sends nothing more, and there is no Try again',
     fake.saveRequests === 1 &&
-      (await row(page, 'Held ride')
-        .getByRole('button', { name: /^Upload / })
-        .count()) === 0 &&
-      (await row(page, 'Held ride')
-        .getByRole('button', { name: /from this phone$/ })
-        .count()) === 0,
+      (await countOf(page, 'Held ride', /^(Try again|Upload again)/)) === 0 &&
+      (await countOf(page, 'Held ride', /^Delete from phone/)) === 0,
     `${fake.saveRequests} sends`,
   );
   fake.release();
-  await waitForStatus(page, 'Held ride', /Uploaded to ParaPo/);
+  await waitForStatus(page, 'Held ride', UPLOADED);
   check('  released, it is uploaded once', fake.rows.size === 1 && fake.saveRequests === 1);
 }
 
@@ -326,7 +409,7 @@ const waitForStatus = async (page, name, pattern) => {
     savedRide('aaaaaaaa-0000-4000-8000-000000000004', T0, { name: 'Refused ride' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Refused ride', /refused/);
+  await waitForStatus(page, 'Refused ride', /Refused/);
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   check(
@@ -337,18 +420,14 @@ const waitForStatus = async (page, name, pattern) => {
   );
   check(
     '  Try again is offered, and Download still is',
-    (await row(page, 'Refused ride')
-      .getByRole('button', { name: /^Upload / })
-      .count()) === 1 &&
-      (await row(page, 'Refused ride')
-        .getByRole('button', { name: /^Download / })
-        .count()) === 1,
+    (await countOf(page, 'Refused ride', /^(Try again|Upload again)/)) === 1 &&
+      (await countOf(page, 'Refused ride', /^Download/)) === 1,
   );
   fake.next.save = 'day_cap';
   await row(page, 'Refused ride')
-    .getByRole('button', { name: /^Upload / })
+    .getByRole('button', { name: /^(Try again|Upload again)/ })
     .click();
-  await waitForStatus(page, 'Refused ride', /20 recordings today/);
+  await waitForStatus(page, 'Refused ride', /20 recordings sent today/);
   check('  the day cap says it tries again later', fake.rows.size === 0);
 }
 
@@ -358,10 +437,8 @@ const waitForStatus = async (page, name, pattern) => {
   const { page, fake } = await phone();
   await seed(page, [savedRide(id, T0, { name: 'Remove me' })]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Remove me', /Uploaded to ParaPo/);
-  await row(page, 'Remove me')
-    .getByRole('button', { name: /^Remove the upload/ })
-    .click();
+  await waitForStatus(page, 'Remove me', UPLOADED);
+  await act(page, 'Remove me', /^Remove upload/);
   const question = await row(page, 'Remove me').getByRole('group').innerText();
   check(
     'Remove upload asks first, says the phone keeps its copy, and focuses Keep it',
@@ -372,30 +449,26 @@ const waitForStatus = async (page, name, pattern) => {
   await row(page, 'Remove me').getByRole('button', { name: 'Keep it' }).click();
   check('  Keep it removes nothing', fake.rows.size === 1 && fake.deleteRequests === 0);
   fake.next.remove = 'removeOffline';
-  await row(page, 'Remove me')
-    .getByRole('button', { name: /^Remove the upload/ })
-    .click();
-  await row(page, 'Remove me').getByRole('button', { name: 'Remove' }).click();
+  await act(page, 'Remove me', /^Remove upload/);
+  await row(page, 'Remove me').getByRole('button', { name: 'Remove', exact: true }).click();
   await waitForStatus(page, 'Remove me', /Not removed/);
   check('  with no signal it says it was not removed', fake.rows.size === 1);
-  await row(page, 'Remove me')
-    .getByRole('button', { name: /^Remove the upload/ })
-    .click();
-  await row(page, 'Remove me').getByRole('button', { name: 'Remove' }).click();
-  await waitForStatus(page, 'Remove me', /Upload removed/);
+  await act(page, 'Remove me', /^Remove upload/);
+  await row(page, 'Remove me').getByRole('button', { name: 'Remove', exact: true }).click();
+  await waitForStatus(page, 'Remove me', /^Only on this phone \|/);
   check(
     '  removed from ParaPo; the phone keeps its copy, marked removed',
     fake.rows.size === 0 && (await storedUpload(page, id)) === 'removed',
   );
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Remove me', /Upload removed/);
+  await waitForStatus(page, 'Remove me', /^Only on this phone \|/);
   await page.waitForTimeout(500);
   const sendsBefore = fake.saveRequests;
   check('  a reload does not send it again on its own', fake.rows.size === 0 && sendsBefore === 1);
   await row(page, 'Remove me')
-    .getByRole('button', { name: /^Upload / })
+    .getByRole('button', { name: /^(Try again|Upload again)/ })
     .click();
-  await waitForStatus(page, 'Remove me', /Uploaded to ParaPo/);
+  await waitForStatus(page, 'Remove me', UPLOADED);
   check('  Upload again sends it back', fake.rows.size === 1);
 }
 
@@ -410,15 +483,13 @@ const waitForStatus = async (page, name, pattern) => {
     savedRide(local, T0 + 3_600_000, { name: 'Local one' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Uploaded one', /Uploaded to ParaPo|no signal/);
-  await waitForStatus(page, 'Local one', /Uploaded to ParaPo|no signal/);
+  await waitForStatus(page, 'Uploaded one', /^Uploaded \||No signal/);
+  await waitForStatus(page, 'Local one', /^Uploaded \||No signal/);
   // Whichever went first met no signal; that one is the one not uploaded.
   const [upName, localName, upId, localId] = fake.rows.has(uploaded)
     ? ['Uploaded one', 'Local one', uploaded, local]
     : ['Local one', 'Uploaded one', local, uploaded];
-  await row(page, upName)
-    .getByRole('button', { name: /from this phone$/ })
-    .click();
+  await act(page, upName, /^Delete from phone/);
   check(
     "Delete from phone on an uploaded recording says ParaPo's copy stays",
     (await row(page, upName).getByRole('group').innerText()).includes(
@@ -426,23 +497,30 @@ const waitForStatus = async (page, name, pattern) => {
     ),
   );
   await shot(page, '4-delete-question');
-  await row(page, upName).getByRole('button', { name: 'Delete' }).click();
+  await row(page, upName).getByRole('button', { name: 'Delete', exact: true }).click();
+  // ParaPo's copy is still the account's, so its card stays, now without a copy on this phone.
   await page.waitForFunction(
-    (n) => ![...document.querySelectorAll('li')].some((li) => li.textContent.includes(n)),
+    (n) =>
+      [...document.querySelectorAll('li')].some(
+        (li) => li.textContent.includes(n) && !li.textContent.includes('Delete this recording'),
+      ),
     upName,
   );
   check(
-    '  two recordings waiting at once signed the phone in once',
-    fake.signIns === 1,
+    "  and its card stays as the account's upload, with only Remove upload behind its dots",
+    (await countOf(page, upName, /^Delete from phone|^Download/)) === 0 &&
+      (await countOf(page, upName, /^Remove upload/)) === 1,
+  );
+  check(
+    '  two recordings waiting at once sent as the account, with no sign-in of their own',
+    fake.signIns === 0,
     `${fake.signIns} sign-ins`,
   );
   check(
     "  the phone's copy is gone; ParaPo's is not",
     (await storedUpload(page, upId)) === 'gone' && fake.rows.has(upId),
   );
-  await row(page, localName)
-    .getByRole('button', { name: /from this phone$/ })
-    .click();
+  await act(page, localName, /^Delete from phone/);
   const localQuestion = await row(page, localName).getByRole('group').innerText();
   check(
     '  on one never uploaded, it says it will be gone for good',
@@ -450,8 +528,12 @@ const waitForStatus = async (page, name, pattern) => {
       !fake.rows.has(localId),
     localQuestion,
   );
-  await row(page, localName).getByRole('button', { name: 'Delete' }).click();
-  await page.waitForFunction(() => document.querySelectorAll('li').length === 0);
+  await row(page, localName).getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.waitForFunction(() => document.querySelectorAll('li').length === 1);
+  check(
+    "  focus lands on History's heading, not the page",
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'History',
+  );
   check('  deleted from the phone', (await storedUpload(page, localId)) === 'gone');
 }
 
@@ -461,10 +543,10 @@ const waitForStatus = async (page, name, pattern) => {
   const { page, fake } = await phone();
   await seed(page, [savedRide(id, T0, { name: 'Editor deleted' })]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Editor deleted', /Uploaded to ParaPo/);
+  await waitForStatus(page, 'Editor deleted', UPLOADED);
   fake.rows.delete(id);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Editor deleted', /Removed from ParaPo by an editor/);
+  await waitForStatus(page, 'Editor deleted', /Removed by an editor/);
   await page.waitForTimeout(500);
   check(
     'an upload an editor deleted reads so on reopening, stays on the phone, and is not sent again',
@@ -483,13 +565,203 @@ const waitForStatus = async (page, name, pattern) => {
     }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Old identity', /earlier sign-in/);
+  await waitForStatus(page, 'Old identity', UPLOADED);
   check(
     'an upload made by an earlier identity on this phone offers no Remove upload, and says why',
-    (await row(page, 'Old identity')
-      .getByRole('button', { name: /^Remove the upload/ })
-      .count()) === 0,
+    (await countOf(page, 'Old identity', /^Remove upload/)) === 0 &&
+      (await statusOf(page, 'Old identity')).includes('Uploaded from an earlier sign-in'),
   );
+  await page.keyboard.press('Escape');
+  check(
+    "  Escape closes the card's actions and puts focus back on its dots",
+    (await row(page, 'Old identity')
+      .getByRole('button', { name: /^More actions/ })
+      .getAttribute('aria-expanded')) === 'false' &&
+      (
+        await page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
+      ).startsWith('More actions'),
+  );
+}
+
+// ------------------------------------------ no consent, nothing is sent
+{
+  const { page, fake, asked } = await phone({ consent: null, opens: 'consent' });
+  const id = 'aaaaaaaa-0000-4000-8000-000000000011';
+  await seed(page, [savedRide(id, T0, { name: 'No consent' })]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.consent(page).waitFor();
+  await page.waitForTimeout(2000);
+  check(
+    'with no consent, a saved recording is not sent and the consent screen shows',
+    fake.saveRequests === 0 &&
+      fake.signIns === 0 &&
+      asked.count === 0 &&
+      (await storedUpload(page, id)) === 'none',
+    `${fake.saveRequests} sends, ${fake.signIns} sign-ins, ${asked.count} requests`,
+  );
+  await page.getByRole('button', { name: 'Okay, I understand' }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await waitForStatus(page, 'No consent', UPLOADED);
+  check(
+    '  agreeing to the current text sends it, with the text' + "'" + 's version',
+    fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 3,
+  );
+  check(
+    '  the phone remembers the version agreed to, for this account',
+    (await page.evaluate(
+      (id) => localStorage.getItem(`parapo.contribute.consent.${id}`),
+      ACCOUNT_ID,
+    )) === '3',
+  );
+  const other = 'cccccccc-0000-4000-8000-000000000002';
+  fake.users.set(other, {
+    email: 'second@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Second', phone: '+639181234567' },
+  });
+  await page.evaluate(
+    ([key, signedIn]) => localStorage.setItem(key, JSON.stringify(signedIn)),
+    ['parapo.contributor-auth', session(other, { email: 'second@example.com', isAccount: true })],
+  );
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.consent(page).waitFor();
+  check(
+    "a second account on the same phone is asked about the text itself; the first one's answer is not theirs",
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
+  );
+}
+
+// -------------------- version-1 consent is not consent to the new text
+{
+  const { page, fake, asked } = await phone({ consent: 'yes', opens: 'consent' });
+  const earlier = 'aaaaaaaa-0000-4000-8000-000000000012';
+  const stamped = 'aaaaaaaa-0000-4000-8000-000000000013';
+  const underTwo = 'aaaaaaaa-0000-4000-8000-000000000019';
+  await seed(page, [
+    savedRide(earlier, T0, { name: 'Under one', isEarlier: true }),
+    savedRide(stamped, T0 + 600_000, { name: 'Stamped' }),
+    savedRide(underTwo, T0 + 900_000, { name: 'Under two', consentVersion: 2 }),
+    // An upload made under version 1: the identity check it would set off must wait for consent too.
+    savedRide('aaaaaaaa-0000-4000-8000-000000000018', T0 + 1_200_000, {
+      name: 'Already up',
+      isEarlier: true,
+      upload: { state: 'uploaded', at: T0, by: 'ffffffff-0000-4000-8000-000000000000' },
+    }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.consent(page).waitFor();
+  await page.waitForTimeout(2000);
+  check(
+    'with version-1 consent, the new text shows, with no Start and nothing sent',
+    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+      fake.saveRequests === 0 &&
+      fake.signIns === 0 &&
+      asked.count === 0 &&
+      (await storedUpload(page, earlier)) === 'none' &&
+      (await storedUpload(page, stamped)) === 'none' &&
+      (await storedUpload(page, underTwo)) === 'none',
+    `${fake.saveRequests} sends`,
+  );
+  check(
+    '  the new text names machine learning and who is responsible',
+    (await page.getByText(/machine learning/).count()) === 1 &&
+      (await page.getByRole('link', { name: 'Message the owner on Facebook' }).count()) === 1,
+  );
+  await page.getByRole('button', { name: 'Okay, I understand' }).click();
+  await SCREENS.earlier(page).waitFor();
+  await page.waitForTimeout(1500);
+  check(
+    '  after agreeing, the recordings made under text 2 or 3 go; the one under text 1 is asked about',
+    fake.rows.size === 2 &&
+      fake.rows.has(stamped) &&
+      fake.rows.has(underTwo) &&
+      (await storedUpload(page, earlier)) === 'none' &&
+      (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
+    [...fake.rows.keys()].join(),
+  );
+}
+
+// ------------------------ earlier recordings: asked about, Keep on phone
+{
+  const a = 'aaaaaaaa-0000-4000-8000-000000000014';
+  const b = 'aaaaaaaa-0000-4000-8000-000000000015';
+  const { page, fake } = await phone();
+  await seed(page, [
+    savedRide(a, T0, { name: 'Earlier one', isEarlier: true }),
+    savedRide(b, T0 + 600_000, { name: 'Earlier two', isEarlier: true }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.earlier(page).waitFor();
+  await page.waitForTimeout(1500);
+  await shot(page, 'earlier-question');
+  check(
+    'earlier recordings are asked about once, by number, and nothing is sent meanwhile',
+    (await page.getByRole('heading', { name: 'Send your 2 earlier recordings too?' }).count()) ===
+      1 &&
+      (await page.getByRole('button', { name: 'Send', exact: true }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Keep on phone' }).count()) === 1 &&
+      fake.saveRequests === 0,
+  );
+  await page.getByRole('button', { name: 'Keep on phone' }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await openHistory(page);
+  await page.waitForTimeout(1500);
+  check(
+    '  Keep on phone sends nothing, and History files it under Only on this phone',
+    fake.saveRequests === 0 &&
+      (await storedUpload(page, a)) === 'none' &&
+      (await groupOf(page, 'Earlier one')) === 'Only on this phone',
+  );
+  // Back on Ready: a reload on #history would land on History instead.
+  await page.evaluate(() => {
+    location.hash = '';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.waitForTimeout(1000);
+  check(
+    '  after a reload it is not asked again and still not sent',
+    (await SCREENS.earlier(page).count()) === 0 && fake.saveRequests === 0,
+  );
+  await openHistory(page);
+  await row(page, 'Earlier one')
+    .getByRole('button', { name: /^Upload,/ })
+    .click();
+  await waitForStatus(page, 'Earlier one', UPLOADED);
+  check(
+    '  it can still be sent from History, one at a time',
+    fake.rows.size === 1 &&
+      fake.rows.has(a) &&
+      (await groupOf(page, 'Earlier two')) === 'Only on this phone',
+  );
+}
+
+// ------------------------------- earlier recordings: Send goes through
+{
+  const a = 'aaaaaaaa-0000-4000-8000-000000000016';
+  const b = 'aaaaaaaa-0000-4000-8000-000000000017';
+  const { page, fake } = await phone();
+  await seed(page, [
+    savedRide(a, T0, { name: 'Sent one', isEarlier: true }),
+    savedRide(b, T0 + 600_000, { name: 'Sent two', isEarlier: true }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.earlier(page).waitFor();
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await waitForStatus(page, 'Sent two', UPLOADED);
+  await waitForStatus(page, 'Sent one', UPLOADED);
+  check(
+    'Send uploads the earlier recordings, each with the current text' + "'" + 's version',
+    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 3),
+  );
+  await page.evaluate(() => {
+    location.hash = '';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  check('  and it is not asked again', (await SCREENS.earlier(page).count()) === 0);
 }
 
 await browser.close();

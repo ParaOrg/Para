@@ -38,7 +38,7 @@ import {
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
-import { ContributorButton } from './contributor-button';
+import { ContributionCard } from './contribution-card';
 import { useStatusBarColour } from './status-bar';
 
 /**
@@ -263,9 +263,6 @@ export function PublicMapApp() {
       {install.shouldShow && (
         <InstallPrompt onInstall={install.install} onLater={install.postpone} />
       )}
-      {/* Out of the way of an open card, which floats at the top left on a wide screen. */}
-      {!cards.open && <ContributorButton />}
-
       {saved.selected && tripLivery && timeline && (
         // One card for as long as a trip is open: SWITCH, and another
         // route from its "Other routes", leave the hintuans open or folded
@@ -364,6 +361,7 @@ export function PublicMapApp() {
           onRoute={openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={cards.closeAll}
+          end={(livery) => <ContributionCard livery={livery} />}
         />
       )}
     </div>

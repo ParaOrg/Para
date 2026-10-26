@@ -23,7 +23,7 @@ interface StudioSaveSheetsProps {
   onSaved: ComponentProps<typeof SavePanel>['onSaved'];
   onSavedHotspot: ComponentProps<typeof HotspotPanel>['onSaved'];
   /** A save stored as a draft (STUDIO_DRAFTS). */
-  onDrafted?: () => void;
+  onDrafted?: (subjectId: string) => void;
   onCancel: () => void;
 }
 

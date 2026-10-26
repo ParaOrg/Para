@@ -6,9 +6,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { UPLOAD_LIMITS, packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { UPLOAD_LIMITS } from '../../src/features/contribute/recording-limits.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';
-import { problemOf } from '../../src/features/contribute/api/upload-contribution.ts';
 
 import { T0, rideFixes, rideRecording } from './fixtures/contribution-ride.mjs';
 
@@ -137,19 +137,41 @@ test('a recording with no fixes packs with no points and no line', () => {
   assert.ok(Date.parse(result.payload.ended_at) > Date.parse(result.payload.started_at));
 });
 
-test('an answer is sorted into what the page does next', () => {
-  assert.equal(
-    problemOf({ code: 'P0001', message: 'day_cap: 20 contributions in 24 hours' }),
-    'day-cap',
+test('marks go up as mark events among the switches, in time order', () => {
+  const fixes = rideFixes(20);
+  const recording = {
+    ...rideRecording(ID, fixes),
+    switches: [{ time: T0 + 10_000, to: 'return' }],
+    marks: [{ time: T0 + 15_000 }, { time: T0 + 5_000 }],
+  };
+  const { payload } = packed(fixes, recording);
+  assert.deepEqual(payload.events.slice(1, -2), [
+    { kind: 'mark', at: new Date(T0 + 5_000).toISOString() },
+    { kind: 'switch', at: new Date(T0 + 10_000).toISOString(), to: 'return' },
+    { kind: 'mark', at: new Date(T0 + 15_000).toISOString() },
+  ]);
+  assert.ok(contributionPayloadSchema.safeParse(payload).success);
+});
+
+test('too many marks give way to the start, stop and save, and the events stay within the limit', () => {
+  const fixes = rideFixes(20);
+  const switches = Array.from({ length: 100 }, (_, i) => ({
+    time: T0 + 1000 + i * 100,
+    to: i % 2 === 0 ? 'return' : 'outbound',
+  }));
+  const marks = Array.from({ length: 600 }, (_, i) => ({ time: T0 + 100_000 + i }));
+  const { payload } = packed(fixes, { ...rideRecording(ID, fixes), switches, marks });
+  assert.equal(payload.events.length, UPLOAD_LIMITS.listEntries);
+  assert.equal(payload.events[0].kind, 'start');
+  assert.deepEqual(
+    payload.events.slice(-2).map((e) => e.kind),
+    ['stop', 'save'],
   );
-  assert.equal(
-    problemOf({ code: 'P0001', message: 'bad_points: point 3 is faster than 150 km/h' }),
-    'refused',
-  );
-  assert.equal(
-    problemOf({ code: '42501', message: 'new row violates row-level security policy' }),
-    'blocked',
-  );
-  assert.equal(problemOf({ code: '23514', message: 'check constraint' }), 'refused');
-  assert.equal(problemOf({ code: '', message: 'TypeError: Failed to fetch' }), 'offline');
+  assert.equal(payload.events.filter((e) => e.kind === 'switch').length, 100);
+  assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 500 - 3 - 100);
+});
+
+test('a recording made before marks packs with none', () => {
+  const { payload } = packed();
+  assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 0);
 });
