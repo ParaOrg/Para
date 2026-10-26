@@ -24,4 +24,4 @@ Closes #
 - [ ] Stories are added or updated for UI components
 - [ ] No `console.log`, commented-out code or unrelated changes
 
-Standards: [`.claude/CLAUDE.md`](https://github.com/Roviicc/ParaPo/blob/staging/.claude/CLAUDE.md), see "Definition of done".
+Standards: [`.claude/CLAUDE.md`](https://github.com/ParaOrg/Para/blob/staging/.claude/CLAUDE.md), see "Definition of done".

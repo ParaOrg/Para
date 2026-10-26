@@ -358,7 +358,7 @@ How we searched:
 | Parapo by Hitch With Us Corp. | "Taxi booking app for safety, convenience and coupons!" Last update 8 Mar 2022 according to APKCombo (a secondary mirror site). | Google Play | Listing returns "Not Found" |
 | PARA POS | A point-of-sale app (unrelated) | Apple App Store | Live |
 | Parapo EHR; ParaPO (an AI research method); "parapo" on SoundCloud | Unrelated fields | app.realparapo.com; OpenReview; SoundCloud | Live |
-| Roviicc/ParaPo | **This project** (it is this repo's own git remote) | GitHub | — |
+| ParaOrg/Para | **This project** (it is this repo's own git remote) | GitHub | — |
 
 **Domains** (we loaded each name; this is not a registry lookup):
 

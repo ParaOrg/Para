@@ -8,10 +8,10 @@ welcome, and there is a list of easy ones below.
 ## Pick something to do
 
 - **Easy first tasks:** open the issues with the
-  [`good first issue`](https://github.com/Roviicc/ParaPo/labels/good%20first%20issue)
+  [`good first issue`](https://github.com/ParaOrg/Para/labels/good%20first%20issue)
   label. Each one names the file, what is wrong and how to check your fix.
 - **A route is wrong or missing?** Open a
-  [route report](https://github.com/Roviicc/ParaPo/issues/new/choose) (see
+  [route report](https://github.com/ParaOrg/Para/issues/new/choose) (see
   "Reporting a wrong or missing route" below). You do not need to write code.
 - **Something else:** a bug or an idea has its own form in the same place. If
   you plan a big change, open an issue first so we can agree on it before you
@@ -26,8 +26,8 @@ You need [Node.js](https://nodejs.org) 22.12 or newer and Git. First press
 **Fork** on the repo's GitHub page, so you have a copy of your own to push to.
 
 ```bash
-git clone https://github.com/<your-username>/ParaPo.git
-cd ParaPo
+git clone https://github.com/<your-username>/Para.git
+cd Para
 git checkout staging
 npm install
 npm run dev
@@ -129,7 +129,7 @@ words above.
 
 The routes are the heart of ParaPo, and local knowledge matters most here.
 
-1. Open [a new issue](https://github.com/Roviicc/ParaPo/issues/new/choose) and
+1. Open [a new issue](https://github.com/ParaOrg/Para/issues/new/choose) and
    pick **Wrong or missing route**.
 2. Fill in the line name (what is written on the jeep's signboard), which
    direction, where on the map, and what is wrong.
