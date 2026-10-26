@@ -1,6 +1,6 @@
 # 08: The contributor tables
 
-Status: ready-for-agent
+Status: ready-for-human (owner: run the audit query in database.md section 13 and explain each row; run the two-phone checklist above)
 Type: task
 Wave: 3
 Who: Sonnet; Opus reviews before the owner sees it
@@ -37,3 +37,5 @@ Between the starting numbers in §5 and the field test's results (04), use which
   - `retire_month` on a test month (in a transaction, rolled back) drops the piece, trims the lines, clears the text, unlinks the phone.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Code done and applied live, under timestamped names rather than `0019_contributions.sql`: `20261019125900_contributions` (ledger 20261019144009: `contributor`, `contribution`, `point_batch` and monthly pieces, `hinto`, `save_contribution`) and `20261022090000_contribution_use` (ledger 20261023024013: `contribution_use`, block/unblock, `retire_month`, `add_months`). Types regenerated. The `supabase/apply/*_check.sql` files came back true. Left: the audit query was not run (09's Answer says so), and the two-phone checklist was not recorded as run.

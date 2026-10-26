@@ -1,6 +1,6 @@
 # 13: Sending on Save, and "Delete my recordings"
 
-Status: ready-for-agent
+Status: ready-for-human (owner: send a ride from a real phone, offline then online, and decide whether the per-recording Remove is enough instead of one "Delete my recordings" button)
 Type: task
 Wave: 4
 Who: Sonnet
@@ -30,3 +30,5 @@ Blocked by: 08, 09, 10
 - `npm run check` passes.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Mostly done; it grew into accounts (contributor-accounts, resolved). Evidence: client with its own storage key in `src/features/contribute/api/contribute-client.ts` (`parapo.contributor-auth`), `upload-contribution.ts` (`uploadContribution`, `removeUpload`), `pack-recording.ts`, retries on online and visibility in `use-uploads.ts`, plain-word errors in `upload-problem.ts`, check-build checks that the contributor page carries Supabase but names no studio table, `tests/e2e/upload-test.mjs`, unit `upload-problem-test.mjs`. The owner's upload from the phone worked on 2026-10-23 (09's Answer). Not as written: there is no single "Delete my recordings" button, only removing one upload at a time (`use-remove-account-upload-mutation.ts`). Needs `20261019125900_contributions` (applied) and, for accounts, `20261024090000_contributor_accounts` (NOT applied yet).

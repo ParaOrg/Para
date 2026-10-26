@@ -30,3 +30,5 @@ Blocked by: 01, 04
 - The studio's headless suite; `npm run check`.
 
 ## Comments
+
+2026-10-26, status check on `staging`: partly done. Exists (649e8434, 55afe525): saving writes a draft, never the approved row (`src/features/studio/data/draft-save.ts`, `drafts.ts` `claimDraft`/`updateDraft`, `draft-facts.ts`, `draft-new-place.ts`; on in production via `VITE_STUDIO_DRAFTS=1`), the Zod payload (`review-schema.ts`), drafts drawn over the approved map (`src/features/studio/maps/draft-lines.tsx`, `draft-markers.tsx`), revision checks against lost updates, discard with a confirmation (`review-confirmation.tsx`), tests `draft-save-test.mjs`, `draft-lines-test.mjs`, `draft-review-test.mjs`. Needs 0018, 0022, `20261018112757_reviewed_draft_approval` (all applied). Still missing: "Being changed by X" with the editor's name (nothing in `src/` reads `editor_name`; `claim_draft` only says the draft is someone else's), the other-editor-discard-after-7-days rule (`discard_draft` lets any editor discard any draft at once), the two-editor headless proof, and the Draft / Pending / Taken down marks on the Playground lists need checking against the ticket.
