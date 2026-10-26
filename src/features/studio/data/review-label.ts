@@ -22,6 +22,8 @@ export interface ReviewDraft {
   kind: 'route' | 'hotspot';
   status: 'draft' | 'pending';
   isNew: boolean;
+  /** The account that made the draft; null once that account is gone. */
+  editorId: string | null;
   revision: number;
   note: string | null;
   updatedAt: string;
@@ -50,6 +52,7 @@ export function reviewDraftOf(
     kind: row.kind,
     status: row.status,
     isNew: row.is_new,
+    editorId: row.editor_id,
     revision: row.revision,
     note: row.note,
     updatedAt: row.updated_at,

@@ -9,21 +9,21 @@ const EDITOR_ID = '11111111-1111-4111-8111-111111111111';
 
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
 
-const make = () => {
+const make = (id, email) => {
   const now = new Date().toISOString();
   const exp = Math.floor(Date.now() / 1000) + 6 * 3600;
   const user = {
-    id: EDITOR_ID,
+    id,
     aud: 'authenticated',
     role: 'authenticated',
-    email: 'editor@example.com',
+    email,
     app_metadata: { provider: 'email' },
     user_metadata: {},
     created_at: now,
     updated_at: now,
   };
   const claims = {
-    sub: EDITOR_ID,
+    sub: id,
     aud: 'authenticated',
     role: 'authenticated',
     exp,
@@ -43,9 +43,12 @@ const make = () => {
   };
 };
 
-/** Makes `page` an editor: the stored session, GoTrue's answers, and the test hook `window.__src`. */
-export async function signInAsEditor(page) {
-  const { user, session } = make();
+/**
+ * Makes `page` an editor: the stored session, GoTrue's answers, and the test hook `window.__src`.
+ * Two pages signed in with different ids are two editors.
+ */
+export async function signInAsEditor(page, { id = EDITOR_ID, email = 'editor@example.com' } = {}) {
+  const { user, session } = make(id, email);
   await page.route(/\/auth\/v1\/user/, (r) =>
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
   );

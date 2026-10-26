@@ -15,6 +15,7 @@ const meta = {
       kind: 'route',
       status: 'pending',
       isNew: false,
+      editorId: null,
       revision: 3,
       note: null,
       updatedAt: '2026-10-18T10:00:00Z',

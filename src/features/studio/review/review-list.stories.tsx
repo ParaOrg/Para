@@ -15,6 +15,7 @@ const meta = {
         kind: 'route',
         status: 'draft',
         isNew: false,
+        editorId: null,
         revision: 3,
         note: null,
         updatedAt: '2026-10-18T10:00:00Z',
@@ -49,4 +50,10 @@ export const LongName: Story = {
       },
     ],
   },
+};
+export const Pending: Story = {
+  args: { drafts: [{ ...meta.args.drafts[0], status: 'pending' }] },
+};
+export const ChangedByAnotherEditor: Story = {
+  args: { changedBy: () => 'Being changed by Marisol. You can look at it, but not change it.' },
 };

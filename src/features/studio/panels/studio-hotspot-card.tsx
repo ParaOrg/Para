@@ -12,6 +12,8 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { CardActions } from './card-actions';
 import type { useDeleteActions } from './use-delete-actions';
 import type { Drawing } from '../drawing/use-drawing';
+import { DraftLockNotice } from '../review/draft-lock-notice';
+import { useDraftLock } from '../review/use-draft-lock';
 
 type Saved = ReturnType<typeof useSavedRoutes<DirectionRow>>;
 type Hotspots = ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -55,6 +57,8 @@ export function StudioHotspotCard({
   onCloseAll,
   onClose,
 }: StudioHotspotCardProps) {
+  // Another editor's draft of this hotspot: it can be looked at, not changed.
+  const { lock, retry } = useDraftLock('hotspot', hotspot.id);
   return (
     <HotspotCard
       routeCards={{
@@ -76,7 +80,10 @@ export function StudioHotspotCard({
         hotspots.show(id, clearOfOpen);
       }}
       actions={
-        canEdit && (
+        canEdit &&
+        (lock ? (
+          <DraftLockNotice lock={lock} onRetry={retry} />
+        ) : (
           <CardActions
             editLabel={hotspot.kind === 'terminal' ? 'Edit terminal' : 'Edit hintuan'}
             onEdit={() => {
@@ -96,7 +103,7 @@ export function StudioHotspotCard({
               if (hotspots.selected) void onDeleteHotspot(hotspots.selected);
             }}
           />
-        )
+        ))
       }
       onClose={onClose}
     />
