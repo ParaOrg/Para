@@ -1,6 +1,6 @@
 # 04: The switch: Contributors | Playground | Public
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 3
 Who: Sonnet
@@ -28,3 +28,5 @@ Blocked by: contribute/03
 - `npm run check` passes.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Done. Evidence: `src/features/studio/maps/map-switch.tsx` (radio group Contributors | Playground | Public, with stories), `studio-map.ts` (`?map=` read with Zod, `DEFAULT_STUDIO_MAP = 'playground'`), and `tests/e2e/save-test.mjs` section 2b (a half-drawn line, camera and basemap survive the switch). Latest touches 466f6588, 54d8ffab. No migration.

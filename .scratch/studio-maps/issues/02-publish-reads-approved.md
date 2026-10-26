@@ -1,6 +1,6 @@
 # 02: The publish: approved only, takedowns against the guard, no contributor data
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2
 Who: Sonnet
@@ -31,3 +31,5 @@ Can be written against 01's design; tested once 01 is applied.
 - A run by hand writes byte-identical files.
 
 ## Comments
+
+2026-10-26, status check on `staging` (ffd27e4a). Done; commit 19ef8b70, with 0018's read rules. Evidence: `scripts/publish/shrinkGuard.mjs` (takedowns excused from the 30% guard, `takenDownSets`), `scripts/publish/privacyProbe.mjs` (one `limit=1` request per contributor table; a row back fails the run), both called in `scripts/publish/publish-map.mjs` before anything is written, `CONTRIBUTOR_FIELDS` in `scripts/checks/check-map-data.mjs`, units `tests/unit/shrink-guard-test.mjs` and `privacy-probe-test.mjs`. Needs 0018 (applied live, ledger 20261018054405). The probe runs on every publish, so it is checked live each night.

@@ -1,6 +1,6 @@
 # 01: The field-test page
 
-Status: claimed
+Status: resolved
 Type: task
 Wave: 1
 Who: Sonnet, another session, from 2026-10-17. Branch `claude/contribute-field-test`, a draft PR into `staging` titled "Contribute: a field-test page that records a ride on the phone". Not in that night's release: the owner tries it first.
@@ -61,3 +61,5 @@ A bare `/contribute/` page that records a ride on the phone. No database, no des
 - On a phone: open `/contribute/` on the PR's preview, Start, ride, Stop, Save, Download, and the JSON holds the points, the hintos and the gaps.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Nobody is on it: branch `claude/contribute-field-test` is merged into `staging`, and the page has grown well past the field test (recorder, saving, upload, accounts, offline, native app). Evidence: `src/app/contribute/`, `src/features/contribute/`, `src/features/routes/model/ride-recording.ts` with its unit check, `tests/e2e/contribute-test.mjs`, and `check-build.mjs` keeping the pages apart. The phone ride it asked for is ticket 04 (ready-for-human).

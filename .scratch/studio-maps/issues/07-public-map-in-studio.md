@@ -1,6 +1,6 @@
 # 07: The Public map in the studio
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 3
 Who: Sonnet
@@ -25,3 +25,5 @@ Blocked by: 03, 04, 06
 - `npm run check` passes.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Done (commit 07cfc5fd and the lane-b merge 15ad17e5). Evidence: `src/features/studio/public-view/` (`studio-public-view.tsx`, `waiting-list.tsx`, `public-waiting.tsx`, stories) and `tests/e2e/studio-public-view-test.mjs`, which compares the ids the studio's Public map draws with the public page's, and runs in CI. Take down / Put back come from 06's actions. Needs 0018 and 0022 (both applied live).

@@ -1,6 +1,6 @@
 # 06: Submit, Approve, Send back, Take down, Put back
 
-Status: ready-for-agent
+Status: ready-for-human (owner: approve one real draft, run or wait for the publish, and check it appears; then take it down and put it back)
 Type: task
 Wave: 3
 Who: Sonnet
@@ -28,3 +28,5 @@ Blocked by: 05
 - The studio's headless suite; `npm run check`.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Code done in 649e8434 (a different tool built it), refined by e2bb3b5c and 55afe525. It differs from the ticket on purpose: Approve is one database function, not the `routes-write.ts` / `hotspots-write.ts` save code, so it succeeds or fails whole (no half-approved state) and refuses when the approved row changed meanwhile (`revision_mismatch` / `conflict`). Evidence: `src/features/studio/data/drafts.ts` (`submitDraft`, `approveDraft`, `takeDown`, `putBack`, `discardDraft`), `review-commands.ts`, `review-schema.ts`, `src/features/studio/review/` (queue, comparison, geometry, conflict, send-back note in `review-details.tsx`, `publication-panel.tsx`), `supabase/migrations/0022_draft_ops.sql` (`submit_draft`, `send_back_draft`, `approve_draft`, `take_down`, `put_back`; an end hotspot of an approved route is refused with `blocked`), `tests/unit/review-flow-test.mjs`, `draft-review-test.mjs`, `tests/e2e/review-test.mjs`, `review-publication-test.mjs`. Needs 0018, 0022 and `20261018112757_reviewed_draft_approval`, all applied live. Left: the by-hand publish run.

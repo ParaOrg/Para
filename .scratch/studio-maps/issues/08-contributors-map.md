@@ -1,6 +1,6 @@
 # 08: The Contributors map
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 5
 Who: Sonnet
@@ -29,3 +29,5 @@ contribute/08 must be applied, and there should be real contributions to look at
 - `npm run check` passes.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Done. Evidence: `src/features/studio/data/contributions-read.ts` (slices by days and box), `src/features/studio/contributors/` (`contributors-view.tsx` with Show hidden, `contribution-list.tsx`, `contribution-layers.ts`, `mark-placement.ts`, stories for list rows and hintos), `tests/unit/contributions-read-test.mjs`, `tests/e2e/studio-contributors-test.mjs` and `studio-scale-test.mjs` (1,000 made-up uploads) in CI. Needs `20261019125900_contributions` and `20261022090000_contribution_use` (applied live). The studio also reads the contributor's name, which needs `20261024090000_contributor_accounts` (NOT applied yet).
