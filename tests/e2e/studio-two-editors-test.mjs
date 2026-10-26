@@ -245,6 +245,8 @@ check('  and B has sent no write', writesOf(db).length === writesBefore);
 await b.page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 const item = b.page.getByRole('listitem').filter({ hasText: 'Discard…' });
 await item.first().waitFor();
+// The name arrives after the list.
+await item.first().getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
 check(
   "B's Drafts list marks it Draft and says who is changing it",
   (await item.first().innerText()).includes('route · Draft') &&
