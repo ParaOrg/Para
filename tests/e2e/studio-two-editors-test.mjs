@@ -12,7 +12,10 @@
 // controls, and sends no write; B's Drafts list says the same under the
 // draft. With no name on file, B is told "another editor" and no id or email
 // shows. After A discards the draft, B reloads, can edit, and B's save
-// stores a draft under B's id. A hotspot's draft is held the same way: B's
+// stores a draft under B's id. B reviewing A's draft is offered Approve but not
+// its details form. A card opened before A's draft cannot save over it, and a
+// direct update of A's draft by B changes nothing (the stand-in applies
+// draft_update as the migration 20261026090000 writes it). A hotspot's draft is held the same way: B's
 // card for it says so and offers no Edit or Delete.
 import { chromium } from 'playwright';
 
@@ -178,6 +181,8 @@ async function openRoute(page) {
  */
 async function openRouteFromPlace(page) {
   // Inside the place's box, clear of the line's end and the draft's marker.
+  // The draft's marker may sit over the place: leave it out of the tap's way.
+  await page.addStyleTag({ content: '.maplibregl-marker { pointer-events: none !important; }' });
   await tapAt(page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
   await page.getByTestId('card-item').first().click();
   await page.waitForTimeout(700);
@@ -245,6 +250,18 @@ check(
   (await item.first().innerText()).includes('route · Draft') &&
     (await item.first().innerText()).includes('Being changed by Marisol'),
 );
+
+// B can review that draft, but not edit its details or resolve its conflict.
+await item.first().getByRole('button', { name: 'Review changes' }).click();
+await b.page.getByText('Being changed by Marisol').waitFor();
+await b.page.getByRole('button', { name: 'Approve', exact: true }).waitFor({ timeout: 10000 });
+check(
+  "B, reviewing A's draft, is offered Approve but not its details form",
+  (await b.page.getByRole('button', { name: 'Save draft details' }).count()) === 0 &&
+    (await b.page.getByRole('heading', { name: 'Edit draft details' }).count()) === 0,
+  (await body(b.page)).slice(0, 700),
+);
+await b.page.getByRole('button', { name: 'Back to drafts' }).click();
 await b.page.locator('dialog').getByRole('button', { name: 'Close', exact: true }).click();
 
 // ---- No name on file: plain words.
@@ -285,8 +302,65 @@ check(
   JSON.stringify(db.tables.draft.map((d) => d.editor_id)),
 );
 
+// ---- A card opened before A's draft cannot save over it.
+db.tables.draft = [];
+await load(b.page);
+await openRouteFromPlace(b.page);
+await b.page.getByRole('button', { name: 'Edit route' }).waitFor();
+await b.page.getByRole('button', { name: 'Edit route' }).click();
+await b.page.waitForFunction(() => /\d+ points?/.test(document.body.innerText));
+db.tables.editor_name = [{ user_id: A_ID, name: 'Marisol' }];
+db.tables.draft.push({
+  id: 'eeeeeeee-0000-4000-8000-0000000000aa',
+  kind: 'route',
+  subject_id: ROUTE_ID,
+  is_new: false,
+  base_revision: 1,
+  revision: 1,
+  status: 'draft',
+  payload: { version: 1 },
+  note: null,
+  editor_id: A_ID,
+  created_at: NOW,
+  updated_at: NOW,
+  submitted_at: null,
+});
+const staleWrites = writesOf(db).length;
+await b.page.getByRole('button', { name: /Done/ }).click();
+await b.page.getByRole('button', { name: /^(Save|Update)$/ }).click();
+await b.page.getByText('This is being changed by Marisol').waitFor({ timeout: 10000 });
+check(
+  "B's save from a card opened before A's draft is refused, and nothing is written",
+  writesOf(db).length === staleWrites &&
+    db.tables.draft.length === 1 &&
+    db.tables.draft[0].revision === 1,
+);
+const direct = await b.page
+  .evaluate(
+    async ([url]) => {
+      const r = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${JSON.parse(localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith('-auth-token')))).access_token}`,
+          prefer: 'return=representation',
+        },
+        body: JSON.stringify({ note: 'overwritten' }),
+      });
+      return r.json();
+    },
+    [`${new URL(b.page.url()).origin}/rest/v1/draft?id=eq.eeeeeeee-0000-4000-8000-0000000000aa`],
+  )
+  .catch(() => null);
+check(
+  "a direct update of A's draft by B changes nothing (draft_update)",
+  db.tables.draft[0].note === null &&
+    (direct === null || (Array.isArray(direct) && direct.length === 0)),
+);
+
 // ---- A hotspot's draft is held the same way.
-db.tables.editor_name.push({ user_id: A_ID, name: 'Marisol' });
+db.tables.draft = [];
+db.tables.editor_name = [{ user_id: A_ID, name: 'Marisol' }];
 db.tables.draft.push({
   id: 'eeeeeeee-0000-4000-8000-00000000000f',
   kind: 'hotspot',
@@ -302,6 +376,8 @@ db.tables.draft.push({
   updated_at: NOW,
   submitted_at: null,
 });
+// The refused save left B's line on B's device, as any unsaved drawing is; drop it.
+await b.page.addInitScript(() => localStorage.removeItem('parapo.draft.v1'));
 await load(b.page);
 await tapAt(b.page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
 await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });

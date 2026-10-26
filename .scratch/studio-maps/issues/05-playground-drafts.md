@@ -39,3 +39,5 @@ Still open on 05:
 - **The 7-day rule** is not built. It waits on the owner (spec, "Open for the owner": may another editor discard a draft left 7 days?). `discard_draft` is as it was: any editor can discard any draft at once, and the Drafts list offers Discard… on another editor's draft.
 - The map's own markers say "Draft: NAME-OF-THING" for every draft; they do not yet say Pending or who is changing it. Small, but a design call: the owner draws it.
 - The acceptance check "after any number of saves, the publish run by hand writes byte-identical files" and the live try with two real editors are the owner's.
+
+2026-10-26, review fixes on PR #407: the Drafts screen no longer edits another editor's draft (details form replaced by the notice; `saveDraftFacts`, `refreshDraftBase` and a hotspot take-down are guarded). Written, not applied: `supabase/migrations/20261026090000_draft_update_own.sql` narrows `draft_update` to the draft's maker (or a draft whose maker is gone), so the database says it too; the review functions are security definers and are unaffected. The owner applies it from `supabase/apply/20261026090000_draft_update_own_apply.sql`.

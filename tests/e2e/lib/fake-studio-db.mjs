@@ -14,7 +14,9 @@
 // The review workflow's three calls are answered as 0022 answers them,
 // enough for two editors to meet over one draft: claim_draft (one draft per
 // route or hotspot, stamped with the caller's id from the request's token),
-// discard_draft, and a draft's revision rising with every change.
+// discard_draft, and a draft's revision rising with every change. A direct
+// update of a draft changes it only for its maker, as draft_update does once
+// 20261026090000 is applied (RLS hides the row, so the update matches none).
 
 const TABLES = [
   'contribution',
@@ -262,9 +264,12 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
       return { status: 200, body: all.map((r) => shape(table, r, select)) };
     }
     if (method === 'PATCH') {
-      for (const r of all)
+      // draft_update (20261026090000): a draft is changed by its maker, or by anyone once the maker is gone.
+      const mine = (r) => table !== 'draft' || r.editor_id == null || r.editor_id === callerOf(req);
+      const changed = all.filter(mine);
+      for (const r of changed)
         Object.assign(r, body, table === 'draft' ? { revision: r.revision + 1 } : {});
-      return answer(all);
+      return answer(changed);
     }
     const made = [];
     for (const r of Array.isArray(body) ? body : [body]) {

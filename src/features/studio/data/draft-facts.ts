@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 
+import { assertNotAnothersDraft } from './draft-guard';
 import { updateDraft } from './drafts';
 import type { DraftRow } from './review-schema';
 
@@ -32,6 +33,7 @@ export function draftFacts(draft: DraftRow): DraftFact[] {
 }
 
 export async function saveDraftFacts(draft: DraftRow, values: Record<string, string>) {
+  await assertNotAnothersDraft(draft);
   if (draft.status !== 'draft') throw new Error('Send this draft back before editing it.');
   const payload = payloadSchema.parse(draft.payload);
   const key = draft.kind === 'route' ? 'route' : 'stop';

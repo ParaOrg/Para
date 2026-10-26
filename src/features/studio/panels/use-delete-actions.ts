@@ -4,8 +4,9 @@ import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots'
 import { isLoop, LOOP_WORD, type DirectionRow } from '@/features/routes/model/routes';
 
 import { endsRefusal } from './hotspot-in-use';
+import { assertNotAnothersDraft } from '../data/draft-guard';
 import { deleteDirectionDraft, draftRefusal, DRAFTED } from '../data/draft-save';
-import { takeDown } from '../data/drafts';
+import { draftOf, takeDown } from '../data/drafts';
 import { STUDIO_DRAFTS } from '../data/flags';
 import { deleteHotspot } from '../data/hotspots-write';
 import { reviewMessage, runReviewCommand } from '../data/review-commands';
@@ -54,6 +55,7 @@ export function useDeleteActions({
     try {
       // With drafts on, a hotspot comes off the map by take-down, which Put back undoes.
       if (STUDIO_DRAFTS) {
+        await assertNotAnothersDraft(await draftOf('hotspot', s.id));
         const refusal = draftRefusal(await takeDown('hotspot', s.id));
         if (refusal) throw new Error(refusal);
       } else await deleteHotspot(s);

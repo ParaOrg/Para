@@ -16,38 +16,39 @@ export function ReviewList({ drafts, changedBy, isBusy, onAction, onReview }: Re
   if (drafts.length === 0) return <p>No drafts. Changes saved in the Playground appear here.</p>;
   return (
     <ul className="flex flex-col gap-3">
-      {drafts.map((draft) => (
-        <li
-          key={draft.id}
-          className="flex flex-col gap-3 rounded-xl border border-border-primary p-4"
-        >
-          <div>
-            <h3 className="font-bold">{draft.label}</h3>
-            <p className="text-sm text-content-secondary">
-              {draft.isNew ? 'New ' : ''}
-              {draft.kind} · {draft.status === 'pending' ? 'Pending' : 'Draft'}
-            </p>
-            {changedBy?.(draft) && (
-              <p className="text-sm text-content-secondary">{changedBy(draft)}</p>
-            )}
-          </div>
-          {draft.note && <p className="text-sm">Note: {draft.note}</p>}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="secondary"
-              label="Review changes"
-              disabled={isBusy}
-              onClick={() => onReview(draft.id)}
-            />
-            <Button
-              variant="secondary"
-              label="Discard…"
-              disabled={isBusy}
-              onClick={() => onAction('discard', draft.id)}
-            />
-          </div>
-        </li>
-      ))}
+      {drafts.map((draft) => {
+        const holder = changedBy?.(draft);
+        return (
+          <li
+            key={draft.id}
+            className="flex flex-col gap-3 rounded-xl border border-border-primary p-4"
+          >
+            <div>
+              <h3 className="font-bold">{draft.label}</h3>
+              <p className="text-sm text-content-secondary">
+                {draft.isNew ? 'New ' : ''}
+                {draft.kind} · {draft.status === 'pending' ? 'Pending' : 'Draft'}
+              </p>
+              {holder && <p className="text-sm text-content-secondary">{holder}</p>}
+            </div>
+            {draft.note && <p className="text-sm">Note: {draft.note}</p>}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                label="Review changes"
+                disabled={isBusy}
+                onClick={() => onReview(draft.id)}
+              />
+              <Button
+                variant="secondary"
+                label="Discard…"
+                disabled={isBusy}
+                onClick={() => onAction('discard', draft.id)}
+              />
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
