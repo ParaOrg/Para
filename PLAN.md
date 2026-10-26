@@ -411,7 +411,7 @@ the spellings on the owner's list, side of road, the field method behind
 | Backend | Supabase — Postgres + PostGIS |
 | Auth | Email + password, single user (was magic link until 2026-09-12; owner did not want sign-in routed through Gmail). Forgot-password is the one flow that still sends mail. Change-password lives in the account pill. Visitors have no accounts (decided 2026-09-14); from step 2 only the owner signs in, at `/studio/`, with no sign-up. |
 | Write access | Public read. Writes only by accounts on the editor list (migration 0005, build-order step 1, applied 2026-09-15). Since 0015 (2026-10-14) every editor edits every route and hotspot; until then only rows they owned. The owner added two editors on 2026-10-14 (0015's header). Before 0005 any signed-in account could write rows it owned (found 2026-09-14) |
-| Repo | github.com/Roviicc/ParaPo |
+| Repo | github.com/ParaOrg/Para |
 | Live | https://parapo.villaralvorovic2.workers.dev |
 | Verified | 2026-09-07: local and live both render Metro Manila (real-clock headless screenshot, 718 KB, no error box) |
 

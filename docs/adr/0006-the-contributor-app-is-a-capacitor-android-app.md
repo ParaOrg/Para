@@ -52,7 +52,7 @@ service with a visible "ParaPo is recording" notification.
   workflow and the release build job name that environment. Only the `publish`
   job can write to the repository, and it holds no secret.
 - **Updates.** The app reads
-  `https://github.com/Roviicc/ParaPo/releases/latest/download/latest.json` at
+  `https://github.com/ParaOrg/Para/releases/latest/download/latest.json` at
   start (`version`, `versionCode`, `url`, `minVersion`; `url` must be https on
   github.com). A newer `versionCode` shows a quiet "A new version is ready"
   with a Download link; below `minVersion` the app asks to update before Start;

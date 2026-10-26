@@ -7,8 +7,7 @@ const meta = {
   component: AppUpdateNotice,
   args: {
     update: 'available',
-    downloadUrl:
-      'https://github.com/Roviicc/ParaPo/releases/latest/download/parapo-contributor.apk',
+    downloadUrl: 'https://github.com/ParaOrg/Para/releases/latest/download/parapo-contributor.apk',
   },
   decorators: [
     (Story) => (
