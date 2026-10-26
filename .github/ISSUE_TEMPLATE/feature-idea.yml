@@ -1,0 +1,25 @@
+name: Feature idea
+description: Suggest something new or better
+labels: ['needs-triage']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve, and for whom?
+      description: Say who has the problem (a commuter, a contributor, an editor) and when.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What is your idea?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Other ways to solve it
+      description: Optional.
+  - type: markdown
+    attributes:
+      value: The owner designs how ParaPo looks, so an idea that changes the look may wait for a design.

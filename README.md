@@ -111,6 +111,16 @@ with warnings, and closed by the first run with nothing to report.
 | `tests/unit/` | the unit checks, Node's own test runner (`npm run test:unit`) |
 | `tests/e2e/` | the headless suites, and their README |
 
+## Contributing
+
+New here? Start with [CONTRIBUTING.md](CONTRIBUTING.md): how to run ParaPo on
+your computer, the standards, and how to send a pull request (into `staging`,
+not `main`). Small, ready-made tasks are the issues labelled
+[good first issue](https://github.com/Roviicc/ParaPo/labels/good%20first%20issue).
+A jeepney route that is wrong or missing? Open a
+[route report](https://github.com/Roviicc/ParaPo/issues/new/choose); you do
+not need to write code.
+
 ## Data and licence
 
 **The code** is under the [MIT licence](LICENSE): use it for anything, keep
