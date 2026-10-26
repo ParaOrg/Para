@@ -1,6 +1,6 @@
 # 07: Forgot password
 
-Status: claimed
+Status: ready-for-human (owner: approve the copy, Resend and Supabase email setup)
 Type: task
 Who: a session (`claude/accounts-07-forgot-password`)
 Blocked by: 02 (resolved). The owner sets up email sending in Supabase (below) before it works for real; the code does not wait for it.
