@@ -6,9 +6,15 @@
 // /rest/v1/ lands here, so no suite reaches the live project.
 //
 //   const db = await fakeStudioDb(page, { contribution: [...], hinto: [...], stop: [...] });
+//   await fakeStudioDb(secondPage, {}, db);   a second editor's page on the same rows
 //   db.log           every request: { method, table, query, body }
 //   db.tables        the rows, by table name
 //   db.next          { when(method, table, url) → bool }, refused once with a 500
+//
+// The review workflow's three calls are answered as 0022 answers them,
+// enough for two editors to meet over one draft: claim_draft (one draft per
+// route or hotspot, stamped with the caller's id from the request's token),
+// discard_draft, and a draft's revision rising with every change.
 
 const TABLES = [
   'contribution',
@@ -21,6 +27,7 @@ const TABLES = [
   'route_stop',
   'stop',
   'draft',
+  'editor_name',
 ];
 const SKIPPED = ['select', 'order', 'offset', 'limit', 'columns', 'on_conflict'];
 const now = '2026-10-22T00:00:00+00:00';
@@ -42,11 +49,25 @@ const splitTop = (s) => {
   return out;
 };
 
-export async function fakeStudioDb(page, seed = {}) {
-  const tables = Object.fromEntries(TABLES.map((t) => [t, [...(seed[t] ?? [])]]));
-  const db = { tables, log: [], fault: null };
-  let seq = 0;
-  const newId = () => `00000000-0000-4000-8000-${String(++seq).padStart(12, '0')}`;
+/** The account a request is made as: the `sub` of its bearer token, or null for the anon key. */
+const callerOf = (req) => {
+  const token = (req.headers().authorization ?? '').replace(/^Bearer /, '');
+  try {
+    return JSON.parse(Buffer.from(token.split('.')[1] ?? '', 'base64url').toString()).sub ?? null;
+  } catch {
+    return null;
+  }
+};
+
+export async function fakeStudioDb(page, seed = {}, shared = null) {
+  const db = shared ?? {
+    tables: Object.fromEntries(TABLES.map((t) => [t, [...(seed[t] ?? [])]])),
+    log: [],
+    fault: null,
+    seq: 0,
+  };
+  const { tables } = db;
+  const newId = () => `00000000-0000-4000-8000-${String(++db.seq).padStart(12, '0')}`;
 
   const shape = (table, row, select) => {
     if (!select || select === '*') return { ...row };
@@ -148,7 +169,40 @@ export async function fakeStudioDb(page, seed = {}) {
     return { ...base, ...r };
   };
 
-  const rpc = (name, body) => {
+  const rpc = (name, body, caller) => {
+    if (name === 'claim_draft') {
+      const same = (d) => d.kind === body.p_kind && d.subject_id === body.p_subject_id;
+      const kept = tables.draft.find(same);
+      if (kept) return { status: 200, body: { code: 'ok', created: false, draft: kept } };
+      const draft = {
+        id: newId(),
+        kind: body.p_kind,
+        subject_id: body.p_subject_id,
+        is_new: body.p_is_new,
+        base_revision: body.p_base_revision,
+        revision: 1,
+        status: 'draft',
+        payload: body.p_payload,
+        note: body.p_note ?? null,
+        editor_id: caller,
+        created_at: now,
+        updated_at: now,
+        submitted_at: null,
+      };
+      tables.draft.push(draft);
+      return { status: 200, body: { code: 'ok', created: true, draft } };
+    }
+    if (name === 'discard_draft') {
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (body.p_revision !== null && body.p_revision !== kept.revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      tables.draft = tables.draft.filter((d) => d !== kept);
+      return { status: 200, body: { code: 'discarded' } };
+    }
     const phone = tables.contributor.find((c) => c.id === body.target);
     if (!phone) return { status: 404, body: { code: 'P0002', message: 'no_contributor' } };
     if (name === 'block_contributor') {
@@ -173,7 +227,7 @@ export async function fakeStudioDb(page, seed = {}) {
       db.fault = null;
       return { status: 500, body: { code: 'XX000', message: 'refused on purpose' } };
     }
-    if (path.startsWith('rpc/')) return rpc(table, body);
+    if (path.startsWith('rpc/')) return rpc(table, body, callerOf(req));
     const params = [...u.searchParams];
     const select = u.searchParams.get('select');
     const prefer = req.headers().prefer ?? '';
@@ -208,7 +262,8 @@ export async function fakeStudioDb(page, seed = {}) {
       return { status: 200, body: all.map((r) => shape(table, r, select)) };
     }
     if (method === 'PATCH') {
-      for (const r of all) Object.assign(r, body);
+      for (const r of all)
+        Object.assign(r, body, table === 'draft' ? { revision: r.revision + 1 } : {});
       return answer(all);
     }
     const made = [];

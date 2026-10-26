@@ -5,9 +5,12 @@ import { Button } from '@/design-system/primitives/button';
 import { ReviewConfirmation } from './review-confirmation';
 import { ReviewDetails } from './review-details';
 import { ReviewList } from './review-list';
+import { useSession } from '../auth/use-session';
+import { editorNameOf, lockMessage } from '../data/draft-lock';
 import { reviewMessage, type ReviewAction } from '../data/review-commands';
-import { reviewDraftOf } from '../data/review-label';
+import { reviewDraftOf, type ReviewDraft } from '../data/review-label';
 import type { DraftRow } from '../data/review-schema';
+import { useEditorNamesQuery } from '../data/use-editor-names-query';
 import { useReviewMutation, useReviewNames, useReviewQuery } from '../data/use-review-query';
 
 interface ReviewQueueProps {
@@ -25,6 +28,8 @@ export function ReviewQueue({ onBusyChange, onChanged, initialDraftId = null }: 
   const query = useReviewQuery();
   const mutation = useReviewMutation();
   const names = useReviewNames(query.data ?? []);
+  const userId = useSession()?.user.id ?? null;
+  const editors = useEditorNamesQuery();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [reviewId, setReviewId] = useState<string | null>(initialDraftId);
   const inFlight = useRef(false);
@@ -63,6 +68,14 @@ export function ReviewQueue({ onBusyChange, onChanged, initialDraftId = null }: 
         <Button variant="secondary" label="Try again" onClick={() => void query.refetch()} />
       </div>
     );
+  // Another editor's draft, by their name; plain words while it is unread or missing.
+  const changedBy = (draft: ReviewDraft) =>
+    draft.editorId === null || draft.editorId === userId
+      ? null
+      : lockMessage({
+          state: 'other',
+          name: editors.data ? editorNameOf(editors.data, draft.editorId) : null,
+        });
   const drafts = query.data.map((row) => reviewDraftOf(row, names));
   const reviewedDraft = query.data.find((draft) => draft.id === reviewId);
   return (
@@ -114,6 +127,7 @@ export function ReviewQueue({ onBusyChange, onChanged, initialDraftId = null }: 
       ) : (
         <ReviewList
           drafts={drafts}
+          changedBy={changedBy}
           isBusy={mutation.isPending}
           onAction={handleAction}
           onReview={setReviewId}

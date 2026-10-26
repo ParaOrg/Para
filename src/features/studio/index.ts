@@ -29,6 +29,7 @@ export { useDeleteActions } from './panels/use-delete-actions';
 export { useSaveFlow } from './panels/use-save-flow';
 export { useSaveTarget } from './panels/use-save-target';
 export { useStudioTrip } from './panels/use-studio-trip';
+export { DraftLocksProvider } from './review/draft-locks-provider';
 export { StudioReview } from './review/studio-review';
 export { StudioPublicView } from './public-view/studio-public-view';
 export { StudioContributors } from './contributors/studio-contributors';
