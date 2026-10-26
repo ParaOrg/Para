@@ -162,8 +162,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Publish map $(date -u '+%Y-%m-%d %H:%M UTC')"
           # The owner may have pushed while this ran; go once more behind it.
-          git pull --rebase origin main || { git rebase --abort; exit 1; }
-          git push origin HEAD:main
+          # Output into publish.log for the issue. A key that is wrong or has no
+          # write access fails here, with git's own message above the hint.
+          {
+            git pull --rebase origin main || { git rebase --abort; exit 1; }
+            git push origin HEAD:main
+          } 2>&1 | tee -a "$RUNNER_TEMP/publish.log" || {
+            echo "If this is a permission or authentication error: the deploy key PUBLISH_DEPLOY_KEY is missing, wrong, or has no write access (Settings -> Deploy keys)." | tee -a "$RUNNER_TEMP/publish.log"
+            exit 1
+          }
 
       # One issue, "The map needs a look", is the whole story. Its body is
       # replaced on every run that has something to say, and a comment is
@@ -184,6 +191,9 @@ jobs:
           body=""
           if [ "$STATUS" != "success" ]; then
             body+="**The publish on $now did not go through** ($STATUS): [the run]($RUN_URL)."$'\n\n'
+            if [ ! -f "$RUNNER_TEMP/publish.log" ]; then
+              body+="The run stopped before the publish started. If it was the checkout, the deploy key PUBLISH_DEPLOY_KEY is missing, wrong, or has no write access (Settings -> Deploy keys)."$'\n\n'
+            fi
             log="$(tail -q -n 15 "$RUNNER_TEMP/publish.log" "$RUNNER_TEMP/check.log" 2>/dev/null | sed '/ExperimentalWarning/d' || true)"
             if [ -n "$log" ]; then body+='```'$'\n'"$log"$'\n''```'$'\n\n'; fi
           fi
