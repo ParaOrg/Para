@@ -17,7 +17,7 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 
 **Caching.** Tiles, styles and assets all go through the Cache API (a style is keyed by the build and the address it is asked on, an asset by the build and its path). Tiles: `public, max-age=86400, stale-while-revalidate=604800`, with the file's name as the ETag, so a new monthly build changes every tile's address in the cache. `current.json` is read at most every 5 minutes per Worker instance. The Cloudflare Cache API stores tiles and leaf directories, but only on a custom domain: on `workers.dev` it keeps nothing, so every tile there is a read from R2.
 
-**CORS.** Allowed: `https://parapo.villaralvorovic2.workers.dev`, `https://staging-parapo.villaralvorovic2.workers.dev`, any `https://<name>-parapo.villaralvorovic2.workers.dev` preview, `http://localhost:5173`, and the comma-separated `EXTRA_ORIGINS` in `wrangler.jsonc` (add the future domain there). A request with no `Origin` is served. Any other origin gets `403` and no CORS headers.
+**CORS.** Allowed: `https://parapo.para-ph-info.workers.dev`, `https://staging-parapo.para-ph-info.workers.dev`, any `https://<name>-parapo.para-ph-info.workers.dev` preview, the same three on `villaralvorovic2.workers.dev` (kept while the site moves accounts; a later change removes them), `http://localhost:5173`, and the comma-separated `EXTRA_ORIGINS` in `wrangler.jsonc` (add the future domain there). A request with no `Origin` is served. Any other origin gets `403` and no CORS headers.
 
 **Rate limit.** Not in the Worker. On a custom domain, set a Cloudflare rate-limiting rule for the zone (Security → WAF → Rate limiting rules); `workers.dev` has none.
 
