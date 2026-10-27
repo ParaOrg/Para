@@ -6,6 +6,10 @@
   "compatibility_date": "2026-09-01",
   "workers_dev": true,
   "preview_urls": true,
+  // The tiles' own domain, declared here so it can't drift from the dashboard. The deploy
+  // fails until the para-commute.org zone is Active in this account. `workers_dev` stays
+  // true because setting `routes` would otherwise turn the workers.dev address off.
+  "routes": [{ "pattern": "tiles.para-commute.org", "custom_domain": true }],
   "r2_buckets": [{ "binding": "TILES", "bucket_name": "parapo-tiles" }],
   "vars": {
     // Extra origins allowed to read the tiles, comma-separated: the site's own domain.

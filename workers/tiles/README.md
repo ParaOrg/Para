@@ -19,7 +19,7 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 
 **CORS.** Allowed: `https://parapo.para-ph-info.workers.dev`, `https://staging-parapo.para-ph-info.workers.dev`, any `https://<name>-parapo.para-ph-info.workers.dev` preview, the same three on `villaralvorovic2.workers.dev` (kept while the site moves accounts; a later change removes them), `http://localhost:5173`, and the comma-separated `EXTRA_ORIGINS` in `wrangler.jsonc` (`https://www.para-commute.org` and `https://para-commute.org`, the site's own domain). A request with no `Origin` is served. Any other origin gets `403` and no CORS headers.
 
-**Custom domain.** The Worker answers at `https://tiles.para-commute.org` (Settings → Domains & Routes → Custom domain), which is what turns the edge cache on. The `workers.dev` address keeps working.
+**Custom domain.** The Worker answers at `https://tiles.para-commute.org`, declared in `wrangler.jsonc` (`routes`, `custom_domain: true`), so the deploy creates it and nothing is added by hand in the dashboard. That is what turns the edge cache on. The deploy fails until the `para-commute.org` zone is Active in this account, and the Workers Builds token needs Workers Routes write on that zone. `workers_dev` stays `true`, so the `workers.dev` address keeps working.
 
 **Rate limit.** Not in the Worker. It is a Cloudflare rate-limiting rule on the `para-commute.org` zone (Security → WAF → Rate limiting rules), an owner step in the dashboard; `workers.dev` has none.
 
@@ -33,7 +33,7 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 6. Check a tile is gzipped once, not twice. Take any tile address the file holds, for example Quiapo at zoom 14:
    `curl -s https://parapo-tiles.<account>.workers.dev/14/13698/7520.pbf | gunzip | head -c 20`
    should print readable protobuf text (layer names such as `water`), not binary that starts `1f 8b` again. The Worker marks tiles `encodeBody: 'manual'` so Cloudflare does not compress them a second time.
-7. For the tiles subdomain: Worker → **Settings → Domains & Routes** → **Add** → **Custom domain**. That is also what turns the edge cache on.
+7. The tiles subdomain needs no step here: `wrangler.jsonc` declares `tiles.para-commute.org` as a custom domain and the deploy creates it (see Custom domain above).
 
 ## Run the checks
 

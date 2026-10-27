@@ -9,7 +9,7 @@ Blocked by: 02, 03, 04
 
 In this order, at a quiet hour:
 
-1. **Tiles first.** Worker `parapo-tiles` → Settings → Domains & Routes → Add → Custom domain → `tiles.para-commute.org`. The hub merges 04; staging reads its tiles from there.
+1. **Tiles first.** `tiles.para-commute.org` comes from `workers/tiles/wrangler.jsonc` (`routes`, `custom_domain: true`), so there is nothing to add by hand: the next `parapo-tiles` deploy creates it, once the zone is Active (02). The owner checks it under Worker `parapo-tiles` → Settings → Domains & Routes. The hub merges 04; staging reads its tiles from there.
 2. **Rate limit.** Security → WAF → Rate limiting rules, on `tiles.para-commute.org` (the number is the hub's to propose from the load test).
 3. **Sign-in.** Turnstile's hostnames get `para-commute.org`. Supabase → Authentication → URL Configuration: Site URL `https://www.para-commute.org`, and `https://www.para-commute.org/**` as a redirect URL.
 4. **The app.** Worker `parapo` → Custom domain → `www.para-commute.org`. Then a redirect rule: `para-commute.org/*` → `https://www.para-commute.org/$1`, 301, query kept.
