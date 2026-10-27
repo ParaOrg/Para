@@ -8,10 +8,10 @@
 #      touches: docs and Markdown alone run nothing (except docs/architecture.md,
 #      which the build job's architecture step checks); src/app/studio/,
 #      src/features/studio/ and the studio's suites alone skip the public
-#      suites; src/app/public-map/, src/features/locator/,
-#      src/features/published-map/, public/ and the public suites alone skip
-#      the studio's. Anything else — shared
-#      code, the build, the lockfile, this file — runs both. A push to main
+#      suites; src/app/public-map/, src/features/published-map/, public/ and
+#      the public suites alone skip the studio's. Anything else — shared code
+#      (Turnstile and the locator among it), the build, the lockfile, this
+#      file — runs both. A push to main
 #      or staging, the nightly run and "Run workflow" run everything.
 #   2. Every suite at once. Each suite is its own job, so the run takes as
 #      long as the slowest suite, not the sum of them all. commuter-test, the
