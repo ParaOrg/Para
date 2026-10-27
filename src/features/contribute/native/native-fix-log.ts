@@ -47,7 +47,7 @@ export function parseFixLog(raw: unknown): FixLog {
 
 interface FixLogPlugin {
   begin: (options: { recordingId: string }) => Promise<void>;
-  read: () => Promise<unknown>;
+  read: (options: { after?: number }) => Promise<unknown>;
   end: (options: { time: number }) => Promise<void>;
   clear: () => Promise<void>;
 }
@@ -62,10 +62,19 @@ export function beginFixLog(recordingId: string): Promise<void> {
 
 /**
  * The fixes the service kept for the recording being logged, in order, whether or not the page
- * was awake to hear them. Null recording id when nothing is being logged.
+ * was awake to hear them; with `after`, only those after that time. Null recording id when nothing
+ * is being logged.
  */
-export async function readFixLog(): Promise<FixLog> {
-  return parseFixLog(await getPlugin().read());
+export async function readFixLog(after: number | null = null): Promise<FixLog> {
+  return parseFixLog(await getPlugin().read(fixLogReadOptions(after)));
+}
+
+/**
+ * What the plugin is asked for. Java reads `after` as a whole number only, so it is rounded down:
+ * at worst one fix the recorder holds comes again, and the recorder skips it.
+ */
+export function fixLogReadOptions(after: number | null): { after?: number } {
+  return after === null ? {} : { after: Math.floor(after) };
 }
 
 /** Ends the log at a Stop: fixes after `time` are dropped and none are taken until begin. */
