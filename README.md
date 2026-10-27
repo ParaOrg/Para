@@ -97,16 +97,26 @@ with warnings, and closed by the first run with nothing to report.
 
 ParaPo is building its own map tiles so the map no longer depends on
 OpenFreeMap (`.scratch/own-tiles/spec.md`). `.github/workflows/tiles.yml`
-builds them on the 3rd of each month at 02:00 Manila and on "Run workflow"
-(tick **upload** to send the result to R2). It reads the box the public map can
-be panned across (`METRO_MANILA` in `map-view.tsx`) and fails if a published
-route falls outside it. Planetiler's OpenMapTiles profile builds zooms 0 to 14
-from Geofabrik's Philippines extract (about 66 MB, four minutes); Planetiler
-and the extract are checked against their checksums. Before anything is
+builds them on the 3rd of each month at 02:00 Manila, on "Run workflow" (tick
+**upload**) and on a push to `staging` that changes the workflow or
+`scripts/tiles/`. It uploads to R2 only from `staging` or `main`, and says so
+and stops on any other branch. GitHub runs a schedule only from `main`, and
+shows "Run workflow" only for a workflow file on `main`, so until the owner
+releases to main the push to `staging` is what starts an upload: merging the
+tiles pull request does the first one once the four secrets exist (without
+them it stops at once, naming the missing secret). It reads the box the public
+map can be panned across (`METRO_MANILA` in `map-view.tsx`) and fails if a
+published route falls outside it. Planetiler's OpenMapTiles profile builds
+zooms 0 to 14 from Geofabrik's Philippines extract (about 66 MB, four
+minutes); Planetiler and the extract are checked against their checksums.
+Planetiler's own downloads (water polygons, Natural Earth, lake centerlines)
+are copied to `build-cache/sources/` in R2: an upload run takes them from
+there, falls back to upstream for what is missing and refreshes the copy
+(delete `build-cache/` to refresh from upstream). Before anything is
 uploaded the file must be at least 40 MB, hold at least 90% of the last
 build's tiles and the SM Fairview, Quiapo and BGC tiles at zoom 14, and carry
 its build date in its metadata. A pull request builds and checks but never
-uploads. A failed run is red, and GitHub emails the owner about a failed
+uploads and never sees the R2 secrets. A failed run is red, and GitHub emails the owner about a failed
 scheduled run, as for the backup.
 
 R2 gets `tiles/parapo-YYYY-MM-DD.pmtiles` (the last three kept), then

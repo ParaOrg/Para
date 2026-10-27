@@ -3,8 +3,11 @@
 # be panned across (METRO_MANILA in map-view.tsx), zoom 0-14, as one PMTiles file. Checked, then
 # uploaded to a private-by-default R2 bucket with the basemap's sprite, glyphs and styles.
 #
-# A pull request builds and checks but uploads nothing. Upload runs on the monthly schedule and on
-# "Run workflow" with `upload` ticked. A failure is a red run with an ::error:: line: GitHub emails
+# A pull request builds and checks but uploads nothing. Upload runs only from `staging` or `main`:
+# on a push to staging that changes this workflow or scripts/tiles/, on the monthly schedule and on
+# "Run workflow" with `upload` ticked. GitHub runs `schedule` only from the default branch and shows
+# "Run workflow" only for a workflow file on it, so until staging is released to main the push to
+# staging is the only way an upload starts. A failure is a red run with an ::error:: line: GitHub emails
 # the owner about a failed scheduled run, the way backup.yml is reported (no issue, no artifact).
 #
 # THE OWNER'S SETUP: an R2 bucket and an API token ("Object Read & Write", scoped to that bucket),
@@ -29,6 +32,11 @@ on:
         description: Upload the checked build to R2 (a pull request never does)
         type: boolean
         default: false
+  push:
+    branches: [staging]
+    paths:
+      - .github/workflows/tiles.yml
+      - scripts/tiles/**
   pull_request:
     paths:
       - .github/workflows/tiles.yml
@@ -56,10 +64,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      WORK: ${{ runner.temp }}/tiles
-      SHOULD_UPLOAD: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload) }}
+      # A pull request never sees the R2 secrets, even one from this repository.
+      TILES_R2_ENDPOINT: ${{ github.event_name != 'pull_request' && secrets.TILES_R2_ENDPOINT || '' }}
+      TILES_R2_BUCKET: ${{ github.event_name != 'pull_request' && secrets.TILES_R2_BUCKET || '' }}
+      AWS_ACCESS_KEY_ID: ${{ github.event_name != 'pull_request' && secrets.TILES_R2_ACCESS_KEY_ID || '' }}
+      AWS_SECRET_ACCESS_KEY: ${{ github.event_name != 'pull_request' && secrets.TILES_R2_SECRET_ACCESS_KEY || '' }}
+      SHOULD_UPLOAD: ${{ github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.upload) }}
     steps:
       - uses: actions/checkout@v5
+      - run: echo "WORK=$RUNNER_TEMP/tiles" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -68,17 +81,39 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Check the upload may run
+        if: env.SHOULD_UPLOAD == 'true'
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/staging ] && [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::The tiles are uploaded only from staging or main; this run is on $GITHUB_REF_NAME. Untick 'upload' to build and check only."
+            exit 1
+          fi
+          missing=0
+          for pair in TILES_R2_ENDPOINT:TILES_R2_ENDPOINT AWS_ACCESS_KEY_ID:TILES_R2_ACCESS_KEY_ID \
+            AWS_SECRET_ACCESS_KEY:TILES_R2_SECRET_ACCESS_KEY TILES_R2_BUCKET:TILES_R2_BUCKET; do
+            variable="${pair%%:*}"
+            if [ -z "${!variable}" ]; then
+              echo "::error::The GitHub secret ${pair##*:} is not set (see this file's header). Nothing was built or uploaded."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
       - name: Read the box and check it covers every published route
         id: area
         run: echo "bounds=$(node scripts/tiles/area.mjs)" >> "$GITHUB_OUTPUT"
 
-      # Planetiler's own downloads come from three third-party hosts; with them cached, one outage
-      # cannot fail a build. Bump PLANETILER_VERSION or delete the cache to refresh them. GitHub
-      # drops a cache unused for 7 days, so a monthly run usually starts cold.
+      # Planetiler's own downloads come from three third-party hosts. An upload run keeps a copy in
+      # R2 (sources.sh); a pull request, which does not read R2, uses GitHub's cache (dropped after
+      # 7 days unused) and then upstream.
       - uses: actions/cache@v4
         with:
           path: ${{ env.WORK }}/data/sources
           key: planetiler-sources-${{ env.PLANETILER_VERSION }}
+
+      - name: Get the R2 copy of Planetiler's downloads
+        if: env.SHOULD_UPLOAD == 'true' && env.TILES_R2_BUCKET != ''
+        run: scripts/tiles/sources.sh pull "$WORK/data/sources"
 
       - name: Build the tiles
         id: build
@@ -92,11 +127,7 @@ jobs:
       - name: Get the last build's current.json
         if: env.SHOULD_UPLOAD == 'true'
         env:
-          TILES_R2_ENDPOINT: ${{ secrets.TILES_R2_ENDPOINT }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.TILES_R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TILES_R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
-          TILES_R2_BUCKET: ${{ secrets.TILES_R2_BUCKET }}
         run: |
           if [ -z "$TILES_R2_ENDPOINT" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$TILES_R2_BUCKET" ]; then
             echo "No R2 secrets: the tile-count comparison is skipped; the upload step will stop."
@@ -126,26 +157,13 @@ jobs:
       - name: Upload to R2
         if: env.SHOULD_UPLOAD == 'true'
         env:
-          TILES_R2_ENDPOINT: ${{ secrets.TILES_R2_ENDPOINT }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.TILES_R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TILES_R2_SECRET_ACCESS_KEY }}
-          TILES_R2_BUCKET: ${{ secrets.TILES_R2_BUCKET }}
           BUILD_DATE: ${{ steps.build.outputs.build_date }}
         run: |
-          missing=0
-          for name in TILES_R2_ENDPOINT AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY TILES_R2_BUCKET; do
-            if [ -z "${!name}" ]; then
-              case "$name" in
-                AWS_ACCESS_KEY_ID) secret=TILES_R2_ACCESS_KEY_ID ;;
-                AWS_SECRET_ACCESS_KEY) secret=TILES_R2_SECRET_ACCESS_KEY ;;
-                *) secret="$name" ;;
-              esac
-              echo "::error::The GitHub secret $secret is not set (see this file's header). The build passed its checks but was not uploaded."
-              missing=1
-            fi
-          done
-          [ "$missing" = 0 ] || exit 1
           scripts/tiles/upload.sh "$WORK/parapo-$BUILD_DATE.pmtiles" "$WORK/current.json" "$WORK/assets"
+
+      - name: Refresh the R2 copy of Planetiler's downloads
+        if: env.SHOULD_UPLOAD == 'true' && env.TILES_R2_BUCKET != ''
+        run: scripts/tiles/sources.sh push "$WORK/data/sources"
 
       - name: Write the summary
         if: always()
