@@ -1,6 +1,6 @@
 # 03: The tiles Worker on our subdomain
 
-Status: needs-info (owner: the tiles subdomain, approval of a new Worker)
+Status: resolved (`para-tiles` serves at `https://para-tiles.para-ph-info.workers.dev`; the custom domain is custom-domain 05)
 Type: task
 Who: Sonnet
 Blocked by: 01

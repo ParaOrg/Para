@@ -1,6 +1,6 @@
 # 03: The old app's phones move to the new app
 
-Status: ready
+Status: resolved (#424)
 Type: task
 Who: Sonnet
 Blocked by: –

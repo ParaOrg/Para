@@ -1,6 +1,6 @@
 # 01: The site on Para, and what Vercel holds
 
-Status: ready (owner)
+Status: in progress (the `para` Worker exists in Para and builds from GitHub, production branch `staging` until the next release; Vercel's records still to list)
 Type: task
 Who: Owner; the hub checks
 Blocked by: –
@@ -19,7 +19,7 @@ Blocked by: –
 | Preview builds | on (this is what gives `staging` its address) |
 | Variables | none (`.env.production` holds them) |
 
-Then Settings → Build → Branch control: production branch `main`.
+Then Settings → Build → Branch control: production branch `main`. Until `staging` is first released to `main`, the production branch is `staging`, so the Worker has something to serve; it switches to `main` after that release.
 
 **Sign-in on the new addresses.** Turnstile's widget hostnames get `para.para-ph-info.workers.dev` and `staging-para.para-ph-info.workers.dev`; Supabase → Authentication → URL Configuration gets `https://para.para-ph-info.workers.dev/**` and `https://staging-para.para-ph-info.workers.dev/**` as redirect URLs.
 
