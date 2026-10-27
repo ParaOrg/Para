@@ -1,6 +1,6 @@
 # 04: Switch staging to our tiles
 
-Status: needs-info (waits on 02 and 03)
+Status: in-review (the switch is built; the staging-side proofs wait on the site's move)
 Type: task
 Who: Sonnet
 Blocked by: 02, 03
@@ -22,3 +22,29 @@ Then run `ready-for-100k` 03's load test against staging with the tiles host inc
 - Setting the host back to OpenFreeMap restores today's map with no other change.
 
 ## Comments
+
+2026-10-27, builder session (PR into `staging`):
+
+**Built.** `VITE_BASEMAP_HOST` (parsed in `src/shared/config/env.ts`, OpenFreeMap when unset) feeds `basemap.ts`, the offline worker's two basemap rules, the page's preconnect (`scripts/node/basemap-offline.ts`) and `check-build.mjs`; the credit line is `map-attribution.ts`; ADR 0007. `.env.production` names `https://parapo-tiles.para-ph-info.workers.dev`, so production switches only when the owner merges `staging` into `main`. Open item before that: a custom domain for the tiles host, so the edge cache is on.
+
+**Proof.**
+- `npm run check` green (1,167 unit checks, including `tests/unit/basemap-host-test.mjs`).
+- Host set back to OpenFreeMap: `VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build` passes `check-build`, the built page preconnects to OpenFreeMap, the worker holds no trace of our host, and the unit check compares the new rules with the old ones on a list of addresses (`basemapCacheRules`) and the three style addresses with today's literals.
+- Screenshots of Monochrome, Colour and Fiord from a local production build (390×844, Metro Manila at the opening view), every request going to our tiles host, none failing: `04-screenshots/`.
+
+**Tiles host, straight (300 random tiles from the 145 in the central box, zooms 11–14, from the build container, origin `http://localhost:5173`):**
+
+| Pass | Concurrency | Median | 90th | 99th | Slowest | `cf-cache-status` |
+| --- | --- | --- | --- | --- | --- | --- |
+| first (cold) | 8 | 292 ms | 721 ms | 1,810 ms | 2,056 ms | none |
+| second | 8 | 54 ms | 82 ms | 100 ms | 109 ms | HIT |
+| burst | 32 | 77 ms | 155 ms | 463 ms | 473 ms | HIT |
+
+All 200, no errors. The 145 tiles were 35.5 MB decoded, about 245 kB each. The `HIT` is the Worker's own Cache API (workers.dev has no zone cache, so this is per data centre).
+
+**Not done.**
+- `ready-for-100k` 03's load test does not exist yet (no `scripts/research/load-test.mjs`), and the staging site is not deploying until the site Worker moves; run it with the tiles host included once both exist.
+- `phone-speed.mjs` serves OpenFreeMap's files from a curl-fed cache keyed to that one host; timing ours beside it needs the script taught a second host, which is its own change.
+- Side-by-side screenshots against OpenFreeMap's, and the first-load comparison on a slow phone, wait for the same.
+- The corner credit shows "© OpenStreetMap contributors" and "© OpenMapTiles" twice with our host: once as the Worker's plain-text source credit, once as `map-attribution.ts`'s links. Making the Worker's source credit the links (or leaving it empty) would remove the repeat; that is a Worker change.
+- `tests/e2e` suites run on the dev server, which reads OpenFreeMap; none was run against our host (the preview origins `:4173`/`:4174` are not allowed by the Worker, so `pwa-test` and `contribute-offline-test` build with OpenFreeMap named in CI).
