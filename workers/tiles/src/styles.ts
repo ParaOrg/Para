@@ -45,7 +45,7 @@ export function rewriteStyle(style: unknown, origin: string, header: PmtilesHead
         type: 'vector',
         tiles: [`${origin}/{z}/{x}/{y}.pbf`],
         minzoom: 0,
-        maxzoom: 14,
+        maxzoom: header.maxZoom,
         bounds: header.bounds,
         attribution: ATTRIBUTION,
       };

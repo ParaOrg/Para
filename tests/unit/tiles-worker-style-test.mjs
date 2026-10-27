@@ -1,6 +1,7 @@
 // The tiles Worker's style rewrite and its CORS rule.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/tiles-worker-style-test.mjs
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -10,7 +11,7 @@ import { rewriteStyle } from '../../workers/tiles/src/styles.ts';
 import { buildPmtiles, fakeBucket } from './tiles-worker-fixture.mjs';
 
 const OWN = 'https://tiles.example';
-const HEADER = { bounds: [120.6, 14.1, 121.5, 15.05] };
+const HEADER = { bounds: [120.6, 14.1, 121.5, 15.05], maxZoom: 14 };
 
 const liberty = () => ({
   version: 8,
@@ -54,6 +55,26 @@ test('the natural_earth raster source and its layer are dropped, the other layer
     style.layers.map((layer) => layer.id),
     ['background', 'water'],
   );
+});
+
+test('the style takes its maxzoom from the file', () => {
+  const style = rewriteStyle(liberty(), OWN, { ...HEADER, maxZoom: 12 });
+  assert.equal(style.sources.openmaptiles.maxzoom, 12);
+});
+
+// OpenFreeMap's Positron as served on 2026-10-27, untouched.
+test("OpenFreeMap's real Positron style is rewritten with nothing left on OpenFreeMap", () => {
+  const original = JSON.parse(
+    readFileSync(new URL('./fixtures/openfreemap-positron-style.json', import.meta.url), 'utf8'),
+  );
+  assert.ok(JSON.stringify(original).includes('tiles.openfreemap.org'));
+  const style = rewriteStyle(original, OWN, HEADER);
+  assert.ok(!JSON.stringify(style).includes('openfreemap'));
+  assert.deepEqual(Object.keys(style.sources), ['openmaptiles']);
+  assert.equal(style.sprite, `${OWN}/assets/sprites/ofm`);
+  assert.equal(style.glyphs, `${OWN}/assets/fonts/{fontstack}/{range}.pbf`);
+  assert.equal(style.layers.length, original.layers.length);
+  assert.equal(style.layers.at(-1).id, original.layers.at(-1).id);
 });
 
 test('a style without the openmaptiles source is refused', () => {
@@ -141,10 +162,11 @@ test('an allowed origin gets CORS headers; a request with no Origin is served wi
   const withOrigin = await ask({ Origin: 'http://localhost:5173' });
   assert.equal(withOrigin.status, 200);
   assert.equal(withOrigin.headers.get('Access-Control-Allow-Origin'), 'http://localhost:5173');
-  assert.match(withOrigin.headers.get('Vary') ?? '', /Origin/);
+  assert.equal(withOrigin.headers.get('Vary'), 'Origin');
   const without = await ask({});
   assert.equal(without.status, 200);
   assert.equal(without.headers.get('Access-Control-Allow-Origin'), null);
+  assert.equal(without.headers.get('Vary'), 'Origin');
 });
 
 test('another origin is refused and gets no CORS headers', async () => {

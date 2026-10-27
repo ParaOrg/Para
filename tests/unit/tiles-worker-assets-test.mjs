@@ -10,10 +10,17 @@ import { fakeBucket } from './tiles-worker-fixture.mjs';
 
 const OWN = 'https://tiles.example';
 
-async function get(path, files) {
+const CURRENT = JSON.stringify({ file: 'parapo-2026-10-27.pmtiles', builtAt: 'x' });
+
+async function get(path, files, headers = {}) {
   globalThis.caches = undefined;
-  const bucket = fakeBucket(new Map(Object.entries(files).map(([k, v]) => [k, Buffer.from(v)])));
-  return createApp()(new Request(`${OWN}${path}`), { TILES: bucket }, { waitUntil() {} });
+  const all = { 'tiles/current.json': CURRENT, ...files };
+  const bucket = fakeBucket(new Map(Object.entries(all).map(([k, v]) => [k, Buffer.from(v)])));
+  return createApp()(
+    new Request(`${OWN}${path}`, { headers }),
+    { TILES: bucket },
+    { waitUntil() {} },
+  );
 }
 
 test('a font name with spaces is decoded before it becomes the bucket key', async () => {
@@ -38,6 +45,25 @@ test('a fontstack is tried font by font and the first one the bucket holds is se
 test('a fontstack with no font in the bucket is 404', async () => {
   const response = await get('/assets/fonts/Nope,Also%20Nope/0-255.pbf', {});
   assert.equal(response.status, 404);
+});
+
+test('a fontstack is read only to its third font', async () => {
+  const stack = '/assets/fonts/A,B,C,D/0-255.pbf';
+  const third = await get(stack, { 'assets/fonts/C/0-255.pbf': 'c' });
+  assert.equal(await third.text(), 'c');
+  const fourth = await get(stack, { 'assets/fonts/D/0-255.pbf': 'd' });
+  assert.equal(fourth.status, 404);
+});
+
+test('an asset is answered 304 to a request that holds its etag, weak or in a list', async () => {
+  const files = { 'assets/sprites/ofm.json': '{}' };
+  const first = await get('/assets/sprites/ofm.json', files);
+  const etag = first.headers.get('ETag');
+  assert.ok(etag);
+  for (const header of [etag, `W/${etag}`, `"other", ${etag}`, '*']) {
+    const response = await get('/assets/sprites/ofm.json', files, { 'If-None-Match': header });
+    assert.equal(response.status, 304, header);
+  }
 });
 
 test('the sprite files are served flat, with their own types', async () => {

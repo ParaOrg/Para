@@ -15,9 +15,10 @@ export function isAllowedOrigin(origin: string, extraOrigins = ''): boolean {
     .includes(origin);
 }
 
-/** CORS headers for an allowed origin; none for a request without an Origin. */
+/** CORS headers for an allowed origin; only Vary for a request without an Origin. */
 export function corsHeaders(origin: string | null): Record<string, string> {
-  if (!origin) return {};
+  // The answer differs by Origin, so shared caches must key on it even when there is none.
+  if (!origin) return { Vary: 'Origin' };
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',

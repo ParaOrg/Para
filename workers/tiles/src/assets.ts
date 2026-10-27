@@ -1,7 +1,10 @@
 import { ASSETS_PREFIX } from './keys';
+import { isBody } from './types';
 import type { R2Bucket } from './types';
 
 const FONTS_PREFIX = `${ASSETS_PREFIX}fonts/`;
+// Each font in a stack costs an R2 read, so a stack is read only this far.
+const MAX_FONTSTACK = 3;
 const ASSET_CACHE_CONTROL = 'public, max-age=604800';
 
 /**
@@ -19,7 +22,10 @@ export function assetKeys(pathname: string): string[] | undefined {
   if (!key.startsWith(ASSETS_PREFIX) || key.split('/').includes('..')) return undefined;
   if (!key.startsWith(FONTS_PREFIX)) return [key];
   const [stack = '', ...rest] = key.slice(FONTS_PREFIX.length).split('/');
-  return stack.split(',').map((font) => [`${FONTS_PREFIX}${font.trim()}`, ...rest].join('/'));
+  return stack
+    .split(',')
+    .slice(0, MAX_FONTSTACK)
+    .map((font) => [`${FONTS_PREFIX}${font.trim()}`, ...rest].join('/'));
 }
 
 function contentType(key: string): string {
@@ -32,7 +38,7 @@ function contentType(key: string): string {
 export async function serveAsset(bucket: R2Bucket, keys: string[]): Promise<Response> {
   for (const key of keys) {
     const object = await bucket.get(key);
-    if (!object) continue;
+    if (!object || !isBody(object)) continue;
     return new Response(object.body, {
       headers: {
         'Content-Type': contentType(key),

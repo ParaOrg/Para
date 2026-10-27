@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { tileIdToZxy } from '../../scripts/research/tiles-pmtiles.mjs';
 import { createApp } from '../../workers/tiles/src/app.ts';
 import { buildPmtiles, fakeBucket, fakeCache, tileBody } from './tiles-worker-fixture.mjs';
 

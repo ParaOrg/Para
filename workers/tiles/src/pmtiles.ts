@@ -6,6 +6,7 @@ export const HEADER_BYTES = 127;
 export const ROOT_READ_BYTES = 16384;
 export const COMPRESSION_NONE = 1;
 export const COMPRESSION_GZIP = 2;
+const TILE_TYPE_MVT = 1;
 const MAX_ZOOM = 22;
 export const MAX_DIRECTORY_DEPTH = 3;
 
@@ -67,6 +68,10 @@ export function parseHeader(bytes: Uint8Array): PmtilesHeader {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const magic = String.fromCharCode(...bytes.subarray(0, 7));
   if (magic !== 'PMTiles' || bytes[7] !== 3) throw new Error('not a PMTiles v3 file');
+  const compressions = [COMPRESSION_NONE, COMPRESSION_GZIP];
+  if (!compressions.includes(bytes[97] ?? 0) || !compressions.includes(bytes[98] ?? 0))
+    throw new Error('PMTiles file uses a compression this Worker cannot serve');
+  if (bytes[99] !== TILE_TYPE_MVT) throw new Error('PMTiles file does not hold vector tiles');
   const u64 = (at: number): number => Number(view.getBigUint64(at, true));
   const degrees = (at: number): number => view.getInt32(at, true) / 1e7;
   return {

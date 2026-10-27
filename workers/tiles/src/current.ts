@@ -1,4 +1,5 @@
 import { CURRENT_KEY } from './keys';
+import { isBody } from './types';
 import type { R2Bucket } from './types';
 
 const CURRENT_TTL_MS = 5 * 60 * 1000;
@@ -31,7 +32,7 @@ export function createCurrentReader(
     if (cached && now() - cached.readAt < CURRENT_TTL_MS) return cached.value;
     try {
       const object = await bucket.get(CURRENT_KEY);
-      if (!object) throw new Error('no tiles published yet');
+      if (!object || !isBody(object)) throw new Error('no tiles published yet');
       const value = parseCurrent(JSON.parse(await new Response(object.body).text()));
       cached = { value, readAt: now() };
       return value;
