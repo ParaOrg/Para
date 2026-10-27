@@ -48,4 +48,4 @@ All 200, no errors. The 145 tiles were 35.5 MB decoded, about 245 kB each. The `
 - `ready-for-100k` 03's load test does not exist yet (no `scripts/research/load-test.mjs`), and the staging site is not deploying until the site Worker moves; run it with the tiles host included once both exist.
 - `phone-speed.mjs` serves OpenFreeMap's files from a curl-fed cache keyed to that one host; timing ours beside it needs the script taught a second host, which is its own change.
 - Side-by-side screenshots against OpenFreeMap's, and the first-load comparison on a slow phone, wait for the same.
-- `tests/e2e` suites run on the dev server, which reads OpenFreeMap; none was run against our host (the preview origins `:4173`/`:4174` are not allowed by the Worker, so `pwa-test` and `contribute-offline-test` build with OpenFreeMap named in CI).
+- `tests/e2e` suites run with OpenFreeMap as the host (CI pins it in `.env.local` and in the two preview builds); none was run against our host.
