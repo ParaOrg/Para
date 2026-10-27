@@ -832,10 +832,6 @@ check(
     .waitForFunction(() => window.__lift, null, { timeout: 30000 })
     .then((h) => h.jsonValue())
     .catch(() => null);
-  // The tiles are asked for once MapLibre has parsed the stand-in's style, which can come after
-  // the first frame that draws the routes; wait for the first to be held before counting.
-  for (let waited = 0; tilesAsked === 0 && waited < 5000; waited += 100)
-    await ap.waitForTimeout(100);
   const asked = tilesAsked;
   check(
     "  and it goes at the first frame that draws the routes, the basemap's tiles still on their way: before the map's 'load' (the owner's answer to A)",
