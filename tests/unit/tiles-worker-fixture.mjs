@@ -163,7 +163,10 @@ export function fakeBucket(files) {
   return bucket;
 }
 
-/** A Cache API stand-in keyed by URL. */
+/**
+ * A Cache API stand-in keyed by URL. `stored` keeps the Response each put was given, with the
+ * encodeBody it was built with (see spyOnResponse).
+ */
 export function fakeCache() {
   const store = new Map();
   const urlOf = (request) => (typeof request === 'string' ? request : request.url);
@@ -175,5 +178,22 @@ export function fakeCache() {
     async put(request, response) {
       store.set(urlOf(request), response);
     },
+  };
+}
+
+/**
+ * Makes every Response remember the `encodeBody` it was built with, which Node would otherwise
+ * ignore. A clone() is a new object without it, as in the Workers runtime. Returns the undo.
+ */
+export function spyOnResponse() {
+  const Original = globalThis.Response;
+  globalThis.Response = class extends Original {
+    constructor(body, init) {
+      super(body, init);
+      this.encodeBody = init?.encodeBody;
+    }
+  };
+  return () => {
+    globalThis.Response = Original;
   };
 }

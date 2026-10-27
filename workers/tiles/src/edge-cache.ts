@@ -1,4 +1,4 @@
-import type { EdgeCache, ExecutionContext } from './types';
+import type { EdgeCache, ExecutionContext, WorkerResponseInit } from './types';
 
 function isEdgeCache(value: unknown): value is EdgeCache {
   return (
@@ -31,6 +31,16 @@ export async function throughCache(
   const hit = await cache?.match(key);
   if (hit) return hit;
   const response = await make();
-  if (cache && response.status === 200) ctx.waitUntil(cache.put(key, response.clone()));
-  return response;
+  if (!cache || response.status !== 200) return response;
+
+  // Not response.clone(): a clone loses encodeBody, so the runtime would gzip a tile that is
+  // already gzipped before storing it, and every cached copy would need two gunzips.
+  const bytes = await response.arrayBuffer();
+  const encodeBody = response.headers.has('Content-Encoding') ? 'manual' : 'automatic';
+  const copy = (): Response => {
+    const init: WorkerResponseInit = { status: 200, headers: response.headers, encodeBody };
+    return new Response(bytes, init);
+  };
+  ctx.waitUntil(cache.put(key, copy()));
+  return copy();
 }

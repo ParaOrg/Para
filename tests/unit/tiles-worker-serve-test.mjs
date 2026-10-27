@@ -7,7 +7,13 @@ import assert from 'node:assert/strict';
 
 import { tileIdToZxy } from '../../scripts/research/tiles-pmtiles.mjs';
 import { createApp } from '../../workers/tiles/src/app.ts';
-import { buildPmtiles, fakeBucket, fakeCache, tileBody } from './tiles-worker-fixture.mjs';
+import {
+  buildPmtiles,
+  fakeBucket,
+  fakeCache,
+  spyOnResponse,
+  tileBody,
+} from './tiles-worker-fixture.mjs';
 
 const FILE = 'parapo-2026-10-27.pmtiles';
 const TILES = [
@@ -99,6 +105,21 @@ test('with the edge cache, a second request for a tile does not touch R2', async
   assert.equal(bucket.reads.length, reads);
   assert.deepEqual(Buffer.from(await second.arrayBuffer()), Buffer.from(await first.arrayBuffer()));
   assert.equal(second.headers.get('Content-Encoding'), 'gzip');
+});
+
+test('a gzipped tile is stored in the edge cache marked as already encoded', async () => {
+  const undo = spyOnResponse();
+  try {
+    const { get, cache } = setup({ withCache: true });
+    const first = await get('/4/9/6.pbf');
+    assert.equal(first.status, 200);
+    const stored = [cache.store.get(`https://tiles.internal/${FILE}/4/9/6`)];
+    assert.ok(stored[0]);
+    assert.equal(stored[0].headers.get('Content-Encoding'), 'gzip');
+    assert.equal(stored[0].encodeBody, 'manual');
+  } finally {
+    undo();
+  }
 });
 
 test('If-None-Match with the file etag answers 304', async () => {
