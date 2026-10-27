@@ -103,7 +103,14 @@ jobs:
               missing=1
             fi
           done
-          exit "$missing"
+          [ "$missing" = 0 ] || exit 1
+          # The value is never printed. Whitespace is an error rather than trimmed: the later steps
+          # pass the secret to aws as it is.
+          endpoint_pattern='^https://[0-9a-f]{32}(\.(eu|fedramp))?\.r2\.cloudflarestorage\.com$'
+          if ! [[ "$TILES_R2_ENDPOINT" =~ $endpoint_pattern ]]; then
+            echo "::error::TILES_R2_ENDPOINT is not an R2 endpoint. It must be exactly https://<32-character account id>.r2.cloudflarestorage.com (or .eu. / .fedramp. before r2), with no path, quotes, spaces or line break. Nothing was built or uploaded."
+            exit 1
+          fi
 
       - name: Read the box and check it covers every published route
         id: area
