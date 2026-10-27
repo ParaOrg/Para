@@ -1,6 +1,6 @@
 # 04: The code for the domain
 
-Status: ready (merges once 02 is Active)
+Status: in-review (draft #423; merges once 02 is Active)
 Type: task
 Who: Sonnet
 Blocked by: – (merge waits on 02)
