@@ -38,3 +38,11 @@ Workflow `.github/workflows/tiles.yml`, scripts in `scripts/tiles/`, README sect
 - Fiord's licence (`openmaptiles/fiord-color-gl-style`): BSD-3-Clause code, CC BY 4.0 design; noted in the README.
 - **File names (hub):** `parapo-YYYY-MM-DD-<run id>.pmtiles`, unique per run; the upload refuses a key that exists, and deletes old builds only after `current.json` has moved.
 - **Secrets (hub):** in a GitHub Environment `tiles` limited to `staging` and `main`; only the R2 steps carry them. Pruning protects the new file and the one the previous `current.json` names.
+
+### First real upload, 2026-10-27
+
+Tiles run 40483304976 (attempt 2), on `staging` 936ffa6, after #417 merged and the owner replaced the R2 keys with ones from the Para account.
+- `tiles/current.json` points at `parapo-2026-10-27-40483304976.pmtiles`: 65,831,334 bytes, 2,568 tiles, built 2026-10-27T10:14:23Z, extract 2026-10-27, Planetiler 0.10.2.
+- 775 asset files synced under `assets/`. The build-cache copy of Planetiler's downloads was pushed (3 files, 1.4 GB). It counts toward R2 storage and is still well inside the free 10 GB.
+- Warnings, none blocking: the tile-count check was skipped (no previous build, as designed); Planetiler's data-fix counts (for example `render_snap_fix_input` 4,522); `actions/cache@v4` runs on Node 20, which GitHub is deprecating.
+- Not yet seen on a real run: the tile-count comparison against a previous build, pruning, and the forced-failure (bad box) check.
