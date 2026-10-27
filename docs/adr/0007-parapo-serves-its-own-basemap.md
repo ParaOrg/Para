@@ -51,8 +51,12 @@ configured host.
   them; they are served to ParaPo's own origins only.
 - **Satellite and Terrain stay as they were.** The studio's two extra designs
   read their own providers (`studio-basemaps.ts`).
-- **Tests.** The browser suites run on the dev server, which reads OpenFreeMap
-  (`.env.production` is not read in development), and the two suites that run a
-  production build (`pwa-test`, `contribute-offline-test`) build with
-  OpenFreeMap named explicitly: their preview origins are not ones the tiles
-  server allows.
+- **Tests.** The browser suites stub `tiles.openfreemap.org`, so they must run
+  with OpenFreeMap as the host. Locally the dev server does, since it reads no
+  `.env.production`. CI copies `.env.production` to `.env.local`, so each of its
+  steps that does so then sets `VITE_BASEMAP_HOST=https://tiles.openfreemap.org`;
+  the two suites that run a production build (`pwa-test`,
+  `contribute-offline-test`) name OpenFreeMap in their build step as well, since
+  their preview origins are not ones the tiles server allows. No suite depends
+  on ParaPo's live tiles server; the built output is checked by `check-build.mjs`
+  against the committed host.
