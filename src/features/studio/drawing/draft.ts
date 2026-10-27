@@ -80,8 +80,8 @@ const fromStored = (d: StoredDraft): Draft => ({
 /**
  * The draft on this device, or null: none, unreadable, not the shape above
  * (an older build's, a hand edit, a half-written save), or with no points.
- * One that is not read stays stored until the next drawing replaces it; read
- * as it is, it would break the restore on every load.
+ * One that is not read is discarded (useDraftSaving clears it on the page's
+ * first render, with nothing drawn) rather than break the restore on every load.
  */
 export function readDraft(): Draft | null {
   try {
