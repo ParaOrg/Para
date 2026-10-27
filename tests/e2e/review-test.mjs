@@ -141,6 +141,11 @@ assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).is
 await shot('09-conflict');
 await page.getByRole('checkbox', { name: /I compared both/ }).check();
 await page.getByRole('button', { name: 'Keep draft for a new review' }).click();
+// The keep's own answer, not Approve, which was on screen (disabled) before it.
+await page
+  .getByRole('status')
+  .filter({ hasText: 'Draft kept. Submit it again when ready.' })
+  .waitFor();
 await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
 await page.getByRole('button', { name: 'Discard…' }).click();
 await shot('05-discard');

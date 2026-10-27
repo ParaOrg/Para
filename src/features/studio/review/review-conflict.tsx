@@ -17,6 +17,15 @@ export function ReviewConflict({ draft, currentRevision }: ReviewConflictProps) 
   const client = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => refreshDraftBase(draft, currentRevision),
+    // The kept draft has a new revision: the drafts list holds it at once, so a
+    // Discard or Approve pressed before the list refetches acts on it, not the old one.
+    onSuccess: (result) => {
+      const kept = result.draft;
+      if (result.code !== 'ok' || !kept) return;
+      client.setQueryData<DraftRow[]>(reviewKeys.drafts(), (drafts) =>
+        drafts?.map((row) => (row.id === kept.id ? kept : row)),
+      );
+    },
     onSettled: () => client.invalidateQueries({ queryKey: reviewKeys.all }),
   });
   return (
