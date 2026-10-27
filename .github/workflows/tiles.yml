@@ -1,0 +1,159 @@
+# The monthly build of ParaPo's own map tiles (.scratch/own-tiles/spec.md, ticket 02): Planetiler's
+# OpenMapTiles profile over Geofabrik's Philippines extract, clipped to the box the public map can
+# be panned across (METRO_MANILA in map-view.tsx), zoom 0-14, as one PMTiles file. Checked, then
+# uploaded to a private-by-default R2 bucket with the basemap's sprite, glyphs and styles.
+#
+# A pull request builds and checks but uploads nothing. Upload runs on the monthly schedule and on
+# "Run workflow" with `upload` ticked. A failure is a red run with an ::error:: line: GitHub emails
+# the owner about a failed scheduled run, the way backup.yml is reported (no issue, no artifact).
+#
+# THE OWNER'S SETUP: an R2 bucket and an API token ("Object Read & Write", scoped to that bucket),
+# then these GitHub secrets (repository secrets):
+#   TILES_R2_ENDPOINT           https://<account-id>.r2.cloudflarestorage.com
+#   TILES_R2_ACCESS_KEY_ID      the token's Access Key ID
+#   TILES_R2_SECRET_ACCESS_KEY  the token's Secret Access Key
+#   TILES_R2_BUCKET             the bucket's name
+# Without them the upload step says so and stops; the build and checks still run.
+#
+# Nothing here is a dependency of the app: Planetiler is a Java jar fetched at run time, pinned by
+# version and checked against its SHA-256; the AWS CLI is preinstalled on ubuntu-latest.
+name: Tiles
+
+on:
+  schedule:
+    # The 3rd of each month, 18:00 UTC = 02:00 in Manila, after Geofabrik's first-of-month extracts.
+    - cron: '0 18 3 * *'
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload the checked build to R2 (a pull request never does)
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - .github/workflows/tiles.yml
+      - scripts/tiles/**
+
+permissions:
+  contents: read
+
+# Never two uploads at once; a newer push to a pull request replaces its older run.
+concurrency:
+  group: tiles-${{ github.event_name == 'pull_request' && github.ref || 'upload' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PLANETILER_VERSION: 0.10.2
+  PLANETILER_SHA256: f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d
+
+jobs:
+  tiles:
+    name: Build, check and upload
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      WORK: ${{ runner.temp }}/tiles
+      SHOULD_UPLOAD: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Read the box and check it covers every published route
+        id: area
+        run: echo "bounds=$(node scripts/tiles/area.mjs)" >> "$GITHUB_OUTPUT"
+
+      # Planetiler's own downloads come from three third-party hosts; with them cached, one outage
+      # cannot fail a build. Bump PLANETILER_VERSION or delete the cache to refresh them. GitHub
+      # drops a cache unused for 7 days, so a monthly run usually starts cold.
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.WORK }}/data/sources
+          key: planetiler-sources-${{ env.PLANETILER_VERSION }}
+
+      - name: Build the tiles
+        id: build
+        run: |
+          build_date="$(date -u +%F)"
+          echo "build_date=$build_date" >> "$GITHUB_OUTPUT"
+          scripts/tiles/build.sh "$WORK" "${{ steps.area.outputs.bounds }}" "$build_date"
+          echo "extract_date=$(cat "$WORK/extract-date.txt")" >> "$GITHUB_OUTPUT"
+          mv "$WORK/parapo.pmtiles" "$WORK/parapo-$build_date.pmtiles"
+
+      - name: Get the last build's current.json
+        if: env.SHOULD_UPLOAD == 'true'
+        env:
+          TILES_R2_ENDPOINT: ${{ secrets.TILES_R2_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TILES_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TILES_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          TILES_R2_BUCKET: ${{ secrets.TILES_R2_BUCKET }}
+        run: |
+          if [ -z "$TILES_R2_ENDPOINT" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$TILES_R2_BUCKET" ]; then
+            echo "No R2 secrets: the tile-count comparison is skipped; the upload step will stop."
+            exit 0
+          fi
+          found="$(aws s3api list-objects-v2 --endpoint-url "$TILES_R2_ENDPOINT" --bucket "$TILES_R2_BUCKET" \
+            --prefix tiles/current.json --query 'Contents[0].Key' --output text)"
+          if [ "$found" = "tiles/current.json" ]; then
+            aws s3 cp "s3://$TILES_R2_BUCKET/tiles/current.json" "$WORK/previous.json" \
+              --endpoint-url "$TILES_R2_ENDPOINT" --only-show-errors
+          else
+            echo "No current.json in the bucket yet: this is the first build."
+          fi
+
+      - name: Check the file
+        env:
+          BUILD_DATE: ${{ steps.build.outputs.build_date }}
+          EXTRACT_DATE: ${{ steps.build.outputs.extract_date }}
+        run: |
+          previous=()
+          [ -f "$WORK/previous.json" ] && previous=("$WORK/previous.json")
+          node scripts/tiles/check.mjs "$WORK/parapo-$BUILD_DATE.pmtiles" "$WORK/current.json" "${previous[@]}"
+
+      - name: Get the styles, sprite and glyphs
+        run: node scripts/tiles/fetch-assets.mjs "$WORK/assets"
+
+      - name: Upload to R2
+        if: env.SHOULD_UPLOAD == 'true'
+        env:
+          TILES_R2_ENDPOINT: ${{ secrets.TILES_R2_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TILES_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TILES_R2_SECRET_ACCESS_KEY }}
+          TILES_R2_BUCKET: ${{ secrets.TILES_R2_BUCKET }}
+          BUILD_DATE: ${{ steps.build.outputs.build_date }}
+        run: |
+          missing=0
+          for name in TILES_R2_ENDPOINT AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY TILES_R2_BUCKET; do
+            if [ -z "${!name}" ]; then
+              case "$name" in
+                AWS_ACCESS_KEY_ID) secret=TILES_R2_ACCESS_KEY_ID ;;
+                AWS_SECRET_ACCESS_KEY) secret=TILES_R2_SECRET_ACCESS_KEY ;;
+                *) secret="$name" ;;
+              esac
+              echo "::error::The GitHub secret $secret is not set (see this file's header). The build passed its checks but was not uploaded."
+              missing=1
+            fi
+          done
+          [ "$missing" = 0 ] || exit 1
+          scripts/tiles/upload.sh "$WORK/parapo-$BUILD_DATE.pmtiles" "$WORK/current.json" "$WORK/assets"
+
+      - name: Write the summary
+        if: always()
+        run: |
+          {
+            echo "### Tiles"
+            echo "Upload: ${SHOULD_UPLOAD/true/yes}"
+            if [ -f "$WORK/current.json" ]; then
+              printf '\n```json\n%s\n```\n' "$(cat "$WORK/current.json")"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

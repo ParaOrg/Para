@@ -93,6 +93,38 @@ goes out with the map and is written up. One issue, **"The map needs a
 look"**, is opened or brought up to date by a run that failed or published
 with warnings, and closed by the first run with nothing to report.
 
+## Map tiles
+
+ParaPo is building its own map tiles so the map no longer depends on
+OpenFreeMap (`.scratch/own-tiles/spec.md`). `.github/workflows/tiles.yml`
+builds them on the 3rd of each month at 02:00 Manila and on "Run workflow"
+(tick **upload** to send the result to R2). It reads the box the public map can
+be panned across (`METRO_MANILA` in `map-view.tsx`) and fails if a published
+route falls outside it. Planetiler's OpenMapTiles profile builds zooms 0 to 14
+from Geofabrik's Philippines extract (about 66 MB, four minutes); Planetiler
+and the extract are checked against their checksums. Before anything is
+uploaded the file must be at least 40 MB, hold at least 90% of the last
+build's tiles and the SM Fairview, Quiapo and BGC tiles at zoom 14, and carry
+its build date in its metadata. A pull request builds and checks but never
+uploads. A failed run is red, and GitHub emails the owner about a failed
+scheduled run, as for the backup.
+
+R2 gets `tiles/parapo-YYYY-MM-DD.pmtiles` (the last three kept), then
+`tiles/current.json` (`file`, `builtAt`, `bytes`, `tiles`, `extractDate`,
+`planetiler`) last, so a failed upload never points at a half file. Under
+`assets/` go OpenFreeMap's three styles as they are (`styles/`), the sprite
+(`sprites/`) and the glyphs of Noto Sans Regular, Bold and Italic (`fonts/`),
+so the map can stop fetching from `tiles.openfreemap.org`; pointing the styles
+at our host is the Worker's job. The GitHub secrets are `TILES_R2_ENDPOINT`,
+`TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` and `TILES_R2_BUCKET`.
+
+Licences to keep with the copies: the styles' code is BSD-3-Clause and their
+design CC BY 4.0 (Positron and Fiord derive from CartoDB Basemaps, CC BY 3.0;
+Fiord's own repository, `openmaptiles/fiord-color-gl-style`, says the same:
+BSD-3-Clause code, CC BY 4.0 design, no attribution needed on the map image
+but reasonably reachable); the sprite's Maki icons are CC0; the fonts are SIL
+OFL 1.1. The map keeps "© OpenMapTiles" and "© OpenStreetMap contributors".
+
 ## Where things are
 
 | | |
@@ -107,7 +139,7 @@ with warnings, and closed by the first run with nothing to report.
 | `src/design-system/` | the tokens, fonts and primitives (foundation ← primitives) |
 | `public/data/` | the published map, every version kept in history: `index.v5.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v4.json` (without loops), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line) |
 | `supabase/migrations/` | the schema and its policies, in order |
-| `scripts/` | tools: the build guards and the data check (`checks/`), the publish (`publish/`), Node's TypeScript hook (`node/`), the research screenshots and the cheap-phone timer, `phone-speed.mjs` with its parts (`research/`), the icons' lossless PNG recompressor, `recompress-png.mjs` (`assets/`) |
+| `scripts/` | tools: the build guards and the data check (`checks/`), the publish (`publish/`), Node's TypeScript hook (`node/`), the monthly map-tiles build (`tiles/`), the research screenshots and the cheap-phone timer, `phone-speed.mjs` with its parts (`research/`), the icons' lossless PNG recompressor, `recompress-png.mjs` (`assets/`) |
 | `tests/unit/` | the unit checks, Node's own test runner (`npm run test:unit`) |
 | `tests/e2e/` | the headless suites, and their README |
 
