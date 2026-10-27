@@ -129,6 +129,21 @@ test('a log with nothing after the stored fixes adds nothing, so importing twice
   assert.deepEqual(twice.rows, []);
 });
 
+test('a ride killed between its auto-stop fix and its stop, with nothing new, imports nothing', () => {
+  // The fix that brought it back to its start was stored; the stop was not.
+  const running = recording();
+  const stored = storedRows(ride.slice(0, BACK_AT + 1));
+  const result = fixLogImport(
+    running,
+    { recordingId: ID, fixes: ride.slice(0, BACK_AT + 1) },
+    stored,
+  );
+  assert.deepEqual(result.rows, []);
+  assert.equal(result.recording, running);
+  const live = takeWatchedFixes(ride.slice(0, BACK_AT + 1).map(asFix), [], running);
+  assert.deepEqual(live, { taken: [], isBackAtStart: false });
+});
+
 test("another recording's log, or none, adds nothing", () => {
   const running = recording();
   for (const recordingId of ['ride-2', null]) {

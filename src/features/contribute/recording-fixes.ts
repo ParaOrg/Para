@@ -76,6 +76,8 @@ export function takeWatchedFixes(
   const fresh = fixesAfter(watched, lastTime)
     .filter((fix) => until === undefined || fix.timestamp <= until)
     .map(fixOfWatched);
+  // Nothing new adds nothing, even when the held fixes alone already came back to the start.
+  if (fresh.length === 0) return { taken: [], isBackAtStart: false };
   const stopCount =
     recording.hasAutoStopped || until !== undefined
       ? null
