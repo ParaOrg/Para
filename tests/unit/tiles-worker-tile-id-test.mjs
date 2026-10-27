@@ -1,12 +1,12 @@
 // The tiles Worker's tile-id maths (workers/tiles/src/pmtiles.ts) against the PMTiles spec's
-// own values and the spike's independent reader.
+// own values and the monthly build's independent reader (scripts/tiles/pmtiles.mjs).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/tiles-worker-tile-id-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { isValidTile, zxyToTileId } from '../../workers/tiles/src/pmtiles.ts';
-import { tileIdToZxy, zxyToTileId as spikeTileId } from '../../scripts/research/tiles-pmtiles.mjs';
+import { tileIdToZxy, zxyToTileId as buildReaderTileId } from '../../scripts/tiles/pmtiles.mjs';
 
 test('tile ids follow the spec: zoom levels stack, each level is a Hilbert curve', () => {
   assert.equal(zxyToTileId(0, 0, 0), 0);
@@ -23,7 +23,7 @@ test('every tile to zoom 5 gets its own id, and the ids round-trip', () => {
     for (let x = 0; x < 2 ** z; x += 1) {
       for (let y = 0; y < 2 ** z; y += 1) {
         const id = zxyToTileId(z, x, y);
-        assert.equal(id, spikeTileId(z, x, y));
+        assert.equal(id, buildReaderTileId(z, x, y));
         assert.deepEqual(tileIdToZxy(id), [z, x, y]);
         seen.add(id);
       }
@@ -32,13 +32,13 @@ test('every tile to zoom 5 gets its own id, and the ids round-trip', () => {
   assert.equal(seen.size, (4 ** 6 - 1) / 3);
 });
 
-test('the ids of Metro Manila at zoom 14 agree with the spike', () => {
+test("the ids of Metro Manila at zoom 14 agree with the monthly build's reader", () => {
   for (const [x, y] of [
     [13701, 7513],
     [13698, 7520],
     [13700, 7522],
   ]) {
-    assert.equal(zxyToTileId(14, x, y), spikeTileId(14, x, y));
+    assert.equal(zxyToTileId(14, x, y), buildReaderTileId(14, x, y));
   }
 });
 
