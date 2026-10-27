@@ -8,8 +8,8 @@
   "preview_urls": true,
   "r2_buckets": [{ "binding": "TILES", "bucket_name": "parapo-tiles" }],
   "vars": {
-    // Extra origins allowed to read the tiles, comma-separated (the future domain).
+    // Extra origins allowed to read the tiles, comma-separated: the site's own domain.
     // The ParaPo workers.dev origins and localhost:5173 are built in.
-    "EXTRA_ORIGINS": "",
+    "EXTRA_ORIGINS": "https://www.para-commute.org,https://para-commute.org",
   },
 }

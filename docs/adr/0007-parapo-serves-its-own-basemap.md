@@ -36,11 +36,11 @@ configured host.
   (or set it to `https://tiles.openfreemap.org`) and the map is OpenFreeMap's
   again, with nothing else changed. `tests/unit/basemap-host-test.mjs` proves
   the three addresses and the worker's rules are exactly what they were.
-- **Open item before `main`: a custom domain.** The tiles Worker is on
-  `workers.dev`, where Cloudflare's edge cache is off, so every tile is an R2
-  read. A domain of ParaPo's own turns the cache on; production should get one
-  before it switches. The host and `EXTRA_ORIGINS` in `workers/tiles/wrangler.jsonc`
-  change together.
+- **The custom domain (closed).** The tiles Worker answers at
+  `tiles.para-commute.org`, a domain of ParaPo's own, so Cloudflare's edge cache
+  is on (on `workers.dev` it is off and every tile is an R2 read). The host in
+  `.env.production` and `EXTRA_ORIGINS` in `workers/tiles/wrangler.jsonc` change
+  together. The `workers.dev` address keeps answering, but nothing points at it.
 - **Phones keep OpenFreeMap's cached tiles** under the same cache name until
   they age out (30 days) or the 1,000-entry cap pushes them out; the first view
   on our host downloads its tiles once.

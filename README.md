@@ -2,8 +2,7 @@
 
 Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
 
-- **The map:** https://parapo.para-ph-info.workers.dev (moving here from
-  https://parapo.villaralvorovic2.workers.dev) — on an Android
+- **The map:** https://www.para-commute.org — on an Android
   phone, Chrome offers to install it as **Para Po**; it then opens full screen
   and keeps working without a signal, showing the routes it last saw. It is
   `main`, and changes only when a release is merged.
