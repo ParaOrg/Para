@@ -9,6 +9,7 @@ Five projects for now and one for later, planned with the owner on 2026-10-15; p
 | 3 | Commuter rename | [commuter-rename/spec.md](commuter-rename/spec.md) | "Visitor" becomes "commuter", in the docs and then the code | Nothing |
 | 4 | Contributors (was the driver app) | [contribute/spec.md](contribute/spec.md) | `/contribute/`: anyone records a ride on their phone, and Save sends it to the studio | The field test; the owner's design of the screens |
 | 5 | Studio maps | [studio-maps/spec.md](studio-maps/spec.md) | Contributors \| Playground \| Public, and Draft → Pending → Approved | Contributions, for the Contributors map only |
+| 6 | Own the map tiles | [own-tiles/spec.md](own-tiles/spec.md) | Our own basemap tiles from OpenStreetMap, on R2 behind a Worker, in place of OpenFreeMap | 01 is the spike; the owner: R2, a subdomain, the Worker |
 | Later | Train tracking | [train-tracking/spec.md](train-tracking/spec.md) | "My train ride" (stations left, an alert before yours) and trains estimated from the timetable | The owner deciding when; timetables |
 
 ## Order
