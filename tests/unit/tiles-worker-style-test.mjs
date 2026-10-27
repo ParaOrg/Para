@@ -41,11 +41,16 @@ test('the style reads our tiles, sprite and glyphs and nothing is left on OpenFr
     minzoom: 0,
     maxzoom: 14,
     bounds: HEADER.bounds,
-    attribution: '© OpenMapTiles © OpenStreetMap contributors',
   });
   assert.equal(style.sprite, `${OWN}/assets/sprites/ofm`);
   assert.equal(style.glyphs, `${OWN}/assets/fonts/{fontstack}/{range}.pbf`);
   assert.ok(!JSON.stringify(style).includes('tiles.openfreemap.org'));
+});
+
+test('no source carries an attribution: the app holds the credit', () => {
+  for (const source of Object.values(rewriteStyle(liberty(), OWN, HEADER).sources)) {
+    assert.ok(!('attribution' in source));
+  }
 });
 
 test('the natural_earth raster source and its layer are dropped, the other layers stay', () => {
@@ -71,6 +76,7 @@ test("OpenFreeMap's real Positron style is rewritten with nothing left on OpenFr
   const style = rewriteStyle(original, OWN, HEADER);
   assert.ok(!JSON.stringify(style).includes('openfreemap'));
   assert.deepEqual(Object.keys(style.sources), ['openmaptiles']);
+  assert.ok(!('attribution' in style.sources.openmaptiles));
   assert.equal(style.sprite, `${OWN}/assets/sprites/ofm`);
   assert.equal(style.glyphs, `${OWN}/assets/fonts/{fontstack}/{range}.pbf`);
   assert.equal(style.layers.length, original.layers.length);

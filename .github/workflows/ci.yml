@@ -31,7 +31,9 @@
 # not needed, and fails when anything under it failed.
 #
 # The dev server reads .env.local, which is gitignored; here it is a copy of
-# .env.production, whose two values are public by design (see that file).
+# .env.production, whose values are public by design (see that file), with the basemap
+# host put back to OpenFreeMap: the suites stub tiles.openfreemap.org, and none should
+# depend on ParaPo's live tiles server.
 #
 # A commit the publish-map workflow pushes (with a deploy key, which does start
 # workflows) changes only public/data/, so a push of that alone skips CI:
@@ -183,6 +185,7 @@ jobs:
         # answers only real browsers on ParaPo's own hostnames.
         run: |
           cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
@@ -198,8 +201,13 @@ jobs:
           echo VITE_CONTRIBUTIONS=1 >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       # pwa-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
+      # These two build a preview from `.env.production` (not `.env.local`) and must not depend
+      # on the tiles server (it allows no :4173 or :4174 origin): OpenFreeMap is named here.
+      # `build` above checks the committed host.
       - name: Build, for pwa-test and contribute-offline-test
         if: matrix.suite == 'pwa-test' || matrix.suite == 'contribute-offline-test'
+        env:
+          VITE_BASEMAP_HOST: https://tiles.openfreemap.org
         run: npm run build
       - name: Start the dev server
         if: matrix.suite != 'pwa-test' && matrix.suite != 'contribute-offline-test'
@@ -262,6 +270,7 @@ jobs:
         # answers only real browsers on ParaPo's own hostnames.
         run: |
           cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
@@ -324,6 +333,7 @@ jobs:
         # answers only real browsers on ParaPo's own hostnames.
         run: |
           cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.

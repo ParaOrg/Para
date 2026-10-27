@@ -89,7 +89,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadEnv } from 'vite';
+import { basemapCacheRules } from '../node/basemap-offline.ts';
 import { mapFileConstants } from '../node/map-file-constants.ts';
+import { OPENFREEMAP_HOST, parseBasemapHost } from '../../src/shared/config/basemap-host.ts';
 import {
   FONTS_MAX_KB,
   GROUPS,
@@ -105,6 +108,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const dist = join(root, 'dist');
 const manifestPath = join(dist, '.vite', 'manifest.json');
 const modulesPath = join(dist, '.vite', 'modules.json');
+// The basemap host this build was made for, read as vite.config.ts reads it.
+const basemapHost = parseBasemapHost(loadEnv('production', root, 'VITE_').VITE_BASEMAP_HOST);
+const basemapRules = basemapCacheRules(basemapHost);
 
 const EDITOR_ONLY = [
   'router.project-osrm.org',
@@ -572,16 +578,23 @@ if (existsSync(swPath)) {
       sw.includes('/^\\/contribute(\\/|$)/'),
   );
   check(
-    `sw.js caches ${MAP_FILE_URL} NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst`,
+    `sw.js caches ${MAP_FILE_URL} NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and the basemap host's (${basemapHost}) styles StaleWhileRevalidate and tiles CacheFirst`,
     !!MAP_FILE_URL &&
       sw.includes(MAP_FILE_URL) &&
       sw.includes('/data/lines/') &&
       sw.includes('map-lines') &&
       sw.includes('/data/signboards/') &&
       sw.includes('x-parapo-served-from') &&
-      sw.includes('tiles.openfreemap.org') &&
+      sw.includes(basemapRules.meta.source) &&
+      sw.includes(basemapRules.tiles.source) &&
+      sw.includes('basemap-meta') &&
       sw.includes('map-file') &&
       sw.includes('basemap-tiles'),
+  );
+  check(
+    `index.html preconnects to the basemap host (${basemapHost}), and a host other than OpenFreeMap leaves OpenFreeMap out of the worker`,
+    html('index.html').includes(`<link rel="preconnect" href="${basemapHost}" crossorigin />`) &&
+      (basemapHost === OPENFREEMAP_HOST || !/openfreemap/i.test(sw)),
   );
   // With `skipWaiting: false` Workbox calls skipWaiting() once, inside the
   // handler for the page's SKIP_WAITING message — never on its own.

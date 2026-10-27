@@ -127,7 +127,8 @@ R2 gets `tiles/parapo-YYYY-MM-DD-<run id>.pmtiles` (never overwritten: an upload
 `assets/` go OpenFreeMap's three styles as they are (`styles/`), the sprite
 (`sprites/`) and the glyphs of Noto Sans Regular, Bold and Italic (`fonts/`),
 so the map can stop fetching from `tiles.openfreemap.org`; pointing the styles
-at our host is the Worker's job. The four secrets, `TILES_R2_ENDPOINT`,
+at our host is the Worker's job, and `VITE_BASEMAP_HOST` points the app at it
+(ADR 0007). The four secrets, `TILES_R2_ENDPOINT`,
 `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` and `TILES_R2_BUCKET`,
 live in a GitHub Environment named `tiles` whose deployment branches are
 limited to `staging` and `main`, so GitHub itself keeps the keys from any other
@@ -190,7 +191,8 @@ you:
 
 The route lines follow OpenStreetMap's road network (snapped with OSRM), so
 the data is a derivative of OpenStreetMap, © OpenStreetMap contributors, also
-under the ODbL. The map tiles come from OpenFreeMap, built from the same data.
+under the ODbL. The map tiles are built from the same data: by ParaPo itself on
+staging (`workers/tiles`, ADR 0007), by OpenFreeMap on `main` until staging is released.
 
 Every published version of the map is kept in this repository's history,
 so what is published stays public.
