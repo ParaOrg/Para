@@ -13,7 +13,6 @@
 //     the map file is stored as on a first visit
 //   - a later version of ours is offered as "Update Para Po!" and waits until tapped
 //   - no page errors
-// The only host the browser can resolve is the preview's.
 //
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
 import { createRequire } from 'node:module';
@@ -74,13 +73,7 @@ const state = (page) =>
     };
   });
 
-// Nothing but the preview is reachable. The new worker cannot take over while
-// the old one has a request in flight (the browser waits for it to go idle), and
-// the basemap's tiles, asked of the old worker, would otherwise hang for about
-// 30 s on a machine with no route to the tile host, past this suite's wait.
-const browser = await chromium.launch({
-  args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'],
-});
+const browser = await chromium.launch();
 try {
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -113,9 +106,12 @@ try {
   });
   await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.update());
   // Ours installs (it precaches the shell), takes over, deletes the old cache and
-  // stores the map file; the last of these is the end of the hand-over.
+  // stores the map file; the last of these is the end of the hand-over. The
+  // browser lets ours activate only once the old worker has no request in
+  // flight, and on a machine with no route to the basemap's tile host the old
+  // worker's tile requests hang for about 30 s: the deadline allows for that.
   let ours = false;
-  for (let i = 0; i < 60 && !ours; i++) {
+  for (let i = 0; i < 180 && !ours; i++) {
     const now = await state(page);
     ours = now.hasMapFile && !now.caches.includes(OLD_CACHE);
     if (!ours) await page.waitForTimeout(500);
