@@ -50,6 +50,15 @@ test('no cache of ours starts with the old app prefix, whatever follows it', () 
   }
 });
 
+test('the contributor worker also forgets the stores made under the old name', () => {
+  const [oldPrefix] = found(
+    'src/app/contribute/contribute-sw.ts',
+    /const OLD_NAME_PREFIX = '([^']+)'/g,
+  );
+  assert.equal(oldPrefix, 'parapo-contribute-');
+  assert.equal(couldBeOldApp(oldPrefix), false);
+});
+
 test('the check itself tells an old-app name from ours', () => {
   assert.equal(couldBeOldApp('para-ph-runtime'), true);
   assert.equal(couldBeOldApp('para-'), true, 'a prefix that could go on as para-ph-');

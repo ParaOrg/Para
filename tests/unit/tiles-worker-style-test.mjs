@@ -145,6 +145,7 @@ const REFUSED = [
   'https://evil-para-tiles.para-ph-info.workers.dev',
   'https://evil-para-x.para-ph-info.workers.dev',
   'https://evilpara.para-ph-info.workers.dev',
+  'https://evil.para.para-ph-info.workers.dev',
   'https://-para.para-ph-info.workers.dev',
   'https://3f2a9c1b-para.para-ph-info.workers.dev.evil.example',
   'https://3f2a9c1b-para.other-account.workers.dev',
