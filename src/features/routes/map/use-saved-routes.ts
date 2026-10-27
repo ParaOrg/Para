@@ -12,17 +12,17 @@ import type { Livery } from '../model/liveries';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 
 /**
- * The RouteCard picked in a list of them — the route list's, or a hotspot's
- * card's (`where`) — by its place, the directions its rows list, and the
- * colour it wears: what the map lights while no trip is open, and in what
- * (the owner's call).
- */
-/**
  * From this zoom a pixel is a couple of metres, and an overview's corners
  * show: the directions on screen get their full lines, as a lit one does.
  */
 const FULL_LINES_FROM = 15;
 
+/**
+ * The RouteCard picked in a list of them — the route list's, or a hotspot's
+ * card's (`where`) — by its place, the directions its rows list, and the
+ * colour it wears: what the map lights while no trip is open, and in what
+ * (the owner's call).
+ */
 export interface Highlight {
   where: 'list' | 'hotspot';
   /** Which card (PickedPlace's card): a place's own, or one of its train lines'. */
