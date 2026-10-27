@@ -6,6 +6,8 @@ import type {
 } from 'maplibre-gl';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
+import { basemapStyleUrl } from '@/shared/config/basemap-host';
+import { basemapHost } from '@/shared/config/env';
 
 import { daylightStyle } from './daylight';
 import { monochromeStyle } from './monochrome';
@@ -14,9 +16,11 @@ import { terrainStyle } from './terrain';
 
 /**
  * The basemap designs a commuter can choose between: Monochrome, Colour and
- * Fiord. All of them are OpenFreeMap styles over the same `/planet` tiles,
- * sprite and glyph endpoint, so a switch fetches one small style file and
- * nothing a phone has cached is wasted.
+ * Fiord. All of them are OpenFreeMap's styles (Positron, Liberty, Fiord) over
+ * the same tiles, sprite and glyphs, so a switch fetches one small style file
+ * and nothing a phone has cached is wasted. They are read from the configured
+ * basemap host (shared/config/env.ts): ParaPo's own tiles server, which
+ * serves the same three styles pointed at its tiles, or OpenFreeMap itself.
  *
  * Monochrome is the default: Positron, as detailed as its tiles allow and
  * still only grays, so the routes and hotspots painted on top carry all the
@@ -62,23 +66,25 @@ export interface Imagery {
   isLabelled: boolean;
 }
 
-const OPENFREEMAP = 'https://tiles.openfreemap.org';
-
 // The id stays `positron` so a device that stored it, or nothing at all, keeps the
 // default. An id that is no longer offered falls back to the default (readBasemap).
 export const MONOCHROME: Basemap = {
   id: 'positron',
   label: 'Monochrome',
-  url: `${OPENFREEMAP}/styles/positron`,
+  url: basemapStyleUrl(basemapHost, 'positron'),
   dressing: 'monochrome',
 };
 export const COLOUR: Basemap = {
   id: 'liberty',
   label: 'Colour',
-  url: `${OPENFREEMAP}/styles/liberty`,
+  url: basemapStyleUrl(basemapHost, 'liberty'),
   dressing: 'daylight',
 };
-const FIORD: Basemap = { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` };
+const FIORD: Basemap = {
+  id: 'fiord',
+  label: 'Fiord',
+  url: basemapStyleUrl(basemapHost, 'fiord'),
+};
 
 export const BASEMAPS: readonly Basemap[] = [MONOCHROME, COLOUR, FIORD];
 

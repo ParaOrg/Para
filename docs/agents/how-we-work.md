@@ -1,6 +1,6 @@
 # How we work
 
-How the owner and the Claude sessions working on ParaPo split the work. The owner approved these rules on 2026-10-16.
+How the owner and the Claude sessions working on ParaPo split the work. The owner approved these rules on 2026-10-16, and moved building to Opus on 2026-10-27.
 
 The goals: a codebase that is easy to review, work that scales, and an app whose code, architecture and system design anyone can scan without much effort.
 
@@ -12,15 +12,16 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 
 ## Which model does what
 
-| Model  | Job                                                                                                                    |
-| ------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Opus   | Planning, architecture and system design, hard bugs, and reviewing other sessions' work before it reaches the owner    |
-| Sonnet | Building from a clear plan: renames, components from Figma, tests, small fixes                                         |
-| Haiku  | Watching and scanning: CI, searching the code, inventories, checklists                                                  |
+| Model  | Job                                                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Opus   | Planning, architecture and system design, building (the default for a builder session), hard bugs, and reviewing         |
+| Sonnet | Small, fully specified jobs: a rename, a doc update, a component from a finished Figma design                             |
+| Haiku  | Watching and scanning: CI, searching the code, inventories, checklists                                                    |
 
+- A builder session runs on Opus unless its job is small and fully specified, then Sonnet. Work that touches the offline worker, CI, the database, Cloudflare or the tiles build is always Opus: it rests on assumptions that need checking, not only on a plan.
 - The cheaper the model, the clearer its brief: what to change, where, and how to prove it.
-- An agent runs on Sonnet unless its file names a model (`CLAUDE_CODE_SUBAGENT_MODEL` in `.claude/settings.json`). The CI watcher (`.claude/agents/ci-watcher.md`) runs on Haiku; brief an Opus agent only for planning, a hard bug or a review.
-- A stronger model reviews a cheaper one's work before the owner sees it.
+- An agent runs on Opus unless its file names a model (`CLAUDE_CODE_SUBAGENT_MODEL` in `.claude/settings.json`). The CI watcher (`.claude/agents/ci-watcher.md`) runs on Haiku.
+- Work is reviewed by an Opus session other than the one that built it, before the owner sees it.
 
 ## Sessions in parallel
 

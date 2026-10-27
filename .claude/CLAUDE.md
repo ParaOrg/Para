@@ -390,5 +390,5 @@ Single-context: `CONTEXT.md` at the root and `docs/adr/`. See `docs/agents/domai
 Read `docs/agents/how-we-work.md` before starting work. In short:
 
 - The owner owns the design. Never make up a look; batch questions for the owner.
-- Opus plans, designs the architecture and reviews; Sonnet builds from a clear plan; Haiku watches and scans.
+- Opus plans, designs the architecture, builds and reviews; Sonnet takes small, fully specified jobs; Haiku watches and scans.
 - At most about four sessions build at once, each owning its own folders. Sessions merge their finished work into `staging`; only the owner merges into `main`.

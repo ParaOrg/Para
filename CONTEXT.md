@@ -241,9 +241,15 @@ lets them go, and the card shows the whole ride.
 
 **Map design**:
 The map drawn under the routes: Monochrome (the default, gray), Colour
-(OpenFreeMap's Liberty in Apple Maps' light palette, since 2026-10-16) and
+(the Liberty style in Apple Maps' light palette, since 2026-10-16) and
 Fiord (dark blue-gray, for night). The studio adds Terrain (Colour with the
 hills) and Satellite. A commuter's pick is kept on the phone.
+
+**Basemap host**:
+The one address the map designs' styles, tiles, sprite and glyphs are read
+from (`VITE_BASEMAP_HOST`). ParaPo's own tiles server on staging; OpenFreeMap
+wherever none is set, which is `main` until the owner releases staging. See
+[ADR 0007](docs/adr/0007-parapo-serves-its-own-basemap.md).
 
 **Map Style card**:
 The card the layers button opens under it, at the map's top-right corner: a
