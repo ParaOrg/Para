@@ -102,13 +102,13 @@ From the renders' requests; all at `tiles.openfreemap.org`:
 
 | What | URL | Licence |
 | --- | --- | --- |
-| Styles | `/styles/{positron,liberty,fiord}` | Positron: code BSD-3-Clause, design CC BY 4.0, derived from CartoDB Basemaps (CC BY 3.0). Liberty (a fork of OSM Bright): code BSD-3-Clause, design CC BY 4.0. Fiord: forked from `openmaptiles/fiord-color-gl-style` per OpenFreeMap's README, not listed in its `LICENSE.md`; check that repo's licence in 02. The app already hosts none of them |
+| Styles | `/styles/{positron,liberty,fiord}` | Positron: code BSD-3-Clause, design CC BY 4.0, derived from CartoDB Basemaps (CC BY 3.0). Liberty (a fork of OSM Bright): code BSD-3-Clause, design CC BY 4.0. Fiord: forked from `openmaptiles/fiord-color-gl-style` per OpenFreeMap's README, not listed in its `LICENSE.md`; check that repo's licence in 02. |
 | Sprite | `/sprites/ofm_f384/ofm.json` and `.png` (49 kB; `@2x` 119 kB) | Maki icons CC0 1.0; right arrow public domain; built with spritezero-cli (ISC) |
 | Glyphs | `/fonts/{fontstack}/{range}.pbf`: Noto Sans Regular, Bold and Italic (Fiord: Regular only) | SIL Open Font License 1.1 |
 | Raster | `/natural_earth/ne2sr/{z}/{x}/{y}.png`, source `ne2_shaded` (maxzoom 6) | Natural Earth, public domain |
 | Tile JSON | `/planet` | the tiles go away with the switch |
 
-Raster: only Liberty draws it (layer `natural_earth`, to z7). The 54 renders at z12 and above never requested one. The sprite and glyph files are fetched on every page load.
+Raster: only Liberty draws it (layer `natural_earth`, to z7). The 54 renders at z12 and above never requested one.
 
 Licences are from OpenFreeMap's `LICENSE.md` (github.com/hyperknot/openfreemap). Keep "© OpenMapTiles" and "© OpenStreetMap contributors" in the attribution: OpenMapTiles' design is CC BY 4.0 and the data is ODbL.
 
@@ -120,7 +120,7 @@ Licences are from OpenFreeMap's `LICENSE.md` (github.com/hyperknot/openfreemap).
 - **Monthly build.** About 4 minutes of Planetiler with 4.5 GB resident, about 6–7 minutes for the whole job; the repo is public, so the minutes are free. 02 should pin Planetiler and check its SHA-256 as this job does, check the extract's md5, and fail loudly if the file is under a size floor (say 20 MB) or has fewer tiles than the last one.
 - **Cache Planetiler's own downloads** (`data/sources`: water polygons from osmdata.openstreetmap.de, Natural Earth from naturalearth.s3.amazonaws.com, lake centerlines from dev.maptiler.download). They are fetched from three third-party hosts on every build; one outage would fail the build. `actions/cache` or a copy in R2 closes that.
 - **Extract.** The job used Geofabrik's `philippines-latest`. Geofabrik is blocked from the owner's agent containers but not from Actions; the build runs only in Actions, so this is fine.
-- **03.** The Worker serves `{z}/{x}/{y}`: `tiles-serve.mjs` is a 60-line model of it (header, directory walk, gzip passthrough: `Content-Encoding: gzip`, `204` for an empty tile). Serve 204, not 404, for a tile the file does not hold, as MapLibre treats it as empty.
+- **03.** The Worker serves `{z}/{x}/{y}`: `tiles-serve.mjs` is a short model of it (header, directory walk, gzip passthrough: `Content-Encoding: gzip`, `204` for an empty tile). Serve 204, not 404, for a tile the file does not hold, as MapLibre treats it as empty.
 - **Also host** the sprite (`json`, `png` and `@2x`), the three Noto Sans fonts' glyph ranges, and copies of the three styles pointing at our tiles, sprite and glyphs. Without them ParaPo still depends on OpenFreeMap on every page load. The `natural_earth` raster only matters to Liberty at z7 and below, which the panning box never shows; drop that layer in our copy.
 
 ## Comments
