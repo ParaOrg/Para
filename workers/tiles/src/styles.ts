@@ -1,7 +1,6 @@
 // Rewrites one of OpenFreeMap's styles to read this Worker's tiles, sprite and glyphs.
 import type { PmtilesHeader } from './pmtiles';
 
-export const ATTRIBUTION = '© OpenMapTiles © OpenStreetMap contributors';
 const UPSTREAM = 'https://tiles.openfreemap.org/';
 const NATURAL_EARTH = '/natural_earth/';
 
@@ -33,6 +32,8 @@ function ownSprite(url: unknown, origin: string): unknown {
     : url;
 }
 
+// The source carries no `attribution`: the app credits OpenMapTiles and OpenStreetMap itself, with
+// links (src/features/routes/map/map-attribution.ts), and these styles are served to our origins only.
 export function rewriteStyle(style: unknown, origin: string, header: PmtilesHeader): Json {
   if (!isRecord(style) || !isRecord(style.sources) || !Array.isArray(style.layers))
     throw new Error('style is not a MapLibre style');
@@ -47,7 +48,6 @@ export function rewriteStyle(style: unknown, origin: string, header: PmtilesHead
         minzoom: 0,
         maxzoom: header.maxZoom,
         bounds: header.bounds,
-        attribution: ATTRIBUTION,
       };
     } else if (isRecord(source) && mentionsNaturalEarth(source)) {
       dropped.add(name);

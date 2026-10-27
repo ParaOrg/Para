@@ -11,12 +11,11 @@ const OSM = link('https://www.openstreetmap.org/copyright', '© OpenStreetMap', 
 const OSRM = link('http://project-osrm.org/', 'OSRM');
 
 /**
- * The credits in the map's corner. The styles' sources ship none from OpenFreeMap, so
- * MapLibre's default control would render empty; our own tiles server puts
- * "© OpenMapTiles © OpenStreetMap contributors" on its source, which stays beside these.
- * The route data's credit is the ODbL's: every copy has to keep it. With OpenFreeMap's
- * tiles OpenFreeMap is credited; with ours it is not the provider, but the schema and
- * the styles are still OpenMapTiles', so that credit is spelled out here too.
+ * The credits in the map's corner. Our tiles server's styles carry none on their sources
+ * (workers/tiles), so this is the whole line. The route data's credit is the ODbL's: every
+ * copy has to keep it. With OpenFreeMap's tiles OpenFreeMap is credited, as before; with
+ * ours it is not the provider, but the schema and the styles are still OpenMapTiles', so
+ * that credit is spelled out here.
  */
 export function mapAttribution(basemapHost: string): string {
   const provider =

@@ -44,9 +44,11 @@ configured host.
 - **Phones keep OpenFreeMap's cached tiles** under the same cache name until
   they age out (30 days) or the 1,000-entry cap pushes them out; the first view
   on our host downloads its tiles once.
-- **Credits.** Our source says "© OpenMapTiles © OpenStreetMap contributors";
-  the corner credit keeps both, drops OpenFreeMap (no longer the provider) and
-  adds the OpenMapTiles link (`map-attribution.ts`).
+- **Credits.** The app holds the credit (`map-attribution.ts`): the corner
+  keeps © OpenStreetMap contributors and the route data's ODbL line, drops
+  OpenFreeMap (no longer the provider) and adds © OpenMapTiles, each with its
+  link. The Worker's styles carry no source `attribution`, so nothing repeats
+  them; they are served to ParaPo's own origins only.
 - **Satellite and Terrain stay as they were.** The studio's two extra designs
   read their own providers (`studio-basemaps.ts`).
 - **Tests.** The browser suites run on the dev server, which reads OpenFreeMap

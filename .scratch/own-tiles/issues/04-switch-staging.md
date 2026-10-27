@@ -42,9 +42,10 @@ Then run `ready-for-100k` 03's load test against staging with the tiles host inc
 
 All 200, no errors. The 145 tiles were 35.5 MB decoded, about 245 kB each. The `HIT` is the Worker's own Cache API (workers.dev has no zone cache, so this is per data centre).
 
+**Credits.** Our Worker's styles carry no source `attribution`; the app's `map-attribution.ts` holds the credit alone (hub review, 2026-10-27), so nothing repeats.
+
 **Not done.**
 - `ready-for-100k` 03's load test does not exist yet (no `scripts/research/load-test.mjs`), and the staging site is not deploying until the site Worker moves; run it with the tiles host included once both exist.
 - `phone-speed.mjs` serves OpenFreeMap's files from a curl-fed cache keyed to that one host; timing ours beside it needs the script taught a second host, which is its own change.
 - Side-by-side screenshots against OpenFreeMap's, and the first-load comparison on a slow phone, wait for the same.
-- The corner credit shows "© OpenStreetMap contributors" and "© OpenMapTiles" twice with our host: once as the Worker's plain-text source credit, once as `map-attribution.ts`'s links. Making the Worker's source credit the links (or leaving it empty) would remove the repeat; that is a Worker change.
 - `tests/e2e` suites run on the dev server, which reads OpenFreeMap; none was run against our host (the preview origins `:4173`/`:4174` are not allowed by the Worker, so `pwa-test` and `contribute-offline-test` build with OpenFreeMap named in CI).
