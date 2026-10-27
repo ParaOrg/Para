@@ -73,7 +73,13 @@ const state = (page) =>
     };
   });
 
-const browser = await chromium.launch();
+// Nothing but the preview is reachable, so the basemap's requests fail at once.
+// The browser lets the new worker activate only when the old one has no request
+// in flight; with no route to the tile host those requests would hang for
+// minutes and the hand-over would wait for them.
+const browser = await chromium.launch({
+  args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'],
+});
 try {
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -106,12 +112,9 @@ try {
   });
   await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.update());
   // Ours installs (it precaches the shell), takes over, deletes the old cache and
-  // stores the map file; the last of these is the end of the hand-over. The
-  // browser lets ours activate only once the old worker has no request in
-  // flight, and on a machine with no route to the basemap's tile host the old
-  // worker's tile requests hang for about 30 s: the deadline allows for that.
+  // stores the map file; the last of these is the end of the hand-over.
   let ours = false;
-  for (let i = 0; i < 180 && !ours; i++) {
+  for (let i = 0; i < 60 && !ours; i++) {
     const now = await state(page);
     ours = now.hasMapFile && !now.caches.includes(OLD_CACHE);
     if (!ours) await page.waitForTimeout(500);
@@ -148,7 +151,8 @@ try {
   if (offered) {
     await Promise.all([
       page.waitForEvent('load', { timeout: 15000 }).catch(() => {}),
-      page.locator('[data-testid="update"]').click(),
+      // Not a tap: with the basemap unreachable its failure banner sits over the button.
+      page.locator('[data-testid="update"]').dispatchEvent('click'),
     ]);
     await page.waitForTimeout(1500);
     const done = await state(page);
