@@ -37,3 +37,4 @@ Workflow `.github/workflows/tiles.yml`, scripts in `scripts/tiles/`, README sect
 - The PMTiles reader is copied to `scripts/tiles/pmtiles.mjs` (the spike's workflow still imports its own).
 - Fiord's licence (`openmaptiles/fiord-color-gl-style`): BSD-3-Clause code, CC BY 4.0 design; noted in the README.
 - **File names (hub):** `parapo-YYYY-MM-DD-<run id>.pmtiles`, unique per run; the upload refuses a key that exists, and deletes old builds only after `current.json` has moved.
+- **Secrets (hub):** in a GitHub Environment `tiles` limited to `staging` and `main`; only the R2 steps carry them. Pruning protects the new file and the one the previous `current.json` names.

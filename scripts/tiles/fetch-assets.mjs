@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 const HOST = 'https://tiles.openfreemap.org';
 const STYLES = ['positron', 'liberty', 'fiord'];
 const FONTS = ['Noto Sans Regular', 'Noto Sans Bold', 'Noto Sans Italic'];
+const GLYPHS_TEMPLATE = `${HOST}/fonts/{fontstack}/{range}.pbf`;
 const SPRITE_FILES = ['.json', '.png', '@2x.json', '@2x.png'];
 const GLYPH_RANGES = Array.from({ length: 256 }, (_, i) => `${i * 256}-${i * 256 + 255}`);
 const PARALLEL = 16;
@@ -35,14 +36,36 @@ async function runAll(jobs) {
   await Promise.all(Array.from({ length: PARALLEL }, worker));
 }
 
+// What the styles name must be what this script copies, so a style change upstream fails the build
+// instead of leaving the map to fetch from OpenFreeMap again.
 const spriteBases = new Set();
+const fontStacks = new Set();
 for (const name of STYLES) {
-  const style = await download(`${HOST}/styles/${name}`, `styles/${name}.json`);
-  spriteBases.add(JSON.parse(style.toString('utf8')).sprite);
+  const bytes = await download(`${HOST}/styles/${name}`, `styles/${name}.json`);
+  const style = JSON.parse(bytes.toString('utf8'));
+  spriteBases.add(style.sprite);
+  if (style.glyphs !== GLYPHS_TEMPLATE) {
+    throw new Error(`${name} names glyphs at ${style.glyphs}, expected ${GLYPHS_TEMPLATE}`);
+  }
+  for (const layer of style.layers) {
+    const font = layer.layout?.['text-font'];
+    if (font === undefined) continue;
+    if (!Array.isArray(font) || !font.every((f) => typeof f === 'string')) {
+      throw new Error(`${name} layer ${layer.id} has a text-font this script cannot read`);
+    }
+    font.forEach((f) => fontStacks.add(f));
+  }
 }
-if (spriteBases.size !== 1)
-  throw new Error(`the styles use ${spriteBases.size} sprites, expected 1`);
 const [spriteBase] = spriteBases;
+if (spriteBases.size !== 1 || !spriteBase.endsWith('/ofm')) {
+  throw new Error(
+    `the styles name sprites ${[...spriteBases].join(', ')}; expected one ending /ofm`,
+  );
+}
+const namedFonts = [...fontStacks].sort().join('|');
+if (namedFonts !== [...FONTS].sort().join('|')) {
+  throw new Error(`the styles name the fonts ${namedFonts}; this script copies ${FONTS.join('|')}`);
+}
 
 const jobs = [
   ...SPRITE_FILES.map((suffix) => () => download(`${spriteBase}${suffix}`, `sprites/ofm${suffix}`)),

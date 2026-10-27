@@ -49,6 +49,12 @@ if (version !== BUILD_DATE) {
 
 if (previousPath) {
   const previous = JSON.parse(readFileSync(previousPath, 'utf8'));
+  if (!Number.isInteger(previous.tiles) || previous.tiles <= 0) {
+    console.error(
+      `::error::The last current.json has no usable tile count (${JSON.stringify(previous.tiles)}); fix or delete tiles/current.json in the bucket.`,
+    );
+    process.exit(1);
+  }
   const floor = Math.ceil(previous.tiles * MIN_TILE_SHARE);
   console.log(
     `The last build (${previous.file}) had ${previous.tiles} tiles; the floor is ${floor}.`,

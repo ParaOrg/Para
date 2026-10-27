@@ -125,8 +125,13 @@ R2 gets `tiles/parapo-YYYY-MM-DD-<run id>.pmtiles` (never overwritten: an upload
 `assets/` go OpenFreeMap's three styles as they are (`styles/`), the sprite
 (`sprites/`) and the glyphs of Noto Sans Regular, Bold and Italic (`fonts/`),
 so the map can stop fetching from `tiles.openfreemap.org`; pointing the styles
-at our host is the Worker's job. The GitHub secrets are `TILES_R2_ENDPOINT`,
-`TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` and `TILES_R2_BUCKET`.
+at our host is the Worker's job. The four secrets, `TILES_R2_ENDPOINT`,
+`TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` and `TILES_R2_BUCKET`,
+live in a GitHub Environment named `tiles` whose deployment branches are
+limited to `staging` and `main`, so GitHub itself keeps the keys from any other
+branch, and only the steps that talk to R2 carry them. Pruning never deletes
+the file the previous `current.json` named, so a run that failed after its
+upload cannot take down the file being served.
 
 Licences to keep with the copies: the styles' code is BSD-3-Clause and their
 design CC BY 4.0 (Positron and Fiord derive from CartoDB Basemaps, CC BY 3.0;

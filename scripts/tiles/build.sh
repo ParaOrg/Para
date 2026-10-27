@@ -10,6 +10,10 @@ set -euo pipefail
 work="$1"
 bounds="$2"
 build_date="$3"
+if ! [[ "$bounds" =~ ^-?[0-9.]+,-?[0-9.]+,-?[0-9.]+,-?[0-9.]+$ ]]; then
+  echo "::error::The bounds \"$bounds\" are not west,south,east,north. Nothing was downloaded."
+  exit 1
+fi
 mkdir -p "$work"
 cd "$work"
 
@@ -17,9 +21,10 @@ curl -fsSL -o planetiler.jar \
   "https://github.com/onthegomap/planetiler/releases/download/v${PLANETILER_VERSION}/planetiler.jar"
 echo "${PLANETILER_SHA256}  planetiler.jar" | sha256sum -c -
 
+# The checksum first, so it cannot be newer than the extract it is checked against.
+curl -fsSL -o philippines-latest.osm.pbf.md5 https://download.geofabrik.de/asia/philippines-latest.osm.pbf.md5
 curl -fsSL -D extract-headers.txt -o philippines-latest.osm.pbf \
   https://download.geofabrik.de/asia/philippines-latest.osm.pbf
-curl -fsSL -o philippines-latest.osm.pbf.md5 https://download.geofabrik.de/asia/philippines-latest.osm.pbf.md5
 md5sum -c philippines-latest.osm.pbf.md5
 last_modified="$(grep -i '^last-modified:' extract-headers.txt | cut -d' ' -f2- | tr -d '\r')"
 date -u -d "$last_modified" +%F > extract-date.txt
