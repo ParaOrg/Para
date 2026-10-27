@@ -106,7 +106,7 @@ try {
 let build = null;
 if (timeLogPath) {
   const log = readFileSync(timeLogPath, 'utf8');
-  const wall = /Elapsed \(wall clock\) time[^:]*: ([\d:.]+)/.exec(log)?.[1];
+  const wall = /Elapsed \(wall clock\) time \(h:mm:ss or m:ss\): ([\d:.]+)/.exec(log)?.[1];
   const rss = /Maximum resident set size \(kbytes\): (\d+)/.exec(log)?.[1];
   const seconds = wall?.split(':').reduce((acc, part) => acc * 60 + Number(part), 0);
   build = {

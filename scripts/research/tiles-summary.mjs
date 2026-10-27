@@ -1,12 +1,12 @@
 // Prints summary.json as Markdown, for $GITHUB_STEP_SUMMARY.
-// Usage: node scripts/research/tiles-summary.mjs <summary.json>
+// Usage: node scripts/research/tiles-summary.mjs <summary.json> [heading]
 import { readFileSync } from 'node:fs';
 
 const s = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 const kb = (n) => (n === null || n === undefined ? '–' : `${(n / 1024).toFixed(1)} kB`);
 const lines = [];
 
-lines.push('## Own tiles spike', '');
+lines.push(`## ${process.argv[3] ?? 'Own tiles spike'}`, '');
 lines.push(
   `- **File:** ${s.file.megabytes} MB (${s.file.bytes} bytes), zoom ${s.file.header.minZoom}–${s.file.header.maxZoom}, ${s.file.header.addressedTiles} tiles`,
 );
