@@ -148,7 +148,7 @@ import {
   tileZoom,
   tilesAlong,
   tripSpots,
-} from './phoneSpeedParts.mjs';
+} from './phone-speed-parts.mjs';
 
 // Playwright reports a service worker's network only with this, read as it
 // loads (older versions; 1.63 does by default): set before it is imported.
@@ -445,7 +445,7 @@ const chosen = { list: null, trip: null };
 // ----------------------------------------------------------------- the browser
 /**
  * Stamps, made in the page before any of its own scripts run. `routesOnMap`
- * is phoneSpeedParts.mjs's, handed over as its text (phonePage).
+ * is phone-speed-parts.mjs's, handed over as its text (phonePage).
  */
 function stamps(routesOnMap) {
   const s = (window.__speed = {

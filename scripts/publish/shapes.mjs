@@ -1,7 +1,7 @@
 import { lineLength } from '../../src/shared/utils/geo.ts';
 import { indexSchema } from '../../src/features/routes/published/index-schema.ts';
 import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
-import { EVERY_LINE, FERRY, withoutLines } from './withoutLines.mjs';
+import { EVERY_LINE, FERRY, withoutLines } from './without-lines.mjs';
 
 /** The data's licence, written into the file itself. See README.md, "Data and licence". */
 export const LICENSE = 'ODbL-1.0';

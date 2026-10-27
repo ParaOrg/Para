@@ -27,7 +27,7 @@ import {
 import { ROUTES_LINE } from '../../src/features/routes/map/rail-rest-layers.ts';
 import { routesDrawn } from '../../src/features/routes/map/saved-routes-layers.ts';
 import { directionLine } from '../../src/features/routes/model/routes.ts';
-import { routesOnMap } from '../../scripts/research/phoneSpeedParts.mjs';
+import { routesOnMap } from '../../scripts/research/phone-speed-parts.mjs';
 
 /** useSavedRoutes' fit as it was until 2026-10-04, verbatim but for the map: the box it handed fitBounds, or null where it fitted nothing. */
 function oldBox(variants) {

@@ -257,7 +257,7 @@ test('step 16 (a): asked again with the same direction and boxes, the very same 
 });
 
 // The cheap-phone plan, step 13, 2026-10-05: each line file carries its
-// direction's stretches, worked out by the publish (scripts/publish/lineFile.mjs,
+// direction's stretches, worked out by the publish (scripts/publish/line-file.mjs,
 // src/features/routes/model/line-pass.ts), with a key: the hintuans they were worked out
 // against. The app takes them only when the index it has gives the same key,
 // and works them out as before otherwise.
@@ -269,7 +269,7 @@ import {
   publishedStretches,
   boxesReached,
 } from '../../src/features/routes/model/line-pass.ts';
-import { lineFileText } from '../../scripts/publish/lineFile.mjs';
+import { lineFileText } from '../../scripts/publish/line-file.mjs';
 import { checkMapData } from '../../scripts/checks/check-map-data.mjs';
 import { createHash } from 'node:crypto';
 import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
