@@ -119,7 +119,7 @@ its build date in its metadata. A pull request builds and checks but never
 uploads and never sees the R2 secrets. A failed run is red, and GitHub emails the owner about a failed
 scheduled run, as for the backup.
 
-R2 gets `tiles/parapo-YYYY-MM-DD.pmtiles` (the last three kept), then
+R2 gets `tiles/parapo-YYYY-MM-DD-<run id>.pmtiles` (never overwritten: an upload refuses a name that exists; the last three kept, older ones deleted only after `current.json` has moved), then
 `tiles/current.json` (`file`, `builtAt`, `bytes`, `tiles`, `extractDate`,
 `planetiler`) last, so a failed upload never points at a half file. Under
 `assets/` go OpenFreeMap's three styles as they are (`styles/`), the sprite

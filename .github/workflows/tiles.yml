@@ -122,7 +122,8 @@ jobs:
           echo "build_date=$build_date" >> "$GITHUB_OUTPUT"
           scripts/tiles/build.sh "$WORK" "${{ steps.area.outputs.bounds }}" "$build_date"
           echo "extract_date=$(cat "$WORK/extract-date.txt")" >> "$GITHUB_OUTPUT"
-          mv "$WORK/parapo.pmtiles" "$WORK/parapo-$build_date.pmtiles"
+          # Unique per run, so a second upload on the same day never reuses a name.
+          mv "$WORK/parapo.pmtiles" "$WORK/parapo-$build_date-$GITHUB_RUN_ID.pmtiles"
 
       - name: Get the last build's current.json
         if: env.SHOULD_UPLOAD == 'true'
@@ -149,7 +150,7 @@ jobs:
         run: |
           previous=()
           [ -f "$WORK/previous.json" ] && previous=("$WORK/previous.json")
-          node scripts/tiles/check.mjs "$WORK/parapo-$BUILD_DATE.pmtiles" "$WORK/current.json" "${previous[@]}"
+          node scripts/tiles/check.mjs "$WORK/parapo-$BUILD_DATE-$GITHUB_RUN_ID.pmtiles" "$WORK/current.json" "${previous[@]}"
 
       - name: Get the styles, sprite and glyphs
         run: node scripts/tiles/fetch-assets.mjs "$WORK/assets"
@@ -159,7 +160,7 @@ jobs:
         env:
           BUILD_DATE: ${{ steps.build.outputs.build_date }}
         run: |
-          scripts/tiles/upload.sh "$WORK/parapo-$BUILD_DATE.pmtiles" "$WORK/current.json" "$WORK/assets"
+          scripts/tiles/upload.sh "$WORK/parapo-$BUILD_DATE-$GITHUB_RUN_ID.pmtiles" "$WORK/current.json" "$WORK/assets"
 
       - name: Refresh the R2 copy of Planetiler's downloads
         if: env.SHOULD_UPLOAD == 'true' && env.TILES_R2_BUCKET != ''

@@ -36,4 +36,4 @@ Workflow `.github/workflows/tiles.yml`, scripts in `scripts/tiles/`, README sect
 - **Cache (hub):** Planetiler's downloads are copied to `build-cache/sources/` in R2 (`sources.sh`: pull, upstream for what is missing, push). `actions/cache` stays for pull requests.
 - The PMTiles reader is copied to `scripts/tiles/pmtiles.mjs` (the spike's workflow still imports its own).
 - Fiord's licence (`openmaptiles/fiord-color-gl-style`): BSD-3-Clause code, CC BY 4.0 design; noted in the README.
-
+- **File names (hub):** `parapo-YYYY-MM-DD-<run id>.pmtiles`, unique per run; the upload refuses a key that exists, and deletes old builds only after `current.json` has moved.

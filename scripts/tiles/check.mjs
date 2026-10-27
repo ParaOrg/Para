@@ -66,7 +66,7 @@ if (failures.length > 0) {
 }
 
 const pointer = {
-  file: `parapo-${BUILD_DATE}.pmtiles`,
+  file: basename(pmtilesPath),
   builtAt: new Date().toISOString(),
   bytes,
   tiles,
