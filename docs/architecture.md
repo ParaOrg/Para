@@ -10,7 +10,7 @@ A unit is a folder: an app, a feature (or a concern folder of a feature that has
 
 - **app**: `contribute`, `public-map`, `studio`
 - **features**: `contribute`, `contribute/account`, `contribute/api`, `contribute/app-update`, `contribute/native`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`, `studio/review`
-- **shared**: `hooks`, `lib`, `types`, `ui`, `utils`
+- **shared**: `config`, `hooks`, `lib`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
 
@@ -47,6 +47,7 @@ flowchart TD
     features_studio_review["studio/review"]
   end
   subgraph shared_layer["shared"]
+    shared_config["config"]
     shared_hooks["hooks"]
     shared_lib["lib"]
     shared_types["types"]
@@ -125,6 +126,7 @@ flowchart TD
   features_routes_map --> features_routes_cards
   features_routes_map --> features_routes_geo
   features_routes_map --> features_routes_model
+  features_routes_map --> shared_config
   features_routes_map --> shared_ui
   features_routes_map --> shared_utils
   features_routes_model --> features_routes_geo
@@ -204,7 +206,7 @@ flowchart TD
 | `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/geo` | `shared/utils` |
-| `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/ui`, `shared/utils` |
+| `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/config`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
 | `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view`, `features/studio/review` |
@@ -216,6 +218,7 @@ flowchart TD
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `features/studio/review`, `shared/ui`, `shared/utils` |
 | `features/studio/public-view` | `design-system/primitives`, `features/studio/data`, `features/studio/maps`, `shared/lib` |
 | `features/studio/review` | `design-system/primitives`, `features/studio/auth`, `features/studio/data`, `features/studio/maps`, `shared/lib` |
+| `shared/config` | — |
 | `shared/hooks` | — |
 | `shared/lib` | — |
 | `shared/types` | — |

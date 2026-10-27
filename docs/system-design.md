@@ -24,7 +24,7 @@ flowchart LR
   publish["Publish: nightly GitHub workflow"]
   repo[("GitHub repo, main branch")]
   osrm["OSRM router (snaps lines to roads)"]
-  tiles["OpenFreeMap basemap tiles"]
+  tiles["Basemap host: ParaPo tiles server (staging), OpenFreeMap (main)"]
 
   editor --> studio
   studio -- "reads and saves" --> db
@@ -40,7 +40,8 @@ flowchart LR
 - The studio and the public map are two pages of one build, served from one place.
 - The public map never talks to Supabase. Its only data is the map files (ADR 0001).
 - The commuter's position stays on the phone. The locator never sends it to ParaPo or stores it.
-  The map does move to it, so OpenFreeMap gets tile requests for that area, as for any map view.
+  The map does move to it, so the basemap host gets tile requests for that area, as for any map view.
+  With ParaPo's own tiles server that host is ParaPo's (ADR 0007); with OpenFreeMap it is theirs.
 
 ## 2. From an edit to a live map
 

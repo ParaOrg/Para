@@ -4,11 +4,13 @@ import { fileURLToPath } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { basemapCacheRules, withBasemapPreconnect } from './scripts/node/basemap-offline.ts';
 import { contributeWorker } from './scripts/node/contribute-worker.ts';
 import { mapFileConstants } from './scripts/node/map-file-constants.ts';
+import { parseBasemapHost } from './src/shared/config/basemap-host.ts';
 
 // The map file's address and the early request's name, read from map-file.ts's
 // text rather than imported: Vite bundles this config before any alias exists,
@@ -209,9 +211,24 @@ export function maplibreWorkerWithThePage(): Plugin {
 const THEME_COLOUR = '#8a595a';
 const BACKGROUND_COLOUR = '#f5f1ee';
 
-// The `urlPattern` functions below are copied into the worker as text, so they
-// must not reach for anything outside themselves: the OpenFreeMap origin is
-// spelled out in each rather than shared as a constant.
+// The basemap host the offline worker caches from, read the way the app reads it
+// (shared/config/env.ts). A worker is only built by `vite build`, so its mode is
+// production; the same value reaches scripts/checks/check-build.mjs.
+const BASEMAP_HOST = parseBasemapHost(
+  loadEnv('production', process.cwd(), 'VITE_').VITE_BASEMAP_HOST,
+);
+const BASEMAP_RULES = basemapCacheRules(BASEMAP_HOST);
+
+/** Points index.html's preconnect at the configured basemap host (see withBasemapPreconnect). */
+function basemapPreconnect(): Plugin {
+  return {
+    name: 'parapo:basemap-preconnect',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (html) => withBasemapPreconnect(html, BASEMAP_HOST),
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
@@ -221,6 +238,7 @@ export default defineConfig({
     chunkModules(),
     readOutDir(),
     mapFileEarly(),
+    basemapPreconnect(),
     VitePWA({
       // The page registers the worker itself (src/features/published-map/pwa.ts), so the
       // plugin writes no registration script — and none into /studio/.
@@ -445,9 +463,7 @@ export default defineConfig({
             // Style, TileJSON, sprites, glyphs: served from the cache at once,
             // refreshed behind it. Glyphs are one entry per font and 256-glyph
             // range, and Liberty uses three faces, so the cap is roomy.
-            urlPattern: ({ url }) =>
-              url.origin === 'https://tiles.openfreemap.org' &&
-              (/^\/(styles|sprites|fonts)\//.test(url.pathname) || url.pathname === '/planet'),
+            urlPattern: BASEMAP_RULES.meta,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'basemap-meta',
@@ -465,9 +481,7 @@ export default defineConfig({
             // and Metro Manila is about 110 such tiles: a normal commuter keeps
             // 30–100 MB, and 1,000 entries is a ceiling only a cross-country
             // pan reaches. When the quota is hit, this cache is the first to go.
-            urlPattern: ({ url }) =>
-              url.origin === 'https://tiles.openfreemap.org' &&
-              /^\/(planet|natural_earth)\/.+\/\d+\/\d+\/\d+\.(pbf|png)$/.test(url.pathname),
+            urlPattern: BASEMAP_RULES.tiles,
             handler: 'CacheFirst',
             options: {
               cacheName: 'basemap-tiles',
