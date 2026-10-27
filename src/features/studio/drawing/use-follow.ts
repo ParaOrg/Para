@@ -84,7 +84,7 @@ export function useFollow({
     const v = choice.follow.v;
     const backwards = choice.follow.travel[0] !== directionLine(v)[0];
     void opening(v, (d) => {
-      const problem = draw.connect(d, at, backwards, offered);
+      const problem = draw.connect(d, at, backwards, gate.points, offered);
       if (problem) setNotice(problem);
     });
   };

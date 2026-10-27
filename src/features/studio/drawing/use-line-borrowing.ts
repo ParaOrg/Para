@@ -77,24 +77,34 @@ export function useLineBorrowing(
    * (live.ts withDrawing), so the owner hears "draw first" at once rather
    * than after a request. `go` false with no problem: nothing to say, as when
    * tracing a hotspot. `connect` asks the same again when the drawing lands.
+   * `points` is the drawing's points as asked, for `connect` to hold the
+   * drawing to: every edit writes a new array, so the same one means nothing
+   * has changed while the line was on its way.
    */
-  const joinGate = useCallback((): { go: boolean; problem: string | null } => {
-    if (areaRef.current || pickingRef.current) return { go: false, problem: null };
-    if (cpRef.current.length === 0) {
+  const joinGate = useCallback((): {
+    go: boolean;
+    problem: string | null;
+    points: readonly LngLat[];
+  } => {
+    const points = cpRef.current;
+    if (areaRef.current || pickingRef.current) return { go: false, problem: null, points };
+    if (points.length === 0) {
       return {
         go: false,
         problem: coarsePointer()
           ? 'Draw from where the jeep starts first, then tap the line it joins and follow it.'
           : 'Draw from where the jeep starts first, then right-click the line it joins.',
+        points,
       };
     }
     if (joinRef.current || borrowRef.current) {
       return {
         go: false,
         problem: 'This drawing already follows part of another line. One per drawing, for now.',
+        points,
       };
     }
-    return { go: true, problem: null };
+    return { go: true, problem: null, points };
   }, [areaRef, pickingRef, cpRef, joinRef, borrowRef]);
 
   /**
@@ -104,12 +114,22 @@ export function useLineBorrowing(
    * route's line and rides it home. `backwards` when that line was stored
    * from its far end, so the copy is turned to run the way the jeep goes.
    * `drop`, from the follow offer: the point the finger's tap added, which
-   * the join replaces, taken out only once the join goes ahead.
+   * the join replaces, taken out only once the join goes ahead. `asked`, the
+   * `points` of the `joinGate` asked before the line was read: a line that
+   * arrives after the drawing moved on (more points, Undo, ✕, another
+   * drawing) is not joined, and nothing is said, as the owner has moved on too.
    *
    * Returns a sentence for the owner when it cannot join, or null.
    */
   const connect = useCallback(
-    (v: DirectionDrawing, at: LngLat, backwards: boolean, drop?: LngLat): string | null => {
+    (
+      v: DirectionDrawing,
+      at: LngLat,
+      backwards: boolean,
+      asked: readonly LngLat[],
+      drop?: LngLat,
+    ): string | null => {
+      if (cpRef.current !== asked) return null;
       const gate = joinGate();
       if (!gate.go) return gate.problem;
       const cp = v.controlPoints ?? [];
@@ -133,7 +153,11 @@ export function useLineBorrowing(
         spot: cut.controlPoints[0],
         end: cut.controlPoints[cut.controlPoints.length - 1],
       };
-      setBorrow({ directionId: v.id, part: 'end' });
+      // The ref at once, not at the next commit: a second line arriving before
+      // then would otherwise pass the one-join rule.
+      const borrow: Borrow = { directionId: v.id, part: 'end' };
+      borrowRef.current = borrow;
+      setBorrow(borrow);
       void resolveGaps(gap, [freehandRef.current ? 'freehand' : 'snapped']);
       return null;
     },
@@ -142,6 +166,7 @@ export function useLineBorrowing(
       cpRef,
       segRef,
       connectedRef,
+      borrowRef,
       freehandRef,
       resolveGaps,
       writePoints,
