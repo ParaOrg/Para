@@ -1,0 +1,15 @@
+// The tiles Worker: ParaPo's own map tiles, styles, sprites and glyphs, read from R2.
+// Deployed by Cloudflare Workers Builds with root directory `workers/tiles`; see README.md.
+{
+  "name": "parapo-tiles",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "preview_urls": true,
+  "r2_buckets": [{ "binding": "TILES", "bucket_name": "parapo-tiles" }],
+  "vars": {
+    // Extra origins allowed to read the tiles, comma-separated (the future domain).
+    // The ParaPo workers.dev origins and localhost:5173 are built in.
+    "EXTRA_ORIGINS": "",
+  },
+}

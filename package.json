@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:phone": "vite --host",
-    "build": "tsc --noEmit && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
-    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && tsc -p workers/tiles && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
+    "typecheck": "tsc --noEmit && tsc -p workers/tiles",
     "lint": "eslint .",
     "check": "npm run format:check && npm run lint && npm run docs:architecture:check && npm run build && npm run test:unit",
     "test": "npm run test:unit",

@@ -23,6 +23,7 @@ const SOURCE = [
   'vite.apk.config.ts',
   'capacitor.config.ts',
   'scripts/**/*.ts',
+  'workers/tiles/src/**/*.ts',
 ];
 
 export default defineConfig([
@@ -307,6 +308,8 @@ export default defineConfig([
       'vite.apk.config.ts',
       'capacitor.config.ts',
       'eslint.config.js',
+      // The Workers runtime requires a default export.
+      'workers/tiles/src/index.ts',
     ],
     rules: {
       'import-x/no-default-export': 'off',
