@@ -5,8 +5,11 @@
 public repo. The private key never is: keep it in a password manager and an
 offline copy, never on GitHub.
 
-The file is not committed yet. Until it is, the backup workflow fails at its
-first step with a message saying so, rather than backing up unencrypted.
+The key is "Para backup (Para) <para.ph.info@gmail.com>", made on 2026-10-27,
+fingerprint `220A A322 40F7 D682 AFAD  B7BD 0932 853C 1FF5 CC94`. It expires on
+2029-10-28: make a new pair and replace this file before then, or the backup
+stops. Backups made with it can still be opened with its private key after
+that date.
 
 How to make the pair, and the rest of the setup, are in the header of
 `.github/workflows/backup.yml`.
