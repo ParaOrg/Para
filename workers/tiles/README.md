@@ -1,0 +1,35 @@
+# parapo-tiles
+
+ParaPo's own map: a Cloudflare Worker that serves the vector tiles, the three base styles, the sprite and the glyphs from the R2 bucket `parapo-tiles`. It replaces `tiles.openfreemap.org` (`.scratch/own-tiles/spec.md`). The site (`wrangler.jsonc` at the repo root, `src/`) is not touched by it.
+
+Plain TypeScript with no npm imports: Cloudflare bundles it, so nothing is added to the app's `package.json`.
+
+## What it answers
+
+| Request | Answer |
+| --- | --- |
+| `GET /{z}/{x}/{y}.pbf` | The tile, read by byte range from the PMTiles file `tiles/current.json` names, gzip as stored. `204` if the file holds no such tile, `400` for an address that is no tile. |
+| `GET /styles/{positron\|liberty\|fiord}` | The original style from `assets/styles/<name>.json`, rewritten to this Worker's own address: our tiles, our sprite and glyphs, no `natural_earth` raster. |
+| `GET /assets/...` | A sprite or glyph file from `assets/...` in the bucket, as it is. |
+| `GET /health` | `{ builtAt, file, tiles }` from `current.json`. |
+
+Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-monthly-build-to-r2.md`; the names are in `src/keys.ts`): `tiles/current.json`, `tiles/parapo-YYYY-MM-DD.pmtiles`, `assets/styles/*.json`, `assets/sprites/...`, `assets/fonts/...`.
+
+**Caching.** Tiles: `public, max-age=86400, stale-while-revalidate=604800`, with the file's name as the ETag, so a new monthly build changes every tile's address in the cache. `current.json` is read at most every 5 minutes per Worker instance. The Cloudflare Cache API stores tiles and leaf directories, but only on a custom domain: on `workers.dev` it keeps nothing, so every tile there is a read from R2.
+
+**CORS.** Allowed: `https://parapo.villaralvorovic2.workers.dev`, `https://staging-parapo.villaralvorovic2.workers.dev`, any `https://<name>-parapo.villaralvorovic2.workers.dev` preview, `http://localhost:5173`, and the comma-separated `EXTRA_ORIGINS` in `wrangler.jsonc` (add the future domain there). A request with no `Origin` is served. Any other origin gets `403` and no CORS headers.
+
+**Rate limit.** Not in the Worker. On a custom domain, set a Cloudflare rate-limiting rule for the zone (Security → WAF → Rate limiting rules); `workers.dev` has none.
+
+## Deploy (the owner's steps)
+
+1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Import a repository** → choose **ParaOrg/Para**.
+2. Name the Worker `parapo-tiles`. Set the **root directory** to `workers/tiles`.
+3. Set the **deploy command** to `npx wrangler deploy`. Leave the build command empty.
+4. Save and deploy. The R2 binding is already in `wrangler.jsonc`: `TILES` → the bucket `parapo-tiles`. In the Worker's **Settings → Bindings** it should show as an R2 bucket. If the bucket has another name, change `bucket_name` in `wrangler.jsonc`.
+5. Open `https://parapo-tiles.<account>.workers.dev/health`. It answers once the first monthly build has put `tiles/current.json` in the bucket; before that it says the tiles are unavailable (`503`).
+6. For the tiles subdomain: Worker → **Settings → Domains & Routes** → **Add** → **Custom domain**. That is also what turns the edge cache on.
+
+## Run the checks
+
+From the repo root: `npm run test:unit` (the `tests/unit/tiles-worker-*` files), and `npm run check`.

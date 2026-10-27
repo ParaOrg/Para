@@ -18,5 +18,11 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "vite.config.ts", "vite.apk.config.ts", "capacitor.config.ts"]
+  "include": [
+    "src",
+    "workers/tiles/src",
+    "vite.config.ts",
+    "vite.apk.config.ts",
+    "capacitor.config.ts"
+  ]
 }
