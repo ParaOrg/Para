@@ -29,3 +29,6 @@ supabase/.temp/
 
 # The Android app's web build (the native project in android/ has its own .gitignore)
 /dist-apk
+
+# Wrangler's local state (wrangler dev)
+.wrangler/
