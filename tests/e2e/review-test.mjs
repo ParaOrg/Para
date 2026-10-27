@@ -141,6 +141,9 @@ assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).is
 await shot('09-conflict');
 await page.getByRole('checkbox', { name: /I compared both/ }).check();
 await page.getByRole('button', { name: 'Keep draft for a new review' }).click();
+// The conflict panel closes once the kept draft's new revision is on screen;
+// Approve was already there (disabled), so it says nothing about the keep.
+await page.getByRole('region', { name: 'Resolve conflict' }).waitFor({ state: 'detached' });
 await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
 await page.getByRole('button', { name: 'Discard…' }).click();
 await shot('05-discard');
