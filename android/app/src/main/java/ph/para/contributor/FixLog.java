@@ -1,4 +1,4 @@
-package ph.parapo.contributor;
+package ph.para.contributor;
 
 import android.content.Context;
 import android.location.Location;
@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * The ride's fixes, kept natively. Android freezes the page's JavaScript about five minutes after
  * the screen goes off, so the page cannot be the only place a fix is written: the location
- * service's fixes are appended here as they arrive (ParaPoApplication), and the page imports what
+ * service's fixes are appended here as they arrive (ParaApplication), and the page imports what
  * it has not stored yet when it wakes, starts or resumes.
  *
  * One file of JSON lines. The first line names the recording the fixes belong to, and a file with

@@ -5,7 +5,7 @@
 #   emulator-ride.sh <debug apk> <output folder>
 #
 # The APK is built with VITE_EMULATOR_RIDE=1 (src/features/contribute/native/emulator-ride.ts), which
-# starts a recording and the native watch with no taps, and prints PARAPO_RIDE lines to logcat. A
+# starts a recording and the native watch with no taps, and prints PARA_RIDE lines to logcat. A
 # scripted jeep ride (about 20 km/h, out and back through Quezon City) is fed to the emulator's GPS
 # once a second.
 #
@@ -21,7 +21,7 @@ set -u
 
 APK=$1
 OUT=$2
-PKG=ph.parapo.contributor
+PKG=ph.para.contributor
 OFF_AFTER=60
 KILL_AT=900
 TOTAL=1200
@@ -121,7 +121,7 @@ import re, sys
 out, kept_at_kill, pid_before, pid_after = sys.argv[1:5]
 kept_at_kill = int(kept_at_kill)
 log = open(f"{out}/logcat.txt", errors="replace").read().splitlines()
-ride = [l.split("PARAPO_RIDE ", 1)[1] for l in log if "PARAPO_RIDE " in l]
+ride = [l.split("PARA_RIDE ", 1)[1] for l in log if "PARA_RIDE " in l]
 fields = lambda s: dict(re.findall(r"(\w+)=(\S+)", s))
 started = [r for r in ride if r.startswith("started")]
 imported = [fields(r) for r in ride if r.startswith("imported")]
@@ -135,7 +135,7 @@ last_rows = int(reports[-1]["rows"]) if reports else 0
 checks = {
     "the ride started": bool(started),
     "the service ran in the foreground with the screen off": "isForeground=true" in services,
-    "the notice 'ParaPo is recording' was up": "ParaPo is recording" in notification,
+    "the notice 'Para is recording' was up": "Para is recording" in notification,
     "the app's process was killed": bool(pid_before) and pid_before != pid_after,
     f"the service had kept at least 0.5 fixes a second until the kill ({kept_at_kill})": kept_at_kill >= 0.5 * (900 - 65),
     f"every fix the service kept is in the ride after reopening ({rows_after_import} >= {kept_at_kill})": bool(imported) and rows_after_import >= kept_at_kill,
