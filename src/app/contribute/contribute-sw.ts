@@ -32,7 +32,7 @@ declare const PRECACHE_URLS: readonly string[];
 /** Named for what is in it, so a new build gets a store of its own. Added by the build. */
 declare const CACHE_NAME: string;
 
-const CACHE_PREFIX = 'parapo-contribute-';
+const CACHE_PREFIX = 'para-contribute-';
 const PAGE_URL = '/contribute/';
 const PRECACHED = new Set(PRECACHE_URLS);
 

@@ -22,4 +22,4 @@ body:
       description: Optional.
   - type: markdown
     attributes:
-      value: The owner designs how ParaPo looks, so an idea that changes the look may wait for a design.
+      value: The owner designs how Para looks, so an idea that changes the look may wait for a design.

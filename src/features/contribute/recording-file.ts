@@ -92,7 +92,7 @@ export function downloadRecording(file: RecordingFile): void {
   const link = document.createElement('a');
   link.href = url;
   const day = MANILA_DAY.format(new Date(file.startedAt));
-  link.download = `parapo-contribution-${day}-${file.id.slice(0, 8)}.json`;
+  link.download = `para-contribution-${day}-${file.id.slice(0, 8)}.json`;
   link.click();
   // The browser reads the blob after the click returns, so it is let go a moment later.
   setTimeout(() => URL.revokeObjectURL(url), 60_000);

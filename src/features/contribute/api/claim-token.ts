@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 
 /** Its own key, apart from the session's: signing in replaces the session, never this. */
-export const CLAIM_TOKEN_KEY = 'parapo.contributor-claim';
+export const CLAIM_TOKEN_KEY = 'para.contributor-claim';
 
 const pendingClaimSchema = z.object({
   token: z.uuid(),

@@ -3,16 +3,16 @@ status: accepted
 date: 2026-10-27
 ---
 
-# ParaPo serves its own basemap
+# Para serves its own basemap
 
 Every commuter's map drew its streets, buildings and place names from
 OpenFreeMap (`tiles.openfreemap.org`): the Monochrome, Colour and Fiord designs
 are its Positron, Liberty and Fiord styles. OpenFreeMap is free, run on
 donations and promises no uptime. At 100,000 commuters it was the one part of a
-visit ParaPo did not control. On 2026-10-27 the owner chose to own the tiles
+visit Para did not control. On 2026-10-27 the owner chose to own the tiles
 (`.scratch/own-tiles/spec.md`, `ready-for-100k` 02).
 
-ParaPo now builds a Metro Manila extract of OpenStreetMap into one PMTiles file
+Para now builds a Metro Manila extract of OpenStreetMap into one PMTiles file
 every month (`.github/workflows/tiles.yml`, to zoom 14, the OpenMapTiles
 schema), keeps it in Cloudflare R2, and serves it from a Worker
 (`workers/tiles/`). The Worker also serves OpenFreeMap's three styles, copied
@@ -38,7 +38,7 @@ configured host.
   the three addresses and the worker's rules are exactly what they were.
 - **Open item before `main`: a custom domain.** The tiles Worker is on
   `workers.dev`, where Cloudflare's edge cache is off, so every tile is an R2
-  read. A domain of ParaPo's own turns the cache on; production should get one
+  read. A domain of Para's own turns the cache on; production should get one
   before it switches. The host and `EXTRA_ORIGINS` in `workers/tiles/wrangler.jsonc`
   change together.
 - **Phones keep OpenFreeMap's cached tiles** under the same cache name until
@@ -48,7 +48,7 @@ configured host.
   keeps © OpenStreetMap contributors and the route data's ODbL line, drops
   OpenFreeMap (no longer the provider) and adds © OpenMapTiles, each with its
   link. The Worker's styles carry no source `attribution`, so nothing repeats
-  them; they are served to ParaPo's own origins only.
+  them; they are served to Para's own origins only.
 - **Satellite and Terrain stay as they were.** The studio's two extra designs
   read their own providers (`studio-basemaps.ts`).
 - **Tests.** The browser suites stub `tiles.openfreemap.org`, so they must run
@@ -58,5 +58,5 @@ configured host.
   the two suites that run a production build (`pwa-test`,
   `contribute-offline-test`) name OpenFreeMap in their build step as well, since
   their preview origins are not ones the tiles server allows. No suite depends
-  on ParaPo's live tiles server; the built output is checked by `check-build.mjs`
+  on Para's live tiles server; the built output is checked by `check-build.mjs`
   against the committed host.

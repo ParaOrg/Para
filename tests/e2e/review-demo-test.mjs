@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { bareStyle, nodeFetch } from './lib/harness.mjs';
-const BASE = process.env.PARAPO_REVIEW_DEMO_BASE ?? 'http://127.0.0.1:4182';
+const BASE = process.env.PARA_REVIEW_DEMO_BASE ?? 'http://127.0.0.1:4182';
 const allowed = ['127.0.0.1', 'parapo-studio-review-preview.villaralvorovic2.workers.dev'];
 if (!allowed.includes(new URL(BASE).hostname))
   throw new Error('This suite runs only on the isolated sample preview.');
@@ -51,7 +51,7 @@ await page.getByRole('button', { name: 'Close', exact: true }).click();
 await page.getByRole('button', { name: 'Publish sample', exact: true }).click();
 assert.ok((await snapshot()).stops.some((stop) => stop.name === 'Hosted reviewed place'));
 await page.getByText('Public', { exact: true }).click();
-await page.getByTitle('Published ParaPo public map').waitFor();
+await page.getByTitle('Published Para public map').waitFor();
 await page.frameLocator('iframe').locator('canvas').waitFor();
 await page.getByText('Playground', { exact: true }).click();
 const openSubjects = async () => {

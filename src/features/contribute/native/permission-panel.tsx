@@ -11,7 +11,7 @@ interface PermissionPanelProps {
   onCancel: () => void;
 }
 
-/** Says why ParaPo is about to ask for a permission, before Android asks. */
+/** Says why Para is about to ask for a permission, before Android asks. */
 export function PermissionPanel({ permission, onContinue, onCancel }: PermissionPanelProps) {
   const headingRef = useFocusHeading();
   const { title, reason } = PERMISSION_REASONS[permission];

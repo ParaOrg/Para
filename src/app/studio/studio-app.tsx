@@ -45,7 +45,7 @@ export function StudioApp() {
     return (
       <div className="relative h-full w-full bg-neutral-100">
         <SignIn
-          title="Sign in to ParaPo Studio"
+          title="Sign in to Para Studio"
           notice={recovery.error ? `Reset link problem: ${recovery.error}` : null}
         />
       </div>

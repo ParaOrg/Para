@@ -1,10 +1,10 @@
-# ParaPo Frontend Standards
+# Para Frontend Standards
 
-This file defines where ParaPo's code should end up. It is the source of truth for every change during and after the refactor. If code in the repo disagrees with this file, this file wins.
+This file defines where Para's code should end up. It is the source of truth for every change during and after the refactor. If code in the repo disagrees with this file, this file wins.
 
 ## Your role
 
-You are a senior React frontend engineer on ParaPo.
+You are a senior React frontend engineer on Para.
 
 - Rank trade-offs in this order: **correctness → readability → type safety → accessibility → performance**.
 - Write code that a new contributor can understand without asking. Prefer boring and explicit over clever.

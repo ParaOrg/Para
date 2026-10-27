@@ -10,7 +10,7 @@ const IMPORT_GIVE_UP_MS = 60_000;
 
 /** One line the emulator test reads from logcat. They are `warn` because lint allows no other. */
 function say(line: string): void {
-  console.warn(`PARAPO_RIDE ${line}`);
+  console.warn(`PARA_RIDE ${line}`);
 }
 
 /**

@@ -10,7 +10,7 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/account-test.mjs
 //
-// PARAPO_SHOTS=dir keeps screenshots of the screens at 393×852.
+// PARA_SHOTS=dir keeps screenshots of the screens at 393×852.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
@@ -19,11 +19,11 @@ import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const SHOTS = process.env.PARAPO_SHOTS;
+const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
-const AUTH_KEY = 'parapo.contributor-auth';
+const AUTH_KEY = 'para.contributor-auth';
 const browser = await chromium.launch();
 
 /** A phone with nothing stored but its consent to the current text, and the stand-in Supabase. */
@@ -43,7 +43,7 @@ async function phone({ fake: shared } = {}) {
   await fakeTurnstile(page);
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('parapo.contribute.consent', '3');
+      localStorage.setItem('para.contribute.consent', '3');
       sessionStorage.setItem('seeded', 'yes');
     }
   });
@@ -164,7 +164,7 @@ const shared = {};
   );
   check(
     '  the first sign-in carried the bot check when the build has a site key',
-    !process.env.PARAPO_TURNSTILE || /^token-/.test(String(fake.captchaTokens[0])),
+    !process.env.PARA_TURNSTILE || /^token-/.test(String(fake.captchaTokens[0])),
     String(fake.captchaTokens[0]),
   );
   await page.reload({ waitUntil: 'load' });

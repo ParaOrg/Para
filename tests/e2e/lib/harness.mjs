@@ -10,8 +10,8 @@
 // studio-scale and save. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
 
-/** The dev server's address: PARAPO_BASE, or http://localhost:5173. */
-export const BASE = (process.env.PARAPO_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
+/** The dev server's address: PARA_BASE, or http://localhost:5173. */
+export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
 
 /**
  * A suite's count. `check` prints PASS or FAIL and its detail, `skip` prints
@@ -41,12 +41,12 @@ export const harness = ({ bracketed = false } = {}) => {
   return { check, skip, tally };
 };
 
-// PARAPO_NODE_FETCH=1: serve every https request through Node fetch. Needed only
+// PARA_NODE_FETCH=1: serve every https request through Node fetch. Needed only
 // where the browser cannot reach the internet but Node can (sandboxed CI).
 // `seen`, when given, is handed each request first: hotspot-test and
 // regression-gestures count the router's requests with it.
 export const nodeFetch = async (p, seen) => {
-  if (!process.env.PARAPO_NODE_FETCH) return;
+  if (!process.env.PARA_NODE_FETCH) return;
   await p.route(/^https:\/\//, async (route) => {
     const req = route.request();
     seen?.(req);

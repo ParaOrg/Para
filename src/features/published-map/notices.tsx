@@ -26,7 +26,7 @@ export function Notices({
   offline: boolean;
   age: { publishedAt: string | null; stale: boolean };
   needRefresh: boolean;
-  /** The new version's "Update Para Po!". */
+  /** The new version's "Update Para!". */
   onUpdate: () => void;
 }) {
   return (
@@ -84,12 +84,7 @@ export function Notices({
       */}
       {needRefresh && (
         <div className="pointer-events-none absolute top-[calc(1.5rem+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 *:pointer-events-auto">
-          <Button
-            variant="primary"
-            label="Update Para Po!"
-            data-testid="update"
-            onClick={onUpdate}
-          />
+          <Button variant="primary" label="Update Para!" data-testid="update" onClick={onUpdate} />
         </div>
       )}
     </>

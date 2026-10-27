@@ -19,7 +19,7 @@ export const Default: Story = {
     // Found, not got: the dialog opens in an effect, which a built Storybook
     // (no act() in production) runs only after the play has begun.
     const dialog = await within(canvasElement.ownerDocument.body).findByRole('dialog', {
-      name: 'Welcome to Para Po',
+      name: 'Welcome to Para',
     });
     await expect(dialog).toBeVisible();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Install' }));

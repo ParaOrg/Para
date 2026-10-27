@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { readAccountAnswer, writeAccountAnswer } from './account-storage';
 import { CONSENT_VERSION, agreedVersionOf, isCurrentConsent } from './consent-version';
 
-const CONSENT_KEY = 'parapo.contribute.consent';
+const CONSENT_KEY = 'para.contribute.consent';
 
 function storedAgreedVersion(accountId: string | null): number | null {
   try {

@@ -66,7 +66,7 @@ export const MAP_FILE_TOO_NEW = 'This map was published for a newer version of t
  * served from its store because the network was slow or gone. Absent on an
  * answer from the network, and on every page with no worker.
  */
-export const SERVED_FROM_HEADER = 'x-parapo-served-from';
+export const SERVED_FROM_HEADER = 'x-para-served-from';
 
 /**
  * The older indexes, newest first: shape 4, without the loops, shape 3,
@@ -94,7 +94,7 @@ export const MAP_FILE_CACHE = 'map-file';
  * a body that is not); it asks with `no-cache`, as fetchIndex does, and at
  * low priority, so the app's own script keeps the link first.
  */
-export const EARLY_MAP_FILE = '__parapoMapFile';
+export const EARLY_MAP_FILE = '__paraMapFile';
 
 /** What index.html's script leaves under EARLY_MAP_FILE. */
 export type EarlyMapFile = Promise<{ res: Response; body: Promise<unknown> | null }>;

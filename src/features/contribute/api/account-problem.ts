@@ -10,7 +10,7 @@
  * - `same-password`: the new password is the one the account already has.
  * - `rate-limited`: too many emails or tries; waiting is the only fix.
  * - `unavailable`: this build has no database to sign in to.
- * - `not-accepting`: ParaPo answered, but not in a way the page knows; most likely its settings.
+ * - `not-accepting`: Para answered, but not in a way the page knows; most likely its settings.
  */
 export type AccountProblem =
   | 'wrong-credentials'
@@ -46,7 +46,7 @@ export const ACCOUNT_MESSAGES: Record<AccountProblem, string> = {
   'same-password': "That's already your password. Sign in with it, or send a new code.",
   'rate-limited': 'Too many tries. Wait a few minutes, then try again.',
   unavailable: 'Accounts are not available on this page.',
-  'not-accepting': "ParaPo can't take this right now. Try again later.",
+  'not-accepting': "Para can't take this right now. Try again later.",
 };
 
 interface AuthFailure {
@@ -66,7 +66,7 @@ const RATE_LIMIT_CODES = new Set(['over_email_send_rate_limit', 'over_request_ra
 
 /**
  * Sorts a failed Auth call. No answer (the fetch itself failed) is no signal; any
- * other answer the page does not know is ParaPo not accepting the request.
+ * other answer the page does not know is Para not accepting the request.
  */
 export function accountProblemOf(error: AuthFailure): AccountProblem {
   if (error.code === 'invalid_credentials') return 'wrong-credentials';

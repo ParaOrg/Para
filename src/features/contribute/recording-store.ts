@@ -1,6 +1,6 @@
 import { fixRowSchema, recordingSchema, type FixRow, type Recording } from './recording-schema';
 
-const DB_NAME = 'parapo-contribute';
+const DB_NAME = 'para-contribute';
 const RECORDINGS = 'recordings';
 const FIXES = 'fixes';
 

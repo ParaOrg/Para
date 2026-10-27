@@ -16,7 +16,7 @@ import { latestReleaseText } from '../../scripts/publish/app-release-file.mjs';
 const RELEASE = {
   version: '1.2.3',
   versionCode: 1002003,
-  url: 'https://github.com/o/r/releases/latest/download/parapo-contributor.apk',
+  url: 'https://github.com/o/r/releases/latest/download/para-contributor.apk',
   minVersion: '1.0.0',
 };
 
@@ -61,11 +61,11 @@ test('the release file is read with Zod and anything else is refused', () => {
     { ...RELEASE, url: 'not a url' },
     { ...RELEASE, minVersion: 'latest' },
     { ...RELEASE, minVersion: '2101.0.0' },
-    { ...RELEASE, url: 'http://github.com/o/r/releases/latest/download/parapo-contributor.apk' },
+    { ...RELEASE, url: 'http://github.com/o/r/releases/latest/download/para-contributor.apk' },
     { ...RELEASE, url: 'javascript:alert(1)' },
     { ...RELEASE, url: 'intent://github.com/#Intent;scheme=https;end' },
-    { ...RELEASE, url: 'https://evil.example/parapo-contributor.apk' },
-    { ...RELEASE, url: 'https://github.com.evil.example/parapo-contributor.apk' },
+    { ...RELEASE, url: 'https://evil.example/para-contributor.apk' },
+    { ...RELEASE, url: 'https://github.com.evil.example/para-contributor.apk' },
     { ...RELEASE, version: '' },
   ]) {
     assert.equal(latestReleaseSchema.safeParse(bad).success, false, JSON.stringify(bad));
@@ -77,7 +77,7 @@ test('the workflow writes a file the app reads, and refuses a contradictory one'
     version: '1.2.3',
     versionCode: 1002003,
     minVersion: '1.0.0',
-    apkUrl: 'https://github.com/o/r/releases/latest/download/parapo-contributor.apk',
+    apkUrl: 'https://github.com/o/r/releases/latest/download/para-contributor.apk',
   };
   assert.deepEqual(JSON.parse(latestReleaseText(input)), RELEASE);
   assert.throws(() => latestReleaseText({ ...input, versionCode: 5 }), /has code 1002003/);

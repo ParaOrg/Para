@@ -6,12 +6,12 @@
 // www.para-commute.org served "Para PH" before this app; its worker (the copy
 // in fixtures/para-ph-sw.js, fetched from the live site and never shipped)
 // sits at the same address and scope as ours. Starts its own preview server on
-// :4173 (or uses PARAPO_BASE), then:
+// :4173 (or uses PARA_BASE), then:
 //   - the old worker is served as /sw.js and takes control of the page
-//   - this app's build replaces it: ours controls the page, no "Update Para Po!"
+//   - this app's build replaces it: ours controls the page, no "Update Para!"
 //     was offered, the page was not reloaded, `para-ph-v20260912` is gone, and
 //     the map file is stored as on a first visit
-//   - a later version of ours is offered as "Update Para Po!" and waits until tapped
+//   - a later version of ours is offered as "Update Para!" and waits until tapped
 //   - no page errors
 //
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
@@ -41,7 +41,7 @@ const swFile = join(root, 'dist', 'sw.js');
 const ourWorker = readFileSync(swFile, 'utf8');
 
 let server = null;
-let base = process.env.PARAPO_BASE;
+let base = process.env.PARA_BASE;
 if (!base) {
   const { preview } = await import('vite');
   server = await preview({ preview: { port: 4173, strictPort: true }, logLevel: 'silent' });
@@ -127,7 +127,7 @@ try {
     after.controlled && after.controllerState === 'activated' && !after.waiting,
     JSON.stringify(after),
   );
-  check('no "Update Para Po!" was offered', !after.update);
+  check('no "Update Para!" was offered', !after.update);
   check('the page was not reloaded', after.sameDocument);
   check(`${OLD_CACHE} is gone`, !after.caches.some((n) => n.startsWith('para-ph-')));
   check('the map file is stored, as after a first visit', after.hasMapFile);
@@ -142,7 +142,7 @@ try {
       () => true,
       () => false,
     );
-  check('a later version of ours is offered as "Update Para Po!"', offered);
+  check('a later version of ours is offered as "Update Para!"', offered);
   const waiting = await state(page);
   check(
     'and waits while the current one keeps controlling the page',

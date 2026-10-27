@@ -87,7 +87,7 @@ async function hasProfileOf(client: ContributeClient): Promise<boolean> {
   const { data, error, status } = await untyped.rpc('get_profile');
   if (error) {
     if (status !== 0)
-      console.warn(`ParaPo did not give the profile (HTTP ${status}):`, error.message);
+      console.warn(`Para did not give the profile (HTTP ${status}):`, error.message);
     return true;
   }
   const rows = profileRowsSchema.safeParse(data);
@@ -117,7 +117,7 @@ export async function fetchAccount(): Promise<Account | null> {
 function authError(error: Parameters<typeof accountProblemOf>[0]): AccountError {
   const problem = accountProblemOf(error);
   if (problem === 'not-accepting') {
-    console.warn(`ParaPo did not accept the request (HTTP ${error.status}):`, error.message);
+    console.warn(`Para did not accept the request (HTTP ${error.status}):`, error.message);
   }
   return new AccountError(problem, error.message);
 }
@@ -146,7 +146,7 @@ async function sendProfile(
   const { error, status } = await untyped.rpc('set_profile', { name, phone });
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
-    console.warn(`ParaPo did not take the profile (HTTP ${status}):`, error.message);
+    console.warn(`Para did not take the profile (HTTP ${status}):`, error.message);
     throw new AccountError('profile-not-saved', error.message);
   }
 }

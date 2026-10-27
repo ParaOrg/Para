@@ -19,7 +19,7 @@ import { terrainStyle } from './terrain';
  * Fiord. All of them are OpenFreeMap's styles (Positron, Liberty, Fiord) over
  * the same tiles, sprite and glyphs, so a switch fetches one small style file
  * and nothing a phone has cached is wasted. They are read from the configured
- * basemap host (shared/config/env.ts): ParaPo's own tiles server, which
+ * basemap host (shared/config/env.ts): Para's own tiles server, which
  * serves the same three styles pointed at its tiles, or OpenFreeMap itself.
  *
  * Monochrome is the default: Positron, as detailed as its tiles allow and
@@ -95,7 +95,7 @@ export const DEFAULT_BASEMAP = MONOCHROME;
  * who never touches the control leaves the browser's storage empty, which the
  * commuter test asserts and the no-tracking promise relies on.
  */
-const STORAGE_KEY = 'parapo.basemap.v1';
+const STORAGE_KEY = 'para.basemap.v1';
 
 /** The remembered design among `offered`; one this page does not offer (the studio's satellite, on the public map) falls back to the default. */
 export function readBasemap(offered: readonly Basemap[]): Basemap {

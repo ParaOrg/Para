@@ -46,7 +46,7 @@ export async function readDeviceInfo(): Promise<DeviceInfo> {
   return deviceInfoSchema.parse(await getPlugin().deviceInfo());
 }
 
-/** Opens ParaPo's page in the phone's Settings. */
+/** Opens Para's page in the phone's Settings. */
 export function openAppSettings(): Promise<void> {
   return getPlugin().openAppSettings();
 }

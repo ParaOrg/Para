@@ -9,7 +9,7 @@ interface BatteryPanelProps {
   onDone: () => void;
 }
 
-/** Shown once on a phone whose maker stops background apps: how to let ParaPo keep recording. */
+/** Shown once on a phone whose maker stops background apps: how to let Para keep recording. */
 export function BatteryPanel({ help, onOpenSettings, onDone }: BatteryPanelProps) {
   const headingRef = useFocusHeading();
   return (
@@ -23,7 +23,7 @@ export function BatteryPanel({ help, onOpenSettings, onDone }: BatteryPanelProps
         tabIndex={-1}
         className="text-xl/7 font-extrabold focus:outline-none"
       >
-        Let ParaPo run in the background
+        Let Para run in the background
       </h1>
       <p className="text-base/6">
         {help.maker} phones can stop apps that run with the screen off, which would cut a recording

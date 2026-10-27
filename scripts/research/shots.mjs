@@ -10,7 +10,7 @@ import { chromium } from 'playwright';
 import { readFileSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const BASE = (process.env.PARAPO_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
+const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
 const OUT = resolve(process.argv[2] ?? 'research-shots');
 mkdirSync(OUT, { recursive: true });
 

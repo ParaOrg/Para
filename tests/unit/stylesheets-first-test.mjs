@@ -64,7 +64,7 @@ test('a page with no stylesheet after its module script, or no module script, or
 });
 
 test('the plugin runs in a build only, after Vite has written the tags, on both pages', () => {
-  const plugin = config.plugins.flat().find((p) => p?.name === 'parapo:stylesheets-first');
+  const plugin = config.plugins.flat().find((p) => p?.name === 'para:stylesheets-first');
   assert.ok(plugin);
   assert.equal(plugin.apply, 'build');
   assert.equal(plugin.transformIndexHtml.order, 'post');

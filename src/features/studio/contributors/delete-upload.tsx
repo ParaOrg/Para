@@ -9,7 +9,7 @@ interface DeleteUploadProps {
   onDeleted: () => void;
 }
 
-/** Delete upload, asked first: it goes for everyone, and only ParaPo's copy goes. */
+/** Delete upload, asked first: it goes for everyone, and only Para's copy goes. */
 export function DeleteUpload({ contributionId, onDeleted }: DeleteUploadProps) {
   const [isAsking, setIsAsking] = useState(false);
   const questionId = useId();
@@ -43,7 +43,7 @@ export function DeleteUpload({ contributionId, onDeleted }: DeleteUploadProps) {
       className="flex w-full flex-col gap-2 rounded-xl border border-border-primary p-3"
     >
       <p id={questionId} className="font-bold text-content-primary">
-        Delete this upload from ParaPo? Its trail and hintos go for every editor, and it cannot be
+        Delete this upload from Para? Its trail and hintos go for every editor, and it cannot be
         undone. The contributor&apos;s phone keeps its own copy.
       </p>
       {deletion.error && <p role="alert">{deletion.error.message}</p>}

@@ -1,7 +1,7 @@
 // Standalone, browser-local sample data for the hosted review preview only.
-// This function is injected into a separate build; deployed ParaPo never imports it.
+// This function is injected into a separate build; deployed Para never imports it.
 export function installReviewDemo(seed, session) {
-  const storageKey = 'parapo-isolated-review-v1';
+  const storageKey = 'para-isolated-review-v1';
   const nativeFetch = window.fetch.bind(window);
   const fresh = () => structuredClone(seed);
   const load = () => {
@@ -184,7 +184,7 @@ export function installReviewDemo(seed, session) {
     btoa(JSON.stringify(value)).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
   session.expires_at = Math.floor(Date.now() / 1000) + 86400;
   session.access_token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: session.user.id, role: 'authenticated', aud: 'authenticated', exp: session.expires_at })}.preview-only`;
-  localStorage.setItem('sb-parapo-isolated-preview-auth-token', JSON.stringify(session));
+  localStorage.setItem('sb-para-isolated-preview-auth-token', JSON.stringify(session));
   window.fetch = async (input, init = {}) => {
     const url = new URL(
       typeof input === 'string' || input instanceof URL ? input : input.url,
@@ -197,7 +197,7 @@ export function installReviewDemo(seed, session) {
       return response(
         state.publishedLines[url.pathname.split('/').at(-1).replace('.json', '')] ?? null,
       );
-    if (url.hostname !== 'parapo-isolated-preview.invalid') return nativeFetch(input, init);
+    if (url.hostname !== 'para-isolated-preview.invalid') return nativeFetch(input, init);
     try {
       if (url.pathname.includes('/auth/'))
         return response(url.pathname.endsWith('/user') ? session.user : session);
@@ -256,7 +256,7 @@ export function installReviewDemo(seed, session) {
       return response({ message: `Sample preview: ${error.message}` }, 400);
     }
   };
-  window.paraPoReviewDemo = {
+  window.paraReviewDemo = {
     reset() {
       localStorage.removeItem(storageKey);
       location.reload();
@@ -341,7 +341,7 @@ export function installReviewDemo(seed, session) {
         ]),
       );
       save(state);
-      window.dispatchEvent(new Event('parapo-sample-published'));
+      window.dispatchEvent(new Event('para-sample-published'));
     },
   };
 }

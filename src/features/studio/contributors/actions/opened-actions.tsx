@@ -38,7 +38,7 @@ export function OpenedActions({
         contributionId={c.id}
         onDeleted={() => {
           onClose();
-          onNotice('Upload deleted from ParaPo.');
+          onNotice('Upload deleted from Para.');
         }}
       />
     </>

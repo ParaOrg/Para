@@ -33,7 +33,7 @@
 # The dev server reads .env.local, which is gitignored; here it is a copy of
 # .env.production, whose values are public by design (see that file), with the basemap
 # host put back to OpenFreeMap: the suites stub tiles.openfreemap.org, and none should
-# depend on ParaPo's live tiles server.
+# depend on Para's live tiles server.
 #
 # A commit the publish-map workflow pushes (with a deploy key, which does start
 # workflows) changes only public/data/, so a push of that alone skips CI:
@@ -183,7 +183,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
-        # answers only real browsers on ParaPo's own hostnames.
+        # answers only real browsers on Para's own hostnames.
         run: |
           cp .env.production .env.local
           echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
@@ -222,7 +222,7 @@ jobs:
       - name: ${{ matrix.suite }}
         run: node tests/e2e/${{ matrix.suite }}.mjs
         env:
-          PARAPO_TURNSTILE: ${{ (matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'forgot-password-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test') && '1' || '' }}
+          PARA_TURNSTILE: ${{ (matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'forgot-password-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test') && '1' || '' }}
           COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
       - name: Keep the screenshots and the dev server log
         if: failure()
@@ -268,7 +268,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
-        # answers only real browsers on ParaPo's own hostnames.
+        # answers only real browsers on Para's own hostnames.
         run: |
           cp .env.production .env.local
           echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
@@ -331,7 +331,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
-        # answers only real browsers on ParaPo's own hostnames.
+        # answers only real browsers on Para's own hostnames.
         run: |
           cp .env.production .env.local
           echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local

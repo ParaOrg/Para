@@ -21,7 +21,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 // Headless Chromium cannot use this container's TLS relay, but Node can reach
 // the internet directly: serve every https request through Node fetch.
 let routerCalls = 0;
-if (process.env.PARAPO_NODE_FETCH) {
+if (process.env.PARA_NODE_FETCH) {
   await nodeFetch(page, (req) => {
     if (/routing\.openstreetmap\.de|route\/v1\/driving/.test(req.url())) routerCalls++;
   });
@@ -260,7 +260,7 @@ const route = await page.evaluate(async () => {
 // can: a stand-in is written `pending` with no `streets`; a segment the router
 // answered has a `streets` array (empty on an unnamed road).
 const routed = await page.evaluate(() => {
-  const draft = JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null');
+  const draft = JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null');
   if (!draft) return { ok: false, detail: 'no draft in localStorage' };
   const snapped = (draft.segments ?? []).filter((s) => s?.snap === 'snapped');
   const real = snapped.filter((s) => Array.isArray(s.streets) && !s.pending);

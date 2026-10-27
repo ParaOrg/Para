@@ -1,4 +1,4 @@
-/** A phone maker known to stop apps that run in the background, and how to allow ParaPo. */
+/** A phone maker known to stop apps that run in the background, and how to allow Para. */
 export interface BatteryHelp {
   maker: string;
   steps: string;
@@ -10,7 +10,7 @@ const MAKERS: { names: string[]; help: BatteryHelp }[] = [
     help: {
       maker: 'Xiaomi',
       steps:
-        'Open ParaPo’s settings, tap Battery saver, then choose No restrictions. Then go back and turn on Autostart.',
+        'Open Para’s settings, tap Battery saver, then choose No restrictions. Then go back and turn on Autostart.',
     },
   },
   {
@@ -18,7 +18,7 @@ const MAKERS: { names: string[]; help: BatteryHelp }[] = [
     help: {
       maker: 'Oppo or Realme',
       steps:
-        'Open ParaPo’s settings, tap Battery, then turn on Allow background activity and Allow auto launch.',
+        'Open Para’s settings, tap Battery, then turn on Allow background activity and Allow auto launch.',
     },
   },
   {
@@ -26,14 +26,14 @@ const MAKERS: { names: string[]; help: BatteryHelp }[] = [
     help: {
       maker: 'Vivo',
       steps:
-        'Open ParaPo’s settings, tap Battery, then choose Allow high background power consumption.',
+        'Open Para’s settings, tap Battery, then choose Allow high background power consumption.',
     },
   },
   {
     names: ['samsung'],
     help: {
       maker: 'Samsung',
-      steps: 'Open ParaPo’s settings, tap Battery, then choose Unrestricted.',
+      steps: 'Open Para’s settings, tap Battery, then choose Unrestricted.',
     },
   },
   {
@@ -41,7 +41,7 @@ const MAKERS: { names: string[]; help: BatteryHelp }[] = [
     help: {
       maker: 'Huawei or Honor',
       steps:
-        'Open ParaPo’s settings, tap Battery, then App launch. Turn off Manage automatically, and turn on Auto-launch, Secondary launch and Run in background.',
+        'Open Para’s settings, tap Battery, then App launch. Turn off Manage automatically, and turn on Auto-launch, Secondary launch and Run in background.',
     },
   },
 ];

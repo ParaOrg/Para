@@ -199,7 +199,7 @@ worth it; said here so no one adds it quietly.
 - **The wording the suites read.** "Draw the return trip" (save-test),
   "is where … ends/end … Delete that route/those routes first" (save-test:
   the refusal), "Edit route", "Edit terminal", "Edit hintuan" (save-test,
-  visitor-test), "Sign in to ParaPo Studio" and "Reset link problem"
+  visitor-test), "Sign in to Para Studio" and "Reset link problem"
   (gate-test, pwa-test), the `confirm` sentences. The strings move with
   their JSX, byte for byte.
 - **Toasts, one at a time** (106): the state stays one value; `SaveToasts`

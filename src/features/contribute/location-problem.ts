@@ -8,7 +8,7 @@ const POSITION_UNAVAILABLE = 2;
 export function locationProblem(error: WatchError): string {
   if (error.code === PERMISSION_DENIED) {
     return isNativeApp()
-      ? 'Location is off for ParaPo. Turn it on in the phone’s Settings, under Apps, ParaPo, Permissions, then start again.'
+      ? 'Location is off for Para. Turn it on in the phone’s Settings, under Apps, Para, Permissions, then start again.'
       : 'Location is blocked for this page. Allow it in the browser settings, then start again.';
   }
   if (error.code === POSITION_UNAVAILABLE) {

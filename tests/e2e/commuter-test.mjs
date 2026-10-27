@@ -178,7 +178,7 @@ page.on('request', (req) => {
 // Responses, not requests: a 404 is a request too, and would count as a load.
 // The pick checks read the file again for their sums, marked so as not to count.
 page.on('response', (res) => {
-  if (/\/data\/index\.v5\.json/.test(res.url()) && !res.request().headers()['x-parapo-test'])
+  if (/\/data\/index\.v5\.json/.test(res.url()) && !res.request().headers()['x-para-test'])
     mapFileStatuses.push(res.status());
 });
 

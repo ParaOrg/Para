@@ -11,8 +11,8 @@ import type { LngLat } from '@/shared/utils/geo';
 import type { Hotspot } from '../model/hotspots';
 
 /*
- * The basemap's own rail station names, hidden where ParaPo has the station
- * (the owner's call): Monochrome drew "Anonas" a block from ParaPo's "Anonas
+ * The basemap's own rail station names, hidden where Para has the station
+ * (the owner's call): Monochrome drew "Anonas" a block from Para's "Anonas
  * Station", and Colour draws its own the same way. A station of ours is a
  * hotspot with a `line`; the basemap's are its `poi` points of class
  * `railway`. One within NEAR_M of one of ours is not drawn; the rest, the

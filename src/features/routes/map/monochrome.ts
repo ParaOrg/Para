@@ -24,7 +24,7 @@ import { recolouredStyle, type Recolour } from './recolour';
  * queries our two hit layers by name and nothing else.
  *
  * No road transit of the basemap's own: its bus terminals and stops, its ferry
- * stops and its busway would stand beside ParaPo's own hotspots and routes as
+ * stops and its busway would stand beside Para's own hotspots and routes as
  * if they were ours. Rail stations stay, by their names alone, with no logo.
  *
  * Roads. Every road in the tiles says whether it is a bridge or a tunnel and

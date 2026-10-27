@@ -4,27 +4,27 @@
 // nothing; an editor signs in to the studio's Contributors map and finds every
 // upload there, in the list and on the map alike, and opens one to its trail.
 //
-//   PARAPO_PREVIEW=http://127.0.0.1:4280 node tests/e2e/contributions-preview-test.mjs
+//   PARA_PREVIEW=http://127.0.0.1:4280 node tests/e2e/contributions-preview-test.mjs
 //
-// PARAPO_SHOTS=dir keeps screenshots of each step at 393×852 and 1280×800.
+// PARA_SHOTS=dir keeps screenshots of each step at 393×852 and 1280×800.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 import { bareStyle, harness } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const BASE = (process.env.PARAPO_PREVIEW ?? 'http://127.0.0.1:4280').replace(/\/$/, '');
+const BASE = (process.env.PARA_PREVIEW ?? 'http://127.0.0.1:4280').replace(/\/$/, '');
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(BASE)) {
-  console.log('Refused: PARAPO_PREVIEW must be the loopback preview');
+  console.log('Refused: PARA_PREVIEW must be the loopback preview');
   process.exit(1);
 }
-const SHOTS = process.env.PARAPO_SHOTS;
+const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 /** This run's tag, so names are this run's whatever the disposable database already holds. */
 const RUN = Date.now().toString(36).slice(-4);
 const STUDIO_KEY = 'sb-127-auth-token';
-const PHONE_KEY = 'parapo.contributor-auth';
+const PHONE_KEY = 'para.contributor-auth';
 
 const GPS = () => {
   const watchers = new Map();
@@ -78,7 +78,7 @@ async function phone() {
   });
   const page = await newPage(context);
   await page.addInitScript(GPS);
-  await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', '3'));
+  await page.addInitScript(() => localStorage.setItem('para.contribute.consent', '3'));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 30000 });
   return { context, page };
@@ -111,8 +111,8 @@ async function recordAndSave(page, name, lat, seconds = 40) {
   await page.getByLabel('End point name').fill('Cubao');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  await page.getByText(/Uploaded to ParaPo|refused|no signal/).waitFor({ timeout: 20000 });
-  return page.getByText('Uploaded to ParaPo').count();
+  await page.getByText(/Uploaded to Para|refused|no signal/).waitFor({ timeout: 20000 });
+  return page.getByText('Uploaded to Para').count();
 }
 
 /** A REST read with this page's phone session, as the phone itself could make it. */
@@ -184,13 +184,13 @@ check("  phone B cannot delete phone A's upload", bDeletesA === 0);
 const studioContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 const studio = await newPage(studioContext);
 await studio.goto(`${BASE}/studio/?map=contributors`, { waitUntil: 'load' });
-await studio.getByText('Sign in to ParaPo Studio').waitFor({ timeout: 30000 });
+await studio.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
 check(
   'a signed-out visitor meets the studio sign-in, and no upload is read',
   (await studio.getByRole('list', { name: 'Uploads' }).count()) === 0,
 );
 await shot(studio, '3-studio-signed-out');
-await studio.getByPlaceholder('you@example.com').fill('preview@parapo.test');
+await studio.getByPlaceholder('you@example.com').fill('preview@para.test');
 await studio.getByPlaceholder('Password').fill('preview');
 await studio.locator('button[type="submit"]').click();
 await studio.getByRole('list', { name: 'Uploads' }).waitFor({ timeout: 20000 });
@@ -336,7 +336,7 @@ await studio
   .getByRole('group', { name: /Delete this upload/ })
   .getByRole('button', { name: 'Delete upload' })
   .click();
-await studio.getByText('Upload deleted from ParaPo.').waitFor({ timeout: 15000 });
+await studio.getByText('Upload deleted from Para.').waitFor({ timeout: 15000 });
 await studio.getByRole('list', { name: 'Uploads' }).waitFor();
 await studio.waitForFunction(
   (id) =>
@@ -378,7 +378,7 @@ await recordAndSave(shared.page, 'Same browser', 14.76);
 const phoneSession = await shared.page.evaluate((k) => localStorage.getItem(k), PHONE_KEY);
 const sharedStudio = await newPage(shared.context);
 await sharedStudio.goto(`${BASE}/studio/?map=contributors`, { waitUntil: 'load' });
-await sharedStudio.getByPlaceholder('you@example.com').fill('preview@parapo.test');
+await sharedStudio.getByPlaceholder('you@example.com').fill('preview@para.test');
 await sharedStudio.getByPlaceholder('Password').fill('preview');
 await sharedStudio.locator('button[type="submit"]').click();
 await sharedStudio.getByRole('list', { name: 'Uploads' }).waitFor({ timeout: 20000 });

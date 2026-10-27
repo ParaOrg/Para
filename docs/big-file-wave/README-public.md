@@ -80,7 +80,7 @@ to 30 for the public suites, in parallel.
 
 | plan | commits | session time | local suite to run first |
 | --- | --- | --- | --- |
-| use-locator | 4 | 2 h | where-test (`PARAPO_NO_TILES=1` where tiles are blocked) |
+| use-locator | 4 | 2 h | where-test (`PARA_NO_TILES=1` where tiles are blocked) |
 | trip-timeline | 4 | 1.5 h | phone-test's fold and pick, or visitor-test one part |
 | saved-hotspots-layers | 4 | 2 h | map-sources, gl-programs, layer-switch, map-style (unit); then phone-test |
 | saved-routes-layers | 3 | 2.5 h | the same unit four; then scale-test (budgets) |

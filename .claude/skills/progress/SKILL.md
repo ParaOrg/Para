@@ -1,6 +1,6 @@
 ---
 name: progress
-description: Tell the owner where ParaPo's work stands right now - what's done, what's in progress, what's next, what the owner needs to do, and how much time is left. Use when the owner types /progress or asks "where are we?".
+description: Tell the owner where Para's work stands right now - what's done, what's in progress, what's next, what the owner needs to do, and how much time is left. Use when the owner types /progress or asks "where are we?".
 ---
 
 # /progress
