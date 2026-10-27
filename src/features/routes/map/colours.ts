@@ -5,9 +5,8 @@ import type { HotspotKind } from '../model/hotspots';
 /**
  * Colours the editor and the public map both paint with. They live apart from
  * either, so the public map never imports the editor just to know what colour
- * a terminal is. The owner's HotspotOverlayCard (Figma 3837:11308,
- * 2026-09-30): a hintuan green, a terminal sky — orange and a brighter sky
- * before.
+ * a terminal is. The HotspotOverlayCard (Figma 3837:11308): a hintuan green,
+ * a terminal sky.
  */
 export const HOTSPOT_COLOUR: Record<HotspotKind, string> = {
   terminal: MAP_COLOURS['Map/OverlayCard/Terminal/surface'],

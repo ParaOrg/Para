@@ -11,11 +11,12 @@ import {
 } from '@/shared/utils/geo';
 
 import { readDraft, restoredState, useDraftSaving } from './draft';
-import { useDrawLayers, useDrawRendering } from './draw-layers';
+import { useDrawLayers } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
 import type { AreaTarget, Borrow, HotspotKind, Picking, Target } from './drawing-types';
 import { useGapResolver } from './gap-resolver';
 import { useDrawEvents } from './use-draw-events';
+import { useDrawRendering } from './use-draw-rendering';
 import { useLineBorrowing } from './use-line-borrowing';
 import { usePointBar } from './use-point-bar';
 import { findUTurns } from './uturns';
@@ -27,11 +28,10 @@ import { findUTurns } from './uturns';
  * modes, and wires the rest together. Its types are drawing-types.ts and the
  * array arithmetic behind the edits drawing-edits.ts; the finger's Delete,
  * Put back and follow offer are use-point-bar.ts, Extend's keep and the
- * right-click's join use-line-borrowing.ts (split 2026-10-14, the big-file
- * wave); what it paints is draw-layers.ts, how the pointer drives it
- * use-draw-events.ts, the router's answers gap-resolver.ts, and the draft on
- * this device draft.ts (split 2026-09-29, stage 10 of the clean-up). Nothing
- * it does changed in either split.
+ * right-click's join use-line-borrowing.ts; what it paints is the draw-*
+ * layers (draw-layers.ts), fed by use-draw-rendering.ts; how the pointer
+ * drives it is use-draw-events.ts, the router's answers gap-resolver.ts, and
+ * the draft on this device draft.ts.
  */
 
 export type Drawing = ReturnType<typeof useDrawing>;
@@ -254,6 +254,21 @@ export function useDrawing(
     [reset],
   );
 
+  /**
+   * Begin a new direction from points that are not the editor's clicks, such
+   * as an upload's line: they become the control points, and the router is
+   * asked for every gap, the stand-ins showing meanwhile.
+   */
+  const startWithPoints = useCallback(
+    (points: LngLat[]) => {
+      start();
+      writePoints(points);
+      if (points.length > 1)
+        void resolveGaps(0, new Array<SnapMode>(points.length - 1).fill('snapped'));
+    },
+    [start, writePoints, resolveGaps],
+  );
+
   /** Open a saved direction for editing: its row with its drawing (live.ts withDrawing). */
   const load = useCallback(
     (v: DirectionDrawing) => {
@@ -324,7 +339,7 @@ export function useDrawing(
    * The outline being traced is now this saved hotspot: a save wrote its row
    * and failed after it (its links). Held in the area, so the panel closed
    * and opened again, or the page reloaded from its draft, updates that row
-   * rather than inserting the box a second time (review of 2026-10-03).
+   * rather than inserting the box a second time.
    */
   const adoptHotspot = useCallback((hotspotId: string) => {
     const a = areaRef.current;
@@ -334,9 +349,9 @@ export function useDrawing(
     areaRef.current = next;
   }, []);
 
-  /** Open a saved hotspot's outline for editing. */
+  /** Open an outline for editing: a saved hotspot's, or (no id) a new one's first corners. */
   const loadArea = useCallback(
-    (kind: HotspotKind, hotspotId: string, ring: LngLat[]) => {
+    (kind: HotspotKind, hotspotId: string | null, ring: LngLat[]) => {
       reset();
       const a = { kind, hotspotId };
       setArea(a);
@@ -381,7 +396,7 @@ export function useDrawing(
     setDrawing(true);
 
     // Gaps still waiting for the router when the page went away: their answers
-    // went with it, so ask again, adjacent ones in one request as before.
+    // went with it, so ask again, adjacent ones in one request.
     for (const [from, to] of restored.pendingRuns) {
       void resolveGaps(from, new Array<SnapMode>(to - from + 1).fill('snapped'));
     }
@@ -469,6 +484,7 @@ export function useDrawing(
     load,
     metres: useMemo(() => lineLength(line), [line]),
     start,
+    startWithPoints,
     startArea,
     loadArea,
     adoptHotspot,

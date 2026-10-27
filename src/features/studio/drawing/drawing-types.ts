@@ -1,16 +1,15 @@
+import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import type { DirectionDrawing } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
-import type { BorrowPart, LineSpot } from './borrow';
+import type { LineSpot } from './borrow';
 
 /**
  * The drawing's shared types: what a save writes to, which hotspot an outline
  * becomes, and the three states a route drawing passes through while it
- * borrows from a saved line. A leaf on purpose, with no React and no hook:
- * the drawing's siblings (draft, gap-resolver, draw-layers, use-draw-events)
- * read these and useDrawing reads them, so a cycle of type imports through
- * the hook ends here (split 2026-10-14, the big-file wave). `Drawing`, the
- * hook's return type, stays in use-drawing.ts.
+ * borrows from a saved line. A leaf on purpose, with no React and no hook, so
+ * any module of the drawing can import these without a cycle through
+ * useDrawing. `Drawing`, the hook's return type, stays in use-drawing.ts.
  */
 
 /** What a save will write to: an existing direction, a new direction on an existing route, or (both null) a new route. */

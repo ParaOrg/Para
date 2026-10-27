@@ -19,7 +19,6 @@ const straight: Segment = { snap: 'freehand', coordinates: [from, to] };
 const parent: DirectionRow = {
   id: 'sample-out',
   routeId: 'sample-route',
-  ownerId: 'sample-owner',
   name: 'Tala → SM Fairview',
   originTerminal: null,
   destinationTerminal: null,
@@ -29,7 +28,6 @@ const parent: DirectionRow = {
   updatedAt: '2026-09-21T00:00:00Z',
   route: {
     id: 'sample-route',
-    ownerId: 'sample-owner',
     signboard: null,
     routeCode: null,
     shortName: null,
@@ -76,6 +74,17 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/** An ikot that goes by a place twice: only the first pass is listed, and the editor is told. */
+export const IkotPassesAPlaceTwice: Story = {
+  args: { isLoop: true, passedTwice: ['Katipunan'], hotspotsCount: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('save-passed-twice')).toHaveTextContent('Katipunan');
+    // An ikot has no ends to end at, so no hotspots is not the warning it is for a route.
+    await expect(canvas.queryByText(/No hotspots yet/)).toBeNull();
+  },
+};
 
 /** A clean line: only the streets it runs along. */
 export const Streets: Story = {

@@ -1,7 +1,7 @@
 // The editor at scale: how /studio/?e2e=1 opens with 5,000 directions and 510
-// hotspots, made from today's map — 250 copies of its 20 directions and 5 of
-// its 102 hotspots, as many as make 500 (its counts on 2026-10-06; the suite
-// prints them), shifted across a 25 × 10 grid — served by a stand-in for the
+// hotspots, made from today's map — as many copies of its directions as make
+// about 5,000 (copiesFor), and of its hotspots as make 500 (the suite prints
+// the counts), shifted across a grid 25 copies wide — served by a stand-in for the
 // database's REST API. The rows are as the database keeps them: a line with a
 // point every 20 m or so (what the router gives), the drawing beside it
 // (control_points, segments) and 15-decimal coordinates. No tiles, no router,
@@ -25,8 +25,10 @@
 // instead of the line: a lit direction's full line is read on its own, and
 // its orange stretches are worked out then.
 import { chromium } from 'playwright';
-import { COPIES, readPublished, shift } from './lib/big-map.mjs';
+import { copiesFor, readPublished, shift } from './lib/big-map.mjs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { fakeStudioDb } from './lib/fake-studio-db.mjs';
+import { signInAsEditor } from './lib/studio-session.mjs';
 import { countLongTasks, startProfile, whereItWent } from './lib/profile.mjs';
 
 /** Seconds from the navigation to the first route line on the screen. */
@@ -35,6 +37,17 @@ const LINES_WITHIN_S = 15;
 const BUSY_WITHIN_S = 10;
 /** Seconds from a click on a line to that route being lit. */
 const LIT_WITHIN_S = 5;
+/** Seconds from signing in to the Contributors map's list and lines on the screen. */
+const CONTRIBUTORS_WITHIN_S = 15;
+/** Seconds from choosing another period or Show hidden to the list and map agreeing on it. */
+const FILTER_WITHIN_S = 5;
+/**
+ * How many times the bare map's pan the same pan may cost with the uploads on
+ * it, and the seconds of slack on top. A runner draws a map in software, so
+ * the bare pan is slow on its own: the budget is for what the uploads add.
+ */
+const PAN_COST_FACTOR = 2;
+const PAN_SLACK_S = 1;
 /** Metres between points on a stored line, about what the router gives. */
 const POINT_EVERY_M = 20;
 
@@ -42,6 +55,7 @@ const { check, tally } = harness();
 
 // ------------------------------------------------------------- the tables
 const m = readPublished();
+const COPIES = copiesFor(m.variants.length);
 // Shifted, and with the digits a save used to keep.
 const mv = (c, [dx, dy], j) => [
   c[0] + dx + (j % 9) * 1e-9 + 3e-12,
@@ -207,6 +221,8 @@ const serve = (route) => {
   asked.push({
     table,
     select: u.searchParams.get('select') ?? '*',
+    // The lines of the drawn rows with no overview yet (live.ts's unsummarised): not the list.
+    isBackfill: u.searchParams.get('overview') === 'is.null',
     offset,
     one,
     bytes: body.length,
@@ -325,11 +341,9 @@ if (process.env.PARAPO_SCALE_DEBUG)
 console.log(
   `  map load ${s(marks['map load'])}; routes in the source ${s(marks['routes in the source'])}; hotspots ${s(marks['hotspots in the source'])}; idle ${s(marks.idle)}\n`,
 );
-check(
-  'every direction reached the map',
-  routes === variants.length,
-  `${routes} of ${variants.length}`,
-);
+// The published map may hold a way not drawn yet (a slot): it has no line to draw.
+const drawn = variants.filter((v) => v.shape).length;
+check('every drawn direction reached the map', routes === drawn, `${routes} of ${drawn}`);
 check('every hotspot reached the map', boxes === stops.length, `${boxes} of ${stops.length}`);
 check(
   'no orange stretch is worked out at load: none is lit',
@@ -349,7 +363,7 @@ check(
 
 // What was asked for: the list without its drawings or its lines, and the
 // pages together.
-const lists = asked.filter((r) => r.table === 'route_variant' && !r.one);
+const lists = asked.filter((r) => r.table === 'route_variant' && !r.one && !r.isBackfill);
 const drawingsInList = lists.filter((r) => {
   const cols = columnsOf(r.select);
   return (
@@ -498,6 +512,165 @@ check(
   !!draft?.borrow && (draft.controlPoints?.length ?? 0) > 2,
   `borrows ${draft?.borrow?.variantId?.slice(0, 12) ?? 'nothing'}, ${draft?.controlPoints?.length ?? 0} points`,
 );
+
+// ------------------------------------ the Contributors map, 1,000 uploads
+// A fake reader (lib/fake-studio-db.mjs) holds 1,000 made-up uploads spread over
+// 85 days, a twentieth of them hidden, each with a line of 150 points. The
+// reader never gives more than the newest 500 of a period (CONTRIBUTION_LIMIT),
+// so the longest period is the cut one. The list and the map must agree on every
+// answer, the filters must settle within FILTER_WITHIN_S, and panning the camera
+// across the lot must leave the main thread free.
+{
+  const DAY = 86_400_000;
+  const LIMIT = 500;
+  const clock = Date.now();
+  const uploads = Array.from({ length: 1000 }, (_, i) => {
+    const [x, y] = [121.0 + (i % 40) * 0.004, 14.55 + Math.floor(i / 40) * 0.004];
+    const received = clock - (i / 1000) * 85 * DAY - 60_000;
+    return {
+      id: `c1000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+      contributor_id: `a0000000-0000-4000-8000-${String(i % 40).padStart(12, '0')}`,
+      started_at: new Date(received - 3_600_000).toISOString(),
+      ended_at: new Date(received - 1_800_000).toISOString(),
+      received_at: new Date(received).toISOString(),
+      vehicle: 'jeep',
+      start_name: `Start ${i}`,
+      end_name: `End ${i}`,
+      description: null,
+      distance_m: 3000,
+      moving_s: 1500,
+      standing_s: 200,
+      lost_s: 0,
+      point_count: 1800,
+      line: {
+        type: 'LineString',
+        coordinates: Array.from({ length: 150 }, (_, k) => [
+          x + k * 0.00002,
+          y + Math.sin(k / 9) * 0.0008,
+        ]),
+      },
+      west: x,
+      south: y - 0.0008,
+      east: x + 0.003,
+      north: y + 0.0008,
+      hidden_at: i % 20 === 7 ? new Date(received).toISOString() : null,
+      hidden_note: null,
+    };
+  });
+  const expected = (days, showHidden) =>
+    Math.min(
+      LIMIT,
+      uploads.filter(
+        (u) =>
+          Date.parse(u.received_at) >= clock - days * DAY && (showHidden || u.hidden_at === null),
+      ).length,
+    );
+
+  const ctx = await b.newContext({
+    viewport: { width: 1280, height: 800 },
+    reducedMotion: 'reduce',
+  });
+  const cpage = await ctx.newPage();
+  cpage.on('pageerror', (e) => errors.push(String(e)));
+  await bareStyle(cpage);
+  await signInAsEditor(cpage);
+  const reader = await fakeStudioDb(cpage, { contribution: uploads });
+  await cpage.addInitScript(countLongTasks);
+
+  const listed = () => cpage.getByRole('list', { name: 'Uploads' }).getByRole('listitem').count();
+  const drawn = () =>
+    cpage.evaluate(async () => (await window.__src('studio-contributions'))?.features?.length ?? 0);
+  /** Until the list and the map both hold `n` uploads: how long it took, or null. */
+  const agree = async (n, ms) => {
+    const from = Date.now();
+    while (Date.now() - from < ms) {
+      if ((await listed().catch(() => -1)) === n && (await drawn()) === n) return Date.now() - from;
+      await cpage.waitForTimeout(100);
+    }
+    return null;
+  };
+
+  const from = Date.now();
+  await cpage.goto(`${BASE}/studio/?map=contributors`, { waitUntil: 'load' });
+  const opened = await agree(expected(30, false), CONTRIBUTORS_WITHIN_S * 1000 + 30_000);
+  const sinceStart = Date.now() - from;
+  check(
+    `the Contributors map opens within ${CONTRIBUTORS_WITHIN_S} s, its list and its lines the same ${expected(30, false)} uploads`,
+    opened !== null && sinceStart < CONTRIBUTORS_WITHIN_S * 1000,
+    `${s(sinceStart)}; ${await listed()} listed, ${await drawn()} on the map`,
+  );
+  const asked = reader.log.filter((r) => r.table === 'contribution' && r.method === 'GET');
+  check(
+    'it asked for a slice, never the whole table: one period, the newest 501 at most, no point read',
+    asked.length >= 1 &&
+      asked.every((r) => /received_at=gte\./.test(r.query) && /limit=501/.test(r.query)) &&
+      !reader.log.some((r) => r.table === 'point_batch'),
+    asked[0]?.query.slice(0, 120),
+  );
+
+  // Each choice: the period, and Show hidden.
+  const choose = async (days, showHidden) => {
+    await cpage.getByLabel('Uploaded in the last').selectOption(String(days));
+    const box = cpage.getByLabel('Show hidden');
+    if ((await box.isChecked()) !== showHidden) await box.setChecked(showHidden);
+    const took = await agree(expected(days, showHidden), FILTER_WITHIN_S * 1000 + 5_000);
+    return took;
+  };
+  for (const [days, showHidden] of [
+    [90, false],
+    [7, false],
+    [90, true],
+    [30, true],
+  ]) {
+    const n = expected(days, showHidden);
+    const took = await choose(days, showHidden);
+    check(
+      `${days} days${showHidden ? ' with hidden' : ''}: the list and the map agree on ${n}${n === LIMIT ? ' (the cut)' : ''} within ${FILTER_WITHIN_S} s`,
+      took !== null && took < FILTER_WITHIN_S * 1000,
+      took === null ? `${await listed()} listed, ${await drawn()} on the map` : s(took),
+    );
+  }
+  await choose(90, false);
+  check(
+    'the cut says so: the newest 500 of the period',
+    (await cpage.locator('body').innerText()).includes(
+      `The newest ${LIMIT} uploads of the last 90 days`,
+    ),
+  );
+
+  // Panning across the lot, a step at a time: with the uploads, then with their layers hidden.
+  const pan = async () => {
+    await cpage.waitForTimeout(500);
+    const before = await cpage.evaluate(() => window.__long);
+    for (let i = 0; i < 20; i++) {
+      await cpage.evaluate(
+        (k) =>
+          window.__map.jumpTo({
+            center: [121.0 + (k % 20) * 0.007, 14.55 + (k % 9) * 0.01],
+            zoom: 13 + (k % 4),
+          }),
+        i,
+      );
+      await cpage.waitForTimeout(40);
+    }
+    await cpage.waitForTimeout(500);
+    return (await cpage.evaluate(() => window.__long)) - before;
+  };
+  const withUploads = await pan();
+  await cpage.evaluate(() => {
+    for (const layer of window.__map.getStyle().layers)
+      if (layer.id.startsWith('studio-contribution'))
+        window.__map.setLayoutProperty(layer.id, 'visibility', 'none');
+  });
+  const bare = await pan();
+  check(
+    `panning and zooming across 500 drawn uploads costs under ${PAN_COST_FACTOR}× the bare map's pan, plus ${PAN_SLACK_S} s of long tasks`,
+    withUploads < bare * PAN_COST_FACTOR + PAN_SLACK_S * 1000,
+    `${Math.round(withUploads)} ms with them, ${Math.round(bare)} ms without`,
+  );
+  await ctx.close();
+}
+
 check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
 whereItWent(profile);

@@ -5,6 +5,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow, LineStringGeoJSON } from '@/features/routes/model/routes';
 
 import { TripCardExtras } from './trip-card-extras';
+import { DraftLockNotice } from '../review/draft-lock-notice';
 
 /** Sample data only, shaped like saved rows. Not read from Supabase. */
 const line: LineStringGeoJSON = {
@@ -24,11 +25,9 @@ const out: DirectionRow = {
   shape: line,
   reversed: false,
   confidence: 'drawn',
-  ownerId: 'sample-owner',
   updatedAt: '2026-09-21T00:00:00Z',
   route: {
     id: 'sample-route',
-    ownerId: 'sample-owner',
     signboard: null,
     routeCode: null,
     shortName: null,
@@ -54,7 +53,6 @@ const back: DirectionRow = {
 
 const hotspot = (id: string, name: string, coordinates: [number, number]): HotspotRow => ({
   id,
-  ownerId: 'sample-owner',
   name,
   informal: null,
   aliases: [],
@@ -125,6 +123,19 @@ export const SignedOut: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: 'Edit route' })).toBeNull();
     await expect(canvas.queryByRole('button', { name: /Delete/ })).toBeNull();
+  },
+};
+
+/** Another editor's draft of the route: the notice stands where Edit, Extend and Delete were. */
+export const ChangedByAnotherEditor: Story = {
+  args: {
+    canEdit: false,
+    notice: <DraftLockNotice lock={{ state: 'other', name: 'Marisol' }} onRetry={fn()} />,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status')).toHaveTextContent('Being changed by Marisol');
+    await expect(canvas.queryByRole('button', { name: 'Edit route' })).toBeNull();
   },
 };
 

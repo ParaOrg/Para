@@ -1,6 +1,6 @@
 ---
 name: ds-component
-description: Build or restyle one ParaPo component, end to end — the owner's Figma design to code, tokens, stories, verification and an independent ds-reviewer pass. Use when building or restyling a component during the visitor redesign. Runs in the main session because it stops to ask the owner.
+description: Build or restyle one ParaPo component, end to end — the owner's Figma design to code, tokens, stories, verification and an independent ds-reviewer pass. Use when building or restyling a component during the commuter redesign. Runs in the main session because it stops to ask the owner.
 ---
 
 # Build one PalimosPoDesignSystem component
@@ -52,8 +52,9 @@ lives in its PalimosPoDesignSystem layer — `src/design-system/primitives/`
 for single elements, `patterns/` for compositions of them — and is
 domain-free: no routes, no hintuans. An app component that merely uses
 the system stays in its area. No barrels, no types file — types live
-with the component. Comments say why, with dates and the owner's
-decisions, in the voice of the files around them. Boundaries hold —
+with the component. Comments say why. Who asked for it, when, and what
+the code used to do go in the commit and the PR, not in comments
+(`.claude/CLAUDE.md`, Comments). Figma node ids may stay. Boundaries hold —
 foundation ← primitives ← patterns ← the apps
 (`npm run lint`: `import-x/no-restricted-paths` in `eslint.config.js`).
 

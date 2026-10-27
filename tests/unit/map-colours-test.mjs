@@ -117,8 +117,8 @@ test("each pale is the primitive its Card/<livery>/surface-pale aliases: the res
       near(hex, want),
       `${figma} is ${hex}, but --${cssName(figma)} is ${primitive}, ${want}`,
     );
-    // Each hue's 200: the card's own hue paled, as the owner's variables alias them.
-    assert.match(primitive, /-200$/, figma);
+    // Each hue's 300: the card's own hue paled, as the owner's variables alias them.
+    assert.match(primitive, /-300$/, figma);
   }
 });
 
@@ -171,6 +171,7 @@ test('no colour is written in the map code outside map-colours.ts', () => {
     '../../src/features/studio/drawing/',
     '../../src/features/locator/',
     '../../src/features/published-map/',
+    '../../src/features/routes/published/',
     '../../src/app/public-map/',
     '../../src/shared/hooks/',
   ];

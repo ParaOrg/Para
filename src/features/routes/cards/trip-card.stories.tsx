@@ -146,9 +146,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Opens the fold, as a rider's tap would — and lets go of it, since a tap draws no focus ring. */
+/**
+ * Opens the fold, as a rider's tap would — and lets go of it, since a tap
+ * draws no focus ring. A train's says "N more stations".
+ */
 const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more hintuans/ });
+  const fold = within(canvasElement).getByRole('button', { name: /more (hintuans|stations)/ });
   await userEvent.click(fold);
   fold.blur();
 };
@@ -188,6 +191,21 @@ export const NoWayBack: Story = {
   },
 };
 
+/** In the studio, the way back still a slot: SWITCH is open, and a tap starts drawing it. */
+export const DrawTheWayBack: Story = {
+  args: {
+    directions: [talaToNovaliches, { ...novalichesToTala, shape: null }],
+    onDrawOtherWay: fn(),
+  },
+  play: async ({ args, canvasElement }) => {
+    const turn = within(canvasElement).getByTestId('card-switch');
+    await expect(turn).toBeEnabled();
+    await userEvent.click(turn);
+    await expect(args.onDrawOtherWay).toHaveBeenCalled();
+    await expect(args.onSwitch).not.toHaveBeenCalled();
+  },
+};
+
 /** Opened from a hotspot's card, not the list: no ‹ back to it. */
 export const NoList: Story = {
   render: (args) => <Keeping {...args} onBackToList={null} />,
@@ -217,7 +235,7 @@ export const OtherRoutes: Story = {
   },
 };
 
-/** A train: priced by its stations, not its metres, in its line's colours; the picked station's code in its pill. */
+/** A train: priced by its stations, not its metres, in its line's colours; its line and bound at the top (LRT-1 Southbound); the picked station's code in its pill. */
 export const Train: Story = {
   args: {
     direction: direction('lrt1', 'Fernando Poe Jr.', 'Baclaran', {
@@ -236,7 +254,38 @@ export const Train: Story = {
     pickedCode: 'CAR',
     height: { snap: 'max', onSnap: fn() },
   },
-  play: openFold,
+  // Carriedo picked: the stations before it on the ride, EDSA the one after
+  // it, shown as it is, so nothing folds.
+};
+
+/** MRT-3 Northbound: its header's words black on the white halves, not its yellow. */
+export const TrainMrt3: Story = {
+  args: {
+    direction: direction('mrt3', 'Taft Avenue', 'North Avenue', {
+      mode: 'mrt',
+      routeCode: 'MRT-3',
+    }),
+    directions: [],
+    timeline: timelineOf('Taft Avenue', 'North Avenue', ['Magallanes', 'Ayala', 'Cubao']),
+    livery: 'metro-rail-way-three',
+  },
+};
+
+/**
+ * A train whose end the line's table does not know: no bound, so the header shows the line alone,
+ * and SWITCH falls back to Pabalik and Papunta, as over a mixed list (switchWord). TODO: what
+ * SWITCH should say for a train with no known bound is not designed yet.
+ */
+export const TrainNoBound: Story = {
+  args: {
+    direction: direction('lrt1x', 'Fernando Poe Jr.', 'Nowhere', {
+      mode: 'lrt',
+      routeCode: 'LRT-1',
+    }),
+    directions: [],
+    timeline: timelineOf('Fernando Poe Jr.', 'Nowhere', ['Balintawak', 'Monumento']),
+    livery: 'light-rail-way-one',
+  },
 };
 
 /** The ferry: free, with the line's own words under the tiles. */
@@ -245,7 +294,7 @@ export const Ferry: Story = {
     direction: direction('prfs', 'Escolta', 'Guadalupe', { mode: 'ferry', routeCode: 'PRFS' }),
     directions: [],
     timeline: timelineOf('Escolta', 'Guadalupe', ['Lawton', 'PUP', 'Lambingan', 'Valenzuela']),
-    livery: 'orange',
+    livery: 'ferry',
   },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('trip-note')).toHaveTextContent('MMDA');
@@ -253,8 +302,8 @@ export const Ferry: Story = {
 };
 
 /**
- * A sample board, not a real one: a picture standing in for the owner's
- * photographs, so its colours are the picture's, not the page's.
+ * A sample board, not a real one: a picture standing in for the SVG files the studio uploads, so
+ * its colours are the picture's, not the page's.
  */
 const sampleBoard = (name: string) =>
   'data:image/svg+xml,' +
@@ -318,3 +367,48 @@ export const LongContent: Story = {
 
 /** A wide map: the trip in the top-left corner, 384 wide, as the list was. */
 export const Wide: Story = { parameters: { phone: false } };
+
+const ikotBase = direction('ikot', 'UP', 'UP', { metres: 5_200 });
+const ikot: Direction = {
+  ...ikotBase,
+  id: 'ikot-out',
+  name: 'UP – Ikot',
+  route: ikotBase.route && {
+    ...ikotBase.route,
+    signboard: 'UP – Ikot',
+    headHotspotId: null,
+    tailHotspotId: null,
+    name: 'UP – Ikot',
+    isLoop: true,
+  },
+};
+const ikotTimeline: Timeline = {
+  from: row('Oblation'),
+  to: row('Oblation'),
+  between: ['Palma Hall', 'Quezon Hall', 'Sunken Garden', 'Engineering'].map((l) => row(l)),
+};
+
+/**
+ * A loop's trip (UP – Ikot): "Ikot" where Papunta stands, the tip at the top
+ * and again at the bottom, the tiles the whole loop's, and no SWITCH.
+ */
+export const Loop: Story = {
+  args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'orange' },
+  play: async ({ canvasElement }) => {
+    const card = within(canvasElement);
+    await expect(card.queryByTestId('card-switch')).toBeNull();
+    await expect(card.getByText('Ikot')).toBeVisible();
+  },
+};
+
+/** A hintuan picked on the loop: the ride from the tip forward to it. */
+export const LoopPicked: Story = {
+  args: {
+    direction: ikot,
+    directions: [ikot],
+    timeline: ikotTimeline,
+    livery: 'orange',
+    picked: 'quezon-hall',
+    pickedMetres: 2_100,
+  },
+};

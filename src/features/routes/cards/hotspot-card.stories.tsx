@@ -41,7 +41,6 @@ const inbound: Direction = {
 
 const terminal: HotspotRow = {
   id: 'sample-hotspot',
-  ownerId: 'sample-owner',
   name: 'Tala Jeepney Terminal',
   informal: 'Tala',
   aliases: ['Tala Terminal', 'Terminal Tala'],
@@ -52,28 +51,29 @@ const terminal: HotspotRow = {
   createdAt: '2026-09-12T00:00:00Z',
 };
 
-/** Keeps the Selected card as the public map does, so the RouteCards stories can be tapped through. */
+/**
+ * Keeps the Selected card as the app does, so the RouteCards stories can be
+ * tapped through.
+ */
 function Picking(props: ComponentProps<typeof HotspotCard>) {
-  const [selected, setSelected] = useState(props.routeCards?.selected ?? null);
+  const [selected, setSelected] = useState(props.routeCards.selected);
   const routeCards = props.routeCards;
   return (
     <HotspotCard
       {...props}
-      routeCards={
-        routeCards && {
-          ...routeCards,
-          selected,
-          onSelect: (p) => {
-            routeCards.onSelect(p);
-            setSelected(p?.from ?? null);
-          },
-        }
-      }
+      routeCards={{
+        ...routeCards,
+        selected,
+        onSelect: (p) => {
+          routeCards.onSelect(p);
+          setSelected(p?.from ?? null);
+        },
+      }}
     />
   );
 }
 
-/** The public map's RouteCards, nothing picked yet. */
+/** RouteCards, nothing picked yet. */
 const routeCards = { selected: null, onSelect: fn(), onShown: fn() };
 
 const meta = {
@@ -101,6 +101,7 @@ const meta = {
     hotspot: terminal,
     linkedDirectionIds: [outbound.id, inbound.id],
     directions: [outbound, inbound],
+    routeCards,
     onSelectDirection: fn(),
     onClose: fn(),
   },
@@ -108,9 +109,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-/** A terminal with the route through it, in the studio's rows: by the place it leaves from, ⇄ for the way back. The hotspot name leads; the ground name is the small line under it. */
-export const Terminal: Story = {};
 
 /** A hintuan with a note and nothing linked yet. */
 export const EmptyHintuan: Story = {
@@ -162,8 +160,8 @@ export const Phone: Story = {
 };
 
 /**
- * Drawn directions, each line `km` long: the owner's two routes out of
- * Tala, both through SM Fairview. Sample data.
+ * Drawn directions, each line `km` long: two routes out of Tala, both through
+ * SM Fairview. Sample data.
  */
 const drawn = (
   key: string,
@@ -194,17 +192,15 @@ const talaRoutes = [
 ];
 
 /**
- * The public map's card (`routeCards`, the owner's ask of 2026-09-29): the
- * routes through here as his RouteCards, edge to edge — his SM Fairview
- * screenshot, Tala with its two ways out, in a colour drawn at random. The
- * map lights every route they show; a tap on a card off its rows narrows
- * that to its own; a row opens its trip straight away. No pesos on any card since his State set: the trip's
- * Expected fare carries them. The rest of the card waits for his hintuan
- * design.
+ * The routes through here as RouteCards, as the studio gives them, edge to
+ * edge — at SM Fairview, Tala with its two ways out, in a colour drawn at
+ * random. The map lights every route they show; a tap on a card off its rows
+ * narrows that to its own; a row opens its trip straight away. No pesos on any
+ * card: the trip's Expected fare carries them. TODO: the rest of the card
+ * awaits the owner's design.
  */
 export const RouteCards: Story = {
   args: {
-    routeCards,
     hotspot: fairviewTeraccess,
     hotspots: fairviewBoxes,
     onPickSibling: fn(),
@@ -256,9 +252,8 @@ export const RouteCardsPhone: Story = {
 };
 
 /**
- * The ways back not drawn yet: the RouteCards list drawn ways only, so the
- * way there is shown, and ⇄ is gone — there is nothing to turn round to. The
- * studio's rows would offer ⇄ and "Not mapped yet".
+ * The ways back not drawn yet: the RouteCards list drawn ways only, so the way
+ * there is shown, and ⇄ is gone — there is nothing to turn round to.
  */
 export const RouteCardsNothingTheOtherWay: Story = {
   args: {
@@ -267,14 +262,13 @@ export const RouteCardsNothingTheOtherWay: Story = {
   },
 };
 
-/** A terminal's card, "Routes that stage here": the same RouteCards (the owner, 2026-09-29). */
+/** A terminal's card, "Routes that stage here": the same RouteCards. */
 export const RouteCardsTerminal: Story = {
   args: {
-    routeCards,
     linkedDirectionIds: talaRoutes.map((v) => v.id),
     directions: talaRoutes,
   },
 };
 
 /** Only slots are linked here yet: the RouteCards list drawn ways only, so there is nothing to list. */
-export const RouteCardsNothingDrawn: Story = { args: { routeCards } };
+export const RouteCardsNothingDrawn: Story = {};

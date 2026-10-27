@@ -94,7 +94,7 @@ export const OfflineUndated: Story = {
 /** On a phone the age sits bottom left, above the scale. */
 export const OfflinePhone: Story = { args: { offline: true }, parameters: { phone: true } };
 
-/** A new version waiting: it never applies itself, the rider taps it. */
+/** A new version waiting: it never applies itself, the commuter taps it. */
 export const UpdateWaiting: Story = {
   args: { needRefresh: true },
   play: async ({ args, canvasElement }) => {

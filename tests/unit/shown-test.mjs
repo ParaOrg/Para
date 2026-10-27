@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { litOf, shownOf, showingOf } from '../../src/features/routes/map/routes-shown.ts';
 import { boxMarks, placeHull } from '../../src/features/routes/map/hotspots-shown.ts';
 
-/** A direction of `route`, drawn unless `drawn` is false: sample data, shaped like the published file. */
+/** A direction of `route`, drawn unless `drawn` is false: sample data, shaped like the published map. */
 const dir = (id, route, reversed = false, drawn = true) => ({
   id,
   routeId: route,
@@ -189,5 +189,20 @@ test("step 16 (c): a line arriving keeps what is lit unless it is a lit directio
       own.map((v) => v.id),
     ),
     ids,
+  );
+});
+
+test('a loop shows whichever way round the list is: it has one direction and no way back', () => {
+  const loop = { ...dir('loop', 'l'), route: { isLoop: true } };
+  const withLoop = [...all, loop];
+  for (const back of [false, true]) {
+    assert.ok(
+      showingOf(withLoop, back, withLoop, null).some((v) => v.id === 'loop'),
+      `way back ${back}`,
+    );
+  }
+  assert.deepEqual(
+    showingOf(withLoop, true, withLoop, null).map((v) => v.id),
+    ['a-back', 'loop'],
   );
 });

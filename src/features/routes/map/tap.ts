@@ -43,20 +43,17 @@ export function tapBox(
 
 /**
  * Binds a layer's mouseenter and mouseleave, the hand the cursor turns into
- * over a line or a box (routeTaps.ts, hotspotTaps.ts), only where a pointer can
+ * over a line or a box (route-taps.ts, hotspot-taps.ts), only where a pointer can
  * hover. MapLibre answers such a pair with a query of the rendered features
- * on every mousemove, and a finger's tap raises one before its click, so a
- * phone paid four queries a tap for a cursor it never shows (the cheap-phone
- * plan, step 7, 2026-10-04). Where `(any-hover: hover)` holds as the hook
- * binds (a mouse, a trackpad, a laptop's touch screen with its trackpad),
- * the pair is bound at once, as on every device before step 7. Where it
- * does not, the pair waits for it to hold: a mouse paired with a phone or a
- * tablet, a keyboard with a trackpad attached. Until the taps review
- * (2026-10-05) the query was read once, as the page was read, and such a
- * pointer got no hand until a reload. Once bound, the pair stays until the
- * returned undo, the pointer gone again or not, as before step 7: unbound
- * while the hand showed, the hand would come back with the next pointer
- * over nothing. Without matchMedia it is bound at once, as before.
+ * on every mousemove, and a finger's tap raises one before its click, so on a
+ * phone each tap would cost four queries for a cursor it never shows. Where
+ * `(any-hover: hover)` holds as the hook binds (a mouse, a trackpad, a laptop's
+ * touch screen with its trackpad), the pair is bound at once. Where it does
+ * not, the pair waits for it to hold (a mouse paired with a phone or a tablet,
+ * a keyboard with a trackpad attached), so such a pointer gets its hand without
+ * a reload. Once bound, the pair stays until the returned undo, the pointer
+ * gone again or not: unbound while the hand showed, the hand would come back
+ * with the next pointer over nothing. Without matchMedia it is bound at once.
  */
 export function bindHover(
   map: MapLibreMap,
@@ -106,23 +103,22 @@ function idsInOrder(features: IdFeature[], key: 'id' | 'routeId' = 'id'): string
 }
 
 /** What one tap landed on: every direction, every route those belong to, and every hotspot in its box. */
-export interface TapTargets {
+interface TapTargets {
   routeIds: string[];
   routeKeys: string[];
   hotspotIds: string[];
 }
 
 /**
- * Each tap's answer, kept for the other hook (the cheap-phone plan, step 7,
- * 2026-10-04). Both hooks hear the map's one `click` (routeTaps, hotspotTaps)
- * and each asks what it landed on: the same question, in the same task, of
- * a map nothing has changed in between (their setters render later), so the
- * second takes the first's answer instead of querying the rendered features
- * again — up to three queries a tap. Keyed on the browser's event, which
- * MapLibre hands every listener of a click, or, without one, on the point it
- * made for them; weakly, so an answer goes with its event. The same map and
- * the same point too, or it is asked afresh. The answer is shared: read it,
- * never change it.
+ * Each tap's answer, kept for the other hook. Both hooks hear the map's one
+ * `click` (routeTaps, hotspotTaps) and each asks what it landed on: the same
+ * question, in the same task, of a map nothing has changed in between (their
+ * setters render later), so the second takes the first's answer instead of
+ * querying the rendered features again — up to three queries a tap. Keyed on
+ * the browser's event, which MapLibre hands every listener of a click, or,
+ * without one, on the point it made for them; weakly, so an answer goes with
+ * its event. The same map and the same point too, or it is asked afresh. The
+ * answer is shared: read it, never change it.
  */
 const answered = new WeakMap<
   object,
@@ -130,15 +126,12 @@ const answered = new WeakMap<
 >();
 
 /**
- * One tap, one kind of thing (the owner's ask, 2026-09-30: "can we only
- * select one not two? select hintuan only show the card, then select route
- * show the route"). A tap inside a hotspot's box is the hotspot's, even
- * where a route runs through it; anywhere else it is the routes' under the
- * finger; and near nothing but a box — a finger's width off its edge — the
- * box's still. Until then everything under the finger was offered together,
- * the hotspots first (decided with him 2026-09-22). `routeKeys` counts
- * routes, not directions, because a route's two directions share most of
- * their road and are one thing to choose between.
+ * One tap, one kind of thing. A tap inside a hotspot's box is the hotspot's,
+ * even where a route runs through it; anywhere else it is the routes' under
+ * the finger; and near nothing but a box — a finger's width off its edge —
+ * the box's still. `routeKeys` counts routes, not directions, because a
+ * route's two directions share most of their road and are one thing to choose
+ * between.
  */
 export function tapTargets(
   map: MapLibreMap,
@@ -180,7 +173,7 @@ function queryTargets(
  * several of one kind — routes sharing a road, or hotspots side by side —
  * which light up and go to the sheet.
  */
-export type TapOutcome =
+type TapOutcome =
   | { kind: 'none' }
   | { kind: 'route'; routeIds: string[] }
   | { kind: 'hotspot'; hotspotId: string }

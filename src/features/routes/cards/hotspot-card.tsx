@@ -3,10 +3,9 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import { SheetHeader } from '@/shared/ui/sheet-header';
 
-import { Departures } from './departures';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
 import { SwitchIcon } from './switch-icon';
-import { departures, drawnDepartures } from '../model/departures';
+import { drawnDepartures } from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { placeSummary, siblingsOf } from '../model/places';
@@ -20,14 +19,12 @@ interface Props {
   /** Called with the direction picked, and, from a RouteCard, the colour its card wore: its trip wears the same. */
   onSelectDirection: (v: Direction, livery?: Livery) => void;
   /**
-   * The routes through here as the owner's RouteCards, as the route list
-   * shows them — the public map's, 2026-09-29 — with the place whose card is
-   * Selected, what to do when one is picked or let go, and where to say
-   * which directions the cards show, for the map to light (nothing once the
-   * card closes). Without it, the rows the studio keeps: their "Not mapped
-   * yet" is its list of returns still to draw.
+   * The routes through here as RouteCards, as the route list shows them, with
+   * the place whose card is Selected, what to do when one is picked or let go,
+   * and where to say which directions the cards show, for the map to light
+   * (nothing once the card closes).
    */
-  routeCards?: {
+  routeCards: {
     selected: string | null;
     onSelect: (place: PickedPlace | null) => void;
     /** What the RouteCards show while the card is open; null once it closes. */
@@ -37,7 +34,10 @@ interface Props {
   hotspots?: readonly Hotspot[];
   /** Show a sibling box on the map: select it and go there. */
   onPickSibling?: (id: string) => void;
-  /** Buttons along the bottom. The editor passes Edit and Delete; the public map passes nothing. */
+  /**
+   * Buttons along the bottom. The studio passes Edit and Delete when an editor
+   * is signed in.
+   */
   actions?: ReactNode;
   onClose: () => void;
   /** Kept but not shown, while a trip picked from it is on top: ‹ comes back to it as it was left, every card at rest. */
@@ -47,11 +47,11 @@ interface Props {
 }
 
 /**
- * What anyone sees when they tap a hotspot. The card does not know who is
- * looking: whoever renders it decides which actions to offer.
+ * The studio's card for a tapped hotspot. Whoever renders it decides which
+ * actions to offer.
  *
- * `BottomSheet` decides the shape, the same as every card's. Its header is
- * the name and what kind of place it is; under it, the routes through it.
+ * `BottomSheet` decides the shape, the same as every card's. Its header is the
+ * name and what kind of place it is; under it, the routes through it.
  */
 export function HotspotCard({
   hotspot,
@@ -71,43 +71,35 @@ export function HotspotCard({
   const siblings = siblingsOf(hotspot, hotspots);
   const byId = new Map(directions.map((v) => [v.id, v]));
   const linked = linkedDirectionIds.map((id) => byId.get(id)).filter((v): v is Direction => !!v);
-  // The routes through here, one way round, by the place each leaves from,
-  // ⇄ for the way back: the owner's RouteCards on the public map, the rows
-  // in the studio. Both directions of a route are linked to a box on a
-  // two-way road, so each route shows once either way round; a route linked
-  // one way only is a slot the other way, which the studio's rows show as
-  // "not mapped yet" and the RouteCards leave out.
+  // The routes through here as RouteCards, one way round, by the place each
+  // leaves from, ⇄ for the way back. Both directions of a route are linked to a
+  // box on a two-way road, so each route shows once either way round; a route
+  // linked one way only is a slot the other way, which the RouteCards leave out.
   // A box on a one-way street, or beside one carriageway, is passed one way
-  // only: then that way is the one shown, and there is nothing to flip to.
-  // The RouteCards list drawn directions only (the owner dropped "not mapped
-  // yet" from them, 2026-09-28), so for them a way round with nothing drawn
-  // is no way round at all.
-  const listed = routeCards ? drawnDepartures : departures;
+  // only: then that way is the one shown, and there is nothing to flip to. The
+  // RouteCards list drawn directions only, so for them a way round with nothing
+  // drawn is no way round at all.
   const [flipped, setFlipped] = useState(false);
-  const there = listed(linked, false).length > 0;
-  const backToo = listed(linked, true).length > 0;
+  const there = drawnDepartures(linked, false).length > 0;
+  const backToo = drawnDepartures(linked, true).length > 0;
   const back = there && backToo ? flipped : backToo;
   const flipLabel = back ? 'Show the way there' : 'Show the way back';
-  const none = routeCards ? !there && !backToo : linked.length === 0;
+  const none = !there && !backToo;
 
-  // What the RouteCards show, for the map to light (the owner, 2026-09-29:
-  // "on hintuan it should light its routes"); nothing once the card closes.
-  // Told only when that changes: the caller's function is read from a ref,
-  // so one made afresh each render cannot set the lights going in a loop.
-  const showsKey = routeCards
-    ? drawnDepartures(linked, back)
-        .flatMap((p) => p.directions.map((d) => d.v.id))
-        .join('\n')
-    : '';
-  const onShown = useRef(routeCards?.onShown);
+  // What the RouteCards show, for the map to light; nothing once the card
+  // closes. Told only when that changes: the caller's function is read from a
+  // ref, so one made afresh each render cannot set the lights going in a loop.
+  const showsKey = drawnDepartures(linked, back)
+    .flatMap((p) => p.directions.map((d) => d.v.id))
+    .join('\n');
+  const onShown = useRef(routeCards.onShown);
   // Kept current as each render commits, ahead of the effect below that reads it.
   useLayoutEffect(() => {
-    onShown.current = routeCards?.onShown;
+    onShown.current = routeCards.onShown;
   });
-  // Before the first paint, and null once closed, as HintuanCard's (2026-10-03).
+  // Before the first paint, and null once closed, as HintuanCard's.
   useLayoutEffect(() => {
     const tell = onShown.current;
-    if (!tell) return;
     tell(showsKey ? showsKey.split('\n') : []);
     return () => tell(null);
   }, [showsKey]);
@@ -145,7 +137,7 @@ export function HotspotCard({
         {/* The place this box belongs to, when it has company: the map shows
             *that* they belong together, this says *what* the place has, and each
             sibling is one tap away — a rider at a hintuan looking for the
-            terminal. Decided with the owner 2026-09-22. */}
+            terminal. */}
         {siblings.length > 0 && (
           <div data-testid="card-place" className="mt-3 rounded-lg bg-neutral-50 px-3 py-2">
             <p className="text-xs font-medium text-content-quaternary">
@@ -187,7 +179,7 @@ export function HotspotCard({
               aria-pressed={back}
               onClick={() => {
                 setFlipped((b) => !b);
-                routeCards?.onSelect(null);
+                routeCards.onSelect(null);
               }}
               aria-label={flipLabel}
               title={flipLabel}
@@ -201,10 +193,10 @@ export function HotspotCard({
           <p className="mt-1 text-sm text-neutral-500">
             {isTerminal ? 'None recorded yet.' : 'No saved route passes through here yet.'}
           </p>
-        ) : routeCards ? (
-          // Edge to edge, as the route list stacks them (the owner, 2026-09-29);
-          // the rest of this card waits for his hintuan design. ⇄ lets the
-          // Selected card go, as SWITCH does over the list.
+        ) : (
+          // Edge to edge, as the route list stacks them. ⇄ lets the Selected
+          // card go, as SWITCH does over the list. TODO: the rest of this card
+          // awaits the owner's design.
           <div className="-mx-4 mt-1">
             <RouteCardStack
               routes={linked}
@@ -215,10 +207,6 @@ export function HotspotCard({
               testId="card"
             />
           </div>
-        ) : (
-          <ul className="-mx-4 mt-1 border-t border-border-primary">
-            <Departures routes={linked} back={back} onRoute={onSelectDirection} testId="card" />
-          </ul>
         )}
 
         {actions && <div className="mt-4 flex gap-2">{actions}</div>}

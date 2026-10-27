@@ -1,0 +1,173 @@
+import {
+  BLOB_PLACE,
+  CARD_BLOB,
+  CARD_SHADOW,
+  CARD_SHADOW_SELECTED,
+  CARD_SURFACE,
+  CARD_TEXT,
+  RAILWAY_PILL,
+} from './livery-card';
+import { RailwayBadge } from './railway-badge';
+import { RouteEndPointBar } from './route-end-point-bar';
+import { VehicleIcon } from './vehicle-icon';
+import { RAILWAY_LIVERY } from '../model/liveries';
+import type { Bound } from '../model/rail-codes';
+import type { RailwayVehicle } from '../model/vehicles';
+
+interface RailwayEndPoint {
+  /** Which direction the row opens. */
+  id: string;
+  /** Figma's routeDirection: the station this direction goes to. */
+  routeDirection: string;
+  /** The station's code, `PL01`, in the row's slot after the name; null on the ferry, or a station the line's table does not know. */
+  stationCode: string | null;
+}
+
+interface RouteCardRailwayProps {
+  /** Figma's Property 1: the line, LRT 1, LRT 2, MRT 3, or the Ferry. It sets the card's colours. */
+  railway: RailwayVehicle;
+  /**
+   * Which way the line's trains run; null on the ferry, or when it is not known. Figma draws no
+   * bound on the card, so it is read out, not shown: the rows say where the trains go.
+   */
+  bound: Bound | null;
+  /** Figma's State, as a RouteCard's. */
+  state: 'rest' | 'selected';
+  /** Figma's Route Origin: the station the card's directions leave from. */
+  routeOrigin: string;
+  /** The origin's station code, `GL02`, in the badge beside its name; null on the ferry, or a station the line's table does not know. */
+  originCode: string | null;
+  /** One row per direction leaving it, in the order given. */
+  endPoints: readonly RailwayEndPoint[];
+  /** A tap on the card outside its rows: select it, or let it go. */
+  onSelect: () => void;
+  /** A row was tapped: open that direction. */
+  onPick: (id: string) => void;
+  /** What the suites call the card and its parts, as RouteCard's. */
+  testId: 'chooser' | 'card';
+}
+
+/** The line's name as Figma's pill writes it. */
+const PILL_LABEL = {
+  'LRT-1': 'LRT Line 1',
+  'LRT-2': 'LRT Line 2',
+  'MRT-3': 'MRT Line 3',
+  Ferry: 'Ferry',
+} satisfies Record<RailwayVehicle, string>;
+
+/**
+ * A station and the train or ferry directions that leave it one way —
+ * Figma's RouteCardRailway (4261:15199): one card per line and bound, in the
+ * line's own colours. Over the station's name, its vehicle in a chip and the
+ * line's pill beside it, both in the pill's colours; the name has the origin's
+ * badge after it, and under it a row per station it goes to (RouteEndPointBar),
+ * each with its station's badge in the row's slot. The ferry has no badges.
+ *
+ * It behaves as RouteCard does: a row opens its trip; a tap anywhere else
+ * selects the card, or lets it go, State=Selected pressing it in under the
+ * Selected shadow. The test ids are RouteCard's, so the suites find a
+ * train's card as they find a jeep's.
+ */
+export function RouteCardRailway({
+  railway,
+  bound,
+  state,
+  routeOrigin,
+  originCode,
+  endPoints,
+  onSelect,
+  onPick,
+  testId,
+}: RouteCardRailwayProps) {
+  const livery = RAILWAY_LIVERY[railway];
+  const isSelected = state === 'selected';
+  // The ferry has no station badges: Figma's Ferry card draws none.
+  const railLine = railway === 'Ferry' ? null : railway;
+  return (
+    <div
+      data-testid={`${testId}-origin`}
+      data-livery={livery}
+      data-state={state}
+      className={
+        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
+        CARD_SURFACE[livery] +
+        ' ' +
+        CARD_TEXT[livery]
+      }
+    >
+      <img
+        src={CARD_BLOB[livery].src}
+        alt=""
+        aria-hidden
+        className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
+      />
+      <div className="flex w-full items-center gap-2 px-4 pt-2">
+        <span aria-hidden className={'shrink-0 rounded-md p-1 ' + RAILWAY_PILL[railway]}>
+          <span className="block size-6 *:size-full">
+            <VehicleIcon vehicle={railway} />
+          </span>
+        </span>
+        <p
+          data-testid={`${testId}-pill`}
+          className={
+            'rounded-full px-2.5 py-0.5 text-xl/7 font-semibold whitespace-nowrap ' +
+            RAILWAY_PILL[railway]
+          }
+        >
+          {PILL_LABEL[railway]}
+          {bound && <span className="sr-only">, {bound}</span>}
+        </p>
+      </div>
+      <div className="flex w-full flex-col">
+        <div className="flex w-full items-center gap-2 px-4">
+          {/* The name is the card's own target, stretched over all of it; the
+              rows are drawn over that, so they keep their own taps. */}
+          <button
+            type="button"
+            data-testid={`${testId}-select`}
+            aria-pressed={isSelected}
+            onClick={onSelect}
+            className="min-w-0 flex-1 text-left text-2xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
+          >
+            {routeOrigin}
+          </button>
+          {railLine && originCode && (
+            <RailwayBadge kind="start" railway={railLine} code={originCode} />
+          )}
+        </div>
+        <ul className="flex w-full flex-col">
+          {endPoints.map((e, index) => (
+            <li key={e.id}>
+              <RouteEndPointBar
+                routeDirection={e.routeDirection}
+                on={livery}
+                position={index === endPoints.length - 1 ? 'bottom' : 'top'}
+                size="xl"
+                slot={
+                  railLine &&
+                  e.stationCode && (
+                    <>
+                      <span className="sr-only">, </span>
+                      <RailwayBadge kind="end" railway={railLine} code={e.stationCode} />
+                    </>
+                  )
+                }
+                data-testid={`${testId}-item`}
+                data-direction={e.id}
+                onClick={() => onPick(e.id)}
+                className="relative"
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+      <span
+        aria-hidden
+        className={
+          'pointer-events-none absolute inset-0 ' +
+          (isSelected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery])
+        }
+      />
+    </div>
+  );
+}

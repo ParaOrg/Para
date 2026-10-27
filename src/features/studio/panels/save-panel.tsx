@@ -1,18 +1,28 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
+import { TextField } from '@/design-system/primitives/text-field';
 import { DirectionTimeline, passesThrough } from '@/features/routes/cards/direction-timeline';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import type { RouteRow, TransportMode, DirectionRow } from '@/features/routes/model/routes';
+import {
+  isClosedLine,
+  LOOP_WORD,
+  type RouteRow,
+  type TransportMode,
+  type DirectionRow,
+} from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
-import { PlacePicker } from './place-picker';
+import { LoopToggle } from './loop-toggle';
+import { NewPlaceForm } from './new-place-form';
+import { NEW_PLACE_KEY, PlacePicker } from './place-picker';
 import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
 import { RouteFields } from './route-fields';
-import { saveRefusal } from './save-checks';
+import { loopSaveRefusal, saveRefusal } from './save-checks';
 import { SaveNotices } from './save-notices';
-import { FIELD, FOOTER, OVERLAY, PANEL } from './sheet';
+import { FOOTER, OVERLAY, PANEL } from './sheet';
 import { useRouteSave } from './use-route-save';
 import { useSaveFacts } from './use-save-facts';
+import { returnTripNotices } from '../drawing/loop-closing';
 import type { Drawing } from '../drawing/use-drawing';
 
 interface SavePanelProps {
@@ -37,16 +47,20 @@ interface SavePanelProps {
    */
   directions?: DirectionRow[];
   onSaved: (v: DirectionRow) => void;
+  /** A save stored as a draft (STUDIO_DRAFTS). */
+  onDrafted?: (directionId: string) => void;
+  /** Hears of a place made from the pickers, so the map's own list is read again. */
+  onPlaceSaved?: () => void;
   onCancel: () => void;
 }
 
 /**
  * The one form in the app. Appears once, at ✓ Done.
  *
- * Since 2026-09-21 it asks for a route's two ends rather than its name: the
- * name is generated from them and cannot be typed over, so a hotspot renamed
- * once fixes every route through it. Nothing here is required except the two
- * ends — the signboard is an observed fact and can wait until it is known.
+ * It asks for a route's two ends, not its name: the name is generated from
+ * them and cannot be typed over, so a hotspot renamed once fixes every route
+ * through it. Nothing here is required except the two ends — the signboard is
+ * an observed fact and can wait until it is known.
  *
  * Its pieces live beside it: the places and the first guess at the ends
  * (`places.ts`), what the line is (`useSaveFacts`), why a save is refused
@@ -59,12 +73,23 @@ export function SavePanel({
   existing,
   route,
   slotReversed = null,
-  hotspots,
+  hotspots: savedHotspots,
   directions = [],
   onSaved,
+  onDrafted,
+  onPlaceSaved,
   onCancel,
 }: SavePanelProps) {
   const parent = existing?.route ?? route;
+  // The places made here, kept beside the saved ones until the map's list has them.
+  const [made, setMade] = useState<HotspotRow[]>([]);
+  const hotspots = useMemo(
+    () => [...savedHotspots, ...made.filter((m) => !savedHotspots.some((s) => s.id === m.id))],
+    [savedHotspots, made],
+  );
+  const [making, setMaking] = useState<'Head' | 'Tail' | null>(null);
+  const headSelect = useRef<HTMLSelectElement>(null);
+  const tailSelect = useRef<HTMLSelectElement>(null);
   const line = draw.controlPoints;
   const places = useMemo(() => groupPlaces(hotspots), [hotspots]);
   // Where a picked end's box is looked for: the end of the line nearer the
@@ -76,8 +101,15 @@ export function SavePanel({
 
   const [signboard, setSignboard] = useState(parent?.signboard ?? '');
   const [mode, setMode] = useState<TransportMode>(parent?.mode ?? 'jeepney');
-  const [fareNote, setFareNote] = useState(parent?.fareNote ?? '');
+  // Kept as the route has it: the form no longer asks for one.
+  const fareNote = parent?.fareNote ?? '';
   const [via, setVia] = useState(parent?.via ?? '');
+  // An ikot is made one or not and stays so (0021): an edit, a return trip or
+  // a retried save keeps what the route is. A new line starts ticked when it
+  // was closed on its own first point.
+  const [isLoop, setIsLoop] = useState(() =>
+    parent ? parent.isLoop === true : isClosedLine(draw.line),
+  );
   // The ends are the route's: a return trip takes them as they are, and Edit
   // route starts from them; a new route's are guessed from where the line
   // actually starts and finishes, once, and corrected by hand when the guess
@@ -110,6 +142,8 @@ export function SavePanel({
     tailId,
     via,
     mode,
+    isLoop,
+    signboard,
   });
   const {
     reversed,
@@ -122,18 +156,61 @@ export function SavePanel({
     name,
     direction,
     preview,
+    loopGapM,
+    loopPlacesCount,
+    placesPassedTwice,
+    signboardTaken,
   } = facts;
-  const { busy, error, setError, written, save } = useRouteSave({ facts, draw, hotspots, onSaved });
+  // A return trip that stops short of where the other way began or ended says so, and saves anyway.
+  const loop = existing
+    ? []
+    : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
+  const { busy, error, setError, written, save } = useRouteSave({
+    facts,
+    draw,
+    hotspots,
+    onSaved,
+    onDrafted,
+  });
 
   // A return trip fills its route's slot and leaves the route as it is; Edit
   // route may change the route's facts, for both its directions. A new
   // route's are fixed once a save has written it: the retry finishes that
   // row and would ignore a changed end.
   const routeLocked = !existing && (!!parent || !!written);
+  // The toggle is locked by more than the route's facts: Edit route keeps it too.
+  const loopLocked = !!existing || routeLocked;
+
+  /** Back to the picker that asked for the form. */
+  const closeMaking = () => {
+    const picker = making === 'Head' ? headSelect : tailSelect;
+    setMaking(null);
+    picker.current?.focus();
+  };
+
+  // The new place becomes that end: the box its place is reached by, as picking it would.
+  const handlePlaceSaved = (place: HotspotRow) => {
+    setMade((previous) => [...previous, place]);
+    const next = groupPlaces([...hotspots, place]);
+    const placeNow = placeOfBox(next, place.id);
+    const isHead = making === 'Head';
+    const box = placeNow ? boxFor(placeNow, isHead ? nearHead : nearTail) : place.id;
+    if (isHead) setHeadId(box);
+    else setTailId(box);
+    onPlaceSaved?.();
+    closeMaking();
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const refusal = saveRefusal({ headId, tailId, headPlace, tailPlace, endsTaken, turnedRound });
+    const refusal = isLoop
+      ? loopSaveRefusal({
+          signboard,
+          gapM: loopGapM,
+          placesCount: loopPlacesCount,
+          signboardTaken,
+        })
+      : saveRefusal({ headId, tailId, headPlace, tailPlace, endsTaken, turnedRound });
     if (refusal) {
       setError(refusal);
       return;
@@ -145,17 +222,37 @@ export function SavePanel({
       signboard,
       mode,
       fareNote,
-      headHotspotId: headId,
-      tailHotspotId: tailId,
+      headHotspotId: isLoop ? null : headId,
+      tailHotspotId: isLoop ? null : tailId,
+      isLoop,
       via,
     });
   }
+
+  const routeFields = (
+    <RouteFields
+      signboard={signboard}
+      mode={mode}
+      isLocked={routeLocked}
+      isSignboardRequired={isLoop}
+      onSignboardChange={setSignboard}
+      onModeChange={setMode}
+    />
+  );
 
   return (
     <div className={OVERLAY}>
       <form onSubmit={submit} className={PANEL}>
         <h2 className="text-base font-medium text-neutral-900">
-          {existing ? 'Update this direction' : route ? 'Draw the return trip' : 'Save this route'}
+          {existing
+            ? isLoop
+              ? `Update this ${LOOP_WORD.toLowerCase()}`
+              : 'Update this direction'
+            : route
+              ? 'Draw the return trip'
+              : isLoop
+                ? `Save this ${LOOP_WORD.toLowerCase()}`
+                : 'Save this route'}
         </h2>
         <p className="mt-1 text-xs text-neutral-500">
           {draw.controlPoints.length} points · {(draw.metres / 1000).toFixed(2)} km
@@ -163,12 +260,17 @@ export function SavePanel({
           {existing &&
             " · the ends, via, signboard, mode and fare note are the route's: a change here is a change to both directions"}
         </p>
+        <LoopToggle isLoop={isLoop} isLocked={loopLocked} onChange={setIsLoop} />
+        {isLoop && <div className="mt-3">{routeFields}</div>}
         <SaveNotices
           segments={draw.segments}
           uTurns={draw.uTurns}
+          loop={loop}
           hotspotsCount={hotspots.length}
+          isLoop={isLoop}
+          passedTwice={isLoop ? placesPassedTwice : []}
           wrongWay={
-            wrongWayRound && head && tail
+            !isLoop && wrongWayRound && head && tail
               ? {
                   direction,
                   startsAt: hotspotLabel(reversed ? head : tail),
@@ -183,82 +285,128 @@ export function SavePanel({
           direction={direction}
         />
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <PlacePicker
-            label="Head"
-            hint="(where the jeeps wait)"
-            places={places}
-            value={headPlace?.key ?? ''}
-            isDisabled={routeLocked}
-            onChange={(key) => setHeadId(pickPlace(key, nearHead))}
-            testId="save-head"
+        {!isLoop && (
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <PlacePicker
+              label="Head"
+              hint="(where the jeeps wait)"
+              places={places}
+              value={headPlace?.key ?? ''}
+              isDisabled={routeLocked}
+              onChange={(key) =>
+                key === NEW_PLACE_KEY ? setMaking('Head') : setHeadId(pickPlace(key, nearHead))
+              }
+              ref={headSelect}
+              testId="save-head"
+            />
+            <PlacePicker
+              label="Tail"
+              hint="(the far end)"
+              places={places}
+              value={tailPlace?.key ?? ''}
+              isDisabled={routeLocked}
+              onChange={(key) =>
+                key === NEW_PLACE_KEY ? setMaking('Tail') : setTailId(pickPlace(key, nearTail))
+              }
+              ref={tailSelect}
+              testId="save-tail"
+            />
+          </div>
+        )}
+
+        {!isLoop && making && nearHead && nearTail && (
+          <NewPlaceForm
+            key={making}
+            end={making}
+            centre={making === 'Head' ? nearHead : nearTail}
+            defaultKind={making === 'Head' ? 'terminal' : 'hintuan'}
+            hotspots={hotspots}
+            directions={directions}
+            onSaved={handlePlaceSaved}
+            onCancel={closeMaking}
           />
-          <PlacePicker
-            label="Tail"
-            hint="(the far end)"
-            places={places}
-            value={tailPlace?.key ?? ''}
-            isDisabled={routeLocked}
-            onChange={(key) => setTailId(pickPlace(key, nearTail))}
-            testId="save-tail"
-          />
-        </div>
+        )}
 
         {/* What the line passes, by the rule the save will apply: seen first, stored the same. */}
-        {head && tail && (
+        {(isLoop || (head && tail)) && (
           <div data-testid="save-timeline" className="mt-3 rounded-lg bg-neutral-50 px-3 py-2">
             <p className="text-xs font-medium text-neutral-600">
-              {preview.between.length === 0
-                ? 'Passes through no hintuan yet — draw one across the road and it appears here'
-                : `${passesThrough(preview.between.length)}, in this order`}
+              {isLoop
+                ? loopPlacesCount === 0
+                  ? 'Goes round no place yet — draw a hintuan across the road and it appears here'
+                  : `Goes round ${loopPlacesCount} ${loopPlacesCount === 1 ? 'place' : 'places'}, from the first drawn, in this order`
+                : preview.between.length === 0
+                  ? 'Passes through no hintuan yet — draw one across the road and it appears here'
+                  : `${passesThrough(preview.between.length)}, in this order`}
             </p>
             <DirectionTimeline timeline={preview} />
           </div>
         )}
 
-        <label className="mt-3 block text-xs font-medium text-neutral-700">
-          Via <span className="text-neutral-400">(only if another route shares both ends)</span>
-          <input
+        <div className="mt-3">
+          <TextField
+            label={
+              <>
+                Via{' '}
+                <span className="text-content-disabled">
+                  {isLoop
+                    ? '(only if another ikot has this signboard)'
+                    : '(only if another route shares both ends)'}
+                </span>
+              </>
+            }
             disabled={routeLocked}
             value={via}
             onChange={(e) => setVia(e.target.value)}
+            onClear={() => setVia('')}
             placeholder="Zabarte"
-            className={FIELD}
           />
-        </label>
+        </div>
 
-        <p className="mt-3 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-600">
-          <span className="text-xs text-neutral-400">This line is the direction</span>
-          <br />
-          <strong data-testid="save-direction" className="text-neutral-900">
-            {direction || '—'}
-          </strong>
-          <br />
-          <span className="text-xs text-neutral-500">
-            {parent ? 'of the route ' : 'of a new route, '}
-            <span data-testid="save-name" className="font-medium text-neutral-700">
-              {name || '—'}
+        {isLoop ? (
+          <p className="mt-3 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-600">
+            <span className="text-xs text-neutral-400">
+              This line is the {LOOP_WORD.toLowerCase()}
             </span>
-          </span>
-          <br />
-          <span className="text-[11px] text-neutral-400">
-            {existing
-              ? 'Both names are generated from the two ends: pick another place above to change them.'
-              : 'Both names are generated from the two ends. Rename a hotspot to change them.'}
-          </span>
-        </p>
+            <br />
+            <strong data-testid="save-direction" className="text-neutral-900">
+              {name}
+            </strong>
+            <br />
+            <span className="text-[11px] text-neutral-400">
+              One way round, as drawn: the jeep goes the way this line does. The other way round is
+              another ikot, with its own signboard.
+            </span>
+          </p>
+        ) : (
+          <p className="mt-3 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-600">
+            <span className="text-xs text-neutral-400">This line is the direction</span>
+            <br />
+            <strong data-testid="save-direction" className="text-neutral-900">
+              {direction || '—'}
+            </strong>
+            <br />
+            <span className="text-xs text-neutral-500">
+              {parent ? 'of the route ' : 'of a new route, '}
+              <span data-testid="save-name" className="font-medium text-neutral-700">
+                {name || '—'}
+              </span>
+            </span>
+            <br />
+            <span className="text-[11px] text-neutral-400">
+              {existing
+                ? 'Both names are generated from the two ends: pick another place above to change them.'
+                : 'Both names are generated from the two ends. Rename a hotspot to change them.'}
+            </span>
+          </p>
+        )}
 
-        <hr className="my-4 border-neutral-200" />
-
-        <RouteFields
-          signboard={signboard}
-          mode={mode}
-          fareNote={fareNote}
-          isLocked={routeLocked}
-          onSignboardChange={setSignboard}
-          onModeChange={setMode}
-          onFareNoteChange={setFareNote}
-        />
+        {!isLoop && (
+          <>
+            <hr className="my-4 border-neutral-200" />
+            {routeFields}
+          </>
+        )}
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 

@@ -4,10 +4,9 @@ import { useSyncExternalStore } from 'react';
  * The browser's offer to install Para Po, kept for the install prompt
  * (InstallPrompt). Chromium fires `beforeinstallprompt` when the page is
  * installable and not installed yet; nothing else says so. Kept only on
- * Android (the owner's pick, 2026-10-13: "Android only for now"): an iPhone
- * has no install a page can start — its Share → Add to Home Screen is a
- * design of its own, not drawn yet — and a computer's Chrome offers it from
- * the address bar already.
+ * Android: an iPhone has no install a page can start (its Share → Add to
+ * Home Screen needs a design of its own, not drawn yet), and a computer's
+ * Chrome offers it from the address bar already.
  */
 
 /** Chromium's install offer. TypeScript's DOM types do not have it. */

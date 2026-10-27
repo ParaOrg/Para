@@ -1,9 +1,9 @@
 // Reading the route lines' looks off the map: the directions a source has lit
 // and the lines' paint, read by what lookReaders puts in the page, and the lit
 // line's colours now, and the end circles' (DOM markers, EndTitles); and the
-// GL programs the map has compiled. lookReaders: visitor-test, phone-test and
+// GL programs the map has compiled. lookReaders: commuter-test, phone-test and
 // group-test. paintNow, rideLook, endRings, colourOf, ringVar, ringed,
-// programsAtRest and programsSince: visitor-test and phone-test.
+// programsAtRest and programsSince: commuter-test and phone-test.
 
 /**
  * In the page, before the app starts (`page.addInitScript(lookReaders)`):
@@ -12,7 +12,7 @@
  */
 export function lookReaders() {
   // Since 2026-09-25 a tap is feature state, not a filter or a paint
-  // expression naming ids (useLighting in src/features/routes/map/saved-routes-layers.ts).
+  // expression naming ids (useLighting in src/features/routes/map/lighting.ts).
   // The directions a source has lit.
   window.__lit = async (src) => {
     const m = window.__map;
@@ -78,7 +78,19 @@ export function lookReaders() {
         named: e.dataset.testid === 'end-title',
         at: e.dataset.at.split(',').map(Number),
         paled: e.hasAttribute('data-paled'),
+        // The sign its pill wears, Start's or End's; null with none. A signed
+        // circle wears the sign's colour, not the line's (EndTitles).
+        sign: e.querySelector('[data-part="name"] [data-part="start"]')
+          ? 'start'
+          : e.querySelector('[data-part="name"] [data-part="end"]')
+            ? 'end'
+            : null,
         ring: getComputedStyle(e.querySelector('[data-part="circle"] > span')).backgroundColor,
+        // The pill's opacity, 0.6 outside the ride (Label's Unselected); null with no pill.
+        fade:
+          e.dataset.testid === 'end-title'
+            ? getComputedStyle(e.querySelector('[data-part="name"]')).opacity
+            : null,
       }),
     );
   // A colour as the page computes it, through a probe span — a token's
@@ -109,15 +121,30 @@ export const rideLook = (page) =>
     };
   });
 
-/** The end circles now (window.__ends): how many, and the rings they wear, bare and paled, as the DOM computes them. */
+/**
+ * The end circles now (window.__ends): how many, the rings the unsigned ones
+ * wear, bare and paled, as the DOM computes them, whether every signed one
+ * wears its sign's colour (Start's green, End's red), and the pills'
+ * opacities.
+ */
 export const endRings = (page) =>
   page.evaluate(() => {
     const ends = window.__ends();
+    const unsigned = ends.filter((e) => !e.sign);
+    const signColour = {
+      start: window.__colour('var(--map-hotspots-card-hintuan-surface)'),
+      end: window.__colour('var(--card-red-surface)'),
+    };
     const worn = (list) => [...new Set(list.map((e) => e.ring))];
+    const fades = (list) => [...new Set(list.filter((e) => e.fade !== null).map((e) => e.fade))];
     return {
       circles: ends.length,
-      rings: worn(ends.filter((e) => !e.paled)),
-      paledRings: worn(ends.filter((e) => e.paled)),
+      signed: ends.length - unsigned.length,
+      signsWorn: ends.every((e) => !e.sign || e.ring === signColour[e.sign]),
+      rings: worn(unsigned.filter((e) => !e.paled)),
+      paledRings: worn(unsigned.filter((e) => e.paled)),
+      fades: fades(ends.filter((e) => !e.paled)),
+      paledFades: fades(ends.filter((e) => e.paled)),
     };
   });
 
@@ -137,12 +164,15 @@ export const ringVar = (livery) =>
       ? `var(--map-rail-${livery}-surface)`
       : `var(--card-${livery}-surface)`;
 
-/** Whether every end circle (endRings) rings in `want`, none paled: one colour, the one asked. */
+/**
+ * Whether the end circles (endRings) are lit as asked: every signed one in its
+ * sign's colour, every other in `want`, none paled.
+ */
 export const ringed = (rings, want) =>
   rings.circles > 0 &&
+  rings.signsWorn &&
   rings.paledRings.length === 0 &&
-  rings.rings.length === 1 &&
-  rings.rings[0] === want;
+  rings.rings.every((r) => r === want);
 
 /**
  * The GL programs the map has compiled, by MapLibre's keys (window.__programs,
@@ -167,17 +197,28 @@ export const programsAtRest = async (page, ms = 20000) => {
     await page.waitForTimeout(200);
   }
   const waited = Date.now() - from;
-  // Then the map at rest, its view's tiles in, before the keys are read.
+  // Then the map at rest, its view drawn, before the keys are read: the
+  // 'idle' after a frame asked for now. loaded() and areTilesLoaded() alone
+  // can be true before the first frame after a jumpTo, which is the frame
+  // that asks for the new view's tiles: the keys were then read with nothing
+  // of the view drawn, and its basemap's programs counted as the tap's
+  // (commuter-test's first tap of a page of its own, 1 run in 4 on
+  // Monochrome, 2026-10-15).
   const keys = await page.evaluate(
     () =>
       new Promise((done) => {
         const m = window.__map;
-        const t0 = performance.now();
-        const read = () =>
-          (m.loaded() && m.areTilesLoaded() && !m.isMoving()) || performance.now() - t0 > 10000
-            ? done(window.__programs?.() ?? [])
-            : setTimeout(read, 100);
-        read();
+        const read = () => done(window.__programs?.() ?? []);
+        const onIdle = () => {
+          clearTimeout(timer);
+          read();
+        };
+        const timer = setTimeout(() => {
+          m.off('idle', onIdle);
+          read();
+        }, 10000);
+        m.once('idle', onIdle);
+        m.triggerRepaint();
       }),
   );
   return { keys, warmed: await warmedNow(), ms: waited };

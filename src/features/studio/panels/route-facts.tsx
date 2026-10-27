@@ -8,18 +8,23 @@ import {
   ruleOn,
   fareFor,
 } from '@/features/routes/model/fares';
-import { MODES, directionLine, type Direction } from '@/features/routes/model/routes';
+import {
+  MODES,
+  directionLine,
+  isLoop,
+  LOOP_WORD,
+  type Direction,
+} from '@/features/routes/model/routes';
 import { lineLength } from '@/shared/utils/geo';
 
 /**
  * What only the editor sees of a direction, under the trip card the public
- * map opens (the owner's pick, 2026-09-30: the public trip card, with the
- * editor's extras below it). The trip card carries the ride — its ends, its
- * hintuans, its kilometres and pesos; this carries what the old studio card
- * said besides: whether it has been ridden, its mode and signboard, and the
- * fare's small print — the discounted price, the rule, the grace for the old
- * minimum, the route's own fare note and where the estimate comes from. Then
- * Edit, Extend and Delete, when the direction is the editor's own.
+ * map opens. The trip card carries the ride — its ends, its hintuans, its
+ * kilometres and pesos; this carries the rest: whether it has been ridden, its
+ * mode and signboard, and the fare's small print — the discounted price, the
+ * rule, the grace for the old minimum, the route's own fare note and where the
+ * estimate comes from. Then Edit, Extend and Delete, when the direction is the
+ * editor's own.
  */
 export function RouteFacts({ direction, actions }: { direction: Direction; actions?: ReactNode }) {
   const r = direction.route;
@@ -44,6 +49,14 @@ export function RouteFacts({ direction, actions }: { direction: Direction; actio
             {verified ? 'verified by riding' : 'drawn, not yet ridden'}
           </span>
         </dd>
+        {isLoop(direction) && (
+          <>
+            <dt className="text-content-tertiary">Route</dt>
+            <dd data-testid="facts-loop" className="text-content-primary">
+              {LOOP_WORD} · one way round, no ends
+            </dd>
+          </>
+        )}
         <dt className="text-content-tertiary">Mode</dt>
         <dd className="text-content-primary">{mode}</dd>
         {r?.signboard && (

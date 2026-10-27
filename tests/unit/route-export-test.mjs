@@ -137,3 +137,33 @@ test('JSON: the export as built, read back whole', () => {
   assert.equal(file.fileName, 'tala-sm-fairview.json');
   assert.deepEqual(JSON.parse(file.text), data);
 });
+
+test('an ikot is exported as one direction whose way is loop', () => {
+  const ikotRoute = {
+    ...route,
+    id: 'r9',
+    signboard: 'UP – Ikot',
+    headHotspotId: null,
+    tailHotspotId: null,
+    name: 'UP – Ikot',
+    isLoop: true,
+  };
+  const round = {
+    ...direction('d-loop', false, [
+      [121.0, 14.0],
+      [121.02, 14.0],
+      [121.02, 14.02],
+      [121.0, 14.0],
+    ]),
+    routeId: 'r9',
+    name: 'UP – Ikot',
+    route: ikotRoute,
+  };
+  const data = routeExport([round], hotspots, () => [mid], AT);
+  assert.deepEqual(
+    data.directions.map((v) => v.way),
+    ['loop'],
+  );
+  assert.equal(data.directions.length, 1);
+  assert.equal(data.route.name, 'UP – Ikot');
+});

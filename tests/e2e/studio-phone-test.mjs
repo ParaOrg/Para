@@ -117,29 +117,36 @@ const recentre = async (zoom = 15) => {
   await page.waitForTimeout(500);
 };
 // The saved route's vertices on screen, `gap` px apart, clear of the
-// attribution at the top and the toolbar and its hint at the foot.
+// attribution at the top and the toolbar and its hint at the foot. The band is
+// measured from the canvas centre, which recentre() puts on a saved vertex, so
+// the same vertices are picked however tall the map box is: the router refuses
+// a point more than 25 m from a road, and a pick that moves with the box's
+// height can land on a drop point it refuses.
+const ABOVE_CENTRE_PX = 282;
+const BELOW_CENTRE_PX = 182;
 const roadPixels = (n, gap) =>
   page.evaluate(
-    ([line, n, gap]) => {
+    ([line, n, gap, above, below]) => {
       const m = window.__map,
         { clientWidth: w, clientHeight: h } = m.getCanvas(),
         picked = [];
       for (const c of line) {
         const p = m.project(c);
-        if (p.x < 40 || p.x > w - 40 || p.y < 140 || p.y > h - 240) continue;
+        if (p.x < 40 || p.x > w - 40 || p.y < h / 2 - above || p.y > h / 2 + below) continue;
         if (picked.every(([x, y]) => Math.hypot(p.x - x, p.y - y) >= gap)) picked.push([p.x, p.y]);
         if (picked.length === n) break;
       }
       return picked;
     },
-    [line, n, gap],
+    [line, n, gap, ABOVE_CENTRE_PX, BELOW_CENTRE_PX],
   );
 
 /** A new route of `n` points tapped down on the saved route. */
 const startRoute = async (n) => {
   await discard();
   await recentre();
-  await tapButton(page.getByRole('button', { name: '+ New Route' }));
+  await tapButton(page.getByRole('button', { name: 'New route, terminal or hintuan' }));
+  await tapButton(page.getByRole('menuitem', { name: /Routes/ }));
   for (const [x, y] of await roadPixels(n, 70)) {
     await tap(x, y);
     await page.waitForTimeout(150);
@@ -597,12 +604,18 @@ check(
   'Keep keeps the drawing',
   (await cp()).length > 0 && (await page.getByRole('button', { name: /Done/ }).count()) === 1,
 );
-const small = await page.evaluate(() =>
+// The owner dropped the 44 px floor (2026-10-16): a drawing button is sized by
+// its padding and text, the same under a finger as under a mouse.
+const floored = await page.evaluate(() =>
   [...document.querySelectorAll('[data-testid="draw-toolbar"] button')]
-    .map((b) => [b.textContent.trim(), Math.round(b.getBoundingClientRect().height)])
-    .filter(([, h]) => h < 44),
+    .map((b) => [b.textContent.trim(), getComputedStyle(b).minHeight, getComputedStyle(b).minWidth])
+    .filter(([, h, w]) => !['auto', '0px'].includes(h) || !['auto', '0px'].includes(w)),
 );
-check('every drawing button is at least 44 px tall', small.length === 0, JSON.stringify(small));
+check(
+  'no drawing button has a size floor for a finger',
+  floored.length === 0,
+  JSON.stringify(floored),
+);
 
 // ---------------------------------------------------------------- follow by finger
 // A tap on a saved line, away from the drawing, offers to follow it; taking
@@ -642,7 +655,7 @@ if (onLine) {
 // ---------------------------------------------------------------- hotspot
 await discard();
 await recentre(16);
-await tapButton(page.getByRole('button', { name: '+ New hotspot' }));
+await tapButton(page.getByRole('button', { name: 'New route, terminal or hintuan' }));
 await tapButton(page.getByRole('menuitem', { name: /Terminal/ }));
 const cx = W / 2,
   cy = H / 2 - 80;

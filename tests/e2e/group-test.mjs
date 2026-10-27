@@ -140,11 +140,11 @@ if (!spot) {
 
   const chooser = page.locator('[data-testid="chooser"]');
   check('a tap where routes share a road opens the list', (await chooser.count()) === 1);
-  /** Whether the list shows the way back (SWITCH pressed). */
+  /** Whether the list shows the way back (SWITCH's data-back). */
   const showsBack = async () =>
     (await chooser
       .locator('[data-testid="chooser-flip"]')
-      .getAttribute('aria-pressed', { timeout: 2000 })
+      .getAttribute('data-back', { timeout: 2000 })
       .catch(() => null)) === 'true';
 
   // What the list shows — each card's place, its rows and the directions
@@ -540,9 +540,12 @@ if (!spot) {
           const probe = document.createElement('span');
           // A train's is its line's, Map/Rail/<line>/surface-pale (2026-10-13).
           const livery = trip?.dataset.livery ?? '';
+          // The ferry's is Map/Ferry/surface-pale.
           probe.style.backgroundColor = /rail-way/.test(livery)
             ? `var(--map-rail-${livery}-surface-pale)`
-            : `var(--card-${livery}-surface-pale)`;
+            : livery === 'ferry'
+              ? 'var(--map-ferry-surface-pale)'
+              : `var(--card-${livery}-surface-pale)`;
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
           probe.remove();

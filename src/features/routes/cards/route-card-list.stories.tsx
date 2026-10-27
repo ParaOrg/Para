@@ -3,11 +3,15 @@ import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { cn } from '@/shared/utils/cn';
+
+import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
+import type { Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';
 
-/** Sample data only, shaped like the published file. Not the real map. */
+/** Sample data only, shaped like the published map. Not the real map. */
 function route(id: string, name: string): Direction['route'] {
   return {
     id,
@@ -55,7 +59,7 @@ function direction(
   };
 }
 
-/** The owner's frames: two routes into Tala, and out of it the other way round. */
+/** Figma's frames: two routes into Tala, and out of it the other way round. */
 const talaRoutes: Direction[] = [
   direction('a', 'Novaliches (Bayan) – Tala', 'Novaliches (Bayan) → Tala', 8.4),
   direction('a', 'Novaliches (Bayan) – Tala', 'Tala → Novaliches (Bayan)', 8.6, true),
@@ -76,8 +80,8 @@ const many: Direction[] = [
   direction('m' + i, `${p} – Tala`, `Tala → ${p}`, 3 + i * 2, true),
 ]);
 
-/** A place whose name runs to two lines on a phone. */
-const LONG = 'Novaliches (Bayan) via Zabarte';
+/** A place whose name runs to two lines on a phone, at RouteCard's 24/32. */
+const LONG = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 const longName: Direction[] = [
   direction('l', `${LONG} – Tala`, `${LONG} → Tala`, 8.4),
   direction('l', `${LONG} – Tala`, `Tala → ${LONG}`, 8.6, true),
@@ -158,8 +162,8 @@ const meta = {
   render: (args) => <Picking {...args} />,
   // A map-sized box, marked @container as the apps' roots are: the list docks
   // along its bottom, and sits in the top-left corner from 1024 wide
-  // (`@float:`) — the owner's frames at 393, 640 and 1024. Never taller than
-  // the canvas, so the story itself does not scroll.
+  // (`@float:`) — Figma's frames at 393, 640 and 1024. Never taller than the
+  // canvas, so the story itself does not scroll.
   decorators: [
     (Story, ctx) => (
       <div
@@ -193,13 +197,18 @@ export const Phone: Story = {};
 /** SWITCHed: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
-/** Tala's card picked: pressed in, its routes alone lit on the map (the owner, 2026-09-29). */
+/** Tala's card picked: pressed in, its routes alone lit on the map. */
 export const ACardSelected: Story = { args: { back: true, selected: 'Tala' } };
 
-/** From 1024 wide, flush in the top-left corner, 384 wide (the owner's 3750:1911). */
+/**
+ * From 1024 wide, flush in the top-left corner, 384 wide (Figma 3750:1911).
+ */
 export const Floating: Story = { parameters: { frame: 'wide' } };
 
-/** The owner's 640 frame: still docked, as wide as the screen — the glow runs edge to edge. */
+/**
+ * Figma's 640 frame: still docked, as wide as the screen — the glow runs edge
+ * to edge.
+ */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /** Taller than the room: the cards scroll under the header. */
@@ -209,9 +218,8 @@ export const ManyPlaces: Story = { args: { routes: many } };
 export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
 
 /**
- * A tap on a hotspot with routes running through it: the hotspot first, as
- * the Chooser's row until the owner's hintuan design, then the cards. The
- * count stays the routes' (his pick, 2026-09-29).
+ * A tap on a hotspot with routes running through it: the hotspot first, as a
+ * plain row, then the cards. The count stays the routes'.
  */
 export const WithAHotspot: Story = { args: { hotspots: [talaTerminal] } };
 
@@ -221,15 +229,21 @@ export const WithAHotspotFloating: Story = {
   parameters: { frame: 'wide' },
 };
 
-/** Two boxes and no line: "2 Hotspots", with no route to count (the owner, 2026-09-29), and nothing to SWITCH. */
+/**
+ * Two boxes and no line: "2 Hotspots", with no route to count, and nothing to
+ * SWITCH.
+ */
 export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 
-/** Both boxes of one hintuan and no line: a row each, and "1 Hotspot", as a rider counts it (hotspotCount; the owner, 2026-09-29). */
+/**
+ * Both boxes of one hintuan and no line: a row each, and "1 Hotspot", as a
+ * rider counts it (hotspotCount).
+ */
 export const OneHintuanTwoBoxes: Story = { args: { routes: [], hotspots: oneHintuan } };
 
 /**
- * The owner's BottomSheetConfiguration (3815:5637, 2026-09-30) holds the list
- * too: it opens at Middle (Phone, above); a tap on the HandleNotch goes round.
+ * Figma's BottomSheetConfiguration (3815:5637) holds the list too: it opens at
+ * Middle (Phone, above); a tap on the HandleNotch goes round.
  */
 const tapHandle = async (canvasElement: HTMLElement, times: number) => {
   const handle = within(canvasElement).getByTestId('dock-handle');
@@ -254,7 +268,7 @@ export const SheetLow: Story = {
   },
 };
 
-/** Low with a long place: one line of it, cut short (3817:6007). */
+/** Low with a long place: one line of it, 32 tall (RouteCard's 24/32), cut short (3817:6007). */
 export const SheetLowLongName: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
@@ -271,5 +285,73 @@ export const SheetMiddleLongName: Story = {
     await expect(
       within(canvasElement).getByText(LONG).getBoundingClientRect().height,
     ).toBeGreaterThan(32);
+  },
+};
+
+/** UP – Ikot: a loop, one direction, called by its signboard and going to "Ikot". */
+const ikotLoop: Direction = {
+  ...direction('ikot', 'UP – Ikot', 'UP – Ikot', 5.2),
+  name: 'UP – Ikot',
+  route: {
+    ...route('ikot-route', 'UP – Ikot'),
+    headHotspotId: null,
+    tailHotspotId: null,
+    signboard: 'UP – Ikot',
+    isLoop: true,
+  },
+};
+
+/** A loop in the list, beside Tala's routes: its row says Ikot, and it is there whichever way round the list is. */
+export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
+
+/** Only a loop: no way back to turn to, so no SWITCH. */
+export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };
+
+/**
+ * The `end` slot, handed the last card's livery: drawn after it. A stand-in
+ * that grows, as the contribute card does, to fill what the list leaves of the sheet.
+ */
+const growingEnd = (livery: Livery) => (
+  <p data-testid="end" className={cn('grow p-4', CARD_SURFACE[livery], CARD_TEXT[livery])}>
+    After the last card: {livery}
+  </p>
+);
+
+export const WithAnEnd: Story = { args: { end: growingEnd } };
+
+/** Short list, Low: the end fills what the sheet shows. */
+export const WithAnEndLow: Story = {
+  args: { end: growingEnd },
+  play: async ({ canvasElement }) => {
+    await tapHandle(canvasElement, 2);
+  },
+};
+
+/** Short list, Max: the end fills to the bottom of the screen. */
+export const WithAnEndMax: Story = {
+  args: { end: growingEnd },
+  play: async ({ canvasElement }) => {
+    await tapHandle(canvasElement, 1);
+  },
+};
+
+/** From 1024 wide, floating in the corner. */
+export const WithAnEndFloating: Story = {
+  args: { end: growingEnd },
+  parameters: { frame: 'wide' },
+};
+
+/** Taller than the sheet: the end keeps its own height and the list scrolls. */
+export const WithAnEndLongList: Story = { args: { routes: many, end: growingEnd } };
+
+/** With no route card listed, only hotspots, the slot is never called. */
+export const NoEndWithoutRouteCards: Story = {
+  args: {
+    routes: [],
+    hotspots: twoBoxes,
+    end: () => <p data-testid="end">Never drawn</p>,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByTestId('end')).toBeNull();
   },
 };

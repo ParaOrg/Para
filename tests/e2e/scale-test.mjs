@@ -1,8 +1,8 @@
 // The public map at scale: how it opens with 5,000 directions and 510
-// hotspots, made from today's map — 250 copies of its 20 directions and 5 of
-// its 102 hotspots, as many as make 500 (its counts on 2026-10-06; the suite
-// prints them), shifted across a 25 × 10 grid — and served to the app in
-// place of /data/index.v4.json and its lines. No tiles are fetched: a bare style
+// hotspots, made from today's map — as many copies of its directions as make
+// about 5,000 (copiesFor), and of its hotspots as make 500 (the suite prints
+// the counts), shifted across a grid 25 copies wide — and served to the app in
+// place of /data/index.v5.json and its lines. No tiles are fetched: a bare style
 // stands in, so this runs the same on a laptop, in this sandbox and on a
 // GitHub runner.
 //
@@ -19,7 +19,7 @@ import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { COPIES, shift } from './lib/big-map.mjs';
+import { copiesFor, shift } from './lib/big-map.mjs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
 import { countLongTasks, startProfile, whereItWent } from './lib/profile.mjs';
 
@@ -49,10 +49,11 @@ const { check, tally } = harness();
 
 // ---------------------------------------------------------------- the map
 const data = fileURLToPath(new URL('../../public/data/', import.meta.url));
-const m = JSON.parse(readFileSync(join(data, 'index.v4.json'), 'utf8'));
+const m = JSON.parse(readFileSync(join(data, 'index.v5.json'), 'utf8'));
 const lineOf = (id) => JSON.parse(readFileSync(join(data, 'lines', `${id}.json`), 'utf8')).shape;
 const mv = (c, [dx, dy]) => [c[0] + dx, c[1] + dy];
 const moved = (line, d) => line && { ...line, coordinates: line.coordinates.map((c) => mv(c, d)) };
+const COPIES = copiesFor(m.variants.length);
 const big = { ...m, variants: [], stops: [], links: [] };
 /** Each copy's full line, served at /data/lines/<id>.json. */
 const lines = new Map();
@@ -67,8 +68,9 @@ for (let k = 0; k < COPIES; k++) {
       route: {
         ...v.route,
         id: `${v.route.id}-${k}`,
-        head_stop_id: `${v.route.head_stop_id}-${k}`,
-        tail_stop_id: `${v.route.tail_stop_id}-${k}`,
+        // A loop has no ends: a copied null must stay null, or the app refuses the index.
+        head_stop_id: v.route.head_stop_id && `${v.route.head_stop_id}-${k}`,
+        tail_stop_id: v.route.tail_stop_id && `${v.route.tail_stop_id}-${k}`,
       },
       overview: moved(v.overview, d),
     });
@@ -108,7 +110,7 @@ page.on('console', (msg) => {
   if (msg.type() === 'error') errors.push(msg.text().slice(0, 160));
 });
 await bareStyle(page);
-await page.route(/\/data\/index\.v4\.json/, (route) =>
+await page.route(/\/data\/index\.v5\.json/, (route) =>
   route.fulfill({ status: 200, contentType: 'application/json', body: file }),
 );
 await page.route(/\/data\/lines\/.+\.json/, (route) => {
@@ -222,11 +224,9 @@ const s = (ms) => (ms == null ? 'never' : `${(ms / 1000).toFixed(1)} s`);
 console.log(
   `  map load ${s(marks['map load'])}; routes in the source ${s(marks['routes in the source'])}; hotspots ${s(marks['hotspots in the source'])}; the first line ${s(marks['lines on the screen'])}; idle ${s(marks.idle)}\n`,
 );
-check(
-  'every direction reached the map',
-  routes === big.variants.length,
-  `${routes} of ${big.variants.length}`,
-);
+// The published map may hold a way not drawn yet (a slot): it has no line to draw.
+const drawn = big.variants.filter((v) => v.overview).length;
+check('every drawn direction reached the map', routes === drawn, `${routes} of ${drawn}`);
 check(
   'no orange stretch is worked out at load: none is lit',
   stretchesAtLoad === 0,

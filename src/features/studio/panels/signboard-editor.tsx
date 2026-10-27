@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react';
 
+import { wayWord } from '@/features/routes/model/departures';
 import type { Direction } from '@/features/routes/model/routes';
 
 import * as live from '../data/signboards';
@@ -11,11 +12,10 @@ export type SignboardCalls = Pick<
 >;
 
 /**
- * The editor's Signboard for one direction (the owner's ask, 2026-10-01: "per
- * route, papunta and balikan … upload signboard in svg format"; the studio's
- * own, as he left its look to us). Under the trip card's facts, for the
- * direction on show — SWITCH brings up the other way's. Each board as the
- * public card shows it, 40 tall at its own width, with ‹ to move it earlier
+ * The editor's Signboard for one direction, uploaded as SVG. Under the trip
+ * card's facts, for the direction on show — SWITCH brings up the other way's.
+ * Its look is the studio's own; there is no Figma design for it. Each board as
+ * the public card shows it, 40 tall at its own width, with ‹ to move it earlier
  * and ✕ to take it off; "Add SVG" sends one or more, each cleaned first.
  * `onChanged` reloads the directions, so the card above shows the new list.
  */
@@ -34,7 +34,7 @@ export function SignboardEditor({
   const [problem, setProblem] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const heading = useId();
-  const way = direction.reversed ? 'Pabalik' : 'Papunta';
+  const way = wayWord(direction.reversed, [direction]);
 
   // Another direction, or the list read again: the boards as they stand, set
   // during render against the ones last shown.
@@ -44,8 +44,8 @@ export function SignboardEditor({
     setShown({ directionId: direction.id, listed });
     setNames(listed ? listed.split('\n') : []);
     // A problem stays until the next change or another direction: the list
-    // read again after an earlier change can land after it, and took it away
-    // unread (save-test on a GitHub runner, 2026-10-01).
+    // read again after an earlier change can land after it, and would take
+    // it away unread. save-test catches this race on slower CI runners.
     if (shown.directionId !== direction.id) setProblem(null);
   }
 
@@ -94,7 +94,7 @@ export function SignboardEditor({
             <li
               key={n}
               data-testid="signboard-item"
-              className="flex items-center gap-1 rounded-lg bg-surface-secondary p-1 pointer-coarse:gap-3"
+              className="flex items-center gap-1 rounded-lg bg-surface-secondary p-1"
             >
               <img
                 src={signboardUrl(n)}
@@ -107,7 +107,7 @@ export function SignboardEditor({
                   disabled={busy}
                   onClick={() => void run((now) => moveSignboardEarlier(direction.id, now, n))}
                   aria-label={`Move signboard ${i + 1} earlier`}
-                  className="rounded-md px-1.5 py-1 text-sm text-content-tertiary hover:bg-surface-tertiary disabled:opacity-60 pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+                  className="rounded-md px-1.5 py-1 text-sm text-content-tertiary hover:bg-surface-tertiary disabled:opacity-60"
                 >
                   ‹
                 </button>
@@ -117,7 +117,7 @@ export function SignboardEditor({
                 disabled={busy}
                 onClick={() => void run((now) => removeSignboard(direction.id, now, n))}
                 aria-label={`Remove signboard ${i + 1}`}
-                className="rounded-md px-1.5 py-1 text-sm text-content-error hover:bg-surface-error disabled:opacity-60 pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+                className="rounded-md px-1.5 py-1 text-sm text-content-error hover:bg-surface-error disabled:opacity-60"
               >
                 ✕
               </button>
@@ -132,7 +132,7 @@ export function SignboardEditor({
           type="button"
           disabled={busy}
           onClick={() => input.current?.click()}
-          className="rounded-lg px-3 py-2 text-sm text-content-primary ring-1 ring-border-primary hover:bg-surface-secondary disabled:opacity-60 pointer-coarse:min-h-11"
+          className="rounded-lg px-3 py-2 text-sm text-content-primary ring-1 ring-border-primary hover:bg-surface-secondary disabled:opacity-60"
         >
           {busy ? 'Saving…' : 'Add SVG'}
         </button>

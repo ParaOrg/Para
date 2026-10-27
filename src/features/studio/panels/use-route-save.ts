@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 
 import type { useSaveFacts } from './use-save-facts';
+import { draftRefusal, saveRouteDraft } from '../data/draft-save';
+import { STUDIO_DRAFTS } from '../data/flags';
 import type { SaveInput } from '../data/routes-write';
 import { saveRouteAndLinks } from '../data/save-route';
 import type { Drawing } from '../drawing/use-drawing';
@@ -19,6 +21,7 @@ type RouteSaveForm = Pick<
   | 'fareNote'
   | 'headHotspotId'
   | 'tailHotspotId'
+  | 'isLoop'
   | 'via'
 >;
 
@@ -36,21 +39,27 @@ interface UseRouteSaveOptions {
   draw: Pick<Drawing, 'controlPoints' | 'segments'>;
   hotspots: HotspotRow[];
   onSaved: (direction: DirectionRow) => void;
+  /** With STUDIO_DRAFTS on: the save is a draft, and the map is unchanged. */
+  /** Hears the direction the draft holds, for what was made from it. */
+  onDrafted?: (directionId: string) => void;
 }
 
 /**
  * The save panel's save: busy while it runs, its error as text, and the row
- * it wrote when the link sync after it failed (split from save-panel.tsx,
- * 2026-10-14).
+ * it wrote when the link sync after it failed.
  */
-export function useRouteSave({ facts, draw, hotspots, onSaved }: UseRouteSaveOptions) {
+export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseRouteSaveOptions) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // The direction as a save wrote it, when the link sync after it failed.
-  // Saves are two steps, not one transaction (PLAN.md's known risk #3): a
-  // second press inserted the route again, met its own row and was refused as
-  // "already drawn" (review finding 13). Now it updates the row it wrote.
+  // Saves are two steps, so a second press must update the row already written:
+  // inserting the route again would meet its own row and be refused as "already drawn".
+  // TODO: one RPC per save would make this one transaction (saves are not transactional today).
   const [written, setWritten] = useState<WrittenDirection | null>(null);
+
+  // A new route's id for its draft, the same on every retry: a claim whose
+  // answer was lost then updates that draft instead of making a second one.
+  const newRouteId = useRef<string | null>(null);
 
   async function save(form: RouteSaveForm) {
     setBusy(true);
@@ -58,20 +67,26 @@ export function useRouteSave({ facts, draw, hotspots, onSaved }: UseRouteSaveOpt
     try {
       // The borrow on the parent's full line, read now if it has not come.
       const borrowed = await facts.borrowedForSave();
-      const named = await saveRouteAndLinks(
-        {
-          ...form,
-          reversed: facts.reversed,
-          controlPoints: draw.controlPoints,
-          segments: draw.segments,
-          // A parent deleted since, or a borrowed part redrawn away, borrows nothing.
-          borrowedFrom: facts.borrowParent && borrowed > 0 ? facts.borrowParent.id : null,
-          borrowedPart: facts.borrowPart,
-          borrowedMetres: borrowed > 0 ? Math.round(borrowed) : null,
-        },
-        hotspots,
-        setWritten,
-      );
+      const input: SaveInput = {
+        ...form,
+        reversed: facts.reversed,
+        controlPoints: draw.controlPoints,
+        segments: draw.segments,
+        // A parent deleted since, or a borrowed part redrawn away, borrows nothing.
+        borrowedFrom: facts.borrowParent && borrowed > 0 ? facts.borrowParent.id : null,
+        borrowedPart: facts.borrowPart,
+        borrowedMetres: borrowed > 0 ? Math.round(borrowed) : null,
+      };
+      if (STUDIO_DRAFTS) {
+        newRouteId.current ??= crypto.randomUUID();
+        const { result, directionId } = await saveRouteDraft(input, hotspots, newRouteId.current);
+        const refusal = draftRefusal(result);
+        if (refusal) throw new Error(refusal);
+        if (onDrafted) onDrafted(directionId);
+        else setBusy(false);
+        return;
+      }
+      const named = await saveRouteAndLinks(input, hotspots, setWritten);
       onSaved(named);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

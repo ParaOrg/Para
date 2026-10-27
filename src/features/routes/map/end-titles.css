@@ -1,5 +1,5 @@
 /*
- * A lit ride's ends on the map (EndTitles.tsx, which imports this sheet):
+ * A lit ride's ends on the map (end-titles.tsx, which imports this sheet):
  * a circle at each, a name in a pill over the named ones. The marker's own
  * element is MapLibre's to move, so the pops are on what is inside: the
  * pill up from its pointer, the circle from its centre, as the hintuans'

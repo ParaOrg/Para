@@ -1,14 +1,15 @@
+import type { Direction } from './direction-schema';
 import { stationIndex } from './rail-fares';
-import type { RailLine } from './routes';
+import { directionEnds, railLineOf, type RailLine } from './routes';
 
 /**
- * The station codes the signs carry, "Quezon Avenue YL02": a two-letter
- * line prefix and two digits, in a pill of the line's colour beside the
- * station's name. The owner's research of 2026-10-08 (Figma, the Research
- * page's "Research: train and ferry lines", 4029:4059) and Wikipedia's
- * Template:Manila MRT station code. GL is the Green Line, LRT-1; PL the
- * Purple Line, LRT-2; YL the Yellow Line, MRT-3. The ferry has no codes,
- * and PRFS is no RailLine, so it never asks here.
+ * The station codes the signs carry, "Quezon Avenue YL02": a two-letter line
+ * prefix and two digits, in a pill of the line's colour beside the station's
+ * name. From the owner's research (Figma, the Research page's "Research:
+ * train and ferry lines", 4029:4059) and Wikipedia's Template:Manila MRT
+ * station code. GL is the Green Line, LRT-1; PL the Purple Line, LRT-2; YL
+ * the Yellow Line, MRT-3. The ferry has no codes, and PRFS is no RailLine, so
+ * it never asks here.
  *
  * The digits are the station's place in its line, counted from the north
  * or west end, and the tables in rail-fares know every station by its map
@@ -27,10 +28,56 @@ const PREFIX: Record<RailLine, string> = { 'LRT-1': 'GL', 'LRT-2': 'PL', 'MRT-3'
 /** Dr. Santos's number, LRT-1's south end, from which the codes count down as the table counts up. */
 const LRT1_SOUTH_END = 26;
 
-/** A station's code, `GL02`, by any of its names; null when the line's table has no such station. */
-export function stationCode(line: RailLine, name: string): string | null {
+/** A station's number, its code's digits, counted from the north or west end; null when the line's table has no such station. */
+export function stationNumber(line: RailLine, name: string): number | null {
   const index = stationIndex(line, name);
   if (index < 0) return null;
-  const number = line === 'LRT-1' ? LRT1_SOUTH_END - index : index + 1;
-  return `${PREFIX[line]}${String(number).padStart(2, '0')}`;
+  return line === 'LRT-1' ? LRT1_SOUTH_END - index : index + 1;
+}
+
+/** A station's code, `GL02`, by any of its names; null when the line's table has no such station. */
+export function stationCode(line: RailLine, name: string): string | null {
+  const number = stationNumber(line, name);
+  return number === null ? null : `${PREFIX[line]}${String(number).padStart(2, '0')}`;
+}
+
+/** Which way a train runs, as riders and the operators say it. */
+export type Bound = 'Northbound' | 'Southbound' | 'Eastbound' | 'Westbound';
+
+/**
+ * A line's two bounds: toward its lower numbers (the north or west end) and
+ * toward its higher ones. LRT-1 and MRT-3 run north–south; LRT-2 runs
+ * east–west, as LRTA calls its trains (the owner confirmed LRT-2's words).
+ */
+const BOUNDS: Record<RailLine, { towardLower: Bound; towardHigher: Bound }> = {
+  'LRT-1': { towardLower: 'Northbound', towardHigher: 'Southbound' },
+  'LRT-2': { towardLower: 'Westbound', towardHigher: 'Eastbound' },
+  'MRT-3': { towardLower: 'Northbound', towardHigher: 'Southbound' },
+};
+
+/**
+ * A train direction's bound, from its two ends' numbers: North Avenue YL01
+ * → Taft Avenue YL13 is Southbound. Null for any other direction, or an end
+ * the line's table does not know.
+ */
+export function railBound(v: Direction): Bound | null {
+  const line = railLineOf(v);
+  if (!line) return null;
+  const { from, to } = directionEnds(v);
+  const [start, end] = [stationNumber(line, from), stationNumber(line, to)];
+  if (start === null || end === null || start === end) return null;
+  return end > start ? BOUNDS[line].towardHigher : BOUNDS[line].towardLower;
+}
+
+/** The bound the other way round: Northbound's is Southbound, Eastbound's Westbound. */
+const OTHER_BOUND = {
+  Northbound: 'Southbound',
+  Southbound: 'Northbound',
+  Eastbound: 'Westbound',
+  Westbound: 'Eastbound',
+} as const satisfies Record<Bound, Bound>;
+
+/** The bound a train runs the other way round on its line. */
+export function otherBound(bound: Bound): Bound {
+  return OTHER_BOUND[bound];
 }

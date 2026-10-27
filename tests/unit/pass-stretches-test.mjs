@@ -181,7 +181,7 @@ import {
   passBoxes,
   stretchesOf,
   stretchesPast,
-} from '../../src/features/routes/geo/pass-stretches.ts';
+} from '../../src/features/routes/map/pass-stretches.ts';
 import { servedBy, directionLine } from '../../src/features/routes/model/routes.ts';
 
 /** usePassStretches' features before step 16, word for word (but for types). */
@@ -258,7 +258,7 @@ test('step 16 (a): asked again with the same direction and boxes, the very same 
 
 // The cheap-phone plan, step 13, 2026-10-05: each line file carries its
 // direction's stretches, worked out by the publish (scripts/publish/lineFile.mjs,
-// src/features/routes/geo/line-pass.ts), with a key: the hintuans they were worked out
+// src/features/routes/model/line-pass.ts), with a key: the hintuans they were worked out
 // against. The app takes them only when the index it has gives the same key,
 // and works them out as before otherwise.
 import {
@@ -268,7 +268,7 @@ import {
   passKey,
   publishedStretches,
   boxesReached,
-} from '../../src/features/routes/geo/line-pass.ts';
+} from '../../src/features/routes/model/line-pass.ts';
 import { lineFileText } from '../../scripts/publish/lineFile.mjs';
 import { checkMapData } from '../../scripts/checks/check-map-data.mjs';
 import { createHash } from 'node:crypto';
@@ -507,7 +507,7 @@ test("step 13: the rule's fingerprint is pinned to PASS_RULE", () => {
   assert.equal(
     fingerprint,
     RULE_PINS[PASS_RULE],
-    'what passStretches paints has changed: bump PASS_RULE in src/features/routes/geo/line-pass.ts, so line files published by the old rule are worked out again, and pin this fingerprint under the new number',
+    'what passStretches paints has changed: bump PASS_RULE in src/features/routes/model/line-pass.ts, so line files published by the old rule are worked out again, and pin this fingerprint under the new number',
   );
 });
 
@@ -554,7 +554,7 @@ test('step 13: the publish and the map data check import nothing from npm but zo
   };
   walk(new URL('scripts/publish/publish-map.mjs', root));
   assert.ok(
-    [...seen].some((u) => u.endsWith('/src/features/routes/geo/line-pass.ts')),
+    [...seen].some((u) => u.endsWith('/src/features/routes/model/line-pass.ts')),
     'the publish reaches line-pass.ts',
   );
   // The check the same workflow runs after it, which reads the app's map file shape since 2026-10-06 (question T).
@@ -564,7 +564,7 @@ test('step 13: the publish and the map data check import nothing from npm but zo
     'the check walked too',
   );
   assert.ok(
-    [...seen].some((u) => u.endsWith('/src/features/published-map/map-file.ts')),
+    [...seen].some((u) => u.endsWith('/src/features/routes/published/map-file.ts')),
     'they reach map-file.ts',
   );
   // zod reads the index's shape for them (ticket 08, 2026-10-07): the one package, and the
@@ -637,10 +637,10 @@ test('step 13: on a copy of public/data, every line file written with its stretc
       }
     };
     const { fetchIndex } = await import(
-      `../../src/features/published-map/api/fetch-index.ts?pass=${Date.now()}`
+      `../../src/features/routes/published/fetch-index.ts?pass=${Date.now()}`
     );
     const { fetchLine } = await import(
-      `../../src/features/published-map/api/fetch-line.ts?pass=${Date.now()}`
+      `../../src/features/routes/published/fetch-line.ts?pass=${Date.now()}`
     );
     const map = await fetchIndex();
     const appBoxes = passBoxes(map.hotspots);
@@ -693,10 +693,10 @@ test('step 13: the committed line files, with stretches or without, are painted 
     }
   };
   const { fetchIndex } = await import(
-    `../../src/features/published-map/api/fetch-index.ts?committed=${Date.now()}`
+    `../../src/features/routes/published/fetch-index.ts?committed=${Date.now()}`
   );
   const { fetchLine } = await import(
-    `../../src/features/published-map/api/fetch-line.ts?committed=${Date.now()}`
+    `../../src/features/routes/published/fetch-line.ts?committed=${Date.now()}`
   );
   const map = await fetchIndex();
   const boxes = passBoxes(map.hotspots);

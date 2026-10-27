@@ -125,17 +125,18 @@ const click = (x, y, o) => page.mouse.click(box0.x + x, box0.y + y, o);
 
 console.log('== Route drawing gestures (ported from the retired Windows-only uitest.mjs)');
 check(
-  'map loads and + New Route is enabled',
-  await page.getByRole('button', { name: '+ New Route' }).isEnabled(),
+  'map loads and the New + is enabled',
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).isEnabled(),
 );
 check(
   'pill shows the saved route count',
   /\d+ routes?/.test(await page.locator('body').innerText()),
 );
-await page.getByRole('button', { name: '+ New Route' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(200);
 check(
-  'clicking + New Route enters drawing mode',
+  '+ then Routes enters drawing mode',
   (await page.getByRole('button', { name: /Done/ }).count()) === 1,
 );
 const cx = box.width / 2,
@@ -294,7 +295,7 @@ await page.getByRole('button', { name: '✕' }).click();
 await page.waitForTimeout(200);
 check(
   'cancel returns to idle',
-  (await page.getByRole('button', { name: '+ New Route' }).count()) === 1,
+  (await page.getByRole('button', { name: 'New route, terminal or hintuan' }).count()) === 1,
 );
 
 // The reload above re-fit the map to saved routes (or a default view), so
@@ -303,7 +304,7 @@ await centerOnLand();
 
 console.log('== Hotspot gestures');
 const before = routerCalls;
-await page.getByRole('button', { name: '+ New hotspot' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Terminal/ }).click();
 await page.waitForTimeout(200);
 for (const [dx, dy] of [
@@ -375,8 +376,8 @@ check('Done enabled for the outline', await page.getByRole('button', { name: /Do
 await page.getByRole('button', { name: '✕' }).click();
 await page.waitForTimeout(200);
 check(
-  'cancel returns to idle with both buttons',
-  (await page.getByRole('button', { name: '+ New hotspot' }).count()) === 1,
+  'cancel returns to idle with the New +',
+  (await page.getByRole('button', { name: 'New route, terminal or hintuan' }).count()) === 1,
 );
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 await page.screenshot({ path: 'regression-final.png' });

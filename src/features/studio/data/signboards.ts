@@ -1,14 +1,16 @@
 import { cleanSignboardSvg } from '@/features/routes/model/signboard-svg';
 
+import { draftRefusal, signboardsDraft } from './draft-save';
+import { STUDIO_DRAFTS } from './flags';
 import { getSupabase, supabaseConfig } from './supabase';
 
 /**
- * A direction's signboards, as the editor uploads them (0010, the owner's ask
- * of 2026-10-01): SVG files in the `signboards` bucket, named by a fresh uuid
- * each, and the direction's `signboards` column listing them in order. The
- * publish copies them beside the map (scripts/publish/publish-map.mjs).
+ * A direction's signboards, as the editor uploads them (0010): SVG files in
+ * the `signboards` bucket, named by a fresh uuid each, and the direction's
+ * `signboards` column listing them in order. The publish copies them beside
+ * the map (scripts/publish/publish-map.mjs).
  *
- * Each file is cleaned before it is sent (signboardSvg.ts): what reaches the
+ * Each file is cleaned before it is sent (signboard-svg.ts): what reaches the
  * bucket is drawing only. Order of writes, so nothing is left pointing at a
  * missing file: an upload sends the file and then lists it; a removal
  * unlists it and then deletes the file, and a file left behind by a delete
@@ -26,14 +28,28 @@ export function signboardUrl(name: string): string {
 async function writeList(directionId: string, names: readonly string[]): Promise<string[]> {
   const client = getSupabase();
   if (!client) throw new Error('Supabase is not configured.');
+  // With drafts on, the list goes into the route's draft; the approved row stays.
+  if (STUDIO_DRAFTS) {
+    const { data: row, error: readError } = await client
+      .from('route_variant')
+      .select('route_id')
+      .eq('id', directionId)
+      .single();
+    if (readError) throw new Error(`The signboards were not saved: ${readError.message}`);
+    const refusal = draftRefusal(
+      await signboardsDraft({ id: directionId, routeId: row.route_id }, names),
+    );
+    if (refusal) throw new Error(`The signboards were not saved: ${refusal}`);
+    return [...names];
+  }
   const { data, error } = await client
     .from('route_variant')
-    .update({ signboards: names })
+    .update({ signboards: [...names] })
     .eq('id', directionId)
     .select('signboards')
     .single();
   if (error) throw new Error(`The signboards were not saved: ${error.message}`);
-  return (data as { signboards: string[] }).signboards;
+  return data.signboards;
 }
 
 /** A file cleaned and sent, then put last in the direction's list. */
@@ -62,9 +78,9 @@ export async function addSignboard(
 /**
  * Several files, each sent and listed in turn. `onStep` hears the list after
  * each one is in, so a file refused halfway leaves the editor holding the
- * boards already listed: it held the list from before them, and the next
- * change wrote that back over them (review of 2026-10-03, finding 11). The
- * refusal is then thrown, as one file's is.
+ * boards already listed: otherwise it holds the list from before them, and
+ * the next change writes that back over them. The refusal is then thrown, as
+ * one file's is.
  */
 export async function addSignboards(
   directionId: string,
@@ -93,7 +109,9 @@ export async function removeSignboard(
     directionId,
     current.filter((n) => n !== name),
   );
-  await client.storage.from(BUCKET).remove([name]);
+  // With drafts on, the approved list still names the file until the draft is
+  // approved: it stays, an unlisted file once approved, which the publish never reads.
+  if (!STUDIO_DRAFTS) await client.storage.from(BUCKET).remove([name]);
   return next;
 }
 

@@ -1,8 +1,7 @@
 /**
- * How BottomSheet's handle and drags decide, on a phone: every card's,
- * since the owner's ask of 2026-09-30 ("make it a universal rule as
- * component"). It also measures the status bar Max stands clear of
- * (measureSafeTop). The listeners that act on these are useSheetGestures'.
+ * How BottomSheet's handle and drags decide on a phone, for every card. It
+ * also measures the status bar Max stands clear of (measureSafeTop). The
+ * listeners that act on these are useSheetGestures'.
  */
 
 /** How far a drag must travel before it counts as a pull rather than a tap. */
@@ -10,22 +9,20 @@ export const DRAG_PX = 24;
 
 /**
  * Drops the `click` the browser sends after a tap on the handle. By the time
- * it is dispatched the sheet has already re-rendered, so the click is aimed at
- * whatever now lies under the finger: pulled down, the map, which would read
- * it as a tap on nothing and close the card; pulled up, whatever the sheet
- * now shows there — a hotspot's route, which it would open (seen 2026-09-29,
- * with the old rows and the RouteCards alike). Caught at the capture phase on
- * the document, before MapLibre or React sees it, and only where the finger
- * lifted: a tap on the sheet's ✕ right after lands elsewhere, and is one the
- * visitor meant. Forgotten when the next gesture starts, if none came — not
- * after a set time: on a busy page the click came a second after the finger
- * lifted, long after the 300 ms this once waited, and landed on the RouteCard
- * the sheet had pulled up under it (a phone-sized page slowed 20×, and the
- * Philcoa card on GitHub's runners once its routes flowed, 2026-09-29).
- * Armed after a drag too: a finger's sends no click, and the next touch ends
- * the watch; a mouse's clicks the handle it was held on, which toggled the
- * sheet straight back (the reviewer's note, fixed on the owner's word,
- * 2026-09-29).
+ * it is dispatched the sheet has already re-rendered, so the click is aimed
+ * at whatever now lies under the finger: pulled down, the map, which would
+ * read it as a tap on nothing and close the card; pulled up, whatever the
+ * sheet now shows there — a hotspot's route, which it would open. Caught at
+ * the capture phase on the document, before MapLibre or React sees it, and
+ * only where the finger lifted: a tap on the sheet's ✕ right after lands
+ * elsewhere, and is one the commuter meant. Forgotten when the next gesture
+ * starts, if none came, not after a set time: on a busy page the click can
+ * come a second after the finger lifted, and 300 ms was too short (seen on a
+ * phone-sized page slowed 20×, and on the Philcoa card on GitHub's runners
+ * once its routes flowed), so it landed on the RouteCard the sheet had pulled
+ * up under it. Armed after a drag too: a finger's sends no click, and the
+ * next touch ends the watch; a mouse's ends with a click on the handle it was
+ * held on, which would toggle the sheet straight back (the handle's onClick).
  */
 export function swallowTheTapsClick(x: number, y: number) {
   const hotspot = (e: MouseEvent) => {
@@ -46,19 +43,18 @@ export function swallowTheTapsClick(x: number, y: number) {
 }
 
 /**
- * The three heights of the owner's BottomSheetConfiguration (Figma 3815:5637,
- * 2026-09-30), on a phone: Low, the header and a trip's origin along the bottom (3814:3976);
- * Middle, about half the screen, where a trip opens (3813:3755, 3815:4040);
+ * The three heights of BottomSheetConfiguration (Figma 3815:5637), on a
+ * phone: Low, the header and a trip's origin along the bottom (3814:3976);
+ * Middle, two fifths of the screen, where a trip opens (3813:3755, 3815:4040);
  * Max, the whole screen, the header at the top and the rest scrolling under
- * it (3815:4306). Between Middle and Max there is no magnet (the owner's
- * ask, 2026-09-30: "the scrolling up for middle to max has no magnet, make
- * it freely"): a sheet let go there stays, a number — the share of the map
- * it shows, over Middle's and under 1.
+ * it (3815:4306). A drag always lets go on one of the three; a number, the
+ * share of Max a sheet shows, is a height set some other way.
  */
 export type Snap = 'low' | 'middle' | 'max' | number;
 
 /** What a sheet at `snap` is called on it (`data-snap`) and by a screen reader: a free height is `free`. */
 export type SnapName = 'low' | 'middle' | 'max' | 'free';
+/** The name a snap goes by, for `data-snap` and the handle's label. */
 export const snapName = (snap: Snap): SnapName => (typeof snap === 'number' ? 'free' : snap);
 
 /** Covering more of the map than Middle does: Max, or a free height. */
@@ -66,63 +62,63 @@ export const aboveMiddle = (snap: Snap) => snap === 'max' || typeof snap === 'nu
 
 /**
  * Where a tap on the handle, or Enter on it, takes the sheet: round, Low →
- * Middle → Max → Low (the owner's defaults, 2026-09-30); from a free height,
- * on up to Max. Pulls go by snapFor.
+ * Middle → Max → Low, the owner's defaults; from a free height, on up to Max.
+ * Pulls go by snapFor.
  */
 export function snapAfterTap(snap: Snap): Snap {
   return snap === 'low' ? 'middle' : snap === 'max' ? 'low' : 'max';
 }
 
 /**
- * A flick faster than this, in pixels a millisecond, goes to the end its way.
- * 0.5 at first; the owner, trying it (2026-09-30), found that "too
- * sensitive" — "even if I scroll up gently it doesn't stay on the middle" —
- * and asked for 7/10, 5/10 and 2/10 of it, then settled on 4/10: 0.5 ÷ 0.4.
- * With the speed read over the last moves only, a gentle swipe settles on
- * the nearest height.
+ * A flick faster than this, in pixels a millisecond, goes to the end its way
+ * even down, where a slower swipe steps down one height: 0.5 ÷ 0.4, the
+ * owner's pick from trying it. The speed is read over the last moves only.
  */
 const FLICK = 1.25;
 
 /** How far back the speed at release is read: only the finger's last moves count. */
 const RECENT_MS = 100;
 
-/** Middle shows this much of the map: 45% since the owner's ask of 2026-09-30 (55% before, as his frames had it). */
-const MIDDLE = 0.45;
+/** Middle shows this much of the map: 55%, the owner's pick. */
+const MIDDLE = 0.55;
 
 /**
- * What Low shows, the same for every card (the owner's 3817:6007,
- * 2026-09-30: "same height, same interaction, same motion"; 129 since his
- * 3869:5195, 2026-10-01, 137 before): the notch, the header and the top of
- * the first card, down past its title — cut to one line there (`sheet-low:`).
+ * What Low shows, the same for every card, the owner's rule (Figma 3817:6007,
+ * 3869:5195): the notch, the header and the top of the first card, down past
+ * its 24/32 title — cut to one line there (`sheet-low:`).
  */
-export const LOW_PX = 129;
+export const LOW_PX = 133;
 
 /**
  * What Max leaves of the map at the top, as Google Maps does: the status
  * bar's height, where the page runs behind it, and this strip under it, so
- * the visitor keeps their place (the owner's asks, 2026-10-02).
+ * the commuter keeps their place: the owner's pick.
  */
 export const MAX_STRIP_PX = 24;
-const MAX_GAP_CSS = `calc(env(safe-area-inset-top) + ${MAX_STRIP_PX}px)`;
+const MAX_GAP_CSS = `calc(var(--map-safe-top) + ${MAX_STRIP_PX}px)`;
 
-/** The status bar's height as the page reads it (BottomSheet measures it): 0 where the page hotspots under it. */
+/**
+ * The status bar's height as the page reads it (BottomSheet measures it): 0
+ * where the page does not run behind it.
+ */
 let safeTop = 0;
-export function setSafeTop(px: number) {
+function setSafeTop(px: number) {
   safeTop = Math.max(0, Math.round(px));
 }
 
-/**
- * The status bar's height as the page reads it, once: what Max leaves above
- * it besides its strip of map (sheetGesture). 0 where the page hotspots under it.
- */
+/** Whether measureSafeTop has read it: once a page. */
 let safeTopRead = false;
-export function measureSafeTop() {
-  if (safeTopRead || typeof document === 'undefined') return;
+/**
+ * Reads the status bar's height, what Max leaves above its strip of map, as
+ * `sheet` sees it: inside the studio's map box the variable is 0. 0 where the
+ * page does not run behind the bar.
+ */
+export function measureSafeTop(sheet: Element | null) {
+  if (safeTopRead || !sheet) return;
   safeTopRead = true;
   const probe = document.createElement('div');
-  probe.style.cssText =
-    'position:fixed;top:0;visibility:hidden;padding-top:env(safe-area-inset-top)';
-  document.body.appendChild(probe);
+  probe.style.cssText = 'position:fixed;top:0;visibility:hidden;padding-top:var(--map-safe-top)';
+  sheet.appendChild(probe);
   setSafeTop(parseFloat(getComputedStyle(probe).paddingTop) || 0);
   probe.remove();
 }
@@ -162,8 +158,7 @@ export function slideShowing(shown: number): string {
  * it took hold at `startY`: how much shows as it moves, and where it lands
  * let go (snapFor). Its speed at release is the finger's over its last
  * RECENT_MS only, so a swipe that slowed before lifting is read as slow,
- * however fast it began (the owner's "even if I scroll up gently it doesn't
- * stay on the middle", 2026-09-30); held still 80 ms before lifting, it is a
+ * however fast it began; held still 80 ms before lifting, it is a
  * placement, not a flick. The touch pull at Max and the pointer drag share it.
  */
 export function follow(startY: number, t: number, from: number, h: number) {
@@ -186,37 +181,50 @@ export function follow(startY: number, t: number, from: number, h: number) {
       const first = moves.find((m) => last - m.t <= RECENT_MS) ?? moves[moves.length - 1];
       const dt = last - first.t;
       const v = now - last > 80 || dt <= 0 ? 0 : (first.at - y) / dt;
-      return snapFor(shown(at), v, heights);
+      return snapFor(shown(at), v, heights, from);
     },
   };
 }
 
-/** Let go this close under Middle's top, it is Middle still; this close under Max's top, Max. */
-const MIDDLE_PULL_PX = 32;
-const MAX_PULL_PX = 64;
-
 /**
- * Where a drag lets go (the owner's asks of 2026-09-30: the sheet follows the
- * finger, fluid; then "like google maps and apple maps"). `shown` is how
- * much of the sheet is on screen as the finger lifts, `heights` what each
- * magnet shows, `velocity` the finger's speed upwards in px/ms (negative:
- * downwards). A flick goes to the end in its direction: up, to Max, from Low
- * or Middle alike; down, to Low, from Max or Middle alike — and down from
- * Low, it closes. Let go slowly between Middle and Max, it stays where it is
- * (the owner's "no magnet ... make it freely"), unless near enough either
- * end to be drawn in — up near the map's top, to Max ("when the scroll up
- * go over, make it to max"). Below Middle it settles on Middle or Low, the
- * nearer, or closes when less than half of Low still shows.
+ * Where a drag lets go, as Google's and Apple's maps do: the sheet follows the
+ * finger. `shown` is how much of the sheet is on screen as the finger lifts,
+ * `heights` what each magnet shows, `velocity` the finger's speed upwards in
+ * px/ms (negative: downwards), `from` how much showed when it took hold.
+ * A flick goes to the end in its direction: up, to Max, from Low or Middle
+ * alike; down, to Low, from Max or Middle alike. A slower swipe moves one
+ * height: up, Low to Middle and Middle to Max; down, Max to Middle and Middle
+ * to Low. It goes on a second height when let go past halfway to it: from Low
+ * to Max above halfway between Middle and Max, from Max to Low below halfway
+ * between Middle and Low. It never rests between heights. A sheet pulled below
+ * half of Low closes, however slowly, and so does a flick down from Low. A
+ * move shorter than a tap's returns to the height nearest where it was let go.
  */
 export function snapFor(
   shown: number,
   velocity: number,
   heights: ReturnType<typeof heightsFor>,
+  from: number,
 ): Snap | 'close' {
   if (velocity >= FLICK) return 'max';
   if (velocity <= -FLICK) return shown > heights.low + 1 ? 'low' : 'close';
-  if (shown >= heights.max - MAX_PULL_PX) return 'max';
-  if (shown > heights.middle + MIDDLE_PULL_PX) return shown / heights.max;
   if (shown < heights.low / 2) return 'close';
-  return Math.abs(heights.middle - shown) < Math.abs(heights.low - shown) ? 'middle' : 'low';
+  const travelled = shown - from;
+  if (travelled > DRAG_PX) {
+    if (from >= heights.middle - 1) return 'max';
+    return shown > (heights.middle + heights.max) / 2 ? 'max' : 'middle';
+  }
+  if (travelled < -DRAG_PX) {
+    if (from <= heights.middle + 1) return 'low';
+    return shown < (heights.low + heights.middle) / 2 ? 'low' : 'middle';
+  }
+  return nearest(shown, heights);
+}
+
+/** The height that shows closest to `shown`: Low, Middle or Max. */
+function nearest(shown: number, heights: ReturnType<typeof heightsFor>): 'low' | 'middle' | 'max' {
+  const stops = ['low', 'middle', 'max'] as const;
+  return stops.reduce((best, stop) =>
+    Math.abs(heights[stop] - shown) < Math.abs(heights[best] - shown) ? stop : best,
+  );
 }

@@ -13,11 +13,10 @@ interface CardActionsProps {
  * The editor passes these into a shared card's `actions` slot; the public map
  * passes nothing.
  *
- * The design system's Button in three voices (the owner, 2026-10-13): Edit
- * Primary, Extend Secondary, Delete Error, each a pill at its word's width as
- * the Button set draws them. Base size is 40 px tall, under the 44 px the
- * hand-made row kept on phones; the owner took the design's height as it is
- * until a phone size is drawn.
+ * The design system's Button in three voices: Edit Primary, Extend Secondary,
+ * Delete Error, each a pill at its word's width as the Button set draws them,
+ * Base size, 40 px tall, on phones too: touch targets are the size Figma
+ * draws them.
  */
 export function CardActions({ editLabel, onEdit, onDelete, onExtend }: CardActionsProps) {
   return (

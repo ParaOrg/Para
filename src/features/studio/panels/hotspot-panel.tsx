@@ -1,20 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { PASS_WITHIN_M } from '@/features/routes/geo/pass';
-import { ringCrossesItself } from '@/features/routes/geo/ring';
+import { TextField } from '@/design-system/primitives/text-field';
 import { coarse } from '@/features/routes/map/map-view';
-import { parseAliases, hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import { directionLine, type DirectionRow } from '@/features/routes/model/routes';
-import { bboxOf, bboxesOverlap, OVERVIEW_M } from '@/shared/utils/geo';
+import { parseAliases, type HotspotRow } from '@/features/routes/model/hotspots';
+import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
-import { terminalAlreadyAt } from './places';
-import { FIELD_TEXT, FOOTER, OVERLAY, PANEL } from './sheet';
+import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
+import { PassesThrough } from './passes-through';
+import { FOOTER, OVERLAY, PANEL } from './sheet';
+import { TerminalChecklist } from './terminal-checklist';
+import { useHotspotSave } from './use-hotspot-save';
+import { useNearLines } from './use-near-lines';
 import { linksThrough, directionsStartingIn } from '../data/hotspots-geometry';
-import { saveHotspot } from '../data/hotspots-write';
-import { linesOf } from '../data/live';
 import type { Drawing } from '../drawing/use-drawing';
 
-interface Props {
+interface HotspotPanelProps {
   draw: Drawing;
   /** The hotspot being edited, or null for a new one. */
   existing: HotspotRow | null;
@@ -28,31 +28,18 @@ interface Props {
   onCancel: () => void;
   /** Hears the row a save wrote, the moment it is in, to keep it beyond this panel. */
   onWritten?: (hotspotId: string) => void;
-}
-
-const field =
-  `mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 ${FIELD_TEXT} outline-none ` +
-  'focus:border-neutral-900';
-
-/** Directions grouped under their route's generated name, for both lists. */
-function groupBySignboard(directions: DirectionRow[]) {
-  const groups = new Map<string, { signboard: string; directions: DirectionRow[] }>();
-  for (const v of directions) {
-    const key = v.routeId;
-    const g = groups.get(key) ?? { signboard: v.route?.name ?? '(unnamed)', directions: [] };
-    g.directions.push(v);
-    groups.set(key, g);
-  }
-  return [...groups.values()].sort((a, b) => a.signboard.localeCompare(b.signboard));
+  /** A save stored as a draft (STUDIO_DRAFTS). */
+  onDrafted?: (hotspotId: string) => void;
 }
 
 /**
  * The save form for a hotspot outline. Name is the only required field.
  *
  * Terminal: a checklist of every direction, pre-ticked with the ones that
- * start inside the outline; the owner decides. Hintuan: a read-only preview of
- * the directions that pass under the outline — the polygon decides, and this
- * shows exactly what the save will write.
+ * start inside the outline; the owner decides (TerminalChecklist). Hintuan:
+ * a read-only preview of the directions that pass under the outline — the
+ * polygon decides, and this shows exactly what the save will write
+ * (PassesThrough).
  */
 export function HotspotPanel({
   draw,
@@ -63,7 +50,8 @@ export function HotspotPanel({
   onSaved,
   onCancel,
   onWritten,
-}: Props) {
+  onDrafted,
+}: HotspotPanelProps) {
   const area = draw.area;
   const kind = area?.kind ?? 'hintuan';
   const ring = draw.controlPoints;
@@ -71,62 +59,24 @@ export function HotspotPanel({
   const [name, setName] = useState(existing?.name ?? '');
   const [informal, setInformal] = useState(existing?.informal ?? '');
   // Also called and Note are off the form for now; a box that has them keeps them.
-  const [aliasText] = useState(existing?.aliases?.join(', ') ?? '');
-  const [note] = useState(existing?.note ?? '');
+  const aliasText = existing?.aliases?.join(', ') ?? '';
+  const note = existing?.note ?? '';
 
   // The informal names already in use, offered as suggestions so a second box
   // for the same place joins the group instead of starting "SM  Fairview".
-  const knownInformal = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const s of hotspots) {
-      if (s.id === existing?.id) continue;
-      const label = hotspotLabel(s);
-      seen.set(label.toLowerCase(), label);
-    }
-    return [...seen.values()].sort((a, b) => a.localeCompare(b));
-  }, [hotspots, existing?.id]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // The row as a save wrote it, when its links failed after: the retry
-  // updates it rather than inserting the box again (SavePanel's `written`).
-  // The studio keeps it in the outline itself (onWritten, adoptHotspot), so ✕
-  // and a reload keep it too (review of 2026-10-03); here otherwise, as in
-  // the stories.
-  const [writtenId, setOwnWritten] = useState<string | null>(null);
-  const setWrittenId = (id: string) => {
-    setOwnWritten(id);
-    onWritten?.(id);
-  };
+  const knownInformal = useMemo(
+    () => knownInformalNames(hotspots, existing?.id),
+    [hotspots, existing?.id],
+  );
+  const { busy, error, setError, writtenId, submit } = useHotspotSave({
+    onSaved,
+    onWritten,
+    onDrafted,
+  });
   const hotspotId = writtenId ?? existing?.id ?? area?.hotspotId ?? null;
 
-  // The list holds overviews (0009); a link's sequence is an index into the
-  // full line, so the directions the outline can reach are read in full
-  // before anything is worked out on them, and Save waits for them.
-  const [lined, setLined] = useState<DirectionRow[] | null>(null);
-  useEffect(() => {
-    let live = true;
-    // Reach: the starts-here distance, the pass rule and the overview's own slack.
-    const reach = bboxOf(ring, 100 + PASS_WITHIN_M + OVERVIEW_M);
-    const near = directions.filter((v) => {
-      const line = directionLine(v);
-      return line.length > 1 && bboxesOverlap(bboxOf(line), reach);
-    });
-    linesOf(near).then(
-      (full) => {
-        if (!live) return;
-        const byId = new Map(full.map((v) => [v.id, v]));
-        setLined(directions.map((v) => byId.get(v.id) ?? v));
-      },
-      (e: unknown) =>
-        live &&
-        setError(
-          `Couldn't read the lines near this outline: ${e instanceof Error ? e.message : String(e)}`,
-        ),
-    );
-    return () => {
-      live = false;
-    };
-  }, [ring, directions]);
+  // The directions the outline can reach, read in full; Save waits for them.
+  const lined = useNearLines(ring, directions, setError);
   const lines = lined ?? directions;
 
   const station = existing?.line ?? null;
@@ -139,18 +89,20 @@ export function HotspotPanel({
   const [startTicks, setStartTicks] = useState<Set<string> | null>(() =>
     existing ? new Set(existingLinks) : null,
   );
-  if (lined && startTicks === null) setStartTicks(new Set(directionsStartingIn(ring, lined)));
+  if (lined && startTicks === null)
+    setStartTicks(
+      new Set(
+        directionsStartingIn(
+          ring,
+          lined.filter((v) => !isLoop(v)),
+        ),
+      ),
+    );
   const [chosen, setChosen] = useState<ReadonlyMap<string, boolean>>(() => new Map());
-  const ticked = useMemo(() => {
-    const t = new Set(startTicks ?? []);
-    for (const [id, on] of chosen) {
-      if (on) t.add(id);
-      else t.delete(id);
-    }
-    return t;
-  }, [startTicks, chosen]);
+  const ticked = useMemo(() => tickedDirections(startTicks, chosen), [startTicks, chosen]);
 
-  const groups = useMemo(() => groupBySignboard(lines), [lines]);
+  // An ikot links the terminals on it by itself (terminalLinks), so it is not a choice here.
+  const groups = useMemo(() => groupBySignboard(lines.filter((v) => !isLoop(v))), [lines]);
   const hintuanGroups = useMemo(
     () => groupBySignboard(lines.filter((v) => throughIds.has(v.id))),
     [lines, throughIds],
@@ -160,153 +112,85 @@ export function HotspotPanel({
     setChosen((m) => new Map(m).set(id, !ticked.has(id)));
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (ringCrossesItself(ring)) {
-      setError(
-        'Two sides of this outline cross each other. Move a corner so the outline goes round the box once, then save.',
-      );
-      return;
-    }
-    if (kind === 'terminal') {
-      const other = terminalAlreadyAt(hotspots, { id: hotspotId, name, informal });
-      if (other) {
-        setError(
-          `${hotspotLabel(other)} already has a terminal ("${other.name}"). A place has one terminal; draw this one as a hintuan under the same name.`,
-        );
-        return;
-      }
-    }
-    setBusy(true);
-    try {
-      const saved = await saveHotspot(
-        {
-          hotspotId,
-          kind,
-          name,
-          informal,
-          aliases: parseAliases(aliasText, [name, informal]),
-          note,
-          ring,
-          directionIds: kind === 'terminal' ? [...ticked] : undefined,
-          directions: lines,
-        },
-        setWrittenId,
-      );
-      onSaved(saved);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setBusy(false);
-    }
-  }
-
   const label = kind === 'terminal' ? 'Terminal' : 'Hintuan';
   const swatch = kind === 'terminal' ? 'bg-sky-500' : 'bg-orange-500';
 
   return (
     <div className={OVERLAY}>
-      <form onSubmit={submit} className={PANEL}>
+      <form
+        onSubmit={(e) =>
+          void submit(
+            e,
+            { ring, kind, hotspots, hotspotId, name, informal },
+            {
+              kind,
+              name,
+              informal,
+              aliases: parseAliases(aliasText, [name, informal]),
+              note,
+              ring,
+              directionIds: kind === 'terminal' ? [...ticked] : undefined,
+              directions: lines,
+            },
+          )
+        }
+        className={PANEL}
+      >
         <h2 className="flex items-center gap-2 text-base font-medium text-neutral-900">
           <span className={`inline-block h-3 w-3 rounded-sm ${swatch}`} />
           {existing ? `Update this ${label.toLowerCase()}` : `Save this ${label.toLowerCase()}`}
         </h2>
         <p className="mt-1 text-xs text-neutral-500">{ring.length} corners</p>
 
-        <label className="mt-4 block text-xs font-medium text-neutral-700">
-          Ground name <span className="text-neutral-400">(as written on the ground)</span>
-          <input
+        <div className="mt-4">
+          <TextField
+            label={
+              <>
+                Ground name{' '}
+                <span className="text-content-disabled">(as written on the ground)</span>
+              </>
+            }
             required
             // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
             autoFocus={!coarse}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onClear={() => setName('')}
             placeholder={kind === 'terminal' ? 'SM Fairview Terminal A' : 'SM Fairview Ilalim'}
-            className={field}
           />
-        </label>
+        </div>
 
-        <label className="mt-3 block text-xs font-medium text-neutral-700">
-          Stop name <span className="text-neutral-400">(what people say — optional)</span>
-          <input
+        <div className="mt-3">
+          <TextField
+            label={
+              <>
+                Stop name{' '}
+                <span className="text-content-disabled">(what people say — optional)</span>
+              </>
+            }
             value={informal}
             onChange={(e) => setInformal(e.target.value)}
+            onClear={() => setInformal('')}
             list="parapo-informal-names"
+            aria-describedby="parapo-stop-name-hint"
             placeholder="SM Fairview"
-            className={field}
           />
           <datalist id="parapo-informal-names">
             {knownInformal.map((n) => (
               <option key={n} value={n} />
             ))}
           </datalist>
-          <span className="mt-1 block text-[11px] font-normal text-neutral-400">
+          <p id="parapo-stop-name-hint" className="mt-1 text-[11px] text-content-disabled">
             Boxes that share a hotspot name are one hotspot, whatever is written on each. Route
             names read it
             {kind === 'terminal' ? '; a hotspot has one terminal.' : '.'}
-          </span>
-        </label>
+          </p>
+        </div>
 
         {kind === 'terminal' ? (
-          <fieldset className="mt-4">
-            <legend className="text-xs font-medium text-neutral-700">
-              Routes that stage here{' '}
-              <span className="font-normal text-neutral-400">
-                — pre-ticked: routes starting inside the outline
-              </span>
-            </legend>
-            {groups.length === 0 ? (
-              <p className="mt-2 text-sm text-neutral-500">No saved routes yet.</p>
-            ) : (
-              <ul className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
-                {groups.map((g) => (
-                  <li key={g.signboard}>
-                    <p className="text-sm font-medium text-neutral-900">{g.signboard}</p>
-                    <ul className="mt-1 space-y-1">
-                      {g.directions.map((v) => (
-                        <li key={v.id}>
-                          <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 pointer-coarse:min-h-11">
-                            <input
-                              type="checkbox"
-                              checked={ticked.has(v.id)}
-                              onChange={() => toggle(v.id)}
-                              className="h-4 w-4 accent-neutral-900"
-                            />
-                            <span>{v.name}</span>
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </fieldset>
+          <TerminalChecklist groups={groups} ticked={ticked} onToggle={toggle} />
         ) : (
-          <div className="mt-4">
-            <p className="text-xs font-medium text-neutral-700">
-              Passes through{' '}
-              <span className="font-normal text-neutral-400">— decided by the outline</span>
-            </p>
-            {hintuanGroups.length === 0 ? (
-              <p className="mt-2 text-sm text-neutral-500">
-                No saved route passes under this outline yet. It will pick up routes drawn through
-                it later.
-              </p>
-            ) : (
-              <ul className="mt-2 max-h-56 space-y-1.5 overflow-y-auto pr-1 text-sm">
-                {hintuanGroups.map((g) => (
-                  <li key={g.signboard} className="text-neutral-700">
-                    <span className="font-medium text-neutral-900">{g.signboard}</span>
-                    <span className="text-neutral-500">
-                      {' '}
-                      · {g.directions.map((v) => v.name).join(' · ')}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <PassesThrough groups={hintuanGroups} />
         )}
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

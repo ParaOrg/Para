@@ -99,7 +99,7 @@ await recentre();
 await page.waitForTimeout(300);
 
 // ---- Hotspot: open menu, choose Hintuan
-await page.getByRole('button', { name: '+ New hotspot' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Hintuan/ }).click();
 check(
   'toolbar shows Hintuan mode',
@@ -195,20 +195,36 @@ await page.screenshot({ path: 'hotspot-trace.png' });
 await page.getByRole('button', { name: '✕' }).click();
 
 // ---- Regression: a 2-point route still snaps to roads
-await page.getByRole('button', { name: '+ New Route' }).click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(200);
 // Two clicks on the centred saved route's own vertices (savedLine, the same
 // route the view is centred on), each at least 120 px from every earlier pick
 // and clear of the cards and the toolbar: on a road, so the router (which
 // refuses a click more than 25 m from one) routes the gap. Fixed offsets from
 // the centre can land inside a block, and a refused gap is drawn freehand.
+// The band is measured from the canvas centre, so the picks do not move when
+// the map box's height does. At zoom 15 a pixel is about 3 m; the studio's
+// one-time fit to the saved routes can still land after a recentre (the routes
+// arrive late), and at its zoom a pixel is about 100 m, which puts a click far
+// from the road. So the view is put back and left to settle first.
+await waitForSource(page, 'saved-routes');
+for (let attempt = 0; attempt < 5; attempt++) {
+  await recentre();
+  await page.waitForTimeout(500);
+  const settled = await page.evaluate(() => {
+    const m = window.__map;
+    return !m.isMoving() && m.getZoom() === 15;
+  });
+  if (settled) break;
+}
 const onRoad = await page.evaluate((line) => {
   const m = window.__map,
     { clientWidth: w, clientHeight: h } = m.getCanvas();
   const picked = [];
   for (const c of line) {
     const p = m.project(c);
-    if (p.x < 80 || p.x > w - 80 || p.y < 80 || p.y > h - 140) continue;
+    if (p.x < 80 || p.x > w - 80 || p.y < h / 2 - 320 || p.y > h / 2 + 260) continue;
     if (picked.every(([x, y]) => Math.hypot(p.x - x, p.y - y) >= 120)) picked.push([p.x, p.y]);
     if (picked.length === 2) break;
   }

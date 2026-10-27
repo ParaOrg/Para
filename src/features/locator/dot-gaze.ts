@@ -7,16 +7,14 @@ import { directionLine, type Direction } from '@/features/routes/model/routes';
 import { M_PER_DEG, nearestOnSegment, type LngLat } from '@/shared/utils/geo';
 
 /**
- * The dot's gaze at what was just picked (the owner's ask, 2026-10-01: "when
- * I tap the route it should look the route for maybe 3 sec then go back
- * again to normal"; routes, and hintuans too, and still when what it looks
- * at is off the screen). Its eyes leave their wandering for the way to it,
- * hold there, and wander again (locator.css). The face it wears stays: only
- * the eyes turn.
+ * The dot's gaze at what was just picked: routes, and hintuans too, and still
+ * when what it looks at is off the screen. Its eyes leave their wandering for
+ * the way to it, hold there, and wander again (locator.css). The face it wears
+ * stays: only the eyes turn.
  */
 
 /** How long the dot gazes before its eyes wander again. */
-export const GAZE_MS = 3000;
+const GAZE_MS = 3000;
 
 /**
  * How far its eyes go from the middle toward what it gazes at, in px of the
@@ -98,9 +96,8 @@ export interface Picks {
  * The public map's subjects, first wins (useDotGaze): a hintuan on the trip
  * card, a place, a trip, a card, or the routes a tap on the map lists —
  * keyed by route, not direction, so SWITCH is no pick. A route is gazed at
- * where it comes nearest the visitor at `from` (their fix). Built where the
- * dot is (VisitorLocation) since 2026-10-05, word for word as CommuterApp
- * built them.
+ * where it comes nearest the commuter at `from` (their fix). Built where the
+ * dot is (CommuterLocation).
  */
 export function gazeSubjects(p: Picks, from: LngLat | null): Subject[] {
   const nearestLit = (lines: LngLat[][]) => (from ? nearestOnLines(from, lines) : null);
@@ -114,7 +111,7 @@ export function gazeSubjects(p: Picks, from: LngLat | null): Subject[] {
     },
     { key: p.trip?.routeId ?? null, at: () => nearestLit(p.trip ? [directionLine(p.trip)] : []) },
     {
-      key: p.highlight && `${p.highlight.where}:${p.highlight.from}`,
+      key: p.highlight && `${p.highlight.where}:${p.highlight.card}`,
       at: () => nearestLit(p.litDirections.map(directionLine)),
     },
     { key: routesOf(p.candidates), at: () => nearestLit(p.litDirections.map(directionLine)) },

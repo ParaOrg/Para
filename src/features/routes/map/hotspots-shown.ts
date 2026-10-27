@@ -4,8 +4,8 @@ import { siblingsOf } from '../model/places';
 
 /*
  * What a tap marks on the saved hotspots, worked out from what is chosen and
- * what the sheet asks about. Pure; useSavedHotspots memoises each. Split from
- * useSavedHotspots.ts, 2026-09-29.
+ * what the sheet asks about. Pure; useSavedHotspots memoises boxMarks and placeHull, and
+ * useSavedHotspotsLayers reads boxState.
  */
 
 /** A box's mark: lit (chosen, or under the tap while the sheet asks), a sibling of the chosen one, both, or the chosen one. */
@@ -50,4 +50,21 @@ export function placeHull(
   return chosen && siblings.length > 0
     ? convexHull([chosen, ...siblings].flatMap((s) => hotspotRing(s)))
     : [];
+}
+
+/**
+ * A box's feature state for its mark (none: undefined): lit (striped)
+ * when chosen, or under the tap while the sheet asks; a sibling when it
+ * shares the chosen box's place.
+ */
+export function boxState(mark: BoxMark | undefined): {
+  lit: boolean;
+  sibling: boolean;
+  chosen: boolean;
+} {
+  return {
+    lit: mark === 'lit' || mark === 'lit+sibling' || mark === 'chosen',
+    sibling: !!mark?.includes('sibling'),
+    chosen: mark === 'chosen',
+  };
 }

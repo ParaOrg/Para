@@ -1,0 +1,54 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { contributionKeys } from './contribution-keys';
+import {
+  fetchContributionDetail,
+  fetchContributions,
+  type ContributionPeriod,
+} from './contributions-read';
+import { deleteContribution, hideContribution, showContribution } from './contributions-write';
+
+/** Asked only when signed in: row security answers no one else, and an empty list would mislead. */
+export function useContributionsQuery(
+  days: ContributionPeriod,
+  showHidden: boolean,
+  isSignedIn: boolean,
+) {
+  return useQuery({
+    queryKey: contributionKeys.list(days, showHidden),
+    queryFn: () => fetchContributions(days, showHidden),
+    enabled: isSignedIn,
+  });
+}
+
+export function useContributionDetailQuery(id: string | null) {
+  return useQuery({
+    queryKey: contributionKeys.detail(id ?? ''),
+    queryFn: () => fetchContributionDetail(id ?? ''),
+    enabled: id !== null,
+  });
+}
+
+/** Deletes an upload, then forgets it: every list it was in is read again, and its trail dropped. */
+export function useDeleteContributionMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: deleteContribution,
+    onSuccess: (_, id) => {
+      client.removeQueries({ queryKey: contributionKeys.detail(id) });
+      // The phone's count of uploads drops with it.
+      void client.invalidateQueries({ queryKey: [...contributionKeys.all, 'phone'] });
+      return client.invalidateQueries({ queryKey: [...contributionKeys.all, 'list'] });
+    },
+  });
+}
+
+/** Hides an upload with a note, or shows it again; every list is read again, the trail kept. */
+export function useHideContributionMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isHiding, note }: { id: string; isHiding: boolean; note: string }) =>
+      isHiding ? hideContribution(id, note) : showContribution(id),
+    onSuccess: () => client.invalidateQueries({ queryKey: [...contributionKeys.all, 'list'] }),
+  });
+}

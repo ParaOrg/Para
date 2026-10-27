@@ -1,24 +1,22 @@
+import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import type {
-  LineStringGeoJSON,
   TransportMode,
   UnnamedDirectionRow,
   DirectionRow,
 } from '@/features/routes/model/routes';
 import type { LngLat, Segment } from '@/shared/utils/geo';
-import { joinSegments, overviewOf, roundLngLat } from '@/shared/utils/geo';
 
+import { directionRows } from './direction-rows';
 import { NOTHING_CHANGED } from './hotspots-write';
 import { DIRECTION_SELECT, unnamedFromListed } from './live';
 import { requireSupabase } from './supabase';
-import type { BorrowPart } from '../drawing/borrow';
 
 /**
  * What the save panel collects. Route fields — the ends, the via, the
  * signboard, the mode, the fare note — belong to the route and are shared by
  * both its directions. With routeId set they are written only when
- * `writeRoute` says so: Edit route changes them (the owner's ask of
- * 2026-09-29 — "Phase 1 – Novaliches" had to become "Bagong Silang Kanan 5 –
- * Novaliches" without a delete); drawing a route's return trip leaves them.
+ * `writeRoute` says so: Edit route changes them, so a route's ends can be
+ * corrected without a delete; drawing a route's return trip leaves them.
  */
 export interface SaveInput {
   routeId: string | null;
@@ -29,9 +27,11 @@ export interface SaveInput {
   signboard: string;
   mode: TransportMode;
   fareNote: string;
-  /** The two ends, as hotspots. The name is generated from them. */
-  headHotspotId: string;
-  tailHotspotId: string;
+  /** The two ends, as hotspots. The name is generated from them. Null on a loop, which has neither. */
+  headHotspotId: string | null;
+  tailHotspotId: string | null;
+  /** A loop: goes round one way, no ends, one direction, called by its signboard (0021). Set when the route is made. */
+  isLoop: boolean;
   /** Only when another route shares both ends by a different road. */
   via: string;
   /** false = head to tail; true = the way back. */
@@ -48,8 +48,8 @@ export interface SaveInput {
 }
 
 // The column objects below carry the database's names (fare_note,
-// head_stop_id, control_points): this file is the boundary where the
-// glossary's names become the table's (CONTEXT.md; ticket 07, 2026-10-07).
+// head_stop_id, control_points): this file and direction-rows.ts are the
+// boundary where the glossary's names become the table's (CONTEXT.md).
 
 const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
 
@@ -59,9 +59,10 @@ const blankToNull = (s: string) => (s.trim() === '' ? null : s.trim());
  * A new route is born with **both** of its directions: the one just drawn, and
  * the other as an empty slot with no line. That is what lets a card always be
  * flipped, gives the studio a list of what is still undrawn, and makes "draw
- * the return trip" a fill rather than an insert. Decided 2026-09-21.
+ * the return trip" a fill rather than an insert.
  *
- * Writes require a signed-in editor who owns the row; RLS enforces it. The row
+ * Writes require a signed-in editor; any editor may change any row (0015); RLS
+ * enforces it. The row
  * comes back as the list reads it (DIRECTION_SELECT, without the drawing just
  * sent) and without its generated name: the caller has the hotspot list and
  * runs nameDirections on it.
@@ -72,10 +73,10 @@ const UNIQUE_VIOLATION = '23505';
 /**
  * The route with these ends already exists. Three cases:
  *
- * - It has no directions: an orphan — a save whose second request failed,
- *   before or after the client learned to clean up after itself. Use it: same
- *   ends, same name, nobody can reach it from a card. Its facts are brought up
- *   to what was just typed, and both directions are inserted as for a new one.
+ * - It has no directions: an orphan — a save whose second request failed and
+ *   whose route was not taken back out. Use it: same ends, same name, nobody
+ *   can reach it from a card. Its facts are brought up to what was just typed,
+ *   and both directions are inserted as for a new one.
  * - This direction is still its empty slot: the line fills it. This is how a
  *   return trip drawn with Extend — from another route's line — lands on the
  *   route its outbound created, with nothing to pick. The route's facts are
@@ -98,27 +99,84 @@ async function claimExistingRoute(
   if (error) throw new Error(error.message);
   if (!data)
     throw new Error('A route with these ends already exists, but it could not be read back.');
-  const directions =
-    (data.route_variant as { id: string; reversed: boolean; shape: unknown }[] | null) ?? [];
+  const directions = data.route_variant;
   if (directions.length === 0) {
     const { error: updateError } = await client.from('route').update(facts).eq('id', data.id);
     if (updateError) throw new Error(updateError.message);
-    return { routeId: data.id as string, fillSlot: false };
+    return { routeId: data.id, fillSlot: false };
   }
   const mine = directions.find((d) => d.reversed === reversed);
   // No row this way round at all (a slot deleted by hand, a route from
   // before 0006) is a slot to fill too: saveDirection's update finds nothing
-  // and its insert is the honest repair. It was refused as drawn already
-  // (review of 2026-10-03).
-  if (!mine || mine.shape === null) return { routeId: data.id as string, fillSlot: true };
+  // and its insert is the honest repair. It is not a duplicate, so it must not
+  // be refused as drawn already.
+  if (!mine || mine.shape === null) return { routeId: data.id, fillSlot: true };
   throw new Error(DRAWN_ALREADY);
 }
+
+/**
+ * The loop with this signboard and via already exists. As claimExistingRoute,
+ * with the ikot's one direction: an orphan is used (its facts brought up to
+ * what was just typed), a line still to be drawn is filled, and a drawn one is
+ * refused. Found by the unique index's own fold, in code: PostgREST's `ilike`
+ * would read `_` and `%` in a signboard as wildcards. There are few ikots.
+ */
+async function claimExistingLoop(
+  client: ReturnType<typeof requireSupabase>,
+  facts: {
+    signboard: string | null;
+    mode: TransportMode;
+    fare_note: string | null;
+    via: string | null;
+  },
+): Promise<{ routeId: string; fillSlot: boolean }> {
+  const { data, error } = await client
+    .from('route')
+    .select('id, signboard, via, route_variant(id, reversed, shape)')
+    .eq('is_loop', true);
+  if (error) throw new Error(error.message);
+  const same = data.find(
+    (r) => foldLoopKey(r.signboard, r.via) === foldLoopKey(facts.signboard, facts.via),
+  );
+  if (!same)
+    throw new Error('An ikot with this signboard already exists, but it could not be read back.');
+  const directions = same.route_variant;
+  if (directions.length === 0) {
+    // Its via is what found it, so it is left as it is.
+    const { signboard, mode, fare_note } = facts;
+    const { error: updateError } = await client
+      .from('route')
+      .update({ signboard, mode, fare_note })
+      .eq('id', same.id);
+    if (updateError) throw new Error(updateError.message);
+    return { routeId: same.id, fillSlot: false };
+  }
+  const mine = directions.find((d) => !d.reversed);
+  if (!mine || mine.shape === null) return { routeId: same.id, fillSlot: true };
+  throw new Error(LOOP_TAKEN);
+}
+
+/**
+ * An ikot's signboard and via as route_loop_unique folds them: case and the
+ * spaces at either end do not tell two apart, and no via is the empty one.
+ */
+export function foldLoopKey(signboard: string | null, via: string | null): string {
+  const fold = (text: string | null) => (text ?? '').trim().toLowerCase();
+  return `${fold(signboard)}\u0000${fold(via)}`;
+}
+
+/** The index a second ikot with the same signboard and via runs into (0021). */
+const LOOP_UNIQUE_INDEX = 'route_loop_unique';
 
 /** The one sentence for route_ends_unique refusing an edit. */
 export const ENDS_TAKEN =
   'Another route already runs between these two places. Give one of them a via to tell them apart, or pick other ends.';
 
-const DRAWN_ALREADY =
+/** The one sentence for route_loop_unique refusing a loop. */
+export const LOOP_TAKEN =
+  'Another ikot already has this signboard. Give one of them a via to tell them apart.';
+
+export const DRAWN_ALREADY =
   'A route between these two places already has this direction drawn. To change it, open it and press Edit route.';
 
 export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionRow> {
@@ -128,25 +186,31 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
   let newRoute = !routeId;
   // Whether the route row is this call's own insert. Only then may a failed
   // save take it back out: a route claimed from claimExistingRoute may be
-  // another save's, in flight, and deleting it cascaded that save's line
-  // away when two saves of one new route overlapped (review of 2026-10-03).
+  // another save's, in flight, and deleting it would cascade that save's line
+  // away when two saves of one new route overlap.
   let createdRoute = false;
   if (routeId && input.writeRoute) {
     // The route row first: its ends are what both directions' names are
     // made of, and a clash with another route's ends is refused before any
     // line is touched. Terminal links stay as the owner set them.
+    // An ikot has no ends to write, and is made one or not and stays so (0021):
+    // its update never names them, nor is_loop.
+    const facts = {
+      signboard: blankToNull(input.signboard),
+      mode: input.mode,
+      fare_note: blankToNull(input.fareNote),
+      via: blankToNull(input.via),
+    };
     const { error } = await client
       .from('route')
-      .update({
-        signboard: blankToNull(input.signboard),
-        mode: input.mode,
-        fare_note: blankToNull(input.fareNote),
-        head_stop_id: input.headHotspotId,
-        tail_stop_id: input.tailHotspotId,
-        via: blankToNull(input.via),
-      })
+      .update(
+        input.isLoop
+          ? facts
+          : { ...facts, head_stop_id: input.headHotspotId, tail_stop_id: input.tailHotspotId },
+      )
       .eq('id', routeId);
-    if (error?.code === UNIQUE_VIOLATION) throw new Error(ENDS_TAKEN);
+    if (error?.code === UNIQUE_VIOLATION)
+      throw new Error(error.message.includes(LOOP_UNIQUE_INDEX) ? LOOP_TAKEN : ENDS_TAKEN);
     if (error) throw new Error(error.message);
   }
   if (!routeId) {
@@ -155,76 +219,42 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
       mode: input.mode,
       fare_note: blankToNull(input.fareNote),
     };
-    const ends = {
-      head_stop_id: input.headHotspotId,
-      tail_stop_id: input.tailHotspotId,
-      via: blankToNull(input.via),
-    };
-    const { data, error } = await client
-      .from('route')
-      .insert({ ...facts, ...ends })
-      .select('id')
-      .single();
+    const via = blankToNull(input.via);
+    const row = input.isLoop
+      ? { ...facts, via, is_loop: true, head_stop_id: null, tail_stop_id: null }
+      : { ...facts, via, head_stop_id: input.headHotspotId, tail_stop_id: input.tailHotspotId };
+    const { data, error } = await client.from('route').insert(row).select('id').single();
     if (error && error.code === UNIQUE_VIOLATION) {
-      const claimed = await claimExistingRoute(client, ends, facts, input.reversed);
+      const { headHotspotId: head, tailHotspotId: tail } = input;
+      let claimed: { routeId: string; fillSlot: boolean };
+      if (input.isLoop) {
+        claimed = await claimExistingLoop(client, { ...facts, via });
+      } else if (head && tail) {
+        claimed = await claimExistingRoute(
+          client,
+          { head_stop_id: head, tail_stop_id: tail, via },
+          facts,
+          input.reversed,
+        );
+      } else {
+        throw new Error('A route needs a place at each end.');
+      }
       routeId = claimed.routeId;
       newRoute = !claimed.fillSlot;
     } else if (error) {
       throw new Error(error.message);
     } else {
-      routeId = data.id as string;
+      routeId = data.id;
       createdRoute = true;
     }
   }
 
-  // Six decimals, about 0.1 m (roundLngLat): the router's points carry 15 or
-  // more, and those digits were half of every row. The line is joined from
-  // the rounded segments, so a segment's end and the shape's point are the
-  // same number, and the publish script's rounding then changes nothing.
-  const segments: Segment[] = input.segments.map((s) => ({
-    ...s,
-    coordinates: s.coordinates.map(roundLngLat),
-  }));
-  const shape: LineStringGeoJSON = {
-    type: 'LineString',
-    coordinates: joinSegments(segments),
-  };
-  const drawn = {
-    route_id: routeId,
-    reversed: input.reversed,
-    control_points: input.controlPoints.map(roundLngLat),
-    segments,
-    shape,
-    // What the list draws (0009): the same line, thinned at 5 m.
-    overview:
-      shape.coordinates.length > 1
-        ? ({ type: 'LineString', coordinates: overviewOf(shape.coordinates) } as LineStringGeoJSON)
-        : null,
-    borrowed_from: input.borrowedFrom,
-    borrowed_part: input.borrowedFrom ? input.borrowedPart : null,
-    borrowed_m: input.borrowedFrom ? input.borrowedMetres : null,
-  };
+  const { drawn, slot, shape } = directionRows(input, routeId);
 
   if (newRoute) {
-    // The other direction, as an empty slot. Every key is spelled out: rows
-    // inserted together must share one column list, and PostgREST fills a
-    // key one row lacks with null — not the column's default. Sent bare, the
-    // slot arrived as control_points = null and the table refused it
-    // (2026-09-22, the owner's first route).
-    const slot = {
-      route_id: routeId,
-      reversed: !input.reversed,
-      control_points: [] as LngLat[],
-      segments: [] as Segment[],
-      shape: null,
-      overview: null,
-      borrowed_from: null,
-      borrowed_part: null,
-      borrowed_m: null,
-    };
     const { data, error } = await client
       .from('route_variant')
-      .insert([drawn, slot])
+      .insert(slot ? [drawn, slot] : [drawn])
       .select(DIRECTION_SELECT);
     if (error) {
       // Two requests, not one transaction: the route row is already in.
@@ -238,9 +268,7 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
         await client.from('route').delete().eq('id', routeId);
       throw new Error(error.message);
     }
-    const saved = (data as unknown[]).find(
-      (v) => (v as { reversed: boolean }).reversed === input.reversed,
-    );
+    const saved = data.find((v) => v.reversed === drawn.reversed);
     if (!saved) throw new Error('Saved the route but could not read the direction back');
     return unnamedFromListed(saved, shape);
   }
@@ -248,16 +276,16 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
   // An existing route: either an edit of a drawn direction, or the first
   // drawing of the empty slot its route was born with. Both are updates —
   // the unique index means there is never a third row to insert. Without a
-  // direction in hand only an empty slot is a target (`shape is null`): a
-  // return trip started on a route whose both ways are drawn once matched the
-  // drawn row and replaced its line (review finding 2).
+  // direction in hand only an empty slot is a target (`shape is null`), so a
+  // return trip started on a route whose both ways are drawn cannot match a
+  // drawn row and replace its line.
   const target = input.directionId
     ? client.from('route_variant').update(drawn).eq('id', input.directionId)
     : client
         .from('route_variant')
         .update(drawn)
         .eq('route_id', routeId)
-        .eq('reversed', input.reversed)
+        .eq('reversed', drawn.reversed)
         .is('shape', null);
 
   const { data, error } = await target.select(DIRECTION_SELECT).maybeSingle();
@@ -283,39 +311,36 @@ export async function saveDirection(input: SaveInput): Promise<UnnamedDirectionR
  * Delete one direction. Emptying a direction leaves its slot: a route always
  * has two. The route itself goes only when both of its directions are gone.
  *
- * The row is emptied, not deleted — deleting it left a route with one row, no
- * slot to redraw into and a card that could not flip, and `+ New Route` with
- * the same ends was then refused as "already drawn" (review finding 3). What
- * deleting the row did on its own is done by hand: its hotspot links go (the
+ * The row is emptied, not deleted: deleting it would leave a route with one
+ * row, no slot to redraw into and a card that cannot flip. What deleting the
+ * row would do on its own is done here by hand: its hotspot links go (the
  * cascade), and a line extended from it forgets its parent (`on delete set
  * null`, 0008) and keeps its own copy.
  *
- * Every step reads its error (finding 16): a refused clean-up is said, not
- * left as a route nobody can reach.
+ * Every step reads its error: a refused clean-up is said, not left as a route
+ * nobody can reach.
  */
 export async function deleteDirection(direction: DirectionRow): Promise<void> {
   const client = requireSupabase();
   const emptied = await client
     .from('route_variant')
     .update({
-      control_points: [] as LngLat[],
-      segments: [] as Segment[],
+      control_points: [],
+      segments: [],
       shape: null,
       overview: null,
       borrowed_from: null,
       borrowed_part: null,
       borrowed_m: null,
-      // Its boards go with its line: the emptied slot kept them, and the
-      // next line drawn into it would have shown another jeep's boards
-      // (review of 2026-10-03). The files stay in the bucket; the publish
-      // copies only listed ones.
-      signboards: [] as string[],
+      // Its boards go with its line: kept, they would show on the next line
+      // drawn into the slot, which is another jeep's. The files stay in the
+      // bucket; the publish copies only listed ones.
+      signboards: [],
     })
     .eq('id', direction.id)
     .select('id');
   if (emptied.error) throw new Error(emptied.error.message);
-  // RLS refusing an update is no rows, not an error: said, not reloaded as
-  // if done (review of 2026-10-03, finding 6).
+  // RLS refusing an update is no rows, not an error: said, not reloaded as if done.
   if (!emptied.data?.length) throw new Error(NOTHING_CHANGED);
   const unlinked = await client.from('route_stop').delete().eq('route_variant_id', direction.id);
   if (unlinked.error) throw new Error(unlinked.error.message);

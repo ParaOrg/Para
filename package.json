@@ -9,36 +9,44 @@
     "build": "tsc --noEmit && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "check": "npm run format:check && npm run lint && npm run build && npm run test:unit",
+    "check": "npm run format:check && npm run lint && npm run docs:architecture:check && npm run build && npm run test:unit",
     "test": "npm run test:unit",
     "test:unit": "node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs --test \"tests/unit/*-test.mjs\"",
     "check:data": "node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/checks/check-map-data.mjs",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "docs:architecture": "node scripts/docs/architecture.mjs",
+    "docs:architecture:check": "node scripts/docs/architecture.mjs --check",
+    "health": "node scripts/checks/health.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Roviicc/ParaPo.git"
+    "url": "git+https://github.com/ParaOrg/Para.git"
   },
   "type": "module",
   "engines": {
     "node": ">=22.12"
   },
   "bugs": {
-    "url": "https://github.com/Roviicc/ParaPo/issues"
+    "url": "https://github.com/ParaOrg/Para/issues"
   },
-  "homepage": "https://github.com/Roviicc/ParaPo#readme",
+  "homepage": "https://github.com/ParaOrg/Para#readme",
   "dependencies": {
+    "@capacitor-community/background-geolocation": "^1.3.1",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "@supabase/supabase-js": "^2.115.0",
+    "@tanstack/react-query": "5.104.4",
     "maplibre-gl": "^6.7.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@eslint/js": "^10.0.1",
     "@maplibre/maplibre-gl-style-spec": "^26.4.1",
     "@storybook/addon-docs": "^10.6.0",

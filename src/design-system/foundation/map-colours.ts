@@ -21,8 +21,12 @@ export const MAP_COLOURS = {
   'Map/HotspotsCard/Hintuan/border-primary': '#0d542b', // green/900
   'Map/HotspotsCard/Terminal/surface': '#0069a8', // sky/700
   'Map/HotspotsCard/Terminal/border-primary': '#024a70', // sky/900
-  'Map/LocatorIndicatorOverlay/surface': '#8ec5ff', // blue/300, at 15%
-  'Map/LocatorIndicatorOverlay/border': '#155dfc', // blue/600, at 75%
+  'Map/LocatorIndicatorOverlay/surface': '#8b7aff', // parabrand/500, at 15%
+  'Map/LocatorIndicatorOverlay/border': '#4900be', // parabrand/800, at 75%
+  // Provisional: not named in Figma yet. A contributor's trail, as /contribute/ draws it live.
+  'Map/Trail/papunta': '#1447e6', // blue/700, the blue of brand-surface
+  'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface
+  'Map/Trail/mark': '#8200db', // purple/700, apart from both ways
   'Map/Rail/LightRailWayOne/surface': '#1d7739', // light-rail-way-one/600
   'Map/Rail/LightRailWayOne/surface-pale': '#b7f5ca', // light-rail-way-one/200
   'Map/Rail/LightRailWayOne/border-primary': '#12612a', // light-rail-way-one/700
@@ -31,15 +35,19 @@ export const MAP_COLOURS = {
   'Map/Rail/LightRailWayTwo/surface-pale': '#d0b9ff', // light-rail-way-two/200
   'Map/Rail/LightRailWayTwo/border-primary': '#382859', // light-rail-way-two/700
   'Map/Rail/LightRailWayTwo/Timeline/surface': '#372b4f', // light-rail-way-two/800
-  'Map/Rail/MetroRailWayThree/surface': '#e2b709', // metro-rail-way-three/600
-  'Map/Rail/MetroRailWayThree/surface-pale': '#fae385', // metro-rail-way-three/200
+  'Map/Rail/MetroRailWayThree/surface': '#edc319', // metro-rail-way-three/600
+  'Map/Rail/MetroRailWayThree/surface-pale': '#fff1b8', // metro-rail-way-three/200
   'Map/Rail/MetroRailWayThree/border-primary': '#ac8b0b', // metro-rail-way-three/700
   'Map/Rail/MetroRailWayThree/Timeline/surface': '#967906', // metro-rail-way-three/800
+  'Map/Ferry/surface': '#003399', // ferry/600
+  'Map/Ferry/surface-pale': '#bccfff', // ferry/200
+  'Map/Ferry/border-primary': '#002a80', // ferry/700
+  'Map/Ferry/Timeline/surface': '#002366', // ferry/800
 } as const satisfies Record<`Map/${string}`, `#${string}`>;
 
 /**
- * The opacity Figma gives a Map/… surface with its colour (the owner's
- * HotspotOverlayCard, 3837:11308): the map paints it as `fill-opacity`.
+ * The opacity Figma gives a Map/… surface with its colour (HotspotOverlayCard,
+ * 3837:11308): the map paints it as `fill-opacity`.
  */
 export const MAP_OPACITY = {
   'Map/OverlayCard/Hintuan/surface': 0.3,
@@ -51,9 +59,9 @@ export const MAP_OPACITY = {
 
 /**
  * The RouteCards' Card/<livery>/surface, in hex, for the map: a picked
- * card's routes, and an open trip's line, wear their card's colour (the
- * owner's ask, 2026-09-29). Each hex is the primitive its token aliases,
- * held to tokens.css by tests/unit/map-colours-test.mjs as the Map/… ones are.
+ * card's routes, and an open trip's line, wear their card's colour. Each hex
+ * is the primitive its token aliases, held to tokens.css by
+ * tests/unit/map-colours-test.mjs as the Map/… ones are.
  */
 export const CARD_COLOURS = {
   'Card/red/surface': '#9f0712', // red/800
@@ -67,38 +75,62 @@ export const CARD_COLOURS = {
 /**
  * The RouteCards' Card/<livery>/surface-pale, in hex, for the map: the rest
  * of an open trip's line past a picked hintuan, from there to where the trip
- * goes, in the card's own hue paled (the owner's ask, 2026-10-12: the
- * remaining line should be surface-pale of the selected colour). Each hex is
- * the primitive its token aliases, each hue's 200, held to tokens.css by
+ * goes, in the card's own hue paled. Each hex is the primitive its token
+ * aliases, each hue's 300, held to tokens.css by
  * tests/unit/map-colours-test.mjs as CARD_COLOURS is.
  */
 export const CARD_PALE_COLOURS = {
-  'Card/red/surface-pale': '#ffc9c9', // red/200
-  'Card/orange/surface-pale': '#ffd6a8', // orange/200
-  'Card/violet/surface-pale': '#ddd6ff', // violet/200
-  'Card/rose/surface-pale': '#ffccd3', // rose/200
-  'Card/fuchsia/surface-pale': '#f6cfff', // fuchsia/200
-  'Card/pink/surface-pale': '#fccee8', // pink/200
+  'Card/red/surface-pale': '#ffa2a2', // red/300
+  'Card/orange/surface-pale': '#ffb86a', // orange/300
+  'Card/violet/surface-pale': '#c4b4ff', // violet/300
+  'Card/rose/surface-pale': '#ffa1ad', // rose/300
+  'Card/fuchsia/surface-pale': '#f4a8ff', // fuchsia/300
+  'Card/pink/surface-pale': '#fda5d5', // pink/300
 } as const satisfies Record<`Card/${string}/surface-pale`, `#${string}`>;
 
 /**
- * Everything else the map paints — the public map's and the editor's — in
- * the value it has always had: colours no Figma variable names yet. One file
- * for every colour the map's painters paint, so
- * tests/unit/map-colours-test.mjs can fail on a colour written in any other
- * of their .ts files (stage 9 of the clean-up, 2026-09-29). The map's
- * stylesheet (hintuanPin.css) is not read by it; its few raw
- * colours wait on the owner's list. Each is the owner's to name
- * in Figma; until then the key says what it paints, and moving one to a
- * Map/… token is changing only this file.
+ * Everything else the map paints — the public map's and the editor's: colours
+ * no Figma variable names yet. One file for every colour the map's painters
+ * paint, so tests/unit/map-colours-test.mjs can fail on a colour written in
+ * any other of their .ts files. The map's stylesheets (hintuan-pin.css and its
+ * neighbours) hold no colour of their own. Until a colour is named in Figma,
+ * the key says what it paints, and moving one to a Map/… token changes only
+ * this file.
  */
 export const MAP_PAINT = {
   'Paint/casing': '#ffffff', // white: the rim under every line, circles' fill, text halos
   'Paint/hit': '#000000', // the tap area, drawn at opacity 0
-  'Paint/basemap-transit': '#3d5a73', // Gray, detailed: terminal and station names
-  'Paint/basemap-landmark': '#6b6b6b', // Gray, detailed: the other landmarks' names
-  'Paint/basemap-building': 'rgb(224, 224, 219)', // Gray, detailed: a building, a shade firmer than Positron's
+  'Paint/basemap-transit': '#3d5a73', // Monochrome: rail station names
+  'Paint/basemap-landmark': '#6b6b6b', // Monochrome: the other landmarks' names
+  'Paint/basemap-building': 'rgb(224, 224, 219)', // Monochrome: a building, a shade firmer than Positron's
   'Paint/basemap-building-edge': 'rgb(204, 204, 201)',
+  'Paint/basemap-street': '#ffffff', // Monochrome: a street from z14, and a bridge's deck
+  'Paint/basemap-street-far': 'rgb(224, 224, 224)', // Positron's own street colour, below z14
+  'Paint/basemap-street-edge': 'rgb(218, 218, 214)', // a street's edge, a shade under the buildings'
+  'Paint/basemap-bridge-edge': 'rgb(176, 176, 172)', // a bridge's or flyover's edge, firmer so it reads as above
+  'Paint/basemap-skyway-edge': 'rgb(150, 150, 146)', // three levels up and more: the Skyway's edge, firmer still
+  'Paint/basemap-tunnel': 'rgb(234, 234, 231)', // an underpass, paler than a street, under a dashed edge
+  'Paint/basemap-path': 'rgb(196, 196, 192)', // a path or footbridge, dashed
+  'Paint/basemap-house-number': '#9a9a96', // Monochrome: house numbers from z17
+  'Paint/terrain-shadow': 'rgb(96, 90, 80)', // Terrain: a slope away from the light, a warm gray
+  'Paint/terrain-highlight': '#ffffff', // a slope toward it
+  'Paint/terrain-accent': 'rgb(122, 116, 104)', // the steepest ground
+  'Paint/basemap-photo-label': '#ffffff', // Satellite, labelled: street and place names over the photo
+  'Paint/basemap-photo-halo': '#1a1a1a', // near-black, so a name reads over a bright roof
+  // Colour: Apple Maps' light palette, read off a screenshot.
+  'Paint/daylight-land': '#f7f3eb', // the ground, a warm cream; homes the same
+  'Paint/daylight-water': '#8edbf6', // rivers, the bay, lakes
+  'Paint/daylight-green': '#d5efbe', // parks, cemeteries, grass and woods
+  'Paint/daylight-commercial': '#fef5e4', // shops, offices and malls, a pale warm yellow
+  'Paint/daylight-building': '#efe9df', // a touch darker than the ground
+  'Paint/daylight-building-edge': '#e4ddd1',
+  'Paint/daylight-building-3d': '#fdfbf8', // a building standing up from z14: near white, so its walls stay soft
+  'Paint/daylight-highway': '#dde1e1', // motorways and their ramps: EDSA, the Skyway
+  'Paint/daylight-highway-edge': '#cdd2d2',
+  'Paint/daylight-avenue': '#e1e3e7', // the avenues: trunk, primary to tertiary, and links
+  'Paint/daylight-avenue-edge': '#ced2d9', // a shade darker
+  'Paint/daylight-street': '#ffffff', // streets and service roads, white
+  'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
   'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
   'Paint/draw-borrow': '#2563eb', // blue/600: the stretch an Extend borrows

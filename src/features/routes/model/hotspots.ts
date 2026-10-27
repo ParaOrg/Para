@@ -2,9 +2,8 @@ import type { Hotspot } from './hotspot-schema';
 import { polygonToRing, type Ring } from '../geo/ring';
 
 /**
- * The rows' shapes are hotspot-schema.ts's (Zod, since ticket 08 of the
- * restructure follow-ups, 2026-10-07); the types derive from them and are
- * re-exported here, beside the rules, so the model keeps one door.
+ * The rows' shapes are hotspot-schema.ts's (Zod); the types derive from them
+ * and are re-exported here, beside the rules, so the model keeps one door.
  */
 export type { Hotspot, HotspotKind, HotspotLink, HotspotRow } from './hotspot-schema';
 export type { PointGeoJSON, PolygonGeoJSON } from './geojson-schema';
@@ -22,6 +21,20 @@ export function hotspotRing(s: Hotspot): Ring {
  */
 export function hotspotLabel(s: Pick<Hotspot, 'name' | 'informal'>): string {
   return s.informal?.trim() || s.name;
+}
+
+/**
+ * The name a hotspot's label on the map shows: a station's without its line
+ * in front, "MRT-3 Boni Station" → "Boni Station" (the owner's call); the
+ * line drawn through it in its colour says which line already. Every other
+ * name as it is, and a station's too when it does not start with its line.
+ * The saved name keeps the line: cards and searches read it whole.
+ */
+export function nameOnMap(s: Pick<Hotspot, 'name' | 'line'>): string {
+  const name = normaliseName(s.name);
+  const prefix = s.line ? `${normaliseName(s.line)} `.toLowerCase() : '';
+  if (!prefix || !name.toLowerCase().startsWith(prefix)) return s.name;
+  return name.slice(prefix.length) || s.name;
 }
 
 /** Trim and collapse inner spaces, so "SM  Fairview " and "SM Fairview" are one group. Case is left alone. */

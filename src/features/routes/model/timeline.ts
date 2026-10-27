@@ -8,15 +8,16 @@ import type { Ring } from '../geo/ring';
 
 /*
  * A direction as a string of places: the hintuans its line passes, in order,
- * and the timeline its card reads. Split from hotspots.ts, 2026-09-29.
+ * and the timeline its card reads.
  */
 
 /**
  * The hintuans a line passes, in the order it reaches them. `index` is
  * where along the line, which is what `route_stop.sequence` stores.
- * Terminals are not listed: a route's ends come from the route itself, and
- * neither are the hintuans this route does not stop at (`servedBy`): the
- * jeep hintuans under a train's track, the stations over a jeep's road.
+ * Terminals are not listed, since a route's ends come from the route itself,
+ * except on a loop, which has no ends. Neither are the hintuans this route
+ * does not stop at (`servedBy`): the jeep hintuans under a train's track, the
+ * stations over a jeep's road.
  */
 export function hintuansAlong<S extends Hotspot>(
   line: readonly LngLat[],
@@ -36,10 +37,13 @@ export function hintuansAlong<S extends Hotspot>(
  * Whether hintuansAlong lists this hotspot for this route, wherever the line
  * runs: a hintuan with a box, at which the route stops (`servedBy`). Split
  * out with passedAt and inPassingOrder for the babaan sides, which ask it of
- * only the boxes their line cuts (the cheap-phone plan, step 8, 2026-10-04).
+ * only the boxes their line cuts.
  */
 export function listedAlong(hotspot: Hotspot, route: ServedRoute): boolean {
-  return hotspot.kind === 'hintuan' && !!hotspot.area && servedBy(hotspot, route);
+  // On a loop a terminal's box is a place on it like any hintuan's: it has no ends to be the end of.
+  const isPlace =
+    hotspot.kind === 'hintuan' || (route.isLoop === true && hotspot.kind === 'terminal');
+  return isPlace && !!hotspot.area && servedBy(hotspot, route);
 }
 
 /**
@@ -53,9 +57,9 @@ export function passedAt(
   hotspot: Hotspot,
 ): { index: number; at: number } | null {
   const index = passIndex(line, ring);
-  // Two boxes met on one segment, a snapped road's 20–30 m, tied and kept
-  // in the order the hotspots were read (review of 2026-10-03): the one
-  // whose middle is further along that segment is reached later.
+  // Two boxes met on one segment, a snapped road's 20–30 m, tied and kept in
+  // the order the hotspots were read: the one whose middle is further along
+  // that segment is reached later.
   return index >= 0
     ? {
         index,
@@ -72,11 +76,11 @@ export const inPassingOrder = (
 ): number => a.index - b.index || a.at - b.at;
 
 /**
- * The hotspots a direction is linked to, in the order its line reaches
- * them: by `sequence`, and two on one segment (the same sequence) by
- * how far along the line their middles are — the card's timeline, as
- * hintuansAlong orders the save panel's (review of 2026-10-03). `line` may
- * be the overview: a position along it is, an index into it is not.
+ * The hotspots a direction is linked to, in the order its line reaches them:
+ * by `sequence`, and two on one segment (the same sequence) by how far along
+ * the line their middles are — the card's timeline, as hintuansAlong orders
+ * the save panel's. `line` may be the overview: a position along it is, an
+ * index into it is not.
  */
 export function orderLinked<S extends Hotspot>(
   linked: readonly { hotspot: S; sequence: number }[],
@@ -98,6 +102,9 @@ export interface TimelineRow {
   kind: HotspotKind;
 }
 
+/** A row is its place, never a box: "SM Fairview", not the terminal's long name. */
+const toRow = (s: Hotspot): TimelineRow => ({ id: s.id, label: hotspotLabel(s), kind: s.kind });
+
 /**
  * A direction as a string of places: where it leaves from, the hintuans on
  * the way in order, where it is going. What a signboard is, generated.
@@ -109,14 +116,13 @@ export interface Timeline {
 }
 
 /**
- * The timeline of a direction with these ends. `along` is the hintuans in
- * the order the line reaches them. A row is a hintuan, named by its hotspot
- * name: the boxes of one place passed one after another — a mini hotspot on
- * each side of the road, or the several of SM Fairview — are one row, and a
- * box's own ground name is for the hotspot card, not the route. The ends'
- * places are left out of the middle: the rider is already getting off
- * there. The owner's model of 2026-09-28, replacing "SM Fairview – Main
- * Babaan" rows. When the line was drawn from the far end (the save panel
+ * The timeline of a direction with these ends. `along` is the hintuans in the
+ * order the line reaches them. A row is a hintuan, named by its hotspot name:
+ * the boxes of one place passed one after another — a mini hotspot on each
+ * side of the road, or the several of SM Fairview — are one row, and a box's
+ * own ground name is for the hotspot card, not the route. The ends' places
+ * are left out of the middle: the rider is already getting off there. The
+ * owner's model. When the line was drawn from the far end (the save panel
  * allows it with a warning) and `lineStart` says so, the middle is turned
  * round to read in travel order. The row keeps the first box's id.
  */
@@ -127,26 +133,101 @@ export function timelineFor(
   along: readonly Hotspot[],
   lineStart?: LngLat,
 ): Timeline {
-  // An end is its place, never a box: "SM Fairview", not the terminal's long name.
-  const row = (s: Hotspot): TimelineRow => ({ id: s.id, label: hotspotLabel(s), kind: s.kind });
   const [from, to] = reversed ? [tail, head] : [head, tail];
   const endPlaces = new Set([head, tail].filter((s) => !!s).map((s) => placeKey(s)));
   let between = along.filter((s) => s.kind === 'hintuan' && !endPlaces.has(placeKey(s)));
   if (lineStart && from && to && drawnFromTheEnd(lineStart, from, to)) between = between.reverse();
   const rows = between
     .filter((s, i) => i === 0 || placeKey(s) !== placeKey(between[i - 1]))
-    .map(row);
-  return { from: from ? row(from) : null, to: to ? row(to) : null, between: rows };
+    .map(toRow);
+  return { from: from ? toRow(from) : null, to: to ? toRow(to) : null, between: rows };
 }
 
 /**
  * Whether a line that starts at `lineStart` was drawn from the far end of its
  * ride: its first point nearer where the ride goes than where it leaves. The
- * stored points run whichever way the owner drew them, and the save panel
+ * stored points run whichever way the editor drew them, and the save panel
  * lets a return be drawn from the far end with only a warning, so the ends
- * decide, not the drawing. The one travel-order rule (the review's 6.5): the
- * timeline's middle, the ride-to cut and the arrows' line all turn on it.
+ * decide, not the drawing. The one travel-order rule: the timeline's middle,
+ * the ride-to cut and the arrows' line all turn on it.
  */
 export function drawnFromTheEnd(lineStart: LngLat, from: Hotspot, to: Hotspot): boolean {
   return haversine(lineStart, to.point.coordinates) < haversine(lineStart, from.point.coordinates);
+}
+
+/**
+ * A loop's rows, in the order its line passes them: one row per place, the
+ * boxes of a place passed one after another a single row (as timelineFor
+ * makes them), and a place the line starts and ends in, the seam of a closed
+ * line, one row, not two. The row keeps its first box's id.
+ */
+export function loopRows(along: readonly Hotspot[]): TimelineRow[] {
+  const rows = along.filter((s, i) => i === 0 || placeKey(s) !== placeKey(along[i - 1])).map(toRow);
+  const first = along[0];
+  const last = along[along.length - 1];
+  const seamIsOnePlace = rows.length > 1 && first && last && placeKey(first) === placeKey(last);
+  return seamIsOnePlace ? rows.slice(0, -1) : rows;
+}
+
+/**
+ * A loop's trip as a timeline: it leaves from its tip and, going round, comes
+ * back to it, so the tip is both `from` and `to` and `between` is every other
+ * row in the order the jeep goes round past the tip. The tip is a row's id
+ * (loopTip chooses it); one that is no row of these, or none, is the first.
+ */
+export function loopTimeline(along: readonly Hotspot[], tipRowId: string | null = null): Timeline {
+  const rows = loopRows(along);
+  if (rows.length === 0) return { from: null, to: null, between: [] };
+  // The row itself first: a place passed twice by two boxes has two rows, and each is a tip.
+  // Failing that, another box of the tip's place is the same tip, as it is for a ride's cut.
+  const exact = rows.findIndex((r) => r.id === tipRowId);
+  const tipBox = along.find((s) => s.id === tipRowId);
+  const tipKey = tipBox ? placeKey(tipBox) : null;
+  const found =
+    exact >= 0
+      ? exact
+      : rows.findIndex((r) => {
+          const box = along.find((s) => s.id === r.id);
+          return box ? placeKey(box) === tipKey : false;
+        });
+  const tip = Math.max(0, found);
+  return {
+    from: rows[tip],
+    to: rows[tip],
+    between: [...rows.slice(tip + 1), ...rows.slice(0, tip)],
+  };
+}
+
+/**
+ * Where a loop's trip starts, as a row's id: the place the trip was opened
+ * from, else the one nearest the commuter, else the first its line passes.
+ * Chosen once, when the trip opens, and never moved under the rider. `along`
+ * is the hotspots in the order the line reaches them.
+ */
+export function loopTip(
+  along: readonly Hotspot[],
+  near: LngLat | null,
+  openedFrom: Hotspot | null,
+): string | null {
+  const rows = loopRows(along);
+  if (rows.length === 0) return null;
+  const rowByPlace = new Map<string, TimelineRow>();
+  for (const r of rows) {
+    const box = along.find((a) => a.id === r.id);
+    if (box) rowByPlace.set(placeKey(box), r);
+  }
+  const rowOf = (s: Hotspot) => rowByPlace.get(placeKey(s)) ?? null;
+  if (openedFrom) {
+    const opened = rowOf(openedFrom);
+    if (opened) return opened.id;
+  }
+  if (near && along.length > 0) {
+    let best = along[0];
+    for (const s of along) {
+      if (haversine(s.point.coordinates, near) < haversine(best.point.coordinates, near)) best = s;
+    }
+    const nearest = rowOf(best);
+    if (nearest) return nearest.id;
+  }
+  return rows[0].id;
 }

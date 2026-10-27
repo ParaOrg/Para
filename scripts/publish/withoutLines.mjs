@@ -12,9 +12,11 @@ export const EVERY_LINE = { modes: LINE_MODES, lines: LINES };
 
 /**
  * The map with some lines left out: every direction of their modes, every
- * station of theirs (a stop whose `line` is one of them) and every link to
- * either — for the shapes an app installed before them reads
- * (src/features/published-map/map-file.ts). Such an app does not know their mode is a
+ * station of theirs (a stop whose `line` is one of them), every direction of
+ * a route that ends at one of those stations (a jeep to an LRT-2 station: the
+ * app would find no hotspot for its end), and every link to any of them —
+ * for the shapes an app installed before them reads
+ * (src/features/routes/published/map-file.ts). Such an app does not know their mode is a
  * line's: it would draw a jeep stopping at one of their stations, and their
  * route at every jeep hintuan along its track or river. Shape 4 has them
  * all; shape 3 every line but the ferry; shapes 1 and 2 none. The owner's
@@ -24,11 +26,15 @@ export const EVERY_LINE = { modes: LINE_MODES, lines: LINES };
  * `ids` are what was left out.
  */
 export function withoutLines({ variants, stops, links }, { modes, lines }) {
-  const directionIds = new Set(
-    variants.filter((v) => modes.includes(v.route?.mode)).map((v) => v.id),
-  );
   const hotspotIds = new Set(
     stops.filter((s) => s.line && lines.includes(s.line)).map((s) => s.id),
+  );
+  const endsAtLeftOut = (route) =>
+    hotspotIds.has(route?.head_stop_id) || hotspotIds.has(route?.tail_stop_id);
+  const directionIds = new Set(
+    variants
+      .filter((v) => modes.includes(v.route?.mode) || endsAtLeftOut(v.route))
+      .map((v) => v.id),
   );
   return {
     variants: variants.filter((v) => !directionIds.has(v.id)),

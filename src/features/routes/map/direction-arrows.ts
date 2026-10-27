@@ -22,30 +22,25 @@ import { REST_LAYER, restDrawn } from './ride-rest';
 import { ROUTES_HIT_LAYER } from './tap';
 
 /**
- * Which way the jeep goes, drawn on the lit directions only; each end of
- * each is circled and named by EndTitles.tsx (the owner's asks of
- * 2026-09-25; the circles were a layer of this hook's until his ask of
- * 2026-10-12 made them the hintuan's own dot).
+ * Which way the jeep goes, drawn on the lit directions only; each end of each
+ * is circled and named by end-titles.tsx.
  *
- * Decided with the owner 2026-09-23: marks *inside* the line, never as a
- * second offset line, only on what is lit — on every resting line they would
- * be clutter once a road carries three routes — and **flowing smoothly**
- * along it from the start of the ride to its end, for as long as it is lit
- * (STEP_MS). No glow: he asked for it
- * and then asked for it gone. What is lit is the chosen direction; or, since
- * 2026-09-29, the Selected RouteCard's directions (a route list's card or a
- * hotspot's); or else every route a list shows, the way round it shows them
- * (since 2026-09-25), or a hotspot's cards do (2026-09-29). Where two of
- * those share a road they flow as one stream, not two.
+ * The marks sit *inside* the line, never as a second offset line, and only on
+ * what is lit — on every resting line they would be clutter once a road
+ * carries three routes — and **flow smoothly** along it from the start of the
+ * ride to its end, for as long as it is lit (STEP_MS); no glow. These are the
+ * owner's calls. What is lit is the chosen direction; or the Selected
+ * RouteCard's directions (a route list's card or a hotspot's); or else every
+ * route a list shows, the way round it shows them, or a hotspot's cards do.
+ * Where two of those share a road they flow as one stream, not two.
  *
- * The mark is a white chevron (near-black, Arrow/Inverse, on a yellow or a
- * mist line, until mist left on 2026-09-30 and yellow on 2026-10-12; since
- * 2026-09-29: useRideColours), one to a place and all alike, with
- * no trail: his call the night of 2026-09-23, after white arrows, a train of
- * four fading chevrons ("not good visually") and jeepneys (parked for a
- * Simulate button, PLAN.md). It is a chevron bigger than the line and cut off
- * by it: its arms run out to the line's edges and stop there, so none of it
- * shows outside the line.
+ * The mark is a chevron, white (Map/RouteLine/Arrow/Rest) or near-black on
+ * MRT-3's yellow (…/Arrow/Inverse), as useRideColours sets it; one to a place
+ * and all alike, with no trail: the owner's call over white arrows and a
+ * train of four fading chevrons. Jeepneys are parked for a Simulate button
+ * (PLAN.md). It is a chevron bigger than the line and cut off by it: its arms
+ * run out to the line's edges and stop there, so none of it shows outside the
+ * line.
  *
  * MapLibre can neither slide a mark along a line nor clip one to a line's
  * width, so each chevron is a small polygon we draw ourselves: every frame,
@@ -54,7 +49,8 @@ import { ROUTES_HIT_LAYER } from './tap';
  * zoom — crisp at every size, where a picture scaled from 5 px to 13 px
  * would blur or shimmer. The line handed in is already in travel order
  * (`travelLine`), so chevron number one leaves the terminal the title names,
- * whichever end it was drawn from.
+ * whichever end it was drawn from; a ride picked backwards turns it round
+ * (flowLines).
  */
 
 const SRC = 'direction-arrows';
@@ -64,26 +60,41 @@ const SAME_END_M = 150;
 
 /**
  * One lit ride: its direction, its line in travel order, and the places it
- * runs from and to; `flow`, the stretch to a picked hintuan, where the ride
- * now ends (the owner's ask, 2026-10-02; HintuanLabel's HintuanEnd) — the
- * line and its ends staying whole; and `rest`, the way on from there to the
- * end (useRideTo's ridden), which useRideRest draws in the card's pale and
- * whose end circle wears it too. The chevrons flow on along the rest, white
- * on the pale as on the line (the owner's ask, 2026-10-13: "continue the
- * arrow into the pale lines", and of two colours tried, "I love the
- * white"); they stopped at the pick from 2026-10-02 until then.
+ * runs from and to; and `pale`, the way not ridden when an end is picked on
+ * its trip, after a start or not (useRideTo's ridden): the line on either
+ * side of the ride. useRideRest draws it in the card's pale, and an end
+ * circle on it wears the pale too and loses its S or E (EndTitles), the
+ * picks' pins carrying them. The chevrons flow on along the pale, in the
+ * colour they wear on the line (the owner's call). `isBackwards`: an end
+ * picked above the start, ridden back along the line, and the chevrons along
+ * the whole of it flow from the S to the E, the line itself still in travel
+ * order for its ends. `isUnmarked`: a start picked on its trip with no ride
+ * drawn, alone or with an end the line can't take it to: both its ends lose
+ * their S and E, the start's pin carrying the S; its `pale` is then the whole
+ * line, the ends on it (useLitRides).
  */
 export interface Ride {
   id?: string;
   line: readonly LngLat[];
-  flow?: readonly LngLat[];
-  rest?: readonly LngLat[];
+  pale?: readonly (readonly LngLat[])[];
+  isBackwards?: boolean;
+  isUnmarked?: boolean;
   from: string;
   to: string;
   fromHotspot?: string | null;
   toHotspot?: string | null;
   /** Its route's code: a train's names its line, LRT-1, so its ends are named with their stations' codes (EndTitles). */
   routeCode?: string | null;
+  /**
+   * A loop has no ends. With its trip open, its line leaves from its tip and
+   * comes back to it, and the tip gets one circle named for it (`from`,
+   * `fromHotspot`), wearing what it is to the ride: `'start'` (the S, at rest
+   * and on a ride from the tip), `'end'` (the E, where a ride with a start
+   * ends) or `'bare'` (a ride passes through it or stops short of it: a plain
+   * circle, no name). Lit in a list or on a card, `'none'`: no circle at all.
+   * Absent on every other ride.
+   */
+  loopEnd?: 'none' | 'start' | 'end' | 'bare';
 }
 
 /**
@@ -91,10 +102,15 @@ export interface Ride {
  * place that carries the name, its hotspot, when the ride says which, and
  * the directions of every lit ride that ends there, this way round
  * (`rides`, on the named one only: the rest are empty); `of`, the ride's own
- * direction, when it has an id; and `paled`, where it is the end of a ride
- * past a picked hintuan, along the rest drawn in the card's pale.
+ * direction, when it has an id; `paled`, where the ride picked on its trip
+ * starts after it or ends before it, the line there drawn in the card's
+ * pale; and `isMarked`, whether it wears its S or E: not on the pale, nor on
+ * a trip whose start is picked with no ride drawn (Ride's `isUnmarked`).
+ * `mark`, which of the two it wears: the origin's S and the destination's
+ * E, turned round on a ride picked backwards, whose E an origin picked from
+ * its row is.
  */
-export interface RideEnd {
+interface RideEnd {
   end: 'from' | 'to';
   name: string;
   named: boolean;
@@ -103,53 +119,82 @@ export interface RideEnd {
   rides: string[];
   of: string | null;
   paled: boolean;
+  isMarked: boolean;
+  mark: 'start' | 'end';
 }
 
 /**
  * Where each lit ride starts and finishes, each place named once: two ends
  * of one name closer than SAME_END_M are one place (Tala, where two rides
- * start). EndTitles.tsx circles every end and names the named ones; the
+ * start). end-titles.tsx circles every end and names the named ones; the
  * end of a ride whose rest is drawn (`paled`) wears the rest's pale.
  */
 export function rideEnds(rides: readonly Ride[]): RideEnd[] {
   const named: RideEnd[] = [];
   return rides
-    .filter((r) => r.line.length > 1)
+    .filter((r) => r.line.length > 1 && r.loopEnd !== 'none')
     .flatMap((r) =>
       (
         [
           ['from', r.from, r.line[0], r.fromHotspot ?? null],
           ['to', r.to, r.line[r.line.length - 1], r.toHotspot ?? null],
         ] as const
-      ).map(([end, name, at, hotspotId]) => {
-        const same = name
-          ? named.find((n) => n.name === name && haversine(n.at, at) < SAME_END_M)
-          : undefined;
-        if (same && same.end === end && r.id) same.rides.push(r.id);
-        const e: RideEnd = {
-          end,
-          name,
-          named: !!name && !same,
-          at,
-          hotspotId,
-          rides: !same && r.id ? [r.id] : [],
-          of: r.id ?? null,
-          paled: end === 'to' && restDrawn(r.rest ?? null),
-        };
-        if (e.named) named.push(e);
-        return e;
-      }),
+      )
+        // A loop's line comes back to where it left: its one end is the tip, the E where the ride ends there.
+        .filter(([end]) => !r.loopEnd || end === (r.loopEnd === 'end' ? 'to' : 'from'))
+        .map(([end, name, at, hotspotId]) => {
+          const same = name
+            ? named.find((n) => n.name === name && haversine(n.at, at) < SAME_END_M)
+            : undefined;
+          if (same && same.end === end && r.id) same.rides.push(r.id);
+          const paled = (r.pale ?? []).some(
+            (l) => restDrawn(l) && samePoint(end === 'from' ? l[0] : l[l.length - 1], at),
+          );
+          const e: RideEnd = {
+            end,
+            name,
+            named: !!name && !same && r.loopEnd !== 'bare',
+            at,
+            hotspotId,
+            rides: !same && r.id ? [r.id] : [],
+            of: r.id ?? null,
+            paled,
+            isMarked: !paled && !r.isUnmarked && r.loopEnd !== 'bare',
+            mark: markOf(end, r.isBackwards ?? false),
+          };
+          if (e.named) named.push(e);
+          return e;
+        }),
     );
 }
 
+/** Which mark an end wears: the origin's S and the destination's E, the other way round on a ride picked backwards. */
+function markOf(end: 'from' | 'to', isBackwards: boolean): 'start' | 'end' {
+  if (isBackwards) return end === 'from' ? 'end' : 'start';
+  return end === 'from' ? 'start' : 'end';
+}
+
 /**
- * How often they move on: fifteen times a second. They flow for as long as
- * a route is lit (the owner's ask of 2026-09-30: "yes continuous arrows"),
- * after flowing for three seconds and resting since 2026-09-29, when a flow
- * at thirty frames kept a phone's main thread nine-tenths busy (a CPU slowed
- * 4×: 17 fps flowing, 60 at rest). At 28 px a second a step of about 2 px
- * still reads as a flow, for half that work; and it holds while the map is
- * dragged or zoomed, so moving the map keeps the whole frame to itself.
+ * The line each lit ride's chevrons flow along: the whole of it, on past a
+ * picked hintuan too, and turned round for a ride picked backwards (Ride's
+ * `isBackwards`), so they flow from its S to its E.
+ */
+export function flowLines(rides: readonly Ride[]): (readonly LngLat[])[] {
+  return rides.map((r) => (r.isBackwards ? [...r.line].reverse() : r.line));
+}
+
+/** Whether two points are one: a pale stretch starting or ending where the line does. */
+function samePoint(a: LngLat, b: LngLat): boolean {
+  return a[0] === b[0] && a[1] === b[1];
+}
+
+/**
+ * How often they move on: fifteen times a second. They flow for as long as a
+ * route is lit, the owner's call over resting after three seconds. A flow at
+ * thirty frames kept a phone's main thread nine-tenths busy (a CPU slowed 4×:
+ * 17 fps flowing, 60 at rest). At 28 px a second a step of about 2 px still
+ * reads as a flow, for half that work; and it holds while the map is dragged
+ * or zoomed, so moving the map keeps the whole frame to itself.
  */
 const STEP_MS = 1000 / 15;
 
@@ -157,20 +202,20 @@ const STEP_MS = 1000 / 15;
  * Steps that came this late, one after another for this long, and they rest
  * where they are, as when asked to keep still: on a phone that cannot draw
  * the map four times a second, each step took the whole frame and a tap
- * waited seconds for its turn (a GitHub runner, 2026-10-01: the trip card's
- * buttons answering five seconds late, 13 frames in 8 s; 51 ms with them
- * still). Counted in time, not steps: three slow steps were under a second,
- * and a runner's short stall as tiles came in rested a flow that keeps up
- * (visitor-test on #95, 2026-10-01); a phone that cannot keep up stays slow.
+ * waited seconds for its turn (on a GitHub runner the trip card's buttons
+ * answered five seconds late, 13 frames in 8 s; 51 ms with the flow still).
+ * Counted in time, not steps: counted in steps, three slow steps came under a
+ * second, and a runner's short stall as tiles came in rested a flow that
+ * keeps up (commuter-test); a phone that cannot keep up stays slow.
  *
  * For WARM_MS after they start, after the map zooms and after a hidden page
- * comes back, no step counts: a new view's first frames are its dearest —
- * its tiles read and laid out — and say little of what the next ones will
- * cost (a GitHub runner, 2026-10-01: a jump to street zoom drew a few slow
- * frames, and the flow rested where it keeps up easily). A gap past AWAY_MS
- * is the page having been away, not a slow step. Rested, they try again only
- * once the map has zoomed a level or more — another view, another cost; a
- * pan, as the locator's camera makes each second, is the same view's.
+ * comes back, no step counts: a new view's first frames are its dearest — its
+ * tiles read and laid out — and say little of what the next ones will cost
+ * (on a GitHub runner a jump to street zoom drew a few slow frames, and the
+ * flow rested where it keeps up easily). A gap past AWAY_MS is the page
+ * having been away, not a slow step. Rested, they try again only once the map
+ * has zoomed a level or more — another view, another cost; a pan, as the
+ * locator's camera makes each second, is the same view's.
  */
 const SLOW_STEP_MS = 4 * STEP_MS;
 const SLOW_FOR_MS = 2000;
@@ -186,11 +231,10 @@ function stillPlease(): boolean {
 /**
  * The chevrons' colour and the rest of the line past a picked hintuan: the
  * selected blue's white chevrons unless the public map says otherwise — a
- * picked card's or an open trip's (liveryLine.ts) — and the rest in the
- * card's pale (the owner's ask, 2026-10-12: the remaining line should be
- * surface-pale of the selected colour). The end circles wear the line's
- * colour by their own classes (EndTitles), nothing to paint since they left
- * the map's layers the same day.
+ * picked card's or an open trip's (livery-line.ts) — and the rest in the
+ * card's pale (surface-pale of the selected colour). The end circles wear the
+ * line's colour by their own classes (EndTitles), so there is nothing to
+ * paint on the map for them.
  */
 export function useRideColours(map: MapLibreMap | null, look: LineLook) {
   // The chevrons' hook adds their layer; wait for it.
@@ -261,15 +305,15 @@ export function widened(view: View): View {
 
 /**
  * What a move of the map does to the chevrons, which do not flow while it
- * moves (the cheap-phone plan, step 17, 2026-10-04):
+ * moves:
  * - 'hold': nothing, while the view stays inside the window they were last
- *   drawn for (`held`) at its zoom: every chevron it can show is there,
- *   the same polygon a draw for the view would make;
- * - 'wide': drawn again a screen wider each way, as the map pans at the
- *   zoom they were last drawn at (`drawnAt`) and leaves the window;
+ *   drawn for (`held`) at its zoom: every chevron it can show is there, the
+ *   same polygon a draw for the view would make;
+ * - 'wide': drawn again a screen wider each way, as the map pans at the zoom
+ *   they were last drawn at (`drawnAt`) and leaves the window;
  * - 'view': drawn for the view, while the zoom changes, each frame changing
  *   their size and spacing.
- * They were drawn for the view at every move: each frame of a pan was a
+ * Drawing them for the view at every move would make each frame of a pan a
  * new source for MapLibre's worker to cut into tiles.
  */
 export function onAMove(held: View | null, drawnAt: number, now: View): 'hold' | 'wide' | 'view' {
@@ -292,11 +336,10 @@ export function onAMove(held: View | null, drawnAt: number, now: View): 'hold' |
  * unchanged (a memo), or the flow restarts.
  */
 export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride[]): void {
-  // The whole line, on past a picked hintuan too (Ride, above).
-  const lines = useMemo(() => rides.map((r) => r.line), [rides]);
+  const lines = useMemo(() => flowLines(rides), [rides]);
   const hitReady = useLayerReady(map, ROUTES_HIT_LAYER);
   useEffect(() => {
-    // Over the lit line and its orange stretches, under the hit area and the
+    // Over the lit line and its green stretches, under the hit area and the
     // basemap's labels: the line hook's layers must be there first, and are,
     // since it is called before this one on both surfaces. The ends' circles
     // and names are DOM markers (EndTitles), on top of everything, so a
@@ -360,16 +403,16 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
       const how = onAMove(held, drawnAt, viewOf(map));
       if (how !== 'hold') draw(how === 'wide');
     };
-    // A camera call made while another moves the map hotspots that one, which
+    // A camera call made while another moves the map stops that one, which
     // says 'moveend', and says 'movestart' at once for its own (MapLibre's
     // easeTo: _stop, then _prepareEase): the compass camera eases at every
-    // turn of the phone of 3° or more (useLocator.ts), thirty times for a
+    // turn of the phone of 3° or more (use-compass.ts), thirty times for a
     // quarter turn made in a second. So the draw back to the view waits for
     // the next frame, and is dropped if a move starts first; and a move that
     // starts inside what is held, at its zoom, draws nothing. Back to back,
-    // such eases cost no draw, where each had cost two, one of them nine
-    // screens' worth (review of step 17, 2026-10-05). What is on screen is
-    // the same: what is held has every chevron a draw for the view makes.
+    // such eases cost no draw, where each would cost two, one of them nine
+    // screens' worth. What is on screen is the same: what is held has every
+    // chevron a draw for the view makes.
     let settle = 0;
     const onStart = () => {
       moving = true;

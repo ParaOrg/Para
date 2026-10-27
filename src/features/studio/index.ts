@@ -1,25 +1,39 @@
 // The studio: the feature's public API, what the shells import. Add a line
 // when something outside the feature needs more; nothing outside imports its
-// inner files (.claude/CLAUDE.md, Import rules). Written with the restructure
-// of 2026-10-07.
+// inner files (.claude/CLAUDE.md, Import rules).
 export { AuthDialogs } from './auth/auth-dialogs';
 export { SignIn } from './auth/sign-in';
 export { skipSignInForTests } from './auth/test-bypass';
+export { useAuthFlow } from './auth/use-auth-flow';
 export { usePasswordRecovery } from './auth/use-password-recovery';
 export { useSession } from './auth/use-session';
-export { lineOf, listDirections, loadHotspotsFromSupabase } from './data/live';
-export { signboardUrl } from './data/signboards';
+export { loadHotspotsFromSupabase } from './data/hotspots-read';
+export { lineOf, listDirections } from './data/live';
 export { getSupabase, setSupabase, supabaseConfig, supabaseConfigError } from './data/supabase';
 export { DrawToolbar } from './drawing/draw-toolbar';
+export { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from './drawing/studio-basemaps';
 export { useDrawing } from './drawing/use-drawing';
 export { useFollow } from './drawing/use-follow';
+export { useLoopClosing } from './drawing/use-loop-closing';
+export { MapPlaceholder } from './maps/map-placeholder';
+export { MapSwitch } from './maps/map-switch';
+export { useStudioMap } from './maps/use-studio-map';
 export { AccountPill } from './panels/account-pill';
-export { CardActions } from './panels/card-actions';
-export { HotspotPanel } from './panels/hotspot-panel';
-export { NewButtons } from './panels/new-buttons';
+export { NEW_MENU_DOCK_FOOT, NewMenu } from './panels/new-menu';
 export { returnTripLeft } from './panels/return-trip';
-export { SavePanel } from './panels/save-panel';
-export { SaveToasts, type SaveToast } from './panels/save-toasts';
-export { TripCardExtras } from './panels/trip-card-extras';
+export { SaveToasts } from './panels/save-toasts';
+export { StudioHotspotCard } from './panels/studio-hotspot-card';
+export { StudioSaveSheets } from './panels/studio-save-sheets';
+export { StudioTripCard } from './panels/studio-trip-card';
 export { useDeleteActions } from './panels/use-delete-actions';
+export { useSaveFlow } from './panels/use-save-flow';
 export { useSaveTarget } from './panels/use-save-target';
+export { useStudioTrip } from './panels/use-studio-trip';
+export { DraftLocksProvider } from './review/draft-locks-provider';
+export { StudioReview } from './review/studio-review';
+export { StudioPublicView } from './public-view/studio-public-view';
+export { StudioContributors } from './contributors/studio-contributors';
+export { ContributionHint } from './contributors/actions/contribution-hint';
+export { useContributionStart } from './contributors/actions/use-contribution-start';
+export type { ContributionStart } from './contributors/actions/contribution-start';
+export { CONTRIBUTIONS } from './data/flags';

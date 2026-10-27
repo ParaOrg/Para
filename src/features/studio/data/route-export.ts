@@ -1,6 +1,6 @@
 import type { Hotspot } from '@/features/routes/model/hotspots';
 import { routeTimeline, travelLine } from '@/features/routes/model/ride';
-import { directionLine, isDrawn, type Direction } from '@/features/routes/model/routes';
+import { directionLine, isDrawn, isLoop, type Direction } from '@/features/routes/model/routes';
 import type { TimelineRow } from '@/features/routes/model/timeline';
 import { lineLength, type LngLat } from '@/shared/utils/geo';
 
@@ -19,8 +19,8 @@ export const EXPORT_FORMATS: readonly { format: ExportFormat; label: string }[] 
   { format: 'json', label: 'JSON' },
 ];
 
-/** Outbound runs head to tail, return the way back (CONTEXT.md). */
-type Way = 'outbound' | 'return';
+/** Outbound runs head to tail, return the way back, a loop goes round (CONTEXT.md). */
+type Way = 'outbound' | 'return' | 'loop';
 
 /** One row of a direction's timeline, numbered in travel order and placed on the ground. */
 interface ExportedPlace {
@@ -43,7 +43,7 @@ interface ExportedDirection {
   line: LngLat[] | null;
 }
 
-export interface RouteExport {
+interface RouteExport {
   exportedAt: string;
   route: {
     id: string;
@@ -100,7 +100,7 @@ export function routeExport(
       return {
         id: v.id,
         name: v.name,
-        way: v.reversed ? 'return' : 'outbound',
+        way: isLoop(v) ? 'loop' : v.reversed ? 'return' : 'outbound',
         confidence: v.confidence,
         metres: line ? Math.round(lineLength(line)) : null,
         places: rows.map((row, i) => ({

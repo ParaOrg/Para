@@ -20,11 +20,24 @@ const SOURCE = [
   'src/**/*.{ts,tsx}',
   '.storybook/**/*.{ts,tsx}',
   'vite.config.ts',
+  'vite.apk.config.ts',
+  'capacitor.config.ts',
   'scripts/**/*.ts',
 ];
 
 export default defineConfig([
-  globalIgnores(['dist/', 'storybook-static/', 'node_modules/', 'public/', '.vite/', '.scratch/']),
+  globalIgnores([
+    'dist/',
+    'dist-apk/',
+    'android/',
+    'storybook-static/',
+    'node_modules/',
+    'public/',
+    '.vite/',
+    '.scratch/',
+    // Generated; see the header of the file.
+    'src/shared/types/database.types.ts',
+  ]),
 
   ...[
     js.configs.recommended,
@@ -115,11 +128,12 @@ export default defineConfig([
       // design-system, never upward; inside the design system foundation ←
       // primitives ← patterns; among the features routes first, then locator,
       // published-map and studio, which never import each other; the public
-      // shell never imports the studio. Each zone is an importer (target) and
-      // what it may not import (from). CSS is not linted: the only CSS
+      // shell never imports the studio; contribute imports routes and shared
+      // only, and only its own shell imports it. Each zone is an importer
+      // (target) and what it may not import (from). CSS is not linted: the only CSS
       // @imports are src/styles/global.css's, of the design system's tokens
-      // and fonts, and a stylesheet imported from TypeScript is checked
-      // through that import.
+      // and fonts, and src/app/contribute/contribute.css's, of Tailwind alone;
+      // a stylesheet imported from TypeScript is checked through that import.
       'import-x/no-restricted-paths': [
         'error',
         {
@@ -182,6 +196,47 @@ export default defineConfig([
               message: 'locator, published-map and studio never import each other.',
             },
             {
+              // The contributors' page records a ride on the phone and sends nothing, so
+              // it needs routes and the shared code, and no other feature. Only its own
+              // shell may import it (check-build.mjs proves what its chunks carry).
+              target: './src/features/contribute',
+              from: [
+                './src/features/locator',
+                './src/features/published-map',
+                './src/features/studio',
+                './src/app',
+              ],
+              message:
+                'contribute imports routes, shared and the design system only: never studio, locator or published-map.',
+            },
+            {
+              target: [
+                './src/features/routes',
+                './src/features/locator',
+                './src/features/published-map',
+                './src/features/studio',
+                './src/shared',
+                './src/design-system',
+                './src/styles',
+                './src/app/public-map',
+                './src/app/studio',
+              ],
+              from: ['./src/features/contribute', './src/app/contribute'],
+              message:
+                'Nothing imports contribute except the contribute shell (src/app/contribute).',
+            },
+            {
+              target: './src/app/contribute',
+              from: [
+                './src/app/public-map',
+                './src/app/studio',
+                './src/features/published-map',
+                './src/features/studio',
+              ],
+              message:
+                'The contribute shell imports contribute, the locator, routes, shared, styles and the design system only.',
+            },
+            {
               target: './src/app/public-map',
               from: ['./src/app/studio', './src/features/studio'],
               message:
@@ -189,13 +244,9 @@ export default defineConfig([
             },
             {
               target: './src/app/studio',
-              from: [
-                './src/app/public-map',
-                './src/features/locator',
-                './src/features/published-map',
-              ],
+              from: ['./src/app/public-map', './src/features/published-map'],
               message:
-                'The studio shell imports studio, routes, shared, styles and the design system only.',
+                'The studio shell imports studio, routes, locator, shared, styles and the design system only.',
             },
           ],
         },
@@ -253,6 +304,8 @@ export default defineConfig([
       'src/**/*.stories.tsx',
       '.storybook/**/*.{ts,tsx}',
       'vite.config.ts',
+      'vite.apk.config.ts',
+      'capacitor.config.ts',
       'eslint.config.js',
     ],
     rules: {

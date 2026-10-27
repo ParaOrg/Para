@@ -38,7 +38,7 @@ More in `docs/research/ph-commute-apps-feature-bank.md` (TrainSight, TRENLigtas,
 
 ## Limits to remember
 
-- **The alert before your station** needs the app on screen. A web page loses its location when the screen is off (the same limit as `driver-app`). So "My train ride" keeps the screen awake while it's on.
+- **The alert before your station** needs the app on screen. A web page loses its location when the screen is off (the same limit as `contribute`). So "My train ride" keeps the screen awake while it's on.
 - **Underground**, at an underground station such as LRT-2's Katipunan, or a future subway: GPS fails there. The station count carries on from the timetable's travel times until the phone has a position again.
 
 ## Not planned

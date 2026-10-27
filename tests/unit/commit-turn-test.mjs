@@ -1,11 +1,11 @@
 // A child's effect run where its parent's hook stood in the commit
-// (src/shared/hooks/commit-turn.ts), and the visitor's camera that needs it
-// (use-locator.ts's `cameraTurn`, visitor-location.tsx; the cheap-phone plan,
+// (src/shared/hooks/commit-turn.ts), and the commuter's camera that needs it
+// (use-locator.ts's `cameraTurn`, commuter-location.tsx; the cheap-phone plan,
 // step 15, 2026-10-05). React runs a component's effects after all of its
-// children's, so the locator's hooks, moved from CommuterApp into a child of
+// children's, so the locator's hooks, moved from PublicMapApp into a child of
 // it, would move the camera before the cards' camera of the same commit and
 // not after: the sheet set to another height while the camera follows the
-// visitor would end on the card's overview, not on the visitor.
+// commuter would end on the card's overview, not on the commuter.
 //
 // Real React (react-dom's client) renders components that draw nothing,
 // into a stand-in container: Node has no DOM, and none is needed for the
@@ -143,7 +143,7 @@ test("StrictMode's second run of a mount's effects runs a turned effect once mor
   await act(async () => root.unmount());
 });
 
-// ---------------------------------------------- the visitor's camera, as used
+// ---------------------------------------------- the commuter's camera, as used
 /**
  * A stand-in map: its camera calls logged, 'movestart' fired as each starts,
  * carrying what it was given (APP_MOVE's `appMove`), as MapLibre's does.
@@ -163,7 +163,7 @@ function standInMap(log) {
     getZoom: () => 12,
     getBearing: () => 0,
     easeTo: (o, e) => {
-      log.push(`easeTo ${o.center ? 'visitor' : 'elsewhere'} ${o.duration}`);
+      log.push(`easeTo ${o.center ? 'commuter' : 'elsewhere'} ${o.duration}`);
       fire('movestart', e);
     },
     fitBounds: (_b, _o, e) => {
@@ -198,8 +198,8 @@ function standInGps() {
  * The page and its cards' camera — the sheet's height moving it to the
  * card's overview, as useHeightOverview does, with APP_MOVE — and the
  * locator: `layout` 'page', its hook among the page's after the cards'
- * (CommuterApp before 2026-10-05); 'child', in a child given the page's turn
- * (VisitorLocation); 'child-unturned', in a child without it.
+ * (PublicMapApp before 2026-10-05); 'child', in a child given the page's turn
+ * (CommuterLocation); 'child-unturned', in a child without it.
  */
 async function sheetWhileFollowing(layout) {
   const log = [];
@@ -207,7 +207,7 @@ async function sheetWhileFollowing(layout) {
   const gps = standInGps();
   const page = {};
   const opts = (snap) => ({ offset: () => [0, -100], snap, compass: false });
-  function Visitor({ snap, turn }) {
+  function Commuter({ snap, turn }) {
     page.locator = useLocator(map, { ...opts(snap), ...(turn ? { cameraTurn: turn } : {}) });
     return null;
   }
@@ -229,7 +229,7 @@ async function sheetWhileFollowing(layout) {
     }, [snap, last]);
     if (layout === 'page') page.locator = useLocator(map, opts(snap));
     const turn = useTurn();
-    return layout === 'page' ? null : h(Visitor, { snap, turn: layout === 'child' ? turn : null });
+    return layout === 'page' ? null : h(Commuter, { snap, turn: layout === 'child' ? turn : null });
   }
   const root = await mount(h(Page));
   await act(async () => page.locator.tap());
@@ -244,16 +244,16 @@ async function sheetWhileFollowing(layout) {
   return { followed, sheet, walked };
 }
 
-test("the sheet set to another height while the camera follows: the overview starts, the visitor's camera takes over, as when the locator was the page's", async () => {
+test("the sheet set to another height while the camera follows: the overview starts, the commuter's camera takes over, as when the locator was the page's", async () => {
   const before = await sheetWhileFollowing('page');
-  assert.deepEqual(before.followed, { log: ['easeTo visitor 800'], mode: 'TrackedLocation' });
+  assert.deepEqual(before.followed, { log: ['easeTo commuter 800'], mode: 'TrackedLocation' });
   assert.deepEqual(before.sheet, {
-    log: ['fitBounds overview', 'easeTo visitor 800'],
+    log: ['fitBounds overview', 'easeTo commuter 800'],
     mode: 'TrackOwnLocation',
   });
   // A tap brings it back, and the next fix, the child's alone, moves it at once.
   assert.deepEqual(before.walked, {
-    log: ['easeTo visitor 800', 'easeTo visitor 400'],
+    log: ['easeTo commuter 800', 'easeTo commuter 400'],
     mode: 'TrackedLocation',
   });
   const now = await sheetWhileFollowing('child');
@@ -262,5 +262,5 @@ test("the sheet set to another height while the camera follows: the overview sta
 
 test('without the turn, the child would move the camera first and the overview would take over: the order the turn keeps', async () => {
   const unturned = await sheetWhileFollowing('child-unturned');
-  assert.deepEqual(unturned.sheet.log, ['easeTo visitor 800', 'fitBounds overview']);
+  assert.deepEqual(unturned.sheet.log, ['easeTo commuter 800', 'fitBounds overview']);
 });

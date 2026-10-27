@@ -132,14 +132,12 @@ test("the ride-to cut of a place shared by a jeep hintuan and a station keeps to
     route: { ...route, headHotspotId: 'h', tailHotspotId: 't' },
     shape: { type: 'LineString', coordinates: LINE },
   });
-  assert.deepEqual(
-    rideCut(v(JEEP), HOTSPOTS, 'jeep-buendia').dots.map((d) => d.hotspotId),
-    ['jeep-buendia'],
-  );
-  assert.deepEqual(
-    rideCut(v(LRT1), HOTSPOTS, 'lrt-buendia').dots.map((d) => d.hotspotId),
-    ['lrt-buendia'],
-  );
+  // The ride ends at the line's own box whichever order the boxes are listed
+  // in: were the other line's box counted too, it could be the last dot.
+  for (const boxes of [HOTSPOTS, [...HOTSPOTS].reverse()]) {
+    assert.equal(rideCut(v(JEEP), boxes, 'jeep-buendia').endHotspotId, 'jeep-buendia');
+    assert.equal(rideCut(v(LRT1), boxes, 'lrt-buendia').endHotspotId, 'lrt-buendia');
+  }
 });
 
 // The studio's links when a hintuan is saved (hotspots-geometry.ts, linksThrough):
@@ -215,4 +213,35 @@ test('shapes 1 and 2 leave out every line, their stations and their links', asyn
   assert.deepEqual(out.links, [{ route_variant_id: 'jeep', stop_id: 'h' }]);
   assert.deepEqual([...out.ids.variants], ['lrt', 'mrt', 'ferry']);
   assert.deepEqual([...out.ids.stops], ['st', 'pier']);
+});
+
+test('a jeep route that ends at a station is left out with the station, in the shapes that leave the station out', async () => {
+  const { withoutLines, EVERY_LINE, FERRY } =
+    await import('../../scripts/publish/withoutLines.mjs');
+  // Cogeo – Cubao, 2026-10-19: a jeep ending at the LRT-2 Cubao station. Shapes 1 and 2
+  // left the station out and kept the jeep, so its route named a hotspot the file
+  // did not have, and the nightly publish's check refused the map.
+  const toStation = { ...JEEP, head_stop_id: 'h', tail_stop_id: 'st' };
+  const rows = {
+    ...ROWS,
+    variants: [
+      ...ROWS.variants,
+      { id: 'to-st', route: toStation },
+      { id: 'to-st-back', route: toStation },
+    ],
+    links: [...ROWS.links, { route_variant_id: 'to-st', stop_id: 'h' }],
+  };
+  const old = withoutLines(rows, EVERY_LINE);
+  assert.deepEqual(
+    old.variants.map((v) => v.id),
+    ['jeep'],
+  );
+  assert.ok(
+    old.ids.variants.has('to-st') && old.ids.variants.has('to-st-back'),
+    'both its directions',
+  );
+  assert.ok(!old.links.some((l) => l.route_variant_id === 'to-st'), 'and their links');
+  // Shape 3 keeps the trains and their stations, so the jeep to one stays.
+  const v3 = withoutLines(rows, FERRY);
+  assert.ok(v3.variants.some((v) => v.id === 'to-st'));
 });

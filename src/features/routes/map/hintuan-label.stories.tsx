@@ -36,15 +36,25 @@ const dotOf = (root: HTMLElement): HTMLElement => {
   return dot;
 };
 
+/** The colour a token class paints, read off a probe wearing it. */
+const wornBy = (className: string) => {
+  const probe = document.createElement('i');
+  probe.className = className;
+  document.body.append(probe);
+  const colour = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return colour;
+};
+
 /** The label's pop (hintuan-label.css) run out: sizes are read through its scale. */
 const settled = (root: HTMLElement) =>
   Promise.all(root.getAnimations({ subtree: true }).map((animation) => animation.finished));
 
-/** The label 10 right of the dot (Figma's spacing/2-5) and centred on it. */
+/** The label 8 right of the dot (Figma's spacing/2) and centred on it. */
 const expectBesideTheDot = async (root: HTMLElement) => {
   const dot = dotOf(root).getBoundingClientRect();
   const label = partOf(root, 'label').getBoundingClientRect();
-  await expect(label.left - dot.right).toBe(10);
+  await expect(label.left - dot.right).toBe(8);
   await expect(label.top + label.height / 2).toBe(dot.top + dot.height / 2);
 };
 
@@ -56,20 +66,24 @@ export const Hintuan: Story = {
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
     // At rest the ring is thick and the centre white (TimelineDot): the picked one's is filled.
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('6px');
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('1');
   },
 };
 
-/** HintuanEnd (4068:4878): the picked hintuan, its dot filled, End's E before its name. */
+/** HintuanEnd (4068:4878): the picked hintuan, its dot filled in End's red, a white End pill before its name on red. */
 export const HintuanEnd: Story = {
   args: { variant: 'hintuan-end' },
   play: async ({ canvasElement }) => {
     await expectBesideTheDot(canvasElement);
     await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'end'))).toBe(true);
     await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+    await expect(getComputedStyle(dotOf(canvasElement)).backgroundColor).toBe(
+      wornBy('bg-card-red-surface'),
+    );
   },
 };
 
-/** CodeSign (4068:4792): a picked train station, the E in its own disc, the code in a white chip. */
+/** CodeSign (4068:4792): a picked train station, the code in one red pill, End and the name in another. */
 export const CodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL06' },
   play: async ({ canvasElement }) => {
@@ -78,8 +92,43 @@ export const CodeSign: Story = {
   },
 };
 
-/** Along the rest past a picked hintuan: the dot rings in the card's pale, the name keeps the line's colour. */
-export const Paled: Story = { args: { variant: 'hintuan', isPaled: true } };
+/**
+ * HintuanStart: a ride's picked start, its dot filled, a white Start pill before
+ * its name on Head Route's green. Figma draws no HintuanStart: HintuanEnd's shape
+ * in RouteLineEndingsLabels' start.
+ */
+export const HintuanStart: Story = {
+  args: { variant: 'hintuan-start' },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(partOf(canvasElement, 'name').contains(partOf(canvasElement, 'start'))).toBe(true);
+    await expect(getComputedStyle(dotOf(canvasElement)).paddingTop).toBe('2px');
+    await expect(getComputedStyle(dotOf(canvasElement)).backgroundColor).toBe(
+      wornBy('bg-map-hotspots-card-hintuan-surface'),
+    );
+  },
+};
+
+/** A picked start station: the code in one green pill, Start and the name in another. */
+export const CodeSignStart: Story = {
+  args: { variant: 'hintuan-start', codeSign: 'YL07' },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(partOf(canvasElement, 'code').textContent).toBe('YL07');
+  },
+};
+
+/**
+ * Outside the ride: the dot rings in the card's pale, the name the Label's
+ * Unselected, the line's colour at 60% (4200:13645).
+ */
+export const Paled: Story = {
+  args: { variant: 'hintuan', isPaled: true },
+  play: async ({ canvasElement }) => {
+    await expectBesideTheDot(canvasElement);
+    await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('0.6');
+  },
+};
 
 /** Further out than the names show: the dot alone. */
 export const DotAlone: Story = {
@@ -101,7 +150,7 @@ export const NameAsButton: Story = {
 
 /**
  * A name longer than its marker allows: the label hangs off a 24 px marker
- * at most 256 wide, cut short with an ellipsis, the disc and code whole.
+ * at most 256 wide, cut short with an ellipsis, the End sign and code whole.
  */
 export const LongName: Story = {
   args: {
@@ -117,12 +166,16 @@ export const LongName: Story = {
     );
     const words = partOf(canvasElement, 'words');
     await expect(words.scrollWidth).toBeGreaterThan(words.clientWidth);
-    await expect(partOf(canvasElement, 'end').getBoundingClientRect().width).toBe(28);
+    // The name gives way; End and the code stay whole.
+    for (const part of ['end', 'code']) {
+      const badge = partOf(canvasElement, part);
+      await expect(badge.scrollWidth).toBe(badge.clientWidth);
+    }
   },
 };
 
 /** A trip in each card colour. */
-export const Red: Story = { args: { variant: 'hintuan-end', livery: 'red' } };
+export const OrangeEnd: Story = { args: { variant: 'hintuan-end', livery: 'orange' } };
 export const Orange: Story = { args: { variant: 'hintuan', livery: 'orange' } };
 export const Violet: Story = { args: { variant: 'hintuan-end', livery: 'violet' } };
 export const Fuchsia: Story = { args: { variant: 'hintuan', livery: 'fuchsia' } };
@@ -137,7 +190,18 @@ export const MetroRailWayThree: Story = {
   args: { variant: 'hintuan-end', livery: 'metro-rail-way-three' },
 };
 
-/** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it (2026-10-13). */
+/** A picked start on MRT-3: the dot and the label Start's green, whatever the line. */
+export const MetroRailWayThreeStart: Story = {
+  args: { variant: 'hintuan-start', codeSign: 'YL07', livery: 'metro-rail-way-three' },
+};
+
+/** A picked MRT-3 station: the code black on white. */
+export const MetroRailWayThreeCodeSign: Story = {
+  args: { variant: 'hintuan-end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
+};
+export const OrangeStart: Story = { args: { variant: 'hintuan-start', livery: 'orange' } };
+
+/** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it. */
 export const MetroRailWayThreeHintuan: Story = {
   args: { variant: 'hintuan', livery: 'metro-rail-way-three' },
 };

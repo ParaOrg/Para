@@ -1,36 +1,31 @@
-import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
+import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect } from 'react';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
-import { HOTSPOT_COLOUR } from '@/features/routes/map/colours';
 import { LAYERS } from '@/features/routes/map/layers';
-import { directionLine } from '@/features/routes/model/routes';
-import type { LngLat, Segment } from '@/shared/utils/geo';
-
-import type { AreaTarget, Picking } from './drawing-types';
-import type { UTurn } from './uturns';
 
 /**
- * What the drawing paints on the map: its sources and layers, laid once, and
- * the data and colours they show as the drawing changes. The `draw-*` ids are
- * a contract — the suites read them — and never change.
+ * What the drawing paints on the map: its sources and layers, laid once
+ * (useDrawLayers); the data and colours they show as the drawing changes are
+ * useDrawRendering's (use-draw-rendering.ts), from draw-features.ts. The
+ * `draw-*` ids are a contract — the suites read them — and never change.
  */
 
 const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 
-const LINE_SRC = 'draw-line';
-const POINT_SRC = 'draw-points';
-const AREA_SRC = 'draw-area';
-const UTURN_SRC = 'draw-uturns';
-const BORROW_SRC = 'draw-borrow';
+export const LINE_SRC = 'draw-line';
+export const POINT_SRC = 'draw-points';
+export const AREA_SRC = 'draw-area';
+export const UTURN_SRC = 'draw-uturns';
+export const BORROW_SRC = 'draw-borrow';
 /** The drawing's points, and the wide invisible line a click finds: the events' layers. */
 export const POINT_LAYER = 'draw-point-dots';
 export const HIT_LAYER = 'draw-line-hit';
 /** The ring round the point a finger selected. */
-const SELECTED_LAYER = 'draw-point-selected';
-const AREA_FILL_LAYER = 'draw-area-fill';
+export const SELECTED_LAYER = 'draw-point-selected';
+export const AREA_FILL_LAYER = 'draw-area-fill';
 
-const ROUTE_COLOUR = MAP_PAINT['Paint/draw-line'];
+export const ROUTE_COLOUR = MAP_PAINT['Paint/draw-line'];
 const UTURN_COLOUR = MAP_PAINT['Paint/draw-uturn'];
 
 const BORROW_COLOUR = MAP_PAINT['Paint/draw-borrow'];
@@ -162,140 +157,4 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       },
     });
   }, [map]);
-}
-
-/**
- * The drawing on the map: its segments (routed and freehand), points, a
- * hotspot's fill and closing edge, the U-turns ringed, the line being picked
- * for Extend, the point a finger selected ringed, and the colours of a route
- * or a hotspot's kind.
- */
-export function useDrawRendering(
-  map: MapLibreMap | null,
-  {
-    segments,
-    controlPoints,
-    area,
-    uTurns,
-    picking,
-    selected,
-  }: {
-    segments: Segment[];
-    controlPoints: LngLat[];
-    area: AreaTarget | null;
-    uTurns: UTurn[];
-    picking: Picking | null;
-    selected: number | null;
-  },
-): void {
-  useEffect(() => {
-    if (!map) return;
-    const lineSrc = map.getSource(LINE_SRC) as GeoJSONSource | undefined;
-    const pointSrc = map.getSource(POINT_SRC) as GeoJSONSource | undefined;
-    if (!lineSrc || !pointSrc) return;
-
-    // Index before filtering: the feature's `index` must stay the segment's
-    // real position, or editing one segment would edit another.
-    const lineFeatures = segments
-      .map((s, i) => ({ s, i }))
-      .filter(({ s }) => (s?.coordinates?.length ?? 0) > 1)
-      .map(({ s, i }) => ({
-        type: 'Feature' as const,
-        properties: { index: i, snap: s.snap },
-        geometry: { type: 'LineString' as const, coordinates: s.coordinates },
-      }));
-
-    // A hotspot closes itself once it has three corners. The closing edge is a
-    // real, clickable feature so a corner can be inserted on it; it carries a
-    // sentinel index because no segment backs it.
-    if (area && controlPoints.length >= 3) {
-      lineFeatures.push({
-        type: 'Feature' as const,
-        properties: { index: CLOSING, snap: 'freehand' as const },
-        geometry: {
-          type: 'LineString' as const,
-          coordinates: [controlPoints[controlPoints.length - 1], controlPoints[0]],
-        },
-      });
-    }
-
-    lineSrc.setData({ type: 'FeatureCollection', features: lineFeatures });
-
-    pointSrc.setData({
-      type: 'FeatureCollection',
-      features: controlPoints.map((c, i) => ({
-        type: 'Feature' as const,
-        properties: { index: i, selected: i === selected },
-        geometry: { type: 'Point' as const, coordinates: c },
-      })),
-    });
-
-    const areaSrc = map.getSource(AREA_SRC) as GeoJSONSource | undefined;
-    areaSrc?.setData(
-      area && controlPoints.length >= 3
-        ? {
-            type: 'FeatureCollection',
-            features: [
-              {
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                  type: 'Polygon',
-                  coordinates: [[...controlPoints, controlPoints[0]]],
-                },
-              },
-            ],
-          }
-        : EMPTY,
-    );
-
-    const uturnSrc = map.getSource(UTURN_SRC) as GeoJSONSource | undefined;
-    const stubs = uTurns.map((u) => ({
-      type: 'Feature' as const,
-      properties: { point: u.point, metres: Math.round(u.metres) },
-      geometry: { type: 'LineString' as const, coordinates: u.stub },
-    }));
-    const rings = uTurns
-      .filter((u) => controlPoints[u.point])
-      .map((u) => ({
-        type: 'Feature' as const,
-        properties: { point: u.point, metres: Math.round(u.metres) },
-        geometry: { type: 'Point' as const, coordinates: controlPoints[u.point] },
-      }));
-    uturnSrc?.setData({ type: 'FeatureCollection', features: [...stubs, ...rings] });
-  }, [map, segments, controlPoints, area, uTurns, selected]);
-
-  useEffect(() => {
-    if (!map) return;
-    const src = map.getSource(BORROW_SRC) as GeoJSONSource | undefined;
-    if (!src) return;
-    if (!picking) {
-      src.setData(EMPTY);
-      return;
-    }
-    const line = {
-      type: 'Feature' as const,
-      properties: {},
-      geometry: { type: 'LineString' as const, coordinates: directionLine(picking.direction) },
-    };
-    const spot = picking.spot && {
-      type: 'Feature' as const,
-      properties: {},
-      geometry: { type: 'Point' as const, coordinates: picking.spot.point },
-    };
-    src.setData({ type: 'FeatureCollection', features: spot ? [line, spot] : [line] });
-  }, [map, picking]);
-
-  // Route traces are rose; a hotspot trace takes its kind's colour, and its
-  // straight edges are drawn solid rather than in the freehand dash.
-  useEffect(() => {
-    if (!map || !map.getLayer(AREA_FILL_LAYER)) return;
-    const colour = area ? HOTSPOT_COLOUR[area.kind] : ROUTE_COLOUR;
-    map.setPaintProperty(LAYERS.drawSnapped, 'line-color', colour);
-    map.setPaintProperty(LAYERS.drawFreehand, 'line-color', colour);
-    map.setPaintProperty(LAYERS.drawFreehand, 'line-dasharray', area ? [1, 0] : [2, 1.5]);
-    map.setPaintProperty(POINT_LAYER, 'circle-stroke-color', colour);
-    map.setPaintProperty(SELECTED_LAYER, 'circle-stroke-color', colour);
-    map.setPaintProperty(AREA_FILL_LAYER, 'fill-color', colour);
-  }, [map, area]);
 }

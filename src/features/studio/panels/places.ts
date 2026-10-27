@@ -6,8 +6,7 @@ import { haversine, type LngLat } from '@/shared/utils/geo';
 /**
  * The places a route can end at, for the save panel's two pickers, and the
  * panel's first guess at its ends: pure, so tests/unit/places-test.mjs can
- * hold them (split from SavePanel.tsx, 2026-09-29; the guess from
- * save-panel.tsx, 2026-10-14).
+ * hold them.
  */
 
 /** The hotspot nearest a point, by centroid. Only a starting guess for the picker. */
@@ -27,8 +26,8 @@ export function nearestHotspot(hotspots: HotspotRow[], to: LngLat | undefined): 
 
 /**
  * A place a route can end at. A route ends at SM Fairview, not at one of the
- * five boxes drawn there: boxes that share the name people say are one place
- * (H3), so the pickers list places and the owner never sees a box name.
+ * five boxes drawn there: boxes that share the name people say are one place,
+ * so the pickers list places and the owner never sees a box name.
  * Case-folded, because "SM fairview" typed once must not become a second
  * place in the list. The row a route actually references is `boxFor`.
  */
@@ -47,7 +46,7 @@ export function groupPlaces(hotspots: HotspotRow[]): Place[] {
     const place = byKey.get(key) ?? { key, label: hotspotLabel(s), boxes: [], terminal: null };
     place.boxes.push(s);
     // The terminal's spelling names the place; it is the one box per place
-    // the database holds to a single row (H4).
+    // the database holds to a single row.
     if (s.kind === 'terminal' && !place.terminal) {
       place.terminal = s;
       place.label = hotspotLabel(s);
@@ -70,12 +69,11 @@ export function boxFor(place: Place, to: LngLat | undefined): string {
 
 /**
  * The terminal already standing at the place this box would join, if any:
- * a place has one terminal (H4). The database refuses the second one
+ * a place has one terminal. The database refuses the second one
  * (0014_terminal_place_unique.sql); this says so before the save, in the
  * form, without a round trip. The place is read as hotspotLabel reads it, so a
- * box whose informal name is left blank joins the place its ground name
- * says — before 2026-10-03 two terminals both named "Tala" with nothing
- * informal slipped past the index, which only looked at the informal name.
+ * box whose informal name is left blank joins the place its name
+ * says. Two terminals both named "Tala" with nothing informal are one place.
  */
 export function terminalAlreadyAt(
   hotspots: HotspotRow[],
@@ -89,6 +87,24 @@ export function terminalAlreadyAt(
   return (
     hotspots.find((s) => s.kind === 'terminal' && s.id !== box.id && placeKey(s) === key) ?? null
   );
+}
+
+/**
+ * The box of a place already standing under this name, if any: grouped by the
+ * same key the pickers group by (placeKey), so case and spacing count as they
+ * do there. `exceptId` is a row of the caller's own, never its own match.
+ */
+export function placeAlreadyNamed(
+  hotspots: HotspotRow[],
+  box: { name: string; informal: string },
+  exceptId: string | null = null,
+): HotspotRow | null {
+  const key = placeKey({
+    name: normaliseName(box.name),
+    informal: normaliseName(box.informal) || null,
+  });
+  if (!key) return null;
+  return hotspots.find((s) => s.id !== exceptId && placeKey(s) === key) ?? null;
 }
 
 /** The place a box belongs to, if any. */

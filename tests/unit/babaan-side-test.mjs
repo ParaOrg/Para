@@ -178,7 +178,7 @@ import { pointInRing, ringToPolygon } from '../../src/features/routes/geo/ring.t
 import { passIndex } from '../../src/features/routes/geo/pass.ts';
 import { isLineMode, servedBy, directionLine } from '../../src/features/routes/model/routes.ts';
 import { drawnFromTheEnd } from '../../src/features/routes/model/timeline.ts';
-import { babaanSideFeatures } from '../../src/features/routes/geo/babaan-sides.ts';
+import { babaanSideFeatures } from '../../src/features/routes/map/babaan-sides.ts';
 
 /** rightOfLine before step 8, word for word (but for its name and types). */
 function oldRightOfLine(ring, line) {

@@ -19,21 +19,20 @@ const meta = {
   args: {
     signboard: '',
     mode: 'jeepney',
-    fareNote: '',
     isLocked: false,
     onSignboardChange: fn(),
     onModeChange: fn(),
-    onFareNoteChange: fn(),
   },
 } satisfies Meta<typeof RouteFields>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A new jeepney route: every field open, the lines left out of the Mode. */
+/** A new jeepney route: the Mode alone, the lines left out of it; no signboard or fare note. */
 export const Jeepney: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('textbox')).toBeNull();
     const mode = canvas.getByRole('combobox', { name: /Mode/ });
     await expect(mode).toBeEnabled();
     await expect(within(mode).queryByRole('option', { name: 'Ferry' })).toBeNull();
@@ -42,35 +41,39 @@ export const Jeepney: Story = {
   },
 };
 
-/** A train line, imported with its line named: its Mode stays, the rest may change. */
-export const Train: Story = {
-  args: { mode: 'lrt', signboard: 'LRT-1', fareNote: '₱15 to ₱35 by distance' },
+/** An ikot is called by its signboard: the field shows, and says it is required. */
+export const IkotSignboardRequired: Story = {
+  args: { isSignboardRequired: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole('combobox', { name: /Mode/ })).toBeDisabled();
-    await expect(canvas.getByRole('textbox', { name: /Signboard/ })).toBeEnabled();
+    const signboard = within(canvasElement).getByRole('textbox', { name: /Signboard/ });
+    await expect(signboard).toHaveAttribute('aria-required', 'true');
+    await expect(signboard).toHaveAttribute('placeholder', 'UP – Ikot');
   },
 };
 
-/** A return trip's: the route's facts, shown and locked. */
+/** A train line, imported with its line named: its Mode stays. */
+export const Train: Story = {
+  args: { mode: 'lrt', signboard: 'LRT-1' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('combobox', { name: /Mode/ })).toBeDisabled();
+  },
+};
+
+/** A return trip's ikot: the route's facts, shown and locked. */
 export const Locked: Story = {
-  args: { signboard: 'Fairview – Tala', fareNote: '₱13 first 4 km', isLocked: true },
+  args: { signboard: 'UP – Ikot', isSignboardRequired: true, isLocked: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('textbox', { name: /Signboard/ })).toBeDisabled();
     await expect(canvas.getByRole('combobox', { name: /Mode/ })).toBeDisabled();
-    await expect(canvas.getByRole('textbox', { name: /Fare note/ })).toBeDisabled();
   },
 };
 
-/**
- * A long signboard and fare note at a phone's width, where Mode and Fare note
- * stack and the fields read 16 px: both follow the viewport, not this box.
- */
+/** A long ikot signboard at a phone's width: the fields read 16 px, following the viewport. */
 export const Phone: Story = {
   args: {
-    signboard: 'SM City Fairview – Novaliches Bayan via Quirino Highway and Regalado Avenue',
-    fareNote: '₱13 first 4 km, ₱1.80 each km after; students, seniors and PWDs 20% off',
+    signboard: 'UP Diliman – Ikot via Katipunan, C.P. Garcia and the Academic Oval',
+    isSignboardRequired: true,
   },
   parameters: { phone: true },
   globals: { viewport: { value: 'mobile1', isRotated: false } },

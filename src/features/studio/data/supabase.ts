@@ -1,5 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { Database } from '@/shared/types/database.types';
+
+/** The studio's client, typed by the generated schema. */
+export type StudioClient = SupabaseClient<Database>;
+
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
@@ -12,7 +17,7 @@ export const supabaseConfig: { url: string; key: string } | null = url && key ? 
  *
  * Never throw here. An import-time throw takes the whole bundle with it: the
  * minifier removes every module after an unconditional throw, and the result
- * is a white page with no explanation. Production shipped exactly that.
+ * is a white page with no explanation.
  */
 export const supabaseConfigError: string | null = supabaseConfig
   ? null
@@ -27,21 +32,21 @@ export const supabaseConfigError: string | null = supabaseConfig
  *
  * The publishable key is public by design — it ships in this bundle. RLS is
  * what protects the data: public read; writes only by accounts on the editor
- * list (migration 0005), and only to rows they own.
+ * list (migration 0005); since 0015 every editor may change every row.
  */
-let client: SupabaseClient | null = null;
+let client: StudioClient | null = null;
 
-export function setSupabase(next: SupabaseClient): void {
+export function setSupabase(next: StudioClient): void {
   client = next;
 }
 
 /** This page's client, or null when the build has no Supabase config. */
-export function getSupabase(): SupabaseClient | null {
+export function getSupabase(): StudioClient | null {
   return client;
 }
 
 /** This page's client, or a readable error for code that cannot go on without one. */
-export function requireSupabase(): SupabaseClient {
+export function requireSupabase(): StudioClient {
   if (!client) {
     throw new Error(
       supabaseConfigError ?? 'No Supabase client: the entry point must call setSupabase() first',

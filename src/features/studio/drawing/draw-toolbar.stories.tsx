@@ -25,7 +25,6 @@ const straight = (from: LngLat, to: LngLat): Segment => ({
 
 const talaFairview: RouteRow & { name: string } = {
   id: 'sample-route',
-  ownerId: 'sample-owner',
   signboard: null,
   routeCode: null,
   shortName: null,
@@ -43,7 +42,6 @@ const talaFairview: RouteRow & { name: string } = {
 const parent: DirectionDrawing = {
   id: 'sample-out',
   routeId: 'sample-route',
-  ownerId: 'sample-owner',
   name: 'Tala → SM Fairview',
   originTerminal: null,
   destinationTerminal: null,
@@ -84,6 +82,7 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     load: fn(),
     metres: 0,
     start: fn(),
+    startWithPoints: fn(),
     startArea: fn(),
     loadArea: fn(),
     adoptHotspot: fn(),
@@ -116,8 +115,7 @@ const drawn = (state: Partial<Drawing> = {}) =>
 
 /**
  * Matches `(pointer: coarse)` for one story, so the toolbar takes the
- * finger's path: its hint in a pill, ✕ asking first. The Tailwind
- * `pointer-coarse:` sizes are CSS and still follow the real pointer.
+ * finger's path: its hint in a pill, ✕ asking first.
  */
 const asFinger = () => {
   const real = window.matchMedia;
@@ -220,7 +218,7 @@ export const KeysOff: Story = {
   },
 };
 
-/** Enter on a focused button presses that button, and is not Done (review of 2026-10-03). */
+/** Enter on a focused button presses that button, and is not Done. */
 export const EnterOnAButton: Story = {
   play: async ({ canvasElement, args }) => {
     await settled();
@@ -416,6 +414,50 @@ export const ExtendLongNames: Story = {
       to: 'Quezon City Hall Interim Terminal',
       backwards: false,
     },
+  },
+};
+
+/** Where a return trip closes: the first point of the way already drawn. */
+const loop = { closeAt: points[0], other: 'papunta' } as const;
+
+/** A return trip with no point yet: Close the loop rests, and its label says why. */
+export const ReturnTripEmpty: Story = {
+  args: { draw: drawing(), loop },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const close = canvas.getByRole('button', { name: 'Close the loop: add a point first' });
+    await expect(close).toBeDisabled();
+    await expect(canvas.getByText(/Tap the dot where papunta ended/)).toBeVisible();
+  },
+};
+
+/** A return trip begun on the other way's last point: the loop can be closed, and the hint says where it starts. */
+export const ReturnTripStarted: Story = {
+  args: { draw: drawing({ controlPoints: [points[2]], segments: [], line: [points[2]] }), loop },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Close the loop' })).toBeEnabled();
+    await expect(canvas.getByText(/starts where papunta ended \(the dot\)/)).toBeVisible();
+  },
+};
+
+/** Close the loop adds one last point on the way already drawn's first. */
+export const ReturnTripClosing: Story = {
+  args: { loop },
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Close the loop' }));
+    await expect(args.draw.addPoint).toHaveBeenCalledOnce();
+    await expect(args.draw.addPoint).toHaveBeenCalledWith(points[0]);
+  },
+};
+
+/** The line already ends on that point: a second would only double it. */
+export const ReturnTripClosed: Story = {
+  args: { draw: drawn({ controlPoints: [points[2], points[1], points[0]] }), loop },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'Close the loop: the loop is closed' }),
+    ).toBeDisabled();
   },
 };
 

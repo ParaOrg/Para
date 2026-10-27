@@ -30,12 +30,12 @@ const JOIN_M = 0.01;
  * Concatenate segments into one continuous line, dropping a segment's first
  * point only where it repeats the previous segment's last.
  *
- * It was dropped always, and a routed segment does not start on the click: it
+ * It is not dropped always: a routed segment does not start on the click, it
  * starts where the router put that click on the road, up to SNAP_RADIUS_M
  * (25 m) away. After a freehand segment, which does end on the click, the
- * road's first vertex was lost, and the saved line, its metres, its hotspot
- * order and the published line cut that corner, while the map, which draws
- * segment by segment, showed it whole (review of 2026-10-03, finding 7).
+ * road's first vertex would be lost, and the saved line, its metres, its
+ * hotspot order and the published line would cut that corner, while the map,
+ * which draws segment by segment, shows it whole.
  */
 export function joinSegments(segments: Segment[]): LngLat[] {
   const out: LngLat[] = [];
@@ -50,9 +50,9 @@ export function joinSegments(segments: Segment[]): LngLat[] {
 
 /**
  * Six decimals, about 0.1 m: what a save keeps of a coordinate. The router
- * and the mouse give 15 or more, and those digits were half of every row
- * (2026-09-25, future-proofing stage 2). The publish script rounds the same
- * way, so a published point is the saved one.
+ * and the mouse give 15 or more, and those digits measured half of every
+ * row. The publish script rounds the same way, so a published point is the
+ * saved one.
  */
 export const round6 = (n: number): number => Math.round(n * 1e6) / 1e6;
 
@@ -68,8 +68,8 @@ function toRad(deg: number) {
 /**
  * Metres in a degree of latitude — and of longitude, times the cosine of the
  * latitude — on the sphere `haversine` measures on: 111,194.9. The one
- * figure every flat patch and padded box uses (the review's 6.5: there were
- * four, 110,574 to 111,320, and a padding metre to cover the gap).
+ * figure every flat patch and padded box uses, so they agree: figures from
+ * 110,574 to 111,320 differ by up to 0.7%.
  */
 export const M_PER_DEG = toRad(1) * EARTH_RADIUS_M;
 
@@ -94,8 +94,8 @@ export function lineLength(coords: readonly LngLat[]): number {
  * Metres one screen pixel covers at this latitude and zoom, on MapLibre's
  * map: Web Mercator with 512 px tiles, so the equator's 40,075 km span 512 px
  * at zoom 0 — half the 156,543 m figure quoted for 256 px tiles. One function
- * for the chevrons' spacing and the locator's accuracy circle; the halo had the 256 px
- * figure and was drawn at half the fix's accuracy (review finding 10).
+ * for the chevrons' spacing and the locator's accuracy circle: the 256 px
+ * figure would draw that circle at half the fix's accuracy.
  */
 export function metresPerPixel(lat: number, zoom: number): number {
   return (78271.51696 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom;
@@ -109,7 +109,10 @@ export function zoomForScale(metres: number, lat: number): number {
   return Math.log2((metresPerPixel(lat, 0) * SCALE_PX) / metres);
 }
 
-/** `12.8km`: a length as the trip card's Kilometer tile writes it, to a tenth, no space (the owner's 3778:3183). */
+/**
+ * `12.8km`: a length as the trip card's Distance tile writes it, to a tenth,
+ * no space (Figma 3778:3183).
+ */
 export function kmLabel(metres: number): string {
   return (metres / 1000).toFixed(1) + 'km';
 }
@@ -131,7 +134,7 @@ export function nearestOnSegment(p: LngLat, a: LngLat, b: LngLat): { point: LngL
  * Metres along the line to the point of it nearest p. What breaks a tie
  * between two hotspots met on one segment (timeline.ts): the line may be
  * the full one or its overview, so an index into it is not to be trusted,
- * a position along it is (2026-10-03).
+ * a position along it is.
  */
 export function metresAlong(line: readonly LngLat[], p: LngLat): number {
   if (line.length < 2) return 0;
@@ -152,7 +155,7 @@ export function metresAlong(line: readonly LngLat[], p: LngLat): number {
 
 /**
  * Metres from point p to segment a–b, on the same flat patch: the one
- * point-to-segment every file measures with (the review's 6.5).
+ * point-to-segment every file measures with.
  */
 export function pointToSegmentM(p: LngLat, a: LngLat, b: LngLat): number {
   const { point } = nearestOnSegment(p, a, b);

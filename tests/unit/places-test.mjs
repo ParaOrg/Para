@@ -12,6 +12,7 @@ import {
   guessBox,
   guessEnds,
   nearestHotspot,
+  placeAlreadyNamed,
   placeOfBox,
   terminalAlreadyAt,
 } from '../../src/features/studio/panels/places.ts';
@@ -138,4 +139,24 @@ test("a new route's ends follow its line, swapped when that pair is a route the 
   assert.deepEqual(guessEnds(places, stops, line, [talaFairview]), [tala.id, fairview.id]);
   // No places: nothing guessed.
   assert.deepEqual(guessEnds([], [], line, []), ['', '']);
+});
+
+test('a name that is already a place is found, as the pickers group it: case and spacing do not matter', () => {
+  const tala = box('Tala Jeepney Terminal', 121.1, 'terminal', 'Tala');
+  const fairview = box('SM Fairview Ilalim', 121.2, 'hintuan', 'SM Fairview');
+  const stops = [tala, fairview];
+  assert.equal(placeAlreadyNamed(stops, { name: 'Tala', informal: '' }), tala);
+  assert.equal(placeAlreadyNamed(stops, { name: 'tala', informal: '' }), tala);
+  assert.equal(
+    placeAlreadyNamed(stops, { name: 'Tala Bay', informal: '  SM   fairview ' }),
+    fairview,
+  );
+  assert.equal(placeAlreadyNamed(stops, { name: ' SM Fairview ', informal: '' }), fairview);
+});
+
+test("a new name, a blank one, and the caller's own row are no match", () => {
+  const tala = box('Tala Jeepney Terminal', 121.1, 'terminal', 'Tala');
+  assert.equal(placeAlreadyNamed([tala], { name: 'Novaliches', informal: '' }), null);
+  assert.equal(placeAlreadyNamed([tala], { name: '  ', informal: '' }), null);
+  assert.equal(placeAlreadyNamed([tala], { name: 'Tala', informal: '' }, tala.id), null);
 });

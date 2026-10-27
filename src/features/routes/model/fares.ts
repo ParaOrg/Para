@@ -8,7 +8,7 @@ import type { TransportMode } from './routes';
  * docs/research/ltfrb-jeepney-fares.md. Amounts in centavos, so the rounding
  * never meets a float.
  */
-export interface FareRule {
+interface FareRule {
   /** The first day it applies, Manila time, `YYYY-MM-DD`. */
   from: string;
   minimum: number;
@@ -20,8 +20,8 @@ export interface FareRule {
 
 /**
  * Traditional jeepney (PUJ, Mega Manila), newest last. Only the traditional
- * class for now, on the owner's call of 2026-09-26. When LTFRB changes the
- * fare, add a row: the card switches on its date by itself.
+ * class for now (the owner's call). When LTFRB changes the fare, add a row:
+ * the card switches on its date by itself.
  */
 export const TRADITIONAL: FareRule[] = [
   {
@@ -31,9 +31,9 @@ export const TRADITIONAL: FareRule[] = [
     perKm: 180,
     source: 'LTFRB fare guide of 8 Oct 2023',
   },
-  // The owner supplied the official guide on 2026-09-28, the day it took
-  // effect; fares-test holds its whole table and every row reproduces. The
-  // guide prints the discount rule unrounded (11.20 + 1.60); its rows round.
+  // LTFRB's PUJ General Fare Guide, effective 2026-09-28; fares-test holds
+  // its whole table and every row reproduces. The guide prints the discount
+  // rule unrounded (11.20 + 1.60); its rows round.
   {
     from: '2026-09-28',
     minimum: 1400,
@@ -98,7 +98,7 @@ export function peso(centavos: number): string {
 /**
  * `₱26` or `₱26–28`, in whole pesos: the low end rounded down, the high end
  * up, so the range still holds the fare — a discounted ₱19.25–20.75 is
- * `₱19–21` (the owner, 2026-09-30: "please don't ever use decimals").
+ * `₱19–21`: the cards never show decimals (the owner's rule).
  */
 export function pesoRange(low: number, high: number): string {
   const lo = Math.floor(low / 100);
@@ -107,16 +107,15 @@ export function pesoRange(low: number, high: number): string {
 }
 
 /**
- * One ride of `metres` by `mode`, as the cards write pesos — `₱14`,
- * `₱24–26` — or nothing when no fare rule prices the mode. A range, the part
- * km counted down and up (fareFor), in whole pesos (pesoRange): the owner
- * had it rounded to one figure on 2026-09-30, then asked for the range back
- * the same day ("don't remove the range of fare, it helps the user"), on
- * the discounted fare too. The trip card's Expected
- * fare, over its whole ride (the owner's 3778:3183, 2026-09-29). The only
- * pesos on the public map since his RouteCard State set took them off the
- * cards (wholeRideFare, their range over a place's ways out, went with
- * them); the studio keeps its own fare details, under the trip card (RouteFacts).
+ * One ride of `metres` by `mode`, as the cards write pesos — `₱14`, `₱24–26`
+ * — or nothing when no fare rule prices the mode. A range (the part km
+ * counted down and up, fareFor) in whole pesos (pesoRange), on the discounted
+ * fare too, because the range helps a commuter (the owner's call). The trip
+ * card's Expected fare over its whole ride, and its pill's over a picked one
+ * (Figma's TimelineRouteDetailCard, 3778:3183); a train's are railFares'. The
+ * trip card is the only place the public map shows pesos: the owner's
+ * RouteCard State set has none. The studio keeps its own fare details, under
+ * the trip card (RouteFacts).
  */
 export function rideFare(
   mode: TransportMode | undefined,

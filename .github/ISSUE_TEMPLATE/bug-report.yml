@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in the app does not work as it should
+labels: ['needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for telling us. For a wrong or missing jeepney route, please use the **Wrong or missing route** form instead.
+  - type: dropdown
+    id: page
+    attributes:
+      label: Where did it happen?
+      options:
+        - The public map (/)
+        - The contributor page (/contribute/)
+        - The studio (/studio/)
+        - The Android contributor app
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect to see?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we see it too?
+      description: The taps or clicks, in order.
+      placeholder: |
+        1. Open the map
+        2. Tap a route
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Your phone or computer and browser
+      placeholder: Android 14, Chrome 130
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or screen recording
+      description: Drag the file into this box. Optional.

@@ -1,0 +1,40 @@
+import { lineFileSchema } from './line-file-schema';
+import { LINES_URL } from './map-file';
+import type { LineStringGeoJSON } from '../model/geojson-schema';
+import { keepLinePass } from '../model/line-pass';
+
+const lines = new Map<string, Promise<LineStringGeoJSON | null>>();
+
+/**
+ * A direction's full line, read once a page and shared. Null for a
+ * direction with no line; a failure is not kept, so the next light tries
+ * again — until then the map keeps the overview, which is the same road.
+ *
+ * The orange stretches the file brings with the line are kept under the line
+ * itself (line-pass.ts), and painted only if they were worked out against the
+ * index's own hintuans; otherwise, and for a file without them, the map works
+ * them out itself (pass-stretches.ts, stretchesPast).
+ */
+export function fetchLine(id: string): Promise<LineStringGeoJSON | null> {
+  let line = lines.get(id);
+  if (!line) {
+    line = fetch(`${LINES_URL}${encodeURIComponent(id)}.json`, { cache: 'no-cache' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`${LINES_URL}${id}.json: HTTP ${res.status}`);
+        const parsed = lineFileSchema.safeParse(await res.json());
+        if (!parsed.success || parsed.data.id !== id) {
+          throw new Error(`${LINES_URL}${id}.json is not that direction's line`);
+        }
+        const file = parsed.data;
+        if (!file.shape) return null;
+        keepLinePass(file.shape, file);
+        return file.shape;
+      })
+      .catch((e: unknown) => {
+        lines.delete(id);
+        throw e;
+      });
+    lines.set(id, line);
+  }
+  return line;
+}

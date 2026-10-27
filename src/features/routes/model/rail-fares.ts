@@ -2,10 +2,10 @@ import { manilaDate, pesoRange } from './fares';
 import { isRailLine, type RailLine } from './routes';
 
 /**
- * The train fares, station to station: LRT-1, LRT-2 and MRT-3 — the owner's
- * ask of 2026-10-02, "real train fares, shown by station like jeep fares".
- * From the operators' own tables, transcribed and checked cell by cell;
- * the research and its sources are in docs/research/rail-fares.md.
+ * The train fares, station to station, on LRT-1, LRT-2 and MRT-3: shown by
+ * station as a jeep's are by hintuan. From the operators' own tables,
+ * transcribed and checked cell by cell; the research and its sources are in
+ * docs/research/rail-fares.md.
  *
  * A ride's fare is two: the beep card's (stored value) and the single
  * journey ticket's, which is the same or more. The card shows them as a
@@ -19,7 +19,7 @@ import { isRailLine, type RailLine } from './routes';
  */
 
 /** One ride's two fares, in centavos. */
-export interface RailFare {
+interface RailFare {
   card: number;
   ticket: number;
 }

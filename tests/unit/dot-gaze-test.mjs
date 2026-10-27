@@ -61,7 +61,7 @@ test('on the routes, the point nearest the dot, between their points too', () =>
 });
 
 // ------------------------------------------------- what the public map gazes at
-// gazeSubjects (2026-10-05): the subjects VisitorLocation hands the dot,
+// gazeSubjects (2026-10-05): the subjects CommuterLocation hands the dot,
 // built as CommuterApp built them before the locator moved off it (the
 // cheap-phone plan, step 15) — that code, word for word but for its names,
 // is `before` here.
@@ -89,7 +89,7 @@ function before(ride, stops, saved, locator) {
   ];
 }
 
-test("the public map's subjects: the same keys, gazed at the same places, as CommuterApp's were", () => {
+test("the public map's subjects: the same keys, gazed at the same places, as PublicMapApp's were", () => {
   const line = (id, routeId, pts) => ({
     id,
     routeId,
@@ -132,14 +132,20 @@ test("the public map's subjects: the same keys, gazed at the same places, as Com
       ...nothing,
       candidates: [a, b],
       litDirections: [a],
-      highlight: { where: 'list', from: 'Tala', ids: ['a1'], livery: 'violet' },
+      highlight: { where: 'list', card: 'Tala', from: 'Tala', ids: ['a1'], livery: 'violet' },
     },
     {
       ...nothing,
       place,
       candidates: [],
       litDirections: [a, b],
-      highlight: { where: 'hotspot', from: 'SM Fairview', ids: ['a1'], livery: 'blue' },
+      highlight: {
+        where: 'hotspot',
+        card: 'SM Fairview',
+        from: 'SM Fairview',
+        ids: ['a1'],
+        livery: 'blue',
+      },
     },
     { ...nothing, trip: a2, litDirections: [a2], candidates: [a, a2, b] },
     {

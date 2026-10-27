@@ -34,8 +34,8 @@ if (!existsSync(join(root, 'dist', 'sw.js'))) {
   console.log('FAIL  dist/sw.js missing — run npm run build first');
   process.exit(1);
 }
-const published = JSON.parse(readFileSync(join(root, 'public', 'data', 'index.v4.json'), 'utf8'));
-/** One past the shape this app reads (src/features/published-map/map-file.ts, MAP_FILE_SCHEMA). */
+const published = JSON.parse(readFileSync(join(root, 'public', 'data', 'index.v5.json'), 'utf8'));
+/** One past the shape this app reads (src/features/routes/published/map-file.ts, MAP_FILE_SCHEMA). */
 const MAP_FILE_SCHEMA_NEXT = published.schema + 1;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const d = new Date(published.published_at);
@@ -44,9 +44,8 @@ const routeCount = published.variants.length;
 
 /**
  * The map's 'load' on page `p`, as a production build shows it (it keeps
- * its map to itself): MapView's design button (BasemapControl,
- * data-testid="basemap"), which comes with the 'load' (framing-test holds
- * it to the 'load'); no failure banner, which shows in the button's place;
+ * its map to itself): MapView's `data-loaded`, set at the 'load'; no
+ * failure banner;
  * and "Loading map…" gone. Not that the basemap's tiles are in: MapLibre
  * (6.7, tile_manager.ts, loaded()) counts a tile that failed as one that
  * came, so 'load' comes once every tile in view has come or failed, and
@@ -63,7 +62,7 @@ const mapLoad = (p) =>
     () => {
       const text = document.body.innerText;
       return (
-        !!document.querySelector('[data-testid="basemap"]') &&
+        !!document.querySelector('[data-testid="map-view"][data-loaded]') &&
         !text.includes('The map failed to load') &&
         !text.includes('Loading map…')
       );
@@ -82,7 +81,7 @@ if (!base) {
 console.log(`preview at ${base}`);
 
 /**
- * Opens a trip as a visitor does, by a tap on its line. A production build
+ * Opens a trip as a commuter does, by a tap on its line. A production build
  * keeps its map to itself (no window.__map) and trip links went on
  * 2026-10-03, so the line is found on a screenshot: a pixel in the colour
  * routes rest in (Map/RouteLine/surface-default, #8ec5ff), away from the
@@ -305,8 +304,8 @@ try {
     names.join(', '),
   );
   check(
-    'map-file cache holds /data/index.v4.json',
-    !!mapFile && caches[mapFile].some((u) => u.endsWith('/data/index.v4.json')),
+    'map-file cache holds /data/index.v5.json',
+    !!mapFile && caches[mapFile].some((u) => u.endsWith('/data/index.v5.json')),
   );
   check(
     'basemap-meta holds the style and the TileJSON',
@@ -337,7 +336,7 @@ try {
     ['/', '/assets/public-map-', true],
     ['/studio', null, false],
     ['/studio/', 'ParaPo Studio', false],
-    ['/data/index.v4.json', '"published_at"', null],
+    ['/data/index.v5.json', '"published_at"', null],
     ['/manifest.webmanifest', '"short_name"', null],
   ]) {
     const r = await page.goto(`${base}${path}`, { waitUntil: 'load' });
@@ -432,7 +431,7 @@ try {
     await new Promise((r) => setTimeout(r, 6000));
     await route.continue().catch(() => {});
   };
-  await ctx.route('**/data/index.v4.json', slow);
+  await ctx.route('**/data/index.v5.json', slow);
   await page.reload({ waitUntil: 'load' });
   const slowMap = await arrived.waitFor({ state: 'attached', timeout: 20000 }).then(
     () => true,
@@ -449,13 +448,13 @@ try {
     slowMap && slowText === `Not refreshed · map as of ${expectedDate}`,
     slowText,
   );
-  await ctx.unroute('**/data/index.v4.json', slow);
+  await ctx.unroute('**/data/index.v5.json', slow);
   await page.reload({ waitUntil: 'load' });
   await page.waitForTimeout(2000);
   check('fast again: no notice', (await page.locator('[data-testid="offline"]').count()) === 0);
 
   // A trip opened reads its direction's full line, and the worker keeps it.
-  // Opened by a tap, as a visitor opens one: trip links (?r=<id>) went on
+  // Opened by a tap, as a commuter opens one: trip links (?r=<id>) went on
   // 2026-10-03.
   const opened = await openSomeTrip(page);
   if (!opened)
@@ -489,7 +488,7 @@ try {
       contentType: 'application/json',
       body: JSON.stringify({ ...published, schema: MAP_FILE_SCHEMA_NEXT }),
     });
-  await ctx.route('**/data/index.v4.json', newer);
+  await ctx.route('**/data/index.v5.json', newer);
   await page.reload({ waitUntil: 'load' });
   const banner = page.getByText('This map was published for a newer version of the app.');
   const bannerShown = await banner.waitFor({ timeout: 15000 }).then(
@@ -500,7 +499,7 @@ try {
     'a map published for a newer app: the banner says so, with Reload',
     bannerShown && (await page.getByRole('button', { name: 'Reload', exact: true }).count()) > 0,
   );
-  await ctx.unroute('**/data/index.v4.json', newer);
+  await ctx.unroute('**/data/index.v5.json', newer);
   if (bannerShown) {
     await Promise.all([
       page.waitForEvent('load', { timeout: 20000 }).catch(() => {}),

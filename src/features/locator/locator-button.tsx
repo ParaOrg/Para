@@ -2,21 +2,33 @@ import type { ComponentPropsWithoutRef } from 'react';
 
 /**
  * Figma's "Property 1" on LocatorButton (3870:5437), its values verbatim:
- * no location yet (LocationOff, the owner's of 2026-10-01: a tap asks for
- * it), the camera somewhere else, the camera on the visitor, and the camera
- * on the visitor turned the way the phone faces.
+ * no location yet (LocationOff: a tap asks for it), the camera somewhere
+ * else, the camera on the commuter, and the camera on the commuter turned
+ * the way the phone faces.
  */
 export type LocatorMode =
   'LocationOff' | 'TrackOwnLocation' | 'TrackedLocation' | 'TracksTheMapBasedOnCompassFacing';
+
+/**
+ * Round on its own (3870:5437); only its bottom when the map-style button
+ * sits on it in LocationAndMap (4245:1966).
+ */
+export type LocatorButtonCorners = 'all' | 'bottom';
+
+const CORNERS = {
+  all: 'rounded-full',
+  bottom: 'rounded-b-full',
+} satisfies Record<LocatorButtonCorners, string>;
 
 type Props = Omit<
   ComponentPropsWithoutRef<'button'>,
   'children' | 'className' | 'style' | 'dangerouslySetInnerHTML' | 'type' | 'aria-label'
 > & {
   mode: LocatorMode;
+  corners?: LocatorButtonCorners;
   /**
    * TrackedLocation's arrow turns the way the phone faces, on the screen
-   * (the owner's rule, 3870:5408): degrees clockwise from the screen's up.
+   * (Figma 3870:5408): degrees clockwise from the screen's up.
    * Null, it points up.
    */
   heading?: number | null;
@@ -25,17 +37,21 @@ type Props = Omit<
 };
 
 /**
- * The owner's LocatorButton (3870:5437, 2026-10-01), in WhereAmI's place:
- * a 48 px Special pill (40 until the owner's change later that day) showing
- * where the camera is with the visitor —
- * a struck-through compass while there is no location (LocationOff),
- * a blue dot when it is elsewhere (TrackOwnLocation), a black arrow when it
- * follows them (TrackedLocation), a blue arrow when it also turns with the
- * phone (TracksTheMapBasedOnCompassFacing). Pressed is
- * InnerShadow/SpecialButtonPressed while touched, nothing else changing,
- * as drawn; no hover is drawn, so none.
+ * LocatorButton (Figma 3870:5437): a 48 px Special pill showing where the
+ * camera is with the commuter — a struck-through compass while there is no
+ * location (LocationOff), a blue dot when it is elsewhere (TrackOwnLocation),
+ * a black arrow when it follows them (TrackedLocation), a blue arrow when it
+ * also turns with the phone (TracksTheMapBasedOnCompassFacing). Pressed is
+ * InnerShadow/SpecialButtonPressed while touched, nothing else changing, as
+ * drawn; no hover is drawn, so none.
  */
-export function LocatorButton({ mode, heading = null, 'aria-label': label, ...rest }: Props) {
+export function LocatorButton({
+  mode,
+  corners = 'all',
+  heading = null,
+  'aria-label': label,
+  ...rest
+}: Props) {
   return (
     <button
       type="button"
@@ -45,8 +61,9 @@ export function LocatorButton({ mode, heading = null, 'aria-label': label, ...re
       title={label}
       data-mode={mode}
       className={
-        'group relative grid size-12 shrink-0 place-items-center rounded-full bg-surface-tertiary ' +
-        'outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand-surface'
+        'group relative grid size-12 shrink-0 place-items-center bg-surface-tertiary ' +
+        'outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-brand-surface ' +
+        CORNERS[corners]
       }
     >
       {mode === 'LocationOff' ? (
@@ -57,7 +74,7 @@ export function LocatorButton({ mode, heading = null, 'aria-label': label, ...re
         // The ring: Map/LocatorIndicatorOverlay/surface, 8 around what it holds.
         <span className="grid place-items-center rounded-full bg-map-locator-indicator-overlay-surface/15 p-2">
           {mode === 'TrackOwnLocation' ? (
-            // The visitor's dot as the map draws it, small: white, 2 around a 12 px Brand/surface.
+            // The commuter's dot as the map draws it, small: white, 2 around a 12 px Brand/surface.
             <span className="rounded-full bg-surface p-0.5">
               <span className="block size-3 rounded-full bg-brand-surface" />
             </span>
@@ -69,13 +86,16 @@ export function LocatorButton({ mode, heading = null, 'aria-label': label, ...re
       {/* Figma's shadow lies over what the button holds, so its ring does not hide the inner light. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full shadow-special-button-rest group-active:shadow-special-button-pressed"
+        className={
+          'pointer-events-none absolute inset-0 shadow-special-button-rest group-active:shadow-special-button-pressed ' +
+          CORNERS[corners]
+        }
       />
     </button>
   );
 }
 
-/** Figma's `navigation-off` (3872:6014), 28 px in 6 around, in Content/tertiary (the owner's new colour, 2026-10-01, 3870:5437; Content/disabled before). */
+/** Figma's `navigation-off` (3872:6014), 28 px in 6 around, in Content/tertiary (3870:5437). */
 function NavigationOffIcon() {
   return (
     <svg

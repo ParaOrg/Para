@@ -1,6 +1,6 @@
 import { passIndex } from '@/features/routes/geo/pass';
-import { entryDistance, type Ring } from '@/features/routes/geo/ring';
-import { servedBy, directionLine, type DirectionRow } from '@/features/routes/model/routes';
+import { entryDistance, firstTouchIndex, type Ring } from '@/features/routes/geo/ring';
+import { servedBy, directionLine, isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
 // Pure functions, kept apart from the writes (hotspots-write.ts), which need the
 // Supabase client a test cannot load: so they can be unit-tested, and so the
@@ -26,6 +26,29 @@ export function linksThrough(
     if (idx >= 0) out.push({ directionId: v.id, sequence: idx });
   }
   return out;
+}
+
+/**
+ * A terminal's links: the directions the owner ticked, and every ikot the
+ * outline is passed by. An ikot has no ends, so a terminal on it is a place
+ * like a hintuan and is linked by the line (the ticks never carry one, and a
+ * stale link to an ikot the outline no longer meets is dropped). `sequence`
+ * is where the direction first meets the outline, 0 when a ticked route never
+ * enters it.
+ */
+export function terminalLinks(
+  ring: Ring,
+  ticked: readonly string[],
+  directions: DirectionRow[],
+): { directionId: string; sequence: number }[] {
+  const byId = new Map(directions.map((v) => [v.id, v]));
+  const chosen = ticked.flatMap((id) => {
+    const v = byId.get(id);
+    if (!v || isLoop(v)) return [];
+    return [{ directionId: id, sequence: Math.max(0, firstTouchIndex(directionLine(v), ring)) }];
+  });
+  const loops = linksThrough(ring, directions.filter(isLoop), null);
+  return [...chosen, ...loops];
 }
 
 /** How far into a route "starts here" still holds, in metres. */

@@ -2,8 +2,13 @@
 /* PalimosPoDesignSystem: the tokens, mirrored from the Figma variables. */
 @import '../design-system/foundation/tokens.css';
 @import '../design-system/foundation/fonts.css';
+/* The page and the map's corners, shared with the contribute page's stylesheet. */
+@import './map-frame.css';
 /* Stories are Storybook-only: their classes stay out of the site's CSS. .storybook/preview.css adds them back. */
 @source not '../**/*.stories.tsx';
+/* The contribute page has a stylesheet of its own (app/contribute/contribute.css). */
+@source not '../app/contribute';
+@source not '../features/contribute';
 
 /*
  * The card layout switches on the width of the MAP, not of the window: both
@@ -11,17 +16,25 @@
  * looks right inside a Storybook frame too. 40rem is roughly where a floating
  * card stops covering the thing it describes.
  *
- * The redesigned route cards (the owner's frames of 2026-09-28) dock at the
- * bottom until `@float:` and only then sit in the top-left corner: he drew
- * them there at 1024 and 1536 wide, docked at 640 and 393.
+ * The route cards dock at the bottom until `@float:` and only then sit in the
+ * top-left corner: the Figma frames draw them there at 1024 and 1536 wide,
+ * docked at 640 and 393.
  */
 @theme {
   --container-wide: 40rem;
   --container-float: 64rem;
+  /* The narrowest phones, where the studio's map switch drops its icons (`max-xs:`). */
+  --breakpoint-xs: 22.5rem;
 }
 
 /*
- * BottomSheet (src/shared/cards/BottomSheet.tsx) stops being a sheet once
+ * `usable:` is the state of anything not disabled: Button's `enabled:`, which a link
+ * (ButtonLink) is as well, since only a form control can be :enabled.
+ */
+@custom-variant usable (&:not(:disabled));
+
+/*
+ * BottomSheet (src/shared/ui/bottom-sheet.tsx) stops being a sheet once
  * the map is wide enough for what it floats as: its `corner` kind at
  * --container-float, its `card` kind at --container-wide (the widths are
  * written out: a container query cannot read a variable). `sheet-floating:`
@@ -51,35 +64,4 @@
       @slot;
     }
   }
-}
-
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-}
-
-/*
- * `viewport-fit=cover` lets the page paint under a notch and under the home
- * indicator, so MapLibre's own corners have to be pushed back inside the safe
- * area. Otherwise the zoom buttons hide behind the notch and the OpenStreetMap
- * attribution — which the licence requires to stay visible — sits under the
- * home indicator. On a desktop every inset is 0, so nothing moves.
- */
-.maplibregl-ctrl-top-left {
-  top: env(safe-area-inset-top);
-  left: env(safe-area-inset-left);
-}
-.maplibregl-ctrl-top-right {
-  top: env(safe-area-inset-top);
-  right: env(safe-area-inset-right);
-}
-.maplibregl-ctrl-bottom-left {
-  bottom: env(safe-area-inset-bottom);
-  left: env(safe-area-inset-left);
-}
-.maplibregl-ctrl-bottom-right {
-  bottom: env(safe-area-inset-bottom);
-  right: env(safe-area-inset-right);
 }

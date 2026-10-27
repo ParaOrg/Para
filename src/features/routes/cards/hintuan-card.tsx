@@ -1,24 +1,17 @@
-import { useLayoutEffect, useRef, useState, type Ref } from 'react';
+import { useState, type Ref } from 'react';
 
-import { Button } from '@/design-system/primitives/button';
-import { IconButton } from '@/design-system/primitives/icon-button';
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
-import {
-  ChevronLeftIcon,
-  CloseIcon,
-  HintuanIcon,
-  InformationIcon,
-  JeepIcon,
-  TerminalIcon,
-} from '@/shared/ui/route-icons';
-import { haversine } from '@/shared/utils/geo';
 
-import { wayWord } from './route-card-header';
+import { HintuanCardBox } from './hintuan-card-box';
+import { HintuanCardCounter } from './hintuan-card-counter';
+import { HintuanCardHeader } from './hintuan-card-header';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { drawnDepartures } from '../model/departures';
-import { hotspotLabel, type HotspotKind, type Hotspot } from '../model/hotspots';
+import { useTellShown } from './use-tell-shown';
+import { drawnDepartures, switchWord } from '../model/departures';
+import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { placeBoxes } from '../model/places';
+import { boxTheOtherWay, placeBoxes } from '../model/places';
+import { isLoop } from '../model/routes';
 import type { Direction } from '../model/routes';
 
 interface Props {
@@ -44,18 +37,16 @@ interface Props {
     /**
      * SWITCH pressed: the routes turn round, and `box`, when the other way
      * leaves from another box of the place, is the one to select. The camera
-     * stays where the visitor tapped the hintuan — no zoom, no glide (the
-     * owner, 2026-10-01: "it must remain where the camera the user clicked
-     * the hintuan").
+     * stays where the commuter tapped the hintuan — no zoom, no glide.
      */
     onSwitch?: (box: string | null) => void;
   };
   /** Another box of the place picked from its row: select it and go there. */
   onPickBox: (id: string) => void;
   /**
-   * No row Selected: the Selected one tapped again lets it go (the owner's
-   * ask, 2026-10-01), and the card shows the routes through every box of
-   * the place until a row is picked — the same one, or another.
+   * No row Selected: the Selected one tapped again lets it go, and the card
+   * shows the routes through every box of the place until a row is picked —
+   * the same one, or another.
    */
   deselected?: boolean;
   /** The Selected row tapped: let it go. */
@@ -71,44 +62,29 @@ interface Props {
   dockRef?: Ref<HTMLDivElement>;
 }
 
-// Figma's HotspotSelectionBar, a terminal's and a hintuan's: the fill, its
-// hairlines and its letter.
-const BAR = {
-  terminal:
-    'bg-map-hotspots-card-terminal-surface border-map-hotspots-card-terminal-border-primary',
-  hintuan: 'bg-map-hotspots-card-hintuan-surface border-map-hotspots-card-hintuan-border-primary',
-} satisfies Record<HotspotKind, string>;
-
-const LETTER = { terminal: <TerminalIcon />, hintuan: <HintuanIcon /> } satisfies Record<
-  HotspotKind,
-  unknown
->;
-
 /**
- * A place and every box of it — the owner's HintuanCard (3854:12690,
- * 2026-09-30), the public map's card for a hotspot since that day, in place
- * of one card per box with its siblings as chips.
+ * A place and every box of it — Figma's HintuanCard (3854:12690), the public
+ * map's card for a hotspot.
  *
  * Under the place's name, a HotspotSelectionBar per box: terminals first, in
  * sky, then the hintuans, in green, each in the order drawn, and boxes of one
  * name numbered (placeBoxes). The box tapped on the map is the Selected one,
- * pressed in; a tap on another row picks it, and the map goes there, the
- * card staying at its height (the caller's `onPickBox`). A tap on the
- * Selected row lets it go: no row Selected, and the routes below are the
- * whole place's until a row is picked again (`deselected`, the owner's ask
- * of 2026-10-01).
+ * pressed in; a tap on another row picks it, and the map goes there, the card
+ * staying at its height (the caller's `onPickBox`). A tap on the Selected row
+ * lets it go: no row Selected, and the routes below are the whole place's
+ * until a row is picked again (`deselected`).
  *
  * Under the rows, the routes that stop at the Selected box — only there:
- * Lagro 1, on the way to SM Fairview, lists Tala → SM Fairview and
- * → Novaliches; Lagro 2, across the road, their way back (the owner's
- * example). The HintuanCardRouteCounter (3851:12206) sits across the join,
- * with SWITCH: the other way round, at this box when it is passed both ways,
- * else at the nearest box of the place that is — the selection moves there.
- * With no box passed the other way, SWITCH rests disabled; with no route at
- * all, the counter is left out.
+ * Lagro 1, on the way to SM Fairview, lists Tala → SM Fairview and →
+ * Novaliches; Lagro 2, across the road, their way back. The
+ * HintuanCardRouteCounter (3851:12206) sits across the join, with SWITCH: the
+ * other way round, at this box when it is passed both ways, else at the
+ * nearest box of the place that is — the selection moves there. With no box
+ * passed the other way, SWITCH rests disabled; with no route at all, the
+ * counter is left out.
  *
- * ⓘ opens the hintuan's description, a card the owner has yet to design: it
- * rests disabled until then (his call, 2026-09-30).
+ * ⓘ rests disabled, the owner's call, until the hintuan's description card is
+ * designed. TODO: open that description from ⓘ once its card is designed.
  */
 export function HintuanCard({
   hotspot,
@@ -137,7 +113,12 @@ export function HintuanCard({
       .map((v) => byId.get(v))
       .filter((v): v is Direction => !!v);
   /** Whether a box is passed `back` — the way back — or the way there, by a drawn direction. */
-  const passes = (id: string, back: boolean) => drawnDepartures(linked(id), back).length > 0;
+  // A loop is passed both ways round, so it never decides which way a box is passed.
+  const passes = (id: string, back: boolean) =>
+    drawnDepartures(
+      linked(id).filter((v) => !isLoop(v)),
+      back,
+    ).length > 0;
 
   // What the routes below are of: the Selected box, or with none, every box
   // of the place, each direction once.
@@ -147,10 +128,12 @@ export function HintuanCard({
 
   // The way round asked for; routes passing one way only show that way.
   const [flipped, setFlipped] = useState(false);
-  const there = drawnDepartures(routes, false).length > 0;
-  const backToo = drawnDepartures(routes, true).length > 0;
+  const twoEnded = routes.filter((v) => !isLoop(v));
+  const there = drawnDepartures(twoEnded, false).length > 0;
+  const backToo = drawnDepartures(twoEnded, true).length > 0;
   const back = there && backToo ? flipped : backToo;
-  const shown = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v.id));
+  const showing = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v));
+  const shown = showing.map((v) => v.id);
 
   // The other way round: here, when these routes run both ways; else the
   // nearest box of the place that is passed that way — none with no row
@@ -161,37 +144,17 @@ export function HintuanCard({
       ? hotspot
       : deselected
         ? null
-        : (rows
-            .map((r) => r.box)
-            .filter((b) => b.id !== hotspot.id && passes(b.id, other))
-            .sort(
-              (a, b) =>
-                haversine(a.point.coordinates, hotspot.point.coordinates) -
-                haversine(b.point.coordinates, hotspot.point.coordinates),
-            )[0] ?? null);
+        : boxTheOtherWay(
+            hotspot,
+            rows.map((r) => r.box),
+            (id) => passes(id, other),
+          );
 
-  // What the RouteCards show, for the map to light; null once the card
-  // closes, so an open card showing nothing still says it is open (a list
-  // kept behind it must not light its own: review of 2026-10-03). Told
-  // before the first paint, so that list's routes do not flash lit for a
-  // frame. Told only when that changes: the caller's function is read from
-  // a ref, so one made afresh each render cannot set the lights going in a loop.
   const shownKey = shown.join('\n');
-  const onShown = useRef(routeCards.onShown);
-  // Kept current as each render commits, ahead of the effect below that reads it.
-  useLayoutEffect(() => {
-    onShown.current = routeCards.onShown;
-  });
-  useLayoutEffect(() => {
-    const tell = onShown.current;
-    tell(shownKey ? shownKey.split('\n') : []);
-    return () => tell(null);
-  }, [shownKey]);
+  useTellShown(routeCards.onShown, shownKey);
 
-  // Figma's "2 routes passes here" (the owner's of 2026-10-01; "… through"
-  // before), its verb agreeing with the count. It counts the head routes,
-  // a card each, not their tails (the owner, 2026-10-01: "we're counting the
-  // head route only not tails").
+  // Figma's "2 routes passes here", its verb agreeing with the count. It
+  // counts the head routes, a card each, not their tails.
   const heads = drawnDepartures(routes, back).length;
   const count = `${heads} ${heads === 1 ? 'route passes' : 'routes pass'} here`;
 
@@ -203,82 +166,23 @@ export function HintuanCard({
       onClose={onClose}
       hidden={hidden}
       height={height}
-      header={
-        // RouteCardHeader/Variant3: the place's name, ⓘ and ✕; ‹ before
-        // the name when a trip's name on the map opened it, as a trip has.
-        <div
-          data-testid="card-place"
-          className="flex w-full items-center gap-2 bg-surface px-3 pt-0 pb-4 @float:pt-3"
-        >
-          {onBack && (
-            <IconButton
-              variant="special"
-              icon={<ChevronLeftIcon />}
-              label="Back"
-              tooltip="top"
-              onClick={onBack}
-            />
-          )}
-          <p className="min-w-0 flex-1 truncate font-sn-pro text-2xl/8 font-black text-content-primary">
-            {label}
-          </p>
-          <div className="flex shrink-0 items-center gap-2">
-            <IconButton
-              variant="special"
-              icon={<InformationIcon />}
-              label="About this place"
-              tooltip="top"
-              disabled
-            />
-            <IconButton
-              variant="special"
-              icon={<CloseIcon />}
-              label="Close"
-              tooltip="top"
-              onClick={onClose}
-            />
-          </div>
-        </div>
-      }
+      header={<HintuanCardHeader label={label} onBack={onBack} onClose={onClose} />}
     >
       <ul>
         {rows.map(({ box, label: name }, i) => {
-          const selected = !deselected && box.id === hotspot.id;
+          const isSelected = !deselected && box.id === hotspot.id;
           return (
             <li key={box.id}>
-              <button
-                type="button"
-                data-testid="card-box"
-                data-box={box.id}
-                data-kind={box.kind}
-                // A toggle since the owner's ask of 2026-10-01: the Selected
-                // row is pressed, a tap on it lets it go, and a tap on any
-                // row picks that one.
-                aria-pressed={selected}
-                onClick={() => {
-                  if (!selected) onPickBox(box.id);
+              <HintuanCardBox
+                box={box}
+                name={name}
+                isSelected={isSelected}
+                hasCounter={i === rows.length - 1 && shown.length > 0}
+                onToggle={() => {
+                  if (!isSelected) onPickBox(box.id);
                   else onDeselect?.();
                 }}
-                className={
-                  'relative flex w-full items-center gap-1 border-y-[0.6px] px-4 pt-3 text-left font-sn-pro text-base/6 font-medium text-content-inverse ' +
-                  BAR[box.kind] +
-                  // The last row makes room for the counter across the join.
-                  (i === rows.length - 1 && shown.length > 0 ? ' pb-11' : ' pb-2.5')
-                }
-              >
-                <span aria-hidden className="size-6 shrink-0 *:size-full">
-                  {LETTER[box.kind]}
-                </span>
-                <span className="min-w-0 flex-1 truncate">{name}</span>
-                {/* Pressed in when Selected, as a RouteCard is. */}
-                <span
-                  aria-hidden
-                  className={
-                    'pointer-events-none absolute inset-0 ' +
-                    (selected ? 'shadow-route-card-primary-selected' : 'shadow-route-card-primary')
-                  }
-                />
-              </button>
+              />
             </li>
           );
         })}
@@ -286,7 +190,7 @@ export function HintuanCard({
 
       {shown.length > 0 && (
         // The first RouteCard makes room at its top for the counter: 36 over
-        // its title's own 8 (3854:12526, 2026-10-01).
+        // its title's own 8 (Figma 3854:12526).
         <div className="relative [&>:first-child]:pt-9">
           <RouteCardStack
             routes={routes}
@@ -296,36 +200,18 @@ export function HintuanCard({
             onRoute={onSelectDirection}
             testId="card"
           />
-          {/* HintuanCardRouteCounter (3851:12206, 2026-10-01), across the join of the rows and the cards, 24 in. */}
-          <div className="absolute inset-x-0 -top-6 z-10 px-6">
-            <div className="flex w-full items-center gap-2 rounded-full bg-surface py-3 pr-3 pl-4">
-              <div className="flex min-w-0 flex-1 items-center gap-1 text-content-primary">
-                <span aria-hidden className="size-5 shrink-0 *:size-full">
-                  <JeepIcon />
-                </span>
-                <p
-                  data-testid="card-count"
-                  className="min-w-0 flex-1 truncate font-sn-pro text-base/6 font-black"
-                >
-                  {count}
-                </p>
-              </div>
-              <Button
-                variant="special"
-                size="small"
-                label={wayWord(back)}
-                data-testid="card-flip"
-                aria-pressed={back}
-                disabled={!switchTo}
-                onClick={() => {
-                  if (!switchTo) return;
-                  routeCards.onSelect(null);
-                  setFlipped(other);
-                  routeCards.onSwitch?.(switchTo.id !== hotspot.id ? switchTo.id : null);
-                }}
-              />
-            </div>
-          </div>
+          <HintuanCardCounter
+            count={count}
+            word={showing.every(isLoop) ? null : switchWord(back, showing)}
+            isBack={back}
+            canSwitch={!!switchTo}
+            onFlip={() => {
+              if (!switchTo) return;
+              routeCards.onSelect(null);
+              setFlipped(other);
+              routeCards.onSwitch?.(switchTo.id !== hotspot.id ? switchTo.id : null);
+            }}
+          />
         </div>
       )}
     </BottomSheet>

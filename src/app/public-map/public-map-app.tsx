@@ -1,19 +1,14 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-import { VisitorLocation, useGazeHush } from '@/features/locator';
+import { CommuterLocation, useGazeHush } from '@/features/locator';
 import {
-  MAP_FILE_TOO_NEW,
-  fetchLine,
   InstallPrompt,
-  installApp,
-  loadDirectionsFromFile,
-  loadHotspotsFromFile,
-  openingDirections,
+  loadProblems,
   reloadForNewerApp,
   reloadToUpdate,
   useNeedRefresh,
-  useInstallOffer,
+  useInstallPrompt,
   Notices,
   useMapAge,
   useOffline,
@@ -21,28 +16,36 @@ import {
 import { HintuanCard } from '@/features/routes/cards/hintuan-card';
 import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { TripCard } from '@/features/routes/cards/trip-card';
-import { useCardCamera } from '@/features/routes/cards/use-card-camera';
-import { useCardStack } from '@/features/routes/cards/use-card-stack';
+import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
+import { useCardCamera } from '@/features/routes/map/use-card-camera';
+import { useCardStack } from '@/features/routes/map/use-card-stack';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
+import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import { placeKey } from '@/features/routes/model/places';
-import { routeTimeline } from '@/features/routes/model/ride';
-import { directionLine } from '@/features/routes/model/routes';
+import {
+  loadDirectionsFromFile,
+  loadHotspotsFromFile,
+  openingDirections,
+} from '@/features/routes/published/fetch-index';
+import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
+import { ContributionCard } from './contribution-card';
 import { useStatusBarColour } from './status-bar';
 
 /**
- * The routes' framing the map opens on (the owner's Q1, 2026-10-04): their
- * box as the map file or the copy kept from an earlier visit has them
- * (openingDirections), the box the routes' own fit frames (useSavedRoutes).
- * Module-level, as the loaders below are.
+ * The routes' framing the map opens on: their box as the index or the copy
+ * kept from an earlier visit has them (openingDirections), the box the
+ * routes' own fit frames (useSavedRoutes). Module-level, as the loaders below
+ * are.
  */
 const openOnRoutes = () =>
   openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
@@ -50,20 +53,30 @@ const openOnRoutes = () =>
 /**
  * The public map at /. Everything published so far and a card for whatever is
  * tapped — nothing else. No sign-in, no drawing, no database: the map comes
- * from one published file, and this page's bundle carries neither editor code
- * nor a Supabase client (scripts/checks/check-build.mjs proves both).
+ * from the published map (an index and its line files), and this page's
+ * bundle carries neither editor code nor a Supabase client
+ * (scripts/checks/check-build.mjs proves both).
  *
  * On a phone the tap is the whole interface: the cards are bottom sheets, a
  * tap near a line counts, and a tap where routes share a road offers a choice.
  */
 export function PublicMapApp() {
   const [map, setMap] = useState<MapLibreMap | null>(null);
+  // Its 'load' in and not failed: the map-style button waits for it (LocationAndMapControl).
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   // One index, fetched once, shared by both hooks; a direction's full line
-  // read as it is lit (mapFile.ts).
+  // read as it is lit (fetch-line.ts).
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
-  // While a trip is open, the map lights only the trip (the owner, 2026-09-29).
+  // While a trip is open, the map lights only the trip.
   const hotspots = useSavedHotspots(map, loadHotspotsFromFile, { muted: !!saved.selected });
-  const tooNew = saved.error === MAP_FILE_TOO_NEW || hotspots.error === MAP_FILE_TOO_NEW;
+  // A load problem, and a published map too new for this app (loadProblems).
+  const problems = loadProblems([saved, hotspots]);
+
+  // Where the commuter is, as CommuterLocation tells it (the first fix, then
+  // each 50 m), kept in memory only, for the tip of a loop's trip: where its
+  // timeline leaves from, chosen once as the trip opens (useLoopTip).
+  const [where, setWhere] = useState<CommuterWhere | null>(null);
+  const tipId = useLoopTip(saved.selected, hotspots, { where, openedFrom: hotspots.selected });
 
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
@@ -86,51 +99,37 @@ export function PublicMapApp() {
     openRide,
     openTrip,
     backFromTrip,
-  } = useCardCamera(map, saved, hotspots, cards);
+    pickOnTrip,
+    endOnTrip,
+  } = useCardCamera(map, saved, hotspots, cards, { tipId });
   // What the lit routes wear on the map, their ends named (useLitRides): a
   // picked hintuan's ride flowing only as far as there.
-  const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden);
+  const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden, ride.startId, tipId);
 
-  // The visitor's own position, the dot and the camera with them live in
-  // VisitorLocation, so a fix, the phone's compass and the dot's moods
-  // render it alone (the cheap-phone plan, step 15, 2026-10-05). Its camera
-  // still moves here, where its hook stood: after the cards' camera above,
-  // which a sheet set to another height moves in the same commit
-  // (commitTurn.ts).
+  // The commuter's own position, the dot and the camera with them live in
+  // CommuterLocation, so a fix, the phone's compass and the dot's moods
+  // render it alone. Its camera moves here, at this page's turn: after the
+  // cards' camera above, which a sheet set to another height moves in the
+  // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
-  // The dot's gaze is hushed by ‹ and ✕: going back picks nothing (dotGaze.ts).
+  // The dot's gaze is hushed by ‹ and ✕: going back picks nothing (dot-gaze.ts).
   const { hush, hushedAt } = useGazeHush();
   const offline = useOffline();
-  // The phone's status bar in the map's colour (statusBar.ts).
+  // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
   const age = useMapAge(saved.directions);
   const needRefresh = useNeedRefresh();
-  // The install prompt, on an Android phone that has not installed Para Po,
-  // once the routes are on the map; "later" hides it until the next visit
-  // (the owner's picks, 2026-10-13).
-  const canInstall = useInstallOffer();
-  const [isInstallPostponed, setIsInstallPostponed] = useState(false);
-  const shouldShowInstall = canInstall && !isInstallPostponed && saved.directions.length > 0;
+  // The install prompt, once the routes are on the map (useInstallPrompt).
+  const install = useInstallPrompt(saved.directions.length > 0);
 
   const { tripLivery, litLivery, height } = cards;
 
-  // The open trip's hintuans, worked out as the trip or the hotspots change,
-  // not at each render of the page (the cheap-phone plan, step 15,
-  // 2026-10-05): they read nothing else (timeline-test).
-  const trip = saved.selected;
-  const { hotspotsAlong } = hotspots;
-  const timeline = useMemo(
-    () =>
-      trip
-        ? routeTimeline(trip, hotspots.hotspots, hotspotsAlong(trip.id, directionLine(trip)))
-        : null,
-    [trip, hotspots.hotspots, hotspotsAlong],
-  );
+  // The open trip's hintuans, worked out once per trip (useTripTimeline).
+  const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
   return (
-    // `data-directions`: how many the map file brought, for the suites on a
-    // production build, where the map itself is out of their reach — the
-    // count pill that told them went on 2026-09-29.
+    // `data-directions`: how many the index brought, for the suites on a
+    // production build, where the map itself is out of their reach.
     // `data-dock-host`: the open card's sheet says where its top is here,
     // for the LocatorButton to follow (BottomSheet).
     <div
@@ -141,25 +140,31 @@ export function PublicMapApp() {
     >
       {/*
         No count of routes and hotspots in a corner, and no +, − or compass:
-        the owner's notes on his screenshot, "annoying for users"
-        (2026-09-29).
+        the owner leaves them off as clutter for commuters.
       */}
       {/*
         Opened framed on the routes, and handed over to draw them as soon as
-        its style is in (`openOn`, the owner's Q1 of 2026-10-04).
+        its style is in (`openOn`). The credits start folded to their ⓘ, as the
+        studio's do: the owner keeps the bar out of the way. The licences need
+        them on the map, so ⓘ still opens them until they have a place of their
+        own.
       */}
       <MapView
         onReady={setMap}
+        onLoadedChange={setIsMapLoaded}
         zoomButtons={false}
         maxBounds={METRO_MANILA}
         openOn={openOnRoutes}
+        foldCredits
+        hasMapStyleButton={false}
       />
       {/*
-        The visitor's own position, and the camera with them, kept clear of
+        The commuter's own position, and the camera with them, kept clear of
         the card on show; the dot gazes at what was just picked.
       */}
-      <VisitorLocation
+      <CommuterLocation
         map={map}
+        isMapLoaded={isMapLoaded}
         snap={cards.snap}
         offset={clearOfOpen}
         docked={cards.open}
@@ -174,8 +179,12 @@ export function PublicMapApp() {
           litDirections: saved.litDirections,
         }}
         hushedAt={hushedAt}
+        onWhere={setWhere}
       />
-      {/* Each lit ride's ends, named over their circles; with no trip open, a tail opens its ride's. */}
+      {/*
+        Each lit ride's ends, named over their circles; with no trip open, a
+        tail opens its ride's.
+      */}
       {map && (
         <EndTitles
           map={map}
@@ -187,9 +196,9 @@ export function PublicMapApp() {
       )}
       {/*
         The open trip's hintuans along its line, a train's stations and a
-        jeepney's hintuans alike since 2026-10-12, each named (RouteLineLabel).
-        A tap picks one as its row on the trip card does, the map gliding in
-        to it (the owner's ask, 2026-10-03), as the studio's do.
+        jeepney's hintuans alike, each named (RouteLineLabel). A tap picks one
+        as its row on the trip card does, the map gliding in to it, as the
+        studio's do.
       */}
       {map && saved.selected && tripLivery && timeline && (
         <StationLabels
@@ -199,14 +208,16 @@ export function PublicMapApp() {
           rows={timeline.between}
           livery={tripLivery}
           pickedId={ride.pickedId}
-          rest={ride.ridden?.rest ?? null}
-          onPick={ride.pick}
+          startId={ride.startId}
+          endPicked={ride.endPicked}
+          hasRide={ride.ridden !== null}
+          onPick={pickOnTrip}
         />
       )}
       {/*
         Keyed on the pick: another hintuan pops a fresh circle. Its name,
         tapped, lets the pick go and takes the camera back where it was, as
-        its row tapped again does (the owner's ask, 2026-10-03).
+        its row tapped again does.
       */}
       {map && ride.pinAt && tripLivery && (
         <HintuanPin
@@ -219,6 +230,19 @@ export function PublicMapApp() {
           onPick={() => ride.pick(ride.pickedId)}
         />
       )}
+      {/* The ride's start, picked by Set as start: its own circle, Start's pill beside it. */}
+      {map && ride.startPinAt && tripLivery && (
+        <HintuanPin
+          key={`start:${ride.startId}`}
+          map={map}
+          at={ride.startPinAt}
+          label={ride.startLabel}
+          code={ride.startCode}
+          livery={tripLivery}
+          marks="start"
+          onPick={ride.removeStart}
+        />
+      )}
 
       {/*
         A load problem is a banner, never a blank page. On a phone it sits at
@@ -227,30 +251,22 @@ export function PublicMapApp() {
         share the bottom with.
       */}
       <Notices
-        loadFailed={!!(saved.error || hotspots.error)}
-        tooNew={tooNew}
-        onTryAgain={() => {
-          void saved.reload();
-          void hotspots.reload();
-        }}
+        loadFailed={problems.loadFailed}
+        tooNew={problems.tooNew}
+        onTryAgain={problems.tryAgain}
         onReloadNewer={() => void reloadForNewerApp()}
         offline={offline}
         age={age}
         needRefresh={needRefresh}
         onUpdate={reloadToUpdate}
       />
-      {shouldShowInstall && (
-        <InstallPrompt
-          onInstall={() => void installApp()}
-          onLater={() => setIsInstallPostponed(true)}
-        />
+      {install.shouldShow && (
+        <InstallPrompt onInstall={install.install} onLater={install.postpone} />
       )}
-
       {saved.selected && tripLivery && timeline && (
         // One card for as long as a trip is open: SWITCH, and another
         // route from its "Other routes", leave the hintuans open or folded
-        // as they were (the owner, 2026-10-01: "don't shrink it"), and the
-        // sheet at its height. A trip opened afresh opens folded.
+        // as they were. A trip opened afresh opens folded.
         <TripCard
           direction={saved.selected}
           directions={saved.directions}
@@ -264,27 +280,29 @@ export function PublicMapApp() {
           // only its overview is here.
           pickedMetres={saved.fullIds.has(saved.selected.id) ? ride.rideTo?.metres : undefined}
           pickedCode={ride.pickedCode}
-          onPick={ride.pick}
-          onEnd={ride.toEnd}
+          start={ride.startId}
+          startCode={ride.startCode}
+          onSetStart={ride.setStart}
+          onRemoveStart={ride.removeStart}
+          onPick={pickOnTrip}
+          onEnd={endOnTrip}
           endPicked={ride.endPicked}
           dockRef={tripDock}
           height={height}
           // "Other routes": that route's trip in this one's place, ‹ still to
           // what this one was picked from; the camera takes it in as it opens.
-          // The sheet goes to Middle from wherever it is, so the map shows it
-          // (the owner, 2026-10-01: from Max at first, then "not only max");
+          // The sheet goes to Middle from wherever it is, so the map shows it;
           // the hintuans stay open or folded.
           onOtherRoute={otherRoute}
         />
       )}
 
       {/*
-        A hotspot's card: the owner's HintuanCard (3854:12690, 2026-09-30),
-        its place and every box of it, the routes stopping at the Selected
-        one as his RouteCards; it stays behind the trip picked from them,
-        hidden, for the trip's ‹. It is `card` to the suites too, and comes
-        after the trip here on purpose: their first `card` is then the trip
-        while this one hides behind it.
+        A hotspot's card: HintuanCard (Figma 3854:12690), its place and every
+        box of it, the routes stopping at the Selected one as RouteCards; it
+        stays behind the trip picked from them, hidden, for the trip's ‹. It is
+        `card` to the suites too, and comes after the trip here on purpose:
+        their first `card` is then the trip while this one hides behind it.
       */}
       {hotspots.selected && (
         // Keyed by the place: another of its boxes — a row, or SWITCH moving
@@ -292,7 +310,7 @@ export function PublicMapApp() {
         <HintuanCard
           key={placeKey(hotspots.selected)}
           routeCards={{
-            selected: saved.highlight?.where === 'hotspot' ? saved.highlight.from : null,
+            selected: saved.highlight?.where === 'hotspot' ? saved.highlight.card : null,
             onSelect: pickOnPlaceCard,
             onShown: saved.showCard,
             // The other way round, the camera kept where it is (HintuanCard's onSwitch).
@@ -306,15 +324,14 @@ export function PublicMapApp() {
           linkedDirectionIds={hotspots.linkedDirectionIds}
           directions={saved.directions}
           onSelectDirection={openTrip}
-          // Its Selected row tapped again: no box is the one until a row is
-          // picked (the owner, 2026-10-01).
+          // Its Selected row tapped again: no box is the one until a row is picked.
           deselected={hotspots.letGone}
           onDeselect={() => {
             saved.highlightCard(null);
             hotspots.letGo();
           }}
           // Another box: the map goes there, the box clear of the card,
-          // which stays at its height (the owner, 2026-10-01).
+          // which stays at its height.
           onPickBox={(id) => {
             saved.highlightCard(null);
             hotspots.show(id, cards.clearOf(hotspotDock));
@@ -325,10 +342,10 @@ export function PublicMapApp() {
       )}
 
       {/*
-        Several things under the tap: the owner's route list (2026-09-28),
-        kept hidden behind the trip picked from it (2026-09-29). Picking a
-        route leaves the hotspots under the tap listed, so ‹ finds the list
-        whole; a hotspot's row opens its card in the list's place.
+        Several things under the tap: the route list, kept hidden behind the
+        trip picked from it. Picking a route leaves the hotspots under the tap
+        listed, so ‹ finds the list whole; a hotspot's row opens its card in
+        the list's place.
       */}
       {cards.choosing && (
         <RouteCardList
@@ -339,11 +356,12 @@ export function PublicMapApp() {
           hotspots={hotspots.candidates}
           back={saved.back}
           onFlip={flipList}
-          selected={saved.highlight?.where === 'list' ? saved.highlight.from : null}
+          selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
           onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
           onRoute={openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={cards.closeAll}
+          end={(livery) => <ContributionCard livery={livery} />}
         />
       )}
     </div>

@@ -6,6 +6,7 @@ dist-ssr
 .env.*
 !.env.*.example
 !.env.production
+!.env.apk
 .DS_Store
 *.log
 npm-debug.log*
@@ -24,3 +25,7 @@ storybook-static
 # deploy (public/icons/ carries what the site needs).
 /*.png
 public/branding/
+supabase/.temp/
+
+# The Android app's web build (the native project in android/ has its own .gitignore)
+/dist-apk

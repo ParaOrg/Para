@@ -18,7 +18,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** As the owner drew it (3870:5247): a 240 circle with its hairline, the beam pointing south. */
+/** As Figma draws it (3870:5247): a 240 circle with its hairline, the beam pointing south. */
 export const AsDrawn: Story = { args: { haloPx: 240, beamDeg: BEAM_DRAWN_DEG } };
 
 /** Facing up the screen. */
@@ -34,8 +34,8 @@ export const TightFix: Story = { args: { haloPx: 12, beamDeg: 300 } };
 export const ZoomedOut: Story = { args: { haloPx: 0, beamDeg: 30, scale: 0.54 } };
 
 /*
- * Its moods and faces (locatorMood.ts, the owner's ask of 2026-10-01): every
- * face it can wear, side by side, for the owner to look over; each a story too.
+ * Its moods and faces (locator-mood.ts): every face it can wear, side by side,
+ * to look over; each a story too.
  */
 const face = (mood: Mood, f: Face): Story => ({
   args: { haloPx: 0, beamDeg: null, mood, face: f },
@@ -101,10 +101,10 @@ export const AllFaces: Story = {
 };
 
 /*
- * Its gaze at what was just picked (dotGaze.ts, the owner's ask of
- * 2026-10-01): for three seconds after a route or a hintuan is picked, the
- * eyes turn the way to it, on the screen or off it; the face stays. A gaze is
- * a heading, degrees clockwise from north, as the beam's is.
+ * Its gaze at what was just picked (dot-gaze.ts): for three seconds after a
+ * route or a hintuan is picked, the eyes turn the way to it, on the screen or
+ * off it; the face stays. A gaze is a heading, degrees clockwise from north,
+ * as the beam's is.
  */
 const gazing = (gazeDeg: number, mood: Mood = 'neutral', f: Face = 'glance'): Story => ({
   args: { haloPx: 0, beamDeg: null, mood, face: f, gazeDeg },
@@ -154,9 +154,9 @@ export const AllGazes: Story = {
 
 /**
  * Every face gazing one way: a face changes every few seconds, so on a phone
- * each of these is met during a gaze — for the owner to look over. North is
- * where a face that holds its eyes up (curious) would leave the dot, were the
- * eyes not brought to the middle first.
+ * each of these is met during a gaze. North is where a face that holds its
+ * eyes up (curious) would leave the dot, were the eyes not brought to the
+ * middle first.
  */
 const facesGazing = (gazeDeg: number): Story => ({
   args: { haloPx: 0, beamDeg: null },

@@ -18,23 +18,20 @@ import { readFileSync } from 'node:fs';
 import { createPropertyExpression, groupByLayout, latest } from '@maplibre/maplibre-gl-style-spec';
 import { TILE_BUFFER, layOutOnce } from '../../src/features/routes/map/layers.ts';
 import { loadOnce } from '../../src/features/routes/map/load-once.ts';
-import {
-  addSavedRoutes,
-  routesData,
-  unpatched,
-} from '../../src/features/routes/map/saved-routes-layers.ts';
+import { addSavedRoutes } from '../../src/features/routes/map/saved-routes-layers.ts';
+import { routesData, unpatched } from '../../src/features/routes/map/saved-routes-data.ts';
 import {
   addSavedHotspots,
   hiddenHotspotFilters,
-  hotspotsData,
 } from '../../src/features/routes/map/saved-hotspots-layers.ts';
+import { hotspotsData } from '../../src/features/routes/map/saved-hotspots-data.ts';
 import { directionLine, isRailLine } from '../../src/features/routes/model/routes.ts';
-import { hotspotRing } from '../../src/features/routes/model/hotspots.ts';
+import { hotspotRing, nameOnMap } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
-import { addPassStretches } from '../../src/features/routes/geo/pass-stretches.ts';
+import { addPassStretches } from '../../src/features/routes/map/pass-stretches.ts';
 import { addDirectionArrows } from '../../src/features/routes/map/direction-arrows.ts';
 import { addRideRest } from '../../src/features/routes/map/ride-rest.ts';
-import { addBabaanSides } from '../../src/features/routes/geo/babaan-sides.ts';
+import { addBabaanSides } from '../../src/features/routes/map/babaan-sides.ts';
 import { INSET_PX, chevronAt } from '../../src/features/routes/map/chevrons.ts';
 import { litWidthAt } from '../../src/features/routes/map/line-style.ts';
 
@@ -148,7 +145,7 @@ test('the chevrons carry 32 px past each tile edge; the lines, the boxes and the
   assert.equal(TILE_BUFFER, 32);
   for (const id of BUFFERED) assert.equal(sources.get(id)?.buffer, TILE_BUFFER, id);
   // A cut at 32 px moved the lines' and the boxes' edges by up to 41 levels
-  // of 255 on a phone's screen; nothing may change what a visitor sees.
+  // of 255 on a phone's screen; nothing may change what a commuter sees.
   for (const id of DEFAULT_BUFFER)
     assert.equal(sources.get(id)?.buffer, undefined, `${id} keeps MapLibre's buffer`);
   assert.deepEqual(
@@ -173,9 +170,9 @@ test('every layer drawn from it reaches less than 32 px from its geometry, and e
       `${l.id} reaches ${r} px`,
     );
   }
-  // The widest: the routes' hit area, 24 px at zoom 20 and up; the lit
+  // The widest: the routes' hit area, 26 px at zoom 20 and up; the lit
   // line's casing, 15 px.
-  assert.equal(reaches['saved-routes-hit'], 12.5);
+  assert.equal(reaches['saved-routes-hit'], 13.5);
   assert.equal(reaches['saved-routes-selected-casing'], 8);
   assert.equal(reaches['direction-arrow-chevrons'], 1);
   assert.deepEqual(
@@ -328,13 +325,18 @@ const routesBefore = (rows) => ({
     })),
 });
 
-/** What the hotspots' effect laid out before 2026-10-04, word for word (boxMiddle as it was). */
+/**
+ * What the hotspots' effect laid out before 2026-10-04, word for word (boxMiddle as it was),
+ * but for one change since: a label's name leaves a station's line out (nameOnMap, the
+ * owner's ask of 2026-10-15), "MRT-3 Boni Station" read "Boni Station".
+ */
 const boxMiddle = (ring) => {
   const lngs = ring.map((p) => p[0]);
   const lats = ring.map((p) => p[1]);
   return [(Math.min(...lngs) + Math.max(...lngs)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
 };
 const hotspotsBefore = (stops) => {
+  const byId = new Map(stops.map((s) => [s.id, s]));
   const withArea = stops.filter((s) => hotspotRing(s).length >= 3);
   return {
     type: 'FeatureCollection',
@@ -351,7 +353,12 @@ const hotspotsBefore = (stops) => {
         })),
       ).map((g) => ({
         type: 'Feature',
-        properties: { id: g.ids[0], ids: g.ids.join(','), kind: g.kind, name: g.name },
+        properties: {
+          id: g.ids[0],
+          ids: g.ids.join(','),
+          kind: g.kind,
+          name: nameOnMap(byId.get(g.ids[0])),
+        },
         geometry: { type: 'Point', coordinates: g.point },
       })),
     ],
@@ -367,7 +374,9 @@ test('the committed map is laid out as before: every direction with a line, ever
   assert.deepEqual(hotspotsData(stops), hotspotsBefore(stops));
   // A slot, a return not drawn yet, has no line, and is left out as before.
   const slot = { ...rows[0], id: 'slot', shape: null };
-  assert.equal(routesData([...rows, slot]).features.length, rows.length);
+  // The published map may hold such a slot itself: only the drawn ways are counted.
+  const drawn = rows.filter((v) => directionLine(v).length > 1);
+  assert.equal(routesData([...rows, slot]).features.length, drawn.length);
   assert.deepEqual(routesData([...rows, slot]), routesBefore([...rows, slot]));
   assert.deepEqual(routesData([]), { type: 'FeatureCollection', features: [] });
   assert.deepEqual(hotspotsData([]), { type: 'FeatureCollection', features: [] });
@@ -573,7 +582,7 @@ test('a style made afresh gets every full line read so far, one on its way when 
   const { createElement: h, act } = await import('react');
   const { createRoot } = await import('react-dom/client');
   const { useSavedRoutesLayers } =
-    await import('../../src/features/routes/map/saved-routes-layers.ts');
+    await import('../../src/features/routes/map/use-saved-routes-layers.ts');
 
   const map = routesMap();
   const [a, b, c] = rows.map((r) => r.id);

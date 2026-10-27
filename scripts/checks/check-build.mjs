@@ -1,5 +1,10 @@
 // Proves, from the production build, that the public page carries no editor.
 // Runs as the last step of `npm run build`, so a deploy that would leak fails.
+// The contributors' page (contribute/index.html) is held to the same: it loads
+// no editor, its Supabase client names no studio table and keeps its session
+// under its own key, it draws its map with the chunks the public page
+// loads (MapLibre, the shared code) and a copy of none, it is not installable,
+// and the public page loads none of its code.
 //
 // 1. Modules. Walks Vite's manifest from each HTML entry through every chunk it
 //    imports, statically or dynamically, and reads which source files went
@@ -11,15 +16,16 @@
 //    the editor has —
 //      router.project-osrm.org   the route snapper
 //      parapo.draft              the drawing-draft key
-//      Sign in to save, Forgot password?, + New Route, Draw the return trip
-//      .supabase.co              the database's address: visitors read the
-//                                published file and never call it
+//      Sign in to save, Forgot password?, New route, terminal or hintuan,
+//      Draw the return trip
+//      .supabase.co              the database's address: commuters read the
+//                                published map and never call it
 //
 // 3. No Supabase client: since step 5 the public page reads the published
-//    file (/data/index.v4.json and the lines; the index since 2026-09-29), so
-//    no module from @supabase may reach it — 54 kB gzipped a visitor does not
+//    file (/data/index.v5.json and the lines; the index since 2026-09-29), so
+//    no module from @supabase may reach it — 54 kB gzipped a commuter does not
 //    download (the shared chunk went 375 → 321 kB), and a database the public
-//    never touches. The live-table readers live in src/features/studio/data/live.ts, which
+//    never touches. The live-table readers live in src/features/studio/data (live.ts and hotspots-read.ts), which
 //    ESLint (import-x/no-restricted-paths) keeps out of the public shell and its features by
 //    construction; these two checks are the backstop.
 //
@@ -36,14 +42,19 @@
 //    chunk, nothing from .vite/ or data/, and not _headers; the studio is on
 //    the worker's navigation denylist; a new version waits to be asked.
 //
+// 4b. The contributor page has a worker of its own (dist/contribute/sw.js): its
+//    precache holds that page's chunks, their CSS and fonts and MapLibre's worker,
+//    no chunk only the public page or the studio loads; it waits to be told to
+//    update; and only the contributor page registers it.
+//
 // 5. Weight (stage 6 of the clean-up, 2026-09-29): the fonts are under
 //    135 kB together (120 until SN Pro ExtraBold joined, the owner's call of
 //    2026-10-13), and what both pages share — MapLibre, React and the
-//    shared code — is under 400 kB gzipped, so neither creeps back
+//    shared code — is under 410 kB gzipped (build-weight.mjs), so neither creeps back
 //    unnoticed. The fonts are precached. Since the cheap-phone plan's steps
-//    12 and 14 (2026-10-05) that is four chunks, named in vite.config.ts,
-//    each with a ceiling of its own: `maplibre`, `maplibre-gl-shared` and
-//    `react` hold only their packages and import none of our code, and
+//    12 and 14 (2026-10-05) that is five chunks (`zod` since), named in vite.config.ts,
+//    each with a ceiling of its own: `maplibre`, `maplibre-gl-shared`,
+//    `react` and `zod` hold only their packages and import none of our code, and
 //    `shared` holds our code; one in the wrong group is too heavy for its
 //    ceiling. So a deploy of ours leaves React's name alone, and
 //    MapLibre's two unless it starts or stops importing one of MapLibre's
@@ -79,6 +90,16 @@ import { gzipSync } from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mapFileConstants } from '../node/map-file-constants.ts';
+import {
+  FONTS_MAX_KB,
+  GROUPS,
+  MAPLIBRE_FILE,
+  SHARED_MAX_GZ_KB,
+  WORKER_MAX_GZ_KB,
+  chunksNamed as chunksIn,
+  fontBytes,
+  gzipBytes,
+} from './build-weight.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const dist = join(root, 'dist');
@@ -90,7 +111,7 @@ const EDITOR_ONLY = [
   'parapo.draft',
   'Sign in to save',
   'Forgot password?',
-  '+ New Route',
+  'New route, terminal or hintuan',
   'Draw the return trip',
   '.supabase.co',
 ];
@@ -111,7 +132,7 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const modules = JSON.parse(readFileSync(modulesPath, 'utf8'));
 
 /** Every JS file an entry loads, following imports and dynamic imports. */
-function chunksOf(entryKey) {
+function chunksOf(entryKey, { isStaticOnly = false } = {}) {
   const seen = new Set();
   const files = new Set();
   const visit = (key) => {
@@ -120,7 +141,8 @@ function chunksOf(entryKey) {
     const chunk = manifest[key];
     if (!chunk) throw new Error(`manifest has no entry "${key}"`);
     if (chunk.file.endsWith('.js')) files.add(chunk.file);
-    for (const k of [...(chunk.imports ?? []), ...(chunk.dynamicImports ?? [])]) visit(k);
+    const next = [...(chunk.imports ?? []), ...(isStaticOnly ? [] : (chunk.dynamicImports ?? []))];
+    for (const k of next) visit(k);
   };
   visit(entryKey);
   return [...files];
@@ -128,6 +150,7 @@ function chunksOf(entryKey) {
 
 const commuterFiles = chunksOf('index.html');
 const studioFiles = chunksOf('studio/index.html');
+const contributeFiles = chunksOf('contribute/index.html');
 
 // ------------------------------------------------------------------ modules
 
@@ -145,6 +168,7 @@ function sourceModules(files) {
 
 const commuterModules = sourceModules(commuterFiles);
 const studioModules = sourceModules(studioFiles);
+const contributeModules = sourceModules(contributeFiles);
 
 // The design system is domain-free and imports only itself, so it is the
 // public page's as much as the studio's: the route list brought its first
@@ -170,6 +194,45 @@ check(
   STUDIO_AREAS.every((a) => studioModules.some((m) => m.startsWith(a))),
 );
 
+// The contributors' page (contribute/index.html) is a third front door. The
+// public page loads none of its code (leakedModules above already fails any
+// module outside PUBLIC_AREAS; this names it), and it loads none of the
+// studio's and no Supabase client: a recording stays on the phone.
+const CONTRIBUTE_AREAS = ['src/app/contribute/', 'src/features/contribute/'];
+check(
+  'contribute chunks hold src/app/contribute/ and src/features/contribute/ modules — the module search works',
+  CONTRIBUTE_AREAS.every((a) => contributeModules.some((m) => m.startsWith(a))),
+);
+const contributeLeaked = commuterModules.filter((m) =>
+  CONTRIBUTE_AREAS.some((a) => m.startsWith(a)),
+);
+check(
+  'public page loads no contribute code',
+  contributeLeaked.length === 0,
+  contributeLeaked.join(', '),
+);
+// The contributors' page draws the ride on the public map's own view, so it
+// loads MapLibre and the shared chunk; but only the chunks the public page
+// already loads, never a copy of its own, and its own code carries no package
+// of MapLibre's.
+const contributeMapChunks = contributeFiles.filter((f) => /\/(maplibre|shared)/.test('/' + f));
+const contributeOnlyFiles = contributeFiles.filter((f) => !commuterFiles.includes(f));
+check(
+  'contribute page loads MapLibre and the shared code only as the public page loads them, with no copy of its own',
+  contributeMapChunks.length > 0 &&
+    contributeMapChunks.every((f) => commuterFiles.includes(f)) &&
+    !packageModules(contributeOnlyFiles).some((p) => p.startsWith('maplibre-gl')),
+  contributeOnlyFiles.join(', '),
+);
+const studioInContribute = contributeModules.filter((m) =>
+  STUDIO_AREAS.some((a) => m.startsWith(a)),
+);
+check(
+  'contribute page loads no studio code',
+  studioInContribute.length === 0,
+  studioInContribute.join(', '),
+);
+
 /** Package modules (under node_modules/) inside the given chunks. */
 function packageModules(files) {
   const out = new Set();
@@ -191,6 +254,48 @@ check(
   'studio chunks carry the Supabase client — the package search works',
   packageModules(studioFiles).some((p) => p.startsWith('@supabase/')),
 );
+// The Android app's build (vite.apk.config.ts) is the only one that carries Capacitor, behind
+// `import.meta.env.MODE === 'apk'` in features/contribute/native-app.ts. No web chunk may hold a
+// Capacitor package, nor the bridge's own name ('androidBridge', which only Capacitor's JavaScript
+// mentions), on any page.
+const allChunks = Object.keys(modules);
+const capacitorPackages = packageModules(allChunks).filter((p) => p.startsWith('@capacitor'));
+check(
+  'no web chunk carries a Capacitor package',
+  capacitorPackages.length === 0,
+  capacitorPackages.join(', '),
+);
+// The app's native modules (src/features/contribute/native/) are reached only behind the same mode
+// check, so none may be in a web chunk, whatever their imports are.
+const nativeModules = allChunks.filter((f) =>
+  (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/native/')),
+);
+check(
+  "no web chunk holds a module of the app's native folder",
+  nativeModules.length === 0,
+  nativeModules.join(', '),
+);
+check(
+  "the contribute feature's own modules are found by that path search",
+  allChunks.some((f) =>
+    (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/recording-')),
+  ),
+);
+const bridgeMentions = allChunks.filter((f) =>
+  readFileSync(join(dist, f), 'utf8').includes('androidBridge'),
+);
+check(
+  'no web chunk mentions the Android bridge',
+  bridgeMentions.length === 0,
+  bridgeMentions.join(', '),
+);
+
+// The contributor page uploads saved recordings, so it carries the client;
+// the strings below hold it to the contributions alone.
+check(
+  'contribute page carries the Supabase client to upload with',
+  packageModules(contributeFiles).some((p) => p.startsWith('@supabase/')),
+);
 
 // ------------------------------------------------------------------ strings
 
@@ -199,9 +304,44 @@ const text = (files) => files.map((f) => readFileSync(join(dist, f), 'utf8')).jo
 // it would be the public page asking the database (2026-10-03).
 const commuter = text([...commuterFiles, ...(existsSync(join(dist, 'sw.js')) ? ['sw.js'] : [])]);
 const studio = text(studioFiles);
+const contribute = text(contributeFiles);
 
 const leaked = EDITOR_ONLY.filter((s) => commuter.includes(s));
 check('public page contains no editor-only string', leaked.length === 0, leaked.join(', '));
+
+// Its own chunks, not the ones it shares with the public page, whose map reader
+// names route_variant in the published file's fields.
+const contributeOwn = text(contributeFiles.filter((f) => !commuterFiles.includes(f)));
+// The database's address and "Forgot password?" (its own Sign in button) are the editor strings the
+// contributor page needs. What it may not name are the studio's tables and operations.
+const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'approve_draft', 'take_down'];
+const leakedToContribute = [
+  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co' && s !== 'Forgot password?'),
+  ...STUDIO_DATA,
+].filter((s) => contributeOwn.includes(s));
+check(
+  'contribute page contains no editor-only string and names no studio table',
+  leakedToContribute.length === 0,
+  leakedToContribute.join(', '),
+);
+check(
+  'contribute page saves through save_contribution under its own session key — the string search works',
+  contribute.includes('save_contribution') && contribute.includes('parapo.contributor-auth'),
+);
+const studioData = STUDIO_DATA.filter((s) => !studio.includes(s));
+check(
+  'studio names every studio table and operation — the string search works',
+  studioData.length === 0,
+  studioData.length ? 'missing: ' + studioData.join(', ') : '',
+);
+
+// Turnstile, Cloudflare's bot check, is the studio's sign-in's (and the
+// contributor page's first upload's): commuters never load its script.
+const TURNSTILE = 'challenges.cloudflare.com';
+check(
+  'public page loads no Turnstile; the studio and the contributor page carry it — the string search works',
+  !commuter.includes(TURNSTILE) && studio.includes(TURNSTILE) && contribute.includes(TURNSTILE),
+);
 
 const missing = EDITOR_ONLY.filter((s) => !studio.includes(s));
 check(
@@ -257,13 +397,19 @@ check(
   !/rel="manifest"/.test(html('studio/index.html')),
 );
 check(
-  'neither page carries a registration script',
-  !/registerSW|vite-plugin-pwa:/.test(html('index.html') + html('studio/index.html')),
+  'contribute/index.html links no manifest — /contribute/ is not installable',
+  !/rel="manifest"/.test(html('contribute/index.html')),
+);
+check(
+  'no page but the map carries a registration script',
+  !/registerSW|vite-plugin-pwa:/.test(
+    html('index.html') + html('studio/index.html') + html('contribute/index.html'),
+  ),
 );
 // Over HTTP/1.1 the scripts ahead of a stylesheet can take all six of a
 // host's connections, and the first paint waits a round trip
 // (vite.config.ts, stylesheetsBeforeScripts, 2026-10-05).
-for (const page of ['index.html', 'studio/index.html']) {
+for (const page of ['index.html', 'studio/index.html', 'contribute/index.html']) {
   const head = html(page).slice(0, html(page).indexOf('</head>'));
   const sheets = [...head.matchAll(/<link rel="stylesheet"/g)].map((m) => m.index);
   const scripts = [...head.matchAll(/<script type="module"|<link rel="modulepreload"/g)].map(
@@ -284,7 +430,7 @@ let EARLY_MAP_FILE = null;
 let constantsError = '';
 try {
   ({ MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
-    readFileSync(join(root, 'src', 'features', 'published-map', 'map-file.ts'), 'utf8'),
+    readFileSync(join(root, 'src', 'features', 'routes', 'published', 'map-file.ts'), 'utf8'),
   ));
 } catch (e) {
   constantsError = e instanceof Error ? e.message : String(e);
@@ -316,6 +462,11 @@ if (MAP_FILE_URL && EARLY_MAP_FILE) {
   check(
     'studio/index.html asks for no map file',
     !studioPage.includes(EARLY_MAP_FILE) && !studioPage.includes(MAP_FILE_URL),
+  );
+  const contributePage = html('contribute/index.html');
+  check(
+    'contribute/index.html asks for no map file',
+    !contributePage.includes(EARLY_MAP_FILE) && !contributePage.includes(MAP_FILE_URL),
   );
 }
 
@@ -384,6 +535,17 @@ if (existsSync(swPath)) {
     fonts.length > 0 && fonts.every((f) => precached.includes(f)),
     fonts.filter((f) => !precached.includes(f)).join(', '),
   );
+  // The vehicles' sprite, fetched by the trip's header rather than inlined in
+  // the JS (the owner's "trim the icons with a sprite", 2026-10-16): offline,
+  // the header still draws its vehicle.
+  const sprites = readdirSync(join(dist, 'assets'))
+    .filter((f) => /^vehicle-icons-.*\.svg$/.test(f))
+    .map((f) => `assets/${f}`);
+  check(
+    "precache holds the vehicles' sprite",
+    sprites.length === 1 && precached.includes(sprites[0]),
+    sprites.join(', ') || 'no vehicle-icons-*.svg in assets/',
+  );
   check(
     'precache holds the three icons',
     ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png'].every((u) =>
@@ -391,21 +553,28 @@ if (existsSync(swPath)) {
     ),
   );
   const studioOnly = studioFiles.filter((f) => !commuterFiles.includes(f));
+  const contributeOnly = contributeFiles.filter((f) => !commuterFiles.includes(f));
   const leakedPrecache = precached.filter(
-    (u) => studioOnly.includes(u) || /^(studio\/|\.vite\/|data\/|branding\/|_headers)/.test(u),
+    (u) =>
+      studioOnly.includes(u) ||
+      contributeOnly.includes(u) ||
+      /^(studio\/|contribute\/|\.vite\/|data\/|branding\/|_headers)/.test(u),
   );
   check(
-    `precache holds no studio chunk (${studioOnly.length} to keep out), nothing from studio/, .vite/, data/, branding/, no _headers`,
-    studioOnly.length > 0 && leakedPrecache.length === 0,
+    `precache holds no studio or contribute chunk (${studioOnly.length + contributeOnly.length} to keep out), nothing from studio/, contribute/, .vite/, data/, branding/, no _headers`,
+    studioOnly.length > 0 && contributeOnly.length > 0 && leakedPrecache.length === 0,
     leakedPrecache.join(', '),
   );
   check(
-    'sw.js answers only / from the stored page, and never /studio',
-    sw.includes('/^\\/(\\?.*)?$/') && sw.includes('/^\\/studio(\\/|$)/'),
+    'sw.js answers only / from the stored page, and never /studio or /contribute',
+    sw.includes('/^\\/(\\?.*)?$/') &&
+      sw.includes('/^\\/studio(\\/|$)/') &&
+      sw.includes('/^\\/contribute(\\/|$)/'),
   );
   check(
-    'sw.js caches /data/index.v4.json NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst',
-    sw.includes('/data/index.v4.json') &&
+    `sw.js caches ${MAP_FILE_URL} NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst`,
+    !!MAP_FILE_URL &&
+      sw.includes(MAP_FILE_URL) &&
       sw.includes('/data/lines/') &&
       sw.includes('map-lines') &&
       sw.includes('/data/signboards/') &&
@@ -431,76 +600,93 @@ if (existsSync(swPath)) {
   );
 }
 
-// 5. Weight.
-const FONTS_MAX_KB = 135;
-const assetFiles = readdirSync(join(dist, 'assets'));
-const fontBytes = assetFiles
-  .filter((f) => f.endsWith('.woff2'))
-  .reduce((n, f) => n + statSync(join(dist, 'assets', f)).size, 0);
+// 4b. The contributor page's own worker (dist/contribute/sw.js, built by
+// scripts/node/contribute-worker.ts): scoped to /contribute/, its precache is
+// the contributor page's chunks alone, it waits to be told to update, and only
+// the contributor page registers it.
+const contributeSwPath = join(dist, 'contribute', 'sw.js');
+check('contribute/sw.js exists', existsSync(contributeSwPath));
+if (existsSync(contributeSwPath)) {
+  const csw = readFileSync(contributeSwPath, 'utf8');
+  const listed = /^const PRECACHE_URLS = (\[.*\]);$/m.exec(csw)?.[1];
+  const stored = listed ? JSON.parse(listed) : [];
+  const withStyles = (files) => [
+    ...files,
+    ...files.flatMap((f) => Object.values(manifest).find((c) => c.file === f)?.css ?? []),
+  ];
+  const withAssets = (files) => [
+    ...withStyles(files),
+    ...files.flatMap((f) => Object.values(manifest).find((c) => c.file === f)?.assets ?? []),
+  ];
+  const contributeNeeds = withAssets(contributeFiles);
+  const needed = ['/contribute/', ...contributeNeeds.map((f) => `/${f}`)];
+  const absent = needed.filter((u) => !stored.includes(u));
+  check(
+    `contribute worker's precache holds the page, its ${contributeFiles.length} chunk(s), their CSS and fonts (${stored.length} entries)`,
+    stored.length > 0 && absent.length === 0,
+    absent.join(', '),
+  );
+  check(
+    "contribute worker's precache holds MapLibre's worker",
+    stored.some((u) => /^\/assets\/maplibre-gl-worker-[\w-]+\.js$/.test(u)),
+  );
+  // What the public page loads and the contributor page does not (the map's own
+  // chunks), and what the studio loads and it does not.
+  const publicOnly = withStyles(commuterFiles).filter((f) => !contributeNeeds.includes(f));
+  const studioOnlyHere = withStyles(studioFiles).filter((f) => !contributeNeeds.includes(f));
+  const publicLeak = stored.filter((u) => publicOnly.includes(u.slice(1)));
+  check(
+    `contribute worker's precache holds no public-only chunk (${publicOnly.length} to keep out)`,
+    publicOnly.length > 0 && publicLeak.length === 0,
+    publicLeak.join(', '),
+  );
+  const studioLeak = stored.filter(
+    (u) => studioOnlyHere.includes(u.slice(1)) || /^\/(studio\/|\.vite\/|data\/|_headers)/.test(u),
+  );
+  check(
+    `contribute worker's precache holds no studio chunk (${studioOnlyHere.length} to keep out), nothing from studio/, .vite/, data/, and no _headers`,
+    studioOnlyHere.length > 0 && studioLeak.length === 0,
+    studioLeak.join(', '),
+  );
+  const unexpected = stored.filter(
+    (u) =>
+      u !== '/contribute/' &&
+      u !== '/icons/favicon.png' &&
+      !needed.includes(u) &&
+      !/^\/assets\/maplibre-gl-worker-[\w-]+\.js$/.test(u),
+  );
+  check(
+    'contribute worker precaches nothing but the contributor page, its icon, its chunks and MapLibre’s worker',
+    unexpected.length === 0,
+    unexpected.join(', '),
+  );
+  const csMsgAt = csw.indexOf('SKIP_WAITING');
+  const csSkipAt = csw.indexOf('skipWaiting()');
+  check(
+    'contribute worker waits to be told to update (one skipWaiting(), inside the SKIP_WAITING handler)',
+    csMsgAt >= 0 && csSkipAt > csMsgAt && csw.indexOf('skipWaiting()', csSkipAt + 1) === -1,
+  );
+  check(
+    'contribute worker answers only GET navigations to /contribute/ and the files it stored, with no cache of /data/, the database or the basemap',
+    csw.includes('"/contribute/"') &&
+      csw.includes('request.method !== "GET"') &&
+      !/\/data\/|supabase|openfreemap/.test(csw.replace(/^const PRECACHE_URLS.*$/m, '')),
+  );
+  check(
+    'only the contributor page registers it: its chunks name /contribute/sw.js, the public page and its worker do not',
+    contribute.includes('/contribute/sw.js') && !commuter.includes('/contribute/sw.js'),
+  );
+}
+
+// 5. Weight. The budgets and how they are measured are in build-weight.mjs.
+const fontsBytes = fontBytes(dist);
 check(
   `the fonts weigh under ${FONTS_MAX_KB} kB together`,
-  fontBytes > 0 && fontBytes < FONTS_MAX_KB * 1024,
-  `${(fontBytes / 1024).toFixed(1)} kB`,
+  fontsBytes > 0 && fontsBytes < FONTS_MAX_KB * 1024,
+  `${(fontsBytes / 1024).toFixed(1)} kB`,
 );
 
-// What both pages share, gzipped, in kB on 2026-10-05: MapLibre's page
-// file 137.4 and the code it shares with its worker 134.8 (step 14; one
-// chunk of 249.7 at step 12, the worker's share being in the worker then),
-// React 57.6 and our shared code 41.0, 370.8 together (the one chunk it was
-// weighed 348.4). Each ceiling leaves some headroom and none for another
-// group's package: React in `shared` is +58, a half of MapLibre +135.
-// `packages` is what the chunk may hold from node_modules, `only` the files
-// it may hold; `vendor` chunks may import no chunk of ours.
-const SHARED_MAX_GZ_KB = 400;
-const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
-const GROUPS = [
-  {
-    name: 'maplibre',
-    maxGzKb: 160,
-    vendor: true,
-    packages: ['maplibre-gl'],
-    only: MAPLIBRE_FILE('maplibre-gl'),
-    holds: 'maplibre-gl.mjs alone, and imports none of our code',
-  },
-  {
-    name: 'maplibre-gl-shared',
-    maxGzKb: 160,
-    vendor: true,
-    packages: ['maplibre-gl'],
-    only: MAPLIBRE_FILE('maplibre-gl-shared'),
-    holds: 'maplibre-gl-shared.mjs alone, and imports none of our code',
-  },
-  {
-    name: 'react',
-    maxGzKb: 70,
-    vendor: true,
-    packages: ['react', 'react-dom', 'scheduler'],
-    holds: 'react, react-dom and scheduler, none of our code, and imports none of it',
-  },
-  // Zod validates the published index as the public map reads it (ticket 08
-  // of the restructure follow-ups, 2026-10-07): zod/mini, the tree-shakeable
-  // API, since the classic one weighed 24.3 kB gzipped over these schemas.
-  // Its own chunk, so its weight is read here on every build.
-  {
-    name: 'zod',
-    maxGzKb: 10,
-    vendor: true,
-    packages: ['zod'],
-    holds: 'zod alone, and imports none of our code',
-  },
-  // From maplibre-gl, its stylesheet and the worker's address (map-view.tsx);
-  // its JavaScript here would be over the ceiling.
-  {
-    name: 'shared',
-    maxGzKb: 80,
-    vendor: false,
-    packages: ['maplibre-gl'],
-    holds: 'our shared code and no package but maplibre-gl',
-  },
-];
-// A group's chunk is the one Vite's manifest names after it.
-const chunksNamed = (name) =>
-  Object.values(manifest).filter((c) => c.name === name && c.file.endsWith('.js'));
+const chunksNamed = (name) => chunksIn(manifest, name);
 const vendorFiles = GROUPS.filter((g) => g.vendor).flatMap((g) =>
   chunksNamed(g.name).map((c) => c.file),
 );
@@ -508,7 +694,7 @@ let groupsGz = 0;
 for (const { name, maxGzKb, vendor, packages, only, holds } of GROUPS) {
   const chunks = chunksNamed(name);
   const files = chunks.map((c) => c.file);
-  const gz = files.reduce((n, f) => n + gzipSync(readFileSync(join(dist, f))).length, 0);
+  const gz = gzipBytes(dist, files);
   groupsGz += gz;
   check(
     `the ${name} chunk is named, loaded by the public page, and under ${maxGzKb} kB gzipped`,
@@ -548,10 +734,50 @@ check(
   `${(groupsGz / 1024).toFixed(1)} kB`,
 );
 
+// The contribute page's own weight: what it loads beyond the public page's
+// chunks: its script only (its stylesheet is not counted), so it stays a page
+// for a phone in the field. The map it draws on is the public page's, already
+// counted above. What it opens with is held to one budget; the database client,
+// loaded only when a recording is uploaded or removed (with signal), to another. The screens the
+// page opens by a tap (sign-in, Profile, History) are chunks of their own and count toward neither.
+const CONTRIBUTE_OWN_MAX_GZ_KB = 30;
+const CONTRIBUTE_UPLOAD_MAX_GZ_KB = 60;
+const contributeOpening = chunksOf('contribute/index.html', { isStaticOnly: true }).filter(
+  (f) => !commuterFiles.includes(f),
+);
+const contributeOnDemand = contributeOnlyFiles.filter((f) => !contributeOpening.includes(f));
+const contributeOwnGz = gzipBytes(dist, contributeOpening);
+check(
+  `the contribute page opens with under ${CONTRIBUTE_OWN_MAX_GZ_KB} kB gzipped of its own`,
+  contributeOpening.length > 0 && contributeOwnGz < CONTRIBUTE_OWN_MAX_GZ_KB * 1024,
+  `${contributeOpening.join(', ')}: ${(contributeOwnGz / 1024).toFixed(1)} kB`,
+);
+// What the upload loads on first need is the database client's chunk and what that chunk imports,
+// not every chunk the page can load later: the sign-in, Profile and History screens are loaded
+// by being opened, so they are not part of an upload.
+const clientFiles = contributeOnDemand.filter((f) =>
+  packageModules([f]).some((p) => p.startsWith('@supabase/')),
+);
+const contributeUploadFiles = [
+  ...new Set(
+    Object.entries(manifest)
+      .filter(([, chunk]) => clientFiles.includes(chunk.file))
+      .flatMap(([key]) => chunksOf(key, { isStaticOnly: true })),
+  ),
+].filter((f) => !contributeOpening.includes(f) && !commuterFiles.includes(f));
+const contributeUploadGz = gzipBytes(dist, contributeUploadFiles);
+check(
+  `the contribute page's upload, loaded on first need, is under ${CONTRIBUTE_UPLOAD_MAX_GZ_KB} kB gzipped and holds the client`,
+  clientFiles.length > 0 &&
+    !packageModules(contributeOpening).some((p) => p.startsWith('@supabase/')) &&
+    contributeUploadGz < CONTRIBUTE_UPLOAD_MAX_GZ_KB * 1024,
+  `${contributeUploadFiles.join(', ')}: ${(contributeUploadGz / 1024).toFixed(1)} kB`,
+);
+
 // 6. Stylesheet order. The rules each page's stylesheets hold, in the order
 // the page links them; a rule inside an at-rule is read as if outside it.
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-for (const page of ['index.html', 'studio/index.html']) {
+for (const page of ['index.html', 'studio/index.html', 'contribute/index.html']) {
   const sheets = [...html(page).matchAll(/<link rel="stylesheet"[^>]*href="\/([^"]+)"/g)].map(
     (m) => m[1],
   );
@@ -574,7 +800,6 @@ for (const page of ['index.html', 'studio/index.html']) {
 
 // 7. MapLibre's worker: its chunk, and every chunk it imports, all the way
 // down, read from Vite's manifest and from what went into each.
-const WORKER_MAX_GZ_KB = 20;
 const workerChunks = chunksNamed('maplibre-gl-worker');
 const workerFile = workerChunks[0]?.file;
 const workerGz = workerFile ? gzipSync(readFileSync(join(dist, workerFile))).length : 0;

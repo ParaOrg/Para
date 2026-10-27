@@ -3,7 +3,7 @@
 //   npm run dev                                  (in another terminal, on :5173)
 //   node scripts/research/shots.mjs [outDir]     (default ./research-shots)
 //
-// Reads today's published file for a route and a hintuan to open, so nothing
+// Reads today's published map for a route and a hintuan to open, so nothing
 // here is hard-coded about the data. Each screen waits real time for tiles.
 // Uses window.__map, which only development builds expose.
 import { chromium } from 'playwright';
@@ -18,7 +18,7 @@ mkdirSync(OUT, { recursive: true });
 const readPublished = () => {
   const at = (name) =>
     JSON.parse(readFileSync(new URL(`../../public/data/${name}`, import.meta.url), 'utf8'));
-  const index = at('index.v4.json');
+  const index = at('index.v5.json');
   return {
     ...index,
     variants: index.variants.map(({ overview, ...v }) => ({
@@ -70,7 +70,7 @@ const openFold = async (p) => {
 };
 
 /**
- * Open the route's trip as a visitor does, by a tap on its line (trip links,
+ * Open the route's trip as a commuter does, by a tap on its line (trip links,
  * ?r=<id>, went on 2026-10-03): centred on a point a third of the way along
  * it. Where routes share that road this opens the list; its first row then.
  */
@@ -126,7 +126,7 @@ if (stop) {
   });
 }
 await shot(phone, '/', '05-phone-load-error', {
-  before: (p) => p.route('**/data/index.v4.json*', (r) => r.abort()),
+  before: (p) => p.route('**/data/index.v5.json*', (r) => r.abort()),
 });
 await shot(desk, '/', '06-desktop-map');
 if (route) await shot(desk, '/', '07-desktop-route', { after: openRoute });

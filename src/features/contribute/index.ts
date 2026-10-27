@@ -1,0 +1,10 @@
+// The contribute feature: the page where a contributor records a route on the phone. The
+// shell imports it from here; nothing outside the feature imports its inner
+// files (.claude/CLAUDE.md, Import rules).
+export { ContributePage } from './contribute-page';
+export type { ContributeLocatorSlot } from './contribute-map';
+export { connectContributions } from './api/contribute-client';
+export { hasOpenRecording } from './open-recording';
+export { askForPersistentStorage } from './persistent-storage';
+export { isNativeApp, prepareNativeApp } from './native-app';
+export { runEmulatorRide } from './native-emulator-ride';

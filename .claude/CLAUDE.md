@@ -30,13 +30,16 @@ Much of the codebase predates this file.
 | TypeScript 7 (strict), native | All source code: `.ts` for logic, `.tsx` for anything that renders JSX. `tsc` comes from the `@typescript/native` alias; the `typescript` package is the 6.0 API (`@typescript/typescript6`), kept only for typescript-eslint until it supports TypeScript 7.1, then dropped |
 | Vite | Dev server and build |
 | Tailwind CSS v4 | Styling via utility classes and `@theme` tokens |
-| Supabase | Backend and database, accessed only through feature `api/` folders |
+| Supabase | Backend and database, reached only by `features/studio/data/` and `features/contribute/api/` (see Data fetching) |
 | TanStack Query | All server state: fetching, caching, mutations |
 | Zod | Runtime validation at every boundary; types inferred from schemas |
 | MapLibre GL | Map rendering, wrapped in one owning component |
 | Storybook | Component development and documentation |
 | vite-plugin-pwa | Installable, offline-capable mobile app |
-| ESLint 10 + Prettier | Automatic enforcement of these standards. Every rule warns until the tree is clean of it, then errors. jsx-a11y's ESLint peer range is overridden in package.json until it declares 10 |
+| Cloudflare Turnstile | The bot check on a contributor's first save and on the studio's sign-in. Cloudflare's own script, loaded on those two pages only; no npm package |
+| Capacitor 8 | The contributor app: the contributor page's own build inside a native Android shell, with `@capacitor-community/background-geolocation` for recording with the screen off. The web bundle carries none of it (ADR 0006) |
+| Cloudflare R2 | The weekly encrypted backup of contributions, written by a GitHub workflow. Nothing in the app reads it |
+| ESLint 10 + Prettier | Automatic enforcement of these standards. Every rule is an error (since 2026-10-14): a new rule warns only until the tree is clean of it. jsx-a11y's ESLint peer range is overridden in package.json until it declares 10 |
 
 Don't add a dependency without asking first. Say what it replaces and why the current stack can't cover it.
 
@@ -48,42 +51,47 @@ The structure is feature-based: code lives next to the feature that uses it.
 src/
 ├── app/                        # App shells. Wiring only, no business logic.
 │   ├── public-map/             # The public map at /: main.tsx, public-map-app.tsx, status-bar.ts
-│   └── studio/                 # The studio at /studio/: main.tsx, studio-app.tsx
-├── pages/                      # Appears when an app gets a second screen. Thin screens that compose features.
+│   ├── studio/                 # The studio at /studio/: main.tsx, studio-app.tsx
+│   └── contribute/             # The contributor page at /contribute/: main.tsx, contribute-app.tsx
+├── pages/                      # Not yet: appears when an app gets a second screen. Thin screens that compose features.
 ├── features/
-│   ├── routes/                 # The core both apps draw: routes, the places they pass, the map that shows them.
+│   ├── routes/                 # The core the public map and the studio draw: routes, the places they pass, the map that shows them.
 │   │   ├── model/              # Domain types and rules. No React, no MapLibre.
 │   │   ├── geo/                # The pass and babaan-side rules.
 │   │   ├── map/                # The map view (the one MapLibre owner), its basemap and layers, the route and hotspot layers and hooks.
+│   │   ├── published/          # The published map's reader: the index and the line files, for the public map and the studio's Public map.
 │   │   └── cards/              # The cards and timelines.
 │   ├── locator/                # "Where am I". index.ts is its public API.
-│   ├── published-map/          # Reads the index and line files, tracks freshness, runs the installed app's updates. index.ts.
-│   ├── studio/                 # The editor. The only feature the public page never loads. index.ts.
+│   ├── published-map/          # Tracks the published map's freshness and runs the installed app's updates. index.ts.
+│   ├── studio/                 # The editor. The public page never loads it. index.ts.
 │   │   └── auth/ data/ drawing/ panels/
+│   ├── contribute/             # The contributor page: consent, the recorder, saving and sending. index.ts. The public page never loads it.
 │   └── <small-feature>/        # components/ hooks/ api/ schemas/ types/ utils/ constants.ts index.ts
 ├── shared/                     # Used by 2+ features. Knows nothing about any feature.
-│   └── ui/ hooks/ lib/ config/ utils/ types/ constants/
+│   └── ui/ hooks/ utils/       # lib/ config/ types/ constants/ when first needed
 ├── styles/global.css           # Tailwind entry. Imports the design system's tokens and fonts.
-├── design-system/              # Domain-free: foundation/ ← primitives/ ← patterns/. Imports nothing else. Tokens live here.
-└── assets/                     # Static images, icons
+├── design-system/              # Domain-free: foundation/ ← primitives/ ← patterns/ (not yet). Imports nothing else. Tokens live here.
+└── assets/                     # Not yet: static images, icons. Today a feature keeps its own beside its code.
 ```
+
+Outside `src/`, `android/` is the contributor app's native Android project (Capacitor; ADR 0006). Edit it with `npx cap`, not by hand where Capacitor generates it. `.github/workflows/contributor-app.yml` builds it, and `vite.apk.config.ts` builds its web side.
 
 Create only the folders a feature actually needs. Don't scaffold empty ones.
 
-A large feature groups by concern (`routes`: model, geo, map, cards; `studio`: auth, data, drawing, panels), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows.
+A large feature groups by concern (`routes`: model, geo, map, published, cards; `studio`: auth, data, drawing, panels), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows.
 
 ### Import rules
 
 - Imports flow one way: **`app` → `pages` → `features` → `shared` → `design-system`**. Never import upward.
 - `shared/` never imports from `features/`, `pages/` or `app/`. `design-system/` imports only itself, foundation ← primitives ← patterns. `styles/` imports only the design system.
-- Features depend one way: `routes` first; `locator`, `published-map` and `studio` may import `routes` and never each other. `app/public-map` never imports `features/studio`. ESLint enforces all of this (`import-x/no-restricted-paths` in `eslint.config.js`, by the resolved path), and `scripts/checks/check-build.mjs` proves from the built output that no studio module reaches the public page.
-- Code outside a feature imports `locator`, `published-map` and `studio` **only through their `index.ts`**. `routes` has no `index.ts` on purpose: Node runs the publish, the data check and the unit checks against source files, and a barrel over routes would load its map view (JSX, MapLibre) into them. Import routes through its concern folders.
+- Features depend one way: `routes` first; `locator`, `published-map`, `studio` and `contribute` may import `routes` and never each other. `app/public-map` never imports `features/studio` or `features/contribute`, and `app/contribute` never imports `features/studio`. ESLint enforces all of this (`import-x/no-restricted-paths` in `eslint.config.js`, by the resolved path), and `scripts/checks/check-build.mjs` proves from the built output that no studio or contribute module reaches the public page, and no studio module reaches the contributor page.
+- Code outside a feature imports `locator`, `published-map`, `studio` and `contribute` **only through their `index.ts`**. `routes` has no `index.ts` on purpose: Node runs the publish, the data check and the unit checks against source files, and a barrel over routes would load its map view (JSX, MapLibre) into them. Import routes through its concern folders.
 - If two features need the same code, move it to `shared/`. Don't let features import each other in a cycle.
 - Use the `@/` alias (maps to `src/`) for any import that leaves the current feature or folder. Use relative imports (`./`, `../`) only inside the same feature.
 
 ```ts
-import { VisitorLocation } from '@/features/locator';                   // ✅ a leaf feature's public API
-import { VisitorLocation } from '@/features/locator/visitor-location';  // ❌ deep import
+import { CommuterLocation } from '@/features/locator';                   // ✅ a leaf feature's public API
+import { CommuterLocation } from '@/features/locator/commuter-location'; // ❌ deep import
 import { routeName } from '@/features/routes/model/routes';             // ✅ routes, by its concern folder
 ```
 
@@ -173,7 +181,7 @@ export function RouteCard({ route, isSelected = false, onSelect }: RouteCardProp
 - Types inferred from Zod stay `type`: `type Route = z.infer<typeof routeSchema>`.
 - Use `import type { … }` for type-only imports.
 - Exported functions in `utils/`, `lib/` and `api/` fetchers declare their return types. Components and hooks that just wrap a library hook may infer.
-- Supabase types, once generated, live in `src/features/studio/data/database.types.ts`. Never edit that file by hand; regenerate it.
+- Supabase types, once generated, live in `src/shared/types/database.types.ts`. Never edit that file by hand; regenerate it after every migration. It holds types only, so it adds no code to any page.
 - Don't duplicate types. If a Zod schema exists, derive the type with `z.infer`.
 
 ## State management
@@ -193,7 +201,7 @@ Choose the right home for each piece of state:
 
 ## Data fetching: Supabase, TanStack Query and Zod
 
-Components never call Supabase directly. Every request goes through a feature's `api/` folder:
+Components never call Supabase directly. In a small feature every request goes through its `api/` folder, as below; the studio's go through `features/studio/data/` and the contributor page's through `features/contribute/api/`, the only two places Supabase is called (see the list after the example):
 
 ```ts
 // features/routes/api/route-keys.ts
@@ -222,8 +230,8 @@ export function useRoutesQuery(filters: RouteFilters) {
 }
 ```
 
-- The public map's only data source is the published map (the index and the line files), read by `features/published-map` the way any fetcher reads: fetch, validate, throw on error. Visitors never read the database (ADR 0001).
-- Supabase is read and written only by `features/studio/data/`, and the one Supabase client lives there, never in `shared/`: the public page must never carry it, and `scripts/checks/check-build.mjs` proves that by path. One `QueryClient`, in `shared/lib/query-client.ts`, once TanStack Query is adopted.
+- The public map's only data source is the published map (the index and the line files), read by `features/routes/published/` the way any fetcher reads: fetch, validate, throw on error. Commuters never read the database (ADR 0001).
+- Supabase is reached by two features only. `features/studio/data/` reads and writes the route tables and reads contributions. `features/contribute/api/` writes the phone's own contributions, reads them back and deletes them, nothing else. Each page's entry point creates its own client, the contributor page's under its own auth storage key; no client lives in `shared/`. The public page carries neither: `scripts/checks/check-build.mjs` proves it by path, and proves the contributor page carries no studio code. One `QueryClient`, in `shared/lib/query-client.ts`, once TanStack Query is adopted.
 - Build every query key from the feature's key factory. Never write key arrays inline.
 - Fetchers throw on error. Never return `null` to signal a failure.
 - Mutations invalidate or update the exact keys they affect.
@@ -234,8 +242,8 @@ export function useRoutesQuery(filters: RouteFilters) {
 Validate data at every boundary where it enters the app:
 
 - Supabase and API responses, parsed in the fetcher.
-- Environment variables, parsed once in `shared/config/env.ts`. Nothing else reads `import.meta.env`.
-- Form input, URL and search params, and anything read from `localStorage`.
+- Environment variables, parsed once per page with Zod: `shared/config/env.ts` for the flags any page may read, and the Supabase and Turnstile values in the feature that uses them (`features/studio/data/env.ts`, `features/contribute/api/env.ts`), so the database's address never enters a module the public page loads. Nothing else reads `import.meta.env`.
+- Form input, URL and search params, and anything read from `localStorage` or IndexedDB.
 
 ```ts
 // features/routes/schemas/route-schema.ts
@@ -246,7 +254,7 @@ export const routeSchema = z
 export type Route = z.infer<typeof routeSchema>;
 ```
 
-Never put secrets in the frontend. Only the Supabase URL and the publishable key belong in `VITE_` variables. Access control is enforced by Row Level Security, not by the UI.
+Never put secrets in the frontend. Only the Supabase URL, the publishable key and the Turnstile site key belong in `VITE_` variables; all three are public by design. Turnstile's secret key lives in Supabase's Auth settings, never in the repo. Access control is enforced by Row Level Security, not by the UI.
 
 ## Hooks and effects
 
@@ -291,7 +299,7 @@ Never put secrets in the frontend. Only the Supabase URL and the publishable key
 - Use ARIA only when native semantics can't express the pattern.
 - Colour is never the only signal. A route colour needs a label, pattern or icon beside it.
 - Anything shown only on the map must also be available as text for screen-reader users.
-- Touch targets are at least 44×44px.
+- Touch targets are the size the owner's Figma draws them. There is no 44×44px floor (the owner, 2026-10-16: "I want more free and follow the figma").
 
 ## Performance
 
@@ -316,7 +324,7 @@ import { RouteCardSkeleton } from './route-card-skeleton'; // 3. relative
 import './route-map.css';                                // 4. side-effect / styles (rare)
 ```
 
-- Barrel files (`index.ts`) exist only at the root of `locator`, `published-map` and `studio` (their public API), and at `shared/ui/index.ts` once it is needed. `features/routes` has none (see Import rules). Don't create barrels in other folders.
+- Barrel files (`index.ts`) exist only at the root of `locator`, `published-map`, `studio` and `contribute` (their public API), and at `shared/ui/index.ts` once it is needed. `features/routes` has none (see Import rules). Don't create barrels in other folders.
 - A feature's `index.ts` exports only what other code needs. Everything else stays private.
 
 ## Errors and logging
@@ -328,7 +336,7 @@ import './route-map.css';                                // 4. side-effect / sty
 
 ## Formatting and linting
 
-These configs are the target. Once they're installed, they enforce everything above.
+These configs are installed and enforce everything above. Every ESLint rule is an error.
 
 - **Prettier:** 2-space indent, semicolons, single quotes, trailing commas everywhere, print width 100, with `prettier-plugin-tailwindcss` to sort classes.
 - **ESLint** (flat config, `eslint.config.js`):
@@ -338,13 +346,14 @@ These configs are the target. Once they're installed, they enforce everything ab
   - Import ordering (groups as above) and a no-default-export rule
   - `eslint-plugin-check-file` to enforce kebab-case file and folder names
   - `no-restricted-imports` to enforce the import direction and ban deep feature imports
-- **Scripts:** `npm run typecheck`, `npm run lint` and `npm run format`.
+- **Scripts:** `npm run typecheck`, `npm run lint` and `npm run format`. `npm run check` runs them all as CI does: `format:check`, `lint`, `build` (typecheck, Vite and the build guards) and the unit checks.
 
 Never disable a lint rule for a whole file. A single-line disable needs a comment explaining why.
 
 ## Comments
 
 - Comment *why*, not *what*. The code says what it does.
+- Don't record history in comments: who asked for a change, when, or what the code used to do. That goes in the commit message and the pull request.
 - Exported functions in `shared/` get a one-line JSDoc summary.
 - `TODO` comments say what is missing and why: `// TODO: paginate once routes exceed 500`.
 - Delete commented-out code. Git keeps the history.
@@ -353,8 +362,8 @@ Never disable a lint rule for a whole file. A single-line disable needs a commen
 
 Before calling a change finished, confirm all of these:
 
-- [ ] `npm run typecheck` passes, with no new `any`, `!` or `as`.
-- [ ] `npm run lint` is clean, once ESLint is set up.
+- [ ] For a medium or hard change, or whenever the owner asks, `npm run check` passes: formatting, lint, the build with its guards and the unit checks. A simple change relies on its PR's CI.
+- [ ] No new `any`, `!` or `as`.
 - [ ] New and changed files follow the naming and folder rules above.
 - [ ] Imports flow `app → pages → features → shared → design-system`, through a leaf feature's `index.ts` and routes' concern folders; `npm run build` proves it.
 - [ ] Loading, error and empty states are handled for any data-driven UI.
@@ -375,3 +384,11 @@ The five default triage labels, unchanged. See `docs/agents/triage-labels.md`.
 ### Domain docs
 
 Single-context: `CONTEXT.md` at the root and `docs/adr/`. See `docs/agents/domain.md`.
+
+### How we work
+
+Read `docs/agents/how-we-work.md` before starting work. In short:
+
+- The owner owns the design. Never make up a look; batch questions for the owner.
+- Opus plans, designs the architecture and reviews; Sonnet builds from a clear plan; Haiku watches and scans.
+- At most about four sessions build at once, each owning its own folders. Sessions merge their finished work into `staging`; only the owner merges into `main`.

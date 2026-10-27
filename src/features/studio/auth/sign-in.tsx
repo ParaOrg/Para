@@ -1,9 +1,12 @@
 import { useState } from 'react';
 
+import { PasswordField } from '@/design-system/primitives/password-field';
+import { TextField } from '@/design-system/primitives/text-field';
 import { coarse } from '@/features/routes/map/map-view';
+import { Turnstile } from '@/shared/ui/turnstile';
 
+import { useCaptcha } from './use-captcha';
 import { getSupabase, supabaseConfigError } from '../data/supabase';
-import { FIELD_TEXT } from '../panels/sheet';
 
 type Mode = 'signin' | 'forgot';
 
@@ -39,6 +42,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(notice);
+  const captcha = useCaptcha();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +57,11 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
     }
 
     if (mode === 'signin') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: captcha.takeToken(),
+      });
       if (error) {
         setError(
           error.message === 'Invalid login credentials'
@@ -69,6 +77,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       // Only the studio has the form that sets the new password.
       redirectTo: `${window.location.origin}/studio/`,
+      ...captcha.takeToken(),
     });
     if (error) {
       setError(error.message);
@@ -131,28 +140,32 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
                 : 'Anyone can see the routes. Only you can save or change them. Your drawing is kept on this device while you sign in.'}
             </p>
 
-            <input
-              type="email"
-              required
-              // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
-              autoFocus={!coarse}
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className={`mt-4 w-full rounded-lg border border-neutral-300 px-3 py-2.5 ${FIELD_TEXT} outline-none focus:border-neutral-900`}
-            />
+            <div className="mt-4">
+              <TextField
+                label="Email"
+                type="email"
+                onClear={() => setEmail('')}
+                required
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
+                autoFocus={!coarse}
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
 
             {mode === 'signin' && (
-              <input
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className={`mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2.5 ${FIELD_TEXT} outline-none focus:border-neutral-900`}
-              />
+              <div className="mt-2">
+                <PasswordField
+                  label="Password"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                />
+              </div>
             )}
 
             {mode === 'signin' && (
@@ -168,6 +181,16 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
             )}
 
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+            {captcha.siteKey && (
+              <div className="mt-4">
+                <Turnstile
+                  key={captcha.round}
+                  siteKey={captcha.siteKey}
+                  onToken={captcha.setToken}
+                />
+              </div>
+            )}
 
             <div className="mt-4 flex gap-2">
               {onDismiss ? (
@@ -188,7 +211,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
               )}
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || !captcha.isReady}
                 className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
               >
                 {submitLabel}

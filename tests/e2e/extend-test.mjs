@@ -79,6 +79,11 @@ const a = line[Math.max(0, mid - 30)];
 const b = line[Math.max(0, mid - 12)];
 await frame([a, join], 250);
 await page.waitForTimeout(800);
+// map.project gives canvas pixels and the mouse takes page pixels, and the
+// canvas does not start at the page's top-left corner: the map switch sits
+// above it.
+const canvasBox = await page.locator('canvas.maplibregl-canvas').boundingBox();
+const click = (x, y, options) => page.mouse.click(canvasBox.x + x, canvasBox.y + y, options);
 const px = (ll) =>
   page.evaluate((ll) => {
     const p = window.__map.project(ll);
@@ -121,7 +126,7 @@ let d = await readDraft();
 check('the draft comes back with its join', d?.join === 0 && d?.borrow?.part === 'end');
 
 const [ax, ay] = await px(a);
-await page.mouse.click(ax, ay);
+await click(ax, ay);
 await page.waitForTimeout(300);
 await waitRouted();
 await page.waitForTimeout(300);
@@ -137,7 +142,7 @@ check(
 );
 
 const [bx, by] = await px(b);
-await page.mouse.click(bx, by);
+await click(bx, by);
 await page.waitForTimeout(300);
 await waitRouted();
 await page.waitForTimeout(300);
@@ -190,7 +195,8 @@ const saved = await page.evaluate(async () =>
     coords: f.geometry.coordinates,
   })),
 );
-await page.locator('button[title="Draw a route"]').click();
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(300);
 const A = line[Math.floor(line.length * 0.1)];
 const B = line[Math.floor(line.length * 0.3)];
@@ -199,10 +205,10 @@ await page.waitForTimeout(800);
 const [Ax, Ay] = await px(A);
 const [Bx, By] = await px(B);
 
-await page.mouse.click(Ax, Ay);
+await click(Ax, Ay);
 // Right-click the point once its dot is drawn, as a person does (see dotAt).
 const dotShown = await dotAt([Ax, Ay]);
-await page.mouse.click(Ax, Ay, { button: 'right' });
+await click(Ax, Ay, { button: 'right' });
 await page.waitForTimeout(400);
 check(
   'right-click on a drawn point still deletes it, even on a saved line',
@@ -210,7 +216,7 @@ check(
   dotShown ? `points ${await pointsShown()}` : 'its dot was not drawn in 5 s',
 );
 
-await page.mouse.click(Bx, By, { button: 'right' });
+await click(Bx, By, { button: 'right' });
 await page.waitForTimeout(400);
 check(
   'with nothing drawn, a right-click on a line says to draw first',
@@ -223,9 +229,9 @@ await page.getByRole('button', { name: 'Dismiss' }).first().click();
 // A click on a dot still drawn is a press on that point, not a new one
 // (useDrawing's onMapClick): let the deleted point's dot go first.
 await dotAt([Ax, Ay], false);
-await page.mouse.click(Ax, Ay);
+await click(Ax, Ay);
 await page.waitForTimeout(300);
-await page.mouse.click(Bx, By, { button: 'right' });
+await click(Bx, By, { button: 'right' });
 // The line's drawing is read from the database when it is followed (one
 // request; the list carries no drawings since 2026-09-25): wait for the join
 // to land in the draft before waiting for its gap to be routed.
