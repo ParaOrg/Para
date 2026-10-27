@@ -1,4 +1,4 @@
-import type { MapLibreMap } from 'maplibre-gl';
+import type { GeoJSONSource, MapLibreMap, Source } from 'maplibre-gl';
 import { useEffect } from 'react';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
@@ -26,6 +26,10 @@ export const SELECTED_LAYER = 'draw-point-selected';
 export const AREA_FILL_LAYER = 'draw-area-fill';
 
 export const ROUTE_COLOUR = MAP_PAINT['Paint/draw-line'];
+
+/** Whether a source the drawing looked up is a GeoJSON one it can set data on. */
+export const isGeoJSON = (source: Source | undefined): source is GeoJSONSource =>
+  source?.type === 'geojson';
 const UTURN_COLOUR = MAP_PAINT['Paint/draw-uturn'];
 
 const BORROW_COLOUR = MAP_PAINT['Paint/draw-borrow'];

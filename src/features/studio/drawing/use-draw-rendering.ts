@@ -1,4 +1,4 @@
-import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
+import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect } from 'react';
 
 import { HOTSPOT_COLOUR } from '@/features/routes/map/colours';
@@ -22,6 +22,7 @@ import {
   ROUTE_COLOUR,
   SELECTED_LAYER,
   UTURN_SRC,
+  isGeoJSON,
 } from './draw-layers';
 import type { AreaTarget, Picking } from './drawing-types';
 import type { UTurn } from './uturns';
@@ -47,21 +48,21 @@ export function useDrawRendering(
 ): void {
   useEffect(() => {
     if (!map) return;
-    const lineSrc = map.getSource(LINE_SRC) as GeoJSONSource | undefined;
-    const pointSrc = map.getSource(POINT_SRC) as GeoJSONSource | undefined;
-    if (!lineSrc || !pointSrc) return;
+    const lineSrc = map.getSource(LINE_SRC);
+    const pointSrc = map.getSource(POINT_SRC);
+    if (!isGeoJSON(lineSrc) || !isGeoJSON(pointSrc)) return;
     lineSrc.setData(lineFeatures(segments, controlPoints, area));
     pointSrc.setData(pointFeatures(controlPoints, selected));
-    const areaSrc = map.getSource(AREA_SRC) as GeoJSONSource | undefined;
-    areaSrc?.setData(areaFeatures(controlPoints, area));
-    const uturnSrc = map.getSource(UTURN_SRC) as GeoJSONSource | undefined;
-    uturnSrc?.setData(uTurnFeatures(uTurns, controlPoints));
+    const areaSrc = map.getSource(AREA_SRC);
+    if (isGeoJSON(areaSrc)) areaSrc.setData(areaFeatures(controlPoints, area));
+    const uturnSrc = map.getSource(UTURN_SRC);
+    if (isGeoJSON(uturnSrc)) uturnSrc.setData(uTurnFeatures(uTurns, controlPoints));
   }, [map, segments, controlPoints, area, uTurns, selected]);
 
   useEffect(() => {
     if (!map) return;
-    const src = map.getSource(BORROW_SRC) as GeoJSONSource | undefined;
-    if (!src) return;
+    const src = map.getSource(BORROW_SRC);
+    if (!isGeoJSON(src)) return;
     src.setData(borrowFeatures(picking));
   }, [map, picking]);
 
