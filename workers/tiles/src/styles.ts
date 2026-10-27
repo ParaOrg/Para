@@ -22,6 +22,17 @@ function ownAsset(url: unknown, origin: string): unknown {
     : url;
 }
 
+// OpenFreeMap keeps its sprite in a versioned folder (sprites/ofm_f384/ofm); the build stores
+// the files flat, as assets/sprites/ofm.json and so on.
+function ownSprite(url: unknown, origin: string): unknown {
+  return typeof url === 'string'
+    ? url.replace(
+        /^https:\/\/tiles\.openfreemap\.org\/sprites\/[^/]+\//,
+        `${origin}/assets/sprites/`,
+      )
+    : url;
+}
+
 export function rewriteStyle(style: unknown, origin: string, header: PmtilesHeader): Json {
   if (!isRecord(style) || !isRecord(style.sources) || !Array.isArray(style.layers))
     throw new Error('style is not a MapLibre style');
@@ -53,7 +64,7 @@ export function rewriteStyle(style: unknown, origin: string, header: PmtilesHead
     ...style,
     sources,
     layers,
-    sprite: ownAsset(style.sprite, origin),
+    sprite: ownSprite(style.sprite, origin),
     glyphs: ownAsset(style.glyphs, origin),
   };
 }

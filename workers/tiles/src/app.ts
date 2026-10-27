@@ -1,9 +1,10 @@
 import { openArchive } from './archive';
 import type { Archive } from './archive';
+import { assetKeys, serveAsset } from './assets';
 import { corsHeaders, isAllowedOrigin } from './cors';
 import { createCurrentReader } from './current';
 import type { Current } from './current';
-import { ASSETS_PREFIX, STYLE_NAMES, styleKey } from './keys';
+import { STYLE_NAMES, styleKey } from './keys';
 import type { StyleName } from './keys';
 import { isValidTile } from './pmtiles';
 import { rewriteStyle } from './styles';
@@ -13,7 +14,6 @@ const TILE_ROUTE = /^\/(\d+)\/(\d+)\/(\d+)\.pbf$/;
 const STYLE_ROUTE = /^\/styles\/([a-z]+)$/;
 const TILE_CACHE_CONTROL = 'public, max-age=86400, stale-while-revalidate=604800';
 const STYLE_CACHE_CONTROL = 'public, max-age=3600, stale-while-revalidate=86400';
-const ASSET_CACHE_CONTROL = 'public, max-age=604800';
 
 function findStyleName(name: string): StyleName | undefined {
   return STYLE_NAMES.find((known) => known === name);
@@ -114,23 +114,6 @@ export function createApp() {
     });
   }
 
-  async function asset(env: Env, key: string): Promise<Response> {
-    const object = await env.TILES.get(key);
-    if (!object) return text(404, 'Not found.');
-    const type = key.endsWith('.json')
-      ? 'application/json'
-      : key.endsWith('.png')
-        ? 'image/png'
-        : 'application/x-protobuf';
-    return new Response(object.body, {
-      headers: {
-        'Content-Type': type,
-        'Cache-Control': ASSET_CACHE_CONTROL,
-        ETag: object.httpEtag,
-      },
-    });
-  }
-
   async function route(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const tileMatch = TILE_ROUTE.exec(url.pathname);
@@ -141,8 +124,8 @@ export function createApp() {
     const styleMatch = STYLE_ROUTE.exec(url.pathname);
     const styleName = styleMatch?.[1] ? findStyleName(styleMatch[1]) : undefined;
     if (styleName) return style(env, url.origin, styleName);
-    if (url.pathname.startsWith(`/${ASSETS_PREFIX}`) && !url.pathname.includes('..'))
-      return asset(env, decodeURIComponent(url.pathname.slice(1)));
+    const keys = assetKeys(url.pathname);
+    if (keys) return serveAsset(env.TILES, keys);
     if (url.pathname === '/health') {
       const { builtAt, file, tiles } = await currentFor(env);
       return Response.json({ builtAt, file, tiles }, { headers: { 'Cache-Control': 'no-store' } });

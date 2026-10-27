@@ -42,7 +42,7 @@ test('the style reads our tiles, sprite and glyphs and nothing is left on OpenFr
     bounds: HEADER.bounds,
     attribution: '© OpenMapTiles © OpenStreetMap contributors',
   });
-  assert.equal(style.sprite, `${OWN}/assets/sprites/ofm_f384/ofm`);
+  assert.equal(style.sprite, `${OWN}/assets/sprites/ofm`);
   assert.equal(style.glyphs, `${OWN}/assets/fonts/{fontstack}/{range}.pbf`);
   assert.ok(!JSON.stringify(style).includes('tiles.openfreemap.org'));
 });
