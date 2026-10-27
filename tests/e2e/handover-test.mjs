@@ -13,6 +13,7 @@
 //     the map file is stored as on a first visit
 //   - a later version of ours is offered as "Update Para Po!" and waits until tapped
 //   - no page errors
+// The only host the browser can resolve is the preview's.
 //
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
 import { createRequire } from 'node:module';
@@ -73,7 +74,13 @@ const state = (page) =>
     };
   });
 
-const browser = await chromium.launch();
+// Nothing but the preview is reachable. The new worker cannot take over while
+// the old one has a request in flight (the browser waits for it to go idle), and
+// the basemap's tiles, asked of the old worker, would otherwise hang for about
+// 30 s on a machine with no route to the tile host, past this suite's wait.
+const browser = await chromium.launch({
+  args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'],
+});
 try {
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
