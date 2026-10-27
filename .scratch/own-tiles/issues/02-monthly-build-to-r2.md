@@ -26,3 +26,15 @@ Also uploads the styles, sprites and glyphs 01 listed, rewritten to point at our
 - A forced failure (a bad box) turns the run red.
 
 ## Comments
+
+### Build (Sonnet), 2026-10-27
+
+Workflow `.github/workflows/tiles.yml`, scripts in `scripts/tiles/`, README section "Map tiles". Area, checks, upload layout and secrets as the hub decided. Choices the brief left open:
+- **Build date in the metadata:** Planetiler's own `planetiler:buildtime` is the jar's build time, so the build passes `--archive_version=<date>` and `check.mjs` requires the metadata `version` to equal it.
+- **Upload trigger (hub):** only from `staging` or `main`. A push to `staging` that changes the workflow or `scripts/tiles/` uploads (schedule and "Run workflow" only work once the file is on `main`); the schedule and "Run workflow" with `upload` ticked stay for then. Any other ref, or a missing secret, stops the run at its first step. A pull request never uploads or sees the secrets.
+- **Failure alert:** as `backup.yml`: a red run with `::error::` lines; GitHub emails the owner on a failed scheduled run. No issue, no artifact.
+- **Cache (hub):** Planetiler's downloads are copied to `build-cache/sources/` in R2 (`sources.sh`: pull, upstream for what is missing, push). `actions/cache` stays for pull requests.
+- The PMTiles reader is copied to `scripts/tiles/pmtiles.mjs` (the spike's workflow still imports its own).
+- Fiord's licence (`openmaptiles/fiord-color-gl-style`): BSD-3-Clause code, CC BY 4.0 design; noted in the README.
+- **File names (hub):** `parapo-YYYY-MM-DD-<run id>.pmtiles`, unique per run; the upload refuses a key that exists, and deletes old builds only after `current.json` has moved.
+- **Secrets (hub):** in a GitHub Environment `tiles` limited to `staging` and `main`; only the R2 steps carry them. Pruning protects the new file and the one the previous `current.json` names.
