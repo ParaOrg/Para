@@ -105,12 +105,13 @@ export async function listDirections(): Promise<DirectionRow[]> {
   if (!client) return [];
   // Read as unknown and parsed, as every row here is: the client's guess at
   // the embedded route (a list) is not what the foreign key makes it (one row).
+  // Paged by id alone, which never changes: a row updated between pages would
+  // move under an updated_at order, read twice and push another out.
   const list = () =>
     readAll<unknown>((from, to) =>
       client
         .from('route_variant')
         .select(DIRECTION_SELECT, { count: 'exact' })
-        .order('updated_at', { ascending: false })
         .order('id')
         .range(from, to),
     );
@@ -122,7 +123,8 @@ export async function listDirections(): Promise<DirectionRow[]> {
             .status !== 'taken_down',
       )
     : listedRaw;
-  const listed: ListedRow[] = parsed(listedRowSchema, visible, 'direction');
+  // Most recently changed first: the order the map stacks them in.
+  const listed: ListedRow[] = parsed(listedRowSchema, visible, 'direction').sort(byRecentChange);
   // A drawn row saved before 0009 and not backfilled has no overview yet: its
   // full line stands in, read for those rows alone.
   const missing = listed.some((r) => r.overview === null)
@@ -132,6 +134,16 @@ export async function listDirections(): Promise<DirectionRow[]> {
     toUnnamedDirectionRow({ ...r, shape: overview ?? shape ?? missing.get(r.id) ?? null }),
   );
   return nameDirections(rows, hotspots);
+}
+
+/** Newest `updated_at` first, then by id. */
+export function byRecentChange(
+  a: { id: string; updated_at: string },
+  b: { id: string; updated_at: string },
+): number {
+  const newer = Date.parse(b.updated_at) - Date.parse(a.updated_at);
+  if (newer !== 0) return newer;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
 /** The full lines of the drawn rows that have no overview yet, by id. */
