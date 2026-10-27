@@ -15,7 +15,7 @@
 //   - /index.html and /studio redirect to / and /studio/ (html_handling's
 //     default, auto-trailing-slash).
 {
-  "name": "parapo",
+  "name": "para",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",
