@@ -368,7 +368,10 @@ export function useRecording(): RecordingState {
     if (isFinishing.current) return;
     isFinishing.current = true;
     const id = currentRef.current?.id;
-    const pull = id ? readNativeFixes(id).then((kept) => takeFixes(kept, at)) : Promise.resolve();
+    const lastHeld = fixesRef.current[fixesRef.current.length - 1]?.time ?? null;
+    const pull = id
+      ? readNativeFixes(id, lastHeld).then((kept) => takeFixes(kept, at))
+      : Promise.resolve();
     pull
       .catch((error: unknown) => {
         hasNativeLogProblem.current = true;

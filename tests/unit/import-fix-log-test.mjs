@@ -144,6 +144,22 @@ test('a ride killed between its auto-stop fix and its stop, with nothing new, im
   assert.deepEqual(live, { taken: [], isBackAtStart: false });
 });
 
+test('a log read from the last stored fix imports what the whole log would', () => {
+  const stored = storedRows(ride.slice(0, 30));
+  const after = stored[stored.length - 1].time;
+  const fromLast = ride.filter((fix) => fix.timestamp > after);
+  for (const each of [
+    recording({ switches: [] }),
+    recording(),
+    recording({ status: 'stopped', stoppedAt: ride[50].timestamp }),
+  ]) {
+    assert.deepEqual(
+      fixLogImport(each, { recordingId: ID, fixes: fromLast }, stored),
+      fixLogImport(each, { recordingId: ID, fixes: ride }, stored),
+    );
+  }
+});
+
 test("another recording's log, or none, adds nothing", () => {
   const running = recording();
   for (const recordingId of ['ride-2', null]) {

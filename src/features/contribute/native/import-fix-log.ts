@@ -54,9 +54,11 @@ export function fixLogImport(
  * store when it changed.
  */
 export async function importFixLog(recording: Recording): Promise<Recording> {
-  const log = await readFixLog();
+  const stored = await loadFixes(recording.id);
+  // Only what came after the last stored fix crosses the bridge: a long ride's log is large.
+  const log = await readFixLog(stored[stored.length - 1]?.time ?? null);
   if (log.recordingId !== recording.id) return recording;
-  const imported = fixLogImport(recording, log, await loadFixes(recording.id));
+  const imported = fixLogImport(recording, log, stored);
   await putFixes(imported.rows);
   return imported.recording;
 }
