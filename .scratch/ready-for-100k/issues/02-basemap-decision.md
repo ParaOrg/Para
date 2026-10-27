@@ -31,3 +31,5 @@ For C:
 A short write-up under `## Answer` with a recommendation and its cost. No code changes. The owner then picks A, B or C. If C, the hub writes the build ticket.
 
 ## Comments
+
+2026-10-27, the hub: the owner chose to own the tiles (C), with OpenFreeMap kept until ours are proven. The work is `.scratch/own-tiles/`.
