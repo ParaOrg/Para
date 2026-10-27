@@ -1,11 +1,13 @@
 const FIXED_ORIGINS = new Set([
   'https://parapo.villaralvorovic2.workers.dev',
   'https://staging-parapo.villaralvorovic2.workers.dev',
+  'https://parapo.para-ph-info.workers.dev',
+  'https://staging-parapo.para-ph-info.workers.dev',
   'http://localhost:5173',
 ]);
 // Workers Builds previews: https://<branch>-parapo.<account>.workers.dev
 const PREVIEW_ORIGIN =
-  /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?-parapo\.villaralvorovic2\.workers\.dev$/;
+  /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?-parapo\.(villaralvorovic2|para-ph-info)\.workers\.dev$/;
 
 export function isAllowedOrigin(origin: string, extraOrigins = ''): boolean {
   if (FIXED_ORIGINS.has(origin) || PREVIEW_ORIGIN.test(origin)) return true;
