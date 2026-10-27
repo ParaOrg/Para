@@ -9,7 +9,7 @@ Plain TypeScript with no npm imports: Cloudflare bundles it, so nothing is added
 | Request | Answer |
 | --- | --- |
 | `GET /{z}/{x}/{y}.pbf` | The tile, read by byte range from the PMTiles file `tiles/current.json` names, gzip as stored. `204` if the file holds no such tile, `400` for an address that is no tile. |
-| `GET /styles/{positron\|liberty\|fiord}` | The original style from `assets/styles/<name>.json`, rewritten to this Worker's own address: our tiles, our sprite and glyphs, no `natural_earth` raster. |
+| `GET /styles/{positron\|liberty\|fiord}` | The original style from `assets/styles/<name>.json`, rewritten to this Worker's own address: our tiles, our sprite and glyphs, no `natural_earth` raster. The tile address carries the build, `{z}/{x}/{y}.pbf?v=<archive file>`, so a phone's month-long tile cache never mixes two builds; the tile route ignores the query. |
 | `GET /assets/...` | A sprite or glyph file from `assets/...` in the bucket, as it is. |
 | `GET /health` | `{ builtAt, file, tiles }` from `current.json`. |
 

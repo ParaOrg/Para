@@ -92,6 +92,8 @@ test('our own host is cached from its own paths and no other origin', () => {
   assert.ok(meta(`${OWN}/assets/sprites/ofm.json`));
   assert.ok(meta(`${OWN}/assets/fonts/Noto%20Sans%20Regular/0-255.pbf`));
   assert.ok(tiles(`${OWN}/14/13490/7508.pbf`));
+  // The style's tile address carries the build (workers/tiles/src/styles.ts).
+  assert.ok(tiles(`${OWN}/14/13490/7508.pbf?v=parapo-2026-10-27-1.pmtiles`));
   assert.ok(!tiles(`${OWN}/health`));
   assert.ok(!meta(`${OWN}/health`));
   assert.ok(!meta(`${OWN}.evil.example/styles/liberty`));

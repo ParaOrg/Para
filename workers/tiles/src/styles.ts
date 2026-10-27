@@ -34,7 +34,15 @@ function ownSprite(url: unknown, origin: string): unknown {
 
 // The source carries no `attribution`: the app credits OpenMapTiles and OpenStreetMap itself, with
 // links (src/features/routes/map/map-attribution.ts), and these styles are served to our origins only.
-export function rewriteStyle(style: unknown, origin: string, header: PmtilesHeader): Json {
+// The tile address carries the build (`?v=<archive file>`): phones keep tiles cache-first for a
+// month, so without it a new build would show beside the old one, tile by tile. The tile route reads
+// the path only, so the query changes nothing on this side.
+export function rewriteStyle(
+  style: unknown,
+  origin: string,
+  header: PmtilesHeader,
+  build: string,
+): Json {
   if (!isRecord(style) || !isRecord(style.sources) || !Array.isArray(style.layers))
     throw new Error('style is not a MapLibre style');
 
@@ -44,7 +52,7 @@ export function rewriteStyle(style: unknown, origin: string, header: PmtilesHead
     if (name === 'openmaptiles') {
       sources[name] = {
         type: 'vector',
-        tiles: [`${origin}/{z}/{x}/{y}.pbf`],
+        tiles: [`${origin}/{z}/{x}/{y}.pbf?v=${encodeURIComponent(build)}`],
         minzoom: 0,
         maxzoom: header.maxZoom,
         bounds: header.bounds,

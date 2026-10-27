@@ -12,6 +12,7 @@ import { buildPmtiles, fakeBucket } from './tiles-worker-fixture.mjs';
 
 const OWN = 'https://tiles.example';
 const HEADER = { bounds: [120.6, 14.1, 121.5, 15.05], maxZoom: 14 };
+const BUILD = 'parapo-2026-10-27.pmtiles';
 
 const liberty = () => ({
   version: 8,
@@ -34,10 +35,10 @@ const liberty = () => ({
 });
 
 test('the style reads our tiles, sprite and glyphs and nothing is left on OpenFreeMap', () => {
-  const style = rewriteStyle(liberty(), OWN, HEADER);
+  const style = rewriteStyle(liberty(), OWN, HEADER, BUILD);
   assert.deepEqual(style.sources.openmaptiles, {
     type: 'vector',
-    tiles: [`${OWN}/{z}/{x}/{y}.pbf`],
+    tiles: [`${OWN}/{z}/{x}/{y}.pbf?v=${BUILD}`],
     minzoom: 0,
     maxzoom: 14,
     bounds: HEADER.bounds,
@@ -48,13 +49,13 @@ test('the style reads our tiles, sprite and glyphs and nothing is left on OpenFr
 });
 
 test('no source carries an attribution: the app holds the credit', () => {
-  for (const source of Object.values(rewriteStyle(liberty(), OWN, HEADER).sources)) {
+  for (const source of Object.values(rewriteStyle(liberty(), OWN, HEADER, BUILD).sources)) {
     assert.ok(!('attribution' in source));
   }
 });
 
 test('the natural_earth raster source and its layer are dropped, the other layers stay', () => {
-  const style = rewriteStyle(liberty(), OWN, HEADER);
+  const style = rewriteStyle(liberty(), OWN, HEADER, BUILD);
   assert.deepEqual(Object.keys(style.sources), ['openmaptiles']);
   assert.deepEqual(
     style.layers.map((layer) => layer.id),
@@ -63,7 +64,7 @@ test('the natural_earth raster source and its layer are dropped, the other layer
 });
 
 test('the style takes its maxzoom from the file', () => {
-  const style = rewriteStyle(liberty(), OWN, { ...HEADER, maxZoom: 12 });
+  const style = rewriteStyle(liberty(), OWN, { ...HEADER, maxZoom: 12 }, BUILD);
   assert.equal(style.sources.openmaptiles.maxzoom, 12);
 });
 
@@ -73,7 +74,7 @@ test("OpenFreeMap's real Positron style is rewritten with nothing left on OpenFr
     readFileSync(new URL('./fixtures/openfreemap-positron-style.json', import.meta.url), 'utf8'),
   );
   assert.ok(JSON.stringify(original).includes('tiles.openfreemap.org'));
-  const style = rewriteStyle(original, OWN, HEADER);
+  const style = rewriteStyle(original, OWN, HEADER, BUILD);
   assert.ok(!JSON.stringify(style).includes('openfreemap'));
   assert.deepEqual(Object.keys(style.sources), ['openmaptiles']);
   assert.ok(!('attribution' in style.sources.openmaptiles));
@@ -83,9 +84,17 @@ test("OpenFreeMap's real Positron style is rewritten with nothing left on OpenFr
   assert.equal(style.layers.at(-1).id, original.layers.at(-1).id);
 });
 
+test('a new build means a new address for every tile, so a phone never mixes two builds', () => {
+  const [now] = rewriteStyle(liberty(), OWN, HEADER, BUILD).sources.openmaptiles.tiles;
+  const [next] = rewriteStyle(liberty(), OWN, HEADER, 'parapo-2026-11-03.pmtiles').sources
+    .openmaptiles.tiles;
+  assert.notEqual(now, next);
+  assert.equal(now.split('?')[0], next.split('?')[0]);
+});
+
 test('a style without the openmaptiles source is refused', () => {
   const bad = { version: 8, sources: {}, layers: [] };
-  assert.throws(() => rewriteStyle(bad, OWN, HEADER), /openmaptiles/);
+  assert.throws(() => rewriteStyle(bad, OWN, HEADER, BUILD), /openmaptiles/);
 });
 
 test('GET /styles/liberty serves the stored style rewritten to the request origin', async () => {
@@ -112,7 +121,7 @@ test('GET /styles/liberty serves the stored style rewritten to the request origi
   );
   assert.equal(response.status, 200);
   const style = await response.json();
-  assert.equal(style.sources.openmaptiles.tiles[0], `${OWN}/{z}/{x}/{y}.pbf`);
+  assert.equal(style.sources.openmaptiles.tiles[0], `${OWN}/{z}/{x}/{y}.pbf?v=${BUILD}`);
   assert.deepEqual(style.sources.openmaptiles.bounds, HEADER.bounds);
   assert.ok(!JSON.stringify(style).includes('openfreemap'));
 });
