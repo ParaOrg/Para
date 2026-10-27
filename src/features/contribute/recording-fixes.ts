@@ -1,7 +1,7 @@
 import { keptFixes, type Fix } from '@/features/routes/model/ride-recording';
 
 import { shouldAutoStop, type WaySwitch } from './recording-rules';
-import type { FixRow } from './recording-schema';
+import type { FixRow, Recording } from './recording-schema';
 import type { WatchedFix } from './use-geolocation-watch';
 
 /**
@@ -49,6 +49,40 @@ export function backAtStartCount(
   switches: readonly WaySwitch[],
 ): number | null {
   return firstCountWhere(fresh, (some) => shouldAutoStop(keptFixes([...held, ...some]), switches));
+}
+
+/** What a batch of watched fixes adds to a ride. */
+export interface TakenFixes {
+  /** The fixes after the last one held, up to the Stop or to where the ride came back to its start. */
+  taken: Fix[];
+  /** Whether the last of them brought the ride back to its start, so it stops there. */
+  isBackAtStart: boolean;
+}
+
+/**
+ * The one step every fix goes through on its way into a ride: the recorder's live watch, the
+ * import of the native log on reopening, and the CI emulator ride. It takes the fixes after the
+ * last one held; `until` is a Stop's time, past which none are taken and the ride is not checked
+ * for coming back to its start. Otherwise a ride that has not stopped itself yet is cut at the
+ * fix where it came back to its start.
+ */
+export function takeWatchedFixes(
+  held: readonly Fix[],
+  watched: readonly WatchedFix[],
+  recording: Pick<Recording, 'hasAutoStopped' | 'switches'>,
+  until?: number,
+): TakenFixes {
+  const lastTime = held[held.length - 1]?.time ?? null;
+  const fresh = fixesAfter(watched, lastTime)
+    .filter((fix) => until === undefined || fix.timestamp <= until)
+    .map(fixOfWatched);
+  // Nothing new adds nothing, even when the held fixes alone already came back to the start.
+  if (fresh.length === 0) return { taken: [], isBackAtStart: false };
+  const stopCount =
+    recording.hasAutoStopped || until !== undefined
+      ? null
+      : backAtStartCount(held, fresh, recording.switches ?? []);
+  return { taken: fresh.slice(0, stopCount ?? fresh.length), isBackAtStart: stopCount !== null };
 }
 
 export const fixOfRow = (row: FixRow): Fix => ({
