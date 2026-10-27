@@ -6,7 +6,7 @@ date: 2026-10-17
 # A commuter's location leaves the phone only on the contributor page, after consent
 
 [ADR 0001](0001-visitors-read-a-published-file.md) kept the public map from
-ever sending a coordinate or an identity. On 2026-10-17 the owner opened ParaPo
+ever sending a coordinate or an identity. On 2026-10-17 the owner opened Para
 to contributors: anyone may make a contribution and send it, so the studio
 learns where jeeps really go and stand.
 

@@ -578,7 +578,7 @@ test('step 13: the publish and the map data check import nothing from npm but zo
 // the app and the check read it.
 test('step 13: on a copy of public/data, every line file written with its stretches is read by the app and painted as it works them out', async () => {
   const committed = fileURLToPath(new URL('../../public/data/', import.meta.url));
-  const dir = mkdtempSync(join(tmpdir(), 'parapo-pass-'));
+  const dir = mkdtempSync(join(tmpdir(), 'para-pass-'));
   try {
     cpSync(committed, dir, { recursive: true });
     const indexPath = join(dir, 'index.v4.json');

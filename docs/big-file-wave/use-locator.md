@@ -101,7 +101,7 @@ takes the option.
 
 CI: a PR under `src/features/locator/` alone runs the public suites and skips
 the studio's (`ci.yml`, the `changes` job). where-test (49) is the one that
-matters; run it locally first with `PARAPO_NO_TILES=1` where tiles are
+matters; run it locally first with `PARA_NO_TILES=1` where tiles are
 blocked.
 
 ## 5. Step order

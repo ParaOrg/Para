@@ -14,7 +14,7 @@ export const routesFraming = (page) =>
   page.evaluate(async () => {
     const live = window.__map;
     const f = await (
-      await fetch('/data/index.v5.json', { headers: { 'x-parapo-test': '1' } })
+      await fetch('/data/index.v5.json', { headers: { 'x-para-test': '1' } })
     ).json();
     let [w, s, e, n] = [Infinity, Infinity, -Infinity, -Infinity];
     for (const v of f.variants) {

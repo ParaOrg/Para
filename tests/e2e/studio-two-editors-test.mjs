@@ -379,7 +379,7 @@ db.tables.draft.push({
   submitted_at: null,
 });
 // The refused save left B's line on B's device, as any unsaved drawing is; drop it.
-await b.page.addInitScript(() => localStorage.removeItem('parapo.draft.v1'));
+await b.page.addInitScript(() => localStorage.removeItem('para.draft.v1'));
 await load(b.page);
 await tapAt(b.page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
 await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });

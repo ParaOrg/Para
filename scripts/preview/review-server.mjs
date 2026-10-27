@@ -7,8 +7,8 @@ import { promisify } from 'node:util';
 import { previewSession, previewToken } from './review-fixture.mjs';
 
 const run = promisify(execFile);
-const root = resolve('/tmp/parapo-review-preview');
-const published = resolve('/tmp/parapo-review-publish/public/data');
+const root = resolve('/tmp/para-review-preview');
+const published = resolve('/tmp/para-review-publish/public/data');
 const session = previewSession();
 const types = {
   '.html': 'text/html',
@@ -42,7 +42,7 @@ createServer(async (req, res) => {
             '--force',
           ],
           {
-            cwd: '/tmp/parapo-review-publish',
+            cwd: '/tmp/para-review-publish',
             env: {
               ...process.env,
               SUPABASE_URL: 'http://127.0.0.1:4180/api',

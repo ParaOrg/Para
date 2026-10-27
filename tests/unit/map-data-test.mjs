@@ -578,7 +578,7 @@ test("T: the committed map gives no warning of its line files' stretches", () =>
 });
 
 test('T: a copy of public/data written as the next publish writes it gives no warning; a tampered or a stale key in it gives one', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'parapo-passkey-'));
+  const dir = mkdtempSync(join(tmpdir(), 'para-passkey-'));
   try {
     cpSync(fileURLToPath(new URL('../../public/data/', import.meta.url)), dir, { recursive: true });
     const read = (name) => {

@@ -15,7 +15,7 @@
 // 2. Strings, as a second net: the public chunks may not contain words only
 //    the editor has —
 //      router.project-osrm.org   the route snapper
-//      parapo.draft              the drawing-draft key
+//      para.draft              the drawing-draft key
 //      Sign in to save, Forgot password?, New route, terminal or hintuan,
 //      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
@@ -114,7 +114,7 @@ const basemapRules = basemapCacheRules(basemapHost);
 
 const EDITOR_ONLY = [
   'router.project-osrm.org',
-  'parapo.draft',
+  'para.draft',
   'Sign in to save',
   'Forgot password?',
   'New route, terminal or hintuan',
@@ -332,7 +332,7 @@ check(
 );
 check(
   'contribute page saves through save_contribution under its own session key — the string search works',
-  contribute.includes('save_contribution') && contribute.includes('parapo.contributor-auth'),
+  contribute.includes('save_contribution') && contribute.includes('para.contributor-auth'),
 );
 const studioData = STUDIO_DATA.filter((s) => !studio.includes(s));
 check(
@@ -493,8 +493,8 @@ if (webManifest) {
     );
   check(
     'manifest: name, id/start_url/scope /, standalone, colours',
-    webManifest.name === 'Para Po' &&
-      webManifest.short_name === 'Para Po' &&
+    webManifest.name === 'Para' &&
+      webManifest.short_name === 'Para' &&
       webManifest.id === '/' &&
       webManifest.start_url === '/' &&
       webManifest.scope === '/' &&
@@ -584,7 +584,7 @@ if (existsSync(swPath)) {
       sw.includes('/data/lines/') &&
       sw.includes('map-lines') &&
       sw.includes('/data/signboards/') &&
-      sw.includes('x-parapo-served-from') &&
+      sw.includes('x-para-served-from') &&
       sw.includes(basemapRules.meta.source) &&
       sw.includes(basemapRules.tiles.source) &&
       sw.includes('basemap-meta') &&

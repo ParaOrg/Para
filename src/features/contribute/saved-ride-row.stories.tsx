@@ -66,26 +66,26 @@ export const WillRetry: Story = {
   },
 };
 
-/** ParaPo answered but turned the upload away, such as with sign-ups off: not a signal problem. */
+/** Para answered but turned the upload away, such as with sign-ups off: not a signal problem. */
 export const NotAccepting: Story = {
   args: {
     status: {
       state: 'failed',
       message:
-        'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
-      brief: "ParaPo isn't taking uploads now",
+        'Not uploaded yet: Para cannot take uploads right now. It stays on this phone. It tries again later.',
+      brief: "Para isn't taking uploads now",
       willRetry: true,
     },
   },
 };
 
-/** ParaPo will never take it as it is: Failed, in the error colour with its own icon. */
+/** Para will never take it as it is: Failed, in the error colour with its own icon. */
 export const Refused: Story = {
   args: {
     status: {
       state: 'failed',
-      message: "ParaPo's checks refused this recording. It stays on this phone.",
-      brief: "Refused by ParaPo's checks",
+      message: "Para's checks refused this recording. It stays on this phone.",
+      brief: "Refused by Para's checks",
       willRetry: false,
     },
   },
@@ -110,7 +110,7 @@ export const EarlierIdentity: Story = {
 
 export const Removing: Story = { args: { status: { state: 'removing' } } };
 
-/** The upload removed from ParaPo; the phone keeps its copy and offers Upload again. */
+/** The upload removed from Para; the phone keeps its copy and offers Upload again. */
 export const Removed: Story = { args: { status: { state: 'removed' } } };
 
 export const RemovedByEditor: Story = { args: { status: { state: 'removed', byEditor: true } } };

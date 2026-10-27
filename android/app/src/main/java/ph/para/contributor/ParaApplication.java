@@ -1,4 +1,4 @@
-package ph.parapo.contributor;
+package ph.para.contributor;
 
 import android.app.Application;
 import android.content.BroadcastReceiver;
@@ -15,7 +15,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
  * this app-wide broadcast (the action is its package name plus ".broadcast"); the plugin's own
  * receiver hands the same fix to the page, which may be frozen by then.
  */
-public class ParaPoApplication extends Application {
+public class ParaApplication extends Application {
     private static final String LOCATION_ACTION =
         "com.equimaps.capacitor_background_geolocation.broadcast";
 

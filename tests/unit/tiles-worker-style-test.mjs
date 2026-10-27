@@ -122,10 +122,10 @@ const ALLOWED = [
   'https://staging-parapo.villaralvorovic2.workers.dev',
   'https://3f2a9c1b-parapo.villaralvorovic2.workers.dev',
   'https://claude-own-tiles-parapo.villaralvorovic2.workers.dev',
-  'https://parapo.para-ph-info.workers.dev',
-  'https://staging-parapo.para-ph-info.workers.dev',
-  'https://3f2a9c1b-parapo.para-ph-info.workers.dev',
-  'https://claude-own-tiles-parapo.para-ph-info.workers.dev',
+  'https://para.para-ph-info.workers.dev',
+  'https://staging-para.para-ph-info.workers.dev',
+  'https://3f2a9c1b-para.para-ph-info.workers.dev',
+  'https://claude-rename-to-para-para.para-ph-info.workers.dev',
   'http://localhost:5173',
 ];
 const REFUSED = [
@@ -135,25 +135,40 @@ const REFUSED = [
   'http://parapo.villaralvorovic2.workers.dev',
   'https://parapo.other-account.workers.dev',
   'https://x-parapo.villaralvorovic2.workers.dev/',
-  'https://parapo.para-ph-info.workers.dev.evil.example',
-  'https://evil-parapo.para-ph-info.workers.dev.evil.example',
-  'http://parapo.para-ph-info.workers.dev',
-  'https://x-parapo.para-ph-info.workers.dev/',
+  'https://para.para-ph-info.workers.dev.evil.example',
+  'https://evil-para.para-ph-info.workers.dev.evil.example',
+  'http://para.para-ph-info.workers.dev',
+  'https://x-para.para-ph-info.workers.dev/',
+  // Look-alikes of a preview: the tiles Worker and its previews, a name with no
+  // hyphen before `para`, an empty branch, and the names that never went live.
+  'https://para-tiles.para-ph-info.workers.dev',
+  'https://evil-para-tiles.para-ph-info.workers.dev',
+  'https://evil-para-x.para-ph-info.workers.dev',
+  'https://evilpara.para-ph-info.workers.dev',
+  'https://evil.para.para-ph-info.workers.dev',
+  'https://-para.para-ph-info.workers.dev',
+  'https://3f2a9c1b-para.para-ph-info.workers.dev.evil.example',
+  'https://3f2a9c1b-para.other-account.workers.dev',
+  'https://parapo.para-ph-info.workers.dev',
+  'https://staging-parapo.para-ph-info.workers.dev',
+  'https://3f2a9c1b-parapo.para-ph-info.workers.dev',
+  'https://para.villaralvorovic2.workers.dev',
+  'https://3f2a9c1b-para.villaralvorovic2.workers.dev',
   'http://localhost:3000',
   'null',
 ];
 
-test('ParaPo origins are allowed and every other origin is not', () => {
+test('Para origins are allowed and every other origin is not', () => {
   for (const origin of ALLOWED) assert.equal(isAllowedOrigin(origin), true, origin);
   for (const origin of REFUSED) assert.equal(isAllowedOrigin(origin), false, origin);
 });
 
 test('the extra origins from vars are allowed too, exactly', () => {
-  const extra = 'https://parapo.example, https://tiles-user.example';
-  assert.equal(isAllowedOrigin('https://parapo.example', extra), true);
+  const extra = 'https://para.example, https://tiles-user.example';
+  assert.equal(isAllowedOrigin('https://para.example', extra), true);
   assert.equal(isAllowedOrigin('https://tiles-user.example', extra), true);
-  assert.equal(isAllowedOrigin('https://parapo.example.evil', extra), false);
-  assert.equal(isAllowedOrigin('https://parapo.example', ''), false);
+  assert.equal(isAllowedOrigin('https://para.example.evil', extra), false);
+  assert.equal(isAllowedOrigin('https://para.example', ''), false);
 });
 
 async function ask(headers, method = 'GET') {
@@ -167,7 +182,7 @@ async function ask(headers, method = 'GET') {
   globalThis.caches = undefined;
   return createApp()(
     new Request(`${OWN}/0/0/0.pbf`, { method, headers }),
-    { TILES: fakeBucket(files), EXTRA_ORIGINS: 'https://parapo.example' },
+    { TILES: fakeBucket(files), EXTRA_ORIGINS: 'https://para.example' },
     { waitUntil() {} },
   );
 }
@@ -190,9 +205,9 @@ test('another origin is refused and gets no CORS headers', async () => {
 });
 
 test('a preflight from an allowed extra origin is answered; from another it is refused', async () => {
-  const ok = await ask({ Origin: 'https://parapo.example' }, 'OPTIONS');
+  const ok = await ask({ Origin: 'https://para.example' }, 'OPTIONS');
   assert.equal(ok.status, 204);
-  assert.equal(ok.headers.get('Access-Control-Allow-Origin'), 'https://parapo.example');
+  assert.equal(ok.headers.get('Access-Control-Allow-Origin'), 'https://para.example');
   const no = await ask({ Origin: 'https://evil.example' }, 'OPTIONS');
   assert.equal(no.status, 403);
 });

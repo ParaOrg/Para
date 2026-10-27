@@ -5,7 +5,7 @@ const link = (href: string, text: string, after = ''): string =>
 
 const ROUTE_DATA = link(
   'https://github.com/ParaOrg/Para#data-and-licence',
-  'Route data © ParaPo contributors, ODbL',
+  'Route data © Para contributors, ODbL',
 );
 const OSM = link('https://www.openstreetmap.org/copyright', '© OpenStreetMap', ' contributors');
 const OSRM = link('http://project-osrm.org/', 'OSRM');

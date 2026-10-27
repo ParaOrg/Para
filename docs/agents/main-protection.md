@@ -21,20 +21,20 @@ An ed25519 key pair is a public half (goes to GitHub as the deploy key) and a pr
 2. Make the pair:
 
    ```powershell
-   ssh-keygen -t ed25519 -C "parapo-publish" -f parapo-publish -N '""'
+   ssh-keygen -t ed25519 -C "para-publish" -f para-publish -N '""'
    ```
 
-   This writes two files: `parapo-publish` (private) and `parapo-publish.pub` (public).
+   This writes two files: `para-publish` (private) and `para-publish.pub` (public).
 3. Add the public key: github.com/ParaOrg/Para → **Settings** → **Deploy keys** → **Add deploy key**.
    - Title: `Nightly publish`
-   - Key: paste the whole contents of `parapo-publish.pub` (`notepad parapo-publish.pub`).
+   - Key: paste the whole contents of `para-publish.pub` (`notepad para-publish.pub`).
    - Tick **Allow write access**.
    - **Add key**.
 4. Add the private key: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
    - Name: `PUBLISH_DEPLOY_KEY`
-   - Secret: paste the whole contents of `parapo-publish` (`notepad parapo-publish`), including the `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----` lines and the final newline.
+   - Secret: paste the whole contents of `para-publish` (`notepad para-publish`), including the `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----` lines and the final newline.
    - **Add secret**.
-5. Delete both files from the computer: `Remove-Item parapo-publish, parapo-publish.pub`. Empty the Recycle Bin if you used Explorer.
+5. Delete both files from the computer: `Remove-Item para-publish, para-publish.pub`. Empty the Recycle Bin if you used Explorer.
 
 ## The hub's step afterwards
 

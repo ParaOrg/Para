@@ -8,8 +8,8 @@
 // `deviceorientationabsolute` event sent as a phone's sensor would.
 //
 //   node tests/e2e/where-test.mjs                against http://localhost:5173
-//   PARAPO_NO_TILES=1 node tests/e2e/where-test.mjs   no basemap tiles (a sandbox)
-//   PARAPO_VIDEO=out/  node tests/e2e/where-test.mjs  also records the run as out/where-am-i.webm
+//   PARA_NO_TILES=1 node tests/e2e/where-test.mjs   no basemap tiles (a sandbox)
+//   PARA_VIDEO=out/  node tests/e2e/where-test.mjs  also records the run as out/where-am-i.webm
 //
 // What it proves: the button shows LocationOff at the map's foot and
 // there is no overlay until asked; asking shows the overlay at the fix over
@@ -29,8 +29,8 @@ import { mkdirSync, renameSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
 
-const NO_TILES = !!process.env.PARAPO_NO_TILES;
-const VIDEO = process.env.PARAPO_VIDEO;
+const NO_TILES = !!process.env.PARA_NO_TILES;
+const VIDEO = process.env.PARA_VIDEO;
 
 const { check, tally } = harness();
 

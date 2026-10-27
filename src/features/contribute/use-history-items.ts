@@ -42,7 +42,7 @@ const loadMessageOf = (error: unknown): string =>
 const removeBriefOf = (error: unknown): string =>
   error instanceof UploadError && error.problem === 'offline'
     ? 'No signal'
-    : "ParaPo isn't taking this now";
+    : "Para isn't taking this now";
 
 /**
  * What History lists: this phone's recordings merged with the account's uploads from the

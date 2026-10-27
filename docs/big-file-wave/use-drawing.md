@@ -208,7 +208,7 @@ Nothing outside the feature changes: `studio/index.ts:16` still exports
 
 ## 3. What must not change
 
-- **The draft contract.** `parapo.draft.v1` and the stored shape with the
+- **The draft contract.** `para.draft.v1` and the stored shape with the
   database's words (`variantId`, `stopId`) stay in `draft.ts` (14, 36–61);
   seven suites and `check-build.mjs:90` read the key. `restoredState` reads
   a `Draft`, never storage.

@@ -1,4 +1,4 @@
-package ph.parapo.contributor;
+package ph.para.contributor;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;

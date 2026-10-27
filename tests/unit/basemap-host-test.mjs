@@ -11,7 +11,7 @@ import {
 } from '../../src/shared/config/basemap-host.ts';
 import { basemapCacheRules, withBasemapPreconnect } from '../../scripts/node/basemap-offline.ts';
 
-const OWN = 'https://parapo-tiles.para-ph-info.workers.dev';
+const OWN = 'https://para-tiles.para-ph-info.workers.dev';
 
 test('no host, or an empty one, is OpenFreeMap', () => {
   for (const unset of [undefined, '', '   '])
@@ -25,7 +25,7 @@ test('a host is read as an origin, with no trailing slash', () => {
 });
 
 test('a host that is not an http(s) origin throws instead of falling back', () => {
-  for (const bad of ['parapo-tiles', 'ftp://tiles.example', `${OWN}/styles`, `${OWN}?x=1`, 42]) {
+  for (const bad of ['para-tiles', 'ftp://tiles.example', `${OWN}/styles`, `${OWN}?x=1`, 42]) {
     assert.throws(() => parseBasemapHost(bad), undefined, String(bad));
   }
 });
@@ -118,5 +118,5 @@ test('the credits keep OpenStreetMap whoever serves the tiles, and OpenMapTiles 
   assert.match(own, /© OpenStreetMap<\/a> contributors/);
   assert.match(own, /© OpenMapTiles/);
   assert.ok(!own.includes('OpenFreeMap'));
-  assert.match(own, /Route data © ParaPo contributors, ODbL/);
+  assert.match(own, /Route data © Para contributors, ODbL/);
 });

@@ -45,7 +45,7 @@ export interface Uploads {
   waitingCount: number;
   /** Sends one now: a retry after a failure, or again after its upload was removed. */
   upload: (recording: Recording) => void;
-  /** Removes the uploaded copy from ParaPo. The phone's copy stays. Settles whether or not it worked. */
+  /** Removes the uploaded copy from Para. The phone's copy stays. Settles whether or not it worked. */
   removeUploaded: (recording: Recording) => Promise<void>;
   /** Whether this phone's identity made the upload, so it may remove it. */
   canRemove: (recording: Recording) => boolean;
@@ -75,8 +75,8 @@ const FAILED: Record<
     willRetry: true,
   },
   refused: {
-    message: "ParaPo's checks refused this recording. It stays on this phone.",
-    brief: "Refused by ParaPo's checks",
+    message: "Para's checks refused this recording. It stays on this phone.",
+    brief: "Refused by Para's checks",
     willRetry: false,
   },
   blocked: {
@@ -96,8 +96,8 @@ const FAILED: Record<
   },
   'not-accepting': {
     message:
-      'Not uploaded yet: ParaPo cannot take uploads right now. It stays on this phone. It tries again later.',
-    brief: "ParaPo isn't taking uploads now",
+      'Not uploaded yet: Para cannot take uploads right now. It stays on this phone. It tries again later.',
+    brief: "Para isn't taking uploads now",
     willRetry: true,
   },
   'too-long': {
@@ -127,7 +127,7 @@ const toFix = (row: { time: number; lng: number; lat: number; accuracyM: number 
 });
 
 /**
- * Sends saved recordings to ParaPo and remembers which arrived. A recording is
+ * Sends saved recordings to Para and remembers which arrived. A recording is
  * sent on its own when it is saved, when the page opens, and when the phone
  * comes back online or to the front; one that failed for want of signal is
  * tried again then too. The phone's copy is never deleted here.
@@ -274,7 +274,7 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
   }, [saved, isAvailable, gate.hasConsent, gate.earlier]);
 
-  // One that failed for want of signal (or the day's limit, or ParaPo not taking
+  // One that failed for want of signal (or the day's limit, or Para not taking
   // uploads) is tried again when the phone comes back online or the page comes
   // back to the front.
   useEffect(() => {

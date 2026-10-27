@@ -14,7 +14,7 @@ import { defineConfig, type Plugin } from 'vite';
  */
 function pageAtTheRoot(): Plugin {
   return {
-    name: 'parapo:apk-page-at-the-root',
+    name: 'para:apk-page-at-the-root',
     apply: 'build',
     writeBundle(options) {
       const out = options.dir;

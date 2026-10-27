@@ -87,7 +87,7 @@ jobs:
           export PARAPO_KEYSTORE_PASSWORD
           keytool -genkeypair -keystore "$plain" -storetype PKCS12 \
             -alias parapo -keyalg RSA -keysize 4096 -validity 10950 \
-            -dname "CN=ParaPo Contributor, O=ParaPo, C=PH" \
+            -dname "CN=Para Contributor, O=Para, C=PH" \
             -storepass:env PARAPO_KEYSTORE_PASSWORD -keypass:env PARAPO_KEYSTORE_PASSWORD
           mkdir -p out
           openssl enc -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 -salt \

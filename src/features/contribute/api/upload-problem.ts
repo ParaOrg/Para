@@ -6,7 +6,7 @@
  * - `blocked`: this phone may not upload.
  * - `check-failed`: the bot check was not passed; tried again on the next attempt.
  * - `unavailable`: this build has no database to upload to.
- * - `not-accepting`: ParaPo answered, but not in a way the page knows; most likely
+ * - `not-accepting`: Para answered, but not in a way the page knows; most likely
  *   its settings turn uploads away. Tried again later.
  */
 export type UploadProblem =
@@ -29,7 +29,7 @@ export interface DatabaseError {
 /**
  * Sorts a database error into what the page does next. `status` is the HTTP
  * status, 0 when no answer came back: only that is no signal. An answer the page
- * does not know is ParaPo not accepting uploads, so a settings mistake is not
+ * does not know is Para not accepting uploads, so a settings mistake is not
  * mistaken for a phone without signal.
  */
 export function problemOf(error: DatabaseError, status: number): UploadProblem {
@@ -49,7 +49,7 @@ interface SignInError {
 
 /**
  * Sorts a failed anonymous sign-in. No answer (the fetch itself failed) is no
- * signal; any answer, such as sign-ups turned off, is ParaPo not accepting uploads.
+ * signal; any answer, such as sign-ups turned off, is Para not accepting uploads.
  */
 export function signInProblemOf(error: SignInError): UploadProblem {
   if (error.code === 'captcha_failed' || /captcha/i.test(error.message)) return 'check-failed';

@@ -1,6 +1,6 @@
 # How we work
 
-How the owner and the Claude sessions working on ParaPo split the work. The owner approved these rules on 2026-10-16, and moved building to Opus on 2026-10-27.
+How the owner and the Claude sessions working on Para split the work. The owner approved these rules on 2026-10-16, and moved building to Opus on 2026-10-27.
 
 The goals: a codebase that is easy to review, work that scales, and an app whose code, architecture and system design anyone can scan without much effort.
 

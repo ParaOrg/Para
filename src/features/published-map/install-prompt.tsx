@@ -12,10 +12,10 @@ interface InstallPromptProps {
 }
 
 /**
- * The welcome to a commuter who has not installed Para Po (Figma 3732:2512):
+ * The welcome to a commuter who has not installed Para (Figma 3732:2512):
  * the page dimmed in Background/surface-transparent, and over it, 16 in from
  * the sides and centred, a card at most 384 wide — its picture, then
- * "Welcome to Para Po", a line under it, and two buttons sharing the row,
+ * "Welcome to Para", a line under it, and two buttons sharing the row,
  * "I'll do it later" (Secondary) and Install (Primary). The same card on a
  * phone and a wide screen; only its width gives.
  *
@@ -76,7 +76,7 @@ export function InstallPrompt({ onInstall, onLater }: InstallPromptProps) {
         <div className="flex flex-col gap-6 p-5">
           <div className="flex flex-col gap-1">
             <h2 id={titleId} className="text-xl/7 font-black text-content-primary">
-              Welcome to Para Po
+              Welcome to Para
             </h2>
             <p id={lineId} className="text-sm/5 text-content-tertiary">
               You’re almost a good commute guide application in the Philippines

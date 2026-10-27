@@ -11,7 +11,7 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/profile-test.mjs
 //
-// PARAPO_SHOTS=dir keeps screenshots of the screens at 393×852.
+// PARA_SHOTS=dir keeps screenshots of the screens at 393×852.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
@@ -20,7 +20,7 @@ import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const SHOTS = process.env.PARAPO_SHOTS;
+const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
@@ -32,7 +32,7 @@ const ACCOUNT = {
   isAccount: true,
   profile: { name: 'Tester', phone: '+639171234567' },
 };
-const AUTH_KEY = 'parapo.contributor-auth';
+const AUTH_KEY = 'para.contributor-auth';
 const browser = await chromium.launch();
 
 /** The database both phones share: the account, and the uploads each of its phones sent. */
@@ -85,7 +85,7 @@ async function phone({ signedIn = true, userId = ACCOUNT_ID, consent = '3' } = {
     ([key, stored, agreed]) => {
       if (stored && !localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(stored));
       if (agreed && !sessionStorage.getItem('seeded')) {
-        localStorage.setItem('parapo.contribute.consent', agreed);
+        localStorage.setItem('para.contribute.consent', agreed);
         sessionStorage.setItem('seeded', 'yes');
       }
     },
@@ -135,7 +135,7 @@ async function seed(page, id, name, upload) {
   await page.evaluate(
     (stored) =>
       new Promise((resolve, reject) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const tx = open.result.transaction(['recordings'], 'readwrite');
@@ -282,7 +282,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await row(page, 'From phone A').getByRole('button', { name: 'Remove', exact: true }).click();
   await row(page, 'From phone A').waitFor({ state: 'detached' });
   check(
-    '  Remove takes it out of ParaPo and off the list',
+    '  Remove takes it out of Para and off the list',
     !database.rows.has('dddddddd-0000-4000-8000-000000000001') && fake.deleteRequests === 1,
   );
 
@@ -305,7 +305,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
         ?.querySelector('h2')?.textContent === 'Only on this phone',
   );
   check(
-    '  and goes to Only on this phone, kept, once it is removed from ParaPo',
+    '  and goes to Only on this phone, kept, once it is removed from Para',
     !database.rows.has('dddddddd-0000-4000-8000-000000000003') &&
       (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 1,
   );
@@ -445,7 +445,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.evaluate(
     ([id, claim]) =>
       localStorage.setItem(
-        'parapo.contributor-claim',
+        'para.contributor-claim',
         JSON.stringify({ token: claim, accountId: id, wasTried: false }),
       ),
     [ACCOUNT_ID, token],
@@ -468,7 +468,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.evaluate(
     ([id]) =>
       localStorage.setItem(
-        'parapo.contributor-claim',
+        'para.contributor-claim',
         JSON.stringify({
           token: 'cccccccc-2222-4000-8000-0000000000c2',
           accountId: id,
@@ -483,7 +483,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   const kept = JSON.parse(
-    await page.evaluate(() => localStorage.getItem('parapo.contributor-claim')),
+    await page.evaluate(() => localStorage.getItem('para.contributor-claim')),
   );
   check(
     'Sign out keeps a waiting claim, still bound to its account, and finishes nothing',
@@ -511,7 +511,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   const kept = await page.evaluate(
     () =>
       new Promise((resolve) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onsuccess = () => {
           const get = open.result.transaction('recordings').objectStore('recordings').getAll();
           get.onsuccess = () => resolve(get.result.length);

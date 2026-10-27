@@ -4,13 +4,13 @@
 // Cloudflare's script and Supabase Auth are stand-ins: no request leaves.
 //
 //   VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA npx vite --port 5176   (in another terminal)
-//   PARAPO_BASE=http://localhost:5176 node tests/e2e/turnstile-test.mjs
+//   PARA_BASE=http://localhost:5176 node tests/e2e/turnstile-test.mjs
 import { chromium } from 'playwright';
 
 import { BASE, harness } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const EMAIL = 'editor@parapo.test';
+const EMAIL = 'editor@para.test';
 
 // Cloudflare's script, standing in: each widget passes after a moment with a token of its own.
 const FAKE_TURNSTILE = `
@@ -101,7 +101,7 @@ await page.route(/^https:\/\/[^/]+\.supabase\.co\//, async (route) => {
 });
 
 await page.goto(`${BASE}/studio/`, { waitUntil: 'load' });
-await page.getByText('Sign in to ParaPo Studio').waitFor({ timeout: 30000 });
+await page.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
 const signIn = page.locator('button[type="submit"]');
 await page.getByPlaceholder('you@example.com').fill(EMAIL);
 await page.getByPlaceholder('Password').fill('wrong');
@@ -159,7 +159,7 @@ await page.getByRole('button', { name: 'Done' }).click();
 // Forgot password, from a signed-out start.
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'load' });
-await page.getByText('Sign in to ParaPo Studio').waitFor({ timeout: 30000 });
+await page.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
 await page.getByRole('button', { name: 'Forgot password?' }).click();
 await page.getByPlaceholder('you@example.com').fill(EMAIL);
 await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);

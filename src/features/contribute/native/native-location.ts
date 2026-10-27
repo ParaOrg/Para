@@ -6,8 +6,8 @@ import { beginFixLog, NO_ACCURACY_M, readFixLog } from './native-fix-log';
 import { watchErrorOf, watchErrorOfThrown } from './watch-error';
 
 const RECORDING_NOTIFICATION = {
-  title: 'ParaPo is recording',
-  message: 'Your route is being recorded. Open ParaPo and tap Stop to finish.',
+  title: 'Para is recording',
+  message: 'Your route is being recorded. Open Para and tap Stop to finish.',
 } as const;
 
 /** A silence this long between live fixes means the page slept through some: read the log. */

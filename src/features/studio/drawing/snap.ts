@@ -5,7 +5,7 @@ import type { LngLat, Segment, StreetRun } from '@/shared/utils/geo';
  * `Access-Control-Allow-Origin: *`, so the browser calls it directly.
  *
  * It is a shared demo server with no SLA. That is acceptable for one person
- * drawing a handful of routes; if ParaPo ever takes real traffic the upgrade
+ * drawing a handful of routes; if Para ever takes real traffic the upgrade
  * is OpenRouteService with a key (host `api.heigit.org`) or self-hosted OSRM.
  * Both return the same thing, so only this file changes.
  */

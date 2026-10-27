@@ -34,7 +34,7 @@ export interface Highlight {
 
 /**
  * Every saved route direction, drawn for everyone. This is the public half of
- * ParaPo: no sign-in, no editor, just the map with what has been recorded.
+ * Para: no sign-in, no editor, just the map with what has been recorded.
  *
  * `load` decides where the directions come from: the public map reads the
  * published map (summaries, simplified lines), the editor the live tables

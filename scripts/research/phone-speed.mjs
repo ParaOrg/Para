@@ -4,12 +4,12 @@
 // for the cheap-phone plan and grown by its Step 0 the same day, so that each
 // step of the plan is measured, not guessed.
 //
-//   PARAPO_CHROMIUM=/opt/pw-browsers/chromium \
-//   PARAPO_BASEMAP_CACHE=<folder> JSON=<file.json> \
+//   PARA_CHROMIUM=/opt/pw-browsers/chromium \
+//   PARA_BASEMAP_CACHE=<folder> JSON=<file.json> \
 //   node scripts/research/phone-speed.mjs [runs]          (3 runs by default)
 //
-//   PARAPO_CHROMIUM       the Chromium to time in; Playwright's own without it
-//   PARAPO_BASEMAP_CACHE  where the basemap's files are kept, one per address
+//   PARA_CHROMIUM       the Chromium to time in; Playwright's own without it
+//   PARA_BASEMAP_CACHE  where the basemap's files are kept, one per address
 //                         (default node_modules/.cache/phone-speed-basemap)
 //   JSON                  where to write every run and the summary; none without it
 //
@@ -26,7 +26,7 @@
 //
 // The basemap. The browser here cannot reach tiles.openfreemap.org, and curl
 // can (through the sandbox's proxy). So every request to that host — style,
-// TileJSON, sprite, glyphs, tiles — is answered from PARAPO_BASEMAP_CACHE, and
+// TileJSON, sprite, glyphs, tiles — is answered from PARA_BASEMAP_CACHE, and
 // a file not there yet is fetched with curl and kept. An untimed warm-up pass
 // visits every scenario once first, so the timed runs find every file there;
 // a file fetched during them is counted and said (it should be none). The
@@ -161,7 +161,7 @@ const PORT = 4175;
 const BASE = `http://localhost:${PORT}`;
 const SITE = join(ROOT, 'node_modules', '.cache', 'phone-speed');
 const CACHE = resolve(
-  process.env.PARAPO_BASEMAP_CACHE ?? join(ROOT, 'node_modules', '.cache', 'phone-speed-basemap'),
+  process.env.PARA_BASEMAP_CACHE ?? join(ROOT, 'node_modules', '.cache', 'phone-speed-basemap'),
 );
 const JSON_OUT = process.env.JSON ? resolve(process.env.JSON) : null;
 const BASEMAP_HOST = 'tiles.openfreemap.org';
@@ -624,7 +624,7 @@ let chromiumVersion = null;
 const launch = async () => {
   const port = await freePort();
   browser = await chromium.launch({
-    executablePath: process.env.PARAPO_CHROMIUM || undefined,
+    executablePath: process.env.PARA_CHROMIUM || undefined,
     args: [...SETTINGS.chromiumArgs, `--remote-debugging-port=${port}`],
   });
   chromiumVersion ??= browser.version();

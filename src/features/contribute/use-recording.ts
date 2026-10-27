@@ -111,7 +111,7 @@ export interface RecordingState {
 const STORE_PROBLEM =
   'This phone could not keep the recording. Close other tabs of this page and try again.';
 /** Tells this phone's other tabs a recording was saved, so their lists catch up. */
-const SAVED_CHANNEL = 'parapo-saved-recordings';
+const SAVED_CHANNEL = 'para-saved-recordings';
 
 function tellOtherTabs() {
   if (typeof BroadcastChannel === 'undefined') return;
@@ -121,7 +121,7 @@ function tellOtherTabs() {
 }
 
 const OTHER_TAB_PROBLEM =
-  'ParaPo is open in another tab. Record in that tab, or close it and reload this one.';
+  'Para is open in another tab. Record in that tab, or close it and reload this one.';
 
 /**
  * The page's whole state: what phase it is in, the recording being made and

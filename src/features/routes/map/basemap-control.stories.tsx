@@ -40,7 +40,7 @@ function OnAnEmptyMap({ above, ...props }: HostedProps) {
         new AttributionControl({
           compact: true,
           customAttribution:
-            '© OpenMapTiles © OpenStreetMap contributors · Route data © ParaPo contributors, ODbL · © OpenStreetMap contributors · © OpenMapTiles · OSRM',
+            '© OpenMapTiles © OpenStreetMap contributors · Route data © Para contributors, ODbL · © OpenStreetMap contributors · © OpenMapTiles · OSRM',
         }),
         'top-right',
       );

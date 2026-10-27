@@ -5,7 +5,7 @@
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/loop-test.mjs
-//   PARAPO_NO_TILES=1 node tests/e2e/loop-test.mjs   no basemap tiles (a sandbox)
+//   PARA_NO_TILES=1 node tests/e2e/loop-test.mjs   no basemap tiles (a sandbox)
 //
 // What it proves, on a phone: a loop's trip has no SWITCH and says Ikot where
 // Papunta stands; its tip is the first place its line passes with no location,
@@ -19,7 +19,7 @@ import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
 
-const NO_TILES = !!process.env.PARAPO_NO_TILES;
+const NO_TILES = !!process.env.PARA_NO_TILES;
 const { check, tally } = harness();
 
 // ------------------------------------------------------------------ the fixture

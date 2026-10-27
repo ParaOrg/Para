@@ -11,7 +11,7 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/forgot-password-test.mjs
 //
-// PARAPO_SHOTS=dir keeps screenshots of the screens at 393×852.
+// PARA_SHOTS=dir keeps screenshots of the screens at 393×852.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
@@ -20,11 +20,11 @@ import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const SHOTS = process.env.PARAPO_SHOTS;
+const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
-const AUTH_KEY = 'parapo.contributor-auth';
+const AUTH_KEY = 'para.contributor-auth';
 const NOTICE = 'If that email has an account, we sent a code';
 const EMAIL = 'juan@example.com';
 const OLD_PASSWORD = 'hunter2hunter2';
@@ -75,7 +75,7 @@ async function phone({ users = accounts, anonymousWith = [] } = {}) {
   await fakeTurnstile(page);
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('parapo.contribute.consent', '3');
+      localStorage.setItem('para.contribute.consent', '3');
       sessionStorage.setItem('seeded', 'yes');
     }
   });
@@ -171,7 +171,7 @@ async function sendCode(page, email) {
   );
   check(
     '  the bot check, when the build has a site key, went with the send',
-    !process.env.PARAPO_TURNSTILE || /^token-/.test(String(fake.captchaTokens[0])),
+    !process.env.PARA_TURNSTILE || /^token-/.test(String(fake.captchaTokens[0])),
     String(fake.captchaTokens[0]),
   );
   await shot(page, '2-reset-password');
@@ -214,7 +214,7 @@ async function sendCode(page, email) {
     '  a second send makes a new code, with a bot check of its own',
     fake.recoveries === 2 &&
       secondCode !== firstCode &&
-      (!process.env.PARAPO_TURNSTILE || new Set(fake.captchaTokens.slice(0, 2)).size === 2),
+      (!process.env.PARA_TURNSTILE || new Set(fake.captchaTokens.slice(0, 2)).size === 2),
     `${firstCode} → ${secondCode}`,
   );
 

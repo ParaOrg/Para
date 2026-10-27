@@ -1,6 +1,6 @@
 ---
 name: ds-component
-description: Build or restyle one ParaPo component, end to end — the owner's Figma design to code, tokens, stories, verification and an independent ds-reviewer pass. Use when building or restyling a component during the commuter redesign. Runs in the main session because it stops to ask the owner.
+description: Build or restyle one Para component, end to end — the owner's Figma design to code, tokens, stories, verification and an independent ds-reviewer pass. Use when building or restyling a component during the commuter redesign. Runs in the main session because it stops to ask the owner.
 ---
 
 # Build one PalimosPoDesignSystem component

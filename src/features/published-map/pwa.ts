@@ -13,7 +13,7 @@ import { isOldAppInControl } from './old-app';
  * (vite.config.ts, `injectRegister: false`), so /studio/ stays a plain page.
  *
  * A new version is never applied on its own: it waits, `needRefresh` turns
- * true, and the page shows "Update Para Po!". The one exception is a phone
+ * true, and the page shows "Update Para!". The one exception is a phone
  * still carrying the old app's worker (old-app.ts): ours takes over from it as
  * on a first visit, with no prompt and no reload. Under `npm run dev` the
  * virtual module is a no-op, so the headless checks never meet a worker.

@@ -3,15 +3,15 @@
 //
 //   node tests/e2e/pwa-test.mjs
 //
-// Starts its own preview server on :4173 (or uses PARAPO_BASE), then:
-//   - the manifest is served, valid, and names Para Po with its three icons
+// Starts its own preview server on :4173 (or uses PARA_BASE), then:
+//   - the manifest is served, valid, and names Para with its three icons
 //   - the service worker registers on / and controls the page; /studio/ in a
 //     fresh browser registers nothing and links no manifest
 //   - the map file and the basemap are cached on the first visit
 //   - offline: a reload of / still shows the routes and hotspots, the map
 //     draws, and the notice says "Offline · map as of <date>"
 //   - back online the notice goes; a changed worker (a deploy) is offered as
-//     "Update Para Po!" and waits until tapped
+//     "Update Para!" and waits until tapped
 //   - housekeeping: no page errors, no request to the database
 //
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
@@ -72,7 +72,7 @@ const mapLoad = (p) =>
   );
 
 let server = null;
-let base = process.env.PARAPO_BASE;
+let base = process.env.PARA_BASE;
 if (!base) {
   const { preview } = await import('vite');
   server = await preview({ preview: { port: 4173, strictPort: true }, logLevel: 'silent' });
@@ -165,10 +165,10 @@ try {
   const manifest = res.ok ? await res.json() : null;
   check('manifest.webmanifest served', res.ok, `HTTP ${res.status}`);
   check(
-    'manifest: Para Po, id / start_url / scope "/", standalone, maskable icon',
+    'manifest: Para, id / start_url / scope "/", standalone, maskable icon',
     !!manifest &&
-      manifest.name === 'Para Po' &&
-      manifest.short_name === 'Para Po' &&
+      manifest.name === 'Para' &&
+      manifest.short_name === 'Para' &&
       manifest.id === '/' &&
       manifest.start_url === '/' &&
       manifest.scope === '/' &&
@@ -195,7 +195,7 @@ try {
     await page.goto(`${base}/studio/`, { waitUntil: 'load' });
     // The positive control: the two negatives below mean nothing on a blank page.
     const door = await page
-      .getByText('Sign in to ParaPo Studio')
+      .getByText('Sign in to Para Studio')
       .waitFor({ timeout: 15000 })
       .then(
         () => true,
@@ -335,7 +335,7 @@ try {
   for (const [path, marker, viaWorker] of [
     ['/', '/assets/public-map-', true],
     ['/studio', null, false],
-    ['/studio/', 'ParaPo Studio', false],
+    ['/studio/', 'Para Studio', false],
     ['/data/index.v5.json', '"published_at"', null],
     ['/manifest.webmanifest', '"short_name"', null],
   ]) {
@@ -420,7 +420,7 @@ try {
     (await page.locator('[data-testid="offline"]').count()) === 0,
   );
   check(
-    'no "Update Para Po!" button on an unchanged build',
+    'no "Update Para!" button on an unchanged build',
     (await page.locator('[data-testid="update"]').count()) === 0,
   );
 
@@ -518,7 +518,7 @@ try {
   // ------------------------------------------------------------ an update
   // A deploy changes sw.js. Stand in for one by changing a byte of the built
   // worker, then ask the browser to look: the new worker must wait, the page
-  // must offer "Update Para Po!", and the tap must bring the new one in.
+  // must offer "Update Para!", and the tap must bring the new one in.
   // The file is put back afterwards.
   const swFile = join(root, 'dist', 'sw.js');
   const swBefore = readFileSync(swFile, 'utf8');
@@ -532,7 +532,7 @@ try {
         () => true,
         () => false,
       );
-    check('a changed worker is offered as "Update Para Po!", not applied', offered);
+    check('a changed worker is offered as "Update Para!", not applied', offered);
     const stillOld = await page.evaluate(async () => {
       const reg = await navigator.serviceWorker.getRegistration();
       return !!reg?.waiting && !!navigator.serviceWorker.controller;

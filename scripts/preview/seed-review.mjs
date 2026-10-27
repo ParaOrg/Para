@@ -1,4 +1,4 @@
-// Fixture data only. Pipe into the disposable parapo_preview database.
+// Fixture data only. Pipe into the disposable para_preview database.
 import { readFileSync } from 'node:fs';
 const index = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
 const owner = '00000000-0000-0000-0000-0000000000e1';

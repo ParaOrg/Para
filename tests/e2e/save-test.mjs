@@ -767,7 +767,7 @@ check(
   await clickAt(OUT[0], 300);
   await clickAt(OUT[1], 300);
   await idle();
-  const draftBefore = await page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  const draftBefore = await page.evaluate(() => localStorage.getItem('para.draft.v1'));
   const pointsBefore = await pointsShown();
   const cameraBefore = await camera();
 
@@ -816,7 +816,7 @@ check(
   await page.waitForTimeout(400);
   check(
     '  the drawing tools are out of reach there: no Done, and keys and clicks leave the line alone',
-    (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === draftBefore &&
+    (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === draftBefore &&
       !(await page.getByRole('button', { name: /Done/ }).isVisible()),
   );
   check('  the camera is as it was', sameCamera(cameraBefore, await camera()));
@@ -834,7 +834,7 @@ check(
   check(
     'back in the Playground the half-drawn line is as it was, with its camera',
     mapOf() === 'playground' &&
-      (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === draftBefore &&
+      (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === draftBefore &&
       (await pointsShown()) === pointsBefore &&
       sameCamera(cameraBefore, await camera()) &&
       (await page
@@ -861,7 +861,7 @@ check(
   await page.waitForTimeout(300);
   check(
     '  the line can still be discarded after the visits',
-    (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === null,
+    (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
   );
 }
 
@@ -940,7 +940,7 @@ check(
 );
 check(
   '  the draft is gone',
-  (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === null,
+  (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
 await waitFor(async () => (await returnTrip().count()) > 0);
 check(
@@ -1633,13 +1633,13 @@ await page.getByRole('menuitem', { name: /Routes/ }).click();
 await clickAt(OUT[0], 300);
 await clickAt(OUT[1], 300);
 await idle();
-const drafted = (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) !== null;
+const drafted = (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) !== null;
 await page.keyboard.press('Control+z');
 await page.keyboard.press('Control+z');
 await page.waitForTimeout(400);
 check(
   'undo down to no points leaves no draft to come back on reload (12)',
-  drafted && (await page.evaluate(() => localStorage.getItem('parapo.draft.v1'))) === null,
+  drafted && (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
@@ -1854,7 +1854,7 @@ await page.waitForTimeout(300);
 
 // ---- 10c. A new head and tail made from the save panel, the line left alone
 {
-  const draftOf = () => page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  const draftOf = () => page.evaluate(() => localStorage.getItem('para.draft.v1'));
   const NEW = '+new-place';
   const L = [at(-0.003, 0.02), at(0, 0.0212), at(0.003, 0.02)];
   await go(at(0, 0.02), 15);
@@ -1997,13 +1997,13 @@ await page.waitForTimeout(300);
   if (made) remove('route', [made]);
   if (head) remove('stop', [head]);
   if (tail) remove('stop', [tail]);
-  await page.evaluate(() => localStorage.removeItem('parapo.draft.v1'));
+  await page.evaluate(() => localStorage.removeItem('para.draft.v1'));
 }
 
 // ---- 10d. The new-place form: what Enter does, one write, a retry, a name already taken
 {
   const NEW = '+new-place';
-  const draftOf = () => page.evaluate(() => localStorage.getItem('parapo.draft.v1'));
+  const draftOf = () => page.evaluate(() => localStorage.getItem('para.draft.v1'));
   // A short line out of P1's corner, among the saved lines, so the lines near its ends are read.
   const L = [at(-0.004, 0.0004), at(-0.0035, 0.002)];
   await go(at(-0.004, 0.001), 15);

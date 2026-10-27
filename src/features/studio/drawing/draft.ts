@@ -12,7 +12,7 @@ import type { AreaTarget, Borrow, Target } from './drawing-types';
  *
  * The key and the shape are a contract: six suites and check-build read them.
  */
-const DRAFT_KEY = 'parapo.draft.v1';
+const DRAFT_KEY = 'para.draft.v1';
 
 /** A gap still waiting for the router when the draft was written is marked `pending`. */
 type DraftSegment = Segment & { pending?: boolean };

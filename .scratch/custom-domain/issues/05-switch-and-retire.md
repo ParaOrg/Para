@@ -9,10 +9,10 @@ Blocked by: 02, 03, 04
 
 In this order, at a quiet hour:
 
-1. **Tiles first.** Worker `parapo-tiles` → Settings → Domains & Routes → Add → Custom domain → `tiles.para-commute.org`. The hub merges 04; staging reads its tiles from there.
+1. **Tiles first.** Worker `para-tiles` → Settings → Domains & Routes → Add → Custom domain → `tiles.para-commute.org`. The hub merges 04; staging reads its tiles from there.
 2. **Rate limit.** Security → WAF → Rate limiting rules, on `tiles.para-commute.org` (the number is the hub's to propose from the load test).
 3. **Sign-in.** Turnstile's hostnames get `para-commute.org`. Supabase → Authentication → URL Configuration: Site URL `https://www.para-commute.org`, and `https://www.para-commute.org/**` as a redirect URL.
-4. **The app.** Worker `parapo` → Custom domain → `www.para-commute.org`. Then a redirect rule: `para-commute.org/*` → `https://www.para-commute.org/$1`, 301, query kept.
+4. **The app.** Worker `para` → Custom domain → `www.para-commute.org`. Then a redirect rule: `para-commute.org/*` → `https://www.para-commute.org/$1`, 301, query kept.
 5. **The hub checks** (below). If anything is wrong, remove the custom domain; the old site needs its Vercel records back to answer again, so keep a copy of them until step 6.
 6. **Retire Vercel.** Remove `para-commute.org` from the old Vercel project. Delete the project when the owner chooses.
 

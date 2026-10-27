@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readDraft, restoredState } from '../../src/features/studio/drawing/draft.ts';
 
-const KEY = 'parapo.draft.v1';
+const KEY = 'para.draft.v1';
 
 /** A point at [lng, 14.7]: one object per call, so identity can be checked. */
 const pt = (lng) => [lng, 14.7];

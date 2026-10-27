@@ -49,7 +49,7 @@ export function contributeWorker(): Plugin {
   let root = process.cwd();
   let outDir = 'dist';
   return {
-    name: 'parapo:contribute-worker',
+    name: 'para:contribute-worker',
     apply: 'build',
     configResolved(config) {
       root = config.root;
@@ -79,7 +79,7 @@ export function contributeWorker(): Plugin {
       writeFileSync(
         target,
         `const PRECACHE_URLS = ${JSON.stringify(urls)};\n` +
-          `const CACHE_NAME = ${JSON.stringify(`parapo-contribute-${version}`)};\n${code}`,
+          `const CACHE_NAME = ${JSON.stringify(`para-contribute-${version}`)};\n${code}`,
       );
     },
   };

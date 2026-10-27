@@ -29,7 +29,7 @@ const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
  */
 function chunkModules(): Plugin {
   return {
-    name: 'parapo:chunk-modules',
+    name: 'para:chunk-modules',
     apply: 'build',
     generateBundle(_options, bundle) {
       const modules: Record<string, string[]> = {};
@@ -50,14 +50,14 @@ function chunkModules(): Plugin {
 /**
  * The PWA plugin writes its `<link rel="manifest">` into every page it builds
  * without looking at which page it is, so left alone /studio/ and /contribute/
- * would install as Para Po too. This runs after it (both are post-order; this
+ * would install as Para too. This runs after it (both are post-order; this
  * one is later in the list) and takes the link back out of those pages. The
  * manifest belongs to / only; scripts/checks/check-build.mjs checks the built
  * pages.
  */
 function onlyTheMapHasAManifest(): Plugin {
   return {
-    name: 'parapo:only-the-map-has-a-manifest',
+    name: 'para:only-the-map-has-a-manifest',
     apply: 'build',
     enforce: 'post',
     transformIndexHtml: {
@@ -108,7 +108,7 @@ export function stylesheetsBeforeScripts(html: string): string {
 }
 function stylesheetsFirst(): Plugin {
   return {
-    name: 'parapo:stylesheets-first',
+    name: 'para:stylesheets-first',
     apply: 'build',
     enforce: 'post',
     transformIndexHtml: { order: 'post', handler: stylesheetsBeforeScripts },
@@ -125,7 +125,7 @@ function stylesheetsFirst(): Plugin {
 let outDir = 'dist';
 function readOutDir(): Plugin {
   return {
-    name: 'parapo:out-dir',
+    name: 'para:out-dir',
     apply: 'build',
     configResolved(config) {
       outDir = resolve(config.root, config.build.outDir);
@@ -154,7 +154,7 @@ function mapFileEarly(): Plugin {
     `.then(function(r){return{res:r,body:r.ok?r.clone().json().catch(function(){}):null}});` +
     `q.catch(function(){});window.${EARLY_MAP_FILE}=q})()`;
   return {
-    name: 'parapo:map-file-early',
+    name: 'para:map-file-early',
     transformIndexHtml: {
       // Before Vite's own: in a build, the app's script and stylesheets are
       // added to the <head> after what is there by then.
@@ -186,9 +186,9 @@ function mapFileEarly(): Plugin {
  */
 export const MAPLIBRE_WORKER_URL = 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 export function maplibreWorkerWithThePage(): Plugin {
-  const resolved = '\0parapo:maplibre-worker-url';
+  const resolved = '\0para:maplibre-worker-url';
   return {
-    name: 'parapo:maplibre-worker',
+    name: 'para:maplibre-worker',
     apply: 'build',
     // Ahead of Vite's worker plugin, which would build it on its own.
     enforce: 'pre',
@@ -222,7 +222,7 @@ const BASEMAP_RULES = basemapCacheRules(BASEMAP_HOST);
 /** Points index.html's preconnect at the configured basemap host (see withBasemapPreconnect). */
 function basemapPreconnect(): Plugin {
   return {
-    name: 'parapo:basemap-preconnect',
+    name: 'para:basemap-preconnect',
     transformIndexHtml: {
       order: 'pre',
       handler: (html) => withBasemapPreconnect(html, BASEMAP_HOST),
@@ -250,8 +250,8 @@ export default defineConfig({
       // Test with `npm run build && npm run preview` (tests/e2e/pwa-test.mjs).
       devOptions: { enabled: false },
       manifest: {
-        name: 'Para Po',
-        short_name: 'Para Po',
+        name: 'Para',
+        short_name: 'Para',
         description: 'Jeepney routes in Metro Manila, drawn from the ground.',
         id: '/',
         start_url: '/',
@@ -385,7 +385,7 @@ export default defineConfig({
                   cachedResponseWillBeUsed: async ({ cachedResponse }) => {
                     if (!cachedResponse) return null;
                     const headers = new Headers(cachedResponse.headers);
-                    headers.set('x-parapo-served-from', 'cache');
+                    headers.set('x-para-served-from', 'cache');
                     return new Response(cachedResponse.body, {
                       status: cachedResponse.status,
                       statusText: cachedResponse.statusText,

@@ -15,7 +15,7 @@ The contributor app is the contributor page's own React code inside a native
 Android shell made with Capacitor. It is Android only, installed from a direct
 download link rather than the Play Store, and its location comes from
 `@capacitor-community/background-geolocation`, which runs as a foreground
-service with a visible "ParaPo is recording" notification.
+service with a visible "Para is recording" notification.
 
 ## Consequences
 
@@ -31,7 +31,7 @@ service with a visible "ParaPo is recording" notification.
   `https://localhost`, with no Cloudflare change.
 - A GitHub workflow builds a debug APK on pull requests that touch the app and,
   on a tag `app-v*`, a signed release APK on the runner's own Android SDK. The
-  tag's run publishes a GitHub Release with two assets, `parapo-contributor.apk`
+  tag's run publishes a GitHub Release with two assets, `para-contributor.apk`
   and `latest.json`; nothing is deployed to the website. `releases/latest/download/latest.json`
   always names the newest Release, so **any other Release made in this
   repository must pass `--latest=false`**.
@@ -71,7 +71,7 @@ service with a visible "ParaPo is recording" notification.
 - **Recording with the screen off.** Android freezes the page's JavaScript about five minutes
   after the screen goes off, even with `useLegacyBridge: true` (the plugin's known problem, seen in
   the spike's emulator ride), so the page cannot be the only place a fix is written. The app's own
-  `ParaPoApplication` listens to the broadcast the plugin's foreground service sends for each fix
+  `ParaApplication` listens to the broadcast the plugin's foreground service sends for each fix
   and appends it to a small file (`FixLog.java`, JSON lines, in the service's own process); the
   `FixLog` plugin lets the page start it for a recording, read it and clear it. The page imports
   what it has not stored yet, de-duplicated by time (a fix at or before the last stored one is
@@ -86,7 +86,7 @@ service with a visible "ParaPo is recording" notification.
   notifications (Android 13+), location, then "Allow all the time" (Android 10+), each after a plain
   reason; a refusal says what still works and opens the phone's Settings, and Start goes on without
   any but location. On makers known to stop background apps (Xiaomi, Oppo, Vivo, Samsung, Huawei,
-  Realme) the first Start shows once how to allow ParaPo to run in the background, with that
+  Realme) the first Start shows once how to allow Para to run in the background, with that
   maker's steps, unless Android already says it is unrestricted.
 - The CI job `emulator-ride` runs a scripted twenty-minute ride with the screen off on an emulator,
   kills the app's process at fifteen minutes and reopens it, and fails unless every fix the service

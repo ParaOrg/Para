@@ -1,4 +1,4 @@
-package ph.parapo.contributor;
+package ph.para.contributor;
 
 import android.content.Context;
 import android.content.Intent;
@@ -46,7 +46,7 @@ import java.util.Locale;
 public class NativePermissionsPlugin extends Plugin {
     /**
      * The phone's maker (lower case) and Android version, which decide which permissions exist and
-     * whose battery steps apply, and whether Android already lets ParaPo run unrestricted.
+     * whose battery steps apply, and whether Android already lets Para run unrestricted.
      */
     @PluginMethod
     public void deviceInfo(PluginCall call) {
@@ -58,7 +58,7 @@ public class NativePermissionsPlugin extends Plugin {
         call.resolve(state);
     }
 
-    /** ParaPo's page in the phone's Settings, where Permissions and Battery are one tap away. */
+    /** Para's page in the phone's Settings, where Permissions and Battery are one tap away. */
     @PluginMethod
     public void openAppSettings(PluginCall call) {
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
