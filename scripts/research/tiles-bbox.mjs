@@ -36,5 +36,16 @@ const padded = {
 const kmW = (padded.east - padded.west) * 111.32 * Math.cos((midLat * Math.PI) / 180);
 const kmH = (padded.north - padded.south) * 111.32;
 console.log(
-  JSON.stringify({ positions, routes: box, marginKm, bounds: padded, bbox: `${padded.west},${padded.south},${padded.east},${padded.north}`, sizeKm: [Math.round(kmW), Math.round(kmH)] }, null, 2),
+  JSON.stringify(
+    {
+      positions,
+      routes: box,
+      marginKm,
+      bounds: padded,
+      bbox: `${padded.west},${padded.south},${padded.east},${padded.north}`,
+      sizeKm: [Math.round(kmW), Math.round(kmH)],
+    },
+    null,
+    2,
+  ),
 );
