@@ -5,13 +5,17 @@ import { STYLE_URL } from '@/features/routes/map/map-view';
 import { takeTilesAsked } from '@/features/routes/map/tiles-asked';
 import { MAP_FILE_URL } from '@/features/routes/published/map-file';
 
+import { isOldAppInControl } from './old-app';
+
 /**
  * The service worker, registered from the public page only. The studio never
  * runs this, and the plugin injects no registration script of its own
  * (vite.config.ts, `injectRegister: false`), so /studio/ stays a plain page.
  *
  * A new version is never applied on its own: it waits, `needRefresh` turns
- * true, and the page shows "Update Para Po!". Under `npm run dev` the
+ * true, and the page shows "Update Para Po!". The one exception is a phone
+ * still carrying the old app's worker (old-app.ts): ours takes over from it as
+ * on a first visit, with no prompt and no reload. Under `npm run dev` the
  * virtual module is a no-op, so the headless checks never meet a worker.
  */
 
@@ -25,10 +29,26 @@ export function registerServiceWorker(): void {
   // A page nobody controls yet is a first visit: see warmCaches. Read before
   // registering, so a worker that claims the page meanwhile cannot hide it.
   const firstVisit = !navigator.serviceWorker.controller;
+  void isOldAppInControl().then((replacesOldApp) => register(firstVisit, replacesOldApp));
+}
+
+function register(firstVisit: boolean, replacesOldApp: boolean): void {
+  let isHandingOver = replacesOldApp;
   applyUpdate = registerSW({
     onNeedRefresh() {
+      if (isHandingOver) {
+        isHandingOver = false;
+        void takeOverFromOldApp();
+        return;
+      }
       needRefresh = true;
       for (const l of listeners) l();
+    },
+    // The plugin reloads the page when a worker takes over from another. Only a
+    // commuter who was offered the update (here or in another tab) has asked
+    // for that: the hand-over from the old app must not reload mid-ride.
+    onNeedReload() {
+      if (needRefresh) window.location.reload();
     },
     onRegisteredSW(_url, r) {
       registration = r;
@@ -38,6 +58,20 @@ export function registerServiceWorker(): void {
       if (firstVisit) void warmCaches();
     },
   });
+}
+
+/**
+ * Our worker is installed and waiting behind the old app's. Tell it to take
+ * over now, as it would have on a first visit, then fill its caches the way
+ * a first visit does: the page's requests so far went through the old worker.
+ */
+async function takeOverFromOldApp(): Promise<void> {
+  const tookOver = new Promise<void>((resolve) =>
+    navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true }),
+  );
+  void applyUpdate?.();
+  await tookOver;
+  await warmCaches();
 }
 
 /**

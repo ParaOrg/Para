@@ -321,6 +321,9 @@ export default defineConfig({
         navigateFallbackAllowlist: [/^\/(\?.*)?$/],
         navigateFallbackDenylist: [/^\/studio(\/|$)/, /^\/contribute(\/|$)/],
         cleanupOutdatedCaches: true,
+        // Deletes the old app's `para-ph-*` caches on activate. It sits in public/,
+        // so it is served beside the worker and never precached.
+        importScripts: ['old-app-cleanup.js'],
         clientsClaim: true,
         skipWaiting: false,
         runtimeCaching: [

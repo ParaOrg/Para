@@ -21,3 +21,4 @@ src/shared/types/database.types.ts
 # The Android app: its web build and the native project (Java, Gradle, XML)
 dist-apk
 android
+tests/e2e/fixtures/

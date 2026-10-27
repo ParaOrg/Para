@@ -97,7 +97,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|src/shared/ui/turnstile.tsx|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
+              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 public=true ;;
               *) public=true; studio=true ;;
             esac
@@ -156,6 +156,7 @@ jobs:
             where-test,
             scale-test,
             pwa-test,
+            handover-test,
             loop-test,
             contribute-test,
             contribute-offline-test,
@@ -197,12 +198,12 @@ jobs:
         run: |
           echo VITE_CONTRIBUTIONS=1 >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-      # pwa-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
-      - name: Build, for pwa-test and contribute-offline-test
-        if: matrix.suite == 'pwa-test' || matrix.suite == 'contribute-offline-test'
+      # pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
+      - name: Build, for pwa-test, handover-test and contribute-offline-test
+        if: matrix.suite == 'pwa-test' || matrix.suite == 'handover-test' || matrix.suite == 'contribute-offline-test'
         run: npm run build
       - name: Start the dev server
-        if: matrix.suite != 'pwa-test' && matrix.suite != 'contribute-offline-test'
+        if: matrix.suite != 'pwa-test' && matrix.suite != 'handover-test' && matrix.suite != 'contribute-offline-test'
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
           for i in $(seq 1 60); do
