@@ -16,6 +16,9 @@ let isApplying = false;
 async function applyIfIdle(registration: ServiceWorkerRegistration): Promise<boolean> {
   const waiting = registration.waiting;
   if (!waiting) return true;
+  // A first worker is briefly `waiting` between installing and activating, and then claims
+  // the page. That is not an update: there is no older version to replace, so nothing to apply.
+  if (!navigator.serviceWorker.controller) return true;
   if (await hasOpenRecording()) return false;
   isApplying = true;
   waiting.postMessage({ type: 'SKIP_WAITING' });

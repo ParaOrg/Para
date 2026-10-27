@@ -2,15 +2,17 @@
 
 Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
 
-- **The map:** https://parapo.villaralvorovic2.workers.dev — on an Android
+- **The map:** https://parapo.para-ph-info.workers.dev (moving here from
+  https://parapo.villaralvorovic2.workers.dev) — on an Android
   phone, Chrome offers to install it as **Para Po**; it then opens full screen
   and keeps working without a signal, showing the routes it last saw. It is
   `main`, and changes only when a release is merged.
-- **Staging:** https://staging-parapo.villaralvorovic2.workers.dev — the
+- **Staging:** https://staging-parapo.para-ph-info.workers.dev (moving here from
+  https://staging-parapo.villaralvorovic2.workers.dev) — the
   `staging` branch, each piece of work there as soon as its checks pass,
   before it is merged. For looking: its `/studio/` edits the same database
   as the live one, so routes are edited on the live studio only. Every other
-  branch gets a link of its own, `https://<branch>-parapo.villaralvorovic2.workers.dev`,
+  branch gets a link of its own, `https://<branch>-parapo.para-ph-info.workers.dev`,
   kept out of search engines as staging is.
 - **How it is built, and what comes next:** [PLAN.md](PLAN.md). The words the
   app, the plan and the owner use: [CONTEXT.md](CONTEXT.md). Decisions and

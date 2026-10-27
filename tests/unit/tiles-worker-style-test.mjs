@@ -122,6 +122,10 @@ const ALLOWED = [
   'https://staging-parapo.villaralvorovic2.workers.dev',
   'https://3f2a9c1b-parapo.villaralvorovic2.workers.dev',
   'https://claude-own-tiles-parapo.villaralvorovic2.workers.dev',
+  'https://parapo.para-ph-info.workers.dev',
+  'https://staging-parapo.para-ph-info.workers.dev',
+  'https://3f2a9c1b-parapo.para-ph-info.workers.dev',
+  'https://claude-own-tiles-parapo.para-ph-info.workers.dev',
   'http://localhost:5173',
 ];
 const REFUSED = [
@@ -131,6 +135,10 @@ const REFUSED = [
   'http://parapo.villaralvorovic2.workers.dev',
   'https://parapo.other-account.workers.dev',
   'https://x-parapo.villaralvorovic2.workers.dev/',
+  'https://parapo.para-ph-info.workers.dev.evil.example',
+  'https://evil-parapo.para-ph-info.workers.dev.evil.example',
+  'http://parapo.para-ph-info.workers.dev',
+  'https://x-parapo.para-ph-info.workers.dev/',
   'http://localhost:3000',
   'null',
 ];
