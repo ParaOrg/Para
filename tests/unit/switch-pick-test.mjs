@@ -469,3 +469,47 @@ test('a jeep’s SWITCH back by other streets, reaching the end’s place first:
   assert.equal(out.ride.ridden.isBackwards, true);
   root.unmount();
 });
+
+// One place, a box on each side of the road, and both ways pass both: each
+// way's row keeps the box it reaches first (timelineFor), so the place's row
+// is SM Gate 1 there and SM Gate 2 back. The pick carried over lands on the
+// row of its place the other way, or no row would show it picked while the
+// map still drew the ride.
+const { routeTimeline } = await vite.ssrLoadModule('/src/features/routes/model/ride.ts');
+const { hintuansAlong } = await vite.ssrLoadModule('/src/features/routes/model/timeline.ts');
+const { directionLine } = await vite.ssrLoadModule('/src/features/routes/model/routes.ts');
+
+test('a jeep’s SWITCH lands a place with a box on each side of the road on its row the other way', async () => {
+  const gate1 = { ...stop('g1', 0.02, 'SM'), name: 'SM Gate 1' };
+  const gate2 = { ...stop('g2', 0.021, 'SM'), name: 'SM Gate 2' };
+  const twoBoxes = [...lined.filter((s) => s.id !== 'b'), gate1, gate2];
+  const rowsOf = (v) =>
+    routeTimeline(
+      v,
+      twoBoxes,
+      hintuansAlong(directionLine(v), twoBoxes, v.route).map((a) => a.hotspot),
+    ).between;
+  const back1 = withLine('back', [...LINE].reverse(), true);
+  assert.deepEqual(
+    rowsOf(out1).map((r) => r.id),
+    ['a', 'g1', 'c'],
+  );
+  assert.deepEqual(
+    rowsOf(back1).map((r) => r.id),
+    ['c', 'g2', 'a'],
+  );
+  const out = {};
+  function Probe(props) {
+    out.ride = useRideTo(null, props.selected, twoBoxes);
+    return null;
+  }
+  const root = createRoot({ ...container });
+  const show = (v) => act(async () => root.render(h(Probe, { selected: v })));
+  await show(out1);
+  await act(async () => out.ride.pick('g1'));
+  await act(async () => out.ride.carryTo(back1, () => true, rowsOf(back1)));
+  await show(back1);
+  assert.equal(out.ride.pickedId, 'g2', 'SM’s row the way back, picked on the card');
+  assert.ok(out.ride.ridden, 'and the ride to it still priced');
+  root.unmount();
+});
