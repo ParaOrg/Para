@@ -114,7 +114,7 @@ export function createApp() {
       if (!object || !isBody(object)) return text(404, 'Style not published.');
       const original: unknown = JSON.parse(await new Response(object.body).text());
       const { header } = await withArchive(env, current, async (opened) => opened);
-      return Response.json(rewriteStyle(original, origin, header), {
+      return Response.json(rewriteStyle(original, origin, header, current.file), {
         headers: { 'Cache-Control': STYLE_CACHE_CONTROL, ETag: `"${current.file}/${name}"` },
       });
     });

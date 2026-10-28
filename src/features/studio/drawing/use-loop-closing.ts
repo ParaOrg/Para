@@ -1,4 +1,4 @@
-import type { GeoJSONSource, MapLibreMap, Source } from 'maplibre-gl';
+import type { MapLibreMap } from 'maplibre-gl';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
@@ -7,7 +7,7 @@ import type { Hotspot } from '@/features/routes/model/hotspots';
 import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
-import { ROUTE_COLOUR } from './draw-layers';
+import { ROUTE_COLOUR, isGeoJSON } from './draw-layers';
 import { loopClosingPoint, outboundFeatures, outboundFor, returnTripStart } from './loop-closing';
 import type { Drawing } from './use-drawing';
 
@@ -23,9 +23,6 @@ const OUTBOUND_SRC = 'draw-outbound';
 const OUTBOUND_LINE = 'draw-outbound-line';
 const OUTBOUND_START = 'draw-outbound-start';
 const OUTBOUND_END = 'draw-outbound-end';
-
-const isGeoJSON = (source: Source | undefined): source is GeoJSONSource =>
-  source?.type === 'geojson';
 
 /** The outbound line's source and layers, laid once, under the drawing's own. */
 function addOutboundLayers(map: MapLibreMap): void {

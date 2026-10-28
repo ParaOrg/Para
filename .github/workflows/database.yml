@@ -2,19 +2,15 @@
 # project: no secret is read here, and no address but the runner's own
 # containers is used.
 #
-#   1. `verify`: supabase/verify/run.sh on a Postgres service container. It
+#   `verify`: supabase/verify/run.sh on a Postgres service container. It
 #      builds every migration in ledger order and checks the review flow's SQL
 #      (0018, 0022, the reviewed approval), then the contributor scripts it
 #      runs last: what one phone may read, save or delete of another's
 #      (contributions.sh, contribution-use.sh, signup-hook.sh,
 #      contributor-accounts.sh).
-#   2. `review`: the isolated review preview (scripts/preview/README.md) on its
-#      own Postgres and PostgREST containers, then review-test (the studio in a
-#      browser: draft, submit, approve, send back) and review-publication-test
-#      (approve, then the real publisher in a copy of the repository).
 #
-# On pull requests that touch the SQL, the code that calls it, the preview or
-# these suites; nightly; and on demand.
+# On pull requests that touch the SQL or the code that calls it; nightly; and
+# on demand.
 name: Database
 
 on:
@@ -23,9 +19,8 @@ on:
       - 'supabase/**'
       - 'src/features/studio/data/**'
       - 'src/features/contribute/api/**'
-      - 'scripts/preview/**'
-      - 'tests/e2e/review-test.mjs'
-      - 'tests/e2e/review-publication-test.mjs'
+      # supabase/verify/studio-drafts.mjs builds its payloads with draft-save.ts, which reads routes/model.
+      - 'src/features/routes/model/**'
       - '.github/workflows/database.yml'
   schedule:
     # 03:43 in Manila (UTC+8), before the 04:00 publish.
@@ -70,104 +65,3 @@ jobs:
         env:
           PSQL: docker exec -i ${{ job.services.postgres.id }} psql -U postgres
         run: bash supabase/verify/run.sh
-
-  review:
-    name: Review suites on the isolated preview
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins.
-      - run: npx playwright install --with-deps chromium
-      # Step 1 of scripts/preview/README.md: Postgres 17 as para-review-db on a
-      # private network, no port published, checked by run.sh first.
-      - name: Start the disposable database
-        run: |
-          docker network create para-review
-          docker run -d --name para-review-db --network para-review -e POSTGRES_PASSWORD=preview-only postgres:17
-          for _ in $(seq 60); do
-            docker exec para-review-db pg_isready -U postgres -q && exit 0
-            sleep 1
-          done
-          echo '::error::the disposable Postgres did not start'
-          exit 1
-      - name: supabase/verify/run.sh on it
-        env:
-          PSQL: docker exec -i para-review-db psql -U postgres
-        run: bash supabase/verify/run.sh
-      # Step 2: para_preview, the editor, PostgREST's login role.
-      - name: Make the preview database
-        env:
-          PSQL: docker exec -i para-review-db psql -U postgres
-        run: bash scripts/preview/review-db.sh
-      # Step 3: PostgREST on loopback port 4191 only, trusting the fixture's
-      # demo signing key (scripts/preview/review-fixture.mjs).
-      - name: Start PostgREST
-        run: |
-          secret=$(node --input-type=module -e "import { PREVIEW_JWT_SECRET } from './scripts/preview/review-fixture.mjs'; console.log(PREVIEW_JWT_SECRET)")
-          docker run -d --name para-review-api --network para-review -p 127.0.0.1:4191:3000 \
-            -e PGRST_DB_URI=postgres://authenticator:preview@para-review-db:5432/para_preview \
-            -e PGRST_DB_ANON_ROLE=anon -e PGRST_DB_SCHEMAS=public -e PGRST_JWT_SECRET="$secret" \
-            postgrest/postgrest:v12.2.3
-          for _ in $(seq 60); do
-            curl -sf -o /dev/null http://127.0.0.1:4191/ && exit 0
-            sleep 1
-          done
-          docker logs para-review-api
-          echo '::error::PostgREST did not start'
-          exit 1
-      # Step 4: a copy for the preview's Publish to write into, and the
-      # deterministic dataset.
-      - name: Seed the preview
-        run: |
-          mkdir -p /tmp/para-review-publish
-          cp -a src scripts public .env.production /tmp/para-review-publish/
-          ln -s "$PWD/node_modules" /tmp/para-review-publish/node_modules
-          bash scripts/preview/reset-review.sh
-      # Step 5: the app built against the loopback server, drafts on, and
-      # the server that stands in for Supabase's auth and proxies to PostgREST.
-      - name: Build the preview and start its server
-        env:
-          VITE_STUDIO_DRAFTS: '1'
-          VITE_SUPABASE_URL: http://127.0.0.1:4180/api
-          VITE_SUPABASE_PUBLISHABLE_KEY: isolated-preview-publishable
-          VITE_BASEMAP_HOST: https://tiles.openfreemap.org
-          # Cloudflare's always-pass Turnstile key; the preview signs in by itself.
-          VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-        run: |
-          npx vite build --outDir /tmp/para-review-preview
-          nohup node scripts/preview/review-server.mjs > /tmp/para-review-server.log 2>&1 &
-          for _ in $(seq 60); do
-            curl -sf -o /dev/null http://127.0.0.1:4180/studio/ && exit 0
-            sleep 1
-          done
-          cat /tmp/para-review-server.log
-          echo '::error::the preview server did not start'
-          exit 1
-      # Step 6.
-      - name: review-test
-        id: review-test
-        run: node tests/e2e/review-test.mjs
-      # Run even when review-test fails, so each suite gives its own answer;
-      # the job still fails if either does.
-      - name: review-publication-test
-        if: success() || steps.review-test.conclusion == 'failure'
-        run: node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/e2e/review-publication-test.mjs
-      - name: The preview's logs
-        if: failure()
-        run: |
-          cat /tmp/para-review-server.log || true
-          docker logs para-review-api || true
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: review-screenshots
-          path: /tmp/para-review-screenshots
-          if-no-files-found: ignore

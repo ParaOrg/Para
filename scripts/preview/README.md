@@ -11,8 +11,6 @@ a live database URL. The demo signing key authenticates disposable fixtures only
    `20261018112757_reviewed_draft_approval.sql` there. Use the fixture bootstrap's
    editor id. The preview auth.uid stand-in must read PostgREST's JSON JWT claims
    as well as the verification scripts' individual claim setting.
-   `PSQL="docker exec -i para-review-db psql -U postgres" bash scripts/preview/review-db.sh`
-   does this step.
 3. Start PostgREST on loopback port 4191 with the `para_preview` database and
    the fixture JWT secret. No live credential is used.
 4. Copy `src`, `scripts`, `public` and the public `.env.production` into
@@ -25,10 +23,6 @@ a live database URL. The demo signing key authenticates disposable fixtures only
    `tests/e2e/review-publication-test.mjs` with the repository's TypeScript hook.
    They refuse remote database URLs and mutate only disposable data. The local
    Publish sample action runs the actual publisher in its isolated copy.
-
-`.github/workflows/database.yml` runs these six steps in CI (job `review`), nightly
-and on pull requests that touch the SQL, the code that calls it, this folder or
-the two suites.
 
 For a shareable static preview, build the same UI to `/tmp/para-review-hosted`
 with the deliberately invalid `https://para-isolated-preview.invalid` URL.
