@@ -27,6 +27,8 @@ const indexDirectionSchema = z.pipe(
 
 /** What makes a file a map at all, before its rows are read: the pre-check's shape. */
 export const indexOutlineSchema = z.looseObject({
+  /** The shape, read before the rest: a number, unless the file is no map of ours. */
+  schema: z.optional(z.unknown()),
   published_at: z.string(),
   variants: z.array(z.unknown()),
   stops: z.array(z.unknown()),

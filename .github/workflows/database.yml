@@ -1,0 +1,67 @@
+# Proves the database's promises on a throwaway Postgres, never on the live
+# project: no secret is read here, and no address but the runner's own
+# containers is used.
+#
+#   `verify`: supabase/verify/run.sh on a Postgres service container. It
+#      builds every migration in ledger order and checks the review flow's SQL
+#      (0018, 0022, the reviewed approval), then the contributor scripts it
+#      runs last: what one phone may read, save or delete of another's
+#      (contributions.sh, contribution-use.sh, signup-hook.sh,
+#      contributor-accounts.sh).
+#
+# On pull requests that touch the SQL or the code that calls it; nightly; and
+# on demand.
+name: Database
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'src/features/studio/data/**'
+      - 'src/features/contribute/api/**'
+      # supabase/verify/studio-drafts.mjs builds its payloads with draft-save.ts, which reads routes/model.
+      - 'src/features/routes/model/**'
+      - '.github/workflows/database.yml'
+  schedule:
+    # 03:43 in Manila (UTC+8), before the 04:00 publish.
+    - cron: '43 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    name: Migrations and row security on a throwaway Postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: verify-only
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      # studio-drafts.mjs and contributions-pack.mjs build their payloads with
+      # the app's own code, which imports zod.
+      - run: npm ci --ignore-scripts
+      # psql and pg_dump from inside the container, so they match its server.
+      - name: supabase/verify/run.sh
+        env:
+          PSQL: docker exec -i ${{ job.services.postgres.id }} psql -U postgres
+        run: bash supabase/verify/run.sh

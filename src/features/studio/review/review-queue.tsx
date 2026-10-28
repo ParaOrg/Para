@@ -5,7 +5,7 @@ import { Button } from '@/design-system/primitives/button';
 import { ReviewConfirmation } from './review-confirmation';
 import { ReviewDetails } from './review-details';
 import { ReviewList } from './review-list';
-import { useSession } from '../auth/use-session';
+import { useStudioSession } from '../auth/use-studio-session';
 import { editorNameOf, lockMessage } from '../data/draft-lock';
 import { reviewMessage, type ReviewAction } from '../data/review-commands';
 import { reviewDraftOf, type ReviewDraft } from '../data/review-label';
@@ -28,7 +28,7 @@ export function ReviewQueue({ onBusyChange, onChanged, initialDraftId = null }: 
   const query = useReviewQuery();
   const mutation = useReviewMutation();
   const names = useReviewNames(query.data ?? []);
-  const userId = useSession()?.user.id ?? null;
+  const userId = useStudioSession()?.user.id ?? null;
   const editors = useEditorNamesQuery();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [reviewId, setReviewId] = useState<string | null>(initialDraftId);

@@ -1,4 +1,4 @@
-// The publish's guard on a shrunk map (scripts/publish/shrinkGuard.mjs).
+// The publish's guard on a shrunk map (scripts/publish/shrink-guard.mjs).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/shrink-guard-test.mjs
 //
@@ -6,7 +6,7 @@
 // rows gone with no takedown behind them still do.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shrinkRefusals, takenDownSets } from '../../scripts/publish/shrinkGuard.mjs';
+import { shrinkRefusals, takenDownSets } from '../../scripts/publish/shrink-guard.mjs';
 
 const maxShrink = 0.3;
 /** Ten routes of one direction each, each direction linked to its own two hotspots. */

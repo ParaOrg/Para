@@ -1,5 +1,5 @@
 // Fixture data only. Pipe into the disposable para_preview database.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 const index = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
 const owner = '00000000-0000-0000-0000-0000000000e1';
 const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
@@ -57,9 +57,13 @@ for (const route of routes)
     }),
   );
 for (const direction of index.variants) {
-  const line = JSON.parse(readFileSync(`public/data/lines/${direction.id}.json`, 'utf8'));
+  // A direction with no line drawn yet has no line file; it is seeded without a shape.
+  const file = `public/data/lines/${direction.id}.json`;
+  const line = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : { shape: null };
+  const shape = line.shape ? json(line.shape) : 'null';
+  const overview = direction.overview ? json(direction.overview) : shape;
   sql.push(
-    `insert into public.route_variant (id, route_id, owner_id, reversed, confidence, shape, overview, control_points, segments, signboards) values (${quote(direction.id)}, ${quote(direction.route_id)}, ${quote(owner)}, ${direction.reversed}, ${quote(direction.confidence)}, ${json(line.shape)}, ${json(direction.overview ?? line.shape)}, ${json(line.shape?.coordinates ?? [])}, ${json(line.shape ? [{ mode: 'freehand', coordinates: line.shape.coordinates }] : [])}, array(select jsonb_array_elements_text(${json(direction.signboards ?? [])})));`,
+    `insert into public.route_variant (id, route_id, owner_id, reversed, confidence, shape, overview, control_points, segments, signboards) values (${quote(direction.id)}, ${quote(direction.route_id)}, ${quote(owner)}, ${direction.reversed}, ${quote(direction.confidence)}, ${shape}, ${overview}, ${json(line.shape?.coordinates ?? [])}, ${json(line.shape ? [{ mode: 'freehand', coordinates: line.shape.coordinates }] : [])}, array(select jsonb_array_elements_text(${json(direction.signboards ?? [])})));`,
   );
 }
 for (const link of index.links) sql.push(insert('route_stop', link));

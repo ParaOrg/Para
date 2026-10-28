@@ -7,6 +7,8 @@ import type { SaveToast } from './save-toasts';
 import { DRAFTED } from '../data/draft-save';
 
 interface UseSaveFlowOptions {
+  /** Whether a line or an area is being drawn: a save panel belongs to one. */
+  isDrawing: boolean;
   /** A reset link's problem, read once on arrival: the first toast, if any. */
   recoveryError: string | null;
   /** Ends the drawing that was saved. */
@@ -23,12 +25,16 @@ interface UseSaveFlowOptions {
  * drawing, reads what it changed again and says so.
  */
 export function useSaveFlow({
+  isDrawing,
   recoveryError,
   cancelDrawing,
   reloadRoutes,
   reloadHotspots,
 }: UseSaveFlowOptions) {
   const [isSaving, setIsSaving] = useState(false);
+  // A drawing that ends with its panel open takes the panel with it, or the
+  // next drawing would open on a save form with no points.
+  if (isSaving && !isDrawing) setIsSaving(false);
   // A rejected reset link (expired, already used) is the first toast: just a
   // notice, since the user is plainly signed out and can ask for another. The
   // link is read once, on arrival, so its error is known before this mounts

@@ -1,4 +1,4 @@
-// The publish's guard on signboards (scripts/publish/boardGuard.mjs).
+// The publish's guard on signboards (scripts/publish/board-guard.mjs).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/board-guard-test.mjs
 //
@@ -8,7 +8,7 @@
 // a board the owner unlisted is not named and never counts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { boardsRefusal } from '../../scripts/publish/boardGuard.mjs';
+import { boardsRefusal } from '../../scripts/publish/board-guard.mjs';
 
 const maxShrink = 0.3;
 

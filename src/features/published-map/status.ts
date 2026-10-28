@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 import { fetchIndex, indexIsStale } from '@/features/routes/published/fetch-index';
 import { noop } from '@/shared/utils/noop';
@@ -28,23 +28,43 @@ export function useOffline(): boolean {
  * When the map on screen was published, and whether it came from a stored
  * copy, from the file both hooks already share. Read again whenever the
  * routes load (`loaded`, their list), so a first load that failed and a "Try
- * again" that worked do not leave the notice saying "Offline" with no date.
+ * again" that worked do not leave the notice saying "Offline" with no date:
+ * a new `loaded` is a new subscription, and each subscription reads the
+ * index again (watchMapAge).
  */
 export function useMapAge(loaded: unknown): MapAge {
-  const [age, setAge] = useState<MapAge>({ publishedAt: null, stale: false });
-  useEffect(() => {
-    let live = true;
-    fetchIndex().then(
-      (f) =>
-        live &&
-        setAge((was) => sameAge(was, { publishedAt: f.publishedAt, stale: indexIsStale() })),
-      noop,
-    );
-    return () => {
-      live = false;
-    };
-  }, [loaded]);
-  return age;
+  // `loaded` is the reason to subscribe again, not something the callback reads.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const subscribe = useCallback((notify: () => void) => watchMapAge(notify), [loaded]);
+  return useSyncExternalStore(
+    subscribe,
+    () => mapAge,
+    () => NO_AGE,
+  );
+}
+
+const NO_AGE: MapAge = { publishedAt: null, stale: false };
+let mapAge = NO_AGE;
+/** The fetchIndex() read the age last came from: the same promise says nothing new. */
+let lastRead: Promise<unknown> | null = null;
+const ageListeners = new Set<() => void>();
+
+/** Tells `notify` of every new age, after reading the shared index once more. */
+function watchMapAge(notify: () => void): () => void {
+  ageListeners.add(notify);
+  const read = fetchIndex();
+  if (read !== lastRead) {
+    lastRead = read;
+    read.then((file) => {
+      const now = sameAge(mapAge, { publishedAt: file.publishedAt, stale: indexIsStale() });
+      if (now === mapAge) return;
+      mapAge = now;
+      for (const listener of ageListeners) listener();
+    }, noop);
+  }
+  return () => {
+    ageListeners.delete(notify);
+  };
 }
 
 /** When the map on screen was published, and whether it is a stored copy. */

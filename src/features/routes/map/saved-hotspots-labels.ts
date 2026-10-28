@@ -1,4 +1,9 @@
-import type { MapLibreMap, SymbolLayerSpecification } from 'maplibre-gl';
+import type {
+  ExpressionSpecification,
+  FilterSpecification,
+  MapLibreMap,
+  SymbolLayerSpecification,
+} from 'maplibre-gl';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
@@ -33,13 +38,12 @@ const NAMES_FROM = Math.log2((METRES_PER_PX_AT_ZOOM_0 * SCALE_PX) / NAMES_WITHIN
  * label's `ids` are its boxes' ids joined by commas: a GeoJSON array property
  * reaches the style as a string anyway, and an id is a UUID, so `in` is exact.
  */
-export const labelsOf = (kind: HotspotKind, hidden = '') =>
-  [
-    'all',
-    ['==', ['geometry-type'], 'Point'],
-    ['==', ['get', 'kind'], kind],
-    ...(hidden ? [['!', ['in', hidden, ['get', 'ids']]]] : []),
-  ] as never;
+export const labelsOf = (kind: HotspotKind, hidden = ''): FilterSpecification => {
+  const notHidden: ExpressionSpecification[] = hidden
+    ? [['!', ['in', hidden, ['get', 'ids']]]]
+    : [];
+  return ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'kind'], kind], ...notHidden];
+};
 /**
  * A kind's names' paint (Figma 3837:11308): its content colour, a white halo
  * (Border/plain). One colour a layer, each layer holding one kind's names

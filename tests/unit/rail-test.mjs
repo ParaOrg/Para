@@ -156,7 +156,7 @@ test('a saved box is linked only to the directions that stop at it', () => {
   );
 });
 
-// The publish's older shapes (scripts/publish/withoutLines.mjs): the lines an
+// The publish's older shapes (scripts/publish/without-lines.mjs): the lines an
 // older app does not know, their stations and every link to either left out,
 // the rest as it was — shape 3 without the ferry, shapes 1 and 2 without any line.
 const ROWS = {
@@ -181,7 +181,7 @@ const ROWS = {
 };
 
 test('shape 3 leaves out the ferry, its stations and their links, and keeps the trains', async () => {
-  const { withoutLines, FERRY } = await import('../../scripts/publish/withoutLines.mjs');
+  const { withoutLines, FERRY } = await import('../../scripts/publish/without-lines.mjs');
   const out = withoutLines(ROWS, FERRY);
   assert.deepEqual(
     out.variants.map((v) => v.id),
@@ -200,7 +200,7 @@ test('shape 3 leaves out the ferry, its stations and their links, and keeps the 
 });
 
 test('shapes 1 and 2 leave out every line, their stations and their links', async () => {
-  const { withoutLines, EVERY_LINE } = await import('../../scripts/publish/withoutLines.mjs');
+  const { withoutLines, EVERY_LINE } = await import('../../scripts/publish/without-lines.mjs');
   const out = withoutLines(ROWS, EVERY_LINE);
   assert.deepEqual(
     out.variants.map((v) => v.id),
@@ -217,7 +217,7 @@ test('shapes 1 and 2 leave out every line, their stations and their links', asyn
 
 test('a jeep route that ends at a station is left out with the station, in the shapes that leave the station out', async () => {
   const { withoutLines, EVERY_LINE, FERRY } =
-    await import('../../scripts/publish/withoutLines.mjs');
+    await import('../../scripts/publish/without-lines.mjs');
   // Cogeo – Cubao, 2026-10-19: a jeep ending at the LRT-2 Cubao station. Shapes 1 and 2
   // left the station out and kept the jeep, so its route named a hotspot the file
   // did not have, and the nightly publish's check refused the map.
