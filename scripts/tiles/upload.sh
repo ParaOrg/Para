@@ -10,7 +10,6 @@ pmtiles="$1"
 pointer="$2"
 assets="$3"
 previous="${4:-}"
-KEEP=3
 export AWS_DEFAULT_REGION=auto
 s3() { aws "$@" --endpoint-url "$TILES_R2_ENDPOINT"; }
 
@@ -40,23 +39,16 @@ s3 s3 cp "$pointer" "s3://$TILES_R2_BUCKET/tiles/current.json" \
   --content-type application/json --cache-control 'no-cache' --only-show-errors
 echo "Moved tiles/current.json to $name"
 
-# Only now that current.json has moved. Never the file just uploaded nor the one current.json
-# pointed at before (the Worker may still be serving it); of the rest, the newest fill the remaining
-# slots. Names carry the date, then the run id, so a version sort orders them by age.
-protected="$name"
-if [ -n "$previous" ]; then
-  live="$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).file))' "$previous")"
-  if ! [[ "$live" =~ ^parapo-[0-9]{4}-[0-9]{2}-[0-9]{2}(-[0-9]+)?\.pmtiles$ ]]; then
-    echo "::error::The previous current.json names \"$live\", which is not a build file. Nothing was deleted."
-    exit 1
-  fi
-  protected="$protected"$'\n'"$live"
+# Only now that current.json has moved. old-builds.mjs chooses what goes: never the file just
+# uploaded, the one current.json points at, nor the one it pointed at before (the Worker may still
+# be serving it); of the rest, the newest fill the remaining slots.
+listed="$(s3 s3api list-objects-v2 --bucket "$TILES_R2_BUCKET" --prefix tiles/parapo- \
+  --query 'Contents[].Key' --output text)"
+if ! old="$(printf '%s\n' "$listed" \
+  | node "$(dirname "$0")/old-builds.mjs" "$name" "$pointer" ${previous:+"$previous"})"; then
+  echo "$old"
+  exit 1
 fi
-slots=$((KEEP - $(echo "$protected" | sort -u | wc -l)))
-old="$(s3 s3api list-objects-v2 --bucket "$TILES_R2_BUCKET" --prefix tiles/parapo- \
-  --query 'Contents[].Key' --output text | tr '\t' '\n' \
-  | grep -E '^tiles/parapo-[0-9]{4}-[0-9]{2}-[0-9]{2}(-[0-9]+)?\.pmtiles$' \
-  | grep -vxF -f <(echo "$protected" | sed 's|^|tiles/|') | sort -V | head -n "-$slots" || true)"
 for key in $old; do
   s3 s3 rm "s3://$TILES_R2_BUCKET/$key" --only-show-errors
   echo "Deleted $key"
