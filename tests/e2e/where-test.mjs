@@ -27,7 +27,7 @@
 import { chromium } from 'playwright';
 import { mkdirSync, renameSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, cardsSettled, harness, mapIdle } from './lib/harness.mjs';
 
 const NO_TILES = !!process.env.PARA_NO_TILES;
 const VIDEO = process.env.PARA_VIDEO;
@@ -46,7 +46,7 @@ const stubTiles = (page) => NO_TILES && bareStyle(page);
 const open = async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
-  await page.waitForTimeout(500);
+  await mapIdle(page);
 };
 const overlay = (page) => page.locator('[data-testid="locator-overlay"]');
 const attr = async (page, name) => overlay(page).first().getAttribute(name);
@@ -73,6 +73,23 @@ const onScreen = (page, p) =>
     },
     [p.longitude, p.latitude],
   );
+/** Whether the overlay sits on fix `p`, as the map draws it there: the fix has come in. */
+const overlayOn = async (page, p) => {
+  const box = await overlay(page)
+    .first()
+    .boundingBox()
+    .catch(() => null);
+  if (!box) return false;
+  const at = await page.evaluate(
+    ([lng, lat]) => {
+      const q = window.__map.project([lng, lat]);
+      const r = window.__map.getContainer().getBoundingClientRect();
+      return { x: r.left + q.x, y: r.top + q.y };
+    },
+    [p.longitude, p.latitude],
+  );
+  return Math.hypot(box.x + box.width / 2 - at.x, box.y + box.height / 2 - at.y) < 4;
+};
 const centred = async (page, p) => {
   const s = await onScreen(page, p);
   return Math.hypot(s.x - s.w / 2, s.y - s.h / 2);
@@ -155,7 +172,9 @@ check(
   (await dotMood()) === 'happy',
   `mood ${await dotMood()}`,
 );
-await page.waitForTimeout(1200);
+// The camera's flight to the fix over.
+await until(async () => (await attr(page, 'data-accuracy-m')) === '30');
+await mapIdle(page);
 check(
   '  at 30 m accuracy',
   (await attr(page, 'data-accuracy-m')) === '30',
@@ -209,14 +228,15 @@ check(
   await until(async () => apart(Number(await attr(page, 'data-heading')), 90) < 10),
   `heading ${await attr(page, 'data-heading')}`,
 );
-await page.waitForTimeout(700);
+await until(async () => (await centred(page, p)) < 4);
 check(
   '  and the camera follows',
   (await centred(page, p)) < 4,
   `${(await centred(page, p)).toFixed(1)} px off`,
 );
 await button.click();
-await page.waitForTimeout(900);
+// Tilted, it would be by the time the map is at rest.
+await mapIdle(page);
 check(
   'with no compass read yet, a tap stays TrackedLocation, flat',
   (await mode()) === 'TrackedLocation' && (await camera(page)).pitch < 0.5,
@@ -252,7 +272,8 @@ check(
 const beforePoke = { mode: await mode(), cam: await camera(page) };
 // A real click at its centre; `force`, as it never holds still (it breathes, it may hop).
 await overlay(page).locator('button.locator-dot').click({ force: true });
-await page.waitForTimeout(300);
+await until(async () => ['boing', 'huff'].includes(await dotFace()), 2000);
+await mapIdle(page);
 const afterPoke = await camera(page);
 check(
   'a tap on the dot: a boing or a huff, the camera and the button as they were',
@@ -270,7 +291,7 @@ await page.mouse.move(from.x, from.y);
 await page.mouse.down();
 await page.mouse.move(from.x - 75, from.y - 100, { steps: 8 });
 await page.mouse.up();
-await page.waitForTimeout(400);
+await until(async () => (await mode()) === 'TrackOwnLocation', 3000);
 // The drag starts on the commuter's dot, mid-screen: it pans all the same.
 check(
   'dragging the map, from the dot itself, lets go: TrackOwnLocation',
@@ -280,7 +301,8 @@ check(
 const dragged = await camera(page);
 p = north(p, 20);
 await ctx.setGeolocation({ ...p, accuracy: 10 });
-await page.waitForTimeout(1200);
+await until(() => overlayOn(page, p));
+await mapIdle(page);
 const after = await camera(page);
 check(
   '  a new fix moves the overlay, not the camera',
@@ -291,7 +313,7 @@ check(
 // Google Maps' way (the owner's screenshots, 2026-10-01): the circle is the
 // fix's metres, so zoomed out it shrinks under the dot and is gone.
 await page.evaluate(() => window.__map.jumpTo({ zoom: 12 }));
-await page.waitForTimeout(300);
+await until(async () => (await attr(page, 'data-halo-px')) === '0', 3000);
 check(
   '  zoomed out till the dot covers its circle, the circle is gone',
   (await attr(page, 'data-halo-px')) === '0' &&
@@ -306,7 +328,8 @@ check(
 // A fix indoors, 1 km out: the circle claims 80 m at most (the owner's call, 2026-10-01).
 await page.evaluate(() => window.__map.jumpTo({ zoom: 16 }));
 await ctx.setGeolocation({ ...p, accuracy: 1000 });
-await page.waitForTimeout(1200);
+await until(async () => (await attr(page, 'data-accuracy-m')) === '1000');
+await mapIdle(page);
 const capMpp = await page.evaluate(
   ([lng, lat]) => {
     const east = 100 / (111319.49079 * Math.cos((lat * Math.PI) / 180));
@@ -325,7 +348,8 @@ check(
 // The phone's compass, facing east-south-east.
 await face(page, 120);
 await button.click();
-await page.waitForTimeout(1200);
+await until(async () => (await mode()) === 'TrackedLocation', 3000);
+await mapIdle(page);
 check(
   '  a tap comes back: TrackedLocation, on the fix',
   (await mode()) === 'TrackedLocation' && (await centred(page, p)) < 4,
@@ -342,7 +366,8 @@ check(
 );
 
 await button.click();
-await page.waitForTimeout(1200);
+await until(async () => (await mode()) === 'TracksTheMapBasedOnCompassFacing', 3000);
+await mapIdle(page);
 cam = await camera(page);
 const compassZoom = await zoomFor(page, 200);
 check(
@@ -364,14 +389,15 @@ check(
   `${await attr(page, 'data-heading')}`,
 );
 await face(page, 200);
-await page.waitForTimeout(800);
+await until(async () => apart((await camera(page)).bearing, 200) < 1, 3000);
 check(
   '  and the camera turns with the phone',
   apart((await camera(page)).bearing, 200) < 1,
   `bearing ${(await camera(page)).bearing.toFixed(1)}`,
 );
 await face(page, 201);
-await page.waitForTimeout(500);
+// Turned, it would be by the time the map is at rest.
+await mapIdle(page);
 check(
   '  a shiver under 3° leaves it be',
   apart((await camera(page)).bearing, 200) < 0.5,
@@ -379,7 +405,8 @@ check(
 );
 
 await button.click();
-await page.waitForTimeout(1200);
+await until(async () => (await mode()) === 'TrackedLocation', 3000);
+await mapIdle(page);
 cam = await camera(page);
 check(
   'the next tap puts north up again: TrackedLocation at the zoom it had, flat',
@@ -395,7 +422,8 @@ check(
   `${await button.locator('svg').first().getAttribute('style')}`,
 );
 await button.click();
-await page.waitForTimeout(1200);
+await until(async () => (await mode()) === 'TracksTheMapBasedOnCompassFacing', 3000);
+await mapIdle(page);
 check(
   '  and the next tilts again',
   (await mode()) === 'TracksTheMapBasedOnCompassFacing' &&
@@ -410,7 +438,7 @@ await page.evaluate(
   (c) => window.__map.easeTo({ center: [c.longitude, c.latitude], duration: 0 }, { appMove: true }),
   away,
 );
-await page.waitForTimeout(300);
+await until(async () => (await mode()) === 'TrackOwnLocation', 3000);
 check(
   'an app camera move lets go: TrackOwnLocation',
   (await mode()) === 'TrackOwnLocation',
@@ -419,7 +447,9 @@ check(
 const moved = await camera(page);
 p = north(p, 20);
 await ctx.setGeolocation({ ...p, accuracy: 10 });
-await page.waitForTimeout(1200);
+// Off the screen here, but drawn where the map puts it all the same.
+await until(() => overlayOn(page, p));
+await mapIdle(page);
 const kept = await camera(page);
 check(
   '  and the next fix leaves the camera where the app put it',
@@ -444,7 +474,7 @@ const onLine = await page.evaluate(async () => {
 if (!onLine) {
   check('a route tapped: the dot gazes at it', false, 'no route line on the map');
 } else {
-  await page.waitForTimeout(600);
+  await mapIdle(page);
   const [tx, ty] = await page.evaluate((c) => Object.values(window.__map.project(c)), onLine);
   // Read in the page, not over round trips that the tap's busiest seconds
   // could stretch past the gaze: its heading, and the eyes once their turn
@@ -529,11 +559,12 @@ if (!onLine) {
   } else {
     await button.click();
     await until(async () => (await mode()) === 'TrackedLocation', 3000);
-    await page.waitForTimeout(1200);
+    await mapIdle(page);
     const following = await camera(page);
     const was = await onScreen(page, p);
     await handle.click();
-    await page.waitForTimeout(1500);
+    // The sheet at its new height, and the camera after it.
+    await cardsSettled(page);
     const now = await camera(page);
     const is = await onScreen(page, p);
     check(
@@ -637,7 +668,8 @@ check(
   `${await where3.getAttribute('data-state')}; ${(await note3.count()) ? await note3.innerText() : 'no note'}`,
 );
 await where3.click();
-await page3.waitForTimeout(300);
+// A second watch, it would have started in the tap's own frame.
+await mapIdle(page3);
 check(
   '  a second tap starts no second watch',
   (await page3.evaluate(() => window.__watches)) === 1,
@@ -648,7 +680,7 @@ check(
 // answers only a new request (the owner, 2026-10-13).
 await page3.waitForTimeout(10_500);
 await where3.click();
-await page3.waitForTimeout(300);
+await until(async () => (await page3.evaluate(() => window.__started)) === 2, 3000);
 const watches3 = await page3.evaluate(() => [window.__started, window.__watches]);
 check(
   "  a tap after 10 s with no fix asks again: a new watch in the old one's place",
@@ -741,7 +773,7 @@ check(
 );
 await where4.click();
 await until(async () => (await where4.getAttribute('data-mode')) === 'TrackedLocation', 8000);
-await page4.waitForTimeout(1000);
+await mapIdle(page4);
 check(
   '  a tap comes to the commuter: TrackedLocation',
   (await where4.getAttribute('data-mode')) === 'TrackedLocation',
@@ -751,7 +783,8 @@ check(
   (await where4.getAttribute('aria-label')) === 'Show where I am',
 );
 await where4.click();
-await page4.waitForTimeout(1000);
+// Tilted, it would be by the time the map is at rest.
+await mapIdle(page4);
 const flat = await page4.evaluate(() => window.__map.getPitch());
 check(
   '  the next tap stays TrackedLocation, flat: no compass to turn by',
