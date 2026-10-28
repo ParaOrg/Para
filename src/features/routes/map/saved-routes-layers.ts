@@ -148,7 +148,7 @@ export function addSavedRoutes(
  * hold a route. Asked at each 'render', it is true from the first frame that
  * draws them: MapLibre lays a source's tiles out between frames and fires
  * 'render' after drawing what it has (map.ts, _render). The same test as the
- * cheap-phone timer's "routes drawn" (phoneSpeedParts.mjs, routesOnMap), for
+ * cheap-phone timer's "routes drawn" (phone-speed-parts.mjs, routesOnMap), for
  * the same reason as its last part: the public map's source is added empty
  * when the style is in before the map file, and an empty GeoJSON source loads
  * like any other. In this order, each part only once the one before holds:

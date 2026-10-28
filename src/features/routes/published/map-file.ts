@@ -52,7 +52,7 @@ export const LINES_URL = '/data/lines/';
  *     shape-4 schema refuses, and one such row makes an installed app refuse
  *     the whole map. The publish writes shape 4 without the loops, shape 3
  *     without the ferry too and shapes 1 and 2 without any line
- *     (scripts/publish/shapes.mjs, withoutLines.mjs), each a month at least
+ *     (scripts/publish/shapes.mjs, without-lines.mjs), each a month at least
  *     after the next ships. The line files under `/data/lines/` are the
  *     same for all.
  */
