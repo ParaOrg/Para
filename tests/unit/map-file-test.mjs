@@ -302,8 +302,8 @@ test('the stored-copy header marks the load stale; a network answer does not', a
 });
 
 // The cheap-phone plan, step 20 (2026-10-04): index.html's own script asks
-// for the file as the page is read (vite.config.ts, mapFileEarly) and leaves
-// the answer under EARLY_MAP_FILE, the body read from a copy. This is that
+// for the file as the page is read (scripts/node/vite-plugins/map-file-early.ts)
+// and leaves the answer under EARLY_MAP_FILE, the body read from a copy. This is that
 // script's promise, made the way it makes it.
 const pageAsked = (res) => {
   const q = Promise.resolve(res).then((r) => ({

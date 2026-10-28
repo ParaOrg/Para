@@ -18,12 +18,16 @@ export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/
  * A suite's count. `check` prints PASS or FAIL and its detail, `skip` prints
  * SKIP for a check today's data cannot support, and `tally` lists the
  * skipped checks, prints how many passed, failed and were skipped, then ends
- * the run, non-zero on any failure. A skip does not fail the run: it is
+ * the run, non-zero on any failure. A skip alone does not fail the run: it is
  * counted so a check that quietly stopped proving anything shows in the last
  * line. With `bracketed`, a detail is printed in [brackets], as
  * regression-gestures and snap-test print theirs.
+ *
+ * With `maxSkips`, more skips than that fail the run too: a suite sets it from
+ * the skips it has today, so one more check going quiet shows as a red run,
+ * not only in the last line. Unset, skips never fail it.
  */
-export const harness = ({ bracketed = false } = {}) => {
+export const harness = ({ bracketed = false, maxSkips = Infinity } = {}) => {
   const results = [];
   const skipped = [];
   const check = (name, ok, detail = '') => {
@@ -48,7 +52,12 @@ export const harness = ({ bracketed = false } = {}) => {
     console.log(
       `${blankLine ? '\n' : ''}${results.length - failed} passed, ${failed} failed, ${skipped.length} skipped`,
     );
-    process.exit(failed ? 1 : 0);
+    const tooManySkips = skipped.length > maxSkips;
+    if (tooManySkips)
+      console.log(
+        `More skipped than the ${maxSkips} this suite allows: a check stopped proving anything.`,
+      );
+    process.exit(failed || tooManySkips ? 1 : 0);
   };
   return { check, skip, tally };
 };

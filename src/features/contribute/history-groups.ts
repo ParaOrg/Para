@@ -1,5 +1,5 @@
 import type { Recording } from './recording-schema';
-import type { UploadStatus } from './use-uploads';
+import type { UploadStatus } from './upload-state';
 
 /** The id of History's heading, which focus returns to after a card is deleted from it. */
 export const HISTORY_HEADING_ID = 'history-heading';
