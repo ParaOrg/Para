@@ -29,6 +29,6 @@ The basemap question is settled: Para serves its own tiles (ADR 0007). A readine
 | 03 | [Load test of the map and its tiles](issues/03-load-test-on-staging.md) | Opus | Full run: Workers Paid (07) |
 | 04 | [Tell the owner when something breaks](issues/04-alerts.md) | Opus | – |
 | 05 | [The operations handbook](issues/05-operations-handbook.md) | Opus | – |
-| 06 | [A draft privacy policy](issues/06-privacy-policy-draft.md) | Opus, then the owner | – |
+| 06 | [The privacy policy](issues/06-privacy-policy-draft.md) (the owner's document, 2026-10-29) | Owner, then Opus checks it against the code | – |
 | 07 | [The owner's launch settings](issues/07-owner-launch-settings.md) | Owner | Rate limit: 03 |
 | 08 | [Errors on commuters' phones](issues/08-phone-error-reports.md) | Owner decides | – |

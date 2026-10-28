@@ -15,6 +15,6 @@ Clicks only the owner can make. About an hour in total, in this order. Tick each
 - [ ] **Cloudflare's GitHub access:** GitHub → ParaOrg → Settings → GitHub Apps → Cloudflare Workers and Pages → give it access to Para. This clears the red "Workers Builds: para" check.
 - [ ] **DNSSEC** (optional, recommended): Cloudflare → para-commute.org → DNS → Settings → Enable DNSSEC, then add the DS record it shows at Namecheap.
 - [ ] **The restore rehearsal,** once 05 is written: restore one backup on your computer, following `docs/operations.md`.
-- [ ] **Approve the privacy policy's words** (06), ideally with a lawyer's read.
+- [ ] **Send the privacy policy document** (06), so a session can check it against the code.
 
 ## Comments

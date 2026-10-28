@@ -1,6 +1,6 @@
-# 06: A draft privacy policy
+# 06: The privacy policy
 
-Status: ready-for-agent
+Status: needs-info (owner: they already have a privacy policy document and send it on 2026-10-29; no draft is written)
 Type: task
 Who: Opus, then the owner approves the words
 
@@ -41,3 +41,5 @@ The draft file only.
 - The questions for the owner are listed in the PR.
 
 ## Comments
+
+- 2026-10-28, hub: the owner has a privacy policy already and sends it tomorrow, so no draft is written. Once it arrives, the next step is to check every claim in it against the code and the ADRs (the list above is the checklist), and decide with the owner where it appears.
