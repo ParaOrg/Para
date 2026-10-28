@@ -413,6 +413,8 @@ await page.evaluate(() => {
   window.__map.on('click', () => window.__clicks++);
 });
 let lateClicks = 0;
+/** Taps a late touch undid after the click sent by hand had done them (buttonTap). */
+let tapsUndone = 0;
 /** A frame drawn after the input queue drained: the click a touch makes, if any, has been dispatched by now. */
 const settled = () =>
   page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
@@ -459,8 +461,11 @@ const mapTap = async (x, y) => {
 /**
  * A finger on a button (a chooser row): a real touch, and, when `done()` is
  * still false 1.5 s later, a click on the button, since the runner drops a
- * touch on a button the same way (the sixth CI run). False when there is no
- * such button.
+ * touch on a button the same way (the sixth CI run). Then, once the page has
+ * had its 600 ms, `done()` asked again: on a toggle (a fold, a hintuan's
+ * pick) a touch the runner only delayed lands after that click and undoes
+ * it, so the click is sent again, up to three in all. False when there is
+ * no such button.
  */
 const buttonTap = async (locator, done) => {
   const b = (await locator.count())
@@ -472,19 +477,25 @@ const buttonTap = async (locator, done) => {
   if (!b) return false;
   await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
   await settled();
-  const until = Date.now() + 1500;
-  while (!(await done()) && Date.now() < until) await page.waitForTimeout(100);
-  if (!(await done())) {
-    tapsByHand++;
-    // Sent straight to the button: Playwright's own click first waits for
-    // the page to hold still, which a runner drawing a phone at three
-    // device pixels per CSS pixel may not do in time (the seventh CI run).
-    await locator.first().dispatchEvent('click');
-    const again = Date.now() + 1500;
-    while (!(await done()) && Date.now() < again) await page.waitForTimeout(100);
+  const doneWithin = async (ms) => {
+    const by = Date.now() + ms;
+    while (!(await done()) && Date.now() < by) await page.waitForTimeout(100);
+    return done();
+  };
+  for (let clicks = 0; ; clicks++) {
+    if (!(await doneWithin(1500)) && clicks < 3) {
+      tapsByHand++;
+      // Sent straight to the button: Playwright's own click first waits for
+      // the page to hold still, which a runner drawing a phone at three
+      // device pixels per CSS pixel may not do in time (the seventh CI run).
+      await locator.first().dispatchEvent('click');
+      continue;
+    }
+    await page.waitForTimeout(600);
+    if ((await done()) || clicks >= 3) return true;
+    // Done, then undone: the touch came after all.
+    tapsUndone++;
   }
-  await page.waitForTimeout(600);
-  return true;
 };
 
 /** Where the camera is: its centre and zoom. */
@@ -4751,7 +4762,7 @@ if (!routeA) {
 // --------------------------------------------------------- 7. housekeeping
 if (tapsByHand)
   console.log(
-    `\n(${tapsByHand} tap(s) needed the click sent by hand: the runner dropped the touch${lateClicks ? `; ${lateClicks} of those got the touch's own click afterwards too` : ''})\n`,
+    `\n(${tapsByHand} tap(s) needed the click sent by hand: the runner dropped the touch${lateClicks ? `; ${lateClicks} of those got the touch's own click afterwards too` : ''}${tapsUndone ? `; ${tapsUndone} undone by a late touch, clicked again` : ''})\n`,
   );
 const odd = await page.evaluate(() => window.__odd ?? []).catch(() => []);
 if (odd.length)
