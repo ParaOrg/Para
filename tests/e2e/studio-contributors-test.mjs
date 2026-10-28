@@ -184,8 +184,8 @@ const open = async (name) => {
   await page.getByText(/On the map: the whole trail/).waitFor({ timeout: 15000 });
 };
 const shot = (name) =>
-  process.env.PARAPO_SHOTS
-    ? page.screenshot({ path: `${process.env.PARAPO_SHOTS}/${name}.png` })
+  process.env.PARA_SHOTS
+    ? page.screenshot({ path: `${process.env.PARA_SHOTS}/${name}.png` })
     : null;
 const writes = () => db.log.filter((r) => r.method !== 'GET' && r.method !== 'HEAD');
 
@@ -278,7 +278,7 @@ const before = writes().length;
 await page.getByRole('button', { name: 'Use this line' }).click();
 await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
 const draft = async () =>
-  page.evaluate(() => JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null'));
+  page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null'));
 await page
   .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
   .catch(() => {});

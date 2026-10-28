@@ -33,7 +33,7 @@ const CONSENT_LINES: readonly ConsentLine[] = [
   {
     id: 'who',
     label: 'Who sees it',
-    text: "ParaPo's editors see your rides and your name, in the studio. Only the owner sees your email and number, to contact you. Never the public.",
+    text: "Para's editors see your rides and your name, in the studio. Only the owner sees your email and number, to contact you. Never the public.",
   },
   {
     id: 'how-long',
@@ -53,7 +53,7 @@ const CONSENT_LINES: readonly ConsentLine[] = [
   {
     id: 'responsible',
     label: 'Who is responsible',
-    text: 'The owner of ParaPo.',
+    text: 'The owner of Para.',
     link: { href: OWNER_PAGE, label: 'Message the owner on Facebook' },
   },
 ];
@@ -78,7 +78,7 @@ export function ConsentPanel({ onAgree, onDecline }: ConsentPanelProps) {
       </h1>
       <p className="text-base/6">
         This page records your route from your phone&apos;s location while it is open. When you save
-        a recording, it is sent to ParaPo.
+        a recording, it is sent to Para.
       </p>
       <dl className="flex flex-col gap-2 text-sm/5">
         {CONSENT_LINES.map(({ id, label, text, link }) => (

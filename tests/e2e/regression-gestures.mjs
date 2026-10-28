@@ -21,9 +21,9 @@ const { check, tally } = harness({ bracketed: true });
 const b = await chromium.launch();
 const page = await b.newPage({ viewport: { width: 1280, height: 800 } });
 let routerCalls = 0;
-// With PARAPO_NODE_FETCH=1 every https request goes through Node's fetch, and
+// With PARA_NODE_FETCH=1 every https request goes through Node's fetch, and
 // the router's are counted as they are served.
-if (process.env.PARAPO_NODE_FETCH) {
+if (process.env.PARA_NODE_FETCH) {
   await nodeFetch(page, (req) => {
     if (/routing\.openstreetmap\.de|route\/v1\/driving/.test(req.url())) routerCalls++;
   });
@@ -61,7 +61,7 @@ const box0 = { x: 0, y: 0 };
 // has a `streets` array (empty on an unnamed road).
 const routed = async () =>
   page.evaluate(() => {
-    const d = JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null');
+    const d = JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null');
     if (!d) return { ok: false, detail: 'no draft in localStorage' };
     const sn = (d.segments ?? []).filter((x) => x?.snap === 'snapped'),
       real = sn.filter((x) => Array.isArray(x.streets) && !x.pending);

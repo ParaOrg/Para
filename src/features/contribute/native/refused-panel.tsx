@@ -36,7 +36,7 @@ export function RefusedPanel({
       </h1>
       <p className="text-base/6">{PERMISSION_REASONS[permission].refused}</p>
       <p className="text-base/6">
-        To change it, open ParaPo’s settings, tap Permissions, then Location or Notifications.
+        To change it, open Para’s settings, tap Permissions, then Location or Notifications.
       </p>
       <div className="flex gap-3">
         <Button variant="primary" label="Open settings" onClick={onOpenSettings} />

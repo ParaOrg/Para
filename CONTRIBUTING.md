@@ -1,6 +1,6 @@
-# Contributing to ParaPo
+# Contributing to Para
 
-Thank you for wanting to help. ParaPo is a map of the jeepney routes of Metro
+Thank you for wanting to help. Para is a map of the jeepney routes of Metro
 Manila: where the jeeps really go and where people really board. You do not
 need to know Manila's jeepneys, or be good at React, to start. Small fixes are
 welcome, and there is a list of easy ones below.
@@ -127,7 +127,7 @@ words above.
 
 ## Reporting a wrong or missing route
 
-The routes are the heart of ParaPo, and local knowledge matters most here.
+The routes are the heart of Para, and local knowledge matters most here.
 
 1. Open [a new issue](https://github.com/ParaOrg/Para/issues/new/choose) and
    pick **Wrong or missing route**.
@@ -149,7 +149,7 @@ What the repo says today:
 - **The route and hotspot data** (`public/data/` and the database it comes
   from) **is under the Open Database License 1.0 (ODbL).** It follows
   OpenStreetMap's roads, which are also ODbL. The credit line the README asks
-  for is "Route data © ParaPo contributors, ODbL".
+  for is "Route data © Para contributors, ODbL".
 
 See "Data and licence" in the [README](README.md#data-and-licence) for the
 details. The repo has no separate contributor agreement, so please only send

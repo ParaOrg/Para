@@ -19,7 +19,7 @@
 // card for it says so and offers no Edit or Delete.
 import { chromium } from 'playwright';
 
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, waitForSource } from './lib/harness.mjs';
 import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
 
@@ -131,11 +131,10 @@ const errors = [];
 async function load(page) {
   await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
-  await page.waitForFunction(
-    async () => ((await window.__src('saved-routes'))?.features?.length ?? 0) > 0,
-    null,
-    { timeout: 30000 },
-  );
+  // The routes too: the studio frames them once, as they first arrive, and a
+  // tap made before that would land where the framing moves the map.
+  if ((await waitForSource(page, 'saved-routes', 30000)).length === 0)
+    throw new Error('the routes did not load in 30 s');
 }
 
 /** An editor's page on the stand-in (shared with the other editor's), with the map loaded. */
@@ -159,7 +158,11 @@ async function editor(id, email, shared) {
 /** Taps the map at a [lng, lat], once the camera is on it. */
 async function tapAt(page, ll, zoom) {
   await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [ll, zoom]);
-  await page.waitForTimeout(500);
+  await page.waitForFunction(
+    (z) => window.__map.getZoom() === z && !window.__map.isMoving() && window.__map.loaded(),
+    zoom,
+    { timeout: 10000 },
+  );
   const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
   const [x, y] = await page.evaluate((c) => {
     const p = window.__map.project(c);
@@ -189,7 +192,10 @@ async function openRouteFromPlace(page) {
 }
 
 const body = async (page) => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-const writesOf = (db) => db.log.filter((r) => r.method !== 'GET' && r.method !== 'HEAD');
+/** The writes in the log, from its `from`th request on. */
+const writesOf = (db, from = 0) =>
+  db.log.slice(from).filter((r) => r.method !== 'GET' && r.method !== 'HEAD');
+const APPROVED_TABLES = ['route', 'route_variant', 'route_stop', 'stop'];
 
 /** Edit route → Done → Update: the editor's own save, which becomes a draft. */
 async function editAndSave(page) {
@@ -211,14 +217,19 @@ check(
   'A, with no draft on the route, is offered Edit route',
   (await a.page.getByRole('button', { name: 'Edit route' }).count()) === 1,
 );
+const logBeforeSave = db.log.length;
 await editAndSave(a.page);
+const approvedWrites = writesOf(db, logBeforeSave).filter((r) => APPROVED_TABLES.includes(r.table));
 check(
   "A's save is a draft under A's id, and the approved route is untouched",
   db.tables.draft.length === 1 &&
     db.tables.draft[0].editor_id === A_ID &&
     db.tables.draft[0].subject_id === ROUTE_ID &&
-    db.tables.route_variant.find((v) => v.id === OUT_ID)?.updated_at === NOW,
-  JSON.stringify(db.tables.draft.map((d) => [d.kind, d.editor_id])),
+    approvedWrites.length === 0,
+  JSON.stringify({
+    drafts: db.tables.draft.map((d) => [d.kind, d.editor_id]),
+    approvedWrites: approvedWrites.map((r) => `${r.method} ${r.table}`),
+  }),
 );
 
 // ---- B opens the same route: looks, cannot change.
@@ -337,27 +348,25 @@ check(
     db.tables.draft.length === 1 &&
     db.tables.draft[0].revision === 1,
 );
-const direct = await b.page
-  .evaluate(
-    async ([url]) => {
-      const r = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${JSON.parse(localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith('-auth-token')))).access_token}`,
-          prefer: 'return=representation',
-        },
-        body: JSON.stringify({ note: 'overwritten' }),
-      });
-      return r.json();
-    },
-    [`${new URL(b.page.url()).origin}/rest/v1/draft?id=eq.eeeeeeee-0000-4000-8000-0000000000aa`],
-  )
-  .catch(() => null);
+const direct = await b.page.evaluate(
+  async ([url]) => {
+    const r = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${JSON.parse(localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith('-auth-token')))).access_token}`,
+        prefer: 'return=representation',
+      },
+      body: JSON.stringify({ note: 'overwritten' }),
+    });
+    return r.json();
+  },
+  [`${new URL(b.page.url()).origin}/rest/v1/draft?id=eq.eeeeeeee-0000-4000-8000-0000000000aa`],
+);
 check(
   "a direct update of A's draft by B changes nothing (draft_update)",
-  db.tables.draft[0].note === null &&
-    (direct === null || (Array.isArray(direct) && direct.length === 0)),
+  db.tables.draft[0].note === null && Array.isArray(direct) && direct.length === 0,
+  JSON.stringify(direct),
 );
 
 // ---- A hotspot's draft is held the same way.
@@ -379,7 +388,7 @@ db.tables.draft.push({
   submitted_at: null,
 });
 // The refused save left B's line on B's device, as any unsaved drawing is; drop it.
-await b.page.addInitScript(() => localStorage.removeItem('parapo.draft.v1'));
+await b.page.addInitScript(() => localStorage.removeItem('para.draft.v1'));
 await load(b.page);
 await tapAt(b.page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
 await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });

@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { tileIdToZxy } from '../../scripts/research/tiles-pmtiles.mjs';
+import { tileIdToZxy } from '../../scripts/tiles/pmtiles.mjs';
 import { createApp } from '../../workers/tiles/src/app.ts';
 import {
   buildPmtiles,
@@ -120,6 +120,21 @@ test('a gzipped tile is stored in the edge cache marked as already encoded', asy
   } finally {
     undo();
   }
+});
+
+test('the build query on a tile address is ignored: same tile, same edge-cache entry', async () => {
+  const { get, bucket, cache } = setup({ withCache: true });
+  const plain = await get('/4/9/6.pbf');
+  const reads = bucket.reads.length;
+  const versioned = await get(`/4/9/6.pbf?v=${FILE}`);
+  const otherBuild = await get('/4/9/6.pbf?v=parapo-2026-11-03.pmtiles');
+  assert.equal(versioned.status, 200);
+  assert.equal(bucket.reads.length, reads, 'answered from the edge cache, not R2');
+  const tileKeys = [...cache.store.keys()].filter((key) => !key.includes('/directory/'));
+  assert.deepEqual(tileKeys, [`https://tiles.internal/${FILE}/4/9/6`]);
+  const bytes = Buffer.from(await plain.arrayBuffer());
+  assert.deepEqual(Buffer.from(await versioned.arrayBuffer()), bytes);
+  assert.deepEqual(Buffer.from(await otherBuild.arrayBuffer()), bytes);
 });
 
 test('If-None-Match with the file etag answers 304', async () => {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
 import {
-  DraftLocksProvider,
   SignIn,
+  StudioSessionProvider,
   skipSignInForTests,
   usePasswordRecovery,
   useSession,
@@ -45,7 +45,7 @@ export function StudioApp() {
     return (
       <div className="relative h-full w-full bg-neutral-100">
         <SignIn
-          title="Sign in to ParaPo Studio"
+          title="Sign in to Para Studio"
           notice={recovery.error ? `Reset link problem: ${recovery.error}` : null}
         />
       </div>
@@ -53,8 +53,8 @@ export function StudioApp() {
   }
 
   return (
-    <DraftLocksProvider>
+    <StudioSessionProvider session={session}>
       <Workshop session={session ?? null} recovery={recovery} />
-    </DraftLocksProvider>
+    </StudioSessionProvider>
   );
 }

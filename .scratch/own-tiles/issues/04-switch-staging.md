@@ -1,6 +1,6 @@
 # 04: Switch staging to our tiles
 
-Status: in-review (the switch is built; the staging-side proofs wait on the site's move)
+Status: resolved (#421; the staging-side proofs run once the `para` Worker serves staging, custom-domain 01)
 Type: task
 Who: Sonnet
 Blocked by: 02, 03

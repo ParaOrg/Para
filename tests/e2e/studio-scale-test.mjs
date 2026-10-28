@@ -332,8 +332,8 @@ console.log(
     .map(([k, n]) => `${k} ×${n}`)
     .join(', ')}`,
 );
-// PARAPO_SCALE_DEBUG=1 lists every request: table, select, offset, bytes, when.
-if (process.env.PARAPO_SCALE_DEBUG)
+// PARA_SCALE_DEBUG=1 lists every request: table, select, offset, bytes, when.
+if (process.env.PARA_SCALE_DEBUG)
   for (const r of asked)
     console.log(
       `    ${r.at.toString().padStart(6)} ms  ${r.table} offset ${r.offset} ${r.one ? 'one ' : ''}${mb(r.bytes)}  select ${r.select.slice(0, 50)}`,
@@ -454,7 +454,7 @@ check(
 // Following a line while drawing reads that line's drawing, once, for it alone.
 await page.evaluate(() => localStorage.clear());
 const start = v.shape.coordinates[Math.floor(v.shape.coordinates.length / 2) - 8];
-await page.evaluate((d) => localStorage.setItem('parapo.draft.v1', JSON.stringify(d)), {
+await page.evaluate((d) => localStorage.setItem('para.draft.v1', JSON.stringify(d)), {
   controlPoints: [start],
   segments: [],
   target: { routeId: null, variantId: null },
@@ -487,14 +487,12 @@ const before = oneRow().length;
 await page.mouse.click(canvas.x + at2[0], canvas.y + at2[1], { button: 'right' });
 const until = Date.now() + 15_000;
 while (Date.now() < until) {
-  const d = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null'),
-  );
+  const d = await page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null'));
   if (d?.borrow) break;
   await page.waitForTimeout(100);
 }
 const draft = await page.evaluate(() =>
-  JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null'),
+  JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null'),
 );
 // Every one-row read of a direction since the right-click: the follow's must
 // be its drawing and nothing more, and there must be just that one.

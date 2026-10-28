@@ -3,7 +3,7 @@
 # order on a disposable Postgres, the contributions migration through its
 # paste file, then what PostgREST needs (a login role) and the preview editor.
 # Refuses anything but a local Docker container.
-#   PSQL="docker exec -i parapo-preview-db psql -U postgres" bash scripts/preview/contributions-db.sh
+#   PSQL="docker exec -i para-preview-db psql -U postgres" bash scripts/preview/contributions-db.sh
 set -euo pipefail
 cd "$(dirname "$0")/../../supabase/verify"
 PSQL=${PSQL:?set PSQL to a psql command for the disposable preview container}

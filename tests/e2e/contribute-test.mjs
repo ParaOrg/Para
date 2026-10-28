@@ -4,7 +4,7 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/contribute-test.mjs
 //
-// PARAPO_SHOTS=dir keeps screenshots of Ready, Recording (papunta, then
+// PARA_SHOTS=dir keeps screenshots of Ready, Recording (papunta, then
 // pabalik), the Save form and Successfully recorded at 393×852.
 //
 // The GPS is a stand-in navigator.geolocation the suite feeds fix by fix, with
@@ -16,7 +16,7 @@ import { fakeContributions } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const SHOTS = process.env.PARAPO_SHOTS;
+const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 
 // Tala's neighbourhood, 14.6°N: a degree of longitude is 107.6 km there.
@@ -75,11 +75,11 @@ async function phone({ consented, earlierConsent = false, granted = false }) {
   // The browser already lets the page read the location, as it does after a first visit's yes.
   if (granted) await context.grantPermissions(['geolocation']);
   const page = await context.newPage();
-  // PARAPO_CPU_THROTTLE=4 runs the page at a quarter of the container's speed, as a slow CI runner is.
-  if (process.env.PARAPO_CPU_THROTTLE) {
+  // PARA_CPU_THROTTLE=4 runs the page at a quarter of the container's speed, as a slow CI runner is.
+  if (process.env.PARA_CPU_THROTTLE) {
     const cdp = await context.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', {
-      rate: Number(process.env.PARAPO_CPU_THROTTLE),
+      rate: Number(process.env.PARA_CPU_THROTTLE),
     });
   }
   await nodeFetch(page);
@@ -88,10 +88,10 @@ async function phone({ consented, earlierConsent = false, granted = false }) {
   await fakeContributions(page);
   await page.addInitScript(GPS);
   if (consented) {
-    await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', '3'));
+    await page.addInitScript(() => localStorage.setItem('para.contribute.consent', '3'));
   }
   if (earlierConsent) {
-    await page.addInitScript(() => localStorage.setItem('parapo.contribute.consent', 'yes'));
+    await page.addInitScript(() => localStorage.setItem('para.contribute.consent', 'yes'));
   }
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -118,7 +118,7 @@ const storedStatus = (page) =>
   page.evaluate(
     () =>
       new Promise((resolve) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onerror = () => resolve(null);
         open.onsuccess = () => {
           const all = open.result.transaction('recordings').objectStore('recordings').getAll();
@@ -213,7 +213,7 @@ const buttons = (page) =>
     );
     check(
       '  it no longer says nothing is sent',
-      !/Nothing is sent anywhere/.test(text) && /sent to ParaPo/.test(text),
+      !/Nothing is sent anywhere/.test(text) && /sent to Para/.test(text),
     );
   }
   // A reload on #history before consent must not send the visitor to History once they agree.
@@ -236,7 +236,7 @@ const buttons = (page) =>
     '  agreeing stores the version of the text agreed to',
     await page.evaluate(() =>
       Object.keys(localStorage).some(
-        (key) => key.startsWith('parapo.contribute.consent') && localStorage.getItem(key) === '3',
+        (key) => key.startsWith('para.contribute.consent') && localStorage.getItem(key) === '3',
       ),
     ),
   );
@@ -769,7 +769,7 @@ const buttons = (page) =>
   const counts = await page.evaluate(
     () =>
       new Promise((resolve) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onsuccess = () => {
           const all = open.result.transaction('recordings').objectStore('recordings').getAll();
           all.onsuccess = () => resolve(all.result.map((r) => r.status));
@@ -1067,7 +1067,7 @@ const stored = (page) =>
   page.evaluate(
     () =>
       new Promise((resolve, reject) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const tx = open.result.transaction(['recordings', 'fixes']);
@@ -1169,7 +1169,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await bareStyle(second);
   await second.addInitScript(GPS);
   await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await second.getByText('ParaPo is open in another tab').waitFor({ timeout: 10000 });
+  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
   check(
     'a second tab does not reopen the ride the first is recording',
     (await second.getByRole('button', { name: 'Resume' }).count()) === 0,
@@ -1180,7 +1180,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   check(
     '  and its Start records nothing: still one recording, and the warning stays',
     (await second.getByRole('group', { name: 'Recording so far' }).count()) === 0 &&
-      (await second.getByText('ParaPo is open in another tab').count()) > 0 &&
+      (await second.getByText('Para is open in another tab').count()) > 0 &&
       both.recordings.length === 1,
     JSON.stringify(both.recordings),
   );

@@ -9,7 +9,7 @@ type FareKind = 'regular' | 'discounted';
  * basemap is: a commuter who never taps it leaves the browser's storage empty, which the commuter
  * test asserts.
  */
-const STORAGE_KEY = 'parapo.fare.v1';
+const STORAGE_KEY = 'para.fare.v1';
 
 function read(): FareKind {
   try {

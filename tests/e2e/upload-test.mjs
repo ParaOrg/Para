@@ -1,5 +1,5 @@
 // The contributor page's uploads, driven by a phone: a saved recording goes to
-// ParaPo on its own, waits out no signal, survives a lost answer and a double
+// Para on its own, waits out no signal, survives a lost answer and a double
 // tap without being stored twice, and its upload can be removed while the
 // phone keeps its copy. Supabase is the in-memory stand-in
 // (lib/fake-contributions.mjs): nothing reaches a real project.
@@ -9,7 +9,7 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/upload-test.mjs
 //
-// PARAPO_SHOTS=dir keeps screenshots of the list's states at 393×852.
+// PARA_SHOTS=dir keeps screenshots of the list's states at 393×852.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
@@ -17,7 +17,7 @@ import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const SHOTS = process.env.PARAPO_SHOTS;
+const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
@@ -88,7 +88,7 @@ async function phone({ studioSession = false, consent = '3', opens = 'start' } =
       if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(signedIn));
     },
     [
-      'parapo.contributor-auth',
+      'para.contributor-auth',
       session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true }),
     ],
   );
@@ -96,7 +96,7 @@ async function phone({ studioSession = false, consent = '3', opens = 'start' } =
     await page.addInitScript((stored) => {
       // Only a first load seeds it, so a reload keeps what the page itself stored.
       if (!sessionStorage.getItem('seeded')) {
-        localStorage.setItem('parapo.contribute.consent', stored);
+        localStorage.setItem('para.contribute.consent', stored);
         sessionStorage.setItem('seeded', 'yes');
       }
     }, consent);
@@ -141,7 +141,7 @@ async function seed(page, recordings) {
   await page.evaluate(
     (rows) =>
       new Promise((resolve, reject) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const tx = open.result.transaction(['recordings', 'fixes'], 'readwrite');
@@ -199,7 +199,7 @@ const storedUpload = (page, id) =>
   page.evaluate(
     (key) =>
       new Promise((resolve) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onsuccess = () => {
           const get = open.result.transaction('recordings').objectStore('recordings').get(key);
           get.onsuccess = () => {
@@ -273,7 +273,7 @@ const groupOf = (page, name) =>
   await page.getByLabel('Start point name').fill('SM Fairview');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  await page.getByText('Uploaded to ParaPo').waitFor({ timeout: 15000 });
+  await page.getByText('Uploaded to Para').waitFor({ timeout: 15000 });
   const [stored] = [...fake.rows.values()];
   check(
     'a saved recording is uploaded on its own, and Successfully recorded says so',
@@ -306,7 +306,7 @@ const groupOf = (page, name) =>
     "  the phone sent as its account, under its own key; the editor's studio session is untouched",
     fake.signIns === 0 &&
       (await page.evaluate((k) => localStorage.getItem(k), STUDIO_KEY)) === studioBefore &&
-      (await page.evaluate(() => localStorage.getItem('parapo.contributor-auth'))) !== null,
+      (await page.evaluate(() => localStorage.getItem('para.contributor-auth'))) !== null,
   );
   await page.getByRole('button', { name: 'Record again' }).click();
   await waitForStatus(page, 'SM Fairview', UPLOADED);
@@ -360,7 +360,7 @@ const groupOf = (page, name) =>
   await page.reload({ waitUntil: 'load' });
   await waitForStatus(page, 'Lost answer', /No signal/);
   check(
-    'an answer lost on the way back reads as not uploaded, though ParaPo has it',
+    'an answer lost on the way back reads as not uploaded, though Para has it',
     fake.rows.size === 1 &&
       (await storedUpload(page, 'aaaaaaaa-0000-4000-8000-000000000002')) === 'none',
   );
@@ -442,7 +442,7 @@ const groupOf = (page, name) =>
   const question = await row(page, 'Remove me').getByRole('group').innerText();
   check(
     'Remove upload asks first, says the phone keeps its copy, and focuses Keep it',
-    question.includes('Remove this recording from ParaPo? The copy on this phone stays.') &&
+    question.includes('Remove this recording from Para? The copy on this phone stays.') &&
       (await page.evaluate(() => document.activeElement?.textContent)) === 'Keep it',
   );
   await shot(page, '3-remove-question');
@@ -457,7 +457,7 @@ const groupOf = (page, name) =>
   await row(page, 'Remove me').getByRole('button', { name: 'Remove', exact: true }).click();
   await waitForStatus(page, 'Remove me', /^Only on this phone \|/);
   check(
-    '  removed from ParaPo; the phone keeps its copy, marked removed',
+    '  removed from Para; the phone keeps its copy, marked removed',
     fake.rows.size === 0 && (await storedUpload(page, id)) === 'removed',
   );
   await page.reload({ waitUntil: 'load' });
@@ -491,14 +491,14 @@ const groupOf = (page, name) =>
     : ['Local one', 'Uploaded one', local, uploaded];
   await act(page, upName, /^Delete from phone/);
   check(
-    "Delete from phone on an uploaded recording says ParaPo's copy stays",
+    "Delete from phone on an uploaded recording says Para's copy stays",
     (await row(page, upName).getByRole('group').innerText()).includes(
-      'Delete this recording from this phone? The copy uploaded to ParaPo stays.',
+      'Delete this recording from this phone? The copy uploaded to Para stays.',
     ),
   );
   await shot(page, '4-delete-question');
   await row(page, upName).getByRole('button', { name: 'Delete', exact: true }).click();
-  // ParaPo's copy is still the account's, so its card stays, now without a copy on this phone.
+  // Para's copy is still the account's, so its card stays, now without a copy on this phone.
   await page.waitForFunction(
     (n) =>
       [...document.querySelectorAll('li')].some(
@@ -517,7 +517,7 @@ const groupOf = (page, name) =>
     `${fake.signIns} sign-ins`,
   );
   check(
-    "  the phone's copy is gone; ParaPo's is not",
+    "  the phone's copy is gone; Para's is not",
     (await storedUpload(page, upId)) === 'gone' && fake.rows.has(upId),
   );
   await act(page, localName, /^Delete from phone/);
@@ -609,7 +609,7 @@ const groupOf = (page, name) =>
   check(
     '  the phone remembers the version agreed to, for this account',
     (await page.evaluate(
-      (id) => localStorage.getItem(`parapo.contribute.consent.${id}`),
+      (id) => localStorage.getItem(`para.contribute.consent.${id}`),
       ACCOUNT_ID,
     )) === '3',
   );
@@ -622,7 +622,7 @@ const groupOf = (page, name) =>
   });
   await page.evaluate(
     ([key, signedIn]) => localStorage.setItem(key, JSON.stringify(signedIn)),
-    ['parapo.contributor-auth', session(other, { email: 'second@example.com', isAccount: true })],
+    ['para.contributor-auth', session(other, { email: 'second@example.com', isAccount: true })],
   );
   await page.reload({ waitUntil: 'load' });
   await SCREENS.consent(page).waitFor();

@@ -11,7 +11,7 @@ export function uploadStatusText(status: UploadStatus, canRemove: boolean): stri
       return 'Uploading…';
     case 'uploaded': {
       const where = canRemove
-        ? 'Uploaded to ParaPo'
+        ? 'Uploaded to Para'
         : 'Uploaded from an earlier sign-in on this phone, so it cannot be removed from here';
       return status.problem ? `${where}. ${status.problem}` : where;
     }
@@ -21,7 +21,7 @@ export function uploadStatusText(status: UploadStatus, canRemove: boolean): stri
       return 'Removing the upload…';
     case 'removed':
       return status.byEditor
-        ? 'Removed from ParaPo by an editor. Kept on this phone'
+        ? 'Removed from Para by an editor. Kept on this phone'
         : 'Upload removed. Kept on this phone';
     case 'held':
       return 'Not uploaded. Kept on this phone';
@@ -30,10 +30,10 @@ export function uploadStatusText(status: UploadStatus, canRemove: boolean): stri
   }
 }
 
-/** The question before deleting the phone's copy: whether a copy stays with ParaPo decides the words. */
+/** The question before deleting the phone's copy: whether a copy stays with Para decides the words. */
 export function deleteFromPhoneQuestion(status: UploadStatus): string {
   if (status.state === 'uploaded') {
-    return 'Delete this recording from this phone? The copy uploaded to ParaPo stays.';
+    return 'Delete this recording from this phone? The copy uploaded to Para stays.';
   }
   if (status.state === 'removed' || status.state === 'unavailable') {
     return 'Delete this recording from this phone? It will be gone for good.';
@@ -42,4 +42,4 @@ export function deleteFromPhoneQuestion(status: UploadStatus): string {
 }
 
 export const REMOVE_UPLOAD_QUESTION =
-  'Remove this recording from ParaPo? The copy on this phone stays.';
+  'Remove this recording from Para? The copy on this phone stays.';

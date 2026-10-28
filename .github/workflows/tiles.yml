@@ -1,4 +1,4 @@
-# The monthly build of ParaPo's own map tiles (.scratch/own-tiles/spec.md, ticket 02): Planetiler's
+# The monthly build of Para's own map tiles (.scratch/own-tiles/spec.md, ticket 02): Planetiler's
 # OpenMapTiles profile over Geofabrik's Philippines extract, clipped to the box the public map can
 # be panned across (METRO_MANILA in map-view.tsx), zoom 0-14, as one PMTiles file. Checked, then
 # uploaded to a private-by-default R2 bucket with the basemap's sprite, glyphs and styles.

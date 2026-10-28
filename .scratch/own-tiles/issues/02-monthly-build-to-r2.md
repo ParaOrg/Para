@@ -1,6 +1,6 @@
 # 02: The monthly build and upload to R2
 
-Status: needs-info (owner: an R2 bucket for tiles and a scoped token, as GitHub secrets)
+Status: resolved (first upload 2026-10-27, run 40483304976; the second, run 40569425946, passed the tile-count comparison)
 Type: task
 Who: Sonnet
 Blocked by: 01

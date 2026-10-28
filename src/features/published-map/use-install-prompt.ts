@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { installApp, useInstallOffer } from './install-offer';
 
 /**
- * The install prompt, on an Android phone that has not installed Para Po,
+ * The install prompt, on an Android phone that has not installed Para,
  * once `isReady` (the routes on the map); "later" hides it until the next visit.
  */
 export function useInstallPrompt(isReady: boolean) {

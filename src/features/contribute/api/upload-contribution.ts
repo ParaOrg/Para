@@ -8,7 +8,7 @@ import { UploadError, problemOf, signInProblemOf, type DatabaseError } from './u
 export function answerError(error: DatabaseError, status: number): UploadError {
   const problem = problemOf(error, status);
   if (problem === 'not-accepting') {
-    console.warn(`ParaPo did not accept the request (HTTP ${status}):`, error.message);
+    console.warn(`Para did not accept the request (HTTP ${status}):`, error.message);
   }
   return new UploadError(problem, error.message);
 }
@@ -62,13 +62,13 @@ export async function uploadContribution(
   if (error) throw answerError(error, status);
   const answer = saveAnswerSchema.safeParse(data);
   if (!answer.success) {
-    console.warn('ParaPo gave an unexpected answer to an upload:', data);
+    console.warn('Para gave an unexpected answer to an upload:', data);
     throw new UploadError('not-accepting', `Unexpected answer: ${String(data)}`);
   }
   return answer.data;
 }
 
-/** The ids of this phone's own uploads still in ParaPo; row security answers no one else's. */
+/** The ids of this phone's own uploads still in Para; row security answers no one else's. */
 export async function uploadsStillThere(): Promise<Set<string>> {
   const client = await requireClient();
   const { data, error, status } = await client.from('contribution').select('id');

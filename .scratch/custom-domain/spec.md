@@ -4,7 +4,7 @@ Written 2026-10-27, after the owner asked to put `main` of `ParaOrg/Para` on the
 
 ## Why
 
-- **One address for commuters.** `www.para-commute.org` is the name people already have; `parapo.<account>.workers.dev` is not something to print on a jeepney.
+- **One address for commuters.** `www.para-commute.org` is the name people already have; `para.<account>.workers.dev` is not something to print on a jeepney.
 - **The tiles cache switches on.** Cloudflare's edge cache works only on a domain of our own, never on `workers.dev` (`workers/tiles/README.md`). Today every tile is an R2 read: 292 ms median and 1.8 s at the 99th percentile for a tile nobody asked for recently, 54 ms once cached (ticket `own-tiles` 04's Comments). `tiles.para-commute.org` is the open item ADR 0007 names before `main` switches to our tiles.
 - **A rate limit on the tiles.** Cloudflare's rate-limiting rules belong to a zone; `workers.dev` has none.
 
@@ -16,7 +16,7 @@ Written 2026-10-27, after the owner asked to put `main` of `ParaOrg/Para` on the
 | DNS (the domain's address book) | Vercel: nameservers `ns1.vercel-dns.com`, `ns2.vercel-dns.com` |
 | The website | Vercel (`server: Vercel`), an older app titled "Para PH" from one of the earlier repos. `para-commute.org` answers `308` to `https://www.para-commute.org/` |
 | Its offline worker | `/sw.js`, cache `para-ph-v20260912`: network-first for page loads, cache-first for `/assets/`, `skipWaiting` and `clients.claim` |
-| The new app | Cloudflare Workers: `parapo` (the site, moving from the old account to Para) and `parapo-tiles` (Para) |
+| The new app | Cloudflare Workers: `para` (the site, moving from the old account to Para) and `para-tiles` (Para) |
 
 The Vercel account the session's connector reaches ("Chupaeng") answers `403` for this domain, so the old project's name and its DNS records are for the owner to read off Vercel (01).
 
@@ -26,10 +26,10 @@ A Worker's custom domain must be a zone in the same Cloudflare account, so the d
 
 | Address | Serves | From |
 | --- | --- | --- |
-| `www.para-commute.org` | The app (`main`) | Worker `parapo`, custom domain |
+| `www.para-commute.org` | The app (`main`) | Worker `para`, custom domain |
 | `para-commute.org` | `301` to `www`, as today | Cloudflare redirect rule |
-| `tiles.para-commute.org` | The tiles, styles, sprite and glyphs, edge-cached | Worker `parapo-tiles`, custom domain |
-| `staging-parapo.para-ph-info.workers.dev` | Staging, unchanged | Worker `parapo`'s preview of `staging` |
+| `tiles.para-commute.org` | The tiles, styles, sprite and glyphs, edge-cached | Worker `para-tiles`, custom domain |
+| `staging-para.para-ph-info.workers.dev` | Staging, unchanged | Worker `para`'s preview of `staging` |
 
 **`www` stays the main address.** An installed app belongs to its exact origin. Phones that installed "Para PH" did so from `https://www.para-commute.org`, so the new app on that origin takes over their icon, while a move to the bare domain would leave those installs pointing at a redirect.
 

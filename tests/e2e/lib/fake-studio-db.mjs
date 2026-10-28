@@ -3,7 +3,9 @@
 // the studio asks for (`route:route(*)`, `route_variant(…)`), inserts, patches,
 // deletes, an upsert that ignores duplicates, a HEAD count, and the two phone
 // block functions. A table the suite does not seed is empty. Every request to
-// /rest/v1/ lands here, so no suite reaches the live project.
+// /rest/v1/ lands here, so no suite reaches the live project. Any other
+// function fails the run with "unknown rpc <name>", rather than being
+// answered as something it is not.
 //
 //   const db = await fakeStudioDb(page, { contribution: [...], hinto: [...], stop: [...] });
 //   await fakeStudioDb(secondPage, {}, db);   a second editor's page on the same rows
@@ -205,6 +207,8 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
       tables.draft = tables.draft.filter((d) => d !== kept);
       return { status: 200, body: { code: 'discarded' } };
     }
+    if (name !== 'block_contributor' && name !== 'unblock_contributor')
+      throw new Error(`unknown rpc ${name}`);
     const phone = tables.contributor.find((c) => c.id === body.target);
     if (!phone) return { status: 404, body: { code: 'P0002', message: 'no_contributor' } };
     if (name === 'block_contributor') {

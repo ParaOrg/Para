@@ -1,6 +1,6 @@
 # System design
 
-How data moves through ParaPo today, in five pictures. For the code's structure, see
+How data moves through Para today, in five pictures. For the code's structure, see
 [the code's structure, generated](architecture.md). The words follow [CONTEXT.md](../CONTEXT.md).
 
 ## 1. The whole system
@@ -14,7 +14,7 @@ flowchart LR
   editor(["Editor or owner"])
   commuter(["Commuter"])
 
-  subgraph site["parapo website on Cloudflare Workers"]
+  subgraph site["para website on Cloudflare Workers"]
     studio["Studio at /studio/"]
     publicmap["Public map at /"]
     files[("Map files: index, line files, signboards")]
@@ -24,7 +24,7 @@ flowchart LR
   publish["Publish: nightly GitHub workflow"]
   repo[("GitHub repo, main branch")]
   osrm["OSRM router (snaps lines to roads)"]
-  tiles["Basemap host: ParaPo tiles server (staging), OpenFreeMap (main)"]
+  tiles["Basemap host: Para tiles server (staging), OpenFreeMap (main)"]
 
   editor --> studio
   studio -- "reads and saves" --> db
@@ -39,9 +39,9 @@ flowchart LR
 
 - The studio and the public map are two pages of one build, served from one place.
 - The public map never talks to Supabase. Its only data is the map files (ADR 0001).
-- The commuter's position stays on the phone. The locator never sends it to ParaPo or stores it.
+- The commuter's position stays on the phone. The locator never sends it to Para or stores it.
   The map does move to it, so the basemap host gets tile requests for that area, as for any map view.
-  With ParaPo's own tiles server that host is ParaPo's (ADR 0007); with OpenFreeMap it is theirs.
+  With Para's own tiles server that host is Para's (ADR 0007); with OpenFreeMap it is theirs.
 
 ## 2. From an edit to a live map
 
@@ -95,7 +95,7 @@ flowchart TD
   copy -- "No" --> fail["Error with Try again"]
   fresh --> update{"New app version waiting?"}
   stale --> update
-  update -- "Yes" --> banner["Banner: Update Para Po. Tap reloads into it."]
+  update -- "Yes" --> banner["Banner: Update Para. Tap reloads into it."]
   update -- "No" --> done(["Map ready"])
   banner --> done
 ```
@@ -135,7 +135,7 @@ What is cached where on the phone:
 | Index, line files, signboard copies      | Publish | JSON and SVG in `public/data/`, in git | Everyone; served by Cloudflare          |
 | Older indexes for installed apps         | Publish | `index.v4.json`, `index.v3.json`, `index.json`, `map.json` | Everyone                            |
 | Cached map, lines, tiles                 | Phone   | Service worker caches                 | That phone only                          |
-| The commuter's position                  | Phone   | Memory only                           | That phone only; never sent to ParaPo or stored |
+| The commuter's position                  | Phone   | Memory only                           | That phone only; never sent to Para or stored |
 
 **RLS in a line:** anyone may read the public tables; only signed-in editors on the editor list
 may write them; GPS traces are each editor's own.

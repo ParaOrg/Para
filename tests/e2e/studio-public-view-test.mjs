@@ -82,7 +82,7 @@ const publicPage = await drawnIds(page);
 
 await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
 await page.locator('label', { hasText: 'Public' }).click();
-const frame = page.frameLocator('iframe[title="Published ParaPo public map"]');
+const frame = page.frameLocator('iframe[title="Published Para public map"]');
 await frame.locator('canvas').first().waitFor();
 const studioFrame = page.frames().find((f) => f !== page.mainFrame() && f.url().includes('/?'));
 const inStudio = await drawnIds(studioFrame);

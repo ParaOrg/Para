@@ -5,7 +5,7 @@ import { readAccountAnswer, writeAccountAnswer } from './account-storage';
 import { EARLIEST_SENT_VERSION } from './consent-version';
 
 // Keyed by the first text that sends unasked: the answer is about recordings older than it.
-const CHOICE_KEY = `parapo.contribute.earlier.${EARLIEST_SENT_VERSION}`;
+const CHOICE_KEY = `para.contribute.earlier.${EARLIEST_SENT_VERSION}`;
 const choiceSchema = z.enum(['send', 'keep']);
 
 /** What the person said about recordings made before they agreed to the current text. */

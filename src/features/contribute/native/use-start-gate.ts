@@ -17,7 +17,7 @@ export type GateStep =
   | { kind: 'refused'; permission: NativePermission }
   | { kind: 'battery'; help: BatteryHelp };
 
-const PROBLEM = 'ParaPo could not check the phone’s permissions. Try Start again.';
+const PROBLEM = 'Para could not check the phone’s permissions. Try Start again.';
 
 export interface StartGate {
   /** The panel to show above Start, or null when Start is plain. */

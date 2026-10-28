@@ -230,6 +230,16 @@ export function useDrawing(
     return joinSegments(drop && last === drop ? segRef.current.slice(0, -1) : segRef.current);
   }, []);
 
+  /**
+   * Whether new points go in ahead of a kept borrowed end (Extend's keep of
+   * the end): the drawing ends on another line, so it is never a loop. Every
+   * change to the join comes with new points, so a render asking this sees it.
+   */
+  const hasJoin = useCallback(
+    () => joinRef.current !== null && cpRef.current.includes(joinRef.current),
+    [],
+  );
+
   const reset = useCallback(() => {
     writePoints([]);
     writeSegments([]);
@@ -479,6 +489,7 @@ export function useDrawing(
     joinGate,
     connect,
     lineNow,
+    hasJoin,
     /** Control points where the route turns back on itself (see findUTurns). */
     uTurns,
     load,

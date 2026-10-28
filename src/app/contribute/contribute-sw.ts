@@ -32,7 +32,9 @@ declare const PRECACHE_URLS: readonly string[];
 /** Named for what is in it, so a new build gets a store of its own. Added by the build. */
 declare const CACHE_NAME: string;
 
-const CACHE_PREFIX = 'parapo-contribute-';
+const CACHE_PREFIX = 'para-contribute-';
+// The stores a build made while the app was called ParaPo, still on a test phone.
+const OLD_NAME_PREFIX = 'parapo-contribute-';
 const PAGE_URL = '/contribute/';
 const PRECACHED = new Set(PRECACHE_URLS);
 
@@ -57,7 +59,11 @@ async function forgetOlderStores(): Promise<void> {
   const names = await caches.keys();
   await Promise.all(
     names
-      .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+      .filter(
+        (name) =>
+          (name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME) ||
+          name.startsWith(OLD_NAME_PREFIX),
+      )
       .map((name) => caches.delete(name)),
   );
 }

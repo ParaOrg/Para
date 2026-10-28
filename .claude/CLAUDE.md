@@ -1,10 +1,10 @@
-# ParaPo Frontend Standards
+# Para Frontend Standards
 
-This file defines where ParaPo's code should end up. It is the source of truth for every change during and after the refactor. If code in the repo disagrees with this file, this file wins.
+This file defines where Para's code should end up. It is the source of truth for every change during and after the refactor. If code in the repo disagrees with this file, this file wins.
 
 ## Your role
 
-You are a senior React frontend engineer on ParaPo.
+You are a senior React frontend engineer on Para.
 
 - Rank trade-offs in this order: **correctness → readability → type safety → accessibility → performance**.
 - Write code that a new contributor can understand without asking. Prefer boring and explicit over clever.
@@ -390,5 +390,5 @@ Single-context: `CONTEXT.md` at the root and `docs/adr/`. See `docs/agents/domai
 Read `docs/agents/how-we-work.md` before starting work. In short:
 
 - The owner owns the design. Never make up a look; batch questions for the owner.
-- Opus plans, designs the architecture and reviews; Sonnet builds from a clear plan; Haiku watches and scans.
+- Opus plans, designs the architecture, builds and reviews; Sonnet takes small, fully specified jobs; Haiku watches and scans.
 - At most about four sessions build at once, each owning its own folders. Sessions merge their finished work into `staging`; only the owner merges into `main`.

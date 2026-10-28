@@ -5,10 +5,10 @@ import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { previewToken } from '../../scripts/preview/review-fixture.mjs';
 import { bareStyle } from './lib/harness.mjs';
-const BASE = process.env.PARAPO_REVIEW_BASE ?? 'http://127.0.0.1:4180';
+const BASE = process.env.PARA_REVIEW_BASE ?? 'http://127.0.0.1:4180';
 if (new URL(BASE).hostname !== '127.0.0.1')
   throw new Error('Review tests require the isolated loopback preview.');
-const out = '/tmp/parapo-review-screenshots';
+const out = '/tmp/para-review-screenshots';
 mkdirSync(out, { recursive: true });
 const api = async (path, options = {}) => {
   const response = await fetch(`${BASE}/api/rest/v1/${path}`, {
@@ -110,7 +110,7 @@ assert.equal(
   'published snapshot contains approved place',
 );
 await page.getByText('Public', { exact: true }).click();
-await page.getByTitle('Published ParaPo public map').waitFor();
+await page.getByTitle('Published Para public map').waitFor();
 await shot('07-public-view');
 await page.getByText('Playground', { exact: true }).click();
 await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
@@ -141,6 +141,9 @@ assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).is
 await shot('09-conflict');
 await page.getByRole('checkbox', { name: /I compared both/ }).check();
 await page.getByRole('button', { name: 'Keep draft for a new review' }).click();
+// The conflict panel closes once the kept draft's new revision is on screen;
+// Approve was already there (disabled), so it says nothing about the keep.
+await page.getByRole('region', { name: 'Resolve conflict' }).waitFor({ state: 'detached' });
 await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
 await page.getByRole('button', { name: 'Discard…' }).click();
 await shot('05-discard');

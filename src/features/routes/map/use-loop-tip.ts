@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -18,8 +18,11 @@ export function useLoopTip(
   trip: Direction | null,
   hotspots: { hotspotsAlong: (directionId: string, line: readonly LngLat[]) => Hotspot[] },
   from: {
-    /** The commuter's place when the trip opens, if the locator has one. */
-    where: CommuterWhere | null;
+    /**
+     * The commuter's place, if the locator has one: read only as the trip
+     * opens, so a ref, which a new fix changes without rendering the page.
+     */
+    where: RefObject<CommuterWhere | null> | null;
     /** The place whose card the trip was opened from, if any. */
     openedFrom: Hotspot | null;
   },
@@ -28,7 +31,7 @@ export function useLoopTip(
   if (trip && isLoop(trip)) {
     if (chosen?.directionId !== trip.id) {
       const along = hotspots.hotspotsAlong(trip.id, directionLine(trip));
-      const near = usableNear(along, from.where);
+      const near = usableNear(along, from.where?.current ?? null);
       setChosen({ directionId: trip.id, tipId: loopTip(along, near, from.openedFrom) });
     }
   } else if (chosen) {

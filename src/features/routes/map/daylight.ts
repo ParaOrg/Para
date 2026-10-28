@@ -20,7 +20,7 @@ import type { Recolour } from './recolour';
  *
  * Everything this does not repaint (labels, rail, boundaries, hospitals and
  * schools, the airport, the shaded relief) is Liberty's own colour, muted
- * (mutedLayer), so ParaPo's routes and hotspots on top still carry the
+ * (mutedLayer), so Para's routes and hotspots on top still carry the
  * strongest colour on the map. The place icons are the exception: they show
  * in full, as Apple's do.
  */

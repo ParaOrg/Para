@@ -4,7 +4,7 @@ import * as z from 'zod/mini';
 import { requireSupabase } from './supabase';
 
 /**
- * Deletes an upload from ParaPo, with its points and hintos. The contributor's
+ * Deletes an upload from Para, with its points and hintos. The contributor's
  * phone keeps its own copy. Throws when nothing was deleted: the upload was
  * already gone, or this account may not delete uploads.
  */

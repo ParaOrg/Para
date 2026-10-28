@@ -12,6 +12,7 @@ import { buildPmtiles, fakeBucket } from './tiles-worker-fixture.mjs';
 
 const OWN = 'https://tiles.example';
 const HEADER = { bounds: [120.6, 14.1, 121.5, 15.05], maxZoom: 14 };
+const BUILD = 'parapo-2026-10-27.pmtiles';
 
 const liberty = () => ({
   version: 8,
@@ -34,10 +35,10 @@ const liberty = () => ({
 });
 
 test('the style reads our tiles, sprite and glyphs and nothing is left on OpenFreeMap', () => {
-  const style = rewriteStyle(liberty(), OWN, HEADER);
+  const style = rewriteStyle(liberty(), OWN, HEADER, BUILD);
   assert.deepEqual(style.sources.openmaptiles, {
     type: 'vector',
-    tiles: [`${OWN}/{z}/{x}/{y}.pbf`],
+    tiles: [`${OWN}/{z}/{x}/{y}.pbf?v=${BUILD}`],
     minzoom: 0,
     maxzoom: 14,
     bounds: HEADER.bounds,
@@ -48,13 +49,13 @@ test('the style reads our tiles, sprite and glyphs and nothing is left on OpenFr
 });
 
 test('no source carries an attribution: the app holds the credit', () => {
-  for (const source of Object.values(rewriteStyle(liberty(), OWN, HEADER).sources)) {
+  for (const source of Object.values(rewriteStyle(liberty(), OWN, HEADER, BUILD).sources)) {
     assert.ok(!('attribution' in source));
   }
 });
 
 test('the natural_earth raster source and its layer are dropped, the other layers stay', () => {
-  const style = rewriteStyle(liberty(), OWN, HEADER);
+  const style = rewriteStyle(liberty(), OWN, HEADER, BUILD);
   assert.deepEqual(Object.keys(style.sources), ['openmaptiles']);
   assert.deepEqual(
     style.layers.map((layer) => layer.id),
@@ -63,7 +64,7 @@ test('the natural_earth raster source and its layer are dropped, the other layer
 });
 
 test('the style takes its maxzoom from the file', () => {
-  const style = rewriteStyle(liberty(), OWN, { ...HEADER, maxZoom: 12 });
+  const style = rewriteStyle(liberty(), OWN, { ...HEADER, maxZoom: 12 }, BUILD);
   assert.equal(style.sources.openmaptiles.maxzoom, 12);
 });
 
@@ -73,7 +74,7 @@ test("OpenFreeMap's real Positron style is rewritten with nothing left on OpenFr
     readFileSync(new URL('./fixtures/openfreemap-positron-style.json', import.meta.url), 'utf8'),
   );
   assert.ok(JSON.stringify(original).includes('tiles.openfreemap.org'));
-  const style = rewriteStyle(original, OWN, HEADER);
+  const style = rewriteStyle(original, OWN, HEADER, BUILD);
   assert.ok(!JSON.stringify(style).includes('openfreemap'));
   assert.deepEqual(Object.keys(style.sources), ['openmaptiles']);
   assert.ok(!('attribution' in style.sources.openmaptiles));
@@ -83,9 +84,17 @@ test("OpenFreeMap's real Positron style is rewritten with nothing left on OpenFr
   assert.equal(style.layers.at(-1).id, original.layers.at(-1).id);
 });
 
+test('a new build means a new address for every tile, so a phone never mixes two builds', () => {
+  const [now] = rewriteStyle(liberty(), OWN, HEADER, BUILD).sources.openmaptiles.tiles;
+  const [next] = rewriteStyle(liberty(), OWN, HEADER, 'parapo-2026-11-03.pmtiles').sources
+    .openmaptiles.tiles;
+  assert.notEqual(now, next);
+  assert.equal(now.split('?')[0], next.split('?')[0]);
+});
+
 test('a style without the openmaptiles source is refused', () => {
   const bad = { version: 8, sources: {}, layers: [] };
-  assert.throws(() => rewriteStyle(bad, OWN, HEADER), /openmaptiles/);
+  assert.throws(() => rewriteStyle(bad, OWN, HEADER, BUILD), /openmaptiles/);
 });
 
 test('GET /styles/liberty serves the stored style rewritten to the request origin', async () => {
@@ -112,7 +121,7 @@ test('GET /styles/liberty serves the stored style rewritten to the request origi
   );
   assert.equal(response.status, 200);
   const style = await response.json();
-  assert.equal(style.sources.openmaptiles.tiles[0], `${OWN}/{z}/{x}/{y}.pbf`);
+  assert.equal(style.sources.openmaptiles.tiles[0], `${OWN}/{z}/{x}/{y}.pbf?v=${BUILD}`);
   assert.deepEqual(style.sources.openmaptiles.bounds, HEADER.bounds);
   assert.ok(!JSON.stringify(style).includes('openfreemap'));
 });
@@ -122,10 +131,10 @@ const ALLOWED = [
   'https://staging-parapo.villaralvorovic2.workers.dev',
   'https://3f2a9c1b-parapo.villaralvorovic2.workers.dev',
   'https://claude-own-tiles-parapo.villaralvorovic2.workers.dev',
-  'https://parapo.para-ph-info.workers.dev',
-  'https://staging-parapo.para-ph-info.workers.dev',
-  'https://3f2a9c1b-parapo.para-ph-info.workers.dev',
-  'https://claude-own-tiles-parapo.para-ph-info.workers.dev',
+  'https://para.para-ph-info.workers.dev',
+  'https://staging-para.para-ph-info.workers.dev',
+  'https://3f2a9c1b-para.para-ph-info.workers.dev',
+  'https://claude-rename-to-para-para.para-ph-info.workers.dev',
   'http://localhost:5173',
 ];
 const REFUSED = [
@@ -135,25 +144,40 @@ const REFUSED = [
   'http://parapo.villaralvorovic2.workers.dev',
   'https://parapo.other-account.workers.dev',
   'https://x-parapo.villaralvorovic2.workers.dev/',
-  'https://parapo.para-ph-info.workers.dev.evil.example',
-  'https://evil-parapo.para-ph-info.workers.dev.evil.example',
-  'http://parapo.para-ph-info.workers.dev',
-  'https://x-parapo.para-ph-info.workers.dev/',
+  'https://para.para-ph-info.workers.dev.evil.example',
+  'https://evil-para.para-ph-info.workers.dev.evil.example',
+  'http://para.para-ph-info.workers.dev',
+  'https://x-para.para-ph-info.workers.dev/',
+  // Look-alikes of a preview: the tiles Worker and its previews, a name with no
+  // hyphen before `para`, an empty branch, and the names that never went live.
+  'https://para-tiles.para-ph-info.workers.dev',
+  'https://evil-para-tiles.para-ph-info.workers.dev',
+  'https://evil-para-x.para-ph-info.workers.dev',
+  'https://evilpara.para-ph-info.workers.dev',
+  'https://evil.para.para-ph-info.workers.dev',
+  'https://-para.para-ph-info.workers.dev',
+  'https://3f2a9c1b-para.para-ph-info.workers.dev.evil.example',
+  'https://3f2a9c1b-para.other-account.workers.dev',
+  'https://parapo.para-ph-info.workers.dev',
+  'https://staging-parapo.para-ph-info.workers.dev',
+  'https://3f2a9c1b-parapo.para-ph-info.workers.dev',
+  'https://para.villaralvorovic2.workers.dev',
+  'https://3f2a9c1b-para.villaralvorovic2.workers.dev',
   'http://localhost:3000',
   'null',
 ];
 
-test('ParaPo origins are allowed and every other origin is not', () => {
+test('Para origins are allowed and every other origin is not', () => {
   for (const origin of ALLOWED) assert.equal(isAllowedOrigin(origin), true, origin);
   for (const origin of REFUSED) assert.equal(isAllowedOrigin(origin), false, origin);
 });
 
 test('the extra origins from vars are allowed too, exactly', () => {
-  const extra = 'https://parapo.example, https://tiles-user.example';
-  assert.equal(isAllowedOrigin('https://parapo.example', extra), true);
+  const extra = 'https://para.example, https://tiles-user.example';
+  assert.equal(isAllowedOrigin('https://para.example', extra), true);
   assert.equal(isAllowedOrigin('https://tiles-user.example', extra), true);
-  assert.equal(isAllowedOrigin('https://parapo.example.evil', extra), false);
-  assert.equal(isAllowedOrigin('https://parapo.example', ''), false);
+  assert.equal(isAllowedOrigin('https://para.example.evil', extra), false);
+  assert.equal(isAllowedOrigin('https://para.example', ''), false);
 });
 
 test("the site's own domain, in EXTRA_ORIGINS, is allowed and look-alikes are not", () => {
@@ -181,7 +205,7 @@ async function ask(headers, method = 'GET') {
   globalThis.caches = undefined;
   return createApp()(
     new Request(`${OWN}/0/0/0.pbf`, { method, headers }),
-    { TILES: fakeBucket(files), EXTRA_ORIGINS: 'https://parapo.example' },
+    { TILES: fakeBucket(files), EXTRA_ORIGINS: 'https://para.example' },
     { waitUntil() {} },
   );
 }
@@ -204,9 +228,9 @@ test('another origin is refused and gets no CORS headers', async () => {
 });
 
 test('a preflight from an allowed extra origin is answered; from another it is refused', async () => {
-  const ok = await ask({ Origin: 'https://parapo.example' }, 'OPTIONS');
+  const ok = await ask({ Origin: 'https://para.example' }, 'OPTIONS');
   assert.equal(ok.status, 204);
-  assert.equal(ok.headers.get('Access-Control-Allow-Origin'), 'https://parapo.example');
+  assert.equal(ok.headers.get('Access-Control-Allow-Origin'), 'https://para.example');
   const no = await ask({ Origin: 'https://evil.example' }, 'OPTIONS');
   assert.equal(no.status, 403);
 });

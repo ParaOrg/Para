@@ -31,7 +31,7 @@ export async function fetchProfile(): Promise<Profile> {
   const { data, error, status } = await untyped.rpc('get_profile');
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
-    console.warn(`ParaPo did not give the profile (HTTP ${status}):`, error.message);
+    console.warn(`Para did not give the profile (HTTP ${status}):`, error.message);
     throw new AccountError('not-accepting', error.message);
   }
   const rows = profileRowsSchema.safeParse(data);

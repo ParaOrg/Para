@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, extname } from 'node:path';
-const root = '/tmp/parapo-review-hosted';
+const root = '/tmp/para-review-hosted';
 const manifest = {};
 function walk(dir, prefix = '') {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -20,5 +20,5 @@ function walk(dir, prefix = '') {
   }
 }
 walk(root);
-writeFileSync('/tmp/parapo-review-assets.json', JSON.stringify({ manifest }));
+writeFileSync('/tmp/para-review-assets.json', JSON.stringify({ manifest }));
 console.log(`${Object.keys(manifest).length} preview assets prepared`);

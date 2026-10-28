@@ -19,7 +19,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The first of three: why ParaPo asks to show the recording notice (Android 13 and up). */
+/** The first of three: why Para asks to show the recording notice (Android 13 and up). */
 export const Notifications: Story = {};
 
 export const Location: Story = { args: { permission: 'location' } };

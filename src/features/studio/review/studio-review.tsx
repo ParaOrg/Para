@@ -7,7 +7,7 @@ const ReviewWorkspace = lazy(() =>
   import('./review-workspace').then((module) => ({ default: module.ReviewWorkspace })),
 );
 
-/** The disabled workflow does not load its query client or review screens. */
+/** Drafts and review, loaded only when the workflow is on. */
 export function StudioReview(props: StudioReviewProps) {
   if (!STUDIO_DRAFTS) return null;
   return (

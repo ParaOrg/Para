@@ -9,22 +9,22 @@ export const PERMISSION_REASONS = {
   notifications: {
     title: 'Show the recording notice',
     reason:
-      'While you record, Android shows a notice that says ParaPo is recording. It is how you know the recording is on.',
+      'While you record, Android shows a notice that says Para is recording. It is how you know the recording is on.',
     refusedTitle: 'The recording notice is off',
     refused:
-      'Without it, ParaPo cannot show its recording notice. You can still record, but the notice that tells you it is on will not show.',
+      'Without it, Para cannot show its recording notice. You can still record, but the notice that tells you it is on will not show.',
   },
   location: {
     title: 'Use your location',
     reason:
-      'ParaPo draws the route you ride from your phone’s location, so it needs to know where you are while you record.',
+      'Para draws the route you ride from your phone’s location, so it needs to know where you are while you record.',
     refusedTitle: 'Location is off',
-    refused: 'ParaPo cannot record a route without your location.',
+    refused: 'Para cannot record a route without your location.',
   },
   backgroundLocation: {
     title: 'Use it all the time',
     reason:
-      'So the recording goes on when the screen is off or another app is open. Choose “Allow all the time”. ParaPo only uses your location between Start and Stop.',
+      'So the recording goes on when the screen is off or another app is open. Choose “Allow all the time”. Para only uses your location between Start and Stop.',
     refusedTitle: '“All the time” is off',
     refused:
       'Without it, recording may stop when the screen turns off or you open another app. It works with the screen on.',

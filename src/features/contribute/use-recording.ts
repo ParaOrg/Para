@@ -18,7 +18,7 @@ import {
 } from './native-fixes';
 import { holdRecorderLock } from './recorder-lock';
 import { downloadRecording, recordingFile } from './recording-file';
-import { backAtStartCount, fixesAfter, fixOfRow, fixOfWatched, rowOfFix } from './recording-fixes';
+import { fixOfRow, rowOfFix, takeWatchedFixes } from './recording-fixes';
 import { withMark } from './recording-marks';
 import { OTHER_WAY, WAY_LABEL, currentWay, type Way } from './recording-rules';
 import { RECORDING_VERSION, type FixRow, type Recording, type RideKind } from './recording-schema';
@@ -111,7 +111,7 @@ export interface RecordingState {
 const STORE_PROBLEM =
   'This phone could not keep the recording. Close other tabs of this page and try again.';
 /** Tells this phone's other tabs a recording was saved, so their lists catch up. */
-const SAVED_CHANNEL = 'parapo-saved-recordings';
+const SAVED_CHANNEL = 'para-saved-recordings';
 
 function tellOtherTabs() {
   if (typeof BroadcastChannel === 'undefined') return;
@@ -121,7 +121,7 @@ function tellOtherTabs() {
 }
 
 const OTHER_TAB_PROBLEM =
-  'ParaPo is open in another tab. Record in that tab, or close it and reload this one.';
+  'Para is open in another tab. Record in that tab, or close it and reload this one.';
 
 /**
  * The page's whole state: what phase it is in, the recording being made and
@@ -285,16 +285,8 @@ export function useRecording(): RecordingState {
     // Fixes that land after the ride stopped itself, before the watch lets go.
     if (!recording || recording.status !== 'recording') return;
     if (isFinishing.current && until === undefined) return;
-    const lastTime = fixesRef.current[fixesRef.current.length - 1]?.time ?? null;
-    const fresh = fixesAfter(watched, lastTime)
-      .filter((fix) => until === undefined || fix.timestamp <= until)
-      .map(fixOfWatched);
-    if (fresh.length === 0) return;
-    const stopCount =
-      recording.hasAutoStopped || until !== undefined
-        ? null
-        : backAtStartCount(fixesRef.current, fresh, recording.switches ?? []);
-    const taken = fresh.slice(0, stopCount ?? fresh.length);
+    const { taken, isBackAtStart } = takeWatchedFixes(fixesRef.current, watched, recording, until);
+    if (taken.length === 0) return;
     const rows = taken.map((fix) => rowOfFix(recording.id, nextSeq.current++, fix));
     const write = putFixes(rows)
       .catch((error: unknown) => {
@@ -307,7 +299,7 @@ export function useRecording(): RecordingState {
     pendingFixWrites.current.add(write);
     setFixList([...fixesRef.current, ...taken]);
     setLocationError(null);
-    if (stopCount !== null) {
+    if (isBackAtStart) {
       setAnnouncement('Back at the start. The recording stopped.');
       finish(taken[taken.length - 1].time, 'form', { hasAutoStopped: true });
     }
@@ -376,7 +368,10 @@ export function useRecording(): RecordingState {
     if (isFinishing.current) return;
     isFinishing.current = true;
     const id = currentRef.current?.id;
-    const pull = id ? readNativeFixes(id).then((kept) => takeFixes(kept, at)) : Promise.resolve();
+    const lastHeld = fixesRef.current[fixesRef.current.length - 1]?.time ?? null;
+    const pull = id
+      ? readNativeFixes(id, lastHeld).then((kept) => takeFixes(kept, at))
+      : Promise.resolve();
     pull
       .catch((error: unknown) => {
         hasNativeLogProblem.current = true;

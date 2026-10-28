@@ -1,17 +1,16 @@
-# ParaPo
+# Para
 
 Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
 
 - **The map:** https://www.para-commute.org — on an Android
-  phone, Chrome offers to install it as **Para Po**; it then opens full screen
+  phone, Chrome offers to install it as **Para**; it then opens full screen
   and keeps working without a signal, showing the routes it last saw. It is
   `main`, and changes only when a release is merged.
-- **Staging:** https://staging-parapo.para-ph-info.workers.dev (moving here from
-  https://staging-parapo.villaralvorovic2.workers.dev) — the
+- **Staging:** https://staging-para.para-ph-info.workers.dev — the
   `staging` branch, each piece of work there as soon as its checks pass,
   before it is merged. For looking: its `/studio/` edits the same database
   as the live one, so routes are edited on the live studio only. Every other
-  branch gets a link of its own, `https://<branch>-parapo.para-ph-info.workers.dev`,
+  branch gets a link of its own, `https://<branch>-para.para-ph-info.workers.dev`,
   kept out of search engines as staging is.
 - **How it is built, and what comes next:** [PLAN.md](PLAN.md). The words the
   app, the plan and the owner use: [CONTEXT.md](CONTEXT.md). Decisions and
@@ -96,7 +95,7 @@ with warnings, and closed by the first run with nothing to report.
 
 ## Map tiles
 
-ParaPo is building its own map tiles so the map no longer depends on
+Para is building its own map tiles so the map no longer depends on
 OpenFreeMap (`.scratch/own-tiles/spec.md`). `.github/workflows/tiles.yml`
 builds them on the 3rd of each month at 02:00 Manila, on "Run workflow" (tick
 **upload**) and on a push to `staging` that changes the workflow or
@@ -162,7 +161,7 @@ OFL 1.1. The map keeps "© OpenMapTiles" and "© OpenStreetMap contributors".
 
 ## Contributing
 
-New here? Start with [CONTRIBUTING.md](CONTRIBUTING.md): how to run ParaPo on
+New here? Start with [CONTRIBUTING.md](CONTRIBUTING.md): how to run Para on
 your computer, the standards, and how to send a pull request (into `staging`,
 not `main`). Small, ready-made tasks are the issues labelled
 [good first issue](https://github.com/ParaOrg/Para/labels/good%20first%20issue).
@@ -181,7 +180,7 @@ is published from — is under the
 (ODbL). You may copy, use and adapt it, including commercially, as long as
 you:
 
-1. **Credit it:** "Route data © ParaPo contributors, ODbL", and OpenStreetMap
+1. **Credit it:** "Route data © Para contributors, ODbL", and OpenStreetMap
    for the roads it follows.
 2. **Share alike:** if you publish an adapted version of the data, publish it
    under the ODbL too.
@@ -190,7 +189,7 @@ you:
 
 The route lines follow OpenStreetMap's road network (snapped with OSRM), so
 the data is a derivative of OpenStreetMap, © OpenStreetMap contributors, also
-under the ODbL. The map tiles are built from the same data: by ParaPo itself on
+under the ODbL. The map tiles are built from the same data: by Para itself on
 staging (`workers/tiles`, ADR 0007), by OpenFreeMap on `main` until staging is released.
 
 Every published version of the map is kept in this repository's history,

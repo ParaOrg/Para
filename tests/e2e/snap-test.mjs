@@ -185,7 +185,7 @@ const settle = async () => {
 const segs = async () =>
   (
     await page.evaluate(async () => {
-      const d = JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null');
+      const d = JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null');
       return ((await window.__src('draw-line'))?.features ?? []).map((f) => {
         const kept = d?.segments?.[f.properties.index];
         return {
@@ -363,7 +363,7 @@ await uTurnChecks('append', s, ['A', 'B', 'C']);
 
 console.log('== Street names');
 const streets = await page.evaluate(async () => {
-  const draft = JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null');
+  const draft = JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null');
   if (!draft) return null;
   const { routeStreets } = await import('/src/features/studio/drawing/streets.ts');
   return routeStreets(draft.segments);

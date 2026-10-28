@@ -350,7 +350,7 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
 
   const frame = useRef(0);
   useEffect(() => {
-    const src = map?.getSource(SRC) as GeoJSONSource | undefined;
+    const src = map?.getSource<GeoJSONSource>(SRC);
     if (!map || !src) return;
     const drawn = lines.filter((l) => l.length > 1);
     if (drawn.length === 0) {

@@ -1,4 +1,4 @@
-const KEY = 'parapo-battery-notice-seen';
+const KEY = 'para-battery-notice-seen';
 
 /** Whether the battery notice was shown already: it is shown once. */
 export function hasSeenBatteryNotice(): boolean {

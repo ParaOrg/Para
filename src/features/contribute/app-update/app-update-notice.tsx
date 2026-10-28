@@ -9,7 +9,7 @@ interface AppUpdateNoticeProps {
 
 /** A newer app is out: a quiet line above Start, or, below the oldest version still allowed, in Start's place. */
 export function AppUpdateNotice({ update, downloadUrl }: AppUpdateNoticeProps) {
-  const text = update === 'required' ? 'Update ParaPo to record' : 'A new version is ready';
+  const text = update === 'required' ? 'Update Para to record' : 'A new version is ready';
   return (
     <div className="flex items-center justify-between gap-3 bg-surface p-3 font-sn-pro text-content-primary">
       <p className="text-base/6">{text}</p>

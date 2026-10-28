@@ -1,4 +1,4 @@
-import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
+import type { ExpressionSpecification, GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
 import { useLayerSwitch } from './layer-switch';
@@ -53,7 +53,7 @@ export function useSavedRoutesLayers(
   // out again, the full lines with it: those are patched in afresh.
   useEffect(() => {
     if (!map) return;
-    const src = map.getSource(SRC) as GeoJSONSource | undefined;
+    const src = map.getSource<GeoJSONSource>(SRC);
     if (!src) return;
     layOutOnce(laidOut, rows, (next) => {
       patched.current = new Map();
@@ -77,7 +77,7 @@ export function useSavedRoutesLayers(
   useEffect(() => {
     if (!map) return;
     const send = () => {
-      const src = map.getSource(SRC) as GeoJSONSource | undefined;
+      const src = map.getSource<GeoJSONSource>(SRC);
       if (!src || lines.size === 0) return;
       const update = unpatched(patched.current, lines);
       if (update.length > 0) void src.updateData({ update });
@@ -100,11 +100,10 @@ export function useSavedRoutesLayers(
   useEffect(() => {
     if (!map || !map.getLayer(ROUTES_LINE)) return;
     applyHidden(hiddenNow, hiddenDirectionId, (hidden) => {
-      const filter = ['!=', ['get', 'id'], hidden] as const;
-      for (const id of [CASING, SELECTED_CASING, SELECTED, HIT]) map.setFilter(id, filter as never);
+      const filter: ExpressionSpecification = ['!=', ['get', 'id'], hidden];
+      for (const id of [CASING, SELECTED_CASING, SELECTED, HIT]) map.setFilter(id, filter);
       // A resting layer keeps its own filter, the line it draws, with the hidden one taken out.
-      for (const id of RESTING_LAYERS)
-        map.setFilter(id, ['all', RESTING_FILTER[id], filter] as never);
+      for (const id of RESTING_LAYERS) map.setFilter(id, ['all', RESTING_FILTER[id], filter]);
     });
   }, [map, hiddenDirectionId]);
 

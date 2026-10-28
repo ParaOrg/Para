@@ -1,5 +1,5 @@
-import { fixesAfter, rowOfFix, fixOfWatched } from '../recording-fixes';
-import { RECORDING_VERSION } from '../recording-schema';
+import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recording-fixes';
+import { RECORDING_VERSION, type Recording } from '../recording-schema';
 import { loadFixes, loadRecordings, putFixes, putRecording } from '../recording-store';
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
@@ -10,7 +10,7 @@ const IMPORT_GIVE_UP_MS = 60_000;
 
 /** One line the emulator test reads from logcat. They are `warn` because lint allows no other. */
 function say(line: string): void {
-  console.warn(`PARAPO_RIDE ${line}`);
+  console.warn(`PARA_RIDE ${line}`);
 }
 
 /**
@@ -39,20 +39,22 @@ async function snapshot(recordingId: string): Promise<string> {
 /**
  * The emulator ride's driver (.github/workflows/contributor-app.yml, scripts/apk/emulator-ride.sh),
  * in a build made with VITE_EMULATOR_RIDE=1 only: the emulator has no account to sign in with, so
- * this starts a recording and the native watch with no taps, writing fixes as the recorder does.
+ * this starts a recording and the native watch with no taps, taking fixes through the recorder's own
+ * step (takeWatchedFixes) and writing them as the recorder does.
  * After the test kills the app and opens it again, the page's own load imports the native log; this
  * waits for that (it polls until the ride holds the log's last fix), reports what the ride then holds, and goes on recording.
  */
 export async function runEmulatorRide(): Promise<void> {
   const open = (await loadRecordings()).find((recording) => recording.status === 'recording');
-  const recordingId = open?.id ?? crypto.randomUUID();
+  let recording: Recording;
   if (open) {
-    await waitForImport(recordingId);
-    say(`imported id=${recordingId} ${await snapshot(recordingId)}`);
+    recording = open;
+    await waitForImport(recording.id);
+    say(`imported id=${recording.id} ${await snapshot(recording.id)}`);
   } else {
-    await putRecording({
+    recording = {
       version: RECORDING_VERSION,
-      id: recordingId,
+      id: crypto.randomUUID(),
       status: 'recording',
       startedAt: Date.now(),
       stoppedAt: null,
@@ -64,20 +66,25 @@ export async function runEmulatorRide(): Promise<void> {
       endPointName: '',
       description: '',
       rideKind: null,
-    });
+    };
+    await putRecording(recording);
   }
 
+  const { id: recordingId } = recording;
   const stored = await loadFixes(recordingId);
-  let lastTime = stored[stored.length - 1]?.time ?? null;
+  const held = stored.map(fixOfRow);
   let nextSeq = stored.length > 0 ? stored[stored.length - 1].seq + 1 : 0;
   await startNativeWatch({
     recordingId,
     onFixes: (watched) => {
-      const fresh = fixesAfter(watched, lastTime);
-      if (fresh.length === 0) return;
-      lastTime = fresh[fresh.length - 1].timestamp;
-      const rows = fresh.map((fix) => rowOfFix(recordingId, nextSeq++, fixOfWatched(fix)));
+      // The recorder's own step (use-recording.ts takeFixes). The scripted ride never switches to
+      // the return, so it never comes back to its start; if it did, the report would say so.
+      const { taken, isBackAtStart } = takeWatchedFixes(held, watched, recording);
+      if (taken.length === 0) return;
+      held.push(...taken);
+      const rows = taken.map((fix) => rowOfFix(recordingId, nextSeq++, fix));
       putFixes(rows).catch((error: unknown) => say(`write-failed ${String(error)}`));
+      if (isBackAtStart) say('error the ride came back to its start');
     },
     onError: (error) => say(`error ${error.message}`),
   });

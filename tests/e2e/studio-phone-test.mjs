@@ -9,7 +9,7 @@
 // what a phone sends it. Points are put down on the saved route with the most
 // coordinates, on its own vertices, so the router has a road to snap to. The
 // router's requests are counted as the browser sends them (or as Node serves
-// them, with PARAPO_NODE_FETCH=1).
+// them, with PARA_NODE_FETCH=1).
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
 import { drawing } from './lib/studio.mjs';
@@ -27,7 +27,7 @@ const ctx = await b.newContext({
 const page = await ctx.newPage();
 let routerCalls = 0;
 const isRouter = (url) => /routing\.openstreetmap\.de|route\/v1\/driving/.test(url);
-if (process.env.PARAPO_NODE_FETCH)
+if (process.env.PARA_NODE_FETCH)
   await nodeFetch(page, (req) => {
     if (isRouter(req.url())) routerCalls++;
   });
@@ -101,7 +101,7 @@ const discard = async () => {
   }
   const yes = page.getByRole('button', { name: 'Discard', exact: true });
   if (await yes.count()) await tapButton(yes);
-  await page.evaluate(() => localStorage.removeItem('parapo.draft.v1'));
+  await page.evaluate(() => localStorage.removeItem('para.draft.v1'));
 };
 
 await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
@@ -635,7 +635,7 @@ if (onLine) {
   await page.waitForTimeout(1500);
   await settle();
   const joined = await page.evaluate(
-    () => JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null')?.borrow ?? null,
+    () => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null')?.borrow ?? null,
   );
   // The tap was on the line, so the join begins where the tap's point was:
   // kept, it would sit on the join's first point.

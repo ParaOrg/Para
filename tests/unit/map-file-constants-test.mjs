@@ -13,12 +13,12 @@ import { mapFileConstants } from '../../scripts/node/map-file-constants.ts';
 
 const bare = `export const MAP_FILE_URL = '/data/index.v5.json'
 const LINES_URL = '/data/lines/'
-export const EARLY_MAP_FILE = '__parapoMapFile'
+export const EARLY_MAP_FILE = '__paraMapFile'
 `;
 const withSemicolons = bare.replace(/'$/gm, "';");
 
 test('the two constants read the same with or without a semicolon after the quote', () => {
-  const expected = { MAP_FILE_URL: '/data/index.v5.json', EARLY_MAP_FILE: '__parapoMapFile' };
+  const expected = { MAP_FILE_URL: '/data/index.v5.json', EARLY_MAP_FILE: '__paraMapFile' };
   assert.deepEqual(mapFileConstants(bare), expected);
   assert.deepEqual(mapFileConstants(withSemicolons), expected);
 });
@@ -46,5 +46,5 @@ test('the committed map-file.ts declares both', () => {
   );
   const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(source);
   assert.equal(MAP_FILE_URL, '/data/index.v5.json');
-  assert.match(EARLY_MAP_FILE, /^__parapo/);
+  assert.match(EARLY_MAP_FILE, /^__para/);
 });
