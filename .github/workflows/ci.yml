@@ -9,13 +9,17 @@
 #      which the build job's architecture step checks); src/app/studio/,
 #      src/features/studio/ and the studio's suites alone skip the public
 #      suites; src/app/public-map/, src/features/published-map/, public/ and
-#      the public suites alone skip the studio's. Anything else — shared code
+#      the public suites alone skip the studio's; src/app/contribute/,
+#      src/features/contribute/ and the contributor page's suites alone run the
+#      build and the contributor page's suites only. Anything else — shared code
 #      (Turnstile and the locator among it), the build, the lockfile, this
 #      file — runs both. A push to main
 #      or staging, the nightly run and "Run workflow" run everything.
 #   2. Every suite at once. Each suite is its own job, so the run takes as
 #      long as the slowest suite, not the sum of them all. commuter-test, the
-#      slowest by far, runs as three parts (COMMUTER_PART, see its top).
+#      slowest by far, runs as three parts (COMMUTER_PART, see its top). What
+#      every job repeats is made once: the build job makes the preview builds
+#      the built-app suites run, and Playwright's Chromium is kept between runs.
 #   3. The drawing suites off the pull request's path. group, regression-
 #      gestures, hotspot, snap, extend and studio-phone draw through the public OSRM demo
 #      router (about one request a second, shared with the world) and read
@@ -70,7 +74,9 @@ jobs:
     outputs:
       public: ${{ steps.scope.outputs.public }}
       studio: ${{ steps.scope.outputs.studio }}
+      contribute: ${{ steps.scope.outputs.contribute }}
       drawing: ${{ steps.scope.outputs.drawing }}
+      preview: ${{ steps.scope.outputs.preview }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -82,36 +88,51 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
+          # The suites that run on a build (preview-suite): every one for the public map, the
+          # contributor page's own alone for the contributor page.
+          ALL_PREVIEWS='[{"suite":"pwa-test","basemap":"openfreemap"},{"suite":"pwa-test","basemap":"own-tiles"},{"suite":"handover-test","basemap":"openfreemap"},{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
+          CONTRIBUTE_PREVIEWS='[{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
           if [ "$EVENT" != "pull_request" ]; then
             echo "public=true" >> "$GITHUB_OUTPUT"
             echo "studio=true" >> "$GITHUB_OUTPUT"
+            echo "contribute=true" >> "$GITHUB_OUTPUT"
             echo "drawing=true" >> "$GITHUB_OUTPUT"
+            echo "preview=$ALL_PREVIEWS" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "drawing=false" >> "$GITHUB_OUTPUT"
           files=$(git diff --name-only "$BASE...$HEAD")
           echo "Changed:"; echo "$files" | sed 's/^/  /'
-          public=false; studio=false
+          public=false; studio=false; contribute=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
             case "$f" in
               docs/architecture.md) public=true; studio=true ;;
               docs/*|*.md) ;;
-              src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs)
                 public=true ;;
+              src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
+                contribute=true ;;
               *) public=true; studio=true ;;
             esac
           done <<< "$files"
+          # The public map's suites include the contributor page's.
+          [ "$public" = true ] && contribute=true
+          preview='[]'
+          [ "$contribute" = true ] && preview=$CONTRIBUTE_PREVIEWS
+          [ "$public" = true ] && preview=$ALL_PREVIEWS
           echo "public=$public" >> "$GITHUB_OUTPUT"
           echo "studio=$studio" >> "$GITHUB_OUTPUT"
-          echo "public=$public studio=$studio"
+          echo "contribute=$contribute" >> "$GITHUB_OUTPUT"
+          echo "preview=$preview" >> "$GITHUB_OUTPUT"
+          echo "public=$public studio=$studio contribute=$contribute"
 
   build:
     name: Build and unit checks
     needs: changes
-    if: needs.changes.outputs.public == 'true' || needs.changes.outputs.studio == 'true'
+    if: needs.changes.outputs.public == 'true' || needs.changes.outputs.studio == 'true' || needs.changes.outputs.contribute == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -137,42 +158,56 @@ jobs:
       # Node's own test runner, no browser: every tests/unit/*-test.mjs.
       - name: The unit checks
         run: npm run test:unit
+      # The builds pwa-test, handover-test and contribute-offline-test run in `vite preview`, made
+      # once here for preview-suite. Each reads the suites' .env.local as well as .env.production
+      # (a build reads both, the latter winning), so it is the build those suites would make.
+      # OpenFreeMap is named for all but pwa-test's own-tiles run, which is built for a stand-in
+      # of the tiles server on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one.
+      - name: The preview builds
+        if: needs.changes.outputs.preview != '[]'
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          echo VITE_STUDIO_DRAFTS=0 >> .env.local
+          VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
+          mv dist preview-openfreemap
+          VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
+          mv dist preview-own-tiles
+          rm .env.local
+      - name: Keep the OpenFreeMap preview build
+        if: needs.changes.outputs.preview != '[]'
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-openfreemap
+          path: preview-openfreemap
+          include-hidden-files: true
+          retention-days: 1
+      - name: Keep the own-tiles preview build
+        if: needs.changes.outputs.public == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-own-tiles
+          path: preview-own-tiles
+          include-hidden-files: true
+          retention-days: 1
 
-  # The pages anyone opens, one job a suite. Each needs only the published map
-  # file and OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door.
+  # The public map's pages, one job a suite, against the dev server. Each needs only the published
+  # map file and OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door.
   public-suite:
-    name: ${{ matrix.suite }}${{ matrix.part && format(' ({0} of 3)', matrix.part) || '' }}${{ matrix.basemap == 'own-tiles' && ' (own tiles)' || '' }}
+    name: ${{ matrix.suite }}${{ matrix.part && format(' ({0} of 3)', matrix.part) || '' }}
     needs: changes
     if: needs.changes.outputs.public == 'true'
     runs-on: ubuntu-latest
-    # commuter-test's first part reached the old 20 on 2026-10-06 (PR #128):
-    # 19 min 49 s, then cut off two seconds after its 753 checks had passed.
+    # commuter-test's first part takes close to 20 minutes, and grows with the
+    # map; 30 leaves it room.
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        suite:
-          [
-            gate-test,
-            phone-test,
-            where-test,
-            scale-test,
-            pwa-test,
-            handover-test,
-            loop-test,
-            contribute-test,
-            contribute-offline-test,
-            upload-test,
-            account-test,
-            forgot-password-test,
-            claim-test,
-            profile-test,
-          ]
-        # The basemap the preview builds draw from. pwa-test runs a second time for Para's own
-        # tiles server, against a stand-in for it (tests/e2e/own-tiles-stand-in.mjs).
-        basemap: [openfreemap]
+        suite: [gate-test, phone-test, where-test, scale-test, loop-test]
         include:
-          - { suite: pwa-test, basemap: own-tiles }
           - { suite: commuter-test, part: 1 }
           - { suite: commuter-test, part: 2 }
           - { suite: commuter-test, part: 3 }
@@ -183,8 +218,93 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins.
-      - run: npx playwright install --with-deps chromium
+      # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
+      # packages are installed every time.
+      - id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.chromium.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Give the dev server the public database address and key
+        # Cloudflare's always-pass Turnstile key in place of the real one, which
+        # answers only real browsers on Para's own hostnames.
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          # The suites written for the recorder and the editor run with uploads
+          # off; upload-test turns them on below, against its stand-in.
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          # and with the studio saving straight to the approved rows, as they
+          # were written for; the review suites run on the isolated preview.
+          echo VITE_STUDIO_DRAFTS=0 >> .env.local
+      - name: Start the dev server
+        run: |
+          npx vite --port 5173 --strictPort > vite.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:5173/ && exit 0
+            sleep 1
+          done
+          echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
+      - name: ${{ matrix.suite }}
+        run: node tests/e2e/${{ matrix.suite }}.mjs
+        env:
+          COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
+      - name: Keep the screenshots and the dev server log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.suite }}${{ matrix.part && format('-{0}', matrix.part) || '' }}-screenshots
+          path: |
+            *.png
+            vite.log
+          if-no-files-found: ignore
+
+  # The contributor page, one job a suite, against the dev server.
+  contribute-suite:
+    name: ${{ matrix.suite }}
+    needs: changes
+    if: needs.changes.outputs.contribute == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          [
+            contribute-test,
+            upload-test,
+            account-test,
+            forgot-password-test,
+            claim-test,
+            profile-test,
+          ]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
+      # packages are installed every time.
+      - id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.chromium.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -201,27 +321,11 @@ jobs:
       # upload-test, account-test, forgot-password-test, claim-test and profile-test turn uploads back on for their own dev server, against a
       # stand-in for Supabase.
       - name: Turn uploads on, for upload-test, account-test, forgot-password-test, claim-test and profile-test
-        if: matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'forgot-password-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test'
+        if: matrix.suite != 'contribute-test'
         run: |
           echo VITE_CONTRIBUTIONS=1 >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-      # pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
-      # These build a preview from `.env.production` (not `.env.local`) and must not depend
-      # on the tiles server (it allows no :4173 or :4174 origin): OpenFreeMap is named here.
-      # `build` above checks the committed host. pwa-test's own-tiles run is built for a stand-in
-      # of Para's own tiles server on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one.
-      - name: Build, for pwa-test, handover-test and contribute-offline-test
-        if: matrix.suite == 'pwa-test' || matrix.suite == 'handover-test' || matrix.suite == 'contribute-offline-test'
-        env:
-          BASEMAP: ${{ matrix.basemap }}
-        run: |
-          if [ "$BASEMAP" = own-tiles ]; then
-            VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
-          else
-            VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
-          fi
       - name: Start the dev server
-        if: matrix.suite != 'pwa-test' && matrix.suite != 'handover-test' && matrix.suite != 'contribute-offline-test'
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
           for i in $(seq 1 60); do
@@ -232,13 +336,76 @@ jobs:
       - name: ${{ matrix.suite }}
         run: node tests/e2e/${{ matrix.suite }}.mjs
         env:
-          PARA_TURNSTILE: ${{ (matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'forgot-password-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test') && '1' || '' }}
-          COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
+          PARA_TURNSTILE: ${{ matrix.suite != 'contribute-test' && '1' || '' }}
       - name: Keep the screenshots and the dev server log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.suite }}${{ matrix.part && format('-{0}', matrix.part) || '' }}${{ matrix.basemap == 'own-tiles' && '-own-tiles' || '' }}-screenshots
+          name: ${{ matrix.suite }}-screenshots
+          path: |
+            *.png
+            vite.log
+          if-no-files-found: ignore
+
+  # The built app: pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start
+  # and stop their own `vite preview` on the build job's preview builds. pwa-test runs a second
+  # time for Para's own tiles server, against a stand-in for it (tests/e2e/own-tiles-stand-in.mjs).
+  # Which of them run is the changes job's `preview`.
+  preview-suite:
+    name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && ' (own tiles)' || '' }}
+    needs: [changes, build]
+    if: needs.changes.outputs.preview != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.changes.outputs.preview) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
+      # packages are installed every time.
+      - id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.chromium.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Give the dev server the public database address and key
+        # Cloudflare's always-pass Turnstile key in place of the real one, which
+        # answers only real browsers on Para's own hostnames.
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          # The suites written for the recorder and the editor run with uploads
+          # off; upload-test turns them on below, against its stand-in.
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          # and with the studio saving straight to the approved rows, as they
+          # were written for; the review suites run on the isolated preview.
+          echo VITE_STUDIO_DRAFTS=0 >> .env.local
+      - name: The preview build
+        uses: actions/download-artifact@v4
+        with:
+          name: preview-${{ matrix.basemap }}
+          path: dist
+      - name: ${{ matrix.suite }}
+        run: node tests/e2e/${{ matrix.suite }}.mjs
+      - name: Keep the screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && '-own-tiles' || '' }}-screenshots
           path: |
             *.png
             vite.log
@@ -276,7 +443,19 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
+      # packages are installed every time.
+      - id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.chromium.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -340,7 +519,19 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
+      # packages are installed every time.
+      - id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.chromium.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -397,15 +588,15 @@ jobs:
   # Passed when everything under them passed or was not needed.
   public:
     name: Build and the public map
-    needs: [changes, build, public-suite]
+    needs: [changes, build, public-suite, contribute-suite, preview-suite]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - env:
-          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }}
+          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }}
         run: |
-          echo "changes, build, public suites: $RESULTS"
+          echo "changes, build, public suites, contributor suites, preview suites: $RESULTS"
           case " $RESULTS " in
             *" failure "*|*" cancelled "*) exit 1 ;;
           esac
