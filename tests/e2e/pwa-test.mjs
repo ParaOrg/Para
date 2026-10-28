@@ -558,13 +558,22 @@ try {
         page.locator('[data-testid="update"]').click(),
       ]);
       await page.waitForTimeout(1500);
-      const after = await page.evaluate(async () => {
-        const reg = await navigator.serviceWorker.getRegistration();
-        return {
-          waiting: !!reg?.waiting,
-          controlled: !!navigator.serviceWorker.controller,
-          button: !!document.querySelector('[data-testid="update"]'),
-        };
+      const readAfter = () =>
+        page.evaluate(async () => {
+          const reg = await navigator.serviceWorker.getRegistration();
+          return {
+            waiting: !!reg?.waiting,
+            controlled: !!navigator.serviceWorker.controller,
+            button: !!document.querySelector('[data-testid="update"]'),
+          };
+        });
+      // The tap's reload can come later than the wait above on a slow runner; a read it cuts off
+      // is read again once that page has loaded.
+      const after = await readAfter().catch(async (e) => {
+        if (!/Execution context was destroyed/.test(String(e))) throw e;
+        await page.waitForLoadState('load');
+        await page.waitForTimeout(1500);
+        return readAfter();
       });
       check(
         'tapping Reload brings the new worker in and the button goes',
