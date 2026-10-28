@@ -272,9 +272,9 @@ import {
 import { lineFileText } from '../../scripts/publish/line-file.mjs';
 import { checkMapData } from '../../scripts/checks/check-map-data.mjs';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 // A flat patch of Tala: metres east and north of a corner, as lng/lat.
 const [X0, Y0] = [121.05, 14.73];
