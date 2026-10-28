@@ -37,7 +37,16 @@
 // compiling no GL program, and asking the map what it landed on once
 // (2026-10-04); and housekeeping.
 import { chromium } from 'playwright';
-import { BASE, harness, nodeFetch, takeHeldReload, waitForSource } from './lib/harness.mjs';
+import {
+  BASE,
+  cardsSettled,
+  harness,
+  mapIdle,
+  nodeFetch,
+  takeHeldReload,
+  until,
+  waitForSource,
+} from './lib/harness.mjs';
 import { routesFraming } from './lib/framing.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import { PAPUNTA_ID, PAPUNTA_TAP, WEST_TERMINAL, serveTwoWayMap } from './fixtures/two-way-map.mjs';
@@ -311,7 +320,9 @@ function liftRecorder() {
       drawn = m.getLayer('saved-routes-line')
         ? m.queryRenderedFeatures({ layers: resting }).length
         : 0;
-    } catch {}
+    } catch {
+      // The map or its style not there yet: nothing drawn so far.
+    }
     window.__lift = { at: Math.round(performance.now()), loaded: !!window.__map, drawn };
   };
   new MutationObserver(look).observe(document, { subtree: true, childList: true });
@@ -403,7 +414,7 @@ else if (!held.socket)
 await page.goto(`${BASE}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 await waitForSource(page, 'saved-routes');
-await page.waitForTimeout(1200);
+await mapIdle(page);
 
 check(
   'no Contributor button is on the public map',
@@ -426,8 +437,6 @@ await page.evaluate(() => {
   window.__map.on('click', () => window.__clicks++);
 });
 let lateClicks = 0;
-/** Taps a late touch undid after the click sent by hand had done them (buttonTap). */
-let tapsUndone = 0;
 /** A frame drawn after the input queue drained: the click a touch makes, if any, has been dispatched by now. */
 const settled = () =>
   page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
@@ -448,10 +457,8 @@ const mapTap = async (x, y) => {
   // sent by hand, and two taps land where one was meant (a local run,
   // 2026-09-25: the second tap replaced the chooser the first had opened).
   await settled();
-  const until = Date.now() + 1500;
-  while ((await page.evaluate(() => window.__clicks)) === before && Date.now() < until)
-    await page.waitForTimeout(100);
-  if ((await page.evaluate(() => window.__clicks)) !== before) return;
+  const clicks = () => page.evaluate(() => window.__clicks);
+  if ((await until(clicks, (n) => n !== before, 1500)) !== before) return;
   tapsByHand++;
   await page.evaluate(
     ([px, py]) => {
@@ -474,11 +481,8 @@ const mapTap = async (x, y) => {
 /**
  * A finger on a button (a chooser row): a real touch, and, when `done()` is
  * still false 1.5 s later, a click on the button, since the runner drops a
- * touch on a button the same way (the sixth CI run). Then, once the page has
- * had its 600 ms, `done()` asked again: on a toggle (a fold, a hintuan's
- * pick) a touch the runner only delayed lands after that click and undoes
- * it, so the click is sent again, up to three in all. False when there is
- * no such button.
+ * touch on a button the same way (the sixth CI run). False when there is no
+ * such button.
  */
 const buttonTap = async (locator, done) => {
   const b = (await locator.count())
@@ -490,25 +494,17 @@ const buttonTap = async (locator, done) => {
   if (!b) return false;
   await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
   await settled();
-  const doneWithin = async (ms) => {
-    const by = Date.now() + ms;
-    while (!(await done()) && Date.now() < by) await page.waitForTimeout(100);
-    return done();
-  };
-  for (let clicks = 0; ; clicks++) {
-    if (!(await doneWithin(1500)) && clicks < 3) {
-      tapsByHand++;
-      // Sent straight to the button: Playwright's own click first waits for
-      // the page to hold still, which a runner drawing a phone at three
-      // device pixels per CSS pixel may not do in time (the seventh CI run).
-      await locator.first().dispatchEvent('click');
-      continue;
-    }
-    await page.waitForTimeout(600);
-    if ((await done()) || clicks >= 3) return true;
-    // Done, then undone: the touch came after all.
-    tapsUndone++;
+  if (!(await until(done, Boolean, 1500))) {
+    tapsByHand++;
+    // Sent straight to the button: Playwright's own click first waits for
+    // the page to hold still, which a runner drawing a phone at three
+    // device pixels per CSS pixel may not do in time (the seventh CI run).
+    await locator.first().dispatchEvent('click');
+    await until(done, Boolean, 1500);
   }
+  // Whatever the tap set going, a sheet or the camera, come to rest.
+  await cardsSettled(page);
+  return true;
 };
 
 /** Where the camera is: its centre and zoom. */
@@ -631,19 +627,17 @@ check(
   /** Lets the file through, and waits for the routes on the map, then for anything their coming moves. */
   const routesCome = async (p, release) => {
     release();
-    const until = Date.now() + 20000;
-    while (Date.now() < until) {
-      const on = await p.evaluate(
-        async () =>
-          ((await window.__map.getSource('saved-routes')?.getData())?.features.length ?? 0) > 0,
-      );
-      if (on) break;
-      await p.waitForTimeout(100);
-    }
-    await p.waitForTimeout(1500);
-    await p
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
-      .catch(() => {});
+    await until(
+      () =>
+        p.evaluate(
+          async () =>
+            ((await window.__map.getSource('saved-routes')?.getData())?.features.length ?? 0) > 0,
+        ),
+      Boolean,
+      20000,
+    );
+    // Their fit, if the map's opening frames them otherwise, and its flight over.
+    await cardsSettled(p);
   };
 
   // With no file to frame on, the old opening; the fit then frames the
@@ -695,7 +689,9 @@ check(
       // Held still before letting go: no fling to carry it on.
       await p.waitForTimeout(250);
       await pdc.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    } catch {}
+    } catch {
+      // The runner refused the touch: the camera reads as unmoved, and the mouse drags instead.
+    }
     await p
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
       .catch(() => {});
@@ -755,10 +751,7 @@ check(
         await p.mouse.up();
         await p.keyboard.up('Shift');
       }
-      await p.waitForTimeout(600);
-      await p
-        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
-        .catch(() => {});
+      await cardsSettled(p);
       const moved = await camOf(p);
       await routesCome(p, release);
       const end = await camOf(p);
@@ -987,7 +980,7 @@ const jumpTo = async (p, center, zoom = ZOOM) => {
       }),
     [center, zoom],
   );
-  await p.waitForTimeout(300);
+  await mapIdle(p);
 };
 // A jump leaves the place in the map's middle, which the sheet at Middle
 // covers: moved up into the quarter of the map above it, where a finger can tap.
@@ -997,7 +990,7 @@ const jumpAboveSheet = async (p, center) => {
     const m = window.__map;
     m.panBy([0, m.project(at).y - m.getContainer().clientHeight / 4], { duration: 0 });
   }, center);
-  await p.waitForTimeout(300);
+  await mapIdle(p);
 };
 /**
  * How many features `layer` draws at canvas point `xy` once it draws any,
@@ -1007,20 +1000,19 @@ const jumpAboveSheet = async (p, center) => {
  * not there yet when the finger came, and the tap hit only the route beside
  * it (the third CI run, 2026-09-25).
  */
-const drawnAt = async (layer, xy, ms = 10000) => {
-  const until = Date.now() + ms;
-  for (;;) {
-    const n = await page.evaluate(
-      ([l, q]) =>
-        window.__map.getLayer(l)
-          ? window.__map.queryRenderedFeatures(q, { layers: [l] }).length
-          : -1,
-      [layer, xy],
-    );
-    if (n !== 0 || Date.now() > until) return n;
-    await page.waitForTimeout(150);
-  }
-};
+const drawnAt = (layer, xy, ms = 10000) =>
+  until(
+    () =>
+      page.evaluate(
+        ([l, q]) =>
+          window.__map.getLayer(l)
+            ? window.__map.queryRenderedFeatures(q, { layers: [l] }).length
+            : -1,
+        [layer, xy],
+      ),
+    (n) => n !== 0,
+    ms,
+  );
 const project = (p, lngLat) =>
   p.evaluate((c) => {
     const q = window.__map.project(c);
@@ -1142,9 +1134,9 @@ const tripChecks = async () => {
   // The rows in sight: folded ones stay in the card, invisible, so that they
   // can close in view (the fold's motion, 2026-09-29).
   const hintuanRows = () => card().locator('[data-testid="trip-hintuan"]:visible').count();
-  /** The rows in sight once the fold has come to rest: it moves for 300 ms at most. */
+  /** The rows in sight once the fold has come to rest. */
   const restingRows = async () => {
-    await page.waitForTimeout(450);
+    await cardsSettled(page);
     return hintuanRows();
   };
   /** How long a row takes to open or fold, as it is now set to. */
@@ -1226,7 +1218,7 @@ const tripChecks = async () => {
         fold,
         async () => (await fold.first().getAttribute('aria-expanded')) === 'true',
       );
-      await page.waitForTimeout(450);
+      await cardsSettled(page);
     }
     const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
     const row = rows.nth(pickedIndex);
@@ -1431,10 +1423,7 @@ const tripChecks = async () => {
         `"${pickedKm}", the sums "${pickWant.km}"`,
       );
     // The glide starts after the card has drawn the pick: let it start, then end.
-    await page.waitForTimeout(200);
-    await page
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-      .catch(() => {});
+    await cardsSettled(page);
     const drawn = await page.evaluate(async (at) => {
       const m = window.__map;
       const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')];
@@ -1666,10 +1655,7 @@ const tripChecks = async () => {
       );
     }
     await buttonTap(pickButton, async () => !(await isPicked()));
-    await page.waitForTimeout(300);
-    await page
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-      .catch(() => {});
+    await cardsSettled(page);
     const camAfterLetGo = await camNow();
     check(
       '  and let go, the camera back where it was before the pick',
@@ -1685,10 +1671,7 @@ const tripChecks = async () => {
     // it slides there at the same zoom (his pick, the same day).
     if (pickWant) {
       const settle = async () => {
-        await page.waitForTimeout(300);
-        await page
-          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-          .catch(() => {});
+        await cardsSettled(page);
       };
       // 150 m on the scale bar, the hintuan halfway up the map above the card, or a screen and a half aside.
       // Done when the map is idle again, as jumpTo is: on a slow machine the
@@ -1904,10 +1887,7 @@ const tripChecks = async () => {
         const endPick = endRow.locator('button[data-testid="trip-hintuan-pick"]');
         await endPick.scrollIntoViewIfNeeded();
         await buttonTap(endPick, () => isSelected(endRow));
-        await page.waitForTimeout(900);
-        await page
-          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-          .catch(() => {});
+        await cardsSettled(page);
         const settled = await sheetState();
         const inView = await page.evaluate(() => {
           const c = window.__map.getCanvas().getBoundingClientRect();
@@ -2032,10 +2012,7 @@ const tripChecks = async () => {
           const nextPick = nextRow.locator('button[data-testid="trip-hintuan-pick"]');
           await nextPick.scrollIntoViewIfNeeded();
           await buttonTap(nextPick, () => isSelected(nextRow));
-          await page.waitForTimeout(900);
-          await page
-            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-            .catch(() => {});
+          await cardsSettled(page);
           const again = await page.evaluate(() => {
             const c = window.__map.getCanvas().getBoundingClientRect();
             const sheetTop = document
@@ -2097,10 +2074,7 @@ const tripChecks = async () => {
             startPick,
             async () => (await startRow.locator('[data-part="end"]').count()) === 1,
           );
-          await page.waitForTimeout(900);
-          await page
-            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-            .catch(() => {});
+          await cardsSettled(page);
           const backMarks = await card().evaluate((c) =>
             [
               ...c.querySelectorAll(
@@ -2199,10 +2173,7 @@ const tripChecks = async () => {
             destinationPick,
             async () => (await destination.getAttribute('data-state')) === 'selected',
           );
-          await page.waitForTimeout(900);
-          await page
-            .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-            .catch(() => {});
+          await cardsSettled(page);
           const kept = await page.evaluate(() => ({
             card: [
               ...document.querySelectorAll(
@@ -2261,10 +2232,7 @@ const tripChecks = async () => {
     } else {
       await pickButton.scrollIntoViewIfNeeded();
       await buttonTap(pickButton, isPicked);
-      await page.waitForTimeout(200);
-      await page
-        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-        .catch(() => {});
+      await cardsSettled(page);
       const stayed = await sheetState();
       const spot = pickWant
         ? await page.evaluate((at) => {
@@ -2334,10 +2302,7 @@ const tripChecks = async () => {
         .getAttribute('data-state');
       await endButton.first().scrollIntoViewIfNeeded();
       await buttonTap(endButton, async () => !(await isPicked()));
-      await page.waitForTimeout(200);
-      await page
-        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-        .catch(() => {});
+      await cardsSettled(page);
       const destination = await card()
         .locator('[data-testid="trip-destination"]')
         .first()
@@ -2399,10 +2364,7 @@ const tripChecks = async () => {
         (await card().locator('[data-testid="trip-origin"]').first().getAttribute('data-state')) ===
         'rest',
     );
-    await page.waitForTimeout(300);
-    await page
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-      .catch(() => {});
+    await cardsSettled(page);
     const camAfterEnd = await camNow();
     check(
       '  where it leaves from, tapped again, lets go, the camera back where it was before the picks',
@@ -2498,7 +2460,7 @@ const tripChecks = async () => {
         fold,
         async () => (await fold.first().getAttribute('aria-expanded')) === 'true',
       );
-      await page.waitForTimeout(450);
+      await cardsSettled(page);
     }
     const any = card().locator('button[data-testid="trip-hintuan-pick"]:visible').first();
     if ((await any.count()) > 0) {
@@ -2566,11 +2528,12 @@ const closeCard = async () => {
     .click({ timeout: 1500 })
     .catch(() => {});
   // The ✕ can be missed while the page is busy drawing; Escape closes a sheet too.
-  for (let i = 0; i < 20 && (await card().count()) > 0; i++) {
-    if (i === 5) await page.keyboard.press('Escape');
-    await page.waitForTimeout(100);
+  const closed = async () => (await card().count()) === 0;
+  if (!(await until(closed, Boolean, 500))) {
+    await page.keyboard.press('Escape');
+    await until(closed, Boolean, 1500);
   }
-  await page.waitForTimeout(300);
+  await cardsSettled(page);
 };
 /**
  * Where a route's box lands once the camera stops: a trip opening takes in
@@ -2797,7 +2760,7 @@ const litIds = (p) => p.evaluate(() => window.__lit('saved-routes'));
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-routes');
-  await page.waitForTimeout(1200);
+  await mapIdle(page);
 }
 
 // How far a pixel reaches on the ground — measured off the map, not looked up.
@@ -2876,7 +2839,7 @@ async function openAlone(d) {
     .first()
     .waitFor({ state: 'visible', timeout: 10000 })
     .catch(() => {});
-  await page.waitForTimeout(2000);
+  await cardsSettled(page);
   return (await openedDirection())?.id === d.id;
 }
 
@@ -2956,7 +2919,7 @@ if (routeA) {
   const [tx, ty] = at(14);
   const camBeforeLineTap = await camNow();
   await mapTap(tx, ty);
-  await page.waitForTimeout(500);
+  await cardsSettled(page);
 
   const text = await cardText();
   check(
@@ -3160,10 +3123,7 @@ if (routeA) {
     const end = tappable[0];
     await jumpAboveSheet(page, end.at);
     await endButton(end.name).locator('[data-part="name"]').click();
-    await page.waitForTimeout(300);
-    await page
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 4000 })
-      .catch(() => {});
+    await cardsSettled(page);
     const opened = await page.evaluate(() => {
       const shown = [...document.querySelectorAll('[data-testid="card"]')].filter((c) => !c.hidden);
       return {
@@ -3221,7 +3181,7 @@ if (routeA) {
     );
   } else {
     await mapTap(far.x, far.y);
-    await page.waitForTimeout(500);
+    await cardsSettled(page);
     check(
       'a tap 40 px away from every line selects nothing',
       (await card().count()) === 0,
@@ -3237,7 +3197,7 @@ if (routeA) {
 // Two routes sharing a road: a vertex of one that lies within 15 m of another's
 // line, with no third route inside the tap box.
 let shared = null;
-for (const [ri, r] of snapshot.routes.entries()) {
+for (const r of snapshot.routes) {
   if (shared) break;
   for (const vi of sampleIndices(r.coords.length, 2000 / Math.max(1, snapshot.routes.length))) {
     const p = r.coords[vi];
@@ -3264,7 +3224,7 @@ if (!shared) {
   const box = await canvasBox();
   await drawnAt('saved-routes-hit', anchor);
   await mapTap(box.x + anchor[0], box.y + anchor[1]);
-  await page.waitForTimeout(600);
+  await cardsSettled(page);
 
   const chooser = page.locator('[data-testid="chooser"]');
   const has = (await chooser.count()) > 0;
@@ -3363,7 +3323,8 @@ if (!shared) {
     `Selected ${await isPicked()}; trip open ${(await trip().count()) > 0}`,
   );
   // The camera stays where it was: a card picked fits nothing (the owner, 2026-10-21).
-  await page.waitForTimeout(500);
+  // Fitted, it would be by the time the card and the camera are at rest.
+  await cardsSettled(page);
   const camAfterCardPick = await camNow();
   check(
     '  and the camera stays where it was: its routes are not fitted',
@@ -3575,7 +3536,7 @@ if (!shared) {
     const anchor2 = await project(page, shared.point);
     const box2 = await canvasBox();
     await mapTap(box2.x + anchor2[0], box2.y + anchor2[1]);
-    await page.waitForTimeout(600);
+    await cardsSettled(page);
     const litTapped = (await litIds(page)) ?? [];
     const pickedAfter = await chooser.locator('[data-state="selected"]').count();
     check(
@@ -3670,7 +3631,7 @@ if (!inside) {
   const anchor = await project(page, point);
   const box = await canvasBox();
   await mapTap(box.x + anchor[0], box.y + anchor[1]);
-  await page.waitForTimeout(600);
+  await cardsSettled(page);
   const chooser = page.locator('[data-testid="chooser"]');
   const text = await cardText();
   check(
@@ -3725,10 +3686,7 @@ if (!inside) {
   } else {
     const from = (await handleTo('max')) ? 'max' : await sheetState();
     await buttonTap(otherRow.first(), async () => (await pressedBox()) === otherId);
-    await page.waitForTimeout(200);
-    await page
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 4000 })
-      .catch(() => {});
+    await cardsSettled(page);
     const at = await project(page, centroidOf(otherPoly.ring));
     const edges = await page.evaluate(() => {
       const c = window.__map.getCanvas().getBoundingClientRect();
@@ -3784,7 +3742,7 @@ if (snapshot.polys.length === 0) {
   const box = await canvasBox();
   const drawn = await drawnAt('saved-stops-fill', inward);
   await mapTap(box.x + anchor[0] + (dx / len) * 15, box.y + anchor[1] + (dy / len) * 15);
-  await page.waitForTimeout(600);
+  await cardsSettled(page);
 
   const text = await cardText();
   check(
@@ -3849,12 +3807,11 @@ const tapHandle = async () => {
   const [x, y] = [hb.x + hb.width / 2, hb.y + hb.height / 2];
   const seen = await pointerdowns();
   await page.touchscreen.tap(x, y);
-  await page.waitForTimeout(450);
-  if ((await pointerdowns()) === seen) {
+  if ((await until(pointerdowns, (n) => n !== seen, 450)) === seen) {
     handleByHand++;
     await handGesture(x, y, []);
-    await page.waitForTimeout(450);
   }
+  await cardsSettled(page);
   return true;
 };
 /**
@@ -3885,7 +3842,7 @@ const dragHandle = async (dy) => {
   } catch (e) {
     return { ok: false, how: `Input.dispatchTouchEvent threw: ${String(e).slice(0, 80)}` };
   }
-  await page.waitForTimeout(450);
+  await cardsSettled(page);
   if ((await sheetState()) !== before || (await card().count()) === 0)
     return { ok: true, how: 'touch' };
   // The sheet ignored the synthetic touch; try the same gesture with a mouse.
@@ -3897,7 +3854,7 @@ const dragHandle = async (dy) => {
   }
   await page.waitForTimeout(150);
   await page.mouse.up();
-  await page.waitForTimeout(450);
+  await cardsSettled(page);
   // Neither made a pointer event: the runner's, as with tapHandle.
   if ((await pointerdowns()) === seen) {
     handleByHand++;
@@ -3906,7 +3863,7 @@ const dragHandle = async (dy) => {
       y,
       Array.from({ length: steps }, (_, i) => y + (dy * (i + 1)) / steps),
     );
-    await page.waitForTimeout(450);
+    await cardsSettled(page);
     return {
       ok: true,
       how: 'by hand (the runner made no pointer events from the touch or the mouse)',
@@ -3926,7 +3883,7 @@ const openSheet = async () => {
   const len = Math.hypot(dx, dy) || 1;
   const box = await canvasBox();
   await mapTap(box.x + anchor[0] + (dx / len) * 15, box.y + anchor[1] + (dy / len) * 15);
-  await page.waitForTimeout(600);
+  await cardsSettled(page);
 };
 /** Each gesture below is judged on its own, so put the sheet back if one broke it. */
 const restore = async (want) => {
@@ -4075,7 +4032,7 @@ if (!hotspot) {
     }
     await page.waitForTimeout(150);
     await page.mouse.up();
-    await page.waitForTimeout(450);
+    await cardsSettled(page);
     // The mouse made no pointer event: the runner's, as with tapHandle. The
     // same drag by hand, then the click a mouse sends after one — on the
     // handle it was held on, where it let go — which is the click this check
@@ -4104,7 +4061,7 @@ if (!hotspot) {
         },
         [x, y + dy],
       );
-      await page.waitForTimeout(450);
+      await cardsSettled(page);
     }
     return true;
   };
@@ -4134,7 +4091,8 @@ if (!hotspot) {
     const [cx, cy] = [cb.x + cb.width / 2, cb.y + cb.height / 2];
     const seen = await pointerdowns();
     await page.touchscreen.tap(cx, cy);
-    await page.waitForTimeout(400);
+    await until(pointerdowns, (n) => n !== seen, 400);
+    await cardsSettled(page);
     // The runner dropped the touch, as tapHandle allows for: the same tap by
     // hand — a press, which ends the watch, then its click — so what is
     // checked is still the watch, not a bare click. The mouse's pointer, as
@@ -4159,7 +4117,7 @@ if (!hotspot) {
         },
         [cx, cy],
       );
-      await page.waitForTimeout(400);
+      await cardsSettled(page);
     }
   }
   check(
@@ -4192,7 +4150,7 @@ if (!withRoutes) {
   const at = await project(page, c);
   const box = await canvasBox();
   await mapTap(box.x + at[0], box.y + at[1]);
-  await page.waitForTimeout(600);
+  await cardsSettled(page);
   // A route under the finger shares the tap: the list asks, and its row opens the box.
   const chooser = page.locator('[data-testid="chooser"]');
   if ((await chooser.count()) > 0) {
@@ -4263,7 +4221,7 @@ if (!withRoutes) {
       [hb.x + hb.width / 2, hb.y + hb.height / 2],
     );
     await settled();
-    await page.waitForTimeout(300);
+    await cardsSettled(page);
     return reached;
   };
   const lateDown = await lateClickTap();
@@ -4303,7 +4261,7 @@ if (!routeA) {
   const box = await canvasBox();
   const camBeforeOpen = await camNow();
   await mapTap(box.x + anchor[0] + perp[0] * 14, box.y + anchor[1] + perp[1] * 14);
-  await page.waitForTimeout(2000);
+  await cardsSettled(page);
   check(
     'a trip opened by a tap leaves the address as it was: no trip link',
     new URL(page.url()).search === '',
@@ -4695,7 +4653,7 @@ await dpage.addInitScript(() => {
 });
 await dpage.goto(`${BASE}/`, { waitUntil: 'load' });
 await dpage.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
-await dpage.waitForTimeout(1500);
+await mapIdle(dpage);
 
 // The public map has no +, − or compass for a mouse either since 2026-09-29
 // (the owner: "annoying for users"); the studio keeps them.
@@ -4711,7 +4669,6 @@ check(
 if (!routeA) {
   skip('a mouse click 4 px beside the line selects it', 'no lone route vertex to click');
 } else {
-  const r = routeA.route;
   const neighbour = routeA.neighbour;
   await jumpTo(dpage, routeA.point);
   const anchor = await project(dpage, routeA.point);
@@ -4720,7 +4677,7 @@ if (!routeA) {
   const dCard = dpage.locator('[data-testid="card"]');
 
   await dpage.mouse.click(box.x + anchor[0] + perp[0] * 4, box.y + anchor[1] + perp[1] * 4);
-  await dpage.waitForTimeout(500);
+  await cardsSettled(dpage);
   check(
     'a mouse click 4 px beside the line selects it',
     (await dCard.count()) > 0,
@@ -4754,7 +4711,7 @@ if (!routeA) {
   const anchor2 = await project(dpage, routeA.point);
   const perp2 = await perpendicular(dpage, routeA.point, neighbour, routeA.route.coords, 20);
   await dpage.mouse.click(box.x + anchor2[0] + perp2[0] * 20, box.y + anchor2[1] + perp2[1] * 20);
-  await dpage.waitForTimeout(500);
+  await cardsSettled(dpage);
   check(
     'a mouse click 20 px away does not — the fine box is ±5 px on an 18 px hit line',
     (await dCard.count()) === 0,
@@ -4766,13 +4723,11 @@ if (!routeA) {
   // listeners since 2026-10-04 (bindHover, tap.ts); a desktop keeps them.
   const cursor = () => dpage.evaluate(() => window.__map.getCanvas().style.cursor);
   await dpage.mouse.move(box.x + anchor2[0], box.y + anchor2[1], { steps: 4 });
-  await dpage.waitForTimeout(300);
-  const over = await cursor();
+  const over = await until(cursor, (c) => c === 'pointer', 2000);
   await dpage.mouse.move(box.x + anchor2[0] + perp2[0] * 20, box.y + anchor2[1] + perp2[1] * 20, {
     steps: 4,
   });
-  await dpage.waitForTimeout(300);
-  const off = await cursor();
+  const off = await until(cursor, (c) => c === '', 2000);
   check(
     'a mouse over the line turns the pointer to a hand, and off it back',
     over === 'pointer' && off === '',
@@ -4783,7 +4738,7 @@ if (!routeA) {
 // --------------------------------------------------------- 7. housekeeping
 if (tapsByHand)
   console.log(
-    `\n(${tapsByHand} tap(s) needed the click sent by hand: the runner dropped the touch${lateClicks ? `; ${lateClicks} of those got the touch's own click afterwards too` : ''}${tapsUndone ? `; ${tapsUndone} undone by a late touch, clicked again` : ''})\n`,
+    `\n(${tapsByHand} tap(s) needed the click sent by hand: the runner dropped the touch${lateClicks ? `; ${lateClicks} of those got the touch's own click afterwards too` : ''})\n`,
   );
 const odd = await page.evaluate(() => window.__odd ?? []).catch(() => []);
 if (odd.length)
