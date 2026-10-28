@@ -12,9 +12,10 @@
 // saved; a new route with its slot and its links to the two hintuans; the
 // return trip from the card's SWITCH, filling the slot; Edit route on the
 // approved revision; a signboard into the route's draft and out again;
-// Delete, approved in the same press (the stand-in refusing as 0022 does
-// when the base is stale), emptying one way while the route keeps the other,
-// then the last way, which takes the route down; an ikot with no ends; a
+// Delete, approved in the same press, and refused in words when another
+// editor's change makes its base stale; then Delete emptying one way while
+// the route keeps the other, then the last way, which takes the route down;
+// an ikot with no ends; a
 // saved hintuan edited twice, the second edit updating the draft kept for it;
 // a hintuan taken down; and two places made from the save panel's pickers,
 // each its own draft, with the route's draft ending at them. Between flows
@@ -465,6 +466,37 @@ check(
 );
 check('  and leaves the file in the bucket: the approved map may still list it', bucket.has(board));
 await approveAll();
+
+// ---- 4b. An approval on a stale base is refused, and the studio says so
+// Another editor's change lands between Delete's draft and its approval: the
+// route's revision moves on, so 0022 answers conflict and applies nothing.
+const CONFLICT_SAID =
+  'Approved data changed since this draft began. Refresh and compare before making a new draft.';
+await openCard(OUT[1]);
+db.meanwhile = {
+  when: (method, table) => method === 'POST' && table === 'approve_reviewed_draft',
+  run: () => {
+    const row = tables.route.find((r) => r.id === route?.id);
+    if (row) row.revision += 1;
+  },
+};
+n = log.length;
+await page.getByRole('button', { name: 'Delete' }).click();
+await waitFor(async () => (await body()).includes(CONFLICT_SAID), 15000);
+w = writesSince(n);
+check(
+  'an approval on a stale base is refused as conflict, and the studio says so in words',
+  (await body()).includes(CONFLICT_SAID) && rpcs(w, 'approve_reviewed_draft').length === 1,
+  `${said(w)} · ${(await body()).slice(-200)}`,
+);
+check(
+  '  and nothing is applied: the direction keeps its line, the draft waits',
+  !!tables.route_variant.find((v) => v.id === outV?.id)?.shape &&
+    draftOf('route', route?.id)?.status === 'pending',
+);
+// The refused draft is the editor's to discard; the stand-in drops it so the next flow starts clean.
+tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
+await load();
 
 // ---- 5. Delete a direction: a draft approved in the same press
 await openCard(OUT[1]);

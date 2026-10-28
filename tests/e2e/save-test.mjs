@@ -1582,7 +1582,16 @@ await dismissToasts();
   await waitFor(async () => (await page.getByRole('button', { name: 'Delete' }).count()) > 0);
   n = log.length;
   await page.getByRole('button', { name: 'Delete' }).click();
-  await waitFor(async () => !tables.route.some((r) => r.id === ikot?.id));
+  // Done when the studio says so: deleteDirection's five requests run one after
+  // another (empty the line, unlink, unborrow, count, delete the route), and
+  // only then does the card close. On a slow runner they take more than a few
+  // seconds, so the wait is for that state, not for a fixed time.
+  await waitFor(
+    async () =>
+      !tables.route.some((r) => r.id === ikot?.id) &&
+      (await page.getByRole('button', { name: 'Edit route' }).count()) === 0,
+    30000,
+  );
   check(
     'Delete on an ikot asks about the ikot, and takes the route away with its only direction',
     dialogs.some((d) => d === 'Delete the ikot "UP – Ikot"?') &&

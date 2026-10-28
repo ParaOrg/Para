@@ -11,7 +11,9 @@
 //   await fakeStudioDb(secondPage, {}, db);   a second editor's page on the same rows
 //   db.log           every request: { method, table, query, body }
 //   db.tables        the rows, by table name
-//   db.next          { when(method, table, url) → bool }, refused once with a 500
+//   db.fault         (method, table, url) → bool: the next match is refused once with a 500
+//   db.meanwhile     { when(method, table, url) → bool, run() }: run() changes the
+//                    tables once, just before the first matching request is served
 //
 // The review workflow's three calls are answered as 0022 answers them,
 // enough for two editors to meet over one draft: claim_draft (one draft per
@@ -329,7 +331,8 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
           status: 200,
           body: { code: name === 'take_down' ? 'not_approved' : 'not_taken_down' },
         };
-      row.status = to;
+      // 0018's bump_revision: every update of a route or stop moves its revision on.
+      Object.assign(row, { status: to, revision: (row.revision ?? 0) + 1 });
       return { status: 200, body: { code: name === 'take_down' ? 'taken_down' : 'put_back' } };
     }
     if (name !== 'block_contributor' && name !== 'unblock_contributor')
@@ -354,6 +357,12 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
     const body = text ? JSON.parse(text) : null;
     const table = path.replace(/^rpc\//, '');
     db.log.push({ method, table, query: decodeURIComponent(u.search), body });
+    // Another editor's change landing just before this request, once.
+    if (db.meanwhile?.when(method, table, u)) {
+      const { run } = db.meanwhile;
+      db.meanwhile = null;
+      run();
+    }
     if (db.fault?.(method, table, u)) {
       db.fault = null;
       return { status: 500, body: { code: 'XX000', message: 'refused on purpose' } };
