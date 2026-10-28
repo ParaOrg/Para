@@ -1,0 +1,64 @@
+# The watch: every 15 minutes, checks what commuters and the owner rely on, and keeps one
+# `alert` issue per problem. GitHub emails the owner about a new issue and the GitHub app
+# shows it; the issue closes itself when the check passes again. No service but GitHub.
+#
+# Checks (scripts/watch/watch.mjs, each tried 3 times, 20 seconds apart):
+#   - https://www.para-commute.org/ answers with the app's page, and the bare domain
+#     redirects to it;
+#   - the published map's index answers, parses, and is under 36 hours old;
+#   - one tile and one style answer from tiles.para-commute.org, on every other run: about
+#     96 requests a day out of the tiles Worker's 100,000;
+#   - the last successful Backup is under 8 days old and the last Tiles build under 35;
+#   - a failed run's alert (opened by the last job of publish-map.yml, backup.yml and
+#     tiles.yml) closes once that workflow's next run passes.
+#
+# It reads the live site and the repository's runs, and writes only issues.
+#
+# On a pull request that changes the watch it runs in dry-run: it prints what it would do
+# to the issues and does nothing. "Run workflow" can point the tiles check at a wrong
+# address, to see an alert open, then run again without it to see the alert close.
+name: Watch
+
+on:
+  schedule:
+    # GitHub may start a scheduled run late; a late check is still a check.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      tiles_address:
+        description: 'Check the tiles at this address instead of https://tiles.para-commute.org (to test an alert)'
+        type: string
+        default: ''
+  pull_request:
+    paths:
+      - .github/workflows/watch.yml
+      - scripts/watch/**
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: watch-${{ github.event_name == 'pull_request' && github.ref || 'live' }}
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Check, and keep the alert issues
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WATCH_TILES: ${{ inputs.tiles_address }}
+          WATCH_ALL: ${{ github.event_name != 'schedule' && '1' || '' }}
+          WATCH_DRY_RUN: ${{ github.event_name == 'pull_request' && '1' || '' }}
+        run: node scripts/watch/watch.mjs
