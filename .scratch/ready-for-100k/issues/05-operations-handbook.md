@@ -1,6 +1,6 @@
 # 05: The operations handbook
 
-Status: ready-for-agent
+Status: resolved (docs/operations.md; the owner's questions are in its PR)
 Type: task
 Who: Opus
 
@@ -47,3 +47,5 @@ Docs only. No secret values, and no account emails beyond what the repo already 
 - The PR lists the "(owner to confirm)" items as questions for the owner.
 
 ## Comments
+
+**2026-10-28, the builder.** `docs/operations.md`, linked from `README.md`. Built from the workflows, both `wrangler.jsonc`, `.env.production`, `.env.apk`, the ADRs, `.scratch/custom-domain/`, contribute/15 and the migrations, plus the hub's live checks of 2026-10-28 (the domain, the routes, Turnstile's account, Workers pricing, Resend). R2 and Supabase limits are from their docs as read that day. What the repo can't confirm is marked "(owner to confirm)" and listed as questions in the PR. The alerts link points at the label `alert`, which 04 will use. The restore rehearsal is the owner's to run; its result goes here.
