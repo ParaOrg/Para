@@ -162,8 +162,11 @@ jobs:
       # (a build reads both, the latter winning), so it is the build those suites would make.
       # OpenFreeMap is named for all but pwa-test's own-tiles run, which is built for a stand-in
       # of the tiles server on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one.
+      # The own-tiles build only for a public change: pwa-test's own-tiles run is a public suite.
       - name: The preview builds
         if: needs.changes.outputs.preview != '[]'
+        env:
+          OWN_TILES: ${{ needs.changes.outputs.public }}
         run: |
           cp .env.production .env.local
           echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
@@ -172,8 +175,10 @@ jobs:
           echo VITE_STUDIO_DRAFTS=0 >> .env.local
           VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
           mv dist preview-openfreemap
-          VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
-          mv dist preview-own-tiles
+          if [ "$OWN_TILES" = true ]; then
+            VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
+            mv dist preview-own-tiles
+          fi
           rm .env.local
       - name: Keep the OpenFreeMap preview build
         if: needs.changes.outputs.preview != '[]'
@@ -225,7 +230,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
@@ -299,7 +304,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
@@ -375,24 +380,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
-      - name: Give the dev server the public database address and key
-        # Cloudflare's always-pass Turnstile key in place of the real one, which
-        # answers only real browsers on Para's own hostnames.
-        run: |
-          cp .env.production .env.local
-          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
-          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-          # The suites written for the recorder and the editor run with uploads
-          # off; upload-test turns them on below, against its stand-in.
-          echo VITE_CONTRIBUTIONS=0 >> .env.local
-          # and with the studio saving straight to the approved rows, as they
-          # were written for; the review suites run on the isolated preview.
-          echo VITE_STUDIO_DRAFTS=0 >> .env.local
+      # The build was made in the build job; `vite preview` serves it as it is.
       - name: The preview build
         uses: actions/download-artifact@v4
         with:
@@ -405,9 +398,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && '-own-tiles' || '' }}-screenshots
-          path: |
-            *.png
-            vite.log
+          path: '*.png'
           if-no-files-found: ignore
 
   # The editor against stand-ins for the database, no router: studio-scale
@@ -450,7 +441,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
@@ -526,7 +517,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'

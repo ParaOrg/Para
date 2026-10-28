@@ -27,7 +27,10 @@ const NODE_GLOBALS = [
   'clearTimeout',
   'console',
   'crypto',
+  'Event',
+  'EventTarget',
   'fetch',
+  'File',
   'FormData',
   'Headers',
   'performance',
@@ -35,6 +38,7 @@ const NODE_GLOBALS = [
   'queueMicrotask',
   'Request',
   'Response',
+  'setImmediate',
   'setInterval',
   'setTimeout',
   'structuredClone',
@@ -378,10 +382,21 @@ export default defineConfig([
   },
 
   {
-    // The Node scripts: the publish, the build guard, the tiles and preview tools. ESLint's
-    // recommended rules, with Node's globals. tests/**/*.mjs is not linted yet.
+    // The Node scripts (the publish, the build guard, the tiles and preview tools) and the
+    // tests: ESLint's recommended rules, with Node's globals. A value left out of a copy by
+    // `...rest` is not unused. Four suites still being edited join once they are free.
     files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
+    ignores: [
+      'tests/e2e/commuter-test.mjs',
+      'tests/e2e/phone-test.mjs',
+      'tests/e2e/where-test.mjs',
+      'tests/e2e/lib/harness.mjs',
+    ],
     ...js.configs.recommended,
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-unused-vars': ['error', { ignoreRestSiblings: true }],
+    },
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
