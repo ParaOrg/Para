@@ -257,6 +257,7 @@ jobs:
             turnstile-test,
             studio-public-view-test,
             studio-two-editors-test,
+            save-drafts-test,
           ]
     steps:
       - uses: actions/checkout@v5
@@ -284,9 +285,10 @@ jobs:
       - name: Turn uploads on, for the Contributors map's suites
         if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
         run: echo VITE_CONTRIBUTIONS=1 >> .env.local
-      # The Public map view exists only with drafts on; the later line wins.
-      - name: Turn the studio's drafts on for studio-public-view-test and studio-two-editors-test
-        if: matrix.suite == 'studio-public-view-test' || matrix.suite == 'studio-two-editors-test'
+      # The Public map view exists only with drafts on, and save-drafts-test runs
+      # save-test's flows on the drafts path; the later line wins.
+      - name: Turn the studio's drafts on for studio-public-view-test, studio-two-editors-test and save-drafts-test
+        if: matrix.suite == 'studio-public-view-test' || matrix.suite == 'studio-two-editors-test' || matrix.suite == 'save-drafts-test'
         run: echo VITE_STUDIO_DRAFTS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
@@ -307,49 +309,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.suite }}-screenshots
-          path: |
-            *.png
-            vite.log
-          if-no-files-found: ignore
-
-  # save-test's core flows again with drafts on, the save path the live studio
-  # takes, against the stand-in that keeps drafts (lib/fake-studio-db.mjs).
-  save-drafts:
-    name: save-drafts-test
-    needs: changes
-    if: needs.changes.outputs.studio == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - name: Give the dev server the public database address and key, with drafts on
-        run: |
-          cp .env.production .env.local
-          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
-          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-          echo VITE_CONTRIBUTIONS=0 >> .env.local
-          echo VITE_STUDIO_DRAFTS=1 >> .env.local
-      - name: Start the dev server
-        run: |
-          npx vite --port 5173 --strictPort > vite.log 2>&1 &
-          for i in $(seq 1 60); do
-            curl -sf -o /dev/null http://localhost:5173/ && exit 0
-            sleep 1
-          done
-          echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
-      - name: save-drafts-test
-        run: node tests/e2e/save-drafts-test.mjs
-      - name: Keep the screenshots and the dev server log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: save-drafts-test-screenshots
           path: |
             *.png
             vite.log

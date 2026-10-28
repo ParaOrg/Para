@@ -17,9 +17,12 @@
 // enough for two editors to meet over one draft: claim_draft (one draft per
 // route or hotspot, stamped with the caller's id from the request's token),
 // discard_draft, and a draft's revision rising with every change. submit_draft
-// and approve_reviewed_draft (or approve_draft) apply a draft as 0022 does;
-// db.approve(id) applies one without the calls, for a suite that needs the
-// map to move on before its next step. A direct
+// and approve_reviewed_draft (or approve_draft) apply a draft as 0022 does,
+// refusing as it does (subject_exists, subject_gone, conflict); a link
+// written bumps its route's and hotspot's revisions; take_down and put_back
+// flip a row's status. db.approve(id) applies a draft without the calls or
+// the checks, for a suite that needs the map to move on before its next
+// step. A direct
 // update of a draft changes it only for its maker, as draft_update does once
 // 20261026090000 is applied (RLS hides the row, so the update matches none).
 
@@ -184,6 +187,15 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
   const apply = (d) => {
     const bump = (row) =>
       Object.assign(row, { status: 'approved', revision: (row.revision ?? 0) + 1 });
+    // A link written or removed bumps both its route and its hotspot (0022's link_bumps_subjects).
+    const routeOfDirection = (id) =>
+      tables.route.find((r) => r.id === tables.route_variant.find((v) => v.id === id)?.route_id);
+    const bumpLinked = (links) => {
+      const routes = new Set(links.map((l) => routeOfDirection(l.route_variant_id)));
+      const stops = new Set(links.map((l) => tables.stop.find((x) => x.id === l.stop_id)));
+      for (const row of [...routes, ...stops])
+        if (row && row.id !== d.subject_id) row.revision = (row.revision ?? 0) + 1;
+    };
     if (d.kind === 'route') {
       const { route: r, directions } = d.payload;
       const row = tables.route.find((x) => x.id === d.subject_id);
@@ -201,9 +213,11 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
         const v = tables.route_variant.find((x) => x.id === dir.id);
         if (v) Object.assign(v, dir);
         else tables.route_variant.push(fill('route_variant', { ...dir, route_id: d.subject_id }));
+        const fresh = links.map((l) => ({ route_variant_id: dir.id, ...l }));
+        bumpLinked([...tables.route_stop.filter((l) => l.route_variant_id === dir.id), ...fresh]);
         tables.route_stop = tables.route_stop
           .filter((l) => l.route_variant_id !== dir.id)
-          .concat(links.map((l) => ({ route_variant_id: dir.id, ...l })));
+          .concat(fresh);
         if (dir.shape === null)
           for (const o of tables.route_variant)
             if (o.borrowed_from === dir.id)
@@ -219,9 +233,9 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
         tables.stop.push(
           fill('stop', { id: d.subject_id, ...stop, status: 'approved', revision: 1 }),
         );
-      tables.route_stop = tables.route_stop
-        .filter((l) => l.stop_id !== d.subject_id)
-        .concat(links.map((l) => ({ ...l, stop_id: d.subject_id })));
+      const fresh = links.map((l) => ({ ...l, stop_id: d.subject_id }));
+      bumpLinked([...tables.route_stop.filter((l) => l.stop_id === d.subject_id), ...fresh]);
+      tables.route_stop = tables.route_stop.filter((l) => l.stop_id !== d.subject_id).concat(fresh);
     }
     tables.draft = tables.draft.filter((x) => x !== d);
   };
@@ -286,8 +300,37 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
           body: { code: 'revision_mismatch', current_revision: kept.revision },
         };
       if (kept.status !== 'pending') return { status: 200, body: { code: 'not_pending' } };
+      // 0022's checks before it applies: the subject is there or not as the
+      // draft says, and nobody changed it since the draft's base was read.
+      const live = (kept.kind === 'route' ? tables.route : tables.stop).find(
+        (x) => x.id === kept.subject_id,
+      );
+      if (kept.is_new && live) return { status: 200, body: { code: 'subject_exists' } };
+      if (!kept.is_new && !live) return { status: 200, body: { code: 'subject_gone' } };
+      if (!kept.is_new && live.revision !== kept.base_revision)
+        return { status: 200, body: { code: 'conflict', current_revision: live.revision } };
       apply(kept);
       return { status: 200, body: { code: 'approved' } };
+    }
+    if (name === 'take_down' || name === 'put_back') {
+      const [from, to] =
+        name === 'take_down' ? ['approved', 'taken_down'] : ['taken_down', 'approved'];
+      const row = (body.p_kind === 'route' ? tables.route : tables.stop).find(
+        (x) => x.id === body.p_subject_id,
+      );
+      // A hotspot an approved route still ends at cannot come down.
+      const isEnd = (r) =>
+        r.status !== 'taken_down' &&
+        (r.head_stop_id === body.p_subject_id || r.tail_stop_id === body.p_subject_id);
+      if (name === 'take_down' && body.p_kind === 'hotspot' && tables.route.some(isEnd))
+        return { status: 200, body: { code: 'blocked' } };
+      if (row?.status !== from)
+        return {
+          status: 200,
+          body: { code: name === 'take_down' ? 'not_approved' : 'not_taken_down' },
+        };
+      row.status = to;
+      return { status: 200, body: { code: name === 'take_down' ? 'taken_down' : 'put_back' } };
     }
     if (name !== 'block_contributor' && name !== 'unblock_contributor')
       throw new Error(`unknown rpc ${name}`);

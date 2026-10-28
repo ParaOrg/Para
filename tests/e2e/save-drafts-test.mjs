@@ -7,16 +7,19 @@
 //   VITE_STUDIO_DRAFTS=1 npm run dev     (in another terminal)
 //   node tests/e2e/save-drafts-test.mjs
 //
-// What it checks, flow by flow as save-test drives them: a hintuan traced and
-// saved is a hotspot draft and no write to the approved tables; a new route
-// is one route draft with its slot and its links to the two hintuans; Edit
-// route is a draft built on the approved route's revision with the edited
-// line; a signboard goes to the bucket and into the route's draft, the
-// approved row untouched, and ✕ takes it out of the draft; Delete is a draft
-// with the direction emptied, approved in the same press, so the line is gone
-// and, being the route's last, the route comes down. Between flows the
-// stand-in approves the draft, as an editor's Approve would, so each flow
-// starts from the approved map as save-test's does.
+// What it checks, flow by flow as save-test drives them, each save a draft
+// and no write to the approved tables but by approval: a hintuan traced and
+// saved; a new route with its slot and its links to the two hintuans; the
+// return trip from the card's SWITCH, filling the slot; Edit route on the
+// approved revision; a signboard into the route's draft and out again;
+// Delete, approved in the same press (the stand-in refusing as 0022 does
+// when the base is stale), emptying one way while the route keeps the other,
+// then the last way, which takes the route down; an ikot with no ends; a
+// saved hintuan edited twice, the second edit updating the draft kept for it;
+// a hintuan taken down; and two places made from the save panel's pickers,
+// each its own draft, with the route's draft ending at them. Between flows
+// the stand-in approves the drafts, as an editor's Approve would, so each
+// flow starts from the approved map as save-test's does.
 import { chromium } from 'playwright';
 
 import { readPublished } from './lib/big-map.mjs';
@@ -322,11 +325,52 @@ check(
   `${route?.status}; ${outV ? 'line' : 'no line'}`,
 );
 
-// ---- 3. Edit a direction
 async function openCard(ll) {
   await go(at(0, 0), 15);
   await clickAt(ll, 700);
 }
+const closeLoop = () => page.getByTestId('close-loop');
+
+// ---- 2b. The return trip, into the slot
+const slotId = draftDirections.find((v) => v.shape === null)?.id;
+const BACK_MID = at(0, -0.0015);
+await openCard(OUT[1]);
+await page.getByTestId('card-switch').click();
+await page.waitForTimeout(400);
+check(
+  "the card's SWITCH starts the return trip on the outbound's end",
+  (await pointsShown()) === 1,
+  `${await pointsShown()} points`,
+);
+await clickAt(BACK_MID, 300);
+await closeLoop().click();
+await idle();
+await done();
+check('  the panel says it draws the return trip', (await body()).includes('Draw the return trip'));
+n = log.length;
+await saveButton().click();
+await drafted();
+w = writesSince(n);
+const returnDraft = draftOf('route', route?.id);
+const returned = returnDraft?.payload.directions ?? [];
+check(
+  '  it is a draft of the same route that fills the slot: two directions, both drawn',
+  !!returnDraft &&
+    returnDraft.is_new === false &&
+    returnDraft.base_revision === route?.revision &&
+    returned.length === 2 &&
+    returned.every((v) => v.shape) &&
+    returned.some((v) => v.id === slotId && v.reversed === true),
+  said(w),
+);
+check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
+await approveAll();
+check(
+  '  approved, the route is drawn both ways',
+  tables.route_variant.filter((v) => v.route_id === route?.id && v.shape).length === 2,
+);
+
+// ---- 3. Edit a direction
 await openCard(OUT[1]);
 check(
   'a tap on the line opens its card, with Edit route',
@@ -446,14 +490,226 @@ check(
     !tables.route_stop.some((l) => l.route_variant_id === outV?.id),
 );
 check(
-  '  its route had no other line, so it comes down',
-  tables.route.find((r) => r.id === route?.id)?.status === 'taken_down',
+  '  the route stays, on its other way',
+  tables.route.find((r) => r.id === route?.id)?.status === 'approved' &&
+    !!tables.route_variant.find((v) => v.id === slotId)?.shape,
 );
 check(
   '  no error shown',
   !/error|refused|Nothing was saved/i.test(await body()),
   (await body()).slice(-160),
 );
+
+// ---- 5b. Delete the other way too: the route's last line, so the route comes down
+await openCard(BACK_MID);
+n = log.length;
+await page.getByRole('button', { name: 'Delete' }).click();
+await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 0);
+await page.waitForTimeout(800);
+w = writesSince(n);
+check(
+  'Delete on the last line: approved in the same press, and the route comes down',
+  rpcs(w, 'approve_reviewed_draft').length === 1 &&
+    tables.route_variant.find((v) => v.id === slotId)?.shape === null &&
+    tables.route.find((r) => r.id === route?.id)?.status === 'taken_down',
+  said(w),
+);
+await load();
+
+// ---- 6. An ikot: one direction, no ends, its signboard
+const IKOT = [
+  P1,
+  at(-0.002, 0.0025),
+  at(0.002, 0.0025),
+  P2,
+  at(0.002, -0.0025),
+  at(-0.002, -0.0025),
+];
+await go(at(0, 0), 15);
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
+await page.waitForTimeout(200);
+for (const p of IKOT) await clickAt(p, 300);
+await closeLoop().click();
+await idle();
+await done();
+await page.getByLabel(/Signboard/).fill('UP – Ikot');
+n = log.length;
+await saveButton().click();
+await drafted();
+w = writesSince(n);
+const ikotDraft = tables.draft.find((d) => d.kind === 'route' && d.payload.route.is_loop);
+const ikotLine = ikotDraft?.payload.directions ?? [];
+check(
+  'an ikot is a new route draft: is_loop, no ends, its signboard, one direction and no slot',
+  !!ikotDraft &&
+    ikotDraft.is_new === true &&
+    ikotDraft.payload.route.head_stop_id === null &&
+    ikotDraft.payload.route.tail_stop_id === null &&
+    ikotDraft.payload.route.signboard === 'UP – Ikot' &&
+    ikotLine.length === 1 &&
+    ikotLine[0].reversed === false &&
+    !!ikotLine[0].shape,
+  said(w),
+);
+check(
+  '  its line is linked to the two hintuans it goes round',
+  [head?.id, tail?.id].every((id) => ikotLine[0]?.links.some((l) => l.stop_id === id)),
+  JSON.stringify(ikotLine[0]?.links),
+);
+check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
+await approveAll();
+check(
+  '  approved, it is a loop on the map',
+  tables.route.find((r) => r.id === ikotDraft?.subject_id)?.is_loop === true,
+);
+
+// ---- 7. Edit a saved hintuan, twice: a draft on its revision, then that draft again
+const nameField = () => page.getByPlaceholder('SM Fairview Ilalim');
+async function editHintuan(spot, name) {
+  await go(spot, 17);
+  await clickAt([spot[0] + R * 0.7, spot[1] - R * 0.7], 700);
+  const edit = page.getByRole('button', { name: 'Edit hintuan' });
+  if ((await edit.count()) === 0) {
+    const row = page.getByRole('button', { name: /Stand-in Tail/ });
+    if (await row.count()) await row.first().click();
+    await page.waitForTimeout(500);
+  }
+  await edit.click();
+  await page.waitForTimeout(400);
+  await done();
+  await nameField().fill(name);
+  const from = log.length;
+  await page.getByRole('button', { name: 'Save changes' }).click();
+  await drafted();
+  await page.waitForTimeout(300);
+  return writesSince(from);
+}
+const tailRevision = tables.stop.find((x) => x.id === tail?.id)?.revision;
+w = await editHintuan(P2, 'Stand-in Tail Renamed');
+const tailDraft = draftOf('hotspot', tail?.id);
+check(
+  "editing a saved hintuan is a draft of it, built on the stop's revision",
+  !!tailDraft &&
+    tailDraft.is_new === false &&
+    tailDraft.base_revision === tailRevision &&
+    tailDraft.payload.stop.name === 'Stand-in Tail Renamed' &&
+    rpcs(w, 'claim_draft').length === 1,
+  said(w),
+);
+check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
+w = await editHintuan(P2, 'Stand-in Tail Twice');
+const tailDraftAgain = draftOf('hotspot', tail?.id);
+check(
+  '  edited again, the draft kept for it is updated in place: same draft, its revision on',
+  tailDraftAgain?.id === tailDraft?.id &&
+    tailDraftAgain.payload.stop.name === 'Stand-in Tail Twice' &&
+    rpcs(w, 'claim_draft').length === 0 &&
+    w.some((x) => x.method === 'PATCH' && x.table === 'draft') &&
+    approvedWrites(w).length === 0,
+  said(w),
+);
+await approveAll();
+check(
+  '  approved, the stop has the last name',
+  tables.stop.find((x) => x.id === tail?.id)?.name === 'Stand-in Tail Twice',
+);
+
+// ---- 8. Take a hintuan down
+await go(P1, 17);
+await clickAt([P1[0] + R * 0.7, P1[1] - R * 0.7], 700);
+{
+  const edit = page.getByRole('button', { name: 'Edit hintuan' });
+  if ((await edit.count()) === 0) {
+    const row = page.getByRole('button', { name: /Stand-in Head/ });
+    if (await row.count()) await row.first().click();
+    await page.waitForTimeout(500);
+  }
+}
+n = log.length;
+await page.getByRole('button', { name: 'Delete' }).click();
+await waitFor(() => tables.stop.find((x) => x.id === head?.id)?.status === 'taken_down');
+w = writesSince(n);
+check(
+  'Delete on a hintuan no route ends at takes it down: one take_down, no row deleted',
+  rpcs(w, 'take_down').length === 1 &&
+    tables.stop.find((x) => x.id === head?.id)?.status === 'taken_down' &&
+    !w.some((x) => x.method === 'DELETE') &&
+    !/Nothing was saved|refused/i.test(await body()),
+  said(w),
+);
+const listedIds = async () =>
+  (await page.evaluate(async () => (await window.__src('saved-stops'))?.features ?? [])).map(
+    (f) => f.properties?.id,
+  );
+await waitFor(async () => !(await listedIds()).includes(head?.id));
+check(
+  '  and the studio no longer lists it',
+  !(await listedIds()).includes(head?.id),
+  `${(await listedIds()).length} features listed`,
+);
+
+// ---- 9. "+ New place here…" from the save panel: each place a draft of its own
+{
+  const NEW = '+new-place';
+  const L = [at(-0.003, 0.02), at(0, 0.0212), at(0.003, 0.02)];
+  const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
+  await go(at(0, 0.02), 15);
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
+  await page.waitForTimeout(200);
+  for (const p of L) await clickAt(p, 300);
+  await done();
+  n = log.length;
+  await page.getByTestId('save-head').selectOption(NEW);
+  await form('head')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Newhead');
+  await form('head').getByRole('button', { name: 'Save place' }).click();
+  await form('head').waitFor({ state: 'hidden' });
+  await page.getByTestId('save-tail').selectOption(NEW);
+  await form('tail')
+    .getByLabel(/Ground name/)
+    .fill('Stand-in Newtail');
+  await form('tail').getByRole('button', { name: 'Save place' }).click();
+  await form('tail').waitFor({ state: 'hidden' });
+  w = writesSince(n);
+  const placeDraft = (name) =>
+    tables.draft.find((d) => d.kind === 'hotspot' && d.payload.stop.name === name);
+  const newHead = placeDraft('Stand-in Newhead');
+  const newTail = placeDraft('Stand-in Newtail');
+  check(
+    'a place made from the pickers is a new hotspot draft each, and no stop row',
+    newHead?.is_new === true &&
+      newTail?.is_new === true &&
+      newHead.payload.stop.kind === 'terminal' &&
+      rpcs(w, 'claim_draft').length === 2 &&
+      approvedWrites(w).length === 0,
+    said(w),
+  );
+  check(
+    '  the pickers show them',
+    (await page.getByTestId('save-head').evaluate((e) => e.selectedOptions[0]?.text)) ===
+      'Stand-in Newhead' &&
+      (await page.getByTestId('save-tail').evaluate((e) => e.selectedOptions[0]?.text)) ===
+        'Stand-in Newtail',
+  );
+  n = log.length;
+  await saveButton().click();
+  await drafted();
+  w = writesSince(n);
+  const newRoute = tables.draft.find(
+    (d) => d.kind === 'route' && d.payload.route.head_stop_id === newHead?.subject_id,
+  );
+  check(
+    '  the route saved on them is a draft whose ends are those two places',
+    !!newRoute &&
+      newRoute.is_new === true &&
+      newRoute.payload.route.tail_stop_id === newTail?.subject_id &&
+      approvedWrites(w).length === 0,
+    said(w),
+  );
+}
 
 check('no React warnings or page errors', errors.length === 0, errors.join(' | '));
 await browser.close();
