@@ -19,10 +19,10 @@ const BACKGROUND_COLOUR = '#f5f1ee';
 export function offlineWorker(basemapRules: BasemapCacheRules): Plugin[] {
   /**
    * Where this build writes, as Vite resolved it: dist/ for `npm run build`,
-   * its own folder for scripts/research/phone-speed.mjs (2026-10-04). The
-   * precache below is cut down by that build's own manifest. Read from dist/
-   * whatever the folder, as it was, the timer's build was cut down by dist/'s
-   * chunk names, and its own page's two chunks were left out of its precache.
+   * its own folder for scripts/research/phone-speed.mjs. The precache below
+   * is cut down by that build's own manifest: read from dist/ whatever the
+   * folder, the timer's build would be cut down by dist/'s chunk names, and
+   * its own page's chunks left out of its precache.
    */
   let outDir = 'dist';
   const readOutDir: Plugin = {
@@ -73,12 +73,10 @@ export function offlineWorker(basemapRules: BasemapCacheRules): Plugin[] {
         // .vite/, data/ and _headers by construction; the transform below
         // then drops every chunk the public page does not load, so a studio-only
         // chunk (the editor, the Supabase client) is never stored on a phone.
-        // The fonts too, since they were subset to Latin (2026-09-29, 109 kB
-        // for all six): offline, the text keeps its face. And the install
-        // prompt's picture (48 kB, the owner's call of 2026-10-13), so the
-        // card is whole offline too; the transform keeps only the page's own.
-        // And the vehicles' sprite (the owner's "trim the icons with a
-        // sprite", 2026-10-16), so a trip's header draws its vehicle offline.
+        // The fonts too, subset to Latin and small: offline, the text keeps its
+        // face. And the install prompt's picture, so the card is whole offline
+        // too; the transform keeps only the page's own. And the vehicles'
+        // sprite, so a trip's header draws its vehicle offline.
         globPatterns: [
           'index.html',
           'manifest.webmanifest',
@@ -114,8 +112,8 @@ export function offlineWorker(basemapRules: BasemapCacheRules): Plugin[] {
               for (const k of [...(chunk.imports ?? []), ...(chunk.dynamicImports ?? [])]) visit(k);
             };
             visit('index.html');
-            // MapLibre's tile worker is a chunk of its own (maplibreWorkerWithThePage,
-            // 2026-10-05) that no page imports, so the walk from index.html never
+            // MapLibre's tile worker is a chunk of its own (maplibreWorkerWithThePage)
+            // that no page imports, so the walk from index.html never
             // reaches it; without it the map draws nothing. What it imports, the
             // page imports too.
             const wanted = (url: string) =>

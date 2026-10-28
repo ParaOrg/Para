@@ -1,4 +1,4 @@
-// 4. The installable app (step 6) belongs to / only: the manifest link is in
+// 4. The installable app belongs to / only: the manifest link is in
 //    index.html and not in studio/index.html, and no page but the map carries a
 //    registration script. The web manifest names the app and its icons. What its
 //    worker stores is public-worker.mjs's.

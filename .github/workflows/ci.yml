@@ -1,8 +1,7 @@
 # Checks every push and pull request: the production build with its guards,
 # then the headless suites from tests/e2e/ against the dev server.
 #
-# Fast by design (the owner's ask of 2026-09-30: "it's stopping me from
-# shipping fast"). Three ideas:
+# Fast by design, so it never holds up shipping. Three ideas:
 #
 #   1. Only what a change can reach. `changes` reads the files a pull request
 #      touches: docs and Markdown alone run nothing (except docs/architecture.md,
@@ -145,8 +144,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.public == 'true'
     runs-on: ubuntu-latest
-    # commuter-test's first part reached the old 20 on 2026-10-06 (PR #128):
-    # 19 min 49 s, then cut off two seconds after its 753 checks had passed.
+    # commuter-test's first part takes close to 20 minutes, and grows with the
+    # map; 30 leaves it room.
     timeout-minutes: 30
     strategy:
       fail-fast: false
