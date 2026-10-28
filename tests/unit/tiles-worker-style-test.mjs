@@ -180,6 +180,20 @@ test('the extra origins from vars are allowed too, exactly', () => {
   assert.equal(isAllowedOrigin('https://para.example', ''), false);
 });
 
+test("the site's own domain, in EXTRA_ORIGINS, is allowed and look-alikes are not", () => {
+  const extra = 'https://www.para-commute.org,https://para-commute.org';
+  for (const origin of ['https://www.para-commute.org', 'https://para-commute.org']) {
+    assert.equal(isAllowedOrigin(origin, extra), true, origin);
+  }
+  for (const origin of [
+    'https://www.para-commute.org.evil.example',
+    'http://www.para-commute.org',
+    'https://evil-para-commute.org',
+  ]) {
+    assert.equal(isAllowedOrigin(origin, extra), false, origin);
+  }
+});
+
 async function ask(headers, method = 'GET') {
   const files = new Map([
     ['tiles/parapo-2026-10-27.pmtiles', buildPmtiles([[0, 0, 0]])],

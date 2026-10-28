@@ -17,9 +17,11 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 
 **Caching.** Tiles, styles and assets all go through the Cache API (a style is keyed by the build and the address it is asked on, an asset by the build and its path). Tiles: `public, max-age=86400, stale-while-revalidate=604800`, with the file's name as the ETag, so a new monthly build changes every tile's address in the cache. `current.json` is read at most every 5 minutes per Worker instance. The Cloudflare Cache API stores tiles and leaf directories, but only on a custom domain: on `workers.dev` it keeps nothing, so every tile there is a read from R2.
 
-**CORS.** Allowed: `https://para.para-ph-info.workers.dev`, `https://staging-para.para-ph-info.workers.dev`, any `https://<name>-para.para-ph-info.workers.dev` preview, and the old site's `https://parapo.villaralvorovic2.workers.dev`, `https://staging-parapo.villaralvorovic2.workers.dev` and `https://<name>-parapo.villaralvorovic2.workers.dev` (kept while the site moves accounts; a later change removes them), `http://localhost:5173`, and the comma-separated `EXTRA_ORIGINS` in `wrangler.jsonc` (add the future domain there). A request with no `Origin` is served. Any other origin gets `403` and no CORS headers.
+**CORS.** Allowed: `https://para.para-ph-info.workers.dev`, `https://staging-para.para-ph-info.workers.dev`, any `https://<name>-para.para-ph-info.workers.dev` preview, and the old site's `https://parapo.villaralvorovic2.workers.dev`, `https://staging-parapo.villaralvorovic2.workers.dev` and `https://<name>-parapo.villaralvorovic2.workers.dev` (kept while the site moves accounts; a later change removes them), `http://localhost:5173`, and the comma-separated `EXTRA_ORIGINS` in `wrangler.jsonc` (`https://www.para-commute.org` and `https://para-commute.org`, the site's own domain). A request with no `Origin` is served. Any other origin gets `403` and no CORS headers.
 
-**Rate limit.** Not in the Worker. On a custom domain, set a Cloudflare rate-limiting rule for the zone (Security → WAF → Rate limiting rules); `workers.dev` has none.
+**Custom domain.** The Worker answers at `https://tiles.para-commute.org`, added in the dashboard (Worker → Settings → Domains & Routes → Custom domain) on the `para-commute.org` zone in the same account. That is what turns the edge cache on. `workers_dev` stays `true`, so the `workers.dev` address keeps working.
+
+**Rate limit.** Not in the Worker. It is a Cloudflare rate-limiting rule on the `para-commute.org` zone (Security → WAF → Rate limiting rules), an owner step in the dashboard; `workers.dev` has none.
 
 ## Deploy (the owner's steps)
 
@@ -31,7 +33,7 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 6. Check a tile is gzipped once, not twice. Take any tile address the file holds, for example Quiapo at zoom 14:
    `curl -s https://para-tiles.<account>.workers.dev/14/13698/7520.pbf | gunzip | head -c 20`
    should print readable protobuf text (layer names such as `water`), not binary that starts `1f 8b` again. The Worker marks tiles `encodeBody: 'manual'` so Cloudflare does not compress them a second time.
-7. For the tiles subdomain: Worker → **Settings → Domains & Routes** → **Add** → **Custom domain**. That is also what turns the edge cache on.
+7. For the tiles subdomain: Worker → **Settings → Domains & Routes** → **Add** → **Custom domain** → `tiles.para-commute.org`. That is also what turns the edge cache on.
 
 ## Run the checks
 
