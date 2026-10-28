@@ -129,27 +129,32 @@ export const waitForSource = async (page, id, ms = 20000) => {
 };
 
 /**
- * Once the map is idle: no camera moving, every tile it asked for in and
- * every fade done (MapLibre's 'idle'). Two frames go by first, so a move a
- * handler starts in them (a sheet's transitionend, an effect) is waited out
- * too, and a frame is asked for, so a map already idle answers at once. At
- * most `ms`, then it goes on: the check after it decides.
+ * Once the map is at rest: two frames gone by, so a move a handler starts in
+ * them (a sheet's transitionend, an effect) has begun, then the first frame
+ * with no camera moving and every source loaded but the chevrons'. Not
+ * MapLibre's 'idle': while a route is lit its chevrons flow, their source
+ * set afresh fifteen times a second (direction-arrows.ts), so 'idle' never
+ * comes. At most `ms`, then it goes on: the check after it decides.
  */
 export const mapIdle = (page, ms = 10000) =>
   page.evaluate(
     (ms) =>
       new Promise((resolve) => {
         const m = window.__map;
-        const timer = setTimeout(resolve, ms);
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => {
-            m.once('idle', () => {
-              clearTimeout(timer);
-              resolve();
-            });
-            m.triggerRepaint();
-          }),
-        );
+        const by = performance.now() + ms;
+        const atRest = () =>
+          !m.isMoving() &&
+          Object.keys(m.getStyle()?.sources ?? {}).every(
+            (id) => id === 'direction-arrows' || m.isSourceLoaded(id),
+          );
+        let frames = 0;
+        const look = () => {
+          frames++;
+          if ((frames > 2 && atRest()) || performance.now() > by) resolve();
+          else requestAnimationFrame(look);
+        };
+        m.triggerRepaint();
+        requestAnimationFrame(look);
       }),
     ms,
   );
