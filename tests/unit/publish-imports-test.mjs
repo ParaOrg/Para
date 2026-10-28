@@ -1,8 +1,8 @@
 // The publish script imports the app's own rules from src/ (publish-map.mjs's
 // header), and nothing runs it before the nightly workflow does: it reads the
 // database as it loads. A renamed export it imports would fail there first,
-// at four in the morning. So each name it imports from src/ is checked here,
-// against the module it names (ticket 07 of the restructure follow-ups,
+// at four in the morning. So each name it imports from src/, itself or through
+// the modules of its own folder it loads, is checked here, against the module it names (ticket 07 of the restructure follow-ups,
 // 2026-10-07, which renamed stops and variants).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/publish-imports-test.mjs
@@ -23,11 +23,28 @@ function sourceImports(text) {
   ]);
 }
 
+/** The script and every module of its own folder it loads, directly or through another. */
+function publishModules(entry) {
+  const seen = new Map();
+  const visit = (url) => {
+    if (seen.has(url.href)) return;
+    const text = readFileSync(url, 'utf8');
+    seen.set(url.href, text);
+    for (const m of text.matchAll(/^import [^;]*? from '(\.\/[^']+\.mjs)';?$/gm)) {
+      visit(new URL(m[1], url));
+    }
+  };
+  visit(entry);
+  return [...seen].map(([href, text]) => [new URL(href), text]);
+}
+
 test('every name the publish script imports from src/ is exported by the module it names', async () => {
-  const imports = sourceImports(readFileSync(SCRIPT, 'utf8'));
+  const imports = publishModules(SCRIPT).flatMap(([url, text]) =>
+    sourceImports(text).map(([names, specifier]) => [names, new URL(specifier, url)]),
+  );
   assert.ok(imports.length >= 5, `the script imports from src/ (${imports.length} lines found)`);
   for (const [names, specifier] of imports) {
-    const module = await import(new URL(specifier, SCRIPT).href);
+    const module = await import(specifier.href);
     for (const name of names) {
       assert.ok(name in module, `${specifier} exports ${name}`);
     }

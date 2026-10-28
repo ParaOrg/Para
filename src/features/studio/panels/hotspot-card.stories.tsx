@@ -3,9 +3,10 @@ import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import type { HotspotRow } from '@/features/routes/model/hotspots';
+import type { Direction } from '@/features/routes/model/routes';
+
 import { HotspotCard } from './hotspot-card';
-import type { HotspotRow } from '../model/hotspots';
-import type { Direction } from '../model/routes';
 
 /** Sample data only, shaped like saved rows. Not read from Supabase. */
 const route = {
@@ -77,7 +78,7 @@ function Picking(props: ComponentProps<typeof HotspotCard>) {
 const routeCards = { selected: null, onSelect: fn(), onShown: fn() };
 
 const meta = {
-  title: 'Features/Routes/HotspotCard',
+  title: 'Features/Studio/HotspotCard',
   component: HotspotCard,
   render: (args) => <Picking {...args} />,
   // The card is placed against the map, so give it a map-sized box to sit in.
