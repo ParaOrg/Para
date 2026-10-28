@@ -1,3 +1,6 @@
+import * as z from 'zod/mini';
+
+import { lngLatSchema } from '@/features/routes/model/geojson-schema';
 import type { LngLat, Segment, StreetRun } from '@/shared/utils/geo';
 
 /**
@@ -75,14 +78,21 @@ async function fetchRoute(url: string, signal?: AbortSignal): Promise<Response> 
   return res.status === 429 ? attempt() : res;
 }
 
-interface OsrmStep {
-  name: string;
-  distance: number;
-  geometry: { coordinates: LngLat[] };
-}
-interface OsrmLeg {
-  steps: OsrmStep[];
-}
+const osrmStepSchema = z.object({
+  name: z.string(),
+  distance: z.number(),
+  geometry: z.object({ coordinates: z.array(lngLatSchema) }),
+});
+type OsrmStep = z.infer<typeof osrmStepSchema>;
+
+/** The router's answer, as much of it as is read: a refusal's code and message, or the legs. */
+const osrmReplySchema = z.object({
+  code: z.optional(z.string()),
+  message: z.optional(z.string()),
+  routes: z.optional(
+    z.array(z.object({ legs: z.array(z.object({ steps: z.array(osrmStepSchema) })) })),
+  ),
+});
 
 /**
  * One request through every point; one Segment per gap. Throws RouterRefusal
@@ -104,11 +114,14 @@ async function route(points: LngLat[], signal?: AbortSignal): Promise<Segment[]>
 
   const res = await fetchRoute(url, signal);
   // A refusal arrives as JSON on a 400, so read the body before the status.
-  const data = await res.json().catch(() => null);
+  // An answer not of this shape is one the router could not give.
+  const reply = z.safeParse(osrmReplySchema, await res.json().catch(() => null));
+  const data = reply.success ? reply.data : null;
   if (data?.code && data.code !== 'Ok') throw new RouterRefusal(data.code, data.message ?? '');
-  if (!res.ok || !data?.routes?.length) throw new Error(`OSRM ${res.status}`);
+  const first = data?.routes?.[0];
+  if (!res.ok || !first) throw new Error(`OSRM ${res.status}`);
 
-  const legs = data.routes[0].legs as OsrmLeg[];
+  const legs = first.legs;
   if (legs.length !== points.length - 1) throw new Error('OSRM returned the wrong number of legs');
 
   return legs.map((leg) => {
