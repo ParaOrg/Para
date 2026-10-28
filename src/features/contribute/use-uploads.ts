@@ -105,11 +105,6 @@ const FAILED: Record<
     brief: 'Longer than 6 hours',
     willRetry: false,
   },
-  'too-many-points': {
-    message: 'Too large to upload. It stays on this phone.',
-    brief: 'Too large to upload',
-    willRetry: false,
-  },
   'line-too-large': {
     message: 'Too large to upload. It stays on this phone.',
     brief: 'Too large to upload',

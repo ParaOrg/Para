@@ -144,6 +144,26 @@ export function timelineFor(
 }
 
 /**
+ * The row of a timeline a box lands on: its own, else the row of its place.
+ * A row keeps the first box of its place the line reaches, so a place with a
+ * box on each side of the road can be one box's row one way round and the
+ * other's the other way. Null when no row is its place.
+ */
+export function rowOfBox(
+  box: Hotspot,
+  rows: readonly TimelineRow[],
+  hotspots: readonly Hotspot[],
+): string | null {
+  if (rows.some((r) => r.id === box.id)) return box.id;
+  const key = placeKey(box);
+  const row = rows.find((r) => {
+    const rowBox = hotspots.find((s) => s.id === r.id);
+    return rowBox ? placeKey(rowBox) === key : false;
+  });
+  return row?.id ?? null;
+}
+
+/**
  * Whether a line that starts at `lineStart` was drawn from the far end of its
  * ride: its first point nearer where the ride goes than where it leaves. The
  * stored points run whichever way the editor drew them, and the save panel

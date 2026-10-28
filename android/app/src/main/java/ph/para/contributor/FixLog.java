@@ -76,8 +76,12 @@ final class FixLog {
         }
     }
 
-    /** The recording being logged and its fixes, or a null recording when none is. */
-    static JSONObject read(Context context) throws IOException, JSONException {
+    /**
+     * The recording being logged and its fixes after the time `after` (Long.MIN_VALUE for all of
+     * them), or a null recording when none is. The page asks only for what it has not had, so a
+     * wake late in a long ride does not send the whole ride across the bridge.
+     */
+    static JSONObject read(Context context, long after) throws IOException, JSONException {
         String text;
         synchronized (FixLog.class) {
             File file = fileOf(context);
@@ -96,7 +100,8 @@ final class FixLog {
         }
         for (int index = 1; index < lines.length; index++) {
             try {
-                fixes.put(new JSONObject(lines[index]));
+                JSONObject fix = new JSONObject(lines[index]);
+                if (fix.getLong("time") > after) fixes.put(fix);
             } catch (JSONException cutShort) {
                 // The last line, cut short by a kill.
             }

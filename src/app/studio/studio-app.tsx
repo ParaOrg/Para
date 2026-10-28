@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
 import {
-  DraftLocksProvider,
   SignIn,
+  StudioSessionProvider,
   skipSignInForTests,
   usePasswordRecovery,
   useSession,
@@ -53,8 +53,8 @@ export function StudioApp() {
   }
 
   return (
-    <DraftLocksProvider>
+    <StudioSessionProvider session={session}>
       <Workshop session={session ?? null} recovery={recovery} />
-    </DraftLocksProvider>
+    </StudioSessionProvider>
   );
 }

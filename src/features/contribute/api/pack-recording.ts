@@ -16,7 +16,7 @@ const MICRO = 1e6;
 const M_PER_MICRO = 0.11132;
 
 /** Why a recording cannot be uploaded at all, whatever the signal. */
-export type PackRefusal = 'too-long' | 'too-many-points' | 'line-too-large';
+export type PackRefusal = 'too-long' | 'line-too-large';
 
 export type PackResult =
   | { ok: true; payload: ContributionPayload; droppedPoints: number }
@@ -60,6 +60,18 @@ function acceptedPoints(fixes: readonly Fix[]): MicroPoint[] {
     points.push(point);
   }
   return points;
+}
+
+/**
+ * At most `limit` of the points, evenly spaced through the ride, the first and the last always
+ * among them: a ride with more fixes than the database keeps (one a second for over four hours)
+ * goes up thinned rather than not at all. Leaving points out only lengthens the step between two
+ * kept ones, so none of them is faster than the limit.
+ */
+function thinnedPoints(points: readonly MicroPoint[], limit: number): MicroPoint[] {
+  if (points.length <= limit) return [...points];
+  const step = (points.length - 1) / (limit - 1);
+  return Array.from({ length: limit }, (_, index) => points[Math.round(index * step)]);
 }
 
 function batchesOf(points: readonly MicroPoint[]): PointBatch[] {
@@ -115,8 +127,7 @@ export function packRecording(
   if (ended - recording.startedAt > UPLOAD_LIMITS.hours * 3_600_000) {
     return { ok: false, reason: 'too-long' };
   }
-  const points = acceptedPoints(fixes);
-  if (points.length > UPLOAD_LIMITS.points) return { ok: false, reason: 'too-many-points' };
+  const points = thinnedPoints(acceptedPoints(fixes), UPLOAD_LIMITS.points);
 
   const summary = summarize(fixes, recording.gaps, recording.startedAt, ended);
   const kept = keptFixes(fixes).filter(({ at: [lng, lat] }) => inBox(lat, lng));

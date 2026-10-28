@@ -3,6 +3,19 @@ import { MAP_FILE_TOO_NEW } from '@/features/routes/published/map-file';
 
 import { shortDate } from './status';
 
+interface NoticesProps {
+  loadFailed: boolean;
+  tooNew: boolean;
+  onTryAgain: () => void;
+  /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
+  onReloadNewer: () => void;
+  offline: boolean;
+  age: { publishedAt: string | null; stale: boolean };
+  needRefresh: boolean;
+  /** The new version's "Update Para!". */
+  onUpdate: () => void;
+}
+
 /**
  * What the public map says about itself, over the map: a load that failed
  * (or a map published for a newer app), how old the map is when it came
@@ -17,18 +30,7 @@ export function Notices({
   age,
   needRefresh,
   onUpdate,
-}: {
-  loadFailed: boolean;
-  tooNew: boolean;
-  onTryAgain: () => void;
-  /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
-  onReloadNewer: () => void;
-  offline: boolean;
-  age: { publishedAt: string | null; stale: boolean };
-  needRefresh: boolean;
-  /** The new version's "Update Para!". */
-  onUpdate: () => void;
-}) {
+}: NoticesProps) {
   return (
     <>
       {loadFailed && (

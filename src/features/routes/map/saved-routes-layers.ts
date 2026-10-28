@@ -63,7 +63,7 @@ export function addSavedRoutes(
       type: 'line',
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      filter: RESTING_FILTER[LINE] as never,
+      filter: RESTING_FILTER[LINE],
       paint: {
         'line-color': MAP_COLOURS['Map/RouteLine/surface-default'],
         'line-width': roadWidth(0),
@@ -78,7 +78,7 @@ export function addSavedRoutes(
         type: 'line',
         source: SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        filter: RESTING_FILTER[id] as never,
+        filter: RESTING_FILTER[id],
         paint: { 'line-color': colour, 'line-width': roadWidth(0) },
       },
       before,

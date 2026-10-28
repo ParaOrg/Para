@@ -116,7 +116,7 @@ export function usePassStretches(
   );
 
   useEffect(() => {
-    const src = map?.getSource(SRC) as GeoJSONSource | undefined;
+    const src = map?.getSource<GeoJSONSource>(SRC);
     if (!src) return;
     src.setData({ type: 'FeatureCollection', features });
   }, [map, features, hitReady]);
@@ -127,7 +127,7 @@ export function usePassStretches(
   useEffect(() => {
     if (!map || !map.getLayer(SELECTED_PASS)) return;
     applyHidden(hiddenNow, hiddenDirectionId, (hidden) => {
-      map.setFilter(SELECTED_PASS, ['!=', ['get', 'id'], hidden] as never);
+      map.setFilter(SELECTED_PASS, ['!=', ['get', 'id'], hidden]);
     });
   }, [map, hiddenDirectionId, hitReady]);
 

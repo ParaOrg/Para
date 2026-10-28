@@ -123,6 +123,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     onSavedHotspot,
     onDrafted,
   } = useSaveFlow({
+    isDrawing: draw.drawing,
     recoveryError: recovery.error,
     cancelDrawing: draw.cancel,
     reloadRoutes: saved.reload,
@@ -215,6 +216,15 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
 
+  // While a save sheet or an account dialog is open over the map, nothing
+  // behind it can be reached: the drawing's toolbar would change the line
+  // under the form. Shown on the same conditions as StudioSaveSheets and AuthDialogs.
+  const isSheetOpen =
+    (isPlayground && isSaving && draw.drawing) ||
+    (isSigningIn && !isSignedIn) ||
+    isResetting ||
+    isChangingPassword;
+
   // "Draw the return trip" only while the route still has a way undrawn.
   const slotLeft = returnTripLeft(justSaved, saved.directions);
 
@@ -238,6 +248,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
         ref={root}
         data-map-box
         data-dock-host
+        inert={isSheetOpen}
         className={
           '@container relative min-h-0 flex-1 overflow-clip' +
           (!draw.drawing && !choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')

@@ -1,4 +1,4 @@
-import type { MapLibreMap } from 'maplibre-gl';
+import type { ExpressionSpecification, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
 import type { LayerSwitch } from './layer-switch';
@@ -24,14 +24,14 @@ import { LAYERS } from './layers';
  * worker — for 1,000 directions, a second and a half of stall a tap
  * (measured).
  */
-const isLit = ['boolean', ['feature-state', 'lit'], false];
+const isLit: ExpressionSpecification = ['boolean', ['feature-state', 'lit'], false];
 
 /**
  * The opacity of a layer that draws the lit directions only: 1 for them, 0
  * for the rest — a switch, never a shade.
  */
-export function litOpacity() {
-  return ['case', isLit, 1, 0] as never;
+export function litOpacity(): ExpressionSpecification {
+  return ['case', isLit, 1, 0];
 }
 
 /**
