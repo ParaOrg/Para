@@ -71,11 +71,12 @@ The tests read what the map holds today (the published map for `/`, the live tab
 routes and hotspots does not break them. commuter-test's count grows with the
 data (some sixteen checks for a hotspot with routes through it, a few for
 one without); a check the data cannot support prints `SKIP`. commuter-test and
-phone-test fail on more skips than they have today (`maxSkips`, set at each
-suite's top with the reason), so a check going quiet turns the run red.
+phone-test fail on a skip of any check not named at their top (`knownSkips`,
+each with its reason), so a check going quiet turns the run red; the sheet's
+heights never skip (phone-test's `handleTo` waits for them, or fails).
 phone-test's section 5d runs its trip checks (the ride, SWITCH) and a
 terminal's card again on a made-up map, `fixtures/two-way-map.mjs`, so they
-never skip.
+never skip: there a skip of any check, a known name or not, fails the run.
 The drawing tests first move the map onto a saved route, so their clicks land on
 streets the router can snap to.
 
