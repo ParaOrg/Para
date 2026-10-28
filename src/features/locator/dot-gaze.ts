@@ -107,7 +107,7 @@ export function gazeSubjects(p: Picks, from: LngLat | null): Subject[] {
     { key: p.pickedId, at: () => p.pinAt },
     {
       key: p.place && placeKey(p.place),
-      at: () => (p.place?.point.coordinates as LngLat | undefined) ?? null,
+      at: () => p.place?.point.coordinates ?? null,
     },
     { key: p.trip?.routeId ?? null, at: () => nearestLit(p.trip ? [directionLine(p.trip)] : []) },
     {

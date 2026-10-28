@@ -19,13 +19,14 @@ export function useCompass(on: boolean): number | null {
     const absolute = 'ondeviceorientationabsolute' in window;
     const type = absolute ? 'deviceorientationabsolute' : 'deviceorientation';
     const read = (e: Event) => {
-      const o = e as DeviceOrientationEvent & { webkitCompassHeading?: number };
+      if (!(e instanceof DeviceOrientationEvent)) return;
+      // Safari's own field, not in the DOM's types.
+      const webkitCompassHeading =
+        'webkitCompassHeading' in e && typeof e.webkitCompassHeading === 'number'
+          ? e.webkitCompassHeading
+          : undefined;
       const h = compassHeading(
-        {
-          alpha: o.alpha,
-          absolute: absolute || o.absolute,
-          webkitCompassHeading: o.webkitCompassHeading,
-        },
+        { alpha: e.alpha, absolute: absolute || e.absolute, webkitCompassHeading },
         screen.orientation?.angle ?? 0,
       );
       if (h !== null) setHeading((was) => (was === null || apart(was, h) >= TURN_DEG ? h : was));
@@ -41,9 +42,9 @@ export function useCompass(on: boolean): number | null {
 
 /** Safari asks before it gives the compass, and only inside a tap. */
 export function askForCompass() {
-  const ask = (
-    globalThis.DeviceOrientationEvent as unknown as
-      { requestPermission?: () => Promise<string> } | undefined
-  )?.requestPermission;
-  if (ask) void ask().catch(noop);
+  // Safari's static requestPermission, not in the DOM's types; absent elsewhere.
+  const event: unknown = globalThis.DeviceOrientationEvent;
+  if (typeof event !== 'function' || !('requestPermission' in event)) return;
+  const ask = event.requestPermission;
+  if (typeof ask === 'function') void Promise.resolve(ask()).catch(noop);
 }
