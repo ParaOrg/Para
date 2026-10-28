@@ -14,7 +14,7 @@ function say(line: string): void {
 }
 
 /**
- * Waits for the page's own load (use-recording.ts) to import the native log: until the ride holds
+ * Waits for the page's own load (recorder-opening.ts) to import the native log: until the ride holds
  * the log's last fix. Gives up after a minute, and the report then shows what the ride holds.
  */
 async function waitForImport(recordingId: string): Promise<void> {

@@ -63,8 +63,14 @@ export function resumedRecording(
   return { ...recording, status: 'recording', stoppedAt: null, gaps: [...recording.gaps, ...lost] };
 }
 
+/** A recording after a switch of way, and the way it is on now. */
+export interface SwitchedWay {
+  recording: Recording;
+  to: Way;
+}
+
 /** The recording switched to the other way at `time`, and the way it is on now. */
-export function switchedWay(recording: Recording, time: number): { recording: Recording; to: Way } {
+export function switchedWay(recording: Recording, time: number): SwitchedWay {
   const switches = recording.switches ?? [];
   const to = OTHER_WAY[currentWay(switches)];
   return { recording: { ...recording, switches: [...switches, { time, to }] }, to };
