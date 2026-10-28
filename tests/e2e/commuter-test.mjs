@@ -1213,7 +1213,9 @@ if (PART === 1) {
         try {
           const { litWidthAt } = await import('/src/features/routes/map/line-style.ts');
           line = litWidthAt(m.getZoom());
-        } catch {}
+        } catch {
+          // A server that cannot serve line-style.ts: each chevron is held to its own width alone.
+        }
         const all = ((await window.__src('direction-arrows'))?.features ?? []).map((f) => {
           const p = f.geometry.coordinates[0].map((c) => m.project(c));
           const ax = p[3].x - p[0].x;

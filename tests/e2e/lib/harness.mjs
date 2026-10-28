@@ -171,7 +171,8 @@ export const cardsSettled = async (page, ms = 10000) => {
     .waitForFunction(
       () =>
         [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')].every(
-          (e) => !e.getAnimations({ subtree: true }).some((a) => a instanceof CSSTransition),
+          // A CSS transition is the one kind with a transitionProperty.
+          (e) => !e.getAnimations({ subtree: true }).some((a) => 'transitionProperty' in a),
         ),
       null,
       { timeout: ms },
@@ -273,7 +274,9 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
       let m = null;
       try {
         m = JSON.parse(String(e.data));
-      } catch {}
+      } catch {
+        // Not JSON: nothing the dev server holds for a page.
+      }
       if (m?.type === 'connected') {
         connected = true;
         // What it holds goes out right behind 'connected', on the same socket.
