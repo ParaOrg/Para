@@ -15,6 +15,9 @@ Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
 - **How it is built, and what comes next:** [PLAN.md](PLAN.md). The words the
   app, the plan and the owner use: [CONTEXT.md](CONTEXT.md). Decisions and
   research: [docs/](docs/).
+- **Running it:** [docs/operations.md](docs/operations.md) — where each
+  service lives, what it costs, what renews when, and what to do when
+  something breaks.
 
 ## Two pages, one published map
 
