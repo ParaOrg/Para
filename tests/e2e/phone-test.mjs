@@ -4565,6 +4565,9 @@ await waitForSource(page, 'saved-routes');
     `"${await tripLabel()}"; lit ${JSON.stringify(lit)}`,
   );
   if ((await trip().count()) > 0) {
+    // The pick's checks run on the first trip with a hintuan; here, whatever
+    // today's map gave them above, they run again on this one.
+    picksChecked = false;
     const made = await tripChecks();
     await closeCard();
     if (made.picked) check('  ✕ lets the picked hintuan go', await noPickLeft());
