@@ -1,6 +1,6 @@
 import type { BorrowPart } from '@/features/routes/model/direction-schema';
 import type { DirectionDrawing } from '@/features/routes/model/routes';
-import type { LngLat } from '@/shared/utils/geo';
+import type { LngLat, Segment } from '@/shared/utils/geo';
 
 import type { LineSpot } from './borrow';
 
@@ -49,6 +49,20 @@ export interface Borrow {
 export interface Picking {
   direction: DirectionDrawing;
   spot: LineSpot | null;
+}
+
+/**
+ * How a drawing begins (useDrawing's `begin`): what it will save to — a
+ * hotspot's outline (`area`) or a route's direction (`target`, a new route
+ * when left out) — the points it opens with, if any, and Extend's spot to
+ * pick (`picking`).
+ */
+export interface DrawingStart {
+  area?: AreaTarget | null;
+  target?: Target;
+  points?: LngLat[];
+  segments?: Segment[];
+  picking?: Picking | null;
 }
 
 /** See `followOffer` in useDrawing. */

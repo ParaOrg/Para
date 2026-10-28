@@ -18,11 +18,10 @@ export function proveDevelopmentOnly(build, check) {
     mentions.join(', '),
   );
 
-  // The map object is the suites' and the timer's (2026-10-04): a build made
-  // with VITE_EXPOSE_MAP=1 hands it to the page as window.__map, from its
-  // making as window.__mapEarly, and its GL programs as window.__programs (the
-  // cheap-phone plan, Step 0), and such a build must never be what a deploy
-  // carries.
+  // The map object is the suites' and the timer's: a build made with
+  // VITE_EXPOSE_MAP=1 hands it to the page as window.__map, from its making as
+  // window.__mapEarly, and its GL programs as window.__programs, and such a
+  // build must never be what a deploy carries.
   const exposing = [...walk(dist)]
     .filter((f) => /\.(js|html)$/.test(f))
     .filter((f) => /__(map|mapEarly|programs)\b/.test(readFileSync(f, 'utf8')))

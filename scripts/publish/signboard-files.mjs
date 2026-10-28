@@ -1,7 +1,7 @@
 // Which signboards the map publishes: each direction's boards, in its order,
-// as files (0010, the owner's ask of 2026-10-01). One the bucket no longer
-// holds is left out, said, and the rest still publish; a name not the studio's
-// is never asked for. Reading the bucket is read-database.mjs's.
+// as files (0010). One the bucket no longer holds is left out, said, and the
+// rest still publish; a name not the studio's is never asked for. Reading the
+// bucket is read-database.mjs's.
 
 /** A board's name in the bucket, as the studio writes it (signboards.ts): a uuid. Anything else is not read. */
 export const BOARD_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.svg$/;
@@ -33,7 +33,7 @@ export function sortBoards(fetched, boardsOf) {
   // likely a bucket made private than a clear-out (a board taken off in the
   // studio is unlisted first, so it is not named), and the files would then
   // be deleted from the map: refused unless told, as a shrunk map is
-  // (review of 2026-10-03, finding 8; board-guard.mjs).
+  // (board-guard.mjs).
   const gone = [...boardText]
     .filter(([n, t]) => t === null && !refused.some(([r]) => r === n))
     .map(([n]) => n);

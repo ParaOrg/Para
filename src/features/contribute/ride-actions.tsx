@@ -1,6 +1,6 @@
 import { Button } from '@/design-system/primitives/button';
 
-import type { UploadStatus } from './use-uploads';
+import type { UploadStatus } from './upload-state';
 
 export type Asking = 'remove-upload' | 'delete-from-phone' | null;
 

@@ -35,9 +35,9 @@ import { noteTile } from './tiles-asked';
  * build ships no worker, so the worker never starts, tiles never parse and the
  * map never fires 'load'. `?worker&url` makes Vite bundle the worker (and the shared
  * chunk it imports) and hand back its real URL. In a build, maplibreWorkerWithThePage
- * (scripts/node/vite-plugins/maplibre-worker.ts) answers this import with a worker built
- * with the page, which imports the page's own copy of MapLibre's shared code rather than
- * carrying one.
+ * (scripts/node/vite-plugins/maplibre-worker.ts) answers this import with a
+ * worker built with the page, which imports the page's own copy of MapLibre's
+ * shared code rather than carrying one.
  */
 setWorkerUrl(maplibreWorkerUrl);
 

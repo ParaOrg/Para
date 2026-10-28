@@ -1,13 +1,12 @@
 import type { Plugin } from 'vite';
 
 /**
- * The map file, asked for by the map's page as it is read (the cheap-phone
- * plan, step 20, 2026-10-04): a few lines of plain script in the <head> of
- * the root index.html, ahead of the app's own script and stylesheets (a
- * script after a stylesheet waits for it), so the 22 kB file comes over
- * while the app's 385 kB (355 before step 14, 2026-10-05) still downloads,
- * and the routes can go onto the map as soon as its style is in (the
- * owner's Q1, MapView's `openOn`). map-file.ts takes the answer once, under
+ * The map file, asked for by the map's page as it is read: a few lines of
+ * plain script in the <head> of the root index.html, ahead of the app's own
+ * script and stylesheets (a script after a stylesheet waits for it), so the
+ * small file comes over while the app's much larger script still downloads,
+ * and the routes can go onto the map as soon as its style is in (MapView's
+ * `openOn`). map-file.ts takes the answer once, under
  * EARLY_MAP_FILE, and treats it as the one it would have fetched itself.
  * `no-cache`, as map-file.ts asks: the file keeps no hash in its name. Low
  * priority: the app's script, which needs the whole link, keeps it first.

@@ -70,9 +70,9 @@ export function writeMapFiles(paths, files) {
  * A line per drawn direction.
  *
  * With its orange stretches, worked out here once rather than by every
- * phone that lights the line (line-file.mjs; the cheap-phone plan, step 13,
- * 2026-10-05): by the app's own rule (src/features/routes/model/line-pass.ts: passBoxes,
- * passBounds, passStretches, hotspotRing, bboxOf, servedBy), on what the app
+ * phone that lights the line (line-file.mjs): by the app's own rule
+ * (src/features/routes/model/line-pass.ts: passBoxes, passBounds,
+ * passStretches, hotspotRing, bboxOf, servedBy), on what the app
  * reads — the line as written and the hotspots as rounded in the index,
  * the same stops in every shape, the app reads shape 5 — with the key the app checks them by.
  * The rows are the file's (the database's names); the app's rules read the

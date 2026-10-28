@@ -1,12 +1,11 @@
 // 1. Modules. Walks Vite's manifest from each HTML entry through every chunk it
 //    imports, statically or dynamically, and reads which source files went
-//    into those chunks (.vite/modules.json, written by the chunkModules plugin
-//    in vite.config.ts). No file from src/app/studio/ or src/features/studio/
+//    into those chunks (.vite/modules.json, written by the chunkModules plugin,
+//    scripts/node/vite-plugins/chunk-modules.ts). No file from src/app/studio/ or src/features/studio/
 //    may reach the public page, whatever it contains.
 
 // The design system is domain-free and imports only itself, so it is the
-// public page's as much as the studio's: the route list brought its first
-// primitives there on 2026-09-28.
+// public page's as much as the studio's.
 const PUBLIC_AREAS = [
   'src/app/public-map/',
   'src/features/routes/',

@@ -232,7 +232,9 @@ export function askedBy(
   let from = '';
   try {
     from = new URL(headers.referer ?? '').pathname;
-  } catch {}
+  } catch {
+    // No referer, or not an address: the request is told by its destination alone.
+  }
   if (dest === 'serviceworker' || swPath.test(from)) return 'sw';
   if (dest === 'worker' || workerPath.test(from)) return 'worker';
   return 'page';

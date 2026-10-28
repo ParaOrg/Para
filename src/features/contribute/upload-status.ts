@@ -1,4 +1,4 @@
-import type { UploadStatus } from './use-uploads';
+import type { UploadStatus } from './upload-state';
 
 /** A saved recording's upload, in the contributor's words. */
 export function uploadStatusText(status: UploadStatus, canRemove: boolean): string {
