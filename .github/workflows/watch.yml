@@ -5,10 +5,13 @@
 # Checks (scripts/watch/watch.mjs, each tried 3 times, 20 seconds apart):
 #   - https://www.para-commute.org/ answers with the app's page, and the bare domain
 #     redirects to it;
-#   - the published map's index answers, parses, and is under 36 hours old;
-#   - one tile and one style answer from tiles.para-commute.org, on every other run: about
-#     96 requests a day out of the tiles Worker's 100,000;
-#   - the last successful Backup is under 8 days old and the last Tiles build under 35;
+#   - the published map's index answers and parses;
+#   - one style and one tile answer from tiles.para-commute.org, on every other run: about
+#     96 requests a day out of the tiles Worker's 100,000, and the tile is fetched once per
+#     run even while the check is retried;
+#   - the last successful Publish map run is under 36 hours old (the index's published_at
+#     moves only when the map changes, so it says nothing about the publish), the last
+#     Backup under 8 days and the last Tiles build under 35;
 #   - a failed run's alert (opened by the last job of publish-map.yml, backup.yml and
 #     tiles.yml) closes once that workflow's next run passes.
 #

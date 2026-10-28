@@ -10,6 +10,14 @@ export const ALERT_LABEL = 'alert';
 // one, so a flapping check is one thread, not a new email each time.
 export const REOPEN_WITHIN_MS = 24 * 60 * 60 * 1000;
 
+// The runbooks in docs/operations.md, on main: what is live is what an alert is about.
+const RUNBOOKS = 'https://github.com/ParaOrg/Para/blob/main/docs/operations.md';
+
+/** The link to one runbook section of docs/operations.md, by its heading's anchor. */
+export function runbookLink(anchor) {
+  return `${RUNBOOKS}#${anchor}`;
+}
+
 const MARKER = /<!-- alert: (\S+) since=(\S+) failures=(\d+) -->/;
 
 /**
@@ -19,6 +27,7 @@ const MARKER = /<!-- alert: (\S+) since=(\S+) failures=(\d+) -->/;
  * @property {boolean} ok
  * @property {string} [answer] What came back, for a failure.
  * @property {string} [hint] The first thing to try, for a failure.
+ * @property {string} [runbook] The runbook's link, from `runbookLink`.
  * @property {boolean} [isEvent] A failed run, not a state: each one is worth a comment.
  */
 
@@ -54,6 +63,7 @@ export function alertBody(result, since, failures, now) {
     '',
     `**First thing to try:** ${result.hint ?? 'Open the run linked above and read its log.'}`,
     '',
+    ...(result.runbook ? [`**Runbook:** ${result.runbook}`, ''] : []),
     '_Kept by the watch (`.github/workflows/watch.yml`). It closes this issue itself when the check passes again._',
     '',
     `<!-- alert: ${result.key} since=${since} failures=${failures} -->`,

@@ -4,7 +4,7 @@
 //   node --test tests/unit/watch-alerts-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { planAlerts, readMarker } from '../../scripts/watch/alerts.mjs';
+import { planAlerts, readMarker, runbookLink } from '../../scripts/watch/alerts.mjs';
 
 const down = {
   key: 'site',
@@ -12,6 +12,7 @@ const down = {
   ok: false,
   answer: '503',
   hint: 'Look',
+  runbook: runbookLink('the-map-is-blank'),
 };
 const up = { key: 'site', title: 'Alert: the site is down', ok: true };
 
@@ -49,6 +50,7 @@ test('down opens one issue with what failed, the answer and the first thing to t
   assert.equal(action.title, 'Alert: the site is down');
   assert.match(action.body, /503/);
   assert.match(action.body, /Look/);
+  assert.match(action.body, /operations\.md#the-map-is-blank/);
   assert.equal(issues.length, 1);
   assert.deepEqual(readMarker(issues[0].body), {
     key: 'site',

@@ -8,7 +8,9 @@ export const TILES = 'https://tiles.para-commute.org';
 export const TILE_PATH = '/10/856/470.pbf';
 export const STYLE_PATH = '/styles/positron';
 
-export const MAP_MAX_AGE_HOURS = 36;
+// The index's published_at moves only when the map's content does, so a quiet week is
+// normal; the publish's own runs say whether the map is being kept up to date.
+export const PUBLISH_MAX_AGE_DAYS = 1.5;
 export const BACKUP_MAX_AGE_DAYS = 8;
 export const TILES_BUILD_MAX_AGE_DAYS = 35;
 
@@ -60,8 +62,8 @@ export async function checkSite(fetchImpl, site = SITE, bareDomain = BARE_DOMAIN
   return { ok: true, answer: `${site}/ 200, ${bareDomain}/ ${bare.status} to ${location}` };
 }
 
-/** The published map's index answers, parses, and was published less than 36 hours ago. */
-export async function checkPublishedMap(fetchImpl, now, site = SITE) {
+/** The published map's index answers 200, parses, and carries a published_at. */
+export async function checkPublishedMap(fetchImpl, site = SITE) {
   const url = `${site}/data/index.v5.json`;
   const response = await fetchImpl(url);
   const text = await response.text();
@@ -72,24 +74,31 @@ export async function checkPublishedMap(fetchImpl, now, site = SITE) {
   } catch {
     return { ok: false, answer: `${url} is not JSON: ${text.slice(0, 200)}` };
   }
-  const ageHours = (Date.parse(now) - Date.parse(publishedAt)) / 3_600_000;
-  if (!Number.isFinite(ageHours)) {
+  if (!Number.isFinite(Date.parse(publishedAt))) {
     return { ok: false, answer: `${url} has no readable published_at (${publishedAt})` };
   }
-  const answer = `published_at ${publishedAt}, ${ageHours.toFixed(1)} hours ago`;
-  return { ok: ageHours < MAP_MAX_AGE_HOURS, answer };
+  return { ok: true, answer: `${url} 200, published_at ${publishedAt}` };
 }
 
-/** One tile and one style answer 200 from the tiles Worker: two requests. */
-export async function checkTiles(fetchImpl, tiles = TILES) {
-  const answers = [];
-  for (const path of [TILE_PATH, STYLE_PATH]) {
-    const response = await fetchImpl(`${tiles}${path}`);
-    await response.body?.cancel();
-    answers.push(`${tiles}${path} ${response.status}`);
-    if (response.status !== 200) return { ok: false, answer: answers.join('\n') };
-  }
-  return { ok: true, answer: answers.join('\n') };
+/**
+ * A check that one style, then one tile, answer 200 from the tiles Worker. The tile is
+ * fetched at most once per check however often it is retried, and only once the style
+ * passes, so a broken Worker costs the tile budget one request per run, not three.
+ */
+export function tilesCheck(fetchImpl, tiles = TILES) {
+  let tileAnswer;
+  return async () => {
+    const style = await fetchImpl(`${tiles}${STYLE_PATH}`);
+    await style.body?.cancel();
+    const styleLine = `${tiles}${STYLE_PATH} ${style.status}`;
+    if (style.status !== 200) return { ok: false, answer: styleLine };
+    if (!tileAnswer) {
+      const tile = await fetchImpl(`${tiles}${TILE_PATH}`);
+      await tile.body?.cancel();
+      tileAnswer = { ok: tile.status === 200, line: `${tiles}${TILE_PATH} ${tile.status}` };
+    }
+    return { ok: tileAnswer.ok, answer: `${styleLine}\n${tileAnswer.line}` };
+  };
 }
 
 /** The newest successful run among `runs` (GitHub's, newest first) counts, if young enough. */

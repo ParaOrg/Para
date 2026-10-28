@@ -7,8 +7,9 @@ import {
   checkLastSuccess,
   checkPublishedMap,
   checkSite,
-  checkTiles,
   lastRunSucceeded,
+  PUBLISH_MAX_AGE_DAYS,
+  tilesCheck,
   withRetries,
 } from '../../scripts/watch/checks.mjs';
 
@@ -47,34 +48,59 @@ test('the site fails on an error, on another page, or on a lost redirect', async
   assert.match((await checkSite(noRedirect.fetchImpl)).answer, /not a redirect/);
 });
 
-test('the published map passes under 36 hours old and fails past it or broken', async () => {
+test('the published map passes when its index answers and parses, whatever its age', async () => {
   const url = 'https://www.para-commute.org/data/index.v5.json';
-  const fresh = fakeFetch({ [url]: { body: '{"published_at":"2026-10-27T23:50:17Z"}' } });
-  assert.equal((await checkPublishedMap(fresh.fetchImpl, '2026-10-28T12:00:00Z')).ok, true);
-  assert.equal((await checkPublishedMap(fresh.fetchImpl, '2026-10-29T12:00:00Z')).ok, false);
+  const old = fakeFetch({ [url]: { body: '{"published_at":"2026-10-01T00:00:00Z"}' } });
+  assert.equal((await checkPublishedMap(old.fetchImpl)).ok, true);
   const html = fakeFetch({ [url]: { body: '<html>' } });
-  assert.match(
-    (await checkPublishedMap(html.fetchImpl, '2026-10-28T12:00:00Z')).answer,
-    /not JSON/,
-  );
+  assert.match((await checkPublishedMap(html.fetchImpl)).answer, /not JSON/);
   const empty = fakeFetch({ [url]: { body: '{}' } });
-  assert.match(
-    (await checkPublishedMap(empty.fetchImpl, '2026-10-28T12:00:00Z')).answer,
-    /no readable/,
-  );
+  assert.match((await checkPublishedMap(empty.fetchImpl)).answer, /no readable/);
+  const gone = fakeFetch({});
+  assert.match((await checkPublishedMap(gone.fetchImpl)).answer, /404/);
 });
 
-test('the tiles check asks for one tile and one style, and stops at the first failure', async () => {
+test('an index unchanged for days while the nightly publish passes raises no alert', () => {
+  // published_at moves only when the map's content does (scripts/publish/assemble.mjs).
+  const nightly = ['2026-10-27', '2026-10-26', '2026-10-25', '2026-10-24', '2026-10-23'].map(
+    (day) => ({ conclusion: 'success', event: 'schedule', run_started_at: `${day}T20:00:00Z` }),
+  );
+  const freshness = checkLastSuccess(
+    nightly,
+    ['schedule', 'workflow_dispatch'],
+    PUBLISH_MAX_AGE_DAYS,
+    '2026-10-28T12:00:00Z',
+  );
+  assert.equal(freshness.ok, true);
+  const stopped = checkLastSuccess(
+    nightly,
+    ['schedule', 'workflow_dispatch'],
+    PUBLISH_MAX_AGE_DAYS,
+    '2026-10-29T12:00:00Z',
+  );
+  assert.equal(stopped.ok, false, 'no good publish for 40 hours is an alert');
+});
+
+test('the tiles check asks for a style, then a tile, and never a tile when the style fails', async () => {
   const good = fakeFetch({
     'https://tiles.para-commute.org/10/856/470.pbf': { body: 'tile' },
     'https://tiles.para-commute.org/styles/positron': { body: '{}' },
   });
-  assert.equal((await checkTiles(good.fetchImpl)).ok, true);
+  assert.equal((await tilesCheck(good.fetchImpl)()).ok, true);
   assert.equal(good.asked.length, 2);
   const wrong = fakeFetch({});
-  const result = await checkTiles(wrong.fetchImpl, 'https://tiles.example.invalid');
+  const result = await tilesCheck(wrong.fetchImpl, 'https://tiles.example.invalid')();
   assert.equal(result.ok, false);
-  assert.equal(wrong.asked.length, 1);
+  assert.deepEqual(wrong.asked, ['https://tiles.example.invalid/styles/positron']);
+});
+
+test('a retried tiles check fetches the tile once per run', async () => {
+  const noTile = fakeFetch({ 'https://tiles.para-commute.org/styles/positron': { body: '{}' } });
+  const result = await withRetries(tilesCheck(noTile.fetchImpl), { sleep: async () => {} });
+  assert.equal(result.ok, false);
+  assert.match(result.answer, /470\.pbf 404/);
+  const tiles = noTile.asked.filter((url) => url.endsWith('.pbf'));
+  assert.equal(tiles.length, 1);
 });
 
 test('the last successful run counts only for the events that do the work', () => {
