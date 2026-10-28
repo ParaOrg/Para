@@ -46,19 +46,19 @@ test('the stylesheets go just before the module script, in their order, after th
   assert.equal(stylesheetsBeforeScripts(moved), moved, 'once is enough');
   // The studio's page: no early script.
   const studio = vite
-    .replace(/\n    <script>.*<\/script>/, '')
-    .replace(/\n    <link rel="stylesheet"[^>]*commuter-f\.css">/, '');
+    .replace(/\n {4}<script>.*<\/script>/, '')
+    .replace(/\n {4}<link rel="stylesheet"[^>]*commuter-f\.css">/, '');
   const studioMoved = moved
-    .replace(/\n    <script>.*<\/script>/, '')
-    .replace(/\n    <link rel="stylesheet"[^>]*commuter-f\.css">/, '');
+    .replace(/\n {4}<script>.*<\/script>/, '')
+    .replace(/\n {4}<link rel="stylesheet"[^>]*commuter-f\.css">/, '');
   assert.notEqual(studio, vite);
   assert.equal(stylesheetsBeforeScripts(studio), studioMoved);
 });
 
 test('a page with no stylesheet after its module script, or no module script, or a stylesheet in its body, is left alone', () => {
-  const noSheets = vite.replace(/\n    <link rel="stylesheet"[^>]*>/g, '');
+  const noSheets = vite.replace(/\n {4}<link rel="stylesheet"[^>]*>/g, '');
   assert.equal(stylesheetsBeforeScripts(noSheets), noSheets);
-  const noScript = vite.replace(/\n    <script type="module"[^>]*><\/script>/, '');
+  const noScript = vite.replace(/\n {4}<script type="module"[^>]*><\/script>/, '');
   assert.equal(stylesheetsBeforeScripts(noScript), noScript);
   const inBody = noSheets.replace('<body>', '<body><link rel="stylesheet" href="/late.css">');
   assert.equal(stylesheetsBeforeScripts(inBody), inBody);
