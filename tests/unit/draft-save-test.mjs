@@ -1,4 +1,5 @@
-// The studio's saves as drafts (src/features/studio/data/draft-save.ts), behind
+// The studio's saves as drafts (src/features/studio/data/draft-save.ts and the
+// state it builds, route-draft-state.ts and route-draft-edits.ts), behind
 // STUDIO_DRAFTS: the whole route or hotspot built as 0022's payload, stored in
 // `draft` only — never a write to route, route_variant, stop or route_stop.
 //
@@ -9,16 +10,20 @@ import { fakeSupabase } from './fixtures/fake-supabase.mjs';
 import { setSupabase } from '../../src/features/studio/data/supabase.ts';
 import {
   deleteDirectionDraft,
-  hintuanLinksFor,
-  newRouteState,
-  routePayloadOf,
-  routeStateFromLive,
   saveHotspotDraft,
   saveRouteDraft,
   signboardsDraft,
+} from '../../src/features/studio/data/draft-save.ts';
+import {
+  hintuanLinksFor,
   withDirectionEmptied,
   withDirectionSaved,
-} from '../../src/features/studio/data/draft-save.ts';
+} from '../../src/features/studio/data/route-draft-edits.ts';
+import {
+  newRouteState,
+  routePayloadOf,
+  routeStateFromLive,
+} from '../../src/features/studio/data/route-draft-state.ts';
 import { STUDIO_DRAFTS } from '../../src/features/studio/data/flags.ts';
 
 const line = [
@@ -429,7 +434,7 @@ test('draftRefusal: stored or taken down says nothing; every refusal says why', 
 });
 
 test('Edit route that changes the mode asks the hintuan rule with the new mode', async () => {
-  const { servedRouteOf } = await import('../../src/features/studio/data/draft-save.ts');
+  const { servedRouteOf } = await import('../../src/features/studio/data/route-draft-state.ts');
   assert.equal(servedRouteOf(live(), { mode: 'bus', isLoop: false, writeRoute: true }).mode, 'bus');
   assert.equal(
     servedRouteOf(live(), { mode: 'bus', isLoop: false }).mode,

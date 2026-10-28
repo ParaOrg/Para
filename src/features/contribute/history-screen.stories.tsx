@@ -3,8 +3,9 @@ import { expect, fn, within } from 'storybook/test';
 
 import { HistoryScreen } from './history-screen';
 import type { Recording } from './recording-schema';
+import type { UploadStatus } from './upload-state';
 import type { HistoryItems, HistoryLoad } from './use-history-items';
-import type { UploadStatus, Uploads } from './use-uploads';
+import type { Uploads } from './use-uploads';
 
 const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
 const PLACES = ['SM Fairview', 'Lagro', 'Novaliches', 'Tala', 'Quezon Memorial Circle'];
