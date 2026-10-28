@@ -465,7 +465,9 @@ function stamps(routesOnMap) {
     new PerformanceObserver((list) => {
       for (const e of list.getEntries()) s.longtasks.push([e.startTime, e.duration]);
     }).observe({ type: 'longtask', buffered: true });
-  } catch {}
+  } catch {
+    // No long-task timing in this browser: the run reports none.
+  }
   // The map from its making (MapView hands it out as window.__mapEarly in
   // this build): its 'load', and "routes drawn", the first frame it renders
   // with a route in the routes' loaded source (routesOnMap). Never throws
@@ -484,14 +486,18 @@ function stamps(routesOnMap) {
           let yes = false;
           try {
             yes = routesOnMap(m);
-          } catch {}
+          } catch {
+            // The routes' source is not loaded yet: not drawn.
+          }
           if (yes) {
             s.routesDrawn ??= performance.now();
             m.off('render', drawn);
           }
         };
         m.on('render', drawn);
-      } catch {}
+      } catch {
+        // Never into MapView: a map that cannot be watched leaves its times unset.
+      }
     },
   });
   navigator.serviceWorker?.ready.then(
@@ -597,7 +603,9 @@ async function rawCdp(port) {
     for (const l of listeners) {
       try {
         Promise.resolve(l(msg)).catch(() => {});
-      } catch {}
+      } catch {
+        // A listener's error is its own: the others still hear the message.
+      }
     }
   });
   ws.addEventListener('close', () => {
