@@ -210,18 +210,35 @@ const cardKind = async () => {
     return { kind: 'route', text };
   return { kind: 'unknown', text };
 };
-// The waits below are on what the next line reads, not the clock: each gives
-// up after its time and lets the check decide.
+// The waits below are on what the next line reads, not the clock. One that
+// runs out throws, naming what never came: the run fails there, loudly.
+const ANY_CARD = '[data-testid="card"], [data-testid="chooser"]';
 /** Once something matches `selector`: what a tap opens. */
-const shows = (selector = '[data-testid="card"], [data-testid="chooser"]', ms = 3000) =>
+const shows = (selector = ANY_CARD, ms = 3000) =>
   page
     .waitForFunction((q) => !!document.querySelector(q), selector, { timeout: ms })
-    .catch(() => {});
+    .catch(() => {
+      throw new Error(`shows: nothing matched ${selector} within ${ms} ms`);
+    });
 /** Once nothing matches `selector`: what a close shuts. */
 const hides = (selector, ms = 3000) =>
   page
     .waitForFunction((q) => !document.querySelector(q), selector, { timeout: ms })
-    .catch(() => {});
+    .catch(() => {
+      throw new Error(`hides: ${selector} still there after ${ms} ms`);
+    });
+/**
+ * Whether something comes to match `selector` within `ms`: for a tap that may
+ * rightly open nothing (a point in a box the finger misses), where the code
+ * after it decides what that means.
+ */
+const appears = (selector = ANY_CARD, ms = 3000) =>
+  page
+    .waitForFunction((q) => !!document.querySelector(q), selector, { timeout: ms })
+    .then(
+      () => true,
+      () => false,
+    );
 /** Once `locator`'s data-state reads `state`: a card or a row picked, or let go. */
 const inState = (locator, state, ms = 3000) =>
   until(
@@ -482,7 +499,8 @@ for (const [i, p] of snapshot.polys.entries()) {
     );
     const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
     await page.mouse.click(box.x + pt[0], box.y + pt[1]);
-    await shows();
+    // A point the finger misses opens nothing: the next one is tried.
+    await appears();
     const chooser = page.locator('[data-testid="chooser"]');
     if ((await chooser.count()) > 0) {
       // Boxes side by side under this point: the list shows them, and its
@@ -491,8 +509,10 @@ for (const [i, p] of snapshot.polys.entries()) {
         .locator('button[data-testid="chooser-item"]')
         .filter({ hasText: p.name })
         .first();
-      if ((await row.count()) > 0) await row.click();
-      await shows(PLACE_UP);
+      if ((await row.count()) > 0) {
+        await row.click();
+        await shows(PLACE_UP);
+      }
     }
     const state = await cardKind();
     if (state.kind === 'hotspot') {
@@ -649,8 +669,10 @@ for (const [i, p] of snapshot.polys.entries()) {
         JSON.stringify(litUnder),
       );
       const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) await back.first().click();
-      await shows(PLACE_UP);
+      if ((await back.count()) > 0) {
+        await back.first().click();
+        await shows(PLACE_UP);
+      }
       const again = await cardKind();
       const litAgain = await until(hotspotsLit, (lit) => lit.includes(p.id));
       check(
@@ -685,8 +707,10 @@ for (const [i, p] of snapshot.polys.entries()) {
       await cardsSettled(page);
       const opened2 = (await cardKind()).kind === 'route';
       const moved = !sameView(await view(), camRow);
-      if ((await back.count()) > 0) await back.first().click();
-      await shows(PLACE_UP);
+      if ((await back.count()) > 0) {
+        await back.first().click();
+        await shows(PLACE_UP);
+      }
       await cardsSettled(page);
       const camRowBack = await view();
       check(
@@ -970,15 +994,19 @@ if (PART !== 1) {
       );
       // The list stays behind the trip, hidden, for its ‹.
       const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) await back.first().click();
-      await hides('[data-testid="card"]');
-      await page
-        .waitForFunction(
-          () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
-          null,
-          { timeout: 3000 },
-        )
-        .catch(() => {});
+      if ((await back.count()) > 0) {
+        await back.first().click();
+        await hides('[data-testid="card"]');
+        await page
+          .waitForFunction(
+            () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
+            null,
+            { timeout: 3000 },
+          )
+          .catch(() => {
+            throw new Error('‹ on the trip: the route list not back within 3000 ms');
+          });
+      }
       const again = (await chooser.first().isVisible()) ? await chooser.first().innerText() : '';
       check(
         '  ‹ on the trip goes back to the list, as it was',

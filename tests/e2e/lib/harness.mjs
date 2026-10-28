@@ -131,40 +131,62 @@ export const waitForSource = async (page, id, ms = 20000) => {
 };
 
 /**
+ * The one source that never comes to rest while a route is lit: its chevrons,
+ * set afresh fifteen times a second (direction-arrows.ts). The map is at rest
+ * all the same.
+ */
+const FLOWING_SOURCE = 'direction-arrows';
+
+/**
  * Once the map is at rest: two frames gone by, so a move a handler starts in
  * them (a sheet's transitionend, an effect) has begun, then the first frame
  * with no camera moving and every source loaded but the chevrons'. Not
- * MapLibre's 'idle': while a route is lit its chevrons flow, their source
- * set afresh fifteen times a second (direction-arrows.ts), so 'idle' never
- * comes. At most `ms`, then it goes on: the check after it decides.
+ * MapLibre's 'idle', which never comes while the chevrons flow. Throws when
+ * the map is not at rest within `ms`, naming what was not, so a wait that
+ * ran out fails the run rather than leaving a check to read a map in motion.
  */
-export const mapIdle = (page, ms = 10000) =>
-  page.evaluate(
-    (ms) =>
+export const mapIdle = async (page, ms = 10000) => {
+  const unrest = await page.evaluate(
+    ([ms, flowing]) =>
       new Promise((resolve) => {
         const m = window.__map;
-        const by = performance.now() + ms;
-        const atRest = () =>
-          !m.isMoving() &&
-          Object.keys(m.getStyle()?.sources ?? {}).every(
-            (id) => id === 'direction-arrows' || m.isSourceLoaded(id),
-          );
+        const sources = Object.keys(m.getStyle()?.sources ?? {}).filter((id) => id !== flowing);
+        const notAtRest = () => [
+          ...(m.isMoving() ? ['the camera moving'] : []),
+          ...sources.filter((id) => !m.isSourceLoaded(id)).map((id) => `source ${id} loading`),
+        ];
         let frames = 0;
+        let done = false;
+        const finish = (value) => {
+          if (done) return;
+          done = true;
+          clearTimeout(deadline);
+          resolve(value);
+        };
+        // A deadline of its own: with no frames drawn the loop below never runs.
+        const deadline = setTimeout(() => {
+          const left = notAtRest();
+          finish(left.length > 0 ? left : [`${frames} frame(s) drawn`]);
+        }, ms);
         const look = () => {
+          if (done) return;
           frames++;
-          if ((frames > 2 && atRest()) || performance.now() > by) resolve();
+          if (frames > 2 && notAtRest().length === 0) finish(null);
           else requestAnimationFrame(look);
         };
         m.triggerRepaint();
         requestAnimationFrame(look);
       }),
-    ms,
+    [ms, FLOWING_SOURCE],
   );
+  if (unrest) throw new Error(`mapIdle: the map not at rest after ${ms} ms: ${unrest.join(', ')}`);
+};
 
 /**
  * Once the cards and the route list have stopped moving (no CSS transition
- * left on them: a sheet rising, a fold opening) and the map is idle after
+ * left on them: a sheet rising, a fold opening) and the map is at rest after
  * them: where a camera move that follows a sheet settling has been and gone.
+ * Throws, as mapIdle does, when either is still moving after `ms`.
  */
 export const cardsSettled = async (page, ms = 10000) => {
   await page
@@ -177,7 +199,9 @@ export const cardsSettled = async (page, ms = 10000) => {
       null,
       { timeout: ms },
     )
-    .catch(() => {});
+    .catch(() => {
+      throw new Error(`cardsSettled: a card or the route list still moving after ${ms} ms`);
+    });
   await mapIdle(page, ms);
 };
 
