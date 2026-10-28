@@ -29,3 +29,5 @@ In `src/features/routes/model/` (no React, no browser APIs; both the contributor
 - The public page's chunks are unchanged (nothing here is imported by it).
 
 ## Comments
+
+2026-10-26, status check on `staging`: partly done. Exists: `src/features/routes/model/ride-recording.ts` with `tests/unit/ride-recording-test.mjs`; packing for upload in `src/features/contribute/api/pack-recording.ts` (up to 600 points a row via `batchesOf`, micro-degrees, `overviewOf` line, Philippines box) with `tests/unit/pack-recording-test.mjs`; the caps in `src/features/contribute/recording-limits.ts` (`UPLOAD_LIMITS`). Missing: `routes/model/point-pack.ts` (the packer lives in the contribute feature, so the studio cannot share it), the decode half (batches back to points, within 0.1 m / 1 ms), a decode test, and `tests/unit/fixtures/rides/`. Also still blocked by 04, the field test on the road (ready-for-human). Decide whether decode is still needed (contributor-app 06 would use it) before building.

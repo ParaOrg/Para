@@ -1,6 +1,12 @@
 import { useState } from 'react';
 
-import { SignIn, skipSignInForTests, usePasswordRecovery, useSession } from '@/features/studio';
+import {
+  SignIn,
+  StudioSessionProvider,
+  skipSignInForTests,
+  usePasswordRecovery,
+  useSession,
+} from '@/features/studio';
 
 import { Workshop } from './workshop';
 
@@ -39,12 +45,16 @@ export function StudioApp() {
     return (
       <div className="relative h-full w-full bg-neutral-100">
         <SignIn
-          title="Sign in to ParaPo Studio"
+          title="Sign in to Para Studio"
           notice={recovery.error ? `Reset link problem: ${recovery.error}` : null}
         />
       </div>
     );
   }
 
-  return <Workshop session={session ?? null} recovery={recovery} />;
+  return (
+    <StudioSessionProvider session={session}>
+      <Workshop session={session ?? null} recovery={recovery} />
+    </StudioSessionProvider>
+  );
 }

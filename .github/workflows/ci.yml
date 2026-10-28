@@ -8,10 +8,10 @@
 #      touches: docs and Markdown alone run nothing (except docs/architecture.md,
 #      which the build job's architecture step checks); src/app/studio/,
 #      src/features/studio/ and the studio's suites alone skip the public
-#      suites; src/app/public-map/, src/features/locator/,
-#      src/features/published-map/, public/ and the public suites alone skip
-#      the studio's. Anything else — shared
-#      code, the build, the lockfile, this file — runs both. A push to main
+#      suites; src/app/public-map/, src/features/published-map/, public/ and
+#      the public suites alone skip the studio's. Anything else — shared code
+#      (Turnstile and the locator among it), the build, the lockfile, this
+#      file — runs both. A push to main
 #      or staging, the nightly run and "Run workflow" run everything.
 #   2. Every suite at once. Each suite is its own job, so the run takes as
 #      long as the slowest suite, not the sum of them all. commuter-test, the
@@ -31,17 +31,22 @@
 # not needed, and fails when anything under it failed.
 #
 # The dev server reads .env.local, which is gitignored; here it is a copy of
-# .env.production, whose two values are public by design (see that file).
+# .env.production, whose values are public by design (see that file), with the basemap
+# host put back to OpenFreeMap: the suites stub tiles.openfreemap.org, and none should
+# depend on Para's live tiles server.
 #
-# A commit the publish-map workflow pushes with GITHUB_TOKEN starts no other
-# workflow, by GitHub's rule, so the nightly map file is not checked here —
-# it changes only public/data/ (the index, its lines and map.json), which the
-# suites read as data anyway.
+# A commit the publish-map workflow pushes (with a deploy key, which does start
+# workflows) changes only public/data/, so a push of that alone skips CI:
+# the drawing suites would run nightly through the shared OSRM router for a
+# file the publish has already checked, and the nightly run at 05:00 covers
+# main right after it anyway.
 name: CI
 
 on:
   push:
     branches: [main, staging]
+    paths-ignore:
+      - 'public/data/**'
   pull_request:
   workflow_dispatch:
   schedule:
@@ -92,9 +97,9 @@ jobs:
             case "$f" in
               docs/architecture.md) public=true; studio=true ;;
               docs/*|*.md) ;;
-              src/app/studio/*|src/features/studio/*|src/shared/ui/turnstile.tsx|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/locator/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 public=true ;;
               *) public=true; studio=true ;;
             esac
@@ -153,11 +158,13 @@ jobs:
             where-test,
             scale-test,
             pwa-test,
+            handover-test,
             loop-test,
             contribute-test,
             contribute-offline-test,
             upload-test,
             account-test,
+            forgot-password-test,
             claim-test,
             profile-test,
           ]
@@ -176,9 +183,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
-        # answers only real browsers on ParaPo's own hostnames.
+        # answers only real browsers on Para's own hostnames.
         run: |
           cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
@@ -186,19 +194,24 @@ jobs:
           # and with the studio saving straight to the approved rows, as they
           # were written for; the review suites run on the isolated preview.
           echo VITE_STUDIO_DRAFTS=0 >> .env.local
-      # upload-test, account-test, claim-test and profile-test turn uploads back on for their own dev server, against a
+      # upload-test, account-test, forgot-password-test, claim-test and profile-test turn uploads back on for their own dev server, against a
       # stand-in for Supabase.
-      - name: Turn uploads on, for upload-test, account-test, claim-test and profile-test
-        if: matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test'
+      - name: Turn uploads on, for upload-test, account-test, forgot-password-test, claim-test and profile-test
+        if: matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'forgot-password-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test'
         run: |
           echo VITE_CONTRIBUTIONS=1 >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-      # pwa-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
-      - name: Build, for pwa-test and contribute-offline-test
-        if: matrix.suite == 'pwa-test' || matrix.suite == 'contribute-offline-test'
+      # pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
+      # These build a preview from `.env.production` (not `.env.local`) and must not depend
+      # on the tiles server (it allows no :4173 or :4174 origin): OpenFreeMap is named here.
+      # `build` above checks the committed host.
+      - name: Build, for pwa-test, handover-test and contribute-offline-test
+        if: matrix.suite == 'pwa-test' || matrix.suite == 'handover-test' || matrix.suite == 'contribute-offline-test'
+        env:
+          VITE_BASEMAP_HOST: https://tiles.openfreemap.org
         run: npm run build
       - name: Start the dev server
-        if: matrix.suite != 'pwa-test' && matrix.suite != 'contribute-offline-test'
+        if: matrix.suite != 'pwa-test' && matrix.suite != 'handover-test' && matrix.suite != 'contribute-offline-test'
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
           for i in $(seq 1 60); do
@@ -209,7 +222,7 @@ jobs:
       - name: ${{ matrix.suite }}
         run: node tests/e2e/${{ matrix.suite }}.mjs
         env:
-          PARAPO_TURNSTILE: ${{ (matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test') && '1' || '' }}
+          PARA_TURNSTILE: ${{ (matrix.suite == 'upload-test' || matrix.suite == 'account-test' || matrix.suite == 'forgot-password-test' || matrix.suite == 'claim-test' || matrix.suite == 'profile-test') && '1' || '' }}
           COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
       - name: Keep the screenshots and the dev server log
         if: failure()
@@ -243,6 +256,7 @@ jobs:
             save-test,
             turnstile-test,
             studio-public-view-test,
+            studio-two-editors-test,
           ]
     steps:
       - uses: actions/checkout@v5
@@ -254,9 +268,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
-        # answers only real browsers on ParaPo's own hostnames.
+        # answers only real browsers on Para's own hostnames.
         run: |
           cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
@@ -270,8 +285,8 @@ jobs:
         if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
         run: echo VITE_CONTRIBUTIONS=1 >> .env.local
       # The Public map view exists only with drafts on; the later line wins.
-      - name: Turn the studio's drafts on for studio-public-view-test
-        if: matrix.suite == 'studio-public-view-test'
+      - name: Turn the studio's drafts on for studio-public-view-test and studio-two-editors-test
+        if: matrix.suite == 'studio-public-view-test' || matrix.suite == 'studio-two-editors-test'
         run: echo VITE_STUDIO_DRAFTS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
@@ -316,9 +331,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
-        # answers only real browsers on ParaPo's own hostnames.
+        # answers only real browsers on Para's own hostnames.
         run: |
           cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.

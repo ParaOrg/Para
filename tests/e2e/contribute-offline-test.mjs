@@ -3,7 +3,7 @@
 //
 //   node tests/e2e/contribute-offline-test.mjs
 //
-// Starts its own preview server on :4174 (or uses PARAPO_BASE), then:
+// Starts its own preview server on :4174 (or uses PARA_BASE), then:
 //   - one visit: the page's own worker registers under /contribute/ and no other, stores the
 //     page, and the page links no manifest (it is not installable)
 //   - the browser is asked to keep the page's data
@@ -37,7 +37,7 @@ if (!existsSync(workerFile)) {
 
 const workerSource = readFileSync(workerFile, 'utf8');
 let server = null;
-let base = process.env.PARAPO_BASE;
+let base = process.env.PARA_BASE;
 if (!base) {
   const { preview } = await import('vite');
   server = await preview({ preview: { port: 4174, strictPort: true }, logLevel: 'silent' });
@@ -46,7 +46,7 @@ if (!base) {
 console.log(`preview at ${base}`);
 
 const ACCOUNT_ID = 'cccccccc-0000-4000-8000-000000000001';
-const AUTH_KEY = 'parapo.contributor-auth';
+const AUTH_KEY = 'para.contributor-auth';
 
 /** Supabase, in memory: the account's session is stored on the phone and its name is in the database. */
 async function standInDatabase(page) {
@@ -84,7 +84,7 @@ const storedFixes = (page) =>
   page.evaluate(
     () =>
       new Promise((resolve) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onerror = () => resolve(-1);
         open.onsuccess = () => {
           const count = open.result.transaction('fixes').objectStore('fixes').count();
@@ -96,9 +96,7 @@ const storedFixes = (page) =>
       }),
   );
 const storeNames = (page) =>
-  page.evaluate(async () =>
-    (await caches.keys()).filter((n) => n.startsWith('parapo-contribute-')),
-  );
+  page.evaluate(async () => (await caches.keys()).filter((n) => n.startsWith('para-contribute-')));
 
 const browser = await chromium.launch();
 const phone = {
@@ -122,7 +120,7 @@ try {
     [AUTH_KEY, session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true })],
   );
   await context.addInitScript(() => {
-    localStorage.setItem('parapo.contribute.consent', '3');
+    localStorage.setItem('para.contribute.consent', '3');
     window.__persistAsked = false;
     const persist = StorageManager.prototype.persist;
     StorageManager.prototype.persist = function () {
@@ -169,7 +167,7 @@ try {
   // The worker claims the page once it is active, and has stored the page by then.
   await first.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 20000 });
   const stored = await first.evaluate(async () => {
-    const [name] = (await caches.keys()).filter((n) => n.startsWith('parapo-contribute-'));
+    const [name] = (await caches.keys()).filter((n) => n.startsWith('para-contribute-'));
     const keys = name ? await (await caches.open(name)).keys() : [];
     return keys.map((r) => new URL(r.url).pathname);
   });
@@ -222,7 +220,7 @@ try {
   await page.waitForFunction(
     () =>
       new Promise((resolve) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onsuccess = () => {
           const count = open.result.transaction('fixes').objectStore('fixes').count();
           count.onsuccess = () => {
@@ -255,7 +253,7 @@ try {
   // is named for the file's bytes. The file is put back when the suite ends.
   writeFileSync(
     workerFile,
-    `${workerSource.replace(/parapo-contribute-[0-9a-f]+/, 'parapo-contribute-update')}\n// a new version\n`,
+    `${workerSource.replace(/para-contribute-[0-9a-f]+/, 'para-contribute-update')}\n// a new version\n`,
   );
   await page.evaluate(async () => (await navigator.serviceWorker.ready).update());
   const hasWaiting = () =>

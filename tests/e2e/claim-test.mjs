@@ -16,8 +16,8 @@ import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
-const AUTH_KEY = 'parapo.contributor-auth';
-const CLAIM_KEY = 'parapo.contributor-claim';
+const AUTH_KEY = 'para.contributor-auth';
+const CLAIM_KEY = 'para.contributor-claim';
 const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
 const ACCOUNT_ID = 'cccccccc-0000-4000-8000-000000000001';
 const ANON_ID = 'aaaaaaaa-0000-4000-8000-000000000001';
@@ -68,7 +68,7 @@ async function seed(page, rides) {
   await page.evaluate(
     (rows) =>
       new Promise((resolve, reject) => {
-        const open = indexedDB.open('parapo-contribute');
+        const open = indexedDB.open('para-contribute');
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const tx = open.result.transaction(['recordings', 'fixes'], 'readwrite');
@@ -119,7 +119,7 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
   }
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('parapo.contribute.consent', '3');
+      localStorage.setItem('para.contribute.consent', '3');
       sessionStorage.setItem('seeded', 'yes');
     }
   });

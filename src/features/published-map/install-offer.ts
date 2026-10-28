@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * The browser's offer to install Para Po, kept for the install prompt
+ * The browser's offer to install Para, kept for the install prompt
  * (InstallPrompt). Chromium fires `beforeinstallprompt` when the page is
  * installable and not installed yet; nothing else says so. Kept only on
  * Android: an iPhone has no install a page can start (its Share → Add to
@@ -44,7 +44,7 @@ const subscribe = (listener: () => void) => {
   return () => listeners.delete(listener);
 };
 
-/** True while the browser would install Para Po on a tap. */
+/** True while the browser would install Para on a tap. */
 export function useInstallOffer(): boolean {
   return useSyncExternalStore(
     subscribe,

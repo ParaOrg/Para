@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { Hotspot, HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
@@ -16,6 +18,8 @@ interface TripCardExtrasProps {
   hotspotsAlong: (directionId: string, line: readonly LngLat[]) => Hotspot[];
   /** A signed-in editor: Edit, Extend, Delete and the signboards show. */
   canEdit: boolean;
+  /** Stands where the actions would be when an editor may not change the route. */
+  notice?: ReactNode;
   onEdit: () => void;
   /** Extend, offered only for a drawn direction. */
   onExtend?: () => void;
@@ -33,6 +37,7 @@ export function TripCardExtras({
   hotspots,
   hotspotsAlong,
   canEdit,
+  notice,
   onEdit,
   onExtend,
   onDelete,
@@ -43,13 +48,15 @@ export function TripCardExtras({
       <RouteFacts
         direction={direction}
         actions={
-          canEdit && (
+          canEdit ? (
             <CardActions
               editLabel="Edit route"
               onEdit={onEdit}
               onDelete={onDelete}
               onExtend={onExtend}
             />
+          ) : (
+            notice
           )
         }
       />

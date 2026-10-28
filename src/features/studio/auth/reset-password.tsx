@@ -59,7 +59,7 @@ export function ResetPassword({ onDone, isInvite = false }: ResetPasswordProps) 
           </h2>
           <p className="mt-2 text-sm text-neutral-600">
             {isInvite
-              ? 'Welcome to ParaPo Studio. You are signed in from your invite. Choose a password to sign in with next time.'
+              ? 'Welcome to Para Studio. You are signed in from your invite. Choose a password to sign in with next time.'
               : 'You are signed in from your reset link. Set a password to finish.'}
           </p>
 

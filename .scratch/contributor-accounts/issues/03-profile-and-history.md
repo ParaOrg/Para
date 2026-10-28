@@ -1,6 +1,6 @@
 # 03: Profile and the account's History
 
-Status: claimed
+Status: resolved
 Type: task
 Who: a session
 Blocked by: 02

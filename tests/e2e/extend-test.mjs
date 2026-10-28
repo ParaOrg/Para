@@ -47,11 +47,11 @@ const draft = {
   borrow: { variantId: 'probe', part: 'end' },
   join: 0,
 };
-await page.evaluate((d) => localStorage.setItem('parapo.draft.v1', JSON.stringify(d)), draft);
+await page.evaluate((d) => localStorage.setItem('para.draft.v1', JSON.stringify(d)), draft);
 await page.reload({ waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 const readDraft = () =>
-  page.evaluate(() => JSON.parse(localStorage.getItem('parapo.draft.v1') ?? 'null'));
+  page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null'));
 const same = (a, b) => Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9;
 // Frame some points. fitBounds reads a pair as [south-west, north-east]; two
 // points the other way round make a box around the whole planet.
@@ -184,7 +184,7 @@ check(
 // rest of it: for a return trip that meets another route's line and rides it
 // home. Which line is followed depends on the data, so the check is that the
 // drawing now ends where *a* saved line ends, and borrows from that one.
-await page.evaluate(() => localStorage.removeItem('parapo.draft.v1'));
+await page.evaluate(() => localStorage.removeItem('para.draft.v1'));
 await page.reload({ waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 if ((await waitForSource(page, 'saved-routes')).length === 0)
@@ -236,11 +236,9 @@ await click(Bx, By, { button: 'right' });
 // request; the list carries no drawings since 2026-09-25): wait for the join
 // to land in the draft before waiting for its gap to be routed.
 await page
-  .waitForFunction(
-    () => !!JSON.parse(localStorage.getItem('parapo.draft.v1') ?? '{}').borrow,
-    null,
-    { timeout: 15000 },
-  )
+  .waitForFunction(() => !!JSON.parse(localStorage.getItem('para.draft.v1') ?? '{}').borrow, null, {
+    timeout: 15000,
+  })
   .catch(() => {});
 await page.waitForTimeout(400);
 await waitRouted();
@@ -286,7 +284,7 @@ await page.locator('button[title="Discard this route"]').click();
 await page.waitForTimeout(300);
 
 // Leave nothing behind for the owner's next visit.
-await page.evaluate(() => localStorage.removeItem('parapo.draft.v1'));
+await page.evaluate(() => localStorage.removeItem('para.draft.v1'));
 check('no page errors', errors.length === 0, errors.join(' | '));
 await browser.close();
 tally({ blankLine: false });

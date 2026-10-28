@@ -8,7 +8,7 @@
 //
 //   node scripts/preview/contributions-server.mjs
 //
-// PREVIEW_DIST (default /tmp/parapo-contributions-preview), PREVIEW_PSQL (a
+// PREVIEW_DIST (default /tmp/para-contributions-preview), PREVIEW_PSQL (a
 // `docker exec … psql` for the preview container) and PREVIEW_API
 // (default http://127.0.0.1:4291) may be set.
 import { createServer } from 'node:http';
@@ -22,17 +22,17 @@ import { PREVIEW_JWT_SECRET, PREVIEW_USER_ID } from './review-fixture.mjs';
 
 const run = promisify(execFile);
 const PORT = 4280;
-const root = resolve(process.env.PREVIEW_DIST ?? '/tmp/parapo-contributions-preview');
+const root = resolve(process.env.PREVIEW_DIST ?? '/tmp/para-contributions-preview');
 const api = process.env.PREVIEW_API ?? 'http://127.0.0.1:4291';
-const psql = (
-  process.env.PREVIEW_PSQL ?? 'docker exec -i parapo-preview-db psql -U postgres'
-).split(' ');
+const psql = (process.env.PREVIEW_PSQL ?? 'docker exec -i para-preview-db psql -U postgres').split(
+  ' ',
+);
 if (psql[0] !== 'docker' || psql[1] !== 'exec')
   throw new Error('PREVIEW_PSQL must be a local docker exec');
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(api))
   throw new Error('PREVIEW_API must be loopback');
 
-const EDITOR_EMAIL = 'preview@parapo.test';
+const EDITOR_EMAIL = 'preview@para.test';
 const types = {
   '.html': 'text/html',
   '.js': 'text/javascript',

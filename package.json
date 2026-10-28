@@ -1,13 +1,13 @@
 {
-  "name": "parapo",
+  "name": "para",
   "version": "0.0.0",
   "description": "Ground-truthed jeepney route data for Metro Manila",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
     "dev:phone": "vite --host",
-    "build": "tsc --noEmit && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
-    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && tsc -p workers/tiles && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
+    "typecheck": "tsc --noEmit && tsc -p workers/tiles",
     "lint": "eslint .",
     "check": "npm run format:check && npm run lint && npm run docs:architecture:check && npm run build && npm run test:unit",
     "test": "npm run test:unit",
@@ -24,16 +24,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Roviicc/ParaPo.git"
+    "url": "git+https://github.com/ParaOrg/Para.git"
   },
   "type": "module",
   "engines": {
     "node": ">=22.12"
   },
   "bugs": {
-    "url": "https://github.com/Roviicc/ParaPo/issues"
+    "url": "https://github.com/ParaOrg/Para/issues"
   },
-  "homepage": "https://github.com/Roviicc/ParaPo#readme",
+  "homepage": "https://github.com/ParaOrg/Para#readme",
   "dependencies": {
     "@capacitor-community/background-geolocation": "^1.3.1",
     "@capacitor/android": "^8.5.3",

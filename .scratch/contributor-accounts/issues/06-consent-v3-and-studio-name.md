@@ -1,6 +1,6 @@
 # 06: Consent v3 and the studio's name
 
-Status: claimed
+Status: resolved
 Type: task
 Who: a session, after the owner approves the text
 Blocked by: 01 (the owner approved the consent v3 lines and the "who sees what" rule, 2026-10-24)

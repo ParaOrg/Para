@@ -3,10 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Para Po</title>
+    <title>Para</title>
     <meta name="description" content="Jeepney routes in Metro Manila, drawn from the ground." />
     <!--
-      The basemaps' host, connected to while the app's script downloads: the map asks it for its
+      The basemaps' host (OpenFreeMap here; the build points this at VITE_BASEMAP_HOST,
+      scripts/node/basemap-offline.ts), connected to while the app's script downloads: the map asks it for its
       style only once that script has run, and the name lookup and the TCP and TLS handshakes are
       several round trips on a slow phone network (the cheap-phone plan, step 6, 2026-10-04).
       `crossorigin`: MapLibre asks without credentials, on connections of their own. Offline it

@@ -15,10 +15,18 @@
 # (a line that ends far from its terminal, a hintuan the line passes without
 # being linked to it) lets the map go out and is written up for the owner.
 # If the file changed, the change is committed to main and the push deploys
-# as any other: Cloudflare's GitHub App gets the push like any other. (A push
-# made with GITHUB_TOKEN starts no other GitHub Actions workflow, by design —
-# the CI workflow does not run on these commits.) If nothing changed, nothing
-# is committed: the script writes a byte-identical file for unchanged data.
+# as any other: Cloudflare's GitHub App gets the push like any other. If
+# nothing changed, nothing is committed: the script writes a byte-identical
+# file for unchanged data.
+#
+# The push goes over SSH with a repository deploy key (the secret
+# PUBLISH_DEPLOY_KEY, write access), because main is protected: pull requests
+# only, and the ruleset lets the deploy key, and nothing else, push straight
+# to it (docs/agents/main-protection.md). GITHUB_TOKEN cannot be a bypass
+# actor and is never a fallback here. A push made with a deploy key, unlike
+# one made with GITHUB_TOKEN, starts other workflows: CI skips it through
+# `paths-ignore: public/data/**` on its push trigger, and the contributor
+# app's release runs on `app-v*` tags only, which this never pushes.
 #
 # The last step is the loud part. A failed run — the database unreachable, a
 # table gone private, a data problem — used to be an email from GitHub that
@@ -49,10 +57,10 @@ on:
         type: boolean
         default: false
 
-# The default token is read-only; committing the file needs write, and so
-# does keeping the issue.
+# Read-only is enough for the repository: the commit is pushed with the deploy
+# key, not with this token. The token only keeps the issue.
 permissions:
-  contents: write
+  contents: read
   issues: write
 
 # Never two publishes at once.
@@ -74,11 +82,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # First, so a missing key fails the run at once instead of at the push
+      # after the whole publish. It writes into publish.log so the issue
+      # "The map needs a look" says why.
+      - name: Check the deploy key is set
+        env:
+          PUBLISH_DEPLOY_KEY: ${{ secrets.PUBLISH_DEPLOY_KEY }}
+        run: |
+          if [ -z "$PUBLISH_DEPLOY_KEY" ]; then
+            msg="The secret PUBLISH_DEPLOY_KEY is not set, so the map cannot be pushed to main. Add the deploy key as that repository secret (docs/agents/main-protection.md)."
+            echo "::error::$msg"
+            echo "$msg" > "$RUNNER_TEMP/publish.log"
+            exit 1
+          fi
+
       # Always main, whatever branch "Run workflow" was pressed on: the file
-      # is published from, and to, what is live.
+      # is published from, and to, what is live. Checked out without the
+      # deploy key and without keeping the token: the install and the publish
+      # below run third-party code, and nothing that can push may be on disk
+      # while they do. Only the commit step gets the key.
       - uses: actions/checkout@v5
         with:
           ref: main
+          persist-credentials: false
 
       - uses: actions/setup-node@v5
         with:
@@ -91,15 +117,17 @@ jobs:
       # reads with, the publish validates with and the check reads with
       # (src/features/routes/published), so the runtime dependencies are
       # installed first: zod and the three packages beside it, a few seconds
-      # with the cache. The output is kept for the issue; the step fails on
-      # the script's exit code through the pipe because the workflow's
-      # `shell: bash` (the `defaults` above) sets pipefail.
+      # with the cache. `--ignore-scripts`: no runtime package has an install
+      # script, and a future one must not run here. The output is kept for
+      # the issue; the step fails on the script's exit code through the pipe
+      # because the workflow's `shell: bash` (the `defaults` above) sets
+      # pipefail.
       #
       # `--force` only on a "Run workflow" press with the box ticked: the
       # schedule has no inputs, so the expression is empty there and the
       # shrink guard keeps its say on every unattended run.
       - name: Install the runtime dependencies
-        run: npm ci --omit=dev
+        run: npm ci --omit=dev --ignore-scripts
 
       - name: Publish the map
         run: node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/publish-map.mjs ${{ inputs.force && '--force' || '' }} 2>&1 | tee "$RUNNER_TEMP/publish.log"
@@ -126,7 +154,15 @@ jobs:
       # for lines/ and signboards/, where the file of a direction gone is
       # removed. The folder whole: signboards/ is empty until a board is
       # uploaded, and git refuses a path that matches nothing.
+      #
+      # The deploy key lives only in this step: written to a file in the
+      # runner's temp folder, handed to git through GIT_SSH_COMMAND, and
+      # deleted when the step ends, however it ends. github.com's host key is
+      # pinned, the RSA one actions/checkout pins.
       - name: Commit if the map changed
+        env:
+          PUBLISH_DEPLOY_KEY: ${{ secrets.PUBLISH_DEPLOY_KEY }}
+          REMOTE: git@github.com:${{ github.repository }}.git
         run: |
           git add -A public/data
           if git diff --cached --quiet; then
@@ -136,9 +172,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Publish map $(date -u '+%Y-%m-%d %H:%M UTC')"
+          key="$RUNNER_TEMP/publish_deploy_key"
+          hosts="$RUNNER_TEMP/publish_known_hosts"
+          trap 'rm -f "$key" "$hosts"' EXIT
+          ( umask 077; printf '%s\n' "$PUBLISH_DEPLOY_KEY" > "$key" )
+          echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=' > "$hosts"
+          export GIT_SSH_COMMAND="ssh -i \"$key\" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=\"$hosts\""
           # The owner may have pushed while this ran; go once more behind it.
-          git pull --rebase origin main || { git rebase --abort; exit 1; }
-          git push origin HEAD:main
+          # Output into publish.log for the issue. A key that is wrong or has no
+          # write access fails here, with git's own message above the hint.
+          {
+            git pull --rebase "$REMOTE" main || { git rebase --abort; exit 1; }
+            git push "$REMOTE" HEAD:main
+          } 2>&1 | tee -a "$RUNNER_TEMP/publish.log" || {
+            echo "If this is a permission or authentication error: the deploy key PUBLISH_DEPLOY_KEY is missing, wrong, or has no write access (Settings -> Deploy keys)." | tee -a "$RUNNER_TEMP/publish.log"
+            exit 1
+          }
 
       # One issue, "The map needs a look", is the whole story. Its body is
       # replaced on every run that has something to say, and a comment is
@@ -148,6 +197,9 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
+          # No checkout may have happened (a missing key fails before it), so
+          # gh cannot read the repository from a clone.
+          GH_REPO: ${{ github.repository }}
           STATUS: ${{ job.status }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -156,6 +208,9 @@ jobs:
           body=""
           if [ "$STATUS" != "success" ]; then
             body+="**The publish on $now did not go through** ($STATUS): [the run]($RUN_URL)."$'\n\n'
+            if [ ! -f "$RUNNER_TEMP/publish.log" ]; then
+              body+="The run stopped before the publish started: the checkout, Node or the install failed. The run's log says which."$'\n\n'
+            fi
             log="$(tail -q -n 15 "$RUNNER_TEMP/publish.log" "$RUNNER_TEMP/check.log" 2>/dev/null | sed '/ExperimentalWarning/d' || true)"
             if [ -n "$log" ]; then body+='```'$'\n'"$log"$'\n''```'$'\n\n'; fi
           fi

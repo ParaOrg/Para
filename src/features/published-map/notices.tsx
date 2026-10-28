@@ -3,6 +3,19 @@ import { MAP_FILE_TOO_NEW } from '@/features/routes/published/map-file';
 
 import { shortDate } from './status';
 
+interface NoticesProps {
+  loadFailed: boolean;
+  tooNew: boolean;
+  onTryAgain: () => void;
+  /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
+  onReloadNewer: () => void;
+  offline: boolean;
+  age: { publishedAt: string | null; stale: boolean };
+  needRefresh: boolean;
+  /** The new version's "Update Para!". */
+  onUpdate: () => void;
+}
+
 /**
  * What the public map says about itself, over the map: a load that failed
  * (or a map published for a newer app), how old the map is when it came
@@ -17,18 +30,7 @@ export function Notices({
   age,
   needRefresh,
   onUpdate,
-}: {
-  loadFailed: boolean;
-  tooNew: boolean;
-  onTryAgain: () => void;
-  /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
-  onReloadNewer: () => void;
-  offline: boolean;
-  age: { publishedAt: string | null; stale: boolean };
-  needRefresh: boolean;
-  /** The new version's "Update Para Po!". */
-  onUpdate: () => void;
-}) {
+}: NoticesProps) {
   return (
     <>
       {loadFailed && (
@@ -84,12 +86,7 @@ export function Notices({
       */}
       {needRefresh && (
         <div className="pointer-events-none absolute top-[calc(1.5rem+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 *:pointer-events-auto">
-          <Button
-            variant="primary"
-            label="Update Para Po!"
-            data-testid="update"
-            onClick={onUpdate}
-          />
+          <Button variant="primary" label="Update Para!" data-testid="update" onClick={onUpdate} />
         </div>
       )}
     </>

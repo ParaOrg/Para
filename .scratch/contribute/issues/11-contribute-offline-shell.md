@@ -1,6 +1,6 @@
 # 11: The contributor page opens with no signal
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 4
 Who: Sonnet
@@ -27,3 +27,5 @@ The contributor page's worker and its registration in `src/app/contribute/`; thi
 - `pwa-test` and `gate-test` pass; `npm run check` passes.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Done. Evidence: `src/app/contribute/contribute-sw.ts` and `register-worker.ts`, `scripts/node/contribute-worker.ts` wired in `vite.config.ts` (public worker's `navigateFallbackDenylist` has `/contribute`), the worker check in `scripts/checks/check-build.mjs`, `src/features/contribute/persistent-storage.ts`, `tests/e2e/contribute-offline-test.mjs` (offline open and record, update waits while recording). No manifest, as asked. No migration.

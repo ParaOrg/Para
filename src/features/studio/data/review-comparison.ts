@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 
+import { assertNotAnothersDraft } from './draft-guard';
 import { routeApprovedState, routePayloadOf, routeStateFromDraft } from './draft-save';
 import { callReview } from './drafts';
 import { readAll } from './read-all';
@@ -79,6 +80,7 @@ export async function fetchReviewComparison(draft: DraftRow): Promise<ReviewComp
 
 /** Conflict resolution is explicit replacement, followed by a fresh submission and review. */
 export async function refreshDraftBase(draft: DraftRow, currentRevision: number) {
+  await assertNotAnothersDraft(draft);
   return callReview('refresh_draft_base', {
     p_draft: draft.id,
     p_revision: draft.revision,

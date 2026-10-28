@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import { requireSupabase } from './supabase';
 
 export interface ContributorInfo {
-  /** Every upload the phone has sent that ParaPo still holds, hidden ones too. */
+  /** Every upload the phone has sent that Para still holds, hidden ones too. */
   uploadCount: number;
   blockedAt: number | null;
   blockNote: string;

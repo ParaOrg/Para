@@ -8,10 +8,10 @@ def hasReleaseKey = ['PARAPO_KEYSTORE_PATH', 'PARAPO_KEYSTORE_PASSWORD', 'PARAPO
     .every { !(System.getenv(it) ?: '').isEmpty() }
 
 android {
-    namespace = "ph.parapo.contributor"
+    namespace = "ph.para.contributor"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "ph.parapo.contributor"
+        applicationId "ph.para.contributor"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // The release workflow passes both from the tag (app-v1.2.3 gives "1.2.3" and 1002003).
@@ -55,6 +55,9 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // Already in the build through the background-geolocation plugin; ParaApplication listens to
+    // the same broadcast.
+    implementation "androidx.localbroadcastmanager:localbroadcastmanager:1.1.0"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

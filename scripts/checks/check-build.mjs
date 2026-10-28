@@ -15,7 +15,7 @@
 // 2. Strings, as a second net: the public chunks may not contain words only
 //    the editor has —
 //      router.project-osrm.org   the route snapper
-//      parapo.draft              the drawing-draft key
+//      para.draft              the drawing-draft key
 //      Sign in to save, Forgot password?, New route, terminal or hintuan,
 //      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
@@ -89,7 +89,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadEnv } from 'vite';
+import { basemapCacheRules } from '../node/basemap-offline.ts';
 import { mapFileConstants } from '../node/map-file-constants.ts';
+import { OPENFREEMAP_HOST, parseBasemapHost } from '../../src/shared/config/basemap-host.ts';
 import {
   FONTS_MAX_KB,
   GROUPS,
@@ -105,10 +108,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const dist = join(root, 'dist');
 const manifestPath = join(dist, '.vite', 'manifest.json');
 const modulesPath = join(dist, '.vite', 'modules.json');
+// The basemap host this build was made for, read as vite.config.ts reads it.
+const basemapHost = parseBasemapHost(loadEnv('production', root, 'VITE_').VITE_BASEMAP_HOST);
+const basemapRules = basemapCacheRules(basemapHost);
 
 const EDITOR_ONLY = [
   'router.project-osrm.org',
-  'parapo.draft',
+  'para.draft',
   'Sign in to save',
   'Forgot password?',
   'New route, terminal or hintuan',
@@ -265,6 +271,22 @@ check(
   capacitorPackages.length === 0,
   capacitorPackages.join(', '),
 );
+// The app's native modules (src/features/contribute/native/) are reached only behind the same mode
+// check, so none may be in a web chunk, whatever their imports are.
+const nativeModules = allChunks.filter((f) =>
+  (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/native/')),
+);
+check(
+  "no web chunk holds a module of the app's native folder",
+  nativeModules.length === 0,
+  nativeModules.join(', '),
+);
+check(
+  "the contribute feature's own modules are found by that path search",
+  allChunks.some((f) =>
+    (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/recording-')),
+  ),
+);
 const bridgeMentions = allChunks.filter((f) =>
   readFileSync(join(dist, f), 'utf8').includes('androidBridge'),
 );
@@ -296,11 +318,11 @@ check('public page contains no editor-only string', leaked.length === 0, leaked.
 // Its own chunks, not the ones it shares with the public page, whose map reader
 // names route_variant in the published file's fields.
 const contributeOwn = text(contributeFiles.filter((f) => !commuterFiles.includes(f)));
-// The database's address is the one editor string the contributor page needs.
-// What it may not name are the studio's tables and operations.
+// The database's address and "Forgot password?" (its own Sign in button) are the editor strings the
+// contributor page needs. What it may not name are the studio's tables and operations.
 const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'approve_draft', 'take_down'];
 const leakedToContribute = [
-  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co'),
+  ...EDITOR_ONLY.filter((s) => s !== '.supabase.co' && s !== 'Forgot password?'),
   ...STUDIO_DATA,
 ].filter((s) => contributeOwn.includes(s));
 check(
@@ -310,7 +332,7 @@ check(
 );
 check(
   'contribute page saves through save_contribution under its own session key — the string search works',
-  contribute.includes('save_contribution') && contribute.includes('parapo.contributor-auth'),
+  contribute.includes('save_contribution') && contribute.includes('para.contributor-auth'),
 );
 const studioData = STUDIO_DATA.filter((s) => !studio.includes(s));
 check(
@@ -471,8 +493,8 @@ if (webManifest) {
     );
   check(
     'manifest: name, id/start_url/scope /, standalone, colours',
-    webManifest.name === 'Para Po' &&
-      webManifest.short_name === 'Para Po' &&
+    webManifest.name === 'Para' &&
+      webManifest.short_name === 'Para' &&
       webManifest.id === '/' &&
       webManifest.start_url === '/' &&
       webManifest.scope === '/' &&
@@ -556,16 +578,23 @@ if (existsSync(swPath)) {
       sw.includes('/^\\/contribute(\\/|$)/'),
   );
   check(
-    `sw.js caches ${MAP_FILE_URL} NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and OpenFreeMap tiles CacheFirst`,
+    `sw.js caches ${MAP_FILE_URL} NetworkFirst (stamping what it serves from the store), the lines under /data/lines/, the signboards under /data/signboards/, and the basemap host's (${basemapHost}) styles StaleWhileRevalidate and tiles CacheFirst`,
     !!MAP_FILE_URL &&
       sw.includes(MAP_FILE_URL) &&
       sw.includes('/data/lines/') &&
       sw.includes('map-lines') &&
       sw.includes('/data/signboards/') &&
-      sw.includes('x-parapo-served-from') &&
-      sw.includes('tiles.openfreemap.org') &&
+      sw.includes('x-para-served-from') &&
+      sw.includes(basemapRules.meta.source) &&
+      sw.includes(basemapRules.tiles.source) &&
+      sw.includes('basemap-meta') &&
       sw.includes('map-file') &&
       sw.includes('basemap-tiles'),
+  );
+  check(
+    `index.html preconnects to the basemap host (${basemapHost}), and a host other than OpenFreeMap leaves OpenFreeMap out of the worker`,
+    html('index.html').includes(`<link rel="preconnect" href="${basemapHost}" crossorigin />`) &&
+      (basemapHost === OPENFREEMAP_HOST || !/openfreemap/i.test(sw)),
   );
   // With `skipWaiting: false` Workbox calls skipWaiting() once, inside the
   // handler for the page's SKIP_WAITING message — never on its own.

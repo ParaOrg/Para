@@ -7,3 +7,4 @@ export { connectContributions } from './api/contribute-client';
 export { hasOpenRecording } from './open-recording';
 export { askForPersistentStorage } from './persistent-storage';
 export { isNativeApp, prepareNativeApp } from './native-app';
+export { runEmulatorRide } from './native-emulator-ride';

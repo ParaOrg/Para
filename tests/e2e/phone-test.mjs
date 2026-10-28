@@ -288,13 +288,13 @@ function liftRecorder() {
 /**
  * In the page, before its own scripts: index.html's request for the map file
  * (the cheap-phone plan, step 20, 2026-10-04), left for the app as
- * window.__parapoMapFile — when the page's plain script left it, when the
+ * window.__paraMapFile — when the page's plain script left it, when the
  * app first read it, and how often (map-file.ts takes it once, and deletes it).
  */
 function earlyFileRecorder() {
   let left;
   window.__earlyFile = { leftAt: null, takenAt: null, reads: 0 };
-  Object.defineProperty(window, '__parapoMapFile', {
+  Object.defineProperty(window, '__paraMapFile', {
     configurable: true,
     get() {
       window.__earlyFile.reads++;
@@ -310,13 +310,13 @@ function earlyFileRecorder() {
 await page.addInitScript(earlyFileRecorder);
 /**
  * The map file as the page asked for it: every request of the page's but
- * the checks' own (x-parapo-test), each with how it ended, and the page's
+ * the checks' own (x-para-test), each with how it ended, and the page's
  * loads, so a second request says whether the page was loaded again.
  */
 const mapFileAsks = [];
 let pageLoads = 0;
 page.on('request', (req) => {
-  if (/\/data\/index\.v5\.json/.test(req.url()) && !req.headers()['x-parapo-test'])
+  if (/\/data\/index\.v5\.json/.test(req.url()) && !req.headers()['x-para-test'])
     mapFileAsks.push({ req, end: 'no answer yet' });
 });
 page.on('requestfinished', async (req) => {
@@ -555,7 +555,7 @@ check(
   // 2026-10-05).
   const early = await page.evaluate(() => ({
     ...window.__earlyFile,
-    still: '__parapoMapFile' in window,
+    still: '__paraMapFile' in window,
   }));
   check(
     '  the page asked for the map file as it was read, and the app took that request, once: the one request for it (step 20)',

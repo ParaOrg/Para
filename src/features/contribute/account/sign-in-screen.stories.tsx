@@ -13,6 +13,7 @@ const meta = {
     captcha: NO_CAPTCHA,
     onSubmit: fn(),
     onCreateAccount: fn(),
+    onForgotPassword: fn(),
   },
   decorators: [
     (Story) => (

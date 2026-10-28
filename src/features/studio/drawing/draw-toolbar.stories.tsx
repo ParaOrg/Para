@@ -78,6 +78,7 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     joinGate: fn(),
     connect: fn(),
     lineNow: fn(() => []),
+    hasJoin: fn(() => false),
     uTurns: [],
     load: fn(),
     metres: 0,

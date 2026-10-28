@@ -35,15 +35,15 @@ async function beginClaim(client: ContributeClient): Promise<string | null> {
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
     if (error.code === '42501') {
-      console.warn(`ParaPo did not begin a claim (${error.message}); signing in without one.`);
+      console.warn(`Para did not begin a claim (${error.message}); signing in without one.`);
       return null;
     }
-    console.warn(`ParaPo did not begin the claim (HTTP ${status}):`, error.message);
+    console.warn(`Para did not begin the claim (HTTP ${status}):`, error.message);
     throw new AccountError('not-accepting', error.message);
   }
   const token = tokenSchema.safeParse(data);
   if (!token.success) {
-    console.warn('ParaPo gave an unexpected answer to begin_claim:', data);
+    console.warn('Para gave an unexpected answer to begin_claim:', data);
     throw new AccountError('not-accepting', 'begin_claim answered with no token');
   }
   return token.data;
@@ -56,7 +56,7 @@ async function finishClaim(client: ContributeClient, claim: PendingClaim): Promi
   if (error) return claimFailureOutcome(error, status, claim.wasTried);
   const moved = movedSchema.safeParse(data);
   if (!moved.success) {
-    console.warn('ParaPo gave an unexpected answer to finish_claim:', data);
+    console.warn('Para gave an unexpected answer to finish_claim:', data);
     return { kind: 'retry' };
   }
   return { kind: 'done', moved: moved.data };

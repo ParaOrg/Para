@@ -1,4 +1,4 @@
-const LOCK_NAME = 'parapo-recorder';
+const LOCK_NAME = 'para-recorder';
 
 let held: Promise<boolean> | null = null;
 

@@ -1,4 +1,4 @@
-// The basemap's rail station names hidden near ParaPo's own stations
+// The basemap's rail station names hidden near Para's own stations
 // (src/features/routes/map/station-mask.ts).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/station-mask-test.mjs

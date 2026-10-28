@@ -15,6 +15,7 @@ interface SignInScreenProps {
   captcha: Captcha;
   onSubmit: (fields: SignInFields) => void;
   onCreateAccount: () => void;
+  onForgotPassword: () => void;
 }
 
 /** The contributor page for a phone with no account: email and password, and the way to Create account. */
@@ -24,6 +25,7 @@ export function SignInScreen({
   captcha,
   onSubmit,
   onCreateAccount,
+  onForgotPassword,
 }: SignInScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,6 +56,12 @@ export function SignInScreen({
             label="Create account"
             disabled={isBusy}
             onClick={onCreateAccount}
+          />
+          <Button
+            variant="secondary"
+            label="Forgot password?"
+            disabled={isBusy}
+            onClick={onForgotPassword}
           />
         </>
       }

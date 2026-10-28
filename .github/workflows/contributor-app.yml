@@ -4,7 +4,7 @@
 #     an artifact. These jobs never see a secret.
 #   - A tag `app-v*` (app-v1.2.3) runs three jobs. `build-release` builds the RELEASE APK, signs it,
 #     and checks the signature against the key's recorded fingerprint. `publish` creates a GitHub
-#     Release with two assets, parapo-contributor.apk and latest.json (the app's update check reads
+#     Release with two assets, para-contributor.apk and latest.json (the app's update check reads
 #     it). The tag sets the version.
 #   - A release with no key fails; it never produces an unsigned APK. Locally, and in pull
 #     requests, a release build is unsigned.
@@ -31,6 +31,7 @@ on:
       - '.github/actions/prepare-app-build/**'
       - 'android/**'
       - 'scripts/android/**'
+      - 'scripts/apk/**'
       - 'scripts/publish/app-release*'
       - 'capacitor.config.ts'
       - 'vite.apk.config.ts'
@@ -83,9 +84,59 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: parapo-contributor-debug
+          name: para-contributor-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 14
+
+  # The screen-off ride on an emulator (scripts/apk/emulator-ride.sh): twenty minutes with the screen
+  # off, the app's process killed at fifteen, and every fix up to the kill still in the ride. Its APK
+  # is built with the ride's driver (VITE_EMULATOR_RIDE), so it is not the APK a tester installs.
+  emulator-ride:
+    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare-app-build
+
+      - name: Build the page with the ride's driver, and the debug APK
+        env:
+          VITE_EMULATOR_RIDE: '1'
+        run: |
+          npx vite build -c vite.apk.config.ts --mode apk
+          npx cap sync android
+          cd android && ./gradlew assembleDebug --no-daemon
+
+      # The emulator needs hardware acceleration.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Ride with the screen off
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/apk/emulator-ride.sh android/app/build/outputs/apk/debug/app-debug.apk emulator-out
+
+      - name: Show the result
+        if: always()
+        run: |
+          cat emulator-out/summary.txt | tee -a "$GITHUB_STEP_SUMMARY" || true
+          grep -a "PARA_RIDE" emulator-out/logcat.txt | tail -40 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-ride
+          path: emulator-out
+          if-no-files-found: warn
           retention-days: 14
 
   build-release:
@@ -94,6 +145,7 @@ jobs:
     timeout-minutes: 30
     environment: app-release
     env:
+      # The key and its secret keep the product's old name: the key was made with them.
       PARAPO_KEY_ALIAS: parapo
     steps:
       - uses: actions/checkout@v5
@@ -130,7 +182,7 @@ jobs:
           fi
           code=$(( 10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]} ))
           echo "GRADLE_VERSION=-PappVersionName=$version -PappVersionCode=$code" >> "$GITHUB_ENV"
-          echo "APK_NAME=parapo-contributor-$version" >> "$GITHUB_ENV"
+          echo "APK_NAME=para-contributor-$version" >> "$GITHUB_ENV"
           echo "APP_VERSION=$version" >> "$GITHUB_ENV"
           echo "APP_VERSION_CODE=$code" >> "$GITHUB_ENV"
           # The page reads its own version code to compare with latest.json (api/env.ts).
@@ -138,6 +190,13 @@ jobs:
 
       - name: Build the contributor page for the app
         run: npx vite build -c vite.apk.config.ts --mode apk
+
+      - name: Check the page carries no test driver
+        run: |
+          if grep -rl "PARA_RIDE" dist-apk; then
+            echo "::error::The release page holds the emulator ride's driver."
+            exit 1
+          fi
 
       - name: Copy it into the Android project
         run: npx cap sync android
@@ -147,7 +206,7 @@ jobs:
         env:
           PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
         run: |
-          keystore="$RUNNER_TEMP/parapo-release.p12"
+          keystore="$RUNNER_TEMP/para-release.p12"
           openssl enc -d -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 \
             -pass env:PARAPO_KEY_PASSPHRASE -in android/release-key.p12.enc -out "$keystore"
           echo "PARAPO_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
@@ -192,7 +251,7 @@ jobs:
             --apk android/app/build/outputs/apk/release/app-release.apk \
             --version "$APP_VERSION" --code "$APP_VERSION_CODE" \
             --min "$(tr -d '[:space:]' < android/min-version.txt)" \
-            --apk-url "https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/parapo-contributor.apk" \
+            --apk-url "https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/para-contributor.apk" \
             --out app-publish
 
       - uses: actions/upload-artifact@v4
@@ -204,7 +263,7 @@ jobs:
 
       - name: Delete the keystore
         if: always()
-        run: shred -u "$RUNNER_TEMP/parapo-release.p12" 2>/dev/null || rm -f "$RUNNER_TEMP/parapo-release.p12"
+        run: shred -u "$RUNNER_TEMP/para-release.p12" 2>/dev/null || rm -f "$RUNNER_TEMP/para-release.p12"
 
   # The only job that can write to the repository. It has no secret and builds nothing: it
   # publishes what `build-release` signed. `releases/latest/download/latest.json` (what the app
@@ -218,7 +277,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: parapo-contributor-*
+          pattern: para-contributor-*
           merge-multiple: true
           path: release-files
 
@@ -229,13 +288,13 @@ jobs:
         # The owner usually makes the tag through GitHub's "Draft a new release" page, which
         # creates the Release with the tag; a tag pushed on its own has none yet. Fill whichever.
         run: |
-          files=(release-files/parapo-contributor.apk release-files/latest.json)
+          files=(release-files/para-contributor.apk release-files/latest.json)
           if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
             gh release edit "$GITHUB_REF_NAME" --latest --prerelease=false --draft=false
           else
             gh release create "$GITHUB_REF_NAME" "${files[@]}" \
               --verify-tag --latest --prerelease=false \
-              --title "ParaPo Contributor ${GITHUB_REF_NAME#app-v}" \
+              --title "Para Contributor ${GITHUB_REF_NAME#app-v}" \
               --notes "Install over the previous version to keep your recordings."
           fi

@@ -163,13 +163,6 @@ export function directionName(head: string, tail: string, reversed: boolean): st
  * and a save need to know about every direction, without its drawing. The
  * drawing — the clicks and the road between each pair — is read on its own
  * when a direction is opened (DirectionDrawing, live.ts withDrawing): it is
- * half of every row, and the editor lists a thousand rows to open one.
- */
-/**
- * One direction as the editor lists it: what the map, the cards, the links
- * and a save need to know about every direction, without its drawing. The
- * drawing — the clicks and the road between each pair — is read on its own
- * when a direction is opened (DirectionDrawing, live.ts withDrawing): it is
  * half of every row, and the editor lists a thousand rows to open one. Its
  * route carries the generated name (nameDirections).
  */

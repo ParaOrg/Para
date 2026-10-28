@@ -4,8 +4,11 @@ import type {
   StyleSpecification,
   SymbolLayerSpecification,
 } from 'maplibre-gl';
+import * as z from 'zod/mini';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
+import { basemapStyleUrl } from '@/shared/config/basemap-host';
+import { basemapHost } from '@/shared/config/env';
 
 import { daylightStyle } from './daylight';
 import { monochromeStyle } from './monochrome';
@@ -14,9 +17,11 @@ import { terrainStyle } from './terrain';
 
 /**
  * The basemap designs a commuter can choose between: Monochrome, Colour and
- * Fiord. All of them are OpenFreeMap styles over the same `/planet` tiles,
- * sprite and glyph endpoint, so a switch fetches one small style file and
- * nothing a phone has cached is wasted.
+ * Fiord. All of them are OpenFreeMap's styles (Positron, Liberty, Fiord) over
+ * the same tiles, sprite and glyphs, so a switch fetches one small style file
+ * and nothing a phone has cached is wasted. They are read from the configured
+ * basemap host (shared/config/env.ts): Para's own tiles server, which
+ * serves the same three styles pointed at its tiles, or OpenFreeMap itself.
  *
  * Monochrome is the default: Positron, as detailed as its tiles allow and
  * still only grays, so the routes and hotspots painted on top carry all the
@@ -62,23 +67,25 @@ export interface Imagery {
   isLabelled: boolean;
 }
 
-const OPENFREEMAP = 'https://tiles.openfreemap.org';
-
 // The id stays `positron` so a device that stored it, or nothing at all, keeps the
 // default. An id that is no longer offered falls back to the default (readBasemap).
 export const MONOCHROME: Basemap = {
   id: 'positron',
   label: 'Monochrome',
-  url: `${OPENFREEMAP}/styles/positron`,
+  url: basemapStyleUrl(basemapHost, 'positron'),
   dressing: 'monochrome',
 };
 export const COLOUR: Basemap = {
   id: 'liberty',
   label: 'Colour',
-  url: `${OPENFREEMAP}/styles/liberty`,
+  url: basemapStyleUrl(basemapHost, 'liberty'),
   dressing: 'daylight',
 };
-const FIORD: Basemap = { id: 'fiord', label: 'Fiord', url: `${OPENFREEMAP}/styles/fiord` };
+const FIORD: Basemap = {
+  id: 'fiord',
+  label: 'Fiord',
+  url: basemapStyleUrl(basemapHost, 'fiord'),
+};
 
 export const BASEMAPS: readonly Basemap[] = [MONOCHROME, COLOUR, FIORD];
 
@@ -89,7 +96,7 @@ export const DEFAULT_BASEMAP = MONOCHROME;
  * who never touches the control leaves the browser's storage empty, which the
  * commuter test asserts and the no-tracking promise relies on.
  */
-const STORAGE_KEY = 'parapo.basemap.v1';
+const STORAGE_KEY = 'para.basemap.v1';
 
 /** The remembered design among `offered`; one this page does not offer (the studio's satellite, on the public map) falls back to the default. */
 export function readBasemap(offered: readonly Basemap[]): Basemap {
@@ -167,19 +174,35 @@ function dressed(b: Basemap, style: StyleSpecification): StyleSpecification {
 }
 
 /**
+ * What makes a fetched file a style worth dressing: MapLibre's version 8,
+ * with its sources and its layers. The dressings read and rewrite the layers,
+ * so anything else goes to MapLibre by its URL, as a failed fetch does.
+ */
+const styleOutlineSchema = z.looseObject({
+  version: z.literal(8),
+  sources: z.record(z.string(), z.unknown()),
+  layers: z.array(z.unknown()),
+});
+
+function isStyle(raw: unknown): raw is StyleSpecification {
+  return styleOutlineSchema.safeParse(raw).success;
+}
+
+/**
  * What to build a map with. `Map` takes a style URL or a style object and has
  * no transform hook, so a design with something to add (`dressed`) fetches
  * its style here and is dressed before the map exists — one request, the same one
- * MapLibre would have made, and no plain-gray flash first. If the fetch fails
- * the plain URL goes in instead, and MapLibre's own error path reports what it
- * can.
+ * MapLibre would have made, and no plain-gray flash first. If the fetch fails,
+ * or brings no style (isStyle), the plain URL goes in instead, and MapLibre's
+ * own error path reports what it can.
  */
 export async function initialStyle(b: Basemap): Promise<StyleSpecification | string> {
   if (isPlain(b)) return b.url;
   try {
     const r = await fetch(b.url);
     if (!r.ok) return b.url;
-    return dressed(b, (await r.json()) as StyleSpecification);
+    const style: unknown = await r.json();
+    return isStyle(style) ? dressed(b, style) : b.url;
   } catch {
     return b.url;
   }

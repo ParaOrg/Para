@@ -12,7 +12,7 @@ export type ContributeClient = SupabaseClient<Database>;
  * and with the default key an anonymous sign-in here would replace an editor's
  * studio session in the same browser.
  */
-export const CONTRIBUTOR_AUTH_KEY = 'parapo.contributor-auth';
+export const CONTRIBUTOR_AUTH_KEY = 'para.contributor-auth';
 
 let isConnected = false;
 let client: Promise<ContributeClient> | null = null;

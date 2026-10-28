@@ -33,7 +33,7 @@ export function PublicViewContent() {
       <iframe
         key={version}
         src="/?studio-public=1"
-        title="Published ParaPo public map"
+        title="Published Para public map"
         className="min-h-0 w-full flex-1 border-0"
       />
       <div className="max-h-1/3 overflow-y-auto border-t border-border-primary p-3">

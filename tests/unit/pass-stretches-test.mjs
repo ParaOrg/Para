@@ -257,7 +257,7 @@ test('step 16 (a): asked again with the same direction and boxes, the very same 
 });
 
 // The cheap-phone plan, step 13, 2026-10-05: each line file carries its
-// direction's stretches, worked out by the publish (scripts/publish/lineFile.mjs,
+// direction's stretches, worked out by the publish (scripts/publish/line-file.mjs,
 // src/features/routes/model/line-pass.ts), with a key: the hintuans they were worked out
 // against. The app takes them only when the index it has gives the same key,
 // and works them out as before otherwise.
@@ -269,7 +269,7 @@ import {
   publishedStretches,
   boxesReached,
 } from '../../src/features/routes/model/line-pass.ts';
-import { lineFileText } from '../../scripts/publish/lineFile.mjs';
+import { lineFileText } from '../../scripts/publish/line-file.mjs';
 import { checkMapData } from '../../scripts/checks/check-map-data.mjs';
 import { createHash } from 'node:crypto';
 import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -578,7 +578,7 @@ test('step 13: the publish and the map data check import nothing from npm but zo
 // the app and the check read it.
 test('step 13: on a copy of public/data, every line file written with its stretches is read by the app and painted as it works them out', async () => {
   const committed = fileURLToPath(new URL('../../public/data/', import.meta.url));
-  const dir = mkdtempSync(join(tmpdir(), 'parapo-pass-'));
+  const dir = mkdtempSync(join(tmpdir(), 'para-pass-'));
   try {
     cpSync(committed, dir, { recursive: true });
     const indexPath = join(dir, 'index.v4.json');

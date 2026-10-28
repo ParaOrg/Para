@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { listDrafts } from './drafts';
@@ -30,6 +30,10 @@ export function useComparisonQuery(draft: DraftRow) {
   return useQuery({
     queryKey: reviewKeys.comparison(draft.id, draft.revision),
     queryFn: () => fetchReviewComparison(draft),
+    // A new revision of the same draft keeps the comparison on screen while it
+    // reloads, so the details form beneath it is not unmounted mid-edit.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[2] === draft.id ? keepPreviousData(previous) : undefined,
   });
 }
 

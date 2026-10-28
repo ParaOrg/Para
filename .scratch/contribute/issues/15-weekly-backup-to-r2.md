@@ -1,6 +1,6 @@
 # 15: The weekly backup to Cloudflare R2
 
-Status: ready-for-agent
+Status: ready-for-human (owner: R2 bucket with 60-day rule and token; gpg key pair, commit the public key as .github/backup/owner-public-key.asc; apply 20261022100000_backup_reader.sql and set the role password; add the GitHub secrets; run the workflow once and a restore)
 Type: task
 Wave: 4, before the Contributor button goes public
 Who: Sonnet, with the owner's setup
@@ -31,3 +31,5 @@ Blocked by: 02, 08
 - The advisors show nothing new.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Code done in 0d49e806 and 0c01cc6f: `supabase/migrations/20261022100000_backup_reader.sql` (the planned 0020; written, NOT applied) and `.github/workflows/backup.yml` with the owner's setup steps and restore steps in its header. Missing: the public key file `.github/backup/owner-public-key.asc` (only a README is there), and every owner step. Needs `20261022090000_contribution_use` applied first (it is), then `20261022100000_backup_reader`.

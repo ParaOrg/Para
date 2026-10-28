@@ -20,6 +20,12 @@ const AppUpdateGate =
       )
     : null;
 
+// Start in the app asks for the permissions first; the web build never builds it.
+const StartGate =
+  import.meta.env.MODE === 'apk'
+    ? lazy(() => import('./native/start-gate').then((module) => ({ default: module.StartGate })))
+    : null;
+
 interface ReadyScreenProps {
   hasConsent: boolean;
   onConsent: () => void;
@@ -55,7 +61,11 @@ export function ReadyScreen({
     (focusTarget ? buttons[focusTarget] : headingRef.current)?.focus();
   }, [focusTarget]);
   const stackRef = useStackRoom();
-  const startBar = <TrackingButton variant="start" onClick={onStart} />;
+  const startBar = StartGate ? (
+    <StartGate onStart={onStart} />
+  ) : (
+    <TrackingButton variant="start" onClick={onStart} />
+  );
 
   return (
     <>
@@ -91,8 +101,9 @@ export function ReadyScreen({
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
+          {/* Nothing stands in for Start while the app's gates load: a plain Start would skip the permissions. */}
           {AppUpdateGate ? (
-            <Suspense fallback={startBar}>
+            <Suspense fallback={null}>
               <AppUpdateGate>{startBar}</AppUpdateGate>
             </Suspense>
           ) : (

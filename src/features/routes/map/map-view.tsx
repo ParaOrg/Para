@@ -9,6 +9,7 @@ import {
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { useEffect, useRef, useState } from 'react';
 
+import { basemapHost } from '@/shared/config/env';
 import { noop } from '@/shared/utils/noop';
 
 import { BASEMAPS, DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } from './basemap';
@@ -24,6 +25,7 @@ import {
   within,
   type Bounds,
 } from './framing';
+import { mapAttribution } from './map-attribution';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
 
@@ -58,12 +60,13 @@ setWorkerUrl(maplibreWorkerUrl);
 prewarm();
 
 /**
- * OpenFreeMap: OSM-derived vector tiles, no API key, no usage limits. Exported
- * for the offline cache warm-up (features/published-map/pwa.ts).
+ * The default basemap's style: OSM-derived vector tiles from the configured
+ * basemap host, no API key. Exported for the offline cache warm-up
+ * (features/published-map/pwa.ts).
  *
  * Positron, not Liberty: a desaturated basemap, so the route lines and hotspot
  * polygons we paint on top carry all the colour on the screen. It serves the
- * same `/planet` tiles, sprite and fonts as Liberty from half the layers, so
+ * same tiles, sprite and fonts as Liberty from half the layers, so
  * it draws a little cheaper and shares Liberty's cached tiles. A commuter can
  * pick another design from the map-style button (basemap.ts);
  * this is the one the map starts with when nothing has been chosen.
@@ -78,19 +81,6 @@ export const STYLE_URL = DEFAULT_BASEMAP.url;
  * those moves.
  */
 export const APP_MOVE = { appMove: true } as const;
-
-/**
- * The OpenFreeMap styles ship no `attribution` on their sources, so MapLibre's
- * default control would render empty. The tiles are OSM-derived, so we
- * declare it ourselves.
- */
-const ATTRIBUTION = [
-  // Our own data, under the ODbL: the credit every copy has to keep.
-  '<a href="https://github.com/Roviicc/ParaPo#data-and-licence" target="_blank" rel="noreferrer">Route data © ParaPo contributors, ODbL</a>',
-  '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a> contributors',
-  '<a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a>',
-  '<a href="http://project-osrm.org/" target="_blank" rel="noreferrer">OSRM</a>',
-].join(' · ');
 
 /**
  * A coarse pointer means a finger: pinch already zooms, so the zoom buttons
@@ -357,7 +347,7 @@ export function MapView({
       if (zoomButtons && !coarse) map.addControl(new NavigationControl(), 'top-right');
       map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
       map.addControl(
-        new AttributionControl({ compact: true, customAttribution: ATTRIBUTION }),
+        new AttributionControl({ compact: true, customAttribution: mapAttribution(basemapHost) }),
         coarse && !creditsAtBottom ? 'top-right' : 'bottom-right',
       );
       // What MapLibre itself does to them on the first drag.

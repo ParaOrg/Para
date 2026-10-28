@@ -41,7 +41,7 @@ test("the socket a dev server's client connects to, with its token; none from a 
   assert.equal(hmrSocketUrl('http://localhost:5173', client('null', '')), 'ws://localhost:5173/');
   // A preview build answers /@vite/client with the app's page.
   assert.equal(
-    hmrSocketUrl('http://localhost:4173', '<!doctype html><html><head><title>Para Po</title>'),
+    hmrSocketUrl('http://localhost:4173', '<!doctype html><html><head><title>Para</title>'),
     null,
   );
   assert.equal(hmrSocketUrl('http://localhost:4173', null), null);
@@ -49,7 +49,7 @@ test("the socket a dev server's client connects to, with its token; none from a 
 
 /** A Vite dev server on a free port, serving a folder with one page. */
 async function devServer() {
-  const root = mkdtempSync(join(tmpdir(), 'parapo-held-reload-'));
+  const root = mkdtempSync(join(tmpdir(), 'para-held-reload-'));
   writeFileSync(join(root, 'index.html'), '<!doctype html><html><body><p>page</p></body></html>');
   const server = await createServer({
     configFile: false,
@@ -145,9 +145,7 @@ test(
 test('nothing to take where no dev server answers, or another server does', limit, async () => {
   // A preview build: /@vite/client is the app's page.
   const preview = createHttpServer((_, res) =>
-    res
-      .writeHead(200, { 'content-type': 'text/html' })
-      .end('<!doctype html><title>Para Po</title>'),
+    res.writeHead(200, { 'content-type': 'text/html' }).end('<!doctype html><title>Para</title>'),
   );
   await new Promise((r) => preview.listen(0, '127.0.0.1', r));
   const port = preview.address().port;

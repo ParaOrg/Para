@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readDraft, restoredState } from '../../src/features/studio/drawing/draft.ts';
 
-const KEY = 'parapo.draft.v1';
+const KEY = 'para.draft.v1';
 
 /** A point at [lng, 14.7]: one object per call, so identity can be checked. */
 const pt = (lng) => [lng, 14.7];
@@ -109,4 +109,24 @@ test('readDraft is null with nothing stored, something unreadable, or a draft wi
   assert.equal(readDraft(), null);
   stored(JSON.stringify({ target: { routeId: null, variantId: null } }));
   assert.equal(readDraft(), null);
+});
+
+test('readDraft is null for a draft not of the stored shape, which the restore could not read', () => {
+  const points = [pt(121), pt(121.01)];
+  const target = { routeId: null, variantId: null };
+  stored(JSON.stringify({ controlPoints: points, segments: { 0: 'not a list' }, target }));
+  assert.equal(readDraft(), null, 'segments not a list');
+  stored(JSON.stringify({ controlPoints: [[121, 'north']], segments: [], target }));
+  assert.equal(readDraft(), null, 'a point that is not [lng, lat]');
+  stored(JSON.stringify({ controlPoints: points, segments: [{ snap: 'snapped' }], target }));
+  assert.equal(readDraft(), null, 'a segment with no coordinates');
+  stored(JSON.stringify({ controlPoints: points, segments: [], target: 'r1' }));
+  assert.equal(readDraft(), null, 'a target that is not one');
+});
+
+test('readDraft still reads a draft with no segments, as an older build left them', () => {
+  stored(JSON.stringify({ controlPoints: [pt(121)], target: { routeId: null, variantId: null } }));
+  const d = readDraft();
+  assert.deepEqual(d.segments, []);
+  assert.deepEqual(restoredState(d).segments, []);
 });

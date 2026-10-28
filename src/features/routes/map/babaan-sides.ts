@@ -73,7 +73,7 @@ export function useBabaanSides(
   const features = useMemo(() => babaanSideFeatures(chosen, hotspots), [chosen, hotspots]);
 
   useEffect(() => {
-    const src = map?.getSource(SRC) as GeoJSONSource | undefined;
+    const src = map?.getSource<GeoJSONSource>(SRC);
     src?.setData({ type: 'FeatureCollection', features });
   }, [map, features, casingReady]);
 }

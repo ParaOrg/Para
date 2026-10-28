@@ -1,4 +1,4 @@
-// The cheap-phone timer's plain parts (scripts/research/phoneSpeedParts.mjs).
+// The cheap-phone timer's plain parts (scripts/research/phone-speed-parts.mjs).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/phone-speed-test.mjs
 //
@@ -30,7 +30,7 @@ import {
   tileZoom,
   tilesAlong,
   tripSpots,
-} from '../../scripts/research/phoneSpeedParts.mjs';
+} from '../../scripts/research/phone-speed-parts.mjs';
 import { ROUTES_LINE } from '../../src/features/routes/map/rail-rest-layers.ts';
 
 // A small map near Manila's latitude, in metres east and north: route A's

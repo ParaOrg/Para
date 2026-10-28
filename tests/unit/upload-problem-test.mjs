@@ -1,6 +1,6 @@
 // Why an upload did not go through (src/features/contribute/api/upload-problem.ts):
 // only a request that got no answer reads as no signal. Any answer the page does
-// not know, such as sign-ups turned off, is ParaPo not accepting uploads.
+// not know, such as sign-ups turned off, is Para not accepting uploads.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/upload-problem-test.mjs
 import { test } from 'node:test';
@@ -30,7 +30,7 @@ test('a database request with no answer is no signal', () => {
   assert.equal(problemOf({ code: '', message: 'AbortError: signal is aborted' }, 0), 'offline');
 });
 
-test('a database answer the page does not know is ParaPo not accepting, not no signal', () => {
+test('a database answer the page does not know is Para not accepting, not no signal', () => {
   assert.equal(
     problemOf({ code: 'PGRST202', message: 'Could not find the function' }, 404),
     'not-accepting',
@@ -48,7 +48,7 @@ test('a sign-in with no answer is no signal', () => {
   assert.equal(signInProblemOf({ name: 'AuthUnknownError', message: 'x', status: 0 }), 'offline');
 });
 
-test('a sign-in refused by its settings is ParaPo not accepting, not no signal', () => {
+test('a sign-in refused by its settings is Para not accepting, not no signal', () => {
   assert.equal(
     signInProblemOf({
       name: 'AuthApiError',

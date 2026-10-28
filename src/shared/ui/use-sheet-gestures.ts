@@ -162,7 +162,7 @@ export function useSheetGestures({
     const handle = handleRef.current;
     // One pointer at a time, a mouse's main button only, and docked only.
     if (drag.current || e.button !== 0 || !sheet || !handle || !docked()) return;
-    const target = e.target as Node;
+    const target = e.target instanceof Node ? e.target : null;
     // At Max the body scrolls as a list does; the header brings the sheet down.
     if (snap === 'max' && !headRef.current?.contains(target) && !handle.contains(target)) return;
     // At Low the top of the body is not for picking: a tap there raises the

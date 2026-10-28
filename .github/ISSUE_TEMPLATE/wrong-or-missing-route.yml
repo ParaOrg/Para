@@ -1,0 +1,59 @@
+name: Wrong or missing route
+description: A jeepney route is drawn wrongly, or is not on the map
+labels: ['needs-triage', 'route-data']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. You know these roads, so your report matters. Do not post private details such as a phone number.
+  - type: input
+    id: line-name
+    attributes:
+      label: Line name
+      description: What is written on the jeep's signboard.
+      placeholder: Tala – SM Fairview
+    validations:
+      required: true
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Direction
+      options:
+        - Papunta (from the head to the tail)
+        - Pabalik (from the tail to the head)
+        - Both
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where on the route?
+      description: A street, a landmark, or the stretch between two places.
+      placeholder: Between Quirino Highway and Zabarte Road
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem is it?
+      options:
+        - The route is not on the map
+        - The line goes along the wrong road
+        - A hintuan (boarding spot) is missing or in the wrong place
+        - The name is wrong
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: whats-wrong
+    attributes:
+      label: What is wrong?
+      description: What does the map show, and what do the jeeps really do? When did you last ride it?
+    validations:
+      required: true
+  - type: textarea
+    id: attachment
+    attributes:
+      label: Screenshot or GPX file
+      description: Optional. A screenshot of the map, or a GPX file of your ride. Drag the file into this box.

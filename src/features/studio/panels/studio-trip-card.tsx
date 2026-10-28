@@ -13,6 +13,8 @@ import type { useDeleteActions } from './use-delete-actions';
 import { signboardUrl } from '../data/signboards';
 import type { Drawing } from '../drawing/use-drawing';
 import type { useFollow } from '../drawing/use-follow';
+import { DraftLockNotice } from '../review/draft-lock-notice';
+import { useDraftLock } from '../review/use-draft-lock';
 
 type Saved = ReturnType<typeof useSavedRoutes<DirectionRow>>;
 type Hotspots = ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -66,6 +68,9 @@ export function StudioTripCard({
   onPick,
   onEnd,
 }: StudioTripCardProps) {
+  // Another editor's draft of this route: it can be looked at, not changed.
+  const { lock, retry } = useDraftLock('route', direction.routeId);
+  const isEditable = canEdit && !lock;
   return (
     <TripCard
       direction={direction}
@@ -74,7 +79,7 @@ export function StudioTripCard({
       livery={livery}
       onBackToList={onBackToList}
       onSwitch={onSwitch}
-      onDrawOtherWay={canEdit ? onDrawOtherWay : undefined}
+      onDrawOtherWay={isEditable ? onDrawOtherWay : undefined}
       onClose={onClose}
       picked={ride.pickedId}
       pickedMetres={saved.fullIds.has(direction.id) ? ride.rideTo?.metres : undefined}
@@ -95,7 +100,8 @@ export function StudioTripCard({
           directions={saved.directions}
           hotspots={hotspots.hotspots}
           hotspotsAlong={hotspots.hotspotsAlong}
-          canEdit={canEdit}
+          canEdit={isEditable}
+          notice={canEdit && lock && <DraftLockNotice lock={lock} onRetry={retry} />}
           onEdit={() => {
             const v = saved.selected;
             if (!v) return;

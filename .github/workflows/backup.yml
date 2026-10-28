@@ -26,11 +26,11 @@
 #     Keep the Access Key ID, the Secret Access Key and the account's S3
 #     endpoint, https://<account-id>.r2.cloudflarestorage.com.
 #  3. GPG key pair, on your own computer (not a CI runner, not this repo):
-#       gpg --quick-generate-key "ParaPo backup <you@example.com>" ed25519 encr 5y
-#       gpg --armor --export "ParaPo backup" > owner-public-key.asc
+#       gpg --quick-generate-key "Para backup <you@example.com>" ed25519 encr 5y
+#       gpg --armor --export "Para backup" > owner-public-key.asc
 #     Commit owner-public-key.asc as .github/backup/owner-public-key.asc (a
 #     public key is safe in a public repo). Keep the PRIVATE key
-#     (gpg --armor --export-secret-keys "ParaPo backup") in your password
+#     (gpg --armor --export-secret-keys "Para backup") in your password
 #     manager and on an offline copy. Never on GitHub, never in R2, never in
 #     Supabase: with it gone every backup is unreadable.
 #  4. The role. Apply supabase/migrations/20261022100000_backup_reader.sql in
@@ -67,25 +67,25 @@
 #     and the same R2 values: aws s3 cp --endpoint-url "$R2_ENDPOINT"
 #     s3://<bucket>/parapo-<date>.sql.gz.gpg .).
 #  2. Decrypt with the private key (gpg asks for its passphrase) and unpack:
-#       gpg --decrypt parapo-<date>.sql.gz.gpg | gunzip > parapo.sql
+#       gpg --decrypt parapo-<date>.sql.gz.gpg | gunzip > para.sql
 #  3. A scratch Postgres (the project's major version, see PG_MAJOR below):
-#       docker run --rm -d --name parapo-restore -e POSTGRES_PASSWORD=x -p 5433:5432 postgres:17
+#       docker run --rm -d --name para-restore -e POSTGRES_PASSWORD=x -p 5433:5432 postgres:17
 #  4. Stand in for what the dump points at outside itself, then load it. Row
 #     security policies and triggers that call Supabase's own functions fail
 #     to create, which is expected; the tables and every row still load:
 #       export PGPASSWORD=x
-#       psql -h localhost -p 5433 -U postgres -c 'create database parapo'
-#       psql -h localhost -p 5433 -U postgres -d parapo <<'SQL'
+#       psql -h localhost -p 5433 -U postgres -c 'create database para'
+#       psql -h localhost -p 5433 -U postgres -d para <<'SQL'
 #       create schema auth;
 #       create table auth.users (id uuid primary key);
 #       create function auth.uid() returns uuid language sql as 'select null::uuid';
 #       create role anon; create role authenticated;
 #       SQL
-#       psql -h localhost -p 5433 -U postgres -d parapo -f parapo.sql
+#       psql -h localhost -p 5433 -U postgres -d para -f para.sql
 #     (Rows of auth.users are not in the backup; add the foreign keys back only
 #     if you need them.)
 #  5. Compare: select count(*) from public.contribution; and so on.
-#  6. Delete parapo.sql and stop the container: it is plain text.
+#  6. Delete para.sql and stop the container: it is plain text.
 name: Backup
 
 on:

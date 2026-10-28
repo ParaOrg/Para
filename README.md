@@ -1,16 +1,16 @@
-# ParaPo
+# Para
 
 Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
 
-- **The map:** https://parapo.villaralvorovic2.workers.dev — on an Android
-  phone, Chrome offers to install it as **Para Po**; it then opens full screen
+- **The map:** https://www.para-commute.org — on an Android
+  phone, Chrome offers to install it as **Para**; it then opens full screen
   and keeps working without a signal, showing the routes it last saw. It is
   `main`, and changes only when a release is merged.
-- **Staging:** https://staging-parapo.villaralvorovic2.workers.dev — the
+- **Staging:** https://staging-para.para-ph-info.workers.dev — the
   `staging` branch, each piece of work there as soon as its checks pass,
   before it is merged. For looking: its `/studio/` edits the same database
   as the live one, so routes are edited on the live studio only. Every other
-  branch gets a link of its own, `https://<branch>-parapo.villaralvorovic2.workers.dev`,
+  branch gets a link of its own, `https://<branch>-para.para-ph-info.workers.dev`,
   kept out of search engines as staging is.
 - **How it is built, and what comes next:** [PLAN.md](PLAN.md). The words the
   app, the plan and the owner use: [CONTEXT.md](CONTEXT.md). Decisions and
@@ -93,6 +93,54 @@ goes out with the map and is written up. One issue, **"The map needs a
 look"**, is opened or brought up to date by a run that failed or published
 with warnings, and closed by the first run with nothing to report.
 
+## Map tiles
+
+Para is building its own map tiles so the map no longer depends on
+OpenFreeMap (`.scratch/own-tiles/spec.md`). `.github/workflows/tiles.yml`
+builds them on the 3rd of each month at 02:00 Manila, on "Run workflow" (tick
+**upload**) and on a push to `staging` that changes the workflow or
+`scripts/tiles/`. It uploads to R2 only from `staging` or `main`, and says so
+and stops on any other branch. GitHub runs a schedule only from `main`, and
+shows "Run workflow" only for a workflow file on `main`, so until the owner
+releases to main the push to `staging` is what starts an upload: merging the
+tiles pull request does the first one once the four secrets exist (without
+them it stops at once, naming the missing secret). It reads the box the public
+map can be panned across (`METRO_MANILA` in `map-view.tsx`) and fails if a
+published route falls outside it. Planetiler's OpenMapTiles profile builds
+zooms 0 to 14 from Geofabrik's Philippines extract (about 66 MB, four
+minutes); Planetiler and the extract are checked against their checksums.
+Planetiler's own downloads (water polygons, Natural Earth, lake centerlines)
+are copied to `build-cache/sources/` in R2: an upload run takes them from
+there, falls back to upstream for what is missing and refreshes the copy
+(delete `build-cache/` to refresh from upstream). Before anything is
+uploaded the file must be at least 40 MB, hold at least 90% of the last
+build's tiles and the SM Fairview, Quiapo and BGC tiles at zoom 14, and carry
+its build date in its metadata. A pull request builds and checks but never
+uploads and never sees the R2 secrets. A failed run is red, and GitHub emails the owner about a failed
+scheduled run, as for the backup.
+
+R2 gets `tiles/parapo-YYYY-MM-DD-<run id>.pmtiles` (never overwritten: an upload refuses a name that exists; the last three kept, older ones deleted only after `current.json` has moved), then
+`tiles/current.json` (`file`, `builtAt`, `bytes`, `tiles`, `extractDate`,
+`planetiler`) last, so a failed upload never points at a half file. Under
+`assets/` go OpenFreeMap's three styles as they are (`styles/`), the sprite
+(`sprites/`) and the glyphs of Noto Sans Regular, Bold and Italic (`fonts/`),
+so the map can stop fetching from `tiles.openfreemap.org`; pointing the styles
+at our host is the Worker's job, and `VITE_BASEMAP_HOST` points the app at it
+(ADR 0007). The four secrets, `TILES_R2_ENDPOINT`,
+`TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` and `TILES_R2_BUCKET`,
+live in a GitHub Environment named `tiles` whose deployment branches are
+limited to `staging` and `main`, so GitHub itself keeps the keys from any other
+branch, and only the steps that talk to R2 carry them. Pruning never deletes
+the file the previous `current.json` named, so a run that failed after its
+upload cannot take down the file being served.
+
+Licences to keep with the copies: the styles' code is BSD-3-Clause and their
+design CC BY 4.0 (Positron and Fiord derive from CartoDB Basemaps, CC BY 3.0;
+Fiord's own repository, `openmaptiles/fiord-color-gl-style`, says the same:
+BSD-3-Clause code, CC BY 4.0 design, no attribution needed on the map image
+but reasonably reachable); the sprite's Maki icons are CC0; the fonts are SIL
+OFL 1.1. The map keeps "© OpenMapTiles" and "© OpenStreetMap contributors".
+
 ## Where things are
 
 | | |
@@ -107,9 +155,19 @@ with warnings, and closed by the first run with nothing to report.
 | `src/design-system/` | the tokens, fonts and primitives (foundation ← primitives) |
 | `public/data/` | the published map, every version kept in history: `index.v5.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v4.json` (without loops), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line) |
 | `supabase/migrations/` | the schema and its policies, in order |
-| `scripts/` | tools: the build guards and the data check (`checks/`), the publish (`publish/`), Node's TypeScript hook (`node/`), the research screenshots and the cheap-phone timer, `phone-speed.mjs` with its parts (`research/`), the icons' lossless PNG recompressor, `recompress-png.mjs` (`assets/`) |
+| `scripts/` | tools: the build guards and the data check (`checks/`), the publish (`publish/`), Node's TypeScript hook (`node/`), the monthly map-tiles build (`tiles/`), the research screenshots and the cheap-phone timer, `phone-speed.mjs` with its parts (`research/`), the icons' lossless PNG recompressor, `recompress-png.mjs` (`assets/`) |
 | `tests/unit/` | the unit checks, Node's own test runner (`npm run test:unit`) |
 | `tests/e2e/` | the headless suites, and their README |
+
+## Contributing
+
+New here? Start with [CONTRIBUTING.md](CONTRIBUTING.md): how to run Para on
+your computer, the standards, and how to send a pull request (into `staging`,
+not `main`). Small, ready-made tasks are the issues labelled
+[good first issue](https://github.com/ParaOrg/Para/labels/good%20first%20issue).
+A jeepney route that is wrong or missing? Open a
+[route report](https://github.com/ParaOrg/Para/issues/new/choose); you do
+not need to write code.
 
 ## Data and licence
 
@@ -122,7 +180,7 @@ is published from — is under the
 (ODbL). You may copy, use and adapt it, including commercially, as long as
 you:
 
-1. **Credit it:** "Route data © ParaPo contributors, ODbL", and OpenStreetMap
+1. **Credit it:** "Route data © Para contributors, ODbL", and OpenStreetMap
    for the roads it follows.
 2. **Share alike:** if you publish an adapted version of the data, publish it
    under the ODbL too.
@@ -131,7 +189,8 @@ you:
 
 The route lines follow OpenStreetMap's road network (snapped with OSRM), so
 the data is a derivative of OpenStreetMap, © OpenStreetMap contributors, also
-under the ODbL. The map tiles come from OpenFreeMap, built from the same data.
+under the ODbL. The map tiles are built from the same data: by Para itself on
+staging (`workers/tiles`, ADR 0007), by OpenFreeMap on `main` until staging is released.
 
 Every published version of the map is kept in this repository's history,
 so what is published stays public.

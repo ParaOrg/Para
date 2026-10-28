@@ -1,6 +1,6 @@
 # 07: Turnstile on the studio's sign-in
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Wave: 2
 Who: Sonnet
@@ -29,3 +29,5 @@ Blocked by: 02, 03
 - With CAPTCHA off in Supabase, editors sign in exactly as before.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Done; commit 5fca7cbe. Evidence: `src/shared/ui/turnstile.tsx` (+ stories), `src/features/studio/auth/use-captcha.ts` (sign in, forgot password, change password), site key in `.env.production` and `src/features/studio/data/env.ts`, the Turnstile check in `scripts/checks/check-build.mjs`, `tests/e2e/turnstile-test.mjs` in CI; the studio CSP in `public/_headers` sets only `frame-ancestors`. The owner turned CAPTCHA on and signed in through it on 2026-10-23 (see 09's Answer). No migration.

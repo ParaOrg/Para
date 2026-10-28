@@ -4,11 +4,13 @@ import { fileURLToPath } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { basemapCacheRules, withBasemapPreconnect } from './scripts/node/basemap-offline.ts';
 import { contributeWorker } from './scripts/node/contribute-worker.ts';
 import { mapFileConstants } from './scripts/node/map-file-constants.ts';
+import { parseBasemapHost } from './src/shared/config/basemap-host.ts';
 
 // The map file's address and the early request's name, read from map-file.ts's
 // text rather than imported: Vite bundles this config before any alias exists,
@@ -27,7 +29,7 @@ const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
  */
 function chunkModules(): Plugin {
   return {
-    name: 'parapo:chunk-modules',
+    name: 'para:chunk-modules',
     apply: 'build',
     generateBundle(_options, bundle) {
       const modules: Record<string, string[]> = {};
@@ -48,14 +50,14 @@ function chunkModules(): Plugin {
 /**
  * The PWA plugin writes its `<link rel="manifest">` into every page it builds
  * without looking at which page it is, so left alone /studio/ and /contribute/
- * would install as Para Po too. This runs after it (both are post-order; this
+ * would install as Para too. This runs after it (both are post-order; this
  * one is later in the list) and takes the link back out of those pages. The
  * manifest belongs to / only; scripts/checks/check-build.mjs checks the built
  * pages.
  */
 function onlyTheMapHasAManifest(): Plugin {
   return {
-    name: 'parapo:only-the-map-has-a-manifest',
+    name: 'para:only-the-map-has-a-manifest',
     apply: 'build',
     enforce: 'post',
     transformIndexHtml: {
@@ -106,7 +108,7 @@ export function stylesheetsBeforeScripts(html: string): string {
 }
 function stylesheetsFirst(): Plugin {
   return {
-    name: 'parapo:stylesheets-first',
+    name: 'para:stylesheets-first',
     apply: 'build',
     enforce: 'post',
     transformIndexHtml: { order: 'post', handler: stylesheetsBeforeScripts },
@@ -123,7 +125,7 @@ function stylesheetsFirst(): Plugin {
 let outDir = 'dist';
 function readOutDir(): Plugin {
   return {
-    name: 'parapo:out-dir',
+    name: 'para:out-dir',
     apply: 'build',
     configResolved(config) {
       outDir = resolve(config.root, config.build.outDir);
@@ -152,7 +154,7 @@ function mapFileEarly(): Plugin {
     `.then(function(r){return{res:r,body:r.ok?r.clone().json().catch(function(){}):null}});` +
     `q.catch(function(){});window.${EARLY_MAP_FILE}=q})()`;
   return {
-    name: 'parapo:map-file-early',
+    name: 'para:map-file-early',
     transformIndexHtml: {
       // Before Vite's own: in a build, the app's script and stylesheets are
       // added to the <head> after what is there by then.
@@ -184,9 +186,9 @@ function mapFileEarly(): Plugin {
  */
 export const MAPLIBRE_WORKER_URL = 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 export function maplibreWorkerWithThePage(): Plugin {
-  const resolved = '\0parapo:maplibre-worker-url';
+  const resolved = '\0para:maplibre-worker-url';
   return {
-    name: 'parapo:maplibre-worker',
+    name: 'para:maplibre-worker',
     apply: 'build',
     // Ahead of Vite's worker plugin, which would build it on its own.
     enforce: 'pre',
@@ -209,9 +211,24 @@ export function maplibreWorkerWithThePage(): Plugin {
 const THEME_COLOUR = '#8a595a';
 const BACKGROUND_COLOUR = '#f5f1ee';
 
-// The `urlPattern` functions below are copied into the worker as text, so they
-// must not reach for anything outside themselves: the OpenFreeMap origin is
-// spelled out in each rather than shared as a constant.
+// The basemap host the offline worker caches from, read the way the app reads it
+// (shared/config/env.ts). A worker is only built by `vite build`, so its mode is
+// production; the same value reaches scripts/checks/check-build.mjs.
+const BASEMAP_HOST = parseBasemapHost(
+  loadEnv('production', process.cwd(), 'VITE_').VITE_BASEMAP_HOST,
+);
+const BASEMAP_RULES = basemapCacheRules(BASEMAP_HOST);
+
+/** Points index.html's preconnect at the configured basemap host (see withBasemapPreconnect). */
+function basemapPreconnect(): Plugin {
+  return {
+    name: 'para:basemap-preconnect',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (html) => withBasemapPreconnect(html, BASEMAP_HOST),
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
@@ -221,6 +238,7 @@ export default defineConfig({
     chunkModules(),
     readOutDir(),
     mapFileEarly(),
+    basemapPreconnect(),
     VitePWA({
       // The page registers the worker itself (src/features/published-map/pwa.ts), so the
       // plugin writes no registration script — and none into /studio/.
@@ -232,8 +250,8 @@ export default defineConfig({
       // Test with `npm run build && npm run preview` (tests/e2e/pwa-test.mjs).
       devOptions: { enabled: false },
       manifest: {
-        name: 'Para Po',
-        short_name: 'Para Po',
+        name: 'Para',
+        short_name: 'Para',
         description: 'Jeepney routes in Metro Manila, drawn from the ground.',
         id: '/',
         start_url: '/',
@@ -321,6 +339,9 @@ export default defineConfig({
         navigateFallbackAllowlist: [/^\/(\?.*)?$/],
         navigateFallbackDenylist: [/^\/studio(\/|$)/, /^\/contribute(\/|$)/],
         cleanupOutdatedCaches: true,
+        // Deletes the old app's `para-ph-*` caches on activate. It sits in public/,
+        // so it is served beside the worker and never precached.
+        importScripts: ['old-app-cleanup.js'],
         clientsClaim: true,
         skipWaiting: false,
         runtimeCaching: [
@@ -364,7 +385,7 @@ export default defineConfig({
                   cachedResponseWillBeUsed: async ({ cachedResponse }) => {
                     if (!cachedResponse) return null;
                     const headers = new Headers(cachedResponse.headers);
-                    headers.set('x-parapo-served-from', 'cache');
+                    headers.set('x-para-served-from', 'cache');
                     return new Response(cachedResponse.body, {
                       status: cachedResponse.status,
                       statusText: cachedResponse.statusText,
@@ -445,9 +466,7 @@ export default defineConfig({
             // Style, TileJSON, sprites, glyphs: served from the cache at once,
             // refreshed behind it. Glyphs are one entry per font and 256-glyph
             // range, and Liberty uses three faces, so the cap is roomy.
-            urlPattern: ({ url }) =>
-              url.origin === 'https://tiles.openfreemap.org' &&
-              (/^\/(styles|sprites|fonts)\//.test(url.pathname) || url.pathname === '/planet'),
+            urlPattern: BASEMAP_RULES.meta,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'basemap-meta',
@@ -465,9 +484,7 @@ export default defineConfig({
             // and Metro Manila is about 110 such tiles: a normal commuter keeps
             // 30–100 MB, and 1,000 entries is a ceiling only a cross-country
             // pan reaches. When the quota is hit, this cache is the first to go.
-            urlPattern: ({ url }) =>
-              url.origin === 'https://tiles.openfreemap.org' &&
-              /^\/(planet|natural_earth)\/.+\/\d+\/\d+\/\d+\.(pbf|png)$/.test(url.pathname),
+            urlPattern: BASEMAP_RULES.tiles,
             handler: 'CacheFirst',
             options: {
               cacheName: 'basemap-tiles',

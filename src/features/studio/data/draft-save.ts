@@ -5,6 +5,7 @@ import type { DirectionRow, ServedRoute } from '@/features/routes/model/routes';
 import { hintuansAlong } from '@/features/routes/model/timeline';
 
 import { directionRows } from './direction-rows';
+import { assertNotAnothersDraft } from './draft-guard';
 import {
   claimDraft,
   draftOf,
@@ -401,6 +402,7 @@ export function hotspotPayloadOf(
  */
 export async function routeDraftState(routeId: string): Promise<RouteDraftState> {
   const kept = await draftOf('route', routeId);
+  await assertNotAnothersDraft(kept);
   if (kept) return routeStateFromDraft(kept);
   return routeApprovedState(routeId);
 }
@@ -553,6 +555,7 @@ export async function saveHotspotDraft(
   }
   const hotspotId = input.hotspotId;
   const kept = await draftOf('hotspot', hotspotId);
+  await assertNotAnothersDraft(kept);
   let base: DraftBase;
   let line: string | null;
   if (kept) {

@@ -2,8 +2,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, extname } from 'node:path';
 const account = '255d609ce53e6aefe256f9874f8f53e8';
-const { manifest } = JSON.parse(readFileSync('/tmp/parapo-review-assets.json', 'utf8'));
-const session = JSON.parse(readFileSync('/tmp/parapo-review-upload-session.json', 'utf8'));
+const { manifest } = JSON.parse(readFileSync('/tmp/para-review-assets.json', 'utf8'));
+const session = JSON.parse(readFileSync('/tmp/para-review-upload-session.json', 'utf8'));
 const types = {
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -21,7 +21,7 @@ for (const bucket of session.buckets) {
   for (const hash of bucket) {
     const file = Object.keys(manifest).find((path) => manifest[path].hash === hash);
     if (!file) throw new Error('Upload session requested an unknown preview file');
-    const bytes = readFileSync(resolve('/tmp/parapo-review-hosted', `.${file}`));
+    const bytes = readFileSync(resolve('/tmp/para-review-hosted', `.${file}`));
     form.set(
       hash,
       new Blob([bytes.toString('base64')], {
@@ -42,6 +42,6 @@ for (const bucket of session.buckets) {
   if (result.result?.jwt) completion = result.result.jwt;
   console.log(`Uploaded preview bucket (${bucket.length} assets)`);
 }
-writeFileSync('/tmp/parapo-review-completion.json', JSON.stringify({ jwt: completion }), {
+writeFileSync('/tmp/para-review-completion.json', JSON.stringify({ jwt: completion }), {
   mode: 0o600,
 });

@@ -14,6 +14,7 @@ import { stationCode } from '../model/rail-codes';
 import { rideCut, rideSpan, rideToEnd, travelLine } from '../model/ride';
 import { carryPicks } from '../model/ride-carry';
 import { directionEnds, isLoop, isRailLine, railLineOf, type Direction } from '../model/routes';
+import { rowOfBox, type TimelineRow } from '../model/timeline';
 
 /**
  * The ride between the picks as the map draws it (useLitRides): `line`, the
@@ -239,15 +240,21 @@ export function useRideTo(
   /**
    * SWITCH on a jeep's trip, just before it turns: the picks go with it to
    * `next`, each landing where HintuanCard's SWITCH puts its place
-   * (boxTheOtherWay), by the rules of carryPicks. On a train SWITCH lets the
-   * picks go.
+   * (boxTheOtherWay), by the rules of carryPicks, and on the row of `next`'s
+   * timeline that is its place (rowOfBox), so its card shows it picked; with
+   * no such row, on the box itself. On a train SWITCH lets the picks go.
    */
   const carryTo = useCallback(
-    (next: Direction, passesNext: (hotspotId: string) => boolean) => {
+    (
+      next: Direction,
+      passesNext: (hotspotId: string) => boolean,
+      nextRows: readonly TimelineRow[] = [],
+    ) => {
       if (railLineOf(next)) return;
       const land = (rowId: string): string | null => {
         const box = hotspots.find((s) => s.id === rowId);
-        return box ? (boxTheOtherWay(box, hotspots, passesNext)?.id ?? null) : null;
+        const landed = box ? boxTheOtherWay(box, hotspots, passesNext) : null;
+        return landed ? (rowOfBox(landed, nextRows, hotspots) ?? landed.id) : null;
       };
       const carriedPicks = carryPicks(
         { start: liveStart?.rowId ?? null, picked: live?.rowId ?? null, endPicked },

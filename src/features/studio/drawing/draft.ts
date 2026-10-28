@@ -1,5 +1,7 @@
 import { useEffect, type RefObject } from 'react';
+import * as z from 'zod/mini';
 
+import { lngLatSchema } from '@/features/routes/model/geojson-schema';
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
 import { waitingRuns } from './drawing-edits';
@@ -12,7 +14,7 @@ import type { AreaTarget, Borrow, Target } from './drawing-types';
  *
  * The key and the shape are a contract: six suites and check-build read them.
  */
-const DRAFT_KEY = 'parapo.draft.v1';
+const DRAFT_KEY = 'para.draft.v1';
 
 /** A gap still waiting for the router when the draft was written is marked `pending`. */
 type DraftSegment = Segment & { pending?: boolean };
@@ -34,14 +36,28 @@ interface Draft {
  * that translates, so a draft left by an older build still reads and the
  * suites that write one still hold.
  */
-interface StoredDraft {
-  controlPoints: LngLat[];
-  segments: DraftSegment[];
-  target: { routeId: string | null; variantId: string | null };
-  area?: { kind: AreaTarget['kind']; stopId: string | null } | null;
-  borrow?: { variantId: string; part: Borrow['part'] } | null;
-  join?: number | null;
-}
+const storedDraftSchema = z.object({
+  controlPoints: z.array(lngLatSchema),
+  segments: z.optional(
+    z.array(
+      z.object({
+        snap: z.enum(['snapped', 'freehand']),
+        coordinates: z.array(lngLatSchema),
+        streets: z.optional(z.array(z.object({ name: z.string(), metres: z.number() }))),
+        pending: z.optional(z.boolean()),
+      }),
+    ),
+  ),
+  target: z.object({ routeId: z.nullable(z.string()), variantId: z.nullable(z.string()) }),
+  area: z.optional(
+    z.nullable(z.object({ kind: z.enum(['terminal', 'hintuan']), stopId: z.nullable(z.string()) })),
+  ),
+  borrow: z.optional(
+    z.nullable(z.object({ variantId: z.string(), part: z.enum(['start', 'end']) })),
+  ),
+  join: z.optional(z.nullable(z.number())),
+});
+type StoredDraft = z.infer<typeof storedDraftSchema>;
 
 const toStored = (d: Draft): StoredDraft => ({
   controlPoints: d.controlPoints,
@@ -54,20 +70,25 @@ const toStored = (d: Draft): StoredDraft => ({
 
 const fromStored = (d: StoredDraft): Draft => ({
   controlPoints: d.controlPoints,
-  segments: d.segments,
+  segments: d.segments ?? [],
   target: { routeId: d.target.routeId, directionId: d.target.variantId },
   area: d.area ? { kind: d.area.kind, hotspotId: d.area.stopId } : d.area,
   borrow: d.borrow ? { directionId: d.borrow.variantId, part: d.borrow.part } : d.borrow,
   join: d.join,
 });
 
-/** The draft on this device, or null: none, unreadable, or with no points. */
+/**
+ * The draft on this device, or null: none, unreadable, not the shape above
+ * (an older build's, a hand edit, a half-written save), or with no points.
+ * One that is not read is discarded (useDraftSaving clears it on the page's
+ * first render, with nothing drawn) rather than break the restore on every load.
+ */
 export function readDraft(): Draft | null {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
-    const d = JSON.parse(raw) as StoredDraft;
-    return Array.isArray(d.controlPoints) && d.controlPoints.length > 0 ? fromStored(d) : null;
+    const d = z.safeParse(storedDraftSchema, JSON.parse(raw));
+    return d.success && d.data.controlPoints.length > 0 ? fromStored(d.data) : null;
   } catch {
     return null;
   }

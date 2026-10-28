@@ -1,6 +1,6 @@
 ---
 name: progress
-description: Tell the owner where ParaPo's work stands right now - what's done, what's in progress, what's next, what the owner needs to do, and how much time is left. Use when the owner types /progress or asks "where are we?".
+description: Tell the owner where Para's work stands right now - what's done, what's in progress, what's next, what the owner needs to do, and how much time is left. Use when the owner types /progress or asks "where are we?".
 ---
 
 # /progress
@@ -15,7 +15,7 @@ A short, verified status report in chat. It reads; it never changes anything.
 - **The run log.** If this session's scratchpad has a run log (for example `night-queue.md`):
   - read its last 40 lines and its latest "STATE NOW" snapshot;
   - find the line that records the last `/progress`, which is where "since last time" starts.
-- **GitHub (Roviicc/ParaPo):**
+- **GitHub (ParaOrg/Para):**
   - open PRs: number, title, draft or ready, head SHA, the latest CI run on that head, and whether a review passed;
   - what merged into `staging` and into `main` since the last `/progress`, or in the last 24 hours if there's none;
   - the latest push CI on `staging` and on `main`.

@@ -2,7 +2,7 @@
 import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import { installReviewDemo } from './browser-demo.mjs';
 import { previewSession, previewToken } from './review-fixture.mjs';
-const source = '/tmp/parapo-review-hosted';
+const source = '/tmp/para-review-hosted';
 const seed = { version: 1 };
 for (const table of ['route', 'route_variant', 'route_stop', 'stop', 'draft']) {
   const response = await fetch(`http://127.0.0.1:4180/api/rest/v1/${table}?select=*`, {
@@ -12,13 +12,13 @@ for (const table of ['route', 'route_variant', 'route_stop', 'stop', 'draft']) {
   seed[table] = await response.json();
 }
 seed.published = JSON.parse(
-  readFileSync('/tmp/parapo-review-publish/public/data/index.v5.json', 'utf8'),
+  readFileSync('/tmp/para-review-publish/public/data/index.v5.json', 'utf8'),
 );
 seed.publishedLines = Object.fromEntries(
   seed.published.variants.map((direction) => [
     direction.id,
     JSON.parse(
-      readFileSync(`/tmp/parapo-review-publish/public/data/lines/${direction.id}.json`, 'utf8'),
+      readFileSync(`/tmp/para-review-publish/public/data/lines/${direction.id}.json`, 'utf8'),
     ),
   ]),
 );
@@ -26,7 +26,7 @@ writeFileSync(
   `${source}/review-demo.js`,
   `(${installReviewDemo.toString()})(${JSON.stringify(seed)},${JSON.stringify(previewSession())});`,
 );
-const toolbar = `<div style="height:40px;padding:4px 8px;display:flex;align-items:center;gap:4px;font:12px sans-serif;background:white;color:#222"><strong style="min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">Sample · Provisional</strong><button style="white-space:nowrap" id="sample-publish">Publish sample</button><button style="white-space:nowrap" id="sample-reset">Reset sample</button><span style="max-width:25%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis" id="sample-result" role="status"></span></div><script>document.getElementById('sample-publish').onclick=()=>{window.paraPoReviewDemo.publish();document.getElementById('sample-result').textContent='Published sample; reload Public view.';};document.getElementById('sample-reset').onclick=()=>window.paraPoReviewDemo.reset();</script><style>#root{height:calc(100% - 40px)!important}</style>`;
+const toolbar = `<div style="height:40px;padding:4px 8px;display:flex;align-items:center;gap:4px;font:12px sans-serif;background:white;color:#222"><strong style="min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">Sample · Provisional</strong><button style="white-space:nowrap" id="sample-publish">Publish sample</button><button style="white-space:nowrap" id="sample-reset">Reset sample</button><span style="max-width:25%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis" id="sample-result" role="status"></span></div><script>document.getElementById('sample-publish').onclick=()=>{window.paraReviewDemo.publish();document.getElementById('sample-result').textContent='Published sample; reload Public view.';};document.getElementById('sample-reset').onclick=()=>window.paraReviewDemo.reset();</script><style>#root{height:calc(100% - 40px)!important}</style>`;
 for (const page of ['index.html', 'studio/index.html']) {
   const file = `${source}/${page}`;
   let html = readFileSync(file, 'utf8');
@@ -42,4 +42,4 @@ for (const page of ['index.html', 'studio/index.html']) {
   if (page.startsWith('studio')) html = html.replace('<body>', `<body>${toolbar}`);
   writeFileSync(file, html);
 }
-cpSync('/tmp/parapo-review-publish/public/data', `${source}/data`, { recursive: true });
+cpSync('/tmp/para-review-publish/public/data', `${source}/data`, { recursive: true });

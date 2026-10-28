@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { Button } from '@/design-system/primitives/button';
 
 import { DraftFactsForm } from './draft-facts-form';
+import { DraftLockNotice } from './draft-lock-notice';
 import { ReviewConflict } from './review-conflict';
 import { ReviewFieldTable } from './review-field-table';
 import { ReviewGeometry } from './review-geometry';
+import { useDraftRowLock } from './use-draft-lock';
 import type { ReviewAction } from '../data/review-commands';
 import { reviewFields } from '../data/review-diff';
 import { reviewDraftOf } from '../data/review-label';
@@ -34,6 +36,8 @@ export function ReviewDetails({
   const [isEditing, setIsEditing] = useState(false);
   const busy = isBusy || isEditing;
   const query = useComparisonQuery(draft);
+  // Another editor's draft can be reviewed, approved or sent back, not edited.
+  const { lock, retry } = useDraftRowLock(draft);
   return (
     <div className="flex flex-col gap-4">
       <Button variant="secondary" label="Back to drafts" onClick={onBack} disabled={busy} />
@@ -52,7 +56,7 @@ export function ReviewDetails({
       )}
       {query.data && (
         <>
-          {query.data.hasConflict && query.data.currentRevision !== null && (
+          {query.data.hasConflict && query.data.currentRevision !== null && !lock && (
             <ReviewConflict
               key={`${draft.revision}:${query.data.currentRevision}`}
               draft={draft}
@@ -124,14 +128,18 @@ export function ReviewDetails({
           </div>
           <ReviewGeometry comparison={query.data} />
           <ReviewFieldTable fields={reviewFields(query.data)} />
-          <DraftFactsForm
-            key={draft.id}
-            draft={draft}
-            onBusyChange={(value) => {
-              setIsEditing(value);
-              onBusyChange(value);
-            }}
-          />
+          {lock ? (
+            <DraftLockNotice lock={lock} onRetry={retry} />
+          ) : (
+            <DraftFactsForm
+              key={draft.id}
+              draft={draft}
+              onBusyChange={(value) => {
+                setIsEditing(value);
+                onBusyChange(value);
+              }}
+            />
+          )}
         </>
       )}
     </div>

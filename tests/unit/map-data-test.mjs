@@ -471,7 +471,7 @@ test('step 13: a line file without stretches is checked as before', () => {
 // report"). Against an older index they stay a note.
 import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
 import { boxesReached } from '../../src/features/routes/model/line-pass.ts';
-import { lineFileText } from '../../scripts/publish/lineFile.mjs';
+import { lineFileText } from '../../scripts/publish/line-file.mjs';
 import { toDirection } from '../../src/features/routes/model/direction-schema.ts';
 import { toHotspot } from '../../src/features/routes/model/hotspot-schema.ts';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -523,7 +523,7 @@ test("T: against the newest index, stretches under another key, a stale one, or 
 
 test("T: the report lists the publish's warning under a heading of its own, the studio's under theirs, and counts each", () => {
   // Review of T (2026-10-06): the warning ends "the publish to look at
-  // (scripts/publish/lineFile.mjs), not the studio", and the report listed
+  // (scripts/publish/line-file.mjs), not the studio", and the report listed
   // it under "worth a look in the studio". A hintuan with no box is the
   // studio's; a line file under another key is the publish's.
   const m = newest(withPass(({ pass }) => ({ pass, passKey: 'other' })));
@@ -572,13 +572,13 @@ test("T: the committed map gives no warning of its line files' stretches", () =>
     assert.deepEqual(
       passWarning(checkMapData(file)),
       [],
-      `${name}: write the committed line files again with lineFileText against this index's hintuans (scripts/publish/lineFile.mjs), as the nightly publish would`,
+      `${name}: write the committed line files again with lineFileText against this index's hintuans (scripts/publish/line-file.mjs), as the nightly publish would`,
     );
   }
 });
 
 test('T: a copy of public/data written as the next publish writes it gives no warning; a tampered or a stale key in it gives one', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'parapo-passkey-'));
+  const dir = mkdtempSync(join(tmpdir(), 'para-passkey-'));
   try {
     cpSync(fileURLToPath(new URL('../../public/data/', import.meta.url)), dir, { recursive: true });
     const read = (name) => {

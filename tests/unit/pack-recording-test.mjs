@@ -111,20 +111,33 @@ test('packing again packs the same contribution: a retry sends what the first tr
   assert.deepEqual({ ...first.payload, sent_at: null }, { ...again.payload, sent_at: null });
 });
 
-test('a recording the database could never take is refused here, with the reason', () => {
+test('a recording longer than six hours is refused here, with the reason', () => {
   const fixes = rideFixes(20);
   const long = { ...rideRecording(ID, fixes), stoppedAt: T0 + 7 * 3_600_000 };
   assert.deepEqual(packRecording(long, fixes, 1, SENT), { ok: false, reason: 'too-long' });
-  const many = Array.from({ length: UPLOAD_LIMITS.points + 1 }, (_, s) => ({
-    time: T0 + s * 1000,
-    at: [121.05, 14.7 + s / 1e6],
-    accuracyM: 5,
-  }));
-  const manyRecording = { ...rideRecording(ID, many), stoppedAt: T0 + 5 * 3_600_000 };
-  assert.deepEqual(packRecording(manyRecording, many, 1, SENT), {
-    ok: false,
-    reason: 'too-many-points',
-  });
+});
+
+test('a five-hour ride, more fixes than the database keeps, goes up thinned evenly to the limit', () => {
+  const fixes = rideFixes(5 * 3600);
+  const recording = rideRecording(ID, fixes);
+  const { payload } = packed(fixes, recording);
+  assert.equal(contributionPayloadSchema.safeParse(payload).success, true);
+  assert.equal(payload.point_count, UPLOAD_LIMITS.points);
+  const points = absolutePoints(payload);
+  assert.equal(points.length, UPLOAD_LIMITS.points);
+  // The ride's first and last fixes are both kept.
+  assert.equal(points[0].time, fixes[0].time);
+  assert.equal(points[points.length - 1].time, fixes[fixes.length - 1].time);
+  // Evenly: one fix a second thinned to 14,400 of 18,000 leaves one or two seconds between each.
+  for (let i = 1; i < points.length; i++) {
+    const dt = points[i].time - points[i - 1].time;
+    assert.ok(dt >= 1000 && dt <= 2000, `${dt} ms between points ${i - 1} and ${i}`);
+    const metres = 0.11132 * Math.abs(points[i].lat - points[i - 1].lat);
+    assert.ok(metres / (dt / 1000) <= UPLOAD_LIMITS.speedKmh / 3.6, `too fast at ${i}`);
+  }
+  // The totals still come from every fix: 8 m a second for all but the two minutes standing.
+  const rideM = 8 * (5 * 3600 - 1 - 120);
+  assert.ok(Math.abs(payload.distance_m - rideM) < rideM / 100, `${payload.distance_m} m`);
 });
 
 test('a recording with no fixes packs with no points and no line', () => {

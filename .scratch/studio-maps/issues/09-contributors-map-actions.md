@@ -1,6 +1,6 @@
 # 09: Use this line, Draw a hintuan here, Hide, Block
 
-Status: ready-for-agent
+Status: ready-for-human (owner: on the live studio, use one line and draw one hintuan, then confirm the contribution_use rows are there)
 Type: task
 Wave: 5
 Who: Sonnet
@@ -26,3 +26,5 @@ Blocked by: 05, 08
 - `npm run check` passes.
 
 ## Comments
+
+2026-10-26, status check on `staging`. Code done in 1e9ce544 (merge d5eb5ca4). Evidence: `src/features/studio/contributors/actions/` (`use-this-line.tsx`, `contribution-start.ts`, `hinto-list.tsx` Draw a hintuan here, `phone-block.tsx`), `src/features/studio/data/contributions-write.ts` (hide, unhide, block, unblock, `contribution_use`), `tests/unit/contribution-start-test.mjs`, `tests/e2e/studio-contributors-test.mjs`. Needs `20261022090000_contribution_use` (applied live). Left: the acceptance check that needs the owner.

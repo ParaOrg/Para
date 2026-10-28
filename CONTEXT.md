@@ -1,9 +1,16 @@
-# ParaPo
+# Para
 
 Ground-truthed jeepney routes for Metro Manila: an editor draws where the jeeps
 actually go and where people actually board, and a public map shows it. The
 words below are the ones the app, the plan and the owner use; where several
 existed, one was chosen.
+
+Para was called ParaPo until 2026-10-27. A few names keep the old one because
+they cannot change: the R2 bucket `parapo-tiles` (a bucket cannot be renamed)
+and the tile archives in it (`tiles/parapo-*.pmtiles`, which the live
+`current.json` names), the weekly backups (`parapo-*.sql.gz.gpg`), the
+contributor app's signing key with its secret `PARAPO_KEY_PASSPHRASE`, and the
+old site's addresses on `villaralvorovic2.workers.dev`.
 
 ## Language
 
@@ -171,7 +178,7 @@ _Avoid_: head/tail (those are the route's), origin/destination
 ### People and surfaces
 
 **Owner**:
-The one person who runs ParaPo and edits its data.
+The one person who runs Para and edits its data.
 
 **Editor**:
 Anyone on the editor list, allowed to write. Since migration 0015
@@ -241,9 +248,15 @@ lets them go, and the card shows the whole ride.
 
 **Map design**:
 The map drawn under the routes: Monochrome (the default, gray), Colour
-(OpenFreeMap's Liberty in Apple Maps' light palette, since 2026-10-16) and
+(the Liberty style in Apple Maps' light palette, since 2026-10-16) and
 Fiord (dark blue-gray, for night). The studio adds Terrain (Colour with the
 hills) and Satellite. A commuter's pick is kept on the phone.
+
+**Basemap host**:
+The one address the map designs' styles, tiles, sprite and glyphs are read
+from (`VITE_BASEMAP_HOST`). Para's own tiles server on staging; OpenFreeMap
+wherever none is set, which is `main` until the owner releases staging. See
+[ADR 0007](docs/adr/0007-para-serves-its-own-basemap.md).
 
 **Map Style card**:
 The card the layers button opens under it, at the map's top-right corner: a

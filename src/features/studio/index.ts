@@ -6,6 +6,7 @@ export { SignIn } from './auth/sign-in';
 export { skipSignInForTests } from './auth/test-bypass';
 export { useAuthFlow } from './auth/use-auth-flow';
 export { usePasswordRecovery } from './auth/use-password-recovery';
+export { StudioSessionProvider } from './auth/studio-session-provider';
 export { useSession } from './auth/use-session';
 export { loadHotspotsFromSupabase } from './data/hotspots-read';
 export { lineOf, listDirections } from './data/live';
