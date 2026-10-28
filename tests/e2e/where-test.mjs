@@ -301,14 +301,16 @@ check(
 const dragged = await camera(page);
 p = north(p, 20);
 await ctx.setGeolocation({ ...p, accuracy: 10 });
-await until(() => overlayOn(page, p));
+const overlayMoved = await until(() => overlayOn(page, p));
 await mapIdle(page);
 const after = await camera(page);
 check(
   '  a new fix moves the overlay, not the camera',
-  Math.abs(after.longitude - dragged.longitude) < 1e-7 &&
+  overlayMoved &&
+    Math.abs(after.longitude - dragged.longitude) < 1e-7 &&
     Math.abs(after.latitude - dragged.latitude) < 1e-7 &&
     (await overlay(page).count()) === 1,
+  `the overlay ${overlayMoved ? 'on the new fix' : 'not on the new fix'}`,
 );
 // Google Maps' way (the owner's screenshots, 2026-10-01): the circle is the
 // fix's metres, so zoomed out it shrinks under the dot and is gone.
@@ -448,13 +450,13 @@ const moved = await camera(page);
 p = north(p, 20);
 await ctx.setGeolocation({ ...p, accuracy: 10 });
 // Off the screen here, but drawn where the map puts it all the same.
-await until(() => overlayOn(page, p));
+const overlayFollowed = await until(() => overlayOn(page, p));
 await mapIdle(page);
 const kept = await camera(page);
 check(
   '  and the next fix leaves the camera where the app put it',
-  Math.abs(kept.latitude - moved.latitude) < 1e-7,
-  `${((kept.latitude - moved.latitude) / M_LAT).toFixed(1)} m moved`,
+  overlayFollowed && Math.abs(kept.latitude - moved.latitude) < 1e-7,
+  `the overlay ${overlayFollowed ? 'on the new fix' : 'not on the new fix'}; ${((kept.latitude - moved.latitude) / M_LAT).toFixed(1)} m moved`,
 );
 
 // A route tapped: the dot gazes at it — its eyes turn the way to it for three
