@@ -208,15 +208,15 @@ jobs:
       # pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
       # These build a preview from `.env.production` (not `.env.local`) and must not depend
       # on the tiles server (it allows no :4173 or :4174 origin): OpenFreeMap is named here.
-      # `build` above checks the committed host. pwa-test's own-tiles run keeps the committed
-      # host and answers it with Playwright routes, never the real server.
+      # `build` above checks the committed host. pwa-test's own-tiles run is built for a stand-in
+      # of Para's own tiles server on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one.
       - name: Build, for pwa-test, handover-test and contribute-offline-test
         if: matrix.suite == 'pwa-test' || matrix.suite == 'handover-test' || matrix.suite == 'contribute-offline-test'
         env:
           BASEMAP: ${{ matrix.basemap }}
         run: |
           if [ "$BASEMAP" = own-tiles ]; then
-            npm run build
+            VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
           else
             VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
           fi
