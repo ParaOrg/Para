@@ -1,21 +1,21 @@
 import type { Plugin } from 'vite';
 
 /**
- * MapLibre's worker, built with the page instead of on its own (the
- * cheap-phone plan, step 14, 2026-10-05). MapLibre 6 ships three files: the
- * page's maplibre-gl.mjs and the worker's maplibre-gl-worker.mjs both import
- * maplibre-gl-shared.mjs, most of the code. `?worker&url` built the worker as
- * a bundle of its own, the shared file copied into it: 135 kB gzipped that
- * the map's 'load' waits for, of code the page had just downloaded. Here the
- * worker is a chunk of the page's own build, so it imports the page's
- * maplibre-gl-shared chunk (the priority-3 group below), which the browser
- * already holds, and what is left of it is a few kB.
+ * MapLibre's worker, built with the page instead of on its own. MapLibre 6
+ * ships three files: the page's maplibre-gl.mjs and the worker's
+ * maplibre-gl-worker.mjs both import maplibre-gl-shared.mjs, most of the
+ * code. `?worker&url` alone builds the worker as a bundle of its own, the
+ * shared file copied into it: over a hundred kB gzipped that the map's 'load'
+ * waits for, of code the page has just downloaded. Here the worker is a chunk
+ * of the page's own build, so it imports the page's maplibre-gl-shared chunk
+ * (its own chunk group in vite.config.ts), which the browser already holds,
+ * and what is left of it is a few kB.
  *
  * Build only: under `npm run dev` map-view.tsx's `?worker&url` reaches Vite's
- * own worker plugin as it always did. In a build this answers that import
- * first, with the URL of the chunk it emits. check-build.mjs proves the
- * worker imports nothing but MapLibre's shared code and Vite's preload
- * helper: our shared chunk, with React, in the worker would stop the map.
+ * own worker plugin. In a build this answers that import first, with the URL
+ * of the chunk it emits. check-build.mjs proves the worker imports nothing
+ * but MapLibre's shared code and Vite's preload helper: our shared chunk,
+ * with React, in the worker would stop the map.
  */
 export const MAPLIBRE_WORKER_URL = 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 export function maplibreWorkerWithThePage(): Plugin {

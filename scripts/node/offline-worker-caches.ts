@@ -39,8 +39,8 @@ export function runtimeCaches(basemapRules: BasemapCacheRules): RuntimeCaching {
           {
             // Only JSON. The host answers a missing file with the
             // map's page, 200 (wrangler.jsonc, single-page-application),
-            // and a 200 alone kept that page as the map (review of
-            // 2026-10-03). Inline: the worker is written from this.
+            // and a 200 alone would keep that page as the map. Inline: the
+            // worker is written from this.
             cacheWillUpdate: async ({ response }) =>
               (response.headers.get('content-type') ?? '').startsWith('application/json')
                 ? response

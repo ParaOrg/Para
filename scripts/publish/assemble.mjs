@@ -1,12 +1,11 @@
 // Assembles the map's rows from the database's, by the app's own rules: no
 // reading, no writing. Each direction's line is thinned to within half a metre
 // of the original and rounded to 6 decimals (about 0.1 m): the router's points
-// every metre or two on a straight road go, the bends stay. It was 5 m and 5
-// decimals until 2026-09-25, when the owner zoomed to a street and saw the
-// lines cut the corners and the two routes that share the road out of Tala
+// every metre or two on a straight road go, the bends stay. A coarser
+// thinning cuts the corners at street zoom, and two routes that share a road
 // braid across each other, each thinned on its own; at zoom 20 five metres is
 // sixty pixels. A hotspot's point and box are rounded to 6 decimals as well:
-// the editor saves them with 15 or more, and those digits were half the file.
+// the editor saves them with 15 or more, and those digits would be half the file.
 //
 // It checks its own work: every original point must lie within half a metre of
 // the thinned line, or it fails.
@@ -33,9 +32,8 @@ import { hotspotLabel } from '../../src/features/routes/model/hotspots.ts';
 export const SIMPLIFY_M = 0.3;
 export const MAX_DEVIATION_M = 0.5;
 /**
- * The overview in the index: OVERVIEW_M (5 m) and 5 decimals (about 1 m),
- * the file's diet before 2026-09-25 — geo.ts's overviewOf, which the editor's
- * list draws too. Below zoom 15 a pixel here is more than 2 m, so it is the
+ * The overview in the index: OVERVIEW_M (5 m) and 5 decimals (about 1 m) —
+ * geo.ts's overviewOf, which the editor's list draws too. Below zoom 15 a pixel here is more than 2 m, so it is the
  * full line to the eye; closer in, and for a lit direction, the map reads
  * the full line.
  */
@@ -111,7 +109,7 @@ function namesOf(v, hotspotName) {
  */
 export function assembleMap(directionRows, hotspotRows, linkRows) {
   // Names are generated from the hotspots at each route's ends and never stored
-  // (PLAN.md, "Naming and creating a route", 2026-09-21). The file carries the
+  // (PLAN.md, "Naming and creating a route"). The file carries the
   // generated strings so commuters need no join; a renamed hotspot shows on the
   // next publish: routeName and directionName, from a hotspot's hotspotLabel — its
   // informal name, what people say, or the name on the ground (0007).

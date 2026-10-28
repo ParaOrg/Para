@@ -131,7 +131,7 @@ export function readBuild(root) {
     studioModules: sourceModules(studioFiles),
     contributeModules: sourceModules(contributeFiles),
     // The worker too: it runs on every visit, and the database's address in
-    // it would be the public page asking the database (2026-10-03).
+    // it would be the public page asking the database.
     commuter: text([...commuterFiles, ...(existsSync(join(dist, 'sw.js')) ? ['sw.js'] : [])]),
     studio: text(studioFiles),
     contribute: text(contributeFiles),

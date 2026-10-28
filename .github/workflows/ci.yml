@@ -1,8 +1,7 @@
 # Checks every push and pull request: the production build with its guards,
 # then the headless suites from tests/e2e/ against the dev server.
 #
-# Fast by design (the owner's ask of 2026-09-30: "it's stopping me from
-# shipping fast"). Three ideas:
+# Fast by design, so it never holds up shipping. Three ideas:
 #
 #   1. Only what a change can reach. `changes` reads the files a pull request
 #      touches: docs and Markdown alone run nothing (except docs/architecture.md,
