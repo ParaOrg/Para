@@ -47,7 +47,7 @@ import {
 
 // None skipped on today's published map, in any of the three parts (CI on
 // staging, 2026-10-28): a skip now is a check that stopped proving anything.
-const { check, skip, tally } = harness({ maxSkips: 0 });
+const { check, skip, tally } = harness({ knownSkips: [] });
 
 // COMMUTER_PART=k/n runs part k of n, so CI can run the parts side by side:
 // every part opens the map and runs sections 1, 2 and 5; section 3's

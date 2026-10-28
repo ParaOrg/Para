@@ -1,16 +1,13 @@
-// 5. Weight (stage 6 of the clean-up, 2026-09-29): the fonts are under
-//    135 kB together (120 until SN Pro ExtraBold joined, the owner's call of
-//    2026-10-13), and what both pages share — MapLibre, React and the
-//    shared code — is under 410 kB gzipped (build-weight.mjs), so neither creeps back
-//    unnoticed. The fonts are precached. Since the cheap-phone plan's steps
-//    12 and 14 (2026-10-05) that is five chunks (`zod` since), named in vite.config.ts,
-//    each with a ceiling of its own: `maplibre`, `maplibre-gl-shared`,
-//    `react` and `zod` hold only their packages and import none of our code, and
-//    `shared` holds our code; one in the wrong group is too heavy for its
-//    ceiling. So a deploy of ours leaves React's name alone, and
-//    MapLibre's two unless it starts or stops importing one of MapLibre's
-//    exports: Rolldown keeps of MapLibre only what our code imports
-//    (vite.config.ts says more), and no check here can tell.
+// 5. Weight: the fonts and what both pages share — MapLibre, React and the
+//    shared code — each stay under a budget (build-weight.mjs), so neither
+//    creeps back unnoticed. The fonts are precached. What both pages share is
+//    five chunks, named in vite.config.ts, each with a ceiling of its own:
+//    `maplibre`, `maplibre-gl-shared`, `react` and `zod` hold only their
+//    packages and import none of our code, and `shared` holds our code; one
+//    in the wrong group is too heavy for its ceiling. So a deploy of ours
+//    leaves React's name alone, and MapLibre's two unless it starts or stops
+//    importing one of MapLibre's exports: Rolldown keeps of MapLibre only what
+//    our code imports (vite.config.ts says more), and no check here can tell.
 import { FONTS_MAX_KB, GROUPS, SHARED_MAX_GZ_KB, fontBytes, gzipBytes } from '../build-weight.mjs';
 
 // The contribute page's own weight: what it loads beyond the public page's

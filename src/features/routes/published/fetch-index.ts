@@ -97,8 +97,8 @@ function parseIndex(raw: unknown, url: string, schema: number): Index {
 /**
  * The copy the worker kept of the index itself, else the newest older one.
  * The worker falls back to its copy only when the network fails or takes over
- * 3 s (vite.config.ts, the map-file rule): a server's 500 is an answer, and
- * comes to the page as one.
+ * 3 s (scripts/node/offline-worker-caches.ts, the map-file rule): a server's
+ * 500 is an answer, and comes to the page as one.
  */
 async function storedCopy(): Promise<Index | null> {
   return (

@@ -62,9 +62,10 @@ export const MAP_FILE_SCHEMA = 5;
 export const MAP_FILE_TOO_NEW = 'This map was published for a newer version of the app.';
 
 /**
- * Set by the service worker (vite.config.ts, the map-file rule) on a copy it
- * served from its store because the network was slow or gone. Absent on an
- * answer from the network, and on every page with no worker.
+ * Set by the service worker (scripts/node/offline-worker-caches.ts, the
+ * map-file rule) on a copy it served from its store because the network was
+ * slow or gone. Absent on an answer from the network, and on every page with
+ * no worker.
  */
 export const SERVED_FROM_HEADER = 'x-para-served-from';
 
@@ -81,15 +82,16 @@ export const STORED_OLD = [
   { url: '/data/index.v3.json', schema: 3 },
   { url: '/data/index.json', schema: 2 },
 ] as const;
-/** The worker's store for the map file (vite.config.ts, the map-file rule). */
+/** The worker's store for the map file (offline-worker-caches.ts, the map-file rule). */
 export const MAP_FILE_CACHE = 'map-file';
 
 /**
- * Where index.html's own script leaves its request for this file:
- * vite.config.ts writes that script into the page's <head>, with
- * MAP_FILE_URL, so the file is asked for as the page is read rather than
- * once the app's script has come and run: that script measured 385 kB on the
- * wire, and 355 kB took about 3.3 s of a slow phone network. The script
+ * Where index.html's own script leaves its request for this file: the
+ * mapFileEarly plugin (scripts/node/vite-plugins/map-file-early.ts) writes
+ * that script into the page's <head>, with MAP_FILE_URL, so the file is
+ * asked for as the page is read rather than once the app's script has come
+ * and run: that script measured 385 kB on the wire, and 355 kB took about
+ * 3.3 s of a slow phone network. The script
  * leaves a promise of the answer and, for an ok one, of its body read as JSON (undefined for
  * a body that is not); it asks with `no-cache`, as fetchIndex does, and at
  * low priority, so the app's own script keeps the link first.

@@ -1,4 +1,4 @@
-// Imported by the public map's worker (vite.config.ts, `importScripts`).
+// Imported by the public map's worker (scripts/node/offline-worker.ts, `importScripts`).
 // Deletes the caches of "Para PH", the app this address served before, which a
 // phone that used it still holds. Their names start with the prefix in
 // src/features/published-map/old-app.ts.

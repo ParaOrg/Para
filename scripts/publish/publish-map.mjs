@@ -3,9 +3,7 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/publish-map.mjs
 //                                                   writes public/data/
 //
-// Six things (shape A of docs/archive/review-2026-09-29.md, section 8, stage 7 of the
-// clean-up; since 2026-09-29; the train lines' shape and the ferry's since
-// 2026-10-03; loops since 2026-10-17):
+// Six things:
 //   data/index.v5.json      schema 5, what the app reads (MAP_FILE_URL): the
 //                           index below with every line and every loop in —
 //                           a loop's route has no ends and `is_loop: true`,
@@ -35,12 +33,11 @@
 //   data/lines/<id>.json    each direction's full line (below), fetched when
 //                           the direction is lit or opened, with its orange
 //                           stretches worked out (`pass`, and `passKey`, what
-//                           they were worked out against: src/features/routes/model/line-pass.ts),
-//                           since 2026-10-05.
-//   data/map.json           schema 1, everything in full as before (without
-//                           any line, as the index), for one
-//                           release: an installed app that has not updated
-//                           reads it. Drop it a month at least after the
+//                           they were worked out against:
+//                           src/features/routes/model/line-pass.ts).
+//   data/map.json           schema 1, everything in full (without any line,
+//                           as the index), for one release: an installed app
+//                           that has not updated reads it. Drop it a month at least after the
 //                           index ships (src/features/routes/published/map-file.ts has the
 //                           rule), with its commit line in the workflow.
 // A line file of a direction that no longer exists is removed.
@@ -61,19 +58,17 @@
 // lie within half a metre of the thinned line, or it fails. And it refuses to
 // publish a map that shrank suddenly — a table that answers with no rows is a
 // normal HTTP 200, so without this a policy slip would blank the public map
-// and deploy it. The signboards are held the same way (board-guard.mjs,
-// 2026-10-03): many of the boards directions name gone from the bucket at
-// once, or every one of them.
+// and deploy it. The signboards are held the same way (board-guard.mjs):
+// many of the boards directions name gone from the bucket at once, or every
+// one of them.
 // `--force` overrides these checks, for a deliberate removal.
 //
 // The rules are the app's own, imported from src/ as check-map-data does —
 // the thinning, the rounding, a hotspot's label, the route and direction
-// names, the index's schema — so the file and the app cannot drift (the
-// review's 6.5: they were written here a second time). TypeScript, which
-// Node strips; ts-resolve.mjs finds the .ts behind an extensionless import.
-// Node's own fetch, zlib and fs, and zod through the app's schemas (ticket 08
-// of the restructure follow-ups, 2026-10-07): the workflow runs `npm ci
-// --omit=dev` first.
+// names, the index's schema — so the file and the app cannot drift, as two
+// copies of a rule would. TypeScript, which Node strips; ts-resolve.mjs finds
+// the .ts behind an extensionless import. Node's own fetch, zlib and fs, and
+// zod through the app's schemas: the workflow runs `npm ci --omit=dev` first.
 import { existsSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
