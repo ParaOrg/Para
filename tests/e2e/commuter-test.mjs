@@ -22,7 +22,15 @@
 // own), and that the map is made framed on the routes, where their fit
 // framed it, and stays there (the owner's Q1).
 import { chromium } from 'playwright';
-import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
+import {
+  BASE,
+  cardsSettled,
+  harness,
+  mapIdle,
+  nodeFetch,
+  until,
+  waitForSource,
+} from './lib/harness.mjs';
 import { routesFraming } from './lib/framing.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
@@ -202,11 +210,56 @@ const cardKind = async () => {
     return { kind: 'route', text };
   return { kind: 'unknown', text };
 };
+// The waits below are on what the next line reads, not the clock. One that
+// runs out throws, naming what never came: the run fails there, loudly.
+const ANY_CARD = '[data-testid="card"], [data-testid="chooser"]';
+/** Once something matches `selector`: what a tap opens. */
+const shows = (selector = ANY_CARD, ms = 3000) =>
+  page
+    .waitForFunction((q) => !!document.querySelector(q), selector, { timeout: ms })
+    .catch(() => {
+      throw new Error(`shows: nothing matched ${selector} within ${ms} ms`);
+    });
+/** Once nothing matches `selector`: what a close shuts. */
+const hides = (selector, ms = 3000) =>
+  page
+    .waitForFunction((q) => !document.querySelector(q), selector, { timeout: ms })
+    .catch(() => {
+      throw new Error(`hides: ${selector} still there after ${ms} ms`);
+    });
+/**
+ * Whether something comes to match `selector` within `ms`: for a tap that may
+ * rightly open nothing (a point in a box the finger misses), where the code
+ * after it decides what that means.
+ */
+const appears = (selector = ANY_CARD, ms = 3000) =>
+  page
+    .waitForFunction((q) => !!document.querySelector(q), selector, { timeout: ms })
+    .then(
+      () => true,
+      () => false,
+    );
+/** Once `locator`'s data-state reads `state`: a card or a row picked, or let go. */
+const inState = (locator, state, ms = 3000) =>
+  until(
+    () => locator.getAttribute('data-state'),
+    (s) => s === state,
+    ms,
+  );
+/** Once a SWITCH's data-back has turned from `was`: the routes turned round. */
+const turned = (locator, was, ms = 3000) =>
+  until(
+    () => locator.getAttribute('data-back'),
+    (b) => b !== was,
+    ms,
+  );
+const TRIP_UP = '[data-testid="card"]:not([hidden]) [data-testid="trip"]';
+const PLACE_UP = '[data-testid="card"]:not([hidden]) [data-testid="card-place"]';
 
 await page.goto(`${BASE}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 await waitForSource(page, 'saved-stops');
-await page.waitForTimeout(1200);
+await mapIdle(page);
 
 // 0. The map is made framed on the routes (the owner's Q1, 2026-10-04):
 // where their fit put it after the map's 'load' until then — the box round
@@ -436,7 +489,7 @@ for (const [i, p] of snapshot.polys.entries()) {
   let opened = null;
   for (const [x, y] of candidates) {
     await page.evaluate(([cx, cy]) => window.__map.jumpTo({ center: [cx, cy], zoom: 18 }), [x, y]);
-    await page.waitForTimeout(500);
+    await mapIdle(page);
     const pt = await page.evaluate(
       ([cx, cy]) => {
         const q = window.__map.project([cx, cy]);
@@ -446,7 +499,8 @@ for (const [i, p] of snapshot.polys.entries()) {
     );
     const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
     await page.mouse.click(box.x + pt[0], box.y + pt[1]);
-    await page.waitForTimeout(350);
+    // A point the finger misses opens nothing: the next one is tried.
+    await appears();
     const chooser = page.locator('[data-testid="chooser"]');
     if ((await chooser.count()) > 0) {
       // Boxes side by side under this point: the list shows them, and its
@@ -455,8 +509,10 @@ for (const [i, p] of snapshot.polys.entries()) {
         .locator('button[data-testid="chooser-item"]')
         .filter({ hasText: p.name })
         .first();
-      if ((await row.count()) > 0) await row.click();
-      await page.waitForTimeout(350);
+      if ((await row.count()) > 0) {
+        await row.click();
+        await shows(PLACE_UP);
+      }
     }
     const state = await cardKind();
     if (state.kind === 'hotspot') {
@@ -573,9 +629,9 @@ for (const [i, p] of snapshot.polys.entries()) {
     await settled();
     const camHome = await view();
     await name.click();
-    await page.waitForTimeout(250);
+    await inState(firstCard, 'selected');
     const cardIds = await cardDirections(firstCard);
-    const picked = await litNow();
+    const picked = await until(litNow, (lit) => sameIds(lit, cardIds));
     check(
       `  a tap on its first card selects it and lights just its routes`,
       (await firstCard.getAttribute('data-state')) === 'selected' && sameIds(picked, cardIds),
@@ -583,7 +639,7 @@ for (const [i, p] of snapshot.polys.entries()) {
     );
     const label = (await rows.first().innerText()).replace(/\s+/g, ' ').trim();
     await rows.first().click();
-    await page.waitForTimeout(350);
+    await shows(TRIP_UP);
     const after = await cardKind();
     check(
       `  its first route row opens a route card straight away`,
@@ -613,15 +669,18 @@ for (const [i, p] of snapshot.polys.entries()) {
         JSON.stringify(litUnder),
       );
       const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) await back.first().click();
-      await page.waitForTimeout(350);
+      if ((await back.count()) > 0) {
+        await back.first().click();
+        await shows(PLACE_UP);
+      }
       const again = await cardKind();
+      const litAgain = await until(hotspotsLit, (lit) => lit.includes(p.id));
       check(
         `  ‹ on the trip goes back to the hotspot's card, lit again`,
-        again.kind === 'hotspot' && again.text === opened && (await hotspotsLit()).includes(p.id),
-        `card ${again.kind}; lit ${JSON.stringify(await hotspotsLit())}`,
+        again.kind === 'hotspot' && again.text === opened && litAgain.includes(p.id),
+        `card ${again.kind}; lit ${JSON.stringify(litAgain)}`,
       );
-      const relit = await litNow();
+      const relit = await until(litNow, (lit) => sameIds(lit, shownIds));
       check(
         `  ‹ comes back to its cards at rest, every route lit again`,
         (await page
@@ -631,9 +690,8 @@ for (const [i, p] of snapshot.polys.entries()) {
       );
       // …and the camera comes back in to where the commuter had it before
       // the pick, out of the trip's overview (the owner's ask, 2026-10-02).
-      await page.waitForTimeout(400);
-      await settled();
-      const camBack = await view();
+      await cardsSettled(page);
+      const camBack = await until(view, (v) => sameView(v, camHome));
       check(
         `  and the camera back where it was before the pick`,
         sameView(camBack, camHome),
@@ -644,13 +702,16 @@ for (const [i, p] of snapshot.polys.entries()) {
       // leaves it where the row was tapped.
       const camRow = await view();
       await rows.first().click();
-      await page.waitForTimeout(350);
-      await settled();
+      await shows(TRIP_UP);
+      // Moved, it would be by now: the card and the camera both at rest.
+      await cardsSettled(page);
       const opened2 = (await cardKind()).kind === 'route';
       const moved = !sameView(await view(), camRow);
-      if ((await back.count()) > 0) await back.first().click();
-      await page.waitForTimeout(400);
-      await settled();
+      if ((await back.count()) > 0) {
+        await back.first().click();
+        await shows(PLACE_UP);
+      }
+      await cardsSettled(page);
       const camRowBack = await view();
       check(
         `  a row tapped at rest: the trip opens with the camera where it was, and its ‹ leaves it there`,
@@ -661,12 +722,12 @@ for (const [i, p] of snapshot.polys.entries()) {
       // overview, goes back to where the commuter had it (the owner, 2026-10-01).
       const camBefore = await view();
       await name.click();
-      await page.waitForTimeout(250);
-      const repicked = (await firstCard.getAttribute('data-state')) === 'selected';
-      await page.waitForTimeout(700);
+      const repicked = (await inState(firstCard, 'selected')) === 'selected';
+      // The pick's overview flown before it is let go.
+      await cardsSettled(page);
       await name.click();
-      await page.waitForTimeout(250);
-      const letGo = await litNow();
+      await inState(firstCard, 'rest');
+      const letGo = await until(litNow, (lit) => sameIds(lit, shownIds));
       check(
         `  a second tap on a picked card lets it go: every route lit again`,
         repicked &&
@@ -674,8 +735,8 @@ for (const [i, p] of snapshot.polys.entries()) {
           sameIds(letGo, shownIds),
         `picked ${repicked}; ${letGo.length} lit`,
       );
-      await page.waitForTimeout(800);
-      const camAfter = await view();
+      await cardsSettled(page);
+      const camAfter = await until(view, (v) => sameView(v, camBefore));
       check(
         `  and the camera goes back to where it was before the pick`,
         Math.abs(camAfter.zoom - camBefore.zoom) < 0.01 &&
@@ -709,19 +770,25 @@ for (const [i, p] of snapshot.polys.entries()) {
               livery: c.dataset.livery,
             }));
           });
+        // SWITCH pressed, once the routes have turned round and anything that
+        // would move the camera has: what the next reading is of.
+        const flipped = async () => {
+          const was = await flip.getAttribute('data-back');
+          await flip.click();
+          await turned(flip, was);
+          await cardsSettled(page);
+        };
         const before = await view();
-        await flip.click();
-        await page.waitForTimeout(900);
-        const turned = await view();
+        await flipped();
+        const turnedView = await view();
         const wornTurned = await worn();
-        await flip.click();
-        await page.waitForTimeout(900);
+        await flipped();
         const back = await view();
         const wornBack = await worn();
         check(
           `  ⇄ turns the routes round with the camera kept still, there and back`,
-          still(before, turned) && still(before, back),
-          JSON.stringify({ before, turned, back }),
+          still(before, turnedView) && still(before, back),
+          JSON.stringify({ before, turned: turnedView, back }),
         );
         // A route wears one colour both ways round (the owner's ask,
         // 2026-10-12: "stop randomly changing colors"): a card the turn
@@ -730,11 +797,9 @@ for (const [i, p] of snapshot.polys.entries()) {
         // clashes on the turn draws again once and keeps that (liveries.ts),
         // so the readings are held from the first turn on, over a second
         // round trip.
-        await flip.click();
-        await page.waitForTimeout(900);
+        await flipped();
         const wornTurned2 = await worn();
-        await flip.click();
-        await page.waitForTimeout(900);
+        await flipped();
         const wornBack2 = await worn();
         const keeps = (from, to) =>
           from.every((a) => {
@@ -753,17 +818,11 @@ for (const [i, p] of snapshot.polys.entries()) {
       }
       // ✕ closes it, a picked card and all: nothing stays lit.
       await name.click();
-      await page.waitForTimeout(250);
-      const pickedAgain = (await firstCard.getAttribute('data-state')) === 'selected';
+      const pickedAgain = (await inState(firstCard, 'selected')) === 'selected';
       await closeCard();
       // Nothing lit as soon as the map has drawn the close: a runner drawing a
       // few frames a second may take more than a quarter second (2026-10-01).
-      const closeBy = Date.now() + 2000;
-      let closed = await litNow();
-      while (closed.length && Date.now() < closeBy) {
-        await page.waitForTimeout(100);
-        closed = await litNow();
-      }
+      const closed = await until(litNow, (lit) => lit.length === 0, 2000);
       check(
         `  ✕ closes it all: nothing lit`,
         pickedAgain && closed.length === 0,
@@ -779,7 +838,7 @@ for (const [i, p] of snapshot.polys.entries()) {
   }
   // Closed already where ✕ was tried; the helper would wait out its timeout.
   if ((await cardKind()).kind !== 'none') await closeCard();
-  await page.waitForTimeout(200);
+  await hides('[data-testid="card"]');
 }
 
 // 4. One tap, one kind of thing (the owner's ask, 2026-09-30: "select
@@ -797,10 +856,10 @@ if (PART !== 1) {
   );
 } else {
   await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), inBox.point);
-  await page.waitForTimeout(700);
+  await mapIdle(page);
   const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  await page.waitForTimeout(350);
+  await shows();
   const state = await cardKind();
   const lists = await page.locator('[data-testid="chooser"]').count();
   // Its card lights the routes it lists, as any hotspot's card does.
@@ -826,10 +885,10 @@ if (PART !== 1) {
   );
 } else {
   await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), hit);
-  await page.waitForTimeout(700);
+  await mapIdle(page);
   const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  await page.waitForTimeout(350);
+  await shows();
   const chooser = page.locator('[data-testid="chooser"]');
   const has = (await chooser.count()) > 0;
   const text = has ? await chooser.first().innerText() : '';
@@ -876,9 +935,9 @@ if (PART !== 1) {
     const colour = await card.getAttribute('data-livery');
     const name = card.locator('[data-testid="chooser-select"]');
     await name.click();
-    await page.waitForTimeout(250);
+    await inState(card, 'selected');
     const cardIds = await cardDirections(card);
-    const picked = await litNow();
+    const picked = await until(litNow, (lit) => sameIds(lit, cardIds));
     const looks = await paintNow(page);
     const cardLook = LOOKS?.byLivery[colour];
     check(
@@ -909,7 +968,7 @@ if (PART !== 1) {
     // Its row, the card picked: the trip opens, and ‹ brings the list back
     // at rest.
     await row.click();
-    await page.waitForTimeout(350);
+    await shows(TRIP_UP);
     const state = await cardKind();
     check(
       "  the route's row opens the route card straight away",
@@ -935,15 +994,26 @@ if (PART !== 1) {
       );
       // The list stays behind the trip, hidden, for its ‹.
       const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) await back.first().click();
-      await page.waitForTimeout(350);
+      if ((await back.count()) > 0) {
+        await back.first().click();
+        await hides('[data-testid="card"]');
+        await page
+          .waitForFunction(
+            () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
+            null,
+            { timeout: 3000 },
+          )
+          .catch(() => {
+            throw new Error('‹ on the trip: the route list not back within 3000 ms');
+          });
+      }
       const again = (await chooser.first().isVisible()) ? await chooser.first().innerText() : '';
       check(
         '  ‹ on the trip goes back to the list, as it was',
         again === text && (await cardKind()).kind === 'none',
         again ? `card ${(await cardKind()).kind}` : 'the list did not come back',
       );
-      const relit = await litNow();
+      const relit = await until(litNow, (lit) => sameIds(lit, listed));
       const stillSelected = await chooser.locator('[data-state="selected"]').count();
       check(
         '  ‹ brings it back at rest: no card picked, every route lit',
@@ -966,11 +1036,10 @@ if (PART !== 1) {
       );
       // Picked, a second tap lets it go.
       await name.click();
-      await page.waitForTimeout(250);
-      const repicked = (await card.getAttribute('data-state')) === 'selected';
+      const repicked = (await inState(card, 'selected')) === 'selected';
       await name.click();
-      await page.waitForTimeout(250);
-      const letGo = await litNow();
+      await inState(card, 'rest');
+      const letGo = await until(litNow, (lit) => sameIds(lit, listed));
       check(
         '  a second tap on a picked card lets it go: every route it shows lit again',
         repicked && (await card.getAttribute('data-state')) === 'rest' && sameIds(letGo, listed),
@@ -986,12 +1055,12 @@ if (PART !== 1) {
         );
       } else {
         await name.click();
-        await page.waitForTimeout(250);
-        const pickedAgain = (await card.getAttribute('data-state')) === 'selected';
+        const pickedAgain = (await inState(card, 'selected')) === 'selected';
+        const was = await flip.getAttribute('data-back');
         await flip.click();
-        await page.waitForTimeout(300);
-        const switched = await litNow();
+        await turned(flip, was);
         const otherWay = await listedNow();
+        const switched = await until(litNow, (lit) => sameIds(lit, otherWay));
         const stillPicked = await chooser.locator('[data-state="selected"]').count();
         check(
           '  SWITCH lets a picked card go: nothing Selected, the other way round lit',
@@ -1007,9 +1076,9 @@ if (PART !== 1) {
         } else {
           const one = backCards.first();
           await one.locator('[data-testid="chooser-select"]').click();
-          await page.waitForTimeout(250);
+          await inState(one, 'selected');
           const oneIds = await cardDirections(one);
-          const narrowed = await litNow();
+          const narrowed = await until(litNow, (lit) => sameIds(lit, oneIds));
           check(
             "  a pick there lights just its card's routes, fewer than the list's",
             oneIds.length > 0 && oneIds.length < otherWay.length && sameIds(narrowed, oneIds),
@@ -1049,9 +1118,11 @@ const firstTapPrograms = async (at) => {
     await p.goto(`${BASE}/`, { waitUntil: 'load' });
     await p.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
     await waitForSource(p, 'saved-routes');
-    await p.waitForTimeout(1200);
+    // The warm-up drawn first (it runs after the map's first idle), so the
+    // baseline below holds its programs and the tap's are only the tap's.
+    await programsAtRest(p);
     await p.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), at);
-    await p.waitForTimeout(700);
+    await mapIdle(p);
     // Its keys as the baseline: the warm-up has come and gone with the jump above.
     const rest = await programsAtRest(p, 0);
     const box = await p.locator('canvas.maplibregl-canvas').boundingBox();
@@ -1065,15 +1136,7 @@ const firstTapPrograms = async (at) => {
         () => false,
       );
     // The trip framed on its whole route, as 4b waits for it, then the map settled.
-    await p.waitForTimeout(350);
-    await p.evaluate(
-      () =>
-        new Promise((done) => {
-          const m = window.__map;
-          if (m.isMoving()) m.once('moveend', () => setTimeout(done, 50));
-          else setTimeout(done, 800);
-        }),
-    );
+    await cardsSettled(p);
     return { opened, ...(await programsSince(p, rest.keys)) };
   } finally {
     await p.close();
@@ -1113,7 +1176,7 @@ if (PART === 1) {
     );
   } else {
     await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), clean);
-    await page.waitForTimeout(700);
+    await mapIdle(page);
     const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
     const readCamera = () =>
       page.evaluate(() => {
@@ -1123,7 +1186,7 @@ if (PART === 1) {
       });
     const camBeforeTap = await readCamera();
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-    await page.waitForTimeout(350);
+    await shows();
     const state = await cardKind();
     const chooserCount = await page.locator('[data-testid="chooser"]').count();
     check(
@@ -1156,8 +1219,9 @@ if (PART === 1) {
       const litIds = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];
       check('  exactly one direction is lit', litIds.length === 1, JSON.stringify(litIds));
       // On a desktop too, the trip opens with the camera where it was: nothing
-      // fits the route (the owner, 2026-10-21).
-      await page.waitForTimeout(800);
+      // fits the route (the owner, 2026-10-21). Fitted, it would be by the
+      // time the card and the camera are at rest.
+      await cardsSettled(page);
       const camAfterTap = await readCamera();
       check(
         '  the camera stays where it was: the route is not fitted',
@@ -1170,14 +1234,16 @@ if (PART === 1) {
       // the lit line's width. Measured on screen, across the chevron's own
       // axis (outer tip to inner tip); the line's width comes from
       // line-style.ts itself where the dev server can serve it.
-      await page.waitForTimeout(200);
+      await waitForSource(page, 'direction-arrows', 3000);
       const chevrons = await page.evaluate(async () => {
         const m = window.__map;
         let line = null;
         try {
           const { litWidthAt } = await import('/src/features/routes/map/line-style.ts');
           line = litWidthAt(m.getZoom());
-        } catch {}
+        } catch {
+          // A server that cannot serve line-style.ts: each chevron is held to its own width alone.
+        }
         const all = ((await window.__src('direction-arrows'))?.features ?? []).map((f) => {
           const p = f.geometry.coordinates[0].map((c) => m.project(c));
           const ax = p[3].x - p[0].x;
@@ -1234,8 +1300,8 @@ if (PART === 1) {
       // runner drawing without a GPU manages a few frames a second on the
       // whole route, and the flow steps on frames.
       await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), clean);
-      await page.waitForTimeout(3200);
-      const flowA = await where();
+      await mapIdle(page);
+      const flowA = await until(where, (w) => w !== '');
       const sets = await page.evaluate(
         () =>
           new Promise((resolve) => {
@@ -1300,7 +1366,11 @@ if (PART === 1) {
         const fold = cardEl.locator('button[data-testid="trip-fold"]');
         if ((await fold.count()) > 0) {
           await fold.first().click();
-          await page.waitForTimeout(450);
+          await until(
+            () => fold.first().getAttribute('aria-expanded'),
+            (open) => open === 'true',
+          );
+          await cardsSettled(page);
         }
         const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
         const row = rows.nth(pickedIndex);
@@ -1338,10 +1408,8 @@ if (PART === 1) {
         const pick = row.locator('button[data-testid="trip-hintuan-pick"]');
         await pick.scrollIntoViewIfNeeded();
         await pick.click();
-        await page.waitForTimeout(250);
-        await page
-          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-          .catch(() => {});
+        await inState(row, 'selected');
+        await cardsSettled(page);
         // On a train the station's code comes first, "GL04 ₱20" (the
         // owner, 2026-10-13): the pesos are their own half then.
         const fare = row.locator('[data-testid="trip-hintuan-fare"]');
@@ -1525,7 +1593,8 @@ if (PART === 1) {
           );
         }
         await pick.click();
-        await page.waitForTimeout(250);
+        await inState(row, 'rest');
+        await hides('[data-testid="hintuan-pin"]');
         const letGo = await page.evaluate(async () => ({
           pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
           rest: ((await window.__src('ride-rest'))?.features ?? []).length,
@@ -1563,16 +1632,12 @@ if (PART === 1) {
           }
         }, litId);
         await pick.click();
-        await page.waitForTimeout(250);
-        const wasPicked = (await row.getAttribute('data-state')) === 'selected';
+        const wasPicked = (await inState(row, 'selected')) === 'selected';
         await cardEl.locator('[data-testid="trip-destination"] button').click();
         const destination = await cardEl
           .locator('[data-testid="trip-destination"]')
           .getAttribute('data-state');
-        await page.waitForTimeout(250);
-        await page
-          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-          .catch(() => {});
+        await cardsSettled(page);
         const atEnd = await page.evaluate(async (at) => {
           const m = window.__map;
           const c = m.getCanvas().getBoundingClientRect();
@@ -1598,7 +1663,7 @@ if (PART === 1) {
         );
         // Where it leaves from is picked in the destination's place, no hintuan picked.
         await cardEl.locator('[data-testid="trip-origin"] button').click();
-        await page.waitForTimeout(250);
+        await inState(cardEl.locator('[data-testid="trip-origin"]'), 'selected');
         const destinationAfter = await cardEl
           .locator('[data-testid="trip-destination"]')
           .getAttribute('data-state');
@@ -1612,11 +1677,11 @@ if (PART === 1) {
         );
         // Picked again, for ✕ to let go.
         await pick.click();
-        await page.waitForTimeout(250);
+        await inState(row, 'selected');
       }
       await closeCard();
-      await page.waitForTimeout(300);
-      const after = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];
+      await hides('[data-testid="card"]');
+      const after = await until(litNow, (lit) => lit.length === 0, 2000);
       check('  closing the card lights nothing again', after.length === 0, JSON.stringify(after));
       const pickAfter = await page.evaluate(async () => ({
         pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
