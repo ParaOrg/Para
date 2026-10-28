@@ -46,18 +46,33 @@ const NODE_GLOBALS = [
 ];
 /** What code a script hands to a page (Playwright's page.evaluate, an injected script) reads there. */
 const BROWSER_GLOBALS = [
-  'Event',
-  'MutationObserver',
-  'PerformanceObserver',
   'addEventListener',
+  'caches',
+  'createImageBitmap',
+  'DeviceOrientationEvent',
   'document',
+  'DOMException',
+  'Element',
+  'Event',
+  'EventTarget',
+  'File',
+  'getComputedStyle',
+  'IDBObjectStore',
+  'indexedDB',
   'innerHeight',
   'innerWidth',
   'localStorage',
   'location',
   'matchMedia',
+  'MouseEvent',
+  'MutationObserver',
   'navigator',
+  'OffscreenCanvas',
+  'PerformanceObserver',
+  'PointerEvent',
   'requestAnimationFrame',
+  'sessionStorage',
+  'StorageManager',
   'window',
 ];
 const readonly = (names) => Object.fromEntries(names.map((name) => [name, 'readonly']));
@@ -365,7 +380,7 @@ export default defineConfig([
   {
     // The Node scripts: the publish, the build guard, the tiles and preview tools. ESLint's
     // recommended rules, with Node's globals. tests/**/*.mjs is not linted yet.
-    files: ['scripts/**/*.mjs'],
+    files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
     ...js.configs.recommended,
     languageOptions: {
       ecmaVersion: 'latest',
@@ -379,6 +394,7 @@ export default defineConfig([
       'scripts/preview/browser-demo.mjs',
       'scripts/research/phone-speed.mjs',
       'scripts/research/shots.mjs',
+      'tests/e2e/**/*.mjs',
     ],
     languageOptions: { globals: { ...readonly(NODE_GLOBALS), ...readonly(BROWSER_GLOBALS) } },
   },
