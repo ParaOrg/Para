@@ -104,7 +104,7 @@ export function useLoopClosing(
   directions: readonly DirectionRow[],
   hotspots: readonly Hotspot[],
 ): { loop: LoopPlan | null; startReturnTrip: (routeId: string) => void } {
-  const { drawing, area, picking, start, addPoint, target, controlPoints } = draw;
+  const { drawing, area, picking, start, addPoint, target, controlPoints, hasJoin } = draw;
   const outbound = useMemo(
     () =>
       drawing && !area && !picking && routeId ? outboundFor(directions, routeId, hotspots) : null,
@@ -130,14 +130,18 @@ export function useLoopClosing(
   const editedLoop = target.directionId
     ? directions.find((v) => v.id === target.directionId)
     : undefined;
+  // A line drawn up to a kept borrowed end (Extend) ends on another line, never a loop.
   const ownStart =
     !!drawing &&
     !area &&
     !picking &&
     !routeId &&
+    !hasJoin() &&
     (target.directionId === null ? target.routeId === null : !!editedLoop && isLoop(editedLoop));
   const first = controlPoints[0];
-  if (ownStart && first) return { loop: { closeAt: first, other: null }, startReturnTrip };
+  // A copy: the drawing finds its points by identity, so the stored one would be taken for itself.
+  if (ownStart && first)
+    return { loop: { closeAt: [first[0], first[1]], other: null }, startReturnTrip };
 
   const closeAt = outbound && loopClosingPoint(outbound);
   const other = slotReversed === false ? 'pabalik' : 'papunta';
