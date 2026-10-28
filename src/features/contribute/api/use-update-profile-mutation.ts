@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { saveProfile } from './account';
 import { accountKeys } from './account-keys';
+import { saveProfile } from './sign-up';
 
 /** Stores a new name and number through set_profile, then shows them as the profile. */
 export function useUpdateProfileMutation() {

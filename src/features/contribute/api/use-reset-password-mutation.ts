@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 
-import { resetPassword } from './account';
+import { resetPassword } from './password-reset';
 import { useSessionWriter } from './use-session-writer';
 
 export function useResetPasswordMutation() {
