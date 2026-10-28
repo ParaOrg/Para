@@ -4,8 +4,10 @@ import { registerSW } from 'virtual:pwa-register';
 import { STYLE_URL } from '@/features/routes/map/map-view';
 import { takeTilesAsked } from '@/features/routes/map/tiles-asked';
 import { MAP_FILE_URL } from '@/features/routes/published/map-file';
+import { noop } from '@/shared/utils/noop';
 
 import { isOldAppInControl } from './old-app';
+import { styleFiles } from './style-files';
 
 /**
  * The service worker, registered from the public page only. The studio never
@@ -54,7 +56,8 @@ function register(firstVisit: boolean, replacesOldApp: boolean): void {
       registration = r;
       // The browser re-checks the worker on a navigation, but an installed app
       // can stay open for days; ask once an hour as well.
-      if (r) window.setInterval(() => void r.update(), 60 * 60 * 1000);
+      // With no network the check fails; the next hour, or the next visit, asks again.
+      if (r) window.setInterval(() => r.update().catch(noop), 60 * 60 * 1000);
       if (firstVisit) void warmCaches();
     },
   });
@@ -99,18 +102,9 @@ async function warmCaches(): Promise<void> {
     quiet(STYLE_URL),
     ...takeTilesAsked().map(quiet),
   ]);
-  const json = (await style?.json().catch(() => null)) as {
-    sprite?: string;
-    sources?: Record<string, { url?: string }>;
-  } | null;
-  if (!json) return;
-  const urls: string[] = [];
-  for (const s of Object.values(json.sources ?? {})) if (s.url) urls.push(s.url);
-  if (json.sprite) {
-    const scale = window.devicePixelRatio > 1 ? '@2x' : '';
-    urls.push(`${json.sprite}${scale}.json`, `${json.sprite}${scale}.png`);
-  }
-  await Promise.all(urls.map(quiet));
+  const json: unknown = await style?.json().catch(() => null);
+  const scale = window.devicePixelRatio > 1 ? '@2x' : '';
+  await Promise.all(styleFiles(json, scale).map(quiet));
 }
 
 const subscribe = (l: () => void) => {

@@ -127,7 +127,7 @@ function nearestM(line, ring) {
  * index it reads (the owner's answer to question T of the cheap-phone
  * report, 2026-10-06). markdownReport lists it under a heading of its own.
  */
-const FOR_THE_PUBLISH = 'the publish to look at (scripts/publish/lineFile.mjs), not the studio';
+const FOR_THE_PUBLISH = 'the publish to look at (scripts/publish/line-file.mjs), not the studio';
 
 /**
  * Every problem, warning and note about a published map (the parsed file).

@@ -1,9 +1,9 @@
-// The publish's probe of private tables (scripts/publish/privacyProbe.mjs).
+// The publish's probe of private tables (scripts/publish/privacy-probe.mjs).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/privacy-probe-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PRIVATE_TABLES, privacyLeaks } from '../../scripts/publish/privacyProbe.mjs';
+import { PRIVATE_TABLES, privacyLeaks } from '../../scripts/publish/privacy-probe.mjs';
 
 test('refused, missing or empty passes', async () => {
   const answers = { contributor: 401, contribution: 403, hinto: 404 };

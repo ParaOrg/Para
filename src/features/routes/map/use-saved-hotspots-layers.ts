@@ -46,7 +46,7 @@ export function useSavedHotspotsLayers(
 
   useEffect(() => {
     if (!map) return;
-    const src = map.getSource(SRC) as GeoJSONSource | undefined;
+    const src = map.getSource<GeoJSONSource>(SRC);
     if (!src) return;
     layOutOnce(laidOut, hotspots, (next) => {
       src.setData(hotspotsData(next));
@@ -88,7 +88,7 @@ export function useSavedHotspotsLayers(
   // The place highlight's wash: a hull over the chosen box and its siblings.
   useEffect(() => {
     if (!map || !map.getLayer(SIBLINGS)) return;
-    const wash = map.getSource(WASH_SRC) as GeoJSONSource | undefined;
+    const wash = map.getSource<GeoJSONSource>(WASH_SRC);
     wash?.setData({
       type: 'FeatureCollection',
       features:
@@ -105,7 +105,7 @@ export function useSavedHotspotsLayers(
   useEffect(() => {
     if (!map || !map.getLayer(FILL)) return;
     applyHidden(hiddenNow, hiddenHotspotId, (hidden) => {
-      for (const [id, filter] of hiddenHotspotFilters(hidden)) map.setFilter(id, filter as never);
+      for (const [id, filter] of hiddenHotspotFilters(hidden)) map.setFilter(id, filter);
     });
   }, [map, hiddenHotspotId]);
 }
