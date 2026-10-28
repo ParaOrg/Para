@@ -40,6 +40,7 @@ import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, takeHeldReload, waitForSource } from './lib/harness.mjs';
 import { routesFraming } from './lib/framing.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
+import { PAPUNTA_ID, PAPUNTA_TAP, WEST_TERMINAL, serveTwoWayMap } from './fixtures/two-way-map.mjs';
 import {
   colourOf,
   endRings,
@@ -4520,6 +4521,88 @@ if (!withOthers) {
       `aria-expanded ${await tripFold.first().getAttribute('aria-expanded')}`,
     );
   }
+  await closeCard();
+}
+
+// ----------------------- 5d. the ride, SWITCH and a terminal, on a made-up map
+// The trip's own checks above run on whichever route today's map lets a tap
+// find, and skip what that route lacks: SWITCH where its other way is not
+// drawn, the fold and the ride where it has no hintuans. Here the same checks
+// run on a map made for them (fixtures/two-way-map.mjs): one route drawn both
+// ways, four hintuans each way, a terminal at either end. Served in place of
+// the index and its line files on this same page, so every helper above
+// reads it as it reads today's map.
+console.log('\n(on the made-up map: fixtures/two-way-map.mjs)\n');
+await closeCard();
+await serveTwoWayMap(page);
+await page.reload({ waitUntil: 'load' });
+await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+// The made-up map's two directions, not a copy of today's kept from before.
+await page.waitForFunction(
+  () => document.querySelector('[data-directions]')?.getAttribute('data-directions') === '2',
+  null,
+  { timeout: 30000 },
+);
+await waitForSource(page, 'saved-routes');
+{
+  await jumpTo(page, PAPUNTA_TAP);
+  const [x, y] = await project(page, PAPUNTA_TAP);
+  const box = await canvasBox();
+  await mapTap(box.x + x, box.y + y);
+  await page
+    .waitForFunction(
+      () => !!document.querySelector('[data-testid="card"] [data-testid="trip"]'),
+      null,
+      {
+        timeout: 10000,
+      },
+    )
+    .catch(() => {});
+  const lit = (await litIds(page)) ?? [];
+  check(
+    'on the made-up map, a tap on its line opens its trip, Papunta lit',
+    (await trip().count()) > 0 && lit.length === 1 && lit[0] === PAPUNTA_ID,
+    `"${await tripLabel()}"; lit ${JSON.stringify(lit)}`,
+  );
+  if ((await trip().count()) > 0) {
+    const made = await tripChecks();
+    await closeCard();
+    if (made.picked) check('  ✕ lets the picked hintuan go', await noPickLeft());
+  }
+
+  // A terminal with no link: its card lists no route, though the route starts
+  // there. Today's behaviour, an open question for the owner (public-map-01):
+  // when the card comes to count a route's head and tail, this check changes
+  // with it.
+  const [tx, ty] = WEST_TERMINAL.point.coordinates;
+  // Inside its box, on the side away from the two lines that leave it.
+  const inBox = [tx - 0.0003, ty];
+  await jumpTo(page, inBox);
+  const [px, py] = await project(page, inBox);
+  const frame = await canvasBox();
+  await mapTap(frame.x + px, frame.y + py);
+  await page
+    .waitForFunction(() => !!document.querySelector('[data-testid="card-place"]'), null, {
+      timeout: 10000,
+    })
+    .catch(() => {});
+  const terminal = await page.evaluate(() => {
+    const shown = [...document.querySelectorAll('[data-testid="card"]')].find((c) => !c.hidden);
+    return {
+      place: shown?.querySelector('[data-testid="card-place"]')?.innerText.trim() ?? null,
+      boxes: shown?.querySelectorAll('[data-testid="card-box"]').length ?? 0,
+      routes: shown?.querySelectorAll('[data-testid="card-origin"]').length ?? 0,
+      counter: shown?.querySelectorAll('[data-testid="card-count"]').length ?? 0,
+    };
+  });
+  check(
+    "a terminal with no link opens its card with no route and no counter (today's behaviour, public-map-01)",
+    !!terminal.place?.includes(WEST_TERMINAL.name) &&
+      terminal.boxes === 1 &&
+      terminal.routes === 0 &&
+      terminal.counter === 0,
+    JSON.stringify(terminal),
+  );
   await closeCard();
 }
 

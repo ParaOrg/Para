@@ -69,7 +69,9 @@ worker and expects "Update Para!" to appear, wait, and work.
 The tests read what the map holds today (the published map for `/`, the live tables for the studio) and assert on that, so adding
 routes and hotspots does not break them. commuter-test's count grows with the
 data (some sixteen checks for a hotspot with routes through it, a few for
-one without); a check the data cannot support prints `SKIP`.
+one without); a check the data cannot support prints `SKIP`. phone-test's
+section 5d runs its trip checks (the ride, SWITCH) and a terminal's card
+again on a made-up map, `fixtures/two-way-map.mjs`, so they never skip.
 The drawing tests first move the map onto a saved route, so their clicks land on
 streets the router can snap to.
 
