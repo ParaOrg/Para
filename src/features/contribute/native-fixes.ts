@@ -18,11 +18,17 @@ export async function importNativeFixes(recording: Recording): Promise<Recording
   return importFixLog(recording);
 }
 
-/** The fixes the service kept for a recording, for the recorder to take at a Stop. */
-export async function readNativeFixes(recordingId: string): Promise<WatchedFix[]> {
+/**
+ * The fixes the service kept for a recording after `after` (the last one the recorder holds, null
+ * for all of them), for the recorder to take at a Stop.
+ */
+export async function readNativeFixes(
+  recordingId: string,
+  after: number | null,
+): Promise<WatchedFix[]> {
   if (import.meta.env.MODE !== 'apk' || !isNativeApp()) return [];
   const { readFixLog } = await import('./native/native-fix-log');
-  const log = await readFixLog();
+  const log = await readFixLog(after);
   return log.recordingId === recordingId ? log.fixes : [];
 }
 
