@@ -18,7 +18,9 @@ export function DraftFactsForm({ draft, onBusyChange }: DraftFactsFormProps) {
     Object.fromEntries(fields.map((field) => [field.key, field.value])),
   );
   const [openedRevision, setOpenedRevision] = useState(draft.revision);
-  const isStale = openedRevision !== draft.revision;
+  // Newer than the revision opened or saved, not merely different: after a save,
+  // the drafts list can still hold the older one for a moment.
+  const isStale = draft.revision > openedRevision;
   const client = useQueryClient();
   const mutation = useMutation({
     onMutate: () => onBusyChange?.(true),
@@ -29,10 +31,12 @@ export function DraftFactsForm({ draft, onBusyChange }: DraftFactsFormProps) {
     },
     onSuccess: (result) => {
       if (result.code === 'ok' && result.draft) {
-        setOpenedRevision(result.draft.revision);
-        setValues(
-          Object.fromEntries(draftFacts(result.draft).map((field) => [field.key, field.value])),
+        const saved = result.draft;
+        client.setQueryData<DraftRow[]>(reviewKeys.drafts(), (drafts) =>
+          drafts?.map((row) => (row.id === saved.id ? saved : row)),
         );
+        setOpenedRevision(saved.revision);
+        setValues(Object.fromEntries(draftFacts(saved).map((field) => [field.key, field.value])));
       }
     },
     onSettled: async () => {

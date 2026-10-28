@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 import { clearOfSheet } from '@/shared/ui/sheet-room';
+import type { LngLat } from '@/shared/utils/geo';
 
 import {
   useCameraBefore,
@@ -17,7 +18,8 @@ import { framedBy, type Framed } from '../cards/card-stack';
 import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import type { Direction } from '../model/routes';
+import { routeTimeline } from '../model/ride';
+import { directionLine, type Direction } from '../model/routes';
 
 interface Routes<V extends Direction> {
   directions: readonly V[];
@@ -34,6 +36,8 @@ interface Hotspots<S extends Hotspot> {
   selected: S | null;
   /** The directions that pass a hotspot (its links): what a jeep's SWITCH carries its pick by. */
   linkedDirectionIds: (hotspotId: string) => readonly string[];
+  /** The hotspots a direction passes, along its line: the other way's rows a SWITCH lands on. */
+  hotspotsAlong: (directionId: string, line: readonly LngLat[]) => S[];
 }
 
 interface Cards {
@@ -200,7 +204,13 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
      * (carryTo; the owner's call).
      */
     switchTrip: (v: Direction) => {
-      ride.carryTo(v, (hotspotId) => hotspots.linkedDirectionIds(hotspotId).includes(v.id));
+      const timeline = routeTimeline(
+        v,
+        hotspots.hotspots,
+        hotspots.hotspotsAlong(v.id, directionLine(v)),
+      );
+      const rows = [timeline.from, ...timeline.between, timeline.to].filter((r) => r !== null);
+      ride.carryTo(v, (hotspotId) => hotspots.linkedDirectionIds(hotspotId).includes(v.id), rows);
       saved.select(v.id, { keepList: true });
       switched();
     },

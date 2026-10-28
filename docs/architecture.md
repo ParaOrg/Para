@@ -143,12 +143,12 @@ flowchart TD
   features_studio_auth --> design_system_primitives
   features_studio_auth --> features_routes_map
   features_studio_auth --> features_studio_data
+  features_studio_auth --> shared_lib
   features_studio_auth --> shared_ui
   features_studio_contributors --> design_system_foundation
   features_studio_contributors --> design_system_primitives
   features_studio_contributors --> features_studio_data
   features_studio_contributors --> features_studio_drawing
-  features_studio_contributors --> shared_lib
   features_studio_contributors --> shared_utils
   features_studio_data --> features_routes_geo
   features_studio_data --> features_routes_model
@@ -177,12 +177,10 @@ flowchart TD
   features_studio_public_view --> design_system_primitives
   features_studio_public_view --> features_studio_data
   features_studio_public_view --> features_studio_maps
-  features_studio_public_view --> shared_lib
   features_studio_review --> design_system_primitives
   features_studio_review --> features_studio_auth
   features_studio_review --> features_studio_data
   features_studio_review --> features_studio_maps
-  features_studio_review --> shared_lib
   shared_ui --> design_system_primitives
   shared_ui --> shared_hooks
   styles --> design_system_foundation
@@ -210,14 +208,14 @@ flowchart TD
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
 | `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view`, `features/studio/review` |
-| `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/ui` |
-| `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `features/studio/drawing`, `shared/lib`, `shared/utils` |
+| `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/lib`, `shared/ui` |
+| `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `features/studio/drawing`, `shared/utils` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
 | `features/studio/maps` | `design-system/foundation`, `design-system/primitives`, `features/routes/map`, `features/studio/data` |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `features/studio/review`, `shared/ui`, `shared/utils` |
-| `features/studio/public-view` | `design-system/primitives`, `features/studio/data`, `features/studio/maps`, `shared/lib` |
-| `features/studio/review` | `design-system/primitives`, `features/studio/auth`, `features/studio/data`, `features/studio/maps`, `shared/lib` |
+| `features/studio/public-view` | `design-system/primitives`, `features/studio/data`, `features/studio/maps` |
+| `features/studio/review` | `design-system/primitives`, `features/studio/auth`, `features/studio/data`, `features/studio/maps` |
 | `shared/config` | — |
 | `shared/hooks` | — |
 | `shared/lib` | — |
@@ -244,7 +242,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/studio`
 
-`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `MapPlaceholder`, `MapSwitch`, `useStudioMap`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `returnTripLeft`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`, `useStudioTrip`, `DraftLocksProvider`, `StudioReview`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`
+`AuthDialogs`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `StudioSessionProvider`, `useSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `MapPlaceholder`, `MapSwitch`, `useStudioMap`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `returnTripLeft`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useSaveFlow`, `useSaveTarget`, `useStudioTrip`, `StudioReview`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`
 
 ## Entry points
 

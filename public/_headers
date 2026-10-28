@@ -23,6 +23,12 @@
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
 
+# The contributor page has a sign-in, a password, the consent and delete
+# buttons: keep it out of other sites' frames for the same reason.
+/contribute/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+
 # Signboards (0010): SVGs uploaded in the studio, cleaned twice
 # (signboardSvg.ts). Shown as pictures they run nothing; opened on their own
 # they are documents on this domain, so nothing in one may run or fetch

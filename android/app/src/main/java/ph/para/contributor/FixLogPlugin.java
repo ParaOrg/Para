@@ -31,7 +31,10 @@ public class FixLogPlugin extends Plugin {
     @PluginMethod
     public void read(PluginCall call) {
         try {
-            call.resolve(JSObject.fromJSONObject(FixLog.read(getContext())));
+            // Absent (or not a whole number), the whole log: the page skips what it already holds.
+            Long after = call.getLong("after");
+            long from = after == null ? Long.MIN_VALUE : after;
+            call.resolve(JSObject.fromJSONObject(FixLog.read(getContext(), from)));
         } catch (IOException | JSONException error) {
             call.reject("The fix log could not be read.", error);
         }

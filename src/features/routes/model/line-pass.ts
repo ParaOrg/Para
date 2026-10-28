@@ -17,7 +17,7 @@ import type { Ring } from '../geo/ring';
  * took 41 ms off the list tap's total blocking time (207 -> 166 ms); the
  * trip tap's change (208 -> 193 ms) was within its run-to-run spread. The
  * publish works the stretches out once a night instead
- * (scripts/publish/lineFile.mjs), with these very functions, and writes
+ * (scripts/publish/line-file.mjs), with these very functions, and writes
  * them into each line file beside the line: `pass`, the stretches, and
  * `passKey`, a short hash of what they were worked out against — the id
  * and the rounded box of every hintuan the route stops at whose ground the

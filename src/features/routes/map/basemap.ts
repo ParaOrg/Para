@@ -4,6 +4,7 @@ import type {
   StyleSpecification,
   SymbolLayerSpecification,
 } from 'maplibre-gl';
+import * as z from 'zod/mini';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { basemapStyleUrl } from '@/shared/config/basemap-host';
@@ -173,19 +174,35 @@ function dressed(b: Basemap, style: StyleSpecification): StyleSpecification {
 }
 
 /**
+ * What makes a fetched file a style worth dressing: MapLibre's version 8,
+ * with its sources and its layers. The dressings read and rewrite the layers,
+ * so anything else goes to MapLibre by its URL, as a failed fetch does.
+ */
+const styleOutlineSchema = z.looseObject({
+  version: z.literal(8),
+  sources: z.record(z.string(), z.unknown()),
+  layers: z.array(z.unknown()),
+});
+
+function isStyle(raw: unknown): raw is StyleSpecification {
+  return styleOutlineSchema.safeParse(raw).success;
+}
+
+/**
  * What to build a map with. `Map` takes a style URL or a style object and has
  * no transform hook, so a design with something to add (`dressed`) fetches
  * its style here and is dressed before the map exists — one request, the same one
- * MapLibre would have made, and no plain-gray flash first. If the fetch fails
- * the plain URL goes in instead, and MapLibre's own error path reports what it
- * can.
+ * MapLibre would have made, and no plain-gray flash first. If the fetch fails,
+ * or brings no style (isStyle), the plain URL goes in instead, and MapLibre's
+ * own error path reports what it can.
  */
 export async function initialStyle(b: Basemap): Promise<StyleSpecification | string> {
   if (isPlain(b)) return b.url;
   try {
     const r = await fetch(b.url);
     if (!r.ok) return b.url;
-    return dressed(b, (await r.json()) as StyleSpecification);
+    const style: unknown = await r.json();
+    return isStyle(style) ? dressed(b, style) : b.url;
   } catch {
     return b.url;
   }

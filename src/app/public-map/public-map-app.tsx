@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { CommuterLocation, useGazeHush } from '@/features/locator';
 import {
@@ -74,9 +74,13 @@ export function PublicMapApp() {
 
   // Where the commuter is, as CommuterLocation tells it (the first fix, then
   // each 50 m), kept in memory only, for the tip of a loop's trip: where its
-  // timeline leaves from, chosen once as the trip opens (useLoopTip).
-  const [where, setWhere] = useState<CommuterWhere | null>(null);
+  // timeline leaves from, chosen once as the trip opens (useLoopTip). A ref,
+  // not state: a fix renders nothing, and only the trip's opening reads it.
+  const where = useRef<CommuterWhere | null>(null);
   const tipId = useLoopTip(saved.selected, hotspots, { where, openedFrom: hotspots.selected });
+  const handleWhere = (at: CommuterWhere | null) => {
+    where.current = at;
+  };
 
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
@@ -179,7 +183,7 @@ export function PublicMapApp() {
           litDirections: saved.litDirections,
         }}
         hushedAt={hushedAt}
-        onWhere={setWhere}
+        onWhere={handleWhere}
       />
       {/*
         Each lit ride's ends, named over their circles; with no trip open, a
