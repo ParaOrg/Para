@@ -140,17 +140,22 @@ const FLOWING_SOURCE = 'direction-arrows';
 /**
  * Once the map is at rest: two frames gone by, so a move a handler starts in
  * them (a sheet's transitionend, an effect) has begun, then the first frame
- * with no camera moving and every source loaded but the chevrons'. Not
- * MapLibre's 'idle', which never comes while the chevrons flow. Throws when
- * the map is not at rest within `ms`, naming what was not, so a wait that
- * ran out fails the run rather than leaving a check to read a map in motion.
+ * with no camera moving and every one of the app's own sources (its GeoJSON:
+ * the routes, the hotspots, the rides) loaded but the chevrons'. Not the
+ * basemap's tiles: they come from an outside service (OpenFreeMap) whose speed
+ * no check reads, and a slow one would fail the run for it. Not MapLibre's
+ * 'idle' either, which never comes while the chevrons flow. Throws when the
+ * map is not at rest within `ms`, naming what was not, so a wait that ran out
+ * fails the run rather than leaving a check to read a map in motion.
  */
 export const mapIdle = async (page, ms = 10000) => {
   const unrest = await page.evaluate(
     ([ms, flowing]) =>
       new Promise((resolve) => {
         const m = window.__map;
-        const sources = Object.keys(m.getStyle()?.sources ?? {}).filter((id) => id !== flowing);
+        const sources = Object.entries(m.getStyle()?.sources ?? {})
+          .filter(([id, source]) => source.type === 'geojson' && id !== flowing)
+          .map(([id]) => id);
         const notAtRest = () => [
           ...(m.isMoving() ? ['the camera moving'] : []),
           ...sources.filter((id) => !m.isSourceLoaded(id)).map((id) => `source ${id} loading`),

@@ -206,8 +206,7 @@ const seg0 = s.find((f) => f.properties.index === 0).geometry.coordinates;
 const order = [...seg0.keys()]
   .filter((i) => i > 0 && i < seg0.length - 1)
   .sort((a, b) => Math.abs(a - seg0.length / 2) - Math.abs(b - seg0.length / 2));
-let mid = seg0[Math.floor(seg0.length / 2)],
-  pm = await proj(mid);
+let pm = await proj(seg0[Math.floor(seg0.length / 2)]);
 for (const i of order) {
   const cand = seg0[i];
   const candPx = await proj(cand);
@@ -218,7 +217,6 @@ for (const i of order) {
     candPx,
   );
   if (gap === 0) {
-    mid = cand;
     pm = candPx;
     break;
   }

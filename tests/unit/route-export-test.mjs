@@ -114,7 +114,7 @@ test('CSV: a header, one row per point, UTF-8 for Excel', () => {
 test('CSV quotes a field holding a comma or a quote', () => {
   const named = { ...outbound, route: { ...route, name: 'Tala, "North" – SM Fairview' } };
   const file = exportFile(routeExport([named], hotspots, along, AT), 'csv');
-  assert.match(file.text, /^﻿route,.*\r\n"Tala, ""North"" – SM Fairview",/);
+  assert.match(file.text, /^\uFEFFroute,.*\r\n"Tala, ""North"" – SM Fairview",/);
   assert.equal(file.fileName, 'tala-north-sm-fairview.csv');
 });
 
