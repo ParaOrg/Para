@@ -9,6 +9,7 @@
 // regression-gestures, snap and studio-phone. bareStyle: where, scale,
 // studio-scale and save. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
+// mapIdle, cardsSettled and until, the waits on the state a check reads: commuter.
 
 /** The dev server's address: PARA_BASE, or http://localhost:5173. */
 export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
@@ -115,6 +116,66 @@ export const waitForSource = async (page, id, ms = 20000) => {
     const fs = await page.evaluate(async (id) => (await window.__src(id))?.features ?? [], id);
     if (fs.length > 0 || Date.now() > until) return fs;
     await page.waitForTimeout(100);
+  }
+};
+
+/**
+ * Once the map is idle: no camera moving, every tile it asked for in and
+ * every fade done (MapLibre's 'idle'). Two frames go by first, so a move a
+ * handler starts in them (a sheet's transitionend, an effect) is waited out
+ * too, and a frame is asked for, so a map already idle answers at once. At
+ * most `ms`, then it goes on: the check after it decides.
+ */
+export const mapIdle = (page, ms = 10000) =>
+  page.evaluate(
+    (ms) =>
+      new Promise((resolve) => {
+        const m = window.__map;
+        const timer = setTimeout(resolve, ms);
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            m.once('idle', () => {
+              clearTimeout(timer);
+              resolve();
+            });
+            m.triggerRepaint();
+          }),
+        );
+      }),
+    ms,
+  );
+
+/**
+ * Once the cards and the route list have stopped moving (no CSS transition
+ * left on them: a sheet rising, a fold opening) and the map is idle after
+ * them: where a camera move that follows a sheet settling has been and gone.
+ */
+export const cardsSettled = async (page, ms = 10000) => {
+  await page
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')].every(
+          (e) => !e.getAnimations({ subtree: true }).some((a) => a instanceof CSSTransition),
+        ),
+      null,
+      { timeout: ms },
+    )
+    .catch(() => {});
+  await mapIdle(page, ms);
+};
+
+/**
+ * `read()`'s value once `holds` says yes of it, asked every 50 ms for up to
+ * `ms`; its last value when it never does, for the check after it to judge.
+ * `read` runs here, so it may read the page in as many steps as it likes
+ * (window.__lit is async, which page.waitForFunction cannot wait on).
+ */
+export const until = async (read, holds, ms = 5000) => {
+  const by = Date.now() + ms;
+  for (;;) {
+    const value = await read();
+    if (holds(value) || Date.now() > by) return value;
+    await new Promise((r) => setTimeout(r, 50));
   }
 };
 
