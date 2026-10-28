@@ -129,6 +129,5 @@ export function addRecordingTrail(map: MapLibreMap): void {
 
 /** Lays the trail out in its source. */
 export function setRecordingTrail(map: MapLibreMap, trail: RecordingTrail): void {
-  const source = map.getSource(TRAIL_SRC);
-  if (source) (source as GeoJSONSource).setData(trailData(trail));
+  map.getSource<GeoJSONSource>(TRAIL_SRC)?.setData(trailData(trail));
 }

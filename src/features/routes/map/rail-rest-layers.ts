@@ -1,3 +1,5 @@
+import type { ExpressionSpecification } from 'maplibre-gl';
+
 import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
 
 import type { RailLine } from '../model/routes';
@@ -41,7 +43,7 @@ export const RESTING_LAYERS: RestingLayer[] = [
 ];
 
 /** Which features each resting layer draws, by the train line a feature's route runs on ('' for none). */
-const restsOn = (line: RailLine | '') => ['==', ['get', 'line'], line] as const;
+const restsOn = (line: RailLine | ''): ExpressionSpecification => ['==', ['get', 'line'], line];
 export const RESTING_FILTER = {
   [ROUTES_LINE]: restsOn(''),
   [RAIL_AT_REST['LRT-1'].id]: restsOn('LRT-1'),
