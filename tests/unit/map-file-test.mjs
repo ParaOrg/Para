@@ -658,7 +658,7 @@ test('the committed files carry no more decimals than the publish script writes'
   assert.ok(worst.hotspot <= 6, `a hotspot corner has ${worst.hotspot} decimals`);
 });
 
-// The shapes an app installed before a line reads (scripts/publish/withoutLines.mjs):
+// The shapes an app installed before a line reads (scripts/publish/without-lines.mjs):
 // the same map, without the lines it does not know or their stations, so it
 // never draws a jeep stopping at one: shape 3 without the ferry, shapes 1 and 2 without any line.
 // Shape 4 is the same without the loops (scripts/publish/shapes.mjs): a route
