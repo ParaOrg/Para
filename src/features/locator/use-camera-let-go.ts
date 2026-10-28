@@ -16,7 +16,7 @@ export function useCameraLetGo(map: MapLibreMap | null, setCamera: (camera: Came
       if (e.originalEvent) setCamera('free');
     };
     const appMoved = (e: object) => {
-      if ((e as { appMove?: boolean }).appMove) setCamera('free');
+      if ('appMove' in e && e.appMove) setCamera('free');
     };
     map.on('dragstart', letGo);
     map.on('zoomstart', letGo);

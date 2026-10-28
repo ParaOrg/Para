@@ -1,4 +1,4 @@
-import type { MapLibreMap } from 'maplibre-gl';
+import type { ExpressionSpecification, FilterSpecification, MapLibreMap } from 'maplibre-gl';
 
 import { MAP_OPACITY } from '@/design-system/foundation/map-colours';
 
@@ -20,8 +20,11 @@ export const FILL = HOTSPOTS_FILL_LAYER;
 const OUTLINE = 'saved-stops-outline';
 
 /** A flag of the feature state a tap sets on a box: `lit`, `sibling` or `chosen`. */
-const state = (name: 'lit' | 'sibling' | 'chosen') =>
-  ['boolean', ['feature-state', name], false] as const;
+const state = (name: 'lit' | 'sibling' | 'chosen'): ExpressionSpecification => [
+  'boolean',
+  ['feature-state', name],
+  false,
+];
 /** The boxes under a tap, or the chosen one, striped while they are asked about: the HotspotOverlayCard's State=Selected. */
 export const HATCH = 'saved-stops-hatch';
 export const HATCH_LAYERS = [HATCH] as const;
@@ -63,8 +66,12 @@ const DRAW_ABOVE = LAYERS.drawCasing;
  * closes the hotspot's card, and its siblings' marks with it, before it opens
  * the outline, and takes no tap on a box while one is open.
  */
-export function hiddenHotspotFilters(hidden: string): [string, unknown][] {
-  const boxes = ['all', ['==', ['geometry-type'], 'Polygon'], ['!=', ['get', 'id'], hidden]];
+export function hiddenHotspotFilters(hidden: string): [string, FilterSpecification][] {
+  const boxes: FilterSpecification = [
+    'all',
+    ['==', ['geometry-type'], 'Polygon'],
+    ['!=', ['get', 'id'], hidden],
+  ];
   return [
     [FILL, boxes],
     [OUTLINE, boxes],
@@ -134,8 +141,13 @@ export function addSavedHotspots(
   );
   // The HotspotOverlayCard (Figma 3837:11308): the box's surface see-through,
   // its edge and name in its content colour.
-  const byKind = (terminal: string | number, hintuan: string | number) =>
-    ['match', ['get', 'kind'], 'terminal', terminal, hintuan] as never;
+  const byKind = (terminal: string | number, hintuan: string | number): ExpressionSpecification => [
+    'match',
+    ['get', 'kind'],
+    'terminal',
+    terminal,
+    hintuan,
+  ];
   const colour = byKind(HOTSPOT_COLOUR.terminal, HOTSPOT_COLOUR.hintuan);
   const content = byKind(HOTSPOT_CONTENT.terminal, HOTSPOT_CONTENT.hintuan);
   for (const kind of ['terminal', 'hintuan'] as const) {
@@ -179,7 +191,7 @@ export function addSavedHotspots(
       filter: ['==', ['geometry-type'], 'Polygon'],
       paint: {
         'fill-color': colour,
-        'fill-opacity': ['case', state('sibling'), byKind(0.3, HINTUAN_STRONGER), 0] as never,
+        'fill-opacity': ['case', state('sibling'), byKind(0.3, HINTUAN_STRONGER), 0],
         // Switched off while no box is a sibling, and from the start (layer-switch.ts): at once, never between.
         'fill-layer-opacity': 0,
         'fill-layer-opacity-transition': { duration: 0, delay: 0 },
@@ -203,8 +215,8 @@ export function addSavedHotspots(
           'terminal',
           hatchOf('terminal'),
           hatchOf('hintuan'),
-        ] as never,
-        'fill-opacity': ['case', state('lit'), 1, 0] as never,
+        ],
+        'fill-opacity': ['case', state('lit'), 1, 0],
         'fill-layer-opacity': 0,
         'fill-layer-opacity-transition': { duration: 0, delay: 0 },
       },

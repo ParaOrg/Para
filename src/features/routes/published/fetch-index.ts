@@ -79,9 +79,10 @@ function parseIndex(raw: unknown, url: string, schema: number): Index {
   const outline = indexOutlineSchema.safeParse(raw);
   if (!outline.success) throw new Error(`${url} is not a published map`);
   const { schema: shape } = outline.data;
-  if (((shape as number | undefined) ?? 1) > MAP_FILE_SCHEMA) throw new Error(MAP_FILE_TOO_NEW);
-  if (shape !== schema)
-    throw new Error(`${url} is shape ${(shape as number | undefined) ?? 1}, not the index`);
+  // A file with no shape is the first one.
+  const shapeNumber = typeof shape === 'number' ? shape : 1;
+  if (shapeNumber > MAP_FILE_SCHEMA) throw new Error(MAP_FILE_TOO_NEW);
+  if (shape !== schema) throw new Error(`${url} is shape ${shapeNumber}, not the index`);
   const parsed = indexSchema.safeParse(raw);
   if (!parsed.success) {
     const [issue] = parsed.error.issues;

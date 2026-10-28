@@ -1,3 +1,5 @@
+import type { ExpressionSpecification } from 'maplibre-gl';
+
 import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
 
 /**
@@ -31,8 +33,8 @@ const [Z0, W0, Z1, W1] = [10, 2 * ROAD_SHARE, 20, 20 * ROAD_SHARE];
 type Stops = [number, number][];
 
 /** The stops as the style expression the layers take. */
-function curve(stops: Stops) {
-  return ['interpolate', ['exponential', BASE], ['zoom'], ...stops.flat()] as never;
+function curve(stops: Stops): ExpressionSpecification {
+  return ['interpolate', ['exponential', BASE], ['zoom'], ...stops.flat()];
 }
 
 /** The stops as a number at `zoom`, the way MapLibre evaluates an exponential interpolation. */

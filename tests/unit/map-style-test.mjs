@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Map as MapLibreMap } from 'maplibre-gl';
 import { featureFilter, groupByLayout } from '@maplibre/maplibre-gl-style-spec';
-import { BASEMAPS, applyBasemap } from '../../src/features/routes/map/basemap.ts';
+import { BASEMAPS, applyBasemap, initialStyle } from '../../src/features/routes/map/basemap.ts';
 import { applyHidden, firstLayerOfType } from '../../src/features/routes/map/layers.ts';
 import { hiddenHotspotFilters } from '../../src/features/routes/map/saved-hotspots-layers.ts';
 import { backgroundColour } from '../../src/app/public-map/status-bar.ts';
@@ -290,4 +290,37 @@ test('the status bar takes the colours it took before, through taps and both kin
   // OTHER), and on each 'styledata' with no background at all (BARE, 2):
   // never for the 20 'styledata' a tap's paint changes make.
   assert.equal(now.m.listed, 1 + 7 + 2 + 2);
+});
+
+/** initialStyle with `fetch` answering `body` as JSON, put back after. */
+async function initialStyleOf(basemap, body) {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify(body));
+  try {
+    return await initialStyle(basemap);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
+test('a fetched style is dressed only once it is one: version 8, its sources and its layers', async () => {
+  const monochrome = BASEMAPS.find((b) => b.dressing === 'monochrome');
+  const style = { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background' }] };
+  const dressed = await initialStyleOf(monochrome, style);
+  assert.equal(typeof dressed, 'object', 'a style, dressed');
+  assert.equal(dressed.version, 8);
+  for (const notAStyle of [
+    { ...style, version: 7 },
+    { version: 8, layers: style.layers },
+    { version: 8, sources: {} },
+    { version: 8, sources: {}, layers: 'none' },
+    ['not', 'a', 'style'],
+    null,
+  ]) {
+    assert.equal(
+      await initialStyleOf(monochrome, notAStyle),
+      monochrome.url,
+      `${JSON.stringify(notAStyle)}: its URL, as a failed fetch gives`,
+    );
+  }
 });

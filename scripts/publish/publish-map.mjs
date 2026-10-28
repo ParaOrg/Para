@@ -18,7 +18,7 @@
 //                           servedBy (src/features/routes/model/routes.ts).
 //                           Kept a month at least after shape 5 ships.
 //   data/index.v3.json      schema 3: the same without the ferry
-//                           (withoutLines.mjs), for an app that knows the
+//                           (without-lines.mjs), for an app that knows the
 //                           trains but would take the ferry for a jeep. Kept
 //                           a month at least after shape 4 ships.
 //   data/index.json         schema 2: every route, its names, every hotspot,
@@ -29,7 +29,7 @@
 //                           metres, measured on the full line, so a trip's
 //                           Distance and fare never read an overview. The
 //                           map draws from it. Without any line
-//                           (withoutLines.mjs): an app installed before
+//                           (without-lines.mjs): an app installed before
 //                           servedBy would draw a jeep stopping at a station.
 //                           Kept a month at least after shape 3 ships.
 //   data/lines/<id>.json    each direction's full line (below), fetched when
@@ -70,7 +70,7 @@
 // lie within half a metre of the thinned line, or it fails. And it refuses to
 // publish a map that shrank suddenly — a table that answers with no rows is a
 // normal HTTP 200, so without this a policy slip would blank the public map
-// and deploy it. The signboards are held the same way (boardGuard.mjs,
+// and deploy it. The signboards are held the same way (board-guard.mjs,
 // 2026-10-03): many of the boards directions name gone from the bucket at
 // once, or every one of them.
 // `--force` overrides these checks, for a deliberate removal.
@@ -108,10 +108,10 @@ import { toHotspot } from '../../src/features/routes/model/hotspot-schema.ts';
 import { passBoxes } from '../../src/features/routes/model/line-pass.ts';
 import { cleanSignboardSvg } from '../../src/features/routes/model/signboard-svg.ts';
 import { ShapeError, buildFiles, indexRowsOf } from './shapes.mjs';
-import { boardsRefusal } from './boardGuard.mjs';
-import { privacyLeaks } from './privacyProbe.mjs';
-import { shrinkRefusals, takenDownSets } from './shrinkGuard.mjs';
-import { lineFileText } from './lineFile.mjs';
+import { boardsRefusal } from './board-guard.mjs';
+import { privacyLeaks } from './privacy-probe.mjs';
+import { shrinkRefusals, takenDownSets } from './shrink-guard.mjs';
+import { lineFileText } from './line-file.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -287,7 +287,7 @@ const [directionRows, hotspotRows, linkRows] = await Promise.all([
 ]);
 
 // No contributor or editor-only row is readable with the key the files are
-// built from: checked before anything is written (privacyProbe.mjs).
+// built from: checked before anything is written (privacy-probe.mjs).
 const leaks = await privacyLeaks(async (table) => {
   const res = await fetch(`${URL_BASE}/rest/v1/${table}?select=*&limit=1`, {
     headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
@@ -343,7 +343,7 @@ for (const [n, t] of boardsRefused) {
 // likely a bucket made private than a clear-out (a board taken off in the
 // studio is unlisted first, so it is not named), and the files would then
 // be deleted from the map below: refused unless told, as a shrunk map is
-// (review of 2026-10-03, finding 8; boardGuard.mjs).
+// (review of 2026-10-03, finding 8; board-guard.mjs).
 const boardsGone = [...boardText]
   .filter(([n, t]) => t === null && !boardsRefused.some(([r]) => r === n))
   .map(([n]) => n);
@@ -490,7 +490,7 @@ const links = linkRows.map((l) => ({
 }));
 
 // The old shapes, for installed apps, without what they do not know
-// (shapes.mjs, withoutLines.mjs): an app from before servedBy would paint a
+// (shapes.mjs, without-lines.mjs): an app from before servedBy would paint a
 // jeep's stretches at the stations over its road, and a line's at every jeep
 // hintuan under its track; one reading shape 3 takes the ferry for a jeep;
 // one reading shape 4 refuses the whole index for a route with no ends.
@@ -510,7 +510,7 @@ const { json: previousV4 } = readJson(INDEX_V4);
 const { json: previousV5 } = readJson(INDEX_V5);
 
 // A map that shrank suddenly is far more likely a read that went wrong than
-// a clear-out (shrinkGuard.mjs): refused unless told, less what editors took
+// a clear-out (shrink-guard.mjs): refused unless told, less what editors took
 // down on purpose. The new index against its last copy, every line and loop
 // in; until it has one, the newest older file against the whole map, which is
 // never more than the whole.
@@ -590,7 +590,7 @@ const indexV5File = files.v5;
 // directions gone removed, so an unchanged map touches nothing.
 //
 // With its orange stretches, worked out here once rather than by every
-// phone that lights the line (lineFile.mjs; the cheap-phone plan, step 13,
+// phone that lights the line (line-file.mjs; the cheap-phone plan, step 13,
 // 2026-10-05): by the app's own rule (src/features/routes/model/line-pass.ts: passBoxes,
 // passBounds, passStretches, hotspotRing, bboxOf, servedBy), on what the app
 // reads — the line as written and the hotspots as rounded in the index,
