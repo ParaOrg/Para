@@ -1,5 +1,5 @@
-// Each page asks for its stylesheets before its scripts (vite.config.ts,
-// stylesheetsBeforeScripts, 2026-10-05): over HTTP/1.1 the scripts ahead of
+// Each page asks for its stylesheets before its scripts (stylesheetsBeforeScripts,
+// scripts/node/vite-plugins/stylesheets-first.ts, 2026-10-05): over HTTP/1.1 the scripts ahead of
 // them took all six of a host's connections and the first paint waited a
 // round trip. Run on the heads Vite writes; check-build.mjs checks the built
 // pages.
@@ -7,7 +7,8 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/stylesheets-first-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import config, { stylesheetsBeforeScripts } from '../../vite.config.ts';
+import config from '../../vite.config.ts';
+import { stylesheetsBeforeScripts } from '../../scripts/node/vite-plugins/stylesheets-first.ts';
 
 // The root page's head as Vite writes it, with index.html's early map-file script.
 const vite = `<html>

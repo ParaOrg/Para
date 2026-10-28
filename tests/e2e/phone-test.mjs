@@ -52,7 +52,13 @@ import {
   ringed,
 } from './lib/looks.mjs';
 
-const { check, skip, tally } = harness();
+// Six skipped on today's published map (CI on staging, 2026-10-28), each for
+// data the map does not hold yet: SWITCH (the route's other way is not
+// drawn), its routes lit (the picked card holds every route), the hintuans'
+// fold twice (a direction with no hintuans), another box from its row (the
+// place has one box) and two overlapping hotspots (none overlap). One more
+// is a check that stopped proving anything.
+const { check, skip, tally } = harness({ maxSkips: 6 });
 
 // ------------------------------------------------------------------ geometry
 // Metres from degrees, flat-earth style. Everything here is within a few km of

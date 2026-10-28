@@ -594,7 +594,7 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
       for (const v of drawn)
         writeFileSync(join(dir, 'lines', `${v.id}.json`), lineFileText(v, boxes));
     };
-    // As publish-map.mjs writes them: lineFileText against passBoxes of the index's own hotspots.
+    // As write-files.mjs writes them: lineFileText against passBoxes of the index's own hotspots.
     const boxes = passBoxes(index.hotspots);
     writeAll(boxes);
     assert.ok(

@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
+import type { Timeline } from '@/features/routes/model/timeline';
+
 import { DirectionTimeline } from './direction-timeline';
-import type { Timeline } from '../model/timeline';
 
 /** Sample rows only, shaped like a direction's timeline. Not read from anywhere. */
 const timeline: Timeline = {
@@ -19,7 +20,7 @@ const timeline: Timeline = {
 };
 
 const meta = {
-  title: 'Features/Routes/DirectionTimeline',
+  title: 'Features/Studio/DirectionTimeline',
   component: DirectionTimeline,
   decorators: [
     (Story) => (
