@@ -8,7 +8,7 @@ Written 2026-10-28 from the repo and from what the hub checked live that day. An
 
 | Service and account | What Para keeps there | Who signs in | Where its keys and secrets are kept |
 | --- | --- | --- | --- |
-| **GitHub**, organisation `ParaOrg`, repository `Para` (public) | The code; the published map in `public/data/`, committed nightly; the workflows; the contributor app's releases (`para-contributor.apk` and `latest.json` on GitHub Releases, ADR 0006); the backup's public key (`.github/backup/owner-public-key.asc`); the encrypted app signing key (`android/release-key.p12.enc`) | The owner (admin) (owner to confirm: any other member) | Repository secrets: `PUBLISH_DEPLOY_KEY` (publish-map.yml), `BACKUP_DATABASE_URL`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (backup.yml). Environment `tiles`: `TILES_R2_ENDPOINT`, `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY`, `TILES_R2_BUCKET` (tiles.yml). Environment `app-release`: `PARAPO_KEY_PASSPHRASE` (contributor-app.yml, make-app-signing-key.yml). The deploy key "Nightly publish" (Settings → Deploy keys, `docs/agents/main-protection.md`) |
+| **GitHub**, organisation `ParaOrg`, repository `Para` (public) | The code; the published map in `public/data/`, committed by the nightly publish when the map changes; the workflows; the contributor app's releases (`para-contributor.apk` and `latest.json` on GitHub Releases, ADR 0006); the backup's public key (`.github/backup/owner-public-key.asc`); the encrypted app signing key (`android/release-key.p12.enc`) | The owner (admin) (owner to confirm: any other member) | Repository secrets: `PUBLISH_DEPLOY_KEY` (publish-map.yml), `BACKUP_DATABASE_URL`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (backup.yml). Environment `tiles`: `TILES_R2_ENDPOINT`, `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY`, `TILES_R2_BUCKET` (tiles.yml). Environment `app-release`: `PARAPO_KEY_PASSPHRASE` (contributor-app.yml, make-app-signing-key.yml). The deploy key "Nightly publish" (Settings → Deploy keys, `docs/agents/main-protection.md`) |
 | **Cloudflare, the Para account** | The zone `para-commute.org` (Free plan). The `para` Worker: the site from `dist/` (`wrangler.jsonc`), built by Workers Builds from GitHub, production branch `main`, a preview per branch. The `para-tiles` Worker (`workers/tiles/wrangler.jsonc`). The R2 bucket `parapo-tiles` (the tiles, styles, sprite and glyphs). The backup's R2 bucket (its name is the secret `R2_BUCKET`) | The owner | R2 API tokens, one per bucket (backup.yml and tiles.yml headers); their values are only in the GitHub secrets above. Workers Builds reaches GitHub through Cloudflare's GitHub App |
 | **Cloudflare, the old Villaralvorovic2 account** | The Turnstile widget (its site key is in `.env.production` and `.env.apk`), and the old `parapo` Worker | The owner | Turnstile's secret key is in Supabase's Auth settings, never in the repo |
 | **Supabase**, project in Singapore (the consent screen, `consent-panel.tsx`) | The database: the route tables, drafts and review, the contributors and their rides; Auth (editors, contributors, anonymous phones); the public Storage bucket `signboards` (`features/studio/data/signboards.ts`) | The owner (owner to confirm: any other dashboard member) | The project URL and publishable key are public (`.env.production`). The `backup_reader` role's password is only inside the secret `BACKUP_DATABASE_URL`. The service and database passwords: the owner's password manager (owner to confirm) |
@@ -25,7 +25,7 @@ The addresses (checked live 2026-10-28):
 - `www.para-commute.org`: the `para` Worker, through a Workers route on the zone.
 - `tiles.para-commute.org`: the `para-tiles` Worker, through a Workers route.
 - `para-commute.org`: a redirect rule to `www`, 301, with Always Use HTTPS on.
-- Staging: `staging-para.para-ph-info.workers.dev`, the `para` Worker's preview of `staging`.
+- Staging: `staging-para.para-ph-info.workers.dev` is meant to be the `para` Worker's preview of `staging`, but on 2026-10-28 it answered Cloudflare's 404 for `/` and `/data/index.v5.json`, likely (not proven) because its builds fail (the "Workers Builds: para" check, ticket ready-for-100k 07). The staging address that works today is the old account's `staging-parapo.villaralvorovic2.workers.dev` (owner to confirm when the new one takes over).
 
 ## Costs and limits
 
@@ -54,7 +54,7 @@ The addresses (checked live 2026-10-28):
 
 ## Runbooks
 
-Each says what you'd see, the first check, and the fix. When the alert workflow (ticket ready-for-100k 04) lands, its issues carry the label `alert` and link the section here: [open alerts](https://github.com/ParaOrg/Para/issues?q=is%3Aissue+is%3Aopen+label%3Aalert).
+Each says what you'd see, the first check, and the fix. When the alert workflow (ticket ready-for-100k 04) lands, its issues carry the label `alert` and link the section here: [open alerts](https://github.com/ParaOrg/Para/issues?q=is%3Aissue+is%3Aopen+label%3Aalert). The alert issues link to these sections by their headings, so rename a heading only together with its link in `scripts/watch/`.
 
 ### The map is blank
 
@@ -88,7 +88,7 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 
 ### The tiles build failed
 
-- **You'd see:** a red Tiles run (monthly, the 3rd, 02:00 Manila), and GitHub's email.
+- **You'd see:** a red Tiles run (monthly, 18:00 UTC on the 3rd, which is 02:00 Manila on the 4th), and GitHub's email.
 - **First check:** the run's `::error::` line (tiles.yml): a secret missing from the `tiles` environment, an endpoint not in R2's shape, the area check, or Planetiler's download.
 - **Fix:** the live tiles keep serving the last good build (`tiles/current.json` only moves on a checked upload), so there is no rush. Fix the cause, then Run workflow with upload ticked, from `main`.
 
