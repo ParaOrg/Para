@@ -31,7 +31,9 @@ export function proveInstallable(build, check) {
   let webManifest = null;
   try {
     webManifest = JSON.parse(readFileSync(manifestFile, 'utf8'));
-  } catch {}
+  } catch {
+    // Missing or not JSON: the check below fails and says so.
+  }
   check('manifest.webmanifest is valid JSON', webManifest !== null);
   if (!webManifest) return;
   const icons = webManifest.icons ?? [];
