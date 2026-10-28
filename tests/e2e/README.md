@@ -50,12 +50,12 @@ alone skips the public suites, the public map's own folders (`src/app/public-map
 `src/features/locator/`, `src/features/published-map/`) and `public/` alone skip the
 studio's, `src/app/contribute/` or `src/features/contribute/` alone runs the build and the
 contributor page's suites only, anything shared runs both. pwa-test, handover-test and
-contribute-offline-test run on preview builds the build job makes once. The drawing suites (group, regression-gestures, hotspot, snap, extend,
-studio-phone) are not run on pull requests. They run on every push to `main` or `staging`, nightly
-and on "Run workflow", one at a time with one retry after a minute for the shared
-router. The pull request's two checks keep their names, "Build and the public map"
-and "The editor". A red check means the push broke something; the failing
-suite's screenshots are kept as the run's artifact.
+contribute-offline-test run on preview builds the build job makes once. The drawing suites
+(group, regression-gestures, hotspot, snap, extend, studio-phone) are not run on pull requests.
+They run on every push to `main` or `staging`, nightly and on "Run workflow", one at a time
+with one retry after a minute for the shared router. The pull request's two checks keep their
+names, "Build and the public map" and "The editor". A red check means the push broke
+something; the failing suite's screenshots are kept as the run's artifact.
 
 The service worker is off under `npm run dev`, so every suite above meets a
 plain page; `pwa-test` alone runs the production build. It starts and stops its

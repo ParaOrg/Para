@@ -188,6 +188,7 @@ jobs:
           path: preview-openfreemap
           include-hidden-files: true
           retention-days: 1
+      # Made only for a public change (The preview builds, above).
       - name: Keep the own-tiles preview build
         if: needs.changes.outputs.public == 'true'
         uses: actions/upload-artifact@v4
@@ -224,13 +225,17 @@ jobs:
       - run: npm ci
       # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
       # packages are installed every time.
+      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
+      # ImageOS is set on the runner, not in the env context.
       - id: playwright
-        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
@@ -298,13 +303,17 @@ jobs:
       - run: npm ci
       # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
       # packages are installed every time.
+      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
+      # ImageOS is set on the runner, not in the env context.
       - id: playwright
-        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
@@ -374,13 +383,17 @@ jobs:
       - run: npm ci
       # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
       # packages are installed every time.
+      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
+      # ImageOS is set on the runner, not in the env context.
       - id: playwright
-        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
@@ -435,13 +448,17 @@ jobs:
       - run: npm ci
       # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
       # packages are installed every time.
+      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
+      # ImageOS is set on the runner, not in the env context.
       - id: playwright
-        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
@@ -511,13 +528,17 @@ jobs:
       - run: npm ci
       # Playwright's Chromium, at the version package-lock pins, kept between runs; its system
       # packages are installed every time.
+      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
+      # ImageOS is set on the runner, not in the env context.
       - id: playwright
-        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
       - if: steps.chromium.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
       - if: steps.chromium.outputs.cache-hit == 'true'
