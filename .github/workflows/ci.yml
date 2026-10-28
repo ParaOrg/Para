@@ -99,7 +99,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 public=true ;;
               *) public=true; studio=true ;;
             esac
@@ -141,7 +141,7 @@ jobs:
   # The pages anyone opens, one job a suite. Each needs only the published map
   # file and OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door.
   public-suite:
-    name: ${{ matrix.suite }}${{ matrix.part && format(' ({0} of 3)', matrix.part) || '' }}
+    name: ${{ matrix.suite }}${{ matrix.part && format(' ({0} of 3)', matrix.part) || '' }}${{ matrix.basemap == 'own-tiles' && ' (own tiles)' || '' }}
     needs: changes
     if: needs.changes.outputs.public == 'true'
     runs-on: ubuntu-latest
@@ -168,7 +168,11 @@ jobs:
             claim-test,
             profile-test,
           ]
+        # The basemap the preview builds draw from. pwa-test runs a second time for Para's own
+        # tiles server, against a stand-in for it (tests/e2e/own-tiles-stand-in.mjs).
+        basemap: [openfreemap]
         include:
+          - { suite: pwa-test, basemap: own-tiles }
           - { suite: commuter-test, part: 1 }
           - { suite: commuter-test, part: 2 }
           - { suite: commuter-test, part: 3 }
@@ -204,12 +208,18 @@ jobs:
       # pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start and stop their own `vite preview` from a build.
       # These build a preview from `.env.production` (not `.env.local`) and must not depend
       # on the tiles server (it allows no :4173 or :4174 origin): OpenFreeMap is named here.
-      # `build` above checks the committed host.
+      # `build` above checks the committed host. pwa-test's own-tiles run keeps the committed
+      # host and answers it with Playwright routes, never the real server.
       - name: Build, for pwa-test, handover-test and contribute-offline-test
         if: matrix.suite == 'pwa-test' || matrix.suite == 'handover-test' || matrix.suite == 'contribute-offline-test'
         env:
-          VITE_BASEMAP_HOST: https://tiles.openfreemap.org
-        run: npm run build
+          BASEMAP: ${{ matrix.basemap }}
+        run: |
+          if [ "$BASEMAP" = own-tiles ]; then
+            npm run build
+          else
+            VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
+          fi
       - name: Start the dev server
         if: matrix.suite != 'pwa-test' && matrix.suite != 'handover-test' && matrix.suite != 'contribute-offline-test'
         run: |
@@ -228,7 +238,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.suite }}${{ matrix.part && format('-{0}', matrix.part) || '' }}-screenshots
+          name: ${{ matrix.suite }}${{ matrix.part && format('-{0}', matrix.part) || '' }}${{ matrix.basemap == 'own-tiles' && '-own-tiles' || '' }}-screenshots
           path: |
             *.png
             vite.log

@@ -14,11 +14,16 @@
 //     "Update Para!" and waits until tapped
 //   - housekeeping: no page errors, no request to the database
 //
+// A build made for a basemap host other than OpenFreeMap (VITE_BASEMAP_HOST, read off the built
+// index.html) is run against a stand-in for that host (own-tiles-stand-in.mjs), so the worker's
+// rules for Para's own tiles server are proved the same way.
+//
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { OPENFREEMAP_HOST, builtBasemapHost, standInForOwnTiles } from './own-tiles-stand-in.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -41,6 +46,8 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const d = new Date(published.published_at);
 const expectedDate = `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 const routeCount = published.variants.length;
+const basemapHost = builtBasemapHost(readFileSync(join(root, 'dist', 'index.html'), 'utf8'));
+const isOwnTiles = basemapHost !== OPENFREEMAP_HOST;
 
 /**
  * The map's 'load' on page `p`, as a production build shows it (it keeps
@@ -214,6 +221,7 @@ try {
 
   // ---------------------------------------------- the map: online, then off
   const ctx = await browser.newContext(phone);
+  if (isOwnTiles) await standInForOwnTiles(ctx, basemapHost);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -307,11 +315,17 @@ try {
     'map-file cache holds /data/index.v5.json',
     !!mapFile && caches[mapFile].some((u) => u.endsWith('/data/index.v5.json')),
   );
+  // OpenFreeMap's style names a TileJSON; Para's own server writes the tiles into the style and
+  // serves the sprite and glyphs under /assets.
   check(
-    'basemap-meta holds the style and the TileJSON',
+    isOwnTiles
+      ? `basemap-meta holds the style and its assets from ${basemapHost}`
+      : 'basemap-meta holds the style and the TileJSON',
     !!meta &&
       caches[meta].some((u) => u.endsWith('/styles/positron')) &&
-      caches[meta].some((u) => u.endsWith('/planet')),
+      caches[meta].some((u) =>
+        isOwnTiles ? u.startsWith(`${basemapHost}/assets/`) : u.endsWith('/planet'),
+      ),
   );
   check(
     `basemap-tiles holds tiles (${tiles ? caches[tiles].length : 0})`,
@@ -357,7 +371,7 @@ try {
   await ctx.setOffline(true);
   let tilesFromWorker = 0;
   const countTiles = (res) => {
-    if (/\.(pbf|png)$/.test(res.url()) && res.fromServiceWorker()) tilesFromWorker++;
+    if (/\.(pbf|png)(\?.*)?$/.test(res.url()) && res.fromServiceWorker()) tilesFromWorker++;
   };
   page.on('response', countTiles);
   await page.reload({ waitUntil: 'load' }).catch(() => {});
