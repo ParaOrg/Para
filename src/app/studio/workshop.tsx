@@ -3,43 +3,29 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useRef, useState } from 'react';
 
 import { CommuterLocation, useGazeHush } from '@/features/locator';
-import { RouteCardList } from '@/features/routes/cards/route-card-list';
-import { EndTitles } from '@/features/routes/map/end-titles';
-import { HintuanPin } from '@/features/routes/map/hintuan-pin';
 import { MapView } from '@/features/routes/map/map-view';
-import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
-import { hotspotCount } from '@/features/routes/model/places';
 import {
   CONTRIBUTIONS,
   lineOf,
   listDirections,
   loadHotspotsFromSupabase,
-  getSupabase,
   supabaseConfigError,
   returnTripLeft,
   AuthDialogs,
-  AccountPill,
   MapPlaceholder,
   MapSwitch,
-  NewMenu,
   NEW_MENU_DOCK_FOOT,
-  DrawToolbar,
-  SaveToasts,
   STUDIO_BASEMAPS,
   STUDIO_BASEMAP_THUMBNAILS,
-  StudioHotspotCard,
   StudioSaveSheets,
-  StudioReview,
   StudioContributors,
-  ContributionHint,
   type ContributionStart,
   StudioPublicView,
-  StudioTripCard,
   type usePasswordRecovery,
   useAuthFlow,
   useDrawing,
@@ -53,6 +39,9 @@ import {
   useStudioTrip,
 } from '@/features/studio';
 import { useTurn } from '@/shared/hooks/commit-turn';
+
+import { PlaygroundCards } from './playground-cards';
+import { PlaygroundTools } from './playground-tools';
 
 interface WorkshopProps {
   session: Session | null;
@@ -85,6 +74,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     switchRef.current?.querySelector<HTMLInputElement>('input[value="playground"]')?.focus();
   };
   // Sign-in, the password change and a reset link's (useAuthFlow).
+  const auth = useAuthFlow(session, recovery);
   const {
     isSignedIn,
     isSigningIn,
@@ -92,7 +82,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     isChangingPassword,
     setIsChangingPassword,
     isResetting,
-  } = useAuthFlow(session, recovery);
+  } = auth;
 
   // A right-click on a saved line while drawing: decided below, once the
   // saved lines and hotspots are loaded (onFollow).
@@ -112,23 +102,15 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   });
   // The save panels and the toast, one at a time, the newest: a save's, or a
   // problem (useSaveFlow).
-  const {
-    isSaving,
-    setIsSaving,
-    toast,
-    setToast,
-    setNotice,
-    justSaved,
-    onSaved,
-    onSavedHotspot,
-    onDrafted,
-  } = useSaveFlow({
+  const saveFlow = useSaveFlow({
     isDrawing: draw.drawing,
     recoveryError: recovery.error,
     cancelDrawing: draw.cancel,
     reloadRoutes: saved.reload,
     reloadHotspots: hotspots.reload,
   });
+  const { isSaving, setIsSaving, setNotice, justSaved, onSaved, onSavedHotspot, onDrafted } =
+    saveFlow;
   // A drawing begun from an upload (Use this line, Draw a hintuan here), and the
   // record of which uploads its save came from (contributors/actions).
   const contribution = useContributionStart({ map, draw, setNotice });
@@ -152,19 +134,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // opened on its whole route, a RouteCard picked, SWITCH and the sheet
   // settled at another height, each framed beside the card; and the camera
   // from before a hotspot's RouteCard was picked, back as it is let go.
-  const {
-    root,
-    tripDock,
-    ride,
-    clearOfOpen,
-    switchTrip,
-    flipList,
-    pickOnPlaceCard,
-    openTrip,
-    backFromTrip,
-    pickOnTrip,
-    endOnTrip,
-  } = useCardCamera(map, saved, hotspots, cards, { tipId });
+  const camera = useCardCamera(map, saved, hotspots, cards, { tipId });
+  const { root, ride, clearOfOpen } = camera;
 
   // The pill's camera moves at this page's turn, after the cards' camera
   // (commit-turn.ts); the dot's gaze is hushed by ‹ and ✕ (dot-gaze.ts).
@@ -173,7 +144,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // Its 'load' in and not failed: the map-style button waits for it.
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  const { rides, timeline, routeCount } = useStudioTrip({
+  const trip = useStudioTrip({
     map,
     saved,
     hotspots,
@@ -214,7 +185,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     else setIsSaving(true);
   };
 
-  const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
+  const { choosing } = cards;
 
   // While a save sheet or an account dialog is open over the map, nothing
   // behind it can be reached: the drawing's toolbar would change the line
@@ -229,7 +200,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   const slotLeft = returnTripLeft(justSaved, saved.directions);
 
   // Delete on the trip's card and the hotspot's: signed out, it asks for sign-in.
-  const { onDelete, onDeleteHotspot } = useDeleteActions({
+  const deletes = useDeleteActions({
     signedIn: isSignedIn,
     onSignInNeeded: () => setIsSigningIn(true),
     saved,
@@ -322,195 +293,40 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
         {/* Out of the page's reach, not unmounted, on the other maps. */}
         <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
-          {/* Each lit ride's ends, named over their circles. */}
-          {map && !draw.drawing && <EndTitles map={map} rides={rides} livery={litLivery} />}
-          {/*
-        The open trip's hintuans along its line, a train's stations and a
-        jeepney's alike, named (RouteLineLabel).
-      */}
-          {map && !draw.drawing && saved.selected && tripLivery && timeline && (
-            <StationLabels
-              map={map}
-              selected={saved.selected}
-              hotspots={hotspots.hotspots}
-              rows={timeline.between}
-              livery={tripLivery}
-              pickedId={ride.pickedId}
-              startId={ride.startId}
-              endPicked={ride.endPicked}
-              hasRide={ride.ridden !== null}
-              onPick={pickOnTrip}
-            />
-          )}
-          {/* Keyed on the pick: another hintuan pops a fresh circle. */}
-          {map && !draw.drawing && ride.pinAt && tripLivery && (
-            <HintuanPin
-              key={ride.pickedId}
-              map={map}
-              at={ride.pinAt}
-              label={ride.pickedLabel}
-              code={ride.pickedCode}
-              livery={tripLivery}
-            />
-          )}
-          {map && !draw.drawing && ride.startPinAt && tripLivery && (
-            <HintuanPin
-              key={`start:${ride.startId}`}
-              map={map}
-              at={ride.startPinAt}
-              label={ride.startLabel}
-              code={ride.startCode}
-              livery={tripLivery}
-              marks="start"
-            />
-          )}
-
-          {/*
-        The tapped direction as the public map's trip card, the editor's facts
-        and its Edit, Extend and Delete under its tiles. Keyed on the route,
-        unlike the public map's: SWITCH keeps the card and its colour.
-      */}
-          {!draw.drawing && saved.selected && tripLivery && timeline && (
-            <StudioTripCard
-              key={saved.selected.routeId}
-              direction={saved.selected}
-              saved={saved}
-              hotspots={hotspots}
-              draw={draw}
-              timeline={timeline}
-              livery={tripLivery}
-              ride={ride}
-              tripDock={tripDock}
-              height={height}
-              canEdit={canEdit}
-              opening={opening}
-              onDelete={onDelete}
-              onBackToList={hush(backFromTrip)}
-              onSwitch={switchTrip}
-              onDrawOtherWay={() => {
-                const routeId = saved.selected?.routeId;
-                if (!routeId) return;
-                closeAll();
-                startReturnTrip(routeId);
-              }}
-              onClose={closeAll}
-              onPick={pickOnTrip}
-              onEnd={endOnTrip}
-            />
-          )}
-
-          {/*
-        A hotspot's card, its routes as RouteCards; it stays behind the trip
-        picked from them, hidden, for the trip's ‹. After the trip on
-        purpose, as on the public map: the suites' first `card` is the trip.
-      */}
-          {!draw.drawing && hotspots.selected && (
-            <StudioHotspotCard
-              key={hotspots.selected.id}
-              hotspot={hotspots.selected}
-              map={map}
-              saved={saved}
-              hotspots={hotspots}
-              draw={draw}
-              height={height}
-              canEdit={canEdit}
-              clearOfOpen={clearOfOpen}
-              onPickOnPlaceCard={pickOnPlaceCard}
-              onOpenTrip={openTrip}
-              onDeleteHotspot={onDeleteHotspot}
-              onCloseAll={closeAll}
-              onClose={hush(cards.closeHotspot)}
-            />
-          )}
-
-          {/*
-        Several saved things under one click: the same list the public map
-        has, kept hidden behind the trip picked from it. It lists only what is
-        drawn, and the owner keeps it so.
-      */}
-          {!draw.drawing && choosing && (
-            <RouteCardList
-              key={choice.map((c) => c.id).join()}
-              hidden={!!saved.selected}
-              height={height}
-              routes={saved.candidates}
-              hotspots={hotspots.candidates}
-              back={saved.back}
-              onFlip={flipList}
-              selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
-              onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
-              onRoute={openTrip}
-              onHotspot={(s) => cards.openHotspot(s.id)}
-              onClose={closeAll}
-            />
-          )}
-          {!draw.drawing && !saved.selected && !hotspots.selected && !choosing && (
-            <AccountPill
-              routes={routeCount}
-              hotspots={hotspots.hotspots.length > 0 ? hotspotCount(hotspots.hotspots) : 0}
-              email={session ? (session.user.email ?? '') : null}
-              onSignIn={() => setIsSigningIn(true)}
-              onPassword={() => setIsChangingPassword(true)}
-              onSignOut={() => void getSupabase()?.auth.signOut()}
-            />
-          )}
-
-          {isSignedIn &&
-            !draw.drawing &&
-            !isSaving &&
-            !isSigningIn &&
-            !isChangingPassword &&
-            !isResetting && (
-              <StudioReview
-                key={session?.user.id}
-                map={map}
-                onChanged={() => {
-                  void saved.reload();
-                  void hotspots.reload();
-                }}
-              />
-            )}
-
-          {contribution.start && (
-            <ContributionHint start={contribution.start} onForget={contribution.forget} />
-          )}
-
-          <SaveToasts
-            toast={toast}
-            isDrawing={draw.drawing}
-            canDrawReturnTrip={slotLeft}
-            onDismiss={() => setToast(null)}
-            onDrawReturnTrip={(routeId) => {
-              setToast(null);
-              startReturnTrip(routeId);
-            }}
+          <PlaygroundCards
+            map={map}
+            draw={draw}
+            saved={saved}
+            hotspots={hotspots}
+            cards={cards}
+            camera={camera}
+            trip={trip}
+            canEdit={canEdit}
+            opening={opening}
+            deletes={deletes}
+            hush={hush}
+            onDrawReturnTrip={startReturnTrip}
           />
-
-          {draw.drawing ? (
-            <DrawToolbar
-              draw={draw}
-              onDone={onDone}
-              keys={
-                isPlayground && !isSaving && !isSigningIn && !isChangingPassword && !isResetting
-              }
-              ends={extendEnds}
-              loop={loop}
-            />
-          ) : choosing ? null : (
-            /*
-          Drawing needs no account; saving does, and asks for it at Done. Not
-          while the route list is open, as the account pill is not: under
-          1024 px wide the list docks along the bottom, and these would stand
-          on its corner.
-        */
-            <NewMenu
-              isReady={!!map}
-              isOpen={isNewMenuOpen}
-              onOpenChange={setIsNewMenuOpen}
-              onNewRoute={() => draw.start()}
-              onNewHotspot={(kind) => draw.startArea(kind)}
-            />
-          )}
+          <PlaygroundTools
+            map={map}
+            session={session}
+            auth={auth}
+            draw={draw}
+            saved={saved}
+            hotspots={hotspots}
+            routeCount={trip.routeCount}
+            saveFlow={saveFlow}
+            contribution={contribution}
+            extendEnds={extendEnds}
+            loop={loop}
+            isPlayground={isPlayground}
+            isChoosing={choosing}
+            isNewMenuOpen={isNewMenuOpen}
+            onNewMenuOpenChange={setIsNewMenuOpen}
+            canDrawReturnTrip={slotLeft}
+            onDrawReturnTrip={startReturnTrip}
+            onDone={onDone}
+          />
         </div>
       </div>
       {/* Outside the map's box, so a full-screen panel covers the band too. */}
