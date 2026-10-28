@@ -1,9 +1,9 @@
 import { BackToMapButton } from './back-to-map-button';
+import type { RecordingFigures } from './recording-figures';
 import type { Way } from './recording-rules';
 import { StatsStrip } from './stats-strip';
 import { TrackingButton } from './tracking-button';
 import { useFocusHeading } from './use-focus-heading';
-import type { RecordingFigures } from './use-recording';
 import { useStackRoom } from './use-stack-room';
 
 interface UnfinishedScreenProps {
