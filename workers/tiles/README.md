@@ -19,7 +19,7 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 
 **CORS.** Allowed: `https://para.para-ph-info.workers.dev`, `https://staging-para.para-ph-info.workers.dev`, any `https://<name>-para.para-ph-info.workers.dev` preview, and the old site's `https://parapo.villaralvorovic2.workers.dev`, `https://staging-parapo.villaralvorovic2.workers.dev` and `https://<name>-parapo.villaralvorovic2.workers.dev` (kept while the site moves accounts; a later change removes them), `http://localhost:5173`, and the comma-separated `EXTRA_ORIGINS` in `wrangler.jsonc` (`https://www.para-commute.org` and `https://para-commute.org`, the site's own domain). A request with no `Origin` is served. Any other origin gets `403` and no CORS headers.
 
-**Custom domain.** The Worker answers at `https://tiles.para-commute.org`, added in the dashboard (Worker → Settings → Domains & Routes → Custom domain) on the `para-commute.org` zone in the same account. That is what turns the edge cache on. `workers_dev` stays `true`, so the `workers.dev` address keeps working.
+**Custom domain.** The Worker answers at `https://tiles.para-commute.org` through a Workers route on the `para-commute.org` zone (Domains → para-commute.org → Workers Routes: `tiles.para-commute.org/*` → `para-tiles`) and a proxied placeholder record (AAAA `tiles` `100::`). The Worker's own custom-domain picker could not see the zone when it was set up. That is what turns the edge cache on. `workers_dev` stays `true`, so the `workers.dev` address keeps working.
 
 **Rate limit.** Not in the Worker. It is a Cloudflare rate-limiting rule on the `para-commute.org` zone (Security → WAF → Rate limiting rules), an owner step in the dashboard; `workers.dev` has none.
 
@@ -33,7 +33,7 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 6. Check a tile is gzipped once, not twice. Take any tile address the file holds, for example Quiapo at zoom 14:
    `curl -s https://para-tiles.<account>.workers.dev/14/13698/7520.pbf | gunzip | head -c 20`
    should print readable protobuf text (layer names such as `water`), not binary that starts `1f 8b` again. The Worker marks tiles `encodeBody: 'manual'` so Cloudflare does not compress them a second time.
-7. For the tiles subdomain: Worker → **Settings → Domains & Routes** → **Add** → **Custom domain** → `tiles.para-commute.org`. That is also what turns the edge cache on.
+7. For the tiles subdomain: the zone's **Workers Routes** → `tiles.para-commute.org/*` → `para-tiles`, plus a proxied AAAA `tiles` `100::` record (see Custom domain above). That is also what turns the edge cache on.
 
 ## Run the checks
 

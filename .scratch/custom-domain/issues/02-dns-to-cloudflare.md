@@ -1,6 +1,6 @@
 # 02: DNS to Cloudflare
 
-Status: ready (owner)
+Status: resolved (Active in the Para account on 2026-10-28)
 Type: task
 Who: Owner
 Blocked by: 01
@@ -22,3 +22,5 @@ Blocked by: 01
 - `https://www.para-commute.org` still shows the old app until 05 (the website records are not moved yet).
 
 ## Comments
+
+**2026-10-28, the hub.** The owner added the zone to the Para account (Free) and cleaned the scan: the `*` wildcard and Vercel's `_domainconnect` were deleted, `@` and `www` were kept as DNS only, and every email, CAA and DKIM record was kept. Namecheap now uses `kianchau.ns.cloudflare.com` and `lovisa.ns.cloudflare.com`. DNSSEC was off. Through Cloudflare's resolver the old site and every email record answered unchanged, and the zone went Active the same afternoon.
