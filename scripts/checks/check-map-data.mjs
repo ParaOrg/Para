@@ -73,7 +73,7 @@ import {
 
 /** How far a line's first or last point may sit from the hotspot it leaves from or arrives at. */
 export const END_WITHIN_M = 50;
-/** The published line lies within this of the drawn one: MAX_DEVIATION_M in scripts/publish/publish-map.mjs. */
+/** The published line lies within this of the drawn one: MAX_DEVIATION_M in scripts/publish/assemble.mjs. */
 const PUBLISHED_WITHIN_M = 0.5;
 
 /** Metres from a point to a hotspot: to its box's edge (0 inside), or to its point when it has no box. */
