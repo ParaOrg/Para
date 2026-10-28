@@ -267,6 +267,7 @@ jobs:
             turnstile-test,
             studio-public-view-test,
             studio-two-editors-test,
+            save-drafts-test,
           ]
     steps:
       - uses: actions/checkout@v5
@@ -294,9 +295,10 @@ jobs:
       - name: Turn uploads on, for the Contributors map's suites
         if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
         run: echo VITE_CONTRIBUTIONS=1 >> .env.local
-      # The Public map view exists only with drafts on; the later line wins.
-      - name: Turn the studio's drafts on for studio-public-view-test and studio-two-editors-test
-        if: matrix.suite == 'studio-public-view-test' || matrix.suite == 'studio-two-editors-test'
+      # The Public map view exists only with drafts on, and save-drafts-test runs
+      # save-test's flows on the drafts path; the later line wins.
+      - name: Turn the studio's drafts on for studio-public-view-test, studio-two-editors-test and save-drafts-test
+        if: matrix.suite == 'studio-public-view-test' || matrix.suite == 'studio-two-editors-test' || matrix.suite == 'save-drafts-test'
         run: echo VITE_STUDIO_DRAFTS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
