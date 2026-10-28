@@ -47,6 +47,10 @@ const d = new Date(published.published_at);
 const expectedDate = `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 const routeCount = published.variants.length;
 const basemapHost = builtBasemapHost(readFileSync(join(root, 'dist', 'index.html'), 'utf8'));
+if (!basemapHost) {
+  console.log('FAIL  dist/index.html preconnects to no basemap host — run npm run build first');
+  process.exit(1);
+}
 const isOwnTiles = basemapHost !== OPENFREEMAP_HOST;
 
 /**
