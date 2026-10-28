@@ -16,8 +16,19 @@ Written 2026-10-26, from the owner's question "we're preparing for 100,000 users
 
 No new services: Redis and the like aren't needed, since there is no ParaPo server to cache for.
 
+## Ready to launch (added 2026-10-28)
+
+The basemap question is settled: Para serves its own tiles (ADR 0007). A readiness check on 2026-10-28 found the app ready and the operations around it not yet: nothing alerts anyone when something breaks, the tiles Worker has a daily cap, there is no public privacy policy, and what lives where is known only to the owner. Tickets 04 to 08 close those.
+
 ## Tickets
 
-- `issues/01-supabase-plan-limits.md`: the owner
-- `issues/02-basemap-decision.md`: research, then the owner's decision
-- `issues/03-load-test-on-staging.md`: an agent
+| # | Ticket | Who | Blocked by |
+| --- | --- | --- | --- |
+| 01 | [Supabase plan limits](issues/01-supabase-plan-limits.md) | Owner | – |
+| 02 | [The basemap decision](issues/02-basemap-decision.md) (resolved) | – | – |
+| 03 | [Load test of the map and its tiles](issues/03-load-test-on-staging.md) | Opus | Full run: Workers Paid (07) |
+| 04 | [Tell the owner when something breaks](issues/04-alerts.md) | Opus | – |
+| 05 | [The operations handbook](issues/05-operations-handbook.md) | Opus | – |
+| 06 | [The privacy policy](issues/06-privacy-policy-draft.md) (the owner's document, 2026-10-29) | Owner, then Opus checks it against the code | – |
+| 07 | [The owner's launch settings](issues/07-owner-launch-settings.md) | Owner | Rate limit: 03 |
+| 08 | [Errors on commuters' phones](issues/08-phone-error-reports.md) | Owner decides | – |
