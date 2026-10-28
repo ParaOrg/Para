@@ -7,8 +7,8 @@ import { TextField } from '@/design-system/primitives/text-field';
 
 import { countdownText } from './format';
 import { RIDE_KINDS, type RideKind } from './recording-schema';
+import type { RecordingDetails } from './recording-state';
 import { useFocusHeading } from './use-focus-heading';
-import type { RecordingDetails } from './use-recording';
 import { useSaveCountdown } from './use-save-countdown';
 
 interface SaveFormProps {

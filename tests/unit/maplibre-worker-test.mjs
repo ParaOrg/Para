@@ -9,7 +9,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import config, { MAPLIBRE_WORKER_URL, maplibreWorkerWithThePage } from '../../vite.config.ts';
+import config from '../../vite.config.ts';
+import {
+  MAPLIBRE_WORKER_URL,
+  maplibreWorkerWithThePage,
+} from '../../scripts/node/vite-plugins/maplibre-worker.ts';
 
 const plugin = maplibreWorkerWithThePage();
 

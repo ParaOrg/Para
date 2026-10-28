@@ -1,6 +1,6 @@
 // The contributor page's service worker, built from src/app/contribute/contribute-sw.ts.
 // Its precache is cut from Vite's manifest as the public worker's is
-// (vite.config.ts, manifestTransforms): the chunks contribute/index.html loads, statically
+// (scripts/node/offline-worker.ts, manifestTransforms): the chunks contribute/index.html loads, statically
 // or lazily, with their stylesheets and fonts, and nothing the public page alone loads.
 // scripts/checks/check-build.mjs proves the result from the built file.
 import { createHash } from 'node:crypto';
@@ -21,7 +21,7 @@ const PAGE_URL = '/contribute/';
 const ENTRY_KEY = 'contribute/index.html';
 /** The page's icon: linked from its head, so in no chunk's list. */
 const ICON_URL = '/icons/favicon.png';
-/** MapLibre's tile worker: a chunk no page imports (maplibreWorkerWithThePage in vite.config.ts). */
+/** MapLibre's tile worker: a chunk no page imports (maplibreWorkerWithThePage in vite-plugins/maplibre-worker.ts). */
 const MAP_WORKER = /^assets\/maplibre-gl-worker-[\w-]+\.js$/;
 
 /** The paths the contributor page needs offline: the page first, the rest sorted. */

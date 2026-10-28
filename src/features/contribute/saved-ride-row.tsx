@@ -12,8 +12,8 @@ import type { Recording } from './recording-schema';
 import { RideActions } from './ride-actions';
 import type { Asking } from './ride-actions';
 import { RideStatusLine } from './ride-status-line';
+import type { UploadStatus } from './upload-state';
 import { REMOVE_UPLOAD_QUESTION, deleteFromPhoneQuestion } from './upload-status';
-import type { UploadStatus } from './use-uploads';
 
 interface SavedRideRowProps {
   recording: Recording;

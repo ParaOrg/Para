@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 
 import { TextField } from '@/design-system/primitives/text-field';
-import { DirectionTimeline, passesThrough } from '@/features/routes/cards/direction-timeline';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
 import {
   isClosedLine,
@@ -12,6 +11,7 @@ import {
 } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
+import { DirectionTimeline, passesThrough } from './direction-timeline';
 import { LoopToggle } from './loop-toggle';
 import { NewPlaceForm } from './new-place-form';
 import { NEW_PLACE_KEY, PlacePicker } from './place-picker';

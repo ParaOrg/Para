@@ -1,15 +1,14 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
+import { RouteCardStack, type PickedPlace } from '@/features/routes/cards/route-card-stack';
+import { SwitchIcon } from '@/features/routes/cards/switch-icon';
+import { drawnDepartures } from '@/features/routes/model/departures';
+import { hotspotLabel, type Hotspot } from '@/features/routes/model/hotspots';
+import type { Livery } from '@/features/routes/model/liveries';
+import { placeSummary, siblingsOf } from '@/features/routes/model/places';
+import type { Direction } from '@/features/routes/model/routes';
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import { SheetHeader } from '@/shared/ui/sheet-header';
-
-import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { SwitchIcon } from './switch-icon';
-import { drawnDepartures } from '../model/departures';
-import { hotspotLabel, type Hotspot } from '../model/hotspots';
-import type { Livery } from '../model/liveries';
-import { placeSummary, siblingsOf } from '../model/places';
-import type { Direction } from '../model/routes';
 
 interface Props {
   hotspot: Hotspot;

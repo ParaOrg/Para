@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { BackToMapButton } from './back-to-map-button';
 import { ConfirmDelete } from './confirm-delete';
+import type { RecordingFigures } from './recording-figures';
 import { OTHER_WAY, type Way } from './recording-rules';
 import { StatsStrip } from './stats-strip';
 import { TrackingButton } from './tracking-button';
-import type { RecordingFigures } from './use-recording';
 import { useStackRoom } from './use-stack-room';
 
 interface RecordingScreenProps {
