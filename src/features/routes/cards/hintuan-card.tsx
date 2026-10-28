@@ -7,10 +7,10 @@ import { HintuanCardCounter } from './hintuan-card-counter';
 import { HintuanCardHeader } from './hintuan-card-header';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
 import { useTellShown } from './use-tell-shown';
-import { drawnDepartures, switchWord } from '../model/departures';
+import { switchWord } from '../model/departures';
+import { hintuanCardShows } from '../model/hintuan-card-shows';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { boxTheOtherWay, placeBoxes } from '../model/places';
 import { isLoop } from '../model/routes';
 import type { Direction } from '../model/routes';
 
@@ -103,59 +103,22 @@ export function HintuanCard({
   dockRef,
 }: Props) {
   const label = hotspotLabel(hotspot);
-  const rows = placeBoxes(
-    hotspot,
-    hotspots.some((s) => s.id === hotspot.id) ? hotspots : [hotspot, ...hotspots],
-  );
-  const byId = new Map(directions.map((v) => [v.id, v]));
-  const linked = (id: string) =>
-    linkedDirectionIds(id)
-      .map((v) => byId.get(v))
-      .filter((v): v is Direction => !!v);
-  /** Whether a box is passed `back` — the way back — or the way there, by a drawn direction. */
-  // A loop is passed both ways round, so it never decides which way a box is passed.
-  const passes = (id: string, back: boolean) =>
-    drawnDepartures(
-      linked(id).filter((v) => !isLoop(v)),
-      back,
-    ).length > 0;
-
-  // What the routes below are of: the Selected box, or with none, every box
-  // of the place, each direction once.
-  const routes = deselected
-    ? [...new Map(rows.flatMap((r) => linked(r.box.id)).map((v) => [v.id, v])).values()]
-    : linked(hotspot.id);
-
   // The way round asked for; routes passing one way only show that way.
   const [flipped, setFlipped] = useState(false);
-  const twoEnded = routes.filter((v) => !isLoop(v));
-  const there = drawnDepartures(twoEnded, false).length > 0;
-  const backToo = drawnDepartures(twoEnded, true).length > 0;
-  const back = there && backToo ? flipped : backToo;
-  const showing = drawnDepartures(routes, back).flatMap((p) => p.directions.map((d) => d.v));
-  const shown = showing.map((v) => v.id);
-
-  // The other way round: here, when these routes run both ways; else the
-  // nearest box of the place that is passed that way — none with no row
-  // Selected, where the whole place already shows.
-  const other = !back;
-  const switchTo =
-    there && backToo
-      ? hotspot
-      : deselected
-        ? null
-        : boxTheOtherWay(
-            hotspot,
-            rows.map((r) => r.box),
-            (id) => passes(id, other),
-          );
+  const { rows, routes, back, showing, shown, heads, switchTo } = hintuanCardShows({
+    hotspot,
+    hotspots,
+    linkedDirectionIds,
+    directions,
+    deselected,
+    flipped,
+  });
 
   const shownKey = shown.join('\n');
   useTellShown(routeCards.onShown, shownKey);
 
   // Figma's "2 routes passes here", its verb agreeing with the count. It
   // counts the head routes, a card each, not their tails.
-  const heads = drawnDepartures(routes, back).length;
   const count = `${heads} ${heads === 1 ? 'route passes' : 'routes pass'} here`;
 
   return (
@@ -208,7 +171,7 @@ export function HintuanCard({
             onFlip={() => {
               if (!switchTo) return;
               routeCards.onSelect(null);
-              setFlipped(other);
+              setFlipped(!back);
               routeCards.onSwitch?.(switchTo.id !== hotspot.id ? switchTo.id : null);
             }}
           />

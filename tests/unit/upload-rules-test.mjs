@@ -7,6 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { CONSENT_VERSION } from '../../src/features/contribute/consent-version.ts';
 import { UploadError } from '../../src/features/contribute/api/upload-problem.ts';
 import { FAILED, problemOfError } from '../../src/features/contribute/upload-failures.ts';
 import {
@@ -17,7 +18,7 @@ import {
 } from '../../src/features/contribute/upload-rules.ts';
 
 const consented = { hasConsent: true, earlier: null };
-const current = (upload) => ({ id: 'ride-1', consentVersion: 3, upload });
+const current = (upload) => ({ id: 'ride-1', consentVersion: CONSENT_VERSION, upload });
 const earlier = { id: 'ride-0', consentVersion: 1 };
 
 test('nothing goes on its own without consent to the current text', () => {

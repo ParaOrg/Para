@@ -47,7 +47,7 @@ import {
 
 // None skipped on today's published map, in any of the three parts (CI on
 // staging, 2026-10-28): a skip now is a check that stopped proving anything.
-const { check, skip, tally } = harness({ maxSkips: 0 });
+const { check, skip, tally } = harness({ knownSkips: [] });
 
 // COMMUTER_PART=k/n runs part k of n, so CI can run the parts side by side:
 // every part opens the map and runs sections 1, 2 and 5; section 3's
@@ -1213,7 +1213,9 @@ if (PART === 1) {
         try {
           const { litWidthAt } = await import('/src/features/routes/map/line-style.ts');
           line = litWidthAt(m.getZoom());
-        } catch {}
+        } catch {
+          // A server that cannot serve line-style.ts: each chevron is held to its own width alone.
+        }
         const all = ((await window.__src('direction-arrows'))?.features ?? []).map((f) => {
           const p = f.geometry.coordinates[0].map((c) => m.project(c));
           const ax = p[3].x - p[0].x;

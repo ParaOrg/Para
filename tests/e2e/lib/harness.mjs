@@ -23,11 +23,12 @@ export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/
  * line. With `bracketed`, a detail is printed in [brackets], as
  * regression-gestures and snap-test print theirs.
  *
- * With `maxSkips`, more skips than that fail the run too: a suite sets it from
- * the skips it has today, so one more check going quiet shows as a red run,
- * not only in the last line. Unset, skips never fail it.
+ * With `knownSkips`, the names of the checks today's data cannot support, a
+ * skip of any other check fails the run too: one more check going quiet shows
+ * as a red run, not only in the last line, and a known one that skips again
+ * and again costs nothing. Unset, skips never fail it.
  */
-export const harness = ({ bracketed = false, maxSkips = Infinity } = {}) => {
+export const harness = ({ bracketed = false, knownSkips = null } = {}) => {
   const results = [];
   const skipped = [];
   const check = (name, ok, detail = '') => {
@@ -52,12 +53,13 @@ export const harness = ({ bracketed = false, maxSkips = Infinity } = {}) => {
     console.log(
       `${blankLine ? '\n' : ''}${results.length - failed} passed, ${failed} failed, ${skipped.length} skipped`,
     );
-    const tooManySkips = skipped.length > maxSkips;
-    if (tooManySkips)
-      console.log(
-        `More skipped than the ${maxSkips} this suite allows: a check stopped proving anything.`,
-      );
-    process.exit(failed || tooManySkips ? 1 : 0);
+    const known = knownSkips && new Set(knownSkips.map((n) => n.trim()));
+    const unknown = known ? [...new Set(skipped.filter((n) => !known.has(n)))] : [];
+    if (unknown.length > 0) {
+      console.log('Skipped, and not a skip this suite knows: a check stopped proving anything.');
+      for (const name of unknown) console.log(`  ${name}`);
+    }
+    process.exit(failed || unknown.length > 0 ? 1 : 0);
   };
   return { check, skip, tally };
 };
@@ -169,7 +171,8 @@ export const cardsSettled = async (page, ms = 10000) => {
     .waitForFunction(
       () =>
         [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')].every(
-          (e) => !e.getAnimations({ subtree: true }).some((a) => a instanceof CSSTransition),
+          // A CSS transition is the one kind with a transitionProperty.
+          (e) => !e.getAnimations({ subtree: true }).some((a) => 'transitionProperty' in a),
         ),
       null,
       { timeout: ms },
@@ -271,7 +274,9 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
       let m = null;
       try {
         m = JSON.parse(String(e.data));
-      } catch {}
+      } catch {
+        // Not JSON: nothing the dev server holds for a page.
+      }
       if (m?.type === 'connected') {
         connected = true;
         // What it holds goes out right behind 'connected', on the same socket.

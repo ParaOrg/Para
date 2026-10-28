@@ -1,8 +1,8 @@
-// 6. Stylesheet order (step 12 too): on each page, the last rule that places
+// 6. Stylesheet order: on each page, the last rule that places
 //    one of MapLibre's four corners is global.css's, inside the safe area, so
 //    the attribution the licence asks for is never under a home indicator.
 //    And each page asks for its stylesheets before its scripts, so over
-//    HTTP/1.1 the first paint does not wait behind them (2026-10-05).
+//    HTTP/1.1 the first paint does not wait behind them.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -14,7 +14,7 @@ export function proveStylesheetOrder(build, check) {
 
   // Over HTTP/1.1 the scripts ahead of a stylesheet can take all six of a
   // host's connections, and the first paint waits a round trip
-  // (vite.config.ts, stylesheetsBeforeScripts, 2026-10-05).
+  // (stylesheetsBeforeScripts in scripts/node/vite-plugins/stylesheets-first.ts).
   for (const page of PAGES) {
     const head = html(page).slice(0, html(page).indexOf('</head>'));
     const sheets = [...head.matchAll(/<link rel="stylesheet"/g)].map((m) => m.index);

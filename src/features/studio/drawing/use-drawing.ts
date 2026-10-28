@@ -13,7 +13,14 @@ import {
 import { readDraft, restoredState, useDraftSaving } from './draft';
 import { useDrawLayers } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
-import type { AreaTarget, Borrow, HotspotKind, Picking, Target } from './drawing-types';
+import type {
+  AreaTarget,
+  Borrow,
+  DrawingStart,
+  HotspotKind,
+  Picking,
+  Target,
+} from './drawing-types';
 import { useGapResolver } from './gap-resolver';
 import { useDrawEvents } from './use-draw-events';
 import { useDrawRendering } from './use-draw-rendering';
@@ -251,17 +258,41 @@ export function useDrawing(
     connectedRef.current = null;
   }, [writePoints, writeSegments, clearPointBar]);
 
-  /** Begin a new direction — of an existing route when routeId is given. */
-  const start = useCallback(
-    (routeId?: string | null) => {
+  /**
+   * Every way a drawing begins: the last one cleared, snapping on, then what
+   * it starts with (DrawingStart).
+   */
+  const begin = useCallback(
+    ({
+      area: nextArea = null,
+      target: nextTarget = { routeId: null, directionId: null },
+      points,
+      segments: nextSegments,
+      picking: nextPicking = null,
+    }: DrawingStart) => {
       reset();
+      if (points) writePoints(points);
+      if (nextSegments) writeSegments(nextSegments);
       setFreehand(false);
-      setArea(null);
-      areaRef.current = null;
-      setTarget({ routeId: typeof routeId === 'string' ? routeId : null, directionId: null });
+      setArea(nextArea);
+      areaRef.current = nextArea;
+      setTarget(nextTarget);
+      if (nextPicking) {
+        setPicking(nextPicking);
+        pickingRef.current = nextPicking;
+      }
       setDrawing(true);
     },
-    [reset],
+    [reset, writePoints, writeSegments],
+  );
+
+  /** Begin a new direction — of an existing route when routeId is given. */
+  const start = useCallback(
+    (routeId?: string | null) =>
+      begin({
+        target: { routeId: typeof routeId === 'string' ? routeId : null, directionId: null },
+      }),
+    [begin],
   );
 
   /**
@@ -281,17 +312,13 @@ export function useDrawing(
 
   /** Open a saved direction for editing: its row with its drawing (live.ts withDrawing). */
   const load = useCallback(
-    (v: DirectionDrawing) => {
-      reset();
-      writePoints(v.controlPoints ?? []);
-      writeSegments(v.segments ?? []);
-      setFreehand(false);
-      setArea(null);
-      areaRef.current = null;
-      setTarget({ routeId: v.routeId, directionId: v.id });
-      setDrawing(true);
-    },
-    [reset, writePoints, writeSegments],
+    (v: DirectionDrawing) =>
+      begin({
+        target: { routeId: v.routeId, directionId: v.id },
+        points: v.controlPoints ?? [],
+        segments: v.segments ?? [],
+      }),
+    [begin],
   );
 
   /**
@@ -299,18 +326,8 @@ export function useDrawing(
    * the new route leaves it, then keeps the part before or after that spot.
    */
   const startExtend = useCallback(
-    (v: DirectionDrawing) => {
-      reset();
-      setFreehand(false);
-      setArea(null);
-      areaRef.current = null;
-      setTarget({ routeId: null, directionId: null });
-      const p = { direction: v, spot: null };
-      setPicking(p);
-      pickingRef.current = p;
-      setDrawing(true);
-    },
-    [reset],
+    (v: DirectionDrawing) => begin({ picking: { direction: v, spot: null } }),
+    [begin],
   );
 
   // Extend's keep of one side of the picked spot, and a right-click's join.
@@ -333,16 +350,8 @@ export function useDrawing(
 
   /** Begin tracing a hotspot outline. */
   const startArea = useCallback(
-    (kind: HotspotKind) => {
-      reset();
-      setFreehand(false);
-      const a = { kind, hotspotId: null };
-      setArea(a);
-      areaRef.current = a;
-      setTarget({ routeId: null, directionId: null });
-      setDrawing(true);
-    },
-    [reset],
+    (kind: HotspotKind) => begin({ area: { kind, hotspotId: null } }),
+    [begin],
   );
 
   /**
@@ -361,18 +370,9 @@ export function useDrawing(
 
   /** Open an outline for editing: a saved hotspot's, or (no id) a new one's first corners. */
   const loadArea = useCallback(
-    (kind: HotspotKind, hotspotId: string | null, ring: LngLat[]) => {
-      reset();
-      const a = { kind, hotspotId };
-      setArea(a);
-      areaRef.current = a;
-      writePoints(ring);
-      writeSegments(ringSegments(ring));
-      setFreehand(false);
-      setTarget({ routeId: null, directionId: null });
-      setDrawing(true);
-    },
-    [reset, writePoints, writeSegments],
+    (kind: HotspotKind, hotspotId: string | null, ring: LngLat[]) =>
+      begin({ area: { kind, hotspotId }, points: ring, segments: ringSegments(ring) }),
+    [begin],
   );
 
   const cancel = useCallback(() => {

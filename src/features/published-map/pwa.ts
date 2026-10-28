@@ -12,7 +12,8 @@ import { styleFiles } from './style-files';
 /**
  * The service worker, registered from the public page only. The studio never
  * runs this, and the plugin injects no registration script of its own
- * (vite.config.ts, `injectRegister: false`), so /studio/ stays a plain page.
+ * (scripts/node/offline-worker.ts, `injectRegister: false`), so /studio/
+ * stays a plain page.
  *
  * A new version is never applied on its own: it waits, `needRefresh` turns
  * true, and the page shows "Update Para!". The one exception is a phone

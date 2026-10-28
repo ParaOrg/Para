@@ -62,13 +62,38 @@ import {
   ringed,
 } from './lib/looks.mjs';
 
-// Six skipped on today's published map (CI on staging, 2026-10-28), each for
-// data the map does not hold yet: SWITCH (the route's other way is not
-// drawn), its routes lit (the picked card holds every route), the hintuans'
-// fold twice (a direction with no hintuans), another box from its row (the
-// place has one box) and two overlapping hotspots (none overlap). One more
-// is a check that stopped proving anything.
-const { check, skip, tally } = harness({ maxSkips: 6 });
+// The checks today's published map cannot support, each for data it does
+// not hold yet (CI on staging, 2026-10-28). A skip of any other check fails
+// the run: it stopped proving anything. The sheet's own heights never skip:
+// a sheet that will not get there fails (handleTo).
+const {
+  check,
+  skip: skipLive,
+  tally,
+} = harness({
+  knownSkips: [
+    // The trip a tap opens has no other way drawn.
+    '  SWITCH turns the trip round',
+    // The picked card holds every route the list shows.
+    '  and lights just its routes',
+    // A trip with no hintuans, here and under "Other routes".
+    '  its hintuans fold into one row, and open',
+    '  its hintuans left open, as they were',
+    // The place has one box.
+    '  another box from its row: Selected, the card staying at Max, the map there',
+    // No two hotspot polygons overlap.
+    'two overlapping hotspots open the list',
+  ],
+});
+/**
+ * On the made-up map (section 5d) nothing may skip, known name or not: the map
+ * holds everything its checks need, so a skip there is a check that broke.
+ */
+let onMadeUpMap = false;
+const skip = (name, reason) =>
+  onMadeUpMap
+    ? check(name, false, `skipped on the made-up map, which holds what it needs: ${reason}`)
+    : skipLive(name, reason);
 
 // ------------------------------------------------------------------ geometry
 // Metres from degrees, flat-earth style. Everything here is within a few km of
@@ -295,7 +320,9 @@ function liftRecorder() {
       drawn = m.getLayer('saved-routes-line')
         ? m.queryRenderedFeatures({ layers: resting }).length
         : 0;
-    } catch {}
+    } catch {
+      // The map or its style not there yet: nothing drawn so far.
+    }
     window.__lift = { at: Math.round(performance.now()), loaded: !!window.__map, drawn };
   };
   new MutationObserver(look).observe(document, { subtree: true, childList: true });
@@ -662,7 +689,9 @@ check(
       // Held still before letting go: no fling to carry it on.
       await p.waitForTimeout(250);
       await pdc.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    } catch {}
+    } catch {
+      // The runner refused the touch: the camera reads as unmoved, and the mouse drags instead.
+    }
     await p
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
       .catch(() => {});
@@ -1854,8 +1883,7 @@ const tripChecks = async () => {
         // Then the end with the sheet at Max: the sheet comes down to Middle and
         // the camera takes in the ride from the start to the end (the owner,
         // 2026-10-16), where a hintuan picked alone at Max leaves it at Max.
-        await buttonTap(handle(), async () => (await sheetState()) === 'max');
-        const wasMax = (await sheetState()) === 'max';
+        const wasMax = await handleTo('max');
         const endPick = endRow.locator('button[data-testid="trip-hintuan-pick"]');
         await endPick.scrollIntoViewIfNeeded();
         await buttonTap(endPick, () => isSelected(endRow));
@@ -1878,8 +1906,9 @@ const tripChecks = async () => {
           };
         });
         if (!wasMax)
-          skip(
+          check(
             '  the end picked after a start: the sheet to Middle, the ride taken in above it',
+            false,
             `the card would not rise to Max: data-snap=${settled}`,
           );
         else
@@ -2194,10 +2223,10 @@ const tripChecks = async () => {
     // card can settle anywhere, don't move the bottomsheet to the middle"),
     // the hintuan landing above where Middle would be, there to see when the
     // card comes down. Let go again after, for the ends below.
-    await buttonTap(handle(), async () => (await sheetState()) === 'max');
-    if ((await sheetState()) !== 'max') {
-      skip(
+    if (!(await handleTo('max'))) {
+      check(
         '  picked at Max, the card stays at Max, the hintuan above where Middle would be',
+        false,
         `the card would not rise to Max: data-snap=${await sheetState()}`,
       );
     } else {
@@ -2224,10 +2253,12 @@ const tripChecks = async () => {
       await buttonTap(pickButton, async () => !(await isPicked()));
       // The card stays at Max now: back to Middle by its handle (round
       // through Low), for the ends below to glide into the map above it.
-      if ((await sheetState()) === 'max')
-        await buttonTap(handle(), async () => (await sheetState()) === 'low');
-      if ((await sheetState()) === 'low')
-        await buttonTap(handle(), async () => (await sheetState()) === 'middle');
+      if (!(await handleTo('middle')))
+        check(
+          '  back to Middle by its handle, for the ends',
+          false,
+          `the card would not come round to Middle: data-snap=${await sheetState()}`,
+        );
     }
     // The ends are buttons too (the owner's asks, 2026-09-29): with a
     // hintuan picked, a tap on where the trip goes, then on where it leaves
@@ -2455,6 +2486,29 @@ const cardText = async () => ((await card().count()) ? await card().first().inne
 /** The card's height: 'low', 'middle' or 'max' (BottomSheet's data-snap). */
 const sheetState = async () =>
   (await card().count()) ? await card().first().getAttribute('data-snap') : null;
+/**
+ * Taps the handle until the sheet rests at `target` (round, Low → Middle →
+ * Max → Low), giving each tap up to 5 s to take hold: a runner drawing a
+ * phone slowly takes seconds over one, and a tap it seemed to drop can land
+ * late and carry the sheet on past, round again to `target`. Whether it got
+ * there within `ms`: a sheet that never does is a failure, not a skip.
+ */
+const handleTo = async (target, ms = 30000) => {
+  const by = Date.now() + ms;
+  for (;;) {
+    const was = await sheetState();
+    if (was === target) return true;
+    if (was === null || Date.now() > by) return false;
+    await buttonTap(handle(), async () => (await sheetState()) !== was);
+    await page
+      .waitForFunction(
+        (w) => document.querySelector('[data-testid="card"]')?.getAttribute('data-snap') !== w,
+        was,
+        { timeout: 5000 },
+      )
+      .catch(() => {});
+  }
+};
 /**
  * How far to drag the handle for the sheet to come to rest at `to` from
  * where it is, by the heights BottomSheet gives it: Low 133, Middle 55% of
@@ -3143,7 +3197,7 @@ if (routeA) {
 // Two routes sharing a road: a vertex of one that lies within 15 m of another's
 // line, with no third route inside the tap box.
 let shared = null;
-for (const [ri, r] of snapshot.routes.entries()) {
+for (const r of snapshot.routes) {
   if (shared) break;
   for (const vi of sampleIndices(r.coords.length, 2000 / Math.max(1, snapshot.routes.length))) {
     const p = r.coords[vi];
@@ -3630,8 +3684,7 @@ if (!inside) {
       `"${poly.name}" is its place's only box`,
     );
   } else {
-    await buttonTap(handle(), async () => (await sheetState()) === 'max');
-    const from = await sheetState();
+    const from = (await handleTo('max')) ? 'max' : await sheetState();
     await buttonTap(otherRow.first(), async () => (await pressedBox()) === otherId);
     await cardsSettled(page);
     const at = await project(page, centroidOf(otherPoly.ring));
@@ -3642,7 +3695,8 @@ if (!inside) {
     const y = edges.top + at[1];
     check(
       '  another box from its row: Selected, the card staying at Max, the map there above where Middle would be',
-      (await pressedBox()) === otherId &&
+      from === 'max' &&
+        (await pressedBox()) === otherId &&
         (await sheetState()) === from &&
         y > edges.top &&
         y < edges.cardTop,
@@ -4240,13 +4294,14 @@ if (!routeA) {
     const capZoom = Math.log2(
       (78271.51696 * Math.cos((((r.bbox[1] + r.bbox[3]) / 2) * Math.PI) / 180) * 100) / 5000,
     );
-    const toMax = await buttonTap(handle(), async () => (await sheetState()) === 'max');
+    const toMax = await handleTo('max');
     const atMax = await framedAboveCard(r.bbox);
-    const toLow = toMax && (await buttonTap(handle(), async () => (await sheetState()) === 'low'));
+    const toLow = toMax && (await handleTo('low'));
     const atLow = await framedAboveCard(r.bbox);
     if (!toLow)
-      skip(
+      check(
         '  the sheet at Max, then Low: the route taken in again in the map it leaves',
+        false,
         `the handle would not go round: data-snap=${await sheetState()}`,
       );
     else {
@@ -4265,8 +4320,9 @@ if (!routeA) {
     // Middle already, and no height change moves the camera (a runner that
     // dropped the handle's taps, 2026-10-01).
     if (!toLow)
-      skip(
+      check(
         '  moved away, then up to Middle: the overview again',
+        false,
         `the sheet never came down to Low: data-snap=${await sheetState()}`,
       );
     else {
@@ -4284,7 +4340,7 @@ if (!routeA) {
             m.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
           }),
       );
-      await buttonTap(handle(), async () => (await sheetState()) === 'middle');
+      const toMiddle = await handleTo('middle');
       // The overview starts a beat after the sheet settles — most of a second
       // from a cold zoom-16 view, with the main thread busy over it (measured
       // on the refactor's base too, 2026-10-12): let it start, then end, as
@@ -4300,8 +4356,8 @@ if (!routeA) {
       const back = await framedAboveCard(r.bbox);
       check(
         '  moved away, then up to Middle: the overview again, 5 km on the bar at the farthest',
-        back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
-        JSON.stringify(back),
+        toMiddle && back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
+        `${toMiddle ? '' : `the sheet would not rise to Middle: data-snap=${await sheetState()}; `}${JSON.stringify(back)}`,
       );
     }
 
@@ -4456,7 +4512,7 @@ if (!withOthers) {
       async () => (await tripFold.first().getAttribute('aria-expanded')) === 'true',
     ));
   // At Max: another route brings the sheet down to Middle, the map showing it (the owner, 2026-10-01).
-  const atMax = await buttonTap(handle(), async () => (await sheetState()) === 'max');
+  const atMax = await handleTo('max');
   await rows.first().scrollIntoViewIfNeeded();
   await buttonTap(
     card().locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`),
@@ -4470,8 +4526,9 @@ if (!withOthers) {
     JSON.stringify({ trip: now, lit, want: to.id }),
   );
   if (!atMax)
-    skip(
+    check(
       '  from Max, the sheet comes down to Middle',
+      false,
       `the card would not rise to Max: data-snap=${await sheetState()}`,
     );
   else
@@ -4504,6 +4561,7 @@ if (!withOthers) {
 // the index and its line files on this same page, so every helper above
 // reads it as it reads today's map.
 console.log('\n(on the made-up map: fixtures/two-way-map.mjs)\n');
+onMadeUpMap = true;
 await closeCard();
 await serveTwoWayMap(page);
 await page.reload({ waitUntil: 'load' });
@@ -4580,6 +4638,8 @@ await waitForSource(page, 'saved-routes');
   await closeCard();
 }
 
+onMadeUpMap = false;
+
 // -------------------------------------------- 6. the desktop control, ±5 px
 const desktop = await b.newContext({ viewport: { width: 1280, height: 800 } });
 const dpage = await desktop.newPage();
@@ -4609,7 +4669,6 @@ check(
 if (!routeA) {
   skip('a mouse click 4 px beside the line selects it', 'no lone route vertex to click');
 } else {
-  const r = routeA.route;
   const neighbour = routeA.neighbour;
   await jumpTo(dpage, routeA.point);
   const anchor = await project(dpage, routeA.point);

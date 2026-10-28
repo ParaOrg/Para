@@ -19,8 +19,8 @@ import { parseBasemapHost } from './src/shared/config/basemap-host.ts';
 
 // The map file's address and the early request's name, read from map-file.ts's
 // text rather than imported: Vite bundles this config before any alias exists,
-// and map-file.ts reaches the rest of the app through `@/` (2026-10-07, the
-// restructure). The same reader guards the build in check-build.mjs.
+// and map-file.ts reaches the rest of the app through `@/`. The same reader
+// guards the build in check-build.mjs.
 const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
   readFileSync(new URL('./src/features/routes/published/map-file.ts', import.meta.url), 'utf8'),
 );
@@ -71,23 +71,21 @@ export default defineConfig({
         studio: 'studio/index.html',
         contribute: 'contribute/index.html',
       },
-      // What both pages load, in chunks named for what they are (the
-      // cheap-phone plan, step 12, 2026-10-05): MapLibre, React, and the
-      // shared code. As one chunk (348 kB gzipped) any change to
-      // src/features, src/shared or src/design-system gave it a new name, and every
-      // returning phone fetched MapLibre and React again with it: 306 kB
-      // of a deploy's 363 kB, over a link the commuter's index and tiles
-      // want too. Now such a deploy is the 56 kB of our own code. React's
-      // chunk keeps its name until React is upgraded: it is CommonJS, kept
-      // whole. MapLibre's two keep theirs until it is upgraded, or until
-      // our code starts or stops importing one of its exports (2026-10-05):
-      // its .mjs files have no side effects (its package.json), so Rolldown
-      // keeps of them only what our code reaches. A Popup imported, or the
-      // ScaleControl dropped, renames maplibre-*.js, 137 kB gzipped that
-      // every returning phone fetches again; importing all of MapLibre
-      // renamed maplibre-gl-shared-*.js too, and with it the worker's
-      // chunk, which imports it by name.
-      //  - maplibre-gl-shared (step 14): the code MapLibre's page and
+      // What both pages load, in chunks named for what they are: MapLibre,
+      // React, and the shared code. As one chunk, any change to src/features,
+      // src/shared or src/design-system gave it a new name, and every
+      // returning phone fetched MapLibre and React again with it, over a link
+      // the commuter's index and tiles want too. Apart, such a deploy is our
+      // own code alone. React's chunk keeps its name until React is upgraded:
+      // it is CommonJS, kept whole. MapLibre's two keep theirs until it is
+      // upgraded, or until our code starts or stops importing one of its
+      // exports: its .mjs files have no side effects (its package.json), so
+      // Rolldown keeps of them only what our code reaches. A Popup imported,
+      // or the ScaleControl dropped, renames maplibre-*.js, which every
+      // returning phone fetches again; importing all of MapLibre renames
+      // maplibre-gl-shared-*.js too, and with it the worker's chunk, which
+      // imports it by name.
+      //  - maplibre-gl-shared: the code MapLibre's page and
       //    worker files share, in a chunk of its own so that the worker
       //    (maplibreWorkerWithThePage) imports it and nothing of the page.
       //    With it, Vite's preload helper (vite-preload): Vite wraps each
@@ -104,8 +102,8 @@ export default defineConfig({
       //  - shared: a module goes in when two chunks import it — Rolldown
       //    counts lazy chunks as well as the two entries — so
       //    check-build.mjs, not this rule, is what proves the studio's
-      //    Supabase stays out of what the public page loads. Left to itself
-      //    it took the name of one of its modules (useSavedStops-*.js).
+      //    Supabase stays out of what the public page loads. Named, so it
+      //    does not take the name of one of its modules.
       // Each one's size is a guard in check-build.mjs; MapLibre is most of
       // it and is what keeps a thousand lines smooth, so the 500 kB warning
       // is answered by those guards rather than by splitting it further.
@@ -123,8 +121,7 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/]maplibre-gl[\\/]dist[\\/]maplibre-gl\.mjs$/,
               priority: 2,
             },
-            //  - zod (ticket 08 of the restructure follow-ups, 2026-10-07): the
-            //    validator the published index is read with, in a chunk of
+            //  - zod: the validator the published index is read with, in a chunk of
             //    its own so check-build.mjs can weigh it and `shared` stays
             //    our code alone.
             {
