@@ -16,6 +16,7 @@ Written 2026-10-28 from the repo and from what the hub checked live that day. An
 | **Resend** | Sends the password-reset email, as Supabase Auth's SMTP. Its DKIM record (`resend._domainkey`) and the `send` MX and TXT records are in Cloudflare DNS | The owner | Its API key is in Supabase's SMTP settings (owner to confirm) |
 | **The owner's own computer and password manager** | The backup's private GPG key (never on GitHub, R2 or Supabase); the app key passphrase; recovery codes | The owner | Password manager and an offline copy (backup.yml step 3) |
 | **Facebook** | The page the consent screen links as the way to reach the owner (`consent-panel.tsx`) | The owner | (owner to confirm) |
+| **The privacy policy** | Para's privacy policy, a document the owner holds; not in the repo | The owner | – |
 | **Services Para uses without an account** | OpenStreetMap data through Geofabrik's extract and Planetiler (tiles.yml); OpenFreeMap's styles, sprite and glyphs, copied monthly (`scripts/tiles/fetch-assets.mjs`); the public OSRM demo router for the studio's snapping; Esri and AWS's elevation tiles for the studio's Satellite and Terrain designs (`studio-basemaps.ts`) | – | – |
 | **Google Play and Apple** | Nothing yet. The commuter app is planned for both stores (ADR 0008); the contributor app is a direct download (ADR 0006) | – | – |
 
@@ -147,3 +148,4 @@ Tick each once, and look again each year.
 - [ ] The old Villaralvorovic2 Cloudflare account: move the Turnstile widget to the Para account (a new widget means a new site key in `.env.production` and `.env.apk`, and its secret in Supabase), then delete the old `parapo` Worker. Until then, keep two-factor on that account too.
 - [ ] GitHub: only "Nightly publish" has a deploy key with write access (`docs/agents/main-protection.md`).
 - [ ] DNSSEC on (ticket 07): Cloudflare → DNS → Settings, then the DS record at Namecheap. Off today.
+- [ ] The privacy policy, which the owner holds, still matches what Para collects and where it keeps it, whenever a service in the table above changes.
