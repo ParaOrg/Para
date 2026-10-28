@@ -15,27 +15,38 @@ export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/
 
 /**
  * A suite's count. `check` prints PASS or FAIL and its detail, `skip` prints
- * SKIP for a check today's data cannot support, and `tally` prints how many
- * passed and failed, then ends the run, non-zero on any failure. With
- * `bracketed`, a detail is printed in [brackets], as regression-gestures and
- * snap-test print theirs.
+ * SKIP for a check today's data cannot support, and `tally` lists the
+ * skipped checks, prints how many passed, failed and were skipped, then ends
+ * the run, non-zero on any failure. A skip does not fail the run: it is
+ * counted so a check that quietly stopped proving anything shows in the last
+ * line. With `bracketed`, a detail is printed in [brackets], as
+ * regression-gestures and snap-test print theirs.
  */
 export const harness = ({ bracketed = false } = {}) => {
   const results = [];
+  const skipped = [];
   const check = (name, ok, detail = '') => {
     results.push(ok);
     console.log(
       `${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? (bracketed ? '  [' + detail + ']' : '  ' + detail) : ''}`,
     );
   };
-  const skip = (name, reason) =>
+  const skip = (name, reason) => {
+    skipped.push(name.trim());
     console.log(
       bracketed ? `SKIP  ${name}${reason ? '  [' + reason + ']' : ''}` : `SKIP  ${name}  ${reason}`,
     );
+  };
   /** The last line, after a blank one unless `blankLine` is false (extend-test and group-test print none). */
   const tally = ({ blankLine = true } = {}) => {
     const failed = results.filter((r) => !r).length;
-    console.log(`${blankLine ? '\n' : ''}${results.length - failed} passed, ${failed} failed`);
+    if (skipped.length > 0) {
+      console.log(`${blankLine ? '\n' : ''}Skipped:`);
+      for (const name of skipped) console.log(`  ${name}`);
+    }
+    console.log(
+      `${blankLine ? '\n' : ''}${results.length - failed} passed, ${failed} failed, ${skipped.length} skipped`,
+    );
     process.exit(failed ? 1 : 0);
   };
   return { check, skip, tally };
