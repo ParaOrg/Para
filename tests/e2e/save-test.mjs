@@ -1260,7 +1260,10 @@ const bothWays = directionsOf(outRow()?.route_id ?? '');
 const fullPoints = bothWays.reduce((sum, v) => sum + (v.shape?.coordinates.length ?? 0), 0);
 n = log.length;
 const csv = await exported('CSV');
-const csvRows = csv.text.replace(/^﻿/, '').trimEnd().split('\r\n');
+const csvRows = csv.text
+  .replace(/^\uFEFF/, '')
+  .trimEnd()
+  .split('\r\n');
 check(
   'Export CSV: a row per point of both full lines, read on their own, under one header',
   csv.name.endsWith('.csv') &&
@@ -1364,7 +1367,6 @@ await dismissToasts();
   ];
   // The ikots this section draws, not the ones the published map brings.
   const drawnIkots = () => tables.route.filter((r) => r.is_loop && !route.has(r.id));
-  const ikotLine = () => directionsOf(drawnIkots()[0]?.id)[0];
   const toggle = () => page.getByTestId('save-loop-toggle');
   const dialogs = [];
   page.on('dialog', (d) => dialogs.push(d.message()));
@@ -2085,7 +2087,6 @@ await page.waitForTimeout(300);
   );
 
   // 1. Enter on a radio saves the place and leaves the route unsaved.
-  n = log.length;
   await open('Head');
   await form('Head')
     .getByLabel(/Ground name/)

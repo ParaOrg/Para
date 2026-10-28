@@ -374,8 +374,10 @@ try {
   // Now with no network at all: the phone keeps everything it needs.
   await ctx.setOffline(true);
   let tilesFromWorker = 0;
+  // Tiles only, by their z/x/y address: glyphs are .pbf files and the sprite a .png too.
   const countTiles = (res) => {
-    if (/\.(pbf|png)(\?.*)?$/.test(res.url()) && res.fromServiceWorker()) tilesFromWorker++;
+    if (/\/\d+\/\d+\/\d+\.(pbf|png)(\?.*)?$/.test(res.url()) && res.fromServiceWorker())
+      tilesFromWorker++;
   };
   page.on('response', countTiles);
   await page.reload({ waitUntil: 'load' }).catch(() => {});

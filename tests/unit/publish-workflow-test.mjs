@@ -19,7 +19,7 @@ const STEPS = WORKFLOW.slice(WORKFLOW.indexOf('    steps:\n'))
   .split('\n')
   .filter((line) => !line.trim().startsWith('#'))
   .join('\n')
-  .split(/\n(?=      - )/)
+  .split(/\n(?= {6}- )/)
   .slice(1);
 
 const stepNamed = (name) => STEPS.find((step) => step.includes(`name: ${name}\n`));
