@@ -384,14 +384,8 @@ export default defineConfig([
   {
     // The Node scripts (the publish, the build guard, the tiles and preview tools) and the
     // tests: ESLint's recommended rules, with Node's globals. A value left out of a copy by
-    // `...rest` is not unused. Four suites still being edited join once they are free.
+    // `...rest` is not unused.
     files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
-    ignores: [
-      'tests/e2e/commuter-test.mjs',
-      'tests/e2e/phone-test.mjs',
-      'tests/e2e/where-test.mjs',
-      'tests/e2e/lib/harness.mjs',
-    ],
     ...js.configs.recommended,
     rules: {
       ...js.configs.recommended.rules,
