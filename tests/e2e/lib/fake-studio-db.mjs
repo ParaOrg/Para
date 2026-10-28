@@ -16,7 +16,10 @@
 // The review workflow's three calls are answered as 0022 answers them,
 // enough for two editors to meet over one draft: claim_draft (one draft per
 // route or hotspot, stamped with the caller's id from the request's token),
-// discard_draft, and a draft's revision rising with every change. A direct
+// discard_draft, and a draft's revision rising with every change. submit_draft
+// and approve_reviewed_draft (or approve_draft) apply a draft as 0022 does;
+// db.approve(id) applies one without the calls, for a suite that needs the
+// map to move on before its next step. A direct
 // update of a draft changes it only for its maker, as draft_update does once
 // 20261026090000 is applied (RLS hides the row, so the update matches none).
 
@@ -173,6 +176,61 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
     return { ...base, ...r };
   };
 
+  /**
+   * A draft approved as approve_draft applies it (0022): the subject's row,
+   * each direction of a route with its whole link set, or a hotspot with its
+   * links; a route left with no drawn line comes down. The draft goes.
+   */
+  const apply = (d) => {
+    const bump = (row) =>
+      Object.assign(row, { status: 'approved', revision: (row.revision ?? 0) + 1 });
+    if (d.kind === 'route') {
+      const { route: r, directions } = d.payload;
+      const row = tables.route.find((x) => x.id === d.subject_id);
+      const columns = {
+        ...r,
+        head_stop_id: r.is_loop ? null : r.head_stop_id,
+        tail_stop_id: r.is_loop ? null : r.tail_stop_id,
+      };
+      if (row) bump(Object.assign(row, columns));
+      else
+        tables.route.push(
+          fill('route', { id: d.subject_id, ...columns, status: 'approved', revision: 1 }),
+        );
+      for (const { links, ...dir } of directions) {
+        const v = tables.route_variant.find((x) => x.id === dir.id);
+        if (v) Object.assign(v, dir);
+        else tables.route_variant.push(fill('route_variant', { ...dir, route_id: d.subject_id }));
+        tables.route_stop = tables.route_stop
+          .filter((l) => l.route_variant_id !== dir.id)
+          .concat(links.map((l) => ({ route_variant_id: dir.id, ...l })));
+        if (dir.shape === null)
+          for (const o of tables.route_variant)
+            if (o.borrowed_from === dir.id)
+              Object.assign(o, { borrowed_from: null, borrowed_part: null, borrowed_m: null });
+      }
+      const drawn = tables.route_variant.some((v) => v.route_id === d.subject_id && v.shape);
+      if (!drawn) tables.route.find((x) => x.id === d.subject_id).status = 'taken_down';
+    } else {
+      const { stop, links } = d.payload;
+      const row = tables.stop.find((x) => x.id === d.subject_id);
+      if (row) bump(Object.assign(row, stop));
+      else
+        tables.stop.push(
+          fill('stop', { id: d.subject_id, ...stop, status: 'approved', revision: 1 }),
+        );
+      tables.route_stop = tables.route_stop
+        .filter((l) => l.stop_id !== d.subject_id)
+        .concat(links.map((l) => ({ ...l, stop_id: d.subject_id })));
+    }
+    tables.draft = tables.draft.filter((x) => x !== d);
+  };
+  db.approve = (draftId) => {
+    const kept = tables.draft.find((d) => d.id === draftId);
+    if (!kept) throw new Error(`no draft ${draftId}`);
+    apply(kept);
+  };
+
   const rpc = (name, body, caller) => {
     if (name === 'claim_draft') {
       const same = (d) => d.kind === body.p_kind && d.subject_id === body.p_subject_id;
@@ -206,6 +264,30 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
         };
       tables.draft = tables.draft.filter((d) => d !== kept);
       return { status: 200, body: { code: 'discarded' } };
+    }
+    if (name === 'submit_draft') {
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (kept.revision !== body.p_revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      if (kept.status !== 'draft') return { status: 200, body: { code: 'already_pending' } };
+      Object.assign(kept, { status: 'pending', submitted_at: now, revision: kept.revision + 1 });
+      return { status: 200, body: { code: 'submitted', draft: kept } };
+    }
+    if (name === 'approve_reviewed_draft' || name === 'approve_draft') {
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (name === 'approve_reviewed_draft' && kept.revision !== body.p_revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      if (kept.status !== 'pending') return { status: 200, body: { code: 'not_pending' } };
+      apply(kept);
+      return { status: 200, body: { code: 'approved' } };
     }
     if (name !== 'block_contributor' && name !== 'unblock_contributor')
       throw new Error(`unknown rpc ${name}`);
