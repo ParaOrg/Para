@@ -3,6 +3,8 @@ import * as z from 'zod/mini';
 import { lngLatSchema } from '@/features/routes/model/geojson-schema';
 import type { LngLat, Segment, StreetRun } from '@/shared/utils/geo';
 
+import { routerQueue } from './router-queue';
+
 /**
  * FOSSGIS public OSRM. No API key, and it sends
  * `Access-Control-Allow-Origin: *`, so the browser calls it directly.
@@ -51,20 +53,9 @@ class RouterRefusal extends Error {
 }
 
 const isAbort = (err: unknown) => err instanceof Error && err.name === 'AbortError';
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-let nextSlot = 0;
-
-/** Wait for this request's turn: one request every REQUEST_GAP_MS, page-wide. Throws if given up on meanwhile. */
-async function takeTurn(signal?: AbortSignal) {
-  signal?.throwIfAborted();
-  const now = Date.now();
-  const at = Math.max(now, nextSlot);
-  nextSlot = at + REQUEST_GAP_MS;
-  if (at > now) await sleep(at - now);
-  // Given up on while it waited (its stand-in was replaced): the slot passes unused.
-  signal?.throwIfAborted();
-}
+/** One request every REQUEST_GAP_MS, page-wide; one given up on while it waits leaves the queue. */
+const { takeTurn } = routerQueue(REQUEST_GAP_MS);
 
 async function fetchRoute(url: string, signal?: AbortSignal): Promise<Response> {
   const attempt = async () => {
