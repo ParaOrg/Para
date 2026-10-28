@@ -39,8 +39,7 @@ export function provePublicWorker(build, check) {
     fonts.filter((f) => !precached.includes(f)).join(', '),
   );
   // The vehicles' sprite, fetched by the trip's header rather than inlined in
-  // the JS (the owner's "trim the icons with a sprite", 2026-10-16): offline,
-  // the header still draws its vehicle.
+  // the JS: offline, the header still draws its vehicle.
   const sprites = readdirSync(join(dist, 'assets'))
     .filter((f) => /^vehicle-icons-.*\.svg$/.test(f))
     .map((f) => `assets/${f}`);
@@ -98,7 +97,7 @@ export function provePublicWorker(build, check) {
   const msgAt = sw.indexOf('SKIP_WAITING');
   const skipAt = sw.indexOf('skipWaiting()');
   // A missing file is the map's page, 200 (wrangler.jsonc): each store keeps
-  // only its own type, or that page was kept as the map (2026-10-03).
+  // only its own type, or that page would be kept as the map.
   check(
     'sw.js keeps only JSON as the map and its lines, and only SVG as a signboard',
     (sw.match(/startsWith\("application\/json"\)/g) ?? []).length >= 2 &&

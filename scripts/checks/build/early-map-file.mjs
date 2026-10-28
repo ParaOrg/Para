@@ -1,11 +1,10 @@
-// 8. The map file asked for as the root page is read (the cheap-phone plan,
-//    step 20, 2026-10-04; vite.config.ts, mapFileEarly): index.html carries
-//    the plain script that asks for MAP_FILE_URL and leaves the request
-//    under EARLY_MAP_FILE (both read from map-file.ts), ahead of its module
-//    script, preloads and stylesheets; the studio's page has none. Without
-//    it the app asks for the file itself, once, and the map opens all the
-//    same, only later: no suite would say so (review of the owner's Q1,
-//    2026-10-05).
+// 8. The map file asked for as the root page is read (mapFileEarly in
+//    scripts/node/vite-plugins/map-file-early.ts): index.html carries the
+//    plain script that asks for MAP_FILE_URL and leaves the request under
+//    EARLY_MAP_FILE (both read from map-file.ts), ahead of its module script,
+//    preloads and stylesheets; the studio's page has none. Without it the app
+//    asks for the file itself, once, and the map opens all the same, only
+//    later: no suite would say so.
 
 export function proveEarlyMapFile(build, check) {
   const { html } = build;

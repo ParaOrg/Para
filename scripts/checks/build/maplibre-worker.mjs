@@ -1,5 +1,4 @@
-// 7. MapLibre's worker (the cheap-phone plan, step 14, 2026-10-05) is a
-//    chunk of the page's build, a few kB, that imports MapLibre's shared
+// 7. MapLibre's worker is a chunk of the page's build, a few kB, that imports MapLibre's shared
 //    code from the page's own chunk and nothing else but Vite's preload
 //    helper and Rolldown's runtime, all of which the public page loads too.
 //    Our shared chunk in its imports would run React and the app in the

@@ -1,14 +1,12 @@
 // How Cloudflare serves the built site (dist/), for every branch.
 //
-// There was no config until 2026-09-29: Workers Builds deployed main without
-// one, working these settings out for itself, but a branch's build — which
-// uploads a version instead of deploying it — failed every time without them.
-// Written down here, main deploys as before and every branch gets a preview
-// link of its own; the `staging` branch's is the owner's staging site (his
-// ask, 2026-09-29: "the production link, then staging").
+// Without a config, Workers Builds works these settings out for itself when
+// it deploys main, but a branch's build — which uploads a version instead of
+// deploying it — fails. Written down here, main deploys and every branch gets
+// a preview link of its own; the `staging` branch's is the owner's staging
+// site.
 //
-// What production did without it, kept as it was (checked on the live site
-// the same day):
+// The settings, as production works them out for itself:
 //   - an address with no file answers with the map's page, 200
 //     (single-page-application), which is also how /.vite/ and
 //     /.assetsignore stay unserved;
