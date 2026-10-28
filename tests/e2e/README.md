@@ -75,7 +75,7 @@ each with its reason), so a check going quiet turns the run red; the sheet's
 heights never skip (phone-test's `handleTo` waits for them, or fails).
 phone-test's section 5d runs its trip checks (the ride, SWITCH) and a
 terminal's card again on a made-up map, `fixtures/two-way-map.mjs`, so they
-never skip.
+never skip: there a skip of any check, a known name or not, fails the run.
 The drawing tests first move the map onto a saved route, so their clicks land on
 streets the router can snap to.
 

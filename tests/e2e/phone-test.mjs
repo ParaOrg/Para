@@ -57,7 +57,11 @@ import {
 // not hold yet (CI on staging, 2026-10-28). A skip of any other check fails
 // the run: it stopped proving anything. The sheet's own heights never skip:
 // a sheet that will not get there fails (handleTo).
-const { check, skip, tally } = harness({
+const {
+  check,
+  skip: skipLive,
+  tally,
+} = harness({
   knownSkips: [
     // The trip a tap opens has no other way drawn.
     '  SWITCH turns the trip round',
@@ -72,6 +76,15 @@ const { check, skip, tally } = harness({
     'two overlapping hotspots open the list',
   ],
 });
+/**
+ * On the made-up map (section 5d) nothing may skip, known name or not: the map
+ * holds everything its checks need, so a skip there is a check that broke.
+ */
+let onMadeUpMap = false;
+const skip = (name, reason) =>
+  onMadeUpMap
+    ? check(name, false, `skipped on the made-up map, which holds what it needs: ${reason}`)
+    : skipLive(name, reason);
 
 // ------------------------------------------------------------------ geometry
 // Metres from degrees, flat-earth style. Everything here is within a few km of
@@ -2272,7 +2285,12 @@ const tripChecks = async () => {
       await buttonTap(pickButton, async () => !(await isPicked()));
       // The card stays at Max now: back to Middle by its handle (round
       // through Low), for the ends below to glide into the map above it.
-      await handleTo('middle');
+      if (!(await handleTo('middle')))
+        check(
+          '  back to Middle by its handle, for the ends',
+          false,
+          `the card would not come round to Middle: data-snap=${await sheetState()}`,
+        );
     }
     // The ends are buttons too (the owner's asks, 2026-09-29): with a
     // hintuan picked, a tap on where the trip goes, then on where it leaves
@@ -3705,8 +3723,7 @@ if (!inside) {
       `"${poly.name}" is its place's only box`,
     );
   } else {
-    await handleTo('max');
-    const from = await sheetState();
+    const from = (await handleTo('max')) ? 'max' : await sheetState();
     await buttonTap(otherRow.first(), async () => (await pressedBox()) === otherId);
     await page.waitForTimeout(200);
     await page
@@ -3720,7 +3737,8 @@ if (!inside) {
     const y = edges.top + at[1];
     check(
       '  another box from its row: Selected, the card staying at Max, the map there above where Middle would be',
-      (await pressedBox()) === otherId &&
+      from === 'max' &&
+        (await pressedBox()) === otherId &&
         (await sheetState()) === from &&
         y > edges.top &&
         y < edges.cardTop,
@@ -4364,7 +4382,7 @@ if (!routeA) {
             m.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
           }),
       );
-      await handleTo('middle');
+      const toMiddle = await handleTo('middle');
       // The overview starts a beat after the sheet settles — most of a second
       // from a cold zoom-16 view, with the main thread busy over it (measured
       // on the refactor's base too, 2026-10-12): let it start, then end, as
@@ -4380,8 +4398,8 @@ if (!routeA) {
       const back = await framedAboveCard(r.bbox);
       check(
         '  moved away, then up to Middle: the overview again, 5 km on the bar at the farthest',
-        back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
-        JSON.stringify(back),
+        toMiddle && back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
+        `${toMiddle ? '' : `the sheet would not rise to Middle: data-snap=${await sheetState()}; `}${JSON.stringify(back)}`,
       );
     }
 
@@ -4585,6 +4603,7 @@ if (!withOthers) {
 // the index and its line files on this same page, so every helper above
 // reads it as it reads today's map.
 console.log('\n(on the made-up map: fixtures/two-way-map.mjs)\n');
+onMadeUpMap = true;
 await closeCard();
 await serveTwoWayMap(page);
 await page.reload({ waitUntil: 'load' });
@@ -4660,6 +4679,8 @@ await waitForSource(page, 'saved-routes');
   );
   await closeCard();
 }
+
+onMadeUpMap = false;
 
 // -------------------------------------------- 6. the desktop control, ±5 px
 const desktop = await b.newContext({ viewport: { width: 1280, height: 800 } });
