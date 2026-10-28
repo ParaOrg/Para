@@ -16,8 +16,9 @@ interface Request {
  * stand-ins are drawn while the router is asked, and while a point is
  * dragged; an answer is written only where its stand-in still is, no U-turn
  * is ever reported against one, and none can be saved. A request whose
- * stand-ins are all gone is called off, giving its place in the router's
- * queue to one still wanted.
+ * stand-ins are all gone is called off: one still waiting for its turn leaves
+ * the router's queue (router-queue.ts), so the next one wanted takes that
+ * turn, and one already sent is cancelled.
  *
  * The drawing's refs are passed in, not owned: the map's handlers read them
  * (useDrawEvents) and every mutator writes them synchronously.
