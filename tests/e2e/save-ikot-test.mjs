@@ -291,9 +291,7 @@ let drawn;
   // Done when the studio says so: deleteDirection's five requests run one after
   // another (empty the line, unlink, unborrow, count, delete the route), and
   // only then does the card close. On a slow runner they take more than a few
-  // seconds, so the wait is for that state, not for a fixed time. It has not
-  // come true on the runs measured: it runs its full 30 s, and the check below
-  // decides.
+  // seconds, so the wait is for that state, not for a fixed time.
   await waitFor(
     async () =>
       !tables.route.some((r) => r.id === ikot?.id) &&
@@ -305,8 +303,11 @@ let drawn;
     dialogs.some((d) => d === 'Delete the ikot "UP – Ikot"?') &&
       !tables.route.some((r) => r.id === ikot?.id) &&
       directionsOf(ikot?.id).length === 0 &&
-      !tables.route_stop.some((l) => l.route_variant_id === ikotV?.[0]?.id),
-    `${dialogs.at(-1)} · ${said(writesSince(n))}`,
+      !tables.route_stop.some((l) => l.route_variant_id === ikotV?.[0]?.id) &&
+      // The card closes on a delete that went through; one that says it went
+      // wrong leaves it open, though the rows are gone.
+      !/Nothing was changed|error|refused/i.test(await body()),
+    `${dialogs.at(-1)} · ${said(writesSince(n))} · ${(await body()).slice(-160)}`,
   );
   await dismissToasts();
   // The second ikot (with its via) is taken away too, so the sections after see what they saw before.
