@@ -24,8 +24,9 @@ name: Watch
 
 on:
   schedule:
-    # GitHub may start a scheduled run late; a late check is still a check.
-    - cron: '*/15 * * * *'
+    # Every 15 minutes, off the hour's quarter marks: GitHub delays or drops scheduled runs at
+    # busy times, the start of each hour most of all. A late check is still a check.
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
     inputs:
       tiles_address:

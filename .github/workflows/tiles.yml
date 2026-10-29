@@ -4,11 +4,11 @@
 # uploaded to a private-by-default R2 bucket with the basemap's sprite, glyphs and styles.
 #
 # A pull request builds and checks but uploads nothing. Upload runs only from `staging` or `main`:
-# on a push to staging that changes this workflow or scripts/tiles/, on the monthly schedule and on
-# "Run workflow" with `upload` ticked. GitHub runs `schedule` only from the default branch and shows
-# "Run workflow" only for a workflow file on it, so until staging is released to main the push to
-# staging is the only way an upload starts. A failure is a red run with an ::error:: line: GitHub
-# emails the owner about a failed scheduled run, the way backup.yml is reported (no issue, no artifact).
+# on a push to staging that changes scripts/tiles/, on the monthly schedule (GitHub runs `schedule`
+# only from the default branch) and on "Run workflow" with `upload` ticked. A change to this file
+# alone uploads nothing: its own steps (an alert, a comment) are no reason to rebuild and replace
+# the live tiles; a pull request still builds and checks it. A failure is a red run with an
+# ::error:: line, and the `alert` job opens an issue (.scratch/ready-for-100k/issues/04-alerts.md).
 #
 # THE OWNER'S SETUP: an R2 bucket and an API token ("Object Read & Write", scoped to that bucket),
 # then a GitHub Environment named `tiles` (Settings -> Environments), with deployment branches
@@ -38,7 +38,6 @@ on:
   push:
     branches: [staging]
     paths:
-      - .github/workflows/tiles.yml
       - scripts/tiles/**
   pull_request:
     paths:
