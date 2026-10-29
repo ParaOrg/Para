@@ -2,6 +2,8 @@
 @import '../src/styles/global.css';
 /* …plus the classes the stories themselves use, which the site's sheet leaves out. */
 @source '../src/**/*.stories.tsx';
-/* The contribute feature's classes, which the site's sheet leaves out for the page's own. */
+/* The contribute feature's classes, which the site's sheet leaves out for the page's own. Its
+   `@source not` stops a `**` or folder pattern from reaching in, so each folder is named: a new
+   folder of the feature needs its name added here. */
 @source '../src/features/contribute/*.tsx';
-@source '../src/features/contribute/{map,screens,history,uploads,consent,common}/*.tsx';
+@source '../src/features/contribute/{account,api,app-update,common,consent,history,map,native,native-bridge,recorder,screens,storage,uploads}/*.tsx';

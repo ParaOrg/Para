@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 
 import {
   MAX_MARKS,
+  markedRecording,
   markPlaces,
   marksThatFit,
   withMark,
@@ -51,4 +52,25 @@ test('a stored recording parses with marks, and an older one without them', () =
   const recording = rideRecording('id-1', rideFixes(5));
   assert.ok(recordingSchema.safeParse({ ...recording, marks: [{ time: 5 }] }).success);
   assert.ok(recordingSchema.safeParse(recording).success);
+});
+
+test('a running recording takes a mark at the tap and counts it', () => {
+  const recording = {
+    ...rideRecording('id-1', rideFixes(5)),
+    status: 'recording',
+    marks: [{ time: 1 }],
+  };
+  const marked = markedRecording(recording, 9);
+  assert.deepEqual(marked.recording.marks, [{ time: 1 }, { time: 9 }]);
+  assert.equal(marked.count, 2);
+  assert.deepEqual(recording.marks, [{ time: 1 }], 'the recording given is left as it was');
+  const older = { ...recording, marks: undefined };
+  assert.deepEqual(markedRecording(older, 9).recording.marks, [{ time: 9 }]);
+});
+
+test('a stopped recording, or one holding the most marks, takes no mark', () => {
+  const recording = { ...rideRecording('id-1', rideFixes(5)), status: 'recording' };
+  assert.equal(markedRecording({ ...recording, status: 'stopped' }, 9), null);
+  const full = Array.from({ length: MAX_MARKS }, (_, time) => ({ time }));
+  assert.equal(markedRecording({ ...recording, marks: full }, 9_999), null);
 });

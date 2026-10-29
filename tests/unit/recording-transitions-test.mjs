@@ -14,6 +14,7 @@ import {
 } from '../../src/features/contribute/recorder/recording-figures.ts';
 import {
   newRecording,
+  reopenPoint,
   resumedRecording,
   savedRecording,
   stoppedRecording,
@@ -146,4 +147,23 @@ test('the time shown is the clock less the pauses while recording, and the Stop 
       .elapsedSeconds,
     0,
   );
+});
+
+test('a recording found open carries on after its last stored row, with the writes it had lost', () => {
+  const row = (seq) => ({ seq, time: STARTED + seq * 1000, lng: 121, lat: 14.6, accuracyM: 5 });
+  const cutOff = { ...running(), failedFixWrites: 3 };
+  assert.deepEqual(reopenPoint(cutOff, [row(0), row(1), row(7)]), {
+    nextSeq: 8,
+    failedFixWrites: 3,
+    phase: 'unfinished',
+  });
+  assert.deepEqual(reopenPoint(running(), []), {
+    nextSeq: 0,
+    failedFixWrites: 0,
+    phase: 'unfinished',
+  });
+});
+
+test('a recording found stopped carries on paused, with Save and Resume', () => {
+  assert.equal(reopenPoint(stoppedAt(STARTED + 60_000), []).phase, 'paused');
 });

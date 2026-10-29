@@ -1,35 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { locationProblem } from './location-problem';
-import { clearNativeFixes, keepsRecordingInBackground } from './native-fixes';
-import { openRecorder } from './recorder-opening';
-import { fixOfRow, takeWatchedFixes } from './recording-fixes';
-import { withMark } from './recording-marks';
+import { keepsRecordingInBackground } from './native-fixes';
+import { takeWatchedFixes } from './recording-fixes';
+import { markedRecording } from './recording-marks';
 import { WAY_LABEL, currentWay } from './recording-rules';
-import type { Phase, RecordingDetails, RecordingState } from './recording-state';
+import type { Phase, RecordingState } from './recording-state';
 import {
   newRecording,
   resumedRecording,
-  savedRecording,
   stoppedRecording,
   switchedWay,
 } from './recording-transitions';
-import { useFixWrites } from './use-fix-writes';
 import { useGeolocationWatch, type WatchedFix } from './use-geolocation-watch';
 import { useHiddenGaps } from './use-hidden-gaps';
 import { useLiveFigures } from './use-live-figures';
 import { useNativeFinish } from './use-native-finish';
+import { useRecorderOpening } from './use-recorder-opening';
+import { useRecorderProblems } from './use-recorder-problems';
+import { useRecordingFixWrites } from './use-recording-fix-writes';
 import { useRecordingInHand } from './use-recording-in-hand';
+import { useRecordingSave } from './use-recording-save';
 import { useWakeLock } from './use-wake-lock';
 import { downloadHeldRecording, downloadStoredRecording } from '../storage/recording-downloads';
 import type { Recording } from '../storage/recording-schema';
-import { deleteRecording, putRecording } from '../storage/recording-store';
 import { useSavedRecordings } from '../storage/use-saved-recordings';
-
-const STORE_PROBLEM =
-  'This phone could not keep the recording. Close other tabs of this page and try again.';
-const OTHER_TAB_PROBLEM =
-  'Para is open in another tab. Record in that tab, or close it and reload this one.';
 
 /**
  * The page's whole state: what phase it is in, the recording being made and
@@ -39,21 +34,10 @@ const OTHER_TAB_PROBLEM =
  */
 export function useRecording(): RecordingState {
   const [phase, setPhase] = useState<Phase>('loading');
-  const [lastSaved, setLastSaved] = useState<Recording | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [focusTarget, setFocusTarget] = useState<'heading' | 'stop'>('heading');
-  // Two slots, so a location error never hides a storage failure: storage stays
-  // until a new recording starts, location clears when the next fix arrives.
-  const [storageProblem, setStorageProblem] = useState<string | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const isSaving = useRef(false);
-  // Another tab holds the recorder: this one shows why and starts nothing.
-  const isOtherTab = useRef(false);
-
-  const reportStore = useCallback((error: unknown) => {
-    console.error('IndexedDB failed.', error);
-    setStorageProblem(STORE_PROBLEM);
-  }, []);
+  const problems = useRecorderProblems();
+  const { reportStore, clearStorageProblem, setLocationProblem } = problems;
 
   // A native log that cannot be read leaves the ride with the fixes the page already holds.
   const reportNativeLog = useCallback((error: unknown) => {
@@ -63,26 +47,8 @@ export function useRecording(): RecordingState {
   const { current, fixes, kept, currentRef, fixesRef, keep, hold, setFixList, forget } =
     useRecordingInHand(reportStore);
 
-  /**
-   * Puts a fix write that failed after the Stop on the stopped recording too, so the
-   * form counts it and offers the download that still holds it.
-   */
-  const noteFailedWrites = useCallback(
-    (failedCount: number) => {
-      const recording = currentRef.current;
-      if (!recording || recording.status === 'recording') return;
-      if (recording.failedFixWrites === failedCount) return;
-      keep({ ...recording, failedFixWrites: failedCount });
-    },
-    [currentRef, keep],
-  );
-
-  const { writeFixes, writeAllFixes, failedFixWrites, resetFixWrites } = useFixWrites(
-    (error, failedCount) => {
-      reportStore(error);
-      noteFailedWrites(failedCount);
-    },
-  );
+  const { writeFixes, writeAllFixes, failedFixWrites, resetFixWrites, noteFailedWrites } =
+    useRecordingFixWrites(currentRef, keep, reportStore);
   const { isFinishingRef, hasNativeLogProblemRef, finishNatively } = useNativeFinish(
     currentRef,
     fixesRef,
@@ -90,42 +56,29 @@ export function useRecording(): RecordingState {
   );
   const { saved, listSaved, addSaved, deleteSaved } = useSavedRecordings(reportStore);
 
-  useEffect(() => {
-    let isCancelled = false;
-    openRecorder({
-      isCancelled: () => isCancelled,
-      onListed: listSaved,
-      onNativeLogProblem: (error) => {
-        // The log stays on the phone, so a Save does not clear fixes that were never stored.
-        hasNativeLogProblemRef.current = true;
-        reportNativeLog(error);
-      },
-    })
-      .then((opening) => {
-        if (opening === null) return;
-        if (opening.kind === 'other-tab') {
-          isOtherTab.current = true;
-          setStorageProblem(OTHER_TAB_PROBLEM);
-          setPhase('ready');
-        } else if (opening.kind === 'open') {
-          const { recording, rows } = opening;
-          hold(recording, rows.map(fixOfRow));
-          const nextSeq = rows.length > 0 ? rows[rows.length - 1].seq + 1 : 0;
-          resetFixWrites(nextSeq, recording.failedFixWrites ?? 0);
-          setPhase(recording.status === 'stopped' ? 'paused' : 'unfinished');
-        } else {
-          setPhase('ready');
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCancelled) return;
-        reportStore(error);
-        setPhase('ready');
-      });
-    return () => {
-      isCancelled = true;
-    };
-  }, [reportStore, reportNativeLog, listSaved, hold, hasNativeLogProblemRef, resetFixWrites]);
+  useRecorderOpening({
+    listSaved,
+    hold,
+    resetFixWrites,
+    hasNativeLogProblemRef,
+    reportStore,
+    reportNativeLog,
+    showOtherTab: problems.showOtherTab,
+    setPhase,
+  });
+  const { lastSaved, isSaving, save, cancel, recordAgain } = useRecordingSave({
+    currentRef,
+    hasNativeLogProblemRef,
+    writeAllFixes,
+    failedFixWrites,
+    noteFailedWrites,
+    addSaved,
+    forget,
+    reportStore,
+    reportNativeLog,
+    clearStorageProblem,
+    setPhase,
+  });
 
   const isRecording = phase === 'recording';
   const isAwake = useWakeLock(isRecording);
@@ -147,7 +100,7 @@ export function useRecording(): RecordingState {
     if (taken.length === 0) return;
     writeFixes(recording.id, taken);
     setFixList([...fixesRef.current, ...taken]);
-    setLocationError(null);
+    setLocationProblem(null);
     if (isBackAtStart) {
       setAnnouncement('Back at the start. The recording stopped.');
       finish(taken[taken.length - 1].time, 'form', { hasAutoStopped: true });
@@ -156,22 +109,19 @@ export function useRecording(): RecordingState {
 
   useGeolocationWatch(isRecording, current?.id ?? null, {
     onFixes: takeFixes,
-    onError: (error) => setLocationError(locationProblem(error)),
+    onError: (error) => setLocationProblem(locationProblem(error)),
   });
 
   // In the app a hidden page loses nothing: the foreground service goes on and its fixes are kept.
   useHiddenGaps(isRecording && !keepsRecordingInBackground(), currentRef, keep);
 
   function start() {
-    if (isOtherTab.current) {
-      setStorageProblem(OTHER_TAB_PROBLEM);
-      return;
-    }
+    if (problems.refuseIfOtherTab()) return;
     const startedAt = Date.now();
     setFixList([]);
     restartClock(startedAt);
-    setStorageProblem(null);
-    setLocationError(null);
+    clearStorageProblem();
+    setLocationProblem(null);
     setAnnouncement('');
     setFocusTarget('heading');
     resetFixWrites(0, 0);
@@ -209,14 +159,14 @@ export function useRecording(): RecordingState {
     const resumedAt = Date.now();
     const lastFixTime = fixes[fixes.length - 1]?.time ?? null;
     restartClock(resumedAt);
-    setLocationError(null);
+    setLocationProblem(null);
     keep(resumedRecording(recording, resumedAt, lastFixTime, phase === 'unfinished'));
     setPhase('recording');
   }
 
   function keepRecording() {
     // A save under way has settled the fix writes it waits for; new ones would be dropped.
-    if (isSaving.current) return;
+    if (isSaving()) return;
     resume();
     setFocusTarget('stop');
     setAnnouncement('Recording again');
@@ -232,12 +182,11 @@ export function useRecording(): RecordingState {
 
   function markPlace() {
     const recording = currentRef.current;
-    if (!recording || recording.status !== 'recording') return;
-    const marks = recording.marks ?? [];
-    const next = withMark(marks, Date.now());
-    if (next === marks) return;
-    keep({ ...recording, marks: next });
-    setAnnouncement(`Marked, ${next.length}`);
+    if (!recording) return;
+    const marked = markedRecording(recording, Date.now());
+    if (!marked) return;
+    keep(marked.recording);
+    setAnnouncement(`Marked, ${marked.count}`);
   }
 
   async function flushFixes() {
@@ -246,50 +195,6 @@ export function useRecording(): RecordingState {
     } catch (error) {
       reportStore(error);
     }
-  }
-
-  /**
-   * Saves only once the phone holds the whole ride: the fix writes in flight are settled,
-   * failed ones written again, then the recording. Until that commits, the ride stays in
-   * hand on the form, where Continue tries again and the download still has every fix.
-   */
-  async function saveNow(details: RecordingDetails | null) {
-    const recording = currentRef.current;
-    if (!recording || isSaving.current) return;
-    isSaving.current = true;
-    try {
-      await writeAllFixes();
-      const kept = savedRecording(recording, details, Date.now(), failedFixWrites());
-      await putRecording(kept);
-      setStorageProblem(null);
-      setLastSaved(kept);
-      addSaved(kept);
-      forget();
-      if (!hasNativeLogProblemRef.current) void clearNativeFixes().catch(reportNativeLog);
-      setPhase('saved');
-    } catch (error) {
-      reportStore(error);
-      noteFailedWrites(failedFixWrites());
-    } finally {
-      isSaving.current = false;
-    }
-  }
-  const save = (details: RecordingDetails | null) => void saveNow(details);
-
-  function cancel() {
-    if (isSaving.current) return;
-    const recording = currentRef.current;
-    if (recording) deleteRecording(recording.id).catch(reportStore);
-    forget();
-    void clearNativeFixes().catch(reportNativeLog);
-    hasNativeLogProblemRef.current = false;
-    setStorageProblem(null);
-    setPhase('ready');
-  }
-
-  function recordAgain() {
-    setLastSaved(null);
-    setPhase('ready');
   }
 
   function downloadCurrent() {
@@ -314,7 +219,7 @@ export function useRecording(): RecordingState {
     lastSaved,
     saved,
     isAwake,
-    problem: storageProblem ?? locationError,
+    problem: problems.problem,
     announcement,
     start,
     stop,
