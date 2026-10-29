@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import type { MapLibreMap } from 'maplibre-gl';
 import { useRef, useState } from 'react';
 
-import { CommuterLocation, useGazeHush } from '@/features/locator';
+import { useGazeHush } from '@/features/locator';
 import { MapView } from '@/features/routes/map/map-view';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
@@ -16,16 +16,11 @@ import {
   loadHotspotsFromSupabase,
   supabaseConfigError,
   returnTripLeft,
-  AuthDialogs,
-  MapPlaceholder,
   MapSwitch,
   NEW_MENU_DOCK_FOOT,
   STUDIO_BASEMAPS,
   STUDIO_BASEMAP_THUMBNAILS,
-  StudioSaveSheets,
-  StudioContributors,
   type ContributionStart,
-  StudioPublicView,
   type usePasswordRecovery,
   useAuthFlow,
   useDrawing,
@@ -40,8 +35,12 @@ import {
 } from '@/features/studio';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
+import { AccountDialogs } from './account-dialogs';
+import { OtherMaps } from './other-maps';
 import { PlaygroundCards } from './playground-cards';
+import { PlaygroundSaveSheets } from './playground-save-sheets';
 import { PlaygroundTools } from './playground-tools';
+import { WorkshopLocation } from './workshop-location';
 
 interface WorkshopProps {
   session: Session | null;
@@ -75,15 +74,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   };
   // Sign-in, the password change and a reset link's (useAuthFlow).
   const auth = useAuthFlow(session, recovery);
-  const {
-    isSignedIn,
-    isSigningIn,
-    isChangingPassword,
-    isResetting,
-    isAccountDialogOpen,
-    openSignIn,
-    closeAccountDialog,
-  } = auth;
+  const { isSignedIn, isAccountDialogOpen, openSignIn } = auth;
 
   // A right-click on a saved line while drawing: decided below, once the
   // saved lines and hotspots are loaded (onFollow).
@@ -110,8 +101,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     reloadRoutes: saved.reload,
     reloadHotspots: hotspots.reload,
   });
-  const { isSaving, setIsSaving, setNotice, justSaved, onSaved, onSavedHotspot, onDrafted } =
-    saveFlow;
+  const { isSaving, setIsSaving, setNotice, justSaved } = saveFlow;
   // A drawing begun from an upload (Use this line, Draw a hintuan here), and the
   // record of which uploads its save came from (contributors/actions).
   const contribution = useContributionStart({ map, draw, setNotice });
@@ -136,7 +126,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // settled at another height, each framed beside the card; and the camera
   // from before a hotspot's RouteCard was picked, back as it is let go.
   const camera = useCardCamera(map, saved, hotspots, cards, { tipId });
-  const { root, ride, clearOfOpen } = camera;
+  const { root, ride } = camera;
 
   // The pill's camera moves at this page's turn, after the cards' camera
   // (commit-turn.ts); the dot's gaze is hushed by ‹ and ✕ (dot-gaze.ts).
@@ -232,28 +222,14 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
             hasMapStyleButton={false}
           />
-          {/*
-            The commuter's own position and the map's design, one pill, as on
-            the public map: the studio sees the map the way a commuter does.
-          */}
-          <CommuterLocation
+          <WorkshopLocation
             map={map}
             isMapLoaded={isMapLoaded}
-            basemaps={STUDIO_BASEMAPS}
-            basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
-            snap={cards.snap}
-            offset={clearOfOpen}
-            docked={cards.open}
+            saved={saved}
+            hotspots={hotspots}
+            cards={cards}
+            camera={camera}
             cameraTurn={locatorTurn}
-            picks={{
-              pickedId: ride.pickedId,
-              pinAt: ride.pinAt,
-              place: hotspots.selected,
-              trip: saved.selected,
-              highlight: saved.highlight,
-              candidates: saved.candidates,
-              litDirections: saved.litDirections,
-            }}
             hushedAt={hushedAt}
           />
         </div>
@@ -265,28 +241,17 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           </div>
         )}
 
-        {isContributors && (
-          <StudioContributors
-            key={session?.user.id}
-            map={map}
-            isSignedIn={isSignedIn}
-            onSignIn={openSignIn}
-            onOpenPlayground={handleOpenPlayground}
-            onStart={handleContributionStart}
-          />
-        )}
-        {studioMap === 'public' ? (
-          <StudioPublicView hasLine={draw.drawing} onOpenPlayground={handleOpenPlayground} />
-        ) : (
-          !isContributors &&
-          !isPlayground && (
-            <MapPlaceholder
-              map={studioMap}
-              hasLine={draw.drawing}
-              onOpenPlayground={handleOpenPlayground}
-            />
-          )
-        )}
+        <OtherMaps
+          studioMap={studioMap}
+          isContributors={isContributors}
+          map={map}
+          userId={session?.user.id}
+          isSignedIn={isSignedIn}
+          hasLine={draw.drawing}
+          onSignIn={openSignIn}
+          onOpenPlayground={handleOpenPlayground}
+          onContributionStart={handleContributionStart}
+        />
 
         {/* Out of the page's reach, not unmounted, on the other maps. */}
         <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
@@ -327,40 +292,16 @@ export function Workshop({ session, recovery }: WorkshopProps) {
         </div>
       </div>
       {/* Outside the map's box, so a full-screen panel covers the band too. */}
-      {/* On every map: the Contributors map asks for a sign-in too. */}
-      <AuthDialogs
-        signingIn={isSigningIn}
-        onSignInDismiss={closeAccountDialog}
-        resetting={isResetting}
-        isInvite={recovery.isInvite}
-        onResetDone={recovery.done}
-        changingPasswordFor={
-          isChangingPassword && !isResetting ? (session?.user.email ?? null) : null
-        }
-        onPasswordDone={closeAccountDialog}
+      <AccountDialogs session={session} auth={auth} recovery={recovery} />
+      <PlaygroundSaveSheets
+        isPlayground={isPlayground}
+        draw={draw}
+        saved={saved}
+        hotspots={hotspots}
+        target={target}
+        saveFlow={saveFlow}
+        contribution={contribution}
       />
-      <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
-        <StudioSaveSheets
-          isSaving={isSaving}
-          draw={draw}
-          saved={saved}
-          hotspots={hotspots}
-          target={target}
-          onSaved={(v) => {
-            void contribution.recordSaved(v.id, draw.controlPoints);
-            onSaved(v);
-          }}
-          onSavedHotspot={(s) => {
-            void contribution.recordSaved(s.id, draw.controlPoints);
-            onSavedHotspot(s);
-          }}
-          onDrafted={(subjectId) => {
-            void contribution.recordSaved(subjectId, draw.controlPoints);
-            onDrafted();
-          }}
-          onCancel={() => setIsSaving(false)}
-        />
-      </div>
     </div>
   );
 }
