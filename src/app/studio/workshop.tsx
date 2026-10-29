@@ -78,10 +78,11 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   const {
     isSignedIn,
     isSigningIn,
-    setIsSigningIn,
     isChangingPassword,
-    setIsChangingPassword,
     isResetting,
+    isAccountDialogOpen,
+    openSignIn,
+    closeAccountDialog,
   } = auth;
 
   // A right-click on a saved line while drawing: decided below, once the
@@ -181,7 +182,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   );
 
   const onDone = () => {
-    if (!isSignedIn) setIsSigningIn(true);
+    if (!isSignedIn) openSignIn();
     else setIsSaving(true);
   };
 
@@ -190,11 +191,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // While a save sheet or an account dialog is open over the map, nothing
   // behind it can be reached: the drawing's toolbar would change the line
   // under the form. Shown on the same conditions as StudioSaveSheets and AuthDialogs.
-  const isSheetOpen =
-    (isPlayground && isSaving && draw.drawing) ||
-    (isSigningIn && !isSignedIn) ||
-    isResetting ||
-    isChangingPassword;
+  const isSheetOpen = (isPlayground && isSaving && draw.drawing) || isAccountDialogOpen;
 
   // "Draw the return trip" only while the route still has a way undrawn.
   const slotLeft = returnTripLeft(justSaved, saved.directions);
@@ -202,7 +199,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // Delete on the trip's card and the hotspot's: signed out, it asks for sign-in.
   const deletes = useDeleteActions({
     signedIn: isSignedIn,
-    onSignInNeeded: () => setIsSigningIn(true),
+    onSignInNeeded: openSignIn,
     saved,
     hotspots,
     setNotice,
@@ -273,7 +270,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             key={session?.user.id}
             map={map}
             isSignedIn={isSignedIn}
-            onSignIn={() => setIsSigningIn(true)}
+            onSignIn={openSignIn}
             onOpenPlayground={handleOpenPlayground}
             onStart={handleContributionStart}
           />
@@ -332,15 +329,15 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       {/* Outside the map's box, so a full-screen panel covers the band too. */}
       {/* On every map: the Contributors map asks for a sign-in too. */}
       <AuthDialogs
-        signingIn={isSigningIn && !isSignedIn}
-        onSignInDismiss={() => setIsSigningIn(false)}
+        signingIn={isSigningIn}
+        onSignInDismiss={closeAccountDialog}
         resetting={isResetting}
         isInvite={recovery.isInvite}
         onResetDone={recovery.done}
         changingPasswordFor={
           isChangingPassword && !isResetting ? (session?.user.email ?? null) : null
         }
-        onPasswordDone={() => setIsChangingPassword(false)}
+        onPasswordDone={closeAccountDialog}
       />
       <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
         <StudioSaveSheets
