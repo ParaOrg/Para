@@ -385,7 +385,11 @@ const serve = async (req) => {
   }
   if (method === 'DELETE') {
     const no = remove(table, rows);
-    return no ?? { status: 204, body: null };
+    if (no) return no;
+    // A delete that asks for its rows back (`.select()`, Prefer:
+    // return=representation) gets them, as PostgREST answers; the studio reads
+    // none as nothing deleted.
+    return /return=representation/.test(prefer) ? answer(rows) : { status: 204, body: null };
   }
   if (method === 'PATCH') {
     for (const r of rows) {
