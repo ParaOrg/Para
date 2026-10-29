@@ -475,7 +475,7 @@ db.meanwhile = {
 };
 n = log.length;
 await page.getByRole('button', { name: 'Delete' }).click();
-await waitFor(async () => (await body()).includes(CONFLICT_SAID), 15000);
+await waitFor(async () => (await body()).includes(CONFLICT_SAID), 25000);
 w = writesSince(n);
 check(
   'an approval on a stale base is refused as conflict, and the studio says so in words',

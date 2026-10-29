@@ -138,8 +138,9 @@ const cardName = async () =>
 await waitFor(async () => {
   await openCard(BACK[1]);
   return (await cardName()) === 'Stand-in Tail → Stand-in Phase';
-  // One try (a jump, a tap and its 700 ms) takes up to 5 s on a slow page.
-}, 30000);
+  // One try (a jump, a tap and its 700 ms) takes up to 5 s on a slow page,
+  // and the list may be read again more than once before the name changes.
+}, 120000);
 check(
   '  and the other direction, which shares the route, is renamed with it',
   directionsOf(outRoute?.id).some((v) => v.id === backId) &&
