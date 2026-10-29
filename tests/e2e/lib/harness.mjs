@@ -7,10 +7,11 @@
 // BASE and harness: every suite but pwa-test, which starts its own server and
 // keeps its own count. nodeFetch: gate, commuter, phone, hotspot,
 // regression-gestures, snap and studio-phone. bareStyle: where, scale,
-// studio-scale and save. waitForSource: commuter, phone, hotspot,
+// studio-scale and save-studio. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
 // mapIdle, cardsSettled and until, the waits on the state a check reads: commuter.
-// waitFor: save, save-drafts and studio-contributors.
+// waitFor: save-studio, save, save-ikot, save-edit, save-drafts and
+// studio-contributors.
 
 /** The dev server's address: PARA_BASE, or http://localhost:5173. */
 export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');

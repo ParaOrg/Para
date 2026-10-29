@@ -2,7 +2,7 @@
 // to make a map of about 5,000 directions, whatever today's holds: the
 // budgets are set for that many, so the load stays the same as the map grows.
 // copiesFor and shift: scale-test and studio-scale-test. readPublished:
-// studio-scale-test and save-test.
+// studio-scale-test and lib/save-studio.mjs.
 import { readFileSync } from 'node:fs';
 
 /** How many directions a scale suite's map holds, about: what its budgets are set for. */
