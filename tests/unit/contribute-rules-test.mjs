@@ -1,5 +1,5 @@
 // The page's one door to the rules for the way a ride is on
-// (src/features/contribute/recording-rules.ts): what it adds to ride-recording.ts's own
+// (src/features/contribute/recorder/recording-rules.ts): what it adds to ride-recording.ts's own
 // rules (tested in ride-recording-test.mjs) — the words the contributor
 // reads, and the trail the map is handed — and the way the stats strip and the
 // countdown say their figures.
@@ -8,12 +8,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { OTHER_WAY, WAY_LABEL, trailOf } from '../../src/features/contribute/recording-rules.ts';
+import {
+  OTHER_WAY,
+  WAY_LABEL,
+  trailOf,
+} from '../../src/features/contribute/recorder/recording-rules.ts';
 import {
   countdownText,
   kilometresText,
   minutesText,
-} from '../../src/features/contribute/format.ts';
+} from '../../src/features/contribute/common/format.ts';
 
 const T0 = Date.UTC(2026, 9, 17, 6, 0, 0);
 const M_PER_DEG_LNG = 107_600;

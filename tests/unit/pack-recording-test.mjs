@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
-import { UPLOAD_LIMITS } from '../../src/features/contribute/recording-limits.ts';
+import { UPLOAD_LIMITS } from '../../src/features/contribute/recorder/recording-limits.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';
 
 import { T0, rideFixes, rideRecording } from './fixtures/contribution-ride.mjs';

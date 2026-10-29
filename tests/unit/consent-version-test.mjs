@@ -1,4 +1,4 @@
-// The consent gate (src/features/contribute/consent-version.ts): only consent to the current
+// The consent gate (src/features/contribute/consent/consent-version.ts): only consent to the current
 // text lets a recording be sent, and an agreement to the first text no longer counts.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/consent-version-test.mjs
@@ -11,7 +11,7 @@ import {
   isCurrentConsent,
   isEarlierRecording,
   shouldAskAboutEarlier,
-} from '../../src/features/contribute/consent-version.ts';
+} from '../../src/features/contribute/consent/consent-version.ts';
 
 test('the current text is version 3', () => {
   assert.equal(CONSENT_VERSION, 3);

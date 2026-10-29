@@ -1,10 +1,10 @@
 import { keptFixes, summarize, type Fix } from '@/features/routes/model/ride-recording';
 import { overviewOf, type LngLat } from '@/shared/utils/geo';
 
-import { UPLOAD_LIMITS } from '../recording-limits';
-import { marksThatFit } from '../recording-marks';
-import { RECORDING_VERSION, type Recording } from '../recording-schema';
 import type { ContributionPayload, PointBatch } from './contribution-payload-schema';
+import { UPLOAD_LIMITS } from '../recorder/recording-limits';
+import { marksThatFit } from '../recorder/recording-marks';
+import { RECORDING_VERSION, type Recording } from '../storage/recording-schema';
 
 /** The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them. */
 export const RULES_VERSION = 1;

@@ -1,8 +1,8 @@
-import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recording-fixes';
-import { RECORDING_VERSION, type Recording } from '../recording-schema';
-import { loadFixes, loadRecordings, putFixes, putRecording } from '../recording-store';
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
+import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
+import { RECORDING_VERSION, type Recording } from '../storage/recording-schema';
+import { loadFixes, loadRecordings, putFixes, putRecording } from '../storage/recording-store';
 
 const REPORT_EVERY_MS = 30_000;
 const IMPORT_POLL_MS = 500;

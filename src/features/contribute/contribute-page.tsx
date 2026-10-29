@@ -1,29 +1,29 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { useAccountGate } from './account/use-account-gate';
+import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
-import { ContributeMap, type ContributeLocatorSlot } from './contribute-map';
-import { MarkButton } from './mark-button';
-import { ReadyScreen } from './ready-screen';
-import { MAX_MARKS } from './recording-marks';
-import { RecordingScreen } from './recording-screen';
-import { SaveForm } from './save-form';
-import { SavedScreen } from './saved-screen';
-import { UnfinishedScreen } from './unfinished-screen';
-import { UploadCheck } from './upload-check';
-import { uploadStatusText } from './upload-status';
-import { useConsent } from './use-consent';
-import { useEarlierQuestion } from './use-earlier-question';
-import { useHistoryView } from './use-history-view';
-import { useProfileView } from './use-profile-view';
-import { useRecording } from './use-recording';
-import { useRecordingTrack } from './use-recording-track';
-import { useUploads } from './use-uploads';
+import { useConsent } from './consent/use-consent';
+import { useEarlierQuestion } from './consent/use-earlier-question';
+import { useHistoryView } from './history/use-history-view';
+import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
+import { useRecordingTrack } from './map/use-recording-track';
+import { MAX_MARKS } from './recorder/recording-marks';
+import { useRecording } from './recorder/use-recording';
+import { MarkButton } from './screens/mark-button';
+import { ReadyScreen } from './screens/ready-screen';
+import { RecordingScreen } from './screens/recording-screen';
+import { SaveForm } from './screens/save-form';
+import { SavedScreen } from './screens/saved-screen';
+import { UnfinishedScreen } from './screens/unfinished-screen';
+import { UploadCheck } from './uploads/upload-check';
+import { uploadStatusText } from './uploads/upload-status';
+import { useUploads } from './uploads/use-uploads';
 
 // Opened from buttons, so the page's first load does not carry them.
 const HistoryView = lazy(() =>
-  import('./history-view').then((module) => ({ default: module.HistoryView })),
+  import('./history/history-view').then((module) => ({ default: module.HistoryView })),
 );
 const ProfileView = lazy(() =>
   import('./account/profile-view').then((module) => ({ default: module.ProfileView })),

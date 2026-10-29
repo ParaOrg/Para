@@ -8,7 +8,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { fixLogImport } from '../../src/features/contribute/native/import-fix-log.ts';
-import { rowOfFix, takeWatchedFixes } from '../../src/features/contribute/recording-fixes.ts';
+import {
+  rowOfFix,
+  takeWatchedFixes,
+} from '../../src/features/contribute/recorder/recording-fixes.ts';
 
 const ID = 'ride-1';
 const STEP_S = 10;

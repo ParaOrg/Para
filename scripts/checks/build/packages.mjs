@@ -23,7 +23,7 @@ export function provePackages(build, check) {
     packageModules(studioFiles).some((p) => p.startsWith('@supabase/')),
   );
   // The Android app's build (vite.apk.config.ts) is the only one that carries Capacitor, behind
-  // `import.meta.env.MODE === 'apk'` in features/contribute/native-app.ts. No web chunk may hold a
+  // `import.meta.env.MODE === 'apk'` in features/contribute/native-bridge/native-app.ts. No web chunk may hold a
   // Capacitor package, nor the bridge's own name ('androidBridge', which only Capacitor's JavaScript
   // mentions), on any page.
   const allChunks = Object.keys(modules);
@@ -46,7 +46,7 @@ export function provePackages(build, check) {
   check(
     "the contribute feature's own modules are found by that path search",
     allChunks.some((f) =>
-      (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/recording-')),
+      (modules[f] ?? []).some((id) => id.includes('/src/features/contribute/recorder/recording-')),
     ),
   );
   const bridgeMentions = allChunks.filter((f) =>

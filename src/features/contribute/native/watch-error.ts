@@ -1,4 +1,4 @@
-import type { WatchError } from '../use-geolocation-watch';
+import type { WatchError } from '../recorder/use-geolocation-watch';
 
 const PERMISSION_DENIED = 1;
 const POSITION_UNAVAILABLE = 2;

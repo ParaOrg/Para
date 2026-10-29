@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 
-import { nativePlugin } from '../native-app';
-import type { WatchedFix } from '../use-geolocation-watch';
+import { nativePlugin } from '../native-bridge/native-app';
+import type { WatchedFix } from '../recorder/use-geolocation-watch';
 
 /** The accuracy a fix with none gets: far past what the recorder keeps, so it never draws. */
 export const NO_ACCURACY_M = 1_000;

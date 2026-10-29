@@ -1,7 +1,7 @@
-import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recording-fixes';
-import type { FixRow, Recording } from '../recording-schema';
-import { loadFixes, putFixes } from '../recording-store';
 import { readFixLog, type FixLog } from './native-fix-log';
+import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
+import type { FixRow, Recording } from '../storage/recording-schema';
+import { loadFixes, putFixes } from '../storage/recording-store';
 
 /** What importing the native log does to a recording: the rows to store, and the recording after. */
 export interface FixLogImport {
