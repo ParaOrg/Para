@@ -108,7 +108,7 @@ jobs:
             case "$f" in
               docs/architecture.md) public=true; studio=true ;;
               docs/*|*.md) ;;
-              src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
               src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs)
                 public=true ;;
@@ -416,16 +416,17 @@ jobs:
 
   # The editor against stand-ins for the database, no router: studio-scale
   # (5,000 directions, what the editor asks for and how soon it opens; and the
-  # Contributors map with 1,000 uploads), save-test (the save flows, signed in)
-  # and studio-contributors (the Contributors map's actions). No retry needed.
+  # Contributors map with 1,000 uploads), the save flows signed in in three parts
+  # (save-test, save-ikot-test and save-edit-test, on lib/save-studio.mjs) and
+  # studio-contributors (the Contributors map's actions). No retry needed.
   studio-suite:
     name: ${{ matrix.suite }}
     needs: changes
     if: needs.changes.outputs.studio == 'true'
     runs-on: ubuntu-latest
-    # save-test normally takes 8 to 16 min, but a slow runner has taken it past
-    # 25 while still passing, a few steps from the end. A timeout-cancel fails
-    # the "The editor" aggregate, so the limit leaves room for that runner.
+    # A slow runner has taken the save flows, run as one suite, past 25 min while
+    # still passing. A timeout-cancel fails the "The editor" aggregate, so the
+    # limit leaves room for that runner.
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -435,6 +436,8 @@ jobs:
             studio-scale-test,
             studio-contributors-test,
             save-test,
+            save-ikot-test,
+            save-edit-test,
             turnstile-test,
             studio-public-view-test,
             studio-two-editors-test,

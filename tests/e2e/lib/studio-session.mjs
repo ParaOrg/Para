@@ -1,7 +1,7 @@
 // A signed-in editor for the studio's headless suites: the session the page
 // stores for itself and the answers GoTrue gives for it, so /studio/ opens as
 // an editor without an account. Used by studio-contributors-test and
-// studio-scale-test; save-test keeps its own, older copy.
+// studio-scale-test; lib/save-studio.mjs keeps its own, older copy.
 
 /** The project ref in VITE_SUPABASE_URL, which names the storage key. */
 const PROJECT_REF = 'smzwbqxttdyvohuizynl';

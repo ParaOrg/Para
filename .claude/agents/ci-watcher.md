@@ -37,7 +37,7 @@ At most 20 lines:
 - The run's result: success, failure or cancelled, with the head SHA (7 characters).
 - Each failed job: its name and its first few FAIL lines, quoted exactly.
 - Known flakes, labelled as such when they are the only failures:
-  `save-test`'s ikot-delete check, and `scale-test`'s timing checks
+  `save-ikot-test`'s ikot-delete check, and `scale-test`'s timing checks
   ("within 5 s", "within 7 s", "main thread busy").
 - If the run did not finish within 60 minutes, say so and give its status.
 
