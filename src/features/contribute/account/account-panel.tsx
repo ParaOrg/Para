@@ -2,9 +2,9 @@ import { useEffect, type ReactNode } from 'react';
 
 import { Turnstile } from '@/shared/ui/turnstile';
 
-import { useFocusHeading } from '../use-focus-heading';
-import { useStackRoom } from '../use-stack-room';
 import type { Captcha } from './use-captcha';
+import { useFocusHeading } from '../common/use-focus-heading';
+import { useStackRoom } from '../common/use-stack-room';
 
 interface AccountPanelProps {
   /** The screen's name for a screen reader; the buttons already say it on screen. */

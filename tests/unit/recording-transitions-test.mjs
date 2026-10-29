@@ -1,4 +1,4 @@
-// The recorder's steps on a recording (src/features/contribute/recording-transitions.ts) and its
+// The recorder's steps on a recording (src/features/contribute/recorder/recording-transitions.ts) and its
 // live totals (recording-figures.ts): Start, Stop with the fixes the phone could not keep, Resume
 // after a pause or a reload, a switch of way, Save with or without details, and the time and
 // distance the stats strip shows.
@@ -7,15 +7,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { CONSENT_VERSION } from '../../src/features/contribute/consent-version.ts';
-import { liveFigures, summaryEnd } from '../../src/features/contribute/recording-figures.ts';
+import { CONSENT_VERSION } from '../../src/features/contribute/consent/consent-version.ts';
+import {
+  liveFigures,
+  summaryEnd,
+} from '../../src/features/contribute/recorder/recording-figures.ts';
 import {
   newRecording,
   resumedRecording,
   savedRecording,
   stoppedRecording,
   switchedWay,
-} from '../../src/features/contribute/recording-transitions.ts';
+} from '../../src/features/contribute/recorder/recording-transitions.ts';
 
 const STARTED = 1_000_000;
 const running = () => newRecording('ride-1', STARTED);

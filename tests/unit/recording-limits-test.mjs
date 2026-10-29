@@ -1,4 +1,4 @@
-// The phone's upload limits (src/features/contribute/recording-limits.ts) against the
+// The phone's upload limits (src/features/contribute/recorder/recording-limits.ts) against the
 // database's: the migration is read as text, so a number changed on one side only fails here.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/recording-limits-test.mjs
@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { UPLOAD_LIMITS } from '../../src/features/contribute/recording-limits.ts';
+import { UPLOAD_LIMITS } from '../../src/features/contribute/recorder/recording-limits.ts';
 
 const MIGRATION = readFileSync(
   new URL('../../supabase/migrations/20261019125900_contributions.sql', import.meta.url),

@@ -4,3 +4,4 @@
 @source '../src/**/*.stories.tsx';
 /* The contribute feature's classes, which the site's sheet leaves out for the page's own. */
 @source '../src/features/contribute/*.tsx';
+@source '../src/features/contribute/{map,screens,history,uploads,consent,common}/*.tsx';

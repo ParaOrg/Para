@@ -1,7 +1,7 @@
 import { Button } from '@/design-system/primitives/button';
 
-import { useFocusHeading } from '../use-focus-heading';
 import type { BatteryHelp } from './battery-steps';
+import { useFocusHeading } from '../common/use-focus-heading';
 
 interface BatteryPanelProps {
   help: BatteryHelp;

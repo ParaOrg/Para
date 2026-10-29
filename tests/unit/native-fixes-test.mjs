@@ -6,7 +6,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { firstCountWhere, fixesAfter } from '../../src/features/contribute/recording-fixes.ts';
+import {
+  firstCountWhere,
+  fixesAfter,
+} from '../../src/features/contribute/recorder/recording-fixes.ts';
 import { parseFixLog } from '../../src/features/contribute/native/native-fix-log.ts';
 import { watchErrorOf } from '../../src/features/contribute/native/watch-error.ts';
 import { batteryHelpFor } from '../../src/features/contribute/native/battery-steps.ts';

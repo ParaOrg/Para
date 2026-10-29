@@ -4,7 +4,7 @@ import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
 import type { ProfileFields } from './account-fields';
 import { ProfileForm } from './profile-form';
-import { useFocusHeading } from '../use-focus-heading';
+import { useFocusHeading } from '../common/use-focus-heading';
 
 interface ProfileScreenProps {
   email: string;

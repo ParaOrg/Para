@@ -1,10 +1,10 @@
 import type { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
 
-import { nativePlugin } from '../native-app';
-import type { WatchedFix, WatchError } from '../use-geolocation-watch';
 import { createFixCatchUp } from './fix-catch-up';
 import { beginFixLog, NO_ACCURACY_M, readFixLog } from './native-fix-log';
 import { watchErrorOf, watchErrorOfThrown } from './watch-error';
+import { nativePlugin } from '../native-bridge/native-app';
+import type { WatchedFix, WatchError } from '../recorder/use-geolocation-watch';
 
 const RECORDING_NOTIFICATION = {
   title: 'Para is recording',

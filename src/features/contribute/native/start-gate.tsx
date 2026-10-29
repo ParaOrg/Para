@@ -1,8 +1,8 @@
-import { TrackingButton } from '../tracking-button';
 import { BatteryPanel } from './battery-panel';
 import { PermissionPanel } from './permission-panel';
 import { RefusedPanel } from './refused-panel';
 import { useStartGate } from './use-start-gate';
+import { TrackingButton } from '../screens/tracking-button';
 
 interface StartGateProps {
   /** Begins the recording, once the phone is ready for it. */

@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 
-import { nativePlugin } from '../native-app';
+import { nativePlugin } from '../native-bridge/native-app';
 
 export type NativePermission = 'notifications' | 'location' | 'backgroundLocation';
 export type NativePermissionState = 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale';

@@ -1,5 +1,5 @@
 // What the contributor page decides about an upload before and after sending it
-// (src/features/contribute/upload-rules.ts, upload-failures.ts): which recordings go on their own,
+// (src/features/contribute/uploads/upload-rules.ts, upload-failures.ts): which recordings go on their own,
 // where an upload stands by what the phone keeps, which still have to go, which an editor has
 // removed from Para, and what an upload error stands for.
 //
@@ -7,15 +7,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { CONSENT_VERSION } from '../../src/features/contribute/consent-version.ts';
+import { CONSENT_VERSION } from '../../src/features/contribute/consent/consent-version.ts';
 import { UploadError } from '../../src/features/contribute/api/upload-problem.ts';
-import { FAILED, problemOfError } from '../../src/features/contribute/upload-failures.ts';
+import { FAILED, problemOfError } from '../../src/features/contribute/uploads/upload-failures.ts';
 import {
   isGoneFromPara,
   isSentOnItsOwn,
   isWaitingToGo,
   storedUploadStatus,
-} from '../../src/features/contribute/upload-rules.ts';
+} from '../../src/features/contribute/uploads/upload-rules.ts';
 
 const consented = { hasConsent: true, earlier: null };
 const current = (upload) => ({ id: 'ride-1', consentVersion: CONSENT_VERSION, upload });

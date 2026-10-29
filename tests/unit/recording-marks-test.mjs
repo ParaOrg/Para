@@ -1,4 +1,4 @@
-// The mark button's rules (src/features/contribute/recording-marks.ts): where a
+// The mark button's rules (src/features/contribute/recorder/recording-marks.ts): where a
 // mark is on the map, and how many a ride keeps.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/recording-marks-test.mjs
@@ -10,8 +10,8 @@ import {
   markPlaces,
   marksThatFit,
   withMark,
-} from '../../src/features/contribute/recording-marks.ts';
-import { recordingSchema } from '../../src/features/contribute/recording-schema.ts';
+} from '../../src/features/contribute/recorder/recording-marks.ts';
+import { recordingSchema } from '../../src/features/contribute/storage/recording-schema.ts';
 import { rideRecording, rideFixes } from './fixtures/contribution-ride.mjs';
 
 const fix = (time, lng) => ({ time, at: [lng, 14.6], accuracyM: 5 });
