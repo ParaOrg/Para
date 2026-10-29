@@ -1,3 +1,5 @@
+// The web side of the Android app, kept apart from ../native/: every page loads this folder, while
+// the build check holds native/ to the app's own build.
 import type { CapacitorGlobal, HttpResponse } from '@capacitor/core';
 
 import { textOfResponse } from '../app-update/response-text';
