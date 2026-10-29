@@ -24,7 +24,7 @@
 import { chromium } from 'playwright';
 
 import { readPublished } from './lib/big-map.mjs';
-import { BASE, bareStyle, harness, waitForSource } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, waitFor, waitForSource } from './lib/harness.mjs';
 import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
@@ -189,13 +189,6 @@ const clickAt = async (ll, wait = 250) => {
   const [x, y] = await px(ll);
   await page.mouse.click(x, y);
   await page.waitForTimeout(wait);
-};
-const waitFor = async (fn, ms = 5000) => {
-  for (let t = 0; t < ms; t += 100) {
-    if (await fn()) return true;
-    await page.waitForTimeout(100);
-  }
-  return false;
 };
 const idle = () =>
   page

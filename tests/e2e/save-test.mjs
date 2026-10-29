@@ -42,7 +42,7 @@ import { readFileSync } from 'node:fs';
 
 import { chromium } from 'playwright';
 import { readPublished } from './lib/big-map.mjs';
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, waitFor } from './lib/harness.mjs';
 import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 
 /** The project ref in VITE_SUPABASE_URL, which names the storage key. */
@@ -645,13 +645,6 @@ const dismissToasts = async () => {
   for (const d of await page.getByRole('button', { name: 'Dismiss' }).all())
     await d.click().catch(() => {});
   await page.waitForTimeout(200);
-};
-const waitFor = async (fn, ms = 5000) => {
-  for (let t = 0; t < ms; t += 100) {
-    if (await fn()) return true;
-    await page.waitForTimeout(100);
-  }
-  return false;
 };
 const directionsOf = (routeId) => tables.route_variant.filter((v) => v.route_id === routeId);
 
@@ -1587,7 +1580,9 @@ await dismissToasts();
   // Done when the studio says so: deleteDirection's five requests run one after
   // another (empty the line, unlink, unborrow, count, delete the route), and
   // only then does the card close. On a slow runner they take more than a few
-  // seconds, so the wait is for that state, not for a fixed time.
+  // seconds, so the wait is for that state, not for a fixed time. It has not
+  // come true on the runs measured: it runs its full 30 s, and the check below
+  // decides.
   await waitFor(
     async () =>
       !tables.route.some((r) => r.id === ikot?.id) &&
@@ -1768,7 +1763,8 @@ const cardName = async () =>
 await waitFor(async () => {
   await openCard(BACK[1]);
   return (await cardName()) === 'Stand-in Tail → Stand-in Phase';
-}, 8000);
+  // One try (a jump, a tap and its 700 ms) takes up to 5 s on a slow page.
+}, 30000);
 check(
   '  and the other direction, which shares the route, is renamed with it',
   directionsOf(outRoute?.id).some((v) => v.id === backId) &&

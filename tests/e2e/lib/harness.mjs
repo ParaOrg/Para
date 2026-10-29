@@ -231,8 +231,10 @@ export const until = async (read, holds, ms = 5000) => {
  * and once more at the deadline. The deadline is real time: a count of 100 ms
  * steps leaves out how long each `holds()` takes, and on a slow page a wait
  * counted that way as 30 s ran for six minutes (staging run 40861272956).
+ * The default is three times the longest a wait with no number of its own
+ * has needed on a slow page.
  */
-export const waitFor = async (holds, ms) => {
+export const waitFor = async (holds, ms = 15000) => {
   const by = Date.now() + ms;
   for (;;) {
     if (await holds()) return true;
