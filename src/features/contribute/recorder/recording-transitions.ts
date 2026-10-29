@@ -1,9 +1,9 @@
 import type { GapReason } from '@/features/routes/model/ride-recording';
 
 import { OTHER_WAY, currentWay, type Way } from './recording-rules';
-import type { RecordingDetails } from './recording-state';
+import type { Phase, RecordingDetails } from './recording-state';
 import { CONSENT_VERSION } from '../consent/consent-version';
-import { RECORDING_VERSION, type Recording } from '../storage/recording-schema';
+import { RECORDING_VERSION, type FixRow, type Recording } from '../storage/recording-schema';
 
 /** A recording that starts now, with nothing in it yet. */
 export function newRecording(id: string, startedAt: number): Recording {
@@ -87,4 +87,23 @@ export function savedRecording(
   delete kept.failedFixWrites;
   if (failedFixWrites > 0) kept.failedFixWrites = failedFixWrites;
   return kept;
+}
+
+/** Where a recording found open as the page opens carries on. */
+export interface ReopenPoint {
+  /** The row its next fix is written at. */
+  nextSeq: number;
+  /** The fix writes the phone had not kept before the reload. */
+  failedFixWrites: number;
+  /** Stopped on purpose: paused, with Save and Resume. Otherwise it was cut off mid-ride. */
+  phase: Extract<Phase, 'paused' | 'unfinished'>;
+}
+
+/** Where `recording`, found open with its stored `rows` (in order), carries on. */
+export function reopenPoint(recording: Recording, rows: readonly FixRow[]): ReopenPoint {
+  return {
+    nextSeq: rows.length > 0 ? rows[rows.length - 1].seq + 1 : 0,
+    failedFixWrites: recording.failedFixWrites ?? 0,
+    phase: recording.status === 'stopped' ? 'paused' : 'unfinished',
+  };
 }
