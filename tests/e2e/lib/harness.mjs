@@ -10,6 +10,7 @@
 // studio-scale and save. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
 // mapIdle, cardsSettled and until, the waits on the state a check reads: commuter.
+// waitFor: save, save-drafts and studio-contributors.
 
 /** The dev server's address: PARA_BASE, or http://localhost:5173. */
 export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
@@ -222,6 +223,21 @@ export const until = async (read, holds, ms = 5000) => {
     const value = await read();
     if (holds(value) || Date.now() > by) return value;
     await new Promise((r) => setTimeout(r, 50));
+  }
+};
+
+/**
+ * Whether `holds()` comes true within `ms` of the clock, asked every 100 ms
+ * and once more at the deadline. The deadline is real time: a count of 100 ms
+ * steps leaves out how long each `holds()` takes, and on a slow page a wait
+ * counted that way as 30 s ran for six minutes (staging run 40861272956).
+ */
+export const waitFor = async (holds, ms) => {
+  const by = Date.now() + ms;
+  for (;;) {
+    if (await holds()) return true;
+    if (Date.now() > by) return false;
+    await new Promise((r) => setTimeout(r, 100));
   }
 };
 
