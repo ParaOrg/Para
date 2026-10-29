@@ -1,19 +1,21 @@
-// The studio's draft payloads (src/features/studio/data/draft-save.ts), built
+// The studio's draft payloads (src/features/studio/data/route-draft-*.ts), built
 // by the studio's own code from rows studio-drafts.sh reads out of the
 // disposable database, so the SQL side checks exactly what the studio sends.
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs supabase/verify/studio-drafts.mjs <op> < state.json
 import { readFileSync } from 'node:fs';
+import { hotspotPayloadOf } from '../../src/features/studio/data/hotspot-draft-state.ts';
 import {
   hintuanLinksFor,
-  hotspotPayloadOf,
+  withDirectionEmptied,
+  withDirectionSaved,
+  withSignboards,
+} from '../../src/features/studio/data/route-draft-edits.ts';
+import {
   newRouteState,
   routePayloadOf,
   routeStateFromLive,
   servedRouteOf,
-  withDirectionEmptied,
-  withDirectionSaved,
-  withSignboards,
-} from '../../src/features/studio/data/draft-save.ts';
+} from '../../src/features/studio/data/route-draft-state.ts';
 
 const [op] = process.argv.slice(2);
 const s = JSON.parse(readFileSync(0, 'utf8'));

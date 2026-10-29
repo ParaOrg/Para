@@ -1,6 +1,6 @@
 # 02: The basemap at 100,000 users
 
-Status: ready-for-agent (research first; the decision is the owner's)
+Status: resolved (the owner chose C on 2026-10-27: Para serves its own tiles, ADR 0007)
 Type: research
 Who: Sonnet, then the owner decides
 

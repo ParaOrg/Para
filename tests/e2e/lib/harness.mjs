@@ -9,6 +9,7 @@
 // regression-gestures, snap and studio-phone. bareStyle: where, scale,
 // studio-scale and save. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
+// mapIdle, cardsSettled and until, the waits on the state a check reads: commuter.
 
 /** The dev server's address: PARA_BASE, or http://localhost:5173. */
 export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
@@ -17,12 +18,17 @@ export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/
  * A suite's count. `check` prints PASS or FAIL and its detail, `skip` prints
  * SKIP for a check today's data cannot support, and `tally` lists the
  * skipped checks, prints how many passed, failed and were skipped, then ends
- * the run, non-zero on any failure. A skip does not fail the run: it is
+ * the run, non-zero on any failure. A skip alone does not fail the run: it is
  * counted so a check that quietly stopped proving anything shows in the last
  * line. With `bracketed`, a detail is printed in [brackets], as
  * regression-gestures and snap-test print theirs.
+ *
+ * With `knownSkips`, the names of the checks today's data cannot support, a
+ * skip of any other check fails the run too: one more check going quiet shows
+ * as a red run, not only in the last line, and a known one that skips again
+ * and again costs nothing. Unset, skips never fail it.
  */
-export const harness = ({ bracketed = false } = {}) => {
+export const harness = ({ bracketed = false, knownSkips = null } = {}) => {
   const results = [];
   const skipped = [];
   const check = (name, ok, detail = '') => {
@@ -47,7 +53,13 @@ export const harness = ({ bracketed = false } = {}) => {
     console.log(
       `${blankLine ? '\n' : ''}${results.length - failed} passed, ${failed} failed, ${skipped.length} skipped`,
     );
-    process.exit(failed ? 1 : 0);
+    const known = knownSkips && new Set(knownSkips.map((n) => n.trim()));
+    const unknown = known ? [...new Set(skipped.filter((n) => !known.has(n)))] : [];
+    if (unknown.length > 0) {
+      console.log('Skipped, and not a skip this suite knows: a check stopped proving anything.');
+      for (const name of unknown) console.log(`  ${name}`);
+    }
+    process.exit(failed || unknown.length > 0 ? 1 : 0);
   };
   return { check, skip, tally };
 };
@@ -115,6 +127,101 @@ export const waitForSource = async (page, id, ms = 20000) => {
     const fs = await page.evaluate(async (id) => (await window.__src(id))?.features ?? [], id);
     if (fs.length > 0 || Date.now() > until) return fs;
     await page.waitForTimeout(100);
+  }
+};
+
+/**
+ * The one source that never comes to rest while a route is lit: its chevrons,
+ * set afresh fifteen times a second (direction-arrows.ts). The map is at rest
+ * all the same.
+ */
+const FLOWING_SOURCE = 'direction-arrows';
+
+/**
+ * Once the map is at rest: two frames gone by, so a move a handler starts in
+ * them (a sheet's transitionend, an effect) has begun, then the first frame
+ * with no camera moving and every one of the app's own sources (its GeoJSON:
+ * the routes, the hotspots, the rides) loaded but the chevrons'. Not the
+ * basemap's tiles: they come from an outside service (OpenFreeMap) whose speed
+ * no check reads, and a slow one would fail the run for it. Not MapLibre's
+ * 'idle' either, which never comes while the chevrons flow. Throws when the
+ * map is not at rest within `ms`, naming what was not, so a wait that ran out
+ * fails the run rather than leaving a check to read a map in motion.
+ */
+export const mapIdle = async (page, ms = 10000) => {
+  const unrest = await page.evaluate(
+    ([ms, flowing]) =>
+      new Promise((resolve) => {
+        const m = window.__map;
+        const sources = Object.entries(m.getStyle()?.sources ?? {})
+          .filter(([id, source]) => source.type === 'geojson' && id !== flowing)
+          .map(([id]) => id);
+        const notAtRest = () => [
+          ...(m.isMoving() ? ['the camera moving'] : []),
+          ...sources.filter((id) => !m.isSourceLoaded(id)).map((id) => `source ${id} loading`),
+        ];
+        let frames = 0;
+        let done = false;
+        const finish = (value) => {
+          if (done) return;
+          done = true;
+          clearTimeout(deadline);
+          resolve(value);
+        };
+        // A deadline of its own: with no frames drawn the loop below never runs.
+        const deadline = setTimeout(() => {
+          const left = notAtRest();
+          finish(left.length > 0 ? left : [`${frames} frame(s) drawn`]);
+        }, ms);
+        const look = () => {
+          if (done) return;
+          frames++;
+          if (frames > 2 && notAtRest().length === 0) finish(null);
+          else requestAnimationFrame(look);
+        };
+        m.triggerRepaint();
+        requestAnimationFrame(look);
+      }),
+    [ms, FLOWING_SOURCE],
+  );
+  if (unrest) throw new Error(`mapIdle: the map not at rest after ${ms} ms: ${unrest.join(', ')}`);
+};
+
+/**
+ * Once the cards and the route list have stopped moving (no CSS transition
+ * left on them: a sheet rising, a fold opening) and the map is at rest after
+ * them: where a camera move that follows a sheet settling has been and gone.
+ * Throws, as mapIdle does, when either is still moving after `ms`.
+ */
+export const cardsSettled = async (page, ms = 10000) => {
+  await page
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')].every(
+          // A CSS transition is the one kind with a transitionProperty.
+          (e) => !e.getAnimations({ subtree: true }).some((a) => 'transitionProperty' in a),
+        ),
+      null,
+      { timeout: ms },
+    )
+    .catch(() => {
+      throw new Error(`cardsSettled: a card or the route list still moving after ${ms} ms`);
+    });
+  await mapIdle(page, ms);
+};
+
+/**
+ * `read()`'s value once `holds` says yes of it, asked every 50 ms for up to
+ * `ms`; its last value when it never does, for the check after it to judge.
+ * `read` runs here, so it may read the page in as many steps as it likes
+ * (window.__lit is async, which page.waitForFunction cannot wait on).
+ */
+export const until = async (read, holds, ms = 5000) => {
+  const by = Date.now() + ms;
+  for (;;) {
+    const value = await read();
+    if (holds(value) || Date.now() > by) return value;
+    await new Promise((r) => setTimeout(r, 50));
   }
 };
 
@@ -196,7 +303,9 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
       let m = null;
       try {
         m = JSON.parse(String(e.data));
-      } catch {}
+      } catch {
+        // Not JSON: nothing the dev server holds for a page.
+      }
       if (m?.type === 'connected') {
         connected = true;
         // What it holds goes out right behind 'connected', on the same socket.

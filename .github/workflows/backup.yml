@@ -5,7 +5,8 @@
 # section 7.
 #
 # The repo is public, and so are its logs. The run therefore prints sizes and
-# counts only, uploads no GitHub artifact and opens no issue. The dump is
+# counts only, uploads no GitHub artifact and puts none of its output in an
+# issue: a failed run's alert names the run and nothing else. The dump is
 # piped through gzip and gpg and never touches the disk unencrypted. The
 # private key is never on GitHub: only the public one is, in
 # .github/backup/owner-public-key.asc.
@@ -211,3 +212,30 @@ jobs:
           done
           count="$("$pg_bin/psql" "$BACKUP_DATABASE_URL" -Atc "select coalesce(sum(point_count), 0) from public.point_batch")"
           echo "point_batch: $count points"
+
+  # When the run failed: opens or updates this workflow's `alert` issue, naming the run
+  # (scripts/watch/report-failed-run.mjs, shared with the watch). A job of its own, so the
+  # job above keeps its permissions and a run that fails at its checkout is still reported.
+  alert:
+    needs: backup
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: backup.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs

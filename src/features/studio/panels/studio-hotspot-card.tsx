@@ -1,6 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
-import { HotspotCard } from '@/features/routes/cards/hotspot-card';
 import { APP_MOVE } from '@/features/routes/map/map-view';
 import type { useCardCamera } from '@/features/routes/map/use-card-camera';
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
@@ -10,6 +9,7 @@ import type { DirectionRow } from '@/features/routes/model/routes';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { CardActions } from './card-actions';
+import { HotspotCard } from './hotspot-card';
 import type { useDeleteActions } from './use-delete-actions';
 import type { Drawing } from '../drawing/use-drawing';
 import { DraftLockNotice } from '../review/draft-lock-notice';

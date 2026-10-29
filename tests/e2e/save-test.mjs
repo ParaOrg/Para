@@ -1260,7 +1260,10 @@ const bothWays = directionsOf(outRow()?.route_id ?? '');
 const fullPoints = bothWays.reduce((sum, v) => sum + (v.shape?.coordinates.length ?? 0), 0);
 n = log.length;
 const csv = await exported('CSV');
-const csvRows = csv.text.replace(/^﻿/, '').trimEnd().split('\r\n');
+const csvRows = csv.text
+  .replace(/^\uFEFF/, '')
+  .trimEnd()
+  .split('\r\n');
 check(
   'Export CSV: a row per point of both full lines, read on their own, under one header',
   csv.name.endsWith('.csv') &&
@@ -1364,7 +1367,6 @@ await dismissToasts();
   ];
   // The ikots this section draws, not the ones the published map brings.
   const drawnIkots = () => tables.route.filter((r) => r.is_loop && !route.has(r.id));
-  const ikotLine = () => directionsOf(drawnIkots()[0]?.id)[0];
   const toggle = () => page.getByTestId('save-loop-toggle');
   const dialogs = [];
   page.on('dialog', (d) => dialogs.push(d.message()));
@@ -1582,7 +1584,16 @@ await dismissToasts();
   await waitFor(async () => (await page.getByRole('button', { name: 'Delete' }).count()) > 0);
   n = log.length;
   await page.getByRole('button', { name: 'Delete' }).click();
-  await waitFor(async () => !tables.route.some((r) => r.id === ikot?.id));
+  // Done when the studio says so: deleteDirection's five requests run one after
+  // another (empty the line, unlink, unborrow, count, delete the route), and
+  // only then does the card close. On a slow runner they take more than a few
+  // seconds, so the wait is for that state, not for a fixed time.
+  await waitFor(
+    async () =>
+      !tables.route.some((r) => r.id === ikot?.id) &&
+      (await page.getByRole('button', { name: 'Edit route' }).count()) === 0,
+    30000,
+  );
   check(
     'Delete on an ikot asks about the ikot, and takes the route away with its only direction',
     dialogs.some((d) => d === 'Delete the ikot "UP – Ikot"?') &&
@@ -2076,7 +2087,6 @@ await page.waitForTimeout(300);
   );
 
   // 1. Enter on a radio saves the place and leaves the route unsaved.
-  n = log.length;
   await open('Head');
   await form('Head')
     .getByLabel(/Ground name/)

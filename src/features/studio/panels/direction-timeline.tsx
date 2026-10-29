@@ -1,4 +1,4 @@
-import type { Timeline, TimelineRow } from '../model/timeline';
+import type { Timeline, TimelineRow } from '@/features/routes/model/timeline';
 
 /** "Passes through 3 hintuans" — the one wording the card and the save panel share. */
 export function passesThrough(n: number): string {

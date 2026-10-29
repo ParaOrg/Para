@@ -1,5 +1,5 @@
-// Each page asks for its stylesheets before its scripts (vite.config.ts,
-// stylesheetsBeforeScripts, 2026-10-05): over HTTP/1.1 the scripts ahead of
+// Each page asks for its stylesheets before its scripts (stylesheetsBeforeScripts,
+// scripts/node/vite-plugins/stylesheets-first.ts, 2026-10-05): over HTTP/1.1 the scripts ahead of
 // them took all six of a host's connections and the first paint waited a
 // round trip. Run on the heads Vite writes; check-build.mjs checks the built
 // pages.
@@ -7,7 +7,8 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/stylesheets-first-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import config, { stylesheetsBeforeScripts } from '../../vite.config.ts';
+import config from '../../vite.config.ts';
+import { stylesheetsBeforeScripts } from '../../scripts/node/vite-plugins/stylesheets-first.ts';
 
 // The root page's head as Vite writes it, with index.html's early map-file script.
 const vite = `<html>
@@ -45,19 +46,19 @@ test('the stylesheets go just before the module script, in their order, after th
   assert.equal(stylesheetsBeforeScripts(moved), moved, 'once is enough');
   // The studio's page: no early script.
   const studio = vite
-    .replace(/\n    <script>.*<\/script>/, '')
-    .replace(/\n    <link rel="stylesheet"[^>]*commuter-f\.css">/, '');
+    .replace(/\n {4}<script>.*<\/script>/, '')
+    .replace(/\n {4}<link rel="stylesheet"[^>]*commuter-f\.css">/, '');
   const studioMoved = moved
-    .replace(/\n    <script>.*<\/script>/, '')
-    .replace(/\n    <link rel="stylesheet"[^>]*commuter-f\.css">/, '');
+    .replace(/\n {4}<script>.*<\/script>/, '')
+    .replace(/\n {4}<link rel="stylesheet"[^>]*commuter-f\.css">/, '');
   assert.notEqual(studio, vite);
   assert.equal(stylesheetsBeforeScripts(studio), studioMoved);
 });
 
 test('a page with no stylesheet after its module script, or no module script, or a stylesheet in its body, is left alone', () => {
-  const noSheets = vite.replace(/\n    <link rel="stylesheet"[^>]*>/g, '');
+  const noSheets = vite.replace(/\n {4}<link rel="stylesheet"[^>]*>/g, '');
   assert.equal(stylesheetsBeforeScripts(noSheets), noSheets);
-  const noScript = vite.replace(/\n    <script type="module"[^>]*><\/script>/, '');
+  const noScript = vite.replace(/\n {4}<script type="module"[^>]*><\/script>/, '');
   assert.equal(stylesheetsBeforeScripts(noScript), noScript);
   const inBody = noSheets.replace('<body>', '<body><link rel="stylesheet" href="/late.css">');
   assert.equal(stylesheetsBeforeScripts(inBody), inBody);

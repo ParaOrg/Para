@@ -6,9 +6,8 @@
 # index the public map reads (index.v5.json, with the trains, the ferry and
 # the loops), the indexes older installed apps read (index.v4.json without
 # the loops, index.v3.json without the ferry too, index.json without any
-# line), a line file per direction, and, for one
-# release after the index shipped (2026-09-29), the old single file map.json,
-# without any line too.
+# line), a line file per direction, and, for one release after the index
+# shipped, the old single file map.json, without any line too.
 # Then scripts/checks/check-map-data.mjs reads the indexes back: a problem the app
 # could not show honestly (a link to a hotspot that is not there, a route
 # whose end hotspot is missing) fails the run before the commit; a warning
@@ -113,8 +112,8 @@ jobs:
 
       # Both scripts import the app's own rules from src/, TypeScript, which
       # Node strips; ts-resolve.mjs finds the .ts behind an extensionless
-      # import. Since 2026-10-07 the index's shape is a Zod schema the app
-      # reads with, the publish validates with and the check reads with
+      # import. The index's shape is a Zod schema the app reads with, the
+      # publish validates with and the check reads with
       # (src/features/routes/published), so the runtime dependencies are
       # installed first: zod and the three packages beside it, a few seconds
       # with the cache. `--ignore-scripts`: no runtime package has an install
@@ -234,3 +233,30 @@ jobs:
           else
             echo "The open issue already says this."
           fi
+
+  # When the run failed: opens or updates this workflow's `alert` issue, naming the run
+  # (scripts/watch/report-failed-run.mjs, shared with the watch). A job of its own, so the
+  # job above keeps its permissions and a run that fails at its checkout is still reported.
+  alert:
+    needs: publish
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: publish-map.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs

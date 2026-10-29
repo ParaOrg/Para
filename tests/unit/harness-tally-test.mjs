@@ -1,7 +1,7 @@
 // The browser suites' tally (tests/e2e/lib/harness.mjs): its last line counts
 // the passed, the failed and the skipped checks, the skipped listed above it,
-// and only a failure ends the run non-zero. Each run is a child process,
-// since tally ends its process.
+// and a failure, or a skip the suite does not know, ends the run non-zero.
+// Each run is a child process, since tally ends its process.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/harness-tally-test.mjs
 import { test } from 'node:test';
@@ -54,4 +54,34 @@ test('a failure still ends the run non-zero, skips or not', () => {
   assert.equal(lines.at(-1), '0 passed, 1 failed, 1 skipped');
   assert.ok(lines.includes('SKIP  two  [why not]'));
   assert.ok(!lines.includes(''), 'no blank line when asked for none');
+});
+
+test('a skip the suite does not know ends the run non-zero, and names it', () => {
+  const { status, lines } = run(
+    `check('one', true); skip('  known', 'why not'); skip('new', 'why not'); tally();`,
+    "{ knownSkips: ['known'] }",
+  );
+  assert.equal(status, 1);
+  assert.ok(lines.includes('1 passed, 0 failed, 2 skipped'));
+  assert.deepEqual(lines.slice(-2), [
+    'Skipped, and not a skip this suite knows: a check stopped proving anything.',
+    '  new',
+  ]);
+});
+
+test('known skips pass, however often they skip', () => {
+  const { status, lines } = run(
+    `check('one', true); skip('known', 'a'); skip('  known', 'b'); tally();`,
+    "{ knownSkips: ['  known'] }",
+  );
+  assert.equal(status, 0);
+  assert.equal(lines.at(-1), '1 passed, 0 failed, 2 skipped');
+});
+
+test('with none known, the first skip fails the run', () => {
+  const { status } = run(
+    `check('one', true); skip('two', 'why not'); tally();`,
+    '{ knownSkips: [] }',
+  );
+  assert.equal(status, 1);
 });

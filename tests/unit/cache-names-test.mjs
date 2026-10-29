@@ -18,7 +18,7 @@ const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), '
 const found = (path, pattern) => [...read(path).matchAll(pattern)].map((match) => match[1]);
 
 // The public map's runtime caches, named in the offline worker's config.
-const RUNTIME_CACHES = found('vite.config.ts', /cacheName: '([^']+)'/g);
+const RUNTIME_CACHES = found('scripts/node/offline-worker-caches.ts', /cacheName: '([^']+)'/g);
 // The contributor page's cache: a fixed prefix the build completes with a version.
 const CONTRIBUTE_PREFIXES = [
   ...found('src/app/contribute/contribute-sw.ts', /const CACHE_PREFIX = '([^']+)'/g),

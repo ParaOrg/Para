@@ -290,7 +290,7 @@ await page.route(/routing\.openstreetmap\.de|route\/v1\/driving/, async (route) 
   if (slowRouter) await new Promise((r) => setTimeout(r, 3000));
   await route.fallback();
 });
-c = await startRoute(2);
+await startRoute(2);
 slowRouter = true;
 const [sx, sy] = (await roadPixels(5, 70))[3] ?? [W / 2, 250];
 await tap(sx, sy);

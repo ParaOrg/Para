@@ -16,6 +16,71 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
+/** What a Node script may read without importing it. */
+const NODE_GLOBALS = [
+  'AbortController',
+  'AbortSignal',
+  'Blob',
+  'btoa',
+  'Buffer',
+  'clearInterval',
+  'clearTimeout',
+  'console',
+  'crypto',
+  'Event',
+  'EventTarget',
+  'fetch',
+  'File',
+  'FormData',
+  'Headers',
+  'performance',
+  'process',
+  'queueMicrotask',
+  'Request',
+  'Response',
+  'setImmediate',
+  'setInterval',
+  'setTimeout',
+  'structuredClone',
+  'TextDecoder',
+  'TextEncoder',
+  'URL',
+  'URLSearchParams',
+  'WebSocket',
+];
+/** What code a script hands to a page (Playwright's page.evaluate, an injected script) reads there. */
+const BROWSER_GLOBALS = [
+  'addEventListener',
+  'caches',
+  'createImageBitmap',
+  'DeviceOrientationEvent',
+  'document',
+  'DOMException',
+  'Element',
+  'Event',
+  'EventTarget',
+  'File',
+  'getComputedStyle',
+  'IDBObjectStore',
+  'indexedDB',
+  'innerHeight',
+  'innerWidth',
+  'localStorage',
+  'location',
+  'matchMedia',
+  'MouseEvent',
+  'MutationObserver',
+  'navigator',
+  'OffscreenCanvas',
+  'PerformanceObserver',
+  'PointerEvent',
+  'requestAnimationFrame',
+  'sessionStorage',
+  'StorageManager',
+  'window',
+];
+const readonly = (names) => Object.fromEntries(names.map((name) => [name, 'readonly']));
+
 const SOURCE = [
   'src/**/*.{ts,tsx}',
   '.storybook/**/*.{ts,tsx}',
@@ -314,5 +379,32 @@ export default defineConfig([
     rules: {
       'import-x/no-default-export': 'off',
     },
+  },
+
+  {
+    // The Node scripts (the publish, the build guard, the tiles and preview tools) and the
+    // tests: ESLint's recommended rules, with Node's globals. A value left out of a copy by
+    // `...rest` is not unused.
+    files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
+    ...js.configs.recommended,
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-unused-vars': ['error', { ignoreRestSiblings: true }],
+    },
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: readonly(NODE_GLOBALS),
+    },
+  },
+  {
+    // These hand code to a page to run there, so it reads the browser's globals.
+    files: [
+      'scripts/preview/browser-demo.mjs',
+      'scripts/research/phone-speed.mjs',
+      'scripts/research/shots.mjs',
+      'tests/e2e/**/*.mjs',
+    ],
+    languageOptions: { globals: { ...readonly(NODE_GLOBALS), ...readonly(BROWSER_GLOBALS) } },
   },
 ]);

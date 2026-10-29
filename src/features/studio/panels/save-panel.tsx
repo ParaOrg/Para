@@ -1,56 +1,18 @@
-import { useMemo, useRef, useState } from 'react';
-
-import { TextField } from '@/design-system/primitives/text-field';
-import { DirectionTimeline, passesThrough } from '@/features/routes/cards/direction-timeline';
-import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
-import {
-  isClosedLine,
-  LOOP_WORD,
-  type RouteRow,
-  type TransportMode,
-  type DirectionRow,
-} from '@/features/routes/model/routes';
-import type { LngLat } from '@/shared/utils/geo';
+import { hotspotLabel } from '@/features/routes/model/hotspots';
+import { LOOP_WORD } from '@/features/routes/model/routes';
 
 import { LoopToggle } from './loop-toggle';
-import { NewPlaceForm } from './new-place-form';
-import { NEW_PLACE_KEY, PlacePicker } from './place-picker';
-import { boxFor, endsByHead, groupPlaces, guessEnds, placeOfBox } from './places';
 import { RouteFields } from './route-fields';
-import { loopSaveRefusal, saveRefusal } from './save-checks';
+import { SaveDirectionName } from './save-direction-name';
+import { SaveEndsFields } from './save-ends-fields';
+import { SaveFooter } from './save-footer';
 import { SaveNotices } from './save-notices';
-import { FOOTER, OVERLAY, PANEL } from './sheet';
-import { useRouteSave } from './use-route-save';
-import { useSaveFacts } from './use-save-facts';
-import { returnTripNotices } from '../drawing/loop-closing';
-import type { Drawing } from '../drawing/use-drawing';
+import { SaveTimeline } from './save-timeline';
+import { OVERLAY, PANEL } from './sheet';
+import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
+import { ViaField } from './via-field';
 
-interface SavePanelProps {
-  draw: Drawing;
-  /** The direction being edited, when this is an edit rather than a new save. */
-  existing: DirectionRow | null;
-  /** The parent route, when adding another direction to a route that exists. */
-  route: RouteRow | null;
-  /**
-   * Which way round the route's empty slot runs, when there is one: the
-   * direction this line is being drawn *for*. Null when there is no slot to
-   * fill. Not inferred from the line — a return trip drawn from the wrong end
-   * must not overwrite the direction that is already there.
-   */
-  slotReversed?: boolean | null;
-  /** Every hotspot, for the two end pickers and for generating the name. */
-  hotspots: HotspotRow[];
-  /**
-   * Every saved direction: for what an Extend borrowed from, for noticing
-   * that the chosen ends already make a route whose empty slot this fills,
-   * and, in Edit route, for refusing ends another route already has.
-   */
-  directions?: DirectionRow[];
-  onSaved: (v: DirectionRow) => void;
-  /** A save stored as a draft (STUDIO_DRAFTS). */
-  onDrafted?: (directionId: string) => void;
-  /** Hears of a place made from the pickers, so the map's own list is read again. */
-  onPlaceSaved?: () => void;
+interface SavePanelProps extends UseSavePanelOptions {
   onCancel: () => void;
 }
 
@@ -62,197 +24,35 @@ interface SavePanelProps {
  * through it. Nothing here is required except the two ends — the signboard is
  * an observed fact and can wait until it is known.
  *
- * Its pieces live beside it: the places and the first guess at the ends
- * (`places.ts`), what the line is (`useSaveFacts`), why a save is refused
- * (`save-checks.ts`), the save itself (`useRouteSave`), the two ends
- * (`PlacePicker`), the route's facts (`RouteFields`), the notices
- * (`SaveNotices`) and the phone layout's classes (`sheet.ts`).
+ * Its state and its submit are `useSavePanel`; its pieces live beside it: the
+ * ends (`SaveEndsFields`), the route's facts (`RouteFields`, `ViaField`), the
+ * notices (`SaveNotices`), what the line passes (`SaveTimeline`) and is
+ * called (`SaveDirectionName`), the buttons (`SaveFooter`) and the phone
+ * layout's classes (`sheet.ts`).
  */
-export function SavePanel({
-  draw,
-  existing,
-  route,
-  slotReversed = null,
-  hotspots: savedHotspots,
-  directions = [],
-  onSaved,
-  onDrafted,
-  onPlaceSaved,
-  onCancel,
-}: SavePanelProps) {
-  const parent = existing?.route ?? route;
-  // The places made here, kept beside the saved ones until the map's list has them.
-  const [made, setMade] = useState<HotspotRow[]>([]);
-  const hotspots = useMemo(
-    () => [...savedHotspots, ...made.filter((m) => !savedHotspots.some((s) => s.id === m.id))],
-    [savedHotspots, made],
-  );
-  const [making, setMaking] = useState<'Head' | 'Tail' | null>(null);
-  const headSelect = useRef<HTMLSelectElement>(null);
-  const tailSelect = useRef<HTMLSelectElement>(null);
-  const line = draw.controlPoints;
-  const places = useMemo(() => groupPlaces(hotspots), [hotspots]);
-  // Where a picked end's box is looked for: the end of the line nearer the
-  // route's head, whichever way it was drawn.
-  const headNow = existing
-    ? hotspots.find((s) => s.id === existing.route.headHotspotId)
-    : undefined;
-  const [nearHead, nearTail] = endsByHead(line, headNow);
-
-  const [signboard, setSignboard] = useState(parent?.signboard ?? '');
-  const [mode, setMode] = useState<TransportMode>(parent?.mode ?? 'jeepney');
-  // Kept as the route has it: the form no longer asks for one.
-  const fareNote = parent?.fareNote ?? '';
-  const [via, setVia] = useState(parent?.via ?? '');
-  // An ikot is made one or not and stays so (0021): an edit, a return trip or
-  // a retried save keeps what the route is. A new line starts ticked when it
-  // was closed on its own first point.
-  const [isLoop, setIsLoop] = useState(() =>
-    parent ? parent.isLoop === true : isClosedLine(draw.line),
-  );
-  // The ends are the route's: a return trip takes them as they are, and Edit
-  // route starts from them; a new route's are guessed from where the line
-  // actually starts and finishes, once, and corrected by hand when the guess
-  // is wrong.
-  const [firstGuess] = useState(() => guessEnds(places, hotspots, line, directions));
-  const [headId, setHeadId] = useState(parent?.headHotspotId ?? firstGuess[0]);
-  const [tailId, setTailId] = useState(parent?.tailHotspotId ?? firstGuess[1]);
-
-  const head = hotspots.find((s) => s.id === headId);
-  const tail = hotspots.find((s) => s.id === tailId);
-  const headPlace = head ? placeOfBox(places, head.id) : undefined;
-  const tailPlace = tail ? placeOfBox(places, tail.id) : undefined;
-
-  const pickPlace = (key: string, to: LngLat | undefined) => {
-    const place = places.find((p) => p.key === key);
-    return place ? boxFor(place, to) : '';
-  };
-
-  // What this line is, as the panel and the save see it.
-  const facts = useSaveFacts({
-    draw,
-    existing,
-    parent,
-    slotReversed,
-    hotspots,
-    directions,
-    head,
-    tail,
-    headId,
-    tailId,
-    via,
-    mode,
-    isLoop,
-    signboard,
-  });
-  const {
-    reversed,
-    wrongWayRound,
-    sameEnds,
-    endsTaken,
-    turnedRound,
-    borrowParent,
-    borrowedM,
-    name,
-    direction,
-    preview,
-    loopGapM,
-    loopPlacesCount,
-    placesPassedTwice,
-    signboardTaken,
-  } = facts;
-  // A return trip that stops short of where the other way began or ended says so, and saves anyway.
-  const loop = existing
-    ? []
-    : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
-  const { busy, error, setError, written, save } = useRouteSave({
-    facts,
-    draw,
-    hotspots,
-    onSaved,
-    onDrafted,
-  });
-
-  // A return trip fills its route's slot and leaves the route as it is; Edit
-  // route may change the route's facts, for both its directions. A new
-  // route's are fixed once a save has written it: the retry finishes that
-  // row and would ignore a changed end.
-  const routeLocked = !existing && (!!parent || !!written);
-  // The toggle is locked by more than the route's facts: Edit route keeps it too.
-  const loopLocked = !!existing || routeLocked;
-
-  /** Back to the picker that asked for the form. */
-  const closeMaking = () => {
-    const picker = making === 'Head' ? headSelect : tailSelect;
-    setMaking(null);
-    picker.current?.focus();
-  };
-
-  // The new place becomes that end: the box its place is reached by, as picking it would.
-  const handlePlaceSaved = (place: HotspotRow) => {
-    setMade((previous) => [...previous, place]);
-    const next = groupPlaces([...hotspots, place]);
-    const placeNow = placeOfBox(next, place.id);
-    const isHead = making === 'Head';
-    const box = placeNow ? boxFor(placeNow, isHead ? nearHead : nearTail) : place.id;
-    if (isHead) setHeadId(box);
-    else setTailId(box);
-    onPlaceSaved?.();
-    closeMaking();
-  };
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const refusal = isLoop
-      ? loopSaveRefusal({
-          signboard,
-          gapM: loopGapM,
-          placesCount: loopPlacesCount,
-          signboardTaken,
-        })
-      : saveRefusal({ headId, tailId, headPlace, tailPlace, endsTaken, turnedRound });
-    if (refusal) {
-      setError(refusal);
-      return;
-    }
-    await save({
-      routeId: written?.routeId ?? parent?.id ?? null,
-      directionId: written?.directionId ?? existing?.id ?? null,
-      writeRoute: !!existing,
-      signboard,
-      mode,
-      fareNote,
-      headHotspotId: isLoop ? null : headId,
-      tailHotspotId: isLoop ? null : tailId,
-      isLoop,
-      via,
-    });
-  }
+export function SavePanel({ onCancel, ...options }: SavePanelProps) {
+  const { draw, existing, route, directions = [] } = options;
+  const panel = useSavePanel(options);
+  const { ends, facts, isLoop, routeLocked } = panel;
+  const { hotspots, head, tail } = ends;
+  const { reversed, direction } = facts;
 
   const routeFields = (
     <RouteFields
-      signboard={signboard}
-      mode={mode}
+      signboard={panel.signboard}
+      mode={panel.mode}
       isLocked={routeLocked}
       isSignboardRequired={isLoop}
-      onSignboardChange={setSignboard}
-      onModeChange={setMode}
+      onSignboardChange={panel.setSignboard}
+      onModeChange={panel.setMode}
     />
   );
 
   return (
     <div className={OVERLAY}>
-      <form onSubmit={submit} className={PANEL}>
+      <form onSubmit={panel.submit} className={PANEL}>
         <h2 className="text-base font-medium text-neutral-900">
-          {existing
-            ? isLoop
-              ? `Update this ${LOOP_WORD.toLowerCase()}`
-              : 'Update this direction'
-            : route
-              ? 'Draw the return trip'
-              : isLoop
-                ? `Save this ${LOOP_WORD.toLowerCase()}`
-                : 'Save this route'}
+          {panelTitle({ isEdit: !!existing, isReturnTrip: !!route, isLoop })}
         </h2>
         <p className="mt-1 text-xs text-neutral-500">
           {draw.controlPoints.length} points · {(draw.metres / 1000).toFixed(2)} km
@@ -260,17 +60,17 @@ export function SavePanel({
           {existing &&
             " · the ends, via, signboard, mode and fare note are the route's: a change here is a change to both directions"}
         </p>
-        <LoopToggle isLoop={isLoop} isLocked={loopLocked} onChange={setIsLoop} />
+        <LoopToggle isLoop={isLoop} isLocked={panel.loopLocked} onChange={panel.setIsLoop} />
         {isLoop && <div className="mt-3">{routeFields}</div>}
         <SaveNotices
           segments={draw.segments}
           uTurns={draw.uTurns}
-          loop={loop}
+          loop={panel.loop}
           hotspotsCount={hotspots.length}
           isLoop={isLoop}
-          passedTwice={isLoop ? placesPassedTwice : []}
+          passedTwice={isLoop ? facts.placesPassedTwice : []}
           wrongWay={
-            !isLoop && wrongWayRound && head && tail
+            !isLoop && facts.wrongWayRound && head && tail
               ? {
                   direction,
                   startsAt: hotspotLabel(reversed ? head : tail),
@@ -279,127 +79,56 @@ export function SavePanel({
               : null
           }
           borrowed={
-            borrowParent && borrowedM > 0 ? { metres: borrowedM, parent: borrowParent } : null
+            facts.borrowParent && facts.borrowedM > 0
+              ? { metres: facts.borrowedM, parent: facts.borrowParent }
+              : null
           }
-          sameEnds={sameEnds}
+          sameEnds={facts.sameEnds}
           direction={direction}
         />
 
         {!isLoop && (
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <PlacePicker
-              label="Head"
-              hint="(where the jeeps wait)"
-              places={places}
-              value={headPlace?.key ?? ''}
-              isDisabled={routeLocked}
-              onChange={(key) =>
-                key === NEW_PLACE_KEY ? setMaking('Head') : setHeadId(pickPlace(key, nearHead))
-              }
-              ref={headSelect}
-              testId="save-head"
-            />
-            <PlacePicker
-              label="Tail"
-              hint="(the far end)"
-              places={places}
-              value={tailPlace?.key ?? ''}
-              isDisabled={routeLocked}
-              onChange={(key) =>
-                key === NEW_PLACE_KEY ? setMaking('Tail') : setTailId(pickPlace(key, nearTail))
-              }
-              ref={tailSelect}
-              testId="save-tail"
-            />
-          </div>
-        )}
-
-        {!isLoop && making && nearHead && nearTail && (
-          <NewPlaceForm
-            key={making}
-            end={making}
-            centre={making === 'Head' ? nearHead : nearTail}
-            defaultKind={making === 'Head' ? 'terminal' : 'hintuan'}
+          <SaveEndsFields
+            places={ends.places}
+            headPlace={ends.headPlace}
+            tailPlace={ends.tailPlace}
+            making={ends.making}
+            nearHead={ends.nearHead}
+            nearTail={ends.nearTail}
             hotspots={hotspots}
             directions={directions}
-            onSaved={handlePlaceSaved}
-            onCancel={closeMaking}
+            isLocked={routeLocked}
+            headRef={ends.headSelect}
+            tailRef={ends.tailSelect}
+            onHeadChange={ends.pickHead}
+            onTailChange={ends.pickTail}
+            onPlaceSaved={ends.handlePlaceSaved}
+            onPlaceCancel={ends.closeMaking}
           />
         )}
 
-        {/* What the line passes, by the rule the save will apply: seen first, stored the same. */}
         {(isLoop || (head && tail)) && (
-          <div data-testid="save-timeline" className="mt-3 rounded-lg bg-neutral-50 px-3 py-2">
-            <p className="text-xs font-medium text-neutral-600">
-              {isLoop
-                ? loopPlacesCount === 0
-                  ? 'Goes round no place yet — draw a hintuan across the road and it appears here'
-                  : `Goes round ${loopPlacesCount} ${loopPlacesCount === 1 ? 'place' : 'places'}, from the first drawn, in this order`
-                : preview.between.length === 0
-                  ? 'Passes through no hintuan yet — draw one across the road and it appears here'
-                  : `${passesThrough(preview.between.length)}, in this order`}
-            </p>
-            <DirectionTimeline timeline={preview} />
-          </div>
-        )}
-
-        <div className="mt-3">
-          <TextField
-            label={
-              <>
-                Via{' '}
-                <span className="text-content-disabled">
-                  {isLoop
-                    ? '(only if another ikot has this signboard)'
-                    : '(only if another route shares both ends)'}
-                </span>
-              </>
-            }
-            disabled={routeLocked}
-            value={via}
-            onChange={(e) => setVia(e.target.value)}
-            onClear={() => setVia('')}
-            placeholder="Zabarte"
+          <SaveTimeline
+            isLoop={isLoop}
+            loopPlacesCount={facts.loopPlacesCount}
+            preview={facts.preview}
           />
-        </div>
-
-        {isLoop ? (
-          <p className="mt-3 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-600">
-            <span className="text-xs text-neutral-400">
-              This line is the {LOOP_WORD.toLowerCase()}
-            </span>
-            <br />
-            <strong data-testid="save-direction" className="text-neutral-900">
-              {name}
-            </strong>
-            <br />
-            <span className="text-[11px] text-neutral-400">
-              One way round, as drawn: the jeep goes the way this line does. The other way round is
-              another ikot, with its own signboard.
-            </span>
-          </p>
-        ) : (
-          <p className="mt-3 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-600">
-            <span className="text-xs text-neutral-400">This line is the direction</span>
-            <br />
-            <strong data-testid="save-direction" className="text-neutral-900">
-              {direction || '—'}
-            </strong>
-            <br />
-            <span className="text-xs text-neutral-500">
-              {parent ? 'of the route ' : 'of a new route, '}
-              <span data-testid="save-name" className="font-medium text-neutral-700">
-                {name || '—'}
-              </span>
-            </span>
-            <br />
-            <span className="text-[11px] text-neutral-400">
-              {existing
-                ? 'Both names are generated from the two ends: pick another place above to change them.'
-                : 'Both names are generated from the two ends. Rename a hotspot to change them.'}
-            </span>
-          </p>
         )}
+
+        <ViaField
+          value={panel.via}
+          isLoop={isLoop}
+          isLocked={routeLocked}
+          onChange={panel.setVia}
+        />
+
+        <SaveDirectionName
+          isLoop={isLoop}
+          name={facts.name}
+          direction={direction}
+          hasParent={!!panel.parent}
+          isEdit={!!existing}
+        />
 
         {!isLoop && (
           <>
@@ -408,26 +137,26 @@ export function SavePanel({
           </>
         )}
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {panel.error && <p className="mt-3 text-sm text-red-600">{panel.error}</p>}
 
-        <div className={FOOTER}>
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={busy}
-            className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-600 ring-1 ring-neutral-300"
-          >
-            Back to map
-          </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {busy ? 'Saving…' : existing ? 'Update' : 'Save'}
-          </button>
-        </div>
+        <SaveFooter isBusy={panel.busy} isEdit={!!existing} onCancel={onCancel} />
       </form>
     </div>
   );
+}
+
+/** The panel's heading: an edit, a return trip, or a new route or loop. */
+function panelTitle({
+  isEdit,
+  isReturnTrip,
+  isLoop,
+}: {
+  isEdit: boolean;
+  isReturnTrip: boolean;
+  isLoop: boolean;
+}): string {
+  const loopWord = LOOP_WORD.toLowerCase();
+  if (isEdit) return isLoop ? `Update this ${loopWord}` : 'Update this direction';
+  if (isReturnTrip) return 'Draw the return trip';
+  return isLoop ? `Save this ${loopWord}` : 'Save this route';
 }

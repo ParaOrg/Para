@@ -6,7 +6,8 @@ import { useAccountUploadsQuery } from './api/use-account-uploads-query';
 import { useRemoveAccountUploadMutation } from './api/use-remove-account-upload-mutation';
 import { mergeHistory } from './history-merge';
 import type { Recording } from './recording-schema';
-import type { UploadStatus, Uploads } from './use-uploads';
+import type { UploadStatus } from './upload-state';
+import type { Uploads } from './use-uploads';
 
 /** Whether the account's uploads from the database have arrived, with the one line if they could not. */
 export interface HistoryLoad {
