@@ -17,7 +17,7 @@
 // a drawing in progress is never replaced.
 import { chromium } from 'playwright';
 
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, waitFor } from './lib/harness.mjs';
 import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
 
@@ -169,13 +169,6 @@ await page.goto(`${BASE}/studio/?map=contributors`, { waitUntil: 'load' });
 const list = page.getByRole('list', { name: 'Uploads' });
 await list.waitFor({ timeout: 30000 });
 const body = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-const waitFor = async (fn, ms = 8000) => {
-  for (let t = 0; t < ms; t += 100) {
-    if (await fn()) return true;
-    await page.waitForTimeout(100);
-  }
-  return false;
-};
 const open = async (name) => {
   await page
     .getByRole('button', { name: new RegExp(name) })
