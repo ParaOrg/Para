@@ -108,7 +108,7 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 
 - **You'd see:** the studio can't load or save; contributors' saves wait; the publish fails.
 - **First check:** status.supabase.com, then the project's dashboard: is it paused, or read-only past 500 MB?
-- **Fix:** commuters are not affected: the public map reads only the published file (ADR 0001). A paused project: Resume (within 90 days). Read-only: free space or upgrade (ticket 01). Contributors' saved rides wait on their phones and are sent again when it answers (`features/contribute/use-uploads.ts`). If the project is lost, restore from the latest backup (below) into a new project (owner to confirm the steps then: the backup holds no `auth.users`, so accounts would be made again).
+- **Fix:** commuters are not affected: the public map reads only the published file (ADR 0001). A paused project: Resume (within 90 days). Read-only: free space or upgrade (ticket 01). Contributors' saved rides wait on their phones and are sent again when it answers (`features/contribute/uploads/use-uploads.ts`). If the project is lost, restore from the latest backup (below) into a new project (owner to confirm the steps then: the backup holds no `auth.users`, so accounts would be made again).
 
 ## The restore rehearsal
 
