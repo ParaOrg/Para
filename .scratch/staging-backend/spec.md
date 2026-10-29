@@ -1,6 +1,6 @@
 # A database of its own for staging
 
-Written 2026-10-29, from the owner's question "fake backend for staging and only main the real?". Plan only: nothing is built until the owner says go.
+Written 2026-10-29, from the owner's question "fake backend for staging and only main the real?". Plan only: nothing is built until the owner says go. Parked on 2026-10-29: Supabase's Free plan allows two active projects per owner, both are in use, and a staging project waits for Pro or a freed slot.
 
 ## The problem
 
@@ -14,7 +14,7 @@ The commuters' side isn't affected: the public map reads the published files, ne
 | --- | --- | --- | --- |
 | Real data safe | Yes | Yes | No |
 | Tests the real thing: sign-in, email, Turnstile, Row Level Security, migrations | No; a fake drifts (the 2026-10-28 review found the studio fake more lenient than 0022) | Yes | Yes |
-| Cost | Free | Free tier (two free projects per organisation; check on the dashboard) | Free |
+| Cost | Free | Pro, or a freed free slot (the owner's two free projects are both in use, 2026-10-29) | Free |
 | Upkeep | Writing and keeping the fake | Each migration applied twice; some sample data | None |
 
 The fakes stay where they work best: in the test suites (`tests/e2e/lib/fake-*.mjs`).

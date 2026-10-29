@@ -1,6 +1,6 @@
 # 01: Create the staging project
 
-Status: needs-info (owner: go, after Cloudflare's GitHub access is fixed)
+Status: needs-info (owner: later; the Free plan's two-project limit is reached)
 Type: task
 Who: the owner, with a checklist a session writes
 
@@ -20,3 +20,5 @@ A session first writes the step-by-step checklist under `## Comments`, from the 
 The staging project exists with every migration applied, and the hub has its public URL and key.
 
 ## Comments
+
+- 2026-10-29, the owner: Supabase refused a third project. The owner's account has reached its limit of 2 active free projects, so the choices are to upgrade the Para organisation to Pro, or to pause or delete an unused free project. The owner chose to keep this as a plan for later.

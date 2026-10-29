@@ -12,7 +12,7 @@ Five projects for now and one for later, planned with the owner on 2026-10-15; p
 | 6 | Own the map tiles | [own-tiles/spec.md](own-tiles/spec.md) | Our own basemap tiles from OpenStreetMap, on R2 behind a Worker, in place of OpenFreeMap | 01 is the spike; the owner: R2, a subdomain, the Worker |
 | 7 | para-commute.org | [custom-domain/spec.md](custom-domain/spec.md) | `www.para-commute.org` serves `main` from Cloudflare, `tiles.para-commute.org` turns the tiles cache on, and the old app's phones move over | The owner: the site on Para, Vercel's records, the nameservers |
 | 8 | The commuter app in the stores | [commuter-app/spec.md](commuter-app/spec.md) | The commuter side as a React Native (Expo) app on the App Store and Google Play, from the polished web design, aiming for December 2026 | The owner: the web polish first, the store accounts, go for the map spike |
-| 9 | A database of its own for staging | [staging-backend/spec.md](staging-backend/spec.md) | Staging talks to a second Supabase project, so testing never touches live data, and migrations are tried there first | The owner: Cloudflare's GitHub access, then go |
+| 9 | A database of its own for staging | [staging-backend/spec.md](staging-backend/spec.md) | Staging talks to a second Supabase project, so testing never touches live data, and migrations are tried there first | Parked: needs Supabase Pro or a free slot (2026-10-29) |
 | Later | Train tracking | [train-tracking/spec.md](train-tracking/spec.md) | "My train ride" (stations left, an alert before yours) and trains estimated from the timetable | The owner deciding when; timetables |
 
 ## Order
