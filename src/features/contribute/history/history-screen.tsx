@@ -12,6 +12,8 @@ import type { Recording } from '../storage/recording-schema';
 interface HistoryScreenProps {
   items: HistoryItems;
   onBack: () => void;
+  /** Back to Start, to record: the empty History's way on. */
+  onRecord: () => void;
   onDownload: (recording: Recording) => void;
   onDeleteFromPhone: (recording: Recording) => void;
 }
@@ -24,6 +26,7 @@ interface HistoryScreenProps {
 export function HistoryScreen({
   items: { recordings, uploads, isOnPhone, load },
   onBack,
+  onRecord,
   onDownload,
   onDeleteFromPhone,
 }: HistoryScreenProps) {
@@ -55,7 +58,7 @@ export function HistoryScreen({
       {groups.length === 0 && load.state === 'ready' && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
           <p className="text-base/6 text-content-quaternary">No recordings yet.</p>
-          <Button variant="primary" label="Record a route" onClick={onBack} />
+          <Button variant="primary" label="Record a route" onClick={onRecord} />
         </div>
       )}
       {groups.length === 0 && load.state !== 'ready' && (

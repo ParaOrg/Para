@@ -220,6 +220,17 @@ async function seed(page, id, name, upload) {
   await button(page, 'Back').click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   check('  and after a reload on #history too', await isOnAccount());
+  await button(page, 'History').click();
+  await page.getByText('No recordings yet.').waitFor({ timeout: 15000 });
+  await button(page, 'Record a route').click();
+  await start(page).waitFor();
+  check(
+    "  an empty History's Record a route leaves History and Account both, for Start",
+    (await page.evaluate(() => location.hash)) === '' &&
+      (await page.getByRole('heading', { level: 1, name: 'Profile' }).count()) === 0,
+  );
+  await personButton(page).click();
+  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await button(page, 'Back').click();
   await start(page).waitFor();
 

@@ -200,6 +200,8 @@ export function ContributePage({ locator }: ContributePageProps) {
                 uploads={uploads}
                 // History is inside Account, so its Back returns there, even after a reload.
                 onBack={hasAccount ? () => history.closeTo('#profile') : history.close}
+                // Record a route leaves History and Account both, for Start.
+                onRecord={hasAccount ? () => history.replaceWith('') : history.close}
                 onDownload={recording.downloadSaved}
                 onDeleteFromPhone={recording.deleteSaved}
               />

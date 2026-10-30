@@ -6,6 +6,8 @@ export interface HashView {
   close: () => void;
   /** Leaves this screen for the one shown at `hash`, the screen it was opened from. */
   closeTo: (hash: string) => void;
+  /** Leaves this screen for the one at `hash` in its place, wherever it was opened from. */
+  replaceWith: (hash: string) => void;
 }
 
 /**
@@ -58,6 +60,13 @@ export function createHashView(hash: string): () => HashView {
       window.history.back();
       return;
     }
+    replaceWith(target);
+  };
+
+  // Every screen's store is told, as a hashchange: replaceState itself fires none.
+  const replaceWith = (target: string) => {
+    if (!isOpenNow()) return;
+    hasPushedEntry = false;
     window.history.replaceState(
       null,
       '',
@@ -68,7 +77,7 @@ export function createHashView(hash: string): () => HashView {
 
   function useHashView(): HashView {
     const isOpen = useSyncExternalStore(subscribe, isOpenNow);
-    return { isOpen, open, close, closeTo };
+    return { isOpen, open, close, closeTo, replaceWith };
   }
   return useHashView;
 }
