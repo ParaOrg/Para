@@ -18,6 +18,7 @@ const meta = {
     onSave: fn(),
     onSignOut: fn(),
     onBack: fn(),
+    onOpenHistory: fn(),
   },
   decorators: [
     (Story) => (
@@ -65,3 +66,6 @@ export const LongName: Story = {
     },
   },
 };
+
+/** Before consent there are no recordings, so Account has no History button. */
+export const WithoutHistory: Story = { args: { onOpenHistory: undefined } };

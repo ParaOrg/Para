@@ -83,6 +83,7 @@ const meta = {
   args: {
     items: itemsOf(rides, allOf(UPLOADED)),
     onBack: fn(),
+    onRecord: fn(),
     onDownload: fn(),
     onDeleteFromPhone: fn(),
   },

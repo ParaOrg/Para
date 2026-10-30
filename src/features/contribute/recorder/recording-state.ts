@@ -59,8 +59,6 @@ export interface RecordingState {
   /** Saves the recording; with no details, as it is. */
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
-  /** Settles the fix writes in flight and writes again the ones that failed, as far as the phone allows. */
-  flushFixes: () => Promise<void>;
   /** Back to Ready after a save. */
   recordAgain: () => void;
   /** Downloads the recording in hand from memory, for when the phone could not keep its fixes. */

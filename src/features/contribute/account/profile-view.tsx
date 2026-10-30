@@ -7,10 +7,12 @@ import { useUpdateProfileMutation } from '../api/use-update-profile-mutation';
 
 interface ProfileViewProps {
   onBack: () => void;
+  /** Opens History, inside Account; absent before consent, when there is none. */
+  onOpenHistory?: () => void;
 }
 
 /** Profile with its data: the stored name and number, saving them, and signing out. */
-export function ProfileView({ onBack }: ProfileViewProps) {
+export function ProfileView({ onBack, onOpenHistory }: ProfileViewProps) {
   const account = useAccountQuery();
   const profile = useProfileQuery();
   const update = useUpdateProfileMutation();
@@ -28,6 +30,7 @@ export function ProfileView({ onBack }: ProfileViewProps) {
       onSave={(fields) => update.mutate(fields)}
       onSignOut={() => signOut.mutate()}
       onBack={onBack}
+      onOpenHistory={onOpenHistory}
     />
   );
 }

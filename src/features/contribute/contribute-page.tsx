@@ -14,7 +14,7 @@ import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-fla
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { MarkButton } from './screens/mark-button';
-import { ReadyScreen } from './screens/ready-screen';
+import { ReadyScreen, type AccountOpener } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
 import { UploadCheck } from './uploads/upload-check';
@@ -28,12 +28,15 @@ const HistoryView = lazy(() =>
 const ProfileView = lazy(() =>
   import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
 );
-// Shown only once a recording is under way or found open, never on the page's first paint.
+// Shown only once a recording is under way or found open, never on the page's first paint. Ready
+// fetches both as it opens (below), so Start never waits on the network, nor fails without one.
+const loadRecordingScreen = () => import('./screens/recording-screen');
+const loadUnfinishedScreen = () => import('./screens/unfinished-screen');
 const RecordingScreen = lazy(() =>
-  import('./screens/recording-screen').then((module) => ({ default: module.RecordingScreen })),
+  loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
 );
 const UnfinishedScreen = lazy(() =>
-  import('./screens/unfinished-screen').then((module) => ({ default: module.UnfinishedScreen })),
+  loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),
 );
 // Sign-in, sign-up and the profile step show only to a phone with no finished account, and bring
 // the form fields and their checks with them: after the first sign-in the page never opens them.
@@ -100,21 +103,29 @@ export function ContributePage({ locator }: ContributePageProps) {
     }
   }, [accountGate, phase, hasConsent, history]);
 
+  // On Ready the recording screens are fetched ahead of Start. A failure here is only a missed
+  // head start: the lazy screen asks again when it is shown.
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    Promise.all([loadRecordingScreen(), loadUnfinishedScreen()]).catch((error: unknown) => {
+      console.warn('The recording screens could not be fetched ahead of Start.', error);
+    });
+  }, [phase]);
+
   // Signing out, or leaving Ready, must not leave #profile to reopen Profile after the next sign-in.
   useEffect(() => {
     const isUsable = accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
     if (profile.isOpen && !isUsable && accountGate !== 'loading') profile.close();
   }, [phase, accountGate, profile]);
 
-  // Once History or Profile has been opened from Ready's button, Ready hands focus back to it.
-  const [lastOpened, setLastOpened] = useState<'history' | 'profile' | null>(null);
-  const handleOpenHistory = () => {
-    setLastOpened('history');
-    history.open();
-  };
-  const handleOpenProfile = () => {
-    setLastOpened('profile');
-    profile.open();
+  // Account is Profile with History inside it; a build with no accounts has History alone. Once it
+  // has been opened from Ready, Ready hands focus back to the button that opened it.
+  const [lastOpened, setLastOpened] = useState<AccountOpener | null>(null);
+  const hasAccount = canUpload();
+  const handleOpenAccount = (opener: AccountOpener) => {
+    setLastOpened(opener);
+    if (hasAccount) profile.open();
+    else history.open();
   };
 
   return (
@@ -146,7 +157,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           {recording.problem && (
             <p
               role="alert"
-              className="absolute inset-x-4 top-[calc(max(1rem,env(safe-area-inset-top))+3.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
+              className="absolute inset-x-4 top-[calc(env(safe-area-inset-top)+5.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
             >
               {recording.problem}
             </p>
@@ -170,14 +181,16 @@ export function ContributePage({ locator }: ContributePageProps) {
               onConsent={giveConsent}
               earlierQuestion={earlier.question}
               onStart={recording.start}
-              onOpenHistory={handleOpenHistory}
-              onOpenProfile={canUpload() ? handleOpenProfile : undefined}
+              onOpenAccount={hasAccount || hasConsent ? handleOpenAccount : undefined}
               returnFocusTo={lastOpened}
             />
           )}
           {isProfileShown && (
             <Suspense fallback={null}>
-              <ProfileView onBack={profile.close} />
+              <ProfileView
+                onBack={profile.close}
+                onOpenHistory={hasConsent ? history.open : undefined}
+              />
             </Suspense>
           )}
           {isHistoryShown && (
@@ -185,7 +198,10 @@ export function ContributePage({ locator }: ContributePageProps) {
               <HistoryView
                 recordings={recording.saved}
                 uploads={uploads}
-                onBack={history.close}
+                // History is inside Account, so its Back returns there, even after a reload.
+                onBack={hasAccount ? () => history.closeTo('#profile') : history.close}
+                // Record a route leaves History and Account both, for Start.
+                onRecord={hasAccount ? () => history.replaceWith('') : history.close}
                 onDownload={recording.downloadSaved}
                 onDeleteFromPhone={recording.deleteSaved}
               />

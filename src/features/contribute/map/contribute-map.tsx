@@ -42,6 +42,8 @@ export function ContributeMap({ track, isRecording, locator, mark }: ContributeM
         zoomButtons={false}
         foldCredits
         hasMapStyleButton={false}
+        // TODO: move the map's credits into Account, as an "About Para" line, once Account's
+        // frame is drawn; until then the ⓘ stays, as the OpenStreetMap licence asks.
         creditsAtBottom
       />
       {map && locator?.(map, isMapLoaded, isRecording, mark)}

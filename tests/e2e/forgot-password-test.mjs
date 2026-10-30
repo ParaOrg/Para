@@ -90,7 +90,7 @@ async function phone({ users = accounts, anonymousWith = [] } = {}) {
 const heading = (page, name) => page.getByRole('heading', { name, level: 1 });
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 const field = (page, name) => page.getByLabel(name, { exact: true });
-const start = (page) => page.getByRole('button', { name: 'Start recording' });
+const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 const alertText = (page) => page.getByRole('alert').innerText();
 /** A new bot check is drawn after each send; its button is usable once it passes. */
 const sendEnabled = (page, label) =>

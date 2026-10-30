@@ -135,11 +135,19 @@ const centreOff = (page, metres) =>
     [eastOf(metres)[0], M_PER_DEG_LNG],
   );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
-/** The History screen, opened through its button on Ready unless it is already showing. */
+/** Ready's Account tab, in the toolbar over the Start bar. */
+const accountTab = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Account' });
+/** Ready's person button at the top right, which opens Account too. */
+const personButton = (page) => page.locator('button[aria-label="Account"]');
+/**
+ * The History screen, opened through Account on Ready unless it is already showing. With no
+ * accounts in this build, Account is History alone.
+ */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const history = page.getByRole('button', { name: 'History' });
-  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
+  const history = accountTab(page);
+  // A reload on #history lands on the screen itself; otherwise Ready's Account tab opens it.
   await heading.or(history).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
   await history.click();
@@ -172,13 +180,13 @@ const buttons = (page) =>
   const { page, errors } = await phone({ consented: false, earlierConsent: true });
   await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
   check(
-    'a phone that agreed to the first text is asked again: the new text shows, with no Start or History',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
+    'a phone that agreed to the first text is asked again: the new text shows, with no Start or Account',
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Account' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 1,
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check('  after agreeing, Start shows', errors.length === 0, errors.join(' | '));
   check(
     '  the web page never shows the Android app’s permissions screen: the browser asks at Start',
@@ -193,7 +201,7 @@ const buttons = (page) =>
   await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
   check(
     'a first visit says what the page does before anything else, with no Start',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 1,
   );
   check(
@@ -231,7 +239,7 @@ const buttons = (page) =>
         .catch(() => false)),
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
     '  agreeing stores the version of the text agreed to',
     await page.evaluate(() =>
@@ -242,7 +250,7 @@ const buttons = (page) =>
   );
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   {
-    const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
+    const start = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
     const credits = await page.locator('.maplibregl-ctrl-bottom-right').boundingBox();
     check(
       'on a first visit, after Okay, the credits sit above the Start bar',
@@ -252,28 +260,34 @@ const buttons = (page) =>
   }
   await page.waitForFunction(() => !!window.__map?.loaded());
   check(
-    'Ready: Start and a way back to the map, no saved-recordings list',
-    (await page.getByRole('button', { name: 'Back to the map' }).count()) === 1 &&
+    'Ready: Start, the top left empty as Figma has it (no Back to the map), no saved-recordings list',
+    (await page.getByRole('button', { name: 'Back to the map' }).count()) === 0 &&
       (await page.getByText('Saved on this phone').count()) === 0 &&
       (await page.getByText('No saved recordings yet.').count()) === 0,
   );
   {
-    const history = page.getByRole('button', { name: 'History' });
+    const history = accountTab(page);
     check(
-      '  History is a button beside Back; nothing of it shows above the Start bar',
+      '  Account is the person button at the top right and a tab over the Start bar; no History button, nothing of it shows',
       (await history.count()) === 1 &&
+        (await personButton(page).count()) === 1 &&
+        (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
         (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
-        (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+        (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 1 &&
+        (await page.getByText('Start Tracking').count()) === 1,
     );
-    const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
+    const start = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
+    const tabs = await page.getByRole('navigation', { name: 'Screens' }).boundingBox();
     const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
     check(
-      '  nothing but the Start bar covers the map',
+      '  the stack over the map is the tabs and, at the foot, the Start Tracking bar',
       !!start &&
+        !!tabs &&
         !!stack &&
-        Math.abs(stack.y - start.y) <= 1 &&
+        Math.abs(stack.y - tabs.y) <= 1 &&
+        tabs.y + tabs.height <= start.y &&
         Math.abs(stack.y + stack.height - (start.y + start.height)) <= 1,
-      JSON.stringify([stack, start]),
+      JSON.stringify([stack, tabs, start]),
     );
     await history.click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
@@ -285,8 +299,8 @@ const buttons = (page) =>
     const opened = {
       hash: await page.evaluate(() => location.hash),
       focus: await page.evaluate(() => document.activeElement?.textContent),
-      starts: await page.getByRole('button', { name: 'Start recording' }).count(),
-      historyButtons: await page.getByRole('button', { name: 'History' }).count(),
+      starts: await page.getByRole('button', { name: 'Start Tracking' }).count(),
+      accountButtons: await page.getByRole('button', { name: 'Account' }).count(),
       // Inert, not removed: the map stays mounted, but nothing in it can be focused or pressed.
       isMapInert: await page.evaluate(
         () => !!document.querySelector('button[aria-label="Map design"]')?.closest('[inert]'),
@@ -294,11 +308,11 @@ const buttons = (page) =>
       empty: await page.getByText('No recordings yet.').count(),
     };
     check(
-      '  History opened is a screen of its own: #history, focus on its heading, no Start, no map controls reachable',
+      '  Account with no accounts in the build is History: #history, focus on its heading, no Start, no map controls reachable',
       opened.hash === '#history' &&
         opened.focus === 'History' &&
         opened.starts === 0 &&
-        opened.historyButtons === 0 &&
+        opened.accountButtons === 0 &&
         opened.isMapInert &&
         opened.empty === 1,
       JSON.stringify(opened),
@@ -307,21 +321,38 @@ const buttons = (page) =>
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 10000 });
     check('  a reload stays on History', (await page.evaluate(() => location.hash)) === '#history');
     await page.getByRole('button', { name: 'Back', exact: true }).click();
-    await page.getByRole('button', { name: 'Start recording' }).waitFor();
+    await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
     check(
       '  its own back button returns to Ready, and the hash is gone',
       (await page.evaluate(() => location.hash)) === '',
     );
-    await page.getByRole('button', { name: 'History' }).click();
+    await accountTab(page).click();
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+    check(
+      '  opened from the Account tab, Back hands focus back to the tab',
+      await page
+        .waitForFunction(
+          () =>
+            document.activeElement?.textContent === 'Account' &&
+            !!document.activeElement.closest('nav[aria-label="Screens"]'),
+          null,
+          { timeout: 5000 },
+        )
+        .then(() => true)
+        .catch(() => false),
+    );
+    await personButton(page).click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
     await page.goBack();
-    await page.getByRole('button', { name: 'Start recording' }).waitFor();
+    await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
     check(
-      "  the browser's Back returns to Ready too, with focus back on the History button that opened it",
+      "  the person button opens it too, and the browser's Back returns to Ready with focus back on it",
       (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
         (await page
           .waitForFunction(
-            () => document.activeElement?.getAttribute('aria-label') === 'History',
+            () => document.activeElement?.getAttribute('aria-label') === 'Account',
             null,
             { timeout: 5000 },
           )
@@ -341,7 +372,7 @@ const buttons = (page) =>
   await page.waitForTimeout(1500);
   await shot(page, '1-ready');
 
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   check(
     'Start begins on Lakad: the stats say so, and the mode button offers Sakay',
@@ -626,7 +657,7 @@ const buttons = (page) =>
   );
   check('  and its mark', file.marks.length === 1 && !Number.isNaN(Date.parse(file.marks[0].time)));
   await page.getByRole('button', { name: 'Record again' }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
     'Record again is Ready, with nothing kept on the screen, and no mark button',
     (await page.getByRole('button', { name: 'Mark this place' }).count()) === 0,
@@ -638,7 +669,7 @@ const buttons = (page) =>
 // ----------------------------------------------- Finish by hand, and ✕
 {
   const { page, errors } = await phone({ consented: true });
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
 
@@ -695,11 +726,11 @@ const buttons = (page) =>
     JSON.stringify([file.startPointName, file.endPointName, file.rideKind]),
   );
   await page.getByRole('button', { name: 'Record again' }).click();
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('button', { name: 'Discard recording' }).waitFor();
   await page.getByRole('button', { name: 'Discard recording' }).click();
   await page.getByRole('button', { name: 'Delete' }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check('✕ then Delete throws the recording away and returns to Ready', true);
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
@@ -713,7 +744,7 @@ const buttons = (page) =>
   const activeName = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
 
   // (a) a Save after a switch, ten minutes on the form, and back.
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 1200);
   await page.getByRole('button', { name: 'Switch to Sakay' }).click();
@@ -768,7 +799,7 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Record again' }).click();
 
   // (b) a Save by hand, then Keep recording.
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
   await finishRecording(page);
@@ -792,7 +823,7 @@ const buttons = (page) =>
 // ----------------- the locator before Start: on its own when the browser allows it, else on a tap
 {
   const { page, errors } = await phone({ consented: true, granted: true });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   await page.waitForFunction(() => window.__locatorWatchers() === 1, null, { timeout: 10000 });
   check(
@@ -812,7 +843,7 @@ const buttons = (page) =>
       (await centreOff(page, 0)) < 15,
     `${await locatorMode(page)}, ${(await centreOff(page, 0)).toFixed(1)} m off`,
   );
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   check(
     'Start leaves the locator following, with its own watch beside the recording',
@@ -825,7 +856,7 @@ const buttons = (page) =>
 }
 {
   const { page, errors } = await phone({ consented: true });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   await page.waitForTimeout(500);
   check(
@@ -851,7 +882,7 @@ const buttons = (page) =>
   await page.mouse.up();
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
   check('  a drag lets the camera go', (await locatorMode(page)) === 'TrackOwnLocation');
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 30000 });
   check(
@@ -866,7 +897,7 @@ const buttons = (page) =>
 // ----------------- where the buttons are, standing still, and Stop on an unfinished one
 {
   const { page, errors } = await phone({ consented: true });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   // The locator's dock slides up as the stack is measured: let it settle.
   await page.waitForTimeout(800);
@@ -874,18 +905,18 @@ const buttons = (page) =>
   const locatorBox = await locate(page).boundingBox();
   const bars = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
   check(
-    "the map-style button sits on the locator button, the public map's 48 px pair, 12 px from the right",
+    "the map-style button sits on the locator button, the public map's 48 px pair, 16 px from the right as Figma has it",
     box &&
       locatorBox &&
       Math.abs(box.width - 48) < 0.5 &&
-      Math.abs(393 - (box.x + box.width) - 12) < 0.5 &&
+      Math.abs(393 - (box.x + box.width) - 16) < 0.5 &&
       Math.abs(locatorBox.x - box.x) < 0.5 &&
       box.y + box.height <= locatorBox.y + 0.5,
     JSON.stringify([box, locatorBox]),
   );
   check(
-    '  and above the Start bar, not under it',
-    bars && locatorBox && locatorBox.y + locatorBox.height <= bars.y + 0.5,
+    '  and above the Start bar, 16 px over the tabs as Figma has it',
+    bars && locatorBox && Math.abs(bars.y - (locatorBox.y + locatorBox.height) - 16) < 0.5,
     JSON.stringify([locatorBox, bars]),
   );
   check(
@@ -901,7 +932,7 @@ const buttons = (page) =>
     JSON.stringify([credits, stack]),
   );
 
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 500);
   await page.waitForTimeout(1500);
@@ -945,7 +976,7 @@ const buttons = (page) =>
 // ------------------------------------------- two minutes alone on the form
 {
   const { page, errors } = await phone({ consented: true });
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 200);
   // Installed before the form opens, so the form's own timer runs on it.
@@ -997,7 +1028,7 @@ const buttons = (page) =>
     'with nothing saved, Ready shows no History',
     (await page.getByRole('heading', { name: 'History' }).count()) === 0,
   );
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 100);
   await finishRecording(page);
@@ -1028,10 +1059,10 @@ const buttons = (page) =>
   );
   check(
     '  History has no Start bar',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
   );
   await page.getByRole('button', { name: 'Back', exact: true }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -1077,7 +1108,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   const { page, errors } = await phone({ consented: true });
   await page.addInitScript(FAIL_WRITES);
   await page.reload({ waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 100);
   await setFail(page, 'fixes', true);
@@ -1145,7 +1176,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
 // ------------------------------------------------------------- a second tab
 {
   const { page, context, errors } = await phone({ consented: true });
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 50);
   const second = await context.newPage();
@@ -1158,7 +1189,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
     'a second tab does not reopen the ride the first is recording',
     (await second.getByRole('button', { name: 'Resume' }).count()) === 0,
   );
-  await second.getByRole('button', { name: 'Start recording' }).click();
+  await second.getByRole('button', { name: 'Start Tracking' }).click();
   await second.waitForTimeout(500);
   const both = await stored(page);
   check(
@@ -1225,7 +1256,7 @@ const WAKE = () => {
   const { page, errors } = await phone({ consented: true });
   await page.addInitScript(WAKE);
   await page.reload({ waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await page.evaluate(() => {
     window.__show('hidden');
@@ -1249,15 +1280,20 @@ const WAKE = () => {
   await page.context().close();
 }
 
-// ------------------------------- Back to the map on every screen but Recording, and a ride kept
+// ------------------- Back to the map on Unfinished and Saved, not on Start or Recording; a ride kept
 {
   const { page, errors } = await phone({ consented: true });
   const back = page.getByRole('button', { name: 'Back to the map' });
   const hasOneBack = async () => (await back.count()) === 1;
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
-  check('Ready has Back to the map', await hasOneBack());
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  check(
+    'Ready has no Back to the map (the browser goes back), no scale bar, and the map credits still',
+    (await back.count()) === 0 &&
+      (await page.locator('.maplibregl-ctrl-scale').isVisible()) === false &&
+      (await page.locator('.maplibregl-ctrl-attrib').count()) === 1,
+  );
 
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
   check(

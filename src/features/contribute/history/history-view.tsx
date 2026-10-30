@@ -7,6 +7,7 @@ interface HistoryViewProps {
   recordings: readonly Recording[];
   uploads: Uploads;
   onBack: () => void;
+  onRecord: () => void;
   onDownload: (recording: Recording) => void;
   onDeleteFromPhone: (recording: Recording) => void;
 }

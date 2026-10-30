@@ -1,4 +1,4 @@
-// The small 24px icons on History's cards, drawn in currentColor like HistoryIcon. TODO: drawn here,
+// The small 24px icons on History's cards, drawn in currentColor like the tracking bars' icons. TODO: drawn here,
 // not in Figma; swap in the owner's drawings once there are some.
 
 const STROKE = {

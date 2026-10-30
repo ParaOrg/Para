@@ -80,24 +80,25 @@ async function phone() {
   await page.addInitScript(GPS);
   await page.addInitScript(() => localStorage.setItem('para.contribute.consent', '3'));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 30000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 30000 });
   return { context, page };
 }
 
-/** The History screen, opened through its button on Ready unless it is already showing. */
+/** The History screen, opened through Account on Ready unless it is already showing. */
 async function openHistory(page) {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const history = page.getByRole('button', { name: 'History' });
-  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
-  await heading.or(history).waitFor({ timeout: 10000 });
+  const account = page.locator('button[aria-label="Account"]');
+  // A reload on #history lands on the screen itself; otherwise History is inside Account.
+  await heading.or(account).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
-  await history.click();
+  await account.click();
+  await page.getByRole('button', { name: 'History', exact: true }).click();
   await heading.waitFor();
 }
 
 /** Records `seconds` of a ride north from `lat`, a fix a second, and saves it with a start name. */
 async function recordAndSave(page, name, lat, seconds = 40) {
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   for (let s = 0; s < seconds; s += 1) {
     const standing = s >= 15 && s < 25;
     const north = (standing ? 15 : s < 15 ? s : s - 10) * 8;

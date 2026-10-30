@@ -131,7 +131,7 @@ function watchDatabase(page) {
 }
 
 const SCREENS = {
-  start: (page) => page.getByRole('button', { name: 'Start recording' }),
+  start: (page) => page.getByRole('button', { name: 'Start Tracking' }),
   consent: (page) => page.getByRole('heading', { name: 'Before you record' }),
   earlier: (page) => page.getByRole('heading', { name: /earlier recordings? too\?/ }),
 };
@@ -213,14 +213,15 @@ const storedUpload = (page, id) =>
 
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
 const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
-/** The History screen, opened through its button on Ready unless it is already showing. */
+/** The History screen, opened through Account on Ready unless it is already showing. */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const history = page.getByRole('button', { name: 'History' });
-  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
-  await heading.or(history).waitFor({ timeout: 10000 });
+  const account = page.locator('button[aria-label="Account"]');
+  // A reload on #history lands on the screen itself; otherwise History is inside Account.
+  await heading.or(account).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
-  await history.click();
+  await account.click();
+  await page.getByRole('button', { name: 'History', exact: true }).click();
   await heading.waitFor();
 };
 /** A card's actions, opened from its dots unless they are open, then the one named by `pattern`. */
@@ -261,7 +262,7 @@ const groupOf = (page, name) =>
 {
   const { page, fake, errors } = await phone({ studioSession: true });
   const studioBefore = await page.evaluate((k) => localStorage.getItem(k), STUDIO_KEY);
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   for (let s = 0; s < 20; s += 1) {
     await page.evaluate(
       ([t, lat]) => window.__fix(121.05, lat, t),
@@ -607,7 +608,7 @@ const groupOf = (page, name) =>
     `${fake.saveRequests} sends, ${fake.signIns} sign-ins, ${asked.count} requests`,
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await waitForStatus(page, 'No consent', UPLOADED);
   check(
     '  agreeing to the current text sends it, with the text' + "'" + 's version',
@@ -635,7 +636,7 @@ const groupOf = (page, name) =>
   await SCREENS.consent(page).waitFor();
   check(
     "a second account on the same phone is asked about the text itself; the first one's answer is not theirs",
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
   );
 }
 
@@ -661,7 +662,7 @@ const groupOf = (page, name) =>
   await page.waitForTimeout(2000);
   check(
     'with version-1 consent, the new text shows, with no Start and nothing sent',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
       fake.saveRequests === 0 &&
       fake.signIns === 0 &&
       asked.count === 0 &&
@@ -684,7 +685,7 @@ const groupOf = (page, name) =>
       fake.rows.has(stamped) &&
       fake.rows.has(underTwo) &&
       (await storedUpload(page, earlier)) === 'none' &&
-      (await page.getByRole('button', { name: 'Start recording' }).count()) === 0,
+      (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
     [...fake.rows.keys()].join(),
   );
 }
@@ -711,7 +712,7 @@ const groupOf = (page, name) =>
       fake.saveRequests === 0,
   );
   await page.getByRole('button', { name: 'Keep on phone' }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await openHistory(page);
   await page.waitForTimeout(1500);
   check(
@@ -725,7 +726,7 @@ const groupOf = (page, name) =>
     location.hash = '';
   });
   await page.reload({ waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await page.waitForTimeout(1000);
   check(
     '  after a reload it is not asked again and still not sent',
@@ -756,7 +757,7 @@ const groupOf = (page, name) =>
   await page.reload({ waitUntil: 'load' });
   await SCREENS.earlier(page).waitFor();
   await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await waitForStatus(page, 'Sent two', UPLOADED);
   await waitForStatus(page, 'Sent one', UPLOADED);
   check(
@@ -767,7 +768,7 @@ const groupOf = (page, name) =>
     location.hash = '';
   });
   await page.reload({ waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check('  and it is not asked again', (await SCREENS.earlier(page).count()) === 0);
 }
 

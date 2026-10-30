@@ -24,7 +24,7 @@ export function UnfinishedScreen({ figures, onResume, onStop }: UnfinishedScreen
       <section
         ref={stackRef}
         aria-labelledby="unfinished-heading"
-        className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-4 pb-[calc(1.5rem+max(2.125rem,env(safe-area-inset-bottom)))]"
       >
         <div className="rounded-4xl bg-surface px-4 pt-4 pb-2 font-sn-pro text-content-primary">
           <h1

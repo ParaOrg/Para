@@ -57,7 +57,7 @@ const SCREENS = {
   signIn: (page) => page.getByRole('heading', { name: 'Welcome Contributor', level: 1 }),
   createAccount: (page) => page.getByRole('heading', { name: 'Create an account', level: 1 }),
   thankYou: (page) => page.getByRole('heading', { name: 'Thank you for signing up!', level: 1 }),
-  start: (page) => page.getByRole('button', { name: 'Start recording' }),
+  start: (page) => page.getByRole('button', { name: 'Start Tracking' }),
 };
 const field = (page, name) => page.getByLabel(name, { exact: true });
 const alertText = (page) => page.getByRole('alert').innerText();
@@ -80,9 +80,9 @@ async function setOffline(context, fake, isOffline) {
   await context.setOffline(isOffline);
 }
 
-/** Signs out through Profile's Sign out button. */
+/** Signs out through Account's Sign out button. */
 async function signOut(page) {
-  await page.getByRole('button', { name: 'Profile', exact: true }).click();
+  await page.locator('button[aria-label="Account"]').click();
   await page.getByRole('button', { name: 'Sign out' }).click();
 }
 
