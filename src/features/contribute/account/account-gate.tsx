@@ -5,8 +5,11 @@ import { CreateAccountScreen } from './create-account-screen';
 import { PasswordResetFlow } from './password-reset-flow';
 import { ProfileStepScreen } from './profile-step-screen';
 import { SignInScreen } from './sign-in-screen';
+import { ThankYouScreen } from './thank-you-screen';
 import { useCaptcha } from './use-captcha';
+import type { Account } from '../api/account';
 import { useSaveProfileMutation } from '../api/use-save-profile-mutation';
+import { useSessionWriter } from '../api/use-session-writer';
 import { useSignInMutation } from '../api/use-sign-in-mutation';
 import { useSignUpMutation } from '../api/use-sign-up-mutation';
 import { BackToMapButton } from '../common/back-to-map-button';
@@ -19,21 +22,30 @@ interface AccountGateProps {
 }
 
 /**
- * What a phone with no account sees: Sign in, with Create account and Forgot password beside it,
- * and the way back to the map. An account whose name and number did not save sees only those two fields.
+ * What a phone with no account sees: Sign in, with Create an account and Forgot password beside
+ * it, and the way back to the map. An account whose name and number did not save sees only those
+ * two fields. A sign-up ends on Thank you, held until Continue.
  */
 export function AccountGate({ needsProfile }: AccountGateProps) {
   const [mode, setMode] = useState<Mode>('sign-in');
+  // The account a sign-up just made: the page learns of it only on Thank you's Continue, so the
+  // gate stays until then.
+  const [madeAccount, setMadeAccount] = useState<Account | null>(null);
   const captcha = useCaptcha();
   const signIn = useSignInMutation();
   const signUp = useSignUpMutation();
   const saveProfile = useSaveProfileMutation();
+  const writeSession = useSessionWriter();
 
   const switchTo = (next: Mode) => {
     signIn.reset();
     signUp.reset();
     setMode(next);
   };
+
+  if (madeAccount) {
+    return <ThankYouScreen onContinue={() => writeSession(madeAccount)} />;
+  }
 
   if (needsProfile) {
     return (
@@ -50,24 +62,31 @@ export function AccountGate({ needsProfile }: AccountGateProps) {
 
   return (
     <>
-      <BackToMapButton />
       {mode === 'sign-in' && (
-        <SignInScreen
-          isBusy={signIn.isPending}
-          error={messageOf(signIn.error)}
-          captcha={captcha}
-          onSubmit={(fields) => signIn.mutate({ ...fields, captchaToken: captcha.takeToken() })}
-          onCreateAccount={() => switchTo('create-account')}
-          onForgotPassword={() => switchTo('forgot-password')}
-        />
+        <>
+          <BackToMapButton />
+          <SignInScreen
+            isBusy={signIn.isPending}
+            error={messageOf(signIn.error)}
+            captcha={captcha}
+            onSubmit={(fields) => signIn.mutate({ ...fields, captchaToken: captcha.takeToken() })}
+            onCreateAccount={() => switchTo('create-account')}
+            onForgotPassword={() => switchTo('forgot-password')}
+          />
+        </>
       )}
       {mode === 'create-account' && (
         <CreateAccountScreen
           isBusy={signUp.isPending}
           error={messageOf(signUp.error)}
           captcha={captcha}
-          onSubmit={(fields) => signUp.mutate({ ...fields, captchaToken: captcha.takeToken() })}
-          onSignIn={() => switchTo('sign-in')}
+          onSubmit={(fields) =>
+            signUp.mutate(
+              { ...fields, captchaToken: captcha.takeToken() },
+              { onSuccess: setMadeAccount },
+            )
+          }
+          onBack={() => switchTo('sign-in')}
         />
       )}
       {mode === 'forgot-password' && (

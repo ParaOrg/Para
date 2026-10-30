@@ -305,11 +305,13 @@ try {
   await setOffline(context, fake, true);
   await page.evaluate((key) => localStorage.removeItem(key), AUTH_KEY);
   await page.reload({ waitUntil: 'load' });
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 20000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 20000 });
   check(
     'with no signal and no account, the page opens on Sign in, with no Start and no page error',
     (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'Create account' }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Create an account' }).count()) === 1 &&
       errors.length === 0,
     errors.slice(0, 3).join(' | '),
   );

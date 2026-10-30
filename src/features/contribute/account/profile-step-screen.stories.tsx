@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { ProfileStepScreen } from './profile-step-screen';
 
@@ -27,3 +27,25 @@ export const NotSaved: Story = {
 };
 
 export const Busy: Story = { args: { isBusy: true } };
+
+/** Continue with nothing typed: both fields say what they need, and nothing is sent. */
+export const FieldErrors: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Continue' }));
+    await expect(canvas.getByText('Enter your name')).toBeVisible();
+    await expect(canvas.getByText('Enter a mobile number like 917 123 4567')).toBeVisible();
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+/** A short phone: the page scrolls inside the screen instead of running off it. */
+export const ShortPhone: Story = {
+  decorators: [
+    (Story) => (
+      <div className="relative h-[560px] w-[360px] overflow-hidden bg-surface-secondary">
+        <Story />
+      </div>
+    ),
+  ],
+};

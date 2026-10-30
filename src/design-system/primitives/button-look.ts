@@ -21,7 +21,10 @@ export type VariantAndSize =
   // (4147:11947): its Base and its Disabled are compile errors until they are
   // designed.
   | { variant: 'primary'; size: 'small'; fill: CardFill; disabled?: never }
-  | { variant: 'error'; size?: 'base'; fill?: never };
+  | { variant: 'error'; size?: 'base'; fill?: never }
+  // Plain (4451:14022): the words alone, as Sign in's "Forgot password". Only Base Default is
+  // drawn; disabled takes the set's opacity/60, as every voice does.
+  | { variant: 'plain'; size?: 'base'; fill?: never };
 
 const VARIANT = {
   special:
@@ -40,6 +43,8 @@ const VARIANT = {
     'bg-error-surface font-sn-pro font-medium text-content-inverse shadow-primary-button-rest ' +
     'usable:hover:shadow-primary-button-hover ' +
     'usable:active:bg-error-surface-secondary usable:active:shadow-primary-button-pressed',
+  // No fill and no shadow; the set draws no Hover or Pressed for it yet.
+  plain: 'bg-transparent font-sn-pro font-medium text-content-primary',
 } satisfies Record<VariantAndSize['variant'], string>;
 
 /**

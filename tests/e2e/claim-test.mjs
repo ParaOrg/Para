@@ -126,7 +126,9 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 30000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 30000 });
   const rides = [
     ...uploaded.map((id, i) =>
       savedRide(id, T0 + i * 3_600_000, {
@@ -142,7 +144,9 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
   if (rides.length) {
     await seed(page, rides);
     await page.reload({ waitUntil: 'load' });
-    await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 30000 });
+    await page
+      .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+      .waitFor({ timeout: 30000 });
   }
   return { page, context, fake, errors };
 }
@@ -289,7 +293,9 @@ async function signInAs(page) {
       import('/src/features/contribute/api/account.ts').then((account) => account.signOut()),
     );
     await page.reload({ waitUntil: 'load' });
-    await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+    await page
+      .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+      .waitFor({ timeout: 15000 });
   };
   fake.next.finishClaim = 'offline';
   await signInAs(page);
@@ -355,12 +361,16 @@ async function signInAs(page) {
 // ----------------- Create account on the same phone: the id stays, nothing is claimed
 {
   const { page, fake, errors } = await phone({ shared: { users: new Map() }, uploaded: ['up-1'] });
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await field(page, 'Name').fill('Juan dela Cruz');
+  await page.getByRole('button', { name: 'Create an account' }).click();
+  await field(page, 'Full name').fill('Juan dela Cruz');
   await field(page, 'Email').fill('new@example.com');
-  await field(page, 'Number').fill('09171234567');
+  await field(page, 'Phone Number').fill('917 123 4567');
   await field(page, 'Password').fill('hunter2hunter2');
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page
+    .getByRole('heading', { name: 'Thank you for signing up!' })
+    .waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: 'Continue' }).click();
   await start(page).waitFor({ timeout: 15000 });
   const [[id, user]] = [...fake.users];
   check(

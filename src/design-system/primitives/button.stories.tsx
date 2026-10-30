@@ -64,6 +64,11 @@ export const Primary: Story = { args: { variant: 'primary' } };
 /** The destructive red, on Primary's shadows. Press darkens to Error/surface-secondary. */
 export const Error: Story = { args: { variant: 'error' } };
 
+/** The words alone, no fill or shadow (4451:14022): Sign in's "Forgot password". */
+export const Plain: Story = {
+  args: { variant: 'plain', firstIcon: undefined, lastIcon: undefined, label: 'Forgot password' },
+};
+
 /** Small exists for Special, Secondary and Primary — on Error it is a compile error. */
 export const SpecialSmall: Story = { args: { variant: 'special', size: 'small' } };
 
@@ -138,6 +143,7 @@ export const Disabled: Story = {
       <Button variant="secondary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
       <Button variant="primary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
       <Button variant="error" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
+      <Button variant="plain" label="Button" disabled />
     </div>
   ),
 };
@@ -155,6 +161,7 @@ export const AllVariants: Story = {
       <Button variant="secondary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
       <Button variant="primary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
       <Button variant="error" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
+      <Button variant="plain" label="Button" />
     </div>
   ),
 };

@@ -4,7 +4,7 @@ import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import { checkForgotPassword, type ForgotPasswordFields } from './account-fields';
-import { AccountPanel } from './account-panel';
+import { AccountPage } from './account-page';
 import type { Captcha } from './use-captcha';
 
 interface ForgotPasswordScreenProps {
@@ -37,8 +37,10 @@ export function ForgotPasswordScreen({
   };
 
   return (
-    <AccountPanel
+    <AccountPage
       title="Forgot password"
+      onBack={onBack}
+      isBackDisabled={isBusy}
       error={error}
       captcha={captcha}
       onSubmit={handleSubmit}
@@ -62,6 +64,6 @@ export function ForgotPasswordScreen({
         error={emailError}
         onChange={(event) => setEmail(event.target.value)}
       />
-    </AccountPanel>
+    </AccountPage>
   );
 }

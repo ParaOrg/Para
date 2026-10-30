@@ -5,7 +5,8 @@ import { PasswordField } from '@/design-system/primitives/password-field';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import { checkSignIn, type SignInFields } from './account-fields';
-import { AccountPanel } from './account-panel';
+import { AccountPage } from './account-page';
+import paraLogo from './para-logo.svg';
 import type { Captcha } from './use-captcha';
 
 interface SignInScreenProps {
@@ -18,7 +19,10 @@ interface SignInScreenProps {
   onForgotPassword: () => void;
 }
 
-/** The contributor page for a phone with no account: email and password, and the way to Create account. */
+/**
+ * The contributor page for a phone with no account (Figma 4451:7904): email and password, and the
+ * ways to Create an account and to Forgot password.
+ */
 export function SignInScreen({
   isBusy,
   error,
@@ -38,8 +42,11 @@ export function SignInScreen({
   };
 
   return (
-    <AccountPanel
-      title="Sign in"
+    <AccountPage
+      title="Welcome Contributor"
+      subtitle="Log in with your email and password"
+      picture={<img src={paraLogo} alt="Para" className="mb-6 h-16 w-auto" />}
+      placement="centre"
       error={error}
       captcha={captcha}
       onSubmit={handleSubmit}
@@ -53,13 +60,13 @@ export function SignInScreen({
           />
           <Button
             variant="secondary"
-            label="Create account"
+            label="Create an account"
             disabled={isBusy}
             onClick={onCreateAccount}
           />
           <Button
-            variant="secondary"
-            label="Forgot password?"
+            variant="plain"
+            label="Forgot password"
             disabled={isBusy}
             onClick={onForgotPassword}
           />
@@ -81,6 +88,6 @@ export function SignInScreen({
         error={fieldErrors.password}
         onChange={(event) => setPassword(event.target.value)}
       />
-    </AccountPanel>
+    </AccountPage>
   );
 }

@@ -22,6 +22,11 @@ test('a local mobile number is stored with +63 in place of its 0', () => {
   assert.equal(normalisePhoneNumber('09171234567'), '+639171234567');
 });
 
+test("the number typed after PhoneField's +63 is stored with it", () => {
+  assert.equal(normalisePhoneNumber('9171234567'), '+639171234567');
+  assert.equal(normalisePhoneNumber('917 123 4567'), '+639171234567');
+});
+
 test('an international mobile number is stored as it is', () => {
   assert.equal(normalisePhoneNumber('+639171234567'), '+639171234567');
 });
@@ -35,6 +40,9 @@ test('a number that is not a Philippine mobile is refused', () => {
   for (const text of [
     '',
     '0917123456',
+    '917123456',
+    '91712345678',
+    '8171234567',
     '091712345678',
     '08171234567',
     '+649171234567',
