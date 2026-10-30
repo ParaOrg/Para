@@ -28,12 +28,15 @@ const HistoryView = lazy(() =>
 const ProfileView = lazy(() =>
   import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
 );
-// Shown only once a recording is under way or found open, never on the page's first paint.
+// Shown only once a recording is under way or found open, never on the page's first paint. Ready
+// fetches both as it opens (below), so Start never waits on the network, nor fails without one.
+const loadRecordingScreen = () => import('./screens/recording-screen');
+const loadUnfinishedScreen = () => import('./screens/unfinished-screen');
 const RecordingScreen = lazy(() =>
-  import('./screens/recording-screen').then((module) => ({ default: module.RecordingScreen })),
+  loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
 );
 const UnfinishedScreen = lazy(() =>
-  import('./screens/unfinished-screen').then((module) => ({ default: module.UnfinishedScreen })),
+  loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),
 );
 // Sign-in, sign-up and the profile step show only to a phone with no finished account, and bring
 // the form fields and their checks with them: after the first sign-in the page never opens them.
@@ -99,6 +102,15 @@ export function ContributePage({ locator }: ContributePageProps) {
       history.close();
     }
   }, [accountGate, phase, hasConsent, history]);
+
+  // On Ready the recording screens are fetched ahead of Start. A failure here is only a missed
+  // head start: the lazy screen asks again when it is shown.
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    Promise.all([loadRecordingScreen(), loadUnfinishedScreen()]).catch((error: unknown) => {
+      console.warn('The recording screens could not be fetched ahead of Start.', error);
+    });
+  }, [phase]);
 
   // Signing out, or leaving Ready, must not leave #profile to reopen Profile after the next sign-in.
   useEffect(() => {

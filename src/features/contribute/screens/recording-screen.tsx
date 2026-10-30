@@ -75,7 +75,7 @@ export function RecordingScreen({
       <RecordingTint state={state} />
       <div
         ref={closeRef}
-        className="absolute top-0 left-0 z-30 pt-[max(1rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))]"
+        className="absolute top-0 left-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] pl-[max(1rem,env(safe-area-inset-left))]"
       >
         <IconButton
           tooltip="top"
@@ -85,23 +85,22 @@ export function RecordingScreen({
           onClick={() => setIsAsking(true)}
         />
       </div>
-      {isAsking && (
-        <div className="absolute inset-x-4 top-[calc(max(1rem,env(safe-area-inset-top))+3.5rem)] z-30">
+      <section
+        ref={stackRef}
+        aria-labelledby="recording-heading"
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-4 pb-[calc(1.5rem+max(2.125rem,env(safe-area-inset-bottom)))]"
+      >
+        <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
+          {isPaused ? 'Recording paused' : 'Recording a route'}
+        </h1>
+        {/* At the foot, over the card, so it never covers the page's problem line at the top. */}
+        {isAsking && (
           <ConfirmDelete
             question="Throw this recording away?"
             onConfirm={onDiscard}
             onKeep={() => setIsAsking(false)}
           />
-        </div>
-      )}
-      <section
-        ref={stackRef}
-        aria-labelledby="recording-heading"
-        className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
-      >
-        <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
-          {isPaused ? 'Recording paused' : 'Recording a route'}
-        </h1>
+        )}
         {!isAwake && !isPaused && (
           <p className="bg-surface p-2 font-sn-pro text-sm/5 text-content-primary">
             The screen could not be kept awake, so it may sleep and the location may stop.

@@ -32,7 +32,7 @@ export function StartBar({ onClick }: StartBarProps) {
         type="button"
         aria-label="Start recording"
         onClick={onClick}
-        className="flex w-full items-center justify-center gap-2 bg-brand-surface-secondary px-2 pt-5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] font-sn-pro text-base/6 font-medium text-content-inverse focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-content-inverse"
+        className="flex w-full items-center justify-center gap-2 bg-brand-surface-secondary px-2 pt-5 pb-[calc(0.625rem+max(2.5625rem,env(safe-area-inset-bottom)))] font-sn-pro text-base/6 font-medium text-content-inverse focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-content-inverse"
       >
         <span aria-hidden className="size-6 shrink-0 *:size-full">
           <PlayIcon />

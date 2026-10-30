@@ -64,7 +64,7 @@ function Stat({ label, figure }: StatProps) {
  * Figma's RecordingComponent (4482:24179): Time, the mode with its dot and
  * whether it is recording, and Distance, over two bars. The figures change
  * every second, so nothing here is a live region; a switch of mode is
- * announced once on its own (RecordingScreen).
+ * announced once on its own (use-recording.ts).
  */
 export function RecordingCard({ elapsedSeconds, distanceM, state, children }: RecordingCardProps) {
   return (

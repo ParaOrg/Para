@@ -74,7 +74,7 @@ export function ReadyScreen({
           is designed. */}
       <BackToMapButton />
       {onOpenAccount && (
-        <div className="absolute top-0 right-0 z-30 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))]">
+        <div className="absolute top-0 right-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] pr-[max(1rem,env(safe-area-inset-right))]">
           <IconButton
             ref={personRef}
             tooltip="top"
