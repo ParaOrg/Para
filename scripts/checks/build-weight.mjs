@@ -48,10 +48,11 @@ export const GROUPS = [
   // Zod validates the published index as the public map reads it (ticket 08
   // of the restructure follow-ups, 2026-10-07): zod/mini, the tree-shakeable
   // API, since the classic one weighed 24.3 kB gzipped over these schemas.
-  // Its own chunk, so its weight is read here on every build.
+  // Its own chunk, so its weight is read here on every build. 11, not 10:
+  // zod 4.6.7, the fix for a high-severity advisory in 4.6.5, weighs 10.3 kB.
   {
     name: 'zod',
-    maxGzKb: 10,
+    maxGzKb: 11,
     vendor: true,
     packages: ['zod'],
     holds: 'zod alone, and imports none of our code',
