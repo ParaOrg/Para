@@ -7,6 +7,8 @@ export const NO_CAPTCHA: Captcha = {
   siteKey: null,
   round: 0,
   onToken: fn(),
+  needsTap: false,
+  onNeedsTap: fn(),
   isReady: true,
   takeToken: () => undefined,
 };

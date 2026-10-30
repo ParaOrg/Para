@@ -8,6 +8,9 @@ export interface Captcha {
   /** Bumped for a fresh widget: a token is good for one request. */
   round: number;
   onToken: (token: string | null) => void;
+  /** Cloudflare is asking the person to tap the check: the page says where it is. */
+  needsTap: boolean;
+  onNeedsTap: (needsTap: boolean) => void;
   /** Whether a request may go: a token is in hand, or none is needed. */
   isReady: boolean;
   /** The token for the request about to go, spent by it. */
@@ -18,14 +21,18 @@ export interface Captcha {
 export function useCaptcha(): Captcha {
   const [token, setToken] = useState<string | null>(null);
   const [round, setRound] = useState(0);
+  const [needsTap, setNeedsTap] = useState(false);
   return {
     siteKey: turnstileSiteKey,
     round,
     onToken: setToken,
+    needsTap,
+    onNeedsTap: setNeedsTap,
     isReady: turnstileSiteKey === null || token !== null,
     takeToken: () => {
       if (turnstileSiteKey === null) return undefined;
       setToken(null);
+      setNeedsTap(false);
       setRound((current) => current + 1);
       return token ?? undefined;
     },
