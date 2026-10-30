@@ -2,7 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 
 import { ContributionDetails } from './contribution-details';
-import { STORY_CONTRIBUTIONS, STORY_DETAIL, STORY_DETAIL_MARKED } from './contributor-story-data';
+import {
+  STORY_CONTRIBUTIONS,
+  STORY_DETAIL,
+  STORY_DETAIL_MARKED,
+  STORY_DETAIL_WALKED,
+} from './contributor-story-data';
 
 const [named, bare] = STORY_CONTRIBUTIONS;
 if (!named || !bare) throw new Error('The stories need two uploads.');
@@ -48,5 +53,13 @@ export const Marked: Story = {
     await expect(
       within(canvasElement).getByText(/2 marks\. Marked at 08:14, 08:31\./),
     ).toBeVisible();
+  },
+};
+
+/** Walking and riding: the text gives each one's distance, as the map dashes the walking. */
+export const Walked: Story = {
+  args: { detail: STORY_DETAIL_WALKED },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText(/1 ride and 2 walks/)).toBeVisible();
   },
 };

@@ -1,9 +1,10 @@
-import type { MapLibreMap, MapLayerMouseEvent } from 'maplibre-gl';
+import type { MapLibreMap, MapLayerMouseEvent, MapStyleImageMissingEvent } from 'maplibre-gl';
 import { useEffect } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
 import {
+  OPENED_COLOUR,
   UPLOADS_LINE,
   UPLOADS_SRC,
   addContributionLayers,
@@ -11,7 +12,9 @@ import {
   setOpened,
   setUploads,
 } from './contribution-layers';
+import { addFootIcon } from './walk-layers';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
+import { FOOT_ICON } from '../maps/foot-icon';
 
 /**
  * The uploads on the studio's map while the Contributors map is open: the
@@ -29,6 +32,18 @@ export function useContributionLayers(
     if (!map) return;
     addContributionLayers(map);
     return () => removeContributionLayers(map);
+  }, [map]);
+
+  // A basemap switch carries the layers across but not the images (basemap.ts).
+  useEffect(() => {
+    if (!map) return;
+    const handleMissing = (event: MapStyleImageMissingEvent) => {
+      if (event.id === FOOT_ICON) addFootIcon(map, OPENED_COLOUR);
+    };
+    map.on('styleimagemissing', handleMissing);
+    return () => {
+      map.off('styleimagemissing', handleMissing);
+    };
   }, [map]);
 
   useEffect(() => {

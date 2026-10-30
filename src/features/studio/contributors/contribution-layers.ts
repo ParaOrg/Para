@@ -3,7 +3,8 @@ import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
-import { placeMark } from './mark-placement';
+import { openedData } from './opened-data';
+import { RIDE, WALK_LAYERS, addWalkLayers } from './walk-layers';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
 export const UPLOADS_SRC = 'studio-contributions';
@@ -15,7 +16,18 @@ const OPENED_CASING = 'studio-contribution-casing';
 const OPENED_LINE = 'studio-contribution-line';
 const OPENED_HINTOS = 'studio-contribution-hintos';
 const OPENED_MARKS = 'studio-contribution-marks';
-const LAYERS = [OPENED_MARKS, OPENED_HINTOS, OPENED_LINE, OPENED_CASING, UPLOADS_DOT, UPLOADS_LINE];
+const LAYERS = [
+  OPENED_MARKS,
+  OPENED_HINTOS,
+  ...WALK_LAYERS,
+  OPENED_LINE,
+  OPENED_CASING,
+  UPLOADS_DOT,
+  UPLOADS_LINE,
+];
+
+/** The opened upload's colour: its line, its walk parts' foot, its marks' rim. */
+export const OPENED_COLOUR = MAP_COLOURS['Map/Trail/pabalik'];
 
 const centreOf = ([west, south, east, north]: readonly [
   number,
@@ -43,49 +55,12 @@ export function uploadsData(contributions: readonly Contribution[]) {
   return { type: 'FeatureCollection' as const, features: [...lines, ...dots] };
 }
 
-/** The opened upload: every point the phone sent, a circle per hinto sized by its minutes, and a pin per mark. */
-export function openedData(detail: ContributionDetail | null) {
-  if (!detail) return { type: 'FeatureCollection' as const, features: [] };
-  const trail = detail.trail.map((p) => [...p.at]);
-  return {
-    type: 'FeatureCollection' as const,
-    features: [
-      ...(trail.length >= 2
-        ? [
-            {
-              type: 'Feature' as const,
-              properties: { kind: 'trail' },
-              geometry: { type: 'LineString' as const, coordinates: trail },
-            },
-          ]
-        : []),
-      ...detail.hintos.map((h) => ({
-        type: 'Feature' as const,
-        properties: { kind: 'hinto', minutes: Math.round(h.seconds / 60) },
-        geometry: { type: 'Point' as const, coordinates: [...h.at] },
-      })),
-      ...detail.marks.flatMap((time) => {
-        const at = placeMark(detail.trail, time);
-        return at
-          ? [
-              {
-                type: 'Feature' as const,
-                properties: { kind: 'mark', time },
-                geometry: { type: 'Point' as const, coordinates: [...at] },
-              },
-            ]
-          : [];
-      }),
-    ],
-  };
-}
-
 /** Adds the uploads' sources and layers, empty. A basemap switch carries them across (basemap.ts). */
 export function addContributionLayers(map: MapLibreMap): void {
   if (map.getSource(UPLOADS_SRC)) return;
   map.addSource(UPLOADS_SRC, { type: 'geojson', data: uploadsData([]), promoteId: 'id' });
   map.addSource(OPENED_SRC, { type: 'geojson', data: openedData(null) });
-  const opened = MAP_COLOURS['Map/Trail/pabalik'];
+  const opened = OPENED_COLOUR;
   map.addLayer({
     id: UPLOADS_LINE,
     type: 'line',
@@ -126,7 +101,7 @@ export function addContributionLayers(map: MapLibreMap): void {
     id: OPENED_CASING,
     type: 'line',
     source: OPENED_SRC,
-    filter: ['==', ['get', 'kind'], 'trail'],
+    filter: RIDE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': 8 },
   });
@@ -134,10 +109,11 @@ export function addContributionLayers(map: MapLibreMap): void {
     id: OPENED_LINE,
     type: 'line',
     source: OPENED_SRC,
-    filter: ['==', ['get', 'kind'], 'trail'],
+    filter: RIDE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': opened, 'line-width': 4 },
   });
+  addWalkLayers(map, OPENED_SRC, opened);
   map.addLayer({
     id: OPENED_HINTOS,
     type: 'circle',

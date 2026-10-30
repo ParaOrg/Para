@@ -2,7 +2,7 @@ import * as z from 'zod/mini';
 
 import type { LngLat } from '@/shared/utils/geo';
 
-import { marksOf } from './contribution-events';
+import { marksOf, partsOf, type ContributionPart } from './contribution-events';
 import { requireSupabase } from './supabase';
 
 /** How far back the Contributors map looks, in days. */
@@ -203,9 +203,17 @@ export interface ContributionDetail {
   hintos: ContributionHinto[];
   /** The times the contributor pressed Mark, oldest first; each is placed on the trail by its time. */
   marks: number[];
+  /** Its walk and ride parts, in time order; an upload sent before Lakad and Sakay is one ride. */
+  parts: ContributionPart[];
 }
 
-/** One upload's whole trail, its hintos and its marks. */
+const eventsRowSchema = z.object({
+  events: z.unknown(),
+  started_at: z.string(),
+  ended_at: z.string(),
+});
+
+/** One upload's whole trail, its hintos, its marks and its walk and ride parts. */
 export async function fetchContributionDetail(id: string): Promise<ContributionDetail> {
   const client = requireSupabase();
   const [batches, hintos, events] = await Promise.all([
@@ -219,14 +227,16 @@ export async function fetchContributionDetail(id: string): Promise<ContributionD
       .select('seq, started_at, seconds, lat, lng')
       .eq('contribution_id', id)
       .order('seq'),
-    client.from('contribution').select('id, events').eq('id', id),
+    client.from('contribution').select('id, events, started_at, ended_at').eq('id', id),
   ]);
   if (batches.error) throw new Error(`The trail could not be read: ${batches.error.message}`);
   if (hintos.error) throw new Error(`The hintos could not be read: ${hintos.error.message}`);
   if (events.error) throw new Error(`The marks could not be read: ${events.error.message}`);
+  const row = z.array(eventsRowSchema).parse(events.data)[0];
   return {
     trail: decodeTrail(z.array(batchSchema).parse(batches.data)),
     hintos: z.array(hintoSchema).parse(hintos.data),
-    marks: marksOf(events.data[0]?.events),
+    marks: marksOf(row?.events),
+    parts: row ? partsOf(row.events, Date.parse(row.started_at), Date.parse(row.ended_at)) : [],
   };
 }

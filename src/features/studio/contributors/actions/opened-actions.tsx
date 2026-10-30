@@ -2,10 +2,11 @@ import { DeleteUpload } from '../delete-upload';
 import { HideUpload } from '../hide-upload';
 import type { ContributionStart } from './contribution-start';
 import { UseThisLine } from './use-this-line';
-import type { Contribution } from '../../data/contributions-read';
+import type { Contribution, ContributionDetail } from '../../data/contributions-read';
 
 interface OpenedActionsProps {
   contribution: Contribution;
+  detail: ContributionDetail | undefined;
   /** Whether hidden uploads are listed: hiding one then leaves it open. */
   showHidden: boolean;
   onClose: () => void;
@@ -16,6 +17,7 @@ interface OpenedActionsProps {
 /** What an editor may do with the opened upload: use its line, hide it, delete it. */
 export function OpenedActions({
   contribution: c,
+  detail,
   showHidden,
   onClose,
   onNotice,
@@ -23,7 +25,7 @@ export function OpenedActions({
 }: OpenedActionsProps) {
   return (
     <>
-      <UseThisLine contribution={c} onStart={onStart} />
+      <UseThisLine contribution={c} detail={detail} onStart={onStart} />
       <HideUpload
         contributionId={c.id}
         hiddenAt={c.hiddenAt}
