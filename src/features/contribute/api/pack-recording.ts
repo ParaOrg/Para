@@ -151,12 +151,16 @@ export function packRecording(
   const between = [...modes, ...marks]
     .sort((a, b) => a.time - b.time)
     .map(({ time, kind, ...rest }) => ({ kind, at: iso(time), ...rest }));
-  const events = [
-    { kind: 'start', at: iso(recording.startedAt) },
-    ...between,
+  const tail = [
     ...(recording.stoppedAt === null ? [] : [{ kind: 'stop', at: iso(recording.stoppedAt) }]),
     ...(recording.savedAt === null ? [] : [{ kind: 'save', at: iso(recording.savedAt) }]),
-  ].slice(0, UPLOAD_LIMITS.listEntries);
+  ];
+  // The start, stop and save go in whatever else is cut: past the limit, the latest between them go.
+  const events = [
+    { kind: 'start', at: iso(recording.startedAt) },
+    ...between.slice(0, UPLOAD_LIMITS.listEntries - 1 - tail.length),
+    ...tail,
+  ];
 
   return {
     ok: true,
