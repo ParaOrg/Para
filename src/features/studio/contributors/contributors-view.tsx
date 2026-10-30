@@ -111,6 +111,7 @@ export function ContributorsView({
                 <OpenedActions
                   contribution={opened}
                   detail={detail.data}
+                  isDetailLoading={detail.isPending}
                   showHidden={showHidden}
                   onClose={() => setOpenedId(null)}
                   onNotice={setNotice}

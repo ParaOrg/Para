@@ -8,13 +8,14 @@ import {
   UPLOADS_LINE,
   UPLOADS_SRC,
   addContributionLayers,
+  keepFeetUnderPins,
   removeContributionLayers,
   setOpened,
   setUploads,
 } from './contribution-layers';
+import { FOOT_ICON } from './foot-icon';
 import { addFootIcon } from './walk-layers';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
-import { FOOT_ICON } from '../maps/foot-icon';
 
 /**
  * The uploads on the studio's map while the Contributors map is open: the
@@ -34,15 +35,18 @@ export function useContributionLayers(
     return () => removeContributionLayers(map);
   }, [map]);
 
-  // A basemap switch carries the layers across but not the images (basemap.ts).
+  // A basemap switch carries the layers across, but not the images and not their order (basemap.ts).
   useEffect(() => {
     if (!map) return;
     const handleMissing = (event: MapStyleImageMissingEvent) => {
       if (event.id === FOOT_ICON) addFootIcon(map, OPENED_COLOUR);
     };
+    const handleStyleLoad = () => keepFeetUnderPins(map);
     map.on('styleimagemissing', handleMissing);
+    map.on('style.load', handleStyleLoad);
     return () => {
       map.off('styleimagemissing', handleMissing);
+      map.off('style.load', handleStyleLoad);
     };
   }, [map]);
 

@@ -1,9 +1,9 @@
 import type { FilterSpecification, MapLibreMap } from 'maplibre-gl';
 
-import { FOOT_ICON, footIcon } from '../maps/foot-icon';
+import { FOOT_ICON, footIcon } from './foot-icon';
 
 const WALK_LINE = 'studio-contribution-walk';
-const WALK_FEET = 'studio-contribution-walk-feet';
+export const WALK_FEET = 'studio-contribution-walk-feet';
 /** The walk parts' layers, top first. */
 export const WALK_LAYERS = [WALK_FEET, WALK_LINE] as const;
 

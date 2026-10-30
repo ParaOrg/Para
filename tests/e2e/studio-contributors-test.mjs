@@ -71,14 +71,16 @@ const trailBatch = (contribution) => {
     dt_ms: [0, 60_000, 60_000, 60_000],
     dlat: [0, 3500, 3500, 3000],
     dlng: [0, 500, -1500, 100],
+    accuracy_m: [6, 6, 6, 6],
   };
 };
 /**
  * C4, 2 km east of the others: walked 2 min to the jeep, rode 3 min north, walked 1 min.
- * One fix a minute.
+ * One fix a minute; the one at minute 3 is 1 km off to the east and too vague to count.
  */
 const C4_START = Date.now() - 5 * HOUR;
-const C4_TRAIL = [0, 1, 2, 3, 4, 5, 6].map((n) => [121.07, 14.7 + n * 0.002]);
+const C4_TRAIL = [0, 1, 2, 3, 4, 5, 6].map((n) => [n === 3 ? 121.08 : 121.07, 14.7 + n * 0.002]);
+const C4_ACCURACY = C4_TRAIL.map((_, n) => (n === 3 ? 120 : 6));
 const c4Batch = {
   contribution_id: C4,
   seq: 0,
@@ -87,7 +89,8 @@ const c4Batch = {
   first_lng: Math.round(C4_TRAIL[0][0] * 1e6),
   dt_ms: C4_TRAIL.map((_, n) => (n === 0 ? 0 : 60_000)),
   dlat: C4_TRAIL.map((_, n) => (n === 0 ? 0 : 2000)),
-  dlng: C4_TRAIL.map(() => 0),
+  dlng: C4_TRAIL.map(([lng], n) => (n === 0 ? 0 : Math.round((lng - C4_TRAIL[n - 1][0]) * 1e6))),
+  accuracy_m: C4_ACCURACY,
 };
 const hinto = (contribution, lng, lat, seconds, started = Date.now() - 2.5 * HOUR, seq = 0) => ({
   contribution_id: contribution,
@@ -126,9 +129,12 @@ const b = await chromium.launch();
 const page = await b.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
+// Once the map is up, MapLibre's errors reach the console as warnings (map-view.tsx).
+const warnings = [];
 page.on('console', (msg) => {
   if (msg.type() === 'error' && !/Failed to load resource/.test(msg.text()))
     errors.push(msg.text().slice(0, 160));
+  if (msg.type() === 'warning') warnings.push(msg.text().slice(0, 160));
 });
 await bareStyle(page);
 await signInAsEditor(page);
@@ -440,6 +446,40 @@ check(
     walkLook.hasFoot,
   JSON.stringify(walkLook),
 );
+// Counted from now: the check below waits for the new style, not the old one still showing.
+await page.evaluate(() => {
+  window.__styleLoads = 0;
+  window.__map.on('style.load', () => (window.__styleLoads += 1));
+});
+await page.getByTestId('basemap').click();
+await page.getByRole('button', { name: 'Fiord' }).click();
+const switched = await waitFor(() => page.evaluate(() => window.__styleLoads > 0));
+const afterSwitch = async () =>
+  page.evaluate(() => {
+    const m = window.__map;
+    const order = m.getStyle().layers.map((l) => l.id);
+    return {
+      hasFoot: m.hasImage('studio-walk-foot'),
+      feetUnderPins:
+        order.indexOf('studio-contribution-walk-feet') <
+          order.indexOf('studio-contribution-hintos') &&
+        order.indexOf('studio-contribution-hintos') < order.indexOf('studio-contribution-marks'),
+    };
+  });
+check(
+  '  a basemap switch keeps the foot, and the feet under the hintos and pins',
+  switched &&
+    (await waitFor(async () => {
+      const now = await afterSwitch();
+      return now.hasFoot && now.feetUnderPins;
+    })),
+  JSON.stringify({ switched, ...(await afterSwitch()) }),
+);
+check(
+  '  with no error of an image or layer added twice',
+  ![...errors, ...warnings].some((e) => /already exists/.test(e)),
+  [...errors, ...warnings].filter((e) => /already exists/.test(e)).join(' | '),
+);
 check(
   '  and says its parts in text',
   /In 1 ride and 2 walks: [\d.]+ km riding, [\d.]+ km walking, the walking dashed\./.test(
@@ -463,6 +503,11 @@ check(
   '  which begins the direction at the ride: from the 2nd minute to the 5th',
   Math.abs(rideOnly.controlPoints[0][1] - C4_TRAIL[2][1]) < 1e-6 &&
     Math.abs(rideOnly.controlPoints.at(-1)[1] - C4_TRAIL[5][1]) < 1e-6,
+  JSON.stringify(rideOnly?.controlPoints),
+);
+check(
+  '  and never through the fix too vague to place the ride',
+  !rideOnly.controlPoints.some(([lng]) => Math.abs(lng - 121.08) < 1e-6),
   JSON.stringify(rideOnly?.controlPoints),
 );
 await shot('5-walk-and-ride');

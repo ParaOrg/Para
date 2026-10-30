@@ -154,6 +154,7 @@ const batchSchema = z.object({
   dt_ms: z.array(z.number()),
   dlat: z.array(z.number()),
   dlng: z.array(z.number()),
+  accuracy_m: z.array(z.number()),
 });
 type Batch = z.infer<typeof batchSchema>;
 
@@ -177,6 +178,8 @@ export type ContributionHinto = z.infer<typeof hintoSchema>;
 export interface TrailPoint {
   time: number;
   at: LngLat;
+  /** The phone's own estimate of the fix's error, in metres. */
+  accuracyM: number;
 }
 
 /** The points the phone sent, back in degrees and milliseconds: each batch starts absolute, the rest are steps. */
@@ -193,7 +196,9 @@ export function decodeTrail(batches: readonly Batch[]): TrailPoint[] {
           lat += batch.dlat[i] ?? 0;
           lng += batch.dlng[i] ?? 0;
         }
-        return { time, at: lngLat(lng / 1e6, lat / 1e6) };
+        // A fix with no accuracy is not trusted; the database never stores one.
+        const accuracyM = batch.accuracy_m[i] ?? Infinity;
+        return { time, at: lngLat(lng / 1e6, lat / 1e6), accuracyM };
       });
     });
 }
@@ -219,7 +224,7 @@ export async function fetchContributionDetail(id: string): Promise<ContributionD
   const [batches, hintos, events] = await Promise.all([
     client
       .from('point_batch')
-      .select('seq, first_at, first_lat, first_lng, dt_ms, dlat, dlng')
+      .select('seq, first_at, first_lat, first_lng, dt_ms, dlat, dlng, accuracy_m')
       .eq('contribution_id', id)
       .order('seq'),
     client

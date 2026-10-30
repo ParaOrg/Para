@@ -12,7 +12,12 @@ import {
 const meta = {
   title: 'Features/Studio/UseThisLine',
   component: UseThisLine,
-  args: { contribution: STORY_CONTRIBUTIONS[0], detail: STORY_DETAIL, onStart: fn() },
+  args: {
+    contribution: STORY_CONTRIBUTIONS[0],
+    detail: STORY_DETAIL,
+    isDetailLoading: false,
+    onStart: fn(),
+  },
   decorators: [
     (Story) => (
       <div className="w-96 bg-surface p-4 font-sn-pro text-sm text-content-secondary">
@@ -58,5 +63,42 @@ export const WithWalking: Story = {
 
 export const AllWalking: Story = { args: { detail: STORY_DETAIL_ALL_WALK } };
 
+/** The ride's fixes are all too vague to place it: there is no ride line, only walking. */
+export const NoRideLongEnough: Story = {
+  args: {
+    detail: {
+      ...STORY_DETAIL_WALKED,
+      trail: STORY_DETAIL_WALKED.trail.map((p, i) => (i === 2 ? { ...p, accuracyM: 120 } : p)),
+      parts: [
+        {
+          mode: 'walk',
+          from: STORY_DETAIL_WALKED.trail[0]?.time ?? 0,
+          to: STORY_DETAIL_WALKED.trail[2]?.time ?? 0,
+        },
+        {
+          mode: 'ride',
+          from: STORY_DETAIL_WALKED.trail[2]?.time ?? 0,
+          to: STORY_DETAIL_WALKED.trail[3]?.time ?? 0,
+        },
+        {
+          mode: 'walk',
+          from: STORY_DETAIL_WALKED.trail[3]?.time ?? 0,
+          to: STORY_DETAIL_WALKED.trail[4]?.time ?? 0,
+        },
+      ],
+    },
+  },
+};
+
 /** The trail is still being read: nothing is offered yet. */
-export const ReadingTrail: Story = { args: { detail: undefined } };
+export const ReadingTrail: Story = { args: { detail: undefined, isDetailLoading: true } };
+
+/** The trail could not be read: the parts are unknown, so the upload's own line is offered. */
+export const TrailFailed: Story = {
+  args: { detail: undefined, isDetailLoading: false },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'Use this line' }),
+    ).toBeVisible();
+  },
+};

@@ -7,6 +7,7 @@ import type { Contribution, ContributionDetail } from '../../data/contributions-
 interface OpenedActionsProps {
   contribution: Contribution;
   detail: ContributionDetail | undefined;
+  isDetailLoading: boolean;
   /** Whether hidden uploads are listed: hiding one then leaves it open. */
   showHidden: boolean;
   onClose: () => void;
@@ -18,6 +19,7 @@ interface OpenedActionsProps {
 export function OpenedActions({
   contribution: c,
   detail,
+  isDetailLoading,
   showHidden,
   onClose,
   onNotice,
@@ -25,7 +27,12 @@ export function OpenedActions({
 }: OpenedActionsProps) {
   return (
     <>
-      <UseThisLine contribution={c} detail={detail} onStart={onStart} />
+      <UseThisLine
+        contribution={c}
+        detail={detail}
+        isDetailLoading={isDetailLoading}
+        onStart={onStart}
+      />
       <HideUpload
         contributionId={c.id}
         hiddenAt={c.hiddenAt}

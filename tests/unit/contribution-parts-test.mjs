@@ -8,12 +8,15 @@ import assert from 'node:assert/strict';
 
 import { partsOf } from '../../src/features/studio/data/contribution-events.ts';
 import {
-  longestRide,
+  longestRideLine,
+  rideLines,
+  TRAIL_MAX_ACCURACY_M,
   modeAt,
   splitTrail,
 } from '../../src/features/studio/contributors/trail-parts.ts';
+import { MAX_ACCURACY_M } from '../../src/features/routes/model/ride-recording.ts';
 import { openedData } from '../../src/features/studio/contributors/opened-data.ts';
-import { FOOT_SIZE, footIcon } from '../../src/features/studio/maps/foot-icon.ts';
+import { FOOT_SIZE, footIcon } from '../../src/features/studio/contributors/foot-icon.ts';
 
 import { T0 } from './fixtures/contribution-ride.mjs';
 
@@ -98,7 +101,7 @@ test("an event outside the recording's time: before counts from the start, after
   ]);
 });
 
-const fix = (seconds, lng) => ({ time: s(seconds), at: [lng, 14.6] });
+const fix = (seconds, lng, accuracyM = 6) => ({ time: s(seconds), at: [lng, 14.6], accuracyM });
 const trail = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540].map((t) => fix(t, 121 + t / 10_000));
 const walkRideWalk = [
   { mode: 'walk', from: T0, to: s(120) },
@@ -122,23 +125,47 @@ test('the trail is cut by its pointsâ€™ times, each part ending on the next oneâ
   );
 });
 
+/** The seconds each point of a line was taken at: the trail's longitude says it. */
+const secondsOf = (line) => line?.map(([lng]) => Math.round((lng - 121) * 10_000));
+
 test('route material is the longest ride; all walking has none', () => {
   const twoRides = [
     { mode: 'ride', from: T0, to: s(120) },
     { mode: 'walk', from: s(120), to: s(180) },
     { mode: 'ride', from: s(180), to: END },
   ];
-  const ride = longestRide(splitTrail(trail, twoRides));
   assert.deepEqual(
-    ride?.points.map((p) => (p.time - T0) / 1000),
+    secondsOf(longestRideLine(splitTrail(trail, twoRides))),
     [180, 240, 300, 360, 420, 480, 540],
   );
   assert.deepEqual(
-    longestRide(splitTrail(trail, walkRideWalk))?.points.map((p) => (p.time - T0) / 1000),
+    rideLines(splitTrail(trail, twoRides)).map(secondsOf),
+    [
+      [0, 60, 120],
+      [180, 240, 300, 360, 420, 480, 540],
+    ],
+    'each ride is its own line, ready to be offered on its own',
+  );
+  assert.deepEqual(
+    secondsOf(longestRideLine(splitTrail(trail, walkRideWalk))),
     [120, 180, 240, 300, 360, 420],
     'a ride between walks runs from where the first walk ended to where the next began',
   );
-  assert.equal(longestRide(splitTrail(trail, [{ mode: 'walk', from: T0, to: END }])), null);
+  assert.equal(longestRideLine(splitTrail(trail, [{ mode: 'walk', from: T0, to: END }])), null);
+});
+
+test("the studio's vague-fix limit is the recorder's", () => {
+  assert.equal(TRAIL_MAX_ACCURACY_M, MAX_ACCURACY_M);
+});
+
+test('a fix too vague to place the ride never becomes route material', () => {
+  const vague = trail.map((p, i) => (i === 4 ? { ...p, at: [121.03, 14.61], accuracyM: 100 } : p));
+  const line = longestRideLine(splitTrail(vague, walkRideWalk));
+  assert.deepEqual(secondsOf(line), [120, 180, 300, 360, 420]);
+  assert.ok(!line.some(([lng, lat]) => lng === 121.03 && lat === 14.61));
+  // A ride whose only fixes are vague has no line at all.
+  const allVague = trail.map((p) => ({ ...p, accuracyM: 80 }));
+  assert.equal(longestRideLine(splitTrail(allVague, walkRideWalk)), null);
 });
 
 test('a hinto takes the mode of the part it began in', () => {

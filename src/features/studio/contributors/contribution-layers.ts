@@ -4,7 +4,7 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { openedData } from './opened-data';
-import { RIDE, WALK_LAYERS, addWalkLayers } from './walk-layers';
+import { RIDE, WALK_FEET, WALK_LAYERS, addWalkLayers } from './walk-layers';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
 export const UPLOADS_SRC = 'studio-contributions';
@@ -139,6 +139,16 @@ export function addContributionLayers(map: MapLibreMap): void {
       'circle-stroke-width': 3,
     },
   });
+}
+
+/**
+ * A basemap switch puts every symbol layer of ours on top (basemap.ts), the
+ * walk's feet over the hintos and mark pins: back under them, so no foot
+ * covers a pin.
+ */
+export function keepFeetUnderPins(map: MapLibreMap): void {
+  if (map.getLayer(WALK_FEET) && map.getLayer(OPENED_HINTOS))
+    map.moveLayer(WALK_FEET, OPENED_HINTOS);
 }
 
 /** Takes the uploads off the map again, when the Contributors map closes. */
