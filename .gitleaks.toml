@@ -1,0 +1,17 @@
+# gitleaks reads this in .github/workflows/security.yml. It keeps gitleaks'
+# own rules and lists only what is safe to commit on purpose, each as narrowly
+# as it can be said, so a real key next to one of these still fails.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Supabase publishable keys ship inside the JS bundle; RLS protects the data (.env.production)"
+regexes = ['''^sb_publishable_[A-Za-z0-9_-]+$''']
+
+[[allowlists]]
+description = "Design token names in the tokens stories read like keys to the generic rule"
+paths = ['''^src/design-system/foundation/[Tt]okens\.stories\.tsx$''']
+
+[[allowlists]]
+description = "A made-up claim token the unit check signs and verifies"
+paths = ['''^tests/unit/claim-test\.mjs$''']
