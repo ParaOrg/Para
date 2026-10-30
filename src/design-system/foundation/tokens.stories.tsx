@@ -521,6 +521,7 @@ function TokensPage() {
           token="LocatorDotShadow"
           cls="shadow-locator-dot-shadow"
         />
+        <Swatch box="bg-surface shadow-large" token="shadow-large" cls="shadow-large" />
       </Group>
 
       <Group title="Type — SN Pro">
