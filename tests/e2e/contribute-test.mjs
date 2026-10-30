@@ -135,11 +135,19 @@ const centreOff = (page, metres) =>
     [eastOf(metres)[0], M_PER_DEG_LNG],
   );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
-/** The History screen, opened through its button on Ready unless it is already showing. */
+/** Ready's Account tab, in the toolbar over the Start bar. */
+const accountTab = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Account' });
+/** Ready's person button at the top right, which opens Account too. */
+const personButton = (page) => page.locator('button[aria-label="Account"]');
+/**
+ * The History screen, opened through Account on Ready unless it is already showing. With no
+ * accounts in this build, Account is History alone.
+ */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const history = page.getByRole('button', { name: 'History' });
-  // A reload on #history lands on the screen itself; otherwise Ready's button opens it.
+  const history = accountTab(page);
+  // A reload on #history lands on the screen itself; otherwise Ready's Account tab opens it.
   await heading.or(history).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
   await history.click();
@@ -172,9 +180,9 @@ const buttons = (page) =>
   const { page, errors } = await phone({ consented: false, earlierConsent: true });
   await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
   check(
-    'a phone that agreed to the first text is asked again: the new text shows, with no Start or History',
+    'a phone that agreed to the first text is asked again: the new text shows, with no Start or Account',
     (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Account' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 1,
   );
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
@@ -258,22 +266,28 @@ const buttons = (page) =>
       (await page.getByText('No saved recordings yet.').count()) === 0,
   );
   {
-    const history = page.getByRole('button', { name: 'History' });
+    const history = accountTab(page);
     check(
-      '  History is a button beside Back; nothing of it shows above the Start bar',
+      '  Account is the person button at the top right and a tab over the Start bar; no History button, nothing of it shows',
       (await history.count()) === 1 &&
+        (await personButton(page).count()) === 1 &&
+        (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
         (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
-        (await page.getByRole('button', { name: 'Start recording' }).count()) === 1,
+        (await page.getByRole('button', { name: 'Start recording' }).count()) === 1 &&
+        (await page.getByText('Start Tracking').count()) === 1,
     );
     const start = await page.getByRole('button', { name: 'Start recording' }).boundingBox();
+    const tabs = await page.getByRole('navigation', { name: 'Screens' }).boundingBox();
     const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
     check(
-      '  nothing but the Start bar covers the map',
+      '  the stack over the map is the tabs and, at the foot, the Start Tracking bar',
       !!start &&
+        !!tabs &&
         !!stack &&
-        Math.abs(stack.y - start.y) <= 1 &&
+        Math.abs(stack.y - tabs.y) <= 1 &&
+        tabs.y + tabs.height <= start.y &&
         Math.abs(stack.y + stack.height - (start.y + start.height)) <= 1,
-      JSON.stringify([stack, start]),
+      JSON.stringify([stack, tabs, start]),
     );
     await history.click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
@@ -286,7 +300,7 @@ const buttons = (page) =>
       hash: await page.evaluate(() => location.hash),
       focus: await page.evaluate(() => document.activeElement?.textContent),
       starts: await page.getByRole('button', { name: 'Start recording' }).count(),
-      historyButtons: await page.getByRole('button', { name: 'History' }).count(),
+      accountButtons: await page.getByRole('button', { name: 'Account' }).count(),
       // Inert, not removed: the map stays mounted, but nothing in it can be focused or pressed.
       isMapInert: await page.evaluate(
         () => !!document.querySelector('button[aria-label="Map design"]')?.closest('[inert]'),
@@ -294,11 +308,11 @@ const buttons = (page) =>
       empty: await page.getByText('No recordings yet.').count(),
     };
     check(
-      '  History opened is a screen of its own: #history, focus on its heading, no Start, no map controls reachable',
+      '  Account with no accounts in the build is History: #history, focus on its heading, no Start, no map controls reachable',
       opened.hash === '#history' &&
         opened.focus === 'History' &&
         opened.starts === 0 &&
-        opened.historyButtons === 0 &&
+        opened.accountButtons === 0 &&
         opened.isMapInert &&
         opened.empty === 1,
       JSON.stringify(opened),
@@ -312,16 +326,16 @@ const buttons = (page) =>
       '  its own back button returns to Ready, and the hash is gone',
       (await page.evaluate(() => location.hash)) === '',
     );
-    await page.getByRole('button', { name: 'History' }).click();
+    await personButton(page).click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
     await page.goBack();
     await page.getByRole('button', { name: 'Start recording' }).waitFor();
     check(
-      "  the browser's Back returns to Ready too, with focus back on the History button that opened it",
+      "  the person button opens it too, and the browser's Back returns to Ready with focus back on it",
       (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
         (await page
           .waitForFunction(
-            () => document.activeElement?.getAttribute('aria-label') === 'History',
+            () => document.activeElement?.getAttribute('aria-label') === 'Account',
             null,
             { timeout: 5000 },
           )

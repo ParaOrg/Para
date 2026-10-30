@@ -1,5 +1,4 @@
-// Figma's `play`, `pause` and `finish` icons (the tracking bars' 24px icons), as the bars draw them: currentColor;
-// and History's, the same size and colour.
+// Figma's `play`, `pause` and `finish` icons (the tracking bars' 24px icons), as the bars draw them: currentColor.
 
 /** Figma's `play`, on Start and Resume. */
 export function PlayIcon() {
@@ -25,49 +24,6 @@ export function FinishIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M10.634 3.34575C12.7642 2.38083 15.2774 1.228 17.7303 2.70585L17.9676 2.85747L18.0695 2.93885C18.1639 3.02825 18.2349 3.14052 18.276 3.26523L21.0395 11.6482C21.1419 11.9592 21.0417 12.3017 20.7876 12.5083C20.5335 12.7147 20.1776 12.7424 19.8941 12.5785C18.4229 11.7284 17.1519 11.5347 16.011 11.6611C14.8462 11.7901 13.7624 12.2581 12.6736 12.8278C12.2855 13.0309 11.8824 13.2538 11.4752 13.4763C11.3934 13.5586 11.2931 13.6248 11.1762 13.6656C11.1441 13.6768 11.1118 13.6853 11.0794 13.6921C10.5261 13.9876 9.96907 14.2658 9.4304 14.4682C8.75379 14.7226 8.04153 14.8841 7.30509 14.8435L9.07489 20.9915C9.19547 21.4105 8.95337 21.8483 8.53436 21.9689C8.11536 22.0895 7.67752 21.8474 7.55694 21.4284L2.95169 5.42565C2.8683 5.13586 2.95758 4.82349 3.18127 4.62128C3.40502 4.4191 3.72459 4.36173 4.00449 4.47394C6.19994 5.3545 8.27279 4.4153 10.634 3.34575ZM9.09888 10.108C8.88328 10.198 8.66808 10.2815 8.45212 10.3496C7.67939 10.593 6.87244 10.6882 6.05613 10.5046L6.82195 13.1645C7.45435 13.3617 8.10702 13.2781 8.87444 12.9897C9.22593 12.8576 9.57538 12.6935 9.93666 12.5083L9.09888 10.108ZM13.7118 7.67688C13.0994 7.93225 12.4747 8.27462 11.8204 8.65344C11.4041 8.89446 10.9687 9.15244 10.5243 9.40042L11.3441 11.7502C11.5368 11.6453 11.7353 11.5371 11.942 11.4289C12.7709 10.9953 13.6842 10.5693 14.6858 10.3076L13.7118 7.67688ZM17.983 8.03324C17.0078 7.32406 16.1103 7.14789 15.2375 7.25028L16.2774 10.0575C17.1364 10.014 18.0342 10.1215 18.9767 10.4352L18.2237 8.15145C18.1396 8.12659 18.058 8.08776 17.983 8.03324ZM7.71885 6.15122C6.80314 6.376 5.84477 6.47509 4.85513 6.32854L5.49675 8.56007C5.50778 8.56667 5.51933 8.57256 5.53015 8.57977C6.31694 9.1043 7.09028 9.12308 7.97755 8.84361C8.17666 8.78088 8.37639 8.70302 8.5789 8.61575L7.71885 6.15122ZM12.4509 4.27348C12.0789 4.42717 11.6912 4.60002 11.285 4.78404C10.6395 5.07642 9.94942 5.39471 9.22395 5.67236L9.99577 7.88504C10.326 7.69633 10.6693 7.49527 11.0289 7.28711C11.6915 6.90346 12.4074 6.50466 13.1627 6.19576L12.4509 4.27348ZM16.866 4.0302C15.9451 3.4953 15.0025 3.48076 13.9423 3.75608L14.6773 5.73832C15.5974 5.57021 16.5455 5.61483 17.5093 5.98418L16.866 4.0302Z" />
-    </svg>
-  );
-}
-
-/**
- * History's: a clock with an arrow turning back, on the Ready screen's History button. TODO: drawn
- * here, not in Figma, which has no history icon yet; swap in the owner's drawing once there is one.
- */
-export function HistoryIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M3.5 12a8.5 8.5 0 1 0 2.5-6" />
-      <path d="M3.5 3.75v4.5H8" />
-      <path d="M12 7.5V12l3 2" />
-    </svg>
-  );
-}
-
-/**
- * Profile's: a head and shoulders, on the Ready screen's Profile button. TODO: drawn here, not in
- * Figma, which has no profile icon yet; swap in the owner's drawing once there is one.
- */
-export function ProfileIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <circle cx="12" cy="8.5" r="3.5" />
-      <path d="M5 20c.6-3.6 3.5-5.5 7-5.5s6.4 1.9 7 5.5" />
     </svg>
   );
 }

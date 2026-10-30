@@ -319,8 +319,9 @@ Not a Stop, which the contributor chose.
 _Avoid_: pause; lost signal (only one of its causes)
 
 **Contributor page**:
-The page at `/contribute/` where a contribution is recorded: Ready, Recording,
-Stopped, Saved. A page of its own, so the public map carries none of it.
+The page at `/contribute/` where a contribution is recorded: Start, Recording
+(on Lakad or Sakay), Paused, Saved, and Account (the profile, with History
+inside it). A page of its own, so the public map carries none of it.
 _Avoid_: driver app, driver link, tracker
 
 **Contributor button**:

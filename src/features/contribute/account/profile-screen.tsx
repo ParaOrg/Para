@@ -20,11 +20,14 @@ interface ProfileScreenProps {
   onSave: (fields: ProfileFields) => void;
   onSignOut: () => void;
   onBack: () => void;
+  /** Opens History, which lives inside Account; absent when there is none to open. */
+  onOpenHistory?: () => void;
 }
 
 /**
- * The account on a screen of its own: name and number to change, the email as it is, and Sign
- * out. The layout says what each is, so nothing carries a caption.
+ * Account, on a screen of its own: name and number to change, the email as it is, History (the
+ * account's recordings, a screen of their own), and Sign out. The layout says what each is, so
+ * nothing carries a caption. No Figma for Account yet: Profile's look, as it was.
  */
 export function ProfileScreen({
   email,
@@ -37,6 +40,7 @@ export function ProfileScreen({
   onSave,
   onSignOut,
   onBack,
+  onOpenHistory,
 }: ProfileScreenProps) {
   const headingRef = useFocusHeading();
 
@@ -91,6 +95,11 @@ export function ProfileScreen({
           <p role="alert" className="text-sm/5">
             {error}
           </p>
+        )}
+        {onOpenHistory && (
+          <div>
+            <Button variant="secondary" label="History" onClick={onOpenHistory} />
+          </div>
         )}
         <div>
           <Button

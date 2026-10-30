@@ -6,7 +6,7 @@ import { TrackingButton, type TrackingVariant } from './tracking-button';
 const meta = {
   title: 'Features/Contribute/TrackingButton',
   component: TrackingButton,
-  args: { variant: 'start', onClick: fn() },
+  args: { variant: 'pause', onClick: fn() },
   decorators: [
     (Story) => (
       <div className="w-[393px] bg-surface-quaternary">
@@ -18,9 +18,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-/** Figma's green: Tailwind's green-700 and green-800, not a livery. */
-export const Start: Story = {};
 
 /** Pause and Resume wear the brand surface (4482:24013, 4482:24031). */
 export const Resume: Story = { args: { variant: 'resume' } };

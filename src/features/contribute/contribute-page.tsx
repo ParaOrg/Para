@@ -14,7 +14,7 @@ import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-fla
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { MarkButton } from './screens/mark-button';
-import { ReadyScreen } from './screens/ready-screen';
+import { ReadyScreen, type AccountOpener } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
 import { UploadCheck } from './uploads/upload-check';
@@ -106,15 +106,14 @@ export function ContributePage({ locator }: ContributePageProps) {
     if (profile.isOpen && !isUsable && accountGate !== 'loading') profile.close();
   }, [phase, accountGate, profile]);
 
-  // Once History or Profile has been opened from Ready's button, Ready hands focus back to it.
-  const [lastOpened, setLastOpened] = useState<'history' | 'profile' | null>(null);
-  const handleOpenHistory = () => {
-    setLastOpened('history');
-    history.open();
-  };
-  const handleOpenProfile = () => {
-    setLastOpened('profile');
-    profile.open();
+  // Account is Profile with History inside it; a build with no accounts has History alone. Once it
+  // has been opened from Ready, Ready hands focus back to the button that opened it.
+  const [lastOpened, setLastOpened] = useState<AccountOpener | null>(null);
+  const hasAccount = canUpload();
+  const handleOpenAccount = (opener: AccountOpener) => {
+    setLastOpened(opener);
+    if (hasAccount) profile.open();
+    else history.open();
   };
 
   return (
@@ -170,14 +169,16 @@ export function ContributePage({ locator }: ContributePageProps) {
               onConsent={giveConsent}
               earlierQuestion={earlier.question}
               onStart={recording.start}
-              onOpenHistory={handleOpenHistory}
-              onOpenProfile={canUpload() ? handleOpenProfile : undefined}
+              onOpenAccount={hasAccount || hasConsent ? handleOpenAccount : undefined}
               returnFocusTo={lastOpened}
             />
           )}
           {isProfileShown && (
             <Suspense fallback={null}>
-              <ProfileView onBack={profile.close} />
+              <ProfileView
+                onBack={profile.close}
+                onOpenHistory={hasConsent ? history.open : undefined}
+              />
             </Suspense>
           )}
           {isHistoryShown && (

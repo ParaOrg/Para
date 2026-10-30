@@ -2,7 +2,7 @@ import { BatteryPanel } from './battery-panel';
 import { PermissionPanel } from './permission-panel';
 import { RefusedPanel } from './refused-panel';
 import { useStartGate } from './use-start-gate';
-import { TrackingButton } from '../screens/tracking-button';
+import { StartBar } from '../screens/start-bar';
 
 interface StartGateProps {
   /** Begins the recording, once the phone is ready for it. */
@@ -45,7 +45,7 @@ export function StartGate({ onStart }: StartGateProps) {
           onDone={gate.handleBatteryDone}
         />
       )}
-      {!step && <TrackingButton variant="start" onClick={gate.handleStart} />}
+      {!step && <StartBar onClick={gate.handleStart} />}
     </>
   );
 }

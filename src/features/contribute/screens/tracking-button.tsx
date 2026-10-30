@@ -10,9 +10,10 @@ import { FinishIcon, PauseIcon, PlayIcon } from './tracking-icons';
 /**
  * Which bar. Lakad and Sakay are the mode button, named for the mode a tap
  * switches TO: Sakay (green) while the recording is on Lakad, Lakad (blue)
- * while it is on Sakay. Stop is the open recording's, found after a reload.
+ * while it is on Sakay. Stop is the open recording's, found after a reload. The Start
+ * bar is a look of its own (start-bar.tsx).
  */
-export type TrackingVariant = 'start' | 'resume' | 'pause' | 'stop' | 'finish' | 'lakad' | 'sakay';
+export type TrackingVariant = 'resume' | 'pause' | 'stop' | 'finish' | 'lakad' | 'sakay';
 
 interface Look {
   text: string;
@@ -40,7 +41,6 @@ const SHADOW = 'shadow-route-card-primary';
 const SHADOW_SELECTED = 'shadow-route-card-primary-selected';
 
 const LOOK = {
-  start: { text: 'Start', name: 'Start recording', surface: GREEN, icon: 'play' },
   resume: { text: 'Resume', name: 'Resume', surface: BRAND, icon: 'play' },
   pause: { text: 'Pause', name: 'Pause', surface: BRAND, icon: 'pause' },
   stop: { text: 'Stop', name: 'Stop', surface: RED, icon: 'pause' },
@@ -78,8 +78,7 @@ interface TrackingButtonProps extends Omit<
 /**
  * Figma's TrackingButtonPrimary: a bar in a RouteCard's colours, its
  * Route/RouteCardPrimary effect and gloss Blob, which press in under
- * RouteCardPrimarySelected. Start and Stop are full-width bars; on the
- * recording card two sit side by side (4482:24012), Pause or Resume on the
+ * RouteCardPrimarySelected. On the recording card two sit side by side (4482:24012), Pause or Resume on the
  * left and the mode button or Finish on the right.
  */
 export function TrackingButton({

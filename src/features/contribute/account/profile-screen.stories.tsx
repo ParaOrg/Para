@@ -18,6 +18,7 @@ const meta = {
     onSave: fn(),
     onSignOut: fn(),
     onBack: fn(),
+    onOpenHistory: fn(),
   },
   decorators: [
     (Story) => (

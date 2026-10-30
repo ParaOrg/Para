@@ -1,6 +1,7 @@
 // The contributor page's Profile and History, driven by a phone signed in to an account: Profile
-// sits beside History on Ready at the same size; it shows the email, changes the name and number
-// through set_profile, and signs this phone out only. History lists the account's uploads from the
+// is Account, opened from the person button at the top right of Ready or from its tab, with
+// History inside it; it shows the email, changes the name and number through set_profile, and
+// signs this phone out only. History lists the account's uploads from the
 // database, whichever phone sent them, merged with this phone's own, and Remove works on any the
 // account owns. Supabase is the in-memory stand-in (lib/fake-contributions.mjs): every request to
 // *.supabase.co lands there, and one it does not know fails the run, so nothing reaches a real
@@ -104,6 +105,13 @@ async function phone({ signedIn = true, userId = ACCOUNT_ID, consent = '3' } = {
 }
 
 const button = (page, name) => page.getByRole('button', { name, exact: true });
+/** Ready's person button at the top right, which opens Account. */
+const personButton = (page) => page.locator('button[aria-label="Account"]');
+/** History, inside Account: the person button, then Account's History button. */
+const openHistory = async (page) => {
+  await personButton(page).click();
+  await button(page, 'History').click();
+};
 const field = (page, name) => page.getByLabel(name, { exact: true });
 const start = (page) => page.getByRole('button', { name: 'Start recording' });
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
@@ -151,34 +159,37 @@ async function seed(page, id, name, upload) {
   );
 }
 
-// ------------------------------------------------ Profile beside History
+// ------------------------------------------------ Account: the person button and the tab
 {
   const { page, fake, errors } = await phone();
   await start(page).waitFor({ timeout: 30000 });
-  const profile = await button(page, 'Profile').boundingBox();
-  const history = await button(page, 'History').boundingBox();
+  const person = await personButton(page).boundingBox();
+  const tab = await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' })
+    .boundingBox();
   check(
-    'Ready has a 48×48 Profile button beside History, the same size and on the same line',
-    profile.width === 48 &&
-      profile.height === 48 &&
-      history.width === 48 &&
-      history.height === 48 &&
-      profile.y === history.y &&
-      profile.x < history.x,
-    JSON.stringify({ profile, history }),
+    'Ready has a 48×48 Account button at the top right, the Account tab over Start, and no History button',
+    person.width === 48 &&
+      person.height === 48 &&
+      person.x > 393 / 2 &&
+      !!tab &&
+      tab.y > person.y &&
+      (await button(page, 'History').count()) === 0,
+    JSON.stringify({ person, tab }),
   );
   await shot(page, '1-ready');
 
-  await button(page, 'Profile').click();
+  await personButton(page).click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await button(page, 'Back').click();
   await start(page).waitFor();
   check(
-    'Back from Profile returns to Ready with focus on the Profile button',
-    (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) === 'Profile',
+    'Back from Account returns to Ready with focus on the button that opened it',
+    (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) === 'Account',
   );
 
-  await button(page, 'Profile').click();
+  await personButton(page).click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await field(page, 'Name').waitFor();
   check(
@@ -250,7 +261,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   });
   await seed(page, 'eeeeeeee-0000-4000-8000-000000000004', 'Only here');
   await page.reload({ waitUntil: 'load' });
-  await button(page, 'History').click();
+  await openHistory(page);
   await row(page, 'From phone A').waitFor({ timeout: 15000 });
   await shot(page, '3-history');
   check(
@@ -320,7 +331,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await seed(page, 'eeeeeeee-0000-4000-8000-000000000004', 'Only here');
   await page.reload({ waitUntil: 'load' });
   fake.next.list = 'hold';
-  await button(page, 'History').click();
+  await openHistory(page);
   await page.getByRole('status').filter({ hasText: 'Loading…' }).waitFor();
   check(
     "while the account's uploads load, this phone's own are already listed",
@@ -357,7 +368,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await field(page, 'Password').fill(ACCOUNT.password);
   await button(page, 'Sign in').click();
   await start(page).waitFor({ timeout: 15000 });
-  await button(page, 'History').click();
+  await openHistory(page);
   await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
     'another phone signed in to the account sees its uploads, with none of its own',
@@ -384,7 +395,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   });
   const { page, errors } = await phone({ userId: EDITOR_ID });
   await start(page).waitFor({ timeout: 30000 });
-  await button(page, 'History').click();
+  await openHistory(page);
   await row(page, 'Editor ride').waitFor({ timeout: 15000 });
   check(
     "an editor signed in here sees only its own uploads in History, not everyone's",
@@ -411,7 +422,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
 {
   const { page } = await phone({ consent: null });
   await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 30000 });
-  await button(page, 'Profile').click();
+  await personButton(page).click();
   await button(page, 'Sign out').click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
@@ -440,7 +451,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     },
   });
   fake.tokens.set(token, { anonymousId: earlier, usedBy: null });
-  await button(page, 'History').click();
+  await openHistory(page);
   await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
     "before the claim, History does not list the earlier identity's upload",
@@ -481,7 +492,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       ),
     [ACCOUNT_ID],
   );
-  await button(page, 'Profile').click();
+  await personButton(page).click();
   await button(page, 'Sign out').click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
@@ -504,7 +515,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await start(page).waitFor({ timeout: 30000 });
   await seed(page, 'eeeeeeee-0000-4000-8000-000000000004', 'Only here');
   await page.reload({ waitUntil: 'load' });
-  await button(page, 'Profile').click();
+  await personButton(page).click();
   await button(page, 'Sign out').click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
