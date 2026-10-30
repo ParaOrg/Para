@@ -151,7 +151,7 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
   return { page, context, fake, errors };
 }
 
-const start = (page) => page.getByRole('button', { name: 'Start recording' });
+const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 const field = (page, name) => page.getByLabel(name, { exact: true });
 const claimOf = (page) => page.evaluate((key) => localStorage.getItem(key), CLAIM_KEY);
 const owners = (fake) => [...fake.rows.values()].map((row) => row.by);

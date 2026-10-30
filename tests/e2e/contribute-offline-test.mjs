@@ -146,7 +146,7 @@ try {
   await standInDatabase(first);
   watch(first);
   await first.goto(`${base}/contribute/`, { waitUntil: 'load' });
-  await first.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
+  await first.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   const worker = await first.evaluate(async () => {
     const ready = await navigator.serviceWorker.ready;
     const all = await navigator.serviceWorker.getRegistrations();
@@ -202,7 +202,7 @@ try {
   fake.isOffline = true;
   watch(page);
   await page.goto(`${base}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   check(
     'with the network off, /contribute/ opens from the worker',
     await page.evaluate(
@@ -214,7 +214,7 @@ try {
         )),
     ),
   );
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor({ timeout: 10000 });
   await ride(context, page, 6);
   await page.waitForFunction(
@@ -289,7 +289,7 @@ try {
   );
   await page.clock.fastForward(95_000);
   check('once the recording is saved, the update takes over and the page reloads', await reloaded);
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   const after = await page.evaluate(() => window.__marker ?? null);
   const stores = await storeNames(page);
   check(
@@ -310,7 +310,7 @@ try {
     .waitFor({ timeout: 20000 });
   check(
     'with no signal and no account, the page opens on Sign in, with no Start and no page error',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'Create an account' }).count()) === 1 &&
       errors.length === 0,
     errors.slice(0, 3).join(' | '),

@@ -79,7 +79,9 @@ export function Locator({
 
   // Never above Middle's top. With no card, the map's foot: short of a
   // phone's home bar, and of what the page stands in the corner (`--dock-foot`,
-  // the studio's New buttons).
+  // the studio's New buttons). `--dock-gap` and `--dock-right` set the column's
+  // gap over that foot and from the right edge; the contributor page sets them,
+  // the public map keeps 0.75rem each.
   const y = docked
     ? `max(var(--dock-y, 100%), ${slide('middle')})`
     : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
@@ -93,7 +95,7 @@ export function Locator({
       }
       style={{ translate: `0 ${y}` }}
     >
-      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-[max(2.5rem,calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
+      <div className="pointer-events-auto absolute right-[calc(var(--dock-right,0.75rem)+env(safe-area-inset-right))] bottom-full mb-[var(--dock-gap,0.75rem)] flex flex-col items-end gap-1 @float:right-3 @float:bottom-[max(2.5rem,calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
         <LocationAndMapControl
           map={map}
           isMapLoaded={isMapLoaded}

@@ -157,7 +157,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           {recording.problem && (
             <p
               role="alert"
-              className="absolute inset-x-4 top-[calc(max(1rem,env(safe-area-inset-top))+3.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
+              className="absolute inset-x-4 top-[calc(env(safe-area-inset-top)+5.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
             >
               {recording.problem}
             </p>
@@ -198,7 +198,8 @@ export function ContributePage({ locator }: ContributePageProps) {
               <HistoryView
                 recordings={recording.saved}
                 uploads={uploads}
-                onBack={history.close}
+                // History is inside Account, so its Back returns there, even after a reload.
+                onBack={hasAccount ? () => history.closeTo('#profile') : history.close}
                 onDownload={recording.downloadSaved}
                 onDeleteFromPhone={recording.deleteSaved}
               />

@@ -4,6 +4,8 @@ export interface HashView {
   isOpen: boolean;
   open: () => void;
   close: () => void;
+  /** Leaves this screen for the one shown at `hash`, the screen it was opened from. */
+  closeTo: (hash: string) => void;
 }
 
 /**
@@ -47,9 +49,26 @@ export function createHashView(hash: string): () => HashView {
     notify();
   };
 
+  // Back, when this page load opened the screen from the one at `hash`; after a reload there is no
+  // entry to go back to, so the URL is replaced and every screen's store told, as a hashchange.
+  const closeTo = (target: string) => {
+    if (!isOpenNow()) return;
+    if (hasPushedEntry) {
+      hasPushedEntry = false;
+      window.history.back();
+      return;
+    }
+    window.history.replaceState(
+      null,
+      '',
+      window.location.pathname + window.location.search + target,
+    );
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
+
   function useHashView(): HashView {
     const isOpen = useSyncExternalStore(subscribe, isOpenNow);
-    return { isOpen, open, close };
+    return { isOpen, open, close, closeTo };
   }
   return useHashView;
 }

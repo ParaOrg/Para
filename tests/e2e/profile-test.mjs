@@ -113,7 +113,7 @@ const openHistory = async (page) => {
   await button(page, 'History').click();
 };
 const field = (page, name) => page.getByLabel(name, { exact: true });
-const start = (page) => page.getByRole('button', { name: 'Start recording' });
+const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
 const moreOf = (page, name) => row(page, name).getByRole('button', { name: /^More actions/ });
 const actionsOf = async (page, name) => {
@@ -188,6 +188,40 @@ async function seed(page, id, name, upload) {
     'Back from Account returns to Ready with focus on the button that opened it',
     (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) === 'Account',
   );
+
+  const tabButton = page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' });
+  await tabButton.click();
+  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
+  await button(page, 'Back').click();
+  await start(page).waitFor();
+  check(
+    '  opened from the Account tab, Back hands focus back to the tab',
+    await page.evaluate(
+      () =>
+        document.activeElement?.textContent === 'Account' &&
+        !!document.activeElement.closest('nav[aria-label="Screens"]'),
+    ),
+  );
+
+  const isOnAccount = async () =>
+    (await page.getByRole('heading', { level: 1, name: 'Profile' }).count()) === 1 &&
+    (await page.evaluate(() => location.hash)) === '#profile';
+  await openHistory(page);
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
+  check('History is inside Account: its Back returns to Account (#profile)', await isOnAccount());
+  await button(page, 'History').click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 30000 });
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
+  check('  and after a reload on #history too', await isOnAccount());
+  await button(page, 'Back').click();
+  await start(page).waitFor();
 
   await personButton(page).click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();

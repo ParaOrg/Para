@@ -40,6 +40,10 @@
  */
 :root {
   --dock-foot: var(--stack-room, 0px);
+  /* Figma's Start (4485:24815) stands the map-type and locator column 16px over the tabs and
+     16px in from the edge, where the public map keeps 12px. */
+  --dock-gap: 1rem;
+  --dock-right: 1rem;
 }
 
 /*

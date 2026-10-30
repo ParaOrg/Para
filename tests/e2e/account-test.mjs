@@ -57,7 +57,7 @@ const SCREENS = {
   signIn: (page) => page.getByRole('heading', { name: 'Welcome Contributor', level: 1 }),
   createAccount: (page) => page.getByRole('heading', { name: 'Create an account', level: 1 }),
   thankYou: (page) => page.getByRole('heading', { name: 'Thank you for signing up!', level: 1 }),
-  start: (page) => page.getByRole('button', { name: 'Start recording' }),
+  start: (page) => page.getByRole('button', { name: 'Start Tracking' }),
 };
 const field = (page, name) => page.getByLabel(name, { exact: true });
 const alertText = (page) => page.getByRole('alert').innerText();

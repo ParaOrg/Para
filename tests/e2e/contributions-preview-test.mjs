@@ -80,7 +80,7 @@ async function phone() {
   await page.addInitScript(GPS);
   await page.addInitScript(() => localStorage.setItem('para.contribute.consent', '3'));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 30000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 30000 });
   return { context, page };
 }
 
@@ -98,7 +98,7 @@ async function openHistory(page) {
 
 /** Records `seconds` of a ride north from `lat`, a fix a second, and saves it with a start name. */
 async function recordAndSave(page, name, lat, seconds = 40) {
-  await page.getByRole('button', { name: 'Start recording' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
   for (let s = 0; s < seconds; s += 1) {
     const standing = s >= 15 && s < 25;
     const north = (standing ? 15 : s < 15 ? s : s - 10) * 8;

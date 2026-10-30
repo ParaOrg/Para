@@ -1,3 +1,5 @@
+import { cn } from '@/shared/utils/cn';
+
 import { BatteryPanel } from './battery-panel';
 import { PermissionPanel } from './permission-panel';
 import { RefusedPanel } from './refused-panel';
@@ -19,31 +21,40 @@ export function StartGate({ onStart }: StartGateProps) {
   return (
     <>
       {gate.problem && (
-        <p role="alert" className="bg-surface p-3 text-base/6 text-content-primary">
+        // Over the Start bar, 2rem clear of it, so the bar's rounded corners do not cover it.
+        <p
+          role="alert"
+          className={cn('bg-surface p-3 text-base/6 text-content-primary', !step && 'mb-8')}
+        >
           {gate.problem}
         </p>
       )}
-      {step?.kind === 'permission' && (
-        <PermissionPanel
-          permission={step.permission}
-          onContinue={gate.handleContinue}
-          onCancel={gate.handleClose}
-        />
-      )}
-      {step?.kind === 'refused' && (
-        <RefusedPanel
-          permission={step.permission}
-          onOpenSettings={gate.handleOpenSettings}
-          onRecordAnyway={gate.handleRecordAnyway}
-          onClose={gate.handleClose}
-        />
-      )}
-      {step?.kind === 'battery' && (
-        <BatteryPanel
-          help={step.help}
-          onOpenSettings={gate.handleOpenSettings}
-          onDone={gate.handleBatteryDone}
-        />
+      {/* In the bar's place the panels keep clear of Android's navigation buttons themselves. */}
+      {step && (
+        <div className="pb-[env(safe-area-inset-bottom)]">
+          {step.kind === 'permission' && (
+            <PermissionPanel
+              permission={step.permission}
+              onContinue={gate.handleContinue}
+              onCancel={gate.handleClose}
+            />
+          )}
+          {step.kind === 'refused' && (
+            <RefusedPanel
+              permission={step.permission}
+              onOpenSettings={gate.handleOpenSettings}
+              onRecordAnyway={gate.handleRecordAnyway}
+              onClose={gate.handleClose}
+            />
+          )}
+          {step.kind === 'battery' && (
+            <BatteryPanel
+              help={step.help}
+              onOpenSettings={gate.handleOpenSettings}
+              onDone={gate.handleBatteryDone}
+            />
+          )}
+        </div>
       )}
       {!step && <StartBar onClick={gate.handleStart} />}
     </>
