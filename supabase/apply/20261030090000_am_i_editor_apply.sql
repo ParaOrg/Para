@@ -5,13 +5,13 @@
 -- supabase/migrations/20261030090000_am_i_editor.sql (copied below unchanged),
 -- then writes the ledger row. If a check fails it raises and nothing is
 -- changed, ledger included. A second run stops at step 1 and changes nothing.
--- Afterwards run 20261030090000_am_i_editor_check.sql (read-only), then
+-- Afterwards run 20261030090000_am_i_editor_check.sql (read-only, 6 rows), then
 -- regenerate the types. Undo: 20261030090000_am_i_editor_revert.sql.
 -- Adds one function; no table, no policy and no row.
 
 begin;
 
--- 1. Before: this has not run, and 0005's check is there.
+-- 1. Before: this has not run, and 0005's check is there, runnable by signed-in users.
 do $$
 begin
   if exists (select 1 from supabase_migrations.schema_migrations where name = 'am_i_editor') then
@@ -19,6 +19,11 @@ begin
   end if;
   if to_regprocedure('private.is_editor()') is null then
     raise exception 'am_i_editor: private.is_editor() is missing (0005). Nothing was changed.';
+  end if;
+  -- am_i_editor runs as the caller: without these 0005 grants it would refuse every editor.
+  if not (has_schema_privilege('authenticated', 'private', 'usage')
+          and has_function_privilege('authenticated', 'private.is_editor()', 'execute')) then
+    raise exception 'am_i_editor: authenticated cannot run private.is_editor() (0005''s grants). Nothing was changed.';
   end if;
 end $$;
 

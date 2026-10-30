@@ -275,6 +275,46 @@ check(
       .then(() => true)),
 );
 
+// From inside the workshop: an editor's session ends there (Sign out), the workshop stays,
+// and a contributor's account signs in from its own Sign in dialog.
+await page.evaluate(
+  ([key, s]) => localStorage.setItem(key, JSON.stringify(s)),
+  [STUDIO_KEY, session(EDITOR_ID)],
+);
+await page.reload({ waitUntil: 'load' });
+await page.getByRole('button', { name: 'Sign out' }).click({ timeout: 20000 });
+await page.getByRole('button', { name: 'Sign in', exact: true }).click({ timeout: 20000 });
+const dialogSubmit = page.locator('form button[type="submit"]');
+await page.getByPlaceholder('you@example.com').fill(CONTRIBUTOR_EMAIL);
+await page.getByPlaceholder('Password').fill('right');
+await page.waitForFunction(() => !document.querySelector('form button[type="submit"]')?.disabled);
+await dialogSubmit.click();
+await notEditor.waitFor({ timeout: 20000 });
+check(
+  "from the workshop's Sign in, a contributor account is turned away the same way, signed out",
+  await page
+    .waitForFunction((key) => localStorage.getItem(key) === null, STUDIO_KEY)
+    .then(() => true),
+);
+await page.getByRole('button', { name: 'Sign in with another account' }).click();
+await page.waitForFunction(
+  () => !document.querySelector('form button[type="submit"]')?.disabled,
+  null,
+  { timeout: 20000 },
+);
+check(
+  '  and its Sign in dialog is ready for another account, not stuck signing in',
+  (await dialogSubmit.innerText()) === 'Sign in' && (await notEditor.count()) === 0,
+  await dialogSubmit.innerText(),
+);
+await page.getByPlaceholder('you@example.com').fill(EMAIL);
+await dialogSubmit.click();
+await page.getByRole('button', { name: 'Sign out' }).waitFor({ timeout: 20000 });
+check(
+  '  where an editor then signs in, and the dialog closes',
+  (await page.getByPlaceholder('you@example.com').count()) === 0,
+);
+
 // Forgot password, from a signed-out start.
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'load' });

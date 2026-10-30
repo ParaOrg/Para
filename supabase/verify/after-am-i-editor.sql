@@ -20,7 +20,7 @@ end $$;
 \set C 'aaaa0000-0000-0000-0000-0000000000c9'
 \set A 'aaaa0000-0000-0000-0000-0000000000a9'
 
-insert into auth.users (id) values (:'E'), (:'C'), (:'A');
+insert into auth.users (id, is_anonymous) values (:'E', false), (:'C', false), (:'A', true);
 insert into private.editor (user_id) values (:'E');
 
 select pg_temp.as_user(:'E');

@@ -12,6 +12,9 @@ select * from (values
    has_function_privilege('authenticated', 'public.am_i_editor()', 'execute')),
   (4, 'visitors may not',
    not has_function_privilege('anon', 'public.am_i_editor()', 'execute')),
-  (5, 'the ledger has the row',
+  (5, 'signed-in users can reach 0005''s check it runs as the caller (usage on private, execute on is_editor)',
+   has_schema_privilege('authenticated', 'private', 'usage')
+     and has_function_privilege('authenticated', 'private.is_editor()', 'execute')),
+  (6, 'the ledger has the row',
    (select count(*) = 1 from supabase_migrations.schema_migrations where name = 'am_i_editor'))
 ) as c(n, check_name, ok) order by n;

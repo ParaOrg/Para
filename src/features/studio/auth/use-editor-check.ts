@@ -16,6 +16,13 @@ export function useEditorCheck(session: Session | null | undefined) {
   const userId = session?.user.id ?? null;
   const [verdict, setVerdict] = useState<EditorVerdict | null>(null);
   const [isTurnedAway, setIsTurnedAway] = useState(false);
+  // A new account (or none) drops the last answer at once, during render, as
+  // React adjusts state to a prop: a sign-in after a sign-out never reuses it.
+  const [askedFor, setAskedFor] = useState(userId);
+  if (askedFor !== userId) {
+    setAskedFor(userId);
+    setVerdict(null);
+  }
 
   useEffect(() => {
     if (!userId) return;
