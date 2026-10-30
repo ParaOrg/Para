@@ -260,8 +260,8 @@ const buttons = (page) =>
   }
   await page.waitForFunction(() => !!window.__map?.loaded());
   check(
-    'Ready: Start and a way back to the map, no saved-recordings list',
-    (await page.getByRole('button', { name: 'Back to the map' }).count()) === 1 &&
+    'Ready: Start, the top left empty as Figma has it (no Back to the map), no saved-recordings list',
+    (await page.getByRole('button', { name: 'Back to the map' }).count()) === 0 &&
       (await page.getByText('Saved on this phone').count()) === 0 &&
       (await page.getByText('No saved recordings yet.').count()) === 0,
   );
@@ -1263,13 +1263,18 @@ const WAKE = () => {
   await page.context().close();
 }
 
-// ------------------------------- Back to the map on every screen but Recording, and a ride kept
+// ------------------- Back to the map on Unfinished and Saved, not on Start or Recording; a ride kept
 {
   const { page, errors } = await phone({ consented: true });
   const back = page.getByRole('button', { name: 'Back to the map' });
   const hasOneBack = async () => (await back.count()) === 1;
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
-  check('Ready has Back to the map', await hasOneBack());
+  check(
+    'Ready has no Back to the map (the browser goes back), no scale bar, and the map credits still',
+    (await back.count()) === 0 &&
+      (await page.locator('.maplibregl-ctrl-scale').isVisible()) === false &&
+      (await page.locator('.maplibregl-ctrl-attrib').count()) === 1,
+  );
 
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();

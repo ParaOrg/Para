@@ -41,3 +41,11 @@
 :root {
   --dock-foot: var(--stack-room, 0px);
 }
+
+/*
+ * The contributor screens carry no scale bar: Figma draws none on them. The credits stay, as
+ * the map's licence asks wherever it shows.
+ */
+.maplibregl-ctrl-scale {
+  display: none;
+}

@@ -4,7 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
-import { BackToMapButton, goBackToMap } from '../common/back-to-map-button';
+import { goBackToMap } from '../common/back-to-map-button';
 import { useStackRoom } from '../common/use-stack-room';
 import { ConsentPanel } from '../consent/consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
@@ -45,8 +45,7 @@ interface ReadyScreenProps {
 /**
  * Before a recording, Figma's Start (4485:24815): the person button at the top right and, at the
  * foot, the Record and Account tabs over the Start Tracking bar (or, on a first visit, what the
- * page does). Back to the map stays at the top left on the web page, where the tutorial's ? will
- * stand.
+ * page does). The top left waits for the tutorial's ?.
  */
 export function ReadyScreen({
   hasConsent,
@@ -71,8 +70,8 @@ export function ReadyScreen({
   return (
     <>
       {/* TODO: show HelpButton (help-button.tsx) here, at the top left, once the tutorial it opens
-          is designed. */}
-      <BackToMapButton />
+          is designed. Until then the corner is empty, as Figma has no Back to the map on Start:
+          the browser's back is the way to the public map. */}
       {onOpenAccount && (
         <div className="absolute top-0 right-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] pr-[max(1rem,env(safe-area-inset-right))]">
           <IconButton
