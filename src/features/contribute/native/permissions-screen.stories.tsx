@@ -104,7 +104,7 @@ export const ProblemWithContinue: Story = {
       { row: 'location', state: 'on' },
     ],
     canContinue: true,
-    problem: 'Para could not ask Android. Tap the switch again.',
+    problem: 'Settings would not open. Open Para in your phone’s Settings to turn it on.',
   },
 };
 

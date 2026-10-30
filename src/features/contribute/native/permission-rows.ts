@@ -71,3 +71,22 @@ export function needsPermissionsScreen(
 ): boolean {
   return firstMissing(states, needed) !== null;
 }
+
+/**
+ * Asks Android for a row's permissions in order (location before "all the time"), skipping any
+ * already granted and stopping at the first refusal. `states` is the phone's answer before asking.
+ */
+export async function askRow(
+  row: PermissionRow,
+  needed: readonly NativePermission[],
+  states: NativePermissionStates,
+  request: (permission: NativePermission) => Promise<NativePermissionStates>,
+): Promise<{ states: NativePermissionStates; isRefused: boolean }> {
+  let current = states;
+  for (const permission of permissionsOfRow(row, needed)) {
+    if (current[permission] === 'granted') continue;
+    current = await request(permission);
+    if (current[permission] !== 'granted') return { states: current, isRefused: true };
+  }
+  return { states: current, isRefused: false };
+}
