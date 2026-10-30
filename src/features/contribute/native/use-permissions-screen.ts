@@ -9,10 +9,10 @@ import {
   type NativePermissionStates,
 } from './native-permissions';
 import {
+  askRow,
   canContinue,
   needsPermissionsScreen,
   permissionRows,
-  permissionsOfRow,
   rowState,
   type PermissionRow,
   type PermissionRowView,
@@ -20,7 +20,9 @@ import {
 import { neededPermissions } from './permission-steps';
 import { markPermissionsScreenSeen } from '../native-bridge/permissions-screen-flag';
 
-const PROBLEM = 'Para could not ask Android. Tap the switch again.';
+const ASK_PROBLEM = 'Para could not ask Android. Tap the switch again.';
+const SETTINGS_PROBLEM =
+  'Settings would not open. Open Para in your phone’s Settings to turn it on.';
 
 interface Checked {
   states: NativePermissionStates;
@@ -91,16 +93,14 @@ export function usePermissionsScreen(onDone: () => void): PermissionsScreenState
   }, []);
 
   const ask = async (row: PermissionRow, { needed }: Checked) => {
-    let states = await checkNativePermissions();
-    for (const permission of permissionsOfRow(row, needed)) {
-      if (states[permission] === 'granted') continue;
-      states = await requestNativePermission(permission);
-      if (states[permission] !== 'granted') {
-        setRefused((current) => new Set(current).add(row));
-        break;
-      }
-    }
-    setChecked({ states, needed });
+    const asked = await askRow(
+      row,
+      needed,
+      await checkNativePermissions(),
+      requestNativePermission,
+    );
+    if (asked.isRefused) setRefused((current) => new Set(current).add(row));
+    setChecked({ states: asked.states, needed });
   };
 
   const handleSwitch = (row: PermissionRow) => {
@@ -110,7 +110,7 @@ export function usePermissionsScreen(onDone: () => void): PermissionsScreenState
     if (state === 'error') {
       openAppSettings().catch((error: unknown) => {
         console.error('Settings could not be opened.', error);
-        setProblem(PROBLEM);
+        setProblem(SETTINGS_PROBLEM);
       });
       return;
     }
@@ -120,7 +120,7 @@ export function usePermissionsScreen(onDone: () => void): PermissionsScreenState
     ask(row, checked)
       .catch((error: unknown) => {
         console.error('Android could not be asked for the permission.', error);
-        setProblem(PROBLEM);
+        setProblem(ASK_PROBLEM);
       })
       .finally(() => {
         isAsking.current = false;

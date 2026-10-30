@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
+  askRow,
   canContinue,
   needsPermissionsScreen,
   permissionRows,
@@ -71,4 +72,46 @@ test('the screen shows only when a needed permission is not granted yet', () => 
   assert.equal(needsPermissionsScreen(ALL, ANDROID_14), false);
   assert.equal(needsPermissionsScreen({ ...ALL, notifications: 'denied' }, ANDROID_11), false);
   assert.equal(needsPermissionsScreen({ ...ALL, backgroundLocation: 'prompt' }, ANDROID_14), true);
+});
+
+/** A stand-in for Android: grants what `answers` says, and records what it was asked. */
+const androidAnswering = (answers) => {
+  const asked = [];
+  let states = { ...ASKED };
+  const request = async (permission) => {
+    asked.push(permission);
+    states = { ...states, [permission]: answers[permission] };
+    return states;
+  };
+  return { asked, request };
+};
+
+test('Location asks for location first, then "all the time"', async () => {
+  const android = androidAnswering({ location: 'granted', backgroundLocation: 'granted' });
+  const result = await askRow('location', ANDROID_14, ASKED, android.request);
+  assert.deepEqual(android.asked, ['location', 'backgroundLocation']);
+  assert.equal(result.isRefused, false);
+  assert.equal(rowState('location', result.states, ANDROID_14, NONE), 'on');
+});
+
+test('a refusal stops the asking: "all the time" is never asked without location', async () => {
+  const android = androidAnswering({ location: 'prompt-with-rationale' });
+  const result = await askRow('location', ANDROID_14, ASKED, android.request);
+  assert.deepEqual(android.asked, ['location']);
+  assert.equal(result.isRefused, true);
+});
+
+test('a permission already granted is not asked again', async () => {
+  const android = androidAnswering({ backgroundLocation: 'denied' });
+  const before = { ...ASKED, location: 'granted' };
+  const result = await askRow('location', ANDROID_14, before, android.request);
+  assert.deepEqual(android.asked, ['backgroundLocation']);
+  assert.equal(result.isRefused, true);
+});
+
+test('Android 9 asks for location alone', async () => {
+  const android = androidAnswering({ location: 'granted' });
+  const result = await askRow('location', ANDROID_9, ASKED, android.request);
+  assert.deepEqual(android.asked, ['location']);
+  assert.equal(result.isRefused, false);
 });
