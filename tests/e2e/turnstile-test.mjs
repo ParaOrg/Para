@@ -1,7 +1,10 @@
 // Turnstile on the studio's Auth requests: Sign in, Forgot password and the
 // current-password check of Change password each carry a token, a fresh one
 // every time (Supabase accepts a token once), and Sign in waits for the check.
-// Cloudflare's script and Supabase Auth are stand-ins: no request leaves.
+// And who gets in: an account am_i_editor says no for (a contributor's) is
+// told so, sees no editing tool, and is signed out of the studio only, whether
+// it signed in or its session was restored; an editor signs in as before.
+// Cloudflare's script, Supabase Auth and the database are stand-ins: no request leaves.
 //
 //   VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA npx vite --port 5176   (in another terminal)
 //   PARA_BASE=http://localhost:5176 node tests/e2e/turnstile-test.mjs
@@ -11,6 +14,12 @@ import { BASE, harness } from './lib/harness.mjs';
 
 const { check, tally } = harness();
 const EMAIL = 'editor@para.test';
+const EDITOR_ID = '00000000-0000-0000-0000-0000000000e1';
+const CONTRIBUTOR_EMAIL = 'contributor@para.test';
+const CONTRIBUTOR_ID = '00000000-0000-0000-0000-0000000000c1';
+/** The studio's own session, in its own storage key; the contributor page keeps another. */
+const STUDIO_KEY = 'sb-smzwbqxttdyvohuizynl-auth-token';
+const CONTRIBUTOR_PAGE_KEY = 'para.contributor-auth';
 
 // Cloudflare's script, standing in: each widget passes after a moment with a token of its own.
 const FAKE_TURNSTILE = `
@@ -29,6 +38,10 @@ const FAKE_TURNSTILE = `
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 const page = await context.newPage();
+const shot = (name) =>
+  process.env.PARA_SHOTS
+    ? page.screenshot({ path: `${process.env.PARA_SHOTS}/${name}.png` })
+    : null;
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 
@@ -41,21 +54,25 @@ await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) => {
 /** Every Auth request: its path and the captcha token it carried. */
 const auth = [];
 let isPasswordRight = false;
-const session = () => ({
-  access_token: 'editor-token',
+/** Which account the password grant signs in: the email typed. */
+const idOf = (email) => (email === CONTRIBUTOR_EMAIL ? CONTRIBUTOR_ID : EDITOR_ID);
+const session = (id = EDITOR_ID) => ({
+  access_token: `token-for-${id}`,
   token_type: 'bearer',
   expires_in: 3600,
   expires_at: Math.floor(Date.now() / 1000) + 3600,
-  refresh_token: 'editor-refresh',
+  refresh_token: `refresh-for-${id}`,
   user: {
-    id: '00000000-0000-0000-0000-0000000000e1',
+    id,
     aud: 'authenticated',
     role: 'authenticated',
-    email: EMAIL,
+    email: id === CONTRIBUTOR_ID ? CONTRIBUTOR_EMAIL : EMAIL,
     app_metadata: {},
     user_metadata: {},
   },
 });
+/** Every am_i_editor question: the account that asked. */
+const asked = [];
 await page.route(/^https:\/\/[^/]+\.supabase\.co\//, async (route) => {
   const request = route.request();
   const url = new URL(request.url());
@@ -84,7 +101,7 @@ await page.route(/^https:\/\/[^/]+\.supabase\.co\//, async (route) => {
     });
     if (url.pathname === '/auth/v1/token' && url.searchParams.get('grant_type') === 'password') {
       return isPasswordRight
-        ? json(200, session())
+        ? json(200, session(idOf(body.email)))
         : json(400, {
             error: 'invalid_grant',
             error_description: 'Invalid login credentials',
@@ -92,8 +109,16 @@ await page.route(/^https:\/\/[^/]+\.supabase\.co\//, async (route) => {
           });
     }
     if (url.pathname === '/auth/v1/recover') return json(200, {});
-    if (url.pathname === '/auth/v1/user') return json(200, session().user);
+    const caller = (request.headers().authorization ?? '').replace(/^Bearer token-for-/, '');
+    if (url.pathname === '/auth/v1/user') return json(200, session(caller || EDITOR_ID).user);
+    if (url.pathname === '/auth/v1/logout') return route.fulfill({ status: 204 });
     return json(200, {});
+  }
+  // 20261030090000: about the caller alone; only the editor is on the list.
+  if (url.pathname === '/rest/v1/rpc/am_i_editor') {
+    const caller = (request.headers().authorization ?? '').replace(/^Bearer token-for-/, '');
+    asked.push(caller);
+    return json(200, caller === EDITOR_ID);
   }
   // The studio's data, empty: this suite is about signing in.
   if (request.method() === 'GET') return json(200, []);
@@ -132,6 +157,11 @@ check(
   passwordGrants.length === 2 && passwordGrants[1].token === 'token-w2',
   passwordGrants.map((a) => a.token).join(', '),
 );
+check(
+  '  an editor: the studio asked am_i_editor for them, and let them in',
+  asked.includes(EDITOR_ID),
+  JSON.stringify(asked),
+);
 
 await page.getByRole('button', { name: 'Password', exact: true }).click();
 await page.getByText('Change password').waitFor();
@@ -155,6 +185,95 @@ check(
   })(),
 );
 await page.getByRole('button', { name: 'Done' }).click();
+
+// An account that is not an editor (a contributor's), signing in at the door.
+await page.evaluate(
+  ([key]) => {
+    localStorage.clear();
+    localStorage.setItem(key, JSON.stringify({ kept: 'the contributor page' }));
+  },
+  [CONTRIBUTOR_PAGE_KEY],
+);
+await page.reload({ waitUntil: 'load' });
+await page.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
+await page.getByPlaceholder('you@example.com').fill(CONTRIBUTOR_EMAIL);
+await page.getByPlaceholder('Password').fill('right');
+await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
+const logoutsBefore = auth.filter((a) => a.path.startsWith('/auth/v1/logout')).length;
+await signIn.click();
+const notEditor = page.getByRole('heading', { name: "This account isn't an editor" });
+await notEditor.waitFor({ timeout: 20000 });
+await shot('not-editor');
+check(
+  'a contributor account is told it is not an editor, focus on the heading',
+  await notEditor.evaluate((el) => el === document.activeElement),
+);
+check(
+  "  in the owner's words, with the contributor page and another sign-in",
+  (await page
+    .getByText(
+      "Para Studio is for the people who draw the routes. You signed in with a contributor account, so you can't make changes here.",
+    )
+    .count()) === 1 &&
+    (await page.getByRole('link', { name: 'Open the contributor page' }).getAttribute('href')) ===
+      '/contribute/' &&
+    (await page.getByRole('button', { name: 'Sign in with another account' }).count()) === 1,
+);
+const editingTools = () =>
+  Promise.all([
+    page.getByRole('button', { name: 'New route, terminal or hintuan' }).count(),
+    page.getByRole('button', { name: 'Password', exact: true }).count(),
+    page.locator('canvas.maplibregl-canvas').count(),
+  ]).then((counts) => counts.reduce((a, b) => a + b, 0));
+check('  and sees no editing tool, no account pill and no map', (await editingTools()) === 0);
+const stored = () =>
+  page.evaluate(
+    ([a, b]) => [localStorage.getItem(a), localStorage.getItem(b)],
+    [STUDIO_KEY, CONTRIBUTOR_PAGE_KEY],
+  );
+check(
+  '  it is signed out of the studio, here only (scope local), the contributor page left signed in',
+  await (async () => {
+    await page.waitForFunction((key) => localStorage.getItem(key) === null, STUDIO_KEY);
+    const [studio, contributorPage] = await stored();
+    const logouts = auth.filter((a) => a.path.startsWith('/auth/v1/logout'));
+    return (
+      studio === null &&
+      contributorPage !== null &&
+      logouts.length === logoutsBefore + 1 &&
+      logouts.at(-1).path.includes('scope=local')
+    );
+  })(),
+  JSON.stringify({
+    stored: await stored(),
+    logouts: auth.filter((a) => a.path.startsWith('/auth/v1/logout')),
+  }),
+);
+for (let i = 0; i < 4; i += 1) await page.keyboard.press('Tab');
+check(
+  '  focus stays in the notice: the page behind it is inert',
+  await page.evaluate(() => !!document.activeElement?.closest('dialog[open]')),
+);
+await page.getByRole('button', { name: 'Sign in with another account' }).click();
+check(
+  '  Sign in with another account comes back to the door',
+  (await page.getByText('Sign in to Para Studio').count()) === 1 && (await notEditor.count()) === 0,
+);
+
+// The same account's session, restored on load: turned away the same way.
+await page.evaluate(
+  ([key, s]) => localStorage.setItem(key, JSON.stringify(s)),
+  [STUDIO_KEY, session(CONTRIBUTOR_ID)],
+);
+await page.reload({ waitUntil: 'load' });
+await notEditor.waitFor({ timeout: 20000 });
+check(
+  "a contributor's session restored on load is turned away too, and never sees the workshop",
+  (await editingTools()) === 0 &&
+    (await page
+      .waitForFunction((key) => localStorage.getItem(key) === null, STUDIO_KEY)
+      .then(() => true)),
+);
 
 // Forgot password, from a signed-out start.
 await page.evaluate(() => localStorage.clear());

@@ -352,6 +352,8 @@ const serve = async (req) => {
       },
     };
   }
+  // 20261030090000: the studio asks at sign-in; this stand-in's session is an editor's.
+  if (table === 'rpc/am_i_editor') return { status: 200, body: true };
   const params = [...u.searchParams];
   const select = u.searchParams.get('select');
   const one = /vnd\.pgrst\.object/.test(req.headers().accept ?? '');
