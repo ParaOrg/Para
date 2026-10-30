@@ -9,6 +9,10 @@ interface TurnstileApi {
       callback: (token: string) => void;
       'expired-callback': () => void;
       'error-callback': () => void;
+      appearance?: TurnstileAppearance;
+      'before-interactive-callback'?: () => void;
+      'after-interactive-callback'?: () => void;
+      'timeout-callback'?: () => void;
     },
   ) => string;
   remove: (widgetId: string) => void;
@@ -48,12 +52,27 @@ function loadTurnstile(url: string): Promise<TurnstileApi> {
   return loading;
 }
 
+/**
+ * Cloudflare's own names: `always` draws the widget from the start; `interaction-only` draws
+ * nothing unless Cloudflare needs the person to tap it.
+ */
+export type TurnstileAppearance = 'always' | 'interaction-only';
+
+/** Interaction-only draws nothing most of the time, so its waiting line is for screen readers. */
+const CHECKING_LINE = {
+  always: 'text-sm text-content-secondary',
+  'interaction-only': 'sr-only',
+} satisfies Record<TurnstileAppearance, string>;
+
 interface TurnstileProps {
   siteKey: string;
   /** The check's token once it passes, and null when it expires or fails. A token is good for one request. */
   onToken: (token: string | null) => void;
   /** Cloudflare's script; a story points it elsewhere to show loading and failing. */
   scriptUrl?: string;
+  appearance?: TurnstileAppearance;
+  /** Told true when Cloudflare asks the person to tap the widget, and false once it no longer does. */
+  onNeedsTap?: (needsTap: boolean) => void;
 }
 
 /**
@@ -61,15 +80,23 @@ interface TurnstileProps {
  * see a tick and nothing to do. Remount it (a new `key`) for a fresh token
  * after each request, since Supabase accepts a token once.
  */
-export function Turnstile({ siteKey, onToken, scriptUrl = SCRIPT_URL }: TurnstileProps) {
+export function Turnstile({
+  siteKey,
+  onToken,
+  scriptUrl = SCRIPT_URL,
+  appearance = 'always',
+  onNeedsTap,
+}: TurnstileProps) {
   const container = useRef<HTMLDivElement>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [hasPassed, setHasPassed] = useState(false);
   const onTokenRef = useRef(onToken);
+  const onNeedsTapRef = useRef(onNeedsTap);
 
   useEffect(() => {
     onTokenRef.current = onToken;
-  }, [onToken]);
+    onNeedsTapRef.current = onNeedsTap;
+  }, [onToken, onNeedsTap]);
 
   useEffect(() => {
     let widgetId: string | null = null;
@@ -79,11 +106,17 @@ export function Turnstile({ siteKey, onToken, scriptUrl = SCRIPT_URL }: Turnstil
         if (!isCurrent || !container.current) return;
         widgetId = api.render(container.current, {
           sitekey: siteKey,
+          appearance,
           callback: (token) => {
             setProblem(null);
             setHasPassed(true);
+            onNeedsTapRef.current?.(false);
             onTokenRef.current(token);
           },
+          'before-interactive-callback': () => onNeedsTapRef.current?.(true),
+          'after-interactive-callback': () => onNeedsTapRef.current?.(false),
+          // An unsolved tap resets the widget, which asks again: the person still needs to tap.
+          'timeout-callback': () => onNeedsTapRef.current?.(true),
           'expired-callback': () => {
             setHasPassed(false);
             onTokenRef.current(null);
@@ -107,7 +140,7 @@ export function Turnstile({ siteKey, onToken, scriptUrl = SCRIPT_URL }: Turnstil
       isCurrent = false;
       if (widgetId !== null) window.turnstile?.remove(widgetId);
     };
-  }, [siteKey, scriptUrl]);
+  }, [siteKey, scriptUrl, appearance]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -118,7 +151,7 @@ export function Turnstile({ siteKey, onToken, scriptUrl = SCRIPT_URL }: Turnstil
         </p>
       ) : (
         !hasPassed && (
-          <p aria-live="polite" className="text-sm text-content-secondary">
+          <p aria-live="polite" className={CHECKING_LINE[appearance]}>
             Checking that you are a person…
           </p>
         )

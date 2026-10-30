@@ -27,7 +27,7 @@ const AUTH_KEY = 'para.contributor-auth';
 const browser = await chromium.launch();
 
 /** A phone with nothing stored but its consent to the current text, and the stand-in Supabase. */
-async function phone({ fake: shared } = {}) {
+async function phone({ fake: shared, isCheckInteractive = false } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -40,7 +40,7 @@ async function phone({ fake: shared } = {}) {
   const fake = await fakeContributions(page);
   // A second phone shares the first's accounts: the database is one.
   if (shared) fake.users = shared.users;
-  await fakeTurnstile(page);
+  await fakeTurnstile(page, { interactive: isCheckInteractive });
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('seeded')) {
       localStorage.setItem('para.contribute.consent', '3');
@@ -114,6 +114,50 @@ async function signOut(page) {
     fake.unknown.join(', '),
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
+}
+
+// ------------------------------- the bot check: last on the page, and seen only when it asks for a tap
+if (process.env.PARA_TURNSTILE) {
+  const { page, fake, errors } = await phone();
+  await SCREENS.signIn(page).waitFor({ timeout: 30000 });
+  const theCheck = page.getByRole('group', { name: 'Check that you are a person' });
+  await theCheck.waitFor({ state: 'attached' });
+  const isLast = await page.evaluate(() => {
+    const form = document.querySelector('form');
+    const widget = document.querySelector('[aria-label="Check that you are a person"]');
+    const buttons = [...(form?.querySelectorAll('button') ?? [])];
+    return (
+      !!widget &&
+      buttons.every(
+        (button) =>
+          button.compareDocumentPosition(widget) & window.Node.DOCUMENT_POSITION_FOLLOWING,
+      ) &&
+      widget.dataset.appearance === 'interaction-only'
+    );
+  });
+  check(
+    'the bot check is drawn interaction-only, after every button on Sign in',
+    isLast && (await page.getByText('Tap the check at the bottom first').count()) === 0,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+
+  const asked = await phone({ fake, isCheckInteractive: true });
+  await SCREENS.signIn(asked.page).waitFor({ timeout: 30000 });
+  await asked.page.getByText('Tap the check at the bottom first').waitFor();
+  const signInButton = asked.page.getByRole('button', { name: 'Sign in', exact: true });
+  check(
+    '  when Cloudflare asks for a tap, one line says where, and Sign in waits for it',
+    await signInButton.isDisabled(),
+  );
+  await shot(asked.page, '1b-check-asks-for-a-tap');
+  await asked.page.getByRole('button', { name: 'Verify you are human' }).click();
+  await asked.page.getByText('Tap the check at the bottom first').waitFor({ state: 'detached' });
+  check(
+    '  the tap passes the check: the line goes and Sign in is usable',
+    await signInButton.isEnabled(),
+  );
+  await asked.page.context().close();
 }
 
 // --------------------------------------------- create an account

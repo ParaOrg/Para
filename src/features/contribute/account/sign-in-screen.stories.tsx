@@ -66,3 +66,15 @@ export const ShortPhone: Story = {
 export const WaitingForCheck: Story = {
   args: { captcha: { ...NO_CAPTCHA, siteKey: '1x00000000000000000000AA', isReady: false } },
 };
+
+/** Cloudflare asks for a tap: one line above Sign in says where the check is. */
+export const CheckAsksForTap: Story = {
+  args: {
+    captcha: {
+      ...NO_CAPTCHA,
+      siteKey: '1x00000000000000000000AA',
+      isReady: false,
+      needsTap: true,
+    },
+  },
+};

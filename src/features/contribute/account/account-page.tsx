@@ -10,6 +10,9 @@ import { useFocusHeading } from '../common/use-focus-heading';
 /** Sign in sits in the middle of the screen; the others start under the back button's row. */
 type Placement = 'centre' | 'top';
 
+/** Said where the button that needs the check is, only while Cloudflare is asking for a tap. */
+const TAP_HINT = 'Tap the check at the bottom first';
+
 const PLACEMENT = {
   centre: 'justify-center pt-[max(1.5rem,env(safe-area-inset-top))]',
   top: '',
@@ -32,14 +35,14 @@ interface AccountPageProps {
   isBackDisabled?: boolean;
   /** The fields, in order. */
   children: ReactNode;
-  /**
-   * A line between the fields and the buttons, 48 from each: the code step's Resend. The bot
-   * check then sits under it, with what sends it, and not above the main button.
-   */
+  /** A line between the fields and the buttons, 48 from each: the code step's Resend. */
   afterFields?: ReactNode;
   /** One red line above the main button: what went wrong. */
   error: string | null;
-  /** The bot check, for the pages that sign in, make a user or send a code. */
+  /**
+   * The bot check, for the pages that sign in, make a user or send a code. It sits below every
+   * button and shows only when Cloudflare needs a tap, so the page keeps Figma's spacing.
+   */
   captcha?: Captcha;
   /** The buttons: the main one first. */
   actions: ReactNode;
@@ -48,8 +51,8 @@ interface AccountPageProps {
 
 /**
  * The onboarding pages' frame (Figma 4451:7904, 4461:646, 4461:4689, 4461:4762, 4461:5382): a
- * full page over the map, the heading block, the fields, then the error line, the bot check and
- * the buttons.
+ * full page over the map, the heading block, the fields, the error line and the buttons, then the
+ * bot check last of all.
  */
 export function AccountPage({
   title,
@@ -67,8 +70,10 @@ export function AccountPage({
 }: AccountPageProps) {
   const headingRef = useFocusHeading();
   const onToken = captcha?.onToken;
-  const captchaBox = captcha?.siteKey && (
-    <Turnstile key={captcha.round} siteKey={captcha.siteKey} onToken={captcha.onToken} />
+  const tapHint = captcha?.siteKey && captcha.needsTap && (
+    <p role="status" className="text-sm/5 text-content-tertiary">
+      {TAP_HINT}
+    </p>
   );
 
   // The widget goes with the page; its token must not outlive it.
@@ -121,20 +126,36 @@ export function AccountPage({
           className={'flex flex-col px-5 ' + (afterFields ? 'gap-12' : 'gap-8')}
         >
           <div className="flex flex-col gap-4">{children}</div>
+          {/* On the code step only Resend needs the check, so its hint sits under Resend. */}
           {afterFields && (
             <div className="flex flex-col items-center gap-4">
               {afterFields}
-              {captchaBox}
+              {tapHint}
             </div>
           )}
-          <div className="flex flex-col gap-4">
+          <div className="relative flex flex-col gap-4">
             {error && (
               <p role="alert" className="text-sm/5 text-content-error">
                 {error}
               </p>
             )}
-            {!afterFields && captchaBox}
+            {!afterFields && tapHint}
             {actions}
+            {/*
+              Last on the page and last to take focus, under the buttons. Out of the flow, so the
+              page keeps Figma's spacing whether or not Cloudflare draws anything.
+            */}
+            {captcha?.siteKey && (
+              <div className="absolute inset-x-0 top-full pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+                <Turnstile
+                  key={captcha.round}
+                  siteKey={captcha.siteKey}
+                  appearance="interaction-only"
+                  onToken={captcha.onToken}
+                  onNeedsTap={captcha.onNeedsTap}
+                />
+              </div>
+            )}
           </div>
         </form>
       </div>
