@@ -143,6 +143,7 @@ export const Disabled: Story = {
       <Button variant="secondary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
       <Button variant="primary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
       <Button variant="error" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} disabled />
+      <Button variant="plain" label="Button" disabled />
     </div>
   ),
 };
@@ -160,7 +161,7 @@ export const AllVariants: Story = {
       <Button variant="secondary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
       <Button variant="primary" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
       <Button variant="error" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
-      <Button variant="plain" label="Button" firstIcon={NavIcon} lastIcon={NavIcon} />
+      <Button variant="plain" label="Button" />
     </div>
   ),
 };

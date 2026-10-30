@@ -22,7 +22,8 @@ export type VariantAndSize =
   // designed.
   | { variant: 'primary'; size: 'small'; fill: CardFill; disabled?: never }
   | { variant: 'error'; size?: 'base'; fill?: never }
-  // Plain (4451:14022): the words alone, as Sign in's "Forgot password". Only Base Default is drawn.
+  // Plain (4451:14022): the words alone, as Sign in's "Forgot password". Only Base Default is
+  // drawn; disabled takes the set's opacity/60, as every voice does.
   | { variant: 'plain'; size?: 'base'; fill?: never };
 
 const VARIANT = {
