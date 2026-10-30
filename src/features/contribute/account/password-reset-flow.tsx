@@ -24,8 +24,8 @@ interface PasswordResetFlowProps {
  * every send, so the page never tells whether the email has an account. A right code signs the
  * phone in, but the page learns of the account only once the new password is saved, so the gate
  * stays on the last step until then. That holds while the page is open: closed or reloaded on the
- * last step, the phone opens signed in with the old password, which the owner accepted (the code
- * already proved the email is theirs).
+ * last step, the phone opens signed in with the old password; the code already proved the email
+ * is theirs.
  */
 export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
   const [step, setStep] = useState<Step>('email');
@@ -37,7 +37,7 @@ export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
   const setNewPassword = useSetNewPasswordMutation();
   const writeSession = useSessionWriter();
 
-  const sendCode = (to: string, onSent: () => void) =>
+  const sendCode = (to: string, onSent?: () => void) =>
     requestCode.mutate({ email: to, captchaToken: captcha.takeToken() }, { onSuccess: onSent });
 
   if (step === 'new-password' && verifiedAccount) {
@@ -75,7 +75,7 @@ export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
         onResend={() => {
           verifyCode.reset();
           requestCode.reset();
-          sendCode(email, () => undefined);
+          sendCode(email);
         }}
         onBack={() => {
           verifyCode.reset();
