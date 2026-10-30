@@ -72,13 +72,18 @@ export const CodeRejected: Story = {
   args: { error: 'That code is wrong or has expired. Check it, or send a new code.' },
 };
 
-/** While the code is checked: Verify and Resend wait. */
-export const Verifying: Story = { args: { isBusy: true } };
+/** While the code is checked: Verify, Resend and Back wait, so the answer is not lost. */
+export const Verifying: Story = {
+  args: { isBusy: true },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('button', { name: 'Back' })).toBeDisabled();
+  },
+};
 
 /** While a new code is sent. */
 export const Resending: Story = { args: { isResending: true } };
 
-/** Waiting on the bot check a Resend needs: its box above Verify, Resend off until it passes. */
+/** Waiting on the bot check a Resend needs: its box under Resend, which is off until it passes. */
 export const WaitingForCheck: Story = {
   args: { captcha: { ...NO_CAPTCHA, siteKey: '1x00000000000000000000AA', isReady: false } },
 };

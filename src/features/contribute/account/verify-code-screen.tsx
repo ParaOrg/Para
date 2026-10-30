@@ -48,6 +48,7 @@ export function VerifyCodeScreen({
       title="Enter the code"
       subtitle={`Enter the verification code sent to ${maskEmail(email)}`}
       onBack={onBack}
+      isBackDisabled={isBusy || isResending}
       error={error}
       captcha={captcha}
       onSubmit={handleSubmit}

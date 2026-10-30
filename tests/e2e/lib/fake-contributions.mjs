@@ -27,6 +27,7 @@
 // Faults, set on `fake.next` before the request they are for:
 //   recover = 'rateLimit'      POST /recover is answered 429 over_email_send_rate_limit
 //   verify = 'expired'         POST /verify is answered 403 otp_expired whatever the code
+//   verify = 'hold'            POST /verify waits until `fake.release()` (a code check in flight)
 //   signupDisabled the sign-in is answered 422, as with sign-ups turned off
 //   passwordSignIn = 'offline'  the password sign-in fails as with no signal
 //   updateUser = 'emailTaken'   the upgrade to an account is answered 422 email_exists
@@ -238,6 +239,7 @@ export async function fakeContributions(page) {
       fake.captchaTokens.push(body.gotrue_meta_security?.captcha_token ?? null);
       const fault = fake.next.verify;
       delete fake.next.verify;
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
       const found = accountByEmail(body.email);
       if (fault === 'expired' || !found || fake.codes.get(body.email) !== body.token) {
         return authError(route, 403, 'otp_expired', 'Token has expired or is invalid');

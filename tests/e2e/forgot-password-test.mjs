@@ -235,7 +235,15 @@ const storedSession = (page) =>
   await page.getByRole('alert').waitFor();
   check('  the earlier code no longer works', (await start(page).count()) === 0);
 
+  fake.next.verify = 'hold';
   await enterCode(page, secondCode);
+  await button(page, 'Verifying…').waitFor();
+  for (let wait = 0; !fake.held && wait < 100; wait += 1) await page.waitForTimeout(100);
+  check(
+    '  while the code is checked, Back waits: leaving would lose the sign-in it makes',
+    (await button(page, 'Back').isDisabled()) && !!fake.held,
+  );
+  fake.release();
   await heading(page, 'Enter new password').waitFor({ timeout: 15000 });
   await shot(page, '4-enter-new-password');
   check(
