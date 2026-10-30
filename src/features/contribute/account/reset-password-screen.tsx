@@ -5,7 +5,7 @@ import { PasswordField } from '@/design-system/primitives/password-field';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import { checkResetPassword, type ResetPasswordFields } from './account-fields';
-import { AccountPanel } from './account-panel';
+import { AccountPage } from './account-page';
 
 interface ResetPasswordScreenProps {
   /** What just happened, said the same whether or not the email has an account. */
@@ -39,8 +39,9 @@ export function ResetPasswordScreen({
   };
 
   return (
-    <AccountPanel
+    <AccountPage
       title="Reset password"
+      onBack={onBack}
       notice={notice}
       error={error}
       onSubmit={handleSubmit}
@@ -78,6 +79,6 @@ export function ResetPasswordScreen({
         error={fieldErrors.password}
         onChange={(event) => setFields((current) => ({ ...current, password: event.target.value }))}
       />
-    </AccountPanel>
+    </AccountPage>
   );
 }

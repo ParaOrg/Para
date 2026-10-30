@@ -350,7 +350,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
 
 {
   const { page, errors } = await phone({ signedIn: false });
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 30000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 30000 });
   await field(page, 'Email').fill(ACCOUNT.email);
   await field(page, 'Password').fill(ACCOUNT.password);
   await button(page, 'Sign in').click();
@@ -411,7 +413,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 30000 });
   await button(page, 'Profile').click();
   await button(page, 'Sign out').click();
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
   check('before consent, Profile is there and signs the account out', true);
 }
 
@@ -479,7 +483,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   await button(page, 'Profile').click();
   await button(page, 'Sign out').click();
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   const kept = JSON.parse(
@@ -500,7 +506,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.reload({ waitUntil: 'load' });
   await button(page, 'Profile').click();
   await button(page, 'Sign out').click();
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
   check(
     'Sign out signs this phone only, and the page asks for Sign in',
     fake.logouts.join() === 'local' &&

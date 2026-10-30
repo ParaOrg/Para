@@ -99,8 +99,8 @@ const sendEnabled = (page, label) =>
   );
 
 async function openForgot(page) {
-  await heading(page, 'Sign in').waitFor({ timeout: 30000 });
-  await button(page, 'Forgot password?').click();
+  await heading(page, 'Welcome Contributor').waitFor({ timeout: 30000 });
+  await button(page, 'Forgot password').click();
   await heading(page, 'Forgot password').waitFor();
 }
 
@@ -152,7 +152,7 @@ async function sendCode(page, email) {
     await alertText(page),
   );
   await button(page, 'Sign in').click();
-  await heading(page, 'Sign in').waitFor();
+  await heading(page, 'Welcome Contributor').waitFor();
   check('  Sign in from the code step goes back', (await field(page, 'Password').count()) === 1);
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
   check('  no page errors', errors.length === 0, errors.join(' | '));
@@ -244,7 +244,7 @@ async function sendCode(page, email) {
 // ------------------------------------------------ the new password signs in; the old one does not
 {
   const { page } = await phone();
-  await heading(page, 'Sign in').waitFor({ timeout: 30000 });
+  await heading(page, 'Welcome Contributor').waitFor({ timeout: 30000 });
   await field(page, 'Email').fill(EMAIL);
   await field(page, 'Password').fill(OLD_PASSWORD);
   await sendEnabled(page, 'Sign in');

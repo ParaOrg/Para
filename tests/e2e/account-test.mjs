@@ -1,5 +1,5 @@
 // The contributor page's accounts, driven by a phone: with no account the page shows only Sign in
-// and Create account; Create account turns the phone's anonymous user into an account with the
+// and Create an account; Create an account turns the phone's anonymous user into an account with the
 // same id and stores the name and number; Sign in takes an account made elsewhere, refuses a wrong
 // password in one line, and says so when there is no signal. Supabase is the in-memory stand-in
 // (lib/fake-contributions.mjs): every request to *.supabase.co lands there, and one it does not
@@ -54,8 +54,9 @@ async function phone({ fake: shared } = {}) {
 }
 
 const SCREENS = {
-  signIn: (page) => page.getByRole('heading', { name: 'Sign in', level: 1 }),
-  createAccount: (page) => page.getByRole('heading', { name: 'Create account', level: 1 }),
+  signIn: (page) => page.getByRole('heading', { name: 'Welcome Contributor', level: 1 }),
+  createAccount: (page) => page.getByRole('heading', { name: 'Create an account', level: 1 }),
+  thankYou: (page) => page.getByRole('heading', { name: 'Thank you for signing up!', level: 1 }),
   start: (page) => page.getByRole('button', { name: 'Start recording' }),
 };
 const field = (page, name) => page.getByLabel(name, { exact: true });
@@ -65,10 +66,11 @@ async function fillCreateAccount(page, values) {
   for (const [name, value] of Object.entries(values)) await field(page, name).fill(value);
 }
 
+// The number as typed after the field's +63.
 const TESTER = {
-  Name: 'Juan dela Cruz',
+  'Full name': 'Juan dela Cruz',
   Email: 'juan@example.com',
-  Number: '0917 123 4567',
+  'Phone Number': '917 123 4567',
   Password: 'hunter2hunter2',
 };
 
@@ -90,11 +92,12 @@ async function signOut(page) {
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   await shot(page, '1-sign-in');
   check(
-    'with no account the page shows Sign in, Create account and the way back, and no Start',
+    'with no account the page shows Sign in, Create an account, Forgot password and the way back, and no Start',
     (await field(page, 'Email').count()) === 1 &&
       (await field(page, 'Password').count()) === 1 &&
       (await page.getByRole('button', { name: 'Sign in', exact: true }).count()) === 1 &&
-      (await page.getByRole('button', { name: 'Create account' }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Create an account' }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Forgot password' }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Back to the map' }).count()) === 1 &&
       (await SCREENS.start(page).count()) === 0,
   );
@@ -118,17 +121,17 @@ const shared = {};
 {
   const { page, fake, errors } = await phone();
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Create an account' }).click();
   await SCREENS.createAccount(page).waitFor();
   await shot(page, '2-create-account');
   check(
-    'Create account asks for Name, Email, Number and Password, and for nothing else',
+    'Create an account asks for Full name, Email, Phone Number and Password, and for nothing else',
     (await page.locator('input').count()) === 4 &&
-      (await field(page, 'Name').count()) === 1 &&
-      (await field(page, 'Number').count()) === 1,
+      (await field(page, 'Full name').count()) === 1 &&
+      (await field(page, 'Phone Number').count()) === 1,
   );
-  await fillCreateAccount(page, { ...TESTER, Number: '12345', Password: 'short' });
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await fillCreateAccount(page, { ...TESTER, 'Phone Number': '12345', Password: 'short' });
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByText('Use at least 8 characters').waitFor();
   check(
     '  a bad number and a short password are named, field by field, and nothing is sent',
@@ -137,13 +140,21 @@ const shared = {};
       fake.profileRequests === 0,
   );
   await shot(page, '3-create-account-errors');
-  await field(page, 'Number').fill(TESTER.Number);
+  await field(page, 'Phone Number').fill(TESTER['Phone Number']);
   await field(page, 'Password').fill(TESTER.Password);
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await SCREENS.thankYou(page).waitFor({ timeout: 15000 });
+  await shot(page, '3b-thank-you');
+  check(
+    'a valid form ends on Thank you, which holds the page until Continue',
+    (await SCREENS.start(page).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Continue' }).count()) === 1,
+  );
+  await page.getByRole('button', { name: 'Continue' }).click();
   await SCREENS.start(page).waitFor({ timeout: 15000 });
   const [[id, account]] = [...fake.users];
   check(
-    'a valid form makes the account and opens Ready',
+    '  the account was made, and Continue opens Ready',
     fake.users.size === 1 &&
       account.isAccount &&
       account.email === 'juan@example.com' &&
@@ -284,10 +295,10 @@ const shared = {};
 {
   const { page, fake } = await phone({ fake: shared });
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Create an account' }).click();
   await SCREENS.createAccount(page).waitFor();
   await fillCreateAccount(page, TESTER);
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('alert').waitFor();
   check(
     'an email that already has an account is refused in one line, with no second profile stored',
@@ -297,20 +308,23 @@ const shared = {};
     await alertText(page),
   );
   await shot(page, '6-email-taken');
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await SCREENS.signIn(page).waitFor();
-  check('  Sign in from there clears the line', (await page.getByRole('alert').count()) === 0);
+  check(
+    '  Back to Sign in from there clears the line',
+    (await page.getByRole('alert').count()) === 0,
+  );
 }
 
 // ------------------- the profile fails after the account is made, then goes
 {
   const { page, fake } = await phone();
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Create an account' }).click();
   await SCREENS.createAccount(page).waitFor();
   await fillCreateAccount(page, { ...TESTER, Email: 'ana@example.com' });
   fake.next.profile = 'offline';
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('alert').waitFor();
   check(
     'if only the name and number fail to save, the page asks for just those two, and says why',
@@ -322,14 +336,14 @@ const shared = {};
   );
   await shot(page, '7-profile-step');
   await page.reload({ waitUntil: 'load' });
-  await field(page, 'Name').waitFor({ timeout: 15000 });
+  await field(page, 'Full name').waitFor({ timeout: 15000 });
   check(
     '  a reload lands on the same step: the account is not let in without its name',
-    (await SCREENS.start(page).count()) === 0 && (await field(page, 'Number').count()) === 1,
+    (await SCREENS.start(page).count()) === 0 && (await field(page, 'Phone Number').count()) === 1,
   );
-  await field(page, 'Name').fill('Ana Reyes');
-  await field(page, 'Number').fill('09181234567');
-  await page.getByRole('button', { name: 'Save' }).click();
+  await field(page, 'Full name').fill('Ana Reyes');
+  await field(page, 'Phone Number').fill('918 123 4567');
+  await page.getByRole('button', { name: 'Continue' }).click();
   await SCREENS.start(page).waitFor({ timeout: 15000 });
   const mine = [...fake.users.values()].find((user) => user.email === 'ana@example.com');
   check(

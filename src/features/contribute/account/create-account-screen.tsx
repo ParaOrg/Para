@@ -2,10 +2,11 @@ import { useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { PasswordField } from '@/design-system/primitives/password-field';
+import { PhoneField } from '@/design-system/primitives/phone-field';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import { checkSignUp, type SignUpFields } from './account-fields';
-import { AccountPanel } from './account-panel';
+import { AccountPage } from './account-page';
 import type { Captcha } from './use-captcha';
 
 interface CreateAccountScreenProps {
@@ -14,16 +15,17 @@ interface CreateAccountScreenProps {
   error: string | null;
   captcha: Captcha;
   onSubmit: (fields: SignUpFields) => void;
-  onSignIn: () => void;
+  /** The back arrow: to Sign in. */
+  onBack: () => void;
 }
 
-/** Make an account: name, email, number and password, and the way back to Sign in. */
+/** Make an account (Figma 4461:646): full name, email, phone number and password. */
 export function CreateAccountScreen({
   isBusy,
   error,
   captcha,
   onSubmit,
-  onSignIn,
+  onBack,
 }: CreateAccountScreenProps) {
   const [fields, setFields] = useState<SignUpFields>({
     name: '',
@@ -43,25 +45,23 @@ export function CreateAccountScreen({
   };
 
   return (
-    <AccountPanel
-      title="Create account"
+    <AccountPage
+      title="Create an account"
+      onBack={onBack}
       error={error}
       captcha={captcha}
       onSubmit={handleSubmit}
       actions={
-        <>
-          <Button
-            type="submit"
-            variant="primary"
-            label={isBusy ? 'Creating account…' : 'Create account'}
-            disabled={isBusy || !captcha.isReady}
-          />
-          <Button variant="secondary" label="Sign in" disabled={isBusy} onClick={onSignIn} />
-        </>
+        <Button
+          type="submit"
+          variant="primary"
+          label={isBusy ? 'Creating account…' : 'Continue'}
+          disabled={isBusy || !captcha.isReady}
+        />
       }
     >
       <TextField
-        label="Name"
+        label="Full name"
         autoComplete="name"
         value={fields.name}
         error={fieldErrors.name}
@@ -75,10 +75,9 @@ export function CreateAccountScreen({
         error={fieldErrors.email}
         onChange={(event) => handleChange('email')(event.target.value)}
       />
-      <TextField
-        label="Number"
-        type="tel"
-        autoComplete="tel"
+      <PhoneField
+        label="Phone Number"
+        autoComplete="tel-national"
         value={fields.phone}
         error={fieldErrors.phone}
         onChange={(event) => handleChange('phone')(event.target.value)}
@@ -90,6 +89,6 @@ export function CreateAccountScreen({
         error={fieldErrors.password}
         onChange={(event) => handleChange('password')(event.target.value)}
       />
-    </AccountPanel>
+    </AccountPage>
   );
 }
