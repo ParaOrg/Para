@@ -1,54 +1,49 @@
+import type { MapLibreMap } from 'maplibre-gl';
+
+import { MAP_PAINT } from '@/design-system/foundation/map-colours';
+
 /** The name the walk parts' foot is added to the map under. */
 export const FOOT_ICON = 'studio-walk-foot';
 
-/** The foot's size in bitmap pixels; drawn at twice its screen size for a sharp screen. */
-export const FOOT_SIZE = 24;
-
-/** A sole and four toes, as ellipses on the bitmap: centre x, centre y, radius x, radius y. */
-const FOOT_SHAPES: readonly [number, number, number, number][] = [
-  [12, 15, 4, 6.5],
-  [8.5, 6.5, 1.4, 1.6],
-  [11, 5.2, 1.4, 1.6],
-  [13.6, 5.4, 1.3, 1.5],
-  [15.8, 6.8, 1.2, 1.4],
+/** The Icon Set's `footsteps` (filled, stroke 2, radius 2, round join), on its 24 px grid. */
+const FOOTSTEPS = [
+  'M10 16C10.0275 15.1798 9.37001 14.5 8.54937 14.5H5.55105C4.71416 14.5 4.028 15.1636 4 16C4 17.6569 5.34315 19 7 19C8.65685 19 10 17.6569 10 16Z',
+  'M10.4246 11.9405C10.186 12.6186 9.5059 13 8.78706 13H5.21302C4.49415 13 3.81401 12.6186 3.57547 11.9405C2.29304 8.29464 3.03655 2 6.99985 2C10.9632 2 11.7071 8.2947 10.4246 11.9405Z',
+  'M20.4246 14.9405C20.186 15.6186 19.5059 16 18.7871 16H15.213C14.4941 16 13.814 15.6186 13.5755 14.9405C12.293 11.2946 13.0365 5 16.9998 5C20.9632 5 21.7071 11.2947 20.4246 14.9405Z',
+  'M20 19C20 18.1716 19.3284 17.5 18.5 17.5H15.5C14.6716 17.5 14 18.1716 14 19C14 20.6569 15.3431 22 17 22C18.6569 22 20 20.6569 20 19Z',
 ];
-/** The white rim round the foot, in bitmap pixels: it reads on any basemap. */
-const RIM = 1.5;
-/** Samples per pixel side, for smooth edges. */
-const SAMPLES = 4;
-
-const isInside = (x: number, y: number, grow: number): boolean =>
-  FOOT_SHAPES.some(
-    ([cx, cy, rx, ry]) => ((x - cx) / (rx + grow)) ** 2 + ((y - cy) / (ry + grow)) ** 2 <= 1,
-  );
+/** The foot's disc, in CSS pixels; drawn at twice that for a sharp screen. */
+const FOOT_SIZE = 20;
 
 /**
- * The walk parts' foot, toes up: a bitmap MapLibre repeats along a walk's line,
- * in the line's colour with a white rim. Provisional: the owner's file has no
- * walk icon yet.
+ * The foot as the contributor's map draws it: the footsteps in white on a
+ * disc of the trail's colour with a white ring, so it reads on the dashes and
+ * between them. Drawn on a canvas, so in the browser only.
  */
-export function footIcon(hex: string): { width: number; height: number; data: Uint8Array } {
-  const foot = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  const data = new Uint8Array(FOOT_SIZE * FOOT_SIZE * 4);
-  for (let y = 0; y < FOOT_SIZE; y++) {
-    for (let x = 0; x < FOOT_SIZE; x++) {
-      let footShare = 0;
-      let rimShare = 0;
-      for (let sy = 0; sy < SAMPLES; sy++) {
-        for (let sx = 0; sx < SAMPLES; sx++) {
-          const px = x + (sx + 0.5) / SAMPLES;
-          const py = y + (sy + 0.5) / SAMPLES;
-          if (isInside(px, py, 0)) footShare += 1;
-          else if (isInside(px, py, RIM)) rimShare += 1;
-        }
-      }
-      const covered = footShare + rimShare;
-      if (covered === 0) continue;
-      // Each channel mixes the foot's colour and the rim's white by their shares.
-      const rgb = foot.map((c) => Math.round((c * footShare + 255 * rimShare) / covered));
-      const alpha = Math.round((covered / SAMPLES ** 2) * 255);
-      data.set([...rgb, alpha], (y * FOOT_SIZE + x) * 4);
-    }
-  }
-  return { width: FOOT_SIZE, height: FOOT_SIZE, data };
+function footImage(colour: string): ImageData | null {
+  const size = FOOT_SIZE * 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+  context.beginPath();
+  context.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
+  context.fillStyle = colour;
+  context.fill();
+  context.lineWidth = 3;
+  context.strokeStyle = MAP_PAINT['Paint/casing'];
+  context.stroke();
+  // The 24 px drawing, unscaled, centred on the disc's 40 image pixels.
+  context.translate((size - 24) / 2, (size - 24) / 2);
+  context.fillStyle = MAP_PAINT['Paint/casing'];
+  for (const path of FOOTSTEPS) context.fill(new Path2D(path));
+  return context.getImageData(0, 0, size, size);
+}
+
+/** Gives the map the foot when it has none: on first use, and after a basemap switch drops it. */
+export function addFootIcon(map: MapLibreMap, colour: string): void {
+  if (map.hasImage(FOOT_ICON)) return;
+  const image = footImage(colour);
+  if (image) map.addImage(FOOT_ICON, image, { pixelRatio: 2 });
 }

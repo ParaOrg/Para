@@ -16,7 +16,6 @@ import {
 } from '../../src/features/studio/contributors/trail-parts.ts';
 import { MAX_ACCURACY_M } from '../../src/features/routes/model/ride-recording.ts';
 import { openedData } from '../../src/features/studio/contributors/opened-data.ts';
-import { FOOT_SIZE, footIcon } from '../../src/features/studio/contributors/foot-icon.ts';
 
 import { T0 } from './fixtures/contribution-ride.mjs';
 
@@ -190,14 +189,4 @@ test('the opened map draws each part as its own line, joined to the next', () =>
     ['ride'],
     'an upload without mode events draws as one ride, as before',
   );
-});
-
-test("the walk parts' foot is an RGBA bitmap in the line's colour, clear at its corners", () => {
-  const { width, height, data } = footIcon('#ca3500');
-  assert.equal(width, FOOT_SIZE);
-  assert.equal(height, FOOT_SIZE);
-  assert.equal(data.length, FOOT_SIZE * FOOT_SIZE * 4);
-  assert.equal(data[3], 0, 'the top-left corner is clear');
-  const sole = (15 * FOOT_SIZE + 12) * 4;
-  assert.deepEqual([...data.slice(sole, sole + 4)], [0xca, 0x35, 0x00, 255]);
 });

@@ -13,8 +13,7 @@ import {
   setOpened,
   setUploads,
 } from './contribution-layers';
-import { FOOT_ICON } from './foot-icon';
-import { addFootIcon } from './walk-layers';
+import { FOOT_ICON, addFootIcon } from './foot-icon';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
 /**
