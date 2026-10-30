@@ -4,6 +4,7 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { CASING_EXTRA, litRadius, litWidth } from './line-style';
+import { FOOT_IMAGE, addFootImage } from './trail-foot';
 import type { Mode } from '../model/ride-recording';
 
 /** A run of the trail on one mode: walk is Lakad, ride is Sakay. */
@@ -12,7 +13,7 @@ export interface TrailLine {
   path: readonly LngLat[];
 }
 
-/** A dot where the mode switched, ringed in the colour of the mode that began there. */
+/** A dot where the mode switched. */
 export interface TrailMarker {
   at: LngLat;
   mode: Mode;
@@ -32,10 +33,11 @@ export interface RecordingTrail {
 
 export const TRAIL_SRC = 'recording-trail';
 const CASING = 'recording-trail-casing';
-const LINE = 'recording-trail-line';
+const RIDE = 'recording-trail-line';
+const WALK = 'recording-trail-walk';
+const FEET = 'recording-trail-feet';
 const MARKERS = 'recording-trail-markers';
 const MARKS = 'recording-trail-marks';
-
 /** The trail as its source takes it: a line per run, a point per switch, and a point per mark. */
 export function trailData(trail: RecordingTrail) {
   return {
@@ -65,11 +67,14 @@ export function trailData(trail: RecordingTrail) {
 /** Adds the trail's source and layers, empty. A basemap switch carries them across (basemap.ts). */
 export function addRecordingTrail(map: MapLibreMap): void {
   if (map.getSource(TRAIL_SRC)) return;
+  addFootImage(map);
   map.addSource(TRAIL_SRC, {
     type: 'geojson',
     data: trailData({ lines: [], markers: [], marks: [] }),
   });
   const isLine: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
+  const isWalk: FilterSpecification = ['all', isLine, ['==', ['get', 'mode'], 'walk']];
+  const isRide: FilterSpecification = ['all', isLine, ['==', ['get', 'mode'], 'ride']];
   map.addLayer({
     id: CASING,
     type: 'line',
@@ -79,20 +84,41 @@ export function addRecordingTrail(map: MapLibreMap): void {
     paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': litWidth(CASING_EXTRA) },
   });
   map.addLayer({
-    id: LINE,
+    id: RIDE,
     type: 'line',
     source: TRAIL_SRC,
-    filter: isLine,
+    filter: isRide,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': MAP_COLOURS['Map/Trail/line'], 'line-width': litWidth() },
+  });
+  // Walking is dashed: a dash and a gap each about the line's own width, measured in line widths.
+  map.addLayer({
+    id: WALK,
+    type: 'line',
+    source: TRAIL_SRC,
+    filter: isWalk,
+    layout: { 'line-cap': 'butt', 'line-join': 'round' },
     paint: {
-      'line-color': [
-        'match',
-        ['get', 'mode'],
-        'walk',
-        MAP_COLOURS['Map/Trail/papunta'],
-        MAP_COLOURS['Map/Trail/pabalik'],
-      ],
+      'line-color': MAP_COLOURS['Map/Trail/line'],
       'line-width': litWidth(),
+      'line-dasharray': [1.2, 1],
+    },
+  });
+  // A foot every so often along a walked line, its toes turned the way the line runs.
+  map.addLayer({
+    id: FEET,
+    type: 'symbol',
+    source: TRAIL_SRC,
+    filter: isWalk,
+    layout: {
+      'symbol-placement': 'line',
+      'symbol-spacing': 80,
+      'icon-image': FOOT_IMAGE,
+      'icon-rotate': 90,
+      'icon-rotation-alignment': 'map',
+      'icon-keep-upright': false,
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
     },
   });
   map.addLayer({
@@ -103,13 +129,7 @@ export function addRecordingTrail(map: MapLibreMap): void {
     paint: {
       'circle-radius': litRadius(CASING_EXTRA),
       'circle-color': MAP_PAINT['Paint/casing'],
-      'circle-stroke-color': [
-        'match',
-        ['get', 'mode'],
-        'walk',
-        MAP_COLOURS['Map/Trail/papunta'],
-        MAP_COLOURS['Map/Trail/pabalik'],
-      ],
+      'circle-stroke-color': MAP_COLOURS['Map/Trail/line'],
       'circle-stroke-width': 3,
     },
   });

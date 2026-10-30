@@ -269,11 +269,14 @@
   --map-locator-indicator-overlay-surface: var(--color-parabrand-500);
   /* Its circle's hairline, at 75%, and the beam's colour (3870:5247). */
   --map-locator-indicator-overlay-border: var(--color-parabrand-800);
-  /* The trail a contributor's recording draws as they ride (/contribute/): papunta in the
-     blue the brand surface wears, pabalik in the orange of Card/orange/surface, so the
-     leg button and the line agree. Provisional: not named in Figma yet. */
+  /* The studio's Contributors map, where a contribution's ways show: papunta in blue/700,
+     pabalik in the orange of Card/orange/surface. Provisional: not named in Figma yet. */
   --map-trail-papunta: var(--color-blue-700);
   --map-trail-pabalik: var(--color-orange-700);
+  /* The contributor page's own trail, walked (dashed, a foot along it) and ridden (solid), in
+     the fuchsia the recording frames draw it in (4480:14235, 4481:23795). Provisional: not
+     named in Figma yet. */
+  --map-trail-line: var(--color-fuchsia-700);
   /* The pin a contributor leaves where they marked a place: in neither way's colour. */
   --map-trail-mark: var(--color-purple-700);
   /* The train lines, each in its own colour: LRT-1, LRT-2 and MRT-3 as Figma
@@ -384,6 +387,7 @@
   --color-map-locator-indicator-overlay-border: var(--map-locator-indicator-overlay-border);
   --color-map-trail-papunta: var(--map-trail-papunta);
   --color-map-trail-pabalik: var(--map-trail-pabalik);
+  --color-map-trail-line: var(--map-trail-line);
   --color-map-trail-mark: var(--map-trail-mark);
   --color-map-rail-light-rail-way-one-surface: var(--map-rail-light-rail-way-one-surface);
   --color-map-rail-light-rail-way-one-surface-pale: var(--map-rail-light-rail-way-one-surface-pale);

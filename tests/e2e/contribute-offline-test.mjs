@@ -8,7 +8,7 @@
 //     page, and the page links no manifest (it is not installable)
 //   - the browser is asked to keep the page's data
 //   - with the network off, a new page opens /contribute/ and records: Start, then fixes
-//     from a stand-in GPS reach IndexedDB, and Stop and Save still work
+//     from a stand-in GPS reach IndexedDB, and Pause and Finish still work
 //   - the phone is signed in to an account (the page shows nothing else without one), stored
 //     with its name; offline with no account, the page shows Sign in, not a broken page
 //   - an update (a changed worker) found with a recording open waits, and the page is not
@@ -239,8 +239,8 @@ try {
     `${fixes} fixes stored`,
   );
   check(
-    '  with a Stop button on the screen',
-    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 1,
+    '  with a Pause button on the screen',
+    (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1,
   );
 
   // ----------------------------------------- an update waits for the ride
@@ -277,9 +277,9 @@ try {
     (await storeNames(page)).includes(firstStores[0]),
   );
 
-  // Stop and Save by hand (Skip: no details), then the update takes over.
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  // Pause and Finish by hand (Skip: no details), then the update takes over.
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByRole('button', { name: 'Record again' }).waitFor({ timeout: 10000 });
   await page.waitForTimeout(500);

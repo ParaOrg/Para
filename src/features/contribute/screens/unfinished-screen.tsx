@@ -1,20 +1,21 @@
-import { StatsStrip } from './stats-strip';
+import { RecordingCard } from './recording-card';
 import { TrackingButton } from './tracking-button';
 import { BackToMapButton } from '../common/back-to-map-button';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useStackRoom } from '../common/use-stack-room';
 import type { RecordingFigures } from '../recorder/recording-figures';
-import type { Mode } from '../recorder/recording-rules';
 
 interface UnfinishedScreenProps {
   figures: RecordingFigures;
-  mode: Mode;
   onResume: () => void;
   onStop: () => void;
 }
 
-/** A recording was left open when the page closed: carry on with it, or stop it where it was. */
-export function UnfinishedScreen({ figures, mode, onResume, onStop }: UnfinishedScreenProps) {
+/**
+ * A recording was left open when the page closed: carry on with it, or stop it where it was. No
+ * Figma frame of its own: the recording card, paused, with Resume and Stop, under a card that says why.
+ */
+export function UnfinishedScreen({ figures, onResume, onStop }: UnfinishedScreenProps) {
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
   return (
@@ -23,9 +24,9 @@ export function UnfinishedScreen({ figures, mode, onResume, onStop }: Unfinished
       <section
         ref={stackRef}
         aria-labelledby="unfinished-heading"
-        className="absolute inset-x-0 bottom-0 z-10 flex flex-col pb-[env(safe-area-inset-bottom)]"
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
       >
-        <div className="bg-surface px-4 pt-4 font-sn-pro text-content-primary">
+        <div className="rounded-4xl bg-surface px-4 pt-4 pb-2 font-sn-pro text-content-primary">
           <h1
             id="unfinished-heading"
             ref={headingRef}
@@ -38,14 +39,14 @@ export function UnfinishedScreen({ figures, mode, onResume, onStop }: Unfinished
             Resume it, and the time since its last fix is logged as a gap, or stop it where it was.
           </p>
         </div>
-        <StatsStrip
+        <RecordingCard
           elapsedSeconds={figures.elapsedSeconds}
           distanceM={figures.distanceM}
-          mode={mode}
-          isPaused
-        />
-        <TrackingButton variant="resume" onClick={onResume} />
-        <TrackingButton variant="stop" onClick={onStop} />
+          state="paused"
+        >
+          <TrackingButton variant="resume" corner="bottom-left" onClick={onResume} />
+          <TrackingButton variant="stop" corner="bottom-right" onClick={onStop} />
+        </RecordingCard>
       </section>
     </>
   );

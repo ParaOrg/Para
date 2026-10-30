@@ -15,10 +15,8 @@ import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { MarkButton } from './screens/mark-button';
 import { ReadyScreen } from './screens/ready-screen';
-import { RecordingScreen } from './screens/recording-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
-import { UnfinishedScreen } from './screens/unfinished-screen';
 import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
@@ -29,6 +27,13 @@ const HistoryView = lazy(() =>
 );
 const ProfileView = lazy(() =>
   import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
+);
+// Shown only once a recording is under way or found open, never on the page's first paint.
+const RecordingScreen = lazy(() =>
+  import('./screens/recording-screen').then((module) => ({ default: module.RecordingScreen })),
+);
+const UnfinishedScreen = lazy(() =>
+  import('./screens/unfinished-screen').then((module) => ({ default: module.UnfinishedScreen })),
 );
 // Sign-in, sign-up and the profile step show only to a phone with no finished account, and bring
 // the form fields and their checks with them: after the first sign-in the page never opens them.
@@ -187,27 +192,29 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {phase === 'unfinished' && figures && (
-            <UnfinishedScreen
-              figures={figures}
-              mode={recording.mode}
-              onResume={recording.resume}
-              onStop={recording.stopAtLastFix}
-            />
+            <Suspense fallback={null}>
+              <UnfinishedScreen
+                figures={figures}
+                onResume={recording.resume}
+                onStop={recording.stopAtLastFix}
+              />
+            </Suspense>
           )}
           {(phase === 'recording' || phase === 'paused') && figures && (
-            <RecordingScreen
-              figures={figures}
-              mode={recording.mode}
-              isPaused={phase === 'paused'}
-              isAwake={recording.isAwake}
-              shouldFocusStop={recording.focusTarget === 'stop'}
-              onStop={recording.stop}
-              onResume={recording.resume}
-              onModeSwitch={recording.switchMode}
-              onSave={recording.openSave}
-              onCancel={recording.cancel}
-              onLeave={recording.flushFixes}
-            />
+            <Suspense fallback={null}>
+              <RecordingScreen
+                figures={figures}
+                mode={recording.mode}
+                isPaused={phase === 'paused'}
+                isAwake={recording.isAwake}
+                shouldFocusPause={recording.focusTarget === 'pause'}
+                onPause={recording.stop}
+                onResume={recording.resume}
+                onModeSwitch={recording.switchMode}
+                onFinish={recording.openSave}
+                onDiscard={recording.cancel}
+              />
+            </Suspense>
           )}
           {phase === 'form' && (
             <SaveForm

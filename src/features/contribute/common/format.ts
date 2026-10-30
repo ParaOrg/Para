@@ -1,5 +1,24 @@
-/** Whole minutes of a span, the way the stats strip says them: `42`. */
-export const minutesText = (seconds: number): string => String(Math.floor(seconds / 60));
+/** A figure as the recording card shows it: the number, and its unit after it in grey. */
+export interface Figure {
+  value: string;
+  unit: string;
+}
+
+/** Time recorded, as the recording card says it: whole seconds under a minute, then whole minutes. */
+export function timeFigure(seconds: number): Figure {
+  const whole = Math.max(0, Math.floor(seconds));
+  return whole < 60
+    ? { value: String(whole), unit: 'sec' }
+    : { value: String(Math.floor(whole / 60)), unit: 'min' };
+}
+
+/** Distance, as the recording card says it: whole metres under a kilometre, then kilometres to one decimal. */
+export function distanceFigure(metres: number): Figure {
+  const whole = Math.max(0, Math.round(metres));
+  return whole < 1000
+    ? { value: String(whole), unit: 'm' }
+    : { value: kilometresText(whole), unit: 'km' };
+}
 
 /** A ride's length as the card says it: `42 min`, or `<1 min`. */
 export const durationText = (seconds: number): string => {
