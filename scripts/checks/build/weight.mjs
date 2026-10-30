@@ -16,7 +16,9 @@ import { FONTS_MAX_KB, GROUPS, SHARED_MAX_GZ_KB, fontBytes, gzipBytes } from '..
 // counted above. What it opens with is held to one budget; the database client,
 // loaded only when a recording is uploaded or removed (with signal), to another. The screens the
 // page opens by a tap (sign-in, Profile, History) are chunks of their own and count toward neither.
-const CONTRIBUTE_OWN_MAX_GZ_KB = 30;
+// 31: the onboarding's field primitives, shared with the account pages, and the app check that
+// hides Back to the map took it to the edge of 30; the onboarding screens themselves stay lazy.
+const CONTRIBUTE_OWN_MAX_GZ_KB = 31;
 const CONTRIBUTE_UPLOAD_MAX_GZ_KB = 60;
 
 export function proveWeight(build, check) {
