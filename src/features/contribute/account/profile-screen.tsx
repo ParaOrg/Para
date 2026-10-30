@@ -27,7 +27,7 @@ interface ProfileScreenProps {
 /**
  * Account, on a screen of its own: name and number to change, the email as it is, History (the
  * account's recordings, a screen of their own), and Sign out. The layout says what each is, so
- * nothing carries a caption. No Figma for Account yet: Profile's look, as it was.
+ * nothing carries a caption. No Figma for Account yet, so it keeps Profile's look.
  */
 export function ProfileScreen({
   email,

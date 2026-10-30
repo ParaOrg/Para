@@ -2,14 +2,14 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
-// Figma's `account`; a file, not inline, so the page's own script stays small.
-import accountIcon from './account-icon.svg?no-inline';
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
 import { BackToMapButton, goBackToMap } from '../common/back-to-map-button';
 import { useStackRoom } from '../common/use-stack-room';
 import { ConsentPanel } from '../consent/consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
+
+import './start-icons.css';
 
 // The update gate exists in the Android app's build only: on the web this is null and the chunk is
 // never built, so the page's first load does not carry it.
@@ -80,7 +80,7 @@ export function ReadyScreen({
             tooltip="top"
             size="large"
             label="Account"
-            icon={<img src={accountIcon} alt="" />}
+            icon={<span className="start-icon start-icon-account" />}
             onClick={() => onOpenAccount('person')}
           />
         </div>

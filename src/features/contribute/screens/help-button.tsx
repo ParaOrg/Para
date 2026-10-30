@@ -1,6 +1,6 @@
 import { IconButton } from '@/design-system/primitives/icon-button';
 
-import helpIcon from './help-icon.svg?no-inline';
+import './start-icons.css';
 
 interface HelpButtonProps {
   onClick: () => void;
@@ -16,7 +16,7 @@ export function HelpButton({ onClick }: HelpButtonProps) {
       tooltip="top"
       size="large"
       label="How to record"
-      icon={<img src={helpIcon} alt="" />}
+      icon={<span className="start-icon start-icon-help" />}
       onClick={onClick}
     />
   );

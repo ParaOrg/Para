@@ -183,14 +183,6 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Marked, ${marked.count}`);
   }
 
-  async function flushFixes() {
-    try {
-      await writeAllFixes();
-    } catch (error) {
-      reportStore(error);
-    }
-  }
-
   function downloadCurrent() {
     if (current) downloadHeldRecording(current, fixes);
   }
@@ -226,7 +218,6 @@ export function useRecording(): RecordingState {
     focusTarget,
     save,
     cancel,
-    flushFixes,
     recordAgain,
     downloadCurrent,
     downloadLastSaved,

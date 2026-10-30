@@ -1,0 +1,27 @@
+/*
+ * The Start screen's icons, Figma's drawings unedited, used as masks so each is painted in the
+ * colour of the words around it (currentColor) rather than the fills the files carry. Files, not
+ * inline SVG, so they stay out of the page's own script.
+ */
+.start-icon {
+  display: block;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+
+.start-icon-record {
+  mask-image: url('./record-icon.svg');
+}
+
+.start-icon-account-tab {
+  mask-image: url('./account-tab-icon.svg');
+}
+
+.start-icon-account {
+  mask-image: url('./account-icon.svg');
+}
+
+.start-icon-help {
+  mask-image: url('./help-icon.svg');
+}
