@@ -48,6 +48,7 @@ export function CreateAccountScreen({
     <AccountPage
       title="Create an account"
       onBack={onBack}
+      isBackDisabled={isBusy}
       error={error}
       captcha={captcha}
       onSubmit={handleSubmit}

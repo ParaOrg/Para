@@ -59,8 +59,13 @@ export const Filled: Story = {
 /** A refused try: one red line above Continue. */
 export const EmailTaken: Story = { args: { error: 'That email already has an account' } };
 
-/** While the request is out: Continue waits. */
-export const Busy: Story = { args: { isBusy: true } };
+/** While the request is out: Continue and Back wait, so the answer is not lost. */
+export const Busy: Story = {
+  args: { isBusy: true },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('button', { name: 'Back' })).toBeDisabled();
+  },
+};
 
 /** A short phone: the page scrolls inside the screen instead of running off it. */
 export const ShortPhone: Story = {

@@ -34,7 +34,7 @@ export const FieldErrors: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Continue' }));
     await expect(canvas.getByText('Enter your name')).toBeVisible();
-    await expect(canvas.getByText('Enter a mobile number like 09171234567')).toBeVisible();
+    await expect(canvas.getByText('Enter a mobile number like 917 123 4567')).toBeVisible();
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };
