@@ -1,0 +1,54 @@
+# GitHub's CodeQL reads the code for known kinds of security bugs: injection,
+# unsafe use of user input, leaked tokens in URLs, and the like. Two languages:
+# javascript-typescript (src/, workers/, scripts/) and actions (these workflow
+# files, for things like untrusted input in a run step).
+#
+# It needs no build ("build-mode: none"), so it runs on its own and never
+# waits on CI. Findings show on the pull request and under the repository's
+# Security tab, not as a red check, so a false alarm can be dismissed there
+# without a code change.
+#
+# If the owner has CodeQL's "default setup" turned on in the repository's
+# settings, this file and that setup clash; keep one of them.
+name: CodeQL
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+  workflow_dispatch:
+  schedule:
+    # Monday 06:00 in Manila (UTC+8), for advisories added during the week.
+    - cron: '0 22 * * 0'
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, actions]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
