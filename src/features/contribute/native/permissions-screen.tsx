@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { Switch } from '@/design-system/primitives/switch';
+import { cn } from '@/shared/utils/cn';
 
 import { LocationIcon, NotificationIcon } from './permission-icons';
 import type { PermissionRow, PermissionRowView } from './permission-rows';
@@ -61,9 +62,9 @@ export function PermissionsScreen({
   );
 }
 
-type PermissionsListProps = Omit<PermissionsScreenProps, 'rows'> & {
-  rows: NonNullable<PermissionsScreenProps['rows']>;
-};
+interface PermissionsListProps extends Omit<PermissionsScreenProps, 'rows'> {
+  rows: PermissionRowView[];
+}
 
 // Its own component so the heading takes focus when the rows arrive, not on the blank screen.
 function PermissionsList({
@@ -102,10 +103,10 @@ function PermissionsList({
                   </p>
                   <p
                     id={`permission-${row}-line`}
-                    className={
-                      'text-xs ' +
-                      (state === 'error' ? 'text-content-error' : 'text-content-tertiary')
-                    }
+                    className={cn(
+                      'text-xs',
+                      state === 'error' ? 'text-content-error' : 'text-content-tertiary',
+                    )}
                   >
                     {state === 'error' ? 'Tap to fix' : line}
                   </p>

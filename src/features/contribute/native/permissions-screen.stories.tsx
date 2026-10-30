@@ -87,9 +87,25 @@ export const LocationRefused: Story = {
 /** Android 12 and older have no notification permission: Location alone (4461:5693's one row). */
 export const LocationOnly: Story = { args: { rows: [{ row: 'location', state: 'rest' }] } };
 
-/** Android could not be asked: the screen's one red line, above Continue's place. */
+/**
+ * Android could not be asked: the screen's one red line above its main button. Figma draws no
+ * error state; this follows the owner's call for every onboarding screen (one red line above the
+ * main button, as today), in Content/error.
+ */
 export const Problem: Story = {
   args: { problem: 'Para could not ask Android. Tap the switch again.' },
+};
+
+/** Settings would not open from a refused row while Continue shows: the line sits above it. */
+export const ProblemWithContinue: Story = {
+  args: {
+    rows: [
+      { row: 'notification', state: 'error' },
+      { row: 'location', state: 'on' },
+    ],
+    canContinue: true,
+    problem: 'Para could not ask Android. Tap the switch again.',
+  },
 };
 
 /** The phone is being checked: blank, so the page behind does not flash. */

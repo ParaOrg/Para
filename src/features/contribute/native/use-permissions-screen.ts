@@ -27,7 +27,7 @@ interface Checked {
   needed: NativePermission[];
 }
 
-export interface PermissionsScreen {
+export interface PermissionsScreenState {
   /** The rows and their switches, or null while the phone is first checked. */
   rows: PermissionRowView[] | null;
   canContinue: boolean;
@@ -43,7 +43,7 @@ export interface PermissionsScreen {
  * `onDone` once Continue is tapped, or at once if nothing needs asking (and if the first check
  * fails: Start asks for each permission again, so the page goes on).
  */
-export function usePermissionsScreen(onDone: () => void): PermissionsScreen {
+export function usePermissionsScreen(onDone: () => void): PermissionsScreenState {
   const [checked, setChecked] = useState<Checked | null>(null);
   const [refused, setRefused] = useState<ReadonlySet<PermissionRow>>(new Set());
   const [problem, setProblem] = useState<string | null>(null);
