@@ -7,6 +7,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   M_PER_DEG,
+  bboxContains,
+  bboxMeetsSegment,
   bboxOf,
   haversine,
   joinSegments,
@@ -100,6 +102,37 @@ test('a box padded by d metres holds every point within d metres of its corners'
   assert.ok(Math.abs(haversine([121.04, s], [121.04, 14.7]) - 10) < 0.01);
   assert.ok(Math.abs(haversine([w, 14.7005], [121.04, 14.7005]) - 10) < 0.05);
   assert.ok(e > 121.041 && n > 14.701);
+});
+
+test('a box holds a point inside it or on its edge, and none beyond any side', () => {
+  const box = [0, 0, 10, 10];
+  assert.ok(bboxContains(box, [5, 5]));
+  assert.ok(bboxContains(box, [0, 5]));
+  assert.ok(bboxContains(box, [10, 10]));
+  for (const outside of [
+    [-1, 5],
+    [11, 5],
+    [5, -1],
+    [5, 11],
+  ]) {
+    assert.ok(!bboxContains(box, outside), `${outside}`);
+  }
+});
+
+test('a segment meets a box inside it, across it or through it, and not from outside', () => {
+  const box = [0, 0, 10, 10];
+  assert.ok(bboxMeetsSegment(box, [2, 2], [8, 8]));
+  assert.ok(bboxMeetsSegment(box, [5, 5], [15, 5]));
+  assert.ok(bboxMeetsSegment(box, [-5, 5], [15, 5]));
+  assert.ok(!bboxMeetsSegment(box, [11, 11], [15, 15]));
+});
+
+// Only the segment's own box is compared with the box. This diagonal passes the
+// corner at [10, 10] without touching the box, but its box overlaps that corner,
+// so it counts. The callers ask it first and measure exactly after, so a wrong
+// yes costs time, not a wrong answer.
+test("a diagonal that misses the box's corner still meets it", () => {
+  assert.ok(bboxMeetsSegment([0, 0, 10, 10], [9, 13], [13, 9]));
 });
 
 // Review of 2026-10-03, finding 7: a routed segment starts where the router
