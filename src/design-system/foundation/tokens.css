@@ -146,6 +146,10 @@
   --text-sm-lower--line-height: calc(1.25 / 0.8125);
   --text-3xl: 1.75rem;
   --text-3xl--line-height: calc(2.25 / 1.75);
+
+  /* Border width: Figma's border-width/0-6, the hairline the Switch is drawn with. Tailwind's
+     own widths are whole pixels, so this one is ours: border-0-6. */
+  --border-width-0-6: 0.6px;
 }
 
 /*
@@ -486,6 +490,9 @@
   /* A card floating over the map: the Map Style card (shadow-sm, 4179:10790).
    * Figma's own shadow-sm, in place of Tailwind's, which nothing wore. */
   --shadow-sm: 0 3px 12px 0 rgb(43 43 43 / 0.12);
+
+  /* A card raised high over the map: the "Track your routes" card (shadow-large, 4461:2601). */
+  --shadow-large: 0 -1px 12px 0 rgb(0 0 0 / 0.04), 0 8px 16px 2px rgb(43 43 43 / 0.09);
 
   /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);

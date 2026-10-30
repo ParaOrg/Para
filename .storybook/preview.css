@@ -6,4 +6,4 @@
    `@source not` stops a `**` or folder pattern from reaching in, so each folder is named: a new
    folder of the feature needs its name added here. */
 @source '../src/features/contribute/*.tsx';
-@source '../src/features/contribute/{account,api,app-update,common,consent,history,map,native,native-bridge,recorder,screens,storage,uploads}/*.tsx';
+@source '../src/features/contribute/{account,api,app-update,common,consent,history,map,native,native-bridge,recorder,screens,storage,tutorial,uploads}/*.tsx';
