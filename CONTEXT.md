@@ -299,10 +299,11 @@ _Avoid_: trip and ride (both taken), ikot (said of a contribution it would be wr
 The two modes a contribution is recorded in: on foot (Lakad, `walk` in code),
 and on a vehicle (Sakay, `ride`). A recording starts on Lakad; the mode button
 switches, as often as the contributor walks and boards. On the map walking is
-dashed with a foot along it, riding solid. Distance and time are
-the whole trip, walked and ridden; hintos count only on Sakay. A recording made before 2026-10-30 is all Sakay.
-They replace Papunta and Pabalik for recordings only: a route's directions keep
-their own words (see Outbound / Return, SWITCH).
+dashed with a foot along it, riding solid. Distance and time are the whole
+trip, walked and ridden; hintos count only on Sakay. A recording with no modes
+(one made before modes) is all Sakay. They replace Papunta and Pabalik for
+recordings only: a route's directions keep their own words (see Outbound /
+Return, SWITCH).
 _Avoid_: Papunta / Pabalik (for a recording), leg, way
 
 **Hinto**:
