@@ -135,14 +135,22 @@ const shared = {};
   await page.getByText('Use at least 8 characters').waitFor();
   check(
     '  a bad number and a short password are named, field by field, and nothing is sent',
-    (await page.getByText('Enter a mobile number like 09171234567').count()) === 1 &&
+    (await page.getByText('Enter a mobile number like 917 123 4567').count()) === 1 &&
       fake.signIns === 0 &&
       fake.profileRequests === 0,
   );
   await shot(page, '3-create-account-errors');
   await field(page, 'Phone Number').fill(TESTER['Phone Number']);
   await field(page, 'Password').fill(TESTER.Password);
+  fake.next.updateUser = 'hold';
   await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Creating account…' }).waitFor();
+  for (let wait = 0; !fake.held && wait < 100; wait += 1) await page.waitForTimeout(100);
+  check(
+    '  while the account is being made, Back waits: leaving would lose the answer',
+    await page.getByRole('button', { name: 'Back', exact: true }).isDisabled(),
+  );
+  fake.release();
   await SCREENS.thankYou(page).waitFor({ timeout: 15000 });
   await shot(page, '3b-thank-you');
   check(

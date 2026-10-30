@@ -16,7 +16,7 @@ const phoneSchema = z
   .check(
     z.refine(
       (text) => normalisePhoneNumber(text) !== null,
-      'Enter a mobile number like 09171234567',
+      'Enter a mobile number like 917 123 4567',
     ),
   );
 // Supabase hashes with bcrypt, which reads no further than 72 bytes: a longer one is cut short.

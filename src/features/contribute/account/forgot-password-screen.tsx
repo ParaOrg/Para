@@ -41,6 +41,7 @@ export function ForgotPasswordScreen({
     <AccountPage
       title="Forgot password"
       onBack={onBack}
+      isBackDisabled={isBusy}
       error={error}
       captcha={captcha}
       onSubmit={handleSubmit}

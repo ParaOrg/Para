@@ -25,6 +25,11 @@ interface AccountPageProps {
   placement?: Placement;
   /** The arrow at the top left, on a 'top' page; none leaves its row empty. */
   onBack?: () => void;
+  /**
+   * The arrow waits while a request is out: leaving drops the request's answer, and a sign-up or
+   * a code check signs the phone in whether or not the page is there to hear it.
+   */
+  isBackDisabled?: boolean;
   /** The fields, in order. */
   children: ReactNode;
   /** A line between the fields and the buttons, 48 from each: the code step's Resend. */
@@ -49,6 +54,7 @@ export function AccountPage({
   picture,
   placement = 'top',
   onBack,
+  isBackDisabled = false,
   children,
   afterFields,
   error,
@@ -76,7 +82,13 @@ export function AccountPage({
         {placement === 'top' && (
           <div className="box-content flex h-16 items-end px-4 pt-[env(safe-area-inset-top)]">
             {onBack && (
-              <IconButton size="base" label="Back" icon={<ArrowLeftIcon />} onClick={onBack} />
+              <IconButton
+                size="base"
+                label="Back"
+                icon={<ArrowLeftIcon />}
+                disabled={isBackDisabled}
+                onClick={onBack}
+              />
             )}
           </div>
         )}

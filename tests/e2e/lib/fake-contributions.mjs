@@ -30,6 +30,7 @@
 //   signupDisabled the sign-in is answered 422, as with sign-ups turned off
 //   passwordSignIn = 'offline'  the password sign-in fails as with no signal
 //   updateUser = 'emailTaken'   the upgrade to an account is answered 422 email_exists
+//   updateUser = 'hold'         the upgrade waits until `fake.release()` (a sign-up in flight)
 //   profile = 'offline'         set_profile fails as with no signal
 //   offline       the save request fails as with no signal
 //   lostAnswer    the save is stored, then the answer is lost on the way back
@@ -164,6 +165,7 @@ export async function fakeContributions(page) {
       const body = request.postDataJSON() ?? {};
       const fault = fake.next.updateUser;
       delete fake.next.updateUser;
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
       const taken = accountByEmail(body.email);
       if (fault === 'emailTaken' || (taken && taken[0] !== id)) {
         return authError(

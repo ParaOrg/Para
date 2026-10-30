@@ -197,7 +197,7 @@ async function seed(page, id, name, upload) {
 
   await field(page, 'Number').fill('12345');
   await button(page, 'Save').click();
-  await page.getByText('Enter a mobile number like 09171234567').waitFor();
+  await page.getByText('Enter a mobile number like 917 123 4567').waitFor();
   check('  a bad number is named and nothing is sent', fake.profileRequests === 0);
 
   await field(page, 'Name').fill('Tester Two');
