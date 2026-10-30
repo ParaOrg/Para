@@ -79,6 +79,40 @@ export const Pasted: Story = {
   },
 };
 
+/** A paste over a code already there, wherever the caret is, replaces it whole. */
+export const PastedOverCode: Story = {
+  args: { value: '123456' },
+  play: async ({ canvasElement }) => {
+    const field = within(canvasElement).getByLabelText('Verification code');
+    await userEvent.click(field);
+    await userEvent.paste('Your code: 482 913');
+    await expect(field).toHaveValue('482913');
+  },
+};
+
+/** A paste into a part-typed code replaces it too. */
+export const PastedOverPart: Story = {
+  args: { value: '12' },
+  play: async ({ canvasElement }) => {
+    const field = within(canvasElement).getByLabelText('Verification code');
+    await userEvent.click(field);
+    await userEvent.paste('482913');
+    await expect(field).toHaveValue('482913');
+  },
+};
+
+/** The caret stays at the end, so a digit typed after a tap goes in the Active box. */
+export const CaretAtEnd: Story = {
+  args: { value: '123' },
+  play: async ({ canvasElement }) => {
+    const field = within(canvasElement).getByLabelText('Verification code');
+    await userEvent.click(field);
+    if (field instanceof HTMLInputElement) field.setSelectionRange(0, 0);
+    await userEvent.keyboard('4');
+    await expect(field).toHaveValue('1234');
+  },
+};
+
 /** InputField's error look, read out with the field. */
 export const WithError: Story = {
   args: { value: '123456', error: 'That code is not right. Check it and try again.' },

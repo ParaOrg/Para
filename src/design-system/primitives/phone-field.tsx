@@ -1,12 +1,13 @@
 import { useId, type ComponentPropsWithoutRef, type ReactNode, type Ref } from 'react';
 
-import { FIELD_BOX, FIELD_CONTROL, FieldError, describedBy, type FieldState } from './field-frame';
+import { FieldError } from './field-error';
+import { FIELD_BOX, FIELD_CONTROL, describedBy, type FieldState } from './field-frame';
 import philippineFlag from './philippine-flag.svg';
 
-type PhoneFieldProps = Omit<
+interface PhoneFieldProps extends Omit<
   ComponentPropsWithoutRef<'input'>,
   'className' | 'style' | 'type' | 'children' | 'dangerouslySetInnerHTML' | 'value' | 'aria-invalid'
-> & {
+> {
   /** Figma's label over the boxes. */
   label: ReactNode;
   /** The number after +63, as typed. */
@@ -14,7 +15,7 @@ type PhoneFieldProps = Omit<
   /** The message under the boxes, the boxes in InputField's error colours. */
   error?: string;
   ref?: Ref<HTMLInputElement>;
-};
+}
 
 /**
  * PalimosPoDesignSystem's PhoneField (Figma 4461:2762): the label, then two boxes 2 apart, the
@@ -27,6 +28,8 @@ export function PhoneField({
   disabled = false,
   id,
   placeholder = '98X XXX XXXX',
+  // The number alone: +63 sits outside the input.
+  autoComplete = 'tel-national',
   'aria-describedby': ownDescription,
   ref,
   ...input
@@ -67,6 +70,7 @@ export function PhoneField({
             type="tel"
             inputMode="tel"
             placeholder={placeholder}
+            autoComplete={autoComplete}
             disabled={disabled}
             aria-invalid={isErrorShown || undefined}
             aria-describedby={describedBy(
