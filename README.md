@@ -19,7 +19,7 @@ Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
   service lives, what it costs, what renews when, and what to do when
   something breaks.
 
-## Two pages, one published map
+## Three pages, one published map
 
 **`/` is the public map.** It never asks the database: it reads the published
 map, `public/data/index.v5.json` — every route (loops too) and hotspot, the train lines
@@ -44,6 +44,11 @@ list. It reads the live tables, draws lines snapped to the road with OSRM,
 traces hotspot boxes, and saves. The database's row-level security refuses
 every write from anyone else, so the publishable key in `.env.production`
 is public by design.
+
+**`/contribute/` is the contributor page.** There a commuter records a
+contribution on the phone, from Start to Save, and sends it to the studio,
+where only editors see it. It is a page of its own, so the public map carries
+none of it, and the contributor app is the same page inside an Android shell.
 
 Nothing from `src/app/studio/` or `src/features/studio/` reaches the public page: `npm run lint`
 checks the import boundaries (`eslint.config.js`) and `npm run build` the built page, and each
@@ -148,12 +153,13 @@ OFL 1.1. The map keeps "© OpenMapTiles" and "© OpenStreetMap contributors".
 
 | | |
 | --- | --- |
-| `src/app/` | the two front doors, wiring only: `public-map/` (the public map's entry, its shell and status bar) and `studio/` (the editor's entry and shell) |
+| `src/app/` | the three front doors, wiring only: `public-map/` (the public map's entry, its shell and status bar), `studio/` (the editor's entry and shell) and `contribute/` (the contributor page's entry, its shell and its service worker) |
 | `src/features/routes/` | the core both apps draw: `model/` (routes, stops, places, timelines, rides, fares, liveries — no React, no MapLibre), `geo/` (the pass and babaan-side rules), `map/` (the map view with its basemap and layers, the route and hotspot layers and hooks, and the map side of the cards: `use-card-stack`, which card is up, and `use-card-camera`, the camera with them), `cards/` (the cards, sheets and timelines, with their stories), `published/` (the published map's reader: `fetch-index.ts` and `fetch-line.ts`, its shape in `index-schema.ts` and `line-file-schema.ts`, its names and URLs in `map-file.ts`). Imported through its concern folders; it has no `index.ts` on purpose, since Node runs the publish and the unit checks against its files |
 | `src/features/locator/` | "Where am I": the commuter's dot, its button and its moods |
 | `src/features/published-map/` | the published map's freshness, the installed app's updates (`pwa.ts`) and the notices |
 | `src/features/studio/` | the editor: `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions). Its `index.ts`, like the locator's and the published map's, is what the shells import |
-| `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths) |
+| `src/features/contribute/` | the contributor page, where a contribution is recorded on the phone, saved and sent, with the consent, the recorder, the contributor's account and the uploads. Its `index.ts` is what the contributor page's shell imports, and the public page never loads it |
+| `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths), `lib/` (the TanStack Query client), `config/` (the basemap host) and `types/` (the database types Supabase generates) |
 | `src/styles/` | `global.css`, the one stylesheet: Tailwind, then the design system's tokens and fonts |
 | `src/design-system/` | the tokens, fonts and primitives (foundation ← primitives) |
 | `public/data/` | the published map, every version kept in history: `index.v5.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v4.json` (without loops), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line) |
