@@ -35,7 +35,7 @@ import { useSavedRecordings } from '../storage/use-saved-recordings';
 export function useRecording(): RecordingState {
   const [phase, setPhase] = useState<Phase>('loading');
   const [announcement, setAnnouncement] = useState('');
-  const [focusTarget, setFocusTarget] = useState<'heading' | 'stop'>('heading');
+  const [focusTarget, setFocusTarget] = useState<'heading' | 'pause'>('heading');
   const problems = useRecorderProblems();
   const { reportStore, clearStorageProblem, setLocationProblem } = problems;
 
@@ -162,7 +162,7 @@ export function useRecording(): RecordingState {
     // A save under way has settled the fix writes it waits for; new ones would be dropped.
     if (isSaving()) return;
     resume();
-    setFocusTarget('stop');
+    setFocusTarget('pause');
     setAnnouncement('Recording again');
   }
 

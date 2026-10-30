@@ -195,6 +195,25 @@ test('too many marks give way to the start, stop and save, and the events stay w
   assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 500 - 3 - 100);
 });
 
+test('more mode switches than the events hold keep the start, stop and save, and the earliest switches', () => {
+  const fixes = rideFixes(20);
+  const modes = Array.from({ length: 600 }, (_, i) => ({
+    time: T0 + i * 100,
+    to: i % 2 === 0 ? 'walk' : 'ride',
+  }));
+  const { payload } = packed(fixes, { ...rideRecording(ID, fixes), modes, marks: [] });
+  assert.equal(payload.events.length, UPLOAD_LIMITS.listEntries);
+  assert.equal(payload.events[0].kind, 'start');
+  assert.deepEqual(
+    payload.events.slice(-2).map((e) => e.kind),
+    ['stop', 'save'],
+  );
+  const kept = payload.events.filter((e) => e.kind === 'mode');
+  assert.equal(kept.length, UPLOAD_LIMITS.listEntries - 3);
+  assert.equal(kept[0].at, new Date(T0).toISOString());
+  assert.ok(contributionPayloadSchema.safeParse(payload).success);
+});
+
 test('a recording made before marks packs with none', () => {
   const { payload } = packed();
   assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 0);

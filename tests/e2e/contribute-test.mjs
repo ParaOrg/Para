@@ -151,6 +151,17 @@ const openCardMenus = async (page) => {
     if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
   }
 };
+/** The card's Time in seconds, whether it reads "42 sec" or "12 min". */
+const recordedSeconds = (stats) => {
+  const [, value, unit] = stats.match(/Time\s+(\d+) (sec|min)/) ?? [];
+  return Number(value) * (unit === 'min' ? 60 : 1);
+};
+/** Pause, then Finish: how a recording ends and opens the Save form. */
+const finishRecording = async (page) => {
+  const pause = page.getByRole('button', { name: 'Pause', exact: true });
+  if (await pause.count()) await pause.click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+};
 const buttons = (page) =>
   page
     .getByRole('button')
@@ -341,11 +352,11 @@ const buttons = (page) =>
       (await buttons(page)).join('|').includes('Switch to Sakay'),
   );
   check(
-    '  Stop, Switch to Sakay, Save and Cancel are buttons',
-    ['Stop', 'Switch to Sakay', 'Save', 'Cancel'].every((n) => (n ? true : false)) &&
+    '  Pause, Switch to Sakay and ✕ (Discard recording) are buttons, and nothing else ends it',
+    (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 0 &&
       (
         await Promise.all(
-          ['Stop', 'Switch to Sakay', 'Save', 'Cancel'].map((n) =>
+          ['Pause', 'Switch to Sakay', 'Discard recording'].map((n) =>
             page.getByRole('button', { name: n, exact: true }).count(),
           ),
         )
@@ -391,33 +402,45 @@ const buttons = (page) =>
       outData.features.filter((f) => f.properties.kind === 'switch').length === 0,
   );
   const paint = await page.evaluate(() => {
-    const colour = (id) => window.__map.getPaintProperty(id, 'line-color');
-    return JSON.stringify(colour('recording-trail-line'));
+    const paintOf = (id, name) => window.__map.getPaintProperty(id, name);
+    return JSON.stringify({
+      ride: paintOf('recording-trail-line', 'line-color'),
+      walk: paintOf('recording-trail-walk', 'line-color'),
+      dashes: paintOf('recording-trail-walk', 'line-dasharray'),
+      foot: window.__map.getLayoutProperty('recording-trail-feet', 'icon-image'),
+      hasFoot: window.__map.hasImage('recording-trail-foot'),
+    });
   });
   check(
-    '  the line takes both colours from map-colours (blue/700 walked, orange/700 ridden)',
-    paint.includes('#1447e6') && paint.includes('#ca3500'),
+    '  walked dashed with a foot along it, ridden solid, both fuchsia/700 from map-colours',
+    paint ===
+      JSON.stringify({
+        ride: '#a800b7',
+        walk: '#a800b7',
+        dashes: [1.2, 1],
+        foot: 'recording-trail-foot',
+        hasFoot: true,
+      }),
     paint,
   );
   await shot(page, '2-recording-lakad');
 
-  // Stop pauses, Resume carries on.
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  // Pause, and Resume carries on.
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
+  const pausedCard = await page.getByRole('group', { name: 'Recording so far' }).innerText();
   check(
-    'Stop pauses: the bar becomes Resume, and the row stays',
-    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 0 &&
-      (
-        await Promise.all(
-          ['Switch to Sakay', 'Save', 'Cancel'].map((n) =>
-            page.getByRole('button', { name: n }).count(),
-          ),
-        )
-      ).every((c) => c === 1) &&
-      (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Stopped'),
+    'Pause: Resume and Finish replace Pause and the mode button, and the card says Paused and --',
+    (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 0 &&
+      (await page.getByRole('button', { name: /^Switch to/ }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1 &&
+      pausedCard.includes('Paused') &&
+      pausedCard.includes('--'),
+    pausedCard.replace(/\n/g, ' '),
   );
   await page.getByRole('button', { name: 'Resume' }).click();
-  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
 
   // The mode button.
   await page.getByRole('button', { name: 'Switch to Sakay' }).click();
@@ -552,13 +575,13 @@ const buttons = (page) =>
   await page.waitForTimeout(1500);
   check(
     'back within 300 m of the start after a kilometre, the recording goes on: it never stops itself',
-    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 1 &&
+    (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
       (await page.getByRole('heading', { name: 'About this route' }).count()) === 0,
   );
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 10000 });
   check(
-    'Save opens the Save form, focus on its heading',
+    'Pause and Finish open the Save form, focus on its heading',
     await page.evaluate(() => document.activeElement?.textContent === 'About this route'),
   );
   check('  the watch let go of the GPS', (await page.evaluate(() => window.__watchers())) === 0);
@@ -612,40 +635,45 @@ const buttons = (page) =>
   await page.context().close();
 }
 
-// ----------------------------------------------- Save by hand, and Cancel
+// ----------------------------------------------- Finish by hand, and ✕
 {
   const { page, errors } = await phone({ consented: true });
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
 
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
   await page.evaluate(() => window.__advance(600_000));
   await page.getByRole('button', { name: 'Resume' }).click();
-  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
     'after ten minutes stopped, Resume shows no time for the pause before the first new fix',
-    /Time\s+0 min/.test(await page.getByRole('group', { name: 'Recording so far' }).innerText()),
+    /Time\s+\d+ sec/.test(await page.getByRole('group', { name: 'Recording so far' }).innerText()),
     (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' '),
   );
   await ride(page, 310, 330);
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByRole('button', { name: 'Discard recording' }).click();
   await page.getByRole('group', { name: 'Throw this recording away?' }).waitFor();
   check(
-    'Cancel asks once, on the page, with focus on the safe answer',
-    await page.evaluate(() => document.activeElement?.textContent === 'Keep it'),
+    '✕ asks once, on the page, with focus on the safe answer, and the recording goes on meanwhile',
+    (await page.evaluate(() => document.activeElement?.textContent === 'Keep it')) &&
+      (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1,
   );
   await page.getByRole('button', { name: 'Keep it' }).click();
-  await page.getByRole('button', { name: 'Cancel' }).waitFor();
+  await page
+    .getByRole('group', { name: 'Throw this recording away?' })
+    .waitFor({ state: 'detached' });
   check(
-    '  Keep it brings the row back and focus on Cancel',
-    await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Cancel'),
+    '  Keep it closes the question and puts focus back on ✕',
+    await page.evaluate(
+      () => document.activeElement?.getAttribute('aria-label') === 'Discard recording',
+    ),
   );
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor();
   check(
-    'Save by hand while recording stops the recording and shows the same form',
+    'Pause and Finish by hand stop the recording and show the same form',
     (await page.evaluate(() => window.__watchers())) === 0 &&
       (await page.getByRole('button', { name: 'Continue' }).count()) === 1,
   );
@@ -668,11 +696,11 @@ const buttons = (page) =>
   );
   await page.getByRole('button', { name: 'Record again' }).click();
   await page.getByRole('button', { name: 'Start recording' }).click();
-  await page.getByRole('button', { name: 'Cancel' }).waitFor();
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByRole('button', { name: 'Discard recording' }).waitFor();
+  await page.getByRole('button', { name: 'Discard recording' }).click();
   await page.getByRole('button', { name: 'Delete' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
-  check('Cancel then Delete throws the recording away and returns to Ready', true);
+  check('✕ then Delete throws the recording away and returns to Ready', true);
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -690,22 +718,22 @@ const buttons = (page) =>
   await ride(page, 0, 1200);
   await page.getByRole('button', { name: 'Switch to Sakay' }).click();
   await ride(page, 1190, 200);
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 30000 });
   await page.evaluate(() => window.__advance(600_000));
   await page.getByRole('button', { name: 'Keep recording' }).click();
-  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
-    'Keep recording after a Save: back on the recording screen, Stop focused, "Recording again" said',
-    (await activeName()) === 'Stop' &&
+    'Keep recording after a Save: back on the recording screen, Pause focused, "Recording again" said',
+    (await activeName()) === 'Pause' &&
       (await page.getByRole('status').innerText()) === 'Recording again',
     `${await activeName()} / ${await page.getByRole('status').innerText()}`,
   );
-  const minutes = Number((await stats()).match(/Time\s+(\d+) min/)?.[1]);
+  const seconds = recordedSeconds(await stats());
   check(
     '  Time does not count the ten minutes on the form',
-    minutes < 8,
-    `${minutes} min; ${await stats()}`,
+    seconds < 8 * 60,
+    `${seconds} s; ${await stats()}`,
   );
   await ride(page, 190, 50);
   await page.waitForTimeout(500);
@@ -717,9 +745,9 @@ const buttons = (page) =>
     await stats(),
   );
 
-  // (c) then a manual Stop and Skip save it once, as one contribution.
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  // (c) then Pause, Finish and Skip save it once, as one contribution.
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   const counts = await page.evaluate(
@@ -733,7 +761,7 @@ const buttons = (page) =>
       }),
   );
   check(
-    'after Keep recording, a manual Stop and Skip save it once, as one contribution',
+    'after Keep recording, Pause, Finish and Skip save it once, as one contribution',
     counts.length === 1 && counts[0] === 'saved',
     JSON.stringify(counts),
   );
@@ -743,20 +771,20 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor();
   await page.evaluate(() => window.__advance(600_000));
   await page.getByRole('button', { name: 'Keep recording' }).click();
-  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
-    'Keep recording after a Save by hand: recording again, Stop focused, no time for the form',
-    (await activeName()) === 'Stop' &&
-      Number((await stats()).match(/Time\s+(\d+) min/)?.[1]) < 8 &&
+    'Keep recording after a Save by hand: recording again, Pause focused, no time for the form',
+    (await activeName()) === 'Pause' &&
+      recordedSeconds(await stats()) < 8 * 60 &&
       (await page.evaluate(() => window.__watchers())) === 1,
     await stats(),
   );
   await ride(page, 310, 340);
-  check('  and the fixes after it count', /Distance\s+0\.3 km/.test(await stats()), await stats());
+  check('  and the fixes after it count', /Distance\s+3\d\d m/.test(await stats()), await stats());
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -906,9 +934,9 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
   check(
-    'Stop on a recording left open pauses it too: Resume and Save, no form',
+    'Stop on a recording left open pauses it too: Resume and Finish, no form',
     (await page.getByRole('heading', { name: 'About this route' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'Save', exact: true }).count()) === 1,
+      (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1,
   );
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
@@ -922,7 +950,7 @@ const buttons = (page) =>
   await ride(page, 0, 200);
   // Installed before the form opens, so the form's own timer runs on it.
   await page.clock.install();
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor();
   await page.clock.runFor(61_000);
   const sixty = await page.locator('form').innerText();
@@ -972,7 +1000,7 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 100);
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByLabel('Description').fill('Reload me');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
@@ -1056,7 +1084,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await ride(page, 110, 150);
   await setFail(page, 'fixes', false);
   await page.waitForTimeout(300);
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor();
   check(
     'fix writes that failed are counted on the form, which offers the download',
@@ -1141,7 +1169,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
     JSON.stringify(both.recordings),
   );
   await openHistory(second);
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByLabel('Description').fill('From the first tab');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
@@ -1211,14 +1239,17 @@ const WAKE = () => {
     held.requests === 1 && held.active === 1,
     JSON.stringify(held),
   );
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.waitForTimeout(200);
-  check('  and Stop lets the one lock go', (await page.evaluate(() => window.__wake.active)) === 0);
+  check(
+    '  and Pause lets the one lock go',
+    (await page.evaluate(() => window.__wake.active)) === 0,
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
 
-// ------------------------------------------- Back to the map on every screen, and a ride kept
+// ------------------------------- Back to the map on every screen but Recording, and a ride kept
 {
   const { page, errors } = await phone({ consented: true });
   const back = page.getByRole('button', { name: 'Back to the map' });
@@ -1229,16 +1260,19 @@ const WAKE = () => {
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
-  check('Recording has Back to the map', await hasOneBack());
-  // Fixes are written as they arrive; Back waits for any still in flight.
+  check(
+    'Recording has ✕ where Back to the map was, and no way back of its own',
+    (await back.count()) === 0 &&
+      (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1,
+  );
+  // Fixes are written as they arrive; a moment lets the last ones land before the page goes.
   const distanceOf = async () =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText())
       .match(/Distance\s+(\S+\s*\S*)/)?.[1]
       .trim();
   const distanceBefore = await distanceOf();
-  await back.click();
-  await page.waitForURL((url) => url.pathname === '/');
-  check('  pressing it leaves for the public map', new URL(page.url()).pathname === '/');
+  await page.waitForTimeout(3000);
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
 
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
   await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
@@ -1250,7 +1284,7 @@ const WAKE = () => {
   check('Unfinished has Back to the map', await hasOneBack());
 
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await finishRecording(page);
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   check('Saved has Back to the map, in front of the screen', await hasOneBack());

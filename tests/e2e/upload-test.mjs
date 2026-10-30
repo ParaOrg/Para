@@ -269,7 +269,8 @@ const groupOf = (page, name) =>
     );
   }
   await page.getByRole('button', { name: 'Mark this place' }).click();
-  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
   await page.getByLabel('Start point name').fill('SM Fairview');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();

@@ -5,7 +5,7 @@ import type { Mode } from './recording-rules';
 import type { Recording, RideKind } from '../storage/recording-schema';
 
 /**
- * Where the page is. Recording and paused are one screen (Stop pauses, Resume
+ * Where the page is. Recording and paused are one screen (Pause pauses, Resume
  * carries on); form is the Save form, however it was reached; saved is the
  * thank-you.
  */
@@ -44,7 +44,7 @@ export interface RecordingState {
   start: () => void;
   /** Pauses the recording; Resume carries on. */
   stop: () => void;
-  /** Stops a recording found open after a reload where its last fix left it, as Stop does: paused, with Save and Resume. */
+  /** Stops a recording found open after a reload where its last fix left it, as Pause does: paused, with Finish and Resume. */
   stopAtLastFix: () => void;
   resume: () => void;
   switchMode: () => void;
@@ -54,8 +54,8 @@ export interface RecordingState {
   openSave: () => void;
   /** From the Save form, back to recording as Resume does: the time on the form is a gap. */
   keepRecording: () => void;
-  /** Where focus goes as the recording screen opens: its heading, or the Stop bar after Keep recording. */
-  focusTarget: 'heading' | 'stop';
+  /** Where focus goes as the recording screen opens: its heading, or the Pause bar after Keep recording. */
+  focusTarget: 'heading' | 'pause';
   /** Saves the recording; with no details, as it is. */
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
