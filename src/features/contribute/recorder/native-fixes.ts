@@ -8,14 +8,11 @@ import type { Recording } from '../storage/recording-schema';
  * check is repeated in each function, not shared: the bundler only drops an import it can see is dead.
  */
 
-/**
- * Stores the fixes the app's foreground service kept for an open recording, and returns it as it
- * now stands (stopped, when it came back to its start in them). Nothing on the web.
- */
-export async function importNativeFixes(recording: Recording): Promise<Recording> {
-  if (import.meta.env.MODE !== 'apk' || !isNativeApp()) return recording;
+/** Stores the fixes the app's foreground service kept for an open recording. Nothing on the web. */
+export async function importNativeFixes(recording: Recording): Promise<void> {
+  if (import.meta.env.MODE !== 'apk' || !isNativeApp()) return;
   const { importFixLog } = await import('../native/import-fix-log');
-  return importFixLog(recording);
+  await importFixLog(recording);
 }
 
 /**

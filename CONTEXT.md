@@ -295,9 +295,19 @@ contributor typed: a start point name, an end point name, a description, what
 was ridden. Never public.
 _Avoid_: trip and ride (both taken), ikot (said of a contribution it would be wrong: Ikot is the word shown for a loop, a route; see Loop), biyahe, session, track, trace
 
+**Lakad** / **Sakay**:
+The two modes a contribution is recorded in: on foot (Lakad, `walk` in code),
+and on a vehicle (Sakay, `ride`). A recording starts on Lakad; the mode button
+switches, as often as the contributor walks and boards. Distance and time are
+the whole trip, walked and ridden; hintos count only on Sakay. A recording made before 2026-10-30 is all Sakay.
+They replace Papunta and Pabalik for recordings only: a route's directions keep
+their own words (see Outbound / Return, SWITCH).
+_Avoid_: Papunta / Pabalik (for a recording), leg, way
+
 **Hinto**:
-A time the phone stood still in one spot during a contribution: 8 seconds or
-more within 25 metres, for now. Many hintos at one spot, across many
+A time the phone stood still in one spot while on Sakay: 8 seconds or more
+within 25 metres, for now. Standing on Lakad is no hinto: on foot a person
+stands for their own reasons. Many hintos at one spot, across many
 contributions, suggest a hintuan. The database uses the same word.
 _Avoid_: stop (the database's name for a hotspot), dwell, idle
 

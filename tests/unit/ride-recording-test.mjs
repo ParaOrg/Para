@@ -7,20 +7,21 @@ import assert from 'node:assert/strict';
 
 import { haversine } from '../../src/shared/utils/geo.ts';
 import {
-  AUTO_STOP_ARM_M,
-  AUTO_STOP_RADIUS_M,
   BEARING_WINDOW_S,
+  HINTO_MIN_SECONDS,
   courseBearing,
-  currentWay,
+  currentMode,
   distanceM,
   hintosOf,
   keptFixes,
   mergeGaps,
+  modeFixIndexes,
+  modesOf,
   pathLengthM,
-  shouldAutoStop,
+  rideHintos,
+  rideSpans,
   silentGaps,
   summarize,
-  waysOf,
 } from '../../src/features/routes/model/ride-recording.ts';
 
 const T0 = Date.UTC(2026, 9, 17, 6, 0, 0);
@@ -323,214 +324,145 @@ test('the distance agrees with shared/utils/geo, whose haversine it repeats', ()
   for (const [a, b] of pairs) assert.equal(distanceM(a, b), haversine(a, b));
 });
 
-// ---------------------------------------------------------------- ways, auto-stop, bearing
+// ---------------------------------------------------------------- modes
 
 /** Metres east per `fix` unit, measured, so a distance below is the distance haversine gives. */
 const PER_METRE = distanceM(fix(0).at, fix(0, 1000).at) / 1000;
 /** A fix `s` seconds in, exactly `m` metres east (and `north` metres north) of the start by haversine. */
 const at = (s, m, north = 0) => fix(s, m / PER_METRE, north);
-/** Out along the road to `farM` and back to `backM`, a fix every 10 s and every 100 m. */
-function loop(farM, backM = 0) {
-  const fixes = [];
-  let s = 0;
-  for (let m = 0; m <= farM; m += 100, s += 10) fixes.push(at(s, m));
-  for (let m = farM - 100; m >= backM; m -= 100, s += 10) fixes.push(at(s, m));
-  return fixes;
-}
-const fromStart = (fixes, f) => Math.round(distanceM(fixes[0].at, f.at));
-/** The contributor taps Pabalik 5 s after the fix at the far end of loop(farM). */
-const returnAtFar = (farM) => ({ time: T0 + (farM / 100) * 10_000 + 5_000, to: 'return' });
+/** A switch to `to` at `s` seconds in. */
+const to = (mode, s) => ({ time: T0 + s * 1000, to: mode });
+/** A recording started on walk at T0, as the page starts one. */
+const started = to('walk', 0);
 
-test('a loop arms past 1 km with a switch to the return, and stops at the first fix within 300 m', () => {
-  const fixes = loop(1500);
-  const switches = [returnAtFar(1500)];
-  const far = fixes.findIndex((f) => fromStart(fixes, f) === 1500);
-  assert.equal(shouldAutoStop(fixes.slice(0, far + 1), switches), false);
-  // On the way back: 400 m from the start has not stopped it.
-  const at400 = fixes.findIndex((f, i) => i > far && fromStart(fixes, f) === 400);
-  assert.equal(shouldAutoStop(fixes.slice(0, at400 + 1), switches), false);
-  // The next fix, just inside 300 m of the start, stops it.
-  const inside = at(fixes[at400].time / 1000 - T0 / 1000 + 10, 299.9);
-  assert.equal(shouldAutoStop([...fixes.slice(0, at400 + 1), inside], switches), true);
-  assert.equal(shouldAutoStop(fixes, switches), true);
+test('currentMode: ride with no switch, the last real flip otherwise', () => {
+  assert.equal(currentMode([]), 'ride');
+  assert.equal(currentMode([started]), 'walk');
+  assert.equal(currentMode([started, to('ride', 10)]), 'ride');
+  assert.equal(currentMode([started, to('ride', 10), to('walk', 20)]), 'walk');
+  // A switch to the mode already on changes nothing; out of order is sorted by time first.
+  assert.equal(currentMode([started, to('walk', 10)]), 'walk');
+  assert.equal(currentMode([to('ride', 10), started]), 'ride');
 });
 
-test('a one-way ride never stops, and neither does a ride that returns without switching', () => {
-  const oneWay = [];
-  for (let i = 0; i <= 40; i++) oneWay.push(at(i * 10, i * 100));
-  assert.equal(shouldAutoStop(oneWay, []), false);
-  assert.equal(shouldAutoStop(loop(1500), []), false);
-});
-
-test('a switch to the return without ever being 1 km away never stops', () => {
-  assert.equal(shouldAutoStop(loop(900), [returnAtFar(900)]), false);
-  assert.equal(AUTO_STOP_ARM_M, 1000);
-});
-
-test('arming needs more than 1 km: 999.5 m is not enough, 1001 m is', () => {
-  const near = [at(0, 0), at(10, 999.5), at(20, 100), at(30, 50)];
-  const far = [at(0, 0), at(10, 1001), at(20, 100), at(30, 50)];
-  const switches = [{ time: T0 + 15_000, to: 'return' }];
-  assert.equal(shouldAutoStop(near, switches), false);
-  assert.equal(shouldAutoStop(far, switches), true);
-});
-
-test('it arms when the switch comes after the 1 km, and not for a fix before the switch', () => {
-  const fixes = [at(0, 0), at(10, 1200), at(20, 1100), at(30, 200)];
-  // Switched only after the fix at 200 m: that fix came before the switch and must not stop it.
-  assert.equal(shouldAutoStop(fixes, [{ time: T0 + 35_000, to: 'return' }]), false);
-  assert.equal(shouldAutoStop(fixes, [{ time: T0 + 25_000, to: 'return' }]), true);
-});
-
-test('a late tap on the way back still stops, measured from the start and not from the tap', () => {
-  const fixes = loop(1500);
-  const far = fixes.findIndex((f) => fromStart(fixes, f) === 1500);
-  const at600 = fixes.findIndex((f, i) => i > far && fromStart(fixes, f) === 600);
-  const switches = [{ time: fixes[at600].time + 5_000, to: 'return' }];
-  const at500 = fixes.findIndex((f, i) => i > far && fromStart(fixes, f) === 500);
-  assert.equal(shouldAutoStop(fixes.slice(0, at500 + 1), switches), false);
-  const inside = at(fixes[at500].time / 1000 - T0 / 1000 + 10, 299.9);
-  assert.equal(shouldAutoStop([...fixes.slice(0, at500 + 1), inside], switches), true);
-});
-
-test('flipping back is an undo: a mistaken tap flipped back arms nothing and leaves no end point', () => {
-  const fixes = loop(1500);
-  const mistaken = [
-    { time: T0 + 5_000, to: 'return' },
-    { time: T0 + 6_000, to: 'outbound' },
-  ];
-  assert.equal(shouldAutoStop(fixes, mistaken), false);
-  const ways = waysOf(fixes, mistaken);
-  assert.equal(ways.endPoint, null);
-  assert.deepEqual(
-    ways.markers.map((m) => m.to),
-    ['return', 'outbound'],
-  );
-  // Flipped back after the far end: the way is outbound again, so the return no longer counts.
-  assert.equal(
-    shouldAutoStop(fixes, [returnAtFar(1500), { time: T0 + 200_000, to: 'outbound' }]),
-    false,
-  );
-});
-
-test('switching to the return again arms it again, from the latest switch', () => {
-  const fixes = loop(1500);
-  const switches = [
-    returnAtFar(1500),
-    { time: T0 + 170_000, to: 'outbound' },
-    { time: T0 + 175_000, to: 'return' },
-  ];
-  assert.equal(shouldAutoStop(fixes, switches), true);
-  // The latest switch comes after every fix: nothing after it can stop the ride yet.
-  assert.equal(
-    shouldAutoStop(fixes, [
-      ...switches,
-      { time: T0 + 900_000, to: 'outbound' },
-      { time: T0 + 901_000, to: 'return' },
-    ]),
-    false,
-  );
-});
-
-test('switches given out of order are applied in time order', () => {
-  const fixes = loop(1500);
-  const backToOutbound = { time: T0 + 200_000, to: 'outbound' };
-  assert.equal(shouldAutoStop(fixes, [backToOutbound, returnAtFar(1500)]), false);
-  const six = [at(0, 0), at(10, 100), at(20, 200), at(30, 300), at(40, 400), at(50, 500)];
-  const ways = waysOf(six, [
-    { time: T0 + 35_000, to: 'outbound' },
-    { time: T0 + 25_000, to: 'return' },
-  ]);
-  assert.deepEqual(
-    ways.markers.map((m) => m.to),
-    ['return', 'outbound'],
-  );
-  assert.equal(ways.endPoint, null);
-});
-
-test('a return tapped already inside 300 m stops on the next fix', () => {
-  const out = [at(0, 0), at(10, 1200), at(20, 250)];
-  const switches = [{ time: T0 + 25_000, to: 'return' }];
-  assert.equal(shouldAutoStop(out, switches), false);
-  assert.equal(shouldAutoStop([...out, at(30, 240)], switches), true);
-});
-
-test('the fix a switch is made on does not stop the ride, and neither do fixes before it is 1 km out', () => {
-  const out = [at(0, 0), at(10, 1200), at(20, 250)];
-  const atFix = [{ time: T0 + 20_000, to: 'return' }];
-  assert.equal(shouldAutoStop(out, atFix), false);
-  assert.equal(shouldAutoStop([...out, at(30, 240)], atFix), true);
-  // Pabalik tapped at the start: the early fixes near it are not the way home.
-  const early = [{ time: T0 + 5_000, to: 'return' }];
-  const fixes = [at(0, 0), at(10, 100), at(20, 1200)];
-  assert.equal(shouldAutoStop(fixes, early), false);
-  assert.equal(shouldAutoStop([...fixes, at(30, 250)], early), true);
-});
-
-test('299 m stops, 301 m does not, and the edge sits at 300 m', () => {
-  const out = [at(0, 0), at(10, 500), at(20, 1100)];
-  const switches = [{ time: T0 + 25_000, to: 'return' }];
-  const backTo = (m) => [...out, at(30, 700), at(40, m)];
-  assert.equal(shouldAutoStop(backTo(299), switches), true);
-  assert.equal(shouldAutoStop(backTo(AUTO_STOP_RADIUS_M - 0.01), switches), true);
-  assert.equal(shouldAutoStop(backTo(AUTO_STOP_RADIUS_M + 0.01), switches), false);
-  assert.equal(shouldAutoStop(backTo(301), switches), false);
-});
-
-test('ways: the outbound and return lines meet at the switch fix, which is the route end', () => {
-  const fixes = [at(0, 0), at(10, 100), at(20, 200), at(30, 100), at(40, 0)];
-  const ways = waysOf(fixes, [{ time: T0 + 24_000, to: 'return' }]);
-  assert.equal(ways.outboundLines.length, 1);
-  assert.equal(ways.returnLines.length, 1);
-  assert.deepEqual(ways.outboundLines[0], [fixes[0].at, fixes[1].at, fixes[2].at]);
-  assert.deepEqual(ways.returnLines[0], [fixes[2].at, fixes[3].at, fixes[4].at]);
-  assert.deepEqual(ways.markers, [{ time: T0 + 24_000, at: fixes[2].at, to: 'return' }]);
-  assert.deepEqual(ways.endPoint, fixes[2].at);
-});
-
-test('ways: no switch is all outbound with no marker and no end point', () => {
-  const fixes = [at(0, 0), at(10, 100), at(20, 200)];
-  assert.deepEqual(waysOf(fixes, []), {
-    outboundLines: [[fixes[0].at, fixes[1].at, fixes[2].at]],
-    returnLines: [],
+test('modes: a recording started on walk is one walked line, with no marker for the start', () => {
+  const fixes = [at(1, 0), at(10, 10), at(20, 20)];
+  assert.deepEqual(modesOf(fixes, [started]), {
+    walkLines: [[fixes[0].at, fixes[1].at, fixes[2].at]],
+    rideLines: [],
     markers: [],
-    endPoint: null,
+  });
+  assert.deepEqual(modeFixIndexes(fixes, [started]), []);
+});
+
+test('modes: no switch at all is all ride, as a recording made before modes reads', () => {
+  const fixes = [at(0, 0), at(10, 100), at(20, 200)];
+  assert.deepEqual(modesOf(fixes, []), {
+    walkLines: [],
+    rideLines: [[fixes[0].at, fixes[1].at, fixes[2].at]],
+    markers: [],
   });
 });
 
-test('ways: switching back makes a second outbound line, and the end point is the latest switch to the return', () => {
-  const fixes = [at(0, 0), at(10, 100), at(20, 200), at(30, 300), at(40, 400), at(50, 500)];
-  const ways = waysOf(fixes, [
-    { time: T0 + 20_000, to: 'return' },
-    { time: T0 + 40_000, to: 'outbound' },
-    { time: T0 + 45_000, to: 'outbound' }, // already outbound: no marker
-  ]);
-  assert.equal(ways.outboundLines.length, 2);
-  assert.equal(ways.returnLines.length, 1);
-  assert.deepEqual(ways.returnLines[0], [fixes[2].at, fixes[3].at, fixes[4].at]);
-  assert.deepEqual(ways.outboundLines[1], [fixes[4].at, fixes[5].at]);
-  assert.deepEqual(
-    ways.markers.map((m) => m.to),
-    ['return', 'outbound'],
-  );
-  // On the outbound way now, so there is no end point.
-  assert.equal(ways.endPoint, null);
-  const again = waysOf(fixes, [
-    { time: T0 + 20_000, to: 'return' },
-    { time: T0 + 30_000, to: 'outbound' },
-    { time: T0 + 40_000, to: 'return' },
-  ]);
-  assert.deepEqual(again.endPoint, fixes[4].at);
+test('modes: the walked and ridden lines meet at the fix the switch happened on', () => {
+  const fixes = [at(1, 0), at(10, 10), at(20, 20), at(30, 120), at(40, 220)];
+  const modes = modesOf(fixes, [started, to('ride', 24)]);
+  assert.deepEqual(modes.walkLines, [[fixes[0].at, fixes[1].at, fixes[2].at]]);
+  assert.deepEqual(modes.rideLines, [[fixes[2].at, fixes[3].at, fixes[4].at]]);
+  assert.deepEqual(modes.markers, [{ time: T0 + 24_000, at: fixes[2].at, to: 'ride' }]);
+  assert.deepEqual(modeFixIndexes(fixes, [started, to('ride', 24)]), [2]);
 });
 
-test('ways: a switch between fixes sits on the last fix before it, and one before any sits on the first', () => {
-  const fixes = [at(0, 0), at(10, 100), at(20, 200)];
-  assert.deepEqual(waysOf(fixes, [{ time: T0 + 19_000, to: 'return' }]).endPoint, fixes[1].at);
-  assert.deepEqual(waysOf(fixes, [{ time: T0 - 5_000, to: 'return' }]).endPoint, fixes[0].at);
-  assert.equal(waysOf([], [{ time: T0, to: 'return' }]).endPoint, null);
-  // A switch at the very time of a fix sits on that fix.
-  assert.deepEqual(waysOf(fixes, [{ time: T0 + 10_000, to: 'return' }]).endPoint, fixes[1].at);
+test('modes: walk, ride, walk makes two walked lines and a marker at each switch', () => {
+  const fixes = [at(1, 0), at(10, 10), at(20, 110), at(30, 210), at(40, 220), at(50, 230)];
+  const modes = modesOf(fixes, [started, to('ride', 10), to('walk', 30), to('walk', 45)]);
+  assert.deepEqual(modes.walkLines, [
+    [fixes[0].at, fixes[1].at],
+    [fixes[3].at, fixes[4].at, fixes[5].at],
+  ]);
+  assert.deepEqual(modes.rideLines, [[fixes[1].at, fixes[2].at, fixes[3].at]]);
+  assert.deepEqual(
+    modes.markers.map((m) => m.to),
+    ['ride', 'walk'],
+  );
 });
+
+test('modes: a switch before the first fix sets the mode it starts on, and leaves no marker', () => {
+  const fixes = [at(10, 0), at(20, 100), at(30, 200)];
+  const modes = modesOf(fixes, [started, to('ride', 5)]);
+  assert.deepEqual(modes.walkLines, []);
+  assert.equal(modes.rideLines.length, 1);
+  assert.deepEqual(modes.markers, []);
+  // Flipped and flipped back before the first fix: still on walk.
+  assert.equal(modesOf(fixes, [started, to('ride', 5), to('walk', 6)]).walkLines.length, 1);
+  assert.deepEqual(modesOf([], [started]), { walkLines: [], rideLines: [], markers: [] });
+});
+
+test('modes: a switch between fixes sits on the last fix before it; one at a fix, on that fix', () => {
+  const fixes = [at(1, 0), at(10, 10), at(20, 110)];
+  assert.deepEqual(modesOf(fixes, [started, to('ride', 19)]).markers[0].at, fixes[1].at);
+  assert.deepEqual(modesOf(fixes, [started, to('ride', 10)]).markers[0].at, fixes[1].at);
+  // After the last fix: a marker on it, and no ridden line yet.
+  const late = modesOf(fixes, [started, to('ride', 25)]);
+  assert.deepEqual(late.markers[0].at, fixes[2].at);
+  assert.deepEqual(late.rideLines, []);
+});
+
+test('ride spans: the stretches on ride, clipped to the window', () => {
+  const modes = [started, to('ride', 60), to('walk', 120), to('ride', 180)];
+  assert.deepEqual(rideSpans(modes, T0, T0 + 240_000), [
+    { from: T0 + 60_000, to: T0 + 120_000 },
+    { from: T0 + 180_000, to: T0 + 240_000 },
+  ]);
+  assert.deepEqual(rideSpans(modes, T0 + 90_000, T0 + 100_000), [
+    { from: T0 + 90_000, to: T0 + 100_000 },
+  ]);
+  assert.deepEqual(rideSpans(modes, T0 + 130_000, T0 + 170_000), []);
+  // No switch is all ride; a recording on walk throughout has none.
+  assert.deepEqual(rideSpans([], T0, T0 + 1000), [{ from: T0, to: T0 + 1000 }]);
+  assert.deepEqual(rideSpans([started], T0, T0 + 1000), []);
+});
+
+test('hintos count only on ride; one across a switch keeps its ridden part if that is long enough', () => {
+  const stand = { from: T0 + 100_000, to: T0 + 130_000, at: at(100, 0).at };
+  // Wholly on walk: none. Wholly on ride: as it was.
+  assert.deepEqual(rideHintos([stand], [started]), []);
+  assert.deepEqual(rideHintos([stand], []), [stand]);
+  assert.deepEqual(rideHintos([stand], [started, to('ride', 50)]), [stand]);
+  // Boarded 10 s into it: the 20 s on ride remain.
+  assert.deepEqual(rideHintos([stand], [started, to('ride', 110)]), [
+    { from: T0 + 110_000, to: T0 + 130_000, at: stand.at },
+  ]);
+  // Boarded with less than a hinto's worth left: none.
+  const late = 130 - HINTO_MIN_SECONDS + 1;
+  assert.deepEqual(rideHintos([stand], [started, to('ride', late)]), []);
+  assert.equal(rideHintos([stand], [started, to('ride', 130 - HINTO_MIN_SECONDS)]).length, 1);
+});
+
+test('the summary is the whole trip: walked distance counts, walked stands are no hintos', () => {
+  // Walk 120 m briskly (a fix every 30 m, so no stretch of it reads as standing), stand 30 s,
+  // then ride 1 km and stand 30 s.
+  const fixes = [];
+  let s = 1;
+  for (let m = 0; m <= 120; m += 30, s += 10) fixes.push(at(s, m));
+  for (let i = 0; i < 30; i++, s++) fixes.push(at(s, 120));
+  const boarded = s;
+  for (let m = 220; m <= 1120; m += 100, s += 10) fixes.push(at(s, m));
+  for (let i = 0; i < 30; i++, s++) fixes.push(at(s, 1120));
+  const modes = [started, to('ride', boarded)];
+  const all = summarize(fixes, [], T0, T0 + s * 1000);
+  const trip = summarize(fixes, [], T0, T0 + s * 1000, modes);
+  assert.equal(all.hintos.length, 2);
+  assert.equal(trip.hintos.length, 1);
+  assert.deepEqual(trip.hintos[0].at, at(0, 1120).at);
+  assert.equal(Math.round(trip.distanceM), 1120);
+  // Only which stands are hintos changes: the distance and the times stay the whole trip's.
+  assert.equal(trip.distanceM, all.distanceM);
+  assert.equal(trip.standingSeconds, all.standingSeconds);
+  assert.equal(trip.movingSeconds, all.movingSeconds);
+});
+
+// ---------------------------------------------------------------- bearing
 
 /** A repeatable stream of independent normal numbers (mulberry32 and Box-Muller). */
 function gaussians(seed) {
@@ -555,43 +487,6 @@ function headings(fixes, start = null) {
   }
   return out;
 }
-
-test('currentWay: outbound with no switch, the last real flip otherwise', () => {
-  assert.equal(currentWay([]), 'outbound');
-  assert.equal(currentWay([{ time: T0, to: 'return' }]), 'return');
-  // A flip and a flip back is outbound again; a switch to the way already on changes nothing.
-  assert.equal(
-    currentWay([
-      { time: T0, to: 'return' },
-      { time: T0 + 1000, to: 'outbound' },
-    ]),
-    'outbound',
-  );
-  assert.equal(
-    currentWay([
-      { time: T0, to: 'return' },
-      { time: T0 + 1000, to: 'return' },
-    ]),
-    'return',
-  );
-  // Out of order: sorted by time first.
-  assert.equal(
-    currentWay([
-      { time: T0 + 2000, to: 'outbound' },
-      { time: T0, to: 'return' },
-    ]),
-    'outbound',
-  );
-  assert.equal(
-    currentWay([
-      { time: T0 + 2000, to: 'return' },
-      { time: T0, to: 'outbound' },
-    ]),
-    'return',
-  );
-  // It agrees with where the ride is armed to stop.
-  assert.equal(currentWay([{ time: T0, to: 'outbound' }]), 'outbound');
-});
 
 test('bearing: straight at 15 km/h gives the true heading in every direction', () => {
   const metresPerSecond = 15 / 3.6;

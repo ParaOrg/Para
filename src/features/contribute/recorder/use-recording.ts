@@ -4,13 +4,13 @@ import { locationProblem } from './location-problem';
 import { keepsRecordingInBackground } from './native-fixes';
 import { takeWatchedFixes } from './recording-fixes';
 import { markedRecording } from './recording-marks';
-import { WAY_LABEL, currentWay } from './recording-rules';
+import { MODE_LABEL, currentMode } from './recording-rules';
 import type { Phase, RecordingState } from './recording-state';
 import {
   newRecording,
   resumedRecording,
   stoppedRecording,
-  switchedWay,
+  switchedMode,
 } from './recording-transitions';
 import { useGeolocationWatch, type WatchedFix } from './use-geolocation-watch';
 import { useHiddenGaps } from './use-hidden-gaps';
@@ -87,24 +87,18 @@ export function useRecording(): RecordingState {
   /**
    * Takes the fixes the watch hands over: those after the last one held, stored in one write and
    * counted as one step. The app hands over a whole stretch at once when the page wakes from the
-   * screen being off; a ride that came back to its start inside it stops at that fix, and the
-   * ones after it are left out. `until` is a Stop's time: later fixes are not taken, and the
-   * ride is not checked for coming back to its start.
+   * screen being off. `until` is a Stop's time: later fixes are not taken.
    */
   function takeFixes(watched: WatchedFix[], until?: number) {
     const recording = currentRef.current;
-    // Fixes that land after the ride stopped itself, before the watch lets go.
+    // Fixes that land after the ride stopped, before the watch lets go.
     if (!recording || recording.status !== 'recording') return;
     if (isFinishingRef.current && until === undefined) return;
-    const { taken, isBackAtStart } = takeWatchedFixes(fixesRef.current, watched, recording, until);
+    const taken = takeWatchedFixes(fixesRef.current, watched, until);
     if (taken.length === 0) return;
     writeFixes(recording.id, taken);
     setFixList([...fixesRef.current, ...taken]);
     setLocationProblem(null);
-    if (isBackAtStart) {
-      setAnnouncement('Back at the start. The recording stopped.');
-      finish(taken[taken.length - 1].time, 'form', { hasAutoStopped: true });
-    }
   }
 
   useGeolocationWatch(isRecording, current?.id ?? null, {
@@ -131,14 +125,14 @@ export function useRecording(): RecordingState {
   }
 
   /** Stops the recording at `at`, then shows `next`; in the app after the native log is read. */
-  function finish(at: number, next: 'paused' | 'form', extra?: Pick<Recording, 'hasAutoStopped'>) {
+  function finish(at: number, next: 'paused' | 'form') {
     finishNatively(
       at,
       (logged) => takeFixes(logged, at),
       () => {
         const recording = currentRef.current;
         if (!recording) return;
-        keep(stoppedRecording(recording, at, failedFixWrites(), extra));
+        keep(stoppedRecording(recording, at, failedFixWrites()));
         setPhase(next);
       },
     );
@@ -172,12 +166,12 @@ export function useRecording(): RecordingState {
     setAnnouncement('Recording again');
   }
 
-  function switchWay() {
+  function switchMode() {
     const recording = currentRef.current;
     if (!recording) return;
-    const switched = switchedWay(recording, Date.now());
+    const switched = switchedMode(recording, Date.now());
     keep(switched.recording);
-    setAnnouncement(`Switched to ${WAY_LABEL[switched.to]}`);
+    setAnnouncement(`Switched to ${MODE_LABEL[switched.to]}`);
   }
 
   function markPlace() {
@@ -215,7 +209,7 @@ export function useRecording(): RecordingState {
     fixes,
     kept,
     figures,
-    way: currentWay(current?.switches ?? []),
+    mode: currentMode(current?.modes ?? []),
     lastSaved,
     saved,
     isAwake,
@@ -225,7 +219,7 @@ export function useRecording(): RecordingState {
     stop,
     stopAtLastFix,
     resume,
-    switchWay,
+    switchMode,
     markPlace,
     openSave,
     keepRecording,

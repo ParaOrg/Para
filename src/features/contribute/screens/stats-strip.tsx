@@ -1,13 +1,13 @@
 import { cn } from '@/shared/utils/cn';
 
 import { kilometresText, minutesText } from '../common/format';
-import { WAY_LABEL, type Way } from '../recorder/recording-rules';
+import { MODE_LABEL, type Mode } from '../recorder/recording-rules';
 
 interface StatsStripProps {
   /** Time recorded so far, pauses left out. */
   elapsedSeconds: number;
   distanceM: number;
-  way: Way;
+  mode: Mode;
   /** Stopped for now: the third column says so. */
   isPaused: boolean;
 }
@@ -45,11 +45,11 @@ const BLUR_LAYERS = [
 ];
 
 /**
- * The figures over the bars: time and distance, and the way the recording is on.
- * They change every second, so nothing here is a live region; the switch of way
+ * The figures over the bars: time and distance, and the mode the recording is on.
+ * They change every second, so nothing here is a live region; the switch of mode
  * is announced once on its own (RecordingScreen).
  */
-export function StatsStrip({ elapsedSeconds, distanceM, way, isPaused }: StatsStripProps) {
+export function StatsStrip({ elapsedSeconds, distanceM, mode, isPaused }: StatsStripProps) {
   return (
     <div
       role="group"
@@ -72,7 +72,7 @@ export function StatsStrip({ elapsedSeconds, distanceM, way, isPaused }: StatsSt
         <Stat
           className="shrink-0 text-right"
           label={isPaused ? 'Stopped' : 'Recording'}
-          value={WAY_LABEL[way]}
+          value={MODE_LABEL[mode]}
         />
       </dl>
     </div>

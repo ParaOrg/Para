@@ -6,13 +6,14 @@ import type { Recording } from '../storage/recording-schema';
 
 const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
 const recording: Recording = {
-  version: 1,
+  version: 2,
   id: '11111111-0000-4000-8000-000000000001',
   status: 'saved',
   startedAt: T0,
   stoppedAt: T0 + 1_800_000,
   savedAt: T0 + 1_830_000,
   gaps: [],
+  modes: [],
   startPointName: 'SM Fairview',
   endPointName: 'Cubao',
   description: '',

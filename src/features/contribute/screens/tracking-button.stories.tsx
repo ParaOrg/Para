@@ -29,18 +29,18 @@ export const StopRecording: Story = { args: { variant: 'stop', isActive: true } 
 
 export const StopAtRest: Story = { args: { variant: 'stop' } };
 
-/** The way button names the way a tap switches TO: orange Pabalik on papunta, blue Papunta on pabalik. */
-export const WaySwitchToPabalik: Story = { args: { variant: 'pabalik' } };
+/** The mode button names the mode a tap switches TO: green Sakay on Lakad, blue Lakad on Sakay. */
+export const ModeSwitchToSakay: Story = { args: { variant: 'sakay' } };
 
-export const WaySwitchToPapunta: Story = { args: { variant: 'papunta' } };
+export const ModeSwitchToLakad: Story = { args: { variant: 'lakad' } };
 
 export const Save: Story = { args: { variant: 'save' } };
 
 export const Cancel: Story = { args: { variant: 'cancel' } };
 
-const ROW: TrackingVariant[] = ['pabalik', 'save', 'cancel'];
+const ROW: TrackingVariant[] = ['sakay', 'save', 'cancel'];
 
-/** The row under the Stop bar: Pabalik and Save share the width, Cancel shrinks to its text. */
+/** The row under the Stop bar: the mode button and Save share the width, Cancel shrinks to its text. */
 export const Row: Story = {
   render: () => (
     <div className="flex flex-col">

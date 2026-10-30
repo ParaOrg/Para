@@ -66,7 +66,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   });
   const track = useRecordingTrack(
     recording.kept,
-    recording.current?.switches,
+    recording.current?.modes,
     recording.current?.marks,
   );
   const history = useHistoryView();
@@ -189,7 +189,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           {phase === 'unfinished' && figures && (
             <UnfinishedScreen
               figures={figures}
-              way={recording.way}
+              mode={recording.mode}
               onResume={recording.resume}
               onStop={recording.stopAtLastFix}
             />
@@ -197,13 +197,13 @@ export function ContributePage({ locator }: ContributePageProps) {
           {(phase === 'recording' || phase === 'paused') && figures && (
             <RecordingScreen
               figures={figures}
-              way={recording.way}
+              mode={recording.mode}
               isPaused={phase === 'paused'}
               isAwake={recording.isAwake}
               shouldFocusStop={recording.focusTarget === 'stop'}
               onStop={recording.stop}
               onResume={recording.resume}
-              onWaySwitch={recording.switchWay}
+              onModeSwitch={recording.switchMode}
               onSave={recording.openSave}
               onCancel={recording.cancel}
               onLeave={recording.flushFixes}

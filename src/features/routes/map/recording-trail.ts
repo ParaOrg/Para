@@ -4,18 +4,18 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { CASING_EXTRA, litRadius, litWidth } from './line-style';
-import type { Way } from '../model/ride-recording';
+import type { Mode } from '../model/ride-recording';
 
-/** A run of the trail on one way: outbound is papunta, return is pabalik. */
+/** A run of the trail on one mode: walk is Lakad, ride is Sakay. */
 export interface TrailLine {
-  way: Way;
+  mode: Mode;
   path: readonly LngLat[];
 }
 
-/** A dot where the way switched, ringed in the colour of the way that began there. */
+/** A dot where the mode switched, ringed in the colour of the mode that began there. */
 export interface TrailMarker {
   at: LngLat;
-  way: Way;
+  mode: Mode;
 }
 
 /** A pin where the contributor marked the place they were. */
@@ -45,12 +45,12 @@ export function trailData(trail: RecordingTrail) {
         .filter((line) => line.path.length >= 2)
         .map((line) => ({
           type: 'Feature' as const,
-          properties: { way: line.way },
+          properties: { mode: line.mode },
           geometry: { type: 'LineString' as const, coordinates: line.path.map((p) => [...p]) },
         })),
       ...trail.markers.map((marker) => ({
         type: 'Feature' as const,
-        properties: { kind: 'switch', way: marker.way },
+        properties: { kind: 'switch', mode: marker.mode },
         geometry: { type: 'Point' as const, coordinates: [...marker.at] },
       })),
       ...trail.marks.map((mark) => ({
@@ -87,10 +87,10 @@ export function addRecordingTrail(map: MapLibreMap): void {
     paint: {
       'line-color': [
         'match',
-        ['get', 'way'],
-        'return',
-        MAP_COLOURS['Map/Trail/pabalik'],
+        ['get', 'mode'],
+        'walk',
         MAP_COLOURS['Map/Trail/papunta'],
+        MAP_COLOURS['Map/Trail/pabalik'],
       ],
       'line-width': litWidth(),
     },
@@ -105,10 +105,10 @@ export function addRecordingTrail(map: MapLibreMap): void {
       'circle-color': MAP_PAINT['Paint/casing'],
       'circle-stroke-color': [
         'match',
-        ['get', 'way'],
-        'return',
-        MAP_COLOURS['Map/Trail/pabalik'],
+        ['get', 'mode'],
+        'walk',
         MAP_COLOURS['Map/Trail/papunta'],
+        MAP_COLOURS['Map/Trail/pabalik'],
       ],
       'circle-stroke-width': 3,
     },

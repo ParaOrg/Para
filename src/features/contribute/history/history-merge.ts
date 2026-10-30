@@ -11,6 +11,7 @@ function recordingOf(upload: AccountUpload): Recording {
     stoppedAt: upload.stoppedAt,
     savedAt: upload.stoppedAt,
     gaps: [],
+    modes: [],
     startPointName: upload.startPointName,
     endPointName: upload.endPointName,
     description: upload.description,

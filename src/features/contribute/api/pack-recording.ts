@@ -6,8 +6,11 @@ import { UPLOAD_LIMITS } from '../recorder/recording-limits';
 import { marksThatFit } from '../recorder/recording-marks';
 import { RECORDING_VERSION, type Recording } from '../storage/recording-schema';
 
-/** The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them. */
-export const RULES_VERSION = 1;
+/**
+ * The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them.
+ * 2 counts hintos only while on ride.
+ */
+export const RULES_VERSION = 2;
 
 /** The Philippines, as the database checks it. */
 const BOX = { south: 4, north: 22, west: 116, east: 127 } as const;
@@ -129,7 +132,7 @@ export function packRecording(
   }
   const points = thinnedPoints(acceptedPoints(fixes), UPLOAD_LIMITS.points);
 
-  const summary = summarize(fixes, recording.gaps, recording.startedAt, ended);
+  const summary = summarize(fixes, recording.gaps, recording.startedAt, ended, recording.modes);
   const kept = keptFixes(fixes).filter(({ at: [lng, lat] }) => inBox(lat, lng));
   const thinned = overviewOf(kept.map((fix) => fix.at));
   const line = thinned.length >= 2 ? { type: 'LineString' as const, coordinates: thinned } : null;
@@ -137,18 +140,15 @@ export function packRecording(
     return { ok: false, reason: 'line-too-large' };
   }
 
-  const switches = (recording.switches ?? []).map((s) => ({
-    time: s.time,
-    kind: 'switch',
-    to: s.to,
-  }));
+  // The mode it started on and every switch: a contribution with none is all ride.
+  const modes = recording.modes.map((m) => ({ time: m.time, kind: 'mode', to: m.to }));
   // The start, stop and save always go in, so marks are what yields to the limit.
-  const marks = marksThatFit(recording.marks ?? [], switches.length + 3).map((m) => ({
+  const marks = marksThatFit(recording.marks ?? [], modes.length + 3).map((m) => ({
     time: m.time,
     kind: 'mark',
   }));
-  // Array.sort is stable: a switch and a mark tapped in the same millisecond keep that order.
-  const between = [...switches, ...marks]
+  // Array.sort is stable: a mode and a mark at the same millisecond keep that order.
+  const between = [...modes, ...marks]
     .sort((a, b) => a.time - b.time)
     .map(({ time, kind, ...rest }) => ({ kind, at: iso(time), ...rest }));
   const events = [

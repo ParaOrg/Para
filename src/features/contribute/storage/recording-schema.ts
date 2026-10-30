@@ -1,9 +1,12 @@
 import * as z from 'zod/mini';
 
-import type { GapReason } from '@/features/routes/model/ride-recording';
+import type { GapReason, Mode } from '@/features/routes/model/ride-recording';
 
-/** The saved format's version: bump it when the file or the stored rows change shape. */
-export const RECORDING_VERSION = 1;
+/**
+ * The saved format's version: bump it when the file or the stored rows change shape. 2 replaced
+ * the Papunta and Pabalik switches with Lakad and Sakay; a recording kept as 1 reads as all Sakay.
+ */
+export const RECORDING_VERSION = 2;
 
 /** What the contributor says they rode; optional, so a recording may have none. */
 export const RIDE_KINDS = ['Jeep', 'Bus', 'Train', 'Ferry', 'Tricycle', 'Other'] as const;
@@ -22,13 +25,15 @@ export const gapSchema = z.object({
   reasons: z.array(z.enum(GAP_REASONS)),
 });
 
-/** A tap on the way button: when it was, and the way the recording was on from then. */
-export const switchSchema = z.object({
+const MODES = ['walk', 'ride'] as const satisfies readonly Mode[];
+
+/** The start, or a tap on the mode button: when it was, and the mode the recording was on from then. */
+export const modeSchema = z.object({
   time: z.number(),
-  to: z.enum(['outbound', 'return']),
+  to: z.enum(MODES),
 });
 
-export type SwitchRow = z.infer<typeof switchSchema>;
+export type ModeRow = z.infer<typeof modeSchema>;
 
 /** A tap on the mark button: when it was. Where it was is worked out from the fixes. */
 export const markSchema = z.object({ time: z.number() });
@@ -52,9 +57,8 @@ export const uploadMarkSchema = z.union([
 ]);
 export type UploadMark = z.infer<typeof uploadMarkSchema>;
 
-/** A recording as IndexedDB keeps it, apart from its fixes. */
-export const recordingSchema = z.object({
-  version: z.literal(RECORDING_VERSION),
+/** What every version of a stored recording holds. */
+const recordingShape = {
   id: z.string(),
   /** Recording until Stop, stopped until Save (or Cancel), then saved. */
   status: z.enum(['recording', 'stopped', 'saved']),
@@ -63,12 +67,8 @@ export const recordingSchema = z.object({
   savedAt: z.nullable(z.number()),
   /** The gaps the page saw happen: hidden, paused, and resumed after a reload. The silent ones come from the fixes. */
   gaps: z.array(gapSchema),
-  /** Each tap on the leg button, in order: the first is the start of pabalik. */
-  switches: z.optional(z.array(switchSchema)),
   /** Each tap on the mark button, in order; absent on a recording made before marks. */
   marks: z.optional(z.array(markSchema)),
-  /** Set when the ride stopped itself on coming back to its start, so a Resume does not stop it again. */
-  hasAutoStopped: z.optional(z.boolean()),
   /** Fixes the phone reported but could not write to IndexedDB; absent when none failed. */
   failedFixWrites: z.optional(z.number()),
   startPointName: z.string(),
@@ -78,8 +78,31 @@ export const recordingSchema = z.object({
   /** The consent text's version agreed to when it began; absent on one made before consent version 2. */
   consentVersion: z.optional(z.number()),
   upload: z.optional(uploadMarkSchema),
+};
+
+/** A recording as IndexedDB keeps it, apart from its fixes. */
+export const recordingSchema = z.object({
+  ...recordingShape,
+  version: z.literal(RECORDING_VERSION),
+  /**
+   * The mode it started on, then each tap on the mode button, in order. Empty on a recording made
+   * before modes, which is all ride.
+   */
+  modes: z.array(modeSchema),
 });
 export type Recording = z.infer<typeof recordingSchema>;
+
+/**
+ * A recording as version 1 kept it, read as all ride. Its Papunta and Pabalik switches and its
+ * auto-stop flag are not listed, so they are dropped: both ways were ridden.
+ */
+const recordingV1Schema = z.pipe(
+  z.object({ ...recordingShape, version: z.literal(1) }),
+  z.transform((old): Recording => ({ ...old, version: RECORDING_VERSION, modes: [] })),
+);
+
+/** A stored recording of any version, read as the current one. */
+export const storedRecordingSchema = z.union([recordingSchema, recordingV1Schema]);
 
 /** One fix as IndexedDB keeps it: a record per fix, keyed by the recording and the fix's place in it. */
 export const fixRowSchema = z.object({

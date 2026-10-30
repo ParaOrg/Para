@@ -1,5 +1,5 @@
 // What the map is handed of a recording (src/features/routes/map/recording-trail.ts):
-// a line per leg that has somewhere to go, and a dot per switch.
+// a line per walked or ridden run that has somewhere to go, and a dot per switch.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/recording-trail-test.mjs
 import { test } from 'node:test';
@@ -16,26 +16,26 @@ const BACK = [
   [121.0005, 14.6],
 ];
 
-test('a line per run, tagged with its way, and a dot per switch', () => {
+test('a line per run, tagged with its mode, and a dot per switch', () => {
   const data = trailData({
     lines: [
-      { way: 'outbound', path: OUT },
-      { way: 'return', path: BACK },
+      { mode: 'walk', path: OUT },
+      { mode: 'ride', path: BACK },
     ],
-    markers: [{ at: [121.001, 14.6], way: 'return' }],
+    markers: [{ at: [121.001, 14.6], mode: 'ride' }],
     marks: [],
   });
   const lines = data.features.filter((f) => f.geometry.type === 'LineString');
   assert.deepEqual(
-    lines.map((f) => f.properties.way),
-    ['outbound', 'return'],
+    lines.map((f) => f.properties.mode),
+    ['walk', 'ride'],
   );
   assert.equal(data.features.filter((f) => f.properties.kind === 'switch').length, 1);
 });
 
 test('a leg with a single point draws no line', () => {
   const data = trailData({
-    lines: [{ way: 'outbound', path: [[121.0, 14.6]] }],
+    lines: [{ mode: 'walk', path: [[121.0, 14.6]] }],
     markers: [],
     marks: [],
   });
@@ -45,8 +45,8 @@ test('a leg with a single point draws no line', () => {
 test('the lines join where one ends and the next begins', () => {
   const data = trailData({
     lines: [
-      { way: 'outbound', path: OUT },
-      { way: 'return', path: BACK },
+      { mode: 'walk', path: OUT },
+      { mode: 'ride', path: BACK },
     ],
     markers: [],
     marks: [],
@@ -57,7 +57,7 @@ test('the lines join where one ends and the next begins', () => {
 
 test('a pin per mark, drawn as its own kind of point', () => {
   const data = trailData({
-    lines: [{ way: 'outbound', path: OUT }],
+    lines: [{ mode: 'walk', path: OUT }],
     markers: [],
     marks: [{ at: [121.0005, 14.6] }, { at: [121.001, 14.6] }],
   });

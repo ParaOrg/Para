@@ -79,10 +79,17 @@ test('the details go in the database names and limits; the stand is a hinto', ()
   assert.equal(payload.start_name, 'Fairview');
   assert.equal(payload.started_at, new Date(T0).toISOString());
   assert.equal(payload.sent_at, new Date(SENT).toISOString());
+  assert.deepEqual(payload.events.slice(0, 3), [
+    { kind: 'start', at: new Date(T0).toISOString() },
+    { kind: 'mode', at: new Date(T0).toISOString(), to: 'walk' },
+    { kind: 'mode', at: new Date(T0 + 60_000).toISOString(), to: 'ride' },
+  ]);
   assert.deepEqual(
-    payload.events.map((e) => e.kind),
-    ['start', 'switch', 'stop', 'save'],
+    payload.events.slice(3).map((e) => e.kind),
+    ['stop', 'save'],
   );
+  assert.equal(payload.format_version, 2);
+  assert.equal(payload.rules_version, 2);
   assert.equal(payload.hintos.length, 1);
   assert.ok(payload.hintos[0].seconds >= 100 && payload.hintos[0].seconds <= 130);
   assert.equal(payload.line.type, 'LineString');
@@ -150,17 +157,21 @@ test('a recording with no fixes packs with no points and no line', () => {
   assert.ok(Date.parse(result.payload.ended_at) > Date.parse(result.payload.started_at));
 });
 
-test('marks go up as mark events among the switches, in time order', () => {
+test('marks go up as mark events among the modes, in time order', () => {
   const fixes = rideFixes(20);
   const recording = {
     ...rideRecording(ID, fixes),
-    switches: [{ time: T0 + 10_000, to: 'return' }],
+    modes: [
+      { time: T0, to: 'walk' },
+      { time: T0 + 10_000, to: 'ride' },
+    ],
     marks: [{ time: T0 + 15_000 }, { time: T0 + 5_000 }],
   };
   const { payload } = packed(fixes, recording);
   assert.deepEqual(payload.events.slice(1, -2), [
+    { kind: 'mode', at: new Date(T0).toISOString(), to: 'walk' },
     { kind: 'mark', at: new Date(T0 + 5_000).toISOString() },
-    { kind: 'switch', at: new Date(T0 + 10_000).toISOString(), to: 'return' },
+    { kind: 'mode', at: new Date(T0 + 10_000).toISOString(), to: 'ride' },
     { kind: 'mark', at: new Date(T0 + 15_000).toISOString() },
   ]);
   assert.ok(contributionPayloadSchema.safeParse(payload).success);
@@ -168,23 +179,46 @@ test('marks go up as mark events among the switches, in time order', () => {
 
 test('too many marks give way to the start, stop and save, and the events stay within the limit', () => {
   const fixes = rideFixes(20);
-  const switches = Array.from({ length: 100 }, (_, i) => ({
-    time: T0 + 1000 + i * 100,
-    to: i % 2 === 0 ? 'return' : 'outbound',
+  const modes = Array.from({ length: 100 }, (_, i) => ({
+    time: T0 + i * 100,
+    to: i % 2 === 0 ? 'walk' : 'ride',
   }));
   const marks = Array.from({ length: 600 }, (_, i) => ({ time: T0 + 100_000 + i }));
-  const { payload } = packed(fixes, { ...rideRecording(ID, fixes), switches, marks });
+  const { payload } = packed(fixes, { ...rideRecording(ID, fixes), modes, marks });
   assert.equal(payload.events.length, UPLOAD_LIMITS.listEntries);
   assert.equal(payload.events[0].kind, 'start');
   assert.deepEqual(
     payload.events.slice(-2).map((e) => e.kind),
     ['stop', 'save'],
   );
-  assert.equal(payload.events.filter((e) => e.kind === 'switch').length, 100);
+  assert.equal(payload.events.filter((e) => e.kind === 'mode').length, 100);
   assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 500 - 3 - 100);
 });
 
 test('a recording made before marks packs with none', () => {
   const { payload } = packed();
   assert.equal(payload.events.filter((e) => e.kind === 'mark').length, 0);
+});
+
+test('a recording made before modes packs with no mode events, which reads as all ride', () => {
+  const fixes = rideFixes();
+  const { payload } = packed(fixes, { ...rideRecording(ID, fixes), modes: [] });
+  assert.equal(payload.events.filter((e) => e.kind === 'mode').length, 0);
+  assert.equal(payload.hintos.length, 1);
+});
+
+test('a stand while on Lakad is no hinto; the distance still counts the walk', () => {
+  const fixes = rideFixes();
+  const onSakay = packed(fixes).payload;
+  // On Lakad until after the two-minute stand: the stand was on foot.
+  const walked = packed(fixes, {
+    ...rideRecording(ID, fixes),
+    modes: [
+      { time: T0, to: 'walk' },
+      { time: T0 + 800_000, to: 'ride' },
+    ],
+  }).payload;
+  assert.equal(walked.hintos.length, 0);
+  assert.equal(walked.distance_m, onSakay.distance_m);
+  assert.equal(walked.moving_s, onSakay.moving_s);
 });

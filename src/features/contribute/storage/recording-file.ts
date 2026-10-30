@@ -1,4 +1,4 @@
-import type { Fix, RideSummary } from '@/features/routes/model/ride-recording';
+import type { Fix, Mode, RideSummary } from '@/features/routes/model/ride-recording';
 
 import { RECORDING_VERSION, type Recording } from './recording-schema';
 
@@ -13,8 +13,8 @@ export interface RecordingFile {
   endPointName: string;
   description: string;
   rideKind: string | null;
-  /** Each tap on the way button and the way (outbound is papunta, return is pabalik) the recording was on from then. */
-  switches: { time: string; to: 'outbound' | 'return' }[];
+  /** The mode it started on, then each tap on the mode button, and the mode (walk is Lakad, ride is Sakay) from then. */
+  modes: { time: string; to: Mode }[];
   /** Each tap on the mark button. */
   marks: { time: string }[];
   /** Fixes the phone reported but could not keep, so the file is missing that many. */
@@ -53,7 +53,7 @@ export function recordingFile(
     endPointName: recording.endPointName,
     description: recording.description,
     rideKind: recording.rideKind,
-    switches: (recording.switches ?? []).map((s) => ({ time: iso(s.time), to: s.to })),
+    modes: recording.modes.map((m) => ({ time: iso(m.time), to: m.to })),
     marks: (recording.marks ?? []).map((m) => ({ time: iso(m.time) })),
     failedFixWrites: recording.failedFixWrites ?? 0,
     summary: {

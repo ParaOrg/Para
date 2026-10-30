@@ -6,11 +6,11 @@ import { BackToMapButton } from '../common/back-to-map-button';
 import { ConfirmDelete } from '../common/confirm-delete';
 import { useStackRoom } from '../common/use-stack-room';
 import type { RecordingFigures } from '../recorder/recording-figures';
-import { OTHER_WAY, type Way } from '../recorder/recording-rules';
+import { OTHER_MODE, type Mode } from '../recorder/recording-rules';
 
 interface RecordingScreenProps {
   figures: RecordingFigures;
-  way: Way;
+  mode: Mode;
   /** Stopped for now: Resume replaces Stop. */
   isPaused: boolean;
   /** Whether the screen is being kept awake. */
@@ -19,29 +19,26 @@ interface RecordingScreenProps {
   shouldFocusStop: boolean;
   onStop: () => void;
   onResume: () => void;
-  onWaySwitch: () => void;
+  onModeSwitch: () => void;
   onSave: () => void;
   onCancel: () => void;
   /** Before Back leaves the page: the fixes still unwritten are written. */
   onLeave: () => Promise<void>;
 }
 
-/** The leg button's variant: named for the way a tap switches TO. */
-const NEXT_WAY = { outbound: 'papunta', return: 'pabalik' } satisfies Record<
-  Way,
-  'papunta' | 'pabalik'
->;
+/** The mode button's variant: named for the mode a tap switches TO. */
+const MODE_VARIANT = { walk: 'lakad', ride: 'sakay' } satisfies Record<Mode, 'lakad' | 'sakay'>;
 
-/** While recording, or stopped for a while: the figures over Stop (or Resume), and the row of Pabalik, Save and Cancel. */
+/** While recording, or stopped for a while: the figures over Stop (or Resume), and the row of the mode button, Save and Cancel. */
 export function RecordingScreen({
   figures,
-  way,
+  mode,
   isPaused,
   isAwake,
   shouldFocusStop,
   onStop,
   onResume,
-  onWaySwitch,
+  onModeSwitch,
   onSave,
   onCancel,
   onLeave,
@@ -88,7 +85,7 @@ export function RecordingScreen({
         <StatsStrip
           elapsedSeconds={figures.elapsedSeconds}
           distanceM={figures.distanceM}
-          way={way}
+          mode={mode}
           isPaused={isPaused}
         />
         {isPaused ? (
@@ -104,7 +101,7 @@ export function RecordingScreen({
           />
         ) : (
           <div ref={cancelRef} className="flex">
-            <TrackingButton variant={NEXT_WAY[OTHER_WAY[way]]} onClick={onWaySwitch} />
+            <TrackingButton variant={MODE_VARIANT[OTHER_MODE[mode]]} onClick={onModeSwitch} />
             <TrackingButton variant="save" onClick={onSave} />
             <TrackingButton variant="cancel" onClick={() => setIsAsking(true)} />
           </div>

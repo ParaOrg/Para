@@ -1,7 +1,7 @@
 import type { Fix } from '@/features/routes/model/ride-recording';
 
 import type { RecordingFigures } from './recording-figures';
-import type { Way } from './recording-rules';
+import type { Mode } from './recording-rules';
 import type { Recording, RideKind } from '../storage/recording-schema';
 
 /**
@@ -29,8 +29,8 @@ export interface RecordingState {
   kept: readonly Fix[];
   /** Time recorded (pauses left out) and distance so far; null on Ready. */
   figures: RecordingFigures | null;
-  /** The way the ride is on now: outbound is papunta, return is pabalik. */
-  way: Way;
+  /** The mode the recording is on now: walk is Lakad, ride is Sakay. */
+  mode: Mode;
   /** The recording just saved, until the contributor records again. */
   lastSaved: Recording | null;
   /** Every recording saved on this phone, newest first. */
@@ -39,7 +39,7 @@ export interface RecordingState {
   isAwake: boolean;
   /** Something the contributor should know went wrong, in words. */
   problem: string | null;
-  /** What a screen reader hears once: a switch of way, or the ride stopping itself. */
+  /** What a screen reader hears once: a switch of mode, a mark, or recording again. */
   announcement: string;
   start: () => void;
   /** Pauses the recording; Resume carries on. */
@@ -47,7 +47,7 @@ export interface RecordingState {
   /** Stops a recording found open after a reload where its last fix left it, as Stop does: paused, with Save and Resume. */
   stopAtLastFix: () => void;
   resume: () => void;
-  switchWay: () => void;
+  switchMode: () => void;
   /** Marks the place the ride is at: the time of the tap, nothing more. */
   markPlace: () => void;
   /** Stops a running recording, then opens the Save form. */

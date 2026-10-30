@@ -1,11 +1,11 @@
 import type { GapReason } from '@/features/routes/model/ride-recording';
 
-import { OTHER_WAY, currentWay, type Way } from './recording-rules';
+import { OTHER_MODE, currentMode, type Mode } from './recording-rules';
 import type { Phase, RecordingDetails } from './recording-state';
 import { CONSENT_VERSION } from '../consent/consent-version';
 import { RECORDING_VERSION, type FixRow, type Recording } from '../storage/recording-schema';
 
-/** A recording that starts now, with nothing in it yet. */
+/** A recording that starts now, on walk, with nothing in it yet. */
 export function newRecording(id: string, startedAt: number): Recording {
   return {
     version: RECORDING_VERSION,
@@ -15,7 +15,7 @@ export function newRecording(id: string, startedAt: number): Recording {
     stoppedAt: null,
     savedAt: null,
     gaps: [],
-    switches: [],
+    modes: [{ time: startedAt, to: 'walk' }],
     marks: [],
     startPointName: '',
     endPointName: '',
@@ -30,11 +30,9 @@ export function stoppedRecording(
   recording: Recording,
   at: number,
   failedFixWrites: number,
-  extra?: Pick<Recording, 'hasAutoStopped'>,
 ): Recording {
   return {
     ...recording,
-    ...extra,
     status: 'stopped',
     stoppedAt: at,
     ...(failedFixWrites > 0 && { failedFixWrites }),
@@ -63,17 +61,16 @@ export function resumedRecording(
   return { ...recording, status: 'recording', stoppedAt: null, gaps: [...recording.gaps, ...lost] };
 }
 
-/** A recording after a switch of way, and the way it is on now. */
-export interface SwitchedWay {
+/** A recording after a switch of mode, and the mode it is on now. */
+export interface SwitchedMode {
   recording: Recording;
-  to: Way;
+  to: Mode;
 }
 
-/** The recording switched to the other way at `time`, and the way it is on now. */
-export function switchedWay(recording: Recording, time: number): SwitchedWay {
-  const switches = recording.switches ?? [];
-  const to = OTHER_WAY[currentWay(switches)];
-  return { recording: { ...recording, switches: [...switches, { time, to }] }, to };
+/** The recording switched to the other mode at `time`, and the mode it is on now. */
+export function switchedMode(recording: Recording, time: number): SwitchedMode {
+  const to = OTHER_MODE[currentMode(recording.modes)];
+  return { recording: { ...recording, modes: [...recording.modes, { time, to }] }, to };
 }
 
 /** The recording as saved, with the details given and the fix writes still missing. */
