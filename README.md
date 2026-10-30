@@ -19,7 +19,7 @@ Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
   service lives, what it costs, what renews when, and what to do when
   something breaks.
 
-## Two pages, one published map
+## Three pages, one published map
 
 **`/` is the public map.** It never asks the database: it reads the published
 map, `public/data/index.v5.json` — every route (loops too) and hotspot, the train lines
@@ -44,6 +44,11 @@ list. It reads the live tables, draws lines snapped to the road with OSRM,
 traces hotspot boxes, and saves. The database's row-level security refuses
 every write from anyone else, so the publishable key in `.env.production`
 is public by design.
+
+**`/contribute/` is the contributor page.** There a commuter records a
+contribution on the phone, from Start to Save, and sends it to the studio,
+where only editors see it. It is a page of its own, so the public map carries
+none of it, and the contributor app is the same page inside an Android shell.
 
 Nothing from `src/app/studio/` or `src/features/studio/` reaches the public page: `npm run lint`
 checks the import boundaries (`eslint.config.js`) and `npm run build` the built page, and each
