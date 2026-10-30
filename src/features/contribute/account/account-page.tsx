@@ -27,6 +27,8 @@ interface AccountPageProps {
   onBack?: () => void;
   /** The fields, in order. */
   children: ReactNode;
+  /** A line between the fields and the buttons, 48 from each: the code step's Resend. */
+  afterFields?: ReactNode;
   /** One red line above the main button: what went wrong. */
   error: string | null;
   /** One line above the fields that is not a problem: what just happened. */
@@ -39,7 +41,8 @@ interface AccountPageProps {
 }
 
 /**
- * The onboarding pages' frame (Figma 4451:7904, 4461:646, 4461:4689): a full page over the map,
+ * The onboarding pages' frame (Figma 4451:7904, 4461:646, 4461:4689, 4461:4762, 4461:5382): a full
+ * page over the map,
  * the heading block, the fields, then the error line, the bot check and the buttons.
  */
 export function AccountPage({
@@ -49,6 +52,7 @@ export function AccountPage({
   placement = 'top',
   onBack,
   children,
+  afterFields,
   error,
   notice,
   captcha,
@@ -99,7 +103,7 @@ export function AccountPage({
             event.preventDefault();
             onSubmit();
           }}
-          className="flex flex-col gap-8 px-5"
+          className={'flex flex-col px-5 ' + (afterFields ? 'gap-12' : 'gap-8')}
         >
           {notice && (
             <p role="status" className="text-base-lower/6 text-content-tertiary">
@@ -107,6 +111,7 @@ export function AccountPage({
             </p>
           )}
           <div className="flex flex-col gap-4">{children}</div>
+          {afterFields}
           <div className="flex flex-col gap-4">
             {error && (
               <p role="alert" className="text-sm/5 text-content-error">

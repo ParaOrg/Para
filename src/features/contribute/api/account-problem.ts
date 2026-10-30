@@ -43,7 +43,7 @@ export const ACCOUNT_MESSAGES: Record<AccountProblem, string> = {
   'check-failed': 'The check that you are a person did not pass. Try again.',
   'profile-not-saved': "Your account is made, but your name and number didn't save. Try again.",
   'code-rejected': 'That code is wrong or has expired. Check it, or send a new code.',
-  'same-password': "That's already your password. Sign in with it, or send a new code.",
+  'same-password': "That's already your password. Choose a new one.",
   'rate-limited': 'Too many tries. Wait a few minutes, then try again.',
   unavailable: 'Accounts are not available on this page.',
   'not-accepting': "Para can't take this right now. Try again later.",

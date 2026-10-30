@@ -38,9 +38,14 @@ export interface ForgotPasswordFields {
   email: string;
 }
 
-export interface ResetPasswordFields {
+export interface CodeFields {
   code: string;
+}
+
+export interface NewPasswordFields {
   password: string;
+  /** The password typed again: checked on the phone, never sent. */
+  confirmation: string;
 }
 
 export interface ProfileFields {
@@ -118,11 +123,16 @@ export function checkForgotPassword(fields: ForgotPasswordFields): Checked<Forgo
   return collect({ email }, { email: problemOf(emailSchema, email) });
 }
 
-/** The emailed code, with the spaces a person types or pastes taken out, and the new password. */
-export function checkResetPassword(fields: ResetPasswordFields): Checked<ResetPasswordFields> {
+/** The emailed code, with any spaces a person types or pastes taken out. */
+export function checkCode(fields: CodeFields): Checked<CodeFields> {
   const code = fields.code.replace(/\s/g, '');
-  return collect(
-    { code, password: fields.password },
-    { code: problemOf(codeSchema, code), password: problemOf(newPasswordSchema, fields.password) },
-  );
+  return collect({ code }, { code: problemOf(codeSchema, code) });
+}
+
+/** The new password, and the same password typed again. */
+export function checkNewPassword(fields: NewPasswordFields): Checked<NewPasswordFields> {
+  return collect(fields, {
+    password: problemOf(newPasswordSchema, fields.password),
+    confirmation: fields.confirmation === fields.password ? undefined : "The passwords don't match",
+  });
 }
