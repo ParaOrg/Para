@@ -231,3 +231,38 @@ Applying this alone changes nothing a phone can see. The accounts code (tickets 
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and nobody has a name or number yet: run `20261024090000_contributor_accounts_revert.sql`. `verify/contributor-accounts.sh` checks the schema afterwards matches the schema before, and that it re-applies.
 - Profiles stored: the revert refuses. Decide with the owner what happens to the names and numbers first.
+
+# Applying am_i_editor to the live project
+
+The studio asks, right after a sign-in or a restored session, whether the account is on the editor
+list, and signs a contributor's account out of the studio with a notice. This adds one function,
+`public.am_i_editor()`: security invoker over 0005's `private.is_editor()`, about the caller alone,
+callable by `authenticated` only. No table, no policy, no row. Three files, each pasted whole into
+the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261030090000_am_i_editor_apply.sql` | One transaction: checks it is not in the ledger yet, that `private.is_editor()` exists and that `authenticated` can run it (usage on `private`, execute on the function: the new function runs as the caller); applies `migrations/20261030090000_am_i_editor.sql` (carried unchanged; `verify/am-i-editor.sh` checks the copy); writes the ledger row `am_i_editor`. A failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261030090000_am_i_editor_check.sql` | Read-only, 6 rows, all `ok` should be `t`. |
+| `20261030090000_am_i_editor_revert.sql` | One transaction: drops the function and its ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261030090000_am_i_editor_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261030090000_am_i_editor_check.sql`: 6 rows, all `ok = t`.
+3. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'am_i_editor';`) in
+   `migrations/README.md`.
+4. Sign in to the studio as yourself: you get in as before. A contributor's account is now told it
+   is not an editor and signed out of the studio (the contributor page keeps its own session).
+
+Until step 1 the studio cannot ask (the function is missing), and lets every account in as before,
+with a console warning; row security refuses a non-editor's writes either way.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and the studio turns away someone it should not: run
+  `20261030090000_am_i_editor_revert.sql`. The studio then lets every account in again, as before
+  (`verify/am-i-editor.sh` checks the schema afterwards matches the schema before, and that it
+  re-applies). Before reverting, check the account is in `private.editor`.
