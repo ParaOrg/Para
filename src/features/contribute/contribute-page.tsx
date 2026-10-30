@@ -9,6 +9,8 @@ import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
+import { isNativeApp } from './native-bridge/native-app';
+import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { MarkButton } from './screens/mark-button';
@@ -33,6 +35,17 @@ const ProfileView = lazy(() =>
 const AccountGate = lazy(() =>
   import('./account/account-gate').then((module) => ({ default: module.AccountGate })),
 );
+
+// The permissions screen exists in the Android app's build only: on the web this is null and the
+// chunk is never built.
+const PermissionsOnboarding =
+  import.meta.env.MODE === 'apk'
+    ? lazy(() =>
+        import('./native/permissions-onboarding').then((module) => ({
+          default: module.PermissionsOnboarding,
+        })),
+      )
+    : null;
 
 interface ContributePageProps {
   /** The locator on the map: the shell's, since this feature may not import the locator's. */
@@ -59,9 +72,18 @@ export function ContributePage({ locator }: ContributePageProps) {
   const history = useHistoryView();
   const profile = useProfileView();
   const { phase, figures } = recording;
-  const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen;
+  // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
+  const [isPermissionsPending, setIsPermissionsPending] = useState(
+    () => PermissionsOnboarding !== null && isNativeApp() && !hasSeenPermissionsScreen(),
+  );
+  const isPermissionsShown = isPermissionsPending && accountGate === 'ready' && phase === 'ready';
+  const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen && !isPermissionsShown;
   const isProfileShown =
-    phase === 'ready' && accountGate === 'ready' && canUpload() && profile.isOpen;
+    phase === 'ready' &&
+    accountGate === 'ready' &&
+    canUpload() &&
+    profile.isOpen &&
+    !isPermissionsShown;
 
   // A stale #history (a reload mid-recording, or before consent was given) must not open History
   // later, when Record again or Okay is pressed. Consent is the account's, so it is unknown until
@@ -92,8 +114,9 @@ export function ContributePage({ locator }: ContributePageProps) {
 
   return (
     <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
-      {/* inert while History or Profile covers it: no map control can be tabbed to behind the screen. */}
-      <div inert={isHistoryShown || isProfileShown} className="contents">
+      {/* inert while History, Profile or the permissions screen covers it: no map control can be
+          tabbed to behind the screen. */}
+      <div inert={isHistoryShown || isProfileShown || isPermissionsShown} className="contents">
         <ContributeMap
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
@@ -129,7 +152,12 @@ export function ContributePage({ locator }: ContributePageProps) {
           <p role="status" className="sr-only">
             {recording.announcement}
           </p>
-          {phase === 'ready' && !isHistoryShown && !isProfileShown && (
+          {isPermissionsShown && PermissionsOnboarding && (
+            <Suspense fallback={<div className="absolute inset-0 z-40 bg-surface" />}>
+              <PermissionsOnboarding onDone={() => setIsPermissionsPending(false)} />
+            </Suspense>
+          )}
+          {phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown && (
             <ReadyScreen
               hasConsent={hasConsent}
               onConsent={giveConsent}
