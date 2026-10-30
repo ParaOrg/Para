@@ -56,15 +56,43 @@ export const STORY_CONTRIBUTIONS: Contribution[] = [
 
 export const STORY_DETAIL: ContributionDetail = {
   trail: [
-    { time: T0, at: [121.06, 14.73] },
-    { time: T0 + 1_800_000, at: [121.05, 14.62] },
+    { time: T0, at: [121.06, 14.73], accuracyM: 6 },
+    { time: T0 + 1_800_000, at: [121.05, 14.62], accuracyM: 6 },
   ],
   hintos: [{ seq: 0, startedAt: T0 + 600_000, seconds: 240, at: [121.07, 14.68] }],
   marks: [],
+  parts: [{ mode: 'ride', from: T0, to: T0 + 1_800_000 }],
 };
 
 /** The same ride with two Mark presses, 8:14 and 8:31 in Manila. */
 export const STORY_DETAIL_MARKED: ContributionDetail = {
   ...STORY_DETAIL,
   marks: [Date.UTC(2026, 9, 19, 0, 14), Date.UTC(2026, 9, 19, 0, 31)],
+};
+
+/** A walk to the jeep, a ride, a walk at the end: the phone said Lakad, Sakay, Lakad. */
+export const STORY_DETAIL_WALKED: ContributionDetail = {
+  trail: [
+    { time: T0, at: [121.058, 14.735], accuracyM: 6 },
+    { time: T0 + 300_000, at: [121.06, 14.73], accuracyM: 6 },
+    { time: T0 + 900_000, at: [121.07, 14.68], accuracyM: 6 },
+    { time: T0 + 1_500_000, at: [121.05, 14.62], accuracyM: 6 },
+    { time: T0 + 1_800_000, at: [121.048, 14.618], accuracyM: 6 },
+  ],
+  hintos: [
+    { seq: 0, startedAt: T0 + 120_000, seconds: 90, at: [121.059, 14.733] },
+    { seq: 1, startedAt: T0 + 600_000, seconds: 240, at: [121.07, 14.68] },
+  ],
+  marks: [],
+  parts: [
+    { mode: 'walk', from: T0, to: T0 + 300_000 },
+    { mode: 'ride', from: T0 + 300_000, to: T0 + 1_500_000 },
+    { mode: 'walk', from: T0 + 1_500_000, to: T0 + 1_800_000 },
+  ],
+};
+
+/** The phone said Lakad for the whole recording. */
+export const STORY_DETAIL_ALL_WALK: ContributionDetail = {
+  ...STORY_DETAIL_WALKED,
+  parts: [{ mode: 'walk', from: T0, to: T0 + 1_800_000 }],
 };

@@ -13,7 +13,7 @@ interface OpenedExtrasProps {
 export function OpenedExtras({ contribution: c, detail, onStart }: OpenedExtrasProps) {
   return (
     <>
-      {detail && <HintoList hintos={detail.hintos} onStart={onStart} />}
+      {detail && <HintoList hintos={detail.hintos} parts={detail.parts} onStart={onStart} />}
       {c.contributorId ? (
         <PhoneBlock contributorId={c.contributorId} phoneCode={c.phoneCode ?? 'unknown'} />
       ) : (

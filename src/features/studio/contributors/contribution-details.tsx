@@ -10,6 +10,7 @@ import {
   minutes,
   vehicleName,
 } from './contribution-format';
+import { partLength, splitTrail, type TrailPart } from './trail-parts';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
 interface ContributionDetailsProps {
@@ -91,6 +92,7 @@ function TrailSummary({ detail, isLoading, error }: TrailSummaryProps) {
     <p aria-live="polite">
       On the map: the whole trail, {detail.trail.length} points, and {detail.hintos.length}{' '}
       {detail.hintos.length === 1 ? 'hinto' : 'hintos'} ({minutes(standing)} standing).
+      <PartsSummary pieces={splitTrail(detail.trail, detail.parts)} />
       {detail.marks.length > 0 && (
         <>
           {' '}
@@ -99,5 +101,26 @@ function TrailSummary({ detail, isLoading, error }: TrailSummaryProps) {
         </>
       )}
     </p>
+  );
+}
+
+const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+
+interface PartsSummaryProps {
+  pieces: readonly TrailPart[];
+}
+
+/** The walk and ride parts as text: the map's dashed walking, for anyone not looking at it. */
+function PartsSummary({ pieces }: PartsSummaryProps) {
+  const walks = pieces.filter((piece) => piece.mode === 'walk');
+  if (walks.length === 0) return null;
+  const rides = pieces.filter((piece) => piece.mode === 'ride');
+  const metres = (parts: readonly TrailPart[]) => parts.reduce((sum, p) => sum + partLength(p), 0);
+  return (
+    <>
+      {' '}
+      In {count(rides.length, 'ride', 'rides')} and {count(walks.length, 'walk', 'walks')}:{' '}
+      {kilometres(metres(rides))} riding, {kilometres(metres(walks))} walking, the walking dashed.
+    </>
   );
 }
