@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { AlertCircleIcon } from './field-icons';
+import { FieldError } from './field-error';
 
-type FieldState = 'default' | 'error' | 'disabled';
+export type FieldState = 'default' | 'error' | 'disabled';
 
 interface FieldFrameProps {
   /** The control's id: the label points at it. */
@@ -25,9 +25,9 @@ interface FieldFrameProps {
 /**
  * The box each state draws (Figma's InputField, 4295:20567). Active is not a prop: it is the box
  * holding focus, a Brand/surface border; at rest the border is there but clear, so focusing moves
- * nothing.
+ * nothing. PhoneField draws its two boxes with it.
  */
-const BOX = {
+export const FIELD_BOX = {
   default:
     'border-transparent bg-surface-secondary text-content-primary focus-within:border-brand-surface',
   // Focused, the error box takes Active's border: Figma draws no focused error state yet.
@@ -68,20 +68,13 @@ export function FieldFrame({
           'relative flex w-full rounded-xl border ' +
           HEIGHT[isMultiline ? 'multiline' : 'single'] +
           ' ' +
-          BOX[state]
+          FIELD_BOX[state]
         }
       >
         {children}
         {trailing}
       </div>
-      {error && !isDisabled && (
-        <p id={errorId} className="flex items-center gap-1.5 text-sm/5 text-content-error">
-          <span aria-hidden className="size-5 shrink-0 *:size-full">
-            <AlertCircleIcon />
-          </span>
-          {error}
-        </p>
-      )}
+      {error && !isDisabled && <FieldError id={errorId} message={error} />}
     </div>
   );
 }
