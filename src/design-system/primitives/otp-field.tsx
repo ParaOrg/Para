@@ -1,0 +1,143 @@
+import { useId, useState, type ComponentPropsWithoutRef, type Ref } from 'react';
+
+import { FieldError, describedBy } from './field-frame';
+
+const CODE_LENGTH = 6;
+/** The dash sits after the third box. */
+const FIRST_GROUP = [0, 1, 2];
+const SECOND_GROUP = [3, 4, 5];
+
+type OtpFieldProps = Omit<
+  ComponentPropsWithoutRef<'input'>,
+  | 'className'
+  | 'style'
+  | 'type'
+  | 'children'
+  | 'dangerouslySetInnerHTML'
+  | 'value'
+  | 'onChange'
+  | 'maxLength'
+  | 'aria-invalid'
+> & {
+  /** The field's accessible name: Figma draws no label, the screen's text says what it is. */
+  label: string;
+  /** The digits typed so far, at most six. */
+  value: string;
+  /** Called with the digits only: anything else typed or pasted is dropped. */
+  onChange: (code: string) => void;
+  /** The message under the boxes, the boxes in InputField's error colours. */
+  error?: string;
+  ref?: Ref<HTMLInputElement>;
+};
+
+type BoxState = 'rest' | 'active' | 'error' | 'active-error' | 'disabled';
+
+/**
+ * OTPFieldItem's looks (Figma 4461:5306): Rest and Blank share the grey box, Active is the box
+ * the next digit goes in. Error and disabled are InputField's (4295:20567): Figma draws neither
+ * for the code. Active's border is 2, as Figma draws it; the border is always there, clear at
+ * rest, so turning Active moves nothing.
+ */
+const BOX = {
+  rest: 'border-transparent bg-surface-secondary text-content-primary',
+  active: 'border-brand-surface bg-surface-secondary text-content-primary',
+  error: 'border-error-surface bg-surface-error text-content-primary',
+  // As InputField does: focused, the error box takes Active's border and keeps its fill.
+  'active-error': 'border-brand-surface bg-surface-error text-content-primary',
+  disabled: 'border-transparent bg-surface-tertiary text-content-disabled',
+} satisfies Record<BoxState, string>;
+
+/**
+ * Digits only, at most six: what a paste of "123 456" or "Code: 123456" leaves. The input has no
+ * maxLength, which would cut a paste short before the digits are picked out of it.
+ */
+function codeDigits(text: string): string {
+  return text.replace(/\D/g, '').slice(0, CODE_LENGTH);
+}
+
+/**
+ * PalimosPoDesignSystem's OTPFIeld (Figma 4461:5363): six boxes, a dash after the third. One
+ * real input lies over the boxes, so a paste fills them all, the phone offers the texted code
+ * (autocomplete one-time-code) and a screen reader reads one field, not six.
+ */
+export function OtpField({
+  label,
+  value,
+  onChange,
+  error,
+  disabled = false,
+  id,
+  'aria-describedby': ownDescription,
+  onFocus,
+  onBlur,
+  ref,
+  ...input
+}: OtpFieldProps) {
+  const ownId = useId();
+  const fieldId = id ?? ownId;
+  const errorId = `${fieldId}-error`;
+  const isErrorShown = !!error && !disabled;
+  const [isFocused, setIsFocused] = useState(false);
+  const digits = codeDigits(value);
+  const activeIndex = Math.min(digits.length, CODE_LENGTH - 1);
+
+  const boxState = (index: number): BoxState => {
+    if (disabled) return 'disabled';
+    const isActive = isFocused && index === activeIndex;
+    if (isErrorShown) return isActive ? 'active-error' : 'error';
+    return isActive ? 'active' : 'rest';
+  };
+
+  const renderBox = (index: number) => (
+    <span
+      key={index}
+      className={
+        'flex h-11 min-w-0 flex-1 items-center justify-center rounded-xl border-2 text-lg/7 font-semibold ' +
+        BOX[boxState(index)]
+      }
+    >
+      {digits[index]}
+    </span>
+  );
+
+  return (
+    <div className="flex w-full flex-col gap-1.5 font-sn-pro">
+      <div className="relative flex w-full items-center gap-3">
+        <div aria-hidden className="flex min-w-0 flex-1 gap-2">
+          {FIRST_GROUP.map(renderBox)}
+        </div>
+        <span aria-hidden className="text-base/6 font-bold text-content-primary">
+          -
+        </span>
+        <div aria-hidden className="flex min-w-0 flex-1 gap-2">
+          {SECOND_GROUP.map(renderBox)}
+        </div>
+        <input
+          {...input}
+          ref={ref}
+          id={fieldId}
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]*"
+          aria-label={label}
+          value={digits}
+          disabled={disabled}
+          aria-invalid={isErrorShown || undefined}
+          aria-describedby={describedBy(ownDescription, isErrorShown ? errorId : undefined)}
+          onChange={(event) => onChange(codeDigits(event.target.value))}
+          onFocus={(event) => {
+            setIsFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setIsFocused(false);
+            onBlur?.(event);
+          }}
+          className="absolute inset-0 size-full cursor-text bg-transparent text-transparent caret-transparent opacity-0 outline-none disabled:cursor-not-allowed"
+        />
+      </div>
+      {isErrorShown && <FieldError id={errorId} message={error} />}
+    </div>
+  );
+}
