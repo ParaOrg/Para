@@ -26,7 +26,6 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
 
 const AUTH_KEY = 'para.contributor-auth';
-const RESENT = 'We sent a new code';
 const EMAIL = 'juan@example.com';
 const MASKED = 'Enter the verification code sent to j**n@example.com';
 const OLD_PASSWORD = 'hunter2hunter2';
@@ -219,10 +218,12 @@ const storedSession = (page) =>
 
   await sendEnabled(page, 'Resend');
   await button(page, 'Resend').click();
-  await page.getByText(RESENT).waitFor();
+  // The stand-in has the second send, then the button reads "Resend" again.
+  for (let wait = 0; fake.recoveries < 2 && wait < 50; wait += 1) await page.waitForTimeout(100);
+  await button(page, 'Resend').waitFor();
   const secondCode = fake.codes.get(EMAIL);
   check(
-    '  Resend makes a new code, with a bot check of its own, says so, and clears the line',
+    '  Resend makes a new code, with a bot check of its own, and clears the line',
     fake.recoveries === 2 &&
       secondCode !== firstCode &&
       (await page.getByRole('alert').count()) === 0 &&

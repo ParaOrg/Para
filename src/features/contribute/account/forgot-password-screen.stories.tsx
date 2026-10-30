@@ -40,7 +40,7 @@ export const FieldError: Story = {
 };
 
 /** Back from the code: the email typed before is still there. */
-export const NewCode: Story = { args: { initialEmail: 'juan@example.com' } };
+export const BackFromCode: Story = { args: { initialEmail: 'juan@example.com' } };
 
 /** While the code is being sent: Verify waits. */
 export const Sending: Story = { args: { initialEmail: 'juan@example.com', isBusy: true } };
@@ -64,4 +64,15 @@ export const TooManyTries: Story = {
 /** Waiting on the bot check: its box above Verify, which stays off until the check passes. */
 export const WaitingForCheck: Story = {
   args: { captcha: { ...NO_CAPTCHA, siteKey: '1x00000000000000000000AA', isReady: false } },
+};
+
+/** A short phone: the page scrolls inside the screen instead of running off it. */
+export const ShortPhone: Story = {
+  decorators: [
+    (Story) => (
+      <div className="relative h-[560px] w-[360px] overflow-hidden bg-surface-secondary">
+        <Story />
+      </div>
+    ),
+  ],
 };

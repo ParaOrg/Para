@@ -67,9 +67,6 @@ export const Resend: Story = {
   },
 };
 
-/** After a Resend: one line says so. */
-export const Resent: Story = { args: { notice: 'We sent a new code' } };
-
 /** A refused code: one red line above Verify. */
 export const CodeRejected: Story = {
   args: { error: 'That code is wrong or has expired. Check it, or send a new code.' },

@@ -11,8 +11,6 @@ import type { Captcha } from './use-captcha';
 interface VerifyCodeScreenProps {
   /** Where the code went, shown masked. */
   email: string;
-  /** What just happened, said the same whether or not the email has an account. */
-  notice?: string;
   isBusy: boolean;
   isResending: boolean;
   /** One line about the last try, or null. */
@@ -28,7 +26,6 @@ interface VerifyCodeScreenProps {
 /** A password reset's second step (Figma 4461:4762): the 6-digit code from the email. */
 export function VerifyCodeScreen({
   email,
-  notice,
   isBusy,
   isResending,
   error,
@@ -51,7 +48,6 @@ export function VerifyCodeScreen({
       title="Enter the code"
       subtitle={`Enter the verification code sent to ${maskEmail(email)}`}
       onBack={onBack}
-      notice={notice}
       error={error}
       captcha={captcha}
       onSubmit={handleSubmit}
