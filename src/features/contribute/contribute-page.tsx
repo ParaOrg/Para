@@ -157,6 +157,8 @@ export function ContributePage({ locator }: ContributePageProps) {
               <PermissionsOnboarding onDone={() => setIsPermissionsPending(false)} />
             </Suspense>
           )}
+          {/* TODO: show TrackRoutesCard (tutorial/track-routes-card.tsx) over the map here, on Ready
+              after the permissions screen, once the tutorial screens it opens are designed. */}
           {phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown && (
             <ReadyScreen
               hasConsent={hasConsent}

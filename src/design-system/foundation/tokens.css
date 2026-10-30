@@ -491,6 +491,9 @@
    * Figma's own shadow-sm, in place of Tailwind's, which nothing wore. */
   --shadow-sm: 0 3px 12px 0 rgb(43 43 43 / 0.12);
 
+  /* A card raised high over the map: the "Track your routes" card (shadow-large, 4461:2601). */
+  --shadow-large: 0 -1px 12px 0 rgb(0 0 0 / 0.04), 0 8px 16px 2px rgb(43 43 43 / 0.09);
+
   /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);
 
