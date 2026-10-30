@@ -1,13 +1,14 @@
 import { useId, useState, type ComponentPropsWithoutRef, type Ref } from 'react';
 
-import { FieldError, describedBy } from './field-frame';
+import { FieldError } from './field-error';
+import { describedBy } from './field-frame';
 
 const CODE_LENGTH = 6;
 /** The dash sits after the third box. */
 const FIRST_GROUP = [0, 1, 2];
 const SECOND_GROUP = [3, 4, 5];
 
-type OtpFieldProps = Omit<
+interface OtpFieldProps extends Omit<
   ComponentPropsWithoutRef<'input'>,
   | 'className'
   | 'style'
@@ -18,7 +19,7 @@ type OtpFieldProps = Omit<
   | 'onChange'
   | 'maxLength'
   | 'aria-invalid'
-> & {
+> {
   /** The field's accessible name: Figma draws no label, the screen's text says what it is. */
   label: string;
   /** The digits typed so far, at most six. */
@@ -28,7 +29,7 @@ type OtpFieldProps = Omit<
   /** The message under the boxes, the boxes in InputField's error colours. */
   error?: string;
   ref?: Ref<HTMLInputElement>;
-};
+}
 
 type BoxState = 'rest' | 'active' | 'error' | 'active-error' | 'disabled';
 
@@ -70,6 +71,7 @@ export function OtpField({
   'aria-describedby': ownDescription,
   onFocus,
   onBlur,
+  onPaste,
   ref,
   ...input
 }: OtpFieldProps) {
@@ -126,6 +128,25 @@ export function OtpField({
           aria-invalid={isErrorShown || undefined}
           aria-describedby={describedBy(ownDescription, isErrorShown ? errorId : undefined)}
           onChange={(event) => onChange(codeDigits(event.target.value))}
+          // A paste replaces the whole code, wherever the caret is: a new code pasted over an old
+          // one, or over a few typed digits, would otherwise be cut back to the first six.
+          onPaste={(event) => {
+            const pasted = codeDigits(event.clipboardData.getData('text'));
+            if (pasted) {
+              event.preventDefault();
+              onChange(pasted);
+            }
+            onPaste?.(event);
+          }}
+          // The caret stays at the end, so what is typed goes in the Active box, wherever the
+          // boxes were tapped.
+          onSelect={(event) => {
+            const field = event.currentTarget;
+            const end = field.value.length;
+            if (field.selectionStart !== end || field.selectionEnd !== end) {
+              field.setSelectionRange(end, end);
+            }
+          }}
           onFocus={(event) => {
             setIsFocused(true);
             onFocus?.(event);
