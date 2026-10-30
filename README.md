@@ -73,6 +73,9 @@ the headless checks — drawing works, saving still needs an account.
     npm run check:data              # the committed map against the app's own rules
     npm run storybook               # the cards, the chooser, the panels, on their own
 
+If the architecture page's check fails, run `npm run docs:architecture` and
+commit the updated `docs/architecture.md`.
+
 **CI runs on GitHub** (`.github/workflows/ci.yml`): the build, the unit
 checks, and the headless suites against the dev server, each suite its own
 job. A pull request runs only the suites its files can reach (docs alone run
