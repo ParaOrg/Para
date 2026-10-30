@@ -8,7 +8,8 @@ import assert from 'node:assert/strict';
 import {
   checkForgotPassword,
   checkProfile,
-  checkResetPassword,
+  checkCode,
+  checkNewPassword,
   checkSignIn,
   checkSignUp,
 } from '../../src/features/contribute/account/account-fields.ts';
@@ -209,18 +210,27 @@ test('the forgot-password email is trimmed and must be an email', () => {
   });
 });
 
-test('the reset code is 6 digits, spaces ignored, and the new password at least 8 characters', () => {
-  assert.deepEqual(checkResetPassword({ code: '123 456', password: 'hunter2hunter2' }), {
-    isValid: true,
-    value: { code: '123456', password: 'hunter2hunter2' },
-  });
+test('the reset code is 6 digits, with spaces ignored', () => {
+  assert.deepEqual(checkCode({ code: '123 456' }), { isValid: true, value: { code: '123456' } });
   for (const code of ['', '12345', '1234567', '12345a']) {
-    const checked = checkResetPassword({ code, password: 'hunter2hunter2' });
+    const checked = checkCode({ code });
     assert.equal(checked.isValid, false, code);
     assert.equal(checked.errors.code, 'Enter the 6-digit code');
   }
-  const short = checkResetPassword({ code: '123456', password: 'short' });
-  assert.deepEqual(short.errors, { password: 'Use at least 8 characters' });
+});
+
+test('the new password is at least 8 characters, and typed the same twice', () => {
+  const good = { password: 'hunter2hunter2', confirmation: 'hunter2hunter2' };
+  assert.deepEqual(checkNewPassword(good), { isValid: true, value: good });
+  assert.deepEqual(checkNewPassword({ password: 'short', confirmation: 'short' }).errors, {
+    password: 'Use at least 8 characters',
+  });
+  assert.deepEqual(checkNewPassword({ ...good, confirmation: 'hunter2hunter3' }).errors, {
+    confirmation: "The passwords don't match",
+  });
+  assert.deepEqual(checkNewPassword({ ...good, confirmation: '' }).errors, {
+    confirmation: "The passwords don't match",
+  });
 });
 
 test('a password is held to 72 characters, which is as far as the project reads', () => {
@@ -228,7 +238,8 @@ test('a password is held to 72 characters, which is as far as the project reads'
   assert.equal(checkSignUp({ ...fields, password: 'a'.repeat(72) }).isValid, true);
   const long = checkSignUp({ ...fields, password: 'a'.repeat(73) });
   assert.deepEqual(long.errors, { password: 'Use 72 characters or fewer' });
-  assert.deepEqual(checkResetPassword({ code: '123456', password: 'a'.repeat(73) }).errors, {
+  const longReset = 'a'.repeat(73);
+  assert.deepEqual(checkNewPassword({ password: longReset, confirmation: longReset }).errors, {
     password: 'Use 72 characters or fewer',
   });
 });

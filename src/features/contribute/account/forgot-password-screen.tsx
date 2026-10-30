@@ -8,17 +8,18 @@ import { AccountPage } from './account-page';
 import type { Captcha } from './use-captcha';
 
 interface ForgotPasswordScreenProps {
-  /** The email to start with: what was typed before, when a new code is asked for. */
+  /** The email to start with: what was typed before, on coming back from the code. */
   initialEmail: string;
   isBusy: boolean;
   /** One line about the last try, or null. */
   error: string | null;
   captcha: Captcha;
   onSubmit: (fields: ForgotPasswordFields) => void;
+  /** The back arrow: to Sign in. */
   onBack: () => void;
 }
 
-/** The first step of a password reset: the email the code goes to. */
+/** A password reset's first step (Figma 4461:4689): the email the code goes to. */
 export function ForgotPasswordScreen({
   initialEmail,
   isBusy,
@@ -45,15 +46,12 @@ export function ForgotPasswordScreen({
       captcha={captcha}
       onSubmit={handleSubmit}
       actions={
-        <>
-          <Button
-            type="submit"
-            variant="primary"
-            label={isBusy ? 'Sending…' : 'Send code'}
-            disabled={isBusy || !captcha.isReady}
-          />
-          <Button variant="secondary" label="Sign in" disabled={isBusy} onClick={onBack} />
-        </>
+        <Button
+          type="submit"
+          variant="primary"
+          label={isBusy ? 'Sending…' : 'Verify'}
+          disabled={isBusy || !captcha.isReady}
+        />
       }
     >
       <TextField

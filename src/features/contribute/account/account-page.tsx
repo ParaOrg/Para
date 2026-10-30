@@ -32,11 +32,14 @@ interface AccountPageProps {
   isBackDisabled?: boolean;
   /** The fields, in order. */
   children: ReactNode;
+  /**
+   * A line between the fields and the buttons, 48 from each: the code step's Resend. The bot
+   * check then sits under it, with what sends it, and not above the main button.
+   */
+  afterFields?: ReactNode;
   /** One red line above the main button: what went wrong. */
   error: string | null;
-  /** One line above the fields that is not a problem: what just happened. */
-  notice?: string;
-  /** The bot check, for the pages that sign in or make a user. */
+  /** The bot check, for the pages that sign in, make a user or send a code. */
   captcha?: Captcha;
   /** The buttons: the main one first. */
   actions: ReactNode;
@@ -44,8 +47,9 @@ interface AccountPageProps {
 }
 
 /**
- * The onboarding pages' frame (Figma 4451:7904, 4461:646, 4461:4689): a full page over the map,
- * the heading block, the fields, then the error line, the bot check and the buttons.
+ * The onboarding pages' frame (Figma 4451:7904, 4461:646, 4461:4689, 4461:4762, 4461:5382): a
+ * full page over the map, the heading block, the fields, then the error line, the bot check and
+ * the buttons.
  */
 export function AccountPage({
   title,
@@ -55,14 +59,17 @@ export function AccountPage({
   onBack,
   isBackDisabled = false,
   children,
+  afterFields,
   error,
-  notice,
   captcha,
   actions,
   onSubmit,
 }: AccountPageProps) {
   const headingRef = useFocusHeading();
   const onToken = captcha?.onToken;
+  const captchaBox = captcha?.siteKey && (
+    <Turnstile key={captcha.round} siteKey={captcha.siteKey} onToken={captcha.onToken} />
+  );
 
   // The widget goes with the page; its token must not outlive it.
   useEffect(() => () => onToken?.(null), [onToken]);
@@ -111,23 +118,22 @@ export function AccountPage({
             event.preventDefault();
             onSubmit();
           }}
-          className="flex flex-col gap-8 px-5"
+          className={'flex flex-col px-5 ' + (afterFields ? 'gap-12' : 'gap-8')}
         >
-          {notice && (
-            <p role="status" className="text-base-lower/6 text-content-tertiary">
-              {notice}
-            </p>
-          )}
           <div className="flex flex-col gap-4">{children}</div>
+          {afterFields && (
+            <div className="flex flex-col items-center gap-4">
+              {afterFields}
+              {captchaBox}
+            </div>
+          )}
           <div className="flex flex-col gap-4">
             {error && (
               <p role="alert" className="text-sm/5 text-content-error">
                 {error}
               </p>
             )}
-            {captcha?.siteKey && (
-              <Turnstile key={captcha.round} siteKey={captcha.siteKey} onToken={captcha.onToken} />
-            )}
+            {!afterFields && captchaBox}
             {actions}
           </div>
         </form>

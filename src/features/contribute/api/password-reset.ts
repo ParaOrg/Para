@@ -9,10 +9,13 @@ export interface PasswordCodeInput {
   captchaToken?: string;
 }
 
-export interface ResetPasswordInput {
+export interface VerifyPasswordCodeInput {
   email: string;
   /** The 6 digits from the email. */
   code: string;
+}
+
+export interface NewPasswordInput {
   password: string;
 }
 
@@ -35,42 +38,30 @@ export async function requestPasswordCode(input: PasswordCodeInput): Promise<voi
 }
 
 /**
- * Signs in with the emailed code, then sets the new password: the same end state as `signIn`,
- * the phone's own earlier uploads claimed included. If only setting the password fails, the code
- * is spent, so the phone is signed out again and the person asks for a new one.
+ * Signs in with the emailed code: the same end state as `signIn`, the phone's own earlier uploads
+ * claimed included. The password is set after, by `setNewPassword`.
  */
-export async function resetPassword(input: ResetPasswordInput): Promise<Account> {
+export async function verifyPasswordCode(input: VerifyPasswordCodeInput): Promise<Account> {
   try {
     const client = await requireClient();
-    const after: { passwordError: Parameters<typeof authError>[0] | null } = {
-      passwordError: null,
-    };
-    const { data, error } = await aroundEarlierIdentity(client, async () => {
-      const verified = await client.auth.verifyOtp({
-        email: input.email,
-        token: input.code,
-        type: 'recovery',
-      });
-      if (verified.error) return verified;
-      // Kept for after the claim: failing here would drop it, and the earlier uploads with it.
-      try {
-        after.passwordError = (await client.auth.updateUser({ password: input.password })).error;
-      } catch (thrown) {
-        after.passwordError = {
-          name: thrown instanceof Error ? thrown.name : 'Error',
-          message: String(thrown),
-        };
-      }
-      return verified;
-    });
+    const { data, error } = await aroundEarlierIdentity(client, () =>
+      client.auth.verifyOtp({ email: input.email, token: input.code, type: 'recovery' }),
+    );
     if (error) throw authError(error);
-    if (after.passwordError) {
-      await client.auth.signOut({ scope: 'local' });
-      throw authError(after.passwordError);
-    }
     const account = accountOf(data.user, await hasProfileOf(client));
     if (!account) throw new AccountError('not-accepting', 'The account has no email.');
     return account;
+  } catch (error) {
+    throw accountErrorOf(error);
+  }
+}
+
+/** Sets the signed-in account's password: the last step of a reset, after the code signed in. */
+export async function setNewPassword(input: NewPasswordInput): Promise<void> {
+  try {
+    const client = await requireClient();
+    const { error } = await client.auth.updateUser({ password: input.password });
+    if (error) throw authError(error);
   } catch (error) {
     throw accountErrorOf(error);
   }
