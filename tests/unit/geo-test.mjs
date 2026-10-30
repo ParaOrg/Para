@@ -10,8 +10,12 @@ import {
   bboxOf,
   haversine,
   joinSegments,
+  lineLength,
+  metresAlong,
   nearestOnSegment,
+  overviewOf,
   pointToSegmentM,
+  simplifyLine,
 } from '../../src/shared/utils/geo.ts';
 
 test('a degree of latitude is what haversine measures it', () => {
@@ -40,6 +44,49 @@ test('metres to a segment agree with haversine to its nearest point, at street s
     const round = haversine(p, nearestOnSegment(p, a, b).point);
     assert.ok(Math.abs(flat - round) < 0.001 * round + 0.01, `${flat} vs ${round}`);
   }
+});
+
+/** East along a street, then north at a corner: a line with one bend. */
+const CORNER = [
+  [121.04, 14.7],
+  [121.041, 14.7],
+  [121.042, 14.7],
+  [121.042, 14.701],
+];
+
+test('metres along a line: 0 under two points, about 0 at its start, its length at its end', () => {
+  assert.equal(metresAlong([], [121.04, 14.7]), 0);
+  assert.equal(metresAlong([CORNER[0]], [121.041, 14.7]), 0);
+  assert.ok(metresAlong(CORNER, CORNER[0]) < 0.01);
+  assert.ok(Math.abs(metresAlong(CORNER, CORNER[3]) - lineLength(CORNER)) < 0.01);
+});
+
+test('a straight line is thinned to its first and last points', () => {
+  const straight = [0, 1, 2, 3, 4].map((i) => [121.04 + i * 0.001, 14.7]);
+  assert.deepEqual(simplifyLine(straight, 1), [straight[0], straight[4]]);
+});
+
+test('a corner stays, and so do the first and last points, however loose the thinning', () => {
+  assert.deepEqual(simplifyLine(CORNER, 1), [CORNER[0], CORNER[2], CORNER[3]]);
+  assert.deepEqual(simplifyLine(CORNER, 1_000_000), [CORNER[0], CORNER[3]]);
+});
+
+test('a line of two points comes back as a copy, not the same array', () => {
+  const two = [CORNER[0], CORNER[1]];
+  const thinned = simplifyLine(two, 1);
+  assert.deepEqual(thinned, two);
+  assert.notEqual(thinned, two);
+});
+
+test('an overview rounds its points to five decimals', () => {
+  const line = [
+    [121.040004, 14.700006],
+    [121.041236, 14.700004],
+  ];
+  assert.deepEqual(overviewOf(line), [
+    [121.04, 14.70001],
+    [121.04124, 14.7],
+  ]);
 });
 
 test('a box padded by d metres holds every point within d metres of its corners', () => {
