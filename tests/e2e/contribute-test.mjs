@@ -185,6 +185,11 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start recording' }).waitFor();
   check('  after agreeing, Start shows', errors.length === 0, errors.join(' | '));
+  check(
+    '  the web page never shows the Android app’s permissions screen: the browser asks at Start',
+    (await page.getByRole('heading', { name: 'Para needs some permissions' }).count()) === 0 &&
+      (await page.getByRole('switch').count()) === 0,
+  );
 }
 
 // ---------------------------------------------------------------- the loop
