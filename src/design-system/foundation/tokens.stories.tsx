@@ -407,6 +407,14 @@ function TokensPage() {
         />
       </Group>
 
+      <Group title="Border width">
+        <Swatch
+          box="border-0-6 border-border-primary bg-surface"
+          token="border-width/0-6"
+          cls="border-0-6"
+        />
+      </Group>
+
       <Group title="Motion — hover a row to play it">
         {/* Classes written out whole: Tailwind cannot see a built name. */}
         <div className="w-full rounded-lg border border-border-primary bg-surface p-4">
