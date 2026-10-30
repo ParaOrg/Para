@@ -12,7 +12,6 @@ import { useSaveProfileMutation } from '../api/use-save-profile-mutation';
 import { useSessionWriter } from '../api/use-session-writer';
 import { useSignInMutation } from '../api/use-sign-in-mutation';
 import { useSignUpMutation } from '../api/use-sign-up-mutation';
-import { BackToMapButton } from '../common/back-to-map-button';
 
 type Mode = 'sign-in' | 'create-account' | 'forgot-password';
 
@@ -23,8 +22,8 @@ interface AccountGateProps {
 
 /**
  * What a phone with no account sees: Sign in, with Create an account and Forgot password beside
- * it, and the way back to the map. An account whose name and number did not save sees only those
- * two fields. A sign-up ends on Thank you, held until Continue.
+ * it. An account whose name and number did not save sees only those two fields. A sign-up ends on
+ * Thank you, held until Continue.
  */
 export function AccountGate({ needsProfile }: AccountGateProps) {
   const [mode, setMode] = useState<Mode>('sign-in');
@@ -49,31 +48,25 @@ export function AccountGate({ needsProfile }: AccountGateProps) {
 
   if (needsProfile) {
     return (
-      <>
-        <BackToMapButton />
-        <ProfileStepScreen
-          isBusy={saveProfile.isPending}
-          error={messageOf(saveProfile.error ?? signUp.error)}
-          onSubmit={(fields) => saveProfile.mutate(fields)}
-        />
-      </>
+      <ProfileStepScreen
+        isBusy={saveProfile.isPending}
+        error={messageOf(saveProfile.error ?? signUp.error)}
+        onSubmit={(fields) => saveProfile.mutate(fields)}
+      />
     );
   }
 
   return (
     <>
       {mode === 'sign-in' && (
-        <>
-          <BackToMapButton />
-          <SignInScreen
-            isBusy={signIn.isPending}
-            error={messageOf(signIn.error)}
-            captcha={captcha}
-            onSubmit={(fields) => signIn.mutate({ ...fields, captchaToken: captcha.takeToken() })}
-            onCreateAccount={() => switchTo('create-account')}
-            onForgotPassword={() => switchTo('forgot-password')}
-          />
-        </>
+        <SignInScreen
+          isBusy={signIn.isPending}
+          error={messageOf(signIn.error)}
+          captcha={captcha}
+          onSubmit={(fields) => signIn.mutate({ ...fields, captchaToken: captcha.takeToken() })}
+          onCreateAccount={() => switchTo('create-account')}
+          onForgotPassword={() => switchTo('forgot-password')}
+        />
       )}
       {mode === 'create-account' && (
         <CreateAccountScreen

@@ -92,13 +92,13 @@ async function signOut(page) {
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   await shot(page, '1-sign-in');
   check(
-    'with no account the page shows Sign in, Create an account, Forgot password and the way back, and no Start',
+    'with no account the page shows Sign in, Create an account and Forgot password, no way back to the map, and no Start',
     (await field(page, 'Email').count()) === 1 &&
       (await field(page, 'Password').count()) === 1 &&
       (await page.getByRole('button', { name: 'Sign in', exact: true }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Create an account' }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Forgot password' }).count()) === 1 &&
-      (await page.getByRole('button', { name: 'Back to the map' }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Back to the map' }).count()) === 0 &&
       (await SCREENS.start(page).count()) === 0,
   );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
