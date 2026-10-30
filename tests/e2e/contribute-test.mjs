@@ -4,8 +4,8 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/contribute-test.mjs
 //
-// PARA_SHOTS=dir keeps screenshots of Ready, Recording (papunta, then
-// pabalik), the Save form and Successfully recorded at 393×852.
+// PARA_SHOTS=dir keeps screenshots of Ready, Recording (Lakad, then
+// Sakay), the Save form and Successfully recorded at 393×852.
 //
 // The GPS is a stand-in navigator.geolocation the suite feeds fix by fix, with
 // timestamps of its own (a second apart), so a kilometre out and back takes
@@ -113,22 +113,6 @@ const ride = async (page, from, to) => {
 const mapSource = (page) =>
   page.evaluate(() => window.__map.getSource('recording-trail')?.serialize().data ?? null);
 /** The map's bearing as 0–360, so -90 and 270 are the same way. */
-/** The status of the recording IndexedDB holds, or null. */
-const storedStatus = (page) =>
-  page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        const open = indexedDB.open('para-contribute');
-        open.onerror = () => resolve(null);
-        open.onsuccess = () => {
-          const all = open.result.transaction('recordings').objectStore('recordings').getAll();
-          all.onsuccess = () => {
-            open.result.close();
-            resolve(all.result[0]?.status ?? null);
-          };
-        };
-      }),
-  );
 /** A phone's compass, facing `heading`: Chrome's absolute orientation, alpha counter-clockwise from north. */
 const face = (page, heading) =>
   page.evaluate((h) => {
@@ -349,19 +333,19 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   check(
-    'Start begins on Papunta: the stats say so, and the leg button offers Pabalik',
-    (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Papunta') &&
+    'Start begins on Lakad: the stats say so, and the mode button offers Sakay',
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Lakad') &&
       (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes(
         'Recording',
       ) &&
-      (await buttons(page)).join('|').includes('Switch to Pabalik'),
+      (await buttons(page)).join('|').includes('Switch to Sakay'),
   );
   check(
-    '  Stop, Switch to Pabalik, Save and Cancel are buttons',
-    ['Stop', 'Switch to Pabalik', 'Save', 'Cancel'].every((n) => (n ? true : false)) &&
+    '  Stop, Switch to Sakay, Save and Cancel are buttons',
+    ['Stop', 'Switch to Sakay', 'Save', 'Cancel'].every((n) => (n ? true : false)) &&
       (
         await Promise.all(
-          ['Stop', 'Switch to Pabalik', 'Save', 'Cancel'].map((n) =>
+          ['Stop', 'Switch to Sakay', 'Save', 'Cancel'].map((n) =>
             page.getByRole('button', { name: n, exact: true }).count(),
           ),
         )
@@ -402,8 +386,8 @@ const buttons = (page) =>
   );
   const outData = await mapSource(page);
   check(
-    'the trail is drawn live: one papunta line, no switch dot yet',
-    outData?.features.filter((f) => f.properties.way === 'outbound').length === 1 &&
+    'the trail is drawn live: one walked line, and the start leaves no switch dot',
+    outData?.features.filter((f) => f.properties.mode === 'walk').length === 1 &&
       outData.features.filter((f) => f.properties.kind === 'switch').length === 0,
   );
   const paint = await page.evaluate(() => {
@@ -411,11 +395,11 @@ const buttons = (page) =>
     return JSON.stringify(colour('recording-trail-line'));
   });
   check(
-    '  the line takes both colours from map-colours (blue/700 papunta, orange/700 pabalik)',
+    '  the line takes both colours from map-colours (blue/700 walked, orange/700 ridden)',
     paint.includes('#1447e6') && paint.includes('#ca3500'),
     paint,
   );
-  await shot(page, '2-recording-papunta');
+  await shot(page, '2-recording-lakad');
 
   // Stop pauses, Resume carries on.
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
@@ -425,7 +409,7 @@ const buttons = (page) =>
     (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 0 &&
       (
         await Promise.all(
-          ['Switch to Pabalik', 'Save', 'Cancel'].map((n) =>
+          ['Switch to Sakay', 'Save', 'Cancel'].map((n) =>
             page.getByRole('button', { name: n }).count(),
           ),
         )
@@ -435,13 +419,13 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
 
-  // The leg button.
-  await page.getByRole('button', { name: 'Switch to Pabalik' }).click();
-  await page.getByRole('button', { name: 'Switch to Papunta' }).waitFor();
+  // The mode button.
+  await page.getByRole('button', { name: 'Switch to Sakay' }).click();
+  await page.getByRole('button', { name: 'Switch to Lakad' }).waitFor();
   check(
-    'the leg switch is announced once, politely, and the stats now say Pabalik',
-    (await page.getByRole('status').innerText()) === 'Switched to Pabalik' &&
-      (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Pabalik'),
+    'the mode switch is announced once, politely, and the stats now say Sakay',
+    (await page.getByRole('status').innerText()) === 'Switched to Sakay' &&
+      (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Sakay'),
     `${await page.getByRole('status').innerText()} / ${(await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ')}`,
   );
   const afterSwitch = await mapSource(page);
@@ -451,23 +435,23 @@ const buttons = (page) =>
   );
   await ride(page, 1190, 700);
   await page.waitForTimeout(1200);
-  const pabalikData = await mapSource(page);
-  const lineOf = (way) =>
-    pabalikData.features.filter(
-      (f) => f.geometry.type === 'LineString' && f.properties.way === way,
+  const sakayData = await mapSource(page);
+  const lineOf = (mode) =>
+    sakayData.features.filter(
+      (f) => f.geometry.type === 'LineString' && f.properties.mode === mode,
     );
   check(
-    'blue papunta and orange pabalik, joined at the switch',
-    lineOf('return').length === 1 &&
-      lineOf('outbound').length === 1 &&
-      JSON.stringify(lineOf('return')[0].geometry.coordinates[0]) ===
-        JSON.stringify(lineOf('outbound')[0].geometry.coordinates.at(-1)),
+    'a walked line and a ridden line, joined at the switch',
+    lineOf('ride').length === 1 &&
+      lineOf('walk').length === 1 &&
+      JSON.stringify(lineOf('ride')[0].geometry.coordinates[0]) ===
+        JSON.stringify(lineOf('walk')[0].geometry.coordinates.at(-1)),
   );
   check(
     '  no dot of the recording is drawn: the locator is the one dot',
-    pabalikData.features.every((f) => f.properties.kind !== 'here'),
+    sakayData.features.every((f) => f.properties.kind !== 'here'),
   );
-  await shot(page, '3-recording-pabalik');
+  await shot(page, '3-recording-sakay');
 
   // Mark this place: a pin where the trail is, a polite "Marked", and nothing to answer.
   const markButton = page.getByRole('button', { name: 'Mark this place' });
@@ -563,20 +547,19 @@ const buttons = (page) =>
     `${await locatorMode(page)}, ${(await centreOff(page, 640)).toFixed(1)} m off`,
   );
 
-  // Back within 300 m of the start: the recording ends itself and the form opens.
+  // Back near the start, the recording goes on: it ends only when the contributor saves it.
   await ride(page, 630, 150);
+  await page.waitForTimeout(1500);
+  check(
+    'back within 300 m of the start after a kilometre, the recording goes on: it never stops itself',
+    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 1 &&
+      (await page.getByRole('heading', { name: 'About this route' }).count()) === 0,
+  );
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 10000 });
   check(
-    'back within 300 m of the start after a Pabalik tap and over a kilometre: auto-stop opens the Save form',
-    true,
-  );
-  check(
-    '  focus is on the form heading',
+    'Save opens the Save form, focus on its heading',
     await page.evaluate(() => document.activeElement?.textContent === 'About this route'),
-  );
-  check(
-    '  the auto-stop was announced',
-    (await page.getByRole('status').innerText()) === 'Back at the start. The recording stopped.',
   );
   check('  the watch let go of the GPS', (await page.evaluate(() => window.__watchers())) === 0);
   const labels = await page.locator('label').allInnerTexts();
@@ -610,13 +593,13 @@ const buttons = (page) =>
     await (await import('node:fs/promises')).readFile(await download.path(), 'utf8'),
   );
   check(
-    'the field-test download holds the ride: its switch, no details, many fixes',
-    file.switches.length === 1 &&
+    'the field-test download holds the ride: its start on Lakad and its switch to Sakay, no details, many fixes',
+    JSON.stringify(file.modes.map((m) => m.to)) === '["walk","ride"]' &&
       file.startPointName === '' &&
       file.rideKind === null &&
       file.fixes.length > 20 &&
       file.savedAt !== null,
-    `${file.switches.length} switch, ${file.fixes.length} fixes`,
+    `${file.modes.length} modes, ${file.fixes.length} fixes`,
   );
   check('  and its mark', file.marks.length === 1 && !Number.isNaN(Date.parse(file.marks[0].time)));
   await page.getByRole('button', { name: 'Record again' }).click();
@@ -694,39 +677,6 @@ const buttons = (page) =>
   await page.context().close();
 }
 
-// -------------------------------- a Resume after an auto-stop stops no second time
-{
-  const { page, errors } = await phone({ consented: true });
-  await page.getByRole('button', { name: 'Start recording' }).click();
-  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
-  await ride(page, 0, 1200);
-  await page.getByRole('button', { name: 'Switch to Pabalik' }).click();
-  await ride(page, 1190, 200);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 30000 });
-  // The recording's stop is written to IndexedDB a moment after the form opens: reload
-  // only once it has been, as a person's reload would come long after.
-  for (let tries = 0; tries < 100 && (await storedStatus(page)) !== 'stopped'; tries++) {
-    await page.waitForTimeout(100);
-  }
-  await page.reload({ waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 30000 });
-  check(
-    'a recording that stopped itself and was reloaded is stopped, with Resume',
-    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 0,
-  );
-  await page.getByRole('button', { name: 'Resume' }).click();
-  await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
-  await ride(page, 190, 50);
-  await page.waitForTimeout(500);
-  check(
-    'Resume near the start does not stop it again',
-    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 1 &&
-      (await page.getByRole('heading', { name: 'About this route' }).count()) === 0,
-  );
-  check('no page errors', errors.length === 0, errors.join('; '));
-  await page.context().close();
-}
-
 // ------------------------------------------------------- Keep recording on the form
 {
   const { page, errors } = await phone({ consented: true });
@@ -734,18 +684,19 @@ const buttons = (page) =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ');
   const activeName = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
 
-  // (a) a wrong auto-stop, ten minutes on the form, and back.
+  // (a) a Save after a switch, ten minutes on the form, and back.
   await page.getByRole('button', { name: 'Start recording' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 1200);
-  await page.getByRole('button', { name: 'Switch to Pabalik' }).click();
+  await page.getByRole('button', { name: 'Switch to Sakay' }).click();
   await ride(page, 1190, 200);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 30000 });
   await page.evaluate(() => window.__advance(600_000));
   await page.getByRole('button', { name: 'Keep recording' }).click();
   await page.getByRole('button', { name: 'Stop', exact: true }).waitFor();
   check(
-    'Keep recording after an auto-stop: back on the recording screen, Stop focused, "Recording again" said',
+    'Keep recording after a Save: back on the recording screen, Stop focused, "Recording again" said',
     (await activeName()) === 'Stop' &&
       (await page.getByRole('status').innerText()) === 'Recording again',
     `${await activeName()} / ${await page.getByRole('status').innerText()}`,
@@ -759,9 +710,9 @@ const buttons = (page) =>
   await ride(page, 190, 50);
   await page.waitForTimeout(500);
   check(
-    '  a fix near the start does not stop it again, and the ways are kept',
+    '  a fix near the start does not stop it, and the modes are kept',
     (await page.getByRole('heading', { name: 'About this route' }).count()) === 0 &&
-      (await stats()).includes('Pabalik') &&
+      (await stats()).includes('Sakay') &&
       (await mapSource(page)).features.filter((f) => f.properties.kind === 'switch').length === 1,
     await stats(),
   );

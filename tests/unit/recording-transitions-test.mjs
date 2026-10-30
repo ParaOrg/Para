@@ -1,6 +1,6 @@
 // The recorder's steps on a recording (src/features/contribute/recorder/recording-transitions.ts) and its
 // live totals (recording-figures.ts): Start, Stop with the fixes the phone could not keep, Resume
-// after a pause or a reload, a switch of way, Save with or without details, and the time and
+// after a pause or a reload, a switch of mode, Save with or without details, and the time and
 // distance the stats strip shows.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/recording-transitions-test.mjs
@@ -18,21 +18,23 @@ import {
   resumedRecording,
   savedRecording,
   stoppedRecording,
-  switchedWay,
+  switchedMode,
 } from '../../src/features/contribute/recorder/recording-transitions.ts';
 
 const STARTED = 1_000_000;
 const running = () => newRecording('ride-1', STARTED);
-const stoppedAt = (at, extra) => stoppedRecording(running(), at, 0, extra);
+const stoppedAt = (at) => stoppedRecording(running(), at, 0);
 
-test('a new recording is running from its start, empty, under the current consent', () => {
+test('a new recording is running from its start on Lakad, empty, under the current consent', () => {
   const recording = running();
   assert.equal(recording.id, 'ride-1');
   assert.equal(recording.status, 'recording');
   assert.equal(recording.startedAt, STARTED);
   assert.equal(recording.stoppedAt, null);
   assert.equal(recording.savedAt, null);
-  assert.deepEqual([recording.gaps, recording.switches, recording.marks], [[], [], []]);
+  assert.deepEqual([recording.gaps, recording.marks], [[], []]);
+  assert.deepEqual(recording.modes, [{ time: STARTED, to: 'walk' }]);
+  assert.equal(recording.version, 2);
   assert.deepEqual(
     [recording.startPointName, recording.endPointName, recording.description],
     ['', '', ''],
@@ -47,7 +49,6 @@ test('a Stop stops it at its time, and carries lost fix writes only when there a
   assert.equal(stopped.stoppedAt, STARTED + 60_000);
   assert.equal('failedFixWrites' in stopped, false);
   assert.equal(stoppedRecording(running(), STARTED + 60_000, 3).failedFixWrites, 3);
-  assert.equal(stoppedAt(STARTED + 60_000, { hasAutoStopped: true }).hasAutoStopped, true);
 });
 
 test('a Resume after a Stop counts the time since the Stop as paused', () => {
@@ -80,13 +81,18 @@ test('a Resume of a running recording that never stopped adds no gap', () => {
   assert.deepEqual(resumedRecording(running(), STARTED + 90_000, null, false).gaps, []);
 });
 
-test('a switch of way goes to the other way, at its time', () => {
-  const first = switchedWay(running(), STARTED + 10_000);
-  assert.equal(first.to, 'return');
-  assert.deepEqual(first.recording.switches, [{ time: STARTED + 10_000, to: 'return' }]);
-  const second = switchedWay(first.recording, STARTED + 20_000);
-  assert.equal(second.to, 'outbound');
-  assert.equal(second.recording.switches.length, 2);
+test('a switch of mode goes to the other mode, at its time', () => {
+  const first = switchedMode(running(), STARTED + 10_000);
+  assert.equal(first.to, 'ride');
+  assert.deepEqual(first.recording.modes, [
+    { time: STARTED, to: 'walk' },
+    { time: STARTED + 10_000, to: 'ride' },
+  ]);
+  const second = switchedMode(first.recording, STARTED + 20_000);
+  assert.equal(second.to, 'walk');
+  assert.equal(second.recording.modes.length, 3);
+  // A recording made before modes is all ride, so its first switch goes to walk.
+  assert.equal(switchedMode({ ...running(), modes: [] }, STARTED + 10_000).to, 'walk');
 });
 
 test('a Save keeps the details given, or the recording as it is with none', () => {

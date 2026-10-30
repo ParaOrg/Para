@@ -288,8 +288,14 @@ const groupOf = (page, name) =>
     'the upload carries the mark as a mark event: a time and no position, between start and stop',
     markEvents.length === 1 &&
       Object.keys(markEvents[0]).sort().join() === 'at,kind' &&
-      stored.recording.events.map((e) => e.kind).join() === 'start,mark,stop,save',
+      stored.recording.events.map((e) => e.kind).join() === 'start,mode,mark,stop,save',
     JSON.stringify(stored.recording.events),
+  );
+  const [startEvent, modeEvent] = stored.recording.events;
+  check(
+    '  and the mode it started on: Lakad, at the start',
+    modeEvent.to === 'walk' && modeEvent.at === startEvent.at,
+    JSON.stringify(modeEvent),
   );
   check(
     '  it went whole: its points, in batches, and the ride kind left blank',

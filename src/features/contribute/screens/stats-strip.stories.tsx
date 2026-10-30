@@ -5,7 +5,7 @@ import { StatsStrip } from './stats-strip';
 const meta = {
   title: 'Features/Contribute/StatsStrip',
   component: StatsStrip,
-  args: { elapsedSeconds: 42 * 60, distanceM: 4200, way: 'outbound', isPaused: false },
+  args: { elapsedSeconds: 42 * 60, distanceM: 4200, mode: 'walk', isPaused: false },
   decorators: [
     (Story) => (
       <div className="relative h-40 w-[393px] overflow-hidden bg-neutral-300">
@@ -21,10 +21,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Papunta: Story = {};
+export const Lakad: Story = {};
 
-export const Pabalik: Story = {
-  args: { way: 'return', elapsedSeconds: 61 * 60, distanceM: 8800 },
+export const Sakay: Story = {
+  args: { mode: 'ride', elapsedSeconds: 61 * 60, distanceM: 8800 },
 };
 
 /** After Stop: the third column says Stopped. */

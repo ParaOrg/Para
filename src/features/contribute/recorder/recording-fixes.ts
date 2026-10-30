@@ -1,8 +1,7 @@
-import { keptFixes, type Fix } from '@/features/routes/model/ride-recording';
+import type { Fix } from '@/features/routes/model/ride-recording';
 
-import { shouldAutoStop, type WaySwitch } from './recording-rules';
 import type { WatchedFix } from './use-geolocation-watch';
-import type { FixRow, Recording } from '../storage/recording-schema';
+import type { FixRow } from '../storage/recording-schema';
 
 /**
  * The fixes that come after the last one stored. A fix at or before that time is already in the
@@ -19,70 +18,19 @@ function isNewTime(fix: WatchedFix, index: number, sorted: WatchedFix[]): boolea
 }
 
 /**
- * How many of the fixes it takes before `isDone` first holds, when it holds for a list and stays
- * true for every longer one (the back-at-start rule does). Null when it never holds. Asks about
- * the whole list once, then halves, so a long batch costs a handful of runs of the rule.
- */
-export function firstCountWhere<T>(
-  items: readonly T[],
-  isDone: (items: readonly T[]) => boolean,
-): number | null {
-  if (!isDone(items)) return null;
-  let low = 1;
-  let high = items.length;
-  while (low < high) {
-    const middle = Math.floor((low + high) / 2);
-    if (isDone(items.slice(0, middle))) high = middle;
-    else low = middle + 1;
-  }
-  return low;
-}
-
-/**
- * How many of the fresh fixes it takes, added to the ones held, for the ride to have come back to
- * its start; null when it has not. The rule stays true once it has fired, so the count is the
- * first fix that fired it and the ones after it are not part of the ride.
- */
-export function backAtStartCount(
-  held: readonly Fix[],
-  fresh: readonly Fix[],
-  switches: readonly WaySwitch[],
-): number | null {
-  return firstCountWhere(fresh, (some) => shouldAutoStop(keptFixes([...held, ...some]), switches));
-}
-
-/** What a batch of watched fixes adds to a ride. */
-export interface TakenFixes {
-  /** The fixes after the last one held, up to the Stop or to where the ride came back to its start. */
-  taken: Fix[];
-  /** Whether the last of them brought the ride back to its start, so it stops there. */
-  isBackAtStart: boolean;
-}
-
-/**
  * The one step every fix goes through on its way into a ride: the recorder's live watch, the
  * import of the native log on reopening, and the CI emulator ride. It takes the fixes after the
- * last one held; `until` is a Stop's time, past which none are taken and the ride is not checked
- * for coming back to its start. Otherwise a ride that has not stopped itself yet is cut at the
- * fix where it came back to its start.
+ * last one held; `until` is a Stop's time, past which none are taken.
  */
 export function takeWatchedFixes(
   held: readonly Fix[],
   watched: readonly WatchedFix[],
-  recording: Pick<Recording, 'hasAutoStopped' | 'switches'>,
   until?: number,
-): TakenFixes {
+): Fix[] {
   const lastTime = held[held.length - 1]?.time ?? null;
-  const fresh = fixesAfter(watched, lastTime)
+  return fixesAfter(watched, lastTime)
     .filter((fix) => until === undefined || fix.timestamp <= until)
     .map(fixOfWatched);
-  // Nothing new adds nothing, even when the held fixes alone already came back to the start.
-  if (fresh.length === 0) return { taken: [], isBackAtStart: false };
-  const stopCount =
-    recording.hasAutoStopped || until !== undefined
-      ? null
-      : backAtStartCount(held, fresh, recording.switches ?? []);
-  return { taken: fresh.slice(0, stopCount ?? fresh.length), isBackAtStart: stopCount !== null };
 }
 
 export const fixOfRow = (row: FixRow): Fix => ({

@@ -10,13 +10,14 @@ import type { Uploads } from '../uploads/use-uploads';
 const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
 const PLACES = ['SM Fairview', 'Lagro', 'Novaliches', 'Tala', 'Quezon Memorial Circle'];
 const ride = (index: number, startPointName: string): Recording => ({
-  version: 1,
+  version: 2,
   id: `11111111-0000-4000-8000-${String(index).padStart(12, '0')}`,
   status: 'saved',
   startedAt: T0 + index * 3_600_000,
   stoppedAt: T0 + index * 3_600_000 + (index + 1) * 600_000,
   savedAt: T0 + index * 3_600_000 + (index + 1) * 600_000 + 30_000,
   gaps: [],
+  modes: [],
   startPointName,
   endPointName: 'Cubao',
   description: '',

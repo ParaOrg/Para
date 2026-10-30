@@ -1,7 +1,7 @@
 import { importNativeFixes } from './native-fixes';
 import { holdRecorderLock } from './recorder-lock';
 import type { FixRow, Recording } from '../storage/recording-schema';
-import { loadFixes, loadRecordings, putRecording } from '../storage/recording-store';
+import { loadFixes, loadRecordings } from '../storage/recording-store';
 
 /** What the page finds on this phone as it opens. */
 export type RecorderOpening =
@@ -33,12 +33,10 @@ export async function openRecorder({
   if (isCancelled()) return null;
   onListed(all);
   if (!isOurs) return { kind: 'other-tab' };
-  let open = all.find((r) => r.status !== 'saved') ?? null;
+  const open = all.find((r) => r.status !== 'saved') ?? null;
   if (open) {
     try {
-      const imported = await importNativeFixes(open);
-      if (imported !== open) await putRecording(imported);
-      open = imported;
+      await importNativeFixes(open);
     } catch (error) {
       onNativeLogProblem(error);
     }

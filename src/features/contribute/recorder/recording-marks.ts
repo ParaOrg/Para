@@ -4,7 +4,7 @@ import type { LngLat } from '@/shared/utils/geo';
 import { UPLOAD_LIMITS } from './recording-limits';
 import type { MarkRow, Recording } from '../storage/recording-schema';
 
-/** Most marks one ride keeps, so a start, a stop, a save and the way switches still fit the upload's events. */
+/** Most marks one ride keeps, so a start, a stop, a save and the mode switches still fit the upload's events. */
 export const MAX_MARKS = 200;
 
 /** The marks with one more at `time`, or the same marks once the ride holds the most. */

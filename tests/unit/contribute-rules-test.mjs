@@ -1,4 +1,4 @@
-// The page's one door to the rules for the way a ride is on
+// The page's one door to the rules for the mode a recording is on
 // (src/features/contribute/recorder/recording-rules.ts): what it adds to ride-recording.ts's own
 // rules (tested in ride-recording-test.mjs) — the words the contributor
 // reads, and the trail the map is handed — and the way the stats strip and the
@@ -9,8 +9,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  OTHER_WAY,
-  WAY_LABEL,
+  MODE_LABEL,
+  OTHER_MODE,
   trailOf,
 } from '../../src/features/contribute/recorder/recording-rules.ts';
 import {
@@ -28,25 +28,29 @@ const fix = (s, east) => ({
   accuracyM: 5,
 });
 
-test('the leg button switches to the other way, and the ways read as papunta and pabalik', () => {
-  assert.equal(OTHER_WAY.outbound, 'return');
-  assert.equal(OTHER_WAY.return, 'outbound');
-  assert.equal(WAY_LABEL.outbound, 'Papunta');
-  assert.equal(WAY_LABEL.return, 'Pabalik');
+test('the mode button switches to the other mode, and the modes read as Lakad and Sakay', () => {
+  assert.equal(OTHER_MODE.walk, 'ride');
+  assert.equal(OTHER_MODE.ride, 'walk');
+  assert.equal(MODE_LABEL.walk, 'Lakad');
+  assert.equal(MODE_LABEL.ride, 'Sakay');
 });
 
-test('the trail is a papunta line, a pabalik line joined to it at the switch, and a dot there', () => {
-  const kept = [fix(0, 0), fix(10, 100), fix(20, 200), fix(30, 100), fix(40, 0)];
-  const trail = trailOf(kept, [{ time: T0 + 20_000, to: 'return' }]);
+test('the trail is a walked line, a ridden line joined to it at the switch, and a dot there', () => {
+  const kept = [fix(1, 0), fix(10, 100), fix(20, 200), fix(30, 300), fix(40, 400)];
+  const trail = trailOf(kept, [
+    { time: T0, to: 'walk' },
+    { time: T0 + 20_000, to: 'ride' },
+  ]);
   assert.deepEqual(
-    trail.lines.map((line) => line.way),
-    ['outbound', 'return'],
+    trail.lines.map((line) => line.mode),
+    ['walk', 'ride'],
   );
   assert.deepEqual(trail.lines[0].path.at(-1), trail.lines[1].path[0]);
-  assert.deepEqual(trail.markers, [{ at: kept[2].at, way: 'return' }]);
+  assert.deepEqual(trail.markers, [{ at: kept[2].at, mode: 'ride' }]);
 });
 
-test('before a switch there is no dot', () => {
+test('the start leaves no dot, and neither does a recording with no modes', () => {
+  assert.equal(trailOf([fix(1, 0), fix(10, 100)], [{ time: T0, to: 'walk' }]).markers.length, 0);
   assert.equal(trailOf([fix(0, 0), fix(10, 100)], []).markers.length, 0);
 });
 

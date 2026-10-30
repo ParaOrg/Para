@@ -4,17 +4,17 @@ import { BackToMapButton } from '../common/back-to-map-button';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useStackRoom } from '../common/use-stack-room';
 import type { RecordingFigures } from '../recorder/recording-figures';
-import type { Way } from '../recorder/recording-rules';
+import type { Mode } from '../recorder/recording-rules';
 
 interface UnfinishedScreenProps {
   figures: RecordingFigures;
-  way: Way;
+  mode: Mode;
   onResume: () => void;
   onStop: () => void;
 }
 
 /** A recording was left open when the page closed: carry on with it, or stop it where it was. */
-export function UnfinishedScreen({ figures, way, onResume, onStop }: UnfinishedScreenProps) {
+export function UnfinishedScreen({ figures, mode, onResume, onStop }: UnfinishedScreenProps) {
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();
   return (
@@ -41,7 +41,7 @@ export function UnfinishedScreen({ figures, way, onResume, onStop }: UnfinishedS
         <StatsStrip
           elapsedSeconds={figures.elapsedSeconds}
           distanceM={figures.distanceM}
-          way={way}
+          mode={mode}
           isPaused
         />
         <TrackingButton variant="resume" onClick={onResume} />

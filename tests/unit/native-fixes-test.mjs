@@ -1,15 +1,11 @@
 // The app's native location (src/features/contribute/native/): which fixes the page still has to
-// take from the native log, how a batch is cut where the ride came back to its start, which
-// permissions each Android version has, and whose battery help applies.
+// take from the native log, which permissions each Android version has, and whose battery help applies.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/native-fixes-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  firstCountWhere,
-  fixesAfter,
-} from '../../src/features/contribute/recorder/recording-fixes.ts';
+import { fixesAfter } from '../../src/features/contribute/recorder/recording-fixes.ts';
 import { parseFixLog } from '../../src/features/contribute/native/native-fix-log.ts';
 import { watchErrorOf } from '../../src/features/contribute/native/watch-error.ts';
 import { batteryHelpFor } from '../../src/features/contribute/native/battery-steps.ts';
@@ -40,29 +36,6 @@ test('fixes come out in time order, and the input is not changed', () => {
   const log = [fix(3000), fix(1000), fix(2000)];
   assert.deepEqual(times(fixesAfter(log, null)), [1000, 2000, 3000]);
   assert.deepEqual(times(log), [3000, 1000, 2000]);
-});
-
-test('a batch is cut at the first fix where the rule holds, in a few runs of the rule', () => {
-  const items = Array.from({ length: 1200 }, (_, index) => index);
-  let runs = 0;
-  const isDone = (taken) => {
-    runs += 1;
-    return taken.length >= 700;
-  };
-  assert.equal(firstCountWhere(items, isDone), 700);
-  assert.ok(runs <= 12, `ran the rule ${runs} times`);
-  assert.equal(
-    firstCountWhere(items, (taken) => taken.length >= 1),
-    1,
-  );
-  assert.equal(
-    firstCountWhere(items, () => false),
-    null,
-  );
-  assert.equal(
-    firstCountWhere([], () => false),
-    null,
-  );
 });
 
 test('each Android version is asked for the permissions it has, in order', () => {

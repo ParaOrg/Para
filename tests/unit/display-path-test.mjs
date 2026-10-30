@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { trailOf } from '../../src/features/contribute/recorder/recording-rules.ts';
 import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
 import { displayFixes } from '../../src/features/routes/model/display-path.ts';
-import { keptFixes, waysOf } from '../../src/features/routes/model/ride-recording.ts';
+import { keptFixes, modesOf } from '../../src/features/routes/model/ride-recording.ts';
 
 import { T0, rideFixes, rideRecording } from './fixtures/contribution-ride.mjs';
 
@@ -137,18 +137,21 @@ test('a fix never moves by more than its own accuracy', () => {
   }
 });
 
-test('the way switches keep the fix they were placed on, and the line still breaks there', () => {
+test('the mode switches keep the fix they were placed on, and the line still breaks there', () => {
   const raw = noisyStraightRide(20, true);
-  const switches = [{ time: T0 + 60_500, to: 'return' }];
+  const switches = [
+    { time: T0, to: 'walk' },
+    { time: T0 + 60_500, to: 'ride' },
+  ];
   const trail = trailOf(raw, switches);
-  const before = waysOf(raw, switches);
+  const before = modesOf(raw, switches);
   assert.deepEqual(
     trail.markers.map((m) => m.at),
     before.markers.map((m) => m.at),
   );
   assert.deepEqual(
-    trail.lines.map((l) => l.way),
-    ['outbound', 'return'],
+    trail.lines.map((l) => l.mode),
+    ['walk', 'ride'],
   );
   assert.deepEqual(trail.lines[0].path.at(-1), before.markers[0].at);
   assert.deepEqual(trail.lines[1].path[0], before.markers[0].at);
@@ -202,14 +205,15 @@ test('a two-hour ride of 7000 fixes is steadied in well under a second', () => {
   assert.ok(took < 500, `took ${Math.round(took)} ms`);
 });
 
-// The drawn line is the only thing that changed: what is stored and uploaded
-// is the same as before, pinned by hashes taken before display-path.ts existed.
+// The drawn line is the only thing display-path.ts changes: what is stored and
+// uploaded stays the same, pinned by hashes. The kept fixes' hash was taken
+// before display-path.ts existed; the packed one is of format 2 and rules 2.
 test('what is stored and uploaded is byte-identical to before', () => {
   const fixes = rideFixes();
   const sha = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
   const id = '11111111-0000-0000-0000-000000000001';
   const packed = packRecording(rideRecording(id, fixes), fixes, 1, T0 + 3_600_000);
-  assert.equal(sha(packed), '92b224ff30feaa8aacf2ad1e9dca744b0b3881a8c8d7dc0fab51a4e81c500bbb');
+  assert.equal(sha(packed), 'c6eb65bdacf1fc29e464049432a5e56c1e0df625e431f060d92c802b74b466f7');
   assert.equal(
     sha(keptFixes(fixes)),
     '2b5bdba203326d081f43723427945a4a505a46fedd612c83331534fa7716aa08',

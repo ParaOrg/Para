@@ -1,7 +1,8 @@
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
 import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
-import { RECORDING_VERSION, type Recording } from '../storage/recording-schema';
+import { newRecording } from '../recorder/recording-transitions';
+import type { Recording } from '../storage/recording-schema';
 import { loadFixes, loadRecordings, putFixes, putRecording } from '../storage/recording-store';
 
 const REPORT_EVERY_MS = 30_000;
@@ -52,21 +53,7 @@ export async function runEmulatorRide(): Promise<void> {
     await waitForImport(recording.id);
     say(`imported id=${recording.id} ${await snapshot(recording.id)}`);
   } else {
-    recording = {
-      version: RECORDING_VERSION,
-      id: crypto.randomUUID(),
-      status: 'recording',
-      startedAt: Date.now(),
-      stoppedAt: null,
-      savedAt: null,
-      gaps: [],
-      switches: [],
-      marks: [],
-      startPointName: '',
-      endPointName: '',
-      description: '',
-      rideKind: null,
-    };
+    recording = newRecording(crypto.randomUUID(), Date.now());
     await putRecording(recording);
   }
 
@@ -77,14 +64,12 @@ export async function runEmulatorRide(): Promise<void> {
   await startNativeWatch({
     recordingId,
     onFixes: (watched) => {
-      // The recorder's own step (use-recording.ts takeFixes). The scripted ride never switches to
-      // the return, so it never comes back to its start; if it did, the report would say so.
-      const { taken, isBackAtStart } = takeWatchedFixes(held, watched, recording);
+      // The recorder's own step (use-recording.ts takeFixes).
+      const taken = takeWatchedFixes(held, watched);
       if (taken.length === 0) return;
       held.push(...taken);
       const rows = taken.map((fix) => rowOfFix(recordingId, nextSeq++, fix));
       putFixes(rows).catch((error: unknown) => say(`write-failed ${String(error)}`));
-      if (isBackAtStart) say('error the ride came back to its start');
     },
     onError: (error) => say(`error ${error.message}`),
   });

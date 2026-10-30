@@ -7,12 +7,11 @@ import { cn } from '@/shared/utils/cn';
 import { PauseIcon, PlayIcon } from './tracking-icons';
 
 /**
- * Which bar. Papunta and Pabalik are the way button, named for the way a tap
- * switches TO: Pabalik (orange) while the ride is on papunta, Papunta (blue)
- * while it is on pabalik.
+ * Which bar. Lakad and Sakay are the mode button, named for the mode a tap
+ * switches TO: Sakay (green) while the recording is on Lakad, Lakad (blue)
+ * while it is on Sakay.
  */
-export type TrackingVariant =
-  'start' | 'resume' | 'stop' | 'save' | 'cancel' | 'papunta' | 'pabalik';
+export type TrackingVariant = 'start' | 'resume' | 'stop' | 'save' | 'cancel' | 'lakad' | 'sakay';
 
 interface Look {
   text: string;
@@ -22,7 +21,7 @@ interface Look {
   icon: 'play' | 'pause' | null;
   /** A full-width bar, or one of the row's buttons. */
   size: 'bar' | 'row';
-  /** In the row, Pabalik and Save share the width and Cancel shrinks to its text. */
+  /** In the row, the mode button and Save share the width and Cancel shrinks to its text. */
   width: 'w-full' | 'flex-1' | 'shrink-0';
 }
 
@@ -79,17 +78,17 @@ const LOOK = {
     size: 'row',
     width: 'shrink-0',
   },
-  pabalik: {
-    text: 'Pabalik',
-    name: 'Switch to Pabalik',
-    surface: CARD_SURFACE.orange,
+  sakay: {
+    text: 'Sakay',
+    name: 'Switch to Sakay',
+    surface: GREEN,
     icon: null,
     size: 'row',
     width: 'flex-1',
   },
-  papunta: {
-    text: 'Papunta',
-    name: 'Switch to Papunta',
+  lakad: {
+    text: 'Lakad',
+    name: 'Switch to Lakad',
     surface: 'bg-brand-surface border-brand-border',
     icon: null,
     size: 'row',
@@ -115,7 +114,7 @@ interface TrackingButtonProps extends Omit<
  * Figma's TrackingButtonPrimary: a square bar in a RouteCard's colours, its
  * Route/RouteCardPrimary effect and gloss Blob, which press in under
  * RouteCardPrimarySelected. Start, Resume and Stop are full-width bars; Save,
- * Cancel and the way button sit in a row under them.
+ * Cancel and the mode button sit in a row under them.
  */
 export function TrackingButton({
   variant,
@@ -133,7 +132,7 @@ export function TrackingButton({
       type={type}
       aria-label={look.name}
       className={cn(
-        // A white ring inside the bar: the browser's own is nearly invisible on orange and red.
+        // A white ring inside the bar: the browser's own is nearly invisible on green and red.
         'group relative isolate flex items-center justify-center overflow-clip border-[0.6px] font-sn-pro text-lg/7 font-bold text-content-inverse focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-content-inverse',
         look.surface,
         look.width,

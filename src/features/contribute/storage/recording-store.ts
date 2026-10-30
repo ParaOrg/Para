@@ -1,4 +1,9 @@
-import { fixRowSchema, recordingSchema, type FixRow, type Recording } from './recording-schema';
+import {
+  fixRowSchema,
+  storedRecordingSchema,
+  type FixRow,
+  type Recording,
+} from './recording-schema';
 
 const DB_NAME = 'para-contribute';
 const RECORDINGS = 'recordings';
@@ -65,7 +70,7 @@ export async function loadRecordings(): Promise<Recording[]> {
   const rows = await rowsOf(db.transaction(RECORDINGS).objectStore(RECORDINGS).getAll());
   const recordings: Recording[] = [];
   for (const row of rows) {
-    const read = recordingSchema.safeParse(row);
+    const read = storedRecordingSchema.safeParse(row);
     if (read.success) recordings.push(read.data);
     else console.warn('A stored recording could not be read and was left out.', read.error);
   }
@@ -92,7 +97,7 @@ export function updateRecording(
     const store = tx.objectStore(RECORDINGS);
     const request = store.get(recordingId);
     request.onsuccess = () => {
-      const read = recordingSchema.safeParse(request.result);
+      const read = storedRecordingSchema.safeParse(request.result);
       if (read.success) store.put(change(read.data));
     };
   });
