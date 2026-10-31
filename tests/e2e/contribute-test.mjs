@@ -1962,6 +1962,211 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await page.context().close();
 }
 
+// ------------------------------------- Start tracking becomes the recording card, never holding it up
+/** Every animate() the page starts, with its timing and whether it is the morph's ghost's. */
+const ANIMATIONS = () => {
+  window.__animations = [];
+  const animate = Element.prototype.animate;
+  Element.prototype.animate = function (keyframes, options) {
+    window.__animations.push({
+      isGhost: this.hasAttribute('data-start-morph'),
+      isCard: this.hasAttribute('data-recording-card'),
+      duration: typeof options === 'object' ? options.duration : options,
+      easing: typeof options === 'object' ? (options.easing ?? 'linear') : 'linear',
+      props: Object.keys(Array.isArray(keyframes) ? (keyframes[0] ?? {}) : keyframes),
+      at: performance.now(),
+    });
+    return animate.call(this, keyframes, options);
+  };
+  window.__ghostSeen = false;
+  new MutationObserver(() => {
+    if (document.querySelector('[data-start-morph]')) window.__ghostSeen = true;
+  }).observe(document, { childList: true, subtree: true });
+};
+{
+  const { page, context, errors } = await phone();
+  await page.addInitScript(ANIMATIONS);
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  const tokens = await page.evaluate(() => {
+    const style = getComputedStyle(document.documentElement);
+    const read = (name) => style.getPropertyValue(name).trim();
+    return {
+      quick: parseFloat(read('--transition-duration-quick')),
+      gentle: parseFloat(read('--transition-duration-gentle')),
+      exit: read('--ease-exit'),
+      move: read('--ease-move'),
+    };
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const atTap = await page.evaluate(() => ({
+    watchers: window.__watchers(),
+    ghost: !!document.querySelector('[data-start-morph]'),
+  }));
+  check(
+    'Start tracking starts the recording on the tap: the watch is on while the morph has only begun',
+    atTap.watchers === 1 && atTap.ghost,
+    JSON.stringify(atTap),
+  );
+  await page.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
+    timeout: 5000,
+  });
+  const ghostAnimations = await page.evaluate(() => window.__animations.filter((a) => a.isGhost));
+  const fold = ghostAnimations[0];
+  const open = ghostAnimations[1];
+  check(
+    '  it folds into a pill on duration-quick and ease-exit, then opens into the card on duration-gentle and ease-move',
+    !!fold &&
+      !!open &&
+      fold.duration === tokens.quick &&
+      fold.easing === tokens.exit &&
+      open.duration === tokens.gentle &&
+      open.easing === tokens.move &&
+      fold.props.join() === 'clipPath' &&
+      open.props.join() === 'clipPath',
+    JSON.stringify({ tokens, ghostAnimations }),
+  );
+  check(
+    '  about 450 ms in all, and only clip-path and opacity move',
+    tokens.quick + tokens.gentle >= 400 &&
+      tokens.quick + tokens.gentle <= 450 &&
+      (await page.evaluate(() =>
+        window.__animations.every((a) => a.props.every((p) => ['clipPath', 'opacity'].includes(p))),
+      )),
+  );
+  check(
+    '  then the card stands in its own place, the ghost gone',
+    (await page.getByRole('group', { name: 'Recording so far' }).isVisible()) &&
+      (await page.locator('[data-start-morph]').count()) === 0 &&
+      (await page.evaluate(
+        () => getComputedStyle(document.querySelector('[data-recording-card]')).opacity,
+      )) === '1',
+  );
+
+  // Pause mid-morph: what the ghost covers takes the tap.
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const isMorphing = await page.evaluate(() => !!document.querySelector('[data-start-morph]'));
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 5000 });
+  // Two frames on: the ghost never shows the card as it was before the pause.
+  const ghostAfterPause = await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            resolve(document.querySelector('[data-start-morph]')?.textContent ?? ''),
+          ),
+        ),
+      ),
+  );
+  check(
+    '  a tap on Pause mid-morph pauses the recording, and the morph shows no Pause over Resume',
+    isMorphing &&
+      (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1 &&
+      !ghostAfterPause.includes('Pause'),
+    ghostAfterPause,
+  );
+  await page.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
+    timeout: 5000,
+  });
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+
+  // Pause while the pill opens into the card: the copy of the card it shows is out of date, so
+  // the morph ends there and then.
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const pausedWhileOpening = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const look = () => {
+          const ghost = document.querySelector('[data-start-morph]');
+          if (!ghost) return resolve(null);
+          if (!ghost.textContent?.includes('Pause')) return requestAnimationFrame(look);
+          const pause = [...document.querySelectorAll('[data-recording-card] button')].find(
+            (button) => button.textContent?.trim() === 'Pause',
+          );
+          pause?.click();
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              resolve({
+                isGhostGone: !document.querySelector('[data-start-morph]'),
+                isCardShown: getComputedStyle(
+                  document.querySelector('[data-recording-card]') ?? document.body,
+                ).opacity,
+              }),
+            ),
+          );
+        };
+        look();
+      }),
+  );
+  check(
+    '  a Pause while the pill opens into the card ends the morph at once, the real card shown',
+    pausedWhileOpening?.isGhostGone === true &&
+      pausedWhileOpening.isCardShown === '1' &&
+      (await page.getByRole('button', { name: 'Resume' }).count()) === 1,
+    JSON.stringify(pausedWhileOpening),
+  );
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+
+  // A start that fails (a second tab, which records nothing): the card never comes, the button does.
+  const second = await context.newPage();
+  await nodeFetch(second);
+  await bareStyle(second);
+  await second.addInitScript(GPS);
+  await second.addInitScript(ANIMATIONS);
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
+  await second.getByRole('button', { name: 'Start Tracking' }).click();
+  const secondMorphed = await second.evaluate(() => !!document.querySelector('[data-start-morph]'));
+  await second.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
+    timeout: 5000,
+  });
+  await second.waitForTimeout(100);
+  check(
+    '  a start that fails: the pill opens back into Start tracking, shown again, and no card comes',
+    secondMorphed &&
+      (await second.getByRole('group', { name: 'Recording so far' }).count()) === 0 &&
+      (await second.getByRole('button', { name: 'Start Tracking' }).isVisible()) &&
+      (await second.evaluate(
+        () => getComputedStyle(document.querySelector('[data-start-tracking]')).opacity,
+      )) === '1',
+  );
+  await second.close();
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+
+  // Reduced motion: no ghost, the card only fades in, quickly.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(() => {
+    window.__animations = [];
+    window.__ghostSeen = false;
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await page.waitForTimeout(400);
+  const reduced = await page.evaluate(() => ({
+    ghostSeen: window.__ghostSeen,
+    card: window.__animations.filter((a) => a.isCard),
+  }));
+  check(
+    '  with reduced motion: no fold and no opening, only a quick crossfade of the card',
+    !reduced.ghostSeen &&
+      reduced.card.some((a) => a.duration === tokens.quick && a.props.join() === 'opacity') &&
+      reduced.card.every((a) => a.duration <= tokens.quick && a.props.join() === 'opacity'),
+    JSON.stringify(reduced),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await context.close();
+}
+
 // ------------------------------------------------------------- a second tab
 {
   const { page, context, errors } = await phone();

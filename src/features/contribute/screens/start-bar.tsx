@@ -16,6 +16,7 @@ export function StartBar({ onClick }: StartBarProps) {
     <div className="px-8">
       <button
         type="button"
+        data-start-tracking
         onClick={onClick}
         className="flex w-full items-center justify-center gap-1 rounded-full bg-brand-surface px-4 py-3 font-sn-pro text-base/6 font-medium text-content-inverse shadow-primary-button-rest outline-none hover:shadow-primary-button-hover focus-visible:ring-2 focus-visible:ring-brand-surface focus-visible:ring-offset-2 active:bg-brand-surface-secondary active:shadow-primary-button-pressed"
       >
