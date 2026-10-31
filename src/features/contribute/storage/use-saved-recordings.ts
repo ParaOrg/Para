@@ -2,16 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { Recording } from './recording-schema';
 import { deleteRecording, loadRecordings } from './recording-store';
-
-/** Tells this phone's other tabs a recording was saved, so their lists catch up. */
-const SAVED_CHANNEL = 'para-saved-recordings';
-
-function tellOtherTabs() {
-  if (typeof BroadcastChannel === 'undefined') return;
-  const channel = new BroadcastChannel(SAVED_CHANNEL);
-  channel.postMessage('saved');
-  channel.close();
-}
+import { SAVED_CHANNEL, tellSavedRecordingsChanged } from './saved-recordings-channel';
 
 const savedOnly = (all: readonly Recording[]) => all.filter((r) => r.status === 'saved');
 
@@ -26,7 +17,10 @@ export interface SavedRecordings {
   deleteSaved: (recording: Recording) => void;
 }
 
-/** The recordings saved on this phone, kept in step with its other tabs. */
+/**
+ * The recordings saved on this phone, kept in step with its other tabs, and read again whenever
+ * anything (a delete of the account) says they changed.
+ */
 export function useSavedRecordings(reportStore: (error: unknown) => void): SavedRecordings {
   const [saved, setSaved] = useState<Recording[]>([]);
 
@@ -43,14 +37,14 @@ export function useSavedRecordings(reportStore: (error: unknown) => void): Saved
 
   function addSaved(recording: Recording) {
     setSaved((list) => [recording, ...list.filter((r) => r.id !== recording.id)]);
-    tellOtherTabs();
+    tellSavedRecordingsChanged();
   }
 
   function deleteSaved(recording: Recording) {
     deleteRecording(recording.id)
       .then(() => {
         setSaved((list) => list.filter((r) => r.id !== recording.id));
-        tellOtherTabs();
+        tellSavedRecordingsChanged();
       })
       .catch(reportStore);
   }

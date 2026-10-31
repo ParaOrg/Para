@@ -35,6 +35,7 @@
 //   profile = 'offline'         set_profile fails as with no signal
 //   stats = 'offline'           get_my_stats fails as with no signal
 //   deleteAccount = 'offline'   delete_my_account fails as with no signal
+//   deleteAccount = 'hold'      delete_my_account waits until `fake.release()` (a delete in flight)
 //
 // get_my_stats answers `fake.stats`, the account's numbers as one row; left null, the function is
 // not there (404 PGRST202), as before its migration is applied.
@@ -320,6 +321,7 @@ export async function fakeContributions(page) {
       const fault = fake.next.deleteAccount;
       delete fake.next.deleteAccount;
       if (fault === 'offline') return route.abort('internetdisconnected');
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
       // As the migration does: an anonymous user or an editor is refused, 42501.
       const user = userOf(request);
       const known = fake.users.get(user ?? '');

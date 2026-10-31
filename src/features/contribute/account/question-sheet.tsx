@@ -15,14 +15,15 @@ interface QuestionSheetProps {
   /** One line about a try that failed, or null: said here, where the contributor is. */
   error: string | null;
   onConfirm: () => void;
-  /** Cancel, Escape, or a tap on the dimmed page. */
+  /** Cancel, Escape, or a tap on the dimmed page; none of them while the answer is under way. */
   onCancel: () => void;
 }
 
 /**
  * A question before an act that ends something (Logout, Delete account), in the app's sheet look
  * (the Map Data Source sheet's): a sheet over the page dimmed in Background/surface-transparent.
- * Focus starts on Cancel, the safe answer, and goes round inside it.
+ * Focus starts on Cancel, the safe answer, and goes round inside it. Once the answer is under
+ * way, nothing cancels it: Cancel, Escape and the dimmed page wait, and the answer says it is busy.
  */
 export function QuestionSheet({
   title,
@@ -38,9 +39,10 @@ export function QuestionSheet({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
   const textId = useId();
-  useEscape(onCancel);
+  // While the answer is under way it cannot be taken back: Cancel would only hide that it goes on.
+  useEscape(onCancel, !isBusy);
 
-  // Focus on Cancel as it opens; Tab goes round its two buttons.
+  // Focus on Cancel as it opens; Tab goes round the buttons that can be pressed.
   useEffect(() => {
     const sheet = sheetRef.current;
     if (!sheet) return;
@@ -49,7 +51,12 @@ export function QuestionSheet({
       ?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
-      const buttons = [...sheet.querySelectorAll('button')];
+      const buttons = [...sheet.querySelectorAll('button')].filter((button) => !button.disabled);
+      // Busy, both buttons wait: focus stays on the question's heading.
+      if (buttons.length === 0) {
+        e.preventDefault();
+        return;
+      }
       const first = buttons.at(0);
       const last = buttons.at(-1);
       if (e.shiftKey && document.activeElement === first) {
@@ -78,7 +85,7 @@ export function QuestionSheet({
         type="button"
         aria-hidden
         tabIndex={-1}
-        onClick={onCancel}
+        onClick={isBusy ? undefined : onCancel}
         className="absolute inset-0 z-40 cursor-default bg-surface-transparent"
       />
       <section
@@ -112,7 +119,7 @@ export function QuestionSheet({
             disabled={isBusy}
             onClick={onConfirm}
           />
-          <Button variant="secondary" label="Cancel" onClick={onCancel} />
+          <Button variant="secondary" label="Cancel" disabled={isBusy} onClick={onCancel} />
         </div>
       </section>
     </>

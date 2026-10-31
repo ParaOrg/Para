@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { DELETE_ACCOUNT_TEXT } from './delete-account-words';
 import { QuestionSheet } from './question-sheet';
@@ -38,7 +38,17 @@ export const LogoutWithUnsent: Story = {
   args: { text: '4 recordings not sent yet will be left behind on this phone, unsent.' },
 };
 
-export const Busy: Story = { args: { isBusy: true } };
+/** Under way: it says so, and nothing cancels it, not Cancel, Escape or the dimmed page. */
+export const Busy: Story = {
+  args: { isBusy: true },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Logging out…' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onCancel).not.toHaveBeenCalled();
+  },
+};
 
 /** A try failed: one line in the sheet, where the contributor is, and the answer to try again. */
 export const Failed: Story = { args: { error: 'No signal. Try again when you’re online.' } };
