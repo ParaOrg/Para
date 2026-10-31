@@ -100,7 +100,7 @@ export function RecordingScreen({
       <RecordingTint state={state} />
       <div
         ref={closeRef}
-        className="absolute top-0 left-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] pl-[max(1rem,env(safe-area-inset-left))]"
+        className="absolute top-0 left-0 z-30 pt-[calc(env(safe-area-inset-top)+1.0625rem)] pl-[max(1.25rem,env(safe-area-inset-left))]"
       >
         <IconButton
           tooltip="top"

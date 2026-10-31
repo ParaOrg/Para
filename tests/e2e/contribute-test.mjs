@@ -734,6 +734,13 @@ const buttons = (page) =>
       (await mapSource(page))?.features.filter((f) => f.properties.kind === 'mark').length === 1,
   );
 
+  const discard = await page.getByRole('button', { name: 'Discard recording' }).boundingBox();
+  check(
+    "✕ stands 20 in and 17 under the safe area's top, as the recording frames have it",
+    Math.abs(discard.x - 20) < 0.5 && Math.abs(discard.y - 17) < 0.5,
+    JSON.stringify(discard),
+  );
+
   const card = page.getByRole('group', { name: 'Recording so far' });
   const open = {
     fold: await foldButton(page).boundingBox(),
