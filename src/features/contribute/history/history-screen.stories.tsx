@@ -91,7 +91,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="relative h-[844px] w-97.5 overflow-hidden">
+      <div className="relative h-211 w-97.5 overflow-hidden">
         <Story />
       </div>
     ),
@@ -164,6 +164,17 @@ export const LongList: Story = {
       Array.from({ length: 30 }, (_, index) => ride(index, PLACES[index % PLACES.length])),
       allOf(UPLOADED),
     ),
+  },
+};
+
+/** The list scrolled: the title takes its BottomShadow (4518:25024). */
+export const Scrolled: Story = {
+  args: LongList.args,
+  play: async ({ canvasElement }) => {
+    const list = canvasElement.querySelector('ul')?.parentElement;
+    list?.scrollTo({ top: 400 });
+    list?.dispatchEvent(new Event('scroll'));
+    await expect(canvasElement.querySelector('header')).toHaveClass('shadow-bottom-shadow');
   },
 };
 

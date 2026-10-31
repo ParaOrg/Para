@@ -13,8 +13,8 @@ const HEIGHT = 120;
  * colours are the map's own, so the sketch follows them when they change.
  */
 const LINE_STYLE: Record<Mode, { stroke: string; dash?: string }> = {
-  walk: { stroke: MAP_COLOURS['Map/Trail/line'], dash: '3 6' },
-  ride: { stroke: MAP_COLOURS['Map/Trail/line'] },
+  walk: { stroke: MAP_COLOURS['Map/Trail/lakad'], dash: '3 6' },
+  ride: { stroke: MAP_COLOURS['Map/Trail/sakay'] },
 };
 
 interface TrailSketchProps {

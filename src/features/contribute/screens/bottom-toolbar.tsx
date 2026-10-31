@@ -7,12 +7,9 @@ import './start-icons.css';
 /** The screen the toolbar is shown on: its tab is the marked one. */
 export type ToolbarTab = 'record' | 'history' | 'account';
 
-interface BottomToolbarProps {
-  current?: ToolbarTab;
+interface ToolbarCommonProps {
   /** Record, from History or Account: back to Start. */
   onOpenRecord?: () => void;
-  /** History. Left out on History. */
-  onOpenHistory?: () => void;
   /** Account. Left out in a build with no accounts, which has no Account tab, and on Account. */
   onOpenAccount?: () => void;
   /** The History tab, so focus can come back to it when History closes. */
@@ -20,6 +17,20 @@ interface BottomToolbarProps {
   /** The Account tab, so focus can come back to it when Account closes. */
   accountRef?: Ref<HTMLButtonElement>;
 }
+
+/** On History, its tab is the marked one: there is nothing for it to open. */
+interface OnHistoryProps extends ToolbarCommonProps {
+  current: 'history';
+  onOpenHistory?: never;
+}
+
+/** Anywhere else, the History tab opens History. */
+interface ElsewhereProps extends ToolbarCommonProps {
+  current?: Exclude<ToolbarTab, 'history'>;
+  onOpenHistory: () => void;
+}
+
+type BottomToolbarProps = OnHistoryProps | ElsewhereProps;
 
 const TAB = 'flex min-w-18 flex-col items-center rounded-full py-1 text-xs/4 font-medium';
 

@@ -10,6 +10,14 @@ import type { HistoryItems } from './use-history-items';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { BottomToolbar } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
+import type { UploadStatus } from '../uploads/upload-state';
+
+/** In flight: taking the recording off the phone now would cut that short. */
+const BUSY_STATES: ReadonlySet<UploadStatus['state']> = new Set([
+  'checking',
+  'uploading',
+  'removing',
+]);
 
 interface HistoryScreenProps {
   items: HistoryItems;
@@ -85,7 +93,7 @@ export function HistoryScreen({
                     canUpload: isKept && canUploadFromMenu(status),
                     isOnPhone: isKept,
                     canDeleteFromPara: uploads.canRemove(recording),
-                    isBusy: status.state === 'uploading' || status.state === 'removing',
+                    isBusy: BUSY_STATES.has(status.state),
                   }}
                   facts={factsOf(recording)}
                   picture={pictures.get(recording.id) ?? null}

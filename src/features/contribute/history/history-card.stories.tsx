@@ -199,3 +199,75 @@ export const AskingBeforeRemove: Story = {
     await expect(canvas.getByRole('button', { name: /More actions/ })).toHaveFocus();
   },
 };
+
+/** A failed removal from Para: it says so in red, and stays uploaded. */
+export const NotRemoved: Story = {
+  args: { status: { ...UPLOADED, problem: 'Not removed. No signal' } },
+};
+
+/** Sent under a sign-in this phone no longer has: it says why ⋮ offers no Delete from Para. */
+export const UploadedFromEarlierSignIn: Story = {
+  args: {
+    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
+  },
+};
+
+/** Longer than 6 hours: never sendable, so red with its reason and no retry. */
+export const TooLong: Story = {
+  args: {
+    status: {
+      state: 'failed',
+      message: 'Longer than 6 hours, so it cannot be uploaded. It stays on this phone.',
+      brief: 'Longer than 6 hours',
+      willRetry: false,
+    },
+    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
+  },
+};
+
+/** Being taken off Para. */
+export const Removing: Story = {
+  args: {
+    status: { state: 'removing' },
+    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: true },
+  },
+};
+
+/** An editor deleted it in the studio: kept here, with Upload to Para in the menu. */
+export const RemovedByAnEditor: Story = {
+  args: {
+    status: { state: 'removed', byEditor: true },
+    actions: { canUpload: true, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
+  },
+};
+
+/**
+ * With its picture: what most cards show. The stand-in here is a plain drawing, not a map; the
+ * real one is cut from the map as the form opens (#574).
+ */
+export const WithPicture: Story = {
+  args: {
+    picture: `data:image/svg+xml,${encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 240"><rect width="180" height="240" fill="#e5e5e5"/><path d="M0 60H180M0 150H180M60 0V240M130 0V240" stroke="#fafafa" stroke-width="10"/><path d="M40 200L70 150L110 110L140 40" stroke="#008236" stroke-width="6" fill="none" stroke-linecap="round"/></svg>',
+    )}`,
+  },
+};
+
+/** Its fixes not read yet: the day and time, and no distance. */
+export const FactsNotReadYet: Story = { args: { facts: null } };
+
+/** No end named on the form: no arrow line. */
+export const NoEndName: Story = { args: { recording: { ...recording, endPointName: '' } } };
+
+/** Nothing to do from here (an upload from another phone, not this account's to delete): no ⋮. */
+export const NoMenu: Story = {
+  args: {
+    actions: { canUpload: false, isOnPhone: false, canDeleteFromPara: false, isBusy: false },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole('button', { name: /More actions/ })).toBeNull();
+  },
+};
+
+/** A tricycle: no icon of its own yet, so none before the day. */
+export const Tricycle: Story = { args: { recording: { ...recording, rideKind: 'Tricycle' } } };

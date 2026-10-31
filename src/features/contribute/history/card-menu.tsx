@@ -11,7 +11,7 @@ export interface CardActions {
   isOnPhone: boolean;
   /** Uploaded under this account, so it can be deleted from Para. */
   canDeleteFromPara: boolean;
-  /** Not mid-upload or mid-removal, when taking it off the phone would cut that short. */
+  /** Mid-upload or mid-removal (or its person check): taking it off the phone would cut that short. */
   isBusy: boolean;
 }
 
