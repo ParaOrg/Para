@@ -348,6 +348,167 @@ async function seed(page, id, name, upload) {
   database.users.get(ACCOUNT_ID).profile = { ...ACCOUNT.profile };
 }
 
+// ------------------------- motion between the tabs: the way the tabs run, and never in the way
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  // Each screen's code fetched once, so the moves below are the moves a phone makes after its first.
+  await historyTab(page).click();
+  await heading('History').waitFor();
+  await accountTab(page).click();
+  await heading('Account').waitFor();
+  await toolbarRecord(page).click();
+  await start(page).waitFor();
+  await page.waitForTimeout(600);
+
+  /** What is moving 60 ms into a move: the view transition's parts and the toolbar's pill. */
+  const midMove = async (tap) => {
+    await tap.click();
+    await page.waitForTimeout(60);
+    return page.evaluate(() => ({
+      direction: document.documentElement.dataset.tabMotion ?? null,
+      parts: document
+        .getAnimations()
+        .map((a) => a.effect?.pseudoElement)
+        .filter(Boolean),
+      pill: document
+        .getAnimations()
+        .some(
+          (a) =>
+            a.effect?.target?.getAttribute?.('aria-hidden') === 'true' &&
+            a.effect.target.parentElement?.classList.contains('tab-toolbar'),
+        ),
+    }));
+  };
+  const toHistory = await midMove(historyTab(page));
+  check(
+    'Record to History: History slides in from the right over the map, and the pill slides to its tab',
+    toHistory.direction === 'forward' &&
+      toHistory.parts.includes('::view-transition-new(tab-screen)') &&
+      !toHistory.parts.includes('::view-transition-old(tab-screen)') &&
+      toHistory.pill,
+    JSON.stringify(toHistory),
+  );
+  check(
+    '  focus is on its heading at once, not after the move',
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'History',
+  );
+  await page.waitForTimeout(400);
+  const toAccount = await midMove(accountTab(page));
+  check(
+    '  History to Account: Account comes in from the right as History goes out to the left',
+    toAccount.direction === 'forward' &&
+      toAccount.parts.includes('::view-transition-new(tab-screen)') &&
+      toAccount.parts.includes('::view-transition-old(tab-screen)'),
+    JSON.stringify(toAccount),
+  );
+  await page.waitForTimeout(400);
+  const toSettings = await midMove(button(page, 'Account settings'));
+  check(
+    '  Account settings pushes in from the right, inside Account',
+    toSettings.direction === 'forward' &&
+      toSettings.parts.includes('::view-transition-new(tab-screen)'),
+    JSON.stringify(toSettings),
+  );
+  check(
+    '  the toolbar, which Account settings has none of, fades out with Account rather than snapping off',
+    toSettings.parts.includes('::view-transition-old(tab-toolbar)') &&
+      !toSettings.parts.includes('::view-transition-new(tab-toolbar)'),
+    JSON.stringify(toSettings),
+  );
+  await page.waitForTimeout(400);
+  const back = await midMove(button(page, 'Back'));
+  check('  and its Back goes the other way', back.direction === 'back', JSON.stringify(back));
+  await heading('Account').waitFor();
+  await page.waitForTimeout(400);
+  const toRecord = await midMove(toolbarRecord(page));
+  check(
+    '  Account to Record goes left: Account slides away to the right, off the map',
+    toRecord.direction === 'back' &&
+      toRecord.parts.includes('::view-transition-old(tab-screen)') &&
+      !toRecord.parts.includes('::view-transition-new(tab-screen)'),
+    JSON.stringify(toRecord),
+  );
+  await start(page).waitFor();
+  await page.waitForTimeout(400);
+
+  // Every value is the owner's Motion token, read by the script's fallbacks from the same place.
+  const timing = await page.evaluate(() =>
+    import('/src/features/contribute/common/tab-motion.ts').then((motion) => ({
+      arrive: motion.motionOf('arrive'),
+      move: motion.motionOf('move'),
+      shift: motion.tabShift(1),
+    })),
+  );
+  check(
+    "the moves' timings are the owner's Motion tokens: base on ease-enter, gentle on ease-move, a 7-step shift",
+    timing.arrive.duration === 200 &&
+      timing.arrive.easing === 'cubic-bezier(0.22, 1, 0.36, 1)' &&
+      timing.move.duration === 300 &&
+      timing.move.easing === 'cubic-bezier(0.65, 0, 0.35, 1)' &&
+      /calc\(1 \* calc\(.*\* 7\)\)/.test(timing.shift),
+    JSON.stringify(timing),
+  );
+
+  // A move to where the phone already is (a second tap) shows nothing: no slide replayed.
+  const noMove = await page.evaluate(() =>
+    import('/src/features/contribute/common/tab-motion.ts').then((motion) => {
+      motion.moveBetweenScreens(
+        () => false,
+        () => {},
+      );
+      return {
+        direction: document.documentElement.dataset.tabMotion ?? null,
+        moving: document.getAnimations().filter((a) => a.effect?.pseudoElement).length,
+      };
+    }),
+  );
+  check(
+    '  a move to the screen already showing shows nothing, and leaves no slide set',
+    noMove.direction === null && noMove.moving === 0,
+    JSON.stringify(noMove),
+  );
+
+  // Three taps faster than a move: each lands, and the last one is where the phone ends up.
+  await historyTab(page).click();
+  await page.waitForTimeout(40);
+  await accountTab(page).click();
+  await page.waitForTimeout(40);
+  await historyTab(page).click();
+  await page.waitForTimeout(600);
+  check(
+    'taps faster than the moves land where the last one points: History, nothing else on top',
+    (await page.evaluate(() => location.hash)) === '#history' &&
+      (await heading('History').count()) === 1 &&
+      (await heading('Account').count()) === 0 &&
+      (await page.evaluate(
+        () => document.getAnimations().filter((a) => a.effect?.pseudoElement).length,
+      )) === 0,
+  );
+
+  // Less motion asked for: the screens and the pill just switch.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await accountTab(page).click();
+  await page.waitForTimeout(40);
+  const reduced = await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter(
+        (a) => a.effect?.pseudoElement || a.effect?.target?.closest?.('.tab-toolbar, .tab-screen'),
+      )
+      .map((a) => a.effect?.pseudoElement || a.effect?.target?.tagName),
+  );
+  await heading('Account').waitFor();
+  check(
+    'with less motion asked for, nothing slides or fades: Account just shows',
+    reduced.length === 0,
+    JSON.stringify(reduced),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------------------------------------- Account: the Commute Statistics
 {
   const { page, fake, errors } = await phone();
