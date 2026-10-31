@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod/mini';
 
 import {
@@ -66,9 +65,7 @@ export async function deleteAccount(): Promise<void> {
         accountId: step.accountId,
         uploadIds: await accountUploadIds(client, step.accountId),
       };
-      // TODO: typed rpc once delete_my_account is applied and database types are regenerated.
-      const untyped: SupabaseClient = client;
-      const { error, status } = await untyped.rpc('delete_my_account');
+      const { error, status } = await client.rpc('delete_my_account');
       if (error) {
         if (status === 0) throw new AccountError('offline', error.message);
         // An anonymous phone, an editor, or an account that still owns rows of the map.
