@@ -3,8 +3,8 @@ import { flushSync } from 'react-dom';
 
 import { CommuteStats, type CommuteStatsState } from './commute-stats';
 import { GeneralBar } from './general-bar';
+import { LogoutConfirm } from './logout-confirm';
 import { ProfileCard } from './profile-card';
-import { QuestionSheet } from './question-sheet';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { BottomToolbar } from '../screens/bottom-toolbar';
 
@@ -107,24 +107,14 @@ export function AccountScreen({
         </div>
       </div>
       {isLogoutAsked && (
-        <QuestionSheet
-          title="Log out?"
-          text={logoutText(unsentCount)}
-          confirmLabel="Log out"
-          busyLabel="Logging out…"
-          isBusy={isLoggingOut}
+        <LogoutConfirm
+          unsentCount={unsentCount}
+          isLoggingOut={isLoggingOut}
           error={error}
-          onConfirm={onLogout}
+          onLogout={onLogout}
           onCancel={handleLogoutCancel}
         />
       )}
     </section>
   );
-}
-
-/** What logging out leaves: recordings not sent yet stay behind on this phone, unsent. */
-function logoutText(unsentCount: number): string {
-  if (unsentCount === 0) return 'You can log in again any time with your email and password.';
-  const noun = unsentCount === 1 ? 'recording' : 'recordings';
-  return `${unsentCount} ${noun} not sent yet will be left behind on this phone, unsent.`;
 }

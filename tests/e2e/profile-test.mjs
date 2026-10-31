@@ -125,13 +125,13 @@ const field = (page, name) => page.getByLabel(name, { exact: true });
 /** Account's toolbar: Record, back to Start. */
 const toolbarRecord = (page) =>
   page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Record' });
-/** Account's Logout, then the sheet's Log out. */
+/** Account's Logout question (4521:3500). */
+const logoutQuestion = (page) =>
+  page.getByRole('alertdialog', { name: 'Are you sure you want to logout?' });
+/** Account's Logout, then the question's Logout. */
 const logout = async (page) => {
   await button(page, 'Logout').click();
-  await page
-    .getByRole('alertdialog', { name: 'Log out?' })
-    .getByRole('button', { name: 'Log out' })
-    .click();
+  await logoutQuestion(page).getByRole('button', { name: 'Logout' }).click();
 };
 const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 /** The Sakay or Lakad row of the Commute Statistics' legend. */
@@ -762,15 +762,26 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.waitForFunction(() => document.readyState === 'complete');
   await accountTab(page).click();
   await button(page, 'Logout').click();
-  const sheet = page.getByRole('alertdialog', { name: 'Log out?' });
+  const sheet = logoutQuestion(page);
   await sheet.waitFor();
   check(
-    'Logout asks first, focus on Cancel, and says the recording not sent stays on this phone',
+    'Logout asks first over the frosted page, focus on Cancel, and says the recording not sent stays on this phone',
     (await page.evaluate(() => document.activeElement?.textContent)) === 'Cancel' &&
       (await sheet
         .getByText('1 recording not sent yet will be left behind on this phone')
-        .count()) === 1,
+        .count()) === 1 &&
+      (await sheet.getByRole('img').count()) === 0 &&
+      (await sheet.locator('img[alt=""]').count()) === 1,
     await sheet.innerText(),
+  );
+  await page.keyboard.press('Shift+Tab');
+  const wentRound = await page.evaluate(() => document.activeElement?.textContent);
+  await page.keyboard.press('Tab');
+  check(
+    '  Tab goes round its two buttons and stays inside',
+    wentRound === 'Logout' &&
+      (await page.evaluate(() => document.activeElement?.textContent)) === 'Cancel',
+    String(wentRound),
   );
   await page.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
@@ -779,7 +790,23 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     fake.logouts.length === 0 &&
       (await page.evaluate(() => document.activeElement?.textContent)) === 'Logout',
   );
+  await button(page, 'Logout').click();
+  await sheet.getByRole('button', { name: 'Cancel' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check('  Cancel keeps it signed in too', fake.logouts.length === 0);
+  // While the Logout is on its way nothing cancels it, and focus stays in the question.
+  fake.next.logout = 'hold';
   await logout(page);
+  await sheet.getByRole('button', { name: 'Logging out…' }).waitFor();
+  await page.keyboard.press('Escape');
+  check(
+    '  while logging out it says so: Cancel waits, Escape does nothing, focus stays inside',
+    (await sheet.count()) === 1 &&
+      (await sheet.getByRole('button', { name: 'Cancel' }).isDisabled()) &&
+      (await sheet.getByRole('button', { name: 'Logging out…' }).isDisabled()) &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="alertdialog"]'))),
+  );
+  fake.release();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
