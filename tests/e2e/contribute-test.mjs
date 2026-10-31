@@ -1058,6 +1058,54 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// -------- the save screens not fetched ahead (offline on Ready), then the signal back: the ride saves
+{
+  const { page, errors } = await phone();
+  // Chromium keeps a failed dynamic import failed for the page's life: Ready's fetch ahead must
+  // not leave the form unreachable once the signal is back.
+  const warnings = [];
+  page.on('console', (message) => {
+    if (message.type() === 'warning') warnings.push(message.text());
+  });
+  const SAVE_SCREENS = /screens\/(save-form|saved-screen)/;
+  await page.route(SAVE_SCREENS, (route) => route.abort('internetdisconnected'));
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  for (let i = 0; i < 50 && !warnings.some((w) => w.includes('fetched ahead')); i += 1) {
+    await page.waitForTimeout(100);
+  }
+  const isFetchAheadFailed = warnings.some((w) => w.includes('fetched ahead'));
+  await page.unroute(SAVE_SCREENS);
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 100);
+  await finishRecording(page);
+  const description = page.getByLabel('Description');
+  const isFormShown = await description
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(
+    'the save screens not fetched ahead on Ready: with the signal back, Finish still opens the form',
+    isFetchAheadFailed && isFormShown,
+    JSON.stringify({ isFetchAheadFailed, isFormShown }),
+  );
+  if (isFormShown) {
+    await description.fill('Fetched again');
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  check(
+    '  and Continue saves it, Successfully recorded',
+    await page
+      .getByRole('heading', { name: 'Successfully recorded' })
+      .waitFor({ timeout: 10000 })
+      .then(() => true)
+      .catch(() => false),
+  );
+  check('  and no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------------------- Keep recording on the form
 {
   const { page, errors } = await phone();
