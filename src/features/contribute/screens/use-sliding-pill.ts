@@ -1,9 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 
-import { prefersReducedMotion } from '../common/tab-motion';
-
-/** The pill's slide, as the owner's brief has it: quick, but seen. */
-const SLIDE = { duration: 250, easing: 'cubic-bezier(0.2, 0, 0, 1)' } as const;
+import { motionOf, prefersReducedMotion } from '../common/tab-motion';
 
 /**
  * Where the last toolbar drawn had its pill, and which tab that was. Each screen draws a toolbar of
@@ -31,20 +28,22 @@ export function useSlidingPill(current: string) {
     const from = last;
     last = { tab: current, left: tab.offsetLeft };
     if (!from || from.tab === current || prefersReducedMotion()) return;
+    // The owner's Motion for something on screen changing place (tokens.css).
+    const slide = motionOf('move');
     pill.animate(
       [
         { transform: `translateX(${from.left}px)` },
         { transform: `translateX(${tab.offsetLeft}px)` },
       ],
-      SLIDE,
+      slide,
     );
     const before = tabOf(from.tab);
     if (!before) return;
     // Each tab's colour now is the other's colour then: the new one darkens, the old one greys.
     const marked = getComputedStyle(tab).color;
     const unmarked = getComputedStyle(before).color;
-    tab.animate([{ color: unmarked }, { color: marked }], SLIDE);
-    before.animate([{ color: marked }, { color: unmarked }], SLIDE);
+    tab.animate([{ color: unmarked }, { color: marked }], slide);
+    before.animate([{ color: marked }, { color: unmarked }], slide);
   }, [current]);
 
   return { barRef, pillRef };

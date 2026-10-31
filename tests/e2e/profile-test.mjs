@@ -411,6 +411,12 @@ async function seed(page, id, name, upload) {
       toSettings.parts.includes('::view-transition-new(tab-screen)'),
     JSON.stringify(toSettings),
   );
+  check(
+    '  the toolbar, which Account settings has none of, fades out with Account rather than snapping off',
+    toSettings.parts.includes('::view-transition-old(tab-toolbar)') &&
+      !toSettings.parts.includes('::view-transition-new(tab-toolbar)'),
+    JSON.stringify(toSettings),
+  );
   await page.waitForTimeout(400);
   const back = await midMove(button(page, 'Back'));
   check('  and its Back goes the other way', back.direction === 'back', JSON.stringify(back));
@@ -426,6 +432,43 @@ async function seed(page, id, name, upload) {
   );
   await start(page).waitFor();
   await page.waitForTimeout(400);
+
+  // Every value is the owner's Motion token, read by the script's fallbacks from the same place.
+  const timing = await page.evaluate(() =>
+    import('/src/features/contribute/common/tab-motion.ts').then((motion) => ({
+      arrive: motion.motionOf('arrive'),
+      move: motion.motionOf('move'),
+      shift: motion.tabShift(1),
+    })),
+  );
+  check(
+    "the moves' timings are the owner's Motion tokens: base on ease-enter, gentle on ease-move, a 7-step shift",
+    timing.arrive.duration === 200 &&
+      timing.arrive.easing === 'cubic-bezier(0.22, 1, 0.36, 1)' &&
+      timing.move.duration === 300 &&
+      timing.move.easing === 'cubic-bezier(0.65, 0, 0.35, 1)' &&
+      /calc\(1 \* calc\(.*\* 7\)\)/.test(timing.shift),
+    JSON.stringify(timing),
+  );
+
+  // A move to where the phone already is (a second tap) shows nothing: no slide replayed.
+  const noMove = await page.evaluate(() =>
+    import('/src/features/contribute/common/tab-motion.ts').then((motion) => {
+      motion.moveBetweenScreens(
+        () => false,
+        () => {},
+      );
+      return {
+        direction: document.documentElement.dataset.tabMotion ?? null,
+        moving: document.getAnimations().filter((a) => a.effect?.pseudoElement).length,
+      };
+    }),
+  );
+  check(
+    '  a move to the screen already showing shows nothing, and leaves no slide set',
+    noMove.direction === null && noMove.moving === 0,
+    JSON.stringify(noMove),
+  );
 
   // Three taps faster than a move: each lands, and the last one is where the phone ends up.
   await historyTab(page).click();

@@ -1,8 +1,16 @@
 /*
  * Motion between the toolbar's screens (tab-motion.ts): the screen over the map slides the way
  * the tabs run, a short way, and fades; the map stays put; the toolbar shows its new state at
- * once, its pill sliding inside it (bottom-toolbar.tsx). Transform and opacity only.
+ * once, its pill sliding inside it (use-sliding-pill.ts). Transform and opacity only.
+ *
+ * Every value is the owner's Motion token (tokens.css), read here and, by the same names, by the
+ * fallbacks in script (tab-motion.ts, motionOf): a screen arriving is base on ease-enter, one
+ * leaving quick on ease-exit (two thirds of its enter), the pill moving gentle on ease-move.
  */
+:root {
+  /* How far a screen slides: a hint of the way, not the whole width. Read by tab-motion.ts. */
+  --tab-motion-shift: calc(var(--spacing) * 7);
+}
 
 /* The screens over the map: History, Account, Account settings. Record has none of its own. */
 .tab-screen {
@@ -14,10 +22,10 @@
   view-transition-name: tab-toolbar;
 }
 
-/* The page under them (the map, and Start's own controls) cross-fades in the same time. */
+/* The page under them (the map, and Start's own controls) cross-fades as a screen arrives. */
 ::view-transition-group(*) {
-  animation-duration: 220ms;
-  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  animation-duration: var(--transition-duration-base);
+  animation-timing-function: var(--ease-enter);
 }
 
 /* Taps go through to the screen being shown, so a second tap mid-move lands where it points. */
@@ -25,8 +33,10 @@
   pointer-events: none;
 }
 
+/* From one toolbar to the next (Record, History, Account): the new one at once, its pill sliding. */
 ::view-transition-group(tab-toolbar) {
-  animation-duration: 250ms;
+  animation-duration: var(--transition-duration-gentle);
+  animation-timing-function: var(--ease-move);
 }
 
 ::view-transition-old(tab-toolbar) {
@@ -38,10 +48,25 @@
   animation: none;
 }
 
-::view-transition-old(tab-screen),
+/* Into a screen with no toolbar (Account settings) and back: it fades with the screen. */
+::view-transition-old(tab-toolbar):only-child {
+  opacity: 1;
+  animation: tab-fade-out var(--transition-duration-quick) var(--ease-exit) both;
+}
+
+::view-transition-new(tab-toolbar):only-child {
+  animation: tab-fade-in var(--transition-duration-base) var(--ease-enter) both;
+}
+
 ::view-transition-new(tab-screen) {
-  animation-duration: 220ms;
-  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  animation-duration: var(--transition-duration-base);
+  animation-timing-function: var(--ease-enter);
+  animation-fill-mode: both;
+}
+
+::view-transition-old(tab-screen) {
+  animation-duration: var(--transition-duration-quick);
+  animation-timing-function: var(--ease-exit);
   animation-fill-mode: both;
 }
 
@@ -66,28 +91,40 @@
 @keyframes tab-in-from-right {
   from {
     opacity: 0;
-    transform: translateX(28px);
+    transform: translateX(var(--tab-motion-shift));
   }
 }
 
 @keyframes tab-in-from-left {
   from {
     opacity: 0;
-    transform: translateX(-28px);
+    transform: translateX(calc(-1 * var(--tab-motion-shift)));
   }
 }
 
 @keyframes tab-out-to-left {
   to {
     opacity: 0;
-    transform: translateX(-28px);
+    transform: translateX(calc(-1 * var(--tab-motion-shift)));
   }
 }
 
 @keyframes tab-out-to-right {
   to {
     opacity: 0;
-    transform: translateX(28px);
+    transform: translateX(var(--tab-motion-shift));
+  }
+}
+
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes tab-fade-out {
+  to {
+    opacity: 0;
   }
 }
 

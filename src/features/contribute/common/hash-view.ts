@@ -29,42 +29,35 @@ export function createHashView(hash: string): () => HashView {
 
   const isOpenNow = (): boolean => window.location.hash === hash;
 
-  // Each move says whether it changed anything: one that did not has nothing to show.
-  const openNow = (): boolean => {
-    if (isOpenNow()) return false;
+  const openNow = () => {
     hasPushedEntry = true;
     window.location.hash = hash;
-    return true;
   };
 
-  const closeNow = (): boolean => {
-    if (!isOpenNow()) return false;
+  const closeNow = () => {
     if (hasPushedEntry) {
       hasPushedEntry = false;
       window.history.back();
-      return true;
+      return;
     }
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     // Every screen's store is told, as a hashchange: replaceState itself fires none.
     window.dispatchEvent(new HashChangeEvent('hashchange'));
-    return true;
   };
 
   // Back, when this page load opened the screen from the one at `hash`; after a reload there is no
   // entry to go back to, so the URL is replaced and every screen's store told, as a hashchange.
-  const closeToNow = (target: string): boolean => {
-    if (!isOpenNow()) return false;
+  const closeToNow = (target: string) => {
     if (hasPushedEntry) {
       hasPushedEntry = false;
       window.history.back();
-      return true;
+      return;
     }
-    return replaceWithNow(target);
+    replaceWithNow(target);
   };
 
   // Every screen's store is told, as a hashchange: replaceState itself fires none.
-  const replaceWithNow = (target: string): boolean => {
-    if (!isOpenNow()) return false;
+  const replaceWithNow = (target: string) => {
     hasPushedEntry = false;
     window.history.replaceState(
       null,
@@ -72,14 +65,16 @@ export function createHashView(hash: string): () => HashView {
       window.location.pathname + window.location.search + target,
     );
     window.dispatchEvent(new HashChangeEvent('hashchange'));
-    return true;
   };
 
   // Every move is shown as one: the screens slide the way the toolbar's tabs run (tab-motion.ts).
-  const open = () => moveBetweenScreens(openNow);
-  const close = () => moveBetweenScreens(closeNow);
-  const closeTo = (target: string) => moveBetweenScreens(() => closeToNow(target));
-  const replaceWith = (target: string) => moveBetweenScreens(() => replaceWithNow(target));
+  // Each moves only from where it can: open when this screen is not showing, the rest when it is.
+  const isShut = () => !isOpenNow();
+  const open = () => moveBetweenScreens(isShut, openNow);
+  const close = () => moveBetweenScreens(isOpenNow, closeNow);
+  const closeTo = (target: string) => moveBetweenScreens(isOpenNow, () => closeToNow(target));
+  const replaceWith = (target: string) =>
+    moveBetweenScreens(isOpenNow, () => replaceWithNow(target));
 
   function useHashView(): HashView {
     const isOpen = useSyncExternalStore(subscribe, isOpenNow);

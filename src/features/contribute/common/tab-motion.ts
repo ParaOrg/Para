@@ -19,6 +19,31 @@ const MOVE_MS = 500;
 
 export type MotionDirection = 'forward' | 'back';
 
+/** The owner's Motion tokens a move uses (tokens.css), by what moves. */
+const MOTION_TOKENS = {
+  /** A screen arriving. */
+  arrive: ['--transition-duration-base', '--ease-enter'],
+  /** Something already on screen changing place: the toolbar's pill. */
+  move: ['--transition-duration-gentle', '--ease-move'],
+} as const;
+
+/**
+ * A move's timing, read from the same Motion tokens tab-motion.css uses, so the script's
+ * fallbacks and the view transitions can never part.
+ */
+export function motionOf(kind: keyof typeof MOTION_TOKENS): { duration: number; easing: string } {
+  const style = getComputedStyle(document.documentElement);
+  const [duration, easing] = MOTION_TOKENS[kind];
+  return {
+    duration: Number.parseFloat(style.getPropertyValue(duration)) || 0,
+    easing: style.getPropertyValue(easing).trim() || 'ease-out',
+  };
+}
+
+/** How far a screen slides on its way in, as tab-motion.css has it: `--tab-motion-shift`. */
+export const tabShift = (sign: 1 | -1): string =>
+  `translateX(calc(${sign} * ${getComputedStyle(document.documentElement).getPropertyValue('--tab-motion-shift').trim() || '0px'}))`;
+
 /** Whether the person asked their phone for less motion: then screens and the pill just switch. */
 export function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -75,14 +100,18 @@ function hashSettled(): Promise<void> {
 let running: ViewTransition | null = null;
 
 /**
- * Moves between the toolbar's screens with `change`, which changes the URL's hash and says whether
- * it did. Where the browser can, the move is a view transition: the screen over the map slides
- * the way the tabs run, 28 px, and fades, while the map stays put (tab-motion.css). A move during
+ * Moves between the toolbar's screens with `change`, which changes the URL's hash, when
+ * `willChange` says it would. Where the browser can, the move is a view transition: the screen over the map slides
+ * the way the tabs run, a short way, and fades, while the map stays put (tab-motion.css). A move during
  * another skips the first to its end, so a second tap always lands where it points. Nothing waits
  * on it: focus and input go to the new screen as it is drawn.
  */
-export function moveBetweenScreens(change: () => boolean): void {
+export function moveBetweenScreens(willChange: () => boolean, change: () => void): void {
   running?.skipTransition();
+  // No slide left over from the last move; this one's way is set as its hash changes.
+  delete document.documentElement.dataset.tabMotion;
+  // Nothing to move to (the screen already showing, a second tap): nothing to show.
+  if (!willChange()) return;
   if (!('startViewTransition' in document) || prefersReducedMotion()) {
     change();
     return;
@@ -92,7 +121,8 @@ export function moveBetweenScreens(change: () => boolean): void {
     const settled = hashSettled();
     isCapturing = true;
     try {
-      if (change()) await settled;
+      change();
+      await settled;
     } finally {
       isCapturing = false;
     }
