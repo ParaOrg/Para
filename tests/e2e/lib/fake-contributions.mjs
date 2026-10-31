@@ -36,6 +36,7 @@
 //   stats = 'offline'           get_my_stats fails as with no signal
 //   deleteAccount = 'offline'   delete_my_account fails as with no signal
 //   deleteAccount = 'hold'      delete_my_account waits until `fake.release()` (a delete in flight)
+//   logout = 'hold'             the sign-out waits until `fake.release()` (a Logout in flight)
 //
 // get_my_stats answers `fake.stats`, the account's numbers as one row; left null, the function is
 // not there (404 PGRST202), as before its migration is applied.
@@ -326,6 +327,9 @@ export async function fakeContributions(page) {
       return json(route, 200, session(found[0], { email: found[1].email, isAccount: true }));
     }
     if (url.pathname === '/auth/v1/logout' && method === 'POST') {
+      const fault = fake.next.logout;
+      delete fake.next.logout;
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
       fake.logouts.push(url.searchParams.get('scope'));
       fake.order.push('logout');
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
