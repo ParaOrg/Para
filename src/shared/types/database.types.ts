@@ -27,6 +27,7 @@ export type Database = {
           end_name: string | null
           ended_at: string
           events: Json
+          fare_php: number | null
           format_version: number
           gaps: Json
           hidden_at: string | null
@@ -39,6 +40,8 @@ export type Database = {
           north: number | null
           point_count: number
           received_at: string
+          ride_m: number | null
+          ride_s: number | null
           rules_version: number
           sent_at: string
           south: number | null
@@ -46,6 +49,8 @@ export type Database = {
           start_name: string | null
           started_at: string
           vehicle: string | null
+          walk_m: number | null
+          walk_s: number | null
           west: number | null
         }
         Insert: {
@@ -57,6 +62,7 @@ export type Database = {
           end_name?: string | null
           ended_at: string
           events: Json
+          fare_php?: number | null
           format_version: number
           gaps: Json
           hidden_at?: string | null
@@ -69,6 +75,8 @@ export type Database = {
           north?: number | null
           point_count: number
           received_at?: string
+          ride_m?: number | null
+          ride_s?: number | null
           rules_version: number
           sent_at: string
           south?: number | null
@@ -76,6 +84,8 @@ export type Database = {
           start_name?: string | null
           started_at: string
           vehicle?: string | null
+          walk_m?: number | null
+          walk_s?: number | null
           west?: number | null
         }
         Update: {
@@ -87,6 +97,7 @@ export type Database = {
           end_name?: string | null
           ended_at?: string
           events?: Json
+          fare_php?: number | null
           format_version?: number
           gaps?: Json
           hidden_at?: string | null
@@ -99,6 +110,8 @@ export type Database = {
           north?: number | null
           point_count?: number
           received_at?: string
+          ride_m?: number | null
+          ride_s?: number | null
           rules_version?: number
           sent_at?: string
           south?: number | null
@@ -106,6 +119,8 @@ export type Database = {
           start_name?: string | null
           started_at?: string
           vehicle?: string | null
+          walk_m?: number | null
+          walk_s?: number | null
           west?: number | null
         }
         Relationships: [
@@ -160,6 +175,9 @@ export type Database = {
           blocked_by: string | null
           first_seen_at: string
           id: string
+          name: string | null
+          phone: string | null
+          profile_updated_at: string | null
         }
         Insert: {
           block_note?: string | null
@@ -167,6 +185,9 @@ export type Database = {
           blocked_by?: string | null
           first_seen_at?: string
           id: string
+          name?: string | null
+          phone?: string | null
+          profile_updated_at?: string | null
         }
         Update: {
           block_note?: string | null
@@ -174,6 +195,9 @@ export type Database = {
           blocked_by?: string | null
           first_seen_at?: string
           id?: string
+          name?: string | null
+          phone?: string | null
+          profile_updated_at?: string | null
         }
         Relationships: []
       }
@@ -198,10 +222,10 @@ export type Database = {
           created_at?: string
           editor_id?: string | null
           id?: string
-          is_new?: boolean
+          is_new: boolean
           kind: string
           note?: string | null
-          payload?: Json
+          payload: Json
           revision?: number
           status?: string
           subject_id: string
@@ -287,7 +311,7 @@ export type Database = {
           started_at: string
         }
         Insert: {
-          cell?: never
+          cell?: number | null
           contribution_id: string
           lat: number
           lng: number
@@ -297,7 +321,7 @@ export type Database = {
           started_at: string
         }
         Update: {
-          cell?: never
+          cell?: number | null
           contribution_id?: string
           lat?: number
           lng?: number
@@ -368,6 +392,1266 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      point_batch_2026_10: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2026_11: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2026_12: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_01: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_02: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_03: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_04: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_05: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_06: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_07: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_08: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_09: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_10: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_11: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2027_12: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_01: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_02: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_03: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_04: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_05: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_06: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_07: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_08: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_09: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_10: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_11: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_2028_12: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
+      }
+      point_batch_default: {
+        Row: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms: number[] | null
+        }
+        Insert: {
+          accuracy_m: number[]
+          contribution_id: string
+          dlat: number[]
+          dlng: number[]
+          dt_ms: number[]
+          first_at: string
+          first_lat: number
+          first_lng: number
+          month: string
+          point_count: number
+          seq: number
+          speed_cms?: number[] | null
+        }
+        Update: {
+          accuracy_m?: number[]
+          contribution_id?: string
+          dlat?: number[]
+          dlng?: number[]
+          dt_ms?: number[]
+          first_at?: string
+          first_lat?: number
+          first_lng?: number
+          month?: string
+          point_count?: number
+          seq?: number
+          speed_cms?: number[] | null
+        }
+        Relationships: []
       }
       route: {
         Row: {
@@ -647,17 +1931,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      approve_draft: {
-        Args: {
-          p_draft: string
-        }
+      am_i_editor: { Args: never; Returns: boolean }
+      approve_draft: { Args: { p_draft: string }; Returns: Json }
+      approve_reviewed_draft: {
+        Args: { p_draft: string; p_revision: number }
         Returns: Json
       }
+      begin_claim: { Args: never; Returns: string }
       block_contributor: {
-        Args: {
-          note?: string
-          target: string
-        }
+        Args: { note?: string; target: string }
         Returns: undefined
       }
       claim_draft: {
@@ -671,54 +1953,74 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_my_account: { Args: never; Returns: undefined }
       discard_draft: {
-        Args: {
-          p_draft: string
-          p_revision?: number
-        }
+        Args: { p_draft: string; p_revision?: number }
         Returns: Json
+      }
+      finish_claim: { Args: { token: string }; Returns: number }
+      get_my_stats: {
+        Args: never
+        Returns: {
+          active_days: number
+          bus_rides: number
+          distance_m: number
+          e_jeep_rides: number
+          fare_php_total: number
+          fare_recordings: number
+          ferry_rides: number
+          first_ride_at: string
+          hinto_s: number
+          hintuans_helped: number
+          jeep_rides: number
+          longest_ride_m: number
+          longest_ride_moving_s: number
+          marks: number
+          moving_s: number
+          other_rides: number
+          ride_m: number
+          ride_s: number
+          rides: number
+          routes_helped: number
+          standing_s: number
+          train_rides: number
+          tricycle_rides: number
+          uv_express_rides: number
+          walk_m: number
+          walk_s: number
+        }[]
+      }
+      get_profile: {
+        Args: never
+        Returns: {
+          name: string
+          phone: string
+          profile_updated_at: string
+        }[]
       }
       put_back: {
-        Args: {
-          p_kind: string
-          p_subject_id: string
-        }
+        Args: { p_kind: string; p_subject_id: string }
         Returns: Json
       }
-      save_contribution: {
-        Args: {
-          recording: Json
-        }
-        Returns: string
+      refresh_draft_base: {
+        Args: { p_base_revision: number; p_draft: string; p_revision: number }
+        Returns: Json
       }
+      save_contribution: { Args: { recording: Json }; Returns: string }
       send_back_draft: {
-        Args: {
-          p_draft: string
-          p_note: string
-          p_revision: number
-        }
+        Args: { p_draft: string; p_note: string; p_revision: number }
         Returns: Json
       }
+      set_profile: { Args: { name: string; phone: string }; Returns: undefined }
       submit_draft: {
-        Args: {
-          p_draft: string
-          p_revision: number
-        }
+        Args: { p_draft: string; p_revision: number }
         Returns: Json
       }
       take_down: {
-        Args: {
-          p_kind: string
-          p_subject_id: string
-        }
+        Args: { p_kind: string; p_subject_id: string }
         Returns: Json
       }
-      unblock_contributor: {
-        Args: {
-          target: string
-        }
-        Returns: undefined
-      }
+      unblock_contributor: { Args: { target: string }; Returns: undefined }
     }
     Enums: {
       route_confidence: "drawn" | "verified"
