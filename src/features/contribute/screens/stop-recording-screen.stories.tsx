@@ -33,3 +33,14 @@ export const NothingYet: Story = { args: { figures: { elapsedSeconds: 2, distanc
 
 /** A long ride: minutes, and kilometres to one decimal. */
 export const LongRide: Story = { args: { figures: { elapsedSeconds: 5400, distanceM: 42_195 } } };
+
+/** A short phone, or one on its side: the whole screen scrolls, the paused figures last. */
+export const ShortScreen: Story = {
+  decorators: [
+    (Story) => (
+      <div className="relative h-[480px] w-[360px] overflow-hidden bg-surface-quaternary">
+        <Story />
+      </div>
+    ),
+  ],
+};

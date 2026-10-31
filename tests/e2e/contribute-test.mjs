@@ -701,6 +701,68 @@ const buttons = (page) =>
     '  Tab goes round its two buttons',
     await page.evaluate(() => !!document.activeElement?.closest('[role="alertdialog"]')),
   );
+  // Where the question and the figures stand, and whether the screen scrolls to reach them.
+  const stopLayout = () =>
+    page.evaluate(() => {
+      const screen = document.querySelector('[role="alertdialog"]');
+      const box = (testId) =>
+        screen.querySelector(`[data-testid="${testId}"]`).getBoundingClientRect();
+      const question = box('stop-question');
+      const paused = box('stop-paused');
+      return {
+        middle: question.top + question.height / 2,
+        questionBottom: question.bottom,
+        pausedTop: paused.top,
+        pausedBottom: paused.bottom,
+        height: screen.clientHeight,
+        isScrolling: screen.scrollHeight > screen.clientHeight,
+      };
+    });
+  {
+    const layout = await stopLayout();
+    check(
+      "  as the frame has it: the question's middle 40 over the screen's, the figures at its foot, no scroll",
+      Math.abs(layout.middle - (layout.height / 2 - 40)) < 1 &&
+        Math.abs(layout.pausedBottom - layout.height) < 1 &&
+        layout.questionBottom <= layout.pausedTop &&
+        !layout.isScrolling,
+      JSON.stringify(layout),
+    );
+  }
+  // A short phone, or one on its side: the whole screen scrolls, the figures last, nothing overlaps.
+  await page.setViewportSize({ width: 360, height: 480 });
+  await page.waitForTimeout(200);
+  {
+    const layout = await stopLayout();
+    const keep = stopScreen.getByRole('button', { name: 'Keep recording' });
+    const stop = stopScreen.getByRole('button', { name: 'Stop without saving' });
+    await stop.scrollIntoViewIfNeeded();
+    const isStopInView = await stop.evaluate((button) => {
+      const { top, bottom } = button.getBoundingClientRect();
+      return top >= 0 && bottom <= window.innerHeight;
+    });
+    // Scrolled to the end, the figures are whole on the screen.
+    const isPausedInView = await stopScreen.evaluate((screen) => {
+      screen.scrollTop = screen.scrollHeight;
+      const paused = screen.querySelector('[data-testid="stop-paused"]').getBoundingClientRect();
+      return paused.top >= 0 && paused.bottom <= window.innerHeight + 0.5;
+    });
+    await keep.scrollIntoViewIfNeeded();
+    const isKeepInView = await keep.evaluate((button) => {
+      const { top, bottom } = button.getBoundingClientRect();
+      return top >= 0 && bottom <= window.innerHeight;
+    });
+    check(
+      '  at 360×480 the screen scrolls: both answers and the figures are reached, none over another',
+      layout.isScrolling &&
+        layout.questionBottom + 24 <= layout.pausedTop + 0.5 &&
+        isStopInView &&
+        isPausedInView &&
+        isKeepInView,
+      JSON.stringify({ ...layout, isStopInView, isPausedInView, isKeepInView }),
+    );
+  }
+  await page.setViewportSize({ width: 393, height: 852 });
   await stopScreen.getByRole('button', { name: 'Keep recording' }).click();
   await stopScreen.waitFor({ state: 'detached' });
   check(

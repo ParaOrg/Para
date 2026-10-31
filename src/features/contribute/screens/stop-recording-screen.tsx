@@ -24,6 +24,10 @@ interface StopRecordingScreenProps {
  *
  * An alertdialog: focus starts on Keep recording and goes round inside it, Escape keeps
  * recording, and the page under it is inert (the page's).
+ *
+ * The question stands 40 over the screen's middle, as the frame has it, and the paused figures at
+ * its foot. Where they do not both fit (a short phone, a phone on its side) the whole screen
+ * scrolls, the figures last, as the owner chose.
  */
 export function StopRecordingScreen({ figures, onKeep, onStop }: StopRecordingScreenProps) {
   const screenRef = useRef<HTMLDivElement>(null);
@@ -62,32 +66,40 @@ export function StopRecordingScreen({ figures, onKeep, onStop }: StopRecordingSc
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={textId}
-      className="absolute inset-0 z-50 bg-surface/80 font-sn-pro backdrop-blur-md motion-safe:animate-fade-in"
+      className="absolute inset-0 z-50 overflow-y-auto bg-surface/80 font-sn-pro backdrop-blur-md motion-safe:animate-fade-in"
     >
-      <div className="absolute inset-x-0 top-[calc(50%-2.5rem)] flex -translate-y-1/2 flex-col gap-12 px-5">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <img src={stopHand} alt="" className="size-20" />
-          <div className="flex flex-col gap-2">
-            <h2 id={titleId} className="text-2xl/8 font-semibold text-content-primary">
-              Stop and delete this ride?
-            </h2>
-            <p id={textId} className="text-base/6 text-content-quaternary">
-              You’ve recorded {distance.value} {distance.unit} so far. It will be lost if you leave
-              now.
-            </p>
+      {/* The room above the question and the room below it grow alike, the room below from 80:
+          so the question's middle is 40 over the screen's. Short of room, the space above gives
+          way first, keeping 24 between the question and the figures, then the screen scrolls. */}
+      <div className="flex min-h-full flex-col">
+        <div className="min-h-5 grow" />
+        <div data-testid="stop-question" className="flex flex-col gap-12 px-5">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <img src={stopHand} alt="" className="size-20" />
+            <div className="flex flex-col gap-2">
+              <h2 id={titleId} className="text-2xl/8 font-semibold text-content-primary">
+                Stop and delete this ride?
+              </h2>
+              <p id={textId} className="text-base/6 text-content-quaternary">
+                You’ve recorded {distance.value} {distance.unit} so far. It will be lost if you
+                leave now.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button variant="primary" label="Keep recording" onClick={onKeep} />
+            <Button variant="error" label="Stop without saving" onClick={onStop} />
           </div>
         </div>
-        <div className="flex flex-col gap-3">
-          <Button variant="primary" label="Keep recording" onClick={onKeep} />
-          <Button variant="error" label="Stop without saving" onClick={onStop} />
+        <div className="flex grow basis-20 flex-col justify-end pt-6">
+          <div data-testid="stop-paused" className="flex flex-col items-center gap-4 px-5 pb-12">
+            <p className="text-2xl/8 font-semibold text-content-disabled">Recording Paused</p>
+            <dl className="flex w-full gap-2">
+              <PausedFigure figure={timeFigure(figures.elapsedSeconds)} name="Time" />
+              <PausedFigure figure={distance} name="Distance" isEnd />
+            </dl>
+          </div>
         </div>
-      </div>
-      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 px-5 pb-12">
-        <p className="text-2xl/8 font-semibold text-content-disabled">Recording Paused</p>
-        <dl className="flex w-full gap-2">
-          <PausedFigure figure={timeFigure(figures.elapsedSeconds)} name="Time" />
-          <PausedFigure figure={distance} name="Distance" isEnd />
-        </dl>
       </div>
     </div>
   );
