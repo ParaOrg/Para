@@ -273,10 +273,12 @@
      pabalik in the orange of Card/orange/surface. Provisional: not named in Figma yet. */
   --map-trail-papunta: var(--color-blue-700);
   --map-trail-pabalik: var(--color-orange-700);
-  /* The contributor page's own trail, walked (dashed, a foot along it) and ridden (solid), in
-     the fuchsia the recording frames draw it in (4480:14235, 4481:23795). Provisional: not
-     named in Figma yet. */
-  --map-trail-line: var(--color-fuchsia-700);
+  /* The contributor page's own trail: walked (Lakad: round dashes, a foot along it) in the blue
+     and ridden (Sakay: solid) in the green of the recording tint's Lakad and Sakay states
+     (OverlayIndicator, 4493:1697), so the line and the map's edges say the same mode.
+     Provisional: not named in Figma yet. */
+  --map-trail-lakad: var(--color-blue-700);
+  --map-trail-sakay: var(--color-green-700);
   /* The pin a contributor leaves where they marked a place: in neither way's colour. */
   --map-trail-mark: var(--color-purple-700);
   /* The contributor page's flagged stop: Figma's flagstop pin (4496:18697), in Card/red/surface. */
@@ -389,7 +391,8 @@
   --color-map-locator-indicator-overlay-border: var(--map-locator-indicator-overlay-border);
   --color-map-trail-papunta: var(--map-trail-papunta);
   --color-map-trail-pabalik: var(--map-trail-pabalik);
-  --color-map-trail-line: var(--map-trail-line);
+  --color-map-trail-lakad: var(--map-trail-lakad);
+  --color-map-trail-sakay: var(--map-trail-sakay);
   --color-map-trail-mark: var(--map-trail-mark);
   --color-map-trail-flag: var(--map-trail-flag);
   --color-map-rail-light-rail-way-one-surface: var(--map-rail-light-rail-way-one-surface);

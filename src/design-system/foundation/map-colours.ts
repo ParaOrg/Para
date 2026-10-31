@@ -24,10 +24,11 @@ export const MAP_COLOURS = {
   'Map/LocatorIndicatorOverlay/surface': '#8b7aff', // parabrand/500, at 15%
   'Map/LocatorIndicatorOverlay/border': '#4900be', // parabrand/800, at 75%
   // Provisional: not named in Figma yet. papunta and pabalik colour the studio's Contributors map;
-  // line is /contribute/'s own trail as it is drawn live.
+  // lakad and sakay are /contribute/'s own trail as it is drawn live.
   'Map/Trail/papunta': '#1447e6', // blue/700
   'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface
-  'Map/Trail/line': '#a800b7', // fuchsia/700, the contributor page's walked and ridden lines
+  'Map/Trail/lakad': '#1447e6', // blue/700, the contributor page's walked line: the tint's Lakad
+  'Map/Trail/sakay': '#008236', // green/700, its ridden line: the tint's Sakay
   'Map/Trail/mark': '#8200db', // purple/700, apart from both ways
   'Map/Trail/flag': '#9f0712', // red/800, Card/red/surface: the contributor page's flagged stop
   'Map/Rail/LightRailWayOne/surface': '#1d7739', // light-rail-way-one/600

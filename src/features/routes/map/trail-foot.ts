@@ -16,7 +16,7 @@ const FOOTSTEPS = [
 const FOOT_SIZE = 20;
 
 /**
- * The foot as an image: the footsteps in white on a disc of the trail's colour with a casing
+ * The foot as an image: the footsteps in white on a disc of the walked line's colour with a casing
  * ring, so it reads on the dashes and between them. Drawn on a canvas, so in the browser only.
  */
 function footImage(): ImageData | null {
@@ -28,7 +28,7 @@ function footImage(): ImageData | null {
   if (!context) return null;
   context.beginPath();
   context.arc(size / 2, size / 2, size / 2 - 2, 0, 2 * Math.PI);
-  context.fillStyle = MAP_COLOURS['Map/Trail/line'];
+  context.fillStyle = MAP_COLOURS['Map/Trail/lakad'];
   context.fill();
   context.lineWidth = 3;
   context.strokeStyle = MAP_PAINT['Paint/casing'];
