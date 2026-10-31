@@ -1001,7 +1001,7 @@ const buttons = (page) =>
   await page.context().close();
 }
 
-// ------------- a screen that fails: the page says so, and Try again brings the ride back as it was
+// ------------- a screen that fails: the page says recording is paused, and Try again brings the ride back
 {
   const { page, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
@@ -1024,22 +1024,36 @@ const buttons = (page) =>
   const failed = page.getByRole('heading', { name: 'Para couldn’t open this screen' });
   await failed.waitFor();
   check(
-    'a screen that fails shows what happened, focus on it, and that the recording is safe, with Try again',
+    'a screen that fails shows what happened, focus on it, that recording is paused and what was recorded is safe, with Try again',
     (await page.evaluate(() => document.activeElement?.tagName === 'H1')) &&
-      (await page.getByText('Your recording is safe on this phone.').count()) === 1 &&
+      (await page
+        .getByText(/^Recording is paused\. What you’ve recorded so far is safe/)
+        .count()) === 1 &&
       (await page.getByRole('button', { name: 'Try again' }).count()) === 1,
   );
+  // The ride goes on while the error shows: the words must not promise these are kept.
+  await ride(page, 310, 600);
   await page.unroute(/\/screens\/recording-screen\.tsx/);
   await page.getByRole('button', { name: 'Try again' }).click();
   await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
   check(
-    '  Try again reloads, and the ride comes back left open, with the distance it had',
+    '  Try again reloads, and the ride comes back left open at the distance it had before the error: nothing recorded while it showed',
     Boolean(distanceBefore) && (await distanceOf()) === distanceBefore,
     `${distanceBefore} / ${await distanceOf()}`,
   );
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
-  check('  and Resume carries on recording it', true);
+  // On from where the kept ride stopped, the page's clock (started afresh by the reload) moved
+  // past the fixes it kept.
+  await page.evaluate(() => window.__advance(10 * 60 * 1000));
+  await ride(page, 300, 600);
+  await page.waitForTimeout(500);
+  const distanceAfter = await distanceOf();
+  check(
+    '  and Resume carries on recording it',
+    distanceAfter !== undefined && distanceAfter !== distanceBefore,
+    `${distanceBefore} / ${distanceAfter}`,
+  );
   check('  with no page error', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

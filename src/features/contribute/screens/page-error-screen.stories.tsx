@@ -18,5 +18,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A screen of the page failed: what happened, that the recording is safe, and Try again. */
+/** A screen of the page failed: what happened, that recording is paused and what was kept, and Try again. */
 export const Default: Story = {};
