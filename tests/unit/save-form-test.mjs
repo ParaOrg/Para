@@ -26,11 +26,49 @@ test('a fare from ₱0 to ₱2,000 with up to two decimals is read in pesos', ()
     ['13.50', 13.5],
     ['.5', 0.5],
     [' 45 ', 45],
-    ['2,000', 2000],
     ['2000.00', 2000],
   ]) {
     assert.deepEqual(fareFromText(text), { farePhp }, text);
   }
+});
+
+test('a decimal comma is read as a decimal point, as a comma-decimal phone gives it', () => {
+  for (const [text, farePhp] of [
+    ['13,50', 13.5],
+    ['13,5', 13.5],
+    ['1,3', 1.3],
+    [',5', 0.5],
+    ['0,75', 0.75],
+  ]) {
+    assert.deepEqual(fareFromText(text), { farePhp }, text);
+  }
+});
+
+test('a comma before three digits is a thousands comma', () => {
+  for (const [text, farePhp] of [
+    ['1,350', 1350],
+    ['1,350.50', 1350.5],
+    ['2,000', 2000],
+  ]) {
+    assert.deepEqual(fareFromText(text), { farePhp }, text);
+  }
+});
+
+test('a comma that cannot be read without a guess is the error, never a fare', () => {
+  for (const text of [
+    '1,3,5',
+    '13,5000',
+    '1,000,50',
+    '13,',
+    ',',
+    '1,35,0',
+    '13,50.5',
+    '12,345,6',
+  ]) {
+    assert.deepEqual(fareFromText(text), { error: FARE_ERROR }, text);
+  }
+  // Over the most, read either way.
+  assert.deepEqual(fareFromText('2,500'), { error: FARE_ERROR });
 });
 
 test('anything else is the one error, and never a fare', () => {

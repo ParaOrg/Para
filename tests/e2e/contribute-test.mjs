@@ -908,6 +908,17 @@ const buttons = (page) =>
   );
   await page.keyboard.press('Tab');
   await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Tab');
+  const afterArrowTab = await focusName();
+  await page.keyboard.press('Shift+Tab');
+  const afterArrowShiftTab = await focusName();
+  check(
+    '  after an arrow key, Tab still stays inside it (back to ✕), and Shift+Tab returns to the ride moved to',
+    (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))) &&
+      afterArrowTab === 'Close' &&
+      afterArrowShiftTab === 'E-Jeep',
+    [afterArrowTab, afterArrowShiftTab].join(' → '),
+  );
   await page.keyboard.press('Enter');
   check(
     '  the arrow keys move along the rides, and Enter picks one: the sheet closes, the field shows it',

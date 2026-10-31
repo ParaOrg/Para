@@ -32,7 +32,7 @@ export function RideField({ rideKind, isSheetOpen, onOpen, ref }: RideFieldProps
       trailing={
         <span
           aria-hidden
-          className={FIELD_TRAILING + ' pointer-events-none absolute inset-y-0 right-0'}
+          className={cn(FIELD_TRAILING, 'pointer-events-none absolute inset-y-0 right-0')}
         >
           <span className="size-6 *:size-full">
             <ChevronDownIcon />

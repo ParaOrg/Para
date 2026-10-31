@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
@@ -68,7 +68,7 @@ export function RideSheet({ rideKind, onPick, onClose }: RideSheetProps) {
     return () => window.removeEventListener('click', handleClick);
   }, [onClose]);
 
-  // Tab goes round inside the sheet: ✕, then the picked row (or the first), and back.
+  // Tab goes round inside the sheet: ✕, then the rows' one stop, and back to ✕ from any row.
   useEffect(() => {
     const sheet = sheetRef.current;
     if (!sheet) return;
@@ -77,10 +77,11 @@ export function RideSheet({ rideKind, onPick, onClose }: RideSheetProps) {
       const stops = [...sheet.querySelectorAll<HTMLElement>('button:not([tabindex="-1"])')];
       const first = stops.at(0);
       const last = stops.at(-1);
+      const isOnRow = document.activeElement?.getAttribute('role') === 'radio';
       if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
         e.preventDefault();
         last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
+      } else if (!e.shiftKey && (isOnRow || document.activeElement === last)) {
         e.preventDefault();
         first?.focus();
       }
@@ -98,9 +99,11 @@ export function RideSheet({ rideKind, onPick, onClose }: RideSheetProps) {
     rows?.[(at + step + RIDE_CHOICES.length) % RIDE_CHOICES.length]?.focus();
   };
 
-  // The one row Tab reaches: the picked ride, or the first.
-  const tabRow =
-    rideKind !== null && RIDE_CHOICES.some((kind) => kind === rideKind) ? rideKind : 'Jeep';
+  // The rows' one Tab stop (a roving tabindex): the picked ride, or the first, then wherever focus
+  // has gone among them, so Tab and Shift+Tab come back to the row last on.
+  const [tabRow, setTabRow] = useState<RideChoice>(
+    () => RIDE_CHOICES.find((kind) => kind === rideKind) ?? 'Jeep',
+  );
 
   return (
     <>
@@ -139,9 +142,10 @@ export function RideSheet({ rideKind, onPick, onClose }: RideSheetProps) {
                 role="radio"
                 aria-checked={isPicked}
                 tabIndex={kind === tabRow ? 0 : -1}
+                onFocus={() => setTabRow(kind)}
                 onClick={() => onPick(kind)}
                 onKeyDown={(e) => handleRowKeyDown(e, at)}
-                className="flex items-center gap-2 py-3 text-left text-content-primary outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-brand-surface"
+                className="flex items-center gap-2 py-3 text-left text-content-primary outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-brand-surface active:bg-surface-secondary"
               >
                 <span aria-hidden className="size-6 shrink-0 *:size-full">
                   {RIDE_ICON[kind]}
@@ -162,19 +166,20 @@ interface RadioMarkProps {
 }
 
 /**
- * Figma's Radiobutton (4524:15177): a 24 ring in Border/secondary. The set draws only its rest;
- * picked, it takes a Brand/surface ring and dot until the owner draws its own.
+ * Figma's Radiobutton (set 4524:15178): at rest (4524:15177) a 24 ring, 1 wide, in
+ * Border/secondary; picked (Variant2, 4524:15179) a 2-wide Brand/surface ring round a 14
+ * Brand/surface dot.
  */
 function RadioMark({ isPicked }: RadioMarkProps) {
   return (
     <span
       aria-hidden
       className={cn(
-        'flex size-6 shrink-0 items-center justify-center rounded-full border',
-        isPicked ? 'border-brand-surface' : 'border-border-secondary',
+        'flex size-6 shrink-0 items-center justify-center rounded-full',
+        isPicked ? 'border-2 border-brand-surface' : 'border border-border-secondary',
       )}
     >
-      {isPicked && <span className="size-3 rounded-full bg-brand-surface" />}
+      {isPicked && <span className="size-3.5 rounded-full bg-brand-surface" />}
     </span>
   );
 }
