@@ -15,7 +15,7 @@ function recordingOf(upload: AccountUpload): Recording {
     startPointName: upload.startPointName,
     endPointName: upload.endPointName,
     description: upload.description,
-    rideKind: null,
+    rideKind: upload.rideKind,
     upload: { state: 'uploaded', at: upload.startedAt, by: '' },
   };
 }

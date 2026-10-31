@@ -136,6 +136,9 @@ const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) 
 /** Ready's History tab, in the toolbar over the Start bar. */
 const historyTab = (page) =>
   page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'History' });
+/** The Record tab, in the toolbar at the foot of History: back to Start. */
+const recordTab = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Record' });
 /** The History screen, opened by Ready's History tab unless it is already showing. */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
@@ -146,11 +149,10 @@ const openHistory = async (page) => {
   await history.click();
   await heading.waitFor();
 };
-/** Every card's actions opened, so its Download is there to press. */
-const openCardMenus = async (page) => {
-  for (const more of await page.getByRole('button', { name: /^More actions/ }).all()) {
-    if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
-  }
+/** The first card's ⋮ menu opened, so its Download recording is there to press. */
+const openCardMenu = async (page) => {
+  const more = page.getByRole('button', { name: /^More actions/ }).first();
+  if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
 };
 /** The card's Time in seconds, whether it reads "42 sec" or "12 min". */
 const recordedSeconds = (stats) => {
@@ -263,7 +265,15 @@ const buttons = (page) =>
       hash: await page.evaluate(() => location.hash),
       focus: await page.evaluate(() => document.activeElement?.textContent),
       starts: await page.getByRole('button', { name: 'Start Tracking' }).count(),
+      // History is a tab like Account: the toolbar at its foot, History marked, Record beside it.
       tabs: await page.getByRole('navigation', { name: 'Screens' }).count(),
+      marked: await page
+        .getByRole('navigation', { name: 'Screens' })
+        .locator('[aria-current="page"]')
+        .textContent(),
+      records: await recordTab(page).count(),
+      accounts: await page.getByRole('button', { name: 'Account' }).count(),
+      backs: await page.getByRole('button', { name: 'Back', exact: true }).count(),
       // Inert, not removed: the map stays mounted, but nothing in it can be focused or pressed.
       isMapInert: await page.evaluate(
         () => !!document.querySelector('button[aria-label="Map design"]')?.closest('[inert]'),
@@ -271,11 +281,15 @@ const buttons = (page) =>
       empty: await page.getByText('No recordings yet.').count(),
     };
     check(
-      '  History opens at #history, focus on its heading, no Start, no tabs, no map controls reachable',
+      '  History opens at #history, focus on its heading, no Start, no Back, the toolbar with History marked and Record (no Account in this build), no map controls reachable',
       opened.hash === '#history' &&
         opened.focus === 'History' &&
         opened.starts === 0 &&
-        opened.tabs === 0 &&
+        opened.tabs === 1 &&
+        opened.marked === 'History' &&
+        opened.records === 1 &&
+        opened.accounts === 0 &&
+        opened.backs === 0 &&
         opened.isMapInert &&
         opened.empty === 1,
       JSON.stringify(opened),
@@ -283,18 +297,18 @@ const buttons = (page) =>
     await page.reload({ waitUntil: 'load' });
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 10000 });
     check('  a reload stays on History', (await page.evaluate(() => location.hash)) === '#history');
-    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await recordTab(page).click();
     await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
     check(
-      '  its own back button returns to Ready, and the hash is gone',
+      '  its Record tab returns to Ready, and the hash is gone',
       (await page.evaluate(() => location.hash)) === '',
     );
     await historyTab(page).click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
-    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await recordTab(page).click();
     await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
     check(
-      '  opened from the History tab, Back hands focus back to the tab',
+      '  opened from the History tab, Record hands focus back to the History tab',
       await page
         .waitForFunction(
           () =>
@@ -1157,9 +1171,56 @@ const buttons = (page) =>
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await page.getByRole('button', { name: 'Record again' }).click();
   await openHistory(page);
-  await openCardMenus(page);
-  await page.getByRole('button', { name: /^Delete from phone, / }).click();
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  const card = page.getByRole('listitem').first();
+  await card.locator('img').waitFor({ timeout: 10000 });
+  const shown = {
+    src: await card.locator('img').getAttribute('src'),
+    text: (await card.innerText()).replace(/\n/g, ' '),
+  };
+  check(
+    "  History's card shows that picture, and its day, time and distance in Figma's order",
+    shown.src === picture?.url &&
+      /\w{3} \d{1,2}, \d{4} 0h \dm \d{3} m/.test(shown.text) &&
+      shown.text.includes('Only on this phone'),
+    shown.text,
+  );
+  // With no picture kept (no tiles when the form opened), the card draws the trail itself.
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const tx = open.result.transaction('thumbnails', 'readwrite');
+          tx.objectStore('thumbnails').clear();
+          tx.oncomplete = resolve;
+        };
+      }),
+  );
+  await page.reload({ waitUntil: 'load' });
+  await openHistory(page);
+  // Attached, not visible: this trail runs due east, a line with no height.
+  await card.locator('path[stroke]').first().waitFor({ state: 'attached', timeout: 10000 });
+  check(
+    '  with no picture, the card draws the trail from its fixes instead',
+    (await card.locator('img').count()) === 0 && (await card.locator('path[stroke]').count()) > 0,
+  );
+  // Kept again, so removing the recording below has a picture to take with it.
+  await page.evaluate(
+    (row) =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const tx = open.result.transaction('thumbnails', 'readwrite');
+          tx.objectStore('thumbnails').put(row);
+          tx.oncomplete = resolve;
+        };
+      }),
+    { recordingId: picture?.id, dataUrl: picture?.url },
+  );
+  check('  (its picture kept again)', (await thumbnails()).length === 1);
+  await openCardMenu(page);
+  await page.getByRole('button', { name: /^Remove from this phone, / }).click();
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
   await page.getByText('No recordings yet.').waitFor();
   check('  deleting the recording deletes its picture', (await thumbnails()).length === 0);
   check('  no page error', errors.length === 0, errors.join('; '));
@@ -1602,13 +1663,13 @@ const buttons = (page) =>
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await page.getByRole('button', { name: 'Record again' }).click();
   await openHistory(page);
-  await openCardMenus(page);
-  const rowDownloads = page.getByRole('button', { name: /^Download, the recording of / });
+  await openCardMenu(page);
+  const rowDownloads = page.getByRole('button', { name: /^Download recording, the recording of / });
   await rowDownloads.first().waitFor();
   check('the recording just saved is listed in History', (await rowDownloads.count()) === 1);
   await page.reload({ waitUntil: 'load' });
   await openHistory(page);
-  await openCardMenus(page);
+  await openCardMenu(page);
   check('after a reload it is still listed', (await rowDownloads.count()) === 1);
   const [download] = await Promise.all([
     page.waitForEvent('download'),
@@ -1626,7 +1687,7 @@ const buttons = (page) =>
     '  History has no Start bar',
     (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
   );
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await recordTab(page).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
@@ -1773,11 +1834,13 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
     .getByRole('heading', { level: 1, name: 'History' })
     .waitFor({ timeout: 5000 })
     .catch(() => {});
-  await openCardMenus(second);
+  await openCardMenu(second);
   check(
     '  once the first tab saves, the second lists it without a reload',
     (await second
-      .getByRole('button', { name: /^Download, the recording of .*, From the first tab$/ })
+      .getByRole('button', {
+        name: /^Download recording, the recording of .*, From the first tab$/,
+      })
       .count()) === 1,
   );
   check('no page errors', errors.length === 0, errors.join('; '));

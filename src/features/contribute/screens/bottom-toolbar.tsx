@@ -5,13 +5,11 @@ import { cn } from '@/shared/utils/cn';
 import './start-icons.css';
 
 /** The screen the toolbar is shown on: its tab is the marked one. */
-export type ToolbarTab = 'record' | 'account';
+export type ToolbarTab = 'record' | 'history' | 'account';
 
-interface BottomToolbarProps {
-  current?: ToolbarTab;
-  /** Record, from Account: back to Start. */
+interface ToolbarCommonProps {
+  /** Record, from History or Account: back to Start. */
   onOpenRecord?: () => void;
-  onOpenHistory: () => void;
   /** Account. Left out in a build with no accounts, which has no Account tab, and on Account. */
   onOpenAccount?: () => void;
   /** The History tab, so focus can come back to it when History closes. */
@@ -20,11 +18,25 @@ interface BottomToolbarProps {
   accountRef?: Ref<HTMLButtonElement>;
 }
 
+/** On History, its tab is the marked one: there is nothing for it to open. */
+interface OnHistoryProps extends ToolbarCommonProps {
+  current: 'history';
+  onOpenHistory?: never;
+}
+
+/** Anywhere else, the History tab opens History. */
+interface ElsewhereProps extends ToolbarCommonProps {
+  current?: Exclude<ToolbarTab, 'history'>;
+  onOpenHistory: () => void;
+}
+
+type BottomToolbarProps = OnHistoryProps | ElsewhereProps;
+
 const TAB = 'flex min-w-18 flex-col items-center rounded-full py-1 text-xs/4 font-medium';
 
 /**
  * Figma's BottomToolbar (4496:10482): Record, History and Account, the screen showing marked. A
- * pill over the map, centred above the Start bar, and at the foot of Account.
+ * pill over the map, centred above the Start bar, and at the foot of History and Account.
  */
 export function BottomToolbar({
   current = 'record',
@@ -41,8 +53,7 @@ export function BottomToolbar({
           <span aria-hidden className="start-icon start-icon-record size-6" />
           Record
         </Tab>
-        {/* History has no toolbar of its own, so its tab is never the marked one. */}
-        <Tab isCurrent={false} onClick={onOpenHistory} ref={historyRef}>
+        <Tab isCurrent={current === 'history'} onClick={onOpenHistory} ref={historyRef}>
           <span aria-hidden className="start-icon start-icon-history-tab size-6" />
           History
         </Tab>

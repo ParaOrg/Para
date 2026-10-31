@@ -73,6 +73,7 @@ const itemsOf = (
   recordings,
   uploads,
   isOnPhone: (recording) => !elsewhere.some((other) => other.id === recording.id),
+  factsOf: () => ({ distanceM: 12_400, isWalkOnly: false, trail: null }),
   load,
 });
 
@@ -82,14 +83,15 @@ const meta = {
   parameters: { layout: 'fullscreen' },
   args: {
     items: itemsOf(rides, allOf(UPLOADED)),
-    onBack: fn(),
-    onRecord: fn(),
+    pictures: new Map(),
+    onOpenRecord: fn(),
+    onOpenAccount: fn(),
     onDownload: fn(),
-    onDeleteFromPhone: fn(),
+    onRemoveFromPhone: fn(),
   },
   decorators: [
     (Story) => (
-      <div className="relative h-[844px] w-97.5 overflow-hidden">
+      <div className="relative h-211 w-97.5 overflow-hidden">
         <Story />
       </div>
     ),
@@ -99,7 +101,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Every group at once: still sending, uploaded, and kept on the phone alone. */
+/** One list, newest first, whatever each upload's state: sending, waiting, uploaded, on the phone alone. */
 export const Mixed: Story = {
   args: {
     items: itemsOf(
@@ -119,7 +121,11 @@ export const Mixed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('heading', { level: 1, name: 'History' })).toHaveFocus();
-    await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(3);
+    await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(5);
+    await expect(canvas.getByRole('navigation', { name: 'Screens' })).toBeInTheDocument();
+    await expect(
+      canvas.getByText('History', { selector: '[aria-current="page"]' }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -135,12 +141,12 @@ export const Offline: Story = {
 /** Para is not taking uploads right now: it will retry on its own. */
 export const NotAccepting: Story = { args: { items: itemsOf(rides, allOf(NOT_ACCEPTING)) } };
 
-/** Para's checks will never take it: Failed. */
+/** Para's checks refused it: Tap retry upload on every card. */
 export const Refused: Story = { args: { items: itemsOf(rides, allOf(REFUSED)) } };
 
 export const Uploaded: Story = { args: { items: itemsOf(rides, allOf(UPLOADED)) } };
 
-/** Nothing saved on this phone yet: one line and the way back. */
+/** Nothing saved on this phone yet: one line and the way to Record. */
 export const Empty: Story = {
   args: { items: itemsOf([], allOf(UPLOADED)) },
   play: async ({ canvasElement }) => {
@@ -151,7 +157,7 @@ export const Empty: Story = {
   },
 };
 
-/** Thirty recordings: the list scrolls under the heading. */
+/** Thirty recordings: the list scrolls under the title, which takes its shadow, and fades under the toolbar. */
 export const LongList: Story = {
   args: {
     items: itemsOf(
@@ -161,9 +167,20 @@ export const LongList: Story = {
   },
 };
 
+/** The list scrolled: the title takes its BottomShadow (4518:25024). */
+export const Scrolled: Story = {
+  args: LongList.args,
+  play: async ({ canvasElement }) => {
+    const list = canvasElement.querySelector('ul')?.parentElement;
+    list?.scrollTo({ top: 400 });
+    list?.dispatchEvent(new Event('scroll'));
+    await expect(canvasElement.querySelector('header')).toHaveClass('shadow-bottom-shadow');
+  },
+};
+
 const OTHER_PHONE = [ride(10, 'Fairview Center Mall'), ride(11, 'Philcoa')];
 
-/** Uploads the account made on another phone sit among the uploaded ones; only Remove upload is behind their dots. */
+/** Uploads the account made on another phone sit among the rest; only Delete from Para is behind their ⋮. */
 export const FromAnotherPhone: Story = {
   args: {
     items: itemsOf([...rides.slice(0, 2), ...OTHER_PHONE], allOf(UPLOADED), {
@@ -174,7 +191,7 @@ export const FromAnotherPhone: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getAllByRole('listitem')).toHaveLength(4);
     await expect(
-      canvas.queryByRole('button', { name: /^Download, .*Fairview Center Mall/ }),
+      canvas.queryByRole('button', { name: /^Download recording, .*Fairview Center Mall/ }),
     ).toBeNull();
   },
 };

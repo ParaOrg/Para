@@ -520,6 +520,9 @@
    * effect style is named BottomToolbar/TopShadow). */
   --shadow-bottom-sheet-top-shadow: 0 -3px 8px 0 rgb(43 43 43 / 0.08);
 
+  /* A screen's header with its page scrolled under it: History's (BottomShadow, 4518:25024). */
+  --shadow-bottom-shadow: 0 3px 8px 0 rgb(43 43 43 / 0.08);
+
   /* A hintuan's name lifted off the map (3847:11760). Mirrored from Figma; nothing wears it
    * now (HintuanLabel, 4068:4791, draws names flat). */
   --shadow-selected-hintuan-route-title: 0 2px 8px 0 rgb(0 0 0 / 0.32);

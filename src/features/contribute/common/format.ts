@@ -47,3 +47,29 @@ export const dateTimeText = (time: number): string =>
 /** A moment to the second, with its year, for telling two recordings apart. */
 export const fullDateTimeText = (time: number): string =>
   new Date(time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'medium' });
+
+/**
+ * A day with its year, as History's card says it: `Jan 25, 2026`. Manila's day in one fixed
+ * pattern, whatever the phone's zone or language, as the recording's file name dates it.
+ */
+export const dayText = (time: number): string =>
+  new Date(time).toLocaleDateString('en-US', {
+    timeZone: 'Asia/Manila',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+/** A ride's length in hours and minutes, as History's card says it: `0h 12m`. */
+export function hoursMinutesText(seconds: number): string {
+  const minutes = Math.max(0, Math.floor(seconds / 60));
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+/** A ride's distance as History's card says it: `850 m`, `4.2 km`, then whole kilometres from 10. */
+export function cardDistanceText(metres: number): string {
+  const whole = Math.max(0, Math.round(metres));
+  if (whole < 1000) return `${whole} m`;
+  if (whole < 10_000) return `${kilometresText(whole)} km`;
+  return `${Math.round(whole / 1000)} km`;
+}

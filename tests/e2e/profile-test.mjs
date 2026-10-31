@@ -51,6 +51,10 @@ function uploadedRow(id, hoursIn, startName) {
       start_name: startName,
       end_name: 'Cubao',
       description: '',
+      vehicle: 'jeep',
+      distance_m: 4_200,
+      walk_m: 300,
+      ride_m: 3_900,
     },
   });
 }
@@ -138,8 +142,8 @@ const actionsOf = async (page, name) => {
   await moreOf(page, name).click();
   return row(page, name).getByRole('button');
 };
-const groupOf = (page, name) =>
-  row(page, name).evaluate((item) => item.closest('section')?.querySelector('h2')?.textContent);
+/** A card's status line, the one under its date: Uploaded, Only on this phone, … */
+const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
 
 /** A saved recording of this phone, put straight into its database as an earlier visit would. */
 async function seed(page, id, name, upload) {
@@ -207,7 +211,17 @@ async function seed(page, id, name, upload) {
 
   await openHistory(page);
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
-  await button(page, 'Back').click();
+  check(
+    'History is a tab like Account: no Back, the toolbar with History marked, Record and Account beside it',
+    (await button(page, 'Back').count()) === 0 &&
+      (await page
+        .getByRole('navigation', { name: 'Screens' })
+        .locator('[aria-current="page"]')
+        .textContent()) === 'History' &&
+      (await toolbarRecord(page).count()) === 1 &&
+      (await accountTab(page).count()) === 1,
+  );
+  await toolbarRecord(page).click();
   await start(page).waitFor();
   await page
     .waitForFunction(() => document.activeElement?.textContent === 'History', null, {
@@ -215,7 +229,7 @@ async function seed(page, id, name, upload) {
     })
     .catch(() => {});
   check(
-    "Ready's History tab opens History; its Back returns to Ready, focus on the History tab",
+    "Ready's History tab opens History; its Record tab returns to Ready, focus on the History tab",
     (await page.evaluate(() => location.hash)) === '' && (await focusedTab(page)) === 'History',
   );
 
@@ -226,17 +240,20 @@ async function seed(page, id, name, upload) {
   await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
   await historyTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
-  await button(page, 'Back').click();
+  await accountTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
-  check("  Account's History tab opens History; its Back returns to Account", await isOnAccount());
+  check(
+    "  Account's History tab opens History; History's Account tab returns to Account",
+    await isOnAccount(),
+  );
   await historyTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 30000 });
-  await button(page, 'Back').click();
+  await toolbarRecord(page).click();
   await start(page).waitFor();
   check(
-    '  after a reload on #history, Back returns to Ready',
+    '  after a reload on #history, Record returns to Ready',
     (await page.evaluate(() => location.hash)) === '',
   );
   await openHistory(page);
@@ -452,10 +469,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await row(page, 'From phone A').waitFor({ timeout: 15000 });
   await shot(page, '3-history');
   check(
-    'History lists uploads another phone sent, merged with this phone, in the existing groups',
-    (await groupOf(page, 'From phone A')) === 'Uploaded' &&
-      (await groupOf(page, 'Also phone A')) === 'Uploaded' &&
-      (await groupOf(page, 'Here and there')) === 'Uploaded' &&
+    'History lists uploads another phone sent, merged with this phone, each Uploaded',
+    (await statusOf(page, 'From phone A')) === 'Uploaded' &&
+      (await statusOf(page, 'Also phone A')) === 'Uploaded' &&
+      (await statusOf(page, 'Here and there')) === 'Uploaded' &&
       (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 1,
   );
   check(
@@ -463,47 +480,52 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     (await page.getByRole('listitem').count()) === 4,
     String(await page.getByRole('listitem').count()),
   );
+  const fromA = (await row(page, 'From phone A').innerText()).replace(/\n/g, ' ');
+  check(
+    "  another phone's upload shows what the database keeps of it: the jeep, and its distance",
+    fromA.includes('Jeep,') && fromA.includes('4.2 km') && fromA.includes('0h 10m'),
+    fromA,
+  );
   const buttons = await actionsOf(page, 'From phone A');
   const names = await buttons.evaluateAll((all) =>
     all.map((b) => b.getAttribute('aria-label') ?? b.textContent),
   );
   check(
-    '  an upload from another phone can be removed, and offers no Download or Delete from phone',
-    names.some((name) => name.startsWith('Remove upload')) &&
-      !names.some((name) => name.startsWith('Download')) &&
-      !names.some((name) => name.startsWith('Delete from phone')),
+    '  an upload from another phone can be deleted from Para, and offers no Download recording or Remove from this phone',
+    names.some((name) => name.startsWith('Delete from Para')) &&
+      !names.some((name) => name.startsWith('Download recording')) &&
+      !names.some((name) => name.startsWith('Remove from this phone')),
     names.join(' | '),
   );
   await row(page, 'From phone A')
-    .getByRole('button', { name: /^Remove upload/ })
+    .getByRole('button', { name: /^Delete from Para/ })
     .click();
-  await row(page, 'From phone A').getByRole('button', { name: 'Remove', exact: true }).click();
+  await row(page, 'From phone A').getByRole('button', { name: 'Delete', exact: true }).click();
   await row(page, 'From phone A').waitFor({ state: 'detached' });
   check(
-    '  Remove takes it out of Para and off the list',
+    '  Delete takes it out of Para and off the list',
     !database.rows.has('dddddddd-0000-4000-8000-000000000001') && fake.deleteRequests === 1,
   );
 
   const here = await actionsOf(page, 'Here and there');
   check(
-    "  an upload this phone sent under an earlier sign-in is the account's: it can be removed",
+    "  an upload this phone sent under an earlier sign-in is the account's: it can be deleted from Para",
     await here.evaluateAll((all) =>
-      all.some((b) => b.getAttribute('aria-label')?.startsWith('Remove upload')),
+      all.some((b) => b.getAttribute('aria-label')?.startsWith('Delete from Para')),
     ),
   );
   await row(page, 'Here and there')
-    .getByRole('button', { name: /^Remove upload/ })
+    .getByRole('button', { name: /^Delete from Para/ })
     .click();
-  await row(page, 'Here and there').getByRole('button', { name: 'Remove', exact: true }).click();
+  await row(page, 'Here and there').getByRole('button', { name: 'Delete', exact: true }).click();
   await page.waitForFunction(
     () =>
       [...document.querySelectorAll('li')]
         .find((li) => li.textContent.includes('Here and there'))
-        ?.closest('section')
-        ?.querySelector('h2')?.textContent === 'Only on this phone',
+        ?.querySelector('[aria-live]')?.textContent === 'Only on this phone',
   );
   check(
-    '  and goes to Only on this phone, kept, once it is removed from Para',
+    '  and reads Only on this phone, kept, once it is deleted from Para',
     !database.rows.has('dddddddd-0000-4000-8000-000000000003') &&
       (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 1,
   );
@@ -560,8 +582,8 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check(
     'another phone signed in to the account sees its uploads, with none of its own',
     (await page.getByRole('listitem').count()) === 2 &&
-      (await groupOf(page, 'Also phone A')) === 'Uploaded' &&
-      (await groupOf(page, 'Only here')) === 'Uploaded',
+      (await statusOf(page, 'Also phone A')) === 'Uploaded' &&
+      (await statusOf(page, 'Only here')) === 'Uploaded',
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
@@ -578,6 +600,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       start_name: 'Editor ride',
       end_name: 'Cubao',
       description: '',
+      vehicle: null,
+      distance_m: 900,
+      walk_m: 900,
+      ride_m: 0,
     },
   });
   const { page, errors } = await phone({ userId: EDITOR_ID });
@@ -660,6 +686,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       start_name: 'Claimed ride',
       end_name: 'Cubao',
       description: '',
+      vehicle: 'bus',
+      distance_m: 2_000,
+      walk_m: null,
+      ride_m: null,
     },
   });
   fake.tokens.set(token, { anonymousId: earlier, usedBy: null });
@@ -681,7 +711,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await row(page, 'Claimed ride').waitFor({ timeout: 15000 });
   check(
     '  a claim finished while History is open adds the moved upload to it',
-    fake.claims.includes('finish_claim') && (await groupOf(page, 'Claimed ride')) === 'Uploaded',
+    fake.claims.includes('finish_claim') && (await statusOf(page, 'Claimed ride')) === 'Uploaded',
     fake.claims.join(),
   );
   database.rows.delete(claimed);
