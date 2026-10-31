@@ -55,3 +55,11 @@ body,
   bottom: env(safe-area-inset-bottom);
   right: env(safe-area-inset-right);
 }
+
+/*
+ * The corner credits stepped aside while the page shows them itself (MapView's
+ * areCreditsShown): the contributor page's ⓘ on Start opens them as a sheet.
+ */
+[data-credits-hidden] .maplibregl-ctrl.maplibregl-ctrl-attrib {
+  display: none;
+}

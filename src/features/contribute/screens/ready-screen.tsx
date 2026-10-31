@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type Ref } from 'react';
 
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
 import { useStackRoom } from '../common/use-stack-room';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
+import { CreditsButton } from '../map/credits-button';
 
 // The update gate exists in the Android app's build only: on the web this is null and the chunk is
 // never built, so the page's first load does not carry it.
@@ -29,17 +30,24 @@ interface ReadyScreenProps {
   onOpenAccount: () => void;
   /** Account was open before this screen: focus goes back to the Account tab. */
   isBackFromAccount: boolean;
+  /** The ⓘ: opens the map's credits, the Map Data Source sheet. */
+  onOpenCredits: () => void;
+  /** The ⓘ, for focus to come back to when the credits close. */
+  creditsButtonRef: Ref<HTMLButtonElement>;
 }
 
 /**
- * Before a recording, Figma's Start (4485:24815): at the foot, the Record and Account tabs over
- * the Start Tracking bar. The top corners are empty: the top left waits for the tutorial's ?.
+ * Before a recording, Figma's Start (4485:24815): at the foot, the map's ⓘ (Figma 4494:10300)
+ * and the Record and Account tabs over the Start Tracking bar. The top corners are empty: the
+ * top left waits for the tutorial's ?.
  */
 export function ReadyScreen({
   earlierQuestion,
   onStart,
   onOpenAccount,
   isBackFromAccount,
+  onOpenCredits,
+  creditsButtonRef,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const tabRef = useRef<HTMLButtonElement>(null);
@@ -66,8 +74,12 @@ export function ReadyScreen({
             Record a route
           </h1>
         )}
-        {/* The tabs stay over the question too: Account, and Sign out, are always a tap away. */}
-        <div className="px-4 pb-4">
+        {/* The tabs stay over the question too: Account, and Sign out, are always a tap away. The
+            ⓘ at the map's bottom left, 12 in and 12 over what stands under the tabs. */}
+        <div className="relative flex justify-center px-4 pb-4">
+          <div className="absolute bottom-3 left-3 z-10 flex">
+            <CreditsButton ref={creditsButtonRef} onClick={onOpenCredits} />
+          </div>
           <BottomToolbar accountRef={tabRef} onOpenAccount={onOpenAccount} />
         </div>
         {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}

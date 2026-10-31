@@ -21,6 +21,8 @@ interface ContributeMapProps {
   locator?: ContributeLocatorSlot;
   /** The mark button, for the locator's column: null when nothing is recording. */
   mark: ReactNode;
+  /** False while a screen shows its own ⓘ for the credits: MapLibre's corner ⓘ steps aside. */
+  areCreditsShown: boolean;
 }
 
 /**
@@ -28,7 +30,13 @@ interface ContributeMapProps {
  * trail drawn on it and the shell's locator (the dot, and the button with the
  * map-style picker) on top.
  */
-export function ContributeMap({ track, isRecording, locator, mark }: ContributeMapProps) {
+export function ContributeMap({
+  track,
+  isRecording,
+  locator,
+  mark,
+  areCreditsShown,
+}: ContributeMapProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
@@ -40,11 +48,9 @@ export function ContributeMap({ track, isRecording, locator, mark }: ContributeM
         onReady={setMap}
         onLoadedChange={setIsMapLoaded}
         zoomButtons={false}
-        foldCredits
         hasMapStyleButton={false}
-        // TODO: move the map's credits into Account, as an "About Para" line, once Account's
-        // frame is drawn; until then the ⓘ stays, as the OpenStreetMap licence asks.
         creditsAtBottom
+        areCreditsShown={areCreditsShown}
       />
       {map && locator?.(map, isMapLoaded, isRecording, mark)}
     </>

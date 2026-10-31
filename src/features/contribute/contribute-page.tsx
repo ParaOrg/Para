@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { useAccountGate } from './account/use-account-gate';
 import { useProfileView } from './account/use-profile-view';
@@ -23,6 +24,10 @@ import { useUploads } from './uploads/use-uploads';
 // Opened from buttons, so the page's first load does not carry them.
 const HistoryView = lazy(() =>
   import('./history/history-view').then((module) => ({ default: module.HistoryView })),
+);
+// The map's credits, opened from the ⓘ on Start: fetched on the tap, not with the page.
+const MapDataSourceView = lazy(() =>
+  import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
 );
 const ProfileView = lazy(() =>
   import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
@@ -92,6 +97,23 @@ export function ContributePage({ locator }: ContributePageProps) {
     canUpload() &&
     profile.isOpen &&
     !isPermissionsShown;
+  const isStartShown =
+    accountGate === 'ready' &&
+    phase === 'ready' &&
+    !isHistoryShown &&
+    !isProfileShown &&
+    !isPermissionsShown;
+  // The map's credits, over Start: closed by ✕, Escape or a tap on the dimmed map. Start's ⓘ
+  // opens them; every other screen over the map keeps MapLibre's corner ⓘ.
+  const [isCreditsOpen, setIsCreditsOpen] = useState(false);
+  const isCreditsShown = isStartShown && isCreditsOpen;
+  // Focus goes back to the ⓘ once Start is live again: the sheet cannot hand it back itself,
+  // as the ⓘ turned inert under it the moment it opened.
+  const creditsButtonRef = useRef<HTMLButtonElement>(null);
+  const closeCredits = useCallback(() => {
+    flushSync(() => setIsCreditsOpen(false));
+    creditsButtonRef.current?.focus();
+  }, []);
 
   // A stale #history (a reload mid-recording, or before signing in) must not open History later,
   // when Record again is pressed or the account signs in. The account is unknown until it has
@@ -130,13 +152,17 @@ export function ContributePage({ locator }: ContributePageProps) {
 
   return (
     <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
-      {/* inert while History, Profile or the permissions screen covers it: no map control can be
-          tabbed to behind the screen. */}
-      <div inert={isHistoryShown || isProfileShown || isPermissionsShown} className="contents">
+      {/* inert while History, Profile, the permissions screen or the credits cover it: no map
+          control can be tabbed to behind the screen. */}
+      <div
+        inert={isHistoryShown || isProfileShown || isPermissionsShown || isCreditsShown}
+        className="contents"
+      >
         <ContributeMap
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
+          areCreditsShown={!isStartShown}
           mark={
             phase === 'recording' ? (
               <MarkButton
@@ -175,17 +201,27 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {/* TODO: show TrackRoutesCard (tutorial/track-routes-card.tsx) over the map here, on Ready
               after the permissions screen, once the tutorial screens it opens are designed. */}
-          {phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown && (
-            <ReadyScreen
-              earlierQuestion={earlier.question}
-              onStart={() => {
-                // A ride begun: the next Start opens fresh, focus on its heading, not the tab.
-                setHasOpenedAccount(false);
-                recording.start();
-              }}
-              onOpenAccount={handleOpenAccount}
-              isBackFromAccount={hasOpenedAccount}
-            />
+          {isStartShown && (
+            // Inert under the credits, as the map is: nothing of Start is reached behind them.
+            <div inert={isCreditsShown} className="contents">
+              <ReadyScreen
+                earlierQuestion={earlier.question}
+                onStart={() => {
+                  // A ride begun: the next Start opens fresh, focus on its heading, not the tab.
+                  setHasOpenedAccount(false);
+                  recording.start();
+                }}
+                onOpenAccount={handleOpenAccount}
+                isBackFromAccount={hasOpenedAccount}
+                onOpenCredits={() => setIsCreditsOpen(true)}
+                creditsButtonRef={creditsButtonRef}
+              />
+            </div>
+          )}
+          {isCreditsShown && (
+            <Suspense fallback={null}>
+              <MapDataSourceView onClose={closeCredits} />
+            </Suspense>
           )}
           {isProfileShown && (
             <Suspense fallback={null}>

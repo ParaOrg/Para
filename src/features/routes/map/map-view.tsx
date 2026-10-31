@@ -173,6 +173,12 @@ interface Props {
    * Figma's button. Read once, as the map is made.
    */
   creditsAtBottom?: boolean;
+  /**
+   * False while the page shows the credits itself: the contributor page's ⓘ,
+   * which opens them as the Map Data Source sheet. The corner ⓘ comes back
+   * the moment it is true again, so the licences' credit is always a tap away.
+   */
+  areCreditsShown?: boolean;
 }
 
 /**
@@ -198,6 +204,7 @@ export function MapView({
   hasMapStyleButton = true,
   labelsPlace = 'map',
   creditsAtBottom = false,
+  areCreditsShown = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -453,10 +460,12 @@ export function MapView({
 
         `data-loaded`: the map's 'load', for the headless suites on a
         production build, where the map itself is out of their reach.
+        `data-credits-hidden`: the corner credits stepped aside (map-frame.css).
       */}
       <div
         data-testid="map-view"
         data-loaded={isLoaded || undefined}
+        data-credits-hidden={!areCreditsShown || undefined}
         className="absolute inset-0 bg-surface-secondary"
       >
         <div ref={containerRef} className="h-full w-full" />

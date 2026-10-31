@@ -166,6 +166,8 @@ const finishRecording = async (page) => {
   if (await pause.count()) await pause.click();
   await page.getByRole('button', { name: 'Finish', exact: true }).click();
 };
+/** Start's ⓘ, which opens the map's credits as the Map Data Source sheet. */
+const creditsButton = (page) => page.getByRole('button', { name: 'Map data sources' });
 const buttons = (page) =>
   page
     .getByRole('button')
@@ -201,11 +203,14 @@ const buttons = (page) =>
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   {
     const start = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
-    const credits = await page.locator('.maplibregl-ctrl-bottom-right').boundingBox();
+    const info = await creditsButton(page).boundingBox();
     check(
-      'on a first visit the credits sit above the Start bar',
-      start && credits && credits.y + credits.height <= start.y + 0.5,
-      JSON.stringify([credits, start]),
+      "on a first visit the map's ⓘ sits above the Start bar, and MapLibre's credits are gone",
+      start &&
+        info &&
+        info.y + info.height <= start.y + 0.5 &&
+        !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
+      JSON.stringify([info, start]),
     );
   }
   await page.waitForFunction(() => !!window.__map?.loaded());
@@ -871,18 +876,19 @@ const buttons = (page) =>
     bars && locatorBox && Math.abs(bars.y - (locatorBox.y + locatorBox.height) - 16) < 0.5,
     JSON.stringify([locatorBox, bars]),
   );
-  check(
-    '  the credits are not in that corner: they are bottom right',
-    (await page.locator('.maplibregl-ctrl-top-right .maplibregl-ctrl-attrib').count()) === 0 &&
-      (await page.locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').count()) === 1,
-  );
-  const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
-  const credits = await page.locator('.maplibregl-ctrl-bottom-right').boundingBox();
-  check(
-    '  and above the Start bar, not under it',
-    credits && stack && credits.y + credits.height <= stack.y + 0.5,
-    JSON.stringify([credits, stack]),
-  );
+  {
+    const info = await creditsButton(page).boundingBox();
+    const bar = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
+    check(
+      "  the map's ⓘ is 32 px, at the bottom left, 12 px in and 12 px over the Start bar",
+      info &&
+        bar &&
+        Math.abs(info.width - 32) < 0.5 &&
+        Math.abs(info.x - 12) < 0.5 &&
+        Math.abs(bar.y - (info.y + info.height) - 12) < 0.5,
+      JSON.stringify([info, bar]),
+    );
+  }
 
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
@@ -1237,12 +1243,22 @@ const WAKE = () => {
   const { page, errors } = await phone();
   const back = page.getByRole('button', { name: 'Back to the map' });
   const hasOneBack = async () => (await back.count()) === 1;
+  // Off Start, the licences' credit is MapLibre's corner ⓘ, at the bottom right, with the
+  // OpenStreetMap credit among its links.
+  const hasCornerCredits = async () =>
+    (await page
+      .locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib-button')
+      .isVisible()) &&
+    (await page
+      .locator('.maplibregl-ctrl-attrib a[href="https://www.openstreetmap.org/copyright"]')
+      .count()) === 1;
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
-    'Ready has no Back to the map (the browser goes back), no scale bar, and the map credits still',
+    "Ready has no Back to the map (the browser goes back), no scale bar, and the map's credits behind its ⓘ",
     (await back.count()) === 0 &&
       (await page.locator('.maplibregl-ctrl-scale').isVisible()) === false &&
-      (await page.locator('.maplibregl-ctrl-attrib').count()) === 1,
+      !(await page.locator('.maplibregl-ctrl-attrib').isVisible()) &&
+      (await creditsButton(page).count()) === 1,
   );
 
   await page.getByRole('button', { name: 'Start Tracking' }).click();
@@ -1253,6 +1269,15 @@ const WAKE = () => {
     (await back.count()) === 0 &&
       (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1,
   );
+  check(
+    "  and the map's credits are MapLibre's corner ⓘ while recording",
+    await hasCornerCredits(),
+  );
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).waitFor();
+  check('  and while paused', await hasCornerCredits());
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   // Fixes are written as they arrive; a moment lets the last ones land before the page goes.
   const distanceOf = async () =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText())
@@ -1270,16 +1295,131 @@ const WAKE = () => {
     `${distanceBefore} / ${await distanceOf()}`,
   );
   check('Unfinished has Back to the map', await hasOneBack());
+  check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
 
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await finishRecording(page);
+  await page.getByRole('button', { name: 'Skip' }).waitFor();
+  check("the Save form keeps the map's corner ⓘ for its credits", await hasCornerCredits());
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   check('Saved has Back to the map, in front of the screen', await hasOneBack());
+  check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
   await back.click();
   await page.waitForURL((url) => url.pathname === '/');
   check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
   check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------------ the map's credits: the Map Data Source sheet
+{
+  const { page, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  const isMapInert = () =>
+    page.evaluate(
+      () => !!document.querySelector('button[aria-label="Map design"]')?.closest('[inert]'),
+    );
+  const focusIsOnInfo = () =>
+    page
+      .waitForFunction(
+        () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
+        null,
+        { timeout: 5000 },
+      )
+      .then(() => true)
+      .catch(() => false);
+
+  await creditsButton(page).click();
+  await sheet.waitFor();
+  // Which tiles this build draws, from the style it asked for: VITE_BASEMAP_HOST, OpenFreeMap when unset.
+  const isOpenFreeMap = await page.evaluate(() =>
+    performance
+      .getEntriesByType('resource')
+      .some((entry) => /^https:\/\/tiles\.openfreemap\.org\/styles\//.test(entry.name)),
+  );
+  const rows = await sheet.getByRole('link').evaluateAll((links) =>
+    links.map((a) => ({
+      text: a.textContent,
+      href: a.getAttribute('href'),
+      target: a.getAttribute('target'),
+      rel: a.getAttribute('rel'),
+    })),
+  );
+  const tiles = isOpenFreeMap
+    ? ['OpenFreeMap', 'https://openfreemap.org']
+    : ['© OpenMapTiles', 'https://openmaptiles.org'];
+  const expected = [
+    ['© Para contributors · ODbL', 'https://github.com/ParaOrg/Para#data-and-licence'],
+    ['© OpenStreetMap contributors', 'https://www.openstreetmap.org/copyright'],
+    tiles,
+    ['OSRM', 'https://project-osrm.org'],
+    ['Improve map', 'https://www.openstreetmap.org/fixthemap'],
+  ];
+  check(
+    `the ⓘ opens Map Data Source: five rows, each a link out in a new tab (${isOpenFreeMap ? 'OpenFreeMap' : 'our tiles'})`,
+    rows.length === 5 &&
+      rows.every(
+        (row, i) =>
+          row.text.startsWith(expected[i][0]) &&
+          row.href === expected[i][1] &&
+          row.target === '_blank' &&
+          row.rel === 'noreferrer',
+      ),
+    JSON.stringify(rows),
+  );
+  check(
+    '  the map under it is dimmed and inert, the scrim hidden from screen readers, focus in the sheet',
+    (await isMapInert()) &&
+      (await page.locator('.bg-surface-transparent[aria-hidden="true"]').count()) === 1 &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+  );
+  for (let i = 0; i < 8; i += 1) await page.keyboard.press('Tab');
+  const isStillIn = await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'));
+  await page.keyboard.press('Shift+Tab');
+  check(
+    '  Tab and Shift+Tab go round inside it',
+    isStillIn && (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+  );
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  Escape closes it, focus back on the ⓘ, the map live again',
+    (await focusIsOnInfo()) && !(await isMapInert()),
+  );
+
+  await creditsButton(page).click();
+  await sheet.getByRole('button', { name: 'Close' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check('  ✕ closes it, focus back on the ⓘ', await focusIsOnInfo());
+
+  // A tap on the dimmed map over a control of Start's: it closes the sheet and presses nothing.
+  // Over the top right's Account button where Start has one, else over bare map.
+  const person = page.locator('button[aria-label="Account"]');
+  const target = (await person.count()) ? await person.boundingBox() : null;
+  await creditsButton(page).click();
+  await sheet.waitFor();
+  check(
+    '  Start under it is inert too: its bar and tabs are not reached behind the sheet',
+    await page.evaluate(
+      () =>
+        !!document.querySelector('section[aria-labelledby="ready-heading"]')?.closest('[inert]'),
+    ),
+  );
+  await page.touchscreen.tap(
+    target ? target.x + target.width / 2 : 200,
+    target ? target.y + target.height / 2 : 120,
+  );
+  await sheet.waitFor({ state: 'detached' });
+  await page.waitForTimeout(500);
+  check(
+    `  a tap on the dimmed map${target ? " over Start's Account button" : ''} closes it, and presses nothing under it`,
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 1 &&
+      (await page.evaluate(() => location.hash)) === '',
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
 
