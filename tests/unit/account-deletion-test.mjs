@@ -14,7 +14,7 @@ const ME = '00000000-0000-0000-0000-0000000000a1';
 const MY_ANON = '00000000-0000-0000-0000-0000000000c3';
 const SOMEONE = '00000000-0000-0000-0000-0000000000b2';
 
-const recording = (id, upload) => ({ id, ...(upload ? { upload } : {}) });
+const recording = (id, upload, status = 'saved') => ({ id, status, ...(upload ? { upload } : {}) });
 
 test("the account's uploads, the ones it claimed, unsent and removed ones go; another account's stay", () => {
   const recordings = [
@@ -34,6 +34,19 @@ test("the account's uploads, the ones it claimed, unsent and removed ones go; an
     ['mine-sent', 'claimed', 'never-sent', 'removed', 'removed-by-editor'],
   );
   assert.deepEqual(recordingsOfAccount([], deletion), []);
+});
+
+test('a recording still under way (recording, paused, or on its form) is never deleted', () => {
+  const deletion = { accountId: ME, uploadIds: [] };
+  const recordings = [
+    recording('riding', undefined, 'recording'),
+    recording('on-the-form', undefined, 'stopped'),
+    recording('saved-unsent'),
+  ];
+  assert.deepEqual(
+    recordingsOfAccount(recordings, deletion).map((r) => r.id),
+    ['saved-unsent'],
+  );
 });
 
 test('signed in with nothing begun: read the uploads, then ask Para', () => {

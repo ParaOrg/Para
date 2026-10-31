@@ -3,36 +3,46 @@ import { useEffect, useId, useRef } from 'react';
 import { Button } from '@/design-system/primitives/button';
 import { useEscape } from '@/shared/hooks/use-escape';
 
-interface LogoutSheetProps {
-  /** Saved recordings not yet sent: they stay on this phone, unsent, after logging out. */
-  unsentCount: number;
-  isLoggingOut: boolean;
-  /** One line about a Logout that failed, or null: said here, where the contributor is. */
+interface QuestionSheetProps {
+  title: string;
+  /** What the answer does: said under the question, and read with it. */
+  text: string;
+  /** The answer that acts (Log out, Delete account), in Content/error: it ends something. */
+  confirmLabel: string;
+  /** Its words while it is under way (Logging out…). */
+  busyLabel: string;
+  isBusy: boolean;
+  /** One line about a try that failed, or null: said here, where the contributor is. */
   error: string | null;
-  onLogout: () => void;
-  /** Cancel, Escape, or a tap on the dimmed page. */
+  onConfirm: () => void;
+  /** Cancel, Escape, or a tap on the dimmed page; none of them while the answer is under way. */
   onCancel: () => void;
 }
 
 /**
- * The question before Logout, in the app's sheet look (the Map Data Source sheet's): a sheet over
- * the page dimmed in Background/surface-transparent. Focus starts on Cancel, the safe answer, and
- * goes round inside it. With recordings not yet sent, it says they stay behind on this phone.
+ * A question before an act that ends something (Logout, Delete account), in the app's sheet look
+ * (the Map Data Source sheet's): a sheet over the page dimmed in Background/surface-transparent.
+ * Focus starts on Cancel, the safe answer, and goes round inside it. Once the answer is under
+ * way, nothing cancels it: Cancel, Escape and the dimmed page wait, and the answer says it is busy.
  */
-export function LogoutSheet({
-  unsentCount,
-  isLoggingOut,
+export function QuestionSheet({
+  title,
+  text,
+  confirmLabel,
+  busyLabel,
+  isBusy,
   error,
-  onLogout,
+  onConfirm,
   onCancel,
-}: LogoutSheetProps) {
+}: QuestionSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
   const textId = useId();
-  useEscape(onCancel);
+  // While the answer is under way it cannot be taken back: Cancel would only hide that it goes on.
+  useEscape(onCancel, !isBusy);
 
-  // Focus on Cancel as it opens; Tab goes round its two buttons.
+  // Focus on Cancel as it opens; Tab goes round the buttons that can be pressed.
   useEffect(() => {
     const sheet = sheetRef.current;
     if (!sheet) return;
@@ -41,7 +51,12 @@ export function LogoutSheet({
       ?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
-      const buttons = [...sheet.querySelectorAll('button')];
+      const buttons = [...sheet.querySelectorAll('button')].filter((button) => !button.disabled);
+      // Busy, both buttons wait: focus stays on the question's heading.
+      if (buttons.length === 0) {
+        e.preventDefault();
+        return;
+      }
       const first = buttons.at(0);
       const last = buttons.at(-1);
       if (e.shiftKey && document.activeElement === first) {
@@ -56,13 +71,12 @@ export function LogoutSheet({
     return () => sheet.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Log out turns off as it is pressed, which would drop focus out of the sheet: the question's
+  // The answer turns off as it is pressed, which would drop focus out of the sheet: the question's
   // heading holds it until the answer comes.
   useEffect(() => {
-    if (isLoggingOut) headingRef.current?.focus();
-  }, [isLoggingOut]);
+    if (isBusy) headingRef.current?.focus();
+  }, [isBusy]);
 
-  const noun = unsentCount === 1 ? 'recording' : 'recordings';
   return (
     <>
       {/* The dimmed page: a tap on it cancels. Hidden from screen readers, who have the sheet's own
@@ -71,7 +85,7 @@ export function LogoutSheet({
         type="button"
         aria-hidden
         tabIndex={-1}
-        onClick={onCancel}
+        onClick={isBusy ? undefined : onCancel}
         className="absolute inset-0 z-40 cursor-default bg-surface-transparent"
       />
       <section
@@ -88,12 +102,10 @@ export function LogoutSheet({
           tabIndex={-1}
           className="text-lg/7 font-bold focus:outline-none"
         >
-          Log out?
+          {title}
         </h2>
         <p id={textId} className="text-base/6 text-content-quaternary">
-          {unsentCount > 0
-            ? `${unsentCount} ${noun} not sent yet will be left behind on this phone, unsent.`
-            : 'You can log in again any time with your email and password.'}
+          {text}
         </p>
         {error && (
           <p role="alert" className="text-sm/5 text-content-error">
@@ -103,11 +115,11 @@ export function LogoutSheet({
         <div className="flex flex-col gap-3">
           <Button
             variant="error"
-            label={isLoggingOut ? 'Logging out…' : 'Log out'}
-            disabled={isLoggingOut}
-            onClick={onLogout}
+            label={isBusy ? busyLabel : confirmLabel}
+            disabled={isBusy}
+            onClick={onConfirm}
           />
-          <Button variant="secondary" label="Cancel" onClick={onCancel} />
+          <Button variant="secondary" label="Cancel" disabled={isBusy} onClick={onCancel} />
         </div>
       </section>
     </>

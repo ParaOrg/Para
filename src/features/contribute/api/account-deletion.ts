@@ -70,7 +70,8 @@ export function nextDeletionStep(
 /**
  * The recordings on this phone that go with the deleted account: every one never sent, and every
  * upload Para held for it, whichever identity sent it (an anonymous phone's it claimed, too). An
- * upload another account owns stays: its copy here is the only way to remove it.
+ * upload another account owns stays: its copy here is the only way to remove it. Only saved
+ * recordings: one still recording, paused or on its form is the ride in hand, never deleted.
  */
 export function recordingsOfAccount(
   recordings: readonly Recording[],
@@ -79,8 +80,9 @@ export function recordingsOfAccount(
   const itsUploads = new Set(deletion.uploadIds);
   return recordings.filter(
     (recording) =>
-      recording.upload?.state !== 'uploaded' ||
-      recording.upload.by === deletion.accountId ||
-      itsUploads.has(recording.id),
+      recording.status === 'saved' &&
+      (recording.upload?.state !== 'uploaded' ||
+        recording.upload.by === deletion.accountId ||
+        itsUploads.has(recording.id)),
   );
 }

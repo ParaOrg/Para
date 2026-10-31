@@ -4,6 +4,7 @@ import { useCaptcha } from './use-captcha';
 import { AccountError } from '../api/account-problem';
 import { useAccountQuery } from '../api/use-account-query';
 import { useChangePasswordMutation } from '../api/use-change-password-mutation';
+import { useDeleteAccountMutation } from '../api/use-delete-account-mutation';
 import { useProfileQuery } from '../api/use-profile-query';
 import { useUpdateProfileMutation } from '../api/use-update-profile-mutation';
 
@@ -13,7 +14,7 @@ interface AccountSettingsViewProps {
 
 /**
  * Account settings with its data: the stored name and number, saving them, and a new password
- * once the current one is checked.
+ * once the current one is checked, and deleting the account.
  */
 export function AccountSettingsView({ onBack }: AccountSettingsViewProps) {
   const account = useAccountQuery();
@@ -21,6 +22,7 @@ export function AccountSettingsView({ onBack }: AccountSettingsViewProps) {
   const update = useUpdateProfileMutation();
   const password = useChangePasswordMutation();
   const captcha = useCaptcha();
+  const deletion = useDeleteAccountMutation();
   const isCurrentPasswordWrong =
     password.error instanceof AccountError && password.error.problem === 'wrong-current-password';
   const email = account.data?.email ?? '';
@@ -47,6 +49,10 @@ export function AccountSettingsView({ onBack }: AccountSettingsViewProps) {
           captchaToken: captcha.takeToken(),
         })
       }
+      isDeleting={deletion.isPending}
+      deleteError={messageOf(deletion.error)}
+      onDeleteAsked={() => deletion.reset()}
+      onDeleteAccount={() => deletion.mutate()}
       onBack={onBack}
     />
   );
