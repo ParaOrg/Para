@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { PasswordField } from '@/design-system/primitives/password-field';
 import { coarse } from '@/features/routes/map/map-view';
 
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_RULE_ERROR,
+  PASSWORD_RULE_HINT,
+  meetsPasswordRule,
+  setPasswordErrorMessage,
+} from './password-rule';
 import { getSupabase, supabaseConfigError } from '../data/supabase';
 
 interface ResetPasswordProps {
@@ -22,6 +29,7 @@ interface ResetPasswordProps {
 export function ResetPassword({ onDone, isInvite = false }: ResetPasswordProps) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const hintId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +37,10 @@ export function ResetPassword({ onDone, isInvite = false }: ResetPasswordProps) 
     e.preventDefault();
     setError(null);
 
+    if (!meetsPasswordRule(password)) {
+      setError(PASSWORD_RULE_ERROR);
+      return;
+    }
     if (password !== confirm) {
       setError('The two passwords do not match.');
       return;
@@ -43,7 +55,7 @@ export function ResetPassword({ onDone, isInvite = false }: ResetPasswordProps) 
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
-      setError(error.message);
+      setError(setPasswordErrorMessage(error));
       setBusy(false);
       return;
     }
@@ -66,30 +78,31 @@ export function ResetPassword({ onDone, isInvite = false }: ResetPasswordProps) 
           <div className="mt-4">
             <PasswordField
               label="New password"
+              aria-describedby={hintId}
               required
               // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
               autoFocus={!coarse}
-              minLength={12}
+              minLength={PASSWORD_MIN_LENGTH}
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="New password"
             />
+            <p id={hintId} className="mt-1 text-xs text-neutral-500">
+              {PASSWORD_RULE_HINT}
+            </p>
           </div>
           <div className="mt-2">
             <PasswordField
               label="Confirm new password"
               required
-              minLength={12}
+              minLength={PASSWORD_MIN_LENGTH}
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Confirm new password"
             />
           </div>
-          <p className="mt-2 text-xs text-neutral-500">
-            At least 12 characters, with upper- and lowercase letters, a number and a symbol.
-          </p>
 
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 

@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { PasswordField } from '@/design-system/primitives/password-field';
 import { coarse } from '@/features/routes/map/map-view';
 import { Turnstile } from '@/shared/ui/turnstile';
 
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_RULE_ERROR,
+  PASSWORD_RULE_HINT,
+  meetsPasswordRule,
+  setPasswordErrorMessage,
+} from './password-rule';
 import { useCaptcha } from './use-captcha';
 import { getSupabase, supabaseConfigError } from '../data/supabase';
 
@@ -19,6 +26,7 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
+  const hintId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -28,6 +36,10 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
     e.preventDefault();
     setError(null);
 
+    if (!meetsPasswordRule(next)) {
+      setError(PASSWORD_RULE_ERROR);
+      return;
+    }
     if (next !== confirm) {
       setError('The two new passwords do not match.');
       return;
@@ -61,7 +73,7 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
 
     const { error } = await supabase.auth.updateUser({ password: next });
     if (error) {
-      setError(error.message);
+      setError(setPasswordErrorMessage(error));
       setBusy(false);
       return;
     }
@@ -106,28 +118,29 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
             <div className="mt-2">
               <PasswordField
                 label="New password"
+                aria-describedby={hintId}
                 required
-                minLength={12}
+                minLength={PASSWORD_MIN_LENGTH}
                 autoComplete="new-password"
                 value={next}
                 onChange={(e) => setNext(e.target.value)}
                 placeholder="New password"
               />
+              <p id={hintId} className="mt-1 text-xs text-neutral-500">
+                {PASSWORD_RULE_HINT}
+              </p>
             </div>
             <div className="mt-2">
               <PasswordField
                 label="Confirm new password"
                 required
-                minLength={12}
+                minLength={PASSWORD_MIN_LENGTH}
                 autoComplete="new-password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Confirm new password"
               />
             </div>
-            <p className="mt-2 text-xs text-neutral-500">
-              At least 12 characters, with upper- and lowercase letters, a number and a symbol.
-            </p>
 
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
