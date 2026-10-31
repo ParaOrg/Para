@@ -1025,8 +1025,23 @@ const buttons = (page) =>
       .match(/Distance\s+(\S+\s*\S*)/)?.[1]
       .trim();
   const distanceBefore = await distanceOf();
-  // Fixes are written as they arrive; a moment lets the last ones land before the page goes.
-  await page.waitForTimeout(1000);
+  // Fixes are written as they arrive: the page goes once the phone holds all 31 ridden, not after
+  // a guess at how long the last writes take (the page may be busy, its map settling).
+  await page.waitForFunction(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const count = open.result.transaction('fixes').objectStore('fixes').count();
+          count.onsuccess = () => {
+            open.result.close();
+            resolve(count.result >= 31);
+          };
+        };
+      }),
+    null,
+    { timeout: 10000, polling: 100 },
+  );
   // The recording screen's code no longer arrives, as with no signal before the worker kept it.
   await page.route(/\/screens\/recording-screen\.tsx/, (route) =>
     route.abort('internetdisconnected'),
