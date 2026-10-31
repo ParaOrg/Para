@@ -1,7 +1,8 @@
-import { keptFixes, summarize, type Fix } from '@/features/routes/model/ride-recording';
+import { keptFixes, mergeGaps, summarize, type Fix } from '@/features/routes/model/ride-recording';
 import { overviewOf, type LngLat } from '@/shared/utils/geo';
 
 import type { ContributionPayload, PointBatch } from './contribution-payload-schema';
+import { walkRideSplit } from './walk-ride-split';
 import { UPLOAD_LIMITS } from '../recorder/recording-limits';
 import { marksThatFit } from '../recorder/recording-marks';
 import { RECORDING_VERSION, type Recording } from '../storage/recording-schema';
@@ -133,6 +134,20 @@ export function packRecording(
   const points = thinnedPoints(acceptedPoints(fixes), UPLOAD_LIMITS.points);
 
   const summary = summarize(fixes, recording.gaps, recording.startedAt, ended, recording.modes);
+  const distanceM = Math.round(summary.distanceM);
+  const movingS = Math.round(summary.movingSeconds);
+  const standingS = Math.round(summary.standingSeconds);
+  const paused = recording.gaps.filter((g) => g.reasons.includes('paused'));
+  const split = walkRideSplit(
+    fixes,
+    mergeGaps([...summary.gaps, ...paused]),
+    recording.startedAt,
+    ended,
+    recording.modes,
+  );
+  // Walk is rounded and ride is the rest, so the two add up to the totals exactly.
+  const walkM = Math.min(Math.round(split.walkM), distanceM);
+  const walkS = Math.min(Math.round(split.walkSeconds), movingS + standingS);
   const kept = keptFixes(fixes).filter(({ at: [lng, lat] }) => inBox(lat, lng));
   const thinned = overviewOf(kept.map((fix) => fix.at));
   const line = thinned.length >= 2 ? { type: 'LineString' as const, coordinates: thinned } : null;
@@ -177,10 +192,14 @@ export function packRecording(
       start_name: recording.startPointName.trim().slice(0, UPLOAD_LIMITS.nameLength),
       end_name: recording.endPointName.trim().slice(0, UPLOAD_LIMITS.nameLength),
       description: recording.description.trim().slice(0, UPLOAD_LIMITS.descriptionLength),
-      distance_m: Math.round(summary.distanceM),
-      moving_s: Math.round(summary.movingSeconds),
-      standing_s: Math.round(summary.standingSeconds),
+      distance_m: distanceM,
+      moving_s: movingS,
+      standing_s: standingS,
       lost_s: Math.round(summary.lostSeconds),
+      walk_m: walkM,
+      ride_m: distanceM - walkM,
+      walk_s: walkS,
+      ride_s: movingS + standingS - walkS,
       point_count: points.length,
       events,
       gaps: summary.gaps

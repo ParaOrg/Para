@@ -39,6 +39,11 @@ export const contributionPayloadSchema = z.object({
   moving_s: z.number(),
   standing_s: z.number(),
   lost_s: z.number(),
+  /** Walked (Lakad) and ridden (Sakay): they add up to distance_m and to moving_s + standing_s. */
+  walk_m: z.number(),
+  ride_m: z.number(),
+  walk_s: z.number(),
+  ride_s: z.number(),
   point_count: z.number(),
   events: z.array(z.object({ kind: z.string(), at: isoTime, to: z.optional(z.string()) })),
   gaps: z.array(z.object({ from: isoTime, to: isoTime, reasons: z.array(z.string()) })),
