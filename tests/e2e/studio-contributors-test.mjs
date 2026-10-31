@@ -489,7 +489,7 @@ await page.evaluate(() => {
   window.__map.on('style.load', () => (window.__styleLoads += 1));
 });
 await page.getByTestId('basemap').click();
-await page.getByRole('button', { name: 'Fiord' }).click();
+await page.getByRole('button', { name: 'Dark' }).click();
 const switched = await waitFor(() => page.evaluate(() => window.__styleLoads > 0));
 const afterSwitch = async () =>
   page.evaluate(() => {

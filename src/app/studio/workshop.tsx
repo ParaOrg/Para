@@ -221,6 +221,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             basemaps={STUDIO_BASEMAPS}
             basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
             hasMapStyleButton={false}
+            labelsPlace="studio"
           />
           <WorkshopLocation
             map={map}

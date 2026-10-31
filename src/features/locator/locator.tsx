@@ -2,6 +2,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useState, type ReactNode } from 'react';
 
 import type { Basemap } from '@/features/routes/map/basemap';
+import type { LabelsPlace } from '@/features/routes/map/location-labels';
 import { slide } from '@/shared/ui/sheet-gesture';
 
 import { LocationAndMapControl } from './location-and-map-control';
@@ -17,6 +18,8 @@ interface Props {
   /** The designs the pill's card offers, and their pictures: MapView's. */
   basemaps: readonly Basemap[];
   basemapThumbnails: Readonly<Record<string, string>>;
+  /** Whose Location Labels choice the card keeps: the studio's own, or the public pages'. */
+  labelsPlace: LabelsPlace;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
   /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
@@ -60,6 +63,7 @@ export function Locator({
   isMapLoaded,
   basemaps,
   basemapThumbnails,
+  labelsPlace,
   docked,
   above,
 }: Props) {
@@ -101,6 +105,7 @@ export function Locator({
           isMapLoaded={isMapLoaded}
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
+          labelsPlace={labelsPlace}
           above={above}
           note={
             // No Figma design for the note yet, so it uses the raw palette.

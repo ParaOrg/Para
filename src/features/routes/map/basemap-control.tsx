@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { IconButton } from '@/design-system/primitives/icon-button';
 
 import type { Basemap } from './basemap';
+import type { LabelsPlace } from './location-labels';
 import { MapStyle } from './map-style';
 import { MapStyleButton } from './map-style-button';
 import { MapTypeIcon } from './map-type-icon';
@@ -28,6 +29,8 @@ interface BasemapControlProps {
   initial: Basemap;
   /** Which button opens the card. */
   buttonStyle?: MapButtonStyle;
+  /** Whose Location Labels choice the card keeps: the public pages' by default. */
+  labelsPlace?: LabelsPlace;
 }
 
 /**
@@ -70,13 +73,21 @@ export function BasemapControl({
   thumbnails,
   initial,
   buttonStyle = 'round',
+  labelsPlace = 'map',
 }: BasemapControlProps) {
   const corner = useTopRightControl(map, CORNER_MARGIN[buttonStyle]);
-  const { current, card, cardRoom, rootRef, toggle, close, select, letGo } = useMapStyleCard(
-    map,
-    initial,
-    'down',
-  );
+  const {
+    current,
+    areLabelsShown,
+    card,
+    cardRoom,
+    rootRef,
+    toggle,
+    close,
+    select,
+    toggleLabels,
+    letGo,
+  } = useMapStyleCard(map, initial, 'down', labelsPlace);
   const isOpen = card === 'open';
 
   return createPortal(
@@ -106,6 +117,8 @@ export function BasemapControl({
           thumbnails={thumbnails}
           maxHeight={cardRoom}
           onSelect={select}
+          areLabelsShown={areLabelsShown}
+          onLabelsToggle={toggleLabels}
           isClosing={card === 'closing'}
           onClose={close}
           onClosed={letGo}

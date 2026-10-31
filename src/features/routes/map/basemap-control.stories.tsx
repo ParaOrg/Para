@@ -115,30 +115,33 @@ export const Open: Story = {
   },
 };
 
-/** Remembered on the device as Fiord: Fiord is ringed, and the button's title says so. */
+/** Remembered on the device as Dark (`fiord`): Dark is ringed, and the button's title says so. */
 export const FiordChosen: Story = {
   args: { initial: BASEMAPS[2] },
   play: async ({ canvasElement }) => {
     const button = await within(canvasElement).findByRole('button', { name: 'Map design' });
-    await expect(button).toHaveAttribute('title', 'Map design: Fiord');
+    await expect(button).toHaveAttribute('title', 'Map design: Dark');
     const card = await openCard(canvasElement);
-    await expect(within(card).getByRole('button', { name: 'Fiord' })).toHaveAttribute(
+    await expect(within(card).getByRole('button', { name: 'Dark' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
   },
 };
 
-/** Tab goes round inside the card: ✕ is its first button and Fiord its last, so each wraps to the other. */
+/**
+ * Tab goes round inside the card: ✕ is its first button and the Location
+ * Labels switch its last, so each wraps to the other.
+ */
 export const TabStaysInside: Story = {
   play: async ({ canvasElement }) => {
     const card = await openCard(canvasElement);
     const close = within(card).getByRole('button', { name: 'Close' });
-    const fiord = within(card).getByRole('button', { name: 'Fiord' });
+    const labels = within(card).getByRole('switch', { name: 'Location Labels' });
     await userEvent.tab({ shift: true });
     await expect(close).toHaveFocus();
     await userEvent.tab({ shift: true });
-    await expect(fiord).toHaveFocus();
+    await expect(labels).toHaveFocus();
     await userEvent.tab();
     await expect(close).toHaveFocus();
   },

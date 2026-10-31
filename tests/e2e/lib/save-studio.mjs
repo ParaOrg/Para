@@ -333,6 +333,23 @@ export const holdRequests = (when) => {
   };
 };
 
+/**
+ * Answers matching `when` are worked out as the request arrives, from the
+ * tables as they stand then, and handed back only once `release()` is
+ * called: a read that answers late, with what it read, as a slow network
+ * delivers it. `when(method, table, url)` may keep count, to hold one only.
+ */
+let late = null;
+export const holdAnswers = (when) => {
+  let release = () => {};
+  const gate = new Promise((resolve) => (release = resolve));
+  late = { when, gate };
+  return () => {
+    late = null;
+    release();
+  };
+};
+
 const serve = async (req) => {
   const u = new URL(req.url());
   const table = u.pathname.split('/rest/v1/')[1];
@@ -516,6 +533,9 @@ export async function open(signedIn, path, phone = false) {
   await bareStyle(page, '#e8e8e8');
   await page.route(/\/rest\/v1\//, async (r) => {
     const out = await serve(r.request());
+    const u = new URL(r.request().url());
+    const table = u.pathname.split('/rest/v1/')[1];
+    if (late?.when(r.request().method(), table, u)) await late.gate;
     const headers = {
       'access-control-expose-headers': 'content-range',
       'access-control-allow-origin': '*',
