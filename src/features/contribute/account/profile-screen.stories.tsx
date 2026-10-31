@@ -66,6 +66,3 @@ export const LongName: Story = {
     },
   },
 };
-
-/** Before consent there are no recordings, so Account has no History button. */
-export const WithoutHistory: Story = { args: { onOpenHistory: undefined } };

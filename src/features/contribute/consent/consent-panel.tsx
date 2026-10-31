@@ -8,7 +8,7 @@ interface ConsentPanelProps {
   onDecline: () => void;
 }
 
-/** What the person agrees to, one short line each. Changing a word here means bumping CONSENT_VERSION. */
+/** What the person agrees to, one short line each. Showing it again, or changing a word, means bumping CONSENT_VERSION. */
 interface ConsentLine {
   id: string;
   label: string;
@@ -58,7 +58,9 @@ const CONSENT_LINES: readonly ConsentLine[] = [
   },
 ];
 
-/** The first visit: what the page records and where it goes, before anything is asked of the phone. */
+// TODO: shown nowhere for now (CONSENT_VERSION 4: having an account is the agreement). The owner is
+// redesigning it and will place it elsewhere in the app; the redesign reuses CONSENT_LINES.
+/** What the page records and where it goes, before anything is asked of the phone. */
 export function ConsentPanel({ onAgree, onDecline }: ConsentPanelProps) {
   const headingRef = useFocusHeading();
   const stackRef = useStackRoom();

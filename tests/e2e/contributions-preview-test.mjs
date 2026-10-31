@@ -68,7 +68,7 @@ async function newPage(context) {
   return page;
 }
 
-/** A consented phone, on the contributor page. */
+/** A phone on the contributor page. */
 async function phone() {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
@@ -78,7 +78,6 @@ async function phone() {
   });
   const page = await newPage(context);
   await page.addInitScript(GPS);
-  await page.addInitScript(() => localStorage.setItem('para.contribute.consent', '3'));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 30000 });
   return { context, page };

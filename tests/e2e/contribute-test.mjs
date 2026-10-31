@@ -60,11 +60,11 @@ const GPS = () => {
 const browser = await chromium.launch();
 
 /**
- * A phone-sized page with the stand-in GPS; `consented` skips the first-visit question.
- * `earlierConsent` stores the first text's agreement instead, which the page no longer accepts.
- * `granted` is a browser that already lets the page read the location.
+ * A phone-sized page with the stand-in GPS. `earlierConsent` stores the first consent screen's
+ * agreement, as a phone from before kept it. `granted` is a browser that already lets the page
+ * read the location.
  */
-async function phone({ consented, earlierConsent = false, granted = false }) {
+async function phone({ earlierConsent = false, granted = false } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -87,9 +87,6 @@ async function phone({ consented, earlierConsent = false, granted = false }) {
   // Saved recordings upload: to the stand-in, never to a real project (upload-test covers it).
   await fakeContributions(page);
   await page.addInitScript(GPS);
-  if (consented) {
-    await page.addInitScript(() => localStorage.setItem('para.contribute.consent', '3'));
-  }
   if (earlierConsent) {
     await page.addInitScript(() => localStorage.setItem('para.contribute.consent', 'yes'));
   }
@@ -173,19 +170,17 @@ const buttons = (page) =>
     .getByRole('button')
     .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? e.textContent));
 
-// ----------------------------------- consent to the first text is not enough
+// ----------------------------------- no consent screen, whatever the phone kept
 {
-  const { page, errors } = await phone({ consented: false, earlierConsent: true });
-  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
+  const { page, errors } = await phone({ earlierConsent: true });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   check(
-    'a phone that agreed to the first text is asked again: the new text shows, with no Start or Account',
-    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'Account' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 1,
+    'a phone that agreed to the first consent screen opens on Start: no consent screen is shown',
+    (await page.getByRole('heading', { name: 'Before you record' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 0 &&
+      errors.length === 0,
+    errors.join(' | '),
   );
-  await page.getByRole('button', { name: 'Okay, I understand' }).click();
-  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
-  check('  after agreeing, Start shows', errors.length === 0, errors.join(' | '));
   check(
     '  the web page never shows the Android app’s permissions screen: the browser asks at Start',
     (await page.getByRole('heading', { name: 'Para needs some permissions' }).count()) === 0 &&
@@ -195,63 +190,19 @@ const buttons = (page) =>
 
 // ---------------------------------------------------------------- the loop
 {
-  const { page, errors } = await phone({ consented: false });
-  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
+  const { page, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   check(
-    'a first visit says what the page does before anything else, with no Start',
-    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'Okay, I understand' }).count()) === 1,
-  );
-  check(
-    '  focus is on the consent heading',
-    await page.evaluate(() => document.activeElement?.textContent === 'Before you record'),
-  );
-  {
-    const text = await page.locator('section[aria-labelledby="consent-heading"]').innerText();
-    check(
-      '  it says what is recorded, what for (machine learning), who sees it, how long, where, deleting and who is responsible',
-      ['What is recorded', 'What for', 'Who sees it', 'How long', 'Where', 'Deleting'].every(
-        (label) => text.includes(label),
-      ) &&
-        /machine learning/.test(text) &&
-        /24 months/.test(text) &&
-        text.includes('Who is responsible'),
-    );
-    check(
-      '  it no longer says nothing is sent',
-      !/Nothing is sent anywhere/.test(text) && /sent to Para/.test(text),
-    );
-  }
-  // A reload on #history before consent must not send the visitor to History once they agree.
-  await page.evaluate(() => {
-    location.hash = 'history';
-  });
-  await page.reload({ waitUntil: 'load' });
-  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 20000 });
-  check(
-    '  #history before consent is let go of, and the consent panel shows',
-    (await page.evaluate(() => location.hash)) === '' ||
-      (await page
-        .waitForFunction(() => location.hash === '', null, { timeout: 5000 })
-        .then(() => true)
-        .catch(() => false)),
-  );
-  await page.getByRole('button', { name: 'Okay, I understand' }).click();
-  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
-  check(
-    '  agreeing stores the version of the text agreed to',
-    await page.evaluate(() =>
-      Object.keys(localStorage).some(
-        (key) => key.startsWith('para.contribute.consent') && localStorage.getItem(key) === '3',
-      ),
-    ),
+    'a first visit opens on Start, with no consent screen and focus on the heading',
+    (await page.getByRole('heading', { name: 'Before you record' }).count()) === 0 &&
+      (await page.evaluate(() => document.activeElement?.id === 'ready-heading')),
   );
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   {
     const start = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
     const credits = await page.locator('.maplibregl-ctrl-bottom-right').boundingBox();
     check(
-      'on a first visit, after Okay, the credits sit above the Start bar',
+      'on a first visit the credits sit above the Start bar',
       start && credits && credits.y + credits.height <= start.y + 0.5,
       JSON.stringify([credits, start]),
     );
@@ -668,7 +619,7 @@ const buttons = (page) =>
 
 // ----------------------------------------------- Finish by hand, and ✕
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
@@ -738,7 +689,7 @@ const buttons = (page) =>
 
 // ------------------------------------------------------- Keep recording on the form
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   const stats = async () =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ');
   const activeName = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
@@ -822,7 +773,7 @@ const buttons = (page) =>
 
 // ----------------- the locator before Start: on its own when the browser allows it, else on a tap
 {
-  const { page, errors } = await phone({ consented: true, granted: true });
+  const { page, errors } = await phone({ granted: true });
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   await page.waitForFunction(() => window.__locatorWatchers() === 1, null, { timeout: 10000 });
@@ -855,7 +806,7 @@ const buttons = (page) =>
   await page.context().close();
 }
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   await page.waitForTimeout(500);
@@ -896,7 +847,7 @@ const buttons = (page) =>
 
 // ----------------- where the buttons are, standing still, and Stop on an unfinished one
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   // The locator's dock slides up as the stack is measured: let it settle.
@@ -975,7 +926,7 @@ const buttons = (page) =>
 
 // ------------------------------------------- two minutes alone on the form
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 200);
@@ -1023,7 +974,7 @@ const buttons = (page) =>
 
 // ------------------------------------------- saved recordings, still there after a reload
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   check(
     'with nothing saved, Ready shows no History',
     (await page.getByRole('heading', { name: 'History' }).count()) === 0,
@@ -1105,7 +1056,7 @@ const stored = (page) =>
 const setFail = (page, store, on) => page.evaluate(([s, v]) => (window.__fail[s] = v), [store, on]);
 const STORE_PROBLEM = 'This phone could not keep the recording.';
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   await page.addInitScript(FAIL_WRITES);
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start Tracking' }).click();
@@ -1175,7 +1126,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
 
 // ------------------------------------------------------------- a second tab
 {
-  const { page, context, errors } = await phone({ consented: true });
+  const { page, context, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 50);
@@ -1253,7 +1204,7 @@ const WAKE = () => {
   });
 };
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   await page.addInitScript(WAKE);
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start Tracking' }).click();
@@ -1282,7 +1233,7 @@ const WAKE = () => {
 
 // ------------------- Back to the map on Unfinished and Saved, not on Start or Recording; a ride kept
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   const back = page.getByRole('button', { name: 'Back to the map' });
   const hasOneBack = async () => (await back.count()) === 1;
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
