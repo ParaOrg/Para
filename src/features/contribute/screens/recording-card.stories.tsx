@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 const onClick = fn();
 
-/** Recording on Lakad (4482:24179): Pause and the green Sakay. Under a minute and a kilometre. */
+/** Recording on Lakad (4482:24090): the blue dot, Pause and the green Sakay. Under a minute and a kilometre. */
 export const RecordingLakad: Story = {
   args: {
     children: (
@@ -34,7 +34,7 @@ export const RecordingLakad: Story = {
   },
 };
 
-/** Recording on Sakay (4482:24088): Pause and the blue Lakad. Minutes and kilometres. */
+/** Recording on Sakay (4482:24088): the green dot, Pause and the blue Lakad. Minutes and kilometres. */
 export const RecordingSakay: Story = {
   args: {
     state: 'sakay',
@@ -49,7 +49,7 @@ export const RecordingSakay: Story = {
   },
 };
 
-/** Paused (4482:24139): "--", the red dot, Resume and Finish. */
+/** Paused, Figma's Finish (4482:24089): "--", the dark dot, Paused a shade darker, Resume and Finish. */
 export const Paused: Story = {
   args: {
     state: 'paused',
