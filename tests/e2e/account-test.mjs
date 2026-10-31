@@ -74,7 +74,7 @@ async function setOffline(context, fake, isOffline) {
   await context.setOffline(isOffline);
 }
 
-/** Signs out through Account's Logout, and the sheet's Log out. */
+/** Signs out through Account's Logout, and the question's Logout. */
 async function signOut(page) {
   await page
     .getByRole('navigation', { name: 'Screens' })
@@ -82,8 +82,8 @@ async function signOut(page) {
     .click();
   await page.getByRole('button', { name: 'Logout' }).click();
   await page
-    .getByRole('alertdialog', { name: 'Log out?' })
-    .getByRole('button', { name: 'Log out' })
+    .getByRole('alertdialog', { name: 'Are you sure you want to logout?' })
+    .getByRole('button', { name: 'Logout' })
     .click();
 }
 

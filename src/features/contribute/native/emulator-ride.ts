@@ -16,17 +16,22 @@ function say(line: string): void {
 
 /**
  * Waits for the page's own load (recorder-opening.ts) to import the native log: until the ride holds
- * the log's last fix. Gives up after a minute, and the report then shows what the ride holds.
+ * the log's last fix, as read in the same look. True once it does; false when it gives up after a
+ * minute, and the report then shows what the ride holds. The service goes on writing meanwhile, so
+ * a count read later may be a fix ahead of the ride: this answer is the one the test reads.
  */
-async function waitForImport(recordingId: string): Promise<void> {
+async function waitForImport(recordingId: string): Promise<boolean> {
   const giveUpAt = Date.now() + IMPORT_GIVE_UP_MS;
   while (Date.now() < giveUpAt) {
     const log = await readFixLog();
     const rows = await loadFixes(recordingId);
     const logEnd = log.fixes[log.fixes.length - 1]?.timestamp ?? 0;
-    if (log.recordingId === recordingId && (rows[rows.length - 1]?.time ?? 0) >= logEnd) return;
+    if (log.recordingId === recordingId && (rows[rows.length - 1]?.time ?? 0) >= logEnd) {
+      return true;
+    }
     await new Promise((resolve) => setTimeout(resolve, IMPORT_POLL_MS));
   }
+  return false;
 }
 
 async function snapshot(recordingId: string): Promise<string> {
@@ -42,19 +47,22 @@ async function snapshot(recordingId: string): Promise<string> {
  * in a build made with VITE_EMULATOR_RIDE=1 only: the emulator has no account to sign in with, so
  * this starts a recording and the native watch with no taps, taking fixes through the recorder's own
  * step (takeWatchedFixes) and writing them as the recorder does.
- * After the test kills the app and opens it again, the page's own load imports the native log; this
- * waits for that (it polls until the ride holds the log's last fix), reports what the ride then holds, and goes on recording.
+ * After the test rebuilds the activity, or kills the app and opens it again, the page's own load
+ * imports the native log; this waits for that (it polls until the ride holds the log's last fix),
+ * reports what the ride then holds, and goes on recording.
  */
 export async function runEmulatorRide(): Promise<void> {
   const open = (await loadRecordings()).find((recording) => recording.status === 'recording');
   let recording: Recording;
   if (open) {
     recording = open;
-    await waitForImport(recording.id);
-    say(`imported id=${recording.id} ${await snapshot(recording.id)}`);
+    const hasCaughtUp = await waitForImport(recording.id);
+    say(`imported id=${recording.id} caught=${hasCaughtUp} ${await snapshot(recording.id)}`);
   } else {
     recording = newRecording(crypto.randomUUID(), Date.now());
     await putRecording(recording);
+    // Said as the ride exists, before the watch: an activity rebuilt from here on finds it open.
+    say(`started id=${recording.id}`);
   }
 
   const { id: recordingId } = recording;
@@ -73,7 +81,7 @@ export async function runEmulatorRide(): Promise<void> {
     },
     onError: (error) => say(`error ${error.message}`),
   });
-  say(`${open ? 'resumed' : 'started'} id=${recordingId}`);
+  say(`${open ? 'resumed' : 'watching'} id=${recordingId}`);
   window.setInterval(() => {
     snapshot(recordingId)
       .then((line) => say(`report ${line}`))

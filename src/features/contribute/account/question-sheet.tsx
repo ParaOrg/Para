@@ -1,15 +1,16 @@
-import { useEffect, useId, useRef } from 'react';
+import { useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
-import { useEscape } from '@/shared/hooks/use-escape';
+
+import { useQuestionFocus } from './use-question-focus';
 
 interface QuestionSheetProps {
   title: string;
   /** What the answer does: said under the question, and read with it. */
   text: string;
-  /** The answer that acts (Log out, Delete account), in Content/error: it ends something. */
+  /** The answer that acts (Delete account), in Content/error: it ends something. */
   confirmLabel: string;
-  /** Its words while it is under way (Logging out…). */
+  /** Its words while it is under way (Deleting…). */
   busyLabel: string;
   isBusy: boolean;
   /** One line about a try that failed, or null: said here, where the contributor is. */
@@ -20,7 +21,7 @@ interface QuestionSheetProps {
 }
 
 /**
- * A question before an act that ends something (Logout, Delete account), in the app's sheet look
+ * A question before an act that ends something (Delete account), in the app's sheet look
  * (the Map Data Source sheet's): a sheet over the page dimmed in Background/surface-transparent.
  * Focus starts on Cancel, the safe answer, and goes round inside it. Once the answer is under
  * way, nothing cancels it: Cancel, Escape and the dimmed page wait, and the answer says it is busy.
@@ -39,43 +40,7 @@ export function QuestionSheet({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
   const textId = useId();
-  // While the answer is under way it cannot be taken back: Cancel would only hide that it goes on.
-  useEscape(onCancel, !isBusy);
-
-  // Focus on Cancel as it opens; Tab goes round the buttons that can be pressed.
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    [...sheet.querySelectorAll('button')]
-      .find((button) => button.textContent === 'Cancel')
-      ?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const buttons = [...sheet.querySelectorAll('button')].filter((button) => !button.disabled);
-      // Busy, both buttons wait: focus stays on the question's heading.
-      if (buttons.length === 0) {
-        e.preventDefault();
-        return;
-      }
-      const first = buttons.at(0);
-      const last = buttons.at(-1);
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    sheet.addEventListener('keydown', handleKeyDown);
-    return () => sheet.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // The answer turns off as it is pressed, which would drop focus out of the sheet: the question's
-  // heading holds it until the answer comes.
-  useEffect(() => {
-    if (isBusy) headingRef.current?.focus();
-  }, [isBusy]);
+  useQuestionFocus(sheetRef, headingRef, isBusy, onCancel);
 
   return (
     <>

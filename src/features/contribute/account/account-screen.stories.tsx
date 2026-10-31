@@ -28,6 +28,8 @@ const meta = {
         seconds: 62 * 3600,
         distanceM: 421_000,
         walkM: 168_400,
+        farePhpTotal: 129,
+        fareRecordings: 4,
         ridesByVehicle: FRAME_RIDES,
       },
     },
@@ -68,12 +70,14 @@ export const LongName: Story = {
   },
 };
 
-/** Logout asks first, focus on Cancel. */
+/** Logout asks first (4521:3500), the page frosted over, focus on Cancel. */
 export const LogoutAsked: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Logout' }));
-    await expect(canvas.getByRole('alertdialog', { name: 'Log out?' })).toBeVisible();
+    await expect(
+      canvas.getByRole('alertdialog', { name: 'Are you sure you want to logout?' }),
+    ).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Cancel' })).toHaveFocus();
   },
 };
@@ -88,7 +92,7 @@ export const LogoutWithUnsent: Story = {
   },
 };
 
-/** Logout failed: the line shows in the open sheet, and stays on the page after Cancel. */
+/** Logout failed: the line shows in the open question, and stays on the page after Cancel. */
 export const LogoutFailed: Story = {
   args: { error: 'No signal. Try again when you’re online.' },
   play: async ({ canvasElement }) => {

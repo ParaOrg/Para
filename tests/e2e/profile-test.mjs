@@ -125,13 +125,13 @@ const field = (page, name) => page.getByLabel(name, { exact: true });
 /** Account's toolbar: Record, back to Start. */
 const toolbarRecord = (page) =>
   page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Record' });
-/** Account's Logout, then the sheet's Log out. */
+/** Account's Logout question (4521:3500). */
+const logoutQuestion = (page) =>
+  page.getByRole('alertdialog', { name: 'Are you sure you want to logout?' });
+/** Account's Logout, then the question's Logout. */
 const logout = async (page) => {
   await button(page, 'Logout').click();
-  await page
-    .getByRole('alertdialog', { name: 'Log out?' })
-    .getByRole('button', { name: 'Log out' })
-    .click();
+  await logoutQuestion(page).getByRole('button', { name: 'Logout' }).click();
 };
 const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 /** The Sakay or Lakad row of the Commute Statistics' legend. */
@@ -348,6 +348,167 @@ async function seed(page, id, name, upload) {
   database.users.get(ACCOUNT_ID).profile = { ...ACCOUNT.profile };
 }
 
+// ------------------------- motion between the tabs: the way the tabs run, and never in the way
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  // Each screen's code fetched once, so the moves below are the moves a phone makes after its first.
+  await historyTab(page).click();
+  await heading('History').waitFor();
+  await accountTab(page).click();
+  await heading('Account').waitFor();
+  await toolbarRecord(page).click();
+  await start(page).waitFor();
+  await page.waitForTimeout(600);
+
+  /** What is moving 60 ms into a move: the view transition's parts and the toolbar's pill. */
+  const midMove = async (tap) => {
+    await tap.click();
+    await page.waitForTimeout(60);
+    return page.evaluate(() => ({
+      direction: document.documentElement.dataset.tabMotion ?? null,
+      parts: document
+        .getAnimations()
+        .map((a) => a.effect?.pseudoElement)
+        .filter(Boolean),
+      pill: document
+        .getAnimations()
+        .some(
+          (a) =>
+            a.effect?.target?.getAttribute?.('aria-hidden') === 'true' &&
+            a.effect.target.parentElement?.classList.contains('tab-toolbar'),
+        ),
+    }));
+  };
+  const toHistory = await midMove(historyTab(page));
+  check(
+    'Record to History: History slides in from the right over the map, and the pill slides to its tab',
+    toHistory.direction === 'forward' &&
+      toHistory.parts.includes('::view-transition-new(tab-screen)') &&
+      !toHistory.parts.includes('::view-transition-old(tab-screen)') &&
+      toHistory.pill,
+    JSON.stringify(toHistory),
+  );
+  check(
+    '  focus is on its heading at once, not after the move',
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'History',
+  );
+  await page.waitForTimeout(400);
+  const toAccount = await midMove(accountTab(page));
+  check(
+    '  History to Account: Account comes in from the right as History goes out to the left',
+    toAccount.direction === 'forward' &&
+      toAccount.parts.includes('::view-transition-new(tab-screen)') &&
+      toAccount.parts.includes('::view-transition-old(tab-screen)'),
+    JSON.stringify(toAccount),
+  );
+  await page.waitForTimeout(400);
+  const toSettings = await midMove(button(page, 'Account settings'));
+  check(
+    '  Account settings pushes in from the right, inside Account',
+    toSettings.direction === 'forward' &&
+      toSettings.parts.includes('::view-transition-new(tab-screen)'),
+    JSON.stringify(toSettings),
+  );
+  check(
+    '  the toolbar, which Account settings has none of, fades out with Account rather than snapping off',
+    toSettings.parts.includes('::view-transition-old(tab-toolbar)') &&
+      !toSettings.parts.includes('::view-transition-new(tab-toolbar)'),
+    JSON.stringify(toSettings),
+  );
+  await page.waitForTimeout(400);
+  const back = await midMove(button(page, 'Back'));
+  check('  and its Back goes the other way', back.direction === 'back', JSON.stringify(back));
+  await heading('Account').waitFor();
+  await page.waitForTimeout(400);
+  const toRecord = await midMove(toolbarRecord(page));
+  check(
+    '  Account to Record goes left: Account slides away to the right, off the map',
+    toRecord.direction === 'back' &&
+      toRecord.parts.includes('::view-transition-old(tab-screen)') &&
+      !toRecord.parts.includes('::view-transition-new(tab-screen)'),
+    JSON.stringify(toRecord),
+  );
+  await start(page).waitFor();
+  await page.waitForTimeout(400);
+
+  // Every value is the owner's Motion token, read by the script's fallbacks from the same place.
+  const timing = await page.evaluate(() =>
+    import('/src/features/contribute/common/tab-motion.ts').then((motion) => ({
+      arrive: motion.motionOf('arrive'),
+      move: motion.motionOf('move'),
+      shift: motion.tabShift(1),
+    })),
+  );
+  check(
+    "the moves' timings are the owner's Motion tokens: base on ease-enter, gentle on ease-move, a 7-step shift",
+    timing.arrive.duration === 200 &&
+      timing.arrive.easing === 'cubic-bezier(0.22, 1, 0.36, 1)' &&
+      timing.move.duration === 300 &&
+      timing.move.easing === 'cubic-bezier(0.65, 0, 0.35, 1)' &&
+      /calc\(1 \* calc\(.*\* 7\)\)/.test(timing.shift),
+    JSON.stringify(timing),
+  );
+
+  // A move to where the phone already is (a second tap) shows nothing: no slide replayed.
+  const noMove = await page.evaluate(() =>
+    import('/src/features/contribute/common/tab-motion.ts').then((motion) => {
+      motion.moveBetweenScreens(
+        () => false,
+        () => {},
+      );
+      return {
+        direction: document.documentElement.dataset.tabMotion ?? null,
+        moving: document.getAnimations().filter((a) => a.effect?.pseudoElement).length,
+      };
+    }),
+  );
+  check(
+    '  a move to the screen already showing shows nothing, and leaves no slide set',
+    noMove.direction === null && noMove.moving === 0,
+    JSON.stringify(noMove),
+  );
+
+  // Three taps faster than a move: each lands, and the last one is where the phone ends up.
+  await historyTab(page).click();
+  await page.waitForTimeout(40);
+  await accountTab(page).click();
+  await page.waitForTimeout(40);
+  await historyTab(page).click();
+  await page.waitForTimeout(600);
+  check(
+    'taps faster than the moves land where the last one points: History, nothing else on top',
+    (await page.evaluate(() => location.hash)) === '#history' &&
+      (await heading('History').count()) === 1 &&
+      (await heading('Account').count()) === 0 &&
+      (await page.evaluate(
+        () => document.getAnimations().filter((a) => a.effect?.pseudoElement).length,
+      )) === 0,
+  );
+
+  // Less motion asked for: the screens and the pill just switch.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await accountTab(page).click();
+  await page.waitForTimeout(40);
+  const reduced = await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter(
+        (a) => a.effect?.pseudoElement || a.effect?.target?.closest?.('.tab-toolbar, .tab-screen'),
+      )
+      .map((a) => a.effect?.pseudoElement || a.effect?.target?.tagName),
+  );
+  await heading('Account').waitFor();
+  check(
+    'with less motion asked for, nothing slides or fades: Account just shows',
+    reduced.length === 0,
+    JSON.stringify(reduced),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------------------------------------- Account: the Commute Statistics
 {
   const { page, fake, errors } = await phone();
@@ -383,6 +544,8 @@ async function seed(page, id, name, upload) {
     busRides: 1_204,
     trainRides: 1,
     tricycleRides: 1,
+    farePhpTotal: 1_240.5,
+    fareRecordings: 31,
   };
   await toolbarRecord(page).click();
   await accountTab(page).click();
@@ -392,10 +555,17 @@ async function seed(page, id, name, upload) {
   const statsText = await stats.innerText();
   await shot(page, '2-account-stats');
   check(
-    '  with stats: total time in hours, distance in km with separators, the route recordings counted',
+    '  with stats: total time in hours, distance in km with separators, the routes recorded counted',
     /Total time\s*62\s*hr/.test(statsText) &&
       /Total distance\s*1,240\s*km/.test(statsText) &&
-      /Route recordings\s*6/.test(statsText),
+      /Routes recorded\s*6/.test(statsText),
+    statsText.replace(/\n/g, ' '),
+  );
+  check(
+    '  the total fare in pesos with its centavos, said in pesos, between the cards and the vehicles',
+    /Total fare\s*₱1,240\.50\s*1,240\.50 pesos/.test(statsText) &&
+      statsText.indexOf('Total fare') > statsText.indexOf('Lakad') &&
+      statsText.indexOf('Total fare') < statsText.indexOf('Jeep'),
     statsText.replace(/\n/g, ' '),
   );
   const vehicles = await stats
@@ -445,8 +615,11 @@ async function seed(page, id, name, upload) {
   await stats.getByText('Sakay', { exact: true }).waitFor();
   const zeroText = await stats.innerText();
   check(
-    '  with no recordings: zeros, and Sakay and Lakad with no shares',
-    /Total time\s*0\s*min/.test(zeroText) && /Route recordings\s*0/.test(zeroText),
+    '  with no recordings: zeros, Sakay and Lakad with no shares, and no fare known: --, not ₱0',
+    /Total time\s*0\s*min/.test(zeroText) &&
+      /Routes recorded\s*0/.test(zeroText) &&
+      /Total fare\s*--\s*none/.test(zeroText) &&
+      !zeroText.includes('₱'),
     zeroText.replace(/\n/g, ' '),
   );
 }
@@ -491,9 +664,8 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     all.map((b) => b.getAttribute('aria-label') ?? b.textContent),
   );
   check(
-    '  an upload from another phone can be deleted from Para, and offers no Download recording or Remove from this phone',
+    '  an upload from another phone can be deleted from Para, and offers no Remove from this phone',
     names.some((name) => name.startsWith('Delete from Para')) &&
-      !names.some((name) => name.startsWith('Download recording')) &&
       !names.some((name) => name.startsWith('Remove from this phone')),
     names.join(' | '),
   );
@@ -762,15 +934,26 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.waitForFunction(() => document.readyState === 'complete');
   await accountTab(page).click();
   await button(page, 'Logout').click();
-  const sheet = page.getByRole('alertdialog', { name: 'Log out?' });
+  const sheet = logoutQuestion(page);
   await sheet.waitFor();
   check(
-    'Logout asks first, focus on Cancel, and says the recording not sent stays on this phone',
+    'Logout asks first over the frosted page, focus on Cancel, and says the recording not sent stays on this phone',
     (await page.evaluate(() => document.activeElement?.textContent)) === 'Cancel' &&
       (await sheet
         .getByText('1 recording not sent yet will be left behind on this phone')
-        .count()) === 1,
+        .count()) === 1 &&
+      (await sheet.getByRole('img').count()) === 0 &&
+      (await sheet.locator('img[alt=""]').count()) === 1,
     await sheet.innerText(),
+  );
+  await page.keyboard.press('Shift+Tab');
+  const wentRound = await page.evaluate(() => document.activeElement?.textContent);
+  await page.keyboard.press('Tab');
+  check(
+    '  Tab goes round its two buttons and stays inside',
+    wentRound === 'Logout' &&
+      (await page.evaluate(() => document.activeElement?.textContent)) === 'Cancel',
+    String(wentRound),
   );
   await page.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
@@ -779,7 +962,23 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     fake.logouts.length === 0 &&
       (await page.evaluate(() => document.activeElement?.textContent)) === 'Logout',
   );
+  await button(page, 'Logout').click();
+  await sheet.getByRole('button', { name: 'Cancel' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check('  Cancel keeps it signed in too', fake.logouts.length === 0);
+  // While the Logout is on its way nothing cancels it, and focus stays in the question.
+  fake.next.logout = 'hold';
   await logout(page);
+  await sheet.getByRole('button', { name: 'Logging out…' }).waitFor();
+  await page.keyboard.press('Escape');
+  check(
+    '  while logging out it says so: Cancel waits, Escape does nothing, focus stays inside',
+    (await sheet.count()) === 1 &&
+      (await sheet.getByRole('button', { name: 'Cancel' }).isDisabled()) &&
+      (await sheet.getByRole('button', { name: 'Logging out…' }).isDisabled()) &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="alertdialog"]'))),
+  );
+  fake.release();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });

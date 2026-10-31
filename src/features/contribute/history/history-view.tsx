@@ -9,7 +9,6 @@ interface HistoryViewProps {
   uploads: Uploads;
   onOpenRecord: () => void;
   onOpenAccount?: () => void;
-  onDownload: (recording: Recording) => void;
   onRemoveFromPhone: (recording: Recording) => void;
 }
 

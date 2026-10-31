@@ -17,7 +17,6 @@ interface CardStatusRowProps {
   /** The ⋮: Escape hands focus back to it, and so does the card when its question is kept. */
   moreRef: RefObject<HTMLButtonElement | null>;
   onUpload: () => void;
-  onDownload: () => void;
   onAsk: (question: Exclude<Asking, null>) => void;
 }
 
@@ -32,7 +31,6 @@ export function CardStatusRow({
   isAsking,
   moreRef,
   onUpload,
-  onDownload,
   onAsk,
 }: CardStatusRowProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -85,7 +83,6 @@ export function CardStatusRow({
           fullName={fullName}
           menuId={menuId}
           onUpload={thenClose(onUpload)}
-          onDownload={thenClose(onDownload)}
           onAsk={(question) => {
             setIsMenuOpen(false);
             onAsk(question);

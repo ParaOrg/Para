@@ -348,7 +348,6 @@ export function ContributePage({ locator }: ContributePageProps) {
                       }
                     : undefined
                 }
-                onDownload={recording.downloadSaved}
                 onRemoveFromPhone={recording.deleteSaved}
               />
             </Suspense>
@@ -400,7 +399,6 @@ export function ContributePage({ locator }: ContributePageProps) {
             <Suspense fallback={null}>
               <SaveForm
                 failedFixWrites={recording.current?.failedFixWrites ?? 0}
-                onDownload={recording.downloadCurrent}
                 onKeepRecording={recording.keepRecording}
                 onSave={recording.save}
               />
@@ -419,7 +417,6 @@ export function ContributePage({ locator }: ContributePageProps) {
                     : ''
                 }
                 onRecordAgain={recording.recordAgain}
-                onDownload={recording.downloadLastSaved}
               />
             </Suspense>
           )}

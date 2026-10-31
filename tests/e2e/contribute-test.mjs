@@ -71,7 +71,6 @@ async function phone({ earlierConsent = false, granted = false } = {}) {
     deviceScaleFactor: 2,
     hasTouch: true,
     isMobile: true,
-    acceptDownloads: true,
   });
   // The browser already lets the page read the location, as it does after a first visit's yes.
   if (granted) await context.grantPermissions(['geolocation']);
@@ -149,11 +148,41 @@ const openHistory = async (page) => {
   await history.click();
   await heading.waitFor();
 };
-/** The first card's ⋮ menu opened, so its Download recording is there to press. */
+/** The first card's ⋮ menu opened, so its Remove from this phone is there to press. */
 const openCardMenu = async (page) => {
   const more = page.getByRole('button', { name: /^More actions/ }).first();
   if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
 };
+/**
+ * The newest saved recording on this phone, read back from IndexedDB as History reads it, with
+ * how many fixes it keeps: what the contributor's phone holds, in place of a file handed over.
+ */
+const lastSavedRide = (page) =>
+  page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open('para-contribute');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction(['recordings', 'fixes']);
+          const recordings = tx.objectStore('recordings').getAll();
+          const fixes = tx.objectStore('fixes').getAll();
+          tx.oncomplete = () => {
+            open.result.close();
+            const saved = recordings.result
+              .filter((r) => r.status === 'saved')
+              .sort((a, b) => b.savedAt - a.savedAt);
+            const ride = saved[0] ?? null;
+            resolve(
+              ride && {
+                ...ride,
+                fixes: fixes.result.filter((f) => f.recordingId === ride.id).length,
+              },
+            );
+          };
+        };
+      }),
+  );
 /** The card's Time in seconds, whether it reads "42 sec" or "12 min". */
 const recordedSeconds = (stats) => {
   const [, value, unit] = stats.match(/Time\s+(\d+) (sec|min)/) ?? [];
@@ -638,23 +667,21 @@ const buttons = (page) =>
       (await page.getByText('Saved on this phone').count()) === 0,
   );
   await shot(page, '5-success');
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Download last recording' }).click(),
-  ]);
-  const file = JSON.parse(
-    await (await import('node:fs/promises')).readFile(await download.path(), 'utf8'),
-  );
   check(
-    'the field-test download holds the ride: its start on Lakad and its switch to Sakay, no details, many fixes',
+    'Successfully recorded offers no Download: the ride is kept on the phone, nothing handed over',
+    (await page.getByRole('button', { name: /download/i }).count()) === 0,
+  );
+  const file = await lastSavedRide(page);
+  check(
+    'the phone keeps the ride: its start on Lakad and its switch to Sakay, no details, many fixes',
     JSON.stringify(file.modes.map((m) => m.to)) === '["walk","ride"]' &&
       file.startPointName === '' &&
       file.rideKind === null &&
-      file.fixes.length > 20 &&
+      file.fixes > 20 &&
       file.savedAt !== null,
-    `${file.modes.length} modes, ${file.fixes.length} fixes`,
+    `${file.modes.length} modes, ${file.fixes} fixes`,
   );
-  check('  and its mark', file.marks.length === 1 && !Number.isNaN(Date.parse(file.marks[0].time)));
+  check('  and its mark', file.marks.length === 1 && Number.isFinite(file.marks[0].time));
   await page.getByRole('button', { name: 'Record again' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
@@ -813,13 +840,7 @@ const buttons = (page) =>
   await page.getByLabel('What did you ride?').selectOption('Jeep');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Download last recording' }).click(),
-  ]);
-  const file = JSON.parse(
-    await (await import('node:fs/promises')).readFile(await download.path(), 'utf8'),
-  );
+  const file = await lastSavedRide(page);
   check(
     'Continue saves with the details',
     file.startPointName === 'Tala' && file.endPointName === 'Cubao' && file.rideKind === 'Jeep',
@@ -1646,13 +1667,7 @@ const buttons = (page) =>
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor({ timeout: 5000 });
   check('left alone for two minutes, the form closes and saves', true);
   await page.clock.resume();
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Download last recording' }).click(),
-  ]);
-  const file = JSON.parse(
-    await (await import('node:fs/promises')).readFile(await download.path(), 'utf8'),
-  );
+  const file = await lastSavedRide(page);
   check(
     '  and it saved what was typed',
     file.description === 'Crowded' && file.savedAt !== null,
@@ -1679,24 +1694,24 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Record again' }).click();
   await openHistory(page);
   await openCardMenu(page);
-  const rowDownloads = page.getByRole('button', { name: /^Download recording, the recording of / });
-  await rowDownloads.first().waitFor();
-  check('the recording just saved is listed in History', (await rowDownloads.count()) === 1);
+  const rowRemoves = page.getByRole('button', {
+    name: /^Remove from this phone, the recording of .*, Reload me$/,
+  });
+  await rowRemoves.first().waitFor();
+  check('the recording just saved is listed in History', (await rowRemoves.count()) === 1);
+  check(
+    '  and its ⋮ offers no Download',
+    (await page.getByRole('button', { name: /^Download recording/ }).count()) === 0,
+  );
   await page.reload({ waitUntil: 'load' });
   await openHistory(page);
   await openCardMenu(page);
-  check('after a reload it is still listed', (await rowDownloads.count()) === 1);
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    rowDownloads.first().click(),
-  ]);
-  const file = JSON.parse(
-    await (await import('node:fs/promises')).readFile(await download.path(), 'utf8'),
-  );
+  check('after a reload it is still listed', (await rowRemoves.count()) === 1);
+  const file = await lastSavedRide(page);
   check(
-    '  and its Download hands over that recording, read back from the phone',
-    file.description === 'Reload me' && file.savedAt !== null,
-    file.description,
+    '  and the phone still holds that recording',
+    file?.description === 'Reload me' && file.savedAt !== null,
+    file?.description,
   );
   check(
     '  History has no Start bar',
@@ -1758,9 +1773,11 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await page.waitForTimeout(300);
   await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  const ROOM_WARNING = 'Your phone ran out of room for part of this recording.';
   check(
-    'fix writes that failed are counted on the form, which offers the download',
-    (await page.getByRole('button', { name: 'Download this recording' }).count()) === 1,
+    'fix writes that failed are noted on the form in one line, with no Download',
+    (await page.getByRole('alert').filter({ hasText: ROOM_WARNING }).count()) === 1 &&
+      (await page.getByRole('button', { name: /download/i }).count()) === 0,
   );
   for (
     let tries = 0;
@@ -1787,7 +1804,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   );
   check(
     '  so the form no longer warns of fixes it could not keep',
-    (await page.getByRole('button', { name: 'Download this recording' }).count()) === 0,
+    (await page.getByText(ROOM_WARNING).count()) === 0,
   );
   await setFail(page, 'recordings', false);
   await page.getByLabel('Description').fill('Crowded');
@@ -1854,7 +1871,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
     '  once the first tab saves, the second lists it without a reload',
     (await second
       .getByRole('button', {
-        name: /^Download recording, the recording of .*, From the first tab$/,
+        name: /^Remove from this phone, the recording of .*, From the first tab$/,
       })
       .count()) === 1,
   );

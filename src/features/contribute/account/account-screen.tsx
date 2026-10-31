@@ -3,9 +3,10 @@ import { flushSync } from 'react-dom';
 
 import { CommuteStats, type CommuteStatsState } from './commute-stats';
 import { GeneralBar } from './general-bar';
+import { LogoutConfirm } from './logout-confirm';
 import { ProfileCard } from './profile-card';
-import { QuestionSheet } from './question-sheet';
 import { useFocusHeading } from '../common/use-focus-heading';
+import { useScreenEntry } from '../common/use-screen-entry';
 import { BottomToolbar } from '../screens/bottom-toolbar';
 
 interface AccountScreenProps {
@@ -48,6 +49,7 @@ export function AccountScreen({
   onOpenRecord,
 }: AccountScreenProps) {
   const headingRef = useFocusHeading();
+  const entryRef = useScreenEntry<HTMLElement>();
   const [isLogoutAsked, setIsLogoutAsked] = useState(false);
   const logoutRef = useRef<HTMLButtonElement>(null);
   // Back on the Logout row once the page is live again: it was inert under the question.
@@ -58,11 +60,12 @@ export function AccountScreen({
 
   return (
     <section
+      ref={entryRef}
       aria-labelledby="account-heading"
-      className="absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
+      className="tab-screen absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isLogoutAsked} className="absolute inset-0">
-        <div className="flex h-full flex-col gap-8 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+2rem)] pb-40">
+        <div className="flex h-full flex-col gap-8 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-40">
           <h1 id="account-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Account
           </h1>
@@ -107,24 +110,14 @@ export function AccountScreen({
         </div>
       </div>
       {isLogoutAsked && (
-        <QuestionSheet
-          title="Log out?"
-          text={logoutText(unsentCount)}
-          confirmLabel="Log out"
-          busyLabel="Logging out…"
-          isBusy={isLoggingOut}
+        <LogoutConfirm
+          unsentCount={unsentCount}
+          isLoggingOut={isLoggingOut}
           error={error}
-          onConfirm={onLogout}
+          onLogout={onLogout}
           onCancel={handleLogoutCancel}
         />
       )}
     </section>
   );
-}
-
-/** What logging out leaves: recordings not sent yet stay behind on this phone, unsent. */
-function logoutText(unsentCount: number): string {
-  if (unsentCount === 0) return 'You can log in again any time with your email and password.';
-  const noun = unsentCount === 1 ? 'recording' : 'recordings';
-  return `${unsentCount} ${noun} not sent yet will be left behind on this phone, unsent.`;
 }

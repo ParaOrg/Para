@@ -12,9 +12,8 @@ import type { RecordingDetails } from '../recorder/recording-state';
 import { RIDE_KINDS, type RideKind } from '../storage/recording-schema';
 
 interface SaveFormProps {
-  /** Fixes the phone could not keep; above zero, the recording is incomplete and can be downloaded now. */
+  /** Fixes the phone could not keep; above zero, the recording is missing part of its trail. */
   failedFixWrites: number;
-  onDownload: () => void;
   /** Back to recording, for a stop that was a mistake. */
   onKeepRecording: () => void;
   /** Continue, and the form's two minutes running out, save what was said; Skip saves without. */
@@ -28,7 +27,7 @@ const isRideKind = (value: string): value is RideKind => RIDE_KINDS.some((kind) 
  * alone for two minutes it saves the recording with what was typed, so a phone put
  * away after the recording does not keep a recording open.
  */
-export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave }: SaveFormProps) {
+export function SaveForm({ failedFixWrites, onKeepRecording, onSave }: SaveFormProps) {
   const ids = useId();
   const headingRef = useFocusHeading();
   const [details, setDetails] = useState<RecordingDetails>({
@@ -65,13 +64,10 @@ export function SaveForm({ failedFixWrites, onDownload, onKeepRecording, onSave 
         </p>
       </div>
       {failedFixWrites > 0 && (
-        <div className="flex flex-col gap-2">
-          <p role="alert" className="text-base/6">
-            The phone could not keep {failedFixWrites} fixes. Download this recording now, before
-            you close the page.
-          </p>
-          <Button variant="secondary" label="Download this recording" onClick={onDownload} />
-        </div>
+        <p role="alert" className="text-base/6">
+          Your phone ran out of room for part of this recording. Free up some space to keep the next
+          one whole.
+        </p>
       )}
       <TextField
         id={`${ids}-start`}

@@ -385,10 +385,15 @@ const retryButton = (page, name) =>
   }
   await page.waitForTimeout(500);
   check(
-    'while an upload is in flight, coming online or to the front sends nothing more; no retry, no Upload to Para, no Remove from this phone',
+    'while an upload is in flight, coming online or to the front sends nothing more; no retry, and no ⋮: nothing to upload or remove',
     fake.saveRequests === 1 &&
       (await retryButton(page, 'Held ride').count()) === 0 &&
-      (await countOf(page, 'Held ride', /^(Upload to Para|Remove from this phone)/)) === 0,
+      (await row(page, 'Held ride')
+        .getByRole('button', { name: /^More actions/ })
+        .count()) === 0 &&
+      (await row(page, 'Held ride')
+        .getByRole('button', { name: /^(Upload to Para|Remove from this phone)/ })
+        .count()) === 0,
     `${fake.saveRequests} sends`,
   );
   fake.release();
@@ -414,9 +419,9 @@ const retryButton = (page, name) =>
     await statusOf(page, 'Refused ride'),
   );
   check(
-    '  its status line is the retry button, and Download recording is still in the menu',
+    '  its status line is the retry button, and its ⋮ still offers Remove from this phone',
     (await retryButton(page, 'Refused ride').count()) === 1 &&
-      (await countOf(page, 'Refused ride', /^Download recording/)) === 1,
+      (await countOf(page, 'Refused ride', /^Remove from this phone/)) === 1,
   );
   fake.next.save = 'day_cap';
   await page.keyboard.press('Escape');
@@ -500,7 +505,7 @@ const retryButton = (page, name) =>
   );
   check(
     "  and its card stays as the account's upload, with only Delete from Para in its menu",
-    (await countOf(page, upName, /^Remove from this phone|^Download recording/)) === 0 &&
+    (await countOf(page, upName, /^Remove from this phone/)) === 0 &&
       (await countOf(page, upName, /^Delete from Para/)) === 1,
   );
   check(
@@ -659,8 +664,8 @@ const retryButton = (page, name) =>
   await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
   await page.getByRole('button', { name: 'Logout' }).click();
   await page
-    .getByRole('alertdialog', { name: 'Log out?' })
-    .getByRole('button', { name: 'Log out' })
+    .getByRole('alertdialog', { name: 'Are you sure you want to logout?' })
+    .getByRole('button', { name: 'Logout' })
     .click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
