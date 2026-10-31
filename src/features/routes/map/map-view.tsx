@@ -25,7 +25,7 @@ import {
   within,
   type Bounds,
 } from './framing';
-import { readLocationLabels } from './location-labels';
+import { readLocationLabels, type LabelsPlace } from './location-labels';
 import { mapAttribution } from './map-attribution';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
@@ -165,6 +165,8 @@ interface Props {
    * map's sits on the locator (LocationAndMap).
    */
   hasMapStyleButton?: boolean;
+  /** Whose Location Labels choice the map opens with: the public pages', or the studio's own. Read once, as the map is made. */
+  labelsPlace?: LabelsPlace;
   /**
    * The credits always at the bottom right, where a phone would put them top
    * right, under the button: the contributor page keeps that corner for
@@ -194,6 +196,7 @@ export function MapView({
   basemapThumbnails = BASEMAP_THUMBNAILS,
   buttonStyle = 'round',
   hasMapStyleButton = true,
+  labelsPlace = 'map',
   creditsAtBottom = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -220,7 +223,7 @@ export function MapView({
   // a remembered choice never flashes gray first.
   const [basemap] = useState<Basemap>(() => readBasemap(basemaps));
   // Read once too: the basemap's labels shown or hidden from the first frame (location-labels.ts).
-  const [areLabelsShown] = useState(readLocationLabels);
+  const [areLabelsShown] = useState(() => readLocationLabels(labelsPlace));
   const [ready, setReady] = useState<MapLibreMap | null>(null);
   const isLoaded = ready !== null && error === null;
   const onLoadedChangeRef = useRef(onLoadedChange);
@@ -465,6 +468,7 @@ export function MapView({
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
           initial={basemap}
+          labelsPlace={labelsPlace}
           buttonStyle={buttonStyle}
         />
       )}

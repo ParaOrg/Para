@@ -1285,7 +1285,7 @@ const WAKE = () => {
 
 // ------------------------------------------------- Location Labels on the Map Style card
 {
-  const { page, errors } = await phone({ consented: true });
+  const { page, errors } = await phone();
   // A stand-in for each design with labels of its own, from a vector source whose tiles are
   // empty, over the bare style: the switch is read off the layers, never off the tiles.
   await page.route(/tiles\.openfreemap\.org/, (route) => {
@@ -1312,6 +1312,19 @@ const WAKE = () => {
             'source-layer': 'place',
           },
           { id: `${design}-road`, type: 'symbol', source: 'openmaptiles', 'source-layer': 'road' },
+          // Coloured draws its stations by an icon and a name, as Liberty's poi_transit does.
+          ...(design === 'liberty'
+            ? [
+                {
+                  id: 'liberty-transit',
+                  type: 'symbol',
+                  source: 'openmaptiles',
+                  'source-layer': 'poi',
+                  filter: ['match', ['get', 'class'], ['bus', 'rail'], true, false],
+                  layout: { 'icon-image': 'railway', 'text-field': '{name}' },
+                },
+              ]
+            : []),
         ],
       }),
     });

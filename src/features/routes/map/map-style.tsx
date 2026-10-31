@@ -143,7 +143,7 @@ export function MapStyle({
           />
         ))}
       </div>
-      <div className="flex items-center gap-2 rounded-xl bg-surface-secondary px-3 py-2.5">
+      <div className="flex items-center justify-between rounded-xl bg-surface-secondary px-3 py-2.5">
         <span
           id={labelsId}
           className="min-w-0 flex-1 text-sm leading-5 font-medium text-content-primary"

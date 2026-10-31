@@ -89,6 +89,7 @@ export function ContributorLocation({
           isMapLoaded={isMapLoaded}
           basemaps={BASEMAPS}
           basemapThumbnails={BASEMAP_THUMBNAILS}
+          labelsPlace="map"
           docked={false}
           above={above}
         />

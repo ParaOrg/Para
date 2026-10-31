@@ -2,6 +2,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import type { ReactNode } from 'react';
 
 import { readBasemap, type Basemap } from '@/features/routes/map/basemap';
+import type { LabelsPlace } from '@/features/routes/map/location-labels';
 import { MapStyle } from '@/features/routes/map/map-style';
 import { MapStyleButton } from '@/features/routes/map/map-style-button';
 import { useMapStyleCard } from '@/features/routes/map/use-map-style-card';
@@ -17,6 +18,8 @@ interface LocationAndMapControlProps {
   basemaps: readonly Basemap[];
   /** Each design's picture on the card, by its id. */
   thumbnails: Readonly<Record<string, string>>;
+  /** Whose Location Labels choice the card keeps: the studio's own, or the public pages'. */
+  labelsPlace: LabelsPlace;
   /** The locator's note, above the pill; hidden while the card is open, which takes its place. */
   note: ReactNode;
   /** Directly above the pill, under the note; hidden while the card is open. */
@@ -35,6 +38,7 @@ export function LocationAndMapControl({
   isMapLoaded,
   basemaps,
   thumbnails,
+  labelsPlace,
   note,
   above,
   children,
@@ -51,7 +55,7 @@ export function LocationAndMapControl({
     select,
     toggleLabels,
     letGo,
-  } = useMapStyleCard(map, () => readBasemap(basemaps), 'up');
+  } = useMapStyleCard(map, () => readBasemap(basemaps), 'up', labelsPlace);
   return (
     <div ref={rootRef} className="flex flex-col items-end gap-1">
       {card === 'closed' && note}

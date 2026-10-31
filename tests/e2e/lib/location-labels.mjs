@@ -3,18 +3,30 @@
 // labels hidden and ours kept; on, they show; the choice survives a basemap switch and a reload.
 // A basemap label is a symbol layer from a source that is not GeoJSON (location-labels.ts).
 
-/** Labels as the map has them now: the basemap's, those of them shown, and ours shown. */
+/**
+ * Labels as the map has them now: the basemap's, those of them shown, ours shown, and the
+ * basemap's station icons (a poi layer with an icon whose filter picks the rail class), which
+ * stay with the labels off, by their icon alone.
+ */
 export const labelsNow = (page) =>
   page.evaluate(() => {
     const style = window.__map.getStyle();
     const isOurs = (l) => style.sources[l.source]?.type === 'geojson';
     const isShown = (l) => l.layout?.visibility !== 'none';
+    const isStation = (l) =>
+      l['source-layer'] === 'poi' &&
+      l.layout?.['icon-image'] !== undefined &&
+      JSON.stringify(l.filter ?? null).includes('"rail"');
     const symbols = style.layers.filter((l) => l.type === 'symbol');
+    const basemap = symbols.filter((l) => !isOurs(l) && !isStation(l));
     return {
       ids: style.layers.map((l) => l.id).join(','),
-      basemap: symbols.filter((l) => !isOurs(l)).map((l) => l.id),
-      basemapShown: symbols.filter((l) => !isOurs(l) && isShown(l)).map((l) => l.id),
+      basemap: basemap.map((l) => l.id),
+      basemapShown: basemap.filter(isShown).map((l) => l.id),
       ours: symbols.filter((l) => isOurs(l) && isShown(l)).map((l) => l.id),
+      stations: symbols
+        .filter((l) => !isOurs(l) && isStation(l))
+        .map((l) => ({ id: l.id, isShown: isShown(l), hasName: 'text-field' in l.layout })),
     };
   });
 
@@ -73,9 +85,9 @@ export async function checkLocationLabels(page, { check, prefix, waitForMap }) {
     `${shown.basemapShown.length} of ${shown.basemap.length} shown; ours ${shown.ours.join(', ') || 'none'}`,
   );
 
-  const colour = await pick(page, 'Colour');
+  const colour = await pick(page, 'Coloured');
   check(
-    `${prefix}: a switch to Colour keeps them shown`,
+    `${prefix}: a switch to Coloured keeps them shown`,
     colour.basemapShown.length > 0 && sameIds(colour.ours, atFirst.ours),
     `${colour.basemapShown.length} of ${colour.basemap.length} shown`,
   );
@@ -93,15 +105,23 @@ export async function checkLocationLabels(page, { check, prefix, waitForMap }) {
 
   await labelsSwitch(page).click();
   const off = await labelsWhen(page, (now) => now.basemapShown.length === 0);
-  const fiord = await pick(page, 'Fiord');
+  check(
+    `${prefix}: off on Coloured, its station icons stay, with no names`,
+    reloaded.stations.length > 0 &&
+      reloaded.stations.every((station) => station.isShown && station.hasName) &&
+      off.stations.length === reloaded.stations.length &&
+      off.stations.every((station) => station.isShown && !station.hasName),
+    JSON.stringify({ on: reloaded.stations, off: off.stations }),
+  );
+  const dark = await pick(page, 'Dark');
   const fiordHidden = await labelsWhen(page, (now) => now.basemap.length > 0);
   check(
-    `${prefix}: off again they hide, and a switch to Fiord keeps them hidden; ours stay`,
+    `${prefix}: off again they hide, and a switch to Dark keeps them hidden; ours stay`,
     off.basemapShown.length === 0 &&
       fiordHidden.basemap.length > 0 &&
       fiordHidden.basemapShown.length === 0 &&
       sameIds(fiordHidden.ours, atFirst.ours) &&
       (await page.evaluate(() => localStorage.getItem('para.location-labels.v1'))) === null,
-    `${fiord.basemapShown.length} of ${fiord.basemap.length} shown on Fiord`,
+    `${dark.basemapShown.length} of ${dark.basemap.length} shown on Dark`,
   );
 }

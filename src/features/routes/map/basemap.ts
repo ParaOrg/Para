@@ -17,16 +17,17 @@ import { maskedStyle } from './station-mask';
 import { terrainStyle } from './terrain';
 
 /**
- * The basemap designs a commuter can choose between: Monochrome, Colour and
- * Fiord. All of them are OpenFreeMap's styles (Positron, Liberty, Fiord) over
- * the same tiles, sprite and glyphs, so a switch fetches one small style file
+ * The basemap designs a commuter can choose between: Monochrome, Coloured and
+ * Dark (the ids `positron`, `liberty` and `fiord`). All of them are
+ * OpenFreeMap's styles (Positron, Liberty, Fiord) over the same tiles, sprite
+ * and glyphs, so a switch fetches one small style file
  * and nothing a phone has cached is wasted. They are read from the configured
  * basemap host (shared/config/env.ts): Para's own tiles server, which
  * serves the same three styles pointed at its tiles, or OpenFreeMap itself.
  *
  * Monochrome is the default: Positron, as detailed as its tiles allow and
  * still only grays, so the routes and hotspots painted on top carry all the
- * colour (monochrome.ts). Colour is Liberty in Apple Maps' light palette, the
+ * colour (monochrome.ts). Coloured is Liberty in Apple Maps' light palette, the
  * rest of it muted so the routes still carry the strongest colour
  * (daylight.ts). Fiord, dark blue-gray, is for night.
  *
@@ -78,13 +79,13 @@ export const MONOCHROME: Basemap = {
 };
 export const COLOUR: Basemap = {
   id: 'liberty',
-  label: 'Colour',
+  label: 'Coloured',
   url: basemapStyleUrl(basemapHost, 'liberty'),
   dressing: 'daylight',
 };
 const FIORD: Basemap = {
   id: 'fiord',
-  label: 'Fiord',
+  label: 'Dark',
   url: basemapStyleUrl(basemapHost, 'fiord'),
 };
 

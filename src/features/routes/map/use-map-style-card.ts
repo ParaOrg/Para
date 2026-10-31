@@ -2,7 +2,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
 import { applyBasemap, rememberBasemap, type Basemap } from './basemap';
-import { readLocationLabels, rememberLocationLabels } from './location-labels';
+import { readLocationLabels, rememberLocationLabels, type LabelsPlace } from './location-labels';
 
 /**
  * Which way the card opens from its button: down from the top-right corner
@@ -55,10 +55,11 @@ export function useMapStyleCard(
   map: MapLibreMap | null,
   initial: Basemap | (() => Basemap),
   direction: MapStyleDirection,
+  labelsPlace: LabelsPlace,
 ): MapStyleCard {
   const [current, setCurrent] = useState<Basemap>(initial);
   // The one MapView built the map with: both read the one remembered.
-  const [areLabelsShown, setAreLabelsShown] = useState(readLocationLabels);
+  const [areLabelsShown, setAreLabelsShown] = useState(() => readLocationLabels(labelsPlace));
   const [card, setCard] = useState<CardState>('closed');
   const [cardRoom, setCardRoom] = useState<number | undefined>(undefined);
   const isOpen = card === 'open';
@@ -129,7 +130,7 @@ export function useMapStyleCard(
     if (!map) return;
     const next = !areLabelsShown;
     setAreLabelsShown(next);
-    rememberLocationLabels(next);
+    rememberLocationLabels(labelsPlace, next);
     applyBasemap(map, current, next);
   };
 
