@@ -5,6 +5,7 @@ import { PasswordField } from '@/design-system/primitives/password-field';
 
 import { checkNewPassword, type NewPasswordFields } from './account-fields';
 import { AccountPage } from './account-page';
+import { NewPasswordField } from './new-password-field';
 
 interface NewPasswordScreenProps {
   isBusy: boolean;
@@ -43,9 +44,8 @@ export function NewPasswordScreen({ isBusy, error, onSubmit }: NewPasswordScreen
         />
       }
     >
-      <PasswordField
+      <NewPasswordField
         label="New password"
-        autoComplete="new-password"
         value={fields.password}
         error={fieldErrors.password}
         onChange={(event) => setFields((current) => ({ ...current, password: event.target.value }))}
