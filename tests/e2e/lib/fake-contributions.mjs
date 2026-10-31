@@ -113,6 +113,8 @@ function statsRow({
   trainRides = 0,
   ferryRides = 0,
   tricycleRides = 0,
+  farePhpTotal = 0,
+  fareRecordings = 0,
 }) {
   return {
     rides,
@@ -139,8 +141,8 @@ function statsRow({
     longest_ride_moving_s: null,
     routes_helped: 0,
     hintuans_helped: 0,
-    fare_php_total: 0,
-    fare_recordings: 0,
+    fare_php_total: farePhpTotal,
+    fare_recordings: fareRecordings,
   };
 }
 

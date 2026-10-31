@@ -28,6 +28,8 @@ const meta = {
         seconds: 62 * 3600,
         distanceM: 421_000,
         walkM: 168_400,
+        farePhpTotal: 129,
+        fareRecordings: 4,
         ridesByVehicle: FRAME_RIDES,
       },
     },

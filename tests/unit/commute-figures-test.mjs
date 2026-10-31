@@ -8,6 +8,7 @@ import {
   modeSplit,
   routeRecordingsLabel,
   totalDistanceFigure,
+  totalFareFigure,
   totalTimeFigure,
   vehicleRidesFigure,
 } from '../../src/features/contribute/account/commute-figures.ts';
@@ -26,10 +27,24 @@ test('total distance is whole kilometres with thousands separators', () => {
   assert.deepEqual(totalDistanceFigure(1_240_000), { value: '1,240', unit: 'km' });
 });
 
-test('one Recording, any other number Recordings', () => {
-  assert.equal(routeRecordingsLabel(0), 'Route recordings');
-  assert.equal(routeRecordingsLabel(1), 'Route recording');
-  assert.equal(routeRecordingsLabel(6), 'Route recordings');
+test('one Route recorded, any other number Routes recorded', () => {
+  assert.equal(routeRecordingsLabel(0), 'Routes recorded');
+  assert.equal(routeRecordingsLabel(1), 'Route recorded');
+  assert.equal(routeRecordingsLabel(6), 'Routes recorded');
+});
+
+test('the total fare: -- with no ride saying its fare, never ₱0', () => {
+  assert.deepEqual(totalFareFigure(0, 0), { shown: '--', spoken: 'none' });
+  assert.deepEqual(totalFareFigure(129, 0), { shown: '--', spoken: 'none' });
+});
+
+test('the total fare in pesos, centavos only when there are some, said in pesos', () => {
+  assert.deepEqual(totalFareFigure(129, 4), { shown: '₱129', spoken: '129 pesos' });
+  assert.deepEqual(totalFareFigure(0, 2), { shown: '₱0', spoken: '0 pesos' });
+  assert.deepEqual(totalFareFigure(1240, 31), { shown: '₱1,240', spoken: '1,240 pesos' });
+  assert.deepEqual(totalFareFigure(1240.5, 31), { shown: '₱1,240.50', spoken: '1,240.50 pesos' });
+  // A sum's float noise is not centavos.
+  assert.deepEqual(totalFareFigure(0.1 + 0.2 + 12.7, 3), { shown: '₱13', spoken: '13 pesos' });
 });
 
 test('Sakay and Lakad by distance, whole percents adding to 100', () => {
