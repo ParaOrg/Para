@@ -13,6 +13,7 @@ import { useAccountGate } from './account/use-account-gate';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
+import { retryingImport } from './common/retrying-import';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
@@ -41,12 +42,13 @@ const ProfileView = lazy(() =>
 );
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
 // fetches them as it opens (below), so Start never waits on the network, nor fails without one.
-const loadRecordingScreen = () => import('./screens/recording-screen');
-const loadUnfinishedScreen = () => import('./screens/unfinished-screen');
-const loadStopRecordingScreen = () => import('./screens/stop-recording-screen');
-const loadFlagStopButton = () => import('./screens/flag-stop-button');
-const loadSaveForm = () => import('./screens/save-form');
-const loadSavedScreen = () => import('./screens/saved-screen');
+// A fetch ahead that failed offline does not leave them unreachable: each asks again afresh.
+const loadRecordingScreen = retryingImport(() => import('./screens/recording-screen'));
+const loadUnfinishedScreen = retryingImport(() => import('./screens/unfinished-screen'));
+const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-recording-screen'));
+const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
+const loadSaveForm = retryingImport(() => import('./screens/save-form'));
+const loadSavedScreen = retryingImport(() => import('./screens/saved-screen'));
 const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
 const SavedScreen = lazy(() =>
   loadSavedScreen().then((module) => ({ default: module.SavedScreen })),
