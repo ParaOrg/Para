@@ -2,15 +2,14 @@ import { motionOf, prefersReducedMotion } from '../common/tab-motion';
 
 /** The attribute Start tracking carries (start-bar.tsx): where the morph begins. */
 export const START_BUTTON_ATTR = 'data-start-tracking';
-/** The attribute the recording card's place carries (recording-screen.tsx): where it ends. */
+/** The attribute the recording card's place carries (recording-screen.tsx), its phase as its value: where the morph ends. */
 export const RECORDING_CARD_ATTR = 'data-recording-card';
 /** The ghost's own attribute, so a suite can find it while it runs. */
 export const START_MORPH_ATTR = 'data-start-morph';
 
 /** How long, after the fold, the morph waits for the card to be drawn before it gives up. */
 const CARD_WAIT_MS = 300;
-/** Start tracking's radius (rounded-full at 48 tall) and the card's (rounded-4xl). */
-const PILL_RADIUS_PX = 24;
+/** The card's radius (rounded-4xl). Start tracking's is half its height, as rounded-full draws it. */
 const CARD_RADIUS_PX = 32;
 
 interface Box {
@@ -102,6 +101,8 @@ export function morphStartIntoCard(button: HTMLElement): void {
   const fold = motionOf('leave');
   const open = motionOf('move');
   const from = boxOf(button);
+  // Half the button's height, whatever the phone's text size makes it, so the fold is a pill.
+  const pillRadius = from.height / 2;
   const pill: Box = {
     left: from.left + from.width - from.height,
     top: from.top,
@@ -130,17 +131,18 @@ export function morphStartIntoCard(button: HTMLElement): void {
   document.body.append(ghost);
   const showButton = hide(button);
 
+  let isFinished = false;
   const finish = (showCard?: () => void) => {
+    if (isFinished) return;
+    isFinished = true;
+    ghost.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
     ghost.remove();
     showButton();
     showCard?.();
   };
 
   const folding = ghost.animate(
-    [
-      { clipPath: insetOf(from, from, PILL_RADIUS_PX) },
-      { clipPath: insetOf(from, pill, PILL_RADIUS_PX) },
-    ],
+    [{ clipPath: insetOf(from, from, pillRadius) }, { clipPath: insetOf(from, pill, pillRadius) }],
     { duration: fold.duration, easing: fold.easing, fill: 'forwards' },
   );
   wordsBox.animate([{ opacity: 1 }, { opacity: 0 }], {
@@ -149,73 +151,89 @@ export function morphStartIntoCard(button: HTMLElement): void {
     fill: 'forwards',
   });
 
-  // Watched for from the tap, so the card is hidden under the ghost from the frame it is drawn.
-  void Promise.all([folding.finished, cardDrawn(fold.duration + CARD_WAIT_MS)]).then(
-    ([, drawn]) => {
-      if (!drawn) {
-        if (!button.isConnected) {
-          finish();
-          return;
-        }
-        // The start did not happen: the pill opens back into the button, its words back.
-        const back = ghost.animate(
-          [
-            { clipPath: insetOf(from, pill, PILL_RADIUS_PX) },
-            { clipPath: insetOf(from, from, PILL_RADIUS_PX) },
-          ],
-          { duration: fold.duration, easing: open.easing, fill: 'forwards' },
-        );
-        wordsBox.animate([{ opacity: 0 }, { opacity: 1 }], {
-          duration: fold.duration,
-          fill: 'forwards',
-        });
-        void back.finished.then(
-          () => finish(),
-          () => finish(),
-        );
+  // Watched for from the tap, so the card is hidden under the ghost from the frame it is drawn. A
+  // fold cut short (cancelled) ends the morph, the card shown as it is.
+  const folded = folding.finished.then(
+    () => true,
+    () => false,
+  );
+  void Promise.all([folded, cardDrawn(fold.duration + CARD_WAIT_MS)]).then(([isFolded, drawn]) => {
+    if (!isFolded) {
+      finish(drawn?.showCard);
+      return;
+    }
+    if (!drawn) {
+      if (!button.isConnected) {
+        finish();
         return;
       }
-
-      const { card, showCard } = drawn;
-      const to = boxOf(card);
-      // One box round the pill and the card, so both are insets of it.
-      const left = Math.min(pill.left, to.left);
-      const top = Math.min(pill.top, to.top);
-      const room: Box = {
-        left,
-        top,
-        width: Math.max(pill.left + pill.width, to.left + to.width) - left,
-        height: Math.max(pill.top + pill.height, to.top + to.height) - top,
-      };
-      const brand = document.createElement('div');
-      brand.className = 'absolute inset-0 bg-brand-surface';
-      const cardFace = copyOf(card);
-      place(cardFace, {
-        left: to.left - room.left,
-        top: to.top - room.top,
-        width: to.width,
-        height: to.height,
-      });
-      cardFace.style.position = 'absolute';
-      cardFace.style.opacity = '0';
-      folding.cancel();
-      ghost.replaceChildren(brand, cardFace);
-      place(ghost, room);
-
-      const timing = { duration: open.duration, easing: open.easing, fill: 'forwards' } as const;
-      const opening = ghost.animate(
+      // The start did not happen: the pill opens back into the button, its words back.
+      const back = ghost.animate(
         [
-          { clipPath: insetOf(room, pill, PILL_RADIUS_PX) },
-          { clipPath: insetOf(room, to, CARD_RADIUS_PX) },
+          { clipPath: insetOf(from, pill, pillRadius) },
+          { clipPath: insetOf(from, from, pillRadius) },
         ],
-        timing,
+        { duration: fold.duration, easing: open.easing, fill: 'forwards' },
       );
-      brand.animate([{ opacity: 1 }, { opacity: 0 }], timing);
-      cardFace.animate([{ opacity: 0 }, { opacity: 1 }], timing);
-      void opening.finished.then(
-        () => finish(showCard),
-        () => finish(showCard),
+      wordsBox.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: fold.duration,
+        fill: 'forwards',
+      });
+      void back.finished.then(
+        () => finish(),
+        () => finish(),
       );
-    },
-  );
+      return;
+    }
+
+    const { card, showCard } = drawn;
+    const to = boxOf(card);
+    // One box round the pill and the card, so both are insets of it.
+    const left = Math.min(pill.left, to.left);
+    const top = Math.min(pill.top, to.top);
+    const room: Box = {
+      left,
+      top,
+      width: Math.max(pill.left + pill.width, to.left + to.width) - left,
+      height: Math.max(pill.top + pill.height, to.top + to.height) - top,
+    };
+    const brand = document.createElement('div');
+    brand.className = 'absolute inset-0 bg-brand-surface';
+    const cardFace = copyOf(card);
+    place(cardFace, {
+      left: to.left - room.left,
+      top: to.top - room.top,
+      width: to.width,
+      height: to.height,
+    });
+    cardFace.style.position = 'absolute';
+    cardFace.style.opacity = '0';
+    folding.cancel();
+    ghost.replaceChildren(brand, cardFace);
+    place(ghost, room);
+
+    // The copy shows the card as it was: a change of phase (Pause, a switch of mode) or a fold
+    // of the card mid-way ends the morph at once, on the real card.
+    const watch = new MutationObserver(() => {
+      watch.disconnect();
+      finish(showCard);
+    });
+    watch.observe(card, { attributeFilter: [RECORDING_CARD_ATTR, 'hidden'] });
+
+    const timing = { duration: open.duration, easing: open.easing, fill: 'forwards' } as const;
+    const opening = ghost.animate(
+      [
+        { clipPath: insetOf(room, pill, pillRadius) },
+        { clipPath: insetOf(room, to, CARD_RADIUS_PX) },
+      ],
+      timing,
+    );
+    brand.animate([{ opacity: 1 }, { opacity: 0 }], timing);
+    cardFace.animate([{ opacity: 0 }, { opacity: 1 }], timing);
+    const end = () => {
+      watch.disconnect();
+      finish(showCard);
+    };
+    void opening.finished.then(end, end);
+  });
 }

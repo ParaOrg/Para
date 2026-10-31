@@ -1902,13 +1902,65 @@ const ANIMATIONS = () => {
   const isMorphing = await page.evaluate(() => !!document.querySelector('[data-start-morph]'));
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 5000 });
+  // Two frames on: the ghost never shows the card as it was before the pause.
+  const ghostAfterPause = await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            resolve(document.querySelector('[data-start-morph]')?.textContent ?? ''),
+          ),
+        ),
+      ),
+  );
   check(
-    '  a tap on Pause mid-morph pauses the recording',
-    isMorphing && (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1,
+    '  a tap on Pause mid-morph pauses the recording, and the morph shows no Pause over Resume',
+    isMorphing &&
+      (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1 &&
+      !ghostAfterPause.includes('Pause'),
+    ghostAfterPause,
   );
   await page.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
     timeout: 5000,
   });
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+
+  // Pause while the pill opens into the card: the copy of the card it shows is out of date, so
+  // the morph ends there and then.
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const pausedWhileOpening = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const look = () => {
+          const ghost = document.querySelector('[data-start-morph]');
+          if (!ghost) return resolve(null);
+          if (!ghost.textContent?.includes('Pause')) return requestAnimationFrame(look);
+          const pause = [...document.querySelectorAll('[data-recording-card] button')].find(
+            (button) => button.textContent?.trim() === 'Pause',
+          );
+          pause?.click();
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              resolve({
+                isGhostGone: !document.querySelector('[data-start-morph]'),
+                isCardShown: getComputedStyle(
+                  document.querySelector('[data-recording-card]') ?? document.body,
+                ).opacity,
+              }),
+            ),
+          );
+        };
+        look();
+      }),
+  );
+  check(
+    '  a Pause while the pill opens into the card ends the morph at once, the real card shown',
+    pausedWhileOpening?.isGhostGone === true &&
+      pausedWhileOpening.isCardShown === '1' &&
+      (await page.getByRole('button', { name: 'Resume' }).count()) === 1,
+    JSON.stringify(pausedWhileOpening),
+  );
   await page.getByRole('button', { name: 'Discard recording' }).click();
   await page.getByRole('button', { name: 'Stop without saving' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
