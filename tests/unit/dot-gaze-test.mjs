@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   GAZE_PX,
+  eyesDeg,
   gazeOffset,
   gazeSubjects,
   gazeToward,
@@ -186,4 +187,48 @@ test("the public map's subjects: the same keys, gazed at the same places, as Pub
     gazeSubjects(nothing, here).map((s) => s.key),
     [null, null, null, null, null],
   );
+});
+
+// The way the phone faces (eyesDeg): the eyes follow the beam's heading, a pick
+// wins while its gaze lasts, and with neither they wander.
+
+test('the eyes look the way the phone faces; a pick wins while its gaze lasts', () => {
+  assert.equal(eyesDeg(null, 120), 120);
+  assert.equal(eyesDeg(30, 120), 30);
+  assert.equal(eyesDeg(0, 120), 0, 'a gaze due north is a gaze, not none');
+  assert.equal(eyesDeg(null, 0), 0, 'facing due north is a heading, not none');
+  assert.equal(eyesDeg(null, null), null);
+});
+
+/** The eyes as the screen shows them: the dot lies north up and turns with the map's bearing. */
+function onScreen(deg, bearing) {
+  const { x, y } = gazeOffset(deg);
+  const t = (-bearing * Math.PI) / 180;
+  return { x: x * Math.cos(t) - y * Math.sin(t), y: x * Math.sin(t) + y * Math.cos(t) };
+}
+const near = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < 0.15;
+
+test('on a map at a bearing the eyes point the same way on the ground as the beam', () => {
+  for (const bearing of [0, 45, 120, 200, 359]) {
+    for (const heading of [0, 90, 135, 270, 359]) {
+      const want = (((heading - bearing) % 360) + 360) % 360;
+      assert.ok(
+        near(onScreen(heading, bearing), gazeOffset(want)),
+        `facing ${heading}° on a map at ${bearing}°: ${want}° from up on the screen`,
+      );
+    }
+  }
+});
+
+test('in the compass view, the map turned with the phone, the eyes look up the screen', () => {
+  for (const heading of [0, 1, 90, 120, 200, 359]) {
+    assert.ok(near(onScreen(heading, heading), { x: 0, y: -GAZE_PX }), `${heading}°`);
+  }
+});
+
+test('the heading wraps: 359° and 1° put the eyes a hair apart, 0° and 360° in one place', () => {
+  const a = gazeOffset(359);
+  const b = gazeOffset(1);
+  assert.ok(Math.hypot(a.x - b.x, a.y - b.y) < 0.2 * GAZE_PX, JSON.stringify({ a, b }));
+  assert.deepEqual(gazeOffset(0), gazeOffset(360));
 });

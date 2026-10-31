@@ -186,3 +186,38 @@ const facesGazing = (gazeDeg: number): Story => ({
 export const AllFacesGazing = facesGazing(90);
 /** Every face, gazing north. */
 export const AllFacesGazingNorth = facesGazing(0);
+
+/*
+ * The way the phone faces (eyesDeg in dot-gaze.ts): with a heading, the beam
+ * shows and the eyes look along it; a pick's gaze wins while it lasts.
+ */
+
+/** Facing east: the beam and the eyes both point east. */
+export const LooksTheWayItFaces: Story = { args: { haloPx: 240, beamDeg: 90 } };
+
+/** Facing east, a hintuan just picked to the north: the gaze wins for its three seconds. */
+export const GazeOverHeading: Story = { args: { haloPx: 240, beamDeg: 90, gazeDeg: 0 } };
+
+/** The map at a bearing: the overlay lies on it north up, so it turns with the map, as LocatorOnMap's marker does. */
+const onMapAt = (bearing: number, beamDeg: number): Story => ({
+  args: { haloPx: 0, beamDeg },
+  render: () => (
+    <div className="flex flex-col items-center gap-16 p-10">
+      <div
+        className="grid size-24 place-items-center"
+        style={{ rotate: `${-bearing}deg`, scale: 3 }}
+      >
+        <LocatorIndicatorOverlay haloPx={0} beamDeg={beamDeg} />
+      </div>
+      <span className="text-xs text-content-tertiary">
+        facing {beamDeg}°, the map turned to {bearing}°
+      </span>
+    </div>
+  ),
+});
+
+/** Facing east on a map turned to 45°: the beam and the eyes point east on the ground, 45° right of up on the screen. */
+export const OnAMapAtABearing = onMapAt(45, 90);
+
+/** The compass view: the map turns with the phone, so the beam and the eyes look up the screen. */
+export const InTheCompassView = onMapAt(200, 200);

@@ -203,14 +203,15 @@
 }
 
 /*
- * Its gaze at what was just picked (dot-gaze.ts): the eyes stop wandering
- * and turn the way to it, `--gaze-x` and `--gaze-y` from the middle, then
- * wander again. The face's eyes stay as they are, but come to the middle
- * first: a face that holds them off it (curious, up; sleepy, down) would
- * carry them past the dot's edge. One selector is enough: it outranks every
- * face's `.locator-eyes` rule above, as specific and later.
+ * Where its eyes look (eyesDeg in dot-gaze.ts): at what was just picked, or
+ * else the way the phone faces. The eyes stop wandering and turn that way,
+ * `--gaze-x` and `--gaze-y` from the middle, following the heading over the
+ * eyes' own quarter-second turn. The face's eyes stay as they are, but come
+ * to the middle first: a face that holds them off it (curious, up; sleepy,
+ * down) would carry them past the dot's edge. One selector is enough: it
+ * outranks every face's `.locator-eyes` rule above, as specific and later.
  */
-.locator-dot[data-gaze] .locator-eyes {
+.locator-dot[data-look] .locator-eyes {
   animation: none;
   transform: translate(-4px, 0);
   translate: var(--gaze-x) var(--gaze-y);
