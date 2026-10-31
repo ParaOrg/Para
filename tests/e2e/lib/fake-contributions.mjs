@@ -34,6 +34,7 @@
 //   updateUser = 'hold'         the upgrade waits until `fake.release()` (a sign-up in flight)
 //   profile = 'offline'         set_profile fails as with no signal
 //   stats = 'offline'           get_my_stats fails as with no signal
+//   deleteAccount = 'offline'   delete_my_account fails as with no signal
 //
 // get_my_stats answers `fake.stats`, the account's numbers as one row; left null, the function is
 // not there (404 PGRST202), as before its migration is applied.
@@ -145,6 +146,9 @@ export async function fakeContributions(page) {
     /** The account's numbers for get_my_stats, as statsRow takes them; null: no such function. */
     stats: null,
     statsRequests: 0,
+    deleteAccountRequests: 0,
+    /** The accounts delete_my_account deleted, in order. */
+    deletedAccounts: [],
     claims: [],
     /** begin_claim, verify, update_password, finish_claim and logout, in the order they came. */
     order: [],
@@ -310,6 +314,27 @@ export async function fakeContributions(page) {
       fake.logouts.push(url.searchParams.get('scope'));
       fake.order.push('logout');
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    if (url.pathname === '/rest/v1/rpc/delete_my_account' && method === 'POST') {
+      fake.deleteAccountRequests += 1;
+      const fault = fake.next.deleteAccount;
+      delete fake.next.deleteAccount;
+      if (fault === 'offline') return route.abort('internetdisconnected');
+      // As the migration does: an anonymous user or an editor is refused, 42501.
+      const user = userOf(request);
+      const known = fake.users.get(user ?? '');
+      if (!known?.isAccount || known.isEditor) {
+        return json(route, 403, {
+          code: '42501',
+          message: 'not_deletable',
+          details: null,
+          hint: null,
+        });
+      }
+      for (const [id, row] of fake.rows) if (row.by === user) fake.rows.delete(id);
+      fake.users.delete(user);
+      fake.deletedAccounts.push(user);
+      return json(route, 200, null);
     }
     if (url.pathname === '/rest/v1/rpc/get_profile' && method === 'POST') {
       const known = fake.users.get(userOf(request) ?? '');

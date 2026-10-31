@@ -1,22 +1,18 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 
-import { accountKeys } from './account-keys';
 import { deleteAccount } from './delete-account';
 import { useSessionWriter } from './use-session-writer';
 
 /**
- * Deletes the signed-in account, in Para and on this phone; nothing of it stays to show.
- * TODO: mounted nowhere yet; Account settings → Delete account will, after its confirm.
+ * Deletes the signed-in account, in Para and on this phone; nothing of it stays to show: the
+ * session writer drops everything kept for it as the session goes. Account settings' Delete
+ * account calls it, after its question.
  */
 export function useDeleteAccountMutation() {
   const write = useSessionWriter();
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteAccount,
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: accountKeys.all });
-      write(null);
-    },
+    onSuccess: () => write(null),
     networkMode: 'always',
   });
 }

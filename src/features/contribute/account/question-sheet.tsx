@@ -3,29 +3,37 @@ import { useEffect, useId, useRef } from 'react';
 import { Button } from '@/design-system/primitives/button';
 import { useEscape } from '@/shared/hooks/use-escape';
 
-interface LogoutSheetProps {
-  /** Saved recordings not yet sent: they stay on this phone, unsent, after logging out. */
-  unsentCount: number;
-  isLoggingOut: boolean;
-  /** One line about a Logout that failed, or null: said here, where the contributor is. */
+interface QuestionSheetProps {
+  title: string;
+  /** What the answer does: said under the question, and read with it. */
+  text: string;
+  /** The answer that acts (Log out, Delete account), in Content/error: it ends something. */
+  confirmLabel: string;
+  /** Its words while it is under way (Logging out…). */
+  busyLabel: string;
+  isBusy: boolean;
+  /** One line about a try that failed, or null: said here, where the contributor is. */
   error: string | null;
-  onLogout: () => void;
+  onConfirm: () => void;
   /** Cancel, Escape, or a tap on the dimmed page. */
   onCancel: () => void;
 }
 
 /**
- * The question before Logout, in the app's sheet look (the Map Data Source sheet's): a sheet over
- * the page dimmed in Background/surface-transparent. Focus starts on Cancel, the safe answer, and
- * goes round inside it. With recordings not yet sent, it says they stay behind on this phone.
+ * A question before an act that ends something (Logout, Delete account), in the app's sheet look
+ * (the Map Data Source sheet's): a sheet over the page dimmed in Background/surface-transparent.
+ * Focus starts on Cancel, the safe answer, and goes round inside it.
  */
-export function LogoutSheet({
-  unsentCount,
-  isLoggingOut,
+export function QuestionSheet({
+  title,
+  text,
+  confirmLabel,
+  busyLabel,
+  isBusy,
   error,
-  onLogout,
+  onConfirm,
   onCancel,
-}: LogoutSheetProps) {
+}: QuestionSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
@@ -56,13 +64,12 @@ export function LogoutSheet({
     return () => sheet.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Log out turns off as it is pressed, which would drop focus out of the sheet: the question's
+  // The answer turns off as it is pressed, which would drop focus out of the sheet: the question's
   // heading holds it until the answer comes.
   useEffect(() => {
-    if (isLoggingOut) headingRef.current?.focus();
-  }, [isLoggingOut]);
+    if (isBusy) headingRef.current?.focus();
+  }, [isBusy]);
 
-  const noun = unsentCount === 1 ? 'recording' : 'recordings';
   return (
     <>
       {/* The dimmed page: a tap on it cancels. Hidden from screen readers, who have the sheet's own
@@ -88,12 +95,10 @@ export function LogoutSheet({
           tabIndex={-1}
           className="text-lg/7 font-bold focus:outline-none"
         >
-          Log out?
+          {title}
         </h2>
         <p id={textId} className="text-base/6 text-content-quaternary">
-          {unsentCount > 0
-            ? `${unsentCount} ${noun} not sent yet will be left behind on this phone, unsent.`
-            : 'You can log in again any time with your email and password.'}
+          {text}
         </p>
         {error && (
           <p role="alert" className="text-sm/5 text-content-error">
@@ -103,9 +108,9 @@ export function LogoutSheet({
         <div className="flex flex-col gap-3">
           <Button
             variant="error"
-            label={isLoggingOut ? 'Logging out…' : 'Log out'}
-            disabled={isLoggingOut}
-            onClick={onLogout}
+            label={isBusy ? busyLabel : confirmLabel}
+            disabled={isBusy}
+            onClick={onConfirm}
           />
           <Button variant="secondary" label="Cancel" onClick={onCancel} />
         </div>
