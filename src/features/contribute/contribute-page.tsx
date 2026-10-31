@@ -97,10 +97,16 @@ export function ContributePage({ locator }: ContributePageProps) {
     canUpload() &&
     profile.isOpen &&
     !isPermissionsShown;
-  // The map's credits, over Start: closed by ✕, Escape or a tap on the dimmed map.
+  const isStartShown =
+    accountGate === 'ready' &&
+    phase === 'ready' &&
+    !isHistoryShown &&
+    !isProfileShown &&
+    !isPermissionsShown;
+  // The map's credits, over Start: closed by ✕, Escape or a tap on the dimmed map. Start's ⓘ
+  // opens them; every other screen over the map keeps MapLibre's corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
-  const isCreditsShown =
-    phase === 'ready' && isCreditsOpen && !isHistoryShown && !isProfileShown && !isPermissionsShown;
+  const isCreditsShown = isStartShown && isCreditsOpen;
   // Focus goes back to the ⓘ once Start is live again: the sheet cannot hand it back itself,
   // as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
@@ -156,6 +162,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
+          areCreditsShown={!isStartShown}
           mark={
             phase === 'recording' ? (
               <MarkButton
@@ -194,7 +201,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {/* TODO: show TrackRoutesCard (tutorial/track-routes-card.tsx) over the map here, on Ready
               after the permissions screen, once the tutorial screens it opens are designed. */}
-          {phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown && (
+          {isStartShown && (
             // Inert under the credits, as the map is: nothing of Start is reached behind them.
             <div inert={isCreditsShown} className="contents">
               <ReadyScreen

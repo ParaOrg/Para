@@ -96,8 +96,12 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
   );
 }
 
+interface CreditLinkProps {
+  credit: MapCredit;
+}
+
 /** One row: its title, its grey description under it, and the chevron, the whole of it the link. */
-function CreditLink({ credit }: { credit: MapCredit }) {
+function CreditLink({ credit }: CreditLinkProps) {
   return (
     <a
       href={credit.href}

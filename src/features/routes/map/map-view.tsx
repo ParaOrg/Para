@@ -168,10 +168,17 @@ interface Props {
   /** Whose Location Labels choice the map opens with: the public pages', or the studio's own. Read once, as the map is made. */
   labelsPlace?: LabelsPlace;
   /**
-   * False where the page shows the credits itself: the contributor page's
-   * Map Data Source sheet, from mapCredits. Read once, as the map is made.
+   * The credits always at the bottom right, where a phone would put them top
+   * right, under the button: the contributor page keeps that corner for
+   * Figma's button. Read once, as the map is made.
    */
-  hasCredits?: boolean;
+  creditsAtBottom?: boolean;
+  /**
+   * False while the page shows the credits itself: the contributor page's ⓘ,
+   * which opens them as the Map Data Source sheet. The corner ⓘ comes back
+   * the moment it is true again, so the licences' credit is always a tap away.
+   */
+  areCreditsShown?: boolean;
 }
 
 /**
@@ -196,7 +203,8 @@ export function MapView({
   buttonStyle = 'round',
   hasMapStyleButton = true,
   labelsPlace = 'map',
-  hasCredits = true,
+  creditsAtBottom = false,
+  areCreditsShown = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -351,11 +359,10 @@ export function MapView({
 
       if (zoomButtons && !coarse) map.addControl(new NavigationControl(), 'top-right');
       map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
-      if (hasCredits)
-        map.addControl(
-          new AttributionControl({ compact: true, customAttribution: mapAttribution(basemapHost) }),
-          coarse ? 'top-right' : 'bottom-right',
-        );
+      map.addControl(
+        new AttributionControl({ compact: true, customAttribution: mapAttribution(basemapHost) }),
+        coarse && !creditsAtBottom ? 'top-right' : 'bottom-right',
+      );
       // What MapLibre itself does to them on the first drag.
       if (foldCredits)
         map
@@ -453,10 +460,12 @@ export function MapView({
 
         `data-loaded`: the map's 'load', for the headless suites on a
         production build, where the map itself is out of their reach.
+        `data-credits-hidden`: the corner credits stepped aside (map-frame.css).
       */}
       <div
         data-testid="map-view"
         data-loaded={isLoaded || undefined}
+        data-credits-hidden={!areCreditsShown || undefined}
         className="absolute inset-0 bg-surface-secondary"
       >
         <div ref={containerRef} className="h-full w-full" />
