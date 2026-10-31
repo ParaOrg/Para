@@ -1,11 +1,10 @@
 // The contributor page's Profile and History, driven by a phone signed in to an account: Profile
-// is Account, opened from the person button at the top right of Ready or from its tab, with
-// History inside it; it shows the email, changes the name and number through set_profile, and
-// signs this phone out only. History lists the account's uploads from the
-// database, whichever phone sent them, merged with this phone's own, and Remove works on any the
-// account owns. Supabase is the in-memory stand-in (lib/fake-contributions.mjs): every request to
-// *.supabase.co lands there, and one it does not know fails the run, so nothing reaches a real
-// project.
+// is Account, opened from the Account tab on Ready, with History inside it; it shows the email,
+// changes the name and number through set_profile, and signs this phone out only. History lists
+// the account's uploads from the database, whichever phone sent them, merged with this phone's
+// own, and Remove works on any the account owns. Supabase is the in-memory stand-in
+// (lib/fake-contributions.mjs): every request to *.supabase.co lands there, and one it does not
+// know fails the run, so nothing reaches a real project.
 //
 //   cp .env.production .env.local && echo VITE_CONTRIBUTIONS=1 >> .env.local
 //                                        (a project URL to stand in for, and uploads on)
@@ -100,11 +99,12 @@ async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
 }
 
 const button = (page, name) => page.getByRole('button', { name, exact: true });
-/** Ready's person button at the top right, which opens Account. */
-const personButton = (page) => page.locator('button[aria-label="Account"]');
-/** History, inside Account: the person button, then Account's History button. */
+/** Ready's Account tab, in the toolbar over the Start bar: the way into Account. */
+const accountTab = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Account' });
+/** History, inside Account: the Account tab, then Account's History button. */
 const openHistory = async (page) => {
-  await personButton(page).click();
+  await accountTab(page).click();
   await button(page, 'History').click();
 };
 const field = (page, name) => page.getByLabel(name, { exact: true });
@@ -154,45 +154,26 @@ async function seed(page, id, name, upload) {
   );
 }
 
-// ------------------------------------------------ Account: the person button and the tab
+// ------------------------------------------------ Account: the tab is the way in
 {
   const { page, fake, errors } = await phone();
   await start(page).waitFor({ timeout: 30000 });
-  const person = await personButton(page).boundingBox();
-  const tab = await page
-    .getByRole('navigation', { name: 'Screens' })
-    .getByRole('button', { name: 'Account' })
-    .boundingBox();
+  const tab = await accountTab(page).boundingBox();
   check(
-    'Ready has a 48×48 Account button at the top right, the Account tab over Start, and no History button',
-    person.width === 48 &&
-      person.height === 48 &&
-      person.x > 393 / 2 &&
-      !!tab &&
-      tab.y > person.y &&
+    'Ready has the Account tab over Start, no Account button at the top right, and no History button',
+    !!tab &&
+      (await page.getByRole('button', { name: 'Account' }).count()) === 1 &&
       (await button(page, 'History').count()) === 0,
-    JSON.stringify({ person, tab }),
+    JSON.stringify({ tab }),
   );
   await shot(page, '1-ready');
 
-  await personButton(page).click();
+  await accountTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await button(page, 'Back').click();
   await start(page).waitFor();
   check(
-    'Back from Account returns to Ready with focus on the button that opened it',
-    (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) === 'Account',
-  );
-
-  const tabButton = page
-    .getByRole('navigation', { name: 'Screens' })
-    .getByRole('button', { name: 'Account' });
-  await tabButton.click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  await button(page, 'Back').click();
-  await start(page).waitFor();
-  check(
-    '  opened from the Account tab, Back hands focus back to the tab',
+    'Back from Account returns to Ready with focus on the Account tab',
     await page.evaluate(
       () =>
         document.activeElement?.textContent === 'Account' &&
@@ -224,12 +205,12 @@ async function seed(page, id, name, upload) {
     (await page.evaluate(() => location.hash)) === '' &&
       (await page.getByRole('heading', { level: 1, name: 'Profile' }).count()) === 0,
   );
-  await personButton(page).click();
+  await accountTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await button(page, 'Back').click();
   await start(page).waitFor();
 
-  await personButton(page).click();
+  await accountTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await field(page, 'Name').waitFor();
   check(
@@ -464,16 +445,26 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 30000 });
+  // A #history kept from before sign-in must not open History once the account is in.
+  await page.evaluate(() => {
+    location.hash = 'history';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 30000 });
   await field(page, 'Email').fill(ACCOUNT.email);
   await field(page, 'Password').fill(ACCOUNT.password);
   await button(page, 'Sign in').click();
   await start(page).waitFor({ timeout: 15000 });
+  check(
+    'a stale #history from before sign-in is dropped: the account lands on Start, not History',
+    (await page.evaluate(() => location.hash)) === '' &&
+      (await page.getByRole('heading', { level: 1, name: 'History' }).count()) === 0,
+  );
   const isConsentShown =
     (await page.getByRole('heading', { name: 'Before you record' }).count()) > 0;
-  await page
-    .getByRole('navigation', { name: 'Screens' })
-    .getByRole('button', { name: 'Account' })
-    .click();
+  await accountTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await button(page, 'Sign out').click();
   await page
@@ -547,7 +538,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       ),
     [ACCOUNT_ID],
   );
-  await personButton(page).click();
+  await accountTab(page).click();
   await button(page, 'Sign out').click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
@@ -570,7 +561,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await start(page).waitFor({ timeout: 30000 });
   await seed(page, 'eeeeeeee-0000-4000-8000-000000000004', 'Only here');
   await page.reload({ waitUntil: 'load' });
-  await personButton(page).click();
+  await accountTab(page).click();
   await button(page, 'Sign out').click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })

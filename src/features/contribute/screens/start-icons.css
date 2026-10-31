@@ -18,10 +18,6 @@
   mask-image: url('./account-tab-icon.svg');
 }
 
-.start-icon-account {
-  mask-image: url('./account-icon.svg');
-}
-
 .start-icon-help {
   mask-image: url('./help-icon.svg');
 }

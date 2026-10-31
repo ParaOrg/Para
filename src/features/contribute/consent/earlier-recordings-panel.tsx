@@ -1,7 +1,6 @@
 import { Button } from '@/design-system/primitives/button';
 
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useStackRoom } from '../common/use-stack-room';
 
 /** The question about recordings made before the current consent text, and what answers it. */
 export interface EarlierQuestion {
@@ -11,16 +10,17 @@ export interface EarlierQuestion {
   onKeep: () => void;
 }
 
-/** Asked once, after the person agrees to the current text: whether recordings made before it may go too. */
+/**
+ * Asked once, after sign-in: whether recordings made before the second consent text may go too.
+ * At the foot of Start, under its tabs, in the Start Tracking bar's place.
+ */
 export function EarlierRecordingsPanel({ count, onSend, onKeep }: EarlierQuestion) {
   const headingRef = useFocusHeading();
-  const stackRef = useStackRoom();
   const noun = count === 1 ? 'recording' : 'recordings';
   return (
     <section
-      ref={stackRef}
       aria-labelledby="earlier-heading"
-      className="absolute inset-x-0 bottom-0 z-10 flex max-h-dvh flex-col gap-4 overflow-y-auto bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary shadow-bottom-sheet-top-shadow"
+      className="flex max-h-dvh flex-col gap-4 overflow-y-auto bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary shadow-bottom-sheet-top-shadow"
     >
       <h1
         id="earlier-heading"

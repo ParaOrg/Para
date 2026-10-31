@@ -205,7 +205,9 @@ const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerTex
 /** The History screen, opened through Account on Ready unless it is already showing. */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const account = page.locator('button[aria-label="Account"]');
+  const account = page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' });
   // A reload on #history lands on the screen itself; otherwise History is inside Account.
   await heading.or(account).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
@@ -645,6 +647,30 @@ const groupOf = (page, name) =>
       (await storedUpload(page, earlier)) === 'none' &&
       (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
     JSON.stringify(versions),
+  );
+}
+
+// ------------- earlier recordings asked about: Account and Sign out still there
+{
+  const { page, fake } = await phone();
+  await seed(page, [
+    savedRide('aaaaaaaa-0000-4000-8000-000000000020', T0, { name: 'Unasked', isEarlier: true }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.earlier(page).waitFor();
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' })
+    .click();
+  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
+  check(
+    'with the earlier-recordings question open, the Account tab reaches Profile and Sign out works',
+    fake.saveRequests === 0,
+    `${fake.saveRequests} sends`,
   );
 }
 
