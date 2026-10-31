@@ -1103,6 +1103,67 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ------------------- History's picture: the whole trail, taken as the form opens, kept and deleted with it
+{
+  const { page, errors } = await phone();
+  const thumbnails = () =>
+    page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const get = open.result.transaction('thumbnails').objectStore('thumbnails').getAll();
+            get.onsuccess = () =>
+              resolve(get.result.map((row) => ({ id: row.recordingId, url: row.dataUrl })));
+          };
+        }),
+    );
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 600);
+  await finishRecording(page);
+  await page.getByLabel('Description').waitFor();
+  await page
+    .waitForFunction(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const count = open.result.transaction('thumbnails').objectStore('thumbnails').count();
+            count.onsuccess = () => resolve(count.result > 0);
+          };
+        }),
+      null,
+      { timeout: 15000 },
+    )
+    .catch(() => {});
+  const [picture] = await thumbnails();
+  const size = picture ? Buffer.from(picture.url.split(',')[1], 'base64').length : 0;
+  check(
+    'as the form opens, a picture of the trail is kept for History: small, a WebP or JPEG',
+    !!picture && /^data:image\/(webp|jpeg);base64,/.test(picture.url) && size > 0 && size < 40_000,
+    `${picture?.url.slice(0, 22)} ${size} bytes`,
+  );
+  // The locator keeps the map on the rider under the form; the picture's framing is put back.
+  const centre = await page.evaluate(() => window.__map.getCenter().toArray());
+  check(
+    '  the map under the form is back on the rider, not on the picture’s frame',
+    Math.abs(centre[0] - eastOf(600)[0]) < 1e-5 && Math.abs(centre[1] - START[1]) < 0.01,
+    JSON.stringify(centre),
+  );
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  await page.getByRole('button', { name: 'Record again' }).click();
+  await openHistory(page);
+  await openCardMenus(page);
+  await page.getByRole('button', { name: /^Delete from phone, / }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.getByText('No recordings yet.').waitFor();
+  check('  deleting the recording deletes its picture', (await thumbnails()).length === 0);
+  check('  no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------------------- Keep recording on the form
 {
   const { page, errors } = await phone();

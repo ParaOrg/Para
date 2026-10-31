@@ -29,9 +29,18 @@ function whenIdle(map: MapLibreMap, ms: number): Promise<boolean> {
  * after it is shown (no preserveDrawingBuffer, which would cost the whole session), so it is read
  * inside the render event that drew it.
  */
-function cutInNextRender(map: MapLibreMap, box: PictureBox): Promise<string> {
+function cutInNextRender(
+  map: MapLibreMap,
+  box: PictureBox,
+  isStillFramed: () => boolean,
+): Promise<string | null> {
   return new Promise((resolve) => {
     map.once('render', () => {
+      // The locator may have eased the camera back to the rider meanwhile: no picture of that.
+      if (!isStillFramed()) {
+        resolve(null);
+        return;
+      }
       const source = map.getCanvas();
       const scale = source.width / source.clientWidth;
       const picture = document.createElement('canvas');
@@ -89,9 +98,12 @@ export async function captureTrailPicture(
       maxZoom: 17,
       animate: false,
     });
+    const framed = { center: map.getCenter(), zoom: map.getZoom() };
+    const isStillFramed = () =>
+      map.getZoom() === framed.zoom && map.getCenter().distanceTo(framed.center) < 1;
     const isIdle = await whenIdle(map, TILES_MS);
-    if (!isIdle || hasTileFailed || !map.areTilesLoaded()) return null;
-    return await cutInNextRender(map, fit.box);
+    if (!isIdle || hasTileFailed || !map.areTilesLoaded() || !isStillFramed()) return null;
+    return await cutInNextRender(map, fit.box, isStillFramed);
   } finally {
     map.off('error', handleError);
     map.jumpTo(camera);
