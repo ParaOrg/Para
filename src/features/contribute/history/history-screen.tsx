@@ -29,7 +29,6 @@ interface HistoryScreenProps {
   onOpenRecord: () => void;
   /** Account. Left out in a build with no accounts, which has no Account tab. */
   onOpenAccount?: () => void;
-  onDownload: (recording: Recording) => void;
   onRemoveFromPhone: (recording: Recording) => void;
 }
 
@@ -43,7 +42,6 @@ export function HistoryScreen({
   pictures,
   onOpenRecord,
   onOpenAccount,
-  onDownload,
   onRemoveFromPhone,
 }: HistoryScreenProps) {
   const headingRef = useFocusHeading();
@@ -104,7 +102,6 @@ export function HistoryScreen({
                   picture={pictures.get(recording.id) ?? null}
                   isOnline={isOnline}
                   onUpload={() => uploads.upload(recording)}
-                  onDownload={() => onDownload(recording)}
                   onDeleteFromPara={() => void uploads.removeUploaded(recording)}
                   onRemoveFromPhone={() => onRemoveFromPhone(recording)}
                 />

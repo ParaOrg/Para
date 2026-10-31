@@ -9,17 +9,10 @@ interface SavedScreenProps {
   /** Where the recording's upload stands, in words. */
   uploadText: string;
   onRecordAgain: () => void;
-  /** Hands over the recording's file. */
-  onDownload: () => void;
 }
 
 /** After Save: the recording is kept on this phone, and Record again. */
-export function SavedScreen({
-  failedFixWrites,
-  uploadText,
-  onRecordAgain,
-  onDownload,
-}: SavedScreenProps) {
+export function SavedScreen({ failedFixWrites, uploadText, onRecordAgain }: SavedScreenProps) {
   const headingRef = useFocusHeading();
   return (
     <>
@@ -46,13 +39,6 @@ export function SavedScreen({
           </p>
         )}
         <Button variant="primary" label="Record again" onClick={onRecordAgain} />
-        <button
-          type="button"
-          onClick={onDownload}
-          className="text-base/6 text-content-quaternary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-content-primary"
-        >
-          Download last recording
-        </button>
       </section>
     </>
   );

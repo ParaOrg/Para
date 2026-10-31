@@ -86,7 +86,6 @@ const meta = {
     pictures: new Map(),
     onOpenRecord: fn(),
     onOpenAccount: fn(),
-    onDownload: fn(),
     onRemoveFromPhone: fn(),
   },
   decorators: [
@@ -191,7 +190,7 @@ export const FromAnotherPhone: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getAllByRole('listitem')).toHaveLength(4);
     await expect(
-      canvas.queryByRole('button', { name: /^Download recording, .*Fairview Center Mall/ }),
+      canvas.queryByRole('button', { name: /^Remove from this phone, .*Fairview Center Mall/ }),
     ).toBeNull();
   },
 };

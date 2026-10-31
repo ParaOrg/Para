@@ -80,7 +80,6 @@ const meta = {
     picture: null,
     isOnline: true,
     onUpload: fn(),
-    onDownload: fn(),
     onDeleteFromPara: fn(),
     onRemoveFromPhone: fn(),
   },
@@ -214,12 +213,12 @@ export const NoPicture: Story = {
   },
 };
 
-/** ⋮ open: only what applies to an uploaded recording kept here, the deletes in red. */
+/** ⋮ open: only what applies to an uploaded recording kept here, the deletes in red; no Download. */
 export const MenuOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
-    await expect(canvas.getByRole('button', { name: /^Download recording/ })).toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: /^Download recording/ })).toBeNull();
     await expect(canvas.getByRole('button', { name: /^Delete from Para/ })).toBeInTheDocument();
     await expect(
       canvas.getByRole('button', { name: /^Remove from this phone/ }),

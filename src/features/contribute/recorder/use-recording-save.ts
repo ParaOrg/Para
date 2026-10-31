@@ -50,7 +50,7 @@ export function useRecordingSave({
   /**
    * Saves only once the phone holds the whole ride: the fix writes in flight are settled,
    * failed ones written again, then the recording. Until that commits, the ride stays in
-   * hand on the form, where Continue tries again and the download still has every fix.
+   * hand on the form, where Continue tries again with every fix still in memory.
    */
   async function saveNow(details: RecordingDetails | null) {
     const recording = currentRef.current;

@@ -61,12 +61,6 @@ export interface RecordingState {
   cancel: () => void;
   /** Back to Ready after a save. */
   recordAgain: () => void;
-  /** Downloads the recording in hand from memory, for when the phone could not keep its fixes. */
-  downloadCurrent: () => void;
-  /** Field test only: the file of the recording just saved. Goes at contribute/13. */
-  downloadLastSaved: () => void;
-  /** Downloads a saved recording, read back from this phone. */
-  downloadSaved: (recording: Recording) => void;
   /** Deletes a saved recording and its fixes from this phone. An uploaded copy is not touched. */
   deleteSaved: (recording: Recording) => void;
 }

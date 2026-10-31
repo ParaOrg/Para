@@ -368,7 +368,7 @@ const lagroRow = a.page.getByRole('listitem').filter({ hasText: `Lagro A ${RUN}`
 await lagroRow.getByRole('button', { name: /^More actions / }).click();
 check(
   '  the phone, reopened, says an editor removed it, keeps its copy, and offers Upload to Para',
-  (await lagroRow.getByRole('button', { name: /^Download recording/ }).count()) === 1 &&
+  (await lagroRow.getByRole('button', { name: /^Remove from this phone/ }).count()) === 1 &&
     (await lagroRow.getByRole('button', { name: /^Upload to Para/ }).count()) === 1,
 );
 await shot(a.page, '8-phone-removed-by-editor');

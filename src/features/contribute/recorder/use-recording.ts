@@ -22,8 +22,6 @@ import { useRecordingFixWrites } from './use-recording-fix-writes';
 import { useRecordingInHand } from './use-recording-in-hand';
 import { useRecordingSave } from './use-recording-save';
 import { useWakeLock } from './use-wake-lock';
-import { downloadHeldRecording, downloadStoredRecording } from '../storage/recording-downloads';
-import type { Recording } from '../storage/recording-schema';
 import { useSavedRecordings } from '../storage/use-saved-recordings';
 
 /**
@@ -183,18 +181,6 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Flagged, ${marked.count}`);
   }
 
-  function downloadCurrent() {
-    if (current) downloadHeldRecording(current, fixes);
-  }
-
-  function downloadSaved(recording: Recording) {
-    downloadStoredRecording(recording).catch(reportStore);
-  }
-
-  function downloadLastSaved() {
-    if (lastSaved) downloadSaved(lastSaved);
-  }
-
   return {
     phase,
     current,
@@ -219,9 +205,6 @@ export function useRecording(): RecordingState {
     save,
     cancel,
     recordAgain,
-    downloadCurrent,
-    downloadLastSaved,
-    downloadSaved,
     deleteSaved,
   };
 }
