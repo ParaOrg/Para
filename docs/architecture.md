@@ -75,6 +75,7 @@ flowchart TD
   app_contribute --> features_contribute
   app_contribute --> features_locator
   app_contribute --> shared_lib
+  app_contribute --> shared_ui
   app_contribute --> styles
   app_public_map --> features_locator
   app_public_map --> features_published_map
@@ -259,7 +260,7 @@ flowchart TD
 
 | Unit | Imports |
 | --- | --- |
-| `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `styles` |
+| `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `shared/ui`, `styles` |
 | `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/utils`, `styles` |
 | `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
@@ -309,7 +310,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
+`ContributePage`, `PageErrorScreen`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
 
 ### `features/locator`
 
