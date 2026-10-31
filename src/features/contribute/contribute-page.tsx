@@ -102,12 +102,17 @@ export function ContributePage({ locator }: ContributePageProps) {
     profile.isOpen &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
+  const isStartShown =
+    accountGate === 'ready' &&
+    phase === 'ready' &&
+    !isHistoryShown &&
+    !isProfileShown &&
+    !isPermissionsShown;
   // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
+  // Their own ⓘ opens them; every other screen over the map keeps MapLibre's corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
-  const isCreditsShown =
-    isCreditsOpen &&
-    (isRecordingShown ||
-      (phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown));
+  const hasCreditsButton = isStartShown || (accountGate === 'ready' && isRecordingShown);
+  const isCreditsShown = hasCreditsButton && isCreditsOpen;
   // The recording card folded away, by the recording it was folded on: each recording opens with
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
   const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
@@ -192,6 +197,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
+          areCreditsShown={!hasCreditsButton}
           mark={
             isRecordingShown ? (
               <FlagStopButton
@@ -231,7 +237,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {/* TODO: show TrackRoutesCard (tutorial/track-routes-card.tsx) over the map here, on Ready
               after the permissions screen, once the tutorial screens it opens are designed. */}
-          {phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown && (
+          {isStartShown && (
             // Inert under the credits, as the map is: nothing of Start is reached behind them.
             <div inert={isCreditsShown} className="contents">
               <ReadyScreen
