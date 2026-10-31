@@ -22,11 +22,17 @@ export function StartBar({ onClick }: StartBarProps) {
     <div className="relative">
       <span
         aria-hidden
-        className={cn('absolute -top-8 size-8 bg-brand-surface-secondary', CORNER_LEFT)}
+        className={cn(
+          'pointer-events-none absolute -top-8 size-8 bg-brand-surface-secondary',
+          CORNER_LEFT,
+        )}
       />
       <span
         aria-hidden
-        className={cn('absolute -top-8 size-8 bg-brand-surface-secondary', CORNER_RIGHT)}
+        className={cn(
+          'pointer-events-none absolute -top-8 size-8 bg-brand-surface-secondary',
+          CORNER_RIGHT,
+        )}
       />
       <button
         type="button"

@@ -877,14 +877,15 @@ const buttons = (page) =>
   );
   {
     const info = await creditsButton(page).boundingBox();
-    const tabs = await page.getByRole('navigation', { name: 'Screens' }).boundingBox();
+    const bar = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
     check(
-      "  the map's ⓘ is at the bottom left, 16 px in, level with the tabs",
+      "  the map's ⓘ is 32 px, at the bottom left, 12 px in and 12 px over the Start bar",
       info &&
-        tabs &&
-        Math.abs(info.x - 16) < 0.5 &&
-        Math.abs(info.y + info.height / 2 - (tabs.y + tabs.height / 2)) < 0.5,
-      JSON.stringify([info, tabs]),
+        bar &&
+        Math.abs(info.width - 32) < 0.5 &&
+        Math.abs(info.x - 12) < 0.5 &&
+        Math.abs(bar.y - (info.y + info.height) - 12) < 0.5,
+      JSON.stringify([info, bar]),
     );
   }
 

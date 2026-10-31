@@ -1,12 +1,12 @@
 import { lazy, Suspense, useEffect, useRef, useState, type Ref } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { InformationIcon } from '@/shared/ui/route-icons';
 
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
 import { useStackRoom } from '../common/use-stack-room';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
+import { CreditsButton } from '../map/credits-button';
 
 import './start-icons.css';
 
@@ -95,18 +95,11 @@ export function ReadyScreen({
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          {/* The ⓘ at the left, level with the tabs centred between it and an empty right. */}
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center px-4 pb-4">
-            <button
-              ref={creditsButtonRef}
-              type="button"
-              aria-label="Map data sources"
-              title="Map data sources"
-              onClick={onOpenCredits}
-              className="size-6 justify-self-start text-content-quaternary"
-            >
-              <InformationIcon />
-            </button>
+          {/* The ⓘ at the map's bottom left, 12 in and 12 over the Start bar; the tabs centred. */}
+          <div className="relative flex justify-center px-4 pb-4">
+            <div className="absolute bottom-3 left-3 z-10 flex">
+              <CreditsButton ref={creditsButtonRef} onClick={onOpenCredits} />
+            </div>
             {onOpenAccount && (
               <BottomToolbar accountRef={tabRef} onOpenAccount={() => onOpenAccount('tab')} />
             )}
