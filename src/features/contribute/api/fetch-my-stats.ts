@@ -18,6 +18,8 @@ const statsRowSchema = z.pipe(
     hinto_s: z.number(),
     marks: z.number(),
     jeep_rides: z.number(),
+    e_jeep_rides: z.number(),
+    uv_express_rides: z.number(),
     bus_rides: z.number(),
     train_rides: z.number(),
     ferry_rides: z.number(),
@@ -29,6 +31,8 @@ const statsRowSchema = z.pipe(
     longest_ride_moving_s: z.nullable(z.number()),
     routes_helped: z.number(),
     hintuans_helped: z.number(),
+    fare_php_total: z.number(),
+    fare_recordings: z.number(),
   }),
   z.transform((row) => ({
     rides: row.rides,
@@ -43,6 +47,8 @@ const statsRowSchema = z.pipe(
     marks: row.marks,
     ridesByVehicle: {
       jeep: row.jeep_rides,
+      eJeep: row.e_jeep_rides,
+      uvExpress: row.uv_express_rides,
       bus: row.bus_rides,
       train: row.train_rides,
       ferry: row.ferry_rides,
@@ -57,6 +63,9 @@ const statsRowSchema = z.pipe(
         : { distanceM: row.longest_ride_m, movingSeconds: row.longest_ride_moving_s },
     routesHelped: row.routes_helped,
     hintuansHelped: row.hintuans_helped,
+    /** Pesos paid over the rides that say what they cost; fareRecordings is how many. */
+    farePhpTotal: row.fare_php_total,
+    fareRecordings: row.fare_recordings,
   })),
 );
 
