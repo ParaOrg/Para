@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { InformationIcon } from '@/shared/ui/route-icons';
 
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
@@ -40,12 +41,14 @@ interface ReadyScreenProps {
   onOpenAccount?: (opener: AccountOpener) => void;
   /** The button that opened the screen that was open before this one. */
   returnFocusTo: AccountOpener | null;
+  /** The ⓘ: opens the map's credits, the Map Data Source sheet. */
+  onOpenCredits: () => void;
 }
 
 /**
  * Before a recording, Figma's Start (4485:24815): the person button at the top right and, at the
- * foot, the Record and Account tabs over the Start Tracking bar (or, on a first visit, what the
- * page does). The top left waits for the tutorial's ?.
+ * foot, the map's ⓘ (Figma 4494:10300) beside the Record and Account tabs, over the Start
+ * Tracking bar (or, on a first visit, what the page does). The top left waits for the tutorial's ?.
  */
 export function ReadyScreen({
   hasConsent,
@@ -54,6 +57,7 @@ export function ReadyScreen({
   onStart,
   onOpenAccount,
   returnFocusTo,
+  onOpenCredits,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const personRef = useRef<HTMLButtonElement>(null);
@@ -94,11 +98,20 @@ export function ReadyScreen({
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          {onOpenAccount && (
-            <div className="px-4 pb-4">
+          {/* The ⓘ at the left, level with the tabs centred between it and an empty right. */}
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center px-4 pb-4">
+            <button
+              type="button"
+              aria-label="Map data sources"
+              onClick={onOpenCredits}
+              className="size-6 justify-self-start text-content-quaternary"
+            >
+              <InformationIcon />
+            </button>
+            {onOpenAccount && (
               <BottomToolbar accountRef={tabRef} onOpenAccount={() => onOpenAccount('tab')} />
-            </div>
-          )}
+            )}
+          </div>
           {/* Nothing stands in for Start while the app's gates load: a plain Start would skip the permissions. */}
           {AppUpdateGate ? (
             <Suspense fallback={null}>

@@ -165,11 +165,10 @@ interface Props {
    */
   hasMapStyleButton?: boolean;
   /**
-   * The credits always at the bottom right, where a phone would put them top
-   * right, under the button: the contributor page keeps that corner for
-   * Figma's button. Read once, as the map is made.
+   * False where the page shows the credits itself: the contributor page's
+   * Map Data Source sheet, from mapCredits. Read once, as the map is made.
    */
-  creditsAtBottom?: boolean;
+  hasCredits?: boolean;
 }
 
 /**
@@ -193,7 +192,7 @@ export function MapView({
   basemapThumbnails = BASEMAP_THUMBNAILS,
   buttonStyle = 'round',
   hasMapStyleButton = true,
-  creditsAtBottom = false,
+  hasCredits = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -346,10 +345,11 @@ export function MapView({
 
       if (zoomButtons && !coarse) map.addControl(new NavigationControl(), 'top-right');
       map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
-      map.addControl(
-        new AttributionControl({ compact: true, customAttribution: mapAttribution(basemapHost) }),
-        coarse && !creditsAtBottom ? 'top-right' : 'bottom-right',
-      );
+      if (hasCredits)
+        map.addControl(
+          new AttributionControl({ compact: true, customAttribution: mapAttribution(basemapHost) }),
+          coarse ? 'top-right' : 'bottom-right',
+        );
       // What MapLibre itself does to them on the first drag.
       if (foldCredits)
         map

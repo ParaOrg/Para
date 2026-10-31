@@ -131,10 +131,14 @@ flowchart TD
   features_contribute_history --> shared_hooks
   features_contribute_history --> shared_ui
   features_contribute_history --> shared_utils
+  features_contribute_map --> design_system_primitives
   features_contribute_map --> features_contribute_recorder
   features_contribute_map --> features_contribute_storage
   features_contribute_map --> features_routes_map
   features_contribute_map --> features_routes_model
+  features_contribute_map --> shared_config
+  features_contribute_map --> shared_hooks
+  features_contribute_map --> shared_ui
   features_contribute_native --> design_system_primitives
   features_contribute_native --> features_contribute_common
   features_contribute_native --> features_contribute_native_bridge
@@ -264,7 +268,7 @@ flowchart TD
 | `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/ui` |
 | `features/contribute/consent` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/storage` |
 | `features/contribute/history` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/storage`, `features/contribute/uploads`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/contribute/map` | `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model` |
+| `features/contribute/map` | `design-system/primitives`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `shared/config`, `shared/hooks`, `shared/ui` |
 | `features/contribute/native` | `design-system/primitives`, `features/contribute/common`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `shared/utils` |
 | `features/contribute/native-bridge` | `features/contribute/app-update`, `features/contribute/native` |
 | `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `shared/utils` |
