@@ -826,5 +826,146 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 
+// ------------------------- Delete account: asks first, and leaves nothing of it, in Para or here
+{
+  const LEAVER_ID = 'ffffffff-0000-4000-8000-000000000003';
+  database.users.set(LEAVER_ID, {
+    email: 'leaver@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Leaver', phone: '+639170000003' },
+  });
+  database.rows.set('ffffffff-1111-4000-8000-000000000001', {
+    by: LEAVER_ID,
+    recording: {
+      id: 'ffffffff-1111-4000-8000-000000000001',
+      started_at: new Date(T0).toISOString(),
+      ended_at: new Date(T0 + 600_000).toISOString(),
+      start_name: 'Leaving',
+      end_name: 'Cubao',
+      description: '',
+    },
+  });
+  const { page, fake, errors } = await phone({ userId: LEAVER_ID });
+  await start(page).waitFor({ timeout: 30000 });
+  // A recording kept on the phone, not sent: it goes with the account.
+  await seed(page, 'ffffffff-2222-4000-8000-000000000002', 'Only on the phone');
+  fake.next.save = 'offline';
+  await page.reload({ waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 30000 });
+  await accountTab(page).click();
+  await button(page, 'Account settings').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  await button(page, 'Delete account').click();
+  const sheet = page.getByRole('alertdialog', { name: 'Delete your account?' });
+  await sheet.waitFor();
+  check(
+    'Delete account asks first, focus on Cancel, and says what goes, the phone’s recordings too',
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'Cancel' &&
+      /sent or not/.test(await sheet.innerText()) &&
+      /can’t be undone/.test(await sheet.innerText()),
+    await sheet.innerText(),
+  );
+  await sheet.getByRole('button', { name: 'Cancel' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  Cancel deletes nothing, focus back on Delete account',
+    fake.deleteAccountRequests === 0 &&
+      (await page.evaluate(() => document.activeElement?.textContent)) === 'Delete account',
+  );
+
+  await button(page, 'Delete account').click();
+  fake.next.deleteAccount = 'offline';
+  await sheet.getByRole('button', { name: 'Delete account' }).click();
+  await sheet.getByRole('alert').waitFor();
+  check(
+    '  with no signal the question says so in one line, and the account stays',
+    (await sheet.getByRole('alert').innerText()).startsWith('No signal') &&
+      database.users.has(LEAVER_ID),
+    await sheet.getByRole('alert').innerText(),
+  );
+  check(
+    '  and the phone keeps no deletion from it: Para never said yes, so nothing may later clear the phone',
+    (await page.evaluate(() => localStorage.getItem('para.contributor-deletion'))) === null,
+  );
+
+  // While the delete is on its way, nothing cancels it: Cancel, Escape and the dimmed page wait.
+  fake.next.deleteAccount = 'hold';
+  await sheet.getByRole('button', { name: 'Delete account' }).click();
+  await sheet.getByRole('button', { name: 'Deleting…' }).waitFor();
+  await page.keyboard.press('Escape');
+  await page.mouse.click(196, 100);
+  check(
+    '  while it is on its way it says so, and Cancel, Escape and a tap on the page do not close it',
+    (await sheet.count()) === 1 &&
+      (await sheet.getByRole('button', { name: 'Cancel' }).isDisabled()) &&
+      (await sheet.getByRole('button', { name: 'Deleting…' }).isDisabled()),
+  );
+  fake.release();
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
+  const keptRecordings = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const get = open.result.transaction('recordings').objectStore('recordings').getAll();
+          get.onsuccess = () => resolve(get.result.length);
+        };
+      }),
+  );
+  check(
+    '  deleting it ends on Sign in: the account, its uploads and the phone’s recordings are gone',
+    fake.deletedAccounts.join() === LEAVER_ID &&
+      !database.users.has(LEAVER_ID) &&
+      ![...database.rows.values()].some((row) => row.by === LEAVER_ID) &&
+      (await page.evaluate((key) => localStorage.getItem(key), AUTH_KEY)) === null &&
+      keptRecordings === 0,
+    JSON.stringify({ deleted: fake.deletedAccounts, keptRecordings }),
+  );
+
+  // Another account signs in on the same tab: none of the deleted account's recordings show.
+  const NEXT_ID = 'ffffffff-0000-4000-8000-000000000004';
+  database.users.set(NEXT_ID, {
+    email: 'next@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Next', phone: '+639170000004' },
+  });
+  await field(page, 'Email').fill('next@example.com');
+  await field(page, 'Password').fill('hunter2hunter2');
+  await button(page, 'Sign in').click();
+  await start(page).waitFor({ timeout: 15000 });
+  await openHistory(page);
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await page.getByText('No recordings yet.').waitFor({ timeout: 15000 });
+  check(
+    '  the next account signed in on the same tab sees none of its recordings',
+    (await row(page, 'Only on the phone').count()) === 0,
+  );
+  check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+}
+{
+  // An editor's account is not deleted from the contributor page: it says where to go.
+  const { page, fake } = await phone({ userId: EDITOR_ID });
+  await start(page).waitFor({ timeout: 30000 });
+  await accountTab(page).click();
+  await button(page, 'Account settings').click();
+  await button(page, 'Delete account').click();
+  const sheet = page.getByRole('alertdialog', { name: 'Delete your account?' });
+  await sheet.getByRole('button', { name: 'Delete account' }).click();
+  await sheet.getByRole('alert').waitFor();
+  check(
+    'Delete account for an editor is refused in one line, and the account stays',
+    (await sheet.getByRole('alert').innerText()) ===
+      "This account can't be deleted here. Ask Para's team to remove it." &&
+      database.users.has(EDITOR_ID) &&
+      fake.deletedAccounts.length === 0,
+    await sheet.getByRole('alert').innerText(),
+  );
+}
+
 await browser.close();
 tally();

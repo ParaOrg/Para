@@ -16,6 +16,7 @@ import { CONTRIBUTOR_AUTH_KEY, type ContributeClient } from './contribute-client
 import { requireClient } from './require-client';
 import { answerError } from './upload-contribution';
 import { deleteRecording, loadRecordings } from '../storage/recording-store';
+import { tellSavedRecordingsChanged } from '../storage/saved-recordings-channel';
 
 /** PostgREST's longest page, by default. */
 const PAGE = 1000;
@@ -45,9 +46,10 @@ async function accountUploadIds(client: ContributeClient, accountId: string): Pr
  * this phone: the session, an unfinished claim, the answers kept for it, and its recordings
  * (recordingsOfAccount). Needs signal; nothing is forgotten on the phone unless Para deleted it.
  *
- * Safe to repeat: what Para held is read and kept on the phone before asking, so a try whose
- * answer was lost is finished by the next one, even after a reload. Para answers an account it
- * already deleted as deleted, and a session already gone with it leaves only the phone to clear.
+ * Safe to repeat: what Para held is read before asking, and kept on the phone once Para has
+ * deleted it, so clearing the phone that failed is finished by the next try, even after a reload.
+ * A try whose answer was lost is asked again while the session lasts: Para answers an account it
+ * already deleted as deleted. With no answer kept, a lapsed session clears nothing.
  * Not while a recording is running: the screen calls it from Account settings only.
  */
 export async function deleteAccount(): Promise<void> {
@@ -64,7 +66,6 @@ export async function deleteAccount(): Promise<void> {
         accountId: step.accountId,
         uploadIds: await accountUploadIds(client, step.accountId),
       };
-      keepDeletion(deletion);
       // TODO: typed rpc once delete_my_account is applied and database types are regenerated.
       const untyped: SupabaseClient = client;
       const { error, status } = await untyped.rpc('delete_my_account');
@@ -78,6 +79,9 @@ export async function deleteAccount(): Promise<void> {
         console.warn(`Para did not delete the account (HTTP ${status}):`, error.message);
         throw new AccountError('not-accepting', error.message);
       }
+      // Kept only once Para has said yes: a deletion kept before an answer that never came would
+      // let a later tap, its session lapsed meanwhile, clear the phone of an account Para still has.
+      keepDeletion(deletion);
     }
     // The user is gone, so the server would refuse a sign-out: this phone's own session goes.
     await client.auth.signOut({ scope: 'local' });
@@ -107,4 +111,7 @@ async function forgetAccountOnPhone(deletion: AccountDeletion): Promise<void> {
     // finish; the person can also delete them one by one.
     console.warn("The phone could not delete the deleted account's recordings.", error);
   }
+  // Every list of saved recordings, this tab's own too, reads them again, whatever was deleted:
+  // none of the deleted account's may show to whoever signs in next.
+  tellSavedRecordingsChanged();
 }
