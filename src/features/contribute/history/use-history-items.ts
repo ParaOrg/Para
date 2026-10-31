@@ -1,11 +1,15 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 
+import { historyKeys } from './history-keys';
 import { mergeHistory } from './history-merge';
+import { rideFactsOf, uploadFactsOf, type RideFacts } from './ride-facts';
 import { accountKeys } from '../api/account-keys';
 import { UploadError } from '../api/upload-problem';
 import { useAccountUploadsQuery } from '../api/use-account-uploads-query';
 import { useRemoveAccountUploadMutation } from '../api/use-remove-account-upload-mutation';
+import { fixOfRow } from '../recorder/recording-fixes';
 import type { Recording } from '../storage/recording-schema';
+import { loadFixes } from '../storage/recording-store';
 import type { UploadStatus } from '../uploads/upload-state';
 import type { Uploads } from '../uploads/use-uploads';
 
@@ -21,6 +25,8 @@ export interface HistoryItems {
   uploads: Uploads;
   /** Whether the recording is kept on this phone; an upload from another phone is not. */
   isOnPhone: (recording: Recording) => boolean;
+  /** Its distance and trail: read from its fixes on this phone, or what the database keeps of an upload from another; null until read. */
+  factsOf: (recording: Recording) => RideFacts | null;
   load: HistoryLoad;
 }
 
@@ -53,8 +59,20 @@ export function useHistoryItems(saved: readonly Recording[], uploads: Uploads): 
   const queryClient = useQueryClient();
   const query = useAccountUploadsQuery();
   const removal = useRemoveAccountUploadMutation();
+  // A saved recording's fixes never change, so each is read once a History opening.
+  const factsQueries = useQueries({
+    queries: saved.map((recording) => ({
+      queryKey: historyKeys.facts(recording.id),
+      queryFn: async () => rideFactsOf(recording, (await loadFixes(recording.id)).map(fixOfRow)),
+      staleTime: Infinity,
+    })),
+  });
+  const keptFacts = new Map(
+    saved.map((recording, index) => [recording.id, factsQueries[index]?.data]),
+  );
   const accountUploads = query.data ?? [];
   const ownedIds = new Set(accountUploads.map((upload) => upload.id));
+  const uploadById = new Map(accountUploads.map((upload) => [upload.id, upload]));
   const onPhoneIds = new Set(saved.map((recording) => recording.id));
 
   const isOnPhone = (recording: Recording) => onPhoneIds.has(recording.id);
@@ -86,6 +104,11 @@ export function useHistoryItems(saved: readonly Recording[], uploads: Uploads): 
     recordings: mergeHistory(saved, accountUploads),
     uploads: { ...uploads, statusOf, canRemove, removeUploaded },
     isOnPhone,
+    factsOf: (recording) => {
+      if (isOnPhone(recording)) return keptFacts.get(recording.id) ?? null;
+      const upload = uploadById.get(recording.id);
+      return upload ? uploadFactsOf(upload) : null;
+    },
     load: {
       state: loadStateOf(query),
       message: query.isError ? loadMessageOf(query.error) : null,

@@ -27,3 +27,6 @@ export const WithoutAccounts: Story = { args: { onOpenAccount: undefined } };
 
 /** On Account: Account marked, Record the way back to Start (4496:10482). */
 export const OnAccount: Story = { args: { current: 'account' } };
+
+/** On History: History marked, Record and Account beside it (4514:23092). */
+export const OnHistory: Story = { args: { current: 'history' } };

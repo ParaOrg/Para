@@ -214,7 +214,7 @@ const openHistory = async (page) => {
   await tab.click();
   await heading.waitFor();
 };
-/** A card's actions, opened from its dots unless they are open, then the one named by `pattern`. */
+/** A card's ⋮ menu, opened unless it is open, then the item named by `pattern`. */
 const openMenu = async (page, name) => {
   const more = row(page, name).getByRole('button', { name: /^More actions/ });
   if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
@@ -227,26 +227,26 @@ const countOf = async (page, name, pattern) => {
   await openMenu(page, name);
   return row(page, name).getByRole('button', { name: pattern }).count();
 };
-/**
- * Waits for a card whose group heading and text together match `pattern`: "Uploaded | ..." for a
- * card under Uploaded, "Not uploaded | ... No signal" for one that met no signal.
- */
+/** Waits for the card named `name` whose status line, the one under its date, matches `pattern`. */
 const waitForStatus = async (page, name, pattern) => {
   await openHistory(page);
   return page.waitForFunction(
     ([n, p]) =>
-      [...document.querySelectorAll('li')].some((li) => {
-        const group = li.closest('section')?.querySelector('h2')?.textContent ?? '';
-        return li.textContent.includes(n) && new RegExp(p).test(`${group} | ${li.textContent}`);
-      }),
+      [...document.querySelectorAll('li')].some(
+        (li) =>
+          li.textContent.includes(n) &&
+          new RegExp(p).test(li.querySelector('[aria-live]')?.textContent ?? ''),
+      ),
     [name, pattern.source],
     { timeout: 15000 },
   );
 };
-const UPLOADED = /^Uploaded \|/;
-/** The heading of the History group a card sits in. */
-const groupOf = (page, name) =>
-  row(page, name).evaluate((li) => li.closest('section')?.querySelector('h2')?.textContent ?? '');
+const UPLOADED = /^Uploaded$/;
+const NO_SIGNAL = /^Waiting for signal$/;
+const ON_PHONE_ONLY = /^Only on this phone$/;
+/** A true failure's status line, which is its retry button. */
+const retryButton = (page, name) =>
+  row(page, name).getByRole('button', { name: /^Tap retry upload, / });
 
 // ------------------------------------------------- record, save, uploaded
 {
@@ -333,12 +333,11 @@ const groupOf = (page, name) =>
     savedRide('aaaaaaaa-0000-4000-8000-000000000001', T0, { name: 'Offline ride' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Offline ride', /No signal/);
+  await waitForStatus(page, 'Offline ride', NO_SIGNAL);
   await shot(page, '2-no-signal');
   check(
-    'with no signal it says so, keeps the copy and files it under Not uploaded',
-    fake.rows.size === 0 &&
-      (await page.getByRole('heading', { level: 2, name: 'Not uploaded' }).count()) === 1,
+    'with no signal it says it waits for signal, keeps the copy, and offers no retry: it goes on its own',
+    fake.rows.size === 0 && (await retryButton(page, 'Offline ride').count()) === 0,
   );
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await waitForStatus(page, 'Offline ride', UPLOADED);
@@ -356,18 +355,16 @@ const groupOf = (page, name) =>
     savedRide('aaaaaaaa-0000-4000-8000-000000000002', T0, { name: 'Lost answer' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Lost answer', /No signal/);
+  await waitForStatus(page, 'Lost answer', NO_SIGNAL);
   check(
     'an answer lost on the way back reads as not uploaded, though Para has it',
     fake.rows.size === 1 &&
       (await storedUpload(page, 'aaaaaaaa-0000-4000-8000-000000000002')) === 'none',
   );
-  await row(page, 'Lost answer')
-    .getByRole('button', { name: /^(Try again|Upload again)/ })
-    .click();
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await waitForStatus(page, 'Lost answer', UPLOADED);
   check(
-    '  Try again answers "already saved": uploaded, and stored once',
+    '  sent again once back online, it is answered "already saved": uploaded, and stored once',
     fake.rows.size === 1 && fake.saveRequests === 2,
     `${fake.rows.size} stored`,
   );
@@ -379,7 +376,7 @@ const groupOf = (page, name) =>
   fake.next.save = 'hold';
   await seed(page, [savedRide('aaaaaaaa-0000-4000-8000-000000000003', T0, { name: 'Held ride' })]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Held ride', /Uploading/);
+  await waitForStatus(page, 'Held ride', /^Sending…$/);
   for (let i = 0; i < 3; i += 1) {
     await page.evaluate(() => {
       window.dispatchEvent(new Event('online'));
@@ -388,10 +385,10 @@ const groupOf = (page, name) =>
   }
   await page.waitForTimeout(500);
   check(
-    'while an upload is in flight, coming online or to the front sends nothing more, and there is no Try again',
+    'while an upload is in flight, coming online or to the front sends nothing more; no retry, no Upload to Para, no Remove from this phone',
     fake.saveRequests === 1 &&
-      (await countOf(page, 'Held ride', /^(Try again|Upload again)/)) === 0 &&
-      (await countOf(page, 'Held ride', /^Delete from phone/)) === 0,
+      (await retryButton(page, 'Held ride').count()) === 0 &&
+      (await countOf(page, 'Held ride', /^(Upload to Para|Remove from this phone)/)) === 0,
     `${fake.saveRequests} sends`,
   );
   fake.release();
@@ -407,7 +404,7 @@ const groupOf = (page, name) =>
     savedRide('aaaaaaaa-0000-4000-8000-000000000004', T0, { name: 'Refused ride' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Refused ride', /Refused/);
+  await waitForStatus(page, 'Refused ride', /^Tap retry upload$/);
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   check(
@@ -417,14 +414,13 @@ const groupOf = (page, name) =>
     await statusOf(page, 'Refused ride'),
   );
   check(
-    '  Try again is offered, and Download still is',
-    (await countOf(page, 'Refused ride', /^(Try again|Upload again)/)) === 1 &&
-      (await countOf(page, 'Refused ride', /^Download/)) === 1,
+    '  its status line is the retry button, and Download recording is still in the menu',
+    (await retryButton(page, 'Refused ride').count()) === 1 &&
+      (await countOf(page, 'Refused ride', /^Download recording/)) === 1,
   );
   fake.next.save = 'day_cap';
-  await row(page, 'Refused ride')
-    .getByRole('button', { name: /^(Try again|Upload again)/ })
-    .click();
+  await page.keyboard.press('Escape');
+  await retryButton(page, 'Refused ride').click();
   await waitForStatus(page, 'Refused ride', /20 recordings sent today/);
   check('  the day cap says it tries again later', fake.rows.size === 0);
 }
@@ -436,38 +432,36 @@ const groupOf = (page, name) =>
   await seed(page, [savedRide(id, T0, { name: 'Remove me' })]);
   await page.reload({ waitUntil: 'load' });
   await waitForStatus(page, 'Remove me', UPLOADED);
-  await act(page, 'Remove me', /^Remove upload/);
+  await act(page, 'Remove me', /^Delete from Para/);
   const question = await row(page, 'Remove me').getByRole('group').innerText();
   check(
-    'Remove upload asks first, says the phone keeps its copy, and focuses Keep it',
-    question.includes('Remove this recording from Para? The copy on this phone stays.') &&
+    'Delete from Para asks first, says the phone keeps its copy, and focuses Keep it',
+    question.includes('Delete this recording from Para? The copy on this phone stays.') &&
       (await page.evaluate(() => document.activeElement?.textContent)) === 'Keep it',
   );
   await shot(page, '3-remove-question');
   await row(page, 'Remove me').getByRole('button', { name: 'Keep it' }).click();
   check('  Keep it removes nothing', fake.rows.size === 1 && fake.deleteRequests === 0);
   fake.next.remove = 'removeOffline';
-  await act(page, 'Remove me', /^Remove upload/);
-  await row(page, 'Remove me').getByRole('button', { name: 'Remove', exact: true }).click();
+  await act(page, 'Remove me', /^Delete from Para/);
+  await row(page, 'Remove me').getByRole('button', { name: 'Delete', exact: true }).click();
   await waitForStatus(page, 'Remove me', /Not removed/);
   check('  with no signal it says it was not removed', fake.rows.size === 1);
-  await act(page, 'Remove me', /^Remove upload/);
-  await row(page, 'Remove me').getByRole('button', { name: 'Remove', exact: true }).click();
-  await waitForStatus(page, 'Remove me', /^Only on this phone \|/);
+  await act(page, 'Remove me', /^Delete from Para/);
+  await row(page, 'Remove me').getByRole('button', { name: 'Delete', exact: true }).click();
+  await waitForStatus(page, 'Remove me', ON_PHONE_ONLY);
   check(
     '  removed from Para; the phone keeps its copy, marked removed',
     fake.rows.size === 0 && (await storedUpload(page, id)) === 'removed',
   );
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Remove me', /^Only on this phone \|/);
+  await waitForStatus(page, 'Remove me', ON_PHONE_ONLY);
   await page.waitForTimeout(500);
   const sendsBefore = fake.saveRequests;
   check('  a reload does not send it again on its own', fake.rows.size === 0 && sendsBefore === 1);
-  await row(page, 'Remove me')
-    .getByRole('button', { name: /^(Try again|Upload again)/ })
-    .click();
+  await act(page, 'Remove me', /^Upload to Para/);
   await waitForStatus(page, 'Remove me', UPLOADED);
-  check('  Upload again sends it back', fake.rows.size === 1);
+  check('  Upload to Para, in its menu, sends it back', fake.rows.size === 1);
 }
 
 // ------------------------------------------- delete the phone's copy
@@ -481,33 +475,33 @@ const groupOf = (page, name) =>
     savedRide(local, T0 + 3_600_000, { name: 'Local one' }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Uploaded one', /^Uploaded \||No signal/);
-  await waitForStatus(page, 'Local one', /^Uploaded \||No signal/);
+  await waitForStatus(page, 'Uploaded one', /^(Uploaded|Waiting for signal)$/);
+  await waitForStatus(page, 'Local one', /^(Uploaded|Waiting for signal)$/);
   // Whichever went first met no signal; that one is the one not uploaded.
   const [upName, localName, upId, localId] = fake.rows.has(uploaded)
     ? ['Uploaded one', 'Local one', uploaded, local]
     : ['Local one', 'Uploaded one', local, uploaded];
-  await act(page, upName, /^Delete from phone/);
+  await act(page, upName, /^Remove from this phone/);
   check(
-    "Delete from phone on an uploaded recording says Para's copy stays",
+    "Remove from this phone on an uploaded recording says Para's copy stays",
     (await row(page, upName).getByRole('group').innerText()).includes(
-      'Delete this recording from this phone? The copy uploaded to Para stays.',
+      'Remove this recording from this phone? The copy uploaded to Para stays.',
     ),
   );
   await shot(page, '4-delete-question');
-  await row(page, upName).getByRole('button', { name: 'Delete', exact: true }).click();
+  await row(page, upName).getByRole('button', { name: 'Remove', exact: true }).click();
   // Para's copy is still the account's, so its card stays, now without a copy on this phone.
   await page.waitForFunction(
     (n) =>
       [...document.querySelectorAll('li')].some(
-        (li) => li.textContent.includes(n) && !li.textContent.includes('Delete this recording'),
+        (li) => li.textContent.includes(n) && !li.textContent.includes('Remove this recording'),
       ),
     upName,
   );
   check(
-    "  and its card stays as the account's upload, with only Remove upload behind its dots",
-    (await countOf(page, upName, /^Delete from phone|^Download/)) === 0 &&
-      (await countOf(page, upName, /^Remove upload/)) === 1,
+    "  and its card stays as the account's upload, with only Delete from Para in its menu",
+    (await countOf(page, upName, /^Remove from this phone|^Download recording/)) === 0 &&
+      (await countOf(page, upName, /^Delete from Para/)) === 1,
   );
   check(
     '  two recordings waiting at once sent as the account, with no sign-in of their own',
@@ -518,7 +512,8 @@ const groupOf = (page, name) =>
     "  the phone's copy is gone; Para's is not",
     (await storedUpload(page, upId)) === 'gone' && fake.rows.has(upId),
   );
-  await act(page, localName, /^Delete from phone/);
+  await page.keyboard.press('Escape');
+  await act(page, localName, /^Remove from this phone/);
   const localQuestion = await row(page, localName).getByRole('group').innerText();
   check(
     '  on one never uploaded, it says it will be gone for good',
@@ -526,7 +521,7 @@ const groupOf = (page, name) =>
       !fake.rows.has(localId),
     localQuestion,
   );
-  await row(page, localName).getByRole('button', { name: 'Delete', exact: true }).click();
+  await row(page, localName).getByRole('button', { name: 'Remove', exact: true }).click();
   await page.waitForFunction(() => document.querySelectorAll('li').length === 1);
   check(
     "  focus lands on History's heading, not the page",
@@ -563,15 +558,15 @@ const groupOf = (page, name) =>
     }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Old identity', UPLOADED);
+  await waitForStatus(page, 'Old identity', /^Uploaded from an earlier sign-in$/);
   check(
-    'an upload made by an earlier identity on this phone offers no Remove upload, and says why',
-    (await countOf(page, 'Old identity', /^Remove upload/)) === 0 &&
+    'an upload made by an earlier identity on this phone offers no Delete from Para, and says why',
+    (await countOf(page, 'Old identity', /^Delete from Para/)) === 0 &&
       (await statusOf(page, 'Old identity')).includes('Uploaded from an earlier sign-in'),
   );
   await page.keyboard.press('Escape');
   check(
-    "  Escape closes the card's actions and puts focus back on its dots",
+    "  Escape closes the card's menu and puts focus back on its ⋮",
     (await row(page, 'Old identity')
       .getByRole('button', { name: /^More actions/ })
       .getAttribute('aria-expanded')) === 'false' &&
@@ -703,10 +698,10 @@ const groupOf = (page, name) =>
   await openHistory(page);
   await page.waitForTimeout(1500);
   check(
-    '  Keep on phone sends nothing, and History files it under Only on this phone',
+    '  Keep on phone sends nothing, and History says it is only on this phone',
     fake.saveRequests === 0 &&
       (await storedUpload(page, a)) === 'none' &&
-      (await groupOf(page, 'Earlier one')) === 'Only on this phone',
+      (await statusOf(page, 'Earlier one')) === 'Only on this phone',
   );
   // Back on Ready: a reload on #history would land on History instead.
   await page.evaluate(() => {
@@ -720,15 +715,13 @@ const groupOf = (page, name) =>
     (await SCREENS.earlier(page).count()) === 0 && fake.saveRequests === 0,
   );
   await openHistory(page);
-  await row(page, 'Earlier one')
-    .getByRole('button', { name: /^Upload,/ })
-    .click();
+  await act(page, 'Earlier one', /^Upload to Para,/);
   await waitForStatus(page, 'Earlier one', UPLOADED);
   check(
-    '  it can still be sent from History, one at a time',
+    '  it can still be sent from History, one at a time, from its menu',
     fake.rows.size === 1 &&
       fake.rows.has(a) &&
-      (await groupOf(page, 'Earlier two')) === 'Only on this phone',
+      (await statusOf(page, 'Earlier two')) === 'Only on this phone',
   );
 }
 

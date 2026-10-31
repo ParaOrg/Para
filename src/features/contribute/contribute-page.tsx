@@ -338,12 +338,18 @@ export function ContributePage({ locator }: ContributePageProps) {
               <HistoryView
                 recordings={recording.saved}
                 uploads={uploads}
-                // Back returns to the screen History was opened from: Ready, or Account.
-                onBack={history.close}
-                // Record a route goes to Start, wherever History was opened from.
-                onRecord={() => history.replaceWith('')}
+                // Record goes to Start, wherever History was opened from; Account takes History's place.
+                onOpenRecord={() => history.replaceWith('')}
+                onOpenAccount={
+                  hasAccount
+                    ? () => {
+                        setOpenedTab('account');
+                        history.replaceWith('#profile');
+                      }
+                    : undefined
+                }
                 onDownload={recording.downloadSaved}
-                onDeleteFromPhone={recording.deleteSaved}
+                onRemoveFromPhone={recording.deleteSaved}
               />
             </Suspense>
           )}
