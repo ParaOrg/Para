@@ -1,7 +1,7 @@
 import { useId, type CSSProperties } from 'react';
 
 import './locator.css';
-import { gazeOffset } from './dot-gaze';
+import { eyesDeg, gazeOffset } from './dot-gaze';
 import type { Face, Mood } from './locator-mood';
 
 /** Where the beam points as drawn: due south, so it is turned by the heading less this. */
@@ -34,15 +34,15 @@ interface Props {
   beat?: number;
   /** The dot is a button, to be poked: LocatorOnMap hears the tap (marker-tap.ts). */
   pokeable?: boolean;
-  /** Which way its eyes gaze, degrees clockwise from the overlay's up, at what was just picked (dot-gaze.ts). Null: they wander. */
+  /** Which way its eyes gaze, degrees clockwise from the overlay's up, at what was just picked (dot-gaze.ts). Null: they look the beam's way, or wander with no beam. */
   gazeDeg?: number | null;
 }
 
 /**
  * LocatorIndicatorOverlay (Figma 3870:5247): the commuter on the map
  * — a 24 px Brand/surface dot in white, lifted by LocatorDotShadow,
- * breathing, its wandering eyes glancing about (locator.css); a beam the
- * way they face fading out from it; and the circle the fix is good to, in
+ * breathing, its eyes looking the way the phone faces, or glancing about
+ * with no heading (locator.css); a beam the way they face fading out from it; and the circle the fix is good to, in
  * Map/LocatorIndicatorOverlay/surface with its border's hairline. The circle
  * matters: GPS in Metro Manila is often 20–50 m out, and a dot alone would
  * claim a certainty the phone does not have. Figma's is 240 across; here the
@@ -58,7 +58,8 @@ export function LocatorIndicatorOverlay({
   pokeable = false,
   gazeDeg = null,
 }: Props) {
-  const gaze = gazeDeg === null ? null : gazeOffset(gazeDeg);
+  const lookDeg = eyesDeg(gazeDeg, beamDeg);
+  const look = lookDeg === null ? null : gazeOffset(lookDeg);
   const Dot = pokeable ? 'button' : 'div';
   const halo = haloFor(haloPx, scale);
   const gradient = useId();
@@ -111,9 +112,10 @@ export function LocatorIndicatorOverlay({
           data-mood={mood}
           data-face={face}
           data-gaze={gazeDeg ?? undefined}
+          data-look={lookDeg ?? undefined}
           style={
-            gaze
-              ? ({ '--gaze-x': `${gaze.x}px`, '--gaze-y': `${gaze.y}px` } as CSSProperties)
+            look
+              ? ({ '--gaze-x': `${look.x}px`, '--gaze-y': `${look.y}px` } as CSSProperties)
               : undefined
           }
           className={
@@ -124,10 +126,13 @@ export function LocatorIndicatorOverlay({
           }
         >
           <div className="relative size-6 overflow-clip rounded-full bg-brand-surface">
-            {/* Its wandering eyes (3878:6071, 3878:6072): every face is theirs (locator.css). */}
-            <div aria-hidden className="locator-eyes absolute inset-0">
-              <span className="locator-eye absolute top-[6.33px] left-[10.48px] h-1.5 w-1 rounded-full bg-surface" />
-              <span className="locator-eye absolute top-[6.33px] left-[17.43px] h-1.5 w-1 rounded-full bg-surface" />
+            {/* Its eyes (3878:6071, 3878:6072): where they look moves the outer group (data-look),
+                and every face places them within it (locator.css). */}
+            <div aria-hidden className="locator-look absolute inset-0">
+              <div className="locator-eyes absolute inset-0">
+                <span className="locator-eye absolute top-[6.33px] left-[10.48px] h-1.5 w-1 rounded-full bg-surface" />
+                <span className="locator-eye absolute top-[6.33px] left-[17.43px] h-1.5 w-1 rounded-full bg-surface" />
+              </div>
             </div>
           </div>
         </Dot>

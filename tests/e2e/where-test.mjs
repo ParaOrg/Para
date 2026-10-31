@@ -122,6 +122,61 @@ const face = (page, heading) =>
       }),
     );
   }, heading);
+/**
+ * Where the dot's eyes look on the screen once their turn has ended: the way
+ * they are moved from where they are drawn, in degrees clockwise from up
+ * (null when they are not moved), with what the dot says it looks at and their
+ * animation. A face that holds the eyes off the middle is in both readings,
+ * so it drops out. Measured off the drawn boxes, so the map's bearing and tilt are
+ * in it as a commuter sees them.
+ */
+const eyesOnScreen = (page) =>
+  page.evaluate(async () => {
+    const dot = document.querySelector('[data-testid="locator-overlay"] .locator-dot');
+    const look = dot?.querySelector('.locator-look');
+    const eyes = dot?.querySelector('.locator-eyes');
+    if (!dot || !look || !eyes) return null;
+    const turns = look.getAnimations().filter((a) => a.transitionProperty === 'translate');
+    await Promise.allSettled(turns.map((a) => a.finished));
+    const mid = (r) => [r.left + r.width / 2, r.top + r.height / 2];
+    // The two eyes' own middle, on the screen.
+    const eyesAt = () => {
+      const [a, b] = [...eyes.querySelectorAll('.locator-eye')].map((e) =>
+        mid(e.getBoundingClientRect()),
+      );
+      return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    };
+    // Where they look, less where they sit as drawn (a little above the
+    // middle): the same eyes with the look's offset taken away for a moment.
+    const [ex, ey] = eyesAt();
+    const was = [dot.style.getPropertyValue('--gaze-x'), dot.style.getPropertyValue('--gaze-y')];
+    look.style.transition = 'none';
+    dot.style.setProperty('--gaze-x', '0px');
+    dot.style.setProperty('--gaze-y', '0px');
+    const [dx, dy] = eyesAt();
+    dot.style.setProperty('--gaze-x', was[0]);
+    dot.style.setProperty('--gaze-y', was[1]);
+    look.style.transition = '';
+    const off = Math.hypot(ex - dx, ey - dy);
+    // The face's own place for the eyes, looking and not: the same but for
+    // the glance and the wink, whose eyes come to the middle to look.
+    const faceTransform = getComputedStyle(eyes).transform;
+    const lookAttr = dot.getAttribute('data-look');
+    eyes.style.transition = 'none';
+    dot.removeAttribute('data-look');
+    const restingTransform = getComputedStyle(eyes).transform;
+    if (lookAttr !== null) dot.setAttribute('data-look', lookAttr);
+    eyes.style.transition = '';
+    return {
+      look: dot.dataset.look ?? null,
+      deg:
+        off < 0.5 ? null : Math.round(((Math.atan2(ex - dx, dy - ey) * 180) / Math.PI + 360) % 360),
+      animation: getComputedStyle(eyes).animationName,
+      face: dot.dataset.face,
+      faceKept: ['glance', 'wink'].includes(dot.dataset.face) || faceTransform === restingTransform,
+      at: [Math.round((ex - dx) * 10) / 10, Math.round((ey - dy) * 10) / 10],
+    };
+  });
 
 // ---------------------------------------------------------- a granted commuter, on a phone
 if (VIDEO) mkdirSync(VIDEO, { recursive: true });
@@ -366,6 +421,19 @@ check(
   '  its label offers the compass',
   (await button.getAttribute('aria-label')) === 'Turn the map the way I face',
 );
+// The eyes say which way the commuter faces, as the beam does, wherever the map is turned;
+// the face keeps its own place for them.
+await until(async () => (await eyesOnScreen(page))?.look === '120', 3000);
+const eyesNorthUp = await eyesOnScreen(page);
+check(
+  "  the dot's eyes look the way the phone faces, the beam's way: east-south-east on a north-up map, in the face's own place for them",
+  eyesNorthUp?.look === '120' &&
+    eyesNorthUp.animation === 'none' &&
+    eyesNorthUp.deg !== null &&
+    apart(eyesNorthUp.deg, 120) < 8 &&
+    eyesNorthUp.faceKept,
+  JSON.stringify(eyesNorthUp),
+);
 
 await button.click();
 await until(async () => (await mode()) === 'TracksTheMapBasedOnCompassFacing', 3000);
@@ -389,6 +457,15 @@ check(
   "  the overlay's heading is the compass's",
   apart(Number(await attr(page, 'data-heading')), 120) < 1,
   `${await attr(page, 'data-heading')}`,
+);
+const eyesCompass = await eyesOnScreen(page);
+check(
+  '  and with the map turned the way the phone faces, its eyes look up the screen, the face kept',
+  eyesCompass?.look === '120' &&
+    eyesCompass.deg !== null &&
+    apart(eyesCompass.deg, 0) < 8 &&
+    eyesCompass.faceKept,
+  JSON.stringify(eyesCompass),
 );
 await face(page, 200);
 await until(async () => apart((await camera(page)).bearing, 200) < 1, 3000);
@@ -488,14 +565,14 @@ if (!onLine) {
       const dot = host?.querySelector('.locator-dot[data-gaze]');
       if (!dot || window.__gazed !== null) return;
       window.__gazed = false;
+      const look = dot.querySelector('.locator-look');
       const eyes = dot.querySelector('.locator-eyes');
       const read = () => {
         if (window.__gazed) return;
-        const style = getComputedStyle(eyes);
         window.__gazed = {
           deg: Number(dot.dataset.gaze),
-          animation: style.animationName,
-          translate: style.translate,
+          animation: getComputedStyle(eyes).animationName,
+          translate: getComputedStyle(look).translate,
         };
       };
       // Once the eyes' own turn has ended, read off the turn itself (the
@@ -505,7 +582,7 @@ if (!onLine) {
       // 2026-10-03). A turn replaced by another is waited out again; no
       // turn at all is read at once — eyes that never move fail as before.
       const settle = () => {
-        const turns = eyes.getAnimations().filter((a) => a.transitionProperty === 'translate');
+        const turns = look.getAnimations().filter((a) => a.transitionProperty === 'translate');
         if (!turns.length) return read();
         Promise.all(turns.map((a) => a.finished)).then(read, settle);
       };
@@ -536,10 +613,13 @@ if (!onLine) {
     gazed && eyes.animation === 'none' && Math.hypot(ex - want[0], (ey || 0) - want[1]) < 0.2,
     `gaze ${deg}°; eyes ${JSON.stringify(eyes)}`,
   );
+  const heading = await attr(page, 'data-heading');
   check(
-    '  and after three seconds they wander again',
-    await until(async () => (await dot.getAttribute('data-gaze')) === null, 4500),
-    `${await dot.getAttribute('data-gaze')}`,
+    '  and after three seconds they look the way the phone faces again',
+    (await until(async () => (await dot.getAttribute('data-gaze')) === null, 4500)) &&
+      heading !== '' &&
+      (await dot.getAttribute('data-look')) === heading,
+    `gaze ${await dot.getAttribute('data-gaze')}, look ${await dot.getAttribute('data-look')}, heading ${heading}`,
   );
 
   // The card that tap opened set to another height while the camera follows
@@ -784,6 +864,42 @@ check(
   '  its label says so, no compass offered',
   (await where4.getAttribute('aria-label')) === 'Show where I am',
 );
+const eyesNoCompass = await eyesOnScreen(page4);
+check(
+  "  with no heading, no beam: the dot's eyes wander",
+  eyesNoCompass?.look === null && eyesNoCompass.animation !== 'none',
+  JSON.stringify(eyesNoCompass),
+);
+// A route tapped with no compass: the gaze, then the wandering again, not a heading.
+const onLine4 = await page4.evaluate(async () => {
+  const m = window.__map;
+  const data = await m.getSource('saved-routes')?.getData();
+  const f = data?.features.find(
+    (x) => x.geometry?.type === 'LineString' && x.geometry.coordinates.length > 1,
+  );
+  if (!f) return null;
+  const [a, b] = f.geometry.coordinates;
+  const at = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  m.jumpTo({ center: at, zoom: 16 });
+  return at;
+});
+if (!onLine4) {
+  check('  a route tapped with no compass: a gaze, then wandering', false, 'no route line');
+} else {
+  await mapIdle(page4);
+  const [tx4, ty4] = await page4.evaluate((c) => Object.values(window.__map.project(c)), onLine4);
+  await page4.mouse.click(tx4, ty4);
+  const dot4 = overlay(page4).locator('.locator-dot').first();
+  const gazed4 = await until(async () => (await dot4.getAttribute('data-gaze')) !== null, 5000);
+  const back4 =
+    gazed4 && (await until(async () => (await dot4.getAttribute('data-gaze')) === null, 4500));
+  const after4 = await eyesOnScreen(page4);
+  check(
+    '  a route tapped with no compass: the dot gazes at it, and after three seconds its eyes wander again',
+    gazed4 && back4 && after4?.look === null && after4.animation !== 'none',
+    JSON.stringify({ gazed4, back4, after4 }),
+  );
+}
 await where4.click();
 // Tilted, it would be by the time the map is at rest.
 await mapIdle(page4);
