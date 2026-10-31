@@ -26,8 +26,14 @@ interface OtpFieldProps extends Omit<
   value: string;
   /** Called with the digits only: anything else typed or pasted is dropped. */
   onChange: (code: string) => void;
-  /** The message under the boxes, the boxes in InputField's error colours. */
+  /**
+   * The message under the boxes, the boxes in InputField's error colours, announced as it
+   * appears. While it shows, the next digit
+   * typed starts the code again from that digit.
+   */
   error?: string;
+  /** Change it to shake the boxes once, as a refusal; unset, they never shake. Reduced motion: no shake. */
+  shakeKey?: number;
   ref?: Ref<HTMLInputElement>;
 }
 
@@ -66,6 +72,7 @@ export function OtpField({
   value,
   onChange,
   error,
+  shakeKey,
   disabled = false,
   id,
   'aria-describedby': ownDescription,
@@ -103,16 +110,20 @@ export function OtpField({
   );
 
   return (
-    <div className="flex w-full flex-col gap-1.5 font-sn-pro">
-      <div className="relative flex w-full items-center gap-3">
-        <div aria-hidden className="flex min-w-0 flex-1 gap-2">
-          {FIRST_GROUP.map(renderBox)}
-        </div>
-        <span aria-hidden className="text-base/6 font-bold text-content-primary">
-          -
-        </span>
-        <div aria-hidden className="flex min-w-0 flex-1 gap-2">
-          {SECOND_GROUP.map(renderBox)}
+    <div className="flex w-full flex-col font-sn-pro">
+      <div className="relative w-full">
+        {/* A new key restarts the shake; the input below keeps its focus. */}
+        <div
+          key={shakeKey}
+          aria-hidden
+          className={
+            'flex w-full items-center gap-3' +
+            (shakeKey === undefined ? '' : ' motion-safe:animate-shake')
+          }
+        >
+          <div className="flex min-w-0 flex-1 gap-2">{FIRST_GROUP.map(renderBox)}</div>
+          <span className="text-base/6 font-bold text-content-primary">-</span>
+          <div className="flex min-w-0 flex-1 gap-2">{SECOND_GROUP.map(renderBox)}</div>
         </div>
         <input
           {...input}
@@ -127,7 +138,12 @@ export function OtpField({
           disabled={disabled}
           aria-invalid={isErrorShown || undefined}
           aria-describedby={describedBy(ownDescription, isErrorShown ? errorId : undefined)}
-          onChange={(event) => onChange(codeDigits(event.target.value))}
+          onChange={(event) => {
+            const typed = event.target.value.replace(/\D/g, '');
+            // The caret is held at the end, so what was added is what follows the old digits.
+            const isAdded = typed.length > digits.length && typed.startsWith(digits);
+            onChange(codeDigits(isErrorShown && isAdded ? typed.slice(digits.length) : typed));
+          }}
           // A paste replaces the whole code, wherever the caret is: a new code pasted over an old
           // one, or over a few typed digits, would otherwise be cut back to the first six.
           onPaste={(event) => {
@@ -158,7 +174,12 @@ export function OtpField({
           className="absolute inset-0 size-full cursor-text bg-transparent text-transparent caret-transparent opacity-0 outline-none disabled:cursor-not-allowed"
         />
       </div>
-      {isErrorShown && <FieldError id={errorId} message={error} />}
+      {/* Read out as it appears: a code is often checked with no button pressed. */}
+      {isErrorShown && (
+        <div role="alert" className="pt-1.5">
+          <FieldError id={errorId} message={error} />
+        </div>
+      )}
     </div>
   );
 }

@@ -113,9 +113,10 @@ async function sendCode(page, email) {
   await heading(page, 'Enter the code').waitFor();
 }
 
+/** The code is checked on its sixth digit; a shorter one is sent with Enter, to be named. */
 async function enterCode(page, code) {
   await field(page, 'Verification code').fill(code);
-  await button(page, 'Verify').click();
+  if (code.replace(/\D/g, '').length < 6) await field(page, 'Verification code').press('Enter');
 }
 
 async function savePassword(page, password, confirmation = password) {
@@ -152,9 +153,10 @@ const storedSession = (page) =>
       (await page.getByRole('alert').count()) === 0,
   );
   check(
-    '  the code step asks for the code, and for nothing else',
+    '  the code step asks for the code, and for nothing else: no Verify button',
     (await page.locator('input').count()) === 1 &&
-      (await field(page, 'Verification code').count()) === 1,
+      (await field(page, 'Verification code').count()) === 1 &&
+      (await button(page, 'Verify').count()) === 0,
   );
   await enterCode(page, '123456');
   await page.getByRole('alert').waitFor();
@@ -214,7 +216,22 @@ const storedSession = (page) =>
       accounts.values().next().value.password === OLD_PASSWORD,
     await alertText(page),
   );
+  check(
+    '  every box goes red, and the page stays on the code',
+    (await field(page, 'Verification code').getAttribute('aria-invalid')) === 'true' &&
+      (await heading(page, 'Enter the code').count()) === 1,
+  );
   await shot(page, '3-code-rejected');
+  const verifies = fake.claims.filter((call) => call === 'verify').length;
+  await field(page, 'Verification code').press('7');
+  check(
+    '  the next digit typed starts the code again from it, and the red and the line go',
+    (await field(page, 'Verification code').inputValue()) === '7' &&
+      (await field(page, 'Verification code').getAttribute('aria-invalid')) === null &&
+      (await page.getByRole('alert').count()) === 0 &&
+      fake.claims.filter((call) => call === 'verify').length === verifies,
+    await field(page, 'Verification code').inputValue(),
+  );
 
   await sendEnabled(page, 'Resend');
   await button(page, 'Resend').click();
@@ -236,12 +253,16 @@ const storedSession = (page) =>
   check('  the earlier code no longer works', (await start(page).count()) === 0);
 
   fake.next.verify = 'hold';
-  await enterCode(page, secondCode);
-  await button(page, 'Verifying…').waitFor();
+  await field(page, 'Verification code').fill('');
+  await field(page, 'Verification code').pressSequentially(secondCode);
+  await page.getByRole('status').filter({ hasText: 'Checking the code…' }).waitFor();
   for (let wait = 0; !fake.held && wait < 100; wait += 1) await page.waitForTimeout(100);
   check(
-    '  while the code is checked, Back waits: leaving would lose the sign-in it makes',
-    (await button(page, 'Back').isDisabled()) && !!fake.held,
+    '  six digits typed are checked with no button pressed; the boxes, Resend and Back wait',
+    (await button(page, 'Back').isDisabled()) &&
+      (await field(page, 'Verification code').isDisabled()) &&
+      (await button(page, 'Resend').isDisabled()) &&
+      !!fake.held,
   );
   fake.release();
   await heading(page, 'Enter new password').waitFor({ timeout: 15000 });

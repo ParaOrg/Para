@@ -6,6 +6,7 @@ import { NewPasswordScreen } from './new-password-screen';
 import type { Captcha } from './use-captcha';
 import { VerifyCodeScreen } from './verify-code-screen';
 import type { Account } from '../api/account';
+import { ACCOUNT_MESSAGES, AccountError } from '../api/account-problem';
 import { useRequestPasswordCodeMutation } from '../api/use-request-password-code-mutation';
 import { useSessionWriter } from '../api/use-session-writer';
 import { useSetNewPasswordMutation } from '../api/use-set-new-password-mutation';
@@ -53,12 +54,19 @@ export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
   }
 
   if (step === 'code') {
+    const isRejected =
+      verifyCode.error instanceof AccountError && verifyCode.error.problem === 'code-rejected';
     return (
       <VerifyCodeScreen
         email={email}
         isBusy={verifyCode.isPending}
         isResending={requestCode.isPending}
-        error={messageOf(verifyCode.error ?? requestCode.error)}
+        rejection={
+          isRejected
+            ? { message: ACCOUNT_MESSAGES['code-rejected'], key: verifyCode.submittedAt }
+            : null
+        }
+        error={messageOf((isRejected ? null : verifyCode.error) ?? requestCode.error)}
         captcha={captcha}
         onSubmit={({ code }) => {
           requestCode.reset();

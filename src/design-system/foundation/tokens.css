@@ -444,6 +444,24 @@
   --ease-enter: cubic-bezier(0.22, 1, 0.36, 1); /* arriving: fast start, soft landing */
   --ease-exit: cubic-bezier(0.55, 0, 1, 0.45); /* leaving: gentle start, clean finish */
   --ease-move: cubic-bezier(0.65, 0, 0.35, 1); /* already on screen, changing place */
+
+  /* A refusal: a short side-to-side shake, once (animate-shake). Use it behind motion-safe:. */
+  --animate-shake: shake var(--transition-duration-gentle) var(--ease-move);
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-6px);
+    }
+    40%,
+    80% {
+      transform: translateX(6px);
+    }
+  }
 }
 
 /*
