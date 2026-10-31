@@ -1001,6 +1001,49 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ------------- a screen that fails: the page says so, and Try again brings the ride back as it was
+{
+  const { page, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  const distanceOf = async () =>
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText())
+      .match(/Distance\s+(\S+\s*\S*)/)?.[1]
+      .trim();
+  const distanceBefore = await distanceOf();
+  // Fixes are written as they arrive; a moment lets the last ones land before the page goes.
+  await page.waitForTimeout(1000);
+  // The recording screen's code no longer arrives, as with no signal before the worker kept it.
+  await page.route(/\/screens\/recording-screen\.tsx/, (route) =>
+    route.abort('internetdisconnected'),
+  );
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
+  await page.getByRole('button', { name: 'Resume' }).click();
+  const failed = page.getByRole('heading', { name: 'Para couldn’t open this screen' });
+  await failed.waitFor();
+  check(
+    'a screen that fails shows what happened, focus on it, and that the recording is safe, with Try again',
+    (await page.evaluate(() => document.activeElement?.tagName === 'H1')) &&
+      (await page.getByText('Your recording is safe on this phone.').count()) === 1 &&
+      (await page.getByRole('button', { name: 'Try again' }).count()) === 1,
+  );
+  await page.unroute(/\/screens\/recording-screen\.tsx/);
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await page.getByRole('heading', { name: 'A recording was left open' }).waitFor();
+  check(
+    '  Try again reloads, and the ride comes back left open, with the distance it had',
+    Boolean(distanceBefore) && (await distanceOf()) === distanceBefore,
+    `${distanceBefore} / ${await distanceOf()}`,
+  );
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
+  check('  and Resume carries on recording it', true);
+  check('  with no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------------------- Keep recording on the form
 {
   const { page, errors } = await phone();
