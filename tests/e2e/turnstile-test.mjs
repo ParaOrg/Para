@@ -1,6 +1,8 @@
 // Turnstile on the studio's Auth requests: Sign in, Forgot password and the
 // current-password check of Change password each carry a token, a fresh one
 // every time (Supabase accepts a token once), and Sign in waits for the check.
+// Change password says the password rule, and refuses a password that breaks
+// it before sending anything.
 // And who gets in: an account am_i_editor says no for (a contributor's) is
 // told so, sees no editing tool, and is signed out of the studio only, whether
 // it signed in or its session was restored; an editor signs in as before.
@@ -170,7 +172,29 @@ await page
   .getByText(/Turnstile stand-in w\d+/)
   .waitFor();
 const fields = page.locator('form input[type="password"]');
+check(
+  'Change password says the rule under the new password, and the field is described by it',
+  (await page.getByText('At least 8 characters, with letters and numbers').count()) === 1 &&
+    (await page
+      .getByPlaceholder('New password', { exact: true })
+      .evaluate(
+        (el) => document.getElementById(el.getAttribute('aria-describedby') ?? '')?.textContent,
+      )) === 'At least 8 characters, with letters and numbers',
+);
+const sentBefore = auth.length;
 await fields.nth(0).fill('right');
+await fields.nth(1).fill('only-letters');
+await fields.nth(2).fill('only-letters');
+await page.waitForFunction(() => !document.querySelector('form button[type="submit"]')?.disabled);
+await page.locator('form button[type="submit"]').click();
+await page
+  .getByText('Use at least 8 characters, with letters and numbers')
+  .waitFor({ timeout: 5000 });
+check(
+  "  a new password without a number is refused in the rule's words, before anything is sent",
+  auth.length === sentBefore,
+  JSON.stringify(auth.slice(sentBefore)),
+);
 await fields.nth(1).fill('A-new-password-2026!');
 await fields.nth(2).fill('A-new-password-2026!');
 await page.waitForFunction(() => !document.querySelector('form button[type="submit"]')?.disabled);

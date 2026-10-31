@@ -9,7 +9,7 @@ import { CloseIcon } from '@/shared/ui/route-icons';
 interface MapDataSourceSheetProps {
   /** The map's credits, from mapCredits: one row each, in its order. */
   credits: readonly MapCredit[];
-  /** ✕, Escape, or a tap on the dimmed map: the sheet goes and focus returns to its ⓘ. */
+  /** ✕, Escape, or a tap on the dimmed map: the sheet goes, and its opener takes focus back. */
   onClose: () => void;
 }
 
@@ -26,14 +26,18 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
   useDialogFocus(sheetRef, false);
   useEscape(onClose);
 
-  // A tap anywhere but the sheet, on the dimmed map, closes it.
+  // A tap anywhere but the sheet, on the dimmed map, closes it: on the tap's click, so the
+  // same tap ends on the scrim and presses nothing under it. Not the click that opened it,
+  // which may still be on its way up as this starts to listen.
   useEffect(() => {
-    const handlePointerDown = (e: PointerEvent) => {
+    const listensFrom = performance.now();
+    const handleClick = (e: MouseEvent) => {
+      if (e.timeStamp < listensFrom) return;
       if (e.target instanceof Node && sheetRef.current?.contains(e.target)) return;
       onClose();
     };
-    window.addEventListener('pointerdown', handlePointerDown);
-    return () => window.removeEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
   }, [onClose]);
 
   // Tab goes round inside the sheet, from its last link to ✕ and back.
@@ -66,7 +70,7 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="absolute inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-4xl bg-surface font-sn-pro shadow-bottom-sheet-top-shadow outline-none"
+        className="absolute inset-x-0 bottom-0 z-50 max-h-dvh overflow-y-auto rounded-t-4xl bg-surface font-sn-pro shadow-bottom-sheet-top-shadow outline-none"
       >
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
           <h2 id={titleId} className="min-w-0 flex-1 text-lg/7 font-bold text-content-primary">

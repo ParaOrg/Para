@@ -66,9 +66,9 @@ database.users.set(EDITOR_ID, {
 
 /**
  * A phone signed in to the account, on the shared database; `signedIn: false` has no session,
- * `userId` signs in as another user (the editor), and `consent: null` has never been asked.
+ * and `userId` signs in as another user (the editor).
  */
-async function phone({ signedIn = true, userId = ACCOUNT_ID, consent = '3' } = {}) {
+async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -83,19 +83,14 @@ async function phone({ signedIn = true, userId = ACCOUNT_ID, consent = '3' } = {
   fake.rows = database.rows;
   await fakeTurnstile(page);
   await page.addInitScript(
-    ([key, stored, agreed]) => {
+    ([key, stored]) => {
       if (stored && !localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(stored));
-      if (agreed && !sessionStorage.getItem('seeded')) {
-        localStorage.setItem('para.contribute.consent', agreed);
-        sessionStorage.setItem('seeded', 'yes');
-      }
     },
     [
       AUTH_KEY,
       signedIn
         ? session(userId, { email: database.users.get(userId).email, isAccount: true })
         : null,
-      consent,
     ],
   );
   const errors = [];
@@ -463,16 +458,31 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 
-// ---------- a new account can reach Profile before agreeing to anything
+// ---------- right after sign-in, Account is there and Sign out works
 {
-  const { page } = await phone({ consent: null });
-  await page.getByRole('heading', { name: 'Before you record' }).waitFor({ timeout: 30000 });
-  await personButton(page).click();
+  const { page } = await phone({ signedIn: false });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 30000 });
+  await field(page, 'Email').fill(ACCOUNT.email);
+  await field(page, 'Password').fill(ACCOUNT.password);
+  await button(page, 'Sign in').click();
+  await start(page).waitFor({ timeout: 15000 });
+  const isConsentShown =
+    (await page.getByRole('heading', { name: 'Before you record' }).count()) > 0;
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' })
+    .click();
+  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
   await button(page, 'Sign out').click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
-  check('before consent, Profile is there and signs the account out', true);
+  check(
+    'right after sign-in, with no consent step, the Account tab opens Profile, and Sign out works',
+    !isConsentShown,
+  );
 }
 
 // ------------- a claim that moves uploads in refreshes an open History

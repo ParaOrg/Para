@@ -1,13 +1,11 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type Ref } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { InformationIcon } from '@/shared/ui/route-icons';
 
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
-import { goBackToMap } from '../common/back-to-map-button';
 import { useStackRoom } from '../common/use-stack-room';
-import { ConsentPanel } from '../consent/consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
 
 import './start-icons.css';
@@ -33,8 +31,6 @@ const StartGate =
 export type AccountOpener = 'person' | 'tab';
 
 interface ReadyScreenProps {
-  hasConsent: boolean;
-  onConsent: () => void;
   earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
   /** Opens Account, from the person button or the Account tab; absent when there is none to open. */
@@ -43,21 +39,22 @@ interface ReadyScreenProps {
   returnFocusTo: AccountOpener | null;
   /** The ⓘ: opens the map's credits, the Map Data Source sheet. */
   onOpenCredits: () => void;
+  /** The ⓘ, for focus to come back to when the credits close. */
+  creditsButtonRef: Ref<HTMLButtonElement>;
 }
 
 /**
  * Before a recording, Figma's Start (4485:24815): the person button at the top right and, at the
  * foot, the map's ⓘ (Figma 4494:10300) beside the Record and Account tabs, over the Start
- * Tracking bar (or, on a first visit, what the page does). The top left waits for the tutorial's ?.
+ * Tracking bar. The top left waits for the tutorial's ?.
  */
 export function ReadyScreen({
-  hasConsent,
-  onConsent,
   earlierQuestion,
   onStart,
   onOpenAccount,
   returnFocusTo,
   onOpenCredits,
+  creditsButtonRef,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const personRef = useRef<HTMLButtonElement>(null);
@@ -88,8 +85,8 @@ export function ReadyScreen({
           />
         </div>
       )}
-      {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
-      {hasConsent && !earlierQuestion && (
+      {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+      {!earlierQuestion && (
         <section
           ref={stackRef}
           aria-labelledby="ready-heading"
@@ -101,8 +98,10 @@ export function ReadyScreen({
           {/* The ⓘ at the left, level with the tabs centred between it and an empty right. */}
           <div className="grid grid-cols-[1fr_auto_1fr] items-center px-4 pb-4">
             <button
+              ref={creditsButtonRef}
               type="button"
               aria-label="Map data sources"
+              title="Map data sources"
               onClick={onOpenCredits}
               className="size-6 justify-self-start text-content-quaternary"
             >
@@ -122,7 +121,6 @@ export function ReadyScreen({
           )}
         </section>
       )}
-      {!hasConsent && <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />}
     </>
   );
 }

@@ -4,6 +4,7 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { openedData } from './opened-data';
+import { RIDE_HIGHLIGHT_LAYERS, addRideHighlight } from './ride-highlight';
 import { RIDE, WALK_FEET, WALK_LAYERS, addWalkLayers } from './walk-layers';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
@@ -22,6 +23,7 @@ const LAYERS = [
   ...WALK_LAYERS,
   OPENED_LINE,
   OPENED_CASING,
+  ...RIDE_HIGHLIGHT_LAYERS,
   UPLOADS_DOT,
   UPLOADS_LINE,
 ];
@@ -114,6 +116,7 @@ export function addContributionLayers(map: MapLibreMap): void {
     paint: { 'line-color': opened, 'line-width': 4 },
   });
   addWalkLayers(map, OPENED_SRC, opened);
+  addRideHighlight(map, OPENED_SRC, opened, OPENED_CASING);
   map.addLayer({
     id: OPENED_HINTOS,
     type: 'circle',

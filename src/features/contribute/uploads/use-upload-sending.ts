@@ -6,7 +6,7 @@ import type { UploadGate, UploadStatus } from './upload-state';
 import { packRecording } from '../api/pack-recording';
 import { removeUpload, uploadContribution } from '../api/upload-contribution';
 import { UploadError } from '../api/upload-problem';
-import { CONSENT_VERSION } from '../consent/consent-version';
+import { sentConsentVersion } from '../consent/consent-version';
 import { fixOfRow } from '../recorder/recording-fixes';
 import type { Recording } from '../storage/recording-schema';
 import { loadFixes, updateRecording } from '../storage/recording-store';
@@ -81,7 +81,7 @@ export function useUploadSending({
         rows.map(fixOfRow),
         // Sent under the text it was made with; an earlier recording the person chose to send is
         // sent under the current one they agreed to.
-        recording.consentVersion ?? CONSENT_VERSION,
+        sentConsentVersion(recording.consentVersion),
         Date.now(),
       );
       if (!packed.ok) {
