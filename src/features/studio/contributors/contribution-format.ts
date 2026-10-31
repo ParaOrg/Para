@@ -31,8 +31,14 @@ export function contributionName(c: Contribution): string {
   return places || c.description || `Recorded ${manilaTime(c.startedAt)}`;
 }
 
-const VEHICLE: Record<string, string> = {
+/** The kinds contribution.vehicle allows, as its check lists them (migration contribution_fare). */
+type ContributionVehicle =
+  'jeep' | 'e_jeep' | 'uv_express' | 'bus' | 'train' | 'ferry' | 'tricycle' | 'other';
+
+const VEHICLE: Record<ContributionVehicle, string> = {
   jeep: 'Jeep',
+  e_jeep: 'E-Jeep',
+  uv_express: 'UV Express',
   bus: 'Bus',
   train: 'Train',
   ferry: 'Ferry',
@@ -40,5 +46,11 @@ const VEHICLE: Record<string, string> = {
   other: 'Other',
 };
 
-export const vehicleName = (vehicle: string | null): string =>
-  vehicle ? (VEHICLE[vehicle] ?? vehicle) : 'Not said';
+const isContributionVehicle = (vehicle: string): vehicle is ContributionVehicle =>
+  Object.hasOwn(VEHICLE, vehicle);
+
+/** A vehicle as the studio names it; a kind it does not know shows as stored. */
+export const vehicleName = (vehicle: string | null): string => {
+  if (vehicle === null || vehicle === '') return 'Not said';
+  return isContributionVehicle(vehicle) ? VEHICLE[vehicle] : vehicle;
+};
