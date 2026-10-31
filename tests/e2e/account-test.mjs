@@ -354,14 +354,19 @@ const shared = {};
   await signInButton.click();
   await SCREENS.start(page).waitFor({ timeout: 15000 });
   check('  trying again, back online, signs in', true);
+  // The module is fetched while there is signal: the page no longer loads it up front, and a
+  // module asked for offline never arrives. Signing out is what goes with no signal.
+  await page.evaluate(() =>
+    import('/src/features/contribute/api/account.ts').then((account) => {
+      window.__signOut = account.signOut;
+    }),
+  );
   await setOffline(context, fake, true);
   const signedOut = await page.evaluate(() =>
-    import('/src/features/contribute/api/account.ts')
-      .then((account) => account.signOut())
-      .then(
-        () => true,
-        () => false,
-      ),
+    window.__signOut().then(
+      () => true,
+      () => false,
+    ),
   );
   check(
     '  signing out with no signal still works: the phone forgets the account',
