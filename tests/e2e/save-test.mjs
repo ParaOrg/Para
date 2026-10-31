@@ -135,6 +135,7 @@ check(
     return picked.trim();
   };
   // Another basemap than the one it opens on, so that "kept" means something.
+  const basemapAtOpen = await basemapPicked();
   await page.getByRole('button', { name: 'Map design' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Terrain' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
@@ -242,6 +243,24 @@ check(
   check(
     '  the line can still be discarded after the visits',
     (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
+  );
+
+  // Back to the basemap it opened on for the rest of the run. Terrain's 3D ground costs a
+  // headless browser's software rendering about a second a frame, so every map update after
+  // it stalls the page, and on a slower runner the signboard and delete steps below would miss
+  // their waits.
+  await page.getByRole('button', { name: 'Map design' }).click();
+  const menu = page.getByTestId('basemap-menu');
+  await menu.getByRole('button', { name: basemapAtOpen, exact: true }).click();
+  await menu.getByRole('button', { name: 'Close' }).click();
+  await page.waitForTimeout(300);
+  const basemapAfter = await basemapPicked();
+  check(
+    '  then the basemap it opened on again, flat, for the steps after',
+    basemapAfter === basemapAtOpen &&
+      basemapAtOpen !== 'Terrain' &&
+      (await page.evaluate(() => !window.__map.getTerrain())),
+    `${basemapAtOpen} → ${basemapAfter}`,
   );
 }
 
