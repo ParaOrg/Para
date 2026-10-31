@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { cn } from '@/shared/utils/cn';
 
 import stopHand from './stop-hand.svg';
 import { distanceFigure, timeFigure, type Figure } from '../common/format';
@@ -61,7 +62,7 @@ export function StopRecordingScreen({ figures, onKeep, onStop }: StopRecordingSc
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={textId}
-      className="absolute inset-0 z-50 overflow-y-auto bg-surface/80 font-sn-pro backdrop-blur-md motion-safe:animate-fade-in"
+      className="absolute inset-0 z-50 bg-surface/80 font-sn-pro backdrop-blur-md motion-safe:animate-fade-in"
     >
       <div className="absolute inset-x-0 top-[calc(50%-2.5rem)] flex -translate-y-1/2 flex-col gap-12 px-5">
         <div className="flex flex-col items-center gap-4 text-center">
@@ -102,7 +103,7 @@ interface PausedFigureProps {
 /** One of the paused recording's figures: the number, its unit greyed, and its name under it. */
 function PausedFigure({ figure, name, isEnd = false }: PausedFigureProps) {
   return (
-    <div className={'flex min-w-0 flex-1 flex-col-reverse ' + (isEnd ? 'text-right' : '')}>
+    <div className={cn('flex min-w-0 flex-1 flex-col-reverse', isEnd && 'text-right')}>
       <dt className="text-sm/5 text-content-quaternary">{name}</dt>
       <dd className="text-2xl/8 font-semibold text-content-primary">
         {figure.value} <span className="text-content-quaternary">{figure.unit}</span>

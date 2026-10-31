@@ -113,9 +113,11 @@ export function ContributePage({ locator }: ContributePageProps) {
   const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
   const isCardFolded = foldedRecordingId !== null && foldedRecordingId === recording.current?.id;
   // ✕ pauses the recording and asks over the whole screen: what it was doing then, so Keep
-  // recording puts it back. Focus returns to ✕ once the recording screen is live again.
+  // recording puts it back. Focus returns to ✕ once the recording screen is live again. The
+  // question waits for the pause to land: in the app it reads the native log first, and a Keep
+  // recording before then would be undone by the pause arriving after it.
   const [stopAskedWhile, setStopAskedWhile] = useState<'recording' | 'paused' | null>(null);
-  const isStopShown = isRecordingShown && stopAskedWhile !== null;
+  const isStopShown = phase === 'paused' && stopAskedWhile !== null;
   const discardButtonRef = useRef<HTMLButtonElement>(null);
   const askToStop = () => {
     setStopAskedWhile(phase === 'paused' ? 'paused' : 'recording');
