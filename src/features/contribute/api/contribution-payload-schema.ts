@@ -1,5 +1,7 @@
 import * as z from 'zod/mini';
 
+import { FARE_PHP_MAX } from './upload-fare';
+
 const isoTime = z.string();
 
 const pointBatchSchema = z.object({
@@ -22,6 +24,13 @@ const hintoRowSchema = z.object({
   lng: z.number(),
 });
 
+/** A fare the database takes: 0 to FARE_PHP_MAX pesos, in whole centavos. */
+const farePhpSchema = z.number().check(
+  z.gte(0),
+  z.lte(FARE_PHP_MAX),
+  z.refine((fare) => Math.abs(fare * 100 - Math.round(fare * 100)) < 1e-6, 'whole centavos'),
+);
+
 /** What `save_contribution` takes: one recording, whole, in the database's own names. */
 export const contributionPayloadSchema = z.object({
   id: z.string(),
@@ -39,6 +48,13 @@ export const contributionPayloadSchema = z.object({
   moving_s: z.number(),
   standing_s: z.number(),
   lost_s: z.number(),
+  /** Walked (Lakad) and ridden (Sakay): they add up to distance_m and to moving_s + standing_s. */
+  walk_m: z.number(),
+  ride_m: z.number(),
+  walk_s: z.number(),
+  ride_s: z.number(),
+  /** What the contributor paid for the whole recording, in pesos; absent until the app asks. */
+  fare_php: z.optional(z.nullable(farePhpSchema)),
   point_count: z.number(),
   events: z.array(z.object({ kind: z.string(), at: isoTime, to: z.optional(z.string()) })),
   gaps: z.array(z.object({ from: isoTime, to: isoTime, reasons: z.array(z.string()) })),

@@ -165,3 +165,29 @@ nothing), requires `…_check.sql` all `t`, and runs `after-contributor-accounts
 
 The revert refuses over a stored name. On a second database, apply then revert twice leaves the
 schema as before, and re-applying passes the check.
+
+## account-stats.sh
+
+`migrations/20261031090000_account_stats.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/account-stats.sh
+
+It applies every earlier migration, the contributions, contribution_use and contributor_accounts
+paste files, then `../apply/20261031090000_account_stats_apply.sql` twice (the second run must stop
+and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must raise nothing and
+leave no row behind, and its 9 read-only rows must be `t`. The revert refuses over a stored split
+and over retired totals. On a second database, apply then revert twice leaves the schema as before,
+and re-applying passes the check.
+
+## contribution-fare.sh
+
+`migrations/20261031110000_contribution_fare.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contribution-fare.sh
+
+It applies every earlier migration, the contributions, contribution_use, contributor_accounts and
+account_stats paste files, then `../apply/20261031110000_contribution_fare_apply.sql` twice (the
+second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
+raise nothing and leave no row behind, and its 7 read-only rows must be `t`. The revert refuses over a
+stored fare, over retired totals counting one and over an E-Jeep ride. On a second database, apply then revert twice
+leaves the schema as before, and re-applying passes the check.

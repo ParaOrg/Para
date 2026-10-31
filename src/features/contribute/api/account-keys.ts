@@ -3,4 +3,5 @@ export const accountKeys = {
   session: () => [...accountKeys.all, 'session'] as const,
   profile: () => [...accountKeys.all, 'profile'] as const,
   uploads: () => [...accountKeys.all, 'uploads'] as const,
+  stats: () => [...accountKeys.all, 'stats'] as const,
 };
