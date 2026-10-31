@@ -190,7 +190,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   };
 
   return (
-    <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
+    // Clipped, not hidden: an overflow:hidden box can still be scrolled from code (focus, scrollIntoView),
+    // and the right-hand column's tooltips run off the screen's edge, so one would slide the page.
+    <main className="relative h-dvh overflow-clip bg-surface-secondary font-sn-pro">
       {/* inert while History, Profile, the permissions screen or the credits cover it: no map
           control can be tabbed to behind the screen. */}
       <div
