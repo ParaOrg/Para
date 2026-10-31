@@ -2263,6 +2263,93 @@ const FIRST_IDLE = () => {
   await page.context().close();
 }
 
+// ------------- the published routes' full lines through a basemap switch, and kept out of the History picture
+{
+  const { page, errors } = await phone();
+  await page.waitForFunction(() => !!window.__map?.getLayer('published-routes-line'), null, {
+    timeout: 30000,
+  });
+  // Street zoom on a route, and the basemap switched at once, while its full lines are on their way.
+  await page.evaluate(() => {
+    const map = window.__map;
+    const { features } = map.getSource('published-routes').serialize().data;
+    const line = features.find((f) => f.properties.line === '').geometry.coordinates;
+    map.jumpTo({ center: line[Math.floor(line.length / 2)], zoom: 16 });
+  });
+  const switched = page.evaluate(
+    () => new Promise((resolve) => window.__map.once('style.load', () => resolve(true))),
+  );
+  await page.getByTestId('basemap').click();
+  await page
+    .getByRole('dialog', { name: 'Map Style' })
+    .getByRole('button', { name: 'Dark', exact: true })
+    .click();
+  await switched;
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(
+    () =>
+      window.__map.loaded() &&
+      performance.getEntriesByType('resource').some((e) => e.name.includes('/data/lines/')),
+    null,
+    { timeout: 30000 },
+  );
+  await page.waitForFunction(() => !window.__map.isMoving() && window.__map.loaded());
+  await page.waitForTimeout(1500);
+  const drawn = await page.evaluate(async () => {
+    const asked = [
+      ...new Set(
+        performance
+          .getEntriesByType('resource')
+          .filter((e) => e.name.includes('/data/lines/'))
+          .map((e) => decodeURIComponent(e.name.split('/data/lines/')[1].replace(/\.json.*$/, ''))),
+      ),
+    ];
+    const data = window.__map.getSource('published-routes').serialize().data;
+    const out = [];
+    for (const id of asked) {
+      const file = await (await fetch(`/data/lines/${encodeURIComponent(id)}.json`)).json();
+      const feature = data.features.find((f) => f.properties.id === id);
+      out.push({
+        id,
+        full: file.shape?.coordinates.length ?? 0,
+        drawn: feature?.geometry.coordinates.length ?? 0,
+      });
+    }
+    return out;
+  });
+  check(
+    'at street zoom, the full lines read come through a basemap switch: each drawn whole, not its overview',
+    drawn.length > 0 && drawn.every(({ full, drawn: shown }) => full > 0 && shown === full),
+    JSON.stringify(drawn),
+  );
+
+  // The History picture is the rider's own trail on the basemap: the routes are hidden for its cut.
+  await page.evaluate(() => {
+    const cut = window.HTMLCanvasElement.prototype.toDataURL;
+    window.HTMLCanvasElement.prototype.toDataURL = function (...args) {
+      window.__routesAtCut = window.__map.getLayoutProperty('published-routes-line', 'visibility');
+      return cut.apply(this, args);
+    };
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  await finishRecording(page);
+  await page.waitForFunction(() => window.__routesAtCut !== undefined, null, { timeout: 20000 });
+  await page.waitForTimeout(300);
+  const atCut = await page.evaluate(() => ({
+    atCut: window.__routesAtCut,
+    after: window.__map.getLayoutProperty('published-routes-line', 'visibility') ?? 'visible',
+  }));
+  check(
+    '  the History picture is cut with the published routes hidden, and they show again after',
+    atCut.atCut === 'none' && atCut.after === 'visible',
+    JSON.stringify(atCut),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // --------------------------- the published map unreachable: no routes, no word of it, and the ride records
 {
   const { page, errors } = await phone();
