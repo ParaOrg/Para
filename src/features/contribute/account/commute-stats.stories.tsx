@@ -1,6 +1,33 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { CommuteStats } from './commute-stats';
+import type { VehicleRides } from './vehicle-grid';
+
+/** The frame's counts: E-Jeep and UV Express not given yet, no ferry ride. */
+const FRAME_RIDES: VehicleRides = {
+  jeep: 5,
+  eJeep: null,
+  uvExpress: null,
+  bus: 12,
+  train: 2,
+  ferry: 0,
+};
+const NO_RIDES: VehicleRides = {
+  jeep: 0,
+  eJeep: 0,
+  uvExpress: 0,
+  bus: 0,
+  train: 0,
+  ferry: 0,
+};
+const MANY_RIDES: VehicleRides = {
+  jeep: 1_204,
+  eJeep: 310,
+  uvExpress: 88,
+  bus: 4_020,
+  train: 912,
+  ferry: 14,
+};
 
 const meta = {
   title: 'Features/Contribute/CommuteStats',
@@ -8,7 +35,13 @@ const meta = {
   args: {
     state: {
       kind: 'shown',
-      numbers: { recordings: 6, seconds: 62 * 3600 + 900, distanceM: 421_300, walkM: 168_000 },
+      numbers: {
+        recordings: 6,
+        seconds: 62 * 3600 + 900,
+        distanceM: 421_300,
+        walkM: 168_000,
+        ridesByVehicle: FRAME_RIDES,
+      },
     },
   },
   decorators: [
@@ -37,7 +70,10 @@ export const Offline: Story = {
 /** No recordings yet: zeros, and the bar empty and grey. */
 export const NoRecordings: Story = {
   args: {
-    state: { kind: 'shown', numbers: { recordings: 0, seconds: 0, distanceM: 0, walkM: 0 } },
+    state: {
+      kind: 'shown',
+      numbers: { recordings: 0, seconds: 0, distanceM: 0, walkM: 0, ridesByVehicle: NO_RIDES },
+    },
   },
 };
 
@@ -46,7 +82,13 @@ export const OneShortRecording: Story = {
   args: {
     state: {
       kind: 'shown',
-      numbers: { recordings: 1, seconds: 1500, distanceM: 6_200, walkM: 800 },
+      numbers: {
+        recordings: 1,
+        seconds: 1500,
+        distanceM: 6_200,
+        walkM: 800,
+        ridesByVehicle: { ...NO_RIDES, jeep: 1 },
+      },
     },
   },
 };
@@ -56,7 +98,13 @@ export const TinyShare: Story = {
   args: {
     state: {
       kind: 'shown',
-      numbers: { recordings: 120, seconds: 1240 * 3600, distanceM: 1_240_000, walkM: 2_000 },
+      numbers: {
+        recordings: 120,
+        seconds: 1240 * 3600,
+        distanceM: 1_240_000,
+        walkM: 2_000,
+        ridesByVehicle: MANY_RIDES,
+      },
     },
   },
 };

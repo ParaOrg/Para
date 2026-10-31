@@ -22,8 +22,6 @@ type Story = StoryObj<typeof meta>;
 /** A row that opens a screen: its icon, its words and the chevron (4513:22925). */
 export const Default: Story = {};
 
-export const History: Story = { args: { icon: 'history', label: 'History' } };
-
 /** Logout, in Content/error, with no chevron: it asks rather than opens a screen. */
 export const Logout: Story = {
   args: { icon: 'logout', label: 'Logout', tone: 'error', hasChevron: false },

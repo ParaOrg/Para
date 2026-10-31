@@ -9,6 +9,7 @@ import {
   recordingsLabel,
   totalDistanceFigure,
   totalTimeFigure,
+  vehicleRidesFigure,
 } from '../../src/features/contribute/account/commute-figures.ts';
 
 test('total time is whole minutes under an hour, then whole hours', () => {
@@ -45,4 +46,11 @@ test('rides from before the split count as Sakay: all that is not walked', () =>
 
 test('no distance has no split, for an empty bar', () => {
   assert.equal(modeSplit(0, 0), null);
+});
+
+test("a vehicle's rides read -- for none and for a count not given yet, else with separators", () => {
+  assert.equal(vehicleRidesFigure(null), '--');
+  assert.equal(vehicleRidesFigure(0), '--');
+  assert.equal(vehicleRidesFigure(5), '5');
+  assert.equal(vehicleRidesFigure(1240), '1,240');
 });

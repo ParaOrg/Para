@@ -35,3 +35,11 @@ export function modeSplit(distanceM: number, walkM: number): ModeSplit | null {
   const lakadPercent = Math.round((Math.min(Math.max(walkM, 0), distanceM) / distanceM) * 100);
   return { sakayPercent: 100 - lakadPercent, lakadPercent };
 }
+
+/**
+ * A vehicle's ride count in the grid: `--` for none, as the frame has it, and for a count the
+ * project does not give yet (null); else the count with thousands separators.
+ */
+export function vehicleRidesFigure(rides: number | null): string {
+  return rides === null || rides <= 0 ? '--' : WHOLE.format(rides);
+}

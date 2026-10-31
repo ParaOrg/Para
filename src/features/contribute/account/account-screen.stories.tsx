@@ -2,6 +2,17 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { AccountScreen } from './account-screen';
+import type { VehicleRides } from './vehicle-grid';
+
+/** The frame's counts: E-Jeep and UV Express not given yet, no ferry ride. */
+const FRAME_RIDES: VehicleRides = {
+  jeep: 5,
+  eJeep: null,
+  uvExpress: null,
+  bus: 12,
+  train: 2,
+  ferry: 0,
+};
 
 const meta = {
   title: 'Features/Contribute/AccountScreen',
@@ -12,7 +23,13 @@ const meta = {
     email: 'rovic@example.com',
     stats: {
       kind: 'shown',
-      numbers: { recordings: 6, seconds: 62 * 3600, distanceM: 421_000, walkM: 168_400 },
+      numbers: {
+        recordings: 6,
+        seconds: 62 * 3600,
+        distanceM: 421_000,
+        walkM: 168_400,
+        ridesByVehicle: FRAME_RIDES,
+      },
     },
     unsentCount: 0,
     isLoggingOut: false,

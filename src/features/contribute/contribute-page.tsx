@@ -211,14 +211,17 @@ export function ContributePage({ locator }: ContributePageProps) {
     if (settings.isOpen) settings.close();
   }, [phase, accountGate, profile, settings]);
 
-  // Account is Profile with History inside it; a build with no accounts has History alone. Once it
-  // has been opened from Ready, Ready hands focus back to the Account tab.
-  const [hasOpenedAccount, setHasOpenedAccount] = useState(false);
+  // History and Account are tabs on Ready; a build with no accounts has History alone. Ready hands
+  // focus back to the tab whose screen was open.
+  const [openedTab, setOpenedTab] = useState<'history' | 'account' | null>(null);
   const hasAccount = canUpload();
+  const handleOpenHistory = () => {
+    setOpenedTab('history');
+    history.open();
+  };
   const handleOpenAccount = () => {
-    setHasOpenedAccount(true);
-    if (hasAccount) profile.open();
-    else history.open();
+    setOpenedTab('account');
+    profile.open();
   };
 
   return (
@@ -285,11 +288,12 @@ export function ContributePage({ locator }: ContributePageProps) {
                 earlierQuestion={earlier.question}
                 onStart={() => {
                   // A ride begun: the next Start opens fresh, focus on its heading, not the tab.
-                  setHasOpenedAccount(false);
+                  setOpenedTab(null);
                   recording.start();
                 }}
-                onOpenAccount={handleOpenAccount}
-                isBackFromAccount={hasOpenedAccount}
+                onOpenHistory={handleOpenHistory}
+                onOpenAccount={hasAccount ? handleOpenAccount : undefined}
+                backFrom={openedTab}
                 onOpenCredits={() => setIsCreditsOpen(true)}
                 creditsButtonRef={creditsButtonRef}
               />
@@ -315,10 +319,10 @@ export function ContributePage({ locator }: ContributePageProps) {
               <HistoryView
                 recordings={recording.saved}
                 uploads={uploads}
-                // History is inside Account, so its Back returns there, even after a reload.
-                onBack={hasAccount ? () => history.closeTo('#profile') : history.close}
-                // Record a route leaves History and Account both, for Start.
-                onRecord={hasAccount ? () => history.replaceWith('') : history.close}
+                // Back returns to the screen History was opened from: Ready, or Account.
+                onBack={history.close}
+                // Record a route goes to Start, wherever History was opened from.
+                onRecord={() => history.replaceWith('')}
                 onDownload={recording.downloadSaved}
                 onDeleteFromPhone={recording.deleteSaved}
               />

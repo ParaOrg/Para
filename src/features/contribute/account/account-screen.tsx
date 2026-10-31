@@ -18,6 +18,7 @@ interface AccountScreenProps {
   isLoggingOut: boolean;
   /** One line about the last Logout, or null. */
   error: string | null;
+  /** History, in the toolbar. */
   onOpenHistory: () => void;
   onOpenSettings: () => void;
   onLogout: () => void;
@@ -26,9 +27,9 @@ interface AccountScreenProps {
 }
 
 /**
- * Account (Figma 4496:10455): the profile card, the Commute Statistics, and General: History,
- * Account settings and Logout, which asks first. The toolbar at the foot marks Account; Record
- * goes back to Start.
+ * Account (Figma 4496:10455): the profile card, the Commute Statistics, and General: Account
+ * settings and Logout, which asks first. The toolbar at the foot marks Account; Record goes back
+ * to Start, History opens History.
  */
 export function AccountScreen({
   name,
@@ -62,7 +63,6 @@ export function AccountScreen({
               General
             </h2>
             <div className="flex flex-col">
-              <GeneralBar icon="history" label="History" hasChevron onClick={onOpenHistory} />
               <GeneralBar
                 icon="settings"
                 label="Account settings"
@@ -85,7 +85,11 @@ export function AccountScreen({
         </div>
         {/* The toolbar over the page's foot, the page fading out under it (4514:23035). */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface px-4 pt-6 pb-[max(3rem,env(safe-area-inset-bottom))] *:pointer-events-auto">
-          <BottomToolbar current="account" onOpenRecord={onOpenRecord} />
+          <BottomToolbar
+            current="account"
+            onOpenRecord={onOpenRecord}
+            onOpenHistory={onOpenHistory}
+          />
         </div>
       </div>
       {isLogoutAsked && (

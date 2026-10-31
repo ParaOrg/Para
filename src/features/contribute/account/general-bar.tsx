@@ -3,7 +3,7 @@ import { cn } from '@/shared/utils/cn';
 import './account-icons.css';
 
 /** The row's icon: one of Figma's, by its name. */
-export type GeneralBarIcon = 'settings' | 'history' | 'logout';
+export type GeneralBarIcon = 'settings' | 'logout';
 
 /** Default for a place to go, Error for an act that ends something (Logout). */
 export type GeneralBarTone = 'default' | 'error';
@@ -19,7 +19,6 @@ interface GeneralBarProps {
 
 const ICON_CLASSES = {
   settings: 'account-icon-settings',
-  history: 'account-icon-history',
   logout: 'account-icon-logout',
 } satisfies Record<GeneralBarIcon, string>;
 

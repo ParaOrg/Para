@@ -85,7 +85,19 @@ export const session = (userId, { email = null, isAccount = false } = {}) => ({
  * get_my_stats's one row, as migration account_stats answers it, from the few numbers a suite sets:
  * `{ rides, distanceM, movingS, standingS, walkM, rideM }`, the rest zero.
  */
-function statsRow({ rides = 0, distanceM = 0, movingS = 0, standingS = 0, walkM = 0, rideM = 0 }) {
+function statsRow({
+  rides = 0,
+  distanceM = 0,
+  movingS = 0,
+  standingS = 0,
+  walkM = 0,
+  rideM = 0,
+  jeepRides = 0,
+  busRides = 0,
+  trainRides = 0,
+  ferryRides = 0,
+  tricycleRides = 0,
+}) {
   return {
     rides,
     distance_m: distanceM,
@@ -97,11 +109,11 @@ function statsRow({ rides = 0, distanceM = 0, movingS = 0, standingS = 0, walkM 
     ride_s: 0,
     hinto_s: 0,
     marks: 0,
-    jeep_rides: 0,
-    bus_rides: 0,
-    train_rides: 0,
-    ferry_rides: 0,
-    tricycle_rides: 0,
+    jeep_rides: jeepRides,
+    bus_rides: busRides,
+    train_rides: trainRides,
+    ferry_rides: ferryRides,
+    tricycle_rides: tricycleRides,
     other_rides: 0,
     active_days: 0,
     first_ride_at: null,

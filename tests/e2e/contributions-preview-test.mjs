@@ -83,17 +83,16 @@ async function phone() {
   return { context, page };
 }
 
-/** The History screen, opened through Account on Ready unless it is already showing. */
+/** The History screen, opened by Ready's History tab unless it is already showing. */
 async function openHistory(page) {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const account = page
+  const tab = page
     .getByRole('navigation', { name: 'Screens' })
-    .getByRole('button', { name: 'Account' });
-  // A reload on #history lands on the screen itself; otherwise History is inside Account.
-  await heading.or(account).waitFor({ timeout: 10000 });
+    .getByRole('button', { name: 'History' });
+  // A reload on #history lands on the screen itself; otherwise the tab opens it.
+  await heading.or(tab).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
-  await account.click();
-  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await tab.click();
   await heading.waitFor();
 }
 

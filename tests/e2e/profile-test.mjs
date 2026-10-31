@@ -1,6 +1,6 @@
 // The contributor page's Account and History, driven by a phone signed in to an account: Account,
 // opened from the Account tab on Ready, shows the name, the email and the Commute Statistics
-// (get_my_stats), with History and Account settings inside it; Account settings changes the name
+// (get_my_stats), with Account settings inside it, and History is a tab of its own; Account settings changes the name
 // and number through set_profile, and Logout asks first and signs this phone out only. History lists
 // the account's uploads from the database, whichever phone sent them, merged with this phone's
 // own, and Remove works on any the account owns. Supabase is the in-memory stand-in
@@ -103,11 +103,20 @@ const button = (page, name) => page.getByRole('button', { name, exact: true });
 /** Ready's Account tab, in the toolbar over the Start bar: the way into Account. */
 const accountTab = (page) =>
   page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Account' });
-/** History, inside Account: the Account tab, then Account's History button. */
+/** The History tab, on Ready or on Account. */
+const historyTab = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'History' });
+/** History, from Ready's History tab. */
 const openHistory = async (page) => {
-  await accountTab(page).click();
-  await button(page, 'History').click();
+  await historyTab(page).click();
 };
+/** The tab focus is on, if focus is on one. */
+const focusedTab = (page) =>
+  page.evaluate(() =>
+    document.activeElement?.closest('nav[aria-label="Screens"]')
+      ? document.activeElement.textContent
+      : null,
+  );
 const field = (page, name) => page.getByLabel(name, { exact: true });
 /** Account's toolbar: Record, back to Start. */
 const toolbarRecord = (page) =>
@@ -121,6 +130,8 @@ const logout = async (page) => {
     .click();
 };
 const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
+/** The Sakay or Lakad row of the Commute Statistics' legend. */
+const legendRow = (stats, word) => stats.getByRole('listitem').filter({ hasText: word });
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
 const moreOf = (page, name) => row(page, name).getByRole('button', { name: /^More actions/ });
 const actionsOf = async (page, name) => {
@@ -172,10 +183,11 @@ async function seed(page, id, name, upload) {
   await start(page).waitFor({ timeout: 30000 });
   const tab = await accountTab(page).boundingBox();
   check(
-    'Ready has the Account tab over Start, no Account button at the top right, and no History button',
+    'Ready has the History and Account tabs over Start, and no Account or History button elsewhere',
     !!tab &&
       (await page.getByRole('button', { name: 'Account' }).count()) === 1 &&
-      (await button(page, 'History').count()) === 0,
+      (await button(page, 'History').count()) === 1 &&
+      (await historyTab(page).count()) === 1,
     JSON.stringify({ tab }),
   );
   await shot(page, '1-ready');
@@ -193,34 +205,49 @@ async function seed(page, id, name, upload) {
     ),
   );
 
-  const isOnAccount = async () =>
-    (await page.getByRole('heading', { level: 1, name: 'Account' }).count()) === 1 &&
-    (await page.evaluate(() => location.hash)) === '#profile';
   await openHistory(page);
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   await button(page, 'Back').click();
+  await start(page).waitFor();
+  await page
+    .waitForFunction(() => document.activeElement?.textContent === 'History', null, {
+      timeout: 5000,
+    })
+    .catch(() => {});
+  check(
+    "Ready's History tab opens History; its Back returns to Ready, focus on the History tab",
+    (await page.evaluate(() => location.hash)) === '' && (await focusedTab(page)) === 'History',
+  );
+
+  const isOnAccount = async () =>
+    (await page.getByRole('heading', { level: 1, name: 'Account' }).count()) === 1 &&
+    (await page.evaluate(() => location.hash)) === '#profile';
+  await accountTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
-  check('History is inside Account: its Back returns to Account (#profile)', await isOnAccount());
-  await button(page, 'History').click();
+  await historyTab(page).click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  check("  Account's History tab opens History; its Back returns to Account", await isOnAccount());
+  await historyTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 30000 });
   await button(page, 'Back').click();
-  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
-  check('  and after a reload on #history too', await isOnAccount());
-  await button(page, 'History').click();
+  await start(page).waitFor();
+  check(
+    '  after a reload on #history, Back returns to Ready',
+    (await page.evaluate(() => location.hash)) === '',
+  );
+  await openHistory(page);
   await page.getByText('No recordings yet.').waitFor({ timeout: 15000 });
   await button(page, 'Record a route').click();
   await start(page).waitFor();
   check(
-    "  an empty History's Record a route leaves History and Account both, for Start",
+    "  an empty History's Record a route goes to Start",
     (await page.evaluate(() => location.hash)) === '' &&
-      (await page.getByRole('heading', { level: 1, name: 'Account' }).count()) === 0,
+      (await page.getByRole('heading', { level: 1, name: 'History' }).count()) === 0,
   );
-  await accountTab(page).click();
-  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
-  await toolbarRecord(page).click();
-  await start(page).waitFor();
 
   await accountTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
@@ -240,7 +267,7 @@ async function seed(page, id, name, upload) {
     (await page.evaluate(() => document.activeElement?.textContent)) === 'Account settings' &&
       (await button(page, 'Save').isDisabled()),
   );
-  await shot(page, '2-profile');
+  await shot(page, '2-account');
 
   await field(page, 'Number').fill('12345');
   await button(page, 'Save').click();
@@ -298,11 +325,11 @@ async function seed(page, id, name, upload) {
       (await page.getByRole('heading', { name: 'Commute Statistics' }).count()) === 0 &&
       (await page.getByRole('alert').count()) === 0,
   );
+  const general = page.locator('section[aria-labelledby="general-heading"]').getByRole('button');
   check(
-    '  General: History, Account settings and Logout',
-    (await button(page, 'History').count()) === 1 &&
-      (await button(page, 'Account settings').count()) === 1 &&
-      (await button(page, 'Logout').count()) === 1,
+    '  General: Account settings and Logout',
+    (await general.allInnerTexts()).join('|') === 'Account settings|Logout',
+    (await general.allInnerTexts()).join('|'),
   );
 
   // 62 hours, 1,240 km in 6 recordings, 40% of it walked.
@@ -313,13 +340,18 @@ async function seed(page, id, name, upload) {
     standingS: 12 * 3600 + 1200,
     walkM: 496_200,
     rideM: 700_000,
+    jeepRides: 3,
+    busRides: 1_204,
+    trainRides: 1,
+    tricycleRides: 1,
   };
   await toolbarRecord(page).click();
   await accountTab(page).click();
   const stats = page.getByRole('region', { name: 'Commute Statistics' });
   // The region shows placeholders first: read it once the numbers are in.
-  await stats.getByText('Sakay 60%').waitFor();
+  await stats.getByText('60%', { exact: true }).waitFor();
   const statsText = await stats.innerText();
+  await shot(page, '2-account-stats');
   check(
     '  with stats: total time in hours, distance in km with separators, the recordings counted',
     /Total time\s*62\s*hr/.test(statsText) &&
@@ -327,10 +359,20 @@ async function seed(page, id, name, upload) {
       /Recordings\s*6/.test(statsText),
     statsText.replace(/\n/g, ' '),
   );
+  const vehicles = await stats
+    .getByRole('list', { name: 'Rides by vehicle' })
+    .getByRole('listitem')
+    .allInnerTexts();
+  check(
+    "  rides by vehicle, the frame's six: -- for none and for E-Jeep and UV Express not counted yet, no Tricycle",
+    vehicles.map((cell) => cell.replace(/\s+/g, ' ').trim()).join(' | ') ===
+      'Jeep 3 | E-Jeep -- none | UV Express -- none | Bus 1,204 | Train 1 | Ferry -- none',
+    vehicles.map((cell) => cell.replace(/\s+/g, ' ').trim()).join(' | '),
+  );
   check(
     '  and Sakay and Lakad by distance, each share said beside its word',
-    (await stats.getByText('Sakay 60%').count()) === 1 &&
-      (await stats.getByText('Lakad 40%').count()) === 1,
+    /^Sakay\s*60%$/.test(await legendRow(stats, 'Sakay').innerText()) &&
+      /^Lakad\s*40%$/.test(await legendRow(stats, 'Lakad').innerText()),
   );
 
   // Asked again offline: the last numbers stay.

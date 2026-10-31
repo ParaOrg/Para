@@ -17,10 +17,6 @@
   mask-image: url('./settings-icon.svg');
 }
 
-.account-icon-history {
-  mask-image: url('./history-icon.svg');
-}
-
 .account-icon-logout {
   mask-image: url('./logout-icon.svg');
 }

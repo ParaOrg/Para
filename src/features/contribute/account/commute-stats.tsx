@@ -9,6 +9,7 @@ import {
   totalTimeFigure,
   type ModeSplit,
 } from './commute-figures';
+import { VehicleGrid, type VehicleRides } from './vehicle-grid';
 import type { Figure } from '../common/format';
 
 /** The numbers the section shows, from the contributor's stats. */
@@ -18,6 +19,7 @@ export interface CommuteNumbers {
   seconds: number;
   distanceM: number;
   walkM: number;
+  ridesByVehicle: VehicleRides;
 }
 
 /** What there is to show: numbers, still loading, or a line saying why there are none. */
@@ -32,8 +34,8 @@ interface CommuteStatsProps {
 
 /**
  * Figma's Commute Statistics (4511:22712): total time and total distance, and beside them the
- * recordings with the Sakay and Lakad bar, by distance. Each share is said beside its word, so the
- * bar's colour is never the only way to read it.
+ * recordings with the Sakay and Lakad bar, by distance; under them the rides by vehicle. Each share
+ * is said beside its word, so the bar's colour is never the only way to read it.
  */
 export function CommuteStats({ state }: CommuteStatsProps) {
   return (
@@ -52,33 +54,39 @@ function StatsBody({ state }: CommuteStatsProps) {
   }
   if (state.kind === 'loading') {
     return (
-      <div aria-busy="true" className="flex gap-3.75">
+      <div aria-busy="true" className="flex flex-col gap-4">
         <p className="sr-only">Loading your statistics</p>
-        <div className="flex flex-1 flex-col gap-3.5">
-          <PlaceholderCard />
-          <PlaceholderCard />
+        <div className="flex gap-3.75">
+          <div className="flex flex-1 flex-col gap-3.5">
+            <PlaceholderCard />
+            <PlaceholderCard />
+          </div>
+          <div aria-hidden className="flex-1 rounded-3xl bg-surface shadow-large">
+            <span className="mx-auto mt-4 block h-6 w-10 rounded-full bg-surface-tertiary" />
+          </div>
         </div>
-        <div aria-hidden className="flex-1 rounded-3xl bg-surface shadow-large">
-          <span className="mx-auto mt-4 block h-6 w-10 rounded-full bg-surface-tertiary" />
-        </div>
+        <div aria-hidden className="h-42 rounded-3xl bg-surface shadow-large" />
       </div>
     );
   }
   const { numbers } = state;
   return (
-    <div className="flex gap-3.75">
-      <div className="flex flex-1 flex-col gap-3.5">
-        <StatCard figure={totalTimeFigure(numbers.seconds)} name="Total time" />
-        <StatCard figure={totalDistanceFigure(numbers.distanceM)} name="Total distance" />
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-3.75">
+        <div className="flex flex-1 flex-col gap-3.5">
+          <StatCard figure={totalTimeFigure(numbers.seconds)} name="Total time" />
+          <StatCard figure={totalDistanceFigure(numbers.distanceM)} name="Total distance" />
+        </div>
+        <div className="flex flex-1 flex-col rounded-3xl bg-surface shadow-large">
+          <StatFigure
+            value={numbers.recordings.toLocaleString('en-US')}
+            name={recordingsLabel(numbers.recordings)}
+            className="pt-4"
+          />
+          <ModeBar split={modeSplit(numbers.distanceM, numbers.walkM)} />
+        </div>
       </div>
-      <div className="flex flex-1 flex-col rounded-3xl bg-surface shadow-large">
-        <StatFigure
-          value={numbers.recordings.toLocaleString('en-US')}
-          name={recordingsLabel(numbers.recordings)}
-          className="pt-4"
-        />
-        <ModeBar split={modeSplit(numbers.distanceM, numbers.walkM)} />
-      </div>
+      <VehicleGrid rides={numbers.ridesByVehicle} />
     </div>
   );
 }
@@ -179,7 +187,8 @@ function LegendRow({ dotClass, word, percent }: LegendRowProps) {
   return (
     <li className="flex items-center gap-1">
       <span aria-hidden className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-      {percent === undefined ? word : `${word} ${percent}%`}
+      <span className="flex-1">{word}</span>
+      {percent !== undefined && <span>{percent}%</span>}
     </li>
   );
 }

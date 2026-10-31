@@ -71,6 +71,15 @@ function statsState(data: MyStats | undefined, error: Error | null): CommuteStat
         seconds: data.movingSeconds + data.standingSeconds,
         distanceM: data.distanceM,
         walkM: data.walkM,
+        ridesByVehicle: {
+          jeep: data.ridesByVehicle.jeep,
+          // TODO: E-Jeep and UV Express from get_my_stats once #568 counts them.
+          eJeep: null,
+          uvExpress: null,
+          bus: data.ridesByVehicle.bus,
+          train: data.ridesByVehicle.train,
+          ferry: data.ridesByVehicle.ferry,
+        },
       },
     };
   }
