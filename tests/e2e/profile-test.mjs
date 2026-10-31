@@ -445,10 +445,23 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 30000 });
+  // A #history kept from before sign-in must not open History once the account is in.
+  await page.evaluate(() => {
+    location.hash = 'history';
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 30000 });
   await field(page, 'Email').fill(ACCOUNT.email);
   await field(page, 'Password').fill(ACCOUNT.password);
   await button(page, 'Sign in').click();
   await start(page).waitFor({ timeout: 15000 });
+  check(
+    'a stale #history from before sign-in is dropped: the account lands on Start, not History',
+    (await page.evaluate(() => location.hash)) === '' &&
+      (await page.getByRole('heading', { level: 1, name: 'History' }).count()) === 0,
+  );
   const isConsentShown =
     (await page.getByRole('heading', { name: 'Before you record' }).count()) > 0;
   await accountTab(page).click();

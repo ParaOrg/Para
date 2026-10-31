@@ -56,29 +56,29 @@ export function ReadyScreen({
       {/* TODO: show HelpButton (help-button.tsx) here, at the top left, once the tutorial it opens
           is designed. Until then the corner is empty, as Figma has no Back to the map on Start:
           the browser's back is the way to the public map. */}
-      {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
-      {!earlierQuestion && (
-        <section
-          ref={stackRef}
-          aria-labelledby="ready-heading"
-          className="absolute inset-x-0 bottom-0 z-10 flex flex-col"
-        >
+      <section
+        ref={stackRef}
+        aria-labelledby={earlierQuestion ? undefined : 'ready-heading'}
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col"
+      >
+        {!earlierQuestion && (
           <h1 id="ready-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Record a route
           </h1>
-          <div className="px-4 pb-4">
-            <BottomToolbar accountRef={tabRef} onOpenAccount={onOpenAccount} />
-          </div>
-          {/* Nothing stands in for Start while the app's gates load: a plain Start would skip the permissions. */}
-          {AppUpdateGate ? (
-            <Suspense fallback={null}>
-              <AppUpdateGate>{startBar}</AppUpdateGate>
-            </Suspense>
-          ) : (
-            startBar
-          )}
-        </section>
-      )}
+        )}
+        {/* The tabs stay over the question too: Account, and Sign out, are always a tap away. */}
+        <div className="px-4 pb-4">
+          <BottomToolbar accountRef={tabRef} onOpenAccount={onOpenAccount} />
+        </div>
+        {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+        {/* Nothing stands in for Start while the app's gates load: a plain Start would skip the permissions. */}
+        {!earlierQuestion && AppUpdateGate && (
+          <Suspense fallback={null}>
+            <AppUpdateGate>{startBar}</AppUpdateGate>
+          </Suspense>
+        )}
+        {!earlierQuestion && !AppUpdateGate && startBar}
+      </section>
     </>
   );
 }

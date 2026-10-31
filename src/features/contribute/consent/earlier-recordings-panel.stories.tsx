@@ -9,7 +9,7 @@ const meta = {
   args: { count: 3, onSend: fn(), onKeep: fn() },
   decorators: [
     (Story) => (
-      <div className="relative h-[480px] w-[390px] overflow-hidden bg-surface-secondary">
+      <div className="flex h-[480px] w-[390px] flex-col justify-end overflow-hidden bg-surface-secondary">
         <Story />
       </div>
     ),

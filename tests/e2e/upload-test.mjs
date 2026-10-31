@@ -650,6 +650,30 @@ const groupOf = (page, name) =>
   );
 }
 
+// ------------- earlier recordings asked about: Account and Sign out still there
+{
+  const { page, fake } = await phone();
+  await seed(page, [
+    savedRide('aaaaaaaa-0000-4000-8000-000000000020', T0, { name: 'Unasked', isEarlier: true }),
+  ]);
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.earlier(page).waitFor();
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' })
+    .click();
+  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
+  check(
+    'with the earlier-recordings question open, the Account tab reaches Profile and Sign out works',
+    fake.saveRequests === 0,
+    `${fake.saveRequests} sends`,
+  );
+}
+
 // ------------------------ earlier recordings: asked about, Keep on phone
 {
   const a = 'aaaaaaaa-0000-4000-8000-000000000014';

@@ -66,10 +66,10 @@ export function ContributePage({ locator }: ContributePageProps) {
   const accountGate = useAccountGate();
   // Having an account is the agreement (CONSENT_VERSION 4): nothing is sent until one is signed
   // in, and recordings made before wait on the phone.
-  const hasConsent = accountGate === 'ready';
-  const earlier = useEarlierQuestion(recording.saved, hasConsent, accountId);
+  const canSend = accountGate === 'ready';
+  const earlier = useEarlierQuestion(recording.saved, canSend, accountId);
   const uploads = useUploads(recording.saved, {
-    hasConsent,
+    hasConsent: canSend,
     earlier: earlier.choice,
   });
   const track = useRecordingTrack(
@@ -85,7 +85,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     () => PermissionsOnboarding !== null && isNativeApp() && !hasSeenPermissionsScreen(),
   );
   const isPermissionsShown = isPermissionsPending && accountGate === 'ready' && phase === 'ready';
-  const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen && !isPermissionsShown;
+  const isHistoryShown = phase === 'ready' && canSend && history.isOpen && !isPermissionsShown;
   const isProfileShown =
     phase === 'ready' &&
     accountGate === 'ready' &&
@@ -98,10 +98,10 @@ export function ContributePage({ locator }: ContributePageProps) {
   // loaded; closing then would shut History on every reload.
   useEffect(() => {
     if (accountGate === 'loading') return;
-    if (history.isOpen && (!hasConsent || (phase !== 'loading' && phase !== 'ready'))) {
+    if (history.isOpen && (!canSend || (phase !== 'loading' && phase !== 'ready'))) {
       history.close();
     }
-  }, [accountGate, phase, hasConsent, history]);
+  }, [accountGate, phase, canSend, history]);
 
   // On Ready the recording screens are fetched ahead of Start. A failure here is only a missed
   // head start: the lazy screen asks again when it is shown.
@@ -178,7 +178,11 @@ export function ContributePage({ locator }: ContributePageProps) {
           {phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown && (
             <ReadyScreen
               earlierQuestion={earlier.question}
-              onStart={recording.start}
+              onStart={() => {
+                // A ride begun: the next Start opens fresh, focus on its heading, not the tab.
+                setHasOpenedAccount(false);
+                recording.start();
+              }}
               onOpenAccount={handleOpenAccount}
               isBackFromAccount={hasOpenedAccount}
             />

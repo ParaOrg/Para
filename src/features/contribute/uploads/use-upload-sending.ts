@@ -79,8 +79,8 @@ export function useUploadSending({
       const packed = packRecording(
         recording,
         rows.map(fixOfRow),
-        // Sent under the text it was made with; an earlier recording the person chose to send is
-        // sent under the current one they agreed to.
+        // Sent under the terms it was made with; an earlier recording the person chose to send
+        // goes under today's, which having the account agrees to.
         sentConsentVersion(recording.consentVersion),
         Date.now(),
       );
