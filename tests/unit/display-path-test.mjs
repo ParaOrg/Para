@@ -207,13 +207,20 @@ test('a two-hour ride of 7000 fixes is steadied in well under a second', () => {
 
 // The drawn line is the only thing display-path.ts changes: what is stored and
 // uploaded stays the same, pinned by hashes. The kept fixes' hash was taken
-// before display-path.ts existed; the packed one is of format 2 and rules 2.
+// before display-path.ts existed; the packed one is of format 2 and rules 2, and
+// is the same without the walk and ride split, which came after.
 test('what is stored and uploaded is byte-identical to before', () => {
   const fixes = rideFixes();
   const sha = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
   const id = '11111111-0000-0000-0000-000000000001';
   const packed = packRecording(rideRecording(id, fixes), fixes, 1, T0 + 3_600_000);
-  assert.equal(sha(packed), 'c6eb65bdacf1fc29e464049432a5e56c1e0df625e431f060d92c802b74b466f7');
+  assert.equal(sha(packed), 'be4059dcd5c4e4e1605a9e681b88fe851e951c8edc83b69760b5a692af562921');
+  const { walk_m, ride_m, walk_s, ride_s, ...withoutSplit } = packed.payload;
+  assert.deepEqual([walk_m, ride_m, walk_s, ride_s], [479, 8918, 60, 1239]);
+  assert.equal(
+    sha({ ...packed, payload: withoutSplit }),
+    'c6eb65bdacf1fc29e464049432a5e56c1e0df625e431f060d92c802b74b466f7',
+  );
   assert.equal(
     sha(keptFixes(fixes)),
     '2b5bdba203326d081f43723427945a4a505a46fedd612c83331534fa7716aa08',
