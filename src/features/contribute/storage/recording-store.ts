@@ -1,3 +1,5 @@
+import * as z from 'zod/mini';
+
 import {
   fixRowSchema,
   storedRecordingSchema,
@@ -6,19 +8,30 @@ import {
 } from './recording-schema';
 
 const DB_NAME = 'para-contribute';
+
+const thumbnailRowSchema = z.object({
+  recordingId: z.string(),
+  dataUrl: z.string().check(z.startsWith('data:image/')),
+});
 const RECORDINGS = 'recordings';
 const FIXES = 'fixes';
+/** A small picture of each saved recording's route, for History's cards; apart from the recording. */
+const THUMBNAILS = 'thumbnails';
 
 let opened: Promise<IDBDatabase> | null = null;
 
 /** The one connection to the phone's database, opened on first use. */
 function openDatabase(): Promise<IDBDatabase> {
   opened ??= new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+    // 2 added the thumbnails; a phone on 1 keeps its recordings and fixes as they are.
+    const request = indexedDB.open(DB_NAME, 2);
+    // Each store made if it is missing, whatever version the phone had.
     request.onupgradeneeded = () => {
       const db = request.result;
-      db.createObjectStore(RECORDINGS, { keyPath: 'id' });
-      db.createObjectStore(FIXES, { keyPath: ['recordingId', 'seq'] });
+      const has = (store: string) => db.objectStoreNames.contains(store);
+      if (!has(RECORDINGS)) db.createObjectStore(RECORDINGS, { keyPath: 'id' });
+      if (!has(FIXES)) db.createObjectStore(FIXES, { keyPath: ['recordingId', 'seq'] });
+      if (!has(THUMBNAILS)) db.createObjectStore(THUMBNAILS, { keyPath: 'recordingId' });
     };
     request.onsuccess = () => {
       const db = request.result;
@@ -125,10 +138,30 @@ export async function loadFixes(recordingId: string): Promise<FixRow[]> {
   return fixes;
 }
 
-/** Deletes a recording and all its fixes together. */
+/** Keeps a recording's thumbnail: a data URL, a few kB. */
+export function putThumbnail(recordingId: string, dataUrl: string): Promise<void> {
+  return inTransaction([THUMBNAILS], 'readwrite', (tx) => {
+    tx.objectStore(THUMBNAILS).put({ recordingId, dataUrl });
+  });
+}
+
+/** Every thumbnail kept, by recording. A row that does not read is left out. */
+export async function loadThumbnails(): Promise<Map<string, string>> {
+  const db = await openDatabase();
+  const rows = await rowsOf(db.transaction(THUMBNAILS).objectStore(THUMBNAILS).getAll());
+  const thumbnails = new Map<string, string>();
+  for (const row of rows) {
+    const read = thumbnailRowSchema.safeParse(row);
+    if (read.success) thumbnails.set(read.data.recordingId, read.data.dataUrl);
+  }
+  return thumbnails;
+}
+
+/** Deletes a recording, all its fixes and its thumbnail together. */
 export function deleteRecording(recordingId: string): Promise<void> {
-  return inTransaction([RECORDINGS, FIXES], 'readwrite', (tx) => {
+  return inTransaction([RECORDINGS, FIXES, THUMBNAILS], 'readwrite', (tx) => {
     tx.objectStore(RECORDINGS).delete(recordingId);
+    tx.objectStore(THUMBNAILS).delete(recordingId);
     tx.objectStore(FIXES).delete(
       IDBKeyRange.bound([recordingId, 0], [recordingId, Number.MAX_SAFE_INTEGER]),
     );
