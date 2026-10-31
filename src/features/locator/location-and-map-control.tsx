@@ -40,11 +40,18 @@ export function LocationAndMapControl({
   children,
 }: LocationAndMapControlProps) {
   // The design MapView opened on: both read the one remembered.
-  const { current, card, cardRoom, rootRef, toggle, close, select, letGo } = useMapStyleCard(
-    map,
-    () => readBasemap(basemaps),
-    'up',
-  );
+  const {
+    current,
+    areLabelsShown,
+    card,
+    cardRoom,
+    rootRef,
+    toggle,
+    close,
+    select,
+    toggleLabels,
+    letGo,
+  } = useMapStyleCard(map, () => readBasemap(basemaps), 'up');
   return (
     <div ref={rootRef} className="flex flex-col items-end gap-1">
       {card === 'closed' && note}
@@ -59,6 +66,8 @@ export function LocationAndMapControl({
             maxHeight={cardRoom}
             direction="up"
             onSelect={select}
+            areLabelsShown={areLabelsShown}
+            onLabelsToggle={toggleLabels}
             isClosing={card === 'closing'}
             onClose={close}
             onClosed={letGo}

@@ -72,11 +72,18 @@ export function BasemapControl({
   buttonStyle = 'round',
 }: BasemapControlProps) {
   const corner = useTopRightControl(map, CORNER_MARGIN[buttonStyle]);
-  const { current, card, cardRoom, rootRef, toggle, close, select, letGo } = useMapStyleCard(
-    map,
-    initial,
-    'down',
-  );
+  const {
+    current,
+    areLabelsShown,
+    card,
+    cardRoom,
+    rootRef,
+    toggle,
+    close,
+    select,
+    toggleLabels,
+    letGo,
+  } = useMapStyleCard(map, initial, 'down');
   const isOpen = card === 'open';
 
   return createPortal(
@@ -106,6 +113,8 @@ export function BasemapControl({
           thumbnails={thumbnails}
           maxHeight={cardRoom}
           onSelect={select}
+          areLabelsShown={areLabelsShown}
+          onLabelsToggle={toggleLabels}
           isClosing={card === 'closing'}
           onClose={close}
           onClosed={letGo}

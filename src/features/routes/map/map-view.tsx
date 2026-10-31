@@ -25,6 +25,7 @@ import {
   within,
   type Bounds,
 } from './framing';
+import { readLocationLabels } from './location-labels';
 import { mapAttribution } from './map-attribution';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
@@ -218,6 +219,8 @@ export function MapView({
   // The design chosen on this device, read once; the map is built with it so
   // a remembered choice never flashes gray first.
   const [basemap] = useState<Basemap>(() => readBasemap(basemaps));
+  // Read once too: the basemap's labels shown or hidden from the first frame (location-labels.ts).
+  const [areLabelsShown] = useState(readLocationLabels);
   const [ready, setReady] = useState<MapLibreMap | null>(null);
   const isLoaded = ready !== null && error === null;
   const onLoadedChangeRef = useRef(onLoadedChange);
@@ -250,7 +253,7 @@ export function MapView({
       // Beside it, the public map's framing (`openOn`): none if it fails or
       // has not come within OPENING_WAIT_MS.
       const [style, framing] = await Promise.all([
-        initialStyle(basemap),
+        initialStyle(basemap, areLabelsShown),
         openOn ? within(openOn(), OPENING_WAIT_MS, null) : null,
       ]);
       if (cancelled || !containerRef.current) return;

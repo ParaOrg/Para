@@ -32,6 +32,7 @@ import {
   waitForSource,
 } from './lib/harness.mjs';
 import { routesFraming } from './lib/framing.mjs';
+import { checkLocationLabels } from './lib/location-labels.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
   colourOf,
@@ -1707,6 +1708,22 @@ check(
   mapFileStatuses.length === 1 && (mapFileStatuses[0] === 200 || mapFileStatuses[0] === 304),
   `${mapFileStatuses.length} response(s): ${mapFileStatuses.join(', ') || 'none'}`,
 );
+
+// 6. The Map Style card's Location Labels switch: part 1's, on a page of its own, as its choice
+// is kept in the storage section 5 holds empty. Only the basemap's labels go; ours stay.
+if (PART === 1) {
+  const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
+  await nodeFetch(p);
+  p.on('pageerror', (e) => errors.push(String(e)));
+  const waitForMap = (q) =>
+    q.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+  await p.goto(`${BASE}/`, { waitUntil: 'load' });
+  await waitForMap(p);
+  await mapIdle(p);
+  await checkLocationLabels(p, { check, prefix: 'public map', waitForMap });
+  await p.close();
+}
+
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 
 await b.close();

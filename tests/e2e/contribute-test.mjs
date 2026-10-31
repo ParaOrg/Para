@@ -14,6 +14,7 @@ import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
+import { checkLocationLabels } from './lib/location-labels.mjs';
 
 const { check, tally } = harness();
 const SHOTS = process.env.PARA_SHOTS;
@@ -1328,6 +1329,49 @@ const WAKE = () => {
   await page.waitForURL((url) => url.pathname === '/');
   check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
   check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------------- Location Labels on the Map Style card
+{
+  const { page, errors } = await phone({ consented: true });
+  // A stand-in for each design with labels of its own, from a vector source whose tiles are
+  // empty, over the bare style: the switch is read off the layers, never off the tiles.
+  await page.route(/tiles\.openfreemap\.org/, (route) => {
+    const url = route.request().url();
+    const design = url.match(/\/styles\/([a-z]+)/)?.[1];
+    if (!design) return route.fulfill({ status: 204, body: '' });
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        version: 8,
+        sources: {
+          openmaptiles: {
+            type: 'vector',
+            tiles: ['https://tiles.openfreemap.org/stand-in/{z}/{x}/{y}.pbf'],
+          },
+        },
+        layers: [
+          { id: `${design}-bg`, type: 'background', paint: { 'background-color': '#eeeeee' } },
+          {
+            id: `${design}-place`,
+            type: 'symbol',
+            source: 'openmaptiles',
+            'source-layer': 'place',
+          },
+          { id: `${design}-road`, type: 'symbol', source: 'openmaptiles', 'source-layer': 'road' },
+        ],
+      }),
+    });
+  });
+  const waitForMap = (p) =>
+    p.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await waitForMap(page);
+  await checkLocationLabels(page, { check, prefix: 'contributor page', waitForMap });
+  check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
 
