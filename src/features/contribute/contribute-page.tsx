@@ -13,6 +13,7 @@ import { useAccountGate } from './account/use-account-gate';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
+import { retryingImport } from './common/retrying-import';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
@@ -23,8 +24,6 @@ import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
-import { SaveForm } from './screens/save-form';
-import { SavedScreen } from './screens/saved-screen';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
@@ -43,10 +42,17 @@ const ProfileView = lazy(() =>
 );
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
 // fetches them as it opens (below), so Start never waits on the network, nor fails without one.
-const loadRecordingScreen = () => import('./screens/recording-screen');
-const loadUnfinishedScreen = () => import('./screens/unfinished-screen');
-const loadStopRecordingScreen = () => import('./screens/stop-recording-screen');
-const loadFlagStopButton = () => import('./screens/flag-stop-button');
+// A fetch ahead that failed offline does not leave them unreachable: each asks again afresh.
+const loadRecordingScreen = retryingImport(() => import('./screens/recording-screen'));
+const loadUnfinishedScreen = retryingImport(() => import('./screens/unfinished-screen'));
+const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-recording-screen'));
+const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
+const loadSaveForm = retryingImport(() => import('./screens/save-form'));
+const loadSavedScreen = retryingImport(() => import('./screens/saved-screen'));
+const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
+const SavedScreen = lazy(() =>
+  loadSavedScreen().then((module) => ({ default: module.SavedScreen })),
+);
 const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
 );
@@ -184,15 +190,18 @@ export function ContributePage({ locator }: ContributePageProps) {
     }
   }, [accountGate, phase, canSend, history]);
 
-  // On Ready the recording screens are fetched ahead of Start. A failure here is only a missed
-  // head start: the lazy screen asks again when it is shown.
+  // On Ready the recording screens are fetched ahead of Start, and the save screens too, also when
+  // the page opens on a ride already under way, so stopping one never waits on the network. A
+  // failure here is only a missed head start: the lazy screen asks again when it is shown.
   useEffect(() => {
-    if (phase !== 'ready') return;
+    if (phase !== 'ready' && phase !== 'recording' && phase !== 'paused') return;
     Promise.all([
       loadRecordingScreen(),
       loadUnfinishedScreen(),
       loadStopRecordingScreen(),
       loadFlagStopButton(),
+      loadSaveForm(),
+      loadSavedScreen(),
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);
     });
@@ -356,27 +365,31 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {phase === 'form' && (
-            <SaveForm
-              failedFixWrites={recording.current?.failedFixWrites ?? 0}
-              onDownload={recording.downloadCurrent}
-              onKeepRecording={recording.keepRecording}
-              onSave={recording.save}
-            />
+            <Suspense fallback={null}>
+              <SaveForm
+                failedFixWrites={recording.current?.failedFixWrites ?? 0}
+                onDownload={recording.downloadCurrent}
+                onKeepRecording={recording.keepRecording}
+                onSave={recording.save}
+              />
+            </Suspense>
           )}
           {phase === 'saved' && (
-            <SavedScreen
-              failedFixWrites={recording.lastSaved?.failedFixWrites ?? 0}
-              uploadText={
-                recording.lastSaved
-                  ? uploadStatusText(
-                      uploads.statusOf(recording.lastSaved),
-                      uploads.canRemove(recording.lastSaved),
-                    )
-                  : ''
-              }
-              onRecordAgain={recording.recordAgain}
-              onDownload={recording.downloadLastSaved}
-            />
+            <Suspense fallback={null}>
+              <SavedScreen
+                failedFixWrites={recording.lastSaved?.failedFixWrites ?? 0}
+                uploadText={
+                  recording.lastSaved
+                    ? uploadStatusText(
+                        uploads.statusOf(recording.lastSaved),
+                        uploads.canRemove(recording.lastSaved),
+                      )
+                    : ''
+                }
+                onRecordAgain={recording.recordAgain}
+                onDownload={recording.downloadLastSaved}
+              />
+            </Suspense>
           )}
         </>
       )}
