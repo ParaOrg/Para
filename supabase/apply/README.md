@@ -309,3 +309,38 @@ numbers for the month to their retired totals first.
   matches the schema before, and that it re-applies.
 - Splits or retired totals stored: the revert refuses. Decide with the owner first: dropping them
   loses numbers that cannot be made again.
+
+# Applying delete_my_account to the live project
+
+Account settings → Delete account. This adds one function, `public.delete_my_account()`: a
+definer with a pinned path, callable by `authenticated` only. It deletes the caller's own auth user
+(`auth.uid()`); the foreign keys already in place take their contributor row, contributions with
+their points, hintos and uses, retired totals and claim tokens with it. It refuses an anonymous
+phone, an editor (the owner removes editors) and an account that still owns rows of the map. No
+table, no policy, no row changes. Three files, each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261031100000_delete_my_account_apply.sql` | One transaction: checks `account_stats` is in the ledger, this is not, `private.is_account()` and `private.is_editor()` exist, and `postgres` may delete from `auth.users`; applies `migrations/20261031100000_delete_my_account.sql` (carried unchanged; `verify/delete-my-account.sh` checks the copy); checks the function is a definer with a pinned path for `authenticated` only; writes the ledger row `delete_my_account`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261031100000_delete_my_account_check.sql` | Part one adds five test users with a row in every table, proves an account deletes itself and only itself with every row of theirs, that anon cannot call it, and that an anonymous phone, an editor and an owner of a map row are refused and keep everything, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261031100000_delete_my_account_revert.sql` | One transaction: drops the function and its ledger row. Accounts already deleted stay deleted. Safe to run twice. |
+
+## Steps
+
+1. `account_stats` first: the apply refuses without it.
+2. Run `20261031100000_delete_my_account_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+3. Run `20261031100000_delete_my_account_check.sql`: part one ends with `ROLLBACK` and no `FAILED`;
+   part two gives 4 rows, all `ok = t`.
+4. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'delete_my_account';`) in
+   `migrations/README.md`.
+
+Apply it before the app's Delete account ships: until then the call answers that the function does
+not exist, and nothing is deleted.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and Delete account must be withdrawn: run `20261031100000_delete_my_account_revert.sql`.
+  `verify/delete-my-account.sh` checks the schema afterwards matches the schema before, and that it
+  re-applies. An account already deleted cannot be brought back.
