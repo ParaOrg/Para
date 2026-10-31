@@ -224,8 +224,18 @@ const buttons = (page) =>
     );
   }
   await page.waitForFunction(() => !!window.__map?.loaded());
+  const paraMark = await page.locator('[data-para-mark]').boundingBox();
   check(
-    'Ready: Start, the top left empty until there is a tutorial (no ?, no Back to the map), no saved-recordings list',
+    "Ready: Para's mark at the top left, 48 px, 20 in and 24 down (Figma's Frame 259), hidden from screen readers",
+    paraMark &&
+      Math.abs(paraMark.x - 20) < 1 &&
+      Math.abs(paraMark.y - 24) < 1 &&
+      Math.abs(paraMark.width - 48) < 1 &&
+      (await page.locator('[data-para-mark]').getAttribute('aria-hidden')) === 'true',
+    JSON.stringify(paraMark),
+  );
+  check(
+    'Ready: Start, the top right empty until there is a tutorial (no ?, no Back to the map), no saved-recordings list',
     (await page.getByRole('button', { name: 'Back to the map' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'How to record' }).count()) === 0 &&
       (await page.getByText('Saved on this phone').count()) === 0 &&
