@@ -18,6 +18,8 @@ const statsRowSchema = z.pipe(
     hinto_s: z.number(),
     marks: z.number(),
     jeep_rides: z.number(),
+    e_jeep_rides: z.number(),
+    uv_express_rides: z.number(),
     bus_rides: z.number(),
     train_rides: z.number(),
     ferry_rides: z.number(),
@@ -45,6 +47,8 @@ const statsRowSchema = z.pipe(
     marks: row.marks,
     ridesByVehicle: {
       jeep: row.jeep_rides,
+      eJeep: row.e_jeep_rides,
+      uvExpress: row.uv_express_rides,
       bus: row.bus_rides,
       train: row.train_rides,
       ferry: row.ferry_rides,

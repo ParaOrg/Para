@@ -312,8 +312,12 @@ numbers for the month to their retired totals first.
 
 # Applying contribution_fare to the live project
 
-The fare a contributor paid, stored with each recording and added up in their stats. The app does
-not ask for it yet; the save form will, once its question is designed. `contribution.fare_php`
+The fare a contributor paid, stored with each recording and added up in their stats, and two more
+vehicle kinds, E-Jeep and UV Express, which the owner's Account design counts. The app does not ask
+for the fare yet (the save form will, once its question is designed), and its ride-kind picker gains
+the two kinds only after this is applied: a phone sending one before would have the whole ride
+refused. `contribution.vehicle` may also be `e_jeep` or `uv_express`; the retired totals and
+`get_my_stats()` count them as `e_jeep_rides` and `uv_express_rides`. `contribution.fare_php`
 (numeric(7,2), 0 to 2000, null when not given) is read by `save_contribution` as an optional key,
 the retired totals gain `fare_php_total` and `fare_recordings`, and `get_my_stats()` returns both
 (live recordings with a fare plus the retired carry, and how many recordings that is). Three files,
@@ -322,8 +326,8 @@ each pasted whole into the SQL editor as `postgres`:
 | File | What it does |
 | --- | --- |
 | `20261031110000_contribution_fare_apply.sql` | One transaction: checks `account_stats` is in the ledger and this is not; applies `migrations/20261031110000_contribution_fare.sql` (carried unchanged; `verify/contribution-fare.sh` checks the copy); checks `get_my_stats` is a definer with a pinned path for `authenticated` only, the private helpers stay closed to the API roles, and `save_contribution` still runs as the caller; writes the ledger row `contribution_fare`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
-| `20261031110000_contribution_fare_check.sql` | Part one adds a test phone and its rides, proves a payload without a fare saves with none, a fare saves, a negative, an over-2000 and an unreadable fare are refused, and the stats add up live and retired fares alike, the same after retiring two months in turn, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 6 rows, all `ok` should be `t`. |
-| `20261031110000_contribution_fare_revert.sql` | One transaction: drops the three columns and puts `save_contribution`, `ride_totals`, `add_retired_totals` and `get_my_stats` back as `account_stats` made them. Refuses, changing nothing, while any contribution holds a fare or any retired totals count one. Safe to run twice. |
+| `20261031110000_contribution_fare_check.sql` | Part one adds a test phone and its rides, proves a kind from before still saves, an E-Jeep and a UV Express ride save, a kind that is not one is refused, a payload without a fare saves with none, a fare saves, a negative, an over-2000 and an unreadable fare are refused, and the stats add up fares and count the new kinds, live and retired alike, the same after retiring two months in turn, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 7 rows, all `ok` should be `t`. |
+| `20261031110000_contribution_fare_revert.sql` | One transaction: drops the five columns, puts the vehicle check back to the six kinds from before, and puts `save_contribution`, `ride_totals`, `add_retired_totals` and `get_my_stats` back as `account_stats` made them. Refuses, changing nothing, while any contribution holds a fare or is an E-Jeep or UV Express ride, or any retired totals count one. Safe to run twice. |
 
 ## Steps
 
@@ -331,12 +335,13 @@ each pasted whole into the SQL editor as `postgres`:
    check reads `get_my_stats` as it was before this.
 2. Run `20261031110000_contribution_fare_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
 3. Run `20261031110000_contribution_fare_check.sql`: part one ends with `ROLLBACK` and no `FAILED`;
-   part two gives 6 rows, all `ok = t`.
+   part two gives 7 rows, all `ok = t`.
 4. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
    (`select version from supabase_migrations.schema_migrations where name = 'contribution_fare';`) in
    `migrations/README.md`.
 
-Apps in the field keep saving: they send no fare, and none is stored.
+Apps in the field keep saving: they send no fare, and none is stored. Only after step 4 may the
+contributor builder add E-Jeep and UV Express to the ride-kind picker.
 
 ## Recovery
 

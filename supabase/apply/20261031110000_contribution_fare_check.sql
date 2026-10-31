@@ -2,7 +2,10 @@
 --
 -- Two parts. The first adds a test phone and its rides, proves the behaviour,
 -- and rolls every one of them back: it raises "FAILED: ..." on the first wrong
--- result, and nothing it did remains. It proves that a payload without a fare
+-- result, and nothing it did remains. It proves that a kind from before still
+-- saves, an E-Jeep and a UV Express ride save, a kind that is not one is
+-- refused, and the stats count both new kinds, live and carried; that a
+-- payload without a fare
 -- (every app in the field) saves with none, that a fare saves, that a negative,
 -- an over-2000 and an unreadable fare are refused, and that get_my_stats adds
 -- up the fares of live rides and of retired months alike, the same before
@@ -74,6 +77,17 @@ select pg_temp.check(public.save_contribution(pg_temp.recording(
 select pg_temp.check(public.save_contribution(pg_temp.recording(
   '11111111-0000-0000-0000-00000000fa05', now() - interval '15 hours', '{"fare_php": 10}')) = 'saved',
   'a third fare saves');
+select pg_temp.check(public.save_contribution(pg_temp.recording(
+  '11111111-0000-0000-0000-00000000fa06', now() - interval '18 hours', '{"vehicle": "e_jeep"}')) = 'saved',
+  'an E-Jeep ride saves');
+select pg_temp.check(public.save_contribution(pg_temp.recording(
+  '11111111-0000-0000-0000-00000000fa07', now() - interval '21 hours', '{"vehicle": "uv_express"}')) = 'saved',
+  'a UV Express ride saves');
+select pg_temp.check(public.save_contribution(pg_temp.recording(
+  '11111111-0000-0000-0000-00000000fa08', now() - interval '24 hours', '{"vehicle": "bus"}')) = 'saved',
+  'a kind from before still saves');
+select pg_temp.refused(pg_temp.recording('11111111-0000-0000-0000-00000000fa04', now() - interval '12 hours',
+  '{"vehicle": "jeepney"}'), 'a vehicle kind that is not one');
 select pg_temp.refused(pg_temp.recording('11111111-0000-0000-0000-00000000fa04', now() - interval '12 hours',
   '{"fare_php": -1}'), 'a negative fare');
 select pg_temp.refused(pg_temp.recording('11111111-0000-0000-0000-00000000fa04', now() - interval '12 hours',
@@ -89,25 +103,34 @@ select pg_temp.check((select fare_php = 45.50 from public.contribution
 set role authenticated;
 select pg_temp.check((select (fare_php_total, fare_recordings) = (75.50::numeric, 3) from public.get_my_stats()),
   'the stats add up the three fares, from 3 rides');
+select pg_temp.check((select (rides, jeep_rides, e_jeep_rides, uv_express_rides, bus_rides) = (7, 4, 1, 1, 1)
+    from public.get_my_stats()),
+  'the stats count the E-Jeep and the UV Express ride as their own kinds');
 reset role;
 
--- Two old months retire in turn, the second adding onto the first's carry: one fared ride in
--- February, a fared ride and the one without in March. The totals stay.
+-- Two old months retire in turn, the second adding onto the first's carry: a fared ride in
+-- February; a fared ride, the one without, the E-Jeep and the UV Express ride in March, so the
+-- new kinds are added onto a row already there. The totals stay.
 update public.contribution set received_at = timestamptz '2024-02-15 12:00+00',
     started_at = timestamptz '2024-02-10 01:00+00', ended_at = timestamptz '2024-02-10 02:00+00'
   where id = '11111111-0000-0000-0000-00000000fa02';
+update public.contribution set received_at = timestamptz '2024-03-15 12:00+00',
+    started_at = timestamptz '2024-03-11 01:00+00', ended_at = timestamptz '2024-03-11 02:00+00'
+  where id in ('11111111-0000-0000-0000-00000000fa06', '11111111-0000-0000-0000-00000000fa07');
 update public.contribution set received_at = timestamptz '2024-03-15 12:00+00',
     started_at = timestamptz '2024-03-10 01:00+00', ended_at = timestamptz '2024-03-10 02:00+00'
   where id in ('11111111-0000-0000-0000-00000000fa01', '11111111-0000-0000-0000-00000000fa05');
 select private.retire_month(date '2024-02-01', 0);
 select private.retire_month(date '2024-03-01', 0);
-select pg_temp.check((select (fare_php_total, fare_recordings) = (55.50::numeric, 2)
+select pg_temp.check((select (fare_php_total, fare_recordings, e_jeep_rides, uv_express_rides)
+      = (55.50::numeric, 2, 1, 1)
     from private.contributor_retired_totals where contributor_id = '00000000-0000-0000-0000-00000000fa01'),
-  'the two retired months carried their fares and their two fared rides');
+  'the two retired months carried their fares, their two fared rides and the two new kinds');
 set role authenticated;
-select pg_temp.check((select (fare_php_total, fare_recordings, rides) = (75.50::numeric, 3, 4)
+select pg_temp.check((select (fare_php_total, fare_recordings, rides, jeep_rides, e_jeep_rides, uv_express_rides,
+      bus_rides) = (75.50::numeric, 3, 7, 4, 1, 1, 1)
     from public.get_my_stats()),
-  'after retiring, the stats are the carry plus the live ride: the same');
+  'after retiring, the stats are the carry plus the live rides: the same');
 reset role;
 
 rollback;
@@ -140,6 +163,13 @@ select * from (values
       and not has_function_privilege('anon', oid, 'execute'))
       from pg_proc where pronamespace = 'private'::regnamespace
       and proname in ('ride_totals', 'add_retired_totals'))),
-  (6, 'the ledger row is there once',
+  (6, 'contribution.vehicle takes e_jeep and uv_express besides the six from before',
+   (select pg_get_constraintdef(oid) like '%e_jeep%uv_express%bus%train%ferry%tricycle%other%'
+      from pg_constraint where conrelid = 'public.contribution'::regclass and conname = 'contribution_vehicle_check')
+   and (select count(*) = 2 from information_schema.columns where table_schema = 'private'
+      and table_name = 'contributor_retired_totals' and column_name in ('e_jeep_rides', 'uv_express_rides'))
+   and (select proargnames @> array['e_jeep_rides', 'uv_express_rides']
+      from pg_proc where oid = 'public.get_my_stats()'::regprocedure)),
+  (7, 'the ledger row is there once',
    (select count(*) = 1 from supabase_migrations.schema_migrations where name = 'contribution_fare'))
 ) as c(n, what, ok) order by n;

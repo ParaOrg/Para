@@ -1,4 +1,4 @@
--- ParaPo — the fare a contributor paid, stored with each recording and added up in their stats
+-- ParaPo — the fare a contributor paid, and two more vehicle kinds (E-Jeep, UV Express)
 --
 -- The app does not ask for the fare yet: the save form will, once the owner
 -- designs the question. This makes the database ready for it.
@@ -22,6 +22,15 @@
 --                  is: "from N rides"). Rides an editor hid are left out, as for
 --                  every other number. Its other columns are unchanged.
 --
+-- Two more vehicle kinds, which the owner's Account design counts:
+--   contribution.vehicle  may also be 'e_jeep' and 'uv_express'. The app does
+--                  not send them yet: the ride-kind picker gains them only once
+--                  this is applied (a phone sending one before would have the
+--                  whole ride refused).
+--   e_jeep_rides, uv_express_rides
+--                  counted like the other kinds: in the retired totals (and so
+--                  the carry and the claim), and in get_my_stats.
+--
 -- get_my_stats is dropped and made again: a function's returned columns cannot
 -- change in place. Its grants are made again with it.
 --
@@ -40,6 +49,17 @@ alter table public.contribution
 alter table private.contributor_retired_totals
   add column fare_php_total numeric(12, 2) not null default 0,
   add column fare_recordings integer not null default 0;
+
+-- ------------------------------------------------------- two more vehicles
+
+alter table public.contribution drop constraint contribution_vehicle_check;
+alter table public.contribution add constraint contribution_vehicle_check check (
+  vehicle in ('jeep', 'e_jeep', 'uv_express', 'bus', 'train', 'ferry', 'tricycle', 'other')
+);
+
+alter table private.contributor_retired_totals
+  add column e_jeep_rides integer not null default 0,
+  add column uv_express_rides integer not null default 0;
 
 -- ------------------------------------------------------------------- save
 
@@ -140,8 +160,8 @@ end $$;
 
 -- ---------------------------------------------------------- retired totals
 
--- As 20261031090000_account_stats.sql's, with the fare and how many had one
--- last, as the table's two new columns are.
+-- As 20261031090000_account_stats.sql's, with the fare, how many had one, and
+-- the two new vehicle kinds last, as the table's four new columns are.
 create or replace function private.ride_totals(
   who uuid, received_from timestamptz, received_before timestamptz, days_after date
 )
@@ -190,11 +210,13 @@ language sql stable security definer set search_path = '' as $$
     (select h.hintuans from helped h),
     now(),
     coalesce(sum(r.fare_php), 0)::numeric(12, 2),
-    (count(*) filter (where r.fare_php is not null))::integer
+    (count(*) filter (where r.fare_php is not null))::integer,
+    (count(*) filter (where r.vehicle = 'e_jeep'))::integer,
+    (count(*) filter (where r.vehicle = 'uv_express'))::integer
   from rides r;
 $$;
 
--- As 20261031090000_account_stats.sql's, adding the fare.
+-- As 20261031090000_account_stats.sql's, adding the fare and the two new kinds.
 create or replace function private.add_retired_totals(more private.contributor_retired_totals)
 returns void language sql security definer set search_path = '' as $$
   insert into private.contributor_retired_totals as t
@@ -227,6 +249,8 @@ returns void language sql security definer set search_path = '' as $$
     hintuans_helped = t.hintuans_helped + excluded.hintuans_helped,
     fare_php_total = t.fare_php_total + excluded.fare_php_total,
     fare_recordings = t.fare_recordings + excluded.fare_recordings,
+    e_jeep_rides = t.e_jeep_rides + excluded.e_jeep_rides,
+    uv_express_rides = t.uv_express_rides + excluded.uv_express_rides,
     updated_at = now();
 $$;
 
@@ -237,7 +261,8 @@ revoke all on function private.add_retired_totals(private.contributor_retired_to
 
 -- ------------------------------------------------------------- my stats
 
--- As 20261031090000_account_stats.sql's, with the two fare columns last.
+-- As 20261031090000_account_stats.sql's, with the two new kinds after jeep and
+-- the two fare columns last.
 drop function public.get_my_stats();
 create function public.get_my_stats()
 returns table (
@@ -252,6 +277,8 @@ returns table (
   hinto_s bigint,
   marks integer,
   jeep_rides integer,
+  e_jeep_rides integer,
+  uv_express_rides integer,
   bus_rides integer,
   train_rides integer,
   ferry_rides integer,
@@ -291,6 +318,8 @@ begin
     live.hinto_s + coalesce(retired.hinto_s, 0),
     live.marks + coalesce(retired.marks, 0),
     live.jeep_rides + coalesce(retired.jeep_rides, 0),
+    live.e_jeep_rides + coalesce(retired.e_jeep_rides, 0),
+    live.uv_express_rides + coalesce(retired.uv_express_rides, 0),
     live.bus_rides + coalesce(retired.bus_rides, 0),
     live.train_rides + coalesce(retired.train_rides, 0),
     live.ferry_rides + coalesce(retired.ferry_rides, 0),

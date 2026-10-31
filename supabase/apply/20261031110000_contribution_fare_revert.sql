@@ -1,6 +1,7 @@
 -- ParaPo — undo the contribution_fare migration. Refuses, changing nothing,
--- while any contribution holds a fare or any retired totals count one: dropped,
--- they cannot be made again. Puts back save_contribution, private.ride_totals,
+-- while any contribution holds a fare or uses e_jeep or uv_express, or any
+-- retired totals count one: dropped, they cannot be made again, and the old
+-- vehicle check would refuse the rows. Puts back save_contribution, private.ride_totals,
 -- private.add_retired_totals and public.get_my_stats as
 -- 20261031090000_account_stats made them. An app that sends fare_php keeps
 -- saving after it: that save_contribution ignores the key. Safe to run twice.
@@ -18,6 +19,15 @@ begin
              and table_name = 'contributor_retired_totals' and column_name = 'fare_recordings') then
     if exists (select 1 from private.contributor_retired_totals where fare_recordings > 0) then
       raise exception 'contribution_fare revert: retired totals count a fare, so it is not undone. Nothing was changed.';
+    end if;
+  end if;
+  if exists (select 1 from public.contribution where vehicle in ('e_jeep', 'uv_express')) then
+    raise exception 'contribution_fare revert: a contribution is an e_jeep or uv_express ride, so it is not undone. Nothing was changed.';
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'private'
+             and table_name = 'contributor_retired_totals' and column_name = 'e_jeep_rides') then
+    if exists (select 1 from private.contributor_retired_totals where e_jeep_rides > 0 or uv_express_rides > 0) then
+      raise exception 'contribution_fare revert: retired totals count an e_jeep or uv_express ride, so it is not undone. Nothing was changed.';
     end if;
   end if;
 end $$;
@@ -117,8 +127,13 @@ begin
 end $$;
 
 alter table public.contribution drop column if exists fare_php;
+alter table public.contribution drop constraint if exists contribution_vehicle_check;
+alter table public.contribution add constraint contribution_vehicle_check check (
+  vehicle in ('jeep', 'bus', 'train', 'ferry', 'tricycle', 'other')
+);
 alter table private.contributor_retired_totals
-  drop column if exists fare_php_total, drop column if exists fare_recordings;
+  drop column if exists fare_php_total, drop column if exists fare_recordings,
+  drop column if exists e_jeep_rides, drop column if exists uv_express_rides;
 
 create or replace function private.ride_totals(
   who uuid, received_from timestamptz, received_before timestamptz, days_after date

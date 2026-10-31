@@ -5,7 +5,8 @@
 # then apply/…_contribution_fare_apply.sql twice (the second run must stop and
 # change nothing), and the check: its rolled-back behaviour part raises nothing
 # and leaves nothing behind, and its read-only rows are all true. The revert
-# refuses over a stored fare and over retired totals counting one. On the
+# refuses over a stored fare, over retired totals counting one and over an
+# e_jeep ride. On the
 # second: apply, revert twice, and the schema equals one the migration never
 # touched; re-apply passes the check.
 #   PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contribution-fare.sh
@@ -34,7 +35,7 @@ checked() {
   out=$($PSQL -d "$DB" -v ON_ERROR_STOP=1 -qAt -F ' | ' < ../apply/${NAME}_check.sql 2>&1) \
     || { echo "FAILED: ${NAME}_check.sql: $(echo "$out" | grep -E 'ERROR|FAILED' | head -3)"; exit 1; }
   rows=$(echo "$out" | grep -E '^[0-9]+ \| ')
-  [ "$(echo "$rows" | wc -l)" = 6 ] || { echo "FAILED: ${NAME}_check.sql gave $(echo "$rows" | wc -l) rows"; exit 1; }
+  [ "$(echo "$rows" | wc -l)" = 7 ] || { echo "FAILED: ${NAME}_check.sql gave $(echo "$rows" | wc -l) rows"; exit 1; }
   ! echo "$rows" | grep -v ' | t$' || { echo "FAILED: ${NAME}_check.sql"; exit 1; }
 }
 
@@ -66,9 +67,13 @@ $PSQL -d $DB -qc "update public.contribution set fare_php = null" \
   -c "insert into private.contributor_retired_totals (contributor_id, rides, fare_php_total, fare_recordings) values ('00000000-0000-0000-0000-0000000000f1', 1, 13, 1)"
 out=$(apply < ../apply/${NAME}_revert.sql || true)
 echo "$out" | grep -q 'retired totals count a fare' || { echo "FAILED: revert ran over a retired fare: $out"; exit 1; }
+$PSQL -d $DB -qc "delete from private.contributor_retired_totals" \
+  -c "update public.contribution set vehicle = 'e_jeep'"
+out=$(apply < ../apply/${NAME}_revert.sql || true)
+echo "$out" | grep -q 'e_jeep or uv_express ride, so' || { echo "FAILED: revert ran over an e_jeep ride: $out"; exit 1; }
 $PSQL -d $DB -qc "delete from public.contributor where id = '00000000-0000-0000-0000-0000000000f1'"
 checked
-echo 'contribution_fare revert: refuses over a stored fare and over a retired one'
+echo 'contribution_fare revert: refuses over a stored fare, a retired one and an e_jeep ride'
 
 DB=verify_contribution_fare_revert
 fresh

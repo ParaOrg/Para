@@ -188,6 +188,6 @@ and re-applying passes the check.
 It applies every earlier migration, the contributions, contribution_use, contributor_accounts and
 account_stats paste files, then `../apply/20261031110000_contribution_fare_apply.sql` twice (the
 second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
-raise nothing and leave no row behind, and its 6 read-only rows must be `t`. The revert refuses over a
-stored fare and over retired totals counting one. On a second database, apply then revert twice
+raise nothing and leave no row behind, and its 7 read-only rows must be `t`. The revert refuses over a
+stored fare, over retired totals counting one and over an E-Jeep ride. On a second database, apply then revert twice
 leaves the schema as before, and re-applying passes the check.
