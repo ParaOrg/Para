@@ -7,7 +7,7 @@ export type Asking = 'delete-from-para' | 'remove-from-phone' | null;
 export interface CardActions {
   /** Kept back, or taken off Para: it can be sent from here. */
   canUpload: boolean;
-  /** On this phone, so there is a copy to download or remove. */
+  /** On this phone, so there is a copy to remove. */
   isOnPhone: boolean;
   /** Uploaded under this account, so it can be deleted from Para. */
   canDeleteFromPara: boolean;
@@ -16,8 +16,12 @@ export interface CardActions {
 }
 
 /** Whether the menu has anything in it: a card with nothing to do shows no ⋮. */
-export const hasMenuItems = ({ canUpload, isOnPhone, canDeleteFromPara }: CardActions): boolean =>
-  canUpload || isOnPhone || canDeleteFromPara;
+export const hasMenuItems = ({
+  canUpload,
+  isOnPhone,
+  canDeleteFromPara,
+  isBusy,
+}: CardActions): boolean => canUpload || (isOnPhone && !isBusy) || canDeleteFromPara;
 
 interface CardMenuProps {
   actions: CardActions;
@@ -26,7 +30,6 @@ interface CardMenuProps {
   /** The id the card's ⋮ controls. */
   menuId: string;
   onUpload: () => void;
-  onDownload: () => void;
   onAsk: (question: Exclude<Asking, null>) => void;
 }
 
@@ -41,27 +44,10 @@ interface MenuItem {
  * The card's ⋮ menu: only the actions that apply, the deletes in red and each asked first. Shown
  * under the ⋮, over the cards below. TODO: Figma draws no menu yet; restyle once the owner does.
  */
-export function CardMenu({
-  actions,
-  fullName,
-  menuId,
-  onUpload,
-  onDownload,
-  onAsk,
-}: CardMenuProps) {
+export function CardMenu({ actions, fullName, menuId, onUpload, onAsk }: CardMenuProps) {
   const items: MenuItem[] = [
     ...(actions.canUpload
       ? [{ key: 'upload', label: 'Upload to Para', isDestructive: false, onSelect: onUpload }]
-      : []),
-    ...(actions.isOnPhone
-      ? [
-          {
-            key: 'download',
-            label: 'Download recording',
-            isDestructive: false,
-            onSelect: onDownload,
-          },
-        ]
       : []),
     ...(actions.canDeleteFromPara
       ? [

@@ -491,9 +491,8 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     all.map((b) => b.getAttribute('aria-label') ?? b.textContent),
   );
   check(
-    '  an upload from another phone can be deleted from Para, and offers no Download recording or Remove from this phone',
+    '  an upload from another phone can be deleted from Para, and offers no Remove from this phone',
     names.some((name) => name.startsWith('Delete from Para')) &&
-      !names.some((name) => name.startsWith('Download recording')) &&
       !names.some((name) => name.startsWith('Remove from this phone')),
     names.join(' | '),
   );

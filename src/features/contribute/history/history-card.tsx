@@ -28,7 +28,6 @@ interface HistoryCardProps {
   /** Whether the phone has a connection: queued reads "Waiting for signal" without one. */
   isOnline: boolean;
   onUpload: () => void;
-  onDownload: () => void;
   onDeleteFromPara: () => void;
   onRemoveFromPhone: () => void;
 }
@@ -46,7 +45,6 @@ export function HistoryCard({
   picture,
   isOnline,
   onUpload,
-  onDownload,
   onDeleteFromPara,
   onRemoveFromPhone,
 }: HistoryCardProps) {
@@ -110,7 +108,6 @@ export function HistoryCard({
               isAsking={asking !== null}
               moreRef={moreRef}
               onUpload={onUpload}
-              onDownload={onDownload}
               onAsk={setAsking}
             />
           </div>

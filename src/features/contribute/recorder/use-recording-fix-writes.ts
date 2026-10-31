@@ -6,7 +6,7 @@ import type { Recording } from '../storage/recording-schema';
 export interface RecordingFixWrites extends FixWrites {
   /**
    * Puts a fix write that failed after the Stop on the stopped recording too, so the
-   * form counts it and offers the download that still holds it.
+   * form says part of the recording could not be kept.
    */
   noteFailedWrites: (failedCount: number) => void;
 }

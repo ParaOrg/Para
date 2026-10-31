@@ -181,7 +181,6 @@ flowchart TD
   features_contribute_screens --> shared_hooks
   features_contribute_screens --> shared_ui
   features_contribute_screens --> shared_utils
-  features_contribute_storage --> features_contribute_recorder
   features_contribute_storage --> features_routes_model
   features_contribute_tutorial --> design_system_primitives
   features_contribute_uploads --> features_contribute_api
@@ -289,7 +288,7 @@ flowchart TD
 | `features/contribute/native-bridge` | `features/contribute/app-update`, `features/contribute/native` |
 | `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `shared/utils` |
 | `features/contribute/screens` | `design-system/primitives`, `features/contribute/app-update`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/map`, `features/contribute/native`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/cards`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/contribute/storage` | `features/contribute/recorder`, `features/routes/model` |
+| `features/contribute/storage` | `features/routes/model` |
 | `features/contribute/tutorial` | `design-system/primitives` |
 | `features/contribute/uploads` | `features/contribute/api`, `features/contribute/consent`, `features/contribute/recorder`, `features/contribute/storage`, `shared/ui` |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
