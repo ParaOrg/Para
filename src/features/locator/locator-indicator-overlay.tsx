@@ -126,10 +126,13 @@ export function LocatorIndicatorOverlay({
           }
         >
           <div className="relative size-6 overflow-clip rounded-full bg-brand-surface">
-            {/* Its wandering eyes (3878:6071, 3878:6072): every face is theirs (locator.css). */}
-            <div aria-hidden className="locator-eyes absolute inset-0">
-              <span className="locator-eye absolute top-[6.33px] left-[10.48px] h-1.5 w-1 rounded-full bg-surface" />
-              <span className="locator-eye absolute top-[6.33px] left-[17.43px] h-1.5 w-1 rounded-full bg-surface" />
+            {/* Its eyes (3878:6071, 3878:6072): where they look moves the outer group (data-look),
+                and every face places them within it (locator.css). */}
+            <div aria-hidden className="locator-look absolute inset-0">
+              <div className="locator-eyes absolute inset-0">
+                <span className="locator-eye absolute top-[6.33px] left-[10.48px] h-1.5 w-1 rounded-full bg-surface" />
+                <span className="locator-eye absolute top-[6.33px] left-[17.43px] h-1.5 w-1 rounded-full bg-surface" />
+              </div>
             </div>
           </div>
         </Dot>

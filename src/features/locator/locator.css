@@ -204,17 +204,26 @@
 
 /*
  * Where its eyes look (eyesDeg in dot-gaze.ts): at what was just picked, or
- * else the way the phone faces. The eyes stop wandering and turn that way,
- * `--gaze-x` and `--gaze-y` from the middle, following the heading over the
- * eyes' own quarter-second turn. The face's eyes stay as they are, but come
- * to the middle first: a face that holds them off it (curious, up; sleepy,
- * down) would carry them past the dot's edge. One selector is enough: it
- * outranks every face's `.locator-eyes` rule above, as specific and later.
+ * else the way the phone faces. The look moves `.locator-look`, the group
+ * around the eyes, `--gaze-x` and `--gaze-y` from where they are drawn, over
+ * a quarter second as the heading changes; inside it, the face keeps its own
+ * place for the eyes (curious up, sleepy and happy down), their shape, and
+ * their blinks and dozes. Looking that way is in place of looking about, so
+ * the glance and the faces' small look-about stop; the glance and the wink,
+ * whose eyes are drawn 4 px right, are brought to the middle as the other
+ * faces' eyes are.
  */
+.locator-look {
+  transition: translate 0.25s ease-out;
+}
+.locator-dot[data-look] .locator-look {
+  translate: var(--gaze-x) var(--gaze-y);
+}
 .locator-dot[data-look] .locator-eyes {
   animation: none;
+}
+.locator-dot[data-look]:is([data-face='glance'], [data-face='wink']) .locator-eyes {
   transform: translate(-4px, 0);
-  translate: var(--gaze-x) var(--gaze-y);
 }
 
 /*
@@ -367,6 +376,7 @@
   .locator-dot[data-face] .locator-eye:nth-child(n) {
     animation: none;
   }
+  .locator-look,
   .locator-eyes,
   .locator-eye {
     transition: none;

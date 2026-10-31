@@ -221,3 +221,27 @@ export const OnAMapAtABearing = onMapAt(45, 90);
 
 /** The compass view: the map turns with the phone, so the beam and the eyes look up the screen. */
 export const InTheCompassView = onMapAt(200, 200);
+
+/** Dozing on a compass phone: the eyes keep their lowered, sleepy place, moved the way the phone faces. */
+export const SleepyLooksTheWayItFaces: Story = {
+  args: { haloPx: 0, beamDeg: 90, mood: 'neutral', face: 'sleepy' },
+};
+
+/** Every face on a compass phone facing east: each keeps its own eyes, moved east. */
+export const AllFacesLookingEast: Story = {
+  args: { haloPx: 0, beamDeg: 90 },
+  render: () => (
+    <div className="grid grid-cols-4 gap-x-10 gap-y-12 p-10">
+      {ALL.map(([m, f]) => (
+        <div key={f} className="flex flex-col items-center gap-8">
+          <div className="grid size-24 place-items-center" style={{ scale: 3 }}>
+            <LocatorIndicatorOverlay haloPx={0} beamDeg={90} mood={m} face={f} />
+          </div>
+          <span className="text-xs text-content-tertiary">
+            {m} · {f}
+          </span>
+        </div>
+      ))}
+    </div>
+  ),
+};
