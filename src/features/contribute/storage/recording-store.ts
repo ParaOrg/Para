@@ -1,29 +1,61 @@
 import {
   fixRowSchema,
   storedRecordingSchema,
+  thumbnailRowSchema,
   type FixRow,
   type Recording,
 } from './recording-schema';
 
 const DB_NAME = 'para-contribute';
+
 const RECORDINGS = 'recordings';
 const FIXES = 'fixes';
+/** A small picture of each saved recording's route, for History's cards; apart from the recording. */
+const THUMBNAILS = 'thumbnails';
+
+/**
+ * The database's version. Versions only ever go forward: a change undone in the code is undone by
+ * a newer version (3), never by going back to 1, which every phone that opened 2 would refuse.
+ */
+const DB_VERSION = 2;
 
 let opened: Promise<IDBDatabase> | null = null;
 
-/** The one connection to the phone's database, opened on first use. */
-function openDatabase(): Promise<IDBDatabase> {
-  opened ??= new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+/**
+ * Opens the database at `version`, or, with none, at the version the phone already has. Each
+ * store is made if it is missing, whatever version the phone had: 2 added the thumbnails, and a
+ * phone on 1 keeps its recordings and fixes as they are.
+ */
+function openRequest(version?: number): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request =
+      version === undefined ? indexedDB.open(DB_NAME) : indexedDB.open(DB_NAME, version);
     request.onupgradeneeded = () => {
       const db = request.result;
-      db.createObjectStore(RECORDINGS, { keyPath: 'id' });
-      db.createObjectStore(FIXES, { keyPath: ['recordingId', 'seq'] });
+      const has = (store: string) => db.objectStoreNames.contains(store);
+      if (!has(RECORDINGS)) db.createObjectStore(RECORDINGS, { keyPath: 'id' });
+      if (!has(FIXES)) db.createObjectStore(FIXES, { keyPath: ['recordingId', 'seq'] });
+      if (!has(THUMBNAILS)) db.createObjectStore(THUMBNAILS, { keyPath: 'recordingId' });
     };
-    request.onsuccess = () => {
-      const db = request.result;
-      // A browser may close the connection under a running page (low storage, a
-      // cleared site); the next write then opens a fresh one.
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/**
+ * The one connection to the phone's database, opened on first use. A page older than the phone's
+ * database (a tab left open across an update, or an update rolled back) opens it at the phone's
+ * own version rather than failing: it then reads and writes the stores it knows.
+ */
+function openDatabase(): Promise<IDBDatabase> {
+  opened ??= openRequest(DB_VERSION)
+    .catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === 'VersionError') return openRequest();
+      throw error;
+    })
+    .then((db) => {
+      // A browser may close the connection under a running page (low storage, a cleared site);
+      // the next write then opens a fresh one.
       db.onclose = () => {
         opened = null;
       };
@@ -31,13 +63,12 @@ function openDatabase(): Promise<IDBDatabase> {
         db.close();
         opened = null;
       };
-      resolve(db);
-    };
-    request.onerror = () => {
+      return db;
+    })
+    .catch((error: unknown) => {
       opened = null;
-      reject(request.error);
-    };
-  });
+      throw error;
+    });
   return opened;
 }
 
@@ -125,10 +156,38 @@ export async function loadFixes(recordingId: string): Promise<FixRow[]> {
   return fixes;
 }
 
-/** Deletes a recording and all its fixes together. */
+/**
+ * Keeps a recording's thumbnail, a data URL of a few kB, only while the recording itself is still
+ * kept: a picture finished after the recording was thrown away (Stop without saving during the
+ * capture) is dropped, in the same transaction, so nothing is left that no delete would reach.
+ */
+export function putThumbnail(recordingId: string, dataUrl: string): Promise<void> {
+  return inTransaction([RECORDINGS, THUMBNAILS], 'readwrite', (tx) => {
+    const kept = tx.objectStore(RECORDINGS).getKey(recordingId);
+    kept.onsuccess = () => {
+      if (kept.result === undefined) return;
+      tx.objectStore(THUMBNAILS).put({ recordingId, dataUrl });
+    };
+  });
+}
+
+/** Every thumbnail kept, by recording. A row that does not read is left out. */
+export async function loadThumbnails(): Promise<Map<string, string>> {
+  const db = await openDatabase();
+  const rows = await rowsOf(db.transaction(THUMBNAILS).objectStore(THUMBNAILS).getAll());
+  const thumbnails = new Map<string, string>();
+  for (const row of rows) {
+    const read = thumbnailRowSchema.safeParse(row);
+    if (read.success) thumbnails.set(read.data.recordingId, read.data.dataUrl);
+  }
+  return thumbnails;
+}
+
+/** Deletes a recording, all its fixes and its thumbnail together. */
 export function deleteRecording(recordingId: string): Promise<void> {
-  return inTransaction([RECORDINGS, FIXES], 'readwrite', (tx) => {
+  return inTransaction([RECORDINGS, FIXES, THUMBNAILS], 'readwrite', (tx) => {
     tx.objectStore(RECORDINGS).delete(recordingId);
+    tx.objectStore(THUMBNAILS).delete(recordingId);
     tx.objectStore(FIXES).delete(
       IDBKeyRange.bound([recordingId, 0], [recordingId, Number.MAX_SAFE_INTEGER]),
     );

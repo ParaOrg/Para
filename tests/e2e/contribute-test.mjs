@@ -1105,6 +1105,201 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ------------------- History's picture: the whole trail, taken as the form opens, kept and deleted with it
+{
+  const { page, errors } = await phone();
+  const thumbnails = () =>
+    page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const get = open.result.transaction('thumbnails').objectStore('thumbnails').getAll();
+            get.onsuccess = () =>
+              resolve(get.result.map((row) => ({ id: row.recordingId, url: row.dataUrl })));
+          };
+        }),
+    );
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 600);
+  await finishRecording(page);
+  await page.getByLabel('Description').waitFor();
+  await page
+    .waitForFunction(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const count = open.result.transaction('thumbnails').objectStore('thumbnails').count();
+            count.onsuccess = () => resolve(count.result > 0);
+          };
+        }),
+      null,
+      { timeout: 15000 },
+    )
+    .catch(() => {});
+  const [picture] = await thumbnails();
+  const size = picture ? Buffer.from(picture.url.split(',')[1], 'base64').length : 0;
+  check(
+    'as the form opens, a picture of the trail is kept for History: small, a WebP or JPEG',
+    !!picture && /^data:image\/(webp|jpeg);base64,/.test(picture.url) && size > 0 && size < 40_000,
+    `${picture?.url.slice(0, 22)} ${size} bytes`,
+  );
+  // The locator keeps the map on the rider under the form; the picture's framing is put back.
+  const centre = await page.evaluate(() => window.__map.getCenter().toArray());
+  check(
+    '  the map under the form is back on the rider, not on the picture’s frame',
+    Math.abs(centre[0] - eastOf(600)[0]) < 1e-5 && Math.abs(centre[1] - START[1]) < 0.01,
+    JSON.stringify(centre),
+  );
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  await page.getByRole('button', { name: 'Record again' }).click();
+  await openHistory(page);
+  await openCardMenus(page);
+  await page.getByRole('button', { name: /^Delete from phone, / }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.getByText('No recordings yet.').waitFor();
+  check('  deleting the recording deletes its picture', (await thumbnails()).length === 0);
+  check('  no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// --------- the form closed while its picture is on its way: no picture, and the camera stays on the rider
+{
+  const { page, errors } = await phone();
+  const thumbnailCount = () =>
+    page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const count = open.result.transaction('thumbnails').objectStore('thumbnails').count();
+            count.onsuccess = () => resolve(count.result);
+          };
+        }),
+    );
+  // The capture's code held back 3 s: the form closes before it can start.
+  let releaseCapture = () => {};
+  const isCaptureHeld = new Promise((resolve) => {
+    page.route('**/capture-trail-picture*', async (route) => {
+      resolve(true);
+      await new Promise((release) => (releaseCapture = release));
+      await route.continue();
+    });
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  await finishRecording(page);
+  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await isCaptureHeld;
+  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
+  releaseCapture();
+  // The rider rides on; the locator follows. A capture that ran now would frame the whole trail,
+  // then put the camera back where the rider was when the form opened.
+  await ride(page, 310, 600);
+  await page.waitForTimeout(3000);
+  const off = await centreOff(page, 600);
+  check(
+    'Keep recording while the picture is on its way: none is taken, and the camera stays on the moving rider',
+    off < 30 && (await thumbnailCount()) === 0,
+    `${Math.round(off)} m off`,
+  );
+  check('  no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+{
+  // The same, but the recording thrown away before the held capture's code arrives.
+  const { page, errors } = await phone();
+  let releaseCapture = () => {};
+  const isCaptureHeld = new Promise((resolve) => {
+    page.route('**/capture-trail-picture*', async (route) => {
+      resolve(true);
+      await new Promise((release) => (releaseCapture = release));
+      await route.continue();
+    });
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  await finishRecording(page);
+  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await isCaptureHeld;
+  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  releaseCapture();
+  await page.waitForTimeout(3000);
+  const left = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const count = open.result.transaction('thumbnails').objectStore('thumbnails').count();
+          count.onsuccess = () => resolve(count.result);
+        };
+      }),
+  );
+  check(
+    '  Stop without saving before it arrives leaves no picture behind',
+    left === 0,
+    String(left),
+  );
+  check('  no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------- a page older than the phone's database (an update rolled back) still records and saves
+{
+  const { page, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  // A newer page took the database to 3; this page's code asks for 2.
+  const version = await page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open('para-contribute', 3);
+        open.onsuccess = () => {
+          const { version: opened } = open.result;
+          open.result.close();
+          resolve(opened);
+        };
+        open.onerror = () => reject(open.error);
+      }),
+  );
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 200);
+  await finishRecording(page);
+  await page.getByRole('button', { name: 'Skip' }).click();
+  const isSaved = await page
+    .getByRole('heading', { name: 'Successfully recorded' })
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  const kept = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const count = open.result.transaction('recordings').objectStore('recordings').count();
+          count.onsuccess = () => resolve([open.result.version, count.result]);
+        };
+      }),
+  );
+  check(
+    "a page whose code is older than the phone's database opens it at the phone's version, and records and saves",
+    version === 3 && isSaved && kept[0] === 3 && kept[1] === 1,
+    JSON.stringify({ version, isSaved, kept }),
+  );
+  check('  no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------------------- Keep recording on the form
 {
   const { page, errors } = await phone();

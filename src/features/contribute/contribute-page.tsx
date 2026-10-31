@@ -26,6 +26,7 @@ import { useRecording } from './recorder/use-recording';
 import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
+import { putThumbnail } from './storage/recording-store';
 import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
@@ -95,6 +96,13 @@ const PermissionsOnboarding =
         })),
       )
     : null;
+
+/** Keeps the picture of a recording's trail for History's card; without it the card draws the trail. */
+function keepTrailPicture(recordingId: string, picture: string): void {
+  putThumbnail(recordingId, picture).catch((error: unknown) => {
+    console.warn("The trail's picture could not be kept; History draws the trail.", error);
+  });
+}
 
 interface ContributePageProps {
   /** The locator on the map: the shell's, since this feature may not import the locator's. */
@@ -249,6 +257,8 @@ export function ContributePage({ locator }: ContributePageProps) {
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
           areCreditsShown={!hasCreditsButton}
+          pictureFor={phase === 'form' ? (recording.current?.id ?? null) : null}
+          onPicture={keepTrailPicture}
           mark={
             isRecordingShown ? (
               <Suspense fallback={null}>
