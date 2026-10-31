@@ -12,6 +12,7 @@ import { UploadError } from '../../src/features/contribute/api/upload-problem.ts
 import { FAILED, problemOfError } from '../../src/features/contribute/uploads/upload-failures.ts';
 import {
   isGoneFromPara,
+  isNotSent,
   isSentOnItsOwn,
   isWaitingToGo,
   storedUploadStatus,
@@ -58,6 +59,15 @@ test('waiting, checking, uploading and failed still have to go; the rest do not'
   }
   for (const state of ['uploaded', 'removing', 'removed', 'held', 'unavailable']) {
     assert.equal(isWaitingToGo({ state }), false, state);
+  }
+});
+
+test('not sent: those still to go, and those held back as made before the current consent', () => {
+  for (const state of ['waiting', 'checking', 'uploading', 'failed', 'held']) {
+    assert.equal(isNotSent({ state }), true, state);
+  }
+  for (const state of ['uploaded', 'removing', 'removed', 'unavailable']) {
+    assert.equal(isNotSent({ state }), false, state);
   }
 });
 

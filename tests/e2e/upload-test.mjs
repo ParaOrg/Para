@@ -650,7 +650,7 @@ const groupOf = (page, name) =>
   );
 }
 
-// ------------- earlier recordings asked about: Account and Sign out still there
+// ------------- earlier recordings asked about: Account and Logout still there
 {
   const { page, fake } = await phone();
   await seed(page, [
@@ -662,13 +662,17 @@ const groupOf = (page, name) =>
     .getByRole('navigation', { name: 'Screens' })
     .getByRole('button', { name: 'Account' })
     .click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await page.getByRole('button', { name: 'Logout' }).click();
+  await page
+    .getByRole('alertdialog', { name: 'Log out?' })
+    .getByRole('button', { name: 'Log out' })
+    .click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
   check(
-    'with the earlier-recordings question open, the Account tab reaches Profile and Sign out works',
+    'with the earlier-recordings question open, the Account tab reaches Account and Logout works',
     fake.saveRequests === 0,
     `${fake.saveRequests} sends`,
   );

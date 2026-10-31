@@ -1,36 +1,35 @@
 import { messageOf } from './account-message';
-import { ProfileScreen } from './profile-screen';
+import { AccountSettingsScreen } from './account-settings-screen';
 import { useAccountQuery } from '../api/use-account-query';
 import { useProfileQuery } from '../api/use-profile-query';
-import { useSignOutMutation } from '../api/use-sign-out-mutation';
+import { useSetNewPasswordMutation } from '../api/use-set-new-password-mutation';
 import { useUpdateProfileMutation } from '../api/use-update-profile-mutation';
 
-interface ProfileViewProps {
+interface AccountSettingsViewProps {
   onBack: () => void;
-  /** Opens History, inside Account. */
-  onOpenHistory: () => void;
 }
 
-/** Profile with its data: the stored name and number, saving them, and signing out. */
-export function ProfileView({ onBack, onOpenHistory }: ProfileViewProps) {
+/** Account settings with its data: the stored name and number, saving them, and a new password. */
+export function AccountSettingsView({ onBack }: AccountSettingsViewProps) {
   const account = useAccountQuery();
   const profile = useProfileQuery();
   const update = useUpdateProfileMutation();
-  const signOut = useSignOutMutation();
+  const password = useSetNewPasswordMutation();
 
   return (
-    <ProfileScreen
+    <AccountSettingsScreen
       email={account.data?.email ?? ''}
       profile={profile.data ?? null}
       loadError={profile.isError ? messageOf(profile.error) : null}
       isSaving={update.isPending}
-      error={messageOf(update.error ?? signOut.error)}
-      isSigningOut={signOut.isPending}
+      saveError={messageOf(update.error)}
+      isChangingPassword={password.isPending}
+      passwordError={messageOf(password.error)}
+      passwordChangedAt={password.isSuccess ? password.submittedAt : null}
       onRetry={() => void profile.refetch()}
       onSave={(fields) => update.mutate(fields)}
-      onSignOut={() => signOut.mutate()}
+      onChangePassword={(fields) => password.mutate(fields)}
       onBack={onBack}
-      onOpenHistory={onOpenHistory}
     />
   );
 }

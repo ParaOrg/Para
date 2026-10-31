@@ -6,7 +6,7 @@ import { BottomToolbar } from './bottom-toolbar';
 const meta = {
   title: 'Features/Contribute/BottomToolbar',
   component: BottomToolbar,
-  args: { onOpenAccount: fn() },
+  args: { onOpenRecord: fn(), onOpenAccount: fn() },
   decorators: [
     (Story) => (
       <div className="w-[393px] bg-surface-quaternary p-4">
@@ -21,3 +21,6 @@ type Story = StoryObj<typeof meta>;
 
 /** Record, the screen showing, and Account (4486:25116). */
 export const Default: Story = {};
+
+/** On Account: Account marked, Record the way back to Start (4496:10482). */
+export const OnAccount: Story = { args: { current: 'account' } };

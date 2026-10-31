@@ -1,24 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { ProfileScreen } from './profile-screen';
+import { AccountSettingsScreen } from './account-settings-screen';
 
 const meta = {
-  title: 'Features/Contribute/ProfileScreen',
-  component: ProfileScreen,
+  title: 'Features/Contribute/AccountSettingsScreen',
+  component: AccountSettingsScreen,
   parameters: { layout: 'fullscreen' },
   args: {
     email: 'juan@example.com',
     profile: { name: 'Juan dela Cruz', phone: '+639171234567' },
     loadError: null,
     isSaving: false,
-    error: null,
-    isSigningOut: false,
+    saveError: null,
+    isChangingPassword: false,
+    passwordError: null,
+    passwordChangedAt: null,
     onRetry: fn(),
     onSave: fn(),
-    onSignOut: fn(),
+    onChangePassword: fn(),
     onBack: fn(),
-    onOpenHistory: fn(),
   },
   decorators: [
     (Story) => (
@@ -27,7 +28,7 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof ProfileScreen>;
+} satisfies Meta<typeof AccountSettingsScreen>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -36,7 +37,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { level: 1, name: 'Profile' })).toHaveFocus();
+    await expect(canvas.getByRole('heading', { level: 1, name: 'Account settings' })).toHaveFocus();
     await expect(canvas.getByRole('button', { name: 'Save' })).toBeDisabled();
     await userEvent.type(canvas.getByLabelText('Name'), ' Jr.');
     await expect(canvas.getByRole('button', { name: 'Save' })).toBeEnabled();
@@ -52,10 +53,17 @@ export const LoadFailed: Story = {
 export const Saving: Story = { args: { isSaving: true } };
 
 export const NotSaved: Story = {
-  args: { error: "No signal — try again when you're online" },
+  args: { saveError: "No signal — try again when you're online" },
 };
 
-export const SigningOut: Story = { args: { isSigningOut: true } };
+/** A new password, the fields checked on the phone before it is sent. */
+export const ChangingPassword: Story = { args: { isChangingPassword: true } };
+
+export const PasswordChanged: Story = { args: { passwordChangedAt: 1 } };
+
+export const PasswordNotChanged: Story = {
+  args: { passwordError: "That's already your password. Choose a new one." },
+};
 
 export const LongName: Story = {
   args: {

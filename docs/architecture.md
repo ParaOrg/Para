@@ -107,7 +107,10 @@ flowchart TD
   features_contribute_account --> design_system_primitives
   features_contribute_account --> features_contribute_api
   features_contribute_account --> features_contribute_common
+  features_contribute_account --> features_contribute_screens
+  features_contribute_account --> shared_hooks
   features_contribute_account --> shared_ui
+  features_contribute_account --> shared_utils
   features_contribute_api --> features_contribute_recorder
   features_contribute_api --> features_contribute_storage
   features_contribute_api --> features_routes_model
@@ -263,7 +266,7 @@ flowchart TD
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `features/contribute/uploads` |
-| `features/contribute/account` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `shared/ui` |
+| `features/contribute/account` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/screens`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/api` | `features/contribute/recorder`, `features/contribute/storage`, `features/routes/model`, `shared/types`, `shared/utils` |
 | `features/contribute/app-update` | `design-system/primitives`, `features/contribute/api`, `features/contribute/native-bridge` |
 | `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/ui` |
