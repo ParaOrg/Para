@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
-import { PasswordField } from '@/design-system/primitives/password-field';
 import { PhoneField } from '@/design-system/primitives/phone-field';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import { checkSignUp, type SignUpFields } from './account-fields';
 import { AccountPage } from './account-page';
+import { NewPasswordField } from './new-password-field';
 import type { Captcha } from './use-captcha';
 
 interface CreateAccountScreenProps {
@@ -83,9 +83,8 @@ export function CreateAccountScreen({
         error={fieldErrors.phone}
         onChange={(event) => handleChange('phone')(event.target.value)}
       />
-      <PasswordField
+      <NewPasswordField
         label="Password"
-        autoComplete="new-password"
         value={fields.password}
         error={fieldErrors.password}
         onChange={(event) => handleChange('password')(event.target.value)}

@@ -2,7 +2,7 @@
  * Why signing up or signing in did not go through.
  * - `wrong-credentials`: the email and password do not match an account.
  * - `email-taken`: that email already has an account.
- * - `weak-password`: the project turned the password away as too short.
+ * - `weak-password`: the project turned the password away: too short, or without a letter and a digit.
  * - `offline`: no answer; the same request can be sent again.
  * - `check-failed`: the bot check was not passed.
  * - `profile-not-saved`: the account was made but its name and number were not stored.
@@ -38,7 +38,7 @@ export class AccountError extends Error {
 export const ACCOUNT_MESSAGES: Record<AccountProblem, string> = {
   'wrong-credentials': 'Wrong email or password',
   'email-taken': 'That email already has an account',
-  'weak-password': 'Use a longer password, at least 8 characters',
+  'weak-password': 'Use at least 8 characters, with letters and numbers',
   offline: "No signal — try again when you're online",
   'check-failed': 'The check that you are a person did not pass. Try again.',
   'profile-not-saved': "Your account is made, but your name and number didn't save. Try again.",
