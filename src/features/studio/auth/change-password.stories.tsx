@@ -5,7 +5,7 @@ import { ChangePassword } from './change-password';
 
 /**
  * Fills the three fields and presses Save password. Callers pass passwords of
- * 12 characters or more, the form's own minimum, so the browser lets it submit.
+ * 8 characters or more, the form's own minimum, so the browser lets it submit.
  */
 async function submitPasswords(
   canvas: ReturnType<typeof within>,
@@ -62,6 +62,18 @@ export const NewPasswordsDiffer: Story = {
     const canvas = within(canvasElement);
     await submitPasswords(canvas, 'Old-password-1', 'New-password-22', 'New-password-23');
     await expect(canvas.getByText('The two new passwords do not match.')).toBeVisible();
+  },
+};
+
+/** The rule is said under the new password, and one without a number is refused before anything is sent. */
+export const RuleBroken: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('At least 8 characters, with letters and numbers')).toBeVisible();
+    await submitPasswords(canvas, 'Old-password-1', 'only-letters', 'only-letters');
+    await expect(
+      canvas.getByText('Use at least 8 characters, with letters and numbers'),
+    ).toBeVisible();
   },
 };
 
