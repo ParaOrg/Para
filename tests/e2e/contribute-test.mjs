@@ -809,8 +809,22 @@ const buttons = (page) =>
     (f) => f.geometry.type === 'LineString',
   )?.geometry.coordinates.length;
   await ride(page, 61, 90);
-  const fixesAfter = (await mapSource(page))?.features.find((f) => f.geometry.type === 'LineString')
-    ?.geometry.coordinates.length;
+  // The trail is redrawn after React has the fixes, not as each one is emitted: wait for it.
+  const fixesAfter = await page
+    .waitForFunction(
+      (before) => {
+        const length = window.__map
+          .getSource('recording-trail')
+          ?.serialize()
+          .data?.features.find((f) => f.geometry.type === 'LineString')?.geometry
+          .coordinates.length;
+        return length > before ? length : false;
+      },
+      fixesBefore,
+      { timeout: 5000 },
+    )
+    .then((handle) => handle.jsonValue())
+    .catch(() => fixesBefore);
   check(
     '  the recording goes on while folded: the trail grows, and the flag still works',
     fixesAfter > fixesBefore && (await flagButton(page).isEnabled()),
