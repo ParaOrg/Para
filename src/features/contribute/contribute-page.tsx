@@ -1,4 +1,12 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from 'react';
 import { flushSync } from 'react-dom';
 
 import { useAccountGate } from './account/use-account-gate';
@@ -14,10 +22,11 @@ import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
-import { FlagStopButton } from './screens/flag-stop-button';
+import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
+import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { UploadCheck } from './uploads/upload-check';
 import { isNotSent } from './uploads/upload-rules';
 import { uploadStatusText } from './uploads/upload-status';
@@ -41,11 +50,31 @@ const AccountSettingsView = lazy(() =>
   })),
 );
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
-// fetches both as it opens (below), so Start never waits on the network, nor fails without one.
+// fetches them as it opens (below), so Start never waits on the network, nor fails without one.
 const loadRecordingScreen = () => import('./screens/recording-screen');
 const loadUnfinishedScreen = () => import('./screens/unfinished-screen');
+const loadStopRecordingScreen = () => import('./screens/stop-recording-screen');
+const loadFlagStopButton = () => import('./screens/flag-stop-button');
 const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
+);
+const StopRecordingScreen = lazy(() =>
+  loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),
+);
+/** Flag a stop's place when its code could not be fetched: nothing, and the ride goes on. */
+function NoFlagStopButton(): null {
+  return null;
+}
+// Not fetched (offline before the worker kept it): the ride records on without the button, rather
+// than the failed load taking the page down with it.
+const FlagStopButton = lazy<ComponentType<FlagStopButtonProps>>(() =>
+  loadFlagStopButton().then(
+    (module) => ({ default: module.FlagStopButton }),
+    (error: unknown) => {
+      console.warn('Flag a stop could not be fetched; the ride records without it.', error);
+      return { default: NoFlagStopButton };
+    },
+  ),
 );
 const UnfinishedScreen = lazy(() =>
   loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),
@@ -124,12 +153,36 @@ export function ContributePage({ locator }: ContributePageProps) {
   // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
   // Their own ⓘ opens them; every other screen over the map keeps MapLibre's corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
-  const hasCreditsButton = isStartShown || (accountGate === 'ready' && isRecordingShown);
+  // The recording screen's ⓘ is there once the screen is, with the figures it waits for.
+  const hasCreditsButton =
+    isStartShown || (accountGate === 'ready' && isRecordingShown && figures !== null);
   const isCreditsShown = hasCreditsButton && isCreditsOpen;
   // The recording card folded away, by the recording it was folded on: each recording opens with
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
   const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
   const isCardFolded = foldedRecordingId !== null && foldedRecordingId === recording.current?.id;
+  // ✕ pauses the recording and asks over the whole screen: what it was doing then, so Keep
+  // recording puts it back. Focus returns to ✕ once the recording screen is live again. The
+  // question shows once the pause lands, and goes as the page leaves the recording screen
+  // (stop-question.ts): dropped during render, as React does for state that follows other state.
+  const [stopAskedWhile, setStopAskedWhile] = useState<StopAskedWhile>(null);
+  if (stopQuestionIn(phase, stopAskedWhile) !== stopAskedWhile) setStopAskedWhile(null);
+  const isStopShown = isStopQuestionShown(phase, stopAskedWhile);
+  const discardButtonRef = useRef<HTMLButtonElement>(null);
+  const askToStop = () => {
+    setStopAskedWhile(phase === 'paused' ? 'paused' : 'recording');
+    if (phase === 'recording') recording.stop();
+  };
+  const keepRecording = () => {
+    const wasRecording = stopAskedWhile === 'recording';
+    flushSync(() => setStopAskedWhile(null));
+    if (wasRecording) recording.resume();
+    discardButtonRef.current?.focus();
+  };
+  const stopWithoutSaving = () => {
+    setStopAskedWhile(null);
+    recording.cancel();
+  };
   // Focus goes back to the ⓘ once Start is live again: the sheet cannot hand it back itself,
   // as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
@@ -152,7 +205,12 @@ export function ContributePage({ locator }: ContributePageProps) {
   // head start: the lazy screen asks again when it is shown.
   useEffect(() => {
     if (phase !== 'ready') return;
-    Promise.all([loadRecordingScreen(), loadUnfinishedScreen()]).catch((error: unknown) => {
+    Promise.all([
+      loadRecordingScreen(),
+      loadUnfinishedScreen(),
+      loadStopRecordingScreen(),
+      loadFlagStopButton(),
+    ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);
     });
   }, [phase]);
@@ -177,9 +235,8 @@ export function ContributePage({ locator }: ContributePageProps) {
   };
 
   return (
-    // Clipped, not hidden: an overflow:hidden box can still be scrolled from code (focus, scrollIntoView),
-    // and the right-hand column's tooltips run off the screen's edge, so one would slide the page.
-    <main className="relative h-dvh overflow-clip bg-surface-secondary font-sn-pro">
+    // The page never scrolls, not even from code (contribute.css, .contribute-page).
+    <main className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro">
       {/* inert while History, Profile, the permissions screen or the credits cover it: no map
           control can be tabbed to behind the screen. */}
       <div
@@ -188,7 +245,8 @@ export function ContributePage({ locator }: ContributePageProps) {
           isProfileShown ||
           isSettingsShown ||
           isPermissionsShown ||
-          isCreditsShown
+          isCreditsShown ||
+          isStopShown
         }
         className="contents"
       >
@@ -199,11 +257,13 @@ export function ContributePage({ locator }: ContributePageProps) {
           areCreditsShown={!hasCreditsButton}
           mark={
             isRecordingShown ? (
-              <FlagStopButton
-                isRecording={phase === 'recording'}
-                canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
-                onFlag={recording.markPlace}
-              />
+              <Suspense fallback={null}>
+                <FlagStopButton
+                  isRecording={phase === 'recording'}
+                  canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
+                  onFlag={recording.markPlace}
+                />
+              </Suspense>
             ) : null
           }
         />
@@ -299,7 +359,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {isRecordingShown && figures && (
             <Suspense fallback={null}>
-              <div inert={isCreditsShown} className="contents">
+              <div inert={isCreditsShown || isStopShown} className="contents">
                 <RecordingScreen
                   figures={figures}
                   mode={recording.mode}
@@ -310,7 +370,8 @@ export function ContributePage({ locator }: ContributePageProps) {
                   onResume={recording.resume}
                   onModeSwitch={recording.switchMode}
                   onFinish={recording.openSave}
-                  onDiscard={recording.cancel}
+                  onAskToStop={askToStop}
+                  discardButtonRef={discardButtonRef}
                   isCardFolded={isCardFolded}
                   onCardFoldedChange={(isFolded) =>
                     setFoldedRecordingId(isFolded ? (recording.current?.id ?? null) : null)
@@ -319,6 +380,15 @@ export function ContributePage({ locator }: ContributePageProps) {
                   creditsButtonRef={creditsButtonRef}
                 />
               </div>
+            </Suspense>
+          )}
+          {isStopShown && figures && (
+            <Suspense fallback={null}>
+              <StopRecordingScreen
+                figures={figures}
+                onKeep={keepRecording}
+                onStop={stopWithoutSaving}
+              />
             </Suspense>
           )}
           {phase === 'form' && (

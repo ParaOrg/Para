@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
-interface FlagStopButtonProps {
+export interface FlagStopButtonProps {
   /** False while paused: the button shows, disabled, as the Paused frame draws it. */
   isRecording: boolean;
   /** False once the ride holds the most stops it can: the button looks disabled, as paused. */
