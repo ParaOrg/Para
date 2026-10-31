@@ -4,7 +4,6 @@ import { useAccountGate } from './account/use-account-gate';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
-import { useConsent } from './consent/use-consent';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
@@ -64,12 +63,13 @@ interface ContributePageProps {
 export function ContributePage({ locator }: ContributePageProps) {
   const recording = useRecording();
   const accountId = useAccountQuery().data?.id ?? null;
-  const { hasConsent, giveConsent } = useConsent(accountId);
-  const earlier = useEarlierQuestion(recording.saved, hasConsent, accountId);
   const accountGate = useAccountGate();
-  // Nothing is sent until an account is signed in: recordings made before wait on the phone.
+  // Having an account is the agreement (CONSENT_VERSION 4): nothing is sent until one is signed
+  // in, and recordings made before wait on the phone.
+  const hasConsent = accountGate === 'ready';
+  const earlier = useEarlierQuestion(recording.saved, hasConsent, accountId);
   const uploads = useUploads(recording.saved, {
-    hasConsent: hasConsent && accountGate === 'ready',
+    hasConsent,
     earlier: earlier.choice,
   });
   const track = useRecordingTrack(
@@ -93,9 +93,9 @@ export function ContributePage({ locator }: ContributePageProps) {
     profile.isOpen &&
     !isPermissionsShown;
 
-  // A stale #history (a reload mid-recording, or before consent was given) must not open History
-  // later, when Record again or Okay is pressed. Consent is the account's, so it is unknown until
-  // the account has loaded; closing then would shut History on every reload.
+  // A stale #history (a reload mid-recording, or before signing in) must not open History later,
+  // when Record again is pressed or the account signs in. The account is unknown until it has
+  // loaded; closing then would shut History on every reload.
   useEffect(() => {
     if (accountGate === 'loading') return;
     if (history.isOpen && (!hasConsent || (phase !== 'loading' && phase !== 'ready'))) {
@@ -177,20 +177,15 @@ export function ContributePage({ locator }: ContributePageProps) {
               after the permissions screen, once the tutorial screens it opens are designed. */}
           {phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown && (
             <ReadyScreen
-              hasConsent={hasConsent}
-              onConsent={giveConsent}
               earlierQuestion={earlier.question}
               onStart={recording.start}
-              onOpenAccount={hasAccount || hasConsent ? handleOpenAccount : undefined}
+              onOpenAccount={handleOpenAccount}
               returnFocusTo={lastOpened}
             />
           )}
           {isProfileShown && (
             <Suspense fallback={null}>
-              <ProfileView
-                onBack={profile.close}
-                onOpenHistory={hasConsent ? history.open : undefined}
-              />
+              <ProfileView onBack={profile.close} onOpenHistory={history.open} />
             </Suspense>
           )}
           {isHistoryShown && (
