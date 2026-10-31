@@ -11,21 +11,23 @@ import { basemapStyleUrl } from '@/shared/config/basemap-host';
 import { basemapHost } from '@/shared/config/env';
 
 import { daylightStyle } from './daylight';
+import { withLocationLabels } from './location-labels';
 import { monochromeStyle } from './monochrome';
 import { maskedStyle } from './station-mask';
 import { terrainStyle } from './terrain';
 
 /**
- * The basemap designs a commuter can choose between: Monochrome, Colour and
- * Fiord. All of them are OpenFreeMap's styles (Positron, Liberty, Fiord) over
- * the same tiles, sprite and glyphs, so a switch fetches one small style file
+ * The basemap designs a commuter can choose between: Monochrome, Coloured and
+ * Dark (the ids `positron`, `liberty` and `fiord`). All of them are
+ * OpenFreeMap's styles (Positron, Liberty, Fiord) over the same tiles, sprite
+ * and glyphs, so a switch fetches one small style file
  * and nothing a phone has cached is wasted. They are read from the configured
  * basemap host (shared/config/env.ts): Para's own tiles server, which
  * serves the same three styles pointed at its tiles, or OpenFreeMap itself.
  *
  * Monochrome is the default: Positron, as detailed as its tiles allow and
  * still only grays, so the routes and hotspots painted on top carry all the
- * colour (monochrome.ts). Colour is Liberty in Apple Maps' light palette, the
+ * colour (monochrome.ts). Coloured is Liberty in Apple Maps' light palette, the
  * rest of it muted so the routes still carry the strongest colour
  * (daylight.ts). Fiord, dark blue-gray, is for night.
  *
@@ -77,13 +79,13 @@ export const MONOCHROME: Basemap = {
 };
 export const COLOUR: Basemap = {
   id: 'liberty',
-  label: 'Colour',
+  label: 'Coloured',
   url: basemapStyleUrl(basemapHost, 'liberty'),
   dressing: 'daylight',
 };
 const FIORD: Basemap = {
   id: 'fiord',
-  label: 'Fiord',
+  label: 'Dark',
   url: basemapStyleUrl(basemapHost, 'fiord'),
 };
 
@@ -190,19 +192,23 @@ function isStyle(raw: unknown): raw is StyleSpecification {
 
 /**
  * What to build a map with. `Map` takes a style URL or a style object and has
- * no transform hook, so a design with something to add (`dressed`) fetches
- * its style here and is dressed before the map exists — one request, the same one
- * MapLibre would have made, and no plain-gray flash first. If the fetch fails,
- * or brings no style (isStyle), the plain URL goes in instead, and MapLibre's
- * own error path reports what it can.
+ * no transform hook, so a design with something to add (`dressed`, or its
+ * labels hidden: location-labels.ts) fetches its style here and is dressed
+ * before the map exists — one request, the same one MapLibre would have made,
+ * and no plain-gray flash first. If the fetch fails, or brings no style
+ * (isStyle), the plain URL goes in instead, and MapLibre's own error path
+ * reports what it can.
  */
-export async function initialStyle(b: Basemap): Promise<StyleSpecification | string> {
-  if (isPlain(b)) return b.url;
+export async function initialStyle(
+  b: Basemap,
+  areLabelsShown: boolean,
+): Promise<StyleSpecification | string> {
+  if (isPlain(b) && areLabelsShown) return b.url;
   try {
     const r = await fetch(b.url);
     if (!r.ok) return b.url;
     const style: unknown = await r.json();
-    return isStyle(style) ? dressed(b, style) : b.url;
+    return isStyle(style) ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
   } catch {
     return b.url;
   }
@@ -221,13 +227,14 @@ export async function initialStyle(b: Basemap): Promise<StyleSpecification | str
  * the order they had, so casing-under-line and draw-above-saved still hold.
  * The route and hotspot hooks never notice.
  */
-function styleTransform(b: Basemap, map: MapLibreMap) {
+function styleTransform(b: Basemap, map: MapLibreMap, areLabelsShown: boolean) {
   return (
     previous: StyleSpecification | undefined,
     next: StyleSpecification,
   ): StyleSpecification => {
-    // The basemap's stations near ours stay hidden on the new one (station-mask.ts).
-    const styled = maskedStyle(dressed(b, next), map);
+    // The basemap's stations near ours stay hidden on the new one (station-mask.ts), and its
+    // labels as the device chose (location-labels.ts), before ours join it.
+    const styled = withLocationLabels(maskedStyle(dressed(b, next), map), areLabelsShown);
     if (!previous) return styled;
     const ours = Object.fromEntries(
       Object.entries(previous.sources).filter(([, s]) => s.type === 'geojson'),
@@ -253,10 +260,12 @@ function styleTransform(b: Basemap, map: MapLibreMap) {
 }
 
 /**
- * Swap the basemap under everything drawn on it. The new style is not checked
- * against the spec as a whole: setStyle takes the map's `validateStyle: false`
- * (map-view.tsx) as its default, so no option is passed here.
+ * Swap the basemap under everything drawn on it, its labels shown or hidden;
+ * the same design again only shows or hides them, as setStyle's diff changes
+ * no more than that. The new style is not checked against the spec as a
+ * whole: setStyle takes the map's `validateStyle: false` (map-view.tsx) as
+ * its default, so no option is passed here.
  */
-export function applyBasemap(map: MapLibreMap, b: Basemap): void {
-  map.setStyle(b.url, { transformStyle: styleTransform(b, map) });
+export function applyBasemap(map: MapLibreMap, b: Basemap, areLabelsShown: boolean): void {
+  map.setStyle(b.url, { transformStyle: styleTransform(b, map, areLabelsShown) });
 }

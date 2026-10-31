@@ -63,7 +63,7 @@ const namePaint = (colour: string): SymbolLayerSpecification['paint'] => ({
 });
 
 /** Rail and subway stations: `railway` is their only class (counted over Cubao and Quiapo). */
-const IS_RAIL_STOP: ExpressionSpecification = ['==', ['get', 'class'], 'railway'];
+export const IS_RAIL_STOP: ExpressionSpecification = ['==', ['get', 'class'], 'railway'];
 
 /** The basemap's other transit, never drawn: bus stops and terminals, ferry stops, subway entrances. */
 const IS_TRANSIT: ExpressionSpecification = [

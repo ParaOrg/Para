@@ -46,6 +46,7 @@ import {
   finish,
   go,
   hintuan,
+  holdAnswers,
   idle,
   log,
   metresBetween,
@@ -590,6 +591,61 @@ check(
     bucket.size === 0 &&
     (await page.getByTestId('trip-signboards').count()) === 0,
   `${JSON.stringify(outRow()?.signboards)}; ${bucket.size} in the bucket; ${await page.getByTestId('trip-signboards').count()} row(s) on the card`,
+);
+
+// The race the step above met on slower runners, made certain: removing the
+// last two boards reads the directions twice, and the first read, which
+// still lists a board, answers after the second. A late answer must never
+// bring a removed board back to the card or the editor.
+await upload(
+  'third.svg',
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40"><rect width="98" height="40" fill="#333"/></svg>',
+);
+await waitFor(async () => (await items().count()) === 1);
+await upload(
+  'fourth.svg',
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40"><rect width="98" height="40" fill="#444"/></svg>',
+);
+await waitFor(
+  async () =>
+    (await items().count()) === 2 && (await page.getByTestId('trip-signboard').count()) === 2,
+);
+let isListHeld = false;
+const releaseList = holdAnswers((method, table, u) => {
+  const isListRead =
+    method === 'GET' &&
+    table === 'route_variant' &&
+    (u.searchParams.get('select') ?? '').startsWith('id,route_id,direction_name');
+  if (isListHeld || !isListRead) return false;
+  isListHeld = true;
+  return true;
+});
+await page.getByRole('button', { name: 'Remove signboard 1' }).click();
+await waitFor(async () => isListHeld && (await items().count()) === 1);
+await page.getByRole('button', { name: 'Remove signboard 1' }).click();
+await waitFor(
+  async () =>
+    (await items().count()) === 0 && (await page.getByTestId('trip-signboards').count()) === 0,
+);
+// The held read is the only list read still out: wait for its answer to be
+// delivered, then for the page to have taken it in.
+const lateAnswer = page.waitForResponse(
+  (r) =>
+    r.request().method() === 'GET' &&
+    /\/rest\/v1\/route_variant\?select=id,route_id,direction_name/.test(
+      decodeURIComponent(r.url()),
+    ),
+);
+releaseList();
+await lateAnswer;
+// Watched for 5 s after: a board shown again at any moment is the race lost.
+const shownAgain = async () =>
+  (await items().count()) + (await page.getByTestId('trip-signboards').count());
+const isBroughtBack = await waitFor(async () => (await shownAgain()) > 0, 5000);
+check(
+  '  a list read that answers late, after the last is gone, never brings a board back',
+  isListHeld && !isBroughtBack && outRow()?.signboards?.length === 0,
+  `held: ${isListHeld}; ${JSON.stringify(outRow()?.signboards)}; ${await items().count()} in the editor; ${await page.getByTestId('trip-signboards').count()} row(s) on the card`,
 );
 
 // ---- 5c. Export, the route both ways (the owner's ask of 2026-10-13)
