@@ -179,6 +179,17 @@ leave no row behind, and its 9 read-only rows must be `t`. The revert refuses ov
 and over retired totals. On a second database, apply then revert twice leaves the schema as before,
 and re-applying passes the check.
 
+## delete-my-account.sh
+
+`migrations/20261031100000_delete_my_account.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/delete-my-account.sh
+
+It applies every earlier migration, the contributions, contribution_use, contributor_accounts and
+account_stats paste files, then `../apply/20261031100000_delete_my_account_apply.sql` twice (the
+second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
+raise nothing and leave no row behind, and its 5 read-only rows must be `t`. On a second database,
+apply then revert twice leaves the schema as before, and re-applying passes the check.
 ## contribution-fare.sh
 
 `migrations/20261031110000_contribution_fare.sql` on databases of its own, run last by `run.sh` or alone:
