@@ -759,5 +759,46 @@ const groupOf = (page, name) =>
   check('  and it is not asked again', (await SCREENS.earlier(page).count()) === 0);
 }
 
+// ---------------------------------- the new vehicles go up as the database names them
+{
+  const { page, fake, errors } = await phone();
+  for (const [kind, vehicle] of [
+    ['E-Jeep', 'e_jeep'],
+    ['UV Express', 'uv_express'],
+  ]) {
+    const before = fake.rows.size;
+    await page.getByRole('button', { name: 'Start Tracking' }).click();
+    for (let s = 0; s < 20; s += 1) {
+      await page.evaluate(
+        ([t, lat]) => window.__fix(121.05, lat, t),
+        [T0 + 3_600_000 * (before + 1) + s * 1000, 14.7 + (s * 8) / 111_320],
+      );
+    }
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('button', { name: 'Finish', exact: true }).click();
+    await page.getByLabel('Start point name').fill(`On a ${kind}`);
+    await page.getByLabel('What did you ride?').selectOption(kind);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+    const isUploaded = await page
+      .getByText('Uploaded to Para')
+      .waitFor({ timeout: 15000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    const stored = [...fake.rows.values()].find(
+      (row) => row.recording.start_name === `On a ${kind}`,
+    );
+    check(
+      `a ride on ${kind} is chosen in the form and uploads as '${vehicle}'`,
+      isUploaded && stored?.recording.vehicle === vehicle,
+      String(stored?.recording.vehicle),
+    );
+    await page.getByRole('button', { name: 'Record again' }).click();
+  }
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+}
+
 await browser.close();
 tally();

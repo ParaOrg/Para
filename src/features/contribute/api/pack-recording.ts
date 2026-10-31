@@ -5,7 +5,7 @@ import type { ContributionPayload, PointBatch } from './contribution-payload-sch
 import { walkRideSplit } from './walk-ride-split';
 import { UPLOAD_LIMITS } from '../recorder/recording-limits';
 import { marksThatFit } from '../recorder/recording-marks';
-import { RECORDING_VERSION, type Recording } from '../storage/recording-schema';
+import { RECORDING_VERSION, type Recording, type RideKind } from '../storage/recording-schema';
 
 /**
  * The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them.
@@ -25,6 +25,18 @@ export type PackRefusal = 'too-long' | 'line-too-large';
 export type PackResult =
   | { ok: true; payload: ContributionPayload; droppedPoints: number }
   | { ok: false; reason: PackRefusal };
+
+/** The vehicles the database's contribution check takes, by the name the phone keeps. */
+export const VEHICLE_OF = {
+  Jeep: 'jeep',
+  'E-Jeep': 'e_jeep',
+  'UV Express': 'uv_express',
+  Bus: 'bus',
+  Train: 'train',
+  Ferry: 'ferry',
+  Tricycle: 'tricycle',
+  Other: 'other',
+} as const satisfies Record<RideKind, string>;
 
 const iso = (ms: number): string => new Date(ms).toISOString();
 const inBox = (lat: number, lng: number): boolean =>
@@ -188,7 +200,7 @@ export function packRecording(
       started_at: iso(recording.startedAt),
       ended_at: iso(ended),
       sent_at: iso(sentAt),
-      vehicle: recording.rideKind?.toLowerCase() ?? null,
+      vehicle: recording.rideKind === null ? null : VEHICLE_OF[recording.rideKind],
       start_name: recording.startPointName.trim().slice(0, UPLOAD_LIMITS.nameLength),
       end_name: recording.endPointName.trim().slice(0, UPLOAD_LIMITS.nameLength),
       description: recording.description.trim().slice(0, UPLOAD_LIMITS.descriptionLength),
