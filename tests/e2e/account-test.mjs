@@ -173,15 +173,39 @@ const shared = {};
   );
   await fillCreateAccount(page, { ...TESTER, 'Phone Number': '12345', Password: 'short' });
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByText('Use at least 8 characters').waitFor();
+  await page
+    .getByText('Use at least 8 characters, with letters and numbers', { exact: true })
+    .waitFor();
   check(
     '  a bad number and a short password are named, field by field, and nothing is sent',
     (await page.getByText('Enter a mobile number like 917 123 4567').count()) === 1 &&
       fake.signIns === 0 &&
       fake.profileRequests === 0,
   );
+  check(
+    '  the password rule sits under the field, and the field names it',
+    (await page
+      .getByText('At least 8 characters, with letters and numbers', { exact: true })
+      .isVisible()) &&
+      (await field(page, 'Password').getAttribute('aria-describedby'))?.includes(
+        (await page
+          .getByText('At least 8 characters, with letters and numbers', { exact: true })
+          .getAttribute('id')) ?? '-',
+      ) === true,
+  );
   await shot(page, '3-create-account-errors');
   await field(page, 'Phone Number').fill(TESTER['Phone Number']);
+  await field(page, 'Password').fill('longenoughbutnodigit');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  check(
+    '  a long password with no digit is refused on the phone, and nothing is sent',
+    (await page
+      .getByText('Use at least 8 characters, with letters and numbers', { exact: true })
+      .count()) === 1 &&
+      (await page.getByText('Enter a mobile number like 917 123 4567').count()) === 0 &&
+      fake.signIns === 0 &&
+      fake.profileRequests === 0,
+  );
   await field(page, 'Password').fill(TESTER.Password);
   fake.next.updateUser = 'hold';
   await page.getByRole('button', { name: 'Continue' }).click();

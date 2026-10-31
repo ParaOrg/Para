@@ -12,6 +12,7 @@ import {
   checkNewPassword,
   checkSignIn,
   checkSignUp,
+  PASSWORD_RULE,
 } from '../../src/features/contribute/account/account-fields.ts';
 import { normalisePhoneNumber } from '../../src/features/contribute/account/phone-number.ts';
 import {
@@ -80,7 +81,7 @@ test('sign-up names every field that is wrong, one message each', () => {
   assert.equal(checked.isValid, false);
   assert.deepEqual(Object.keys(checked.errors).sort(), ['email', 'name', 'password', 'phone']);
   assert.equal(checked.errors.name, 'Enter your name');
-  assert.equal(checked.errors.password, 'Use at least 8 characters');
+  assert.equal(checked.errors.password, 'Use at least 8 characters, with letters and numbers');
 });
 
 test('a name is 1 to 80 characters', () => {
@@ -91,9 +92,46 @@ test('a name is 1 to 80 characters', () => {
 });
 
 test('a password is at least 8 characters, counted without trimming', () => {
-  assert.equal(checkSignUp({ ...GOOD, password: '1234567' }).isValid, false);
-  assert.equal(checkSignUp({ ...GOOD, password: '12345678' }).isValid, true);
-  assert.equal(checkSignUp({ ...GOOD, password: '       8' }).isValid, true);
+  assert.equal(checkSignUp({ ...GOOD, password: 'abc1234' }).isValid, false);
+  assert.equal(checkSignUp({ ...GOOD, password: 'abcd1234' }).isValid, true);
+  assert.equal(checkSignUp({ ...GOOD, password: '   abc 1' }).isValid, true);
+});
+
+test("a new password needs a letter and a digit, as the project's Letters and digits setting does", () => {
+  const refused = { password: 'Use at least 8 characters, with letters and numbers' };
+  for (const password of ['abc1234', 'abcdefgh', 'ABCDEFGHIJ', '12345678', '1234 5678!']) {
+    assert.deepEqual(checkSignUp({ ...GOOD, password }).errors, refused, password);
+    assert.deepEqual(
+      checkNewPassword({ password, confirmation: password }).errors,
+      refused,
+      password,
+    );
+  }
+  for (const password of ['abcd1234', '1234567A', 'Pass word 9']) {
+    assert.equal(checkSignUp({ ...GOOD, password }).isValid, true, password);
+    assert.equal(checkNewPassword({ password, confirmation: password }).isValid, true, password);
+  }
+});
+
+test('the letter and digit are Latin ones: the project looks for a-z, A-Z and 0-9 alone', () => {
+  // Supabase Auth checks each required set with strings.ContainsAny, and "Letters and digits"
+  // is the sets abc…zABC…Z and 0123456789: ñ, é or a Devanagari digit does not count.
+  for (const password of ['ñññññ123', 'éééééé12', 'Ññññú2026', 'abcdefg\u0967']) {
+    assert.deepEqual(
+      checkSignUp({ ...GOOD, password }).errors,
+      { password: 'Use at least 8 characters, with letters and numbers' },
+      password,
+    );
+  }
+  assert.equal(checkSignUp({ ...GOOD, password: 'Ñandú2026' }).isValid, true);
+});
+
+test('the rule under the field and the refusal say the same thing', () => {
+  assert.equal(PASSWORD_RULE, 'At least 8 characters, with letters and numbers');
+  assert.equal(
+    ACCOUNT_MESSAGES['weak-password'],
+    'Use at least 8 characters, with letters and numbers',
+  );
 });
 
 test('sign-in needs an email and a password, but holds the password to no minimum', () => {
@@ -223,7 +261,7 @@ test('the new password is at least 8 characters, and typed the same twice', () =
   const good = { password: 'hunter2hunter2', confirmation: 'hunter2hunter2' };
   assert.deepEqual(checkNewPassword(good), { isValid: true, value: good });
   assert.deepEqual(checkNewPassword({ password: 'short', confirmation: 'short' }).errors, {
-    password: 'Use at least 8 characters',
+    password: 'Use at least 8 characters, with letters and numbers',
   });
   assert.deepEqual(checkNewPassword({ ...good, confirmation: 'hunter2hunter3' }).errors, {
     confirmation: "The passwords don't match",
@@ -235,10 +273,10 @@ test('the new password is at least 8 characters, and typed the same twice', () =
 
 test('a password is held to 72 characters, which is as far as the project reads', () => {
   const fields = { name: 'Juan', email: 'juan@example.com', phone: '09171234567' };
-  assert.equal(checkSignUp({ ...fields, password: 'a'.repeat(72) }).isValid, true);
-  const long = checkSignUp({ ...fields, password: 'a'.repeat(73) });
+  assert.equal(checkSignUp({ ...fields, password: 'a1'.repeat(36) }).isValid, true);
+  const long = checkSignUp({ ...fields, password: 'a1'.repeat(36) + 'a' });
   assert.deepEqual(long.errors, { password: 'Use 72 characters or fewer' });
-  const longReset = 'a'.repeat(73);
+  const longReset = 'a1'.repeat(36) + 'a';
   assert.deepEqual(checkNewPassword({ password: longReset, confirmation: longReset }).errors, {
     password: 'Use 72 characters or fewer',
   });

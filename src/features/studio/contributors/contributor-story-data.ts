@@ -96,3 +96,23 @@ export const STORY_DETAIL_ALL_WALK: ContributionDetail = {
   ...STORY_DETAIL_WALKED,
   parts: [{ mode: 'walk', from: T0, to: T0 + 1_800_000 }],
 };
+
+/** A walk to the jeep, a ride, a walk to change, a second ride. */
+export const STORY_DETAIL_TWO_RIDES: ContributionDetail = {
+  trail: [
+    { time: T0, at: [121.058, 14.735], accuracyM: 6 },
+    { time: T0 + 300_000, at: [121.06, 14.73], accuracyM: 6 },
+    { time: T0 + 900_000, at: [121.07, 14.68], accuracyM: 6 },
+    { time: T0 + 1_150_000, at: [121.055, 14.64], accuracyM: 6 },
+    { time: T0 + 1_200_000, at: [121.05, 14.62], accuracyM: 6 },
+    { time: T0 + 1_500_000, at: [121.04, 14.6], accuracyM: 6 },
+  ],
+  hintos: [],
+  marks: [],
+  parts: [
+    { mode: 'walk', from: T0, to: T0 + 300_000 },
+    { mode: 'ride', from: T0 + 300_000, to: T0 + 1_100_000 },
+    { mode: 'walk', from: T0 + 1_100_000, to: T0 + 1_200_000 },
+    { mode: 'ride', from: T0 + 1_200_000, to: T0 + 1_500_000 },
+  ],
+};

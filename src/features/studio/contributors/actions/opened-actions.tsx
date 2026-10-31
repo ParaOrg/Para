@@ -13,6 +13,8 @@ interface OpenedActionsProps {
   onClose: () => void;
   onNotice: (text: string) => void;
   onStart: (start: ContributionStart) => void;
+  /** A ride's row pointed at or focused, by its trail part, for the map; null when none is. */
+  onHighlightRide: (piece: number | null) => void;
 }
 
 /** What an editor may do with the opened upload: use its line, hide it, delete it. */
@@ -24,6 +26,7 @@ export function OpenedActions({
   onClose,
   onNotice,
   onStart,
+  onHighlightRide,
 }: OpenedActionsProps) {
   return (
     <>
@@ -32,6 +35,7 @@ export function OpenedActions({
         detail={detail}
         isDetailLoading={isDetailLoading}
         onStart={onStart}
+        onHighlightRide={onHighlightRide}
       />
       <HideUpload
         contributionId={c.id}
