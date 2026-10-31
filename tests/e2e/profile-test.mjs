@@ -317,13 +317,15 @@ async function seed(page, id, name, upload) {
   await toolbarRecord(page).click();
   await accountTab(page).click();
   const stats = page.getByRole('region', { name: 'Commute Statistics' });
-  await stats.waitFor();
+  // The region shows placeholders first: read it once the numbers are in.
+  await stats.getByText('Sakay 60%').waitFor();
+  const statsText = await stats.innerText();
   check(
     '  with stats: total time in hours, distance in km with separators, the recordings counted',
-    /Total time\s*62\s*hr/.test(await stats.innerText()) &&
-      /Total distance\s*1,240\s*km/.test(await stats.innerText()) &&
-      /Recordings\s*6/.test(await stats.innerText()),
-    (await stats.innerText()).replace(/\n/g, ' '),
+    /Total time\s*62\s*hr/.test(statsText) &&
+      /Total distance\s*1,240\s*km/.test(statsText) &&
+      /Recordings\s*6/.test(statsText),
+    statsText.replace(/\n/g, ' '),
   );
   check(
     '  and Sakay and Lakad by distance, each share said beside its word',
@@ -358,13 +360,13 @@ async function seed(page, id, name, upload) {
   fake.stats = {};
   await toolbarRecord(page).click();
   await accountTab(page).click();
-  await stats.getByText('Total time').waitFor();
+  // Read once the numbers are in, not the placeholders.
+  await stats.getByText('Sakay', { exact: true }).waitFor();
+  const zeroText = await stats.innerText();
   check(
     '  with no recordings: zeros, and Sakay and Lakad with no shares',
-    /Total time\s*0\s*min/.test(await stats.innerText()) &&
-      /Recordings\s*0/.test(await stats.innerText()) &&
-      (await stats.getByText('Sakay', { exact: true }).count()) === 1,
-    (await stats.innerText()).replace(/\n/g, ' '),
+    /Total time\s*0\s*min/.test(zeroText) && /Recordings\s*0/.test(zeroText),
+    zeroText.replace(/\n/g, ' '),
   );
 }
 
