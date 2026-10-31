@@ -2151,5 +2151,157 @@ const WAKE = () => {
   await page.context().close();
 }
 
+// ------------------------------------- the published routes, faint under the trail, a picture only
+// The resting paints of the public map (map-colours.ts): Map/RouteLine/surface-default, and each
+// train line's Map/Rail/<line>/surface-pale.
+const PUBLISHED_PAINT = {
+  'published-routes-line': '#8ec5ff',
+  'published-saved-routes-rail-lrt-1': '#b7f5ca',
+  'published-saved-routes-rail-lrt-2': '#d0b9ff',
+  'published-saved-routes-rail-mrt-3': '#fff1b8',
+};
+/** When the map first settled, in the page's own time: the routes come after it. */
+const FIRST_IDLE = () => {
+  const watch = setInterval(() => {
+    if (!window.__map) return;
+    clearInterval(watch);
+    window.__map.once('idle', () => (window.__firstIdle = performance.now()));
+  }, 5);
+};
+{
+  const { page, errors } = await phone();
+  await page.addInitScript(FIRST_IDLE);
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => !!window.__map?.getLayer('published-routes-line'), null, {
+    timeout: 30000,
+  });
+  const layers = await page.evaluate((paint) => {
+    const map = window.__map;
+    const order = map.getLayersOrder();
+    const firstLabel = order.findIndex((id) => map.getLayer(id)?.type === 'symbol');
+    return {
+      at: Object.keys(paint).map((id) => order.indexOf(id)),
+      casing: order.indexOf('published-routes-casing'),
+      trail: order.indexOf('recording-trail-casing'),
+      firstLabel,
+      colours: Object.keys(paint).map((id) => map.getPaintProperty(id, 'line-color')),
+      routes: map.getSource('published-routes').serialize().data.features.length,
+      hit: order.filter((id) => id.startsWith('published') && /hit|selected/.test(id)),
+    };
+  }, PUBLISHED_PAINT);
+  check(
+    "the published routes are on the contributor's map: a casing and the four resting lines",
+    layers.casing >= 0 && layers.at.every((i) => i > layers.casing) && layers.routes > 0,
+    JSON.stringify(layers),
+  );
+  check(
+    "  pale, in the public map's resting paints (Map/RouteLine/surface-default, the trains' surface-pale)",
+    JSON.stringify(layers.colours) === JSON.stringify(Object.values(PUBLISHED_PAINT)),
+    JSON.stringify(layers.colours),
+  );
+  check(
+    "  under the recording trail and under the map's labels, with no tap area and no lit layer",
+    layers.trail > Math.max(...layers.at) &&
+      (layers.firstLabel < 0 || layers.firstLabel > Math.max(...layers.at)) &&
+      layers.hit.length === 0,
+    JSON.stringify(layers),
+  );
+  const asked = await page.evaluate(() => ({
+    firstIdle: window.__firstIdle ?? null,
+    index: performance
+      .getEntriesByType('resource')
+      .filter((entry) => entry.name.includes('/data/index.v5.json'))
+      .map((entry) => entry.startTime),
+  }));
+  check(
+    '  read only after the map first settled, off the opening path',
+    asked.firstIdle !== null && asked.index.length === 1 && asked.index[0] >= asked.firstIdle,
+    JSON.stringify(asked),
+  );
+
+  // A tap on a route does what a tap on empty map does: nothing opens.
+  await page.evaluate(() => window.__map.jumpTo({ center: [121.0437, 14.6577], zoom: 14 }));
+  await page.waitForFunction(() => !window.__map.isMoving() && window.__map.loaded());
+  const onRoute = await page.evaluate(() => {
+    const map = window.__map;
+    const { width, height } = map.getCanvas().getBoundingClientRect();
+    // A point on a route in the open middle of the screen, clear of the buttons at its edges.
+    for (let y = height * 0.2; y < height * 0.6; y += 4) {
+      for (let x = width * 0.2; x < width * 0.8; x += 4) {
+        const hits = map.queryRenderedFeatures([x, y], { layers: ['published-routes-line'] });
+        if (hits.length > 0) return { x, y };
+      }
+    }
+    return null;
+  });
+  const before = await page.evaluate(() => ({
+    text: document.body.innerText,
+    hash: location.hash,
+    dialogs: document.querySelectorAll('[role="dialog"], dialog[open]').length,
+  }));
+  if (onRoute) await page.touchscreen.tap(onRoute.x, onRoute.y);
+  await page.waitForTimeout(400);
+  const after = await page.evaluate(() => ({
+    text: document.body.innerText,
+    hash: location.hash,
+    dialogs: document.querySelectorAll('[role="dialog"], dialog[open]').length,
+  }));
+  check(
+    '  a tap on a route opens nothing: no card, no sheet, the same screen as before',
+    !!onRoute &&
+      after.hash === before.hash &&
+      after.dialogs === before.dialogs &&
+      after.text === before.text,
+    JSON.stringify({
+      onRoute,
+      before: { ...before, text: before.text.length },
+      after: { ...after, text: after.text.length },
+    }),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// --------------------------- the published map unreachable: no routes, no word of it, and the ride records
+{
+  const { page, errors } = await phone();
+  const warnings = [];
+  page.on('console', (message) => {
+    if (message.type() === 'warning') warnings.push(message.text());
+  });
+  await page.route(/\/data\/(index\.v5\.json|lines\/)/, (route) =>
+    route.abort('internetdisconnected'),
+  );
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 300);
+  await page.waitForTimeout(500);
+  const trail = await mapSource(page);
+  const ridden = (trail?.features ?? []).filter((f) => f.geometry.type === 'LineString');
+  check(
+    'with the published map unreachable, Start records: the trail is drawn as the fixes come',
+    ridden.length > 0 && ridden.some((f) => f.geometry.coordinates.length > 10),
+    JSON.stringify(ridden.map((f) => f.geometry.coordinates.length)),
+  );
+  check(
+    '  and no routes are on the map, and nothing on the screen says so',
+    (await page.evaluate(() => !window.__map.getLayer('published-routes-line'))) &&
+      (await page.getByRole('alert').count()) === 0 &&
+      (await page.getByText(/published|routes/i).count()) === 0,
+    await page.evaluate(() => document.body.innerText),
+  );
+  check(
+    '  the page notes it once, in the console only',
+    warnings.filter((w) => w.includes('published routes could not be shown')).length === 1,
+    JSON.stringify(warnings),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 await browser.close();
 tally();
