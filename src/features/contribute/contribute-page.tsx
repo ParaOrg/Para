@@ -16,6 +16,7 @@ import { useRecording } from './recorder/use-recording';
 import { ReadyScreen } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
+import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
@@ -114,7 +115,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
   // Their own ⓘ opens them; every other screen over the map keeps MapLibre's corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
-  const hasCreditsButton = isStartShown || (accountGate === 'ready' && isRecordingShown);
+  // The recording screen's ⓘ is there once the screen is, with the figures it waits for.
+  const hasCreditsButton =
+    isStartShown || (accountGate === 'ready' && isRecordingShown && figures !== null);
   const isCreditsShown = hasCreditsButton && isCreditsOpen;
   // The recording card folded away, by the recording it was folded on: each recording opens with
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
@@ -122,10 +125,11 @@ export function ContributePage({ locator }: ContributePageProps) {
   const isCardFolded = foldedRecordingId !== null && foldedRecordingId === recording.current?.id;
   // ✕ pauses the recording and asks over the whole screen: what it was doing then, so Keep
   // recording puts it back. Focus returns to ✕ once the recording screen is live again. The
-  // question waits for the pause to land: in the app it reads the native log first, and a Keep
-  // recording before then would be undone by the pause arriving after it.
-  const [stopAskedWhile, setStopAskedWhile] = useState<'recording' | 'paused' | null>(null);
-  const isStopShown = phase === 'paused' && stopAskedWhile !== null;
+  // question shows once the pause lands, and goes as the page leaves the recording screen
+  // (stop-question.ts): dropped during render, as React does for state that follows other state.
+  const [stopAskedWhile, setStopAskedWhile] = useState<StopAskedWhile>(null);
+  if (stopQuestionIn(phase, stopAskedWhile) !== stopAskedWhile) setStopAskedWhile(null);
+  const isStopShown = isStopQuestionShown(phase, stopAskedWhile);
   const discardButtonRef = useRef<HTMLButtonElement>(null);
   const askToStop = () => {
     setStopAskedWhile(phase === 'paused' ? 'paused' : 'recording');
