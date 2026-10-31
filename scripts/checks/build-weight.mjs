@@ -18,8 +18,10 @@ export const WORKER_MAX_GZ_KB = 20;
 // `packages` is what the chunk may hold from node_modules, `only` the files
 // it may hold; `vendor` chunks may import no chunk of ours. The locator counts
 // here as both pages draw it: the public page's own chunk is that much lighter,
-// its download no heavier.
-export const SHARED_MAX_GZ_KB = 410;
+// its download no heavier. The Map Style card's Location Labels switch (the
+// design system's Switch, its row and the label rule) is in it; lazy-loading
+// the card would give that room back.
+export const SHARED_MAX_GZ_KB = 412;
 export const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
 export const GROUPS = [
   {

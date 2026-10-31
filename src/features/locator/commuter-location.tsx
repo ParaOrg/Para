@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 
 import { BASEMAPS, type Basemap } from '@/features/routes/map/basemap';
 import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
+import type { LabelsPlace } from '@/features/routes/map/location-labels';
 import { coarse } from '@/features/routes/map/map-view';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import type { Turn } from '@/shared/hooks/commit-turn';
@@ -26,6 +27,8 @@ interface Props {
   /** The designs MapView was handed, for the pill's card: the public map's by default, the studio's its own. */
   basemaps?: readonly Basemap[];
   basemapThumbnails?: Readonly<Record<string, string>>;
+  /** Whose Location Labels choice the card keeps: the public map's by default, the studio's its own. */
+  labelsPlace?: LabelsPlace;
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
   /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
@@ -61,6 +64,7 @@ export function CommuterLocation({
   isMapLoaded,
   basemaps = BASEMAPS,
   basemapThumbnails = BASEMAP_THUMBNAILS,
+  labelsPlace = 'map',
   snap,
   offset,
   docked,
@@ -103,6 +107,7 @@ export function CommuterLocation({
           isMapLoaded={isMapLoaded}
           basemaps={basemaps}
           basemapThumbnails={basemapThumbnails}
+          labelsPlace={labelsPlace}
           docked={docked}
         />
       )}

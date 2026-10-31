@@ -45,6 +45,7 @@ export function WorkshopLocation({
       isMapLoaded={isMapLoaded}
       basemaps={STUDIO_BASEMAPS}
       basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
+      labelsPlace="studio"
       snap={cards.snap}
       offset={clearOfOpen}
       docked={cards.open}

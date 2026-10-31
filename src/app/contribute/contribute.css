@@ -17,6 +17,7 @@
 @source '../../features/locator/';
 @source '../../features/routes/map/basemap-control.tsx';
 @source '../../features/routes/map/map-style.tsx';
+@source '../../features/routes/map/location-labels-row.tsx';
 @source '../../features/routes/map/map-style-button.tsx';
 @source '../../features/routes/map/map-type-icon.tsx';
 @source '../../features/routes/map/map-view.tsx';
