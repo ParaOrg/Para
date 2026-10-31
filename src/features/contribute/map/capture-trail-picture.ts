@@ -9,18 +9,24 @@ const TILES_MS = 8000;
 /** WebP where the browser can write it, a JPEG where it cannot: both small at this quality. */
 const QUALITY = 0.7;
 
-/** Settles true once the map is idle (everything for the view drawn), false after `ms`. */
-function whenIdle(map: MapLibreMap, ms: number): Promise<boolean> {
+/** Settles true once the map is idle (everything for the view drawn), false after `ms` or on abort. */
+function whenIdle(map: MapLibreMap, ms: number, signal: AbortSignal): Promise<boolean> {
   return new Promise((resolve) => {
-    const timer = window.setTimeout(() => {
-      map.off('idle', handleIdle);
-      resolve(false);
-    }, ms);
-    function handleIdle() {
+    const settle = (isIdle: boolean) => {
       window.clearTimeout(timer);
-      resolve(true);
+      map.off('idle', handleIdle);
+      signal.removeEventListener('abort', handleAbort);
+      resolve(isIdle);
+    };
+    const timer = window.setTimeout(() => settle(false), ms);
+    function handleIdle() {
+      settle(true);
+    }
+    function handleAbort() {
+      settle(false);
     }
     map.once('idle', handleIdle);
+    signal.addEventListener('abort', handleAbort);
   });
 }
 
@@ -33,11 +39,13 @@ function cutInNextRender(
   map: MapLibreMap,
   box: PictureBox,
   isStillFramed: () => boolean,
+  signal: AbortSignal,
 ): Promise<string | null> {
   return new Promise((resolve) => {
     map.once('render', () => {
-      // The locator may have eased the camera back to the rider meanwhile: no picture of that.
-      if (!isStillFramed()) {
+      // The locator may have eased the camera back to the rider meanwhile, or the form closed:
+      // no picture of that.
+      if (signal.aborted || !isStillFramed()) {
         resolve(null);
         return;
       }
@@ -69,16 +77,19 @@ function cutInNextRender(
 /**
  * A picture of the whole trail on the map, as History's card shows it: the camera framed on every
  * run of it, its tiles waited for, the frame cut and the camera put back where the rider had it.
- * Null when there is no trail, or the tiles for it could not be had (no signal): the card then
- * draws the trail itself rather than show a blank map.
+ * Null when there is no trail, the tiles for it could not be had (no signal), or `signal` aborted
+ * it (the form closed): the card then draws the trail itself rather than show a blank map. The
+ * camera goes back only if nothing moved it since the framing: once the locator or the rider has
+ * moved it, where it was before is out of date.
  */
 export async function captureTrailPicture(
   map: MapLibreMap,
   trail: RecordingTrail,
+  signal: AbortSignal,
 ): Promise<string | null> {
   const canvas = map.getCanvas();
   const fit = trailFit(trail, canvas.clientWidth, canvas.clientHeight);
-  if (!fit) return null;
+  if (!fit || signal.aborted) return null;
   const camera = {
     center: map.getCenter(),
     zoom: map.getZoom(),
@@ -90,22 +101,22 @@ export async function captureTrailPicture(
     hasTileFailed = true;
   };
   map.on('error', handleError);
+  map.fitBounds(fit.bounds, {
+    padding: fit.padding,
+    bearing: 0,
+    pitch: 0,
+    maxZoom: 17,
+    animate: false,
+  });
+  const framed = { center: map.getCenter(), zoom: map.getZoom() };
+  const isStillFramed = () =>
+    map.getZoom() === framed.zoom && map.getCenter().distanceTo(framed.center) < 1;
   try {
-    map.fitBounds(fit.bounds, {
-      padding: fit.padding,
-      bearing: 0,
-      pitch: 0,
-      maxZoom: 17,
-      animate: false,
-    });
-    const framed = { center: map.getCenter(), zoom: map.getZoom() };
-    const isStillFramed = () =>
-      map.getZoom() === framed.zoom && map.getCenter().distanceTo(framed.center) < 1;
-    const isIdle = await whenIdle(map, TILES_MS);
+    const isIdle = await whenIdle(map, TILES_MS, signal);
     if (!isIdle || hasTileFailed || !map.areTilesLoaded() || !isStillFramed()) return null;
-    return await cutInNextRender(map, fit.box, isStillFramed);
+    return await cutInNextRender(map, fit.box, isStillFramed, signal);
   } finally {
     map.off('error', handleError);
-    map.jumpTo(camera);
+    if (isStillFramed()) map.jumpTo(camera);
   }
 }
