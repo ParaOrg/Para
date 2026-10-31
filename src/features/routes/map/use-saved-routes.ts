@@ -188,10 +188,16 @@ export function useSavedRoutes<T extends Direction>(
   );
   useEffect(() => () => arrivals.current?.clear(), []);
 
+  // Which load is the latest: only its answer is taken. Two loads can be out
+  // at once (the studio reloads after each signboard change), and an earlier
+  // one answering last would put back what the later one no longer has.
+  const latestLoad = useRef(0);
   const reload = useCallback(async () => {
+    const thisLoad = ++latestLoad.current;
     setLoading(true);
     try {
       const next = await load();
+      if (thisLoad !== latestLoad.current) return;
       setRows(next);
       setLines(new Map());
       arrivals.current?.clear();
@@ -199,9 +205,10 @@ export function useSavedRoutes<T extends Direction>(
       failedRef.current.clear();
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (thisLoad === latestLoad.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      // Still loading while a later load is out.
+      if (thisLoad === latestLoad.current) setLoading(false);
     }
   }, [load]);
 

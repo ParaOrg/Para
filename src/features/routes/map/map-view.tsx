@@ -25,6 +25,7 @@ import {
   within,
   type Bounds,
 } from './framing';
+import { readLocationLabels, type LabelsPlace } from './location-labels';
 import { mapAttribution } from './map-attribution';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
@@ -164,6 +165,8 @@ interface Props {
    * map's sits on the locator (LocationAndMap).
    */
   hasMapStyleButton?: boolean;
+  /** Whose Location Labels choice the map opens with: the public pages', or the studio's own. Read once, as the map is made. */
+  labelsPlace?: LabelsPlace;
   /**
    * False where the page shows the credits itself: the contributor page's
    * Map Data Source sheet, from mapCredits. Read once, as the map is made.
@@ -192,6 +195,7 @@ export function MapView({
   basemapThumbnails = BASEMAP_THUMBNAILS,
   buttonStyle = 'round',
   hasMapStyleButton = true,
+  labelsPlace = 'map',
   hasCredits = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -217,6 +221,8 @@ export function MapView({
   // The design chosen on this device, read once; the map is built with it so
   // a remembered choice never flashes gray first.
   const [basemap] = useState<Basemap>(() => readBasemap(basemaps));
+  // Read once too: the basemap's labels shown or hidden from the first frame (location-labels.ts).
+  const [areLabelsShown] = useState(() => readLocationLabels(labelsPlace));
   const [ready, setReady] = useState<MapLibreMap | null>(null);
   const isLoaded = ready !== null && error === null;
   const onLoadedChangeRef = useRef(onLoadedChange);
@@ -249,7 +255,7 @@ export function MapView({
       // Beside it, the public map's framing (`openOn`): none if it fails or
       // has not come within OPENING_WAIT_MS.
       const [style, framing] = await Promise.all([
-        initialStyle(basemap),
+        initialStyle(basemap, areLabelsShown),
         openOn ? within(openOn(), OPENING_WAIT_MS, null) : null,
       ]);
       if (cancelled || !containerRef.current) return;
@@ -462,6 +468,7 @@ export function MapView({
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
           initial={basemap}
+          labelsPlace={labelsPlace}
           buttonStyle={buttonStyle}
         />
       )}

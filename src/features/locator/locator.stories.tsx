@@ -57,6 +57,7 @@ function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx }:
         isMapLoaded={isMapLoaded}
         basemaps={BASEMAPS}
         basemapThumbnails={BASEMAP_THUMBNAILS}
+        labelsPlace="map"
         docked={snap !== null}
       />
       {snap !== null && (
