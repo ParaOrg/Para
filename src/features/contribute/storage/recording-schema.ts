@@ -126,3 +126,9 @@ export const fixRowSchema = z.object({
   accuracyM: z.number(),
 });
 export type FixRow = z.infer<typeof fixRowSchema>;
+
+/** A kept picture of a recording's whole trail, for History's card: a data URL of an image. */
+export const thumbnailRowSchema = z.object({
+  recordingId: z.string(),
+  dataUrl: z.string().check(z.startsWith('data:image/')),
+});

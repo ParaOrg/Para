@@ -53,8 +53,9 @@ export function ContributeMap({
   useRecordingTrail(map, track.trail);
 
   // Once each time a recording's form opens, the trail whole on the map under it: the form covers
-  // the map, so framing the trail for the picture moves nothing the rider sees. The trail and the
-  // callback hold still while the form is open; the ref keeps a second picture from being taken.
+  // the map, so framing the trail for the picture moves nothing the rider sees. The ref keeps a
+  // second picture from being taken. The form closing (Keep recording, Stop without saving) aborts
+  // a capture still under way; one cut short otherwise is tried again.
   const pictureTakenFor = useRef<string | null>(null);
   const { trail } = track;
   useEffect(() => {
@@ -63,14 +64,22 @@ export function ContributeMap({
       return;
     }
     pictureTakenFor.current = pictureFor;
+    const controller = new AbortController();
+    let isDone = false;
     loadCapture()
-      .then(({ captureTrailPicture }) => captureTrailPicture(map, trail))
+      .then(({ captureTrailPicture }) => captureTrailPicture(map, trail, controller.signal))
       .then((picture) => {
-        if (picture) onPicture(pictureFor, picture);
+        isDone = true;
+        if (picture && !controller.signal.aborted) onPicture(pictureFor, picture);
       })
       .catch((error: unknown) => {
+        isDone = true;
         console.warn("The trail's picture could not be taken; History draws the trail.", error);
       });
+    return () => {
+      controller.abort();
+      if (!isDone) pictureTakenFor.current = null;
+    };
   }, [map, isMapLoaded, pictureFor, trail, onPicture]);
 
   return (

@@ -32,13 +32,6 @@ import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
 
 // Opened from buttons, so the page's first load does not carry them.
-/** Keeps the picture of a recording's trail for History's card; without it the card draws the trail. */
-function keepTrailPicture(recordingId: string, picture: string): void {
-  putThumbnail(recordingId, picture).catch((error: unknown) => {
-    console.warn("The trail's picture could not be kept; History draws the trail.", error);
-  });
-}
-
 const HistoryView = lazy(() =>
   import('./history/history-view').then((module) => ({ default: module.HistoryView })),
 );
@@ -103,6 +96,13 @@ const PermissionsOnboarding =
         })),
       )
     : null;
+
+/** Keeps the picture of a recording's trail for History's card; without it the card draws the trail. */
+function keepTrailPicture(recordingId: string, picture: string): void {
+  putThumbnail(recordingId, picture).catch((error: unknown) => {
+    console.warn("The trail's picture could not be kept; History draws the trail.", error);
+  });
+}
 
 interface ContributePageProps {
   /** The locator on the map: the shell's, since this feature may not import the locator's. */
