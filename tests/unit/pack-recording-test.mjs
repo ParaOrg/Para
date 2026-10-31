@@ -6,7 +6,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { packRecording, VEHICLE_OF } from '../../src/features/contribute/api/pack-recording.ts';
+import { RIDE_KINDS } from '../../src/features/contribute/storage/recording-schema.ts';
 import { UPLOAD_LIMITS } from '../../src/features/contribute/recorder/recording-limits.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';
 
@@ -240,4 +241,38 @@ test('a stand while on Lakad is no hinto; the distance still counts the walk', (
   assert.equal(walked.hintos.length, 0);
   assert.equal(walked.distance_m, onSakay.distance_m);
   assert.equal(walked.moving_s, onSakay.moving_s);
+});
+
+test('every vehicle the phone offers packs as a value the database takes, and none as no vehicle', () => {
+  // The contribution table's vehicle check (migrations: contribution_fare).
+  const DATABASE_VEHICLES = [
+    'jeep',
+    'e_jeep',
+    'uv_express',
+    'bus',
+    'train',
+    'ferry',
+    'tricycle',
+    'other',
+  ];
+  assert.deepEqual(Object.keys(VEHICLE_OF).sort(), [...RIDE_KINDS].sort());
+  for (const kind of RIDE_KINDS) {
+    const fixes = rideFixes();
+    const { payload } = packed(fixes, { ...rideRecording(ID, fixes), rideKind: kind });
+    assert.ok(DATABASE_VEHICLES.includes(payload.vehicle), `${kind} → ${payload.vehicle}`);
+  }
+  assert.equal(packed(rideFixes()).payload.vehicle, 'jeep');
+  const fixes = rideFixes();
+  assert.equal(
+    packed(fixes, { ...rideRecording(ID, fixes), rideKind: 'E-Jeep' }).payload.vehicle,
+    'e_jeep',
+  );
+  assert.equal(
+    packed(fixes, { ...rideRecording(ID, fixes), rideKind: 'UV Express' }).payload.vehicle,
+    'uv_express',
+  );
+  assert.equal(
+    packed(fixes, { ...rideRecording(ID, fixes), rideKind: null }).payload.vehicle,
+    null,
+  );
 });

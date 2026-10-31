@@ -85,6 +85,18 @@ export const session = (userId, { email = null, isAccount = false } = {}) => ({
  * get_my_stats's one row, as migration account_stats answers it, from the few numbers a suite sets:
  * `{ rides, distanceM, movingS, standingS, walkM, rideM }`, the rest zero.
  */
+/** The vehicles the contribution table takes (migration contribution_fare). */
+const DATABASE_VEHICLES = [
+  'jeep',
+  'e_jeep',
+  'uv_express',
+  'bus',
+  'train',
+  'ferry',
+  'tricycle',
+  'other',
+];
+
 function statsRow({
   rides = 0,
   distanceM = 0,
@@ -435,6 +447,16 @@ export async function fakeContributions(page) {
         return json(route, 400, { code: 'P0001', message, details: null, hint: null });
       }
       const recording = request.postDataJSON().recording;
+      // The contribution table's vehicle check (contribution_fare): anything else is refused.
+      if (recording.vehicle !== null && !DATABASE_VEHICLES.includes(recording.vehicle)) {
+        return json(route, 400, {
+          code: '23514',
+          message:
+            'new row for relation "contribution" violates check constraint "contribution_vehicle_check"',
+          details: null,
+          hint: null,
+        });
+      }
       const existing = fake.rows.get(recording.id);
       if (existing && existing.by !== user) {
         return json(route, 400, { code: 'P0001', message: 'id_taken', details: null, hint: null });
