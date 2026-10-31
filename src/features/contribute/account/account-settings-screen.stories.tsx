@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { AccountSettingsScreen } from './account-settings-screen';
+import { NO_CAPTCHA } from './account-stories-args';
 
 const meta = {
   title: 'Features/Contribute/AccountSettingsScreen',
@@ -15,6 +16,8 @@ const meta = {
     saveError: null,
     isChangingPassword: false,
     passwordError: null,
+    currentPasswordError: null,
+    captcha: NO_CAPTCHA,
     passwordChangedAt: null,
     onRetry: fn(),
     onSave: fn(),
@@ -56,8 +59,33 @@ export const NotSaved: Story = {
   args: { saveError: "No signal — try again when you're online" },
 };
 
-/** A new password, the fields checked on the phone before it is sent. */
+/** The current password being checked, then the new one sent. */
 export const ChangingPassword: Story = { args: { isChangingPassword: true } };
+
+/** The current password given is not the account's: said on its field. */
+export const WrongCurrentPassword: Story = {
+  args: { currentPasswordError: 'That’s not your current password' },
+};
+
+/** The fields checked on the phone: a current password missing, a new one with no digit. */
+export const PasswordFieldsChecked: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText('New password'), 'onlyletters');
+    await userEvent.type(canvas.getByLabelText('Confirm password'), 'onlyletters');
+    await userEvent.click(canvas.getByRole('button', { name: 'Change password' }));
+    await expect(canvas.getByText('Enter your current password')).toBeVisible();
+    await expect(
+      canvas.getByText('Use at least 8 characters, with letters and numbers'),
+    ).toBeVisible();
+    await expect(args.onChangePassword).not.toHaveBeenCalled();
+  },
+};
+
+/** Waiting on the bot check: Change password stays off until it passes. */
+export const WaitingForCheck: Story = {
+  args: { captcha: { ...NO_CAPTCHA, siteKey: '1x00000000000000000000AA', isReady: false } },
+};
 
 export const PasswordChanged: Story = { args: { passwordChangedAt: 1 } };
 

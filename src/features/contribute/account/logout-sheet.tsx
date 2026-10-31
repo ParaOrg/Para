@@ -27,6 +27,7 @@ export function LogoutSheet({
   onCancel,
 }: LogoutSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
   const textId = useId();
   useEscape(onCancel);
@@ -55,6 +56,12 @@ export function LogoutSheet({
     return () => sheet.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Log out turns off as it is pressed, which would drop focus out of the sheet: the question's
+  // heading holds it until the answer comes.
+  useEffect(() => {
+    if (isLoggingOut) headingRef.current?.focus();
+  }, [isLoggingOut]);
+
   const noun = unsentCount === 1 ? 'recording' : 'recordings';
   return (
     <>
@@ -75,7 +82,12 @@ export function LogoutSheet({
         aria-describedby={textId}
         className="absolute inset-x-0 bottom-0 z-50 flex max-h-dvh flex-col gap-4 overflow-y-auto rounded-t-4xl bg-surface px-4 pt-4 pb-[max(2rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary shadow-bottom-sheet-top-shadow"
       >
-        <h2 id={titleId} className="text-lg/7 font-bold">
+        <h2
+          id={titleId}
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-lg/7 font-bold focus:outline-none"
+        >
           Log out?
         </h2>
         <p id={textId} className="text-base/6 text-content-quaternary">

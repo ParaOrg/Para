@@ -37,6 +37,7 @@ const meta = {
     onOpenHistory: fn(),
     onOpenSettings: fn(),
     onLogout: fn(),
+    onLogoutAsked: fn(),
     onOpenRecord: fn(),
   },
   decorators: [

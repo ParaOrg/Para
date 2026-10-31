@@ -23,6 +23,8 @@ interface AccountScreenProps {
   onOpenHistory: () => void;
   onOpenSettings: () => void;
   onLogout: () => void;
+  /** The Logout question opens: a last Logout's error is not carried into it. */
+  onLogoutAsked: () => void;
   /** Record, in the toolbar: back to Start. */
   onOpenRecord: () => void;
 }
@@ -42,6 +44,7 @@ export function AccountScreen({
   onOpenHistory,
   onOpenSettings,
   onLogout,
+  onLogoutAsked,
   onOpenRecord,
 }: AccountScreenProps) {
   const headingRef = useFocusHeading();
@@ -80,7 +83,10 @@ export function AccountScreen({
                 icon="logout"
                 label="Logout"
                 tone="error"
-                onClick={() => setIsLogoutAsked(true)}
+                onClick={() => {
+                  onLogoutAsked();
+                  setIsLogoutAsked(true);
+                }}
                 ref={logoutRef}
               />
             </div>

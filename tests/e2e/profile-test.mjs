@@ -257,7 +257,7 @@ async function seed(page, id, name, upload) {
   check(
     'Account settings shows the email as it is, the name and number to change, and a new password',
     (await page.getByText(ACCOUNT.email, { exact: true }).count()) === 1 &&
-      (await page.locator('input').count()) === 4 &&
+      (await page.locator('input').count()) === 5 &&
       (await page.evaluate(() => location.hash)) === '#account-settings' &&
       (await field(page, 'Name').inputValue()) === 'Tester' &&
       (await field(page, 'Number').inputValue()) === '+639171234567',
@@ -304,6 +304,27 @@ async function seed(page, id, name, upload) {
     (await field(page, 'Name').inputValue()) === 'Tester Two' &&
       (await field(page, 'Number').inputValue()) === '+639187654321',
   );
+
+  // Change password asks for the current one: a phone left unlocked cannot change it.
+  await field(page, 'Current password').fill('not-it-123');
+  await field(page, 'New password').fill('n3wpassword');
+  await field(page, 'Confirm password').fill('n3wpassword');
+  await button(page, 'Change password').click();
+  await page.getByText('That’s not your current password').waitFor();
+  check(
+    '  Change password: a wrong current password is said on its field, and nothing changes',
+    database.users.get(ACCOUNT_ID).password === ACCOUNT.password &&
+      !fake.order.includes('update_password'),
+  );
+  await field(page, 'Current password').fill(ACCOUNT.password);
+  await button(page, 'Change password').click();
+  await page.getByText('Your password is changed.').waitFor();
+  check(
+    '  the right current password changes it, checked first by signing in with it',
+    database.users.get(ACCOUNT_ID).password === 'n3wpassword' &&
+      fake.order.includes('update_password'),
+  );
+  database.users.get(ACCOUNT_ID).password = ACCOUNT.password;
 
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
   check('  no page errors', errors.length === 0, errors.join(' | '));
@@ -761,6 +782,48 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     page.url(),
   );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
+}
+
+// ------------- a shared phone: the next account never sees the last one's statistics
+{
+  const OTHER_ID = 'dddddddd-0000-4000-8000-000000000002';
+  database.users.set(OTHER_ID, {
+    email: 'other@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Other', phone: '+639170000002' },
+  });
+  const { page, fake, errors } = await phone();
+  fake.stats = { rides: 6, distanceM: 1_240_500, movingS: 62 * 3600 };
+  await start(page).waitFor({ timeout: 30000 });
+  await accountTab(page).click();
+  const stats = page.getByRole('region', { name: 'Commute Statistics' });
+  await stats.getByText('Total time').waitFor();
+  await logout(page);
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
+  await field(page, 'Email').fill('other@example.com');
+  await field(page, 'Password').fill('hunter2hunter2');
+  await button(page, 'Sign in').click();
+  await start(page).waitFor({ timeout: 15000 });
+  // The next account's numbers cannot be had: no signal.
+  fake.next.stats = 'offline';
+  await accountTab(page).click();
+  await page.getByText('other@example.com', { exact: true }).waitFor();
+  const isOfflineLine = await stats
+    .getByText('Your statistics show when you’re online.')
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(
+    "Logout, then another account signs in with no signal: none of the last account's statistics show",
+    isOfflineLine &&
+      (await stats.getByText('62', { exact: false }).count()) === 0 &&
+      (await page.getByText('Tester', { exact: true }).count()) === 0,
+    (await stats.innerText()).replace(/\n/g, ' '),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 
 await browser.close();

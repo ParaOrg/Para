@@ -52,6 +52,7 @@ export function AccountView({
       onOpenHistory={onOpenHistory}
       onOpenSettings={settings.open}
       onLogout={() => signOut.mutate()}
+      onLogoutAsked={() => signOut.reset()}
       onOpenRecord={onOpenRecord}
     />
   );

@@ -2,9 +2,10 @@ import { Button } from '@/design-system/primitives/button';
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 
-import type { NewPasswordFields, ProfileFields } from './account-fields';
+import type { ChangePasswordFields, ProfileFields } from './account-fields';
 import { ChangePasswordForm } from './change-password-form';
 import { ProfileForm } from './profile-form';
+import type { Captcha } from './use-captcha';
 import { useFocusHeading } from '../common/use-focus-heading';
 
 interface AccountSettingsScreenProps {
@@ -19,11 +20,15 @@ interface AccountSettingsScreenProps {
   isChangingPassword: boolean;
   /** One line about the last password change, or null. */
   passwordError: string | null;
+  /** The current password given was not the account's: said on its field. */
+  currentPasswordError: string | null;
+  /** The bot check the password change's sign-in needs. */
+  captcha: Captcha;
   /** When the last password change went through, or null: each one clears the fields. */
   passwordChangedAt: number | null;
   onRetry: () => void;
   onSave: (fields: ProfileFields) => void;
-  onChangePassword: (fields: NewPasswordFields) => void;
+  onChangePassword: (fields: ChangePasswordFields) => void;
   onBack: () => void;
 }
 
@@ -39,6 +44,8 @@ export function AccountSettingsScreen({
   saveError,
   isChangingPassword,
   passwordError,
+  currentPasswordError,
+  captcha,
   passwordChangedAt,
   onRetry,
   onSave,
@@ -101,6 +108,8 @@ export function AccountSettingsScreen({
           key={passwordChangedAt ?? 'unchanged'}
           isBusy={isChangingPassword}
           error={passwordError}
+          currentPasswordError={currentPasswordError}
+          captcha={captcha}
           isDone={passwordChangedAt !== null}
           onSubmit={onChangePassword}
         />
