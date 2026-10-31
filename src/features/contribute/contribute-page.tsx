@@ -14,7 +14,7 @@ import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-fla
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { MarkButton } from './screens/mark-button';
-import { ReadyScreen, type AccountOpener } from './screens/ready-screen';
+import { ReadyScreen } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
 import { UploadCheck } from './uploads/upload-check';
@@ -119,11 +119,11 @@ export function ContributePage({ locator }: ContributePageProps) {
   }, [phase, accountGate, profile]);
 
   // Account is Profile with History inside it; a build with no accounts has History alone. Once it
-  // has been opened from Ready, Ready hands focus back to the button that opened it.
-  const [lastOpened, setLastOpened] = useState<AccountOpener | null>(null);
+  // has been opened from Ready, Ready hands focus back to the Account tab.
+  const [hasOpenedAccount, setHasOpenedAccount] = useState(false);
   const hasAccount = canUpload();
-  const handleOpenAccount = (opener: AccountOpener) => {
-    setLastOpened(opener);
+  const handleOpenAccount = () => {
+    setHasOpenedAccount(true);
     if (hasAccount) profile.open();
     else history.open();
   };
@@ -182,7 +182,7 @@ export function ContributePage({ locator }: ContributePageProps) {
               earlierQuestion={earlier.question}
               onStart={recording.start}
               onOpenAccount={hasAccount || hasConsent ? handleOpenAccount : undefined}
-              returnFocusTo={lastOpened}
+              isBackFromAccount={hasOpenedAccount}
             />
           )}
           {isProfileShown && (

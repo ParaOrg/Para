@@ -216,7 +216,9 @@ const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerTex
 /** The History screen, opened through Account on Ready unless it is already showing. */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const account = page.locator('button[aria-label="Account"]');
+  const account = page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' });
   // A reload on #history lands on the screen itself; otherwise History is inside Account.
   await heading.or(account).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;

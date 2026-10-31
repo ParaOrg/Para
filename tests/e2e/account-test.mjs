@@ -82,7 +82,10 @@ async function setOffline(context, fake, isOffline) {
 
 /** Signs out through Account's Sign out button. */
 async function signOut(page) {
-  await page.locator('button[aria-label="Account"]').click();
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' })
+    .click();
   await page.getByRole('button', { name: 'Sign out' }).click();
 }
 

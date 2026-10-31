@@ -87,7 +87,9 @@ async function phone() {
 /** The History screen, opened through Account on Ready unless it is already showing. */
 async function openHistory(page) {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const account = page.locator('button[aria-label="Account"]');
+  const account = page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' });
   // A reload on #history lands on the screen itself; otherwise History is inside Account.
   await heading.or(account).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;

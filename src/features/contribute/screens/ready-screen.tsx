@@ -1,15 +1,11 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
-import { IconButton } from '@/design-system/primitives/icon-button';
-
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
 import { goBackToMap } from '../common/back-to-map-button';
 import { useStackRoom } from '../common/use-stack-room';
 import { ConsentPanel } from '../consent/consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
-
-import './start-icons.css';
 
 // The update gate exists in the Android app's build only: on the web this is null and the chunk is
 // never built, so the page's first load does not carry it.
@@ -28,24 +24,21 @@ const StartGate =
     ? lazy(() => import('../native/start-gate').then((module) => ({ default: module.StartGate })))
     : null;
 
-/** Which button opened Account: focus goes back to it when Account closes. */
-export type AccountOpener = 'person' | 'tab';
-
 interface ReadyScreenProps {
   hasConsent: boolean;
   onConsent: () => void;
   earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
-  /** Opens Account, from the person button or the Account tab; absent when there is none to open. */
-  onOpenAccount?: (opener: AccountOpener) => void;
-  /** The button that opened the screen that was open before this one. */
-  returnFocusTo: AccountOpener | null;
+  /** Opens Account from the Account tab; absent when there is none to open. */
+  onOpenAccount?: () => void;
+  /** Account was open before this screen: focus goes back to the Account tab. */
+  isBackFromAccount: boolean;
 }
 
 /**
- * Before a recording, Figma's Start (4485:24815): the person button at the top right and, at the
- * foot, the Record and Account tabs over the Start Tracking bar (or, on a first visit, what the
- * page does). The top left waits for the tutorial's ?.
+ * Before a recording, Figma's Start (4485:24815): at the foot, the Record and Account tabs over
+ * the Start Tracking bar (or, on a first visit, what the page does). The top corners are empty:
+ * the top left waits for the tutorial's ?.
  */
 export function ReadyScreen({
   hasConsent,
@@ -53,17 +46,15 @@ export function ReadyScreen({
   earlierQuestion,
   onStart,
   onOpenAccount,
-  returnFocusTo,
+  isBackFromAccount,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const personRef = useRef<HTMLButtonElement>(null);
   const tabRef = useRef<HTMLButtonElement>(null);
   // Decided once, as the screen opens: a later change must not move focus again.
-  const [focusTarget] = useState(returnFocusTo);
+  const [shouldFocusTab] = useState(isBackFromAccount);
   useEffect(() => {
-    const openers = { person: personRef.current, tab: tabRef.current };
-    (focusTarget ? openers[focusTarget] : headingRef.current)?.focus();
-  }, [focusTarget]);
+    (shouldFocusTab ? tabRef.current : headingRef.current)?.focus();
+  }, [shouldFocusTab]);
   const stackRef = useStackRoom();
   const startBar = StartGate ? <StartGate onStart={onStart} /> : <StartBar onClick={onStart} />;
 
@@ -72,18 +63,6 @@ export function ReadyScreen({
       {/* TODO: show HelpButton (help-button.tsx) here, at the top left, once the tutorial it opens
           is designed. Until then the corner is empty, as Figma has no Back to the map on Start:
           the browser's back is the way to the public map. */}
-      {onOpenAccount && (
-        <div className="absolute top-0 right-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] pr-[max(1rem,env(safe-area-inset-right))]">
-          <IconButton
-            ref={personRef}
-            tooltip="top"
-            size="large"
-            label="Account"
-            icon={<span className="start-icon start-icon-account" />}
-            onClick={() => onOpenAccount('person')}
-          />
-        </div>
-      )}
       {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
       {hasConsent && !earlierQuestion && (
         <section
@@ -96,7 +75,7 @@ export function ReadyScreen({
           </h1>
           {onOpenAccount && (
             <div className="px-4 pb-4">
-              <BottomToolbar accountRef={tabRef} onOpenAccount={() => onOpenAccount('tab')} />
+              <BottomToolbar accountRef={tabRef} onOpenAccount={onOpenAccount} />
             </div>
           )}
           {/* Nothing stands in for Start while the app's gates load: a plain Start would skip the permissions. */}
