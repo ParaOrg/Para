@@ -755,6 +755,24 @@ const buttons = (page) =>
       Math.abs(open.fold.y + open.fold.height - (open.locator.y + open.locator.height)) < 0.5,
     JSON.stringify(open),
   );
+  // The ⓘ under the card opens the credits, and has the focus back once they close.
+  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  await creditsButton(page).click();
+  await sheet.waitFor();
+  check(
+    'while recording, the ⓘ under the card opens Map Data Source, the screen inert under it',
+    await page.evaluate(
+      () => !!document.querySelector('[aria-label="Discard recording"]')?.closest('[inert]'),
+    ),
+  );
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  Escape closes it, focus back on the ⓘ',
+    await page.evaluate(
+      () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
+    ),
+  );
   await foldButton(page).click();
   await card.waitFor({ state: 'hidden' });
   // The column and the chevron slide down together (duration/sheet).
@@ -781,6 +799,11 @@ const buttons = (page) =>
         'false',
     JSON.stringify(folded),
   );
+  await creditsButton(page).click();
+  await sheet.waitFor();
+  await sheet.getByRole('button', { name: 'Close' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check('  folded, the ⓘ opens it too', true);
   const fixesBefore = (await mapSource(page))?.features.find(
     (f) => f.geometry.type === 'LineString',
   )?.geometry.coordinates.length;

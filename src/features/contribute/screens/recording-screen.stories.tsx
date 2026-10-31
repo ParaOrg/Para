@@ -49,3 +49,6 @@ export const Folded: Story = { args: { isCardFolded: true } };
 
 /** The screen could not be kept awake: the note stands over the card. */
 export const NotKeptAwake: Story = { args: { isAwake: false } };
+
+/** Folded, with the note that the screen may sleep: it stays in the stack, under the column. */
+export const FoldedNotKeptAwake: Story = { args: { isCardFolded: true, isAwake: false } };

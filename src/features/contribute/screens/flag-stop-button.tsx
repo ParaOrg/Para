@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
@@ -20,6 +20,7 @@ const FLAGGED_MS = 1500;
  * a moment (a screen reader hears it from the page's status line).
  */
 export function FlagStopButton({ isRecording, canFlag, onFlag }: FlagStopButtonProps) {
+  const limitId = useId();
   const [flaggedTaps, setFlaggedTaps] = useState(0);
   const isFlaggedShown = flaggedTaps > 0;
 
@@ -56,8 +57,15 @@ export function FlagStopButton({ isRecording, canFlag, onFlag }: FlagStopButtonP
         icon={<FlagStopIcon />}
         disabled={!isRecording}
         aria-disabled={!canFlag || undefined}
+        aria-describedby={canFlag ? undefined : limitId}
         onClick={handleClick}
       />
+      {/* TODO: the owner draws how a full ride's flag looks; until then a screen reader is told. */}
+      {!canFlag && (
+        <span id={limitId} className="sr-only">
+          This ride has the most stops it can hold.
+        </span>
+      )}
     </div>
   );
 }

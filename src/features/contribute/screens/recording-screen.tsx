@@ -1,8 +1,10 @@
 import { useEffect, useId, useRef, useState, type Ref } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { ChevronDownIcon, CloseIcon } from '@/shared/ui/route-icons';
+import { CloseIcon } from '@/shared/ui/route-icons';
+import { cn } from '@/shared/utils/cn';
 
+import { FoldButton } from './fold-button';
 import { RecordingCard, type RecordingCardState } from './recording-card';
 import { RecordingTint } from './recording-tint';
 import { TrackingButton } from './tracking-button';
@@ -68,9 +70,10 @@ export function RecordingScreen({
   const stackRef = useStackRoom();
   const pauseRef = useRef<HTMLButtonElement>(null);
   // The heading takes focus as the screen opens, a screen reader starting at its top; back from
-  // Keep recording it is the Pause bar, where the contributor was before.
+  // Keep recording it is the Pause bar, where the contributor was before, unless the card is
+  // folded away with it.
   useEffect(() => {
-    (shouldFocusPause ? pauseRef.current : headingRef.current)?.focus();
+    (shouldFocusPause && !isCardFolded ? pauseRef.current : headingRef.current)?.focus();
     // Once, as the screen opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a change of the prop alone must not move focus
   }, []);
@@ -110,33 +113,20 @@ export function RecordingScreen({
           onClick={() => setIsAsking(true)}
         />
       </div>
-      {/* At the left, level with the right-hand column's foot, which stands 16 (--dock-gap) over
-          the stack: it slides with it as the card folds and comes back. */}
-      <div className="absolute bottom-0 left-5 z-10 flex -translate-y-[calc(var(--stack-room,0px)+var(--dock-gap,1rem))] transition-[translate] duration-sheet ease-enter motion-reduce:transition-none">
-        <IconButton
-          tooltip="right"
-          size="large"
-          label={isCardFolded ? 'Show the recording card' : 'Hide the recording card'}
-          icon={isCardFolded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-          aria-expanded={!isCardFolded}
-          aria-controls={cardId}
-          onClick={() => onCardFoldedChange(!isCardFolded)}
-        />
-      </div>
-      <div className="absolute bottom-3 left-3 z-10 flex">
-        <CreditsButton ref={creditsButtonRef} onClick={onOpenCredits} />
-      </div>
+      <FoldButton isFolded={isCardFolded} controls={cardId} onFoldedChange={onCardFoldedChange} />
       <section
         ref={stackRef}
         aria-labelledby="recording-heading"
-        className={
-          'absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-5 ' +
+        // The stack takes no taps itself, only what it holds: its padding is the map's, and
+        // the ⓘ's under it.
+        className={cn(
+          'pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-5 *:pointer-events-auto',
           // Open, the card stands 40 over the screen's foot; folded, the column does, its 16 over
           // the stack taken off.
-          (isCardFolded
+          isCardFolded
             ? 'pb-[calc(max(2.125rem,env(safe-area-inset-bottom))-0.625rem)]'
-            : 'pb-[calc(0.375rem+max(2.125rem,env(safe-area-inset-bottom)))]')
-        }
+            : 'pb-[calc(0.375rem+max(2.125rem,env(safe-area-inset-bottom)))]',
+        )}
       >
         <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
           {isPaused ? 'Recording paused' : 'Recording a route'}
@@ -183,15 +173,10 @@ export function RecordingScreen({
           </RecordingCard>
         </div>
       </section>
+      {/* Figma's ⓘ, 12 in from the frame's left and foot, over the stack's padding. */}
+      <div className="absolute bottom-3 left-3 z-20 flex">
+        <CreditsButton ref={creditsButtonRef} onClick={onOpenCredits} />
+      </div>
     </>
-  );
-}
-
-/** chevron-up: the chevron-down turned over, to bring the card back. */
-function ChevronUpIcon() {
-  return (
-    <span className="block size-full rotate-180 *:size-full">
-      <ChevronDownIcon />
-    </span>
   );
 }

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { FlagStopButton } from './flag-stop-button';
 
@@ -27,3 +27,11 @@ export const Paused: Story = { args: { isRecording: false } };
 
 /** The ride holds the most stops it can: the button stays, and a tap does nothing. */
 export const AtTheLimit: Story = { args: { canFlag: false } };
+
+/** Just tapped: "Flagged" beside the button for a moment (no Figma design for the note yet). */
+export const JustFlagged: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Flag a stop' }));
+    await expect(within(canvasElement).getByText('Flagged')).toBeVisible();
+  },
+};
