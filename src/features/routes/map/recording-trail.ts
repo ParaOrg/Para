@@ -4,6 +4,7 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { CASING_EXTRA, litRadius, litWidth } from './line-style';
+import { FLAG_IMAGE, FLAG_POINT_X, addFlagImage } from './trail-flag';
 import { FOOT_IMAGE, addFootImage } from './trail-foot';
 import type { Mode } from '../model/ride-recording';
 
@@ -19,7 +20,7 @@ export interface TrailMarker {
   mode: Mode;
 }
 
-/** A pin where the contributor marked the place they were. */
+/** A flagged stop: a pin where the contributor marked the place they were. */
 export interface TrailMark {
   at: LngLat;
 }
@@ -68,6 +69,7 @@ export function trailData(trail: RecordingTrail) {
 export function addRecordingTrail(map: MapLibreMap): void {
   if (map.getSource(TRAIL_SRC)) return;
   addFootImage(map);
+  addFlagImage(map);
   map.addSource(TRAIL_SRC, {
     type: 'geojson',
     data: trailData({ lines: [], markers: [], marks: [] }),
@@ -133,16 +135,18 @@ export function addRecordingTrail(map: MapLibreMap): void {
       'circle-stroke-width': 3,
     },
   });
+  // Figma's flagstop pin, its point (the stem's foot) on the place: always drawn, over the rest.
   map.addLayer({
     id: MARKS,
-    type: 'circle',
+    type: 'symbol',
     source: TRAIL_SRC,
     filter: ['==', ['get', 'kind'], 'mark'],
-    paint: {
-      'circle-radius': litRadius(CASING_EXTRA),
-      'circle-color': MAP_COLOURS['Map/Trail/mark'],
-      'circle-stroke-color': MAP_PAINT['Paint/casing'],
-      'circle-stroke-width': 2,
+    layout: {
+      'icon-image': FLAG_IMAGE,
+      'icon-anchor': 'bottom-left',
+      'icon-offset': [-FLAG_POINT_X, 0],
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
     },
   });
 }

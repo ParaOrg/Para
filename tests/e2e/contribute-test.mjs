@@ -168,6 +168,17 @@ const finishRecording = async (page) => {
 };
 /** Start's ⓘ, which opens the map's credits as the Map Data Source sheet. */
 const creditsButton = (page) => page.getByRole('button', { name: 'Map data sources' });
+/** Flag a stop, at the top of the right-hand column while recording. */
+const flagButton = (page) => page.getByRole('button', { name: 'Flag a stop' });
+/** The tint's state and its edges' colour: "lakad:from-blue-700/10". */
+const tintOf = (page) =>
+  page.evaluate(() => {
+    const tint = document.querySelector('[data-tint]');
+    const from = tint?.firstElementChild?.className.match(/from-\S+/)?.[0];
+    return `${tint?.getAttribute('data-tint')}:${from}`;
+  });
+/** The fold: the chevron at the left over the card, or at the foot with it folded away. */
+const foldButton = (page) => page.getByRole('button', { name: /^(Hide|Show) the recording card$/ });
 const buttons = (page) =>
   page
     .getByRole('button')
@@ -412,10 +423,18 @@ const buttons = (page) =>
     paint,
   );
   await shot(page, '2-recording-lakad');
+  check(
+    "  Lakad tints the map's edges blue/700 at 10%, Figma's OverlayIndicator",
+    (await tintOf(page)) === 'lakad:from-blue-700/10',
+  );
 
   // Pause, and Resume carries on.
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
+  check(
+    '  Paused tints them neutral/900, and Flag a stop shows, disabled',
+    (await tintOf(page)) === 'paused:from-neutral-900/10' && (await flagButton(page).isDisabled()),
+  );
   const pausedCard = await page.getByRole('group', { name: 'Recording so far' }).innerText();
   check(
     'Pause: Resume and Finish replace Pause and the mode button, and the card says Paused and --',
@@ -464,42 +483,52 @@ const buttons = (page) =>
   );
   await shot(page, '3-recording-sakay');
 
-  // Mark this place: a pin where the trail is, a polite "Marked", and nothing to answer.
-  const markButton = page.getByRole('button', { name: 'Mark this place' });
-  const markBox = await markButton.boundingBox();
+  check(
+    "  Sakay tints the map's edges green/700 at 10%",
+    (await tintOf(page)) === 'sakay:from-green-700/10',
+  );
+
+  // Flag a stop: Figma's flagstop pin where the trail is, a polite "Flagged", nothing to answer.
+  const flagBox = await flagButton(page).boundingBox();
   const locatorBox = await locate(page).boundingBox();
   const styleBox = await page.getByRole('button', { name: 'Map design' }).boundingBox();
   check(
-    'while recording, "Mark this place" is a round 48 px button directly above the locator column',
-    markBox?.width === 48 &&
-      markBox.height === 48 &&
-      Math.abs(markBox.x - locatorBox.x) < 1 &&
-      markBox.y + markBox.height <= styleBox.y,
-    JSON.stringify([markBox, locatorBox]),
+    'while recording, Flag a stop is a 48 px button at the top of the right-hand column, 16 over the map-style button',
+    flagBox?.width === 48 &&
+      flagBox.height === 48 &&
+      Math.abs(flagBox.x - locatorBox.x) < 1 &&
+      Math.abs(styleBox.y - (flagBox.y + flagBox.height) - 16) < 0.5 &&
+      Math.abs(393 - (locatorBox.x + locatorBox.width) - 20) < 0.5,
+    JSON.stringify([flagBox, styleBox, locatorBox]),
   );
-  await markButton.click();
-  await page.getByTestId('marked-note').waitFor();
+  await flagButton(page).click();
+  await page.getByTestId('flagged-note').waitFor();
   check(
-    '  a tap says "Marked" on the screen and politely in the status line, with no dialog',
-    (await page.getByTestId('marked-note').innerText()) === 'Marked' &&
-      (await page.getByRole('status').filter({ hasText: 'Marked, 1' }).count()) === 1 &&
+    '  on Sakay a tap says "Flagged" on the screen and politely in the status line, with no dialog',
+    (await page.getByTestId('flagged-note').innerText()) === 'Flagged' &&
+      (await page.getByRole('status').filter({ hasText: 'Flagged, 1' }).count()) === 1 &&
       (await page.getByRole('dialog').count()) === 0,
   );
-  await shot(page, '3b-marked');
+  await shot(page, '3b-flagged');
   const marked = await mapSource(page);
   check(
-    '  a pin is left on the trail, in the mark colour, above the line',
+    "  Figma's flagstop pin is left on the trail, its point on the place, above the line",
     marked?.features.filter((f) => f.properties.kind === 'mark').length === 1 &&
-      (await page.evaluate(() =>
-        window.__map.getPaintProperty('recording-trail-marks', 'circle-color'),
-      )) === '#8200db' &&
       (await page.evaluate(() => {
-        const ids = window.__map.getStyle().layers.map((l) => l.id);
-        return ids.indexOf('recording-trail-marks') > ids.indexOf('recording-trail-line');
+        const m = window.__map;
+        const layer = m.getLayer('recording-trail-marks');
+        const ids = m.getStyle().layers.map((l) => l.id);
+        return (
+          layer?.type === 'symbol' &&
+          m.getLayoutProperty('recording-trail-marks', 'icon-image') === 'recording-trail-flag' &&
+          m.getLayoutProperty('recording-trail-marks', 'icon-anchor') === 'bottom-left' &&
+          m.hasImage('recording-trail-flag') &&
+          ids.indexOf('recording-trail-marks') > ids.indexOf('recording-trail-line')
+        );
       })),
   );
-  await page.getByTestId('marked-note').waitFor({ state: 'detached', timeout: 5000 });
-  check('  "Marked" goes away by itself', true);
+  await page.getByTestId('flagged-note').waitFor({ state: 'detached', timeout: 5000 });
+  check('  "Flagged" goes away by itself', true);
 
   // The locator's cycle: turn with the compass, north up again, a pan lets go, a tap follows.
   await face(page, 270);
@@ -616,8 +645,8 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Record again' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
-    'Record again is Ready, with nothing kept on the screen, and no mark button',
-    (await page.getByRole('button', { name: 'Mark this place' }).count()) === 0,
+    'Record again is Ready, with nothing kept on the screen, and no Flag a stop',
+    (await flagButton(page).count()) === 0,
   );
   check('no page errors on the loop', errors.length === 0, errors.join('; '));
   await page.context().close();
@@ -689,6 +718,156 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Delete' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check('✕ then Delete throws the recording away and returns to Ready', true);
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------- Flag a stop on Lakad, and the card folded away
+{
+  const { page, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 60);
+  await flagButton(page).click();
+  check(
+    'on Lakad, Flag a stop is enabled and flags the place',
+    (await page.getByRole('status').filter({ hasText: 'Flagged, 1' }).count()) === 1 &&
+      (await mapSource(page))?.features.filter((f) => f.properties.kind === 'mark').length === 1,
+  );
+  // The column's tooltips run past the screen's edge: the page must not slide to them, even from
+  // code, as focus and scrollIntoView do (once seen on CI: every control 72 in and 16 up).
+  check(
+    '  the page cannot be scrolled, even from code: nothing slides',
+    await page.evaluate(() => {
+      const main = document.querySelector('main');
+      main.scrollLeft = 1000;
+      main.scrollTop = 1000;
+      document.querySelector('[aria-label="Flag a stop"]').scrollIntoView({ inline: 'end' });
+      return main.scrollLeft === 0 && main.scrollTop === 0;
+    }),
+  );
+
+  const discard = await page.getByRole('button', { name: 'Discard recording' }).boundingBox();
+  check(
+    "✕ stands 20 in and 17 under the safe area's top, as the recording frames have it",
+    Math.abs(discard.x - 20) < 0.5 && Math.abs(discard.y - 17) < 0.5,
+    JSON.stringify(discard),
+  );
+
+  const card = page.getByRole('group', { name: 'Recording so far' });
+  const open = {
+    fold: await foldButton(page).boundingBox(),
+    locator: await locate(page).boundingBox(),
+    card: await card.boundingBox(),
+  };
+  check(
+    'open, the chevron is at the left, 20 in, level with the column, both 16 over the card',
+    (await foldButton(page).getAttribute('aria-label')) === 'Hide the recording card' &&
+      (await foldButton(page).getAttribute('aria-expanded')) === 'true' &&
+      Math.abs(open.fold.x - 20) < 0.5 &&
+      Math.abs(open.fold.y + open.fold.height - (open.locator.y + open.locator.height)) < 0.5,
+    JSON.stringify(open),
+  );
+  // The ⓘ under the card opens the credits, and has the focus back once they close.
+  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  await creditsButton(page).click();
+  await sheet.waitFor();
+  check(
+    'while recording, the ⓘ under the card opens Map Data Source, the screen inert under it',
+    await page.evaluate(
+      () => !!document.querySelector('[aria-label="Discard recording"]')?.closest('[inert]'),
+    ),
+  );
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  Escape closes it, focus back on the ⓘ',
+    await page.evaluate(
+      () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
+    ),
+  );
+  await foldButton(page).click();
+  await card.waitFor({ state: 'hidden' });
+  // The column and the chevron slide down together (duration/sheet).
+  await page.waitForTimeout(800);
+  const folded = {
+    fold: await foldButton(page).boundingBox(),
+    locator: await locate(page).boundingBox(),
+    stack: await page.locator('section[aria-labelledby="recording-heading"]').boundingBox(),
+    isAwakeNoteShown: (await page.getByText('The screen could not be kept awake').count()) > 0,
+  };
+  // Folded, the stack is Figma's 40 under the column, less the column's 16 over it; here the
+  // headless browser's note that the screen may sleep stands in it too.
+  const foldedFoot = 852 - (folded.locator.y + folded.locator.height);
+  check(
+    '  folded: the card hides, and the column and the chevron, turned up, slide down to 16 over what is left of the stack',
+    (await foldButton(page).getAttribute('aria-label')) === 'Show the recording card' &&
+      (await foldButton(page).getAttribute('aria-expanded')) === 'false' &&
+      folded.locator.y + folded.locator.height > open.locator.y + open.locator.height + 100 &&
+      Math.abs(folded.stack.y - (folded.locator.y + folded.locator.height) - 16) < 0.5 &&
+      (folded.isAwakeNoteShown || Math.abs(foldedFoot - 40) < 0.5) &&
+      Math.abs(folded.fold.y + folded.fold.height - (folded.locator.y + folded.locator.height)) <
+        0.5 &&
+      (await page.evaluate(() => document.activeElement?.getAttribute('aria-expanded'))) ===
+        'false',
+    JSON.stringify(folded),
+  );
+  await creditsButton(page).click();
+  await sheet.waitFor();
+  await sheet.getByRole('button', { name: 'Close' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check('  folded, the ⓘ opens it too', true);
+  const fixesBefore = (await mapSource(page))?.features.find(
+    (f) => f.geometry.type === 'LineString',
+  )?.geometry.coordinates.length;
+  await ride(page, 61, 90);
+  // The trail is redrawn after React has the fixes, not as each one is emitted: wait for it.
+  const fixesAfter = await page
+    .waitForFunction(
+      (before) => {
+        const length = window.__map
+          .getSource('recording-trail')
+          ?.serialize()
+          .data?.features.find((f) => f.geometry.type === 'LineString')?.geometry
+          .coordinates.length;
+        return length > before ? length : false;
+      },
+      fixesBefore,
+      { timeout: 5000 },
+    )
+    .then((handle) => handle.jsonValue())
+    .catch(() => fixesBefore);
+  check(
+    '  the recording goes on while folded: the trail grows, and the flag still works',
+    fixesAfter > fixesBefore && (await flagButton(page).isEnabled()),
+    `${fixesBefore} → ${fixesAfter}`,
+  );
+  await foldButton(page).click();
+  await card.waitFor();
+  check(
+    '  Show brings the card back, with the time and the distance gone on',
+    /Time\s+\d+ (sec|min)/.test(await card.innerText()) &&
+      (await foldButton(page).getAttribute('aria-expanded')) === 'true',
+  );
+  await page.getByRole('button', { name: 'Switch to Sakay' }).click();
+  await page.getByRole('button', { name: 'Switch to Lakad' }).waitFor();
+  await foldButton(page).click();
+  await card.waitFor({ state: 'hidden' });
+  await ride(page, 91, 100);
+  check(
+    '  folded on Sakay, it stays folded as the fixes come',
+    (await card.isHidden()) &&
+      (await foldButton(page).getAttribute('aria-label')) === 'Show the recording card',
+  );
+  // ✕ is still there with the card folded: discard, and the next recording opens with its card.
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await card.waitFor();
+  check(
+    'the next recording starts with its card out',
+    (await foldButton(page).getAttribute('aria-expanded')) === 'true',
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -1269,13 +1448,14 @@ const WAKE = () => {
     (await back.count()) === 0 &&
       (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1,
   );
-  check(
-    "  and the map's credits are MapLibre's corner ⓘ while recording",
-    await hasCornerCredits(),
-  );
+  // Recording keeps the credits behind its own ⓘ, as Start does: no corner one beside it.
+  const hasOwnCredits = async () =>
+    (await creditsButton(page).isVisible()) &&
+    !(await page.locator('.maplibregl-ctrl-attrib').isVisible());
+  check("  and the map's credits behind its own ⓘ while recording", await hasOwnCredits());
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
-  check('  and while paused', await hasCornerCredits());
+  check('  and while paused', await hasOwnCredits());
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   // Fixes are written as they arrive; a moment lets the last ones land before the page goes.

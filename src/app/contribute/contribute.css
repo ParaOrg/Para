@@ -49,8 +49,8 @@
 
 /*
  * The contributor screens carry no scale bar: Figma draws none on them. The credits are the
- * page's own ⓘ on Start, the Map Data Source sheet (map-data-source-sheet.tsx), and MapLibre's
- * corner ⓘ on every other screen.
+ * page's own ⓘ on Start and while recording, the Map Data Source sheet
+ * (map-data-source-sheet.tsx), and MapLibre's corner ⓘ on every other screen.
  */
 .maplibregl-ctrl-scale {
   display: none;

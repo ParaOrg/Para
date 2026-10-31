@@ -260,7 +260,7 @@ const groupOf = (page, name) =>
       [T0 + s * 1000, 14.7 + (s * 8) / 111_320],
     );
   }
-  await page.getByRole('button', { name: 'Mark this place' }).click();
+  await page.getByRole('button', { name: 'Flag a stop' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Finish', exact: true }).click();
   await page.getByLabel('Start point name').fill('SM Fairview');

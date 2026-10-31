@@ -180,7 +180,7 @@ export function useRecording(): RecordingState {
     const marked = markedRecording(recording, Date.now());
     if (!marked) return;
     keep(marked.recording);
-    setAnnouncement(`Marked, ${marked.count}`);
+    setAnnouncement(`Flagged, ${marked.count}`);
   }
 
   function downloadCurrent() {

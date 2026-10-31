@@ -7,7 +7,8 @@ import { Tooltip } from './tooltip';
  * Button's Special voice with the words taken out — a round pill holding one
  * icon, on the same surfaces and the same InnerShadow/SpecialButton… effect
  * styles, state for state (see Button). Brand is Button's Primary the same way:
- * Brand/surface under the PrimaryButton/… effect styles.
+ * Brand/surface under the PrimaryButton/… effect styles. aria-disabled looks
+ * disabled too, for a button that must keep its focus while it can do nothing.
  * The set draws Plain too; nothing uses it yet, so it is not here.
  *
  * With no words on it, its label shows as the Tooltip on hover — every
@@ -57,12 +58,14 @@ type Variant = NonNullable<Props['variant']>;
 export const VARIANT = {
   special:
     'bg-surface-tertiary text-content-primary shadow-special-button-rest ' +
-    'enabled:hover:shadow-special-button-hover ' +
-    'enabled:active:bg-surface-quaternary enabled:active:shadow-special-button-pressed',
+    'enabled:not-aria-disabled:hover:shadow-special-button-hover ' +
+    'enabled:not-aria-disabled:active:bg-surface-quaternary ' +
+    'enabled:not-aria-disabled:active:shadow-special-button-pressed',
   // Pressed keeps Brand/surface: the set darkens only the shadow.
   brand:
     'bg-brand-surface text-content-inverse shadow-primary-button-rest ' +
-    'enabled:hover:shadow-primary-button-hover enabled:active:shadow-primary-button-pressed',
+    'enabled:not-aria-disabled:hover:shadow-primary-button-hover ' +
+    'enabled:not-aria-disabled:active:shadow-primary-button-pressed',
 } satisfies Record<Variant, string>;
 
 // Large is 48px round (10px around a 28px icon); Base 40px (8px around 24px);
@@ -117,7 +120,7 @@ export function IconButton({
         type={type}
         aria-label={label}
         className={
-          'inline-flex shrink-0 items-center justify-center rounded-full disabled:opacity-60 ' +
+          'inline-flex shrink-0 items-center justify-center rounded-full disabled:opacity-60 aria-disabled:opacity-60 ' +
           VARIANT[variant] +
           ' ' +
           SIZE[size]

@@ -18,11 +18,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Recording on Lakad: the edges in blue (4481:23631). */
+/** Recording on Lakad: the edges in blue/700 at 10% (OverlayIndicator, 4493:1697). */
 export const Lakad: Story = {};
 
-/** Recording on Sakay: green (4481:23798). */
+/** Recording on Sakay: green/700. */
 export const Sakay: Story = { args: { state: 'sakay' } };
 
-/** Paused: the red card's surface (4481:23636). */
+/** Paused: neutral/900. */
 export const Paused: Story = { args: { state: 'paused' } };

@@ -13,7 +13,7 @@ import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
-import { MarkButton } from './screens/mark-button';
+import { FlagStopButton } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
@@ -97,16 +97,22 @@ export function ContributePage({ locator }: ContributePageProps) {
     canUpload() &&
     profile.isOpen &&
     !isPermissionsShown;
+  const isRecordingShown = phase === 'recording' || phase === 'paused';
   const isStartShown =
     accountGate === 'ready' &&
     phase === 'ready' &&
     !isHistoryShown &&
     !isProfileShown &&
     !isPermissionsShown;
-  // The map's credits, over Start: closed by ✕, Escape or a tap on the dimmed map. Start's ⓘ
-  // opens them; every other screen over the map keeps MapLibre's corner ⓘ.
+  // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
+  // Their own ⓘ opens them; every other screen over the map keeps MapLibre's corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
-  const isCreditsShown = isStartShown && isCreditsOpen;
+  const hasCreditsButton = isStartShown || (accountGate === 'ready' && isRecordingShown);
+  const isCreditsShown = hasCreditsButton && isCreditsOpen;
+  // The recording card folded away, by the recording it was folded on: each recording opens with
+  // its card out, and the contributor's choice holds through its switches, pauses and the form.
+  const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
+  const isCardFolded = foldedRecordingId !== null && foldedRecordingId === recording.current?.id;
   // Focus goes back to the ⓘ once Start is live again: the sheet cannot hand it back itself,
   // as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
@@ -151,7 +157,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   };
 
   return (
-    <main className="relative h-dvh overflow-hidden bg-surface-secondary font-sn-pro">
+    // Clipped, not hidden: an overflow:hidden box can still be scrolled from code (focus, scrollIntoView),
+    // and the right-hand column's tooltips run off the screen's edge, so one would slide the page.
+    <main className="relative h-dvh overflow-clip bg-surface-secondary font-sn-pro">
       {/* inert while History, Profile, the permissions screen or the credits cover it: no map
           control can be tabbed to behind the screen. */}
       <div
@@ -162,12 +170,13 @@ export function ContributePage({ locator }: ContributePageProps) {
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
-          areCreditsShown={!isStartShown}
+          areCreditsShown={!hasCreditsButton}
           mark={
-            phase === 'recording' ? (
-              <MarkButton
-                canMark={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
-                onMark={recording.markPlace}
+            isRecordingShown ? (
+              <FlagStopButton
+                isRecording={phase === 'recording'}
+                canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
+                onFlag={recording.markPlace}
               />
             ) : null
           }
@@ -251,20 +260,28 @@ export function ContributePage({ locator }: ContributePageProps) {
               />
             </Suspense>
           )}
-          {(phase === 'recording' || phase === 'paused') && figures && (
+          {isRecordingShown && figures && (
             <Suspense fallback={null}>
-              <RecordingScreen
-                figures={figures}
-                mode={recording.mode}
-                isPaused={phase === 'paused'}
-                isAwake={recording.isAwake}
-                shouldFocusPause={recording.focusTarget === 'pause'}
-                onPause={recording.stop}
-                onResume={recording.resume}
-                onModeSwitch={recording.switchMode}
-                onFinish={recording.openSave}
-                onDiscard={recording.cancel}
-              />
+              <div inert={isCreditsShown} className="contents">
+                <RecordingScreen
+                  figures={figures}
+                  mode={recording.mode}
+                  isPaused={phase === 'paused'}
+                  isAwake={recording.isAwake}
+                  shouldFocusPause={recording.focusTarget === 'pause'}
+                  onPause={recording.stop}
+                  onResume={recording.resume}
+                  onModeSwitch={recording.switchMode}
+                  onFinish={recording.openSave}
+                  onDiscard={recording.cancel}
+                  isCardFolded={isCardFolded}
+                  onCardFoldedChange={(isFolded) =>
+                    setFoldedRecordingId(isFolded ? (recording.current?.id ?? null) : null)
+                  }
+                  onOpenCredits={() => setIsCreditsOpen(true)}
+                  creditsButtonRef={creditsButtonRef}
+                />
+              </div>
             </Suspense>
           )}
           {phase === 'form' && (
