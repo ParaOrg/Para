@@ -11,7 +11,9 @@ const meta = {
     email: 'villanueva2@gmail.com',
     isBusy: false,
     isResending: false,
+    rejection: null,
     error: null,
+    resendError: null,
     captcha: NO_CAPTCHA,
     onSubmit: fn(),
     onResend: fn(),
@@ -38,24 +40,63 @@ export const Default: Story = {
   },
 };
 
-/** Six digits typed, then Verify: the code goes as digits. */
+/** The sixth digit sends the code, with no button to press. */
 export const Filled: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('Verification code'), '482913');
-    await userEvent.click(canvas.getByRole('button', { name: 'Verify' }));
+    await userEvent.type(canvas.getByLabelText('Verification code'), '48291');
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await userEvent.type(canvas.getByLabelText('Verification code'), '3');
+    await expect(args.onSubmit).toHaveBeenCalledOnce();
+    await expect(args.onSubmit).toHaveBeenCalledWith({ code: '482913' });
+    await expect(canvas.queryByRole('button', { name: 'Verify' })).toBeNull();
+  },
+};
+
+/** A pasted code is sent the same way. */
+export const Pasted: Story = {
+  play: async ({ args, canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByLabelText('Verification code'));
+    await userEvent.paste('Your code: 482 913');
+    await expect(args.onSubmit).toHaveBeenCalledOnce();
     await expect(args.onSubmit).toHaveBeenCalledWith({ code: '482913' });
   },
 };
 
-/** Fewer than six digits: the boxes say so, and nothing is sent. */
+/** Enter with fewer than six digits: the boxes say so, and nothing is sent. */
 export const ShortCode: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('Verification code'), '482');
-    await userEvent.click(canvas.getByRole('button', { name: 'Verify' }));
+    await userEvent.type(canvas.getByLabelText('Verification code'), '482{Enter}');
     await expect(canvas.getByText('Enter the 6-digit code')).toBeVisible();
     await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+/** After that line, typing goes on from the digits there: only a refusal starts afresh. */
+export const ShortCodeThenTyping: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const field = canvas.getByLabelText('Verification code');
+    await userEvent.type(field, '482{Enter}');
+    await expect(canvas.getByText('Enter the 6-digit code')).toBeVisible();
+    await userEvent.type(field, '9');
+    await expect(field).toHaveValue('4829');
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+/** A Resend that failed: its line shows, and the boxes are left as they were. */
+export const ResendFailed: Story = {
+  args: { resendError: "No signal — try again when you're online" },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const field = canvas.getByLabelText('Verification code');
+    await expect(field).not.toHaveFocus();
+    await expect(canvas.getByRole('alert')).toHaveTextContent('No signal');
+    await userEvent.type(field, '482913');
+    await userEvent.click(field);
+    await expect(args.onSubmit).toHaveBeenCalledOnce();
   },
 };
 
@@ -67,21 +108,68 @@ export const Resend: Story = {
   },
 };
 
-/** A refused code: one red line above Verify. */
+/** A refused code: the boxes shake once and go red, the line under them read out. */
 export const CodeRejected: Story = {
-  args: { error: 'That code is wrong or has expired. Check it, or send a new code.' },
-};
-
-/** While the code is checked: Verify, Resend and Back wait, so the answer is not lost. */
-export const Verifying: Story = {
-  args: { isBusy: true },
+  args: {
+    rejection: {
+      message: 'That code is wrong or has expired. Check it, or send a new code.',
+      key: 1,
+    },
+  },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('button', { name: 'Back' })).toBeDisabled();
+    const canvas = within(canvasElement);
+    await expect(canvas.getByLabelText('Verification code')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    await expect(canvas.getAllByRole('alert').map((alert) => alert.textContent)).toContain(
+      'That code is wrong or has expired. Check it, or send a new code.',
+    );
   },
 };
 
-/** While a new code is sent. */
-export const Resending: Story = { args: { isResending: true } };
+/** After a refusal, the next digit starts the code again, and the red goes. */
+export const TypingAfterRejection: Story = {
+  args: CodeRejected.args,
+  play: async ({ canvasElement }) => {
+    const field = within(canvasElement).getByLabelText('Verification code');
+    await userEvent.type(field, '5');
+    await expect(field).toHaveValue('5');
+    await expect(field).not.toHaveAttribute('aria-invalid');
+  },
+};
+
+/** Another failure (no signal): one line, no shake, no red; the digits stay to try again. */
+export const NoSignal: Story = {
+  args: { error: "No signal — try again when you're online" },
+  play: async ({ args, canvasElement }) => {
+    const field = within(canvasElement).getByLabelText('Verification code');
+    await expect(field).not.toHaveAttribute('aria-invalid');
+    await userEvent.type(field, '482913');
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+    await userEvent.click(field);
+    await expect(args.onSubmit).toHaveBeenCalledTimes(2);
+  },
+};
+
+/** While the code is checked: the boxes, Resend and Back wait, and a line says why. */
+export const Verifying: Story = {
+  args: { isBusy: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Back' })).toBeDisabled();
+    await expect(canvas.getByLabelText('Verification code')).toBeDisabled();
+    await expect(canvas.getByRole('status')).toHaveTextContent('Checking the code…');
+  },
+};
+
+/** While a new code is sent: the boxes wait too, so a full code is never left unsent. */
+export const Resending: Story = {
+  args: { isResending: true },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByLabelText('Verification code')).toBeDisabled();
+  },
+};
 
 /** Waiting on the bot check a Resend needs: its box under Resend, which is off until it passes. */
 export const WaitingForCheck: Story = {

@@ -143,6 +143,43 @@ export const DisabledWithError: Story = {
   },
 };
 
+/** Refused once more each press: the boxes shake once, side to side. */
+function Refusals(props: ComponentProps<typeof OtpField>) {
+  const [refusals, setRefusals] = useState(0);
+  return (
+    <div className="flex flex-col gap-4">
+      <Controlled
+        {...props}
+        error={refusals > 0 ? props.error : undefined}
+        shakeKey={refusals > 0 ? refusals : undefined}
+      />
+      <button type="button" onClick={() => setRefusals((count) => count + 1)}>
+        Refuse
+      </button>
+    </div>
+  );
+}
+
+/**
+ * A refused code: a new shakeKey shakes the boxes once and they go red. With reduced motion asked
+ * for, they only go red.
+ */
+export const Shake: Story = {
+  args: { value: '123456', error: 'That code is wrong or has expired.' },
+  render: (args) => <Refusals {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const field = canvas.getByLabelText('Verification code');
+    const boxes = field.previousElementSibling;
+    await expect(boxes?.getAnimations()).toHaveLength(0);
+    await userEvent.click(canvas.getByRole('button', { name: 'Refuse' }));
+    const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const shaking = field.previousElementSibling;
+    await expect(shaking?.getAnimations()).toHaveLength(isReduced ? 0 : 1);
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+  },
+};
+
 /** InputField's disabled look: nothing can be typed. */
 export const Disabled: Story = { args: { value: '123', disabled: true } };
 
