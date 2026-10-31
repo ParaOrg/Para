@@ -28,7 +28,6 @@ import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { UploadCheck } from './uploads/upload-check';
-import { isNotSent } from './uploads/upload-rules';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
 
@@ -40,14 +39,9 @@ const HistoryView = lazy(() =>
 const MapDataSourceView = lazy(() =>
   import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
 );
-// Account and its settings, opened from the Account tab: fetched on the tap, not with the page.
+// Account, with its settings inside it, opened from the Account tab: fetched on the tap.
 const AccountView = lazy(() =>
   import('./account/account-view').then((module) => ({ default: module.AccountView })),
-);
-const AccountSettingsView = lazy(() =>
-  import('./account/account-settings-view').then((module) => ({
-    default: module.AccountSettingsView,
-  })),
 );
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
 // fetches them as it opens (below), so Start never waits on the network, nor fails without one.
@@ -133,14 +127,8 @@ export function ContributePage({ locator }: ContributePageProps) {
     phase === 'ready' &&
     accountGate === 'ready' &&
     canUpload() &&
-    profile.isOpen &&
-    !isPermissionsShown;
-  // Account settings, over Account: the same conditions, opened from Account's General.
-  const isSettingsShown =
-    phase === 'ready' &&
-    accountGate === 'ready' &&
-    canUpload() &&
-    settings.isOpen &&
+    // Account settings is shown by Account, in its place.
+    (profile.isOpen || settings.isOpen) &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
   const isStartShown =
@@ -148,7 +136,6 @@ export function ContributePage({ locator }: ContributePageProps) {
     phase === 'ready' &&
     !isHistoryShown &&
     !isProfileShown &&
-    !isSettingsShown &&
     !isPermissionsShown;
   // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
   // Their own ⓘ opens them; every other screen over the map keeps MapLibre's corner ⓘ.
@@ -241,12 +228,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           control can be tabbed to behind the screen. */}
       <div
         inert={
-          isHistoryShown ||
-          isProfileShown ||
-          isSettingsShown ||
-          isPermissionsShown ||
-          isCreditsShown ||
-          isStopShown
+          isHistoryShown || isProfileShown || isPermissionsShown || isCreditsShown || isStopShown
         }
         className="contents"
       >
@@ -321,17 +303,11 @@ export function ContributePage({ locator }: ContributePageProps) {
           {isProfileShown && (
             <Suspense fallback={null}>
               <AccountView
-                unsentCount={recording.saved.filter((r) => isNotSent(uploads.statusOf(r))).length}
+                recordings={recording.saved}
+                statusOf={uploads.statusOf}
                 onOpenHistory={history.open}
-                onOpenSettings={settings.open}
                 onOpenRecord={profile.close}
               />
-            </Suspense>
-          )}
-          {isSettingsShown && (
-            <Suspense fallback={null}>
-              {/* Inside Account, so its Back returns there, even after a reload. */}
-              <AccountSettingsView onBack={() => settings.closeTo('#profile')} />
             </Suspense>
           )}
           {isHistoryShown && (
