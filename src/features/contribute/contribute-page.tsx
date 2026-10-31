@@ -14,7 +14,7 @@ import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-fla
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { MarkButton } from './screens/mark-button';
-import { ReadyScreen, type AccountOpener } from './screens/ready-screen';
+import { ReadyScreen } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
 import { UploadCheck } from './uploads/upload-check';
@@ -71,10 +71,10 @@ export function ContributePage({ locator }: ContributePageProps) {
   const accountGate = useAccountGate();
   // Having an account is the agreement (CONSENT_VERSION 4): nothing is sent until one is signed
   // in, and recordings made before wait on the phone.
-  const hasConsent = accountGate === 'ready';
-  const earlier = useEarlierQuestion(recording.saved, hasConsent, accountId);
+  const canSend = accountGate === 'ready';
+  const earlier = useEarlierQuestion(recording.saved, canSend, accountId);
   const uploads = useUploads(recording.saved, {
-    hasConsent,
+    hasConsent: canSend,
     earlier: earlier.choice,
   });
   const track = useRecordingTrack(
@@ -90,7 +90,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     () => PermissionsOnboarding !== null && isNativeApp() && !hasSeenPermissionsScreen(),
   );
   const isPermissionsShown = isPermissionsPending && accountGate === 'ready' && phase === 'ready';
-  const isHistoryShown = phase === 'ready' && hasConsent && history.isOpen && !isPermissionsShown;
+  const isHistoryShown = phase === 'ready' && canSend && history.isOpen && !isPermissionsShown;
   const isProfileShown =
     phase === 'ready' &&
     accountGate === 'ready' &&
@@ -114,10 +114,10 @@ export function ContributePage({ locator }: ContributePageProps) {
   // loaded; closing then would shut History on every reload.
   useEffect(() => {
     if (accountGate === 'loading') return;
-    if (history.isOpen && (!hasConsent || (phase !== 'loading' && phase !== 'ready'))) {
+    if (history.isOpen && (!canSend || (phase !== 'loading' && phase !== 'ready'))) {
       history.close();
     }
-  }, [accountGate, phase, hasConsent, history]);
+  }, [accountGate, phase, canSend, history]);
 
   // On Ready the recording screens are fetched ahead of Start. A failure here is only a missed
   // head start: the lazy screen asks again when it is shown.
@@ -135,11 +135,11 @@ export function ContributePage({ locator }: ContributePageProps) {
   }, [phase, accountGate, profile]);
 
   // Account is Profile with History inside it; a build with no accounts has History alone. Once it
-  // has been opened from Ready, Ready hands focus back to the button that opened it.
-  const [lastOpened, setLastOpened] = useState<AccountOpener | null>(null);
+  // has been opened from Ready, Ready hands focus back to the Account tab.
+  const [hasOpenedAccount, setHasOpenedAccount] = useState(false);
   const hasAccount = canUpload();
-  const handleOpenAccount = (opener: AccountOpener) => {
-    setLastOpened(opener);
+  const handleOpenAccount = () => {
+    setHasOpenedAccount(true);
     if (hasAccount) profile.open();
     else history.open();
   };
@@ -199,9 +199,13 @@ export function ContributePage({ locator }: ContributePageProps) {
             <div inert={isCreditsShown} className="contents">
               <ReadyScreen
                 earlierQuestion={earlier.question}
-                onStart={recording.start}
+                onStart={() => {
+                  // A ride begun: the next Start opens fresh, focus on its heading, not the tab.
+                  setHasOpenedAccount(false);
+                  recording.start();
+                }}
                 onOpenAccount={handleOpenAccount}
-                returnFocusTo={lastOpened}
+                isBackFromAccount={hasOpenedAccount}
                 onOpenCredits={() => setIsCreditsOpen(true)}
                 creditsButtonRef={creditsButtonRef}
               />

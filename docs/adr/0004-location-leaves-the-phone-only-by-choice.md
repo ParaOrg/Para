@@ -17,8 +17,8 @@ learning), who sees it, for how long and where, and only when they tap Save.
 *(Superseded in part on 2026-10-31: the owner removed the consent screen for
 now, to redesign it and place it elsewhere. Having an account is the
 agreement, recorded as consent version 4 on each upload; recordings made under
-the screen still go as version 3. The text stays in `consent-panel.tsx` for the
-redesign.)*
+the screen go as the version they were made under (2 or 3). The text stays in
+`consent-panel.tsx` for the redesign.)*
 The phone is known by an anonymous identity, never a name.
 *(Superseded in part on 2026-10-24: a contribution now belongs to its
 contributor's account, and editors see the account's name. Email and number

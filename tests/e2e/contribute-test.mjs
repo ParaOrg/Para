@@ -135,8 +135,6 @@ const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) 
 /** Ready's Account tab, in the toolbar over the Start bar. */
 const accountTab = (page) =>
   page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Account' });
-/** Ready's person button at the top right, which opens Account too. */
-const personButton = (page) => page.locator('button[aria-label="Account"]');
 /**
  * The History screen, opened through Account on Ready unless it is already showing. With no
  * accounts in this build, Account is History alone.
@@ -224,9 +222,9 @@ const buttons = (page) =>
   {
     const history = accountTab(page);
     check(
-      '  Account is the person button at the top right and a tab over the Start bar; no History button, nothing of it shows',
+      '  Account is the tab over the Start bar alone, the top right empty; no History button, nothing of it shows',
       (await history.count()) === 1 &&
-        (await personButton(page).count()) === 1 &&
+        (await page.getByRole('button', { name: 'Account' }).count()) === 1 &&
         (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
         (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
         (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 1 &&
@@ -299,16 +297,18 @@ const buttons = (page) =>
         .then(() => true)
         .catch(() => false),
     );
-    await personButton(page).click();
+    await accountTab(page).click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
     await page.goBack();
     await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
     check(
-      "  the person button opens it too, and the browser's Back returns to Ready with focus back on it",
+      "  the browser's Back returns to Ready with focus back on the tab too",
       (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
         (await page
           .waitForFunction(
-            () => document.activeElement?.getAttribute('aria-label') === 'Account',
+            () =>
+              document.activeElement?.textContent === 'Account' &&
+              !!document.activeElement.closest('nav[aria-label="Screens"]'),
             null,
             { timeout: 5000 },
           )
