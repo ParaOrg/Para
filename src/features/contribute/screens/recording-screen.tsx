@@ -173,8 +173,9 @@ export function RecordingScreen({
           </RecordingCard>
         </div>
       </section>
-      {/* Figma's ⓘ, 12 in from the frame's left and foot, over the stack's padding. */}
-      <div className="absolute bottom-3 left-3 z-20 flex">
+      {/* Figma's ⓘ, 12 in from the frame's left and foot, over the stack's padding; lifted over
+          the gesture bar where the phone has one, so the bar does not take its taps. */}
+      <div className="absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 z-20 flex">
         <CreditsButton ref={creditsButtonRef} onClick={onOpenCredits} />
       </div>
     </>

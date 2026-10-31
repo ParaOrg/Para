@@ -25,7 +25,7 @@ export const Default: Story = {};
 /** Paused: shown, disabled, as the Paused frame draws it. */
 export const Paused: Story = { args: { isRecording: false } };
 
-/** The ride holds the most stops it can: the button stays, and a tap does nothing. */
+/** The ride holds the most stops it can: it looks as Paused, keeps focus, and a tap does nothing. */
 export const AtTheLimit: Story = { args: { canFlag: false } };
 
 /** Just tapped: "Flagged" beside the button for a moment (no Figma design for the note yet). */
