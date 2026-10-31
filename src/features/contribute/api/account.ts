@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod/mini';
 
 import { accountErrorOf, authError } from './account-errors';
@@ -55,9 +54,7 @@ const profileRowsSchema = z.array(z.object({ name: z.nullable(z.string()) }));
  * database not having get_profile yet): then yes, so a phone is not shut out of recording for it.
  */
 export async function hasProfileOf(client: ContributeClient): Promise<boolean> {
-  // Not in the generated types until ticket 01 is applied and they are regenerated.
-  const untyped: SupabaseClient = client;
-  const { data, error, status } = await untyped.rpc('get_profile');
+  const { data, error, status } = await client.rpc('get_profile');
   if (error) {
     if (status !== 0)
       console.warn(`Para did not give the profile (HTTP ${status}):`, error.message);

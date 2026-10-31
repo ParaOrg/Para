@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod/mini';
 
 import { AccountError } from './account-problem';
@@ -97,9 +96,7 @@ export async function fetchMyStats(): Promise<MyStats> {
     }
     throw new AccountError('unavailable', String(error));
   }
-  // TODO: typed rpc once account_stats is applied and database types are regenerated.
-  const untyped: SupabaseClient = client;
-  const { data, error, status } = await untyped.rpc('get_my_stats');
+  const { data, error, status } = await client.rpc('get_my_stats');
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
     // get_my_stats not there yet (before its migration is applied): no stats to show, not a fault.

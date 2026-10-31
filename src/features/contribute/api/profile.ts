@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod/mini';
 
 import { AccountError } from './account-problem';
@@ -26,9 +25,7 @@ export async function fetchProfile(): Promise<Profile> {
     }
     throw new AccountError('unavailable', String(error));
   }
-  // TODO: typed rpc once 01 is applied and database types are regenerated.
-  const untyped: SupabaseClient = client;
-  const { data, error, status } = await untyped.rpc('get_profile');
+  const { data, error, status } = await client.rpc('get_profile');
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
     console.warn(`Para did not give the profile (HTTP ${status}):`, error.message);

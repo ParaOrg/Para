@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod/mini';
 
 import { AccountError } from './account-problem';
@@ -14,9 +13,6 @@ import type { ContributeClient } from './contribute-client';
 const tokenSchema = z.uuid();
 const movedSchema = z.int();
 
-/** Not in the generated types until ticket 01 is applied and they are regenerated. */
-const untyped = (client: ContributeClient): SupabaseClient => client;
-
 /**
  * Whether the phone's session is its own anonymous user, with uploads of its own that signing in
  * would leave behind. A session read from storage is enough: no signal is needed to know it.
@@ -31,7 +27,7 @@ async function isAnonymous(client: ContributeClient): Promise<boolean> {
  * database says the phone is not anonymous after all (a stale session): there is nothing to claim.
  */
 async function beginClaim(client: ContributeClient): Promise<string | null> {
-  const { data, error, status } = await untyped(client).rpc('begin_claim');
+  const { data, error, status } = await client.rpc('begin_claim');
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
     if (error.code === '42501') {
@@ -52,7 +48,7 @@ async function beginClaim(client: ContributeClient): Promise<string | null> {
 async function finishClaim(client: ContributeClient, claim: PendingClaim): Promise<ClaimOutcome> {
   // Kept as tried before the request goes: the answer may be lost after the server acted.
   keepPendingClaim({ ...claim, wasTried: true });
-  const { data, error, status } = await untyped(client).rpc('finish_claim', { token: claim.token });
+  const { data, error, status } = await client.rpc('finish_claim', { token: claim.token });
   if (error) return claimFailureOutcome(error, status, claim.wasTried);
   const moved = movedSchema.safeParse(data);
   if (!moved.success) {
