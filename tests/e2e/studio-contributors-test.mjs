@@ -14,6 +14,8 @@
 // `contribution_use` (direction) against the direction it wrote; Draw a
 // hintuan here begins a box, and a save records one `contribution_use`
 // (hintuan) for each upload with a hinto inside the box, none for one outside;
+// an upload of two rides offers each on its own, its row highlighting it on
+// the map and its Use this line copying its own line;
 // a drawing in progress is never replaced.
 import { chromium } from 'playwright';
 
@@ -26,7 +28,7 @@ const { check, tally } = harness();
 // ------------------------------------------------------------- the tables
 const PHONE_A = 'aaaaaa01-0000-4000-8000-000000000001';
 const PHONE_B = 'bbbbbb02-0000-4000-8000-000000000002';
-const [C1, C2, C3, C4] = [1, 2, 3, 4].map((n) => `c0000000-0000-4000-8000-00000000000${n}`);
+const [C1, C2, C3, C4, C5] = [1, 2, 3, 4, 5].map((n) => `c0000000-0000-4000-8000-00000000000${n}`);
 /** Where the ride starts, 14.7 N 121.05 E, and ends 1.1 km north. */
 const START = [121.05, 14.7];
 const END = [121.05, 14.71];
@@ -91,6 +93,23 @@ const c4Batch = {
   dlat: C4_TRAIL.map((_, n) => (n === 0 ? 0 : 2000)),
   dlng: C4_TRAIL.map(([lng], n) => (n === 0 ? 0 : Math.round((lng - C4_TRAIL[n - 1][0]) * 1e6))),
   accuracy_m: C4_ACCURACY,
+};
+/**
+ * C5, 4 km east: walked a minute, rode 3 north, walked a minute to change, rode 2 more.
+ * One fix a minute, every one accurate.
+ */
+const C5_START = Date.now() - 6 * HOUR;
+const C5_TRAIL = [0, 1, 2, 3, 4, 5, 6, 7].map((n) => [121.09, 14.7 + n * 0.002]);
+const c5Batch = {
+  contribution_id: C5,
+  seq: 0,
+  first_at: iso(C5_START),
+  first_lat: Math.round(C5_TRAIL[0][1] * 1e6),
+  first_lng: Math.round(C5_TRAIL[0][0] * 1e6),
+  dt_ms: C5_TRAIL.map((_, n) => (n === 0 ? 0 : 60_000)),
+  dlat: C5_TRAIL.map((_, n) => (n === 0 ? 0 : 2000)),
+  dlng: C5_TRAIL.map(() => 0),
+  accuracy_m: C5_TRAIL.map(() => 6),
 };
 const hinto = (contribution, lng, lat, seconds, started = Date.now() - 2.5 * HOUR, seq = 0) => ({
   contribution_id: contribution,
@@ -185,9 +204,27 @@ const db = await fakeStudioDb(page, {
         { kind: 'mode', at: 'junk', to: 'ride' },
       ],
     }),
+    upload(C5, PHONE_B, {
+      start_name: 'Palengke',
+      end_name: 'Eskwela',
+      started_at: iso(C5_START),
+      ended_at: iso(C5_START + 7 * 60_000),
+      received_at: iso(Date.now() - 5 * HOUR),
+      line: { type: 'LineString', coordinates: C5_TRAIL },
+      west: 121.09,
+      south: 14.7,
+      east: 121.09,
+      north: 14.714,
+      events: [
+        { kind: 'mode', at: iso(C5_START), to: 'walk' },
+        { kind: 'mode', at: iso(C5_START + 60_000), to: 'ride' },
+        { kind: 'mode', at: iso(C5_START + 4 * 60_000), to: 'walk' },
+        { kind: 'mode', at: iso(C5_START + 5 * 60_000), to: 'ride' },
+      ],
+    }),
   ],
   // C2's hinto is 7 m from C1's, inside a box round it; C3's is 600 m north, outside.
-  point_batch: [trailBatch(C1), c4Batch],
+  point_batch: [trailBatch(C1), c4Batch, c5Batch],
   hinto: [
     hinto(C1, ...HINTO, 240),
     hinto(C2, HINTO[0] + 0.00006, HINTO[1], 120),
@@ -514,6 +551,59 @@ await shot('5-walk-and-ride');
 await page.getByTitle('Discard this route').click();
 await waitFor(
   async () => (await page.getByRole('region', { name: 'From an upload' }).count()) === 0,
+);
+
+// ------------------------------------------------ two rides, each on its own
+await page.getByText('Contributors', { exact: true }).click();
+await list.waitFor();
+await open('Palengke to Eskwela');
+const useButtons = page.getByRole('button', { name: 'Use this line' });
+await waitFor(async () => (await useButtons.count()) === 2);
+check(
+  'an upload of two rides offers each on its own: two Use this line, Ride 1 and Ride 2',
+  (await useButtons.count()) === 2 &&
+    (await body()).includes('Walking is left out: each ride can be used on its own.') &&
+    /Ride 1 · [\d.]+ km/.test(await body()) &&
+    /Ride 2 · [\d.]+ km/.test(await body()),
+  (await body()).match(/Walking is left out.{0,120}/)?.[0],
+);
+const highlighted = () =>
+  page.evaluate(() => JSON.stringify(window.__map.getFilter('studio-contribution-ride-highlight')));
+await page.getByRole('list', { name: 'Rides' }).getByRole('listitem').nth(1).hover();
+const pointedAt = await highlighted();
+check(
+  "  pointing at a ride's row highlights that ride on the map (trail part 3, the second ride)",
+  /"piece"\],3\]/.test(pointedAt),
+  pointedAt,
+);
+/** The control points a ride's Use this line begins, read off the draft. */
+const useRide = async (n) => {
+  await useButtons.nth(n).click();
+  await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+  const points = (await draft())?.controlPoints ?? [];
+  await page.getByTitle('Discard this route').click();
+  await waitFor(
+    async () => (await page.getByRole('region', { name: 'From an upload' }).count()) === 0,
+  );
+  return points;
+};
+const startsAt = (points, n) => Math.abs((points[0]?.[1] ?? 0) - C5_TRAIL[n][1]) < 1e-6;
+const endsAt = (points, n) => Math.abs((points.at(-1)?.[1] ?? 0) - C5_TRAIL[n][1]) < 1e-6;
+const secondRide = await useRide(1);
+check(
+  "  the second ride's Use this line copies its own line: the 5th minute to the 7th",
+  startsAt(secondRide, 5) && endsAt(secondRide, 7),
+  JSON.stringify(secondRide),
+);
+await page.getByText('Contributors', { exact: true }).click();
+await list.waitFor();
+await open('Palengke to Eskwela');
+await waitFor(async () => (await useButtons.count()) === 2);
+const firstRide = await useRide(0);
+check(
+  "  the first ride's copies its own: the 1st minute to the 4th, where the walk began",
+  startsAt(firstRide, 1) && endsAt(firstRide, 4),
+  JSON.stringify(firstRide),
 );
 
 // ------------------------------------- a drawing in progress is kept

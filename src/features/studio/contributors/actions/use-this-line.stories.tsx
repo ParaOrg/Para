@@ -6,6 +6,7 @@ import {
   STORY_CONTRIBUTIONS,
   STORY_DETAIL,
   STORY_DETAIL_ALL_WALK,
+  STORY_DETAIL_TWO_RIDES,
   STORY_DETAIL_WALKED,
 } from '../contributor-story-data';
 
@@ -17,6 +18,7 @@ const meta = {
     detail: STORY_DETAIL,
     isDetailLoading: false,
     onStart: fn(),
+    onHighlightRide: fn(),
   },
   decorators: [
     (Story) => (
@@ -100,5 +102,29 @@ export const TrailFailed: Story = {
     await expect(
       within(canvasElement).getByRole('button', { name: 'Use this line' }),
     ).toBeVisible();
+  },
+};
+
+/** Two rides with a walk between: each is offered on its own, and copies its own line. */
+export const TwoRides: Story = {
+  args: { detail: STORY_DETAIL_TWO_RIDES },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByText('Walking is left out: each ride can be used on its own.'),
+    ).toBeVisible();
+    const buttons = canvas.getAllByRole('button', { name: 'Use this line' });
+    await expect(buttons).toHaveLength(2);
+    const second = buttons[1];
+    if (!second) throw new Error('The second ride has no Use this line.');
+    await userEvent.click(second);
+    await expect(args.onStart).toHaveBeenCalledWith(
+      expect.objectContaining({
+        points: [
+          [121.05, 14.62],
+          [121.04, 14.6],
+        ],
+      }),
+    );
   },
 };

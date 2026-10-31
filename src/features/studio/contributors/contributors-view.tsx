@@ -42,11 +42,24 @@ export function ContributorsView({
   const contributions = list.data?.contributions ?? [];
   const opened = contributions.find((c) => c.id === openedId) ?? null;
   const detail = useContributionDetailQuery(opened ? opened.id : null);
+  // The ride highlighted on the map, by its trail part; another upload opened starts with none.
+  const [highlight, setHighlight] = useState<{ id: string | null; piece: number | null }>({
+    id: null,
+    piece: null,
+  });
+  const highlightedPiece = highlight.id === openedId ? highlight.piece : null;
   const handleOpen = useCallback((id: string) => {
     setOpenedId(id);
     setNotice('');
   }, []);
-  useContributionLayers(map, contributions, opened?.id ?? null, detail.data ?? null, handleOpen);
+  useContributionLayers(
+    map,
+    contributions,
+    opened?.id ?? null,
+    detail.data ?? null,
+    handleOpen,
+    highlightedPiece,
+  );
 
   return (
     <section aria-labelledby={headingId} className={PANEL}>
@@ -116,6 +129,7 @@ export function ContributorsView({
                   onClose={() => setOpenedId(null)}
                   onNotice={setNotice}
                   onStart={onStart}
+                  onHighlightRide={(piece) => setHighlight({ id: openedId, piece })}
                 />
               }
               extras={<OpenedExtras contribution={opened} detail={detail.data} onStart={onStart} />}

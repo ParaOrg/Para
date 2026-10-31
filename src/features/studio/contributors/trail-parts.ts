@@ -47,29 +47,29 @@ export function splitTrail(
 /** How far a part's points run, in metres. */
 export const partLength = (part: TrailPart): number => lineLength(part.points.map((p) => p.at));
 
-/**
- * Each ride part as route material: only its fixes accurate enough to place
- * the ride (TRAIL_MAX_ACCURACY_M, the rule the upload's own line is made by;
- * the upload already left out impossible jumps). A ride with fewer than two such
- * fixes has no line and is left out.
- */
-export function rideLines(pieces: readonly TrailPart[]): LngLat[][] {
-  return pieces
-    .filter((part) => part.mode === 'ride')
-    .map((part) =>
-      part.points
-        .filter((point) => point.accuracyM <= TRAIL_MAX_ACCURACY_M)
-        .map((point) => point.at),
-    )
-    .filter((line) => line.length >= 2);
+/** A ride part as route material, with which part of the trail it is. */
+export interface RideLine {
+  /** Its index among splitTrail's parts: the map draws each part with it. */
+  piece: number;
+  /** Its accurate fixes, in time order. */
+  line: LngLat[];
+  lengthM: number;
 }
 
-/** The longest ride line: what Use this line takes while one direction is made from an upload. */
-export function longestRideLine(pieces: readonly TrailPart[]): LngLat[] | null {
-  return rideLines(pieces).reduce<LngLat[] | null>(
-    (best, line) => (best && lineLength(best) >= lineLength(line) ? best : line),
-    null,
-  );
+/**
+ * Every ride part usable as route material, in time order: only its fixes
+ * accurate enough to place the ride (TRAIL_MAX_ACCURACY_M, the rule the
+ * upload's own line is made by; the upload already left out impossible jumps).
+ * A ride with fewer than two such fixes has no line and is left out.
+ */
+export function rideLines(pieces: readonly TrailPart[]): RideLine[] {
+  return pieces.flatMap((part, piece) => {
+    if (part.mode !== 'ride') return [];
+    const line = part.points
+      .filter((point) => point.accuracyM <= TRAIL_MAX_ACCURACY_M)
+      .map((point) => point.at);
+    return line.length >= 2 ? [{ piece, line, lengthM: lineLength(line) }] : [];
+  });
 }
 
 /** The mode at a time: the part holding it, the first before the start, the last after the end. */

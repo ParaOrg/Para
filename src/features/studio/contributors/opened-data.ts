@@ -12,13 +12,13 @@ export function openedData(detail: ContributionDetail | null) {
   return {
     type: 'FeatureCollection' as const,
     features: [
-      ...pieces.flatMap((piece) => {
+      ...pieces.flatMap((piece, index) => {
         const line = piece.points.map((p) => [...p.at]);
         return line.length >= 2
           ? [
               {
                 type: 'Feature' as const,
-                properties: { kind: 'trail', mode: piece.mode },
+                properties: { kind: 'trail', mode: piece.mode, piece: index },
                 geometry: { type: 'LineString' as const, coordinates: line },
               },
             ]
