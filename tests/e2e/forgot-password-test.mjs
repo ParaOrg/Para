@@ -29,8 +29,8 @@ const AUTH_KEY = 'para.contributor-auth';
 const EMAIL = 'juan@example.com';
 const MASKED = 'Enter the verification code sent to j**n@example.com';
 const OLD_PASSWORD = 'hunter2hunter2';
-const NEW_PASSWORD = 'a-better-password';
-const THIRD_PASSWORD = 'a-third-password';
+const NEW_PASSWORD = 'a-better-password-2';
+const THIRD_PASSWORD = 'a-third-password-3';
 const browser = await chromium.launch();
 
 /** An account made elsewhere, as the database holds it. */
@@ -287,13 +287,26 @@ const storedSession = (page) =>
       !fake.order.includes('update_password'),
     fake.order.join(),
   );
-  await savePassword(page, 'short');
+  await savePassword(page, '1234567890');
   check(
-    '  a short password is named, and nothing is sent',
-    (await page.getByText('Use at least 8 characters').count()) === 1 &&
+    '  a password of digits alone is refused on the phone, and nothing is sent',
+    (await page
+      .getByText('Use at least 8 characters, with letters and numbers', { exact: true })
+      .count()) === 1 &&
+      (await page
+        .getByText('At least 8 characters, with letters and numbers', { exact: true })
+        .isVisible()) &&
+      (await page.getByText("The passwords don't match").count()) === 0 &&
       !fake.order.includes('update_password'),
   );
 
+  await savePassword(page, 'short');
+  check(
+    '  a short password is named, and nothing is sent',
+    (await page
+      .getByText('Use at least 8 characters, with letters and numbers', { exact: true })
+      .count()) === 1 && !fake.order.includes('update_password'),
+  );
   await savePassword(page, NEW_PASSWORD);
   await start(page).waitFor({ timeout: 15000 });
   const [[id, account]] = [...accounts];

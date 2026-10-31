@@ -19,10 +19,19 @@ const phoneSchema = z
       'Enter a mobile number like 917 123 4567',
     ),
   );
+/** The rule under a new password's field, always shown. */
+export const PASSWORD_RULE = 'At least 8 characters, with letters and numbers';
+const PASSWORD_RULE_ERROR = 'Use at least 8 characters, with letters and numbers';
+// The project's "Letters and digits" setting: one of a-z or A-Z, and one of 0-9. It looks for
+// those exact characters, so ñ or é is not a letter to it, and neither is a non-Latin digit.
+const LETTER = /[A-Za-z]/;
+const DIGIT = /[0-9]/;
+
 // Supabase hashes with bcrypt, which reads no further than 72 bytes: a longer one is cut short.
 const newPasswordSchema = z.string().check(
-  z.minLength(8, 'Use at least 8 characters'),
+  z.minLength(8, PASSWORD_RULE_ERROR),
   z.refine((text) => text.length <= 72, 'Use 72 characters or fewer'),
+  z.refine((text) => LETTER.test(text) && DIGIT.test(text), PASSWORD_RULE_ERROR),
 );
 const codeSchema = z
   .string()
