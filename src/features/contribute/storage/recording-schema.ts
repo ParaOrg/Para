@@ -8,8 +8,20 @@ import type { GapReason, Mode } from '@/features/routes/model/ride-recording';
  */
 export const RECORDING_VERSION = 2;
 
-/** What the contributor says they rode; optional, so a recording may have none. */
-export const RIDE_KINDS = ['Jeep', 'Bus', 'Train', 'Ferry', 'Tricycle', 'Other'] as const;
+/**
+ * What the contributor says they rode; optional, so a recording may have none. Only ever added
+ * to: a recording kept with any of these still reads.
+ */
+export const RIDE_KINDS = [
+  'Jeep',
+  'E-Jeep',
+  'UV Express',
+  'Bus',
+  'Train',
+  'Ferry',
+  'Tricycle',
+  'Other',
+] as const;
 export type RideKind = (typeof RIDE_KINDS)[number];
 
 const GAP_REASONS = [

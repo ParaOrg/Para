@@ -55,3 +55,14 @@ test('a version 2 recording without modes, or an unknown version, does not read'
   assert.equal(storedRecordingSchema.safeParse(noModes).success, false);
   assert.equal(storedRecordingSchema.safeParse({ ...current, version: 3 }).success, false);
 });
+
+test('a recording kept before E-Jeep and UV Express, with any vehicle it could have, still reads', () => {
+  for (const rideKind of ['Jeep', 'Bus', 'Train', 'Ferry', 'Tricycle', 'Other', null]) {
+    const read = storedRecordingSchema.safeParse({ ...current, rideKind });
+    assert.ok(read.success, String(rideKind));
+    assert.equal(read.data.rideKind, rideKind);
+  }
+  for (const rideKind of ['E-Jeep', 'UV Express']) {
+    assert.ok(storedRecordingSchema.safeParse({ ...current, rideKind }).success, rideKind);
+  }
+});
