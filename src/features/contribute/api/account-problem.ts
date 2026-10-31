@@ -1,6 +1,8 @@
 /**
  * Why signing up or signing in did not go through.
  * - `wrong-credentials`: the email and password do not match an account.
+ * - `wrong-current-password`: changing the password, the current one given is not the account's.
+ * - `needs-recent-sign-in`: Para wants a recent sign-in before the password changes.
  * - `email-taken`: that email already has an account.
  * - `weak-password`: the project turned the password away: too short, or without a letter and a digit.
  * - `offline`: no answer; the same request can be sent again.
@@ -16,6 +18,8 @@
  */
 export type AccountProblem =
   | 'wrong-credentials'
+  | 'wrong-current-password'
+  | 'needs-recent-sign-in'
   | 'email-taken'
   | 'weak-password'
   | 'offline'
@@ -40,6 +44,8 @@ export class AccountError extends Error {
 /** The one line the person reads for each problem: what happened, and what to do. */
 export const ACCOUNT_MESSAGES: Record<AccountProblem, string> = {
   'wrong-credentials': 'Wrong email or password',
+  'wrong-current-password': 'That’s not your current password',
+  'needs-recent-sign-in': 'For your safety, log out and log in again, then change your password.',
   'email-taken': 'That email already has an account',
   'weak-password': 'Use at least 8 characters, with letters and numbers',
   offline: "No signal — try again when you're online",
@@ -78,6 +84,7 @@ export function accountProblemOf(error: AuthFailure): AccountProblem {
   if (error.code === 'weak_password') return 'weak-password';
   if (error.code === 'otp_expired') return 'code-rejected';
   if (error.code === 'same_password') return 'same-password';
+  if (error.code === 'reauthentication_needed') return 'needs-recent-sign-in';
   if (error.code && RATE_LIMIT_CODES.has(error.code)) return 'rate-limited';
   if (error.code === 'captcha_failed' || /captcha/i.test(error.message)) return 'check-failed';
   const isNoAnswer =

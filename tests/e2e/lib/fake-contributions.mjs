@@ -33,6 +33,10 @@
 //   updateUser = 'emailTaken'   the upgrade to an account is answered 422 email_exists
 //   updateUser = 'hold'         the upgrade waits until `fake.release()` (a sign-up in flight)
 //   profile = 'offline'         set_profile fails as with no signal
+//   stats = 'offline'           get_my_stats fails as with no signal
+//
+// get_my_stats answers `fake.stats`, the account's numbers as one row; left null, the function is
+// not there (404 PGRST202), as before its migration is applied.
 //   offline       the save request fails as with no signal
 //   lostAnswer    the save is stored, then the answer is lost on the way back
 //   hold          the save waits until `fake.release()` (an upload in flight)
@@ -77,6 +81,55 @@ export const session = (userId, { email = null, isAccount = false } = {}) => ({
   },
 });
 
+/**
+ * get_my_stats's one row, as migration account_stats answers it, from the few numbers a suite sets:
+ * `{ rides, distanceM, movingS, standingS, walkM, rideM }`, the rest zero.
+ */
+function statsRow({
+  rides = 0,
+  distanceM = 0,
+  movingS = 0,
+  standingS = 0,
+  walkM = 0,
+  rideM = 0,
+  jeepRides = 0,
+  eJeepRides = 0,
+  uvExpressRides = 0,
+  busRides = 0,
+  trainRides = 0,
+  ferryRides = 0,
+  tricycleRides = 0,
+}) {
+  return {
+    rides,
+    distance_m: distanceM,
+    moving_s: movingS,
+    standing_s: standingS,
+    walk_m: walkM,
+    ride_m: rideM,
+    walk_s: 0,
+    ride_s: 0,
+    hinto_s: 0,
+    marks: 0,
+    jeep_rides: jeepRides,
+    e_jeep_rides: eJeepRides,
+    uv_express_rides: uvExpressRides,
+    bus_rides: busRides,
+    train_rides: trainRides,
+    ferry_rides: ferryRides,
+    tricycle_rides: tricycleRides,
+    other_rides: 0,
+    active_days: 0,
+    first_ride_at: null,
+    longest_ride_m: null,
+    longest_ride_moving_s: null,
+    routes_helped: 0,
+    hintuans_helped: 0,
+    fare_php_total: 0,
+    fare_recordings: 0,
+  };
+}
+
 /** Routes `page`'s Supabase requests to a fresh stand-in. Register after any other https route. */
 export async function fakeContributions(page) {
   const fake = {
@@ -89,6 +142,9 @@ export async function fakeContributions(page) {
     /** The scope of each sign-out the page sent: 'local' signs out this phone only. */
     logouts: [],
     profileRequests: 0,
+    /** The account's numbers for get_my_stats, as statsRow takes them; null: no such function. */
+    stats: null,
+    statsRequests: 0,
     claims: [],
     /** begin_claim, verify, update_password, finish_claim and logout, in the order they came. */
     order: [],
@@ -261,6 +317,22 @@ export async function fakeContributions(page) {
       return json(route, 200, [
         { name: known.profile?.name ?? null, phone: known.profile?.phone ?? null },
       ]);
+    }
+    if (url.pathname === '/rest/v1/rpc/get_my_stats' && method === 'POST') {
+      fake.statsRequests += 1;
+      if (fake.next.stats === 'offline') {
+        delete fake.next.stats;
+        return route.abort('internetdisconnected');
+      }
+      if (fake.stats === null) {
+        return json(route, 404, {
+          code: 'PGRST202',
+          message: 'Could not find the function public.get_my_stats without parameters',
+          details: null,
+          hint: null,
+        });
+      }
+      return json(route, 200, [statsRow(fake.stats)]);
     }
     if (url.pathname === '/rest/v1/rpc/set_profile' && method === 'POST') {
       fake.profileRequests += 1;

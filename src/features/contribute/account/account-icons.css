@@ -1,0 +1,26 @@
+/*
+ * The Account page's icons, Figma's drawings unedited, used as masks so each is painted in the
+ * colour of the words around it (currentColor), as the Start screen's are (start-icons.css).
+ */
+.account-icon {
+  display: block;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+
+.account-icon-person {
+  mask-image: url('./account-icon.svg');
+}
+
+.account-icon-settings {
+  mask-image: url('./settings-icon.svg');
+}
+
+.account-icon-logout {
+  mask-image: url('./logout-icon.svg');
+}
+
+.account-icon-chevron-right {
+  mask-image: url('./chevron-right-icon.svg');
+}

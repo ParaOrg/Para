@@ -37,6 +37,7 @@ const codeSchema = z
   .string()
   .check(z.refine((text) => /^[0-9]{6}$/.test(text), 'Enter the 6-digit code'));
 const passwordSchema = z.string().check(z.minLength(1, 'Enter your password'));
+const currentPasswordSchema = z.string().check(z.minLength(1, 'Enter your current password'));
 
 export interface SignInFields {
   email: string;
@@ -55,6 +56,11 @@ export interface NewPasswordFields {
   password: string;
   /** The password typed again: checked on the phone, never sent. */
   confirmation: string;
+}
+
+/** A password change from Account settings: the current password first, then the new one twice. */
+export interface ChangePasswordFields extends NewPasswordFields {
+  currentPassword: string;
 }
 
 export interface ProfileFields {
@@ -141,6 +147,15 @@ export function checkCode(fields: CodeFields): Checked<CodeFields> {
 /** The new password, and the same password typed again. */
 export function checkNewPassword(fields: NewPasswordFields): Checked<NewPasswordFields> {
   return collect(fields, {
+    password: problemOf(newPasswordSchema, fields.password),
+    confirmation: fields.confirmation === fields.password ? undefined : "The passwords don't match",
+  });
+}
+
+/** The current password, given at all, and the new one held to the reset's rules. */
+export function checkChangePassword(fields: ChangePasswordFields): Checked<ChangePasswordFields> {
+  return collect(fields, {
+    currentPassword: problemOf(currentPasswordSchema, fields.currentPassword),
     password: problemOf(newPasswordSchema, fields.password),
     confirmation: fields.confirmation === fields.password ? undefined : "The passwords don't match",
   });

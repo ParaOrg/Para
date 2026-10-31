@@ -10,6 +10,7 @@ import {
 import { flushSync } from 'react-dom';
 
 import { useAccountGate } from './account/use-account-gate';
+import { useAccountSettingsView } from './account/use-account-settings-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
@@ -37,8 +38,9 @@ const HistoryView = lazy(() =>
 const MapDataSourceView = lazy(() =>
   import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
 );
-const ProfileView = lazy(() =>
-  import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
+// Account, with its settings inside it, opened from the Account tab: fetched on the tap.
+const AccountView = lazy(() =>
+  import('./account/account-view').then((module) => ({ default: module.AccountView })),
 );
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
 // fetches them as it opens (below), so Start never waits on the network, nor fails without one.
@@ -119,6 +121,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   );
   const history = useHistoryView();
   const profile = useProfileView();
+  const settings = useAccountSettingsView();
   const { phase, figures } = recording;
   // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
   const [isPermissionsPending, setIsPermissionsPending] = useState(
@@ -130,7 +133,8 @@ export function ContributePage({ locator }: ContributePageProps) {
     phase === 'ready' &&
     accountGate === 'ready' &&
     canUpload() &&
-    profile.isOpen &&
+    // Account settings is shown by Account, in its place.
+    (profile.isOpen || settings.isOpen) &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
   const isStartShown =
@@ -207,20 +211,26 @@ export function ContributePage({ locator }: ContributePageProps) {
     });
   }, [phase]);
 
-  // Signing out, or leaving Ready, must not leave #profile to reopen Profile after the next sign-in.
+  // Signing out, or leaving Ready, must not leave #profile or #account-settings to reopen Account
+  // after the next sign-in.
   useEffect(() => {
     const isUsable = accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
-    if (profile.isOpen && !isUsable && accountGate !== 'loading') profile.close();
-  }, [phase, accountGate, profile]);
+    if (isUsable || accountGate === 'loading') return;
+    if (profile.isOpen) profile.close();
+    if (settings.isOpen) settings.close();
+  }, [phase, accountGate, profile, settings]);
 
-  // Account is Profile with History inside it; a build with no accounts has History alone. Once it
-  // has been opened from Ready, Ready hands focus back to the Account tab.
-  const [hasOpenedAccount, setHasOpenedAccount] = useState(false);
+  // History and Account are tabs on Ready; a build with no accounts has History alone. Ready hands
+  // focus back to the tab whose screen was open.
+  const [openedTab, setOpenedTab] = useState<'history' | 'account' | null>(null);
   const hasAccount = canUpload();
+  const handleOpenHistory = () => {
+    setOpenedTab('history');
+    history.open();
+  };
   const handleOpenAccount = () => {
-    setHasOpenedAccount(true);
-    if (hasAccount) profile.open();
-    else history.open();
+    setOpenedTab('account');
+    profile.open();
   };
 
   return (
@@ -287,11 +297,12 @@ export function ContributePage({ locator }: ContributePageProps) {
                 earlierQuestion={earlier.question}
                 onStart={() => {
                   // A ride begun: the next Start opens fresh, focus on its heading, not the tab.
-                  setHasOpenedAccount(false);
+                  setOpenedTab(null);
                   recording.start();
                 }}
-                onOpenAccount={handleOpenAccount}
-                isBackFromAccount={hasOpenedAccount}
+                onOpenHistory={handleOpenHistory}
+                onOpenAccount={hasAccount ? handleOpenAccount : undefined}
+                backFrom={openedTab}
                 onOpenCredits={() => setIsCreditsOpen(true)}
                 creditsButtonRef={creditsButtonRef}
               />
@@ -304,7 +315,12 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {isProfileShown && (
             <Suspense fallback={null}>
-              <ProfileView onBack={profile.close} onOpenHistory={history.open} />
+              <AccountView
+                recordings={recording.saved}
+                statusOf={uploads.statusOf}
+                onOpenHistory={history.open}
+                onOpenRecord={profile.close}
+              />
             </Suspense>
           )}
           {isHistoryShown && (
@@ -312,10 +328,10 @@ export function ContributePage({ locator }: ContributePageProps) {
               <HistoryView
                 recordings={recording.saved}
                 uploads={uploads}
-                // History is inside Account, so its Back returns there, even after a reload.
-                onBack={hasAccount ? () => history.closeTo('#profile') : history.close}
-                // Record a route leaves History and Account both, for Start.
-                onRecord={hasAccount ? () => history.replaceWith('') : history.close}
+                // Back returns to the screen History was opened from: Ready, or Account.
+                onBack={history.close}
+                // Record a route goes to Start, wherever History was opened from.
+                onRecord={() => history.replaceWith('')}
                 onDownload={recording.downloadSaved}
                 onDeleteFromPhone={recording.deleteSaved}
               />

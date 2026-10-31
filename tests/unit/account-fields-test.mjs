@@ -6,6 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  checkChangePassword,
   checkForgotPassword,
   checkProfile,
   checkCode,
@@ -280,4 +281,37 @@ test('a password is held to 72 characters, which is as far as the project reads'
   assert.deepEqual(checkNewPassword({ password: longReset, confirmation: longReset }).errors, {
     password: 'Use 72 characters or fewer',
   });
+});
+
+test('a password change needs the current password, and holds the new one to the reset rules', () => {
+  const good = {
+    currentPassword: 'old-pass1',
+    password: 'hunter2hunter2',
+    confirmation: 'hunter2hunter2',
+  };
+  assert.deepEqual(checkChangePassword(good), { isValid: true, value: good });
+  assert.deepEqual(checkChangePassword({ ...good, currentPassword: '' }).errors, {
+    currentPassword: 'Enter your current password',
+  });
+  assert.deepEqual(
+    checkChangePassword({ ...good, password: 'onlyletters', confirmation: 'onlyletters' }).errors,
+    { password: 'Use at least 8 characters, with letters and numbers' },
+  );
+  assert.deepEqual(checkChangePassword({ ...good, confirmation: 'hunter2hunter3' }).errors, {
+    confirmation: "The passwords don't match",
+  });
+});
+
+test('a password change is sorted honestly: a wrong current password, and a sign-in too old', () => {
+  assert.equal(
+    accountProblemOf({
+      name: 'AuthApiError',
+      message: 'Reauthentication required',
+      status: 401,
+      code: 'reauthentication_needed',
+    }),
+    'needs-recent-sign-in',
+  );
+  assert.notEqual(ACCOUNT_MESSAGES['needs-recent-sign-in'], ACCOUNT_MESSAGES['not-accepting']);
+  assert.equal(ACCOUNT_MESSAGES['wrong-current-password'], 'That’s not your current password');
 });

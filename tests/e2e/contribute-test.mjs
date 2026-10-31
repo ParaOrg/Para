@@ -133,17 +133,14 @@ const centreOff = (page, metres) =>
     [eastOf(metres)[0], M_PER_DEG_LNG],
   );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
-/** Ready's Account tab, in the toolbar over the Start bar. */
-const accountTab = (page) =>
-  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Account' });
-/**
- * The History screen, opened through Account on Ready unless it is already showing. With no
- * accounts in this build, Account is History alone.
- */
+/** Ready's History tab, in the toolbar over the Start bar. */
+const historyTab = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'History' });
+/** The History screen, opened by Ready's History tab unless it is already showing. */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const history = accountTab(page);
-  // A reload on #history lands on the screen itself; otherwise Ready's Account tab opens it.
+  const history = historyTab(page);
+  // A reload on #history lands on the screen itself; otherwise Ready's History tab opens it.
   await heading.or(history).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
   await history.click();
@@ -232,12 +229,12 @@ const buttons = (page) =>
       (await page.getByText('No saved recordings yet.').count()) === 0,
   );
   {
-    const history = accountTab(page);
+    const history = historyTab(page);
     check(
-      '  Account is the tab over the Start bar alone, the top right empty; no History button, nothing of it shows',
+      '  with no accounts in the build the tabs over the Start bar are Record and History, no Account; the top right empty, nothing of History shows',
       (await history.count()) === 1 &&
-        (await page.getByRole('button', { name: 'Account' }).count()) === 1 &&
-        (await page.getByRole('button', { name: 'History' }).count()) === 0 &&
+        (await page.getByRole('button', { name: 'History' }).count()) === 1 &&
+        (await page.getByRole('button', { name: 'Account' }).count()) === 0 &&
         (await page.getByRole('heading', { name: 'History' }).count()) === 0 &&
         (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 1 &&
         (await page.getByText('Start Tracking').count()) === 1,
@@ -266,7 +263,7 @@ const buttons = (page) =>
       hash: await page.evaluate(() => location.hash),
       focus: await page.evaluate(() => document.activeElement?.textContent),
       starts: await page.getByRole('button', { name: 'Start Tracking' }).count(),
-      accountButtons: await page.getByRole('button', { name: 'Account' }).count(),
+      tabs: await page.getByRole('navigation', { name: 'Screens' }).count(),
       // Inert, not removed: the map stays mounted, but nothing in it can be focused or pressed.
       isMapInert: await page.evaluate(
         () => !!document.querySelector('button[aria-label="Map design"]')?.closest('[inert]'),
@@ -274,11 +271,11 @@ const buttons = (page) =>
       empty: await page.getByText('No recordings yet.').count(),
     };
     check(
-      '  Account with no accounts in the build is History: #history, focus on its heading, no Start, no map controls reachable',
+      '  History opens at #history, focus on its heading, no Start, no tabs, no map controls reachable',
       opened.hash === '#history' &&
         opened.focus === 'History' &&
         opened.starts === 0 &&
-        opened.accountButtons === 0 &&
+        opened.tabs === 0 &&
         opened.isMapInert &&
         opened.empty === 1,
       JSON.stringify(opened),
@@ -292,16 +289,16 @@ const buttons = (page) =>
       '  its own back button returns to Ready, and the hash is gone',
       (await page.evaluate(() => location.hash)) === '',
     );
-    await accountTab(page).click();
+    await historyTab(page).click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
     check(
-      '  opened from the Account tab, Back hands focus back to the tab',
+      '  opened from the History tab, Back hands focus back to the tab',
       await page
         .waitForFunction(
           () =>
-            document.activeElement?.textContent === 'Account' &&
+            document.activeElement?.textContent === 'History' &&
             !!document.activeElement.closest('nav[aria-label="Screens"]'),
           null,
           { timeout: 5000 },
@@ -309,7 +306,7 @@ const buttons = (page) =>
         .then(() => true)
         .catch(() => false),
     );
-    await accountTab(page).click();
+    await historyTab(page).click();
     await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
     await page.goBack();
     await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
@@ -319,7 +316,7 @@ const buttons = (page) =>
         (await page
           .waitForFunction(
             () =>
-              document.activeElement?.textContent === 'Account' &&
+              document.activeElement?.textContent === 'History' &&
               !!document.activeElement.closest('nav[aria-label="Screens"]'),
             null,
             { timeout: 5000 },

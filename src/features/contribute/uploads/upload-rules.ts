@@ -28,6 +28,14 @@ export function isWaitingToGo(status: UploadStatus): boolean {
   return state === 'waiting' || state === 'checking' || state === 'uploading' || state === 'failed';
 }
 
+/**
+ * Whether a saved recording has not reached Para: one still to go, and one held back as made
+ * before the current consent text. Logging out leaves these behind on the phone, unsent.
+ */
+export function isNotSent(status: UploadStatus): boolean {
+  return isWaitingToGo(status) || status.state === 'held';
+}
+
 /** Whether an upload this identity made is gone from Para: `there` holds the ids Para still has. */
 export function isGoneFromPara(
   recording: Recording,

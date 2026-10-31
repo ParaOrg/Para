@@ -202,17 +202,16 @@ const storedUpload = (page, id) =>
 
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
 const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
-/** The History screen, opened through Account on Ready unless it is already showing. */
+/** The History screen, opened by Ready's History tab unless it is already showing. */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });
-  const account = page
+  const tab = page
     .getByRole('navigation', { name: 'Screens' })
-    .getByRole('button', { name: 'Account' });
-  // A reload on #history lands on the screen itself; otherwise History is inside Account.
-  await heading.or(account).waitFor({ timeout: 10000 });
+    .getByRole('button', { name: 'History' });
+  // A reload on #history lands on the screen itself; otherwise the tab opens it.
+  await heading.or(tab).waitFor({ timeout: 10000 });
   if (await heading.isVisible()) return;
-  await account.click();
-  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await tab.click();
   await heading.waitFor();
 };
 /** A card's actions, opened from its dots unless they are open, then the one named by `pattern`. */
@@ -650,7 +649,7 @@ const groupOf = (page, name) =>
   );
 }
 
-// ------------- earlier recordings asked about: Account and Sign out still there
+// ------------- earlier recordings asked about: Account and Logout still there
 {
   const { page, fake } = await phone();
   await seed(page, [
@@ -662,13 +661,17 @@ const groupOf = (page, name) =>
     .getByRole('navigation', { name: 'Screens' })
     .getByRole('button', { name: 'Account' })
     .click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await page.getByRole('button', { name: 'Logout' }).click();
+  await page
+    .getByRole('alertdialog', { name: 'Log out?' })
+    .getByRole('button', { name: 'Log out' })
+    .click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
   check(
-    'with the earlier-recordings question open, the Account tab reaches Profile and Sign out works',
+    'with the earlier-recordings question open, the Account tab reaches Account and Logout works',
     fake.saveRequests === 0,
     `${fake.saveRequests} sends`,
   );

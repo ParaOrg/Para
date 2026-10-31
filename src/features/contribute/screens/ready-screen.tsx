@@ -26,10 +26,11 @@ const StartGate =
 interface ReadyScreenProps {
   earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
-  /** Opens Account from the Account tab. */
-  onOpenAccount: () => void;
-  /** Account was open before this screen: focus goes back to the Account tab. */
-  isBackFromAccount: boolean;
+  onOpenHistory: () => void;
+  /** Opens Account from the Account tab; left out in a build with no accounts. */
+  onOpenAccount?: () => void;
+  /** The tab whose screen was open before this one: focus goes back to it. */
+  backFrom: 'history' | 'account' | null;
   /** The ⓘ: opens the map's credits, the Map Data Source sheet. */
   onOpenCredits: () => void;
   /** The ⓘ, for focus to come back to when the credits close. */
@@ -38,24 +39,27 @@ interface ReadyScreenProps {
 
 /**
  * Before a recording, Figma's Start (4485:24815): at the foot, the map's ⓘ (Figma 4494:10300)
- * and the Record and Account tabs over the Start Tracking bar. The top corners are empty: the
+ * and the Record, History and Account tabs over the Start Tracking bar. The top corners are empty: the
  * top left waits for the tutorial's ?.
  */
 export function ReadyScreen({
   earlierQuestion,
   onStart,
+  onOpenHistory,
   onOpenAccount,
-  isBackFromAccount,
+  backFrom,
   onOpenCredits,
   creditsButtonRef,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const tabRef = useRef<HTMLButtonElement>(null);
+  const historyRef = useRef<HTMLButtonElement>(null);
+  const accountRef = useRef<HTMLButtonElement>(null);
   // Decided once, as the screen opens: a later change must not move focus again.
-  const [shouldFocusTab] = useState(isBackFromAccount);
+  const [focusTab] = useState(backFrom);
   useEffect(() => {
-    (shouldFocusTab ? tabRef.current : headingRef.current)?.focus();
-  }, [shouldFocusTab]);
+    const tabRefs = { history: historyRef, account: accountRef };
+    ((focusTab && tabRefs[focusTab].current) ?? headingRef.current)?.focus();
+  }, [focusTab]);
   const stackRef = useStackRoom();
   const startBar = StartGate ? <StartGate onStart={onStart} /> : <StartBar onClick={onStart} />;
 
@@ -74,13 +78,18 @@ export function ReadyScreen({
             Record a route
           </h1>
         )}
-        {/* The tabs stay over the question too: Account, and Sign out, are always a tap away. The
+        {/* The tabs stay over the question too: History and Account are always a tap away. The
             ⓘ at the map's bottom left, 12 in and 12 over what stands under the tabs. */}
         <div className="relative flex justify-center px-4 pb-4">
           <div className="absolute bottom-3 left-3 z-10 flex">
             <CreditsButton ref={creditsButtonRef} onClick={onOpenCredits} />
           </div>
-          <BottomToolbar accountRef={tabRef} onOpenAccount={onOpenAccount} />
+          <BottomToolbar
+            historyRef={historyRef}
+            accountRef={accountRef}
+            onOpenHistory={onOpenHistory}
+            onOpenAccount={onOpenAccount}
+          />
         </div>
         {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
         {/* Nothing stands in for Start while the app's gates load: a plain Start would skip the permissions. */}

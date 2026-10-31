@@ -21,3 +21,7 @@
 .start-icon-help {
   mask-image: url('./help-icon.svg');
 }
+
+.start-icon-history-tab {
+  mask-image: url('./history-tab-icon.svg');
+}

@@ -1,6 +1,7 @@
-// The contributor page's Profile and History, driven by a phone signed in to an account: Profile
-// is Account, opened from the Account tab on Ready, with History inside it; it shows the email,
-// changes the name and number through set_profile, and signs this phone out only. History lists
+// The contributor page's Account and History, driven by a phone signed in to an account: Account,
+// opened from the Account tab on Ready, shows the name, the email and the Commute Statistics
+// (get_my_stats), with Account settings inside it, and History is a tab of its own; Account settings changes the name
+// and number through set_profile, and Logout asks first and signs this phone out only. History lists
 // the account's uploads from the database, whichever phone sent them, merged with this phone's
 // own, and Remove works on any the account owns. Supabase is the in-memory stand-in
 // (lib/fake-contributions.mjs): every request to *.supabase.co lands there, and one it does not
@@ -102,13 +103,35 @@ const button = (page, name) => page.getByRole('button', { name, exact: true });
 /** Ready's Account tab, in the toolbar over the Start bar: the way into Account. */
 const accountTab = (page) =>
   page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Account' });
-/** History, inside Account: the Account tab, then Account's History button. */
+/** The History tab, on Ready or on Account. */
+const historyTab = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'History' });
+/** History, from Ready's History tab. */
 const openHistory = async (page) => {
-  await accountTab(page).click();
-  await button(page, 'History').click();
+  await historyTab(page).click();
 };
+/** The tab focus is on, if focus is on one. */
+const focusedTab = (page) =>
+  page.evaluate(() =>
+    document.activeElement?.closest('nav[aria-label="Screens"]')
+      ? document.activeElement.textContent
+      : null,
+  );
 const field = (page, name) => page.getByLabel(name, { exact: true });
+/** Account's toolbar: Record, back to Start. */
+const toolbarRecord = (page) =>
+  page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'Record' });
+/** Account's Logout, then the sheet's Log out. */
+const logout = async (page) => {
+  await button(page, 'Logout').click();
+  await page
+    .getByRole('alertdialog', { name: 'Log out?' })
+    .getByRole('button', { name: 'Log out' })
+    .click();
+};
 const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
+/** The Sakay or Lakad row of the Commute Statistics' legend. */
+const legendRow = (stats, word) => stats.getByRole('listitem').filter({ hasText: word });
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
 const moreOf = (page, name) => row(page, name).getByRole('button', { name: /^More actions/ });
 const actionsOf = async (page, name) => {
@@ -160,20 +183,21 @@ async function seed(page, id, name, upload) {
   await start(page).waitFor({ timeout: 30000 });
   const tab = await accountTab(page).boundingBox();
   check(
-    'Ready has the Account tab over Start, no Account button at the top right, and no History button',
+    'Ready has the History and Account tabs over Start, and no Account or History button elsewhere',
     !!tab &&
       (await page.getByRole('button', { name: 'Account' }).count()) === 1 &&
-      (await button(page, 'History').count()) === 0,
+      (await button(page, 'History').count()) === 1 &&
+      (await historyTab(page).count()) === 1,
     JSON.stringify({ tab }),
   );
   await shot(page, '1-ready');
 
   await accountTab(page).click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await toolbarRecord(page).click();
   await start(page).waitFor();
   check(
-    'Back from Account returns to Ready with focus on the Account tab',
+    "Account's Record tab returns to Ready with focus on the Account tab",
     await page.evaluate(
       () =>
         document.activeElement?.textContent === 'Account' &&
@@ -181,51 +205,69 @@ async function seed(page, id, name, upload) {
     ),
   );
 
-  const isOnAccount = async () =>
-    (await page.getByRole('heading', { level: 1, name: 'Profile' }).count()) === 1 &&
-    (await page.evaluate(() => location.hash)) === '#profile';
   await openHistory(page);
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   await button(page, 'Back').click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  check('History is inside Account: its Back returns to Account (#profile)', await isOnAccount());
-  await button(page, 'History').click();
+  await start(page).waitFor();
+  await page
+    .waitForFunction(() => document.activeElement?.textContent === 'History', null, {
+      timeout: 5000,
+    })
+    .catch(() => {});
+  check(
+    "Ready's History tab opens History; its Back returns to Ready, focus on the History tab",
+    (await page.evaluate(() => location.hash)) === '' && (await focusedTab(page)) === 'History',
+  );
+
+  const isOnAccount = async () =>
+    (await page.getByRole('heading', { level: 1, name: 'Account' }).count()) === 1 &&
+    (await page.evaluate(() => location.hash)) === '#profile';
+  await accountTab(page).click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await historyTab(page).click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  check("  Account's History tab opens History; its Back returns to Account", await isOnAccount());
+  await historyTab(page).click();
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 30000 });
   await button(page, 'Back').click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  check('  and after a reload on #history too', await isOnAccount());
-  await button(page, 'History').click();
+  await start(page).waitFor();
+  check(
+    '  after a reload on #history, Back returns to Ready',
+    (await page.evaluate(() => location.hash)) === '',
+  );
+  await openHistory(page);
   await page.getByText('No recordings yet.').waitFor({ timeout: 15000 });
   await button(page, 'Record a route').click();
   await start(page).waitFor();
   check(
-    "  an empty History's Record a route leaves History and Account both, for Start",
+    "  an empty History's Record a route goes to Start",
     (await page.evaluate(() => location.hash)) === '' &&
-      (await page.getByRole('heading', { level: 1, name: 'Profile' }).count()) === 0,
+      (await page.getByRole('heading', { level: 1, name: 'History' }).count()) === 0,
   );
-  await accountTab(page).click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  await button(page, 'Back').click();
-  await start(page).waitFor();
 
   await accountTab(page).click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await button(page, 'Account settings').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
   await field(page, 'Name').waitFor();
   check(
-    'Profile shows the email as it is, and only the name and number to change',
+    'Account settings shows the email as it is, the name and number to change, and a new password',
     (await page.getByText(ACCOUNT.email, { exact: true }).count()) === 1 &&
-      (await page.locator('input').count()) === 2 &&
+      (await page.locator('input').count()) === 5 &&
+      (await page.evaluate(() => location.hash)) === '#account-settings' &&
       (await field(page, 'Name').inputValue()) === 'Tester' &&
       (await field(page, 'Number').inputValue()) === '+639171234567',
   );
   check(
     '  its heading has focus, and Save waits for a change',
-    (await page.evaluate(() => document.activeElement?.textContent)) === 'Profile' &&
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'Account settings' &&
       (await button(page, 'Save').isDisabled()),
   );
-  await shot(page, '2-profile');
+  await shot(page, '2-account');
 
   await field(page, 'Number').fill('12345');
   await button(page, 'Save').click();
@@ -258,14 +300,138 @@ async function seed(page, id, name, upload) {
   await page.reload({ waitUntil: 'load' });
   await field(page, 'Name').waitFor({ timeout: 15000 });
   check(
-    '  a reload stays on Profile, with the saved values',
+    '  a reload stays on Account settings, with the saved values',
     (await field(page, 'Name').inputValue()) === 'Tester Two' &&
       (await field(page, 'Number').inputValue()) === '+639187654321',
   );
 
+  // Change password asks for the current one: a phone left unlocked cannot change it.
+  await field(page, 'Current password').fill('not-it-123');
+  await field(page, 'New password').fill('n3wpassword');
+  await field(page, 'Confirm password').fill('n3wpassword');
+  await button(page, 'Change password').click();
+  await page.getByText('That’s not your current password').waitFor();
+  check(
+    '  Change password: a wrong current password is said on its field, and nothing changes',
+    database.users.get(ACCOUNT_ID).password === ACCOUNT.password &&
+      !fake.order.includes('update_password'),
+  );
+  await field(page, 'Current password').fill(ACCOUNT.password);
+  await button(page, 'Change password').click();
+  await page.getByText('Your password is changed.').waitFor();
+  check(
+    '  the right current password changes it, checked first by signing in with it',
+    database.users.get(ACCOUNT_ID).password === 'n3wpassword' &&
+      fake.order.includes('update_password'),
+  );
+  database.users.get(ACCOUNT_ID).password = ACCOUNT.password;
+
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
   check('  no page errors', errors.length === 0, errors.join(' | '));
   database.users.get(ACCOUNT_ID).profile = { ...ACCOUNT.profile };
+}
+
+// ------------------------------------------- Account: the Commute Statistics
+{
+  const { page, fake, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  await accountTab(page).click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await page.getByText(ACCOUNT.email, { exact: true }).waitFor();
+  await page.waitForFunction(() => document.querySelector('[aria-busy="true"]') === null);
+  check(
+    'Account shows the name and email; with no get_my_stats yet, the statistics are left out quietly',
+    (await page.getByText(ACCOUNT.profile.name, { exact: true }).count()) === 1 &&
+      fake.statsRequests > 0 &&
+      (await page.getByRole('heading', { name: 'Commute Statistics' }).count()) === 0 &&
+      (await page.getByRole('alert').count()) === 0,
+  );
+  const general = page.locator('section[aria-labelledby="general-heading"]').getByRole('button');
+  check(
+    '  General: Account settings and Logout',
+    (await general.allInnerTexts()).join('|') === 'Account settings|Logout',
+    (await general.allInnerTexts()).join('|'),
+  );
+
+  // 62 hours, 1,240 km in 6 recordings, 40% of it walked.
+  fake.stats = {
+    rides: 6,
+    distanceM: 1_240_500,
+    movingS: 50 * 3600,
+    standingS: 12 * 3600 + 1200,
+    walkM: 496_200,
+    rideM: 700_000,
+    jeepRides: 3,
+    eJeepRides: 2,
+    busRides: 1_204,
+    trainRides: 1,
+    tricycleRides: 1,
+  };
+  await toolbarRecord(page).click();
+  await accountTab(page).click();
+  const stats = page.getByRole('region', { name: 'Commute Statistics' });
+  // The region shows placeholders first: read it once the numbers are in.
+  await stats.getByText('Total time').waitFor();
+  const statsText = await stats.innerText();
+  await shot(page, '2-account-stats');
+  check(
+    '  with stats: total time in hours, distance in km with separators, the route recordings counted',
+    /Total time\s*62\s*hr/.test(statsText) &&
+      /Total distance\s*1,240\s*km/.test(statsText) &&
+      /Route recordings\s*6/.test(statsText),
+    statsText.replace(/\n/g, ' '),
+  );
+  const vehicles = await stats
+    .getByRole('list', { name: 'Rides by vehicle' })
+    .getByRole('listitem')
+    .allInnerTexts();
+  check(
+    "  rides by vehicle, the frame's six: -- for none, no Tricycle",
+    vehicles.map((cell) => cell.replace(/\s+/g, ' ').trim()).join(' | ') ===
+      'Jeep 3 | E-Jeep 2 | UV Express -- none | Bus 1,204 | Train 1 | Ferry -- none',
+    vehicles.map((cell) => cell.replace(/\s+/g, ' ').trim()).join(' | '),
+  );
+  check(
+    '  and Sakay and Lakad by distance, each share under its end, and said with its word',
+    /^Sakay\s*60%$/.test(await legendRow(stats, 'Sakay').innerText()) &&
+      /^Lakad\s*40%$/.test(await legendRow(stats, 'Lakad').innerText()),
+  );
+
+  // Asked again offline: the last numbers stay.
+  fake.next.stats = 'offline';
+  await toolbarRecord(page).click();
+  await accountTab(page).click();
+  await stats.waitFor();
+  await page.waitForTimeout(500);
+  check(
+    '  asked again with no signal, the last numbers stay',
+    /62\s*hr/.test(await stats.innerText()) && fake.next.stats === undefined,
+  );
+  check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+}
+{
+  // None had yet, and no signal: one short line in their place.
+  const { page, fake } = await phone();
+  fake.stats = { rides: 1, distanceM: 1000 };
+  fake.next.stats = 'offline';
+  await start(page).waitFor({ timeout: 30000 });
+  await accountTab(page).click();
+  const stats = page.getByRole('region', { name: 'Commute Statistics' });
+  await stats.getByText('Your statistics show when you’re online.').waitFor();
+  check('Commute Statistics with no signal and none kept: one short line', true);
+  // No recordings yet: zeros and an empty bar.
+  fake.stats = {};
+  await toolbarRecord(page).click();
+  await accountTab(page).click();
+  // Read once the numbers are in, not the placeholders.
+  await stats.getByText('Sakay', { exact: true }).waitFor();
+  const zeroText = await stats.innerText();
+  check(
+    '  with no recordings: zeros, and Sakay and Lakad with no shares',
+    /Total time\s*0\s*min/.test(zeroText) && /Route recordings\s*0/.test(zeroText),
+    zeroText.replace(/\n/g, ' '),
+  );
 }
 
 // --------------------------------- History: the account's uploads, any phone
@@ -439,7 +605,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 
-// ---------- right after sign-in, Account is there and Sign out works
+// ---------- right after sign-in, Account is there and Logout works
 {
   const { page } = await phone({ signedIn: false });
   await page
@@ -465,13 +631,13 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   const isConsentShown =
     (await page.getByRole('heading', { name: 'Before you record' }).count()) > 0;
   await accountTab(page).click();
-  await page.getByRole('heading', { level: 1, name: 'Profile' }).waitFor();
-  await button(page, 'Sign out').click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await logout(page);
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
   check(
-    'right after sign-in, with no consent step, the Account tab opens Profile, and Sign out works',
+    'right after sign-in, with no consent step, the Account tab opens Account, and Logout works',
     !isConsentShown,
   );
 }
@@ -539,7 +705,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     [ACCOUNT_ID],
   );
   await accountTab(page).click();
-  await button(page, 'Sign out').click();
+  await logout(page);
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
@@ -549,25 +715,46 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     await page.evaluate(() => localStorage.getItem('para.contributor-claim')),
   );
   check(
-    'Sign out keeps a waiting claim, still bound to its account, and finishes nothing',
+    'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
     kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
     JSON.stringify(kept),
   );
 }
 
-// ----------------------------------------------------- Sign out
+// ----------------------------------------------------- Logout
 {
   const { page, fake } = await phone();
   await start(page).waitFor({ timeout: 30000 });
   await seed(page, 'eeeeeeee-0000-4000-8000-000000000004', 'Only here');
+  // Its upload fails, as with no signal: it is still on the phone, not sent, when Logout asks.
+  fake.next.save = 'offline';
   await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => document.readyState === 'complete');
   await accountTab(page).click();
-  await button(page, 'Sign out').click();
+  await button(page, 'Logout').click();
+  const sheet = page.getByRole('alertdialog', { name: 'Log out?' });
+  await sheet.waitFor();
+  check(
+    'Logout asks first, focus on Cancel, and says the recording not sent stays on this phone',
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'Cancel' &&
+      (await sheet
+        .getByText('1 recording not sent yet will be left behind on this phone')
+        .count()) === 1,
+    await sheet.innerText(),
+  );
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  Escape keeps the account signed in, focus back on Logout',
+    fake.logouts.length === 0 &&
+      (await page.evaluate(() => document.activeElement?.textContent)) === 'Logout',
+  );
+  await logout(page);
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
   check(
-    'Sign out signs this phone only, and the page asks for Sign in',
+    'Logout signs this phone only, and the page asks for Sign in',
     fake.logouts.join() === 'local' &&
       (await page.evaluate((key) => localStorage.getItem(key), AUTH_KEY)) === null &&
       (await start(page).count()) === 0,
@@ -589,12 +776,54 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await button(page, 'Sign in').click();
   await start(page).waitFor({ timeout: 15000 });
   check(
-    '  signing in again lands on Ready, not on Profile',
-    (await page.getByRole('heading', { name: 'Profile', level: 1 }).count()) === 0 &&
+    '  signing in again lands on Ready, not on Account',
+    (await page.getByRole('heading', { name: 'Account', level: 1 }).count()) === 0 &&
       !page.url().includes('#profile'),
     page.url(),
   );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
+}
+
+// ------------- a shared phone: the next account never sees the last one's statistics
+{
+  const OTHER_ID = 'dddddddd-0000-4000-8000-000000000002';
+  database.users.set(OTHER_ID, {
+    email: 'other@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Other', phone: '+639170000002' },
+  });
+  const { page, fake, errors } = await phone();
+  fake.stats = { rides: 6, distanceM: 1_240_500, movingS: 62 * 3600 };
+  await start(page).waitFor({ timeout: 30000 });
+  await accountTab(page).click();
+  const stats = page.getByRole('region', { name: 'Commute Statistics' });
+  await stats.getByText('Total time').waitFor();
+  await logout(page);
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
+  await field(page, 'Email').fill('other@example.com');
+  await field(page, 'Password').fill('hunter2hunter2');
+  await button(page, 'Sign in').click();
+  await start(page).waitFor({ timeout: 15000 });
+  // The next account's numbers cannot be had: no signal.
+  fake.next.stats = 'offline';
+  await accountTab(page).click();
+  await page.getByText('other@example.com', { exact: true }).waitFor();
+  const isOfflineLine = await stats
+    .getByText('Your statistics show when you’re online.')
+    .waitFor({ timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
+  check(
+    "Logout, then another account signs in with no signal: none of the last account's statistics show",
+    isOfflineLine &&
+      (await stats.getByText('62', { exact: false }).count()) === 0 &&
+      (await page.getByText('Tester', { exact: true }).count()) === 0,
+    (await stats.innerText()).replace(/\n/g, ' '),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 
 await browser.close();

@@ -83,7 +83,10 @@ export function myStatsOf(data: unknown): MyStats | null {
   return (rows.success ? rows.data[0] : undefined) ?? null;
 }
 
-/** The signed-in contributor's own stats, from get_my_stats. Needs signal. */
+/**
+ * The signed-in contributor's own stats, from get_my_stats. Needs signal. `unavailable` when the
+ * project has no get_my_stats yet, which the Account page takes as no stats to show.
+ */
 export async function fetchMyStats(): Promise<MyStats> {
   let client;
   try {
@@ -99,6 +102,10 @@ export async function fetchMyStats(): Promise<MyStats> {
   const { data, error, status } = await untyped.rpc('get_my_stats');
   if (error) {
     if (status === 0) throw new AccountError('offline', error.message);
+    // get_my_stats not there yet (before its migration is applied): no stats to show, not a fault.
+    if (status === 404 || error.code === 'PGRST202') {
+      throw new AccountError('unavailable', error.message);
+    }
     console.warn(`Para did not give the stats (HTTP ${status}):`, error.message);
     throw new AccountError('not-accepting', error.message);
   }
