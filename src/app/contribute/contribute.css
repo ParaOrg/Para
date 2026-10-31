@@ -55,3 +55,19 @@
 .maplibregl-ctrl-scale {
   display: none;
 }
+
+/*
+ * The page itself never scrolls (contribute-page.tsx). The right-hand column's tooltips run past
+ * the screen's edge, and an overflow:hidden box can still be scrolled from code (focus,
+ * scrollIntoView), which slid every control aside; clip cannot be. Hidden for a WebView older
+ * than Chrome 90, which has no clip: Capacitor 8 allows WebView 60. Two rules, not two
+ * declarations in one, which the build's minifier folds into the last for its modern targets.
+ */
+.contribute-page {
+  overflow: hidden;
+}
+@supports (overflow: clip) {
+  .contribute-page {
+    overflow: clip;
+  }
+}

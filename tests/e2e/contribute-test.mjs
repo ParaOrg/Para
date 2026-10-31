@@ -977,6 +977,30 @@ const buttons = (page) =>
   await page.context().close();
 }
 
+// ------------------------- Flag a stop not fetched (offline before the worker kept it): the ride goes on
+{
+  const { page, errors } = await phone();
+  // Its code fails to arrive, before Ready fetches it ahead and again when the ride asks for it.
+  await page.route(/flag-stop-button/, (route) => route.abort('internetdisconnected'));
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 60);
+  await page.waitForTimeout(300);
+  check(
+    'Flag a stop not fetched: the recording screen still shows, and records, with no Flag a stop',
+    (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1 &&
+      (await flagButton(page).count()) === 0 &&
+      /Distance\s+\d+ m/.test(
+        await page.getByRole('group', { name: 'Recording so far' }).innerText(),
+      ),
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' '),
+  );
+  check('  and no page error', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------------------- Keep recording on the form
 {
   const { page, errors } = await phone();

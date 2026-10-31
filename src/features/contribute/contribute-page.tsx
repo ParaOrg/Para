@@ -1,4 +1,12 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from 'react';
 import { flushSync } from 'react-dom';
 
 import { useAccountGate } from './account/use-account-gate';
@@ -13,6 +21,7 @@ import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
+import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
@@ -44,8 +53,20 @@ const RecordingScreen = lazy(() =>
 const StopRecordingScreen = lazy(() =>
   loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),
 );
-const FlagStopButton = lazy(() =>
-  loadFlagStopButton().then((module) => ({ default: module.FlagStopButton })),
+/** Flag a stop's place when its code could not be fetched: nothing, and the ride goes on. */
+function NoFlagStopButton(): null {
+  return null;
+}
+// Not fetched (offline before the worker kept it): the ride records on without the button, rather
+// than the failed load taking the page down with it.
+const FlagStopButton = lazy<ComponentType<FlagStopButtonProps>>(() =>
+  loadFlagStopButton().then(
+    (module) => ({ default: module.FlagStopButton }),
+    (error: unknown) => {
+      console.warn('Flag a stop could not be fetched; the ride records without it.', error);
+      return { default: NoFlagStopButton };
+    },
+  ),
 );
 const UnfinishedScreen = lazy(() =>
   loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),
@@ -194,9 +215,8 @@ export function ContributePage({ locator }: ContributePageProps) {
   };
 
   return (
-    // Clipped, not hidden: an overflow:hidden box can still be scrolled from code (focus, scrollIntoView),
-    // and the right-hand column's tooltips run off the screen's edge, so one would slide the page.
-    <main className="relative h-dvh overflow-clip bg-surface-secondary font-sn-pro">
+    // The page never scrolls, not even from code (contribute.css, .contribute-page).
+    <main className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro">
       {/* inert while History, Profile, the permissions screen or the credits cover it: no map
           control can be tabbed to behind the screen. */}
       <div
