@@ -58,5 +58,5 @@ export const Primary: Story = {};
 /** Content/inverse on a livery's surface: the same drawings, taking the card's white words. */
 export const Inverse: Story = { args: { ground: 'inverse' } };
 
-/** At 20, as the rows draw circle-arrow-right, Terminal and Hintuan. */
+/** At 20, as the rows draw Terminal and Hintuan. */
 export const Small: Story = { args: { size: 'small' } };
