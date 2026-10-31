@@ -18,8 +18,9 @@ const statsRowSchema = z.pipe(
     hinto_s: z.number(),
     marks: z.number(),
     jeep_rides: z.number(),
-    e_jeep_rides: z.number(),
-    uv_express_rides: z.number(),
+    // Absent until contribution_fare is applied, with the two fare columns: read as 0.
+    e_jeep_rides: z.optional(z.number()),
+    uv_express_rides: z.optional(z.number()),
     bus_rides: z.number(),
     train_rides: z.number(),
     ferry_rides: z.number(),
@@ -31,8 +32,8 @@ const statsRowSchema = z.pipe(
     longest_ride_moving_s: z.nullable(z.number()),
     routes_helped: z.number(),
     hintuans_helped: z.number(),
-    fare_php_total: z.number(),
-    fare_recordings: z.number(),
+    fare_php_total: z.optional(z.number()),
+    fare_recordings: z.optional(z.number()),
   }),
   z.transform((row) => ({
     rides: row.rides,
@@ -47,8 +48,8 @@ const statsRowSchema = z.pipe(
     marks: row.marks,
     ridesByVehicle: {
       jeep: row.jeep_rides,
-      eJeep: row.e_jeep_rides,
-      uvExpress: row.uv_express_rides,
+      eJeep: row.e_jeep_rides ?? 0,
+      uvExpress: row.uv_express_rides ?? 0,
       bus: row.bus_rides,
       train: row.train_rides,
       ferry: row.ferry_rides,
@@ -63,9 +64,9 @@ const statsRowSchema = z.pipe(
         : { distanceM: row.longest_ride_m, movingSeconds: row.longest_ride_moving_s },
     routesHelped: row.routes_helped,
     hintuansHelped: row.hintuans_helped,
-    /** Pesos paid over the rides that say what they cost; fareRecordings is how many. */
-    farePhpTotal: row.fare_php_total,
-    fareRecordings: row.fare_recordings,
+    /** Pesos paid over the rides that say what they cost; fareRecordings is how many (0: none known). */
+    farePhpTotal: row.fare_php_total ?? 0,
+    fareRecordings: row.fare_recordings ?? 0,
   })),
 );
 
@@ -75,6 +76,12 @@ const statsRowSchema = z.pipe(
  * less than distanceM. Nothing about a ride an editor hid.
  */
 export type MyStats = z.infer<typeof statsRowSchema>;
+
+/** The one row get_my_stats answers, read; null when it is not in the form expected. */
+export function myStatsOf(data: unknown): MyStats | null {
+  const rows = z.array(statsRowSchema).safeParse(data);
+  return (rows.success ? rows.data[0] : undefined) ?? null;
+}
 
 /**
  * The signed-in contributor's own stats, from get_my_stats. Needs signal. `unavailable` when the
@@ -102,8 +109,7 @@ export async function fetchMyStats(): Promise<MyStats> {
     console.warn(`Para did not give the stats (HTTP ${status}):`, error.message);
     throw new AccountError('not-accepting', error.message);
   }
-  const rows = z.array(statsRowSchema).safeParse(data);
-  const [stats] = rows.success ? rows.data : [];
+  const stats = myStatsOf(data);
   if (!stats) throw new AccountError('not-accepting', 'The stats are not in the form expected.');
   return stats;
 }

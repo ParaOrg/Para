@@ -11,6 +11,8 @@
  * - `code-rejected`: the 6-digit code is wrong or has expired; the project answers both the same.
  * - `same-password`: the new password is the one the account already has.
  * - `rate-limited`: too many emails or tries; waiting is the only fix.
+ * - `not-deletable`: the account cannot be deleted from this page (an editor's, or one that still
+ *   owns part of the map); Para's team removes it.
  * - `unavailable`: this build has no database to sign in to.
  * - `not-accepting`: Para answered, but not in a way the page knows; most likely its settings.
  */
@@ -26,6 +28,7 @@ export type AccountProblem =
   | 'code-rejected'
   | 'same-password'
   | 'rate-limited'
+  | 'not-deletable'
   | 'unavailable'
   | 'not-accepting';
 
@@ -51,6 +54,7 @@ export const ACCOUNT_MESSAGES: Record<AccountProblem, string> = {
   'code-rejected': 'That code is wrong or has expired. Check it, or send a new code.',
   'same-password': "That's already your password. Choose a new one.",
   'rate-limited': 'Too many tries. Wait a few minutes, then try again.',
+  'not-deletable': "This account can't be deleted here. Ask Para's team to remove it.",
   unavailable: 'Accounts are not available on this page.',
   'not-accepting': "Para can't take this right now. Try again later.",
 };
