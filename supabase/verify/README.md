@@ -188,5 +188,5 @@ and re-applying passes the check.
 It applies every earlier migration, the contributions, contribution_use, contributor_accounts and
 account_stats paste files, then `../apply/20261031100000_delete_my_account_apply.sql` twice (the
 second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
-raise nothing and leave no row behind, and its 4 read-only rows must be `t`. On a second database,
+raise nothing and leave no row behind, and its 5 read-only rows must be `t`. On a second database,
 apply then revert twice leaves the schema as before, and re-applying passes the check.
