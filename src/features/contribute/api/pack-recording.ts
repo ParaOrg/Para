@@ -12,7 +12,7 @@ import { RECORDING_VERSION, type Recording, type RideKind } from '../storage/rec
  * The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them.
  * 2 counts hintos only while on ride.
  */
-export const RULES_VERSION = 2;
+const RULES_VERSION = 2;
 
 /** The Philippines, as the database checks it. */
 const BOX = { south: 4, north: 22, west: 116, east: 127 } as const;
