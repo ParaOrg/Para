@@ -12,17 +12,12 @@ import { markFixIndexes } from './recording-marks';
 import type { MarkRow } from '../storage/recording-schema';
 
 /*
- * The one place the page calls the rules for the mode a recording is on: lines,
- * markers and the course-up bearing are ride-recording.ts's; this file only
+ * The one place the page calls the rules for the mode a recording is on: lines
+ * and markers are ride-recording.ts's; this file only
  * puts them in the page's words (Lakad and Sakay) and in the shape the map draws.
  */
 
-export {
-  courseBearing,
-  currentMode,
-  type Mode,
-  type ModeSwitch,
-} from '@/features/routes/model/ride-recording';
+export { currentMode, type Mode } from '@/features/routes/model/ride-recording';
 
 /** The mode as the contributor reads it. */
 export const MODE_LABEL = { walk: 'Lakad', ride: 'Sakay' } satisfies Record<Mode, string>;
