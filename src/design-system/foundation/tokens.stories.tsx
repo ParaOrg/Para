@@ -342,7 +342,8 @@ function TokensPage() {
           token="Map/LocatorIndicatorOverlay (15%, border 75%)"
           cls="bg-map-locator-indicator-overlay-surface"
         />
-        <Swatch box="bg-map-trail-line" token="Map/Trail/line" cls="bg-map-trail-line" />
+        <Swatch box="bg-map-trail-lakad" token="Map/Trail/lakad" cls="bg-map-trail-lakad" />
+        <Swatch box="bg-map-trail-sakay" token="Map/Trail/sakay" cls="bg-map-trail-sakay" />
       </Group>
 
       <Group title="Map — the train lines, LRT-1, LRT-2 and MRT-3 (in map-colours.ts, for the map to paint)">

@@ -417,17 +417,19 @@ const buttons = (page) =>
       ride: paintOf('recording-trail-line', 'line-color'),
       walk: paintOf('recording-trail-walk', 'line-color'),
       dashes: paintOf('recording-trail-walk', 'line-dasharray'),
+      cap: window.__map.getLayoutProperty('recording-trail-walk', 'line-cap'),
       foot: window.__map.getLayoutProperty('recording-trail-feet', 'icon-image'),
       hasFoot: window.__map.hasImage('recording-trail-foot'),
     });
   });
   check(
-    '  walked dashed with a foot along it, ridden solid, both fuchsia/700 from map-colours',
+    "  walked in round dashes with a foot along it in blue/700, ridden solid in green/700, the tint's Lakad and Sakay from map-colours",
     paint ===
       JSON.stringify({
-        ride: '#a800b7',
-        walk: '#a800b7',
-        dashes: [1.2, 1],
+        ride: '#008236',
+        walk: '#1447e6',
+        dashes: [0.5, 2],
+        cap: 'round',
         foot: 'recording-trail-foot',
         hasFoot: true,
       }),
