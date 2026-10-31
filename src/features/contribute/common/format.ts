@@ -48,9 +48,17 @@ export const dateTimeText = (time: number): string =>
 export const fullDateTimeText = (time: number): string =>
   new Date(time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'medium' });
 
-/** A day with its year, as History's card says it: `Jan 25, 2026`. */
+/**
+ * A day with its year, as History's card says it: `Jan 25, 2026`. Manila's day in one fixed
+ * pattern, whatever the phone's zone or language, as the recording's file name dates it.
+ */
 export const dayText = (time: number): string =>
-  new Date(time).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  new Date(time).toLocaleDateString('en-US', {
+    timeZone: 'Asia/Manila',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
 /** A ride's length in hours and minutes, as History's card says it: `0h 12m`. */
 export function hoursMinutesText(seconds: number): string {

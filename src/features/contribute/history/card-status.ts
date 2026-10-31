@@ -23,10 +23,15 @@ const NEVER_FITS = new Set([FAILED['too-long'].brief, FAILED['line-too-large'].b
  * The one line every card shows about its upload. A retry only for a true failure: one the page
  * will not try again by itself. A failure it will retry is waiting: for signal, or for the reason it gives.
  */
-export function cardStatusOf(status: UploadStatus, canDeleteFromPara: boolean): CardStatus {
+export function cardStatusOf(
+  status: UploadStatus,
+  canDeleteFromPara: boolean,
+  isOnline: boolean,
+): CardStatus {
   switch (status.state) {
     case 'waiting':
-      return { tone: 'quiet', words: 'Waiting for signal' };
+      // Queued: for the signal when the phone has none, else for its turn.
+      return { tone: 'quiet', words: isOnline ? 'Waiting to send' : 'Waiting for signal' };
     case 'checking':
     case 'uploading':
       return { tone: 'quiet', words: 'Sending…' };

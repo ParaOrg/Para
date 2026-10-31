@@ -11,18 +11,22 @@ import {
   cardStatusOf,
 } from '../../src/features/contribute/history/card-status.ts';
 import { sketchLines } from '../../src/features/contribute/history/trail-sketch-paths.ts';
-import { cardDistanceText, hoursMinutesText } from '../../src/features/contribute/common/format.ts';
+import {
+  cardDistanceText,
+  dayText,
+  hoursMinutesText,
+} from '../../src/features/contribute/common/format.ts';
 import { FAILED } from '../../src/features/contribute/uploads/upload-failures.ts';
 
 const failed = (reason) => ({ state: 'failed', ...FAILED[reason] });
 
 test('uploaded is green; a removal that failed says why, in red', () => {
-  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, true), {
+  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, true, true), {
     tone: 'uploaded',
     words: 'Uploaded',
   });
   // Sent under an identity this phone no longer has: it cannot be deleted from here, and says why.
-  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, false), {
+  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, false, true), {
     tone: 'uploaded',
     words: 'Uploaded from an earlier sign-in',
   });
@@ -37,9 +41,14 @@ test('only a failure the page will not retry by itself offers Tap retry upload',
     assert.equal(cardStatusOf(failed(reason)).tone, 'retry', reason);
   }
   assert.deepEqual(cardStatusOf(failed('offline')), { tone: 'quiet', words: 'Waiting for signal' });
-  assert.deepEqual(cardStatusOf({ state: 'waiting' }), {
+  // Queued: for the signal with none, else only for its turn.
+  assert.deepEqual(cardStatusOf({ state: 'waiting' }, true, false), {
     tone: 'quiet',
     words: 'Waiting for signal',
+  });
+  assert.deepEqual(cardStatusOf({ state: 'waiting' }, true, true), {
+    tone: 'quiet',
+    words: 'Waiting to send',
   });
   // Retried by itself later, for a reason of its own: grey, with that reason.
   assert.deepEqual(cardStatusOf(failed('day-cap')), {
@@ -151,4 +160,18 @@ test('the card’s time and distance read as Figma writes them', () => {
   assert.equal(cardDistanceText(850), '850 m');
   assert.equal(cardDistanceText(4_249), '4.2 km');
   assert.equal(cardDistanceText(34_200), '34 km');
+});
+
+test('the card’s day is Manila’s, in one pattern, whatever the phone’s zone', () => {
+  const zone = process.env.TZ;
+  process.env.TZ = 'UTC';
+  try {
+    // 00:30 in Manila on Jan 25 is still Jan 24 on a phone kept on UTC.
+    const halfPastMidnight = Date.UTC(2026, 0, 24, 16, 30);
+    assert.equal(new Date(halfPastMidnight).getDate(), 24);
+    assert.equal(dayText(halfPastMidnight), 'Jan 25, 2026');
+  } finally {
+    if (zone === undefined) delete process.env.TZ;
+    else process.env.TZ = zone;
+  }
 });

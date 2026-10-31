@@ -78,6 +78,7 @@ const meta = {
     actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: true, isBusy: false },
     facts: FACTS,
     picture: null,
+    isOnline: true,
     onUpload: fn(),
     onDownload: fn(),
     onDeleteFromPara: fn(),
@@ -115,6 +116,14 @@ export const TapRetry: Story = {
   play: async ({ canvasElement, args }) => {
     await userEvent.click(within(canvasElement).getByRole('button', { name: /^Tap retry upload/ }));
     await expect(args.onUpload).toHaveBeenCalled();
+  },
+};
+
+/** Queued, the phone online: its turn comes. */
+export const WaitingToSend: Story = {
+  args: {
+    status: { state: 'waiting' },
+    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
   },
 };
 
@@ -156,7 +165,7 @@ export const WalkedAllTheWay: Story = {
   },
 };
 
-/** Long names wrap; they are never cut. */
+/** Long names: two lines each at most, then an ellipsis, so the cards keep a steady height. */
 export const LongNames: Story = {
   args: {
     recording: {
@@ -164,6 +173,36 @@ export const LongNames: Story = {
       startPointName: 'SM City Fairview, the terminal behind the Regalado Avenue entrance',
       endPointName: 'Quezon Memorial Circle, the jeepney stop under the footbridge',
     },
+  },
+};
+
+/** Delete from Para on an upload with no copy here says it will be gone for good. */
+export const AskingBeforeDeletingTheOnlyCopy: Story = {
+  args: {
+    facts: { ...FACTS, trail: null },
+    actions: { canUpload: false, isOnPhone: false, canDeleteFromPara: true, isBusy: false },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Delete from Para/ }));
+    await expect(
+      canvas.getByText(
+        "Delete this recording from Para? There's no copy on this phone, so it will be gone for good.",
+      ),
+    ).toBeInTheDocument();
+  },
+};
+
+/** Delete from Para with the copy kept here says so. */
+export const AskingBeforeDeletingFromPara: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Delete from Para/ }));
+    await expect(
+      canvas.getByText('Delete this recording from Para? The copy on this phone stays.'),
+    ).toBeInTheDocument();
   },
 };
 

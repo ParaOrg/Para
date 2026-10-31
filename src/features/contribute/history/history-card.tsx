@@ -1,36 +1,21 @@
-import { useEffect, useId, useRef, useState, type ComponentType } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
-import { useEscape } from '@/shared/hooks/use-escape';
-import {
-  BusIcon,
-  EJeepIcon,
-  FerryIcon,
-  JeepneyIcon,
-  TrainIcon,
-  UvExpressIcon,
-} from '@/shared/ui/route-icons';
-
-import { CardMenu, hasMenuItems, type Asking, type CardActions } from './card-menu';
+import type { Asking, CardActions } from './card-menu';
+import { CardMeta } from './card-meta';
+import { CardPicture } from './card-picture';
 import { HISTORY_HEADING_ID, cardStatusOf } from './card-status';
-import { CardStatusLine } from './card-status-line';
-import { ArrowRightIcon, FootstepsIcon, MoreIcon } from './history-icons';
+import { CardStatusRow } from './card-status-row';
+import { ArrowRightIcon } from './history-icons';
 import type { RideFacts } from './ride-facts';
-import { TrailSketch } from './trail-sketch';
 import { ConfirmDelete } from '../common/confirm-delete';
-import { cardDistanceText, dayText, fullDateTimeText, hoursMinutesText } from '../common/format';
-import type { Recording, RideKind } from '../storage/recording-schema';
+import { fullDateTimeText } from '../common/format';
+import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
-import { REMOVE_UPLOAD_QUESTION, deleteFromPhoneQuestion } from '../uploads/upload-status';
-
-/** The vehicles with an icon of their own; Tricycle and Other have none yet. */
-const VEHICLE_ICONS: Partial<Record<RideKind, ComponentType>> = {
-  Jeep: JeepneyIcon,
-  'E-Jeep': EJeepIcon,
-  'UV Express': UvExpressIcon,
-  Bus: BusIcon,
-  Train: TrainIcon,
-  Ferry: FerryIcon,
-};
+import {
+  DELETE_ONLY_COPY_QUESTION,
+  REMOVE_UPLOAD_QUESTION,
+  deleteFromPhoneQuestion,
+} from '../uploads/upload-status';
 
 interface HistoryCardProps {
   recording: Recording;
@@ -40,6 +25,8 @@ interface HistoryCardProps {
   facts: RideFacts | null;
   /** The picture of its whole trail on the map, taken as its form opened; null for none. */
   picture: string | null;
+  /** Whether the phone has a connection: queued reads "Waiting for signal" without one. */
+  isOnline: boolean;
   onUpload: () => void;
   onDownload: () => void;
   onDeleteFromPara: () => void;
@@ -57,29 +44,18 @@ export function HistoryCard({
   actions,
   facts,
   picture,
+  isOnline,
   onUpload,
   onDownload,
   onDeleteFromPara,
   onRemoveFromPhone,
 }: HistoryCardProps) {
   const [asking, setAsking] = useState<Asking>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
-  const menuAreaRef = useRef<HTMLDivElement>(null);
   const shouldReturnFocus = useRef(false);
   const titleId = useId();
-  const menuId = useId();
   const title = recording.startPointName || recording.description || 'Recording';
   const fullName = `the recording of ${fullDateTimeText(recording.startedAt)}, ${title}`;
-  const seconds = ((recording.stoppedAt ?? recording.startedAt) - recording.startedAt) / 1000;
-  const VehicleIcon = facts?.isWalkOnly
-    ? FootstepsIcon
-    : recording.rideKind && VEHICLE_ICONS[recording.rideKind];
-  const meta = [
-    dayText(recording.startedAt),
-    hoursMinutesText(seconds),
-    ...(facts ? [cardDistanceText(facts.distanceM)] : []),
-  ];
 
   // The question took the menu's place, so Keep it hands focus back to the ⋮ that led to it.
   useEffect(() => {
@@ -87,23 +63,6 @@ export function HistoryCard({
     shouldReturnFocus.current = false;
     moreRef.current?.focus();
   }, [asking]);
-
-  // A press anywhere but the menu and its ⋮ closes it, as Escape does.
-  useEffect(() => {
-    if (!isMenuOpen) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      if (event.target instanceof Node && menuAreaRef.current?.contains(event.target)) return;
-      setIsMenuOpen(false);
-    };
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [isMenuOpen]);
-
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-    moreRef.current?.focus();
-  };
-  useEscape(closeMenu, isMenuOpen);
 
   const handleConfirm = () => {
     if (asking === 'delete-from-para') onDeleteFromPara();
@@ -118,32 +77,16 @@ export function HistoryCard({
     setAsking(null);
   };
 
-  const handleAsk = (question: Exclude<Asking, null>) => {
-    setIsMenuOpen(false);
-    setAsking(question);
-  };
-
-  const handleMenuAction = (action: () => void) => () => {
-    setIsMenuOpen(false);
-    action();
-  };
-
   return (
     <li className="flex flex-col gap-2">
       <article
         aria-labelledby={titleId}
         className="flex rounded-2xl bg-surface font-sn-pro text-content-primary shadow-sm"
       >
-        <div className="w-22.75 shrink-0 overflow-hidden rounded-l-xl bg-surface-secondary">
-          {picture ? (
-            <img src={picture} alt="" className="size-full object-cover" />
-          ) : (
-            facts?.trail && <TrailSketch trail={facts.trail} />
-          )}
-        </div>
+        <CardPicture picture={picture} trail={facts?.trail ?? null} />
         <div className="flex min-w-0 flex-1 flex-col gap-3 p-3">
           <div className="flex flex-col">
-            <h2 id={titleId} className="text-base/6 font-extrabold break-words">
+            <h2 id={titleId} className="line-clamp-2 text-base/6 font-extrabold break-words">
               {title}
             </h2>
             {recording.endPointName && (
@@ -152,65 +95,24 @@ export function HistoryCard({
                   <ArrowRightIcon />
                 </span>
                 <span className="sr-only">to</span>
-                <span className="min-w-0 flex-1 break-words">{recording.endPointName}</span>
+                <span className="line-clamp-2 min-w-0 flex-1 break-words">
+                  {recording.endPointName}
+                </span>
               </p>
             )}
           </div>
           <div className="flex flex-col gap-2">
-            <p className="flex items-center gap-2 text-xs/4 text-content-tertiary">
-              {VehicleIcon && (
-                <span aria-hidden className="size-4 shrink-0 *:size-full">
-                  <VehicleIcon />
-                </span>
-              )}
-              {facts?.isWalkOnly && <span className="sr-only">Walked,</span>}
-              {!facts?.isWalkOnly && recording.rideKind && (
-                <span className="sr-only">{recording.rideKind},</span>
-              )}
-              <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                {meta.map((text, index) => (
-                  <span key={text} className="flex items-center gap-1.5 whitespace-nowrap">
-                    {index > 0 && (
-                      <span aria-hidden className="size-0.5 rounded-full bg-content-tertiary" />
-                    )}
-                    {text}
-                  </span>
-                ))}
-              </span>
-            </p>
-            <div ref={menuAreaRef} className="relative flex h-4 items-center gap-2">
-              <CardStatusLine
-                status={cardStatusOf(status, actions.canDeleteFromPara)}
-                fullName={fullName}
-                onRetry={onUpload}
-              />
-              {hasMenuItems(actions) && (
-                <button
-                  ref={moreRef}
-                  type="button"
-                  aria-label={`More actions for ${fullName}`}
-                  aria-expanded={isMenuOpen}
-                  aria-controls={menuId}
-                  disabled={asking !== null}
-                  onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
-                  className="-m-2 shrink-0 rounded-full p-2 text-content-primary disabled:text-content-disabled"
-                >
-                  <span aria-hidden className="block size-4 *:size-full">
-                    <MoreIcon />
-                  </span>
-                </button>
-              )}
-              {isMenuOpen && (
-                <CardMenu
-                  actions={actions}
-                  fullName={fullName}
-                  menuId={menuId}
-                  onUpload={handleMenuAction(onUpload)}
-                  onDownload={handleMenuAction(onDownload)}
-                  onAsk={handleAsk}
-                />
-              )}
-            </div>
+            <CardMeta recording={recording} facts={facts} />
+            <CardStatusRow
+              status={cardStatusOf(status, actions.canDeleteFromPara, isOnline)}
+              actions={actions}
+              fullName={fullName}
+              isAsking={asking !== null}
+              moreRef={moreRef}
+              onUpload={onUpload}
+              onDownload={onDownload}
+              onAsk={setAsking}
+            />
           </div>
         </div>
       </article>
@@ -218,9 +120,11 @@ export function HistoryCard({
         <div className="overflow-hidden rounded-2xl shadow-sm">
           <ConfirmDelete
             question={
-              asking === 'delete-from-para'
-                ? REMOVE_UPLOAD_QUESTION
-                : deleteFromPhoneQuestion(status)
+              asking === 'remove-from-phone'
+                ? deleteFromPhoneQuestion(status)
+                : actions.isOnPhone
+                  ? REMOVE_UPLOAD_QUESTION
+                  : DELETE_ONLY_COPY_QUESTION
             }
             confirmLabel={asking === 'delete-from-para' ? 'Delete' : 'Remove'}
             onConfirm={handleConfirm}

@@ -7,6 +7,7 @@ import { HISTORY_HEADING_ID, canUploadFromMenu } from './card-status';
 import { HistoryCard } from './history-card';
 import { HistoryLoadLine } from './history-load-line';
 import type { HistoryItems } from './use-history-items';
+import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { BottomToolbar } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
@@ -46,6 +47,7 @@ export function HistoryScreen({
 }: HistoryScreenProps) {
   const headingRef = useFocusHeading();
   const [isScrolled, setIsScrolled] = useState(false);
+  const isOnline = useIsOnline();
   const { recordings, uploads, isOnPhone, factsOf, load } = items;
 
   return (
@@ -97,6 +99,7 @@ export function HistoryScreen({
                   }}
                   facts={factsOf(recording)}
                   picture={pictures.get(recording.id) ?? null}
+                  isOnline={isOnline}
                   onUpload={() => uploads.upload(recording)}
                   onDownload={() => onDownload(recording)}
                   onDeleteFromPara={() => void uploads.removeUploaded(recording)}
