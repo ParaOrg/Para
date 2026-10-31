@@ -7,8 +7,8 @@ import { useUpdateProfileMutation } from '../api/use-update-profile-mutation';
 
 interface ProfileViewProps {
   onBack: () => void;
-  /** Opens History, inside Account; absent before consent, when there is none. */
-  onOpenHistory?: () => void;
+  /** Opens History, inside Account. */
+  onOpenHistory: () => void;
 }
 
 /** Profile with its data: the stored name and number, saving them, and signing out. */

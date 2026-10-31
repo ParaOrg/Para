@@ -4,7 +4,7 @@ import { ChevronLeftIcon } from '@/shared/ui/route-icons';
 import { isNativeApp } from '../native-bridge/native-app';
 
 /** A ride is written to the phone fix by fix, so leaving mid-recording brings it back as unfinished. */
-export const goBackToMap = () => window.location.assign('/');
+const goBackToMap = () => window.location.assign('/');
 
 /**
  * The top-left way out of the contributor page, to the public map. The web page only: the

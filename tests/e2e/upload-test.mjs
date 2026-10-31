@@ -52,11 +52,10 @@ const browser = await chromium.launch();
 
 /**
  * A phone with the stand-in GPS and Supabase; `studioSession` is an editor signed in on the same
- * site. `consent` is what the phone has stored: '3' (the current text) unless given, 'yes' (the
- * first text) or null (never asked). `opens` is the screen the page is waited on. The phone is
- * already signed in to an account: the page shows nothing else until one is.
+ * site. The page is waited on until Start shows. The phone is already signed in to an account:
+ * the page shows nothing else until one is, and having it is the agreement.
  */
-async function phone({ studioSession = false, consent = '3', opens = 'start' } = {}) {
+async function phone({ studioSession = false } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -92,15 +91,6 @@ async function phone({ studioSession = false, consent = '3', opens = 'start' } =
       session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true }),
     ],
   );
-  if (consent !== null) {
-    await page.addInitScript((stored) => {
-      // Only a first load seeds it, so a reload keeps what the page itself stored.
-      if (!sessionStorage.getItem('seeded')) {
-        localStorage.setItem('para.contribute.consent', stored);
-        sessionStorage.setItem('seeded', 'yes');
-      }
-    }, consent);
-  }
   if (studioSession) {
     await page.addInitScript(
       ([key]) => {
@@ -113,13 +103,13 @@ async function phone({ studioSession = false, consent = '3', opens = 'start' } =
   const asked = watchDatabase(page);
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await SCREENS[opens](page).waitFor({ timeout: 30000 });
+  await SCREENS.start(page).waitFor({ timeout: 30000 });
   return { page, context, fake, errors, asked };
 }
 
 /**
  * Counts every request the page makes to the database (sign-in, identity, reads or sends), but not
- * the account's own profile read: the page asks that before consent, to know the account is done.
+ * the account's own profile read: the page asks that first, to know the account is done.
  */
 function watchDatabase(page) {
   const watch = { count: 0 };
@@ -132,7 +122,6 @@ function watchDatabase(page) {
 
 const SCREENS = {
   start: (page) => page.getByRole('button', { name: 'Start Tracking' }),
-  consent: (page) => page.getByRole('heading', { name: 'Before you record' }),
   earlier: (page) => page.getByRole('heading', { name: /earlier recordings? too\?/ }),
 };
 
@@ -187,7 +176,7 @@ function savedRide(
     endPointName: 'Cubao',
     description: '',
     rideKind: 'Jeep',
-    // A recording carries the version of the consent text it was made under; one from the first text has none.
+    // A recording carries the version of the terms it was made under; one from the first text has none.
     ...(isEarlier ? {} : { consentVersion }),
     ...(upload ? { upload } : {}),
   };
@@ -278,11 +267,11 @@ const groupOf = (page, name) =>
   await page.getByText('Uploaded to Para').waitFor({ timeout: 15000 });
   const [stored] = [...fake.rows.values()];
   check(
-    'a saved recording is uploaded on its own, and Successfully recorded says so',
+    'a saved recording is uploaded on its own, under the current terms (4), and Successfully recorded says so',
     fake.rows.size === 1 &&
       fake.saveRequests === 1 &&
       stored.recording.start_name === 'SM Fairview' &&
-      stored.recording.consent_version === 3,
+      stored.recording.consent_version === 4,
     `${fake.rows.size} stored, ${fake.saveRequests} sends`,
   );
   const markEvents = stored.recording.events.filter((e) => e.kind === 'mark');
@@ -591,35 +580,19 @@ const groupOf = (page, name) =>
   );
 }
 
-// ------------------------------------------ no consent, nothing is sent
+// ----------------- no consent step: signed in, a recording waiting goes
 {
-  const { page, fake, asked } = await phone({ consent: null, opens: 'consent' });
+  const { page, fake } = await phone();
   const id = 'aaaaaaaa-0000-4000-8000-000000000011';
-  await seed(page, [savedRide(id, T0, { name: 'No consent' })]);
+  await seed(page, [savedRide(id, T0, { name: 'Waiting' })]);
   await page.reload({ waitUntil: 'load' });
-  await SCREENS.consent(page).waitFor();
-  await page.waitForTimeout(2000);
-  check(
-    'with no consent, a saved recording is not sent and the consent screen shows',
-    fake.saveRequests === 0 &&
-      fake.signIns === 0 &&
-      asked.count === 0 &&
-      (await storedUpload(page, id)) === 'none',
-    `${fake.saveRequests} sends, ${fake.signIns} sign-ins, ${asked.count} requests`,
-  );
-  await page.getByRole('button', { name: 'Okay, I understand' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
-  await waitForStatus(page, 'No consent', UPLOADED);
+  await waitForStatus(page, 'Waiting', UPLOADED);
   check(
-    '  agreeing to the current text sends it, with the text' + "'" + 's version',
-    fake.rows.size === 1 && [...fake.rows.values()][0].recording.consent_version === 3,
-  );
-  check(
-    '  the phone remembers the version agreed to, for this account',
-    (await page.evaluate(
-      (id) => localStorage.getItem(`para.contribute.consent.${id}`),
-      ACCOUNT_ID,
-    )) === '3',
+    'signed in, a recording waiting on the phone goes with no consent step, under the terms it was made with (3)',
+    (await page.getByRole('heading', { name: 'Before you record' }).count()) === 0 &&
+      fake.rows.size === 1 &&
+      [...fake.rows.values()][0].recording.consent_version === 3,
   );
   const other = 'cccccccc-0000-4000-8000-000000000002';
   fake.users.set(other, {
@@ -633,60 +606,41 @@ const groupOf = (page, name) =>
     ['para.contributor-auth', session(other, { email: 'second@example.com', isAccount: true })],
   );
   await page.reload({ waitUntil: 'load' });
-  await SCREENS.consent(page).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 30000 });
   check(
-    "a second account on the same phone is asked about the text itself; the first one's answer is not theirs",
-    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
+    '  a second account on the same phone opens on Start too, with no consent step',
+    (await page.getByRole('heading', { name: 'Before you record' }).count()) === 0,
   );
 }
 
-// -------------------- version-1 consent is not consent to the new text
+// ---------- a phone from before: its recordings go under their own terms
 {
-  const { page, fake, asked } = await phone({ consent: 'yes', opens: 'consent' });
+  const { page, fake } = await phone();
   const earlier = 'aaaaaaaa-0000-4000-8000-000000000012';
   const stamped = 'aaaaaaaa-0000-4000-8000-000000000013';
   const underTwo = 'aaaaaaaa-0000-4000-8000-000000000019';
+  // The first consent screen's agreement, as a phone from before kept it: the page no longer reads it.
+  await page.evaluate(() => localStorage.setItem('para.contribute.consent', 'yes'));
   await seed(page, [
     savedRide(earlier, T0, { name: 'Under one', isEarlier: true }),
     savedRide(stamped, T0 + 600_000, { name: 'Stamped' }),
     savedRide(underTwo, T0 + 900_000, { name: 'Under two', consentVersion: 2 }),
-    // An upload made under version 1: the identity check it would set off must wait for consent too.
-    savedRide('aaaaaaaa-0000-4000-8000-000000000018', T0 + 1_200_000, {
-      name: 'Already up',
-      isEarlier: true,
-      upload: { state: 'uploaded', at: T0, by: 'ffffffff-0000-4000-8000-000000000000' },
-    }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await SCREENS.consent(page).waitFor();
-  await page.waitForTimeout(2000);
-  check(
-    'with version-1 consent, the new text shows, with no Start and nothing sent',
-    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
-      fake.saveRequests === 0 &&
-      fake.signIns === 0 &&
-      asked.count === 0 &&
-      (await storedUpload(page, earlier)) === 'none' &&
-      (await storedUpload(page, stamped)) === 'none' &&
-      (await storedUpload(page, underTwo)) === 'none',
-    `${fake.saveRequests} sends`,
-  );
-  check(
-    '  the new text names machine learning and who is responsible',
-    (await page.getByText(/machine learning/).count()) === 1 &&
-      (await page.getByRole('link', { name: 'Message the owner on Facebook' }).count()) === 1,
-  );
-  await page.getByRole('button', { name: 'Okay, I understand' }).click();
-  await SCREENS.earlier(page).waitFor();
+  await SCREENS.earlier(page).waitFor({ timeout: 30000 });
   await page.waitForTimeout(1500);
+  const versions = Object.fromEntries(
+    [...fake.rows.entries()].map(([id, row]) => [id, row.recording.consent_version]),
+  );
   check(
-    '  after agreeing, the recordings made under text 2 or 3 go; the one under text 1 is asked about',
-    fake.rows.size === 2 &&
-      fake.rows.has(stamped) &&
-      fake.rows.has(underTwo) &&
+    'with no consent step, the recordings made under text 2 or 3 go, stamped 2 and 3; the one under text 1 is asked about',
+    (await page.getByRole('heading', { name: 'Before you record' }).count()) === 0 &&
+      fake.rows.size === 2 &&
+      versions[stamped] === 3 &&
+      versions[underTwo] === 2 &&
       (await storedUpload(page, earlier)) === 'none' &&
       (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
-    [...fake.rows.keys()].join(),
+    JSON.stringify(versions),
   );
 }
 
@@ -761,8 +715,8 @@ const groupOf = (page, name) =>
   await waitForStatus(page, 'Sent two', UPLOADED);
   await waitForStatus(page, 'Sent one', UPLOADED);
   check(
-    'Send uploads the earlier recordings, each with the current text' + "'" + 's version',
-    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 3),
+    'Send uploads the earlier recordings, each under the current terms (4)',
+    fake.rows.size === 2 && [...fake.rows.values()].every((r) => r.recording.consent_version === 4),
   );
   await page.evaluate(() => {
     location.hash = '';

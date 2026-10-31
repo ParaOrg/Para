@@ -20,8 +20,8 @@ interface ProfileScreenProps {
   onSave: (fields: ProfileFields) => void;
   onSignOut: () => void;
   onBack: () => void;
-  /** Opens History, which lives inside Account; absent when there is none to open. */
-  onOpenHistory?: () => void;
+  /** Opens History, which lives inside Account. */
+  onOpenHistory: () => void;
 }
 
 /**
@@ -96,11 +96,9 @@ export function ProfileScreen({
             {error}
           </p>
         )}
-        {onOpenHistory && (
-          <div>
-            <Button variant="secondary" label="History" onClick={onOpenHistory} />
-          </div>
-        )}
+        <div>
+          <Button variant="secondary" label="History" onClick={onOpenHistory} />
+        </div>
         <div>
           <Button
             variant="secondary"

@@ -4,9 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 
 import { BottomToolbar } from './bottom-toolbar';
 import { StartBar } from './start-bar';
-import { goBackToMap } from '../common/back-to-map-button';
 import { useStackRoom } from '../common/use-stack-room';
-import { ConsentPanel } from '../consent/consent-panel';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
 
 import './start-icons.css';
@@ -32,8 +30,6 @@ const StartGate =
 export type AccountOpener = 'person' | 'tab';
 
 interface ReadyScreenProps {
-  hasConsent: boolean;
-  onConsent: () => void;
   earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
   /** Opens Account, from the person button or the Account tab; absent when there is none to open. */
@@ -44,12 +40,10 @@ interface ReadyScreenProps {
 
 /**
  * Before a recording, Figma's Start (4485:24815): the person button at the top right and, at the
- * foot, the Record and Account tabs over the Start Tracking bar (or, on a first visit, what the
- * page does). The top left waits for the tutorial's ?.
+ * foot, the Record and Account tabs over the Start Tracking bar. The top left waits for the
+ * tutorial's ?.
  */
 export function ReadyScreen({
-  hasConsent,
-  onConsent,
   earlierQuestion,
   onStart,
   onOpenAccount,
@@ -84,8 +78,8 @@ export function ReadyScreen({
           />
         </div>
       )}
-      {hasConsent && earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
-      {hasConsent && !earlierQuestion && (
+      {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+      {!earlierQuestion && (
         <section
           ref={stackRef}
           aria-labelledby="ready-heading"
@@ -109,7 +103,6 @@ export function ReadyScreen({
           )}
         </section>
       )}
-      {!hasConsent && <ConsentPanel onAgree={onConsent} onDecline={goBackToMap} />}
     </>
   );
 }

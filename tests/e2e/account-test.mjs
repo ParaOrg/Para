@@ -26,7 +26,7 @@ const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.
 const AUTH_KEY = 'para.contributor-auth';
 const browser = await chromium.launch();
 
-/** A phone with nothing stored but its consent to the current text, and the stand-in Supabase. */
+/** A phone with nothing stored, and the stand-in Supabase. */
 async function phone({ fake: shared, isCheckInteractive = false } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
@@ -41,12 +41,6 @@ async function phone({ fake: shared, isCheckInteractive = false } = {}) {
   // A second phone shares the first's accounts: the database is one.
   if (shared) fake.users = shared.users;
   await fakeTurnstile(page, { interactive: isCheckInteractive });
-  await page.addInitScript(() => {
-    if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('para.contribute.consent', '3');
-      sessionStorage.setItem('seeded', 'yes');
-    }
-  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
