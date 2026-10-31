@@ -1,6 +1,6 @@
 # 09: README "Where things are" forgets the contributor page
 
-Status: ready-for-human
+Status: resolved (#530)
 Type: task
 Size: small
 Blocked by: none

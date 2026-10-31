@@ -1,6 +1,6 @@
 # Database design: contributors and the studio's review step
 
-**Status: proposed, for the owner's approval.** Nothing here is applied, and no migration is written until you approve it. After that, migrations are written by sessions and applied by you, one at a time.
+**Status: approved** by the owner on 2026-10-17 (`issues/02-owner-approves-the-plan.md`), and built from: `supabase/migrations/20261019125900_contributions.sql` is the first migration written from it. Migrations are written by sessions and applied by the owner, one at a time.
 
 Checked against the live project "ParaPo!" (Singapore, Postgres 17, free plan) on 2026-10-17, with read-only queries: `pg_policies`, `information_schema`, grants, default privileges, functions, indexes, the storage buckets, the Realtime publication and the migration ledger.
 

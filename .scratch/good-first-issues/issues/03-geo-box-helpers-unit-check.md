@@ -1,6 +1,6 @@
 # 03: Unit checks for the box helpers in `geo.ts`
 
-Status: ready-for-human
+Status: resolved (#524)
 Type: task
 Size: small
 Blocked by: none

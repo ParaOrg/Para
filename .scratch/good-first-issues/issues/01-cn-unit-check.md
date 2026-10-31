@@ -1,6 +1,6 @@
 # 01: A unit check for `cn`
 
-Status: ready-for-human
+Status: resolved (#522)
 Type: task
 Size: small
 Blocked by: none
