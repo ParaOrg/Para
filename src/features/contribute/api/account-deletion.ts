@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import type { Recording } from '../storage/recording-schema';
 
 /** Its own key: the deletion this phone began, kept until the phone has forgotten the account. */
-const DELETION_KEY = 'para.contributor-deletion';
+export const DELETION_KEY = 'para.contributor-deletion';
 
 const deletionSchema = z.object({
   accountId: z.string(),

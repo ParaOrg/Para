@@ -33,7 +33,7 @@ const GAP_REASONS = [
   'paused',
 ] as const satisfies readonly GapReason[];
 
-const gapSchema = z.object({
+export const gapSchema = z.object({
   from: z.number(),
   to: z.number(),
   reasons: z.array(z.enum(GAP_REASONS)),
@@ -60,7 +60,7 @@ export type MarkRow = z.infer<typeof markSchema>;
  * a removal is only possible from that identity. `removed` keeps the phone's
  * copy and stops it being sent again unless the contributor asks.
  */
-const uploadMarkSchema = z.union([
+export const uploadMarkSchema = z.union([
   z.object({ state: z.literal('uploaded'), at: z.number(), by: z.string() }),
   z.object({
     state: z.literal('removed'),

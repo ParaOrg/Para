@@ -3,7 +3,7 @@ import { motionOf, prefersReducedMotion } from '../common/tab-motion';
 /** The attribute Start tracking carries (start-bar.tsx): where the morph begins. */
 export const START_BUTTON_ATTR = 'data-start-tracking';
 /** The attribute the recording card's place carries (recording-screen.tsx), its phase as its value: where the morph ends. */
-const RECORDING_CARD_ATTR = 'data-recording-card';
+export const RECORDING_CARD_ATTR = 'data-recording-card';
 /** The ghost's own attribute, so a suite can find it while it runs. */
 export const START_MORPH_ATTR = 'data-start-morph';
 

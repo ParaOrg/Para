@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod/mini';
 
 import { getSupabase, requireSupabase } from './supabase';
@@ -77,15 +76,11 @@ export function readEditorAnswer(data: unknown, error: EditorAskError | null): E
   return { isEditor: parsed.data, problem: null };
 }
 
-// am_i_editor is not in the generated types until its migration is applied.
-// TODO: remove once database.types.ts is regenerated with am_i_editor
-const untyped = (): SupabaseClient => requireSupabase();
-
 /** Whether the signed-in account is on the editor list (`am_i_editor`, 20261030090000). */
 export async function fetchIsEditor(): Promise<boolean> {
   let answer: EditorAnswer;
   try {
-    const { data, error, status } = await untyped().rpc('am_i_editor');
+    const { data, error, status } = await requireSupabase().rpc('am_i_editor');
     answer = readEditorAnswer(
       data,
       error ? { message: error.message, code: error.code, status } : null,

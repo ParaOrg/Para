@@ -39,7 +39,7 @@ export const fixOfRow = (row: FixRow): Fix => ({
   accuracyM: row.accuracyM,
 });
 
-const fixOfWatched = (fix: WatchedFix): Fix => ({
+export const fixOfWatched = (fix: WatchedFix): Fix => ({
   time: fix.timestamp,
   at: [fix.coords.longitude, fix.coords.latitude],
   accuracyM: fix.coords.accuracy,
