@@ -33,6 +33,7 @@ export const TwoRides: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Ride 2 · 2.4 km')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Use this line: Ride 2' })).toBeVisible();
     await userEvent.tab();
     await expect(args.onHighlight).toHaveBeenCalledWith(1);
   },

@@ -12,8 +12,8 @@ interface RideListProps {
 
 /**
  * An upload with more than one ride: each ride on its own row, in time order,
- * with its own Use this line. Pointing at a row, or focusing its button,
- * highlights that ride on the map.
+ * with its own Use this line, named with its ride ("Use this line: Ride 2").
+ * Pointing at a row, or focusing its button, highlights that ride on the map.
  */
 export function RideList({ rides, onUse, onHighlight }: RideListProps) {
   return (
@@ -30,7 +30,13 @@ export function RideList({ rides, onUse, onHighlight }: RideListProps) {
           <span className="text-sm text-content-primary">
             Ride {i + 1} · {kilometres(ride.lengthM)}
           </span>
-          <Button variant="primary" label="Use this line" onClick={() => onUse(ride)} />
+          {/* Named with its ride, as several sit together; the visible words start the name. */}
+          <Button
+            variant="primary"
+            label="Use this line"
+            aria-label={`Use this line: Ride ${i + 1}`}
+            onClick={() => onUse(ride)}
+          />
         </li>
       ))}
     </ul>

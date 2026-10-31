@@ -113,11 +113,10 @@ export const TwoRides: Story = {
     await expect(
       canvas.getByText('Walking is left out: each ride can be used on its own.'),
     ).toBeVisible();
-    const buttons = canvas.getAllByRole('button', { name: 'Use this line' });
-    await expect(buttons).toHaveLength(2);
-    const second = buttons[1];
-    if (!second) throw new Error('The second ride has no Use this line.');
-    await userEvent.click(second);
+    await expect(canvas.getAllByRole('button', { name: /^Use this line: Ride \d$/ })).toHaveLength(
+      2,
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Use this line: Ride 2' }));
     await expect(args.onStart).toHaveBeenCalledWith(
       expect.objectContaining({
         points: [

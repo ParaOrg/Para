@@ -557,10 +557,10 @@ await waitFor(
 await page.getByText('Contributors', { exact: true }).click();
 await list.waitFor();
 await open('Palengke to Eskwela');
-const useButtons = page.getByRole('button', { name: 'Use this line' });
+const useButtons = page.getByRole('button', { name: /^Use this line: Ride \d$/ });
 await waitFor(async () => (await useButtons.count()) === 2);
 check(
-  'an upload of two rides offers each on its own: two Use this line, Ride 1 and Ride 2',
+  'an upload of two rides offers each on its own: two Use this line, named Ride 1 and Ride 2',
   (await useButtons.count()) === 2 &&
     (await body()).includes('Walking is left out: each ride can be used on its own.') &&
     /Ride 1 · [\d.]+ km/.test(await body()) &&
@@ -576,6 +576,20 @@ check(
   /"piece"\],3\]/.test(pointedAt),
   pointedAt,
 );
+// Focused, then closed without the focus moving (a script's click): the row goes
+// with no blur, so only closing can clear what it highlighted.
+await page.getByRole('button', { name: 'Use this line: Ride 2', exact: true }).focus();
+await page.evaluate(() =>
+  [...document.querySelectorAll('button')].find((b) => b.textContent === 'Close')?.click(),
+);
+await open('Palengke to Eskwela');
+await waitFor(async () => (await useButtons.count()) === 2);
+const afterReopen = await highlighted();
+check(
+  '  closing the upload clears its highlight: reopened, no ride is highlighted',
+  /"piece"\],-1\]/.test(afterReopen),
+  afterReopen,
+);
 /** The control points a ride's Use this line begins, read off the draft. */
 const useRide = async (n) => {
   await useButtons.nth(n).click();
@@ -589,6 +603,11 @@ const useRide = async (n) => {
 };
 const startsAt = (points, n) => Math.abs((points[0]?.[1] ?? 0) - C5_TRAIL[n][1]) < 1e-6;
 const endsAt = (points, n) => Math.abs((points.at(-1)?.[1] ?? 0) - C5_TRAIL[n][1]) < 1e-6;
+check(
+  '  each button says its ride to a screen reader',
+  (await page.getByRole('button', { name: 'Use this line: Ride 1', exact: true }).count()) === 1 &&
+    (await page.getByRole('button', { name: 'Use this line: Ride 2', exact: true }).count()) === 1,
+);
 const secondRide = await useRide(1);
 check(
   "  the second ride's Use this line copies its own line: the 5th minute to the 7th",
