@@ -1,0 +1,101 @@
+/*
+ * Motion between the toolbar's screens (tab-motion.ts): the screen over the map slides the way
+ * the tabs run, a short way, and fades; the map stays put; the toolbar shows its new state at
+ * once, its pill sliding inside it (bottom-toolbar.tsx). Transform and opacity only.
+ */
+
+/* The screens over the map: History, Account, Account settings. Record has none of its own. */
+.tab-screen {
+  view-transition-name: tab-screen;
+}
+
+/* The toolbar moves as one piece: no old copy fading out over the new. */
+.tab-toolbar {
+  view-transition-name: tab-toolbar;
+}
+
+/* The page under them (the map, and Start's own controls) cross-fades in the same time. */
+::view-transition-group(*) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Taps go through to the screen being shown, so a second tap mid-move lands where it points. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(tab-toolbar) {
+  animation-duration: 250ms;
+}
+
+::view-transition-old(tab-toolbar) {
+  animation: none;
+  opacity: 0;
+}
+
+::view-transition-new(tab-toolbar) {
+  animation: none;
+}
+
+::view-transition-old(tab-screen),
+::view-transition-new(tab-screen) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  animation-fill-mode: both;
+}
+
+/* Right, to a tab further along: the new screen comes in from the right, the old goes left. */
+:root[data-tab-motion='forward']::view-transition-new(tab-screen) {
+  animation-name: tab-in-from-right;
+}
+
+:root[data-tab-motion='forward']::view-transition-old(tab-screen) {
+  animation-name: tab-out-to-left;
+}
+
+/* Left: mirrored. */
+:root[data-tab-motion='back']::view-transition-new(tab-screen) {
+  animation-name: tab-in-from-left;
+}
+
+:root[data-tab-motion='back']::view-transition-old(tab-screen) {
+  animation-name: tab-out-to-right;
+}
+
+@keyframes tab-in-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes tab-in-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
+@keyframes tab-out-to-left {
+  to {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
+@keyframes tab-out-to-right {
+  to {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+/* Less motion asked for: no view transition is started at all (tab-motion.ts); this is the net. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

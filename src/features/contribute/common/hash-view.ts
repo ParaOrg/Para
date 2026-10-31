@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
+import { moveBetweenScreens } from './tab-motion';
+
 export interface HashView {
   isOpen: boolean;
   open: () => void;
@@ -16,56 +18,53 @@ export interface HashView {
  * the page by its path alone. Each screen has its own store; the hook is made once per screen.
  */
 export function createHashView(hash: string): () => HashView {
-  const listeners = new Set<() => void>();
-  const notify = () => listeners.forEach((listener) => listener());
-
   // Whether opening the screen added a history entry this page load, so the in-page back button
   // can pop it. After a reload there is none to pop: Back would leave the page.
   let hasPushedEntry = false;
 
   const subscribe = (listener: () => void): (() => void) => {
-    listeners.add(listener);
     window.addEventListener('hashchange', listener);
-    return () => {
-      listeners.delete(listener);
-      window.removeEventListener('hashchange', listener);
-    };
+    return () => window.removeEventListener('hashchange', listener);
   };
 
   const isOpenNow = (): boolean => window.location.hash === hash;
 
-  const open = () => {
-    if (isOpenNow()) return;
+  // Each move says whether it changed anything: one that did not has nothing to show.
+  const openNow = (): boolean => {
+    if (isOpenNow()) return false;
     hasPushedEntry = true;
     window.location.hash = hash;
+    return true;
   };
 
-  const close = () => {
-    if (!isOpenNow()) return;
+  const closeNow = (): boolean => {
+    if (!isOpenNow()) return false;
     if (hasPushedEntry) {
       hasPushedEntry = false;
       window.history.back();
-      return;
+      return true;
     }
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    notify();
+    // Every screen's store is told, as a hashchange: replaceState itself fires none.
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    return true;
   };
 
   // Back, when this page load opened the screen from the one at `hash`; after a reload there is no
   // entry to go back to, so the URL is replaced and every screen's store told, as a hashchange.
-  const closeTo = (target: string) => {
-    if (!isOpenNow()) return;
+  const closeToNow = (target: string): boolean => {
+    if (!isOpenNow()) return false;
     if (hasPushedEntry) {
       hasPushedEntry = false;
       window.history.back();
-      return;
+      return true;
     }
-    replaceWith(target);
+    return replaceWithNow(target);
   };
 
   // Every screen's store is told, as a hashchange: replaceState itself fires none.
-  const replaceWith = (target: string) => {
-    if (!isOpenNow()) return;
+  const replaceWithNow = (target: string): boolean => {
+    if (!isOpenNow()) return false;
     hasPushedEntry = false;
     window.history.replaceState(
       null,
@@ -73,7 +72,14 @@ export function createHashView(hash: string): () => HashView {
       window.location.pathname + window.location.search + target,
     );
     window.dispatchEvent(new HashChangeEvent('hashchange'));
+    return true;
   };
+
+  // Every move is shown as one: the screens slide the way the toolbar's tabs run (tab-motion.ts).
+  const open = () => moveBetweenScreens(openNow);
+  const close = () => moveBetweenScreens(closeNow);
+  const closeTo = (target: string) => moveBetweenScreens(() => closeToNow(target));
+  const replaceWith = (target: string) => moveBetweenScreens(() => replaceWithNow(target));
 
   function useHashView(): HashView {
     const isOpen = useSyncExternalStore(subscribe, isOpenNow);

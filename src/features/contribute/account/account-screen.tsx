@@ -6,6 +6,7 @@ import { GeneralBar } from './general-bar';
 import { ProfileCard } from './profile-card';
 import { QuestionSheet } from './question-sheet';
 import { useFocusHeading } from '../common/use-focus-heading';
+import { useScreenEntry } from '../common/use-screen-entry';
 import { BottomToolbar } from '../screens/bottom-toolbar';
 
 interface AccountScreenProps {
@@ -48,6 +49,7 @@ export function AccountScreen({
   onOpenRecord,
 }: AccountScreenProps) {
   const headingRef = useFocusHeading();
+  const entryRef = useScreenEntry<HTMLElement>();
   const [isLogoutAsked, setIsLogoutAsked] = useState(false);
   const logoutRef = useRef<HTMLButtonElement>(null);
   // Back on the Logout row once the page is live again: it was inert under the question.
@@ -58,8 +60,9 @@ export function AccountScreen({
 
   return (
     <section
+      ref={entryRef}
       aria-labelledby="account-heading"
-      className="absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
+      className="tab-screen absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isLogoutAsked} className="absolute inset-0">
         <div className="flex h-full flex-col gap-8 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+2rem)] pb-40">
