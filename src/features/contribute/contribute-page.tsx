@@ -13,7 +13,6 @@ import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
-import { FlagStopButton } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
@@ -33,15 +32,19 @@ const ProfileView = lazy(() =>
   import('./account/profile-view').then((module) => ({ default: module.ProfileView })),
 );
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
-// fetches both as it opens (below), so Start never waits on the network, nor fails without one.
+// fetches them as it opens (below), so Start never waits on the network, nor fails without one.
 const loadRecordingScreen = () => import('./screens/recording-screen');
 const loadUnfinishedScreen = () => import('./screens/unfinished-screen');
 const loadStopRecordingScreen = () => import('./screens/stop-recording-screen');
+const loadFlagStopButton = () => import('./screens/flag-stop-button');
 const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
 );
 const StopRecordingScreen = lazy(() =>
   loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),
+);
+const FlagStopButton = lazy(() =>
+  loadFlagStopButton().then((module) => ({ default: module.FlagStopButton })),
 );
 const UnfinishedScreen = lazy(() =>
   loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),
@@ -160,11 +163,14 @@ export function ContributePage({ locator }: ContributePageProps) {
   // head start: the lazy screen asks again when it is shown.
   useEffect(() => {
     if (phase !== 'ready') return;
-    Promise.all([loadRecordingScreen(), loadUnfinishedScreen(), loadStopRecordingScreen()]).catch(
-      (error: unknown) => {
-        console.warn('The recording screens could not be fetched ahead of Start.', error);
-      },
-    );
+    Promise.all([
+      loadRecordingScreen(),
+      loadUnfinishedScreen(),
+      loadStopRecordingScreen(),
+      loadFlagStopButton(),
+    ]).catch((error: unknown) => {
+      console.warn('The recording screens could not be fetched ahead of Start.', error);
+    });
   }, [phase]);
 
   // Signing out, or leaving Ready, must not leave #profile to reopen Profile after the next sign-in.
@@ -200,11 +206,13 @@ export function ContributePage({ locator }: ContributePageProps) {
           areCreditsShown={!hasCreditsButton}
           mark={
             isRecordingShown ? (
-              <FlagStopButton
-                isRecording={phase === 'recording'}
-                canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
-                onFlag={recording.markPlace}
-              />
+              <Suspense fallback={null}>
+                <FlagStopButton
+                  isRecording={phase === 'recording'}
+                  canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
+                  onFlag={recording.markPlace}
+                />
+              </Suspense>
             ) : null
           }
         />
