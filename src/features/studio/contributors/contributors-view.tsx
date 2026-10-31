@@ -9,6 +9,7 @@ import { ContributionDetails } from './contribution-details';
 import { ContributionList } from './contribution-list';
 import type { StudioContributorsProps } from './contributors-props';
 import { useContributionLayers } from './use-contribution-layers';
+import { useRideHighlight } from './use-ride-highlight';
 import {
   CONTRIBUTION_LIMIT,
   CONTRIBUTION_PERIODS,
@@ -42,11 +43,24 @@ export function ContributorsView({
   const contributions = list.data?.contributions ?? [];
   const opened = contributions.find((c) => c.id === openedId) ?? null;
   const detail = useContributionDetailQuery(opened ? opened.id : null);
+  const { highlightedPiece, highlightRide, clearRideHighlight } = useRideHighlight(openedId);
+  // Closed, the upload's ride highlight goes with it: reopened, it starts with none.
+  const handleClose = () => {
+    setOpenedId(null);
+    clearRideHighlight();
+  };
   const handleOpen = useCallback((id: string) => {
     setOpenedId(id);
     setNotice('');
   }, []);
-  useContributionLayers(map, contributions, opened?.id ?? null, detail.data ?? null, handleOpen);
+  useContributionLayers(
+    map,
+    contributions,
+    opened?.id ?? null,
+    detail.data ?? null,
+    handleOpen,
+    highlightedPiece,
+  );
 
   return (
     <section aria-labelledby={headingId} className={PANEL}>
@@ -62,7 +76,7 @@ export function ContributorsView({
             onChange={(event) => {
               const next = CONTRIBUTION_PERIODS.find((d) => String(d) === event.target.value);
               if (next) setDays(next);
-              setOpenedId(null);
+              handleClose();
             }}
           >
             {CONTRIBUTION_PERIODS.map((d) => (
@@ -106,16 +120,17 @@ export function ContributorsView({
               detail={detail.data}
               isDetailLoading={detail.isPending}
               detailError={detail.error?.message ?? null}
-              onClose={() => setOpenedId(null)}
+              onClose={handleClose}
               actions={
                 <OpenedActions
                   contribution={opened}
                   detail={detail.data}
                   isDetailLoading={detail.isPending}
                   showHidden={showHidden}
-                  onClose={() => setOpenedId(null)}
+                  onClose={handleClose}
                   onNotice={setNotice}
                   onStart={onStart}
+                  onHighlightRide={highlightRide}
                 />
               }
               extras={<OpenedExtras contribution={opened} detail={detail.data} onStart={onStart} />}

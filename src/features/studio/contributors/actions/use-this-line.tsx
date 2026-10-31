@@ -2,8 +2,9 @@ import { Button } from '@/design-system/primitives/button';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { controlPointsOf, type ContributionStart } from './contribution-start';
+import { RideList } from './ride-list';
 import type { Contribution, ContributionDetail } from '../../data/contributions-read';
-import { longestRideLine, splitTrail } from '../trail-parts';
+import { rideLines, splitTrail } from '../trail-parts';
 
 interface UseThisLineProps {
   contribution: Contribution;
@@ -11,14 +12,16 @@ interface UseThisLineProps {
   detail: ContributionDetail | undefined;
   isDetailLoading: boolean;
   onStart: (start: ContributionStart) => void;
+  /** A ride's row pointed at or focused, by its trail part, for the map; null when none is. */
+  onHighlightRide: (piece: number | null) => void;
 }
 
 const NOTE = 'w-full text-sm text-content-secondary';
 
 /**
- * Use this line: the upload's line goes to the Playground as a draft
+ * Use this line: a line of the upload goes to the Playground as a draft
  * direction, snapped to the roads there. Only riding becomes a route: with
- * walking in it, the longest ride part is used and the walking left out.
+ * walking in it, each ride is offered on its own and the walking left out.
  * When the trail could not be read, the parts are unknown and the upload's
  * own line is used, as for an upload sent before Lakad and Sakay.
  */
@@ -27,23 +30,13 @@ export function UseThisLine({
   detail,
   isDetailLoading,
   onStart,
+  onHighlightRide,
 }: UseThisLineProps) {
   if (!detail && isDetailLoading) return <p className={NOTE}>Reading the trail…</p>;
   const pieces = detail ? splitTrail(detail.trail, detail.parts) : [];
-  const rideCount = pieces.filter((piece) => piece.mode === 'ride').length;
   const hasWalk = pieces.some((piece) => piece.mode === 'walk');
-  const line: LngLat[] | null = hasWalk ? longestRideLine(pieces) : c.line;
-  if (hasWalk && !line) {
-    return (
-      <p className={NOTE}>
-        {rideCount === 0
-          ? 'This upload is all walking: there is no ride to use.'
-          : 'No ride in this upload is long enough to use.'}
-      </p>
-    );
-  }
-  if (!line || line.length < 2) return <p className={NOTE}>This upload has no line to use.</p>;
-  const handleClick = () =>
+  const rides = hasWalk ? rideLines(pieces) : [];
+  const start = (line: readonly LngLat[]) =>
     onStart({
       kind: 'direction',
       contributionId: c.id,
@@ -51,16 +44,30 @@ export function UseThisLine({
       startName: c.startName,
       endName: c.endName,
     });
+
+  if (hasWalk && rides.length > 1) {
+    return (
+      <>
+        <p className={NOTE}>Walking is left out: each ride can be used on its own.</p>
+        <RideList rides={rides} onUse={(ride) => start(ride.line)} onHighlight={onHighlightRide} />
+      </>
+    );
+  }
+  const line = hasWalk ? (rides[0]?.line ?? null) : c.line;
+  if (hasWalk && !line) {
+    return (
+      <p className={NOTE}>
+        {pieces.some((piece) => piece.mode === 'ride')
+          ? 'No ride in this upload is long enough to use.'
+          : 'This upload is all walking: there is no ride to use.'}
+      </p>
+    );
+  }
+  if (!line || line.length < 2) return <p className={NOTE}>This upload has no line to use.</p>;
   return (
     <>
-      {hasWalk && (
-        <p className={NOTE}>
-          {rideCount > 1
-            ? `Walking is left out: Use this line takes the longest of its ${rideCount} rides.`
-            : 'Walking is left out: Use this line takes the ride only.'}
-        </p>
-      )}
-      <Button variant="primary" label="Use this line" onClick={handleClick} />
+      {hasWalk && <p className={NOTE}>Walking is left out: Use this line takes the ride only.</p>}
+      <Button variant="primary" label="Use this line" onClick={() => start(line)} />
     </>
   );
 }
