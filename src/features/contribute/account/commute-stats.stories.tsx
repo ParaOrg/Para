@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { CommuteStats } from './commute-stats';
+import { CommuteStats, type CommuteNumbers } from './commute-stats';
 import type { VehicleRides } from './vehicle-grid';
 
 /** The frame's counts: no UV Express or ferry ride. */
@@ -29,20 +29,22 @@ const MANY_RIDES: VehicleRides = {
   ferry: 14,
 };
 
+/** The frame's numbers (4511:22712). */
+const FRAME_NUMBERS: CommuteNumbers = {
+  recordings: 6,
+  seconds: 62 * 3600 + 900,
+  distanceM: 421_300,
+  walkM: 168_000,
+  farePhpTotal: 129,
+  fareRecordings: 4,
+  ridesByVehicle: FRAME_RIDES,
+};
+
 const meta = {
   title: 'Features/Contribute/CommuteStats',
   component: CommuteStats,
   args: {
-    state: {
-      kind: 'shown',
-      numbers: {
-        recordings: 6,
-        seconds: 62 * 3600 + 900,
-        distanceM: 421_300,
-        walkM: 168_000,
-        ridesByVehicle: FRAME_RIDES,
-      },
-    },
+    state: { kind: 'shown', numbers: FRAME_NUMBERS },
   },
   decorators: [
     (Story) => (
@@ -56,7 +58,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** As the frame has it (4511:22712): each share said beside its word. */
+/** As the frame has it (4511:22712): each share said beside its word, and ₱129 as 129 pesos. */
 export const Default: Story = {};
 
 /** Placeholders until the first numbers come. */
@@ -72,12 +74,20 @@ export const NoRecordings: Story = {
   args: {
     state: {
       kind: 'shown',
-      numbers: { recordings: 0, seconds: 0, distanceM: 0, walkM: 0, ridesByVehicle: NO_RIDES },
+      numbers: {
+        recordings: 0,
+        seconds: 0,
+        distanceM: 0,
+        walkM: 0,
+        farePhpTotal: 0,
+        fareRecordings: 0,
+        ridesByVehicle: NO_RIDES,
+      },
     },
   },
 };
 
-/** One recording, under an hour: Recording, and minutes. */
+/** One recording, under an hour: Route recorded, and minutes; its fare not said, so `--`. */
 export const OneShortRecording: Story = {
   args: {
     state: {
@@ -87,6 +97,8 @@ export const OneShortRecording: Story = {
         seconds: 1500,
         distanceM: 6_200,
         walkM: 800,
+        farePhpTotal: 0,
+        fareRecordings: 0,
         ridesByVehicle: { ...NO_RIDES, jeep: 1 },
       },
     },
@@ -103,8 +115,40 @@ export const TinyShare: Story = {
         seconds: 1240 * 3600,
         distanceM: 1_240_000,
         walkM: 2_000,
+        farePhpTotal: 31_204.5,
+        fareRecordings: 96,
         ridesByVehicle: MANY_RIDES,
       },
+    },
+  },
+};
+
+/** Rides recorded, but none saying its fare (the app does not ask yet): `--`, said as none. */
+export const FareNotKnown: Story = {
+  args: {
+    state: {
+      kind: 'shown',
+      numbers: { ...FRAME_NUMBERS, farePhpTotal: 0, fareRecordings: 0 },
+    },
+  },
+};
+
+/** A whole number of pesos: no centavos shown. */
+export const FareWholePesos: Story = {
+  args: {
+    state: {
+      kind: 'shown',
+      numbers: { ...FRAME_NUMBERS, farePhpTotal: 1_240, fareRecordings: 31 },
+    },
+  },
+};
+
+/** Centavos in the total: shown to two places, ₱1,240.50. */
+export const FareWithCentavos: Story = {
+  args: {
+    state: {
+      kind: 'shown',
+      numbers: { ...FRAME_NUMBERS, farePhpTotal: 1_240.5, fareRecordings: 31 },
     },
   },
 };

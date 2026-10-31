@@ -57,7 +57,7 @@ export function VehicleGrid({ rides }: VehicleGridProps) {
           <li
             key={vehicle}
             className={cn(
-              'flex flex-col-reverse items-center border-border-primary',
+              'flex flex-col-reverse items-center gap-0.5 border-border-primary',
               isTopRow ? 'border-b-0-6 pb-4' : 'pt-4',
               index % PER_ROW !== 0 && 'border-l-0-6',
             )}

@@ -9,6 +9,7 @@ import { HistoryLoadLine } from './history-load-line';
 import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
+import { useScreenEntry } from '../common/use-screen-entry';
 import { BottomToolbar } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
@@ -44,14 +45,16 @@ export function HistoryScreen({
   onRemoveFromPhone,
 }: HistoryScreenProps) {
   const headingRef = useFocusHeading();
+  const entryRef = useScreenEntry<HTMLElement>();
   const [isScrolled, setIsScrolled] = useState(false);
   const isOnline = useIsOnline();
   const { recordings, uploads, isOnPhone, factsOf, load } = items;
 
   return (
     <section
+      ref={entryRef}
       aria-labelledby={HISTORY_HEADING_ID}
-      className="absolute inset-0 z-20 flex flex-col bg-surface font-sn-pro text-content-primary"
+      className="tab-screen absolute inset-0 z-20 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <header
         className={cn(

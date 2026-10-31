@@ -664,8 +664,8 @@ const retryButton = (page, name) =>
   await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
   await page.getByRole('button', { name: 'Logout' }).click();
   await page
-    .getByRole('alertdialog', { name: 'Log out?' })
-    .getByRole('button', { name: 'Log out' })
+    .getByRole('alertdialog', { name: 'Are you sure you want to logout?' })
+    .getByRole('button', { name: 'Logout' })
     .click();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })

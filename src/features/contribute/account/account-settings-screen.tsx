@@ -12,6 +12,7 @@ import { ProfileForm } from './profile-form';
 import { QuestionSheet } from './question-sheet';
 import type { Captcha } from './use-captcha';
 import { useFocusHeading } from '../common/use-focus-heading';
+import { useScreenEntry } from '../common/use-screen-entry';
 
 interface AccountSettingsScreenProps {
   email: string;
@@ -69,6 +70,7 @@ export function AccountSettingsScreen({
   onBack,
 }: AccountSettingsScreenProps) {
   const headingRef = useFocusHeading();
+  const entryRef = useScreenEntry<HTMLElement>();
   const [isDeleteAsked, setIsDeleteAsked] = useState(false);
   const deleteRowRef = useRef<HTMLDivElement>(null);
   // Back on Delete account once the page is live again: it was inert under the question.
@@ -79,8 +81,9 @@ export function AccountSettingsScreen({
 
   return (
     <section
+      ref={entryRef}
       aria-labelledby="account-settings-heading"
-      className="absolute inset-0 z-30 flex flex-col bg-surface-secondary font-sn-pro text-content-primary"
+      className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface-secondary font-sn-pro text-content-primary"
     >
       <div inert={isDeleteAsked} className="flex min-h-0 flex-1 flex-col">
         <header className="flex items-center gap-3 pt-[max(1rem,env(safe-area-inset-top))] pr-4 pb-3 pl-[max(1rem,env(safe-area-inset-left))]">
