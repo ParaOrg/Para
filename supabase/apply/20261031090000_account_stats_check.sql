@@ -4,7 +4,7 @@
 -- behaviour, and rolls every one of them back: it raises "FAILED: ..." on the
 -- first wrong result, and nothing it did remains. It proves that a recording
 -- saves with the walk and ride split and without it (an older app), that a
--- half, negative or oversized split is refused, that each user reads only their
+-- half, negative, oversized or undersized split is refused, that each user reads only their
 -- own stats, that anon cannot call get_my_stats, that a hidden ride is left
 -- out, that retiring a month (private.retire_month(month, 0) on a month in
 -- 2024 that holds only the test rides) leaves every number the same, carried
@@ -90,6 +90,10 @@ select pg_temp.refused(pg_temp.recording('11111111-0000-0000-0000-00000000a504',
   pg_temp.split(1000, 4100, 0, 3500)), 'walk and ride over the distance');
 select pg_temp.refused(pg_temp.recording('11111111-0000-0000-0000-00000000a504', now() - interval '12 hours',
   pg_temp.split(1000, 4000, 1000, 2600)), 'walk and ride over the moving and standing time');
+select pg_temp.refused(pg_temp.recording('11111111-0000-0000-0000-00000000a504', now() - interval '12 hours',
+  pg_temp.split(0, 0, 0, 3500)), 'walk and ride under the distance');
+select pg_temp.refused(pg_temp.recording('11111111-0000-0000-0000-00000000a504', now() - interval '12 hours',
+  pg_temp.split(1000, 4000, 0, 3497)), 'walk and ride under the moving and standing time');
 reset role;
 select pg_temp.check((select walk_m is null and ride_s is null from public.contribution
   where id = '11111111-0000-0000-0000-00000000a502'), 'the older app''s recording stored no split');

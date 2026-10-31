@@ -53,7 +53,7 @@ end $$;
 --                  is distance_m and walk_s + ride_s is moving_s + standing_s.
 --                  Null on every row from before and on any save from an app
 --                  that does not send them; all four or none. The table's own
---                  checks hold them (>= 0, and the sums within 2 of the totals),
+--                  checks hold them (>= 0, and each sum within 2 of its total, either way),
 --                  so a direct insert is held to them too.
 --   save_contribution(jsonb)
 --                  reads them as four optional keys; a missing key stores null.
@@ -125,9 +125,9 @@ alter table public.contribution
     and (walk_m is null) = (walk_s is null)
     and (walk_m is null) = (ride_s is null)
   ),
-  -- The phone makes the sums equal; 2 leaves room for its rounding.
-  add constraint contribution_split_distance check (walk_m + ride_m <= distance_m + 2),
-  add constraint contribution_split_time check (walk_s + ride_s <= moving_s + standing_s + 2);
+  -- The phone makes the sums equal; 2 either way leaves room for its rounding.
+  add constraint contribution_split_distance check (abs(walk_m + ride_m - distance_m) <= 2),
+  add constraint contribution_split_time check (abs(walk_s + ride_s - moving_s - standing_s) <= 2);
 
 -- ------------------------------------------------------------------- save
 
@@ -398,6 +398,12 @@ begin
     raise exception 'too_soon: % is newer than % months', first_day, min_age_months using errcode = 'P0001';
   end if;
 
+  -- Locked before the carry reads them, so a ride deleted meanwhile is neither carried nor kept.
+  perform 1 from public.contribution
+    where (received_at at time zone 'UTC') >= first_day
+      and (received_at at time zone 'UTC') < next_day
+      and contributor_id is not null
+    for update;
   -- The contributors' lifetime numbers keep what this month's rows are about to lose.
   perform private.carry_retired_month(first_day);
 
