@@ -220,7 +220,7 @@ const buttons = (page) =>
       start &&
         info &&
         info.y + info.height <= start.y + 0.5 &&
-        (await page.locator('.maplibregl-ctrl-attrib').count()) === 0,
+        !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
       JSON.stringify([info, start]),
     );
   }
@@ -1396,12 +1396,21 @@ const WAKE = () => {
   const { page, errors } = await phone();
   const back = page.getByRole('button', { name: 'Back to the map' });
   const hasOneBack = async () => (await back.count()) === 1;
+  // Off Start, the licences' credit is MapLibre's corner ⓘ, at the bottom right, with the
+  // OpenStreetMap credit among its links.
+  const hasCornerCredits = async () =>
+    (await page
+      .locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib-button')
+      .isVisible()) &&
+    (await page
+      .locator('.maplibregl-ctrl-attrib a[href="https://www.openstreetmap.org/copyright"]')
+      .count()) === 1;
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
     "Ready has no Back to the map (the browser goes back), no scale bar, and the map's credits behind its ⓘ",
     (await back.count()) === 0 &&
       (await page.locator('.maplibregl-ctrl-scale').isVisible()) === false &&
-      (await page.locator('.maplibregl-ctrl-attrib').count()) === 0 &&
+      !(await page.locator('.maplibregl-ctrl-attrib').isVisible()) &&
       (await creditsButton(page).count()) === 1,
   );
 
@@ -1413,6 +1422,16 @@ const WAKE = () => {
     (await back.count()) === 0 &&
       (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1,
   );
+  // Recording keeps the credits behind its own ⓘ, as Start does: no corner one beside it.
+  const hasOwnCredits = async () =>
+    (await creditsButton(page).isVisible()) &&
+    !(await page.locator('.maplibregl-ctrl-attrib').isVisible());
+  check("  and the map's credits behind its own ⓘ while recording", await hasOwnCredits());
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).waitFor();
+  check('  and while paused', await hasOwnCredits());
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   // Fixes are written as they arrive; a moment lets the last ones land before the page goes.
   const distanceOf = async () =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText())
@@ -1430,12 +1449,16 @@ const WAKE = () => {
     `${distanceBefore} / ${await distanceOf()}`,
   );
   check('Unfinished has Back to the map', await hasOneBack());
+  check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
 
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await finishRecording(page);
+  await page.getByRole('button', { name: 'Skip' }).waitFor();
+  check("the Save form keeps the map's corner ⓘ for its credits", await hasCornerCredits());
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   check('Saved has Back to the map, in front of the screen', await hasOneBack());
+  check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
   await back.click();
   await page.waitForURL((url) => url.pathname === '/');
   check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
