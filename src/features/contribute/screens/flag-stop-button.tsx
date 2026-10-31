@@ -5,7 +5,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 interface FlagStopButtonProps {
   /** False while paused: the button shows, disabled, as the Paused frame draws it. */
   isRecording: boolean;
-  /** False once the ride holds the most stops it can: the button stays, aria-disabled. */
+  /** False once the ride holds the most stops it can: the button looks disabled, as paused. */
   canFlag: boolean;
   onFlag: () => void;
 }
@@ -60,7 +60,7 @@ export function FlagStopButton({ isRecording, canFlag, onFlag }: FlagStopButtonP
         aria-describedby={canFlag ? undefined : limitId}
         onClick={handleClick}
       />
-      {/* TODO: the owner draws how a full ride's flag looks; until then a screen reader is told. */}
+      {/* The look says it can do nothing; this says why. */}
       {!canFlag && (
         <span id={limitId} className="sr-only">
           This ride has the most stops it can hold.

@@ -42,6 +42,16 @@ export const Disabled: Story = {
   ),
 };
 
+/** aria-disabled: looks as Disabled, but keeps focus, for a button that has just stopped working. */
+export const AriaDisabled: Story = {
+  render: () => (
+    <div className="flex items-center gap-3">
+      <IconButton icon={NavIcon} label="Go" aria-disabled />
+      <IconButton icon={NavIcon} label="Add" variant="brand" size="large" aria-disabled />
+    </div>
+  ),
+};
+
 /**
  * Hover one: after delay/tooltip its label shows as the Tooltip, on the side
  * the screen asked for (the prop names the arrow's side, as the Tooltip set
