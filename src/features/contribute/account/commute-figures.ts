@@ -16,9 +16,9 @@ export function totalDistanceFigure(metres: number): Figure {
   return { value: WHOLE.format(Math.floor(Math.max(0, metres) / 1000)), unit: 'km' };
 }
 
-/** The recordings' words, as the owner names them: one Route contributed, else Routes. */
-export const routesContributedLabel = (count: number): string =>
-  count === 1 ? 'Route contributed' : 'Routes contributed';
+/** The recordings' words, as the owner names them: one Route recording, else Route recordings. */
+export const routeRecordingsLabel = (count: number): string =>
+  count === 1 ? 'Route recording' : 'Route recordings';
 
 /** How the distance splits between riding and walking, each a whole percent; null with none. */
 export interface ModeSplit {
@@ -36,10 +36,7 @@ export function modeSplit(distanceM: number, walkM: number): ModeSplit | null {
   return { sakayPercent: 100 - lakadPercent, lakadPercent };
 }
 
-/**
- * A vehicle's ride count in the grid: `--` for none, as the frame has it, and for a count the
- * project does not give yet (null); else the count with thousands separators.
- */
-export function vehicleRidesFigure(rides: number | null): string {
-  return rides === null || rides <= 0 ? '--' : WHOLE.format(rides);
+/** A vehicle's ride count in the grid: `--` for none, as the frame has it, else with separators. */
+export function vehicleRidesFigure(rides: number): string {
+  return rides <= 0 ? '--' : WHOLE.format(rides);
 }

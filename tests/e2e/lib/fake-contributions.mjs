@@ -93,6 +93,8 @@ function statsRow({
   walkM = 0,
   rideM = 0,
   jeepRides = 0,
+  eJeepRides = 0,
+  uvExpressRides = 0,
   busRides = 0,
   trainRides = 0,
   ferryRides = 0,
@@ -110,6 +112,8 @@ function statsRow({
     hinto_s: 0,
     marks: 0,
     jeep_rides: jeepRides,
+    e_jeep_rides: eJeepRides,
+    uv_express_rides: uvExpressRides,
     bus_rides: busRides,
     train_rides: trainRides,
     ferry_rides: ferryRides,
@@ -121,6 +125,8 @@ function statsRow({
     longest_ride_moving_s: null,
     routes_helped: 0,
     hintuans_helped: 0,
+    fare_php_total: 0,
+    fare_recordings: 0,
   };
 }
 

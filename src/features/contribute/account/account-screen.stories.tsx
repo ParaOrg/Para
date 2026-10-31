@@ -4,11 +4,11 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { AccountScreen } from './account-screen';
 import type { VehicleRides } from './vehicle-grid';
 
-/** The frame's counts: E-Jeep and UV Express not given yet, no ferry ride. */
+/** The frame's counts: no UV Express or ferry ride. */
 const FRAME_RIDES: VehicleRides = {
   jeep: 5,
-  eJeep: null,
-  uvExpress: null,
+  eJeep: 2,
+  uvExpress: 0,
   bus: 12,
   train: 2,
   ferry: 0,
@@ -95,4 +95,15 @@ export const LogoutFailed: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Logout' }));
     await expect(within(canvas.getByRole('alertdialog')).getByText(/No signal/)).toBeVisible();
   },
+};
+
+/** A short, narrow phone: the page scrolls inside the screen, and the grid keeps three across. */
+export const ShortPhone: Story = {
+  decorators: [
+    (Story) => (
+      <div className="relative h-[560px] w-[360px] overflow-hidden bg-surface-secondary">
+        <Story />
+      </div>
+    ),
+  ],
 };

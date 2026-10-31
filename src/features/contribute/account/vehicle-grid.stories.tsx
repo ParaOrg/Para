@@ -6,7 +6,7 @@ const meta = {
   title: 'Features/Contribute/VehicleGrid',
   component: VehicleGrid,
   args: {
-    rides: { jeep: 5, eJeep: null, uvExpress: null, bus: 12, train: 2, ferry: 0 },
+    rides: { jeep: 5, eJeep: 2, uvExpress: 0, bus: 12, train: 2, ferry: 0 },
   },
   decorators: [
     (Story) => (
@@ -20,7 +20,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** As the frame has it (4514:23003): `--` for none, and for E-Jeep and UV Express not given yet. */
+/** As the frame has it (4514:23003): `--` for none. */
 export const Default: Story = {};
 
 /** No rides yet: every cell `--`. */

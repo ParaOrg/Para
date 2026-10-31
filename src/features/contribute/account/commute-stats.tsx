@@ -4,7 +4,7 @@ import { cn } from '@/shared/utils/cn';
 
 import {
   modeSplit,
-  routesContributedLabel,
+  routeRecordingsLabel,
   totalDistanceFigure,
   totalTimeFigure,
   type ModeSplit,
@@ -34,7 +34,7 @@ interface CommuteStatsProps {
 
 /**
  * Figma's Commute Statistics (4511:22712): total time and total distance, and beside them the
- * routes contributed with the Sakay and Lakad bar, by distance; under them the rides by vehicle.
+ * route recordings with the Sakay and Lakad bar, by distance; under them the rides by vehicle.
  */
 export function CommuteStats({ state }: CommuteStatsProps) {
   return (
@@ -79,7 +79,7 @@ function StatsBody({ state }: CommuteStatsProps) {
         <div className="flex flex-1 flex-col rounded-3xl bg-surface shadow-large">
           <StatFigure
             value={numbers.recordings.toLocaleString('en-US')}
-            name={routesContributedLabel(numbers.recordings)}
+            name={routeRecordingsLabel(numbers.recordings)}
             className="pt-4"
           />
           <ModeBar split={modeSplit(numbers.distanceM, numbers.walkM)} />

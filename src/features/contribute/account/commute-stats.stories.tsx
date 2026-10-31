@@ -3,11 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CommuteStats } from './commute-stats';
 import type { VehicleRides } from './vehicle-grid';
 
-/** The frame's counts: E-Jeep and UV Express not given yet, no ferry ride. */
+/** The frame's counts: no UV Express or ferry ride. */
 const FRAME_RIDES: VehicleRides = {
   jeep: 5,
-  eJeep: null,
-  uvExpress: null,
+  eJeep: 2,
+  uvExpress: 0,
   bus: 12,
   train: 2,
   ferry: 0,

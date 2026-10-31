@@ -60,7 +60,7 @@ export function ChangePasswordForm({ isBusy, error, isDone, onSubmit }: ChangePa
         }
       />
       {error && (
-        <p role="alert" className="text-sm/5">
+        <p role="alert" className="text-sm/5 text-content-error">
           {error}
         </p>
       )}

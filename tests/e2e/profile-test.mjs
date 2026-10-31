@@ -341,6 +341,7 @@ async function seed(page, id, name, upload) {
     walkM: 496_200,
     rideM: 700_000,
     jeepRides: 3,
+    eJeepRides: 2,
     busRides: 1_204,
     trainRides: 1,
     tricycleRides: 1,
@@ -353,10 +354,10 @@ async function seed(page, id, name, upload) {
   const statsText = await stats.innerText();
   await shot(page, '2-account-stats');
   check(
-    '  with stats: total time in hours, distance in km with separators, the routes contributed counted',
+    '  with stats: total time in hours, distance in km with separators, the route recordings counted',
     /Total time\s*62\s*hr/.test(statsText) &&
       /Total distance\s*1,240\s*km/.test(statsText) &&
-      /Routes contributed\s*6/.test(statsText),
+      /Route recordings\s*6/.test(statsText),
     statsText.replace(/\n/g, ' '),
   );
   const vehicles = await stats
@@ -364,9 +365,9 @@ async function seed(page, id, name, upload) {
     .getByRole('listitem')
     .allInnerTexts();
   check(
-    "  rides by vehicle, the frame's six: -- for none and for E-Jeep and UV Express not counted yet, no Tricycle",
+    "  rides by vehicle, the frame's six: -- for none, no Tricycle",
     vehicles.map((cell) => cell.replace(/\s+/g, ' ').trim()).join(' | ') ===
-      'Jeep 3 | E-Jeep -- none | UV Express -- none | Bus 1,204 | Train 1 | Ferry -- none',
+      'Jeep 3 | E-Jeep 2 | UV Express -- none | Bus 1,204 | Train 1 | Ferry -- none',
     vehicles.map((cell) => cell.replace(/\s+/g, ' ').trim()).join(' | '),
   );
   check(
@@ -407,7 +408,7 @@ async function seed(page, id, name, upload) {
   const zeroText = await stats.innerText();
   check(
     '  with no recordings: zeros, and Sakay and Lakad with no shares',
-    /Total time\s*0\s*min/.test(zeroText) && /Routes contributed\s*0/.test(zeroText),
+    /Total time\s*0\s*min/.test(zeroText) && /Route recordings\s*0/.test(zeroText),
     zeroText.replace(/\n/g, ' '),
   );
 }

@@ -74,3 +74,14 @@ export const LongName: Story = {
     },
   },
 };
+
+/** A short, narrow phone: the page scrolls inside the screen instead of running off it. */
+export const ShortPhone: Story = {
+  decorators: [
+    (Story) => (
+      <div className="relative h-[560px] w-[360px] overflow-hidden bg-surface-secondary">
+        <Story />
+      </div>
+    ),
+  ],
+};

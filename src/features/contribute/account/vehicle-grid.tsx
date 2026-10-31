@@ -15,8 +15,8 @@ import { vehicleRidesFigure } from './commute-figures';
 /** The vehicles the grid shows, in the frame's order. Tricycle and Other are left out. */
 export type GridVehicle = 'jeep' | 'eJeep' | 'uvExpress' | 'bus' | 'train' | 'ferry';
 
-/** Rides by vehicle; null where the project does not count that vehicle yet. */
-export type VehicleRides = Record<GridVehicle, number | null>;
+/** Rides by vehicle. */
+export type VehicleRides = Record<GridVehicle, number>;
 
 interface VehicleCell {
   vehicle: GridVehicle;

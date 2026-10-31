@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 
 import {
   modeSplit,
-  routesContributedLabel,
+  routeRecordingsLabel,
   totalDistanceFigure,
   totalTimeFigure,
   vehicleRidesFigure,
@@ -27,9 +27,9 @@ test('total distance is whole kilometres with thousands separators', () => {
 });
 
 test('one Recording, any other number Recordings', () => {
-  assert.equal(routesContributedLabel(0), 'Routes contributed');
-  assert.equal(routesContributedLabel(1), 'Route contributed');
-  assert.equal(routesContributedLabel(6), 'Routes contributed');
+  assert.equal(routeRecordingsLabel(0), 'Route recordings');
+  assert.equal(routeRecordingsLabel(1), 'Route recording');
+  assert.equal(routeRecordingsLabel(6), 'Route recordings');
 });
 
 test('Sakay and Lakad by distance, whole percents adding to 100', () => {
@@ -48,8 +48,7 @@ test('no distance has no split, for an empty bar', () => {
   assert.equal(modeSplit(0, 0), null);
 });
 
-test("a vehicle's rides read -- for none and for a count not given yet, else with separators", () => {
-  assert.equal(vehicleRidesFigure(null), '--');
+test("a vehicle's rides read -- for none, else with separators", () => {
   assert.equal(vehicleRidesFigure(0), '--');
   assert.equal(vehicleRidesFigure(5), '5');
   assert.equal(vehicleRidesFigure(1240), '1,240');

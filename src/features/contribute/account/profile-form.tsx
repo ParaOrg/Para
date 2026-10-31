@@ -56,7 +56,7 @@ export function ProfileForm({ profile, isBusy, error, onSubmit }: ProfileFormPro
         onChange={(event) => setFields({ ...fields, phone: event.target.value })}
       />
       {error && (
-        <p role="alert" className="text-sm/5">
+        <p role="alert" className="text-sm/5 text-content-error">
           {error}
         </p>
       )}
