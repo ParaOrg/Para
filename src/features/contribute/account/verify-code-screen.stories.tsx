@@ -13,6 +13,7 @@ const meta = {
     isResending: false,
     rejection: null,
     error: null,
+    resendError: null,
     captcha: NO_CAPTCHA,
     onSubmit: fn(),
     onResend: fn(),
@@ -69,6 +70,33 @@ export const ShortCode: Story = {
     await userEvent.type(canvas.getByLabelText('Verification code'), '482{Enter}');
     await expect(canvas.getByText('Enter the 6-digit code')).toBeVisible();
     await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+/** After that line, typing goes on from the digits there: only a refusal starts afresh. */
+export const ShortCodeThenTyping: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const field = canvas.getByLabelText('Verification code');
+    await userEvent.type(field, '482{Enter}');
+    await expect(canvas.getByText('Enter the 6-digit code')).toBeVisible();
+    await userEvent.type(field, '9');
+    await expect(field).toHaveValue('4829');
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+/** A Resend that failed: its line shows, and the boxes are left as they were. */
+export const ResendFailed: Story = {
+  args: { resendError: "No signal — try again when you're online" },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const field = canvas.getByLabelText('Verification code');
+    await expect(field).not.toHaveFocus();
+    await expect(canvas.getByRole('alert')).toHaveTextContent('No signal');
+    await userEvent.type(field, '482913');
+    await userEvent.click(field);
+    await expect(args.onSubmit).toHaveBeenCalledOnce();
   },
 };
 
@@ -135,8 +163,13 @@ export const Verifying: Story = {
   },
 };
 
-/** While a new code is sent. */
-export const Resending: Story = { args: { isResending: true } };
+/** While a new code is sent: the boxes wait too, so a full code is never left unsent. */
+export const Resending: Story = {
+  args: { isResending: true },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByLabelText('Verification code')).toBeDisabled();
+  },
+};
 
 /** Waiting on the bot check a Resend needs: its box under Resend, which is off until it passes. */
 export const WaitingForCheck: Story = {

@@ -66,7 +66,8 @@ export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
             ? { message: ACCOUNT_MESSAGES['code-rejected'], key: verifyCode.submittedAt }
             : null
         }
-        error={messageOf((isRejected ? null : verifyCode.error) ?? requestCode.error)}
+        error={isRejected ? null : messageOf(verifyCode.error)}
+        resendError={messageOf(requestCode.error)}
         captcha={captcha}
         onSubmit={({ code }) => {
           requestCode.reset();

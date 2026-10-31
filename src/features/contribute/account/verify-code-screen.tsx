@@ -20,8 +20,10 @@ interface VerifyCodeScreenProps {
   isResending: boolean;
   /** The code was wrong or expired: the boxes shake once and go red, the line under them. */
   rejection: CodeRejection | null;
-  /** Any other line about the last try (no signal, the check), or null. The digits stay. */
+  /** Any other line about the last check (no signal, the bot check), or null. The digits stay. */
   error: string | null;
+  /** Why the last Resend did not go, or null. It leaves the boxes and their focus alone. */
+  resendError: string | null;
   /** The bot check a Resend sends with. */
   captcha: Captcha;
   onSubmit: (fields: CodeFields) => void;
@@ -41,6 +43,7 @@ export function VerifyCodeScreen({
   isResending,
   rejection,
   error,
+  resendError,
   captcha,
   onSubmit,
   onResend,
@@ -85,7 +88,7 @@ export function VerifyCodeScreen({
       subtitle={`Enter the verification code sent to ${maskEmail(email)}`}
       onBack={onBack}
       isBackDisabled={isBusy || isResending}
-      error={error}
+      error={error ?? resendError}
       captcha={captcha}
       onSubmit={() => submit(code)}
       afterFields={
@@ -116,7 +119,7 @@ export function VerifyCodeScreen({
           value={code}
           error={shownRejection?.message ?? codeError}
           shakeKey={shownRejection?.key}
-          disabled={isBusy}
+          disabled={isBusy || isResending}
           onChange={handleChange}
           onClick={handleClick}
         />

@@ -26,13 +26,12 @@ interface OtpFieldProps extends Omit<
   value: string;
   /** Called with the digits only: anything else typed or pasted is dropped. */
   onChange: (code: string) => void;
-  /**
-   * The message under the boxes, the boxes in InputField's error colours, announced as it
-   * appears. While it shows, the next digit
-   * typed starts the code again from that digit.
-   */
+  /** The message under the boxes, the boxes in InputField's error colours; read out as it shows. */
   error?: string;
-  /** Change it to shake the boxes once, as a refusal; unset, they never shake. Reduced motion: no shake. */
+  /**
+   * Set while a code is refused: a new value shakes the boxes once (no shake with reduced
+   * motion), and the next digit typed starts the code again from that digit. Unset, neither.
+   */
   shakeKey?: number;
   ref?: Ref<HTMLInputElement>;
 }
@@ -142,7 +141,8 @@ export function OtpField({
             const typed = event.target.value.replace(/\D/g, '');
             // The caret is held at the end, so what was added is what follows the old digits.
             const isAdded = typed.length > digits.length && typed.startsWith(digits);
-            onChange(codeDigits(isErrorShown && isAdded ? typed.slice(digits.length) : typed));
+            const isRefused = isErrorShown && shakeKey !== undefined;
+            onChange(codeDigits(isRefused && isAdded ? typed.slice(digits.length) : typed));
           }}
           // A paste replaces the whole code, wherever the caret is: a new code pasted over an old
           // one, or over a few typed digits, would otherwise be cut back to the first six.
