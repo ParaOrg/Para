@@ -39,6 +39,8 @@ const WALK = 'recording-trail-walk';
 const FEET = 'recording-trail-feet';
 const MARKERS = 'recording-trail-markers';
 const MARKS = 'recording-trail-marks';
+/** The walked line's dash and gap, in line widths, before its round caps. */
+const WALK_DASH = [0.5, 2];
 /** The trail as its source takes it: a line per run, a point per switch, and a point per mark. */
 export function trailData(trail: RecordingTrail) {
   return {
@@ -91,19 +93,21 @@ export function addRecordingTrail(map: MapLibreMap): void {
     source: TRAIL_SRC,
     filter: isRide,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': MAP_COLOURS['Map/Trail/line'], 'line-width': litWidth() },
+    paint: { 'line-color': MAP_COLOURS['Map/Trail/sakay'], 'line-width': litWidth() },
   });
-  // Walking is dashed: a dash and a gap each about the line's own width, measured in line widths.
+  // Walking is dashed with round ends, so it is easy to follow. In line widths: each cap adds half
+  // a width to both ends of its dash, so a dash of WALK_DASH[0] shows one width longer and a gap of
+  // WALK_DASH[1] one width shorter.
   map.addLayer({
     id: WALK,
     type: 'line',
     source: TRAIL_SRC,
     filter: isWalk,
-    layout: { 'line-cap': 'butt', 'line-join': 'round' },
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: {
-      'line-color': MAP_COLOURS['Map/Trail/line'],
+      'line-color': MAP_COLOURS['Map/Trail/lakad'],
       'line-width': litWidth(),
-      'line-dasharray': [1.2, 1],
+      'line-dasharray': WALK_DASH,
     },
   });
   // A foot every so often along a walked line, its toes turned the way the line runs.
@@ -131,7 +135,14 @@ export function addRecordingTrail(map: MapLibreMap): void {
     paint: {
       'circle-radius': litRadius(CASING_EXTRA),
       'circle-color': MAP_PAINT['Paint/casing'],
-      'circle-stroke-color': MAP_COLOURS['Map/Trail/line'],
+      // In the colour of the mode the recording switched to.
+      'circle-stroke-color': [
+        'match',
+        ['get', 'mode'],
+        'walk',
+        MAP_COLOURS['Map/Trail/lakad'],
+        MAP_COLOURS['Map/Trail/sakay'],
+      ],
       'circle-stroke-width': 3,
     },
   });
