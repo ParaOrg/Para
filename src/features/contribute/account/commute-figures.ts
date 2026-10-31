@@ -16,9 +16,9 @@ export function totalDistanceFigure(metres: number): Figure {
   return { value: WHOLE.format(Math.floor(Math.max(0, metres) / 1000)), unit: 'km' };
 }
 
-/** The recordings' word: one Recording, any other number Recordings. */
-export const recordingsLabel = (count: number): string =>
-  count === 1 ? 'Recording' : 'Recordings';
+/** The recordings' words, as the owner names them: one Route contributed, else Routes. */
+export const routesContributedLabel = (count: number): string =>
+  count === 1 ? 'Route contributed' : 'Routes contributed';
 
 /** How the distance splits between riding and walking, each a whole percent; null with none. */
 export interface ModeSplit {

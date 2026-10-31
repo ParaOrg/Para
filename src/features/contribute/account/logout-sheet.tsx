@@ -7,6 +7,8 @@ interface LogoutSheetProps {
   /** Saved recordings not yet sent: they stay on this phone, unsent, after logging out. */
   unsentCount: number;
   isLoggingOut: boolean;
+  /** One line about a Logout that failed, or null: said here, where the contributor is. */
+  error: string | null;
   onLogout: () => void;
   /** Cancel, Escape, or a tap on the dimmed page. */
   onCancel: () => void;
@@ -17,7 +19,13 @@ interface LogoutSheetProps {
  * the page dimmed in Background/surface-transparent. Focus starts on Cancel, the safe answer, and
  * goes round inside it. With recordings not yet sent, it says they stay behind on this phone.
  */
-export function LogoutSheet({ unsentCount, isLoggingOut, onLogout, onCancel }: LogoutSheetProps) {
+export function LogoutSheet({
+  unsentCount,
+  isLoggingOut,
+  error,
+  onLogout,
+  onCancel,
+}: LogoutSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const titleId = useId();
   const textId = useId();
@@ -27,7 +35,9 @@ export function LogoutSheet({ unsentCount, isLoggingOut, onLogout, onCancel }: L
   useEffect(() => {
     const sheet = sheetRef.current;
     if (!sheet) return;
-    sheet.querySelectorAll('button')[1]?.focus();
+    [...sheet.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Cancel')
+      ?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
       const buttons = [...sheet.querySelectorAll('button')];
@@ -48,9 +58,11 @@ export function LogoutSheet({ unsentCount, isLoggingOut, onLogout, onCancel }: L
   const noun = unsentCount === 1 ? 'recording' : 'recordings';
   return (
     <>
+      {/* The dimmed page: a tap on it cancels. Hidden from screen readers, who have the sheet's own
+          Cancel. */}
       <button
         type="button"
-        aria-label="Cancel"
+        aria-hidden
         tabIndex={-1}
         onClick={onCancel}
         className="absolute inset-0 z-40 cursor-default bg-surface-transparent"
@@ -71,6 +83,11 @@ export function LogoutSheet({ unsentCount, isLoggingOut, onLogout, onCancel }: L
             ? `${unsentCount} ${noun} not sent yet will be left behind on this phone, unsent.`
             : 'You can log in again any time with your email and password.'}
         </p>
+        {error && (
+          <p role="alert" className="text-sm/5 text-content-error">
+            {error}
+          </p>
+        )}
         <div className="flex flex-col gap-3">
           <Button
             variant="error"

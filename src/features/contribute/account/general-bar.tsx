@@ -1,3 +1,5 @@
+import type { Ref } from 'react';
+
 import { cn } from '@/shared/utils/cn';
 
 import './account-icons.css';
@@ -15,6 +17,8 @@ interface GeneralBarProps {
   /** A chevron at the right, for a row that opens a screen of its own. */
   hasChevron?: boolean;
   onClick: () => void;
+  /** The row, so focus can come back to it (Logout, when its question is cancelled). */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const ICON_CLASSES = {
@@ -37,9 +41,11 @@ export function GeneralBar({
   tone = 'default',
   hasChevron = false,
   onClick,
+  ref,
 }: GeneralBarProps) {
   return (
     <button
+      ref={ref}
       type="button"
       onClick={onClick}
       className={cn(

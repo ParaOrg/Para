@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 
 import {
   modeSplit,
-  recordingsLabel,
+  routesContributedLabel,
   totalDistanceFigure,
   totalTimeFigure,
   vehicleRidesFigure,
@@ -27,9 +27,9 @@ test('total distance is whole kilometres with thousands separators', () => {
 });
 
 test('one Recording, any other number Recordings', () => {
-  assert.equal(recordingsLabel(0), 'Recordings');
-  assert.equal(recordingsLabel(1), 'Recording');
-  assert.equal(recordingsLabel(6), 'Recordings');
+  assert.equal(routesContributedLabel(0), 'Routes contributed');
+  assert.equal(routesContributedLabel(1), 'Route contributed');
+  assert.equal(routesContributedLabel(6), 'Routes contributed');
 });
 
 test('Sakay and Lakad by distance, whole percents adding to 100', () => {

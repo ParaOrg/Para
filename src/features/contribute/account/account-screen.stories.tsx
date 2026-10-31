@@ -87,6 +87,12 @@ export const LogoutWithUnsent: Story = {
   },
 };
 
+/** Logout failed: the line shows in the open sheet, and stays on the page after Cancel. */
 export const LogoutFailed: Story = {
-  args: { error: "No signal — try again when you're online" },
+  args: { error: 'No signal. Try again when you’re online.' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Logout' }));
+    await expect(within(canvas.getByRole('alertdialog')).getByText(/No signal/)).toBeVisible();
+  },
 };

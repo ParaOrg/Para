@@ -5,7 +5,7 @@ import { cn } from '@/shared/utils/cn';
 import './start-icons.css';
 
 /** The screen the toolbar is shown on: its tab is the marked one. */
-export type ToolbarTab = 'record' | 'history' | 'account';
+export type ToolbarTab = 'record' | 'account';
 
 interface BottomToolbarProps {
   current?: ToolbarTab;
@@ -41,7 +41,8 @@ export function BottomToolbar({
           <span aria-hidden className="start-icon start-icon-record size-6" />
           Record
         </Tab>
-        <Tab isCurrent={current === 'history'} onClick={onOpenHistory} ref={historyRef}>
+        {/* History has no toolbar of its own, so its tab is never the marked one. */}
+        <Tab isCurrent={false} onClick={onOpenHistory} ref={historyRef}>
           <span aria-hidden className="start-icon start-icon-history-tab size-6" />
           History
         </Tab>

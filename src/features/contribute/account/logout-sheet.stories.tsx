@@ -7,7 +7,7 @@ const meta = {
   title: 'Features/Contribute/LogoutSheet',
   component: LogoutSheet,
   parameters: { layout: 'fullscreen' },
-  args: { unsentCount: 0, isLoggingOut: false, onLogout: fn(), onCancel: fn() },
+  args: { unsentCount: 0, isLoggingOut: false, error: null, onLogout: fn(), onCancel: fn() },
   decorators: [
     (Story) => (
       <div className="relative h-[852px] w-[393px] overflow-hidden bg-surface">
@@ -30,3 +30,6 @@ export const OneUnsent: Story = { args: { unsentCount: 1 } };
 export const SeveralUnsent: Story = { args: { unsentCount: 4 } };
 
 export const LoggingOut: Story = { args: { isLoggingOut: true } };
+
+/** Logout failed: one line in the sheet, where the contributor is, and Log out to try again. */
+export const Failed: Story = { args: { error: 'No signal. Try again when you’re online.' } };

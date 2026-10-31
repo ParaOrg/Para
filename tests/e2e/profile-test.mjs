@@ -349,14 +349,14 @@ async function seed(page, id, name, upload) {
   await accountTab(page).click();
   const stats = page.getByRole('region', { name: 'Commute Statistics' });
   // The region shows placeholders first: read it once the numbers are in.
-  await stats.getByText('60%', { exact: true }).waitFor();
+  await stats.getByText('Total time').waitFor();
   const statsText = await stats.innerText();
   await shot(page, '2-account-stats');
   check(
-    '  with stats: total time in hours, distance in km with separators, the recordings counted',
+    '  with stats: total time in hours, distance in km with separators, the routes contributed counted',
     /Total time\s*62\s*hr/.test(statsText) &&
       /Total distance\s*1,240\s*km/.test(statsText) &&
-      /Recordings\s*6/.test(statsText),
+      /Routes contributed\s*6/.test(statsText),
     statsText.replace(/\n/g, ' '),
   );
   const vehicles = await stats
@@ -370,7 +370,7 @@ async function seed(page, id, name, upload) {
     vehicles.map((cell) => cell.replace(/\s+/g, ' ').trim()).join(' | '),
   );
   check(
-    '  and Sakay and Lakad by distance, each share said beside its word',
+    '  and Sakay and Lakad by distance, each share under its end, and said with its word',
     /^Sakay\s*60%$/.test(await legendRow(stats, 'Sakay').innerText()) &&
       /^Lakad\s*40%$/.test(await legendRow(stats, 'Lakad').innerText()),
   );
@@ -407,7 +407,7 @@ async function seed(page, id, name, upload) {
   const zeroText = await stats.innerText();
   check(
     '  with no recordings: zeros, and Sakay and Lakad with no shares',
-    /Total time\s*0\s*min/.test(zeroText) && /Recordings\s*0/.test(zeroText),
+    /Total time\s*0\s*min/.test(zeroText) && /Routes contributed\s*0/.test(zeroText),
     zeroText.replace(/\n/g, ' '),
   );
 }
@@ -722,7 +722,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   await page.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
-  check('  Escape keeps the account signed in', fake.logouts.length === 0);
+  check(
+    '  Escape keeps the account signed in, focus back on Logout',
+    fake.logouts.length === 0 &&
+      (await page.evaluate(() => document.activeElement?.textContent)) === 'Logout',
+  );
   await logout(page);
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })

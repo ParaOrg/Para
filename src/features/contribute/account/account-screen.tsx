@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { CommuteStats, type CommuteStatsState } from './commute-stats';
 import { GeneralBar } from './general-bar';
@@ -45,6 +46,12 @@ export function AccountScreen({
 }: AccountScreenProps) {
   const headingRef = useFocusHeading();
   const [isLogoutAsked, setIsLogoutAsked] = useState(false);
+  const logoutRef = useRef<HTMLButtonElement>(null);
+  // Back on the Logout row once the page is live again: it was inert under the question.
+  const handleLogoutCancel = () => {
+    flushSync(() => setIsLogoutAsked(false));
+    logoutRef.current?.focus();
+  };
 
   return (
     <section
@@ -74,6 +81,7 @@ export function AccountScreen({
                 label="Logout"
                 tone="error"
                 onClick={() => setIsLogoutAsked(true)}
+                ref={logoutRef}
               />
             </div>
             {error && (
@@ -97,7 +105,8 @@ export function AccountScreen({
           unsentCount={unsentCount}
           isLoggingOut={isLoggingOut}
           onLogout={onLogout}
-          onCancel={() => setIsLogoutAsked(false)}
+          error={error}
+          onCancel={handleLogoutCancel}
         />
       )}
     </section>

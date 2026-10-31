@@ -4,7 +4,7 @@ import { cn } from '@/shared/utils/cn';
 
 import {
   modeSplit,
-  recordingsLabel,
+  routesContributedLabel,
   totalDistanceFigure,
   totalTimeFigure,
   type ModeSplit,
@@ -34,8 +34,7 @@ interface CommuteStatsProps {
 
 /**
  * Figma's Commute Statistics (4511:22712): total time and total distance, and beside them the
- * recordings with the Sakay and Lakad bar, by distance; under them the rides by vehicle. Each share
- * is said beside its word, so the bar's colour is never the only way to read it.
+ * routes contributed with the Sakay and Lakad bar, by distance; under them the rides by vehicle.
  */
 export function CommuteStats({ state }: CommuteStatsProps) {
   return (
@@ -80,7 +79,7 @@ function StatsBody({ state }: CommuteStatsProps) {
         <div className="flex flex-1 flex-col rounded-3xl bg-surface shadow-large">
           <StatFigure
             value={numbers.recordings.toLocaleString('en-US')}
-            name={recordingsLabel(numbers.recordings)}
+            name={routesContributedLabel(numbers.recordings)}
             className="pt-4"
           />
           <ModeBar split={modeSplit(numbers.distanceM, numbers.walkM)} />
@@ -143,32 +142,44 @@ interface ModeBarProps {
   split: ModeSplit | null;
 }
 
-/** The share of each, with a sliver at the least so a small one still shows; grey with none. */
+/**
+ * Figma's Sakay and Lakad (4516:23788): the bar, each share under its own end in its colour, and
+ * the legend below. A share's side and the legend's order say which is which beside the colour;
+ * a screen reader hears each share with its word. A small share keeps a sliver; none is grey.
+ */
 function ModeBar({ split }: ModeBarProps) {
   return (
-    <div className="flex flex-1 flex-col justify-center gap-1.5 px-3 py-3 text-xs/4">
-      <div aria-hidden className="flex h-4 gap-0.5 overflow-clip rounded-full opacity-80">
-        {split === null ? (
-          <span className="flex-1 bg-surface-tertiary" />
-        ) : (
-          <>
-            {split.sakayPercent > 0 && (
-              // Runtime shares: CLAUDE.md's one use for `style`.
-              <span
-                className="min-w-1 basis-0 bg-green-700"
-                style={{ flexGrow: split.sakayPercent }}
-              />
-            )}
-            {split.lakadPercent > 0 && (
-              <span
-                className="min-w-1 basis-0 bg-blue-700"
-                style={{ flexGrow: split.lakadPercent }}
-              />
-            )}
-          </>
+    <div className="flex flex-1 flex-col justify-center gap-1.5 px-4 text-xs/4">
+      <div aria-hidden className="flex flex-col gap-0.5">
+        <div className="flex h-4 gap-0.5 overflow-clip rounded-full opacity-80">
+          {split === null ? (
+            <span className="flex-1 bg-surface-tertiary" />
+          ) : (
+            <>
+              {split.sakayPercent > 0 && (
+                // Runtime shares: CLAUDE.md's one use for `style`.
+                <span
+                  className="min-w-1 basis-0 bg-green-700"
+                  style={{ flexGrow: split.sakayPercent }}
+                />
+              )}
+              {split.lakadPercent > 0 && (
+                <span
+                  className="min-w-1 basis-0 bg-blue-700"
+                  style={{ flexGrow: split.lakadPercent }}
+                />
+              )}
+            </>
+          )}
+        </div>
+        {split && (
+          <p className="flex gap-2 font-medium">
+            <span className="flex-1 text-green-700">{split.sakayPercent}%</span>
+            <span className="text-blue-700">{split.lakadPercent}%</span>
+          </p>
         )}
       </div>
-      <ul className="flex flex-col gap-1 text-content-secondary">
+      <ul className="flex flex-col gap-1.5 text-content-secondary">
         <LegendRow dotClass="bg-green-700" word="Sakay" percent={split?.sakayPercent} />
         <LegendRow dotClass="bg-blue-700" word="Lakad" percent={split?.lakadPercent} />
       </ul>
@@ -179,7 +190,7 @@ function ModeBar({ split }: ModeBarProps) {
 interface LegendRowProps {
   dotClass: string;
   word: string;
-  /** Its share, beside the word; none with no distance yet. */
+  /** Its share, said with the word to a screen reader; none with no distance yet. */
   percent: number | undefined;
 }
 
@@ -187,8 +198,10 @@ function LegendRow({ dotClass, word, percent }: LegendRowProps) {
   return (
     <li className="flex items-center gap-1">
       <span aria-hidden className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-      <span className="flex-1">{word}</span>
-      {percent !== undefined && <span>{percent}%</span>}
+      <span className="flex-1">
+        {word}
+        {percent !== undefined && <span className="sr-only"> {percent}%</span>}
+      </span>
     </li>
   );
 }
