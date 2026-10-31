@@ -13,7 +13,7 @@ import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
-import { MarkButton } from './screens/mark-button';
+import { FlagStopButton } from './screens/flag-stop-button';
 import { ReadyScreen, type AccountOpener } from './screens/ready-screen';
 import { SaveForm } from './screens/save-form';
 import { SavedScreen } from './screens/saved-screen';
@@ -97,10 +97,17 @@ export function ContributePage({ locator }: ContributePageProps) {
     canUpload() &&
     profile.isOpen &&
     !isPermissionsShown;
-  // The map's credits, over Start: closed by ✕, Escape or a tap on the dimmed map.
+  const isRecordingShown = phase === 'recording' || phase === 'paused';
+  // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   const isCreditsShown =
-    phase === 'ready' && isCreditsOpen && !isHistoryShown && !isProfileShown && !isPermissionsShown;
+    isCreditsOpen &&
+    (isRecordingShown ||
+      (phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown));
+  // The recording card folded away, by the recording it was folded on: each recording opens with
+  // its card out, and the contributor's choice holds through its switches, pauses and the form.
+  const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
+  const isCardFolded = foldedRecordingId !== null && foldedRecordingId === recording.current?.id;
   // Focus goes back to the ⓘ once Start is live again: the sheet cannot hand it back itself,
   // as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
@@ -157,10 +164,11 @@ export function ContributePage({ locator }: ContributePageProps) {
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
           mark={
-            phase === 'recording' ? (
-              <MarkButton
-                canMark={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
-                onMark={recording.markPlace}
+            isRecordingShown ? (
+              <FlagStopButton
+                isRecording={phase === 'recording'}
+                canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
+                onFlag={recording.markPlace}
               />
             ) : null
           }
@@ -240,20 +248,28 @@ export function ContributePage({ locator }: ContributePageProps) {
               />
             </Suspense>
           )}
-          {(phase === 'recording' || phase === 'paused') && figures && (
+          {isRecordingShown && figures && (
             <Suspense fallback={null}>
-              <RecordingScreen
-                figures={figures}
-                mode={recording.mode}
-                isPaused={phase === 'paused'}
-                isAwake={recording.isAwake}
-                shouldFocusPause={recording.focusTarget === 'pause'}
-                onPause={recording.stop}
-                onResume={recording.resume}
-                onModeSwitch={recording.switchMode}
-                onFinish={recording.openSave}
-                onDiscard={recording.cancel}
-              />
+              <div inert={isCreditsShown} className="contents">
+                <RecordingScreen
+                  figures={figures}
+                  mode={recording.mode}
+                  isPaused={phase === 'paused'}
+                  isAwake={recording.isAwake}
+                  shouldFocusPause={recording.focusTarget === 'pause'}
+                  onPause={recording.stop}
+                  onResume={recording.resume}
+                  onModeSwitch={recording.switchMode}
+                  onFinish={recording.openSave}
+                  onDiscard={recording.cancel}
+                  isCardFolded={isCardFolded}
+                  onCardFoldedChange={(isFolded) =>
+                    setFoldedRecordingId(isFolded ? (recording.current?.id ?? null) : null)
+                  }
+                  onOpenCredits={() => setIsCreditsOpen(true)}
+                  creditsButtonRef={creditsButtonRef}
+                />
+              </div>
             </Suspense>
           )}
           {phase === 'form' && (

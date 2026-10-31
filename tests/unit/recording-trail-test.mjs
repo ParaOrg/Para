@@ -5,7 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { trailData } from '../../src/features/routes/map/recording-trail.ts';
+import { addRecordingTrail, trailData } from '../../src/features/routes/map/recording-trail.ts';
+import { FLAG_IMAGE, FLAG_POINT_X } from '../../src/features/routes/map/trail-flag.ts';
 
 const OUT = [
   [121.0, 14.6],
@@ -69,4 +70,23 @@ test('a pin per mark, drawn as its own kind of point', () => {
       [121.001, 14.6],
     ],
   );
+});
+
+test("a flagged stop is Figma's flagstop pin, its point (the stem's foot) on the place", () => {
+  const layers = [];
+  addRecordingTrail({
+    getSource: () => undefined,
+    hasImage: () => true,
+    addSource: () => {},
+    addLayer: (layer) => layers.push(layer),
+  });
+  const marks = layers.find((l) => l.id === 'recording-trail-marks');
+  assert.equal(marks.type, 'symbol');
+  assert.equal(marks.layout['icon-image'], FLAG_IMAGE);
+  // The image's bottom-left corner on the place, moved left by half the 4 px stem.
+  assert.equal(marks.layout['icon-anchor'], 'bottom-left');
+  assert.deepEqual(marks.layout['icon-offset'], [-2, 0]);
+  assert.equal(FLAG_POINT_X, 2);
+  assert.equal(marks.layout['icon-allow-overlap'], true);
+  assert.equal(layers.at(-1).id, 'recording-trail-marks', 'drawn over the rest of the trail');
 });

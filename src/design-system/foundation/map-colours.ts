@@ -29,6 +29,7 @@ export const MAP_COLOURS = {
   'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface
   'Map/Trail/line': '#a800b7', // fuchsia/700, the contributor page's walked and ridden lines
   'Map/Trail/mark': '#8200db', // purple/700, apart from both ways
+  'Map/Trail/flag': '#9f0712', // red/800, Card/red/surface: the contributor page's flagged stop
   'Map/Rail/LightRailWayOne/surface': '#1d7739', // light-rail-way-one/600
   'Map/Rail/LightRailWayOne/surface-pale': '#b7f5ca', // light-rail-way-one/200
   'Map/Rail/LightRailWayOne/border-primary': '#12612a', // light-rail-way-one/700
