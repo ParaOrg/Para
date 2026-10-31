@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState, type Ref } from 'react';
 
 import { BottomToolbar } from './bottom-toolbar';
 import { HelpButton } from './help-button';
+import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
 import { useStackRoom } from '../common/use-stack-room';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
@@ -40,7 +41,7 @@ interface ReadyScreenProps {
   onOpenTutorial?: () => void;
 }
 
-// TODO: true once the tutorial screens exist: the ? at the top left (Figma 4520:3471) opens them.
+// TODO: true once the tutorial screens exist: the ? at the top right (Figma 4520:3471) opens them.
 // Until then nothing stands there, and nothing else moves for it: the ? is laid over the map.
 const HAS_TUTORIAL = false;
 
@@ -48,7 +49,8 @@ const HAS_TUTORIAL = false;
  * Before a recording, Figma's Record (4520:3197): at the foot, Start tracking over the Record,
  * History and Account tabs, on the map fading into white, and the map's ⓘ (4494:10300) in the
  * bottom left corner. The map-type and locator column stands at the right, 20 in and 24 over
- * Start tracking. The top left holds the tutorial's ?, once there is a tutorial (HAS_TUTORIAL).
+ * Start tracking. Along the top (Figma's Frame 259, 20 in and 24 under the status bar): Para's mark
+ * at the left, and at the right the tutorial's ?, once there is a tutorial (HAS_TUTORIAL).
  */
 export function ReadyScreen({
   earlierQuestion,
@@ -85,11 +87,14 @@ export function ReadyScreen({
 
   return (
     <>
-      {HAS_TUTORIAL && onOpenTutorial && (
-        <div className="absolute top-[calc(env(safe-area-inset-top)+1.5rem)] left-5 z-20">
-          <HelpButton onClick={onOpenTutorial} />
-        </div>
-      )}
+      <div className="pointer-events-none absolute inset-x-5 top-[calc(env(safe-area-inset-top)+1.5rem)] z-20 flex items-center justify-between">
+        <ParaMark />
+        {HAS_TUTORIAL && onOpenTutorial && (
+          <div className="pointer-events-auto">
+            <HelpButton onClick={onOpenTutorial} />
+          </div>
+        )}
+      </div>
       <section
         ref={stackRef}
         aria-labelledby={earlierQuestion ? undefined : 'ready-heading'}
