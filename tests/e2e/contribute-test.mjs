@@ -2057,7 +2057,12 @@ const ANIMATIONS = () => {
       new Promise((resolve) =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() =>
-            resolve(document.querySelector('[data-start-morph]')?.textContent ?? ''),
+            // The copy's buttons, by their words: its status line may say "Paused", rightly.
+            resolve(
+              [...document.querySelectorAll('[data-start-morph] button')].map(
+                (button) => button.textContent?.trim() ?? '',
+              ),
+            ),
           ),
         ),
       ),
@@ -2067,7 +2072,7 @@ const ANIMATIONS = () => {
     isMorphing &&
       (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1 &&
       !ghostAfterPause.includes('Pause'),
-    ghostAfterPause,
+    ghostAfterPause.join(' | '),
   );
   await page.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
     timeout: 5000,
