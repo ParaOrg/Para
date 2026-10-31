@@ -605,6 +605,10 @@ const groupOf = (page, name) =>
     ([key, signedIn]) => localStorage.setItem(key, JSON.stringify(signedIn)),
     ['para.contributor-auth', session(other, { email: 'second@example.com', isAccount: true })],
   );
+  // Back on Ready: a reload on #history would land on History instead.
+  await page.evaluate(() => {
+    location.hash = '';
+  });
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 30000 });
   check(
