@@ -44,6 +44,8 @@ export const contributionPayloadSchema = z.object({
   ride_m: z.number(),
   walk_s: z.number(),
   ride_s: z.number(),
+  /** What the contributor paid for the whole recording, in pesos; absent until the app asks. */
+  fare_php: z.optional(z.nullable(z.number())),
   point_count: z.number(),
   events: z.array(z.object({ kind: z.string(), at: isoTime, to: z.optional(z.string()) })),
   gaps: z.array(z.object({ from: isoTime, to: isoTime, reasons: z.array(z.string()) })),

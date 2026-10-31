@@ -200,6 +200,7 @@ export function packRecording(
       ride_m: distanceM - walkM,
       walk_s: walkS,
       ride_s: movingS + standingS - walkS,
+      // TODO: send fare_php once the recording keeps the fare the save form will ask for.
       point_count: points.length,
       events,
       gaps: summary.gaps

@@ -29,6 +29,8 @@ const statsRowSchema = z.pipe(
     longest_ride_moving_s: z.nullable(z.number()),
     routes_helped: z.number(),
     hintuans_helped: z.number(),
+    fare_php_total: z.number(),
+    fare_recordings: z.number(),
   }),
   z.transform((row) => ({
     rides: row.rides,
@@ -57,6 +59,9 @@ const statsRowSchema = z.pipe(
         : { distanceM: row.longest_ride_m, movingSeconds: row.longest_ride_moving_s },
     routesHelped: row.routes_helped,
     hintuansHelped: row.hintuans_helped,
+    /** Pesos paid over the rides that say what they cost; fareRecordings is how many. */
+    farePhpTotal: row.fare_php_total,
+    fareRecordings: row.fare_recordings,
   })),
 );
 
