@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { Switch } from '@/design-system/primitives/switch';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import type { Basemap } from './basemap';
+import { LocationLabelsRow } from './location-labels-row';
 import type { MapStyleDirection } from './use-map-style-card';
 
 import './map-style.css';
@@ -57,9 +57,8 @@ export function MapStyle({
   onClosed,
 }: MapStyleProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  // Ids of their own, so two cards on one page (a docs page of every story) name themselves.
+  // An id of its own, so two cards on one page (a docs page of every story) name themselves.
   const titleId = useId();
-  const labelsId = useId();
 
   // Let go once its own leaving is over (map-style.css): not the pop, which
   // a close cuts short, nor a child's. Cut short itself (motion turned off
@@ -143,19 +142,7 @@ export function MapStyle({
           />
         ))}
       </div>
-      <div className="flex items-center justify-between rounded-xl bg-surface-secondary px-3 py-2.5">
-        <span
-          id={labelsId}
-          className="min-w-0 flex-1 text-sm leading-5 font-medium text-content-primary"
-        >
-          Location Labels
-        </span>
-        <Switch
-          state={areLabelsShown ? 'on' : 'rest'}
-          labelledBy={labelsId}
-          onClick={onLabelsToggle}
-        />
-      </div>
+      <LocationLabelsRow areShown={areLabelsShown} onToggle={onLabelsToggle} />
     </div>
   );
 }

@@ -1312,16 +1312,17 @@ const WAKE = () => {
             'source-layer': 'place',
           },
           { id: `${design}-road`, type: 'symbol', source: 'openmaptiles', 'source-layer': 'road' },
-          // Coloured draws its stations by an icon and a name, as Liberty's poi_transit does.
+          // Coloured draws its places, train stations among them, by an icon and a name, as
+          // Liberty's poi_r1 does.
           ...(design === 'liberty'
             ? [
                 {
-                  id: 'liberty-transit',
+                  id: 'liberty-poi',
                   type: 'symbol',
                   source: 'openmaptiles',
                   'source-layer': 'poi',
-                  filter: ['match', ['get', 'class'], ['bus', 'rail'], true, false],
-                  layout: { 'icon-image': 'railway', 'text-field': '{name}' },
+                  filter: ['>=', ['get', 'rank'], 1],
+                  layout: { 'icon-image': '{class}', 'text-field': '{name}' },
                 },
               ]
             : []),

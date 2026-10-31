@@ -1,5 +1,13 @@
-import type { LayerSpecification, StyleSpecification, SymbolLayerSpecification } from 'maplibre-gl';
+import type {
+  FilterSpecification,
+  LayerSpecification,
+  StyleSpecification,
+  SymbolLayerSpecification,
+} from 'maplibre-gl';
 import * as z from 'zod/mini';
+
+import { IS_RAIL_STOP } from './monochrome';
+import { isExpressionFilter } from './station-mask';
 
 /**
  * Location Labels, the Map Style card's switch: the basemap's own words
@@ -8,7 +16,7 @@ import * as z from 'zod/mini';
  * so the map reads as Para's: our labels (hintuans, terminals, route codes, a
  * ride's) are drawn from our own GeoJSON sources, or as HTML over the map,
  * and always stay. The basemap's train stations stay too, by their icon alone
- * (isStationIcons). On in the studio, where editors draw by the streets.
+ * (isPlaceIcons). On in the studio, where editors draw by the streets.
  *
  * A basemap label is found by what it is, not by a list of names a style
  * update could change: a symbol layer drawn from a source that is not
@@ -23,27 +31,32 @@ export function isBasemapLabel(
   return sources[layer.source]?.type !== 'geojson';
 }
 
-/** The class OpenMapTiles' `poi` layer gives a train station, as the styles' own filters name it. */
-const RAIL_CLASS = 'rail';
-
 /**
- * A basemap layer that draws train stations by an icon: one from the `poi`
- * source layer with an icon, whose filter picks the `rail` class. Coloured's
- * `poi_transit` today, the transit layer, which draws bus stations and
- * airports by their icons too. Monochrome names its stations without an icon
- * (monochrome.ts, `detail-rail-stops`) and Dark draws none, so neither has one.
+ * A basemap layer that draws places by an icon: one from OpenMapTiles' `poi` source layer with an
+ * icon, in an expression filter a station's class can join. With the labels off it keeps its
+ * train stations alone (stationIconsOnly). On the real styles: Coloured's `poi_r1`, `poi_r7`
+ * and `poi_r20`, which draw the stations among every place by rank, and its `poi_transit`
+ * (airports and bus stations, so none of it stays); Monochrome's landmarks
+ * (monochrome.ts), which draw no station; Monochrome names its stations without an icon
+ * (`detail-rail-stops`) and Dark draws no place icon, so neither keeps one.
  */
-export function isStationIcons(layer: LayerSpecification): layer is SymbolLayerSpecification {
+export function isPlaceIcons(layer: LayerSpecification): layer is SymbolLayerSpecification {
   if (layer.type !== 'symbol' || layer['source-layer'] !== 'poi') return false;
   if (layer.layout?.['icon-image'] === undefined) return false;
-  return JSON.stringify(layer.filter ?? null).includes(`"${RAIL_CLASS}"`);
+  return layer.filter === undefined || isExpressionFilter(layer.filter);
 }
 
-/** A station layer with its labels off: its icons alone, with no name. */
-function iconsOnly(layer: SymbolLayerSpecification): SymbolLayerSpecification {
+/**
+ * A place layer with the labels off: its train stations alone (class `railway`, as the tiles
+ * class them: monochrome.ts, IS_RAIL_STOP), by their icon, with no name.
+ */
+function stationIconsOnly(layer: SymbolLayerSpecification): SymbolLayerSpecification {
   const layout = { ...layer.layout };
   delete layout['text-field'];
-  return { ...layer, layout };
+  const own = layer.filter;
+  const filter: FilterSpecification =
+    own === undefined || !isExpressionFilter(own) ? IS_RAIL_STOP : ['all', own, IS_RAIL_STOP];
+  return { ...layer, layout, filter };
 }
 
 /**
@@ -61,7 +74,7 @@ export function withLocationLabels(
     ...style,
     layers: style.layers.map((layer) => {
       if (!isBasemapLabel(layer, style.sources)) return layer;
-      if (isStationIcons(layer)) return iconsOnly(layer);
+      if (isPlaceIcons(layer)) return stationIconsOnly(layer);
       return { ...layer, layout: { ...layer.layout, visibility: 'none' } };
     }),
   };

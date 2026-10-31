@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 
 import {
   isBasemapLabel,
-  isStationIcons,
+  isPlaceIcons,
   readLocationLabels,
   rememberLocationLabels,
   withLocationLabels,
@@ -42,7 +42,8 @@ const STYLE = {
       'source-layer': 'place',
       layout: { 'text-field': '{name}' },
     },
-    // Coloured's transit layer: a station by its icon and its name.
+    // Coloured's transit layer, as Liberty has it: airports and bus stations (the tiles class a
+    // train station `railway`, so none of these is one).
     {
       id: 'poi_transit',
       type: 'symbol',
@@ -57,17 +58,27 @@ const STYLE = {
       type: 'symbol',
       source: 'openmaptiles',
       'source-layer': 'poi',
-      filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'class'], 'rail']],
+      filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'class'], 'railway']],
       layout: { 'text-field': '{name}' },
     },
-    // A shop's icon: a POI that is not a station.
+    // Coloured's places by rank, as Liberty has them: shops, schools and train stations alike,
+    // each by its icon and its name.
     {
       id: 'poi_r1',
       type: 'symbol',
       source: 'openmaptiles',
       'source-layer': 'poi',
       filter: ['>=', ['get', 'rank'], 1],
-      layout: { 'icon-image': '{class}', 'text-field': '{name}' },
+      layout: { 'icon-image': '{class}', 'text-field': '{name}', 'text-size': 12 },
+    },
+    // A place layer in the legacy filter syntax, which an expression cannot join.
+    {
+      id: 'poi_legacy',
+      type: 'symbol',
+      source: 'openmaptiles',
+      'source-layer': 'poi',
+      filter: ['==', 'class', 'shop'],
+      layout: { 'icon-image': '{class}' },
     },
     { id: 'saved-hotspot-labels', type: 'symbol', source: 'saved-hotspots' },
     { id: 'recording-trail-feet', type: 'symbol', source: 'recording-trail' },
@@ -86,27 +97,45 @@ test('a basemap label is a symbol layer from a source that is not GeoJSON', () =
     'poi_transit',
     'detail-rail-stops',
     'poi_r1',
+    'poi_legacy',
   ]);
 });
 
-test('station icons: a poi layer with an icon whose filter picks the rail class', () => {
-  const stations = STYLE.layers.filter((l) => isStationIcons(l)).map((l) => l.id);
-  assert.deepEqual(stations, ['poi_transit'], 'not a name-only station layer, nor a shop');
+test('place icons: a poi layer with an icon, in a filter a station class can join', () => {
+  const places = STYLE.layers.filter((l) => isPlaceIcons(l)).map((l) => l.id);
+  assert.deepEqual(places, ['poi_transit', 'poi_r1'], 'not a name-only layer, nor a legacy one');
 });
 
-test('hidden, the stations keep their icons and lose their names; nothing else of them changes', () => {
-  const transit = layer(withLocationLabels(STYLE, false), 'poi_transit');
-  assert.equal(transit.layout.visibility, undefined, 'still drawn');
-  assert.equal(transit.layout['icon-image'], '{class}');
-  assert.equal(transit.layout['text-field'], undefined, 'no name');
-  assert.equal(transit.layout['text-size'], 12);
-  assert.deepEqual(transit.filter, layer(STYLE, 'poi_transit').filter);
-  assert.equal(layer(withLocationLabels(STYLE, true), 'poi_transit'), layer(STYLE, 'poi_transit'));
+test('hidden, a place layer keeps its train stations alone, class railway, by their icon and no name', () => {
+  const hidden = withLocationLabels(STYLE, false);
+  const ranked = layer(hidden, 'poi_r1');
+  assert.equal(ranked.layout.visibility, undefined, 'still drawn');
+  assert.equal(ranked.layout['icon-image'], '{class}');
+  assert.equal(ranked.layout['text-field'], undefined, 'no name');
+  assert.equal(ranked.layout['text-size'], 12);
+  // The station's class as the tiles have it, not "rail": the stations the ranked layer draws.
+  assert.deepEqual(ranked.filter, [
+    'all',
+    ['>=', ['get', 'rank'], 1],
+    ['==', ['get', 'class'], 'railway'],
+  ]);
+  assert.deepEqual(layer(hidden, 'poi_transit').filter, [
+    'all',
+    ['match', ['get', 'class'], ['airport', 'bus', 'rail'], true, false],
+    ['==', ['get', 'class'], 'railway'],
+  ]);
+  assert.equal(layer(withLocationLabels(STYLE, true), 'poi_r1'), layer(STYLE, 'poi_r1'));
 });
 
 test('hidden, every basemap label is hidden and nothing else changes', () => {
   const hidden = withLocationLabels(STYLE, false);
-  for (const id of ['highway_name', 'highway_ref', 'place_city', 'detail-rail-stops', 'poi_r1']) {
+  for (const id of [
+    'highway_name',
+    'highway_ref',
+    'place_city',
+    'detail-rail-stops',
+    'poi_legacy',
+  ]) {
     assert.equal(layer(hidden, id).layout.visibility, 'none', id);
   }
   assert.equal(layer(hidden, 'place_city').layout['text-field'], '{name}', 'its layout is kept');

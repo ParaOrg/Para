@@ -5,18 +5,15 @@
 
 /**
  * Labels as the map has them now: the basemap's, those of them shown, ours shown, and the
- * basemap's station icons (a poi layer with an icon whose filter picks the rail class), which
- * stay with the labels off, by their icon alone.
+ * basemap's place icons (a poi layer with an icon), which keep their train stations with the
+ * labels off: class railway, by their icon alone.
  */
 export const labelsNow = (page) =>
   page.evaluate(() => {
     const style = window.__map.getStyle();
     const isOurs = (l) => style.sources[l.source]?.type === 'geojson';
     const isShown = (l) => l.layout?.visibility !== 'none';
-    const isStation = (l) =>
-      l['source-layer'] === 'poi' &&
-      l.layout?.['icon-image'] !== undefined &&
-      JSON.stringify(l.filter ?? null).includes('"rail"');
+    const isStation = (l) => l['source-layer'] === 'poi' && l.layout?.['icon-image'] !== undefined;
     const symbols = style.layers.filter((l) => l.type === 'symbol');
     const basemap = symbols.filter((l) => !isOurs(l) && !isStation(l));
     return {
@@ -26,7 +23,14 @@ export const labelsNow = (page) =>
       ours: symbols.filter((l) => isOurs(l) && isShown(l)).map((l) => l.id),
       stations: symbols
         .filter((l) => !isOurs(l) && isStation(l))
-        .map((l) => ({ id: l.id, isShown: isShown(l), hasName: 'text-field' in l.layout })),
+        .map((l) => ({
+          id: l.id,
+          isShown: isShown(l),
+          hasName: 'text-field' in l.layout,
+          isRailwayOnly: JSON.stringify(l.filter ?? null).endsWith(
+            '["==",["get","class"],"railway"]]',
+          ),
+        })),
     };
   });
 
@@ -106,11 +110,13 @@ export async function checkLocationLabels(page, { check, prefix, waitForMap }) {
   await labelsSwitch(page).click();
   const off = await labelsWhen(page, (now) => now.basemapShown.length === 0);
   check(
-    `${prefix}: off on Coloured, its station icons stay, with no names`,
+    `${prefix}: off on Coloured, its place icons stay for the train stations alone (class railway), with no names`,
     reloaded.stations.length > 0 &&
-      reloaded.stations.every((station) => station.isShown && station.hasName) &&
+      reloaded.stations.every(
+        (station) => station.isShown && station.hasName && !station.isRailwayOnly,
+      ) &&
       off.stations.length === reloaded.stations.length &&
-      off.stations.every((station) => station.isShown && !station.hasName),
+      off.stations.every((station) => station.isShown && !station.hasName && station.isRailwayOnly),
     JSON.stringify({ on: reloaded.stations, off: off.stations }),
   );
   const dark = await pick(page, 'Dark');
@@ -123,5 +129,11 @@ export async function checkLocationLabels(page, { check, prefix, waitForMap }) {
       sameIds(fiordHidden.ours, atFirst.ours) &&
       (await page.evaluate(() => localStorage.getItem('para.location-labels.v1'))) === null,
     `${dark.basemapShown.length} of ${dark.basemap.length} shown on Dark`,
+  );
+
+  await card(page).getByText('Location Labels', { exact: true }).click();
+  check(
+    `${prefix}: a tap on the words "Location Labels" flips the switch too`,
+    (await labelsSwitch(page).getAttribute('aria-checked')) === 'true',
   );
 }
