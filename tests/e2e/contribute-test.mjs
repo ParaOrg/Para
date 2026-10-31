@@ -734,6 +734,18 @@ const buttons = (page) =>
     (await page.getByRole('status').filter({ hasText: 'Flagged, 1' }).count()) === 1 &&
       (await mapSource(page))?.features.filter((f) => f.properties.kind === 'mark').length === 1,
   );
+  // The column's tooltips run past the screen's edge: the page must not slide to them, even from
+  // code, as focus and scrollIntoView do (once seen on CI: every control 72 in and 16 up).
+  check(
+    '  the page cannot be scrolled, even from code: nothing slides',
+    await page.evaluate(() => {
+      const main = document.querySelector('main');
+      main.scrollLeft = 1000;
+      main.scrollTop = 1000;
+      document.querySelector('[aria-label="Flag a stop"]').scrollIntoView({ inline: 'end' });
+      return main.scrollLeft === 0 && main.scrollTop === 0;
+    }),
+  );
 
   const discard = await page.getByRole('button', { name: 'Discard recording' }).boundingBox();
   check(
