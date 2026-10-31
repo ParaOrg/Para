@@ -7,7 +7,7 @@ interface HelpButtonProps {
 }
 
 /**
- * Figma's ? at the Start screen's top left (4486:25007), which opens the tutorial. Built, not yet
+ * Figma's ? at the Start screen's top right (4520:3472), which opens the tutorial. Built, not yet
  * shown: the tutorial is not designed (ready-screen.tsx says where it goes).
  */
 export function HelpButton({ onClick }: HelpButtonProps) {

@@ -132,7 +132,7 @@ const centreOff = (page, metres) =>
     [eastOf(metres)[0], M_PER_DEG_LNG],
   );
 const bearing = (page) => page.evaluate(() => (window.__map.getBearing() + 360) % 360);
-/** Ready's History tab, in the toolbar over the Start bar. */
+/** Ready's History tab, in the toolbar under Start tracking. */
 const historyTab = (page) =>
   page.getByRole('navigation', { name: 'Screens' }).getByRole('button', { name: 'History' });
 /** The Record tab, in the toolbar at the foot of History: back to Start. */
@@ -179,6 +179,31 @@ const lastSavedRide = (page) =>
                 fixes: fixes.result.filter((f) => f.recordingId === ride.id).length,
               },
             );
+          };
+        };
+      }),
+  );
+/** The recordings and the number of fixes IndexedDB holds. */
+const stored = (page) =>
+  page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open('para-contribute');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction(['recordings', 'fixes']);
+          const recordings = tx.objectStore('recordings').getAll();
+          const fixes = tx.objectStore('fixes').count();
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve({
+              recordings: recordings.result.map((r) => ({
+                status: r.status,
+                description: r.description,
+                failedFixWrites: r.failedFixWrites ?? 0,
+              })),
+              fixes: fixes.result,
+            });
           };
         };
       }),
@@ -244,25 +269,36 @@ const buttons = (page) =>
     const start = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
     const info = await creditsButton(page).boundingBox();
     check(
-      "on a first visit the map's ⓘ sits above the Start bar, and MapLibre's credits are gone",
+      "on a first visit the map's ⓘ sits at the bottom left, under Start tracking, and MapLibre's credits are gone",
       start &&
         info &&
-        info.y + info.height <= start.y + 0.5 &&
+        info.y >= start.y + start.height - 0.5 &&
         !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
       JSON.stringify([info, start]),
     );
   }
   await page.waitForFunction(() => !!window.__map?.loaded());
+  const paraMark = await page.locator('[data-para-mark]').boundingBox();
   check(
-    'Ready: Start, the top left empty as Figma has it (no Back to the map), no saved-recordings list',
+    "Ready: Para's mark at the top left, 48 px, 20 in and 24 down (Figma's Frame 259), hidden from screen readers",
+    paraMark &&
+      Math.abs(paraMark.x - 20) < 1 &&
+      Math.abs(paraMark.y - 24) < 1 &&
+      Math.abs(paraMark.width - 48) < 1 &&
+      (await page.locator('[data-para-mark]').getAttribute('aria-hidden')) === 'true',
+    JSON.stringify(paraMark),
+  );
+  check(
+    'Ready: Start, the top right empty until there is a tutorial (no ?, no Back to the map), no saved-recordings list',
     (await page.getByRole('button', { name: 'Back to the map' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'How to record' }).count()) === 0 &&
       (await page.getByText('Saved on this phone').count()) === 0 &&
       (await page.getByText('No saved recordings yet.').count()) === 0,
   );
   {
     const history = historyTab(page);
     check(
-      '  with no accounts in the build the tabs over the Start bar are Record and History, no Account; the top right empty, nothing of History shows',
+      '  with no accounts in the build the tabs under Start tracking are Record and History, no Account; the top right empty, nothing of History shows',
       (await history.count()) === 1 &&
         (await page.getByRole('button', { name: 'History' }).count()) === 1 &&
         (await page.getByRole('button', { name: 'Account' }).count()) === 0 &&
@@ -274,13 +310,16 @@ const buttons = (page) =>
     const tabs = await page.getByRole('navigation', { name: 'Screens' }).boundingBox();
     const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
     check(
-      '  the stack over the map is the tabs and, at the foot, the Start Tracking bar',
+      "  as Figma's Record has it: Start tracking 32 in each side and 48 tall, the tabs 12 under it, 32 over the foot",
       !!start &&
         !!tabs &&
         !!stack &&
-        Math.abs(stack.y - tabs.y) <= 1 &&
-        tabs.y + tabs.height <= start.y &&
-        Math.abs(stack.y + stack.height - (start.y + start.height)) <= 1,
+        Math.abs(stack.y - start.y) <= 1 &&
+        Math.abs(start.x - 32) <= 0.5 &&
+        Math.abs(start.width - (393 - 64)) <= 0.5 &&
+        Math.abs(start.height - 48) <= 0.5 &&
+        Math.abs(tabs.y - (start.y + start.height) - 12) <= 0.5 &&
+        Math.abs(stack.y + stack.height - (tabs.y + tabs.height) - 32) <= 0.5,
       JSON.stringify([stack, tabs, start]),
     );
     await history.click();
@@ -635,34 +674,35 @@ const buttons = (page) =>
   check(
     'back within 300 m of the start after a kilometre, the recording goes on: it never stops itself',
     (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
-      (await page.getByRole('heading', { name: 'About this route' }).count()) === 0,
+      (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 0,
   );
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 10000 });
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor({ timeout: 10000 });
   check(
     'Pause and Finish open the Save form, focus on its heading',
-    await page.evaluate(() => document.activeElement?.textContent === 'About this route'),
+    await page.evaluate(() => document.activeElement?.textContent === 'Save Recording'),
   );
   check('  the watch let go of the GPS', (await page.evaluate(() => window.__watchers())) === 0);
   const labels = await page.locator('label').allInnerTexts();
   check(
-    '  four visible labels: start point name, end point name, description, What did you ride?',
-    ['Start point name', 'End point name', 'Description', 'What did you ride?'].every((l) =>
+    '  five visible labels: start point name, end point name, fare, What did you ride?, description',
+    ['Start point name', 'End point name', 'Fare', 'What did you ride?', 'Description'].every((l) =>
       labels.some((t) => t.startsWith(l)),
     ),
     labels.map((l) => l.split('\n')[0]).join(' | '),
   );
   check(
-    '  Continue and Skip, and "Saving in" quietly',
-    (await page.getByRole('button', { name: 'Continue' }).count()) === 1 &&
-      (await page.getByRole('button', { name: 'Skip' }).count()) === 1 &&
-      /Saving in \d:\d\d/.test(await page.locator('form').innerText()),
+    '  Save recording and Resume, Discard recording, and "Saves by itself in" quietly',
+    (await page.getByRole('button', { name: 'Save recording' }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Resume', exact: true }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1 &&
+      /Saves by itself in \d:\d\d/.test(await page.locator('form').innerText()),
   );
   await shot(page, '4-form');
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   check(
-    'Skip saves, and Successfully recorded keeps no list',
+    'Save recording with nothing typed saves, and Successfully recorded keeps no list',
     (await page.getByRole('button', { name: 'Record again' }).count()) === 1 &&
       (await page.getByText('Saved on this phone').count()) === 0,
   );
@@ -829,24 +869,131 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
   check(
     'Pause and Finish by hand stop the recording and show the same form',
     (await page.evaluate(() => window.__watchers())) === 0 &&
-      (await page.getByRole('button', { name: 'Continue' }).count()) === 1,
+      (await page.getByRole('button', { name: 'Save recording' }).count()) === 1,
   );
+  // "What did you ride?": a sheet that holds the keyboard, its rides a radio group.
+  const rideField = page.getByRole('button', { name: 'What did you ride?' });
+  const rideSheet = page.getByRole('dialog', { name: 'What did you ride?' });
+  const isFocusOnRideField = () =>
+    page.evaluate(() => document.activeElement?.getAttribute('aria-haspopup') === 'dialog');
+  await rideField.click();
+  await rideSheet.waitFor();
+  const rides = (await rideSheet.getByRole('radio').allInnerTexts()).map((t) => t.trim());
+  check(
+    '"What did you ride?" opens a sheet of seven rides, Others last and no Tricycle, focus in it',
+    JSON.stringify(rides) ===
+      JSON.stringify(['Jeep', 'E-Jeep', 'UV Express', 'Bus', 'Train', 'Ferry', 'Others']) &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+    rides.join(' | '),
+  );
+  await page.keyboard.press('Escape');
+  check(
+    '  Escape closes it with nothing picked, focus back on the field, still "Pick one"',
+    (await rideSheet.count()) === 0 &&
+      (await isFocusOnRideField()) &&
+      (await rideField.innerText()).includes('Pick one'),
+  );
+  await rideField.click();
+  await rideSheet.waitFor();
+  await rideSheet.getByRole('button', { name: 'Close' }).click();
+  check('  ✕ closes it too', (await rideSheet.count()) === 0 && (await isFocusOnRideField()));
+  await rideField.click();
+  await rideSheet.waitFor();
+  const focusName = () =>
+    page.evaluate(
+      () =>
+        document.activeElement?.getAttribute('aria-label') ??
+        document.activeElement?.textContent?.trim(),
+    );
+  await page.keyboard.press('Tab');
+  const afterOneTab = await focusName();
+  await page.keyboard.press('Tab');
+  const afterTwoTabs = await focusName();
+  await page.keyboard.press('Tab');
+  const afterThreeTabs = await focusName();
+  check(
+    '  Tab goes round inside it: ✕, the rides (one stop), and back to ✕',
+    afterOneTab === 'Close' && afterTwoTabs === 'Jeep' && afterThreeTabs === 'Close',
+    [afterOneTab, afterTwoTabs, afterThreeTabs].join(' → '),
+  );
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Tab');
+  const afterArrowTab = await focusName();
+  await page.keyboard.press('Shift+Tab');
+  const afterArrowShiftTab = await focusName();
+  check(
+    '  after an arrow key, Tab still stays inside it (back to ✕), and Shift+Tab returns to the ride moved to',
+    (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))) &&
+      afterArrowTab === 'Close' &&
+      afterArrowShiftTab === 'E-Jeep',
+    [afterArrowTab, afterArrowShiftTab].join(' → '),
+  );
+  await page.keyboard.press('Enter');
+  check(
+    '  the arrow keys move along the rides, and Enter picks one: the sheet closes, the field shows it',
+    (await rideSheet.count()) === 0 &&
+      (await isFocusOnRideField()) &&
+      (await rideField.innerText()).includes('E-Jeep'),
+    await rideField.innerText(),
+  );
+
+  // Discard asks over the whole screen, as ✕ does while recording; Keep it is back to the form.
   await page.getByLabel('Start point name').fill('Tala');
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  const discardQuestion = page.getByRole('alertdialog');
+  await discardQuestion.waitFor();
+  check(
+    'Discard recording on the form asks first, on the Stopping screen: Keep it or Stop without saving',
+    (await discardQuestion.getByRole('button', { name: 'Keep it' }).count()) === 1 &&
+      (await discardQuestion.getByRole('button', { name: 'Stop without saving' }).count()) === 1 &&
+      (await discardQuestion.getByRole('button', { name: 'Keep recording' }).count()) === 0,
+  );
+  await discardQuestion.getByRole('button', { name: 'Keep it' }).click();
+  check(
+    '  Keep it is back on the form as it was, focus on Discard recording',
+    (await page.getByRole('alertdialog').count()) === 0 &&
+      (await page.getByLabel('Start point name').inputValue()) === 'Tala' &&
+      (await focusName()) === 'Discard recording',
+  );
+
   await page.getByLabel('End point name').fill('Cubao');
-  await page.getByLabel('What did you ride?').selectOption('Jeep');
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByLabel('Fare').fill('15');
+  await rideField.click();
+  await page.getByRole('radio', { name: 'Jeep', exact: true }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   const file = await lastSavedRide(page);
   check(
-    'Continue saves with the details',
-    file.startPointName === 'Tala' && file.endPointName === 'Cubao' && file.rideKind === 'Jeep',
-    JSON.stringify([file.startPointName, file.endPointName, file.rideKind]),
+    'Save recording saves with the details, the fare among them',
+    file.startPointName === 'Tala' &&
+      file.endPointName === 'Cubao' &&
+      file.rideKind === 'Jeep' &&
+      file.farePhp === 15,
+    JSON.stringify([file.startPointName, file.endPointName, file.rideKind, file.farePhp]),
   );
+
+  // Discard's Stop without saving throws the stopped recording away.
   await page.getByRole('button', { name: 'Record again' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 100);
+  await finishRecording(page);
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  const afterDiscard = await stored(page);
+  check(
+    '  and Stop without saving from the form throws it away and lands on Start',
+    afterDiscard.recordings.every((r) => r.status === 'saved') &&
+      (await lastSavedRide(page)).startPointName === 'Tala',
+    JSON.stringify(afterDiscard.recordings),
+  );
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('button', { name: 'Discard recording' }).waitFor();
   await page.getByRole('button', { name: 'Discard recording' }).click();
@@ -1141,10 +1288,10 @@ const buttons = (page) =>
   );
   if (isFormShown) {
     await description.fill('Fetched again');
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Save recording' }).click();
   }
   check(
-    '  and Continue saves it, Successfully recorded',
+    '  and Save recording saves it, Successfully recorded',
     await page
       .getByRole('heading', { name: 'Successfully recorded' })
       .waitFor({ timeout: 10000 })
@@ -1203,7 +1350,7 @@ const buttons = (page) =>
     Math.abs(centre[0] - eastOf(600)[0]) < 1e-5 && Math.abs(centre[1] - START[1]) < 0.01,
     JSON.stringify(centre),
   );
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await page.getByRole('button', { name: 'Record again' }).click();
   await openHistory(page);
@@ -1290,9 +1437,9 @@ const buttons = (page) =>
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
   await isCaptureHeld;
-  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   releaseCapture();
   // The rider rides on; the locator follows. A capture that ran now would frame the whole trail,
@@ -1323,9 +1470,9 @@ const buttons = (page) =>
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
   await isCaptureHeld;
-  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Discard recording' }).click();
   await page.getByRole('button', { name: 'Stop without saving' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
@@ -1372,7 +1519,7 @@ const buttons = (page) =>
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 200);
   await finishRecording(page);
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   const isSaved = await page
     .getByRole('heading', { name: 'Successfully recorded' })
     .waitFor({ timeout: 10000 })
@@ -1411,12 +1558,12 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Switch to Sakay' }).click();
   await ride(page, 1190, 200);
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor({ timeout: 30000 });
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor({ timeout: 30000 });
   await page.evaluate(() => window.__advance(600_000));
-  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
-    'Keep recording after a Save: back on the recording screen, Pause focused, "Recording again" said',
+    'Resume on the form: back on the recording screen, Pause focused, "Recording again" said',
     (await activeName()) === 'Pause' &&
       (await page.getByRole('status').innerText()) === 'Recording again',
     `${await activeName()} / ${await page.getByRole('status').innerText()}`,
@@ -1431,16 +1578,16 @@ const buttons = (page) =>
   await page.waitForTimeout(500);
   check(
     '  a fix near the start does not stop it, and the modes are kept',
-    (await page.getByRole('heading', { name: 'About this route' }).count()) === 0 &&
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 0 &&
       (await stats()).includes('Sakay') &&
       (await mapSource(page)).features.filter((f) => f.properties.kind === 'switch').length === 1,
     await stats(),
   );
 
-  // (c) then Pause, Finish and Skip save it once, as one contribution.
+  // (c) then Pause, Finish and Save recording save it once, as one contribution.
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await finishRecording(page);
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   const counts = await page.evaluate(
     () =>
@@ -1453,7 +1600,7 @@ const buttons = (page) =>
       }),
   );
   check(
-    'after Keep recording, Pause, Finish and Skip save it once, as one contribution',
+    'after Resume, Pause, Finish and Save recording save it once, as one contribution',
     counts.length === 1 && counts[0] === 'saved',
     JSON.stringify(counts),
   );
@@ -1464,12 +1611,12 @@ const buttons = (page) =>
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
   await page.evaluate(() => window.__advance(600_000));
-  await page.getByRole('button', { name: 'Keep recording' }).click();
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
-    'Keep recording after a Save by hand: recording again, Pause focused, no time for the form',
+    'Resume on the form after a stop by hand: recording again, Pause focused, no time for the form',
     (await activeName()) === 'Pause' &&
       recordedSeconds(await stats()) < 8 * 60 &&
       (await page.evaluate(() => window.__watchers())) === 1,
@@ -1566,30 +1713,30 @@ const buttons = (page) =>
   const locatorBox = await locate(page).boundingBox();
   const bars = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
   check(
-    "the map-style button sits on the locator button, the public map's 48 px pair, 16 px from the right as Figma has it",
+    "the map-style button sits on the locator button, the public map's 48 px pair, 20 px from the right as Figma has it",
     box &&
       locatorBox &&
       Math.abs(box.width - 48) < 0.5 &&
-      Math.abs(393 - (box.x + box.width) - 16) < 0.5 &&
+      Math.abs(393 - (box.x + box.width) - 20) < 0.5 &&
       Math.abs(locatorBox.x - box.x) < 0.5 &&
       box.y + box.height <= locatorBox.y + 0.5,
     JSON.stringify([box, locatorBox]),
   );
   check(
-    '  and above the Start bar, 16 px over the tabs as Figma has it',
-    bars && locatorBox && Math.abs(bars.y - (locatorBox.y + locatorBox.height) - 16) < 0.5,
+    '  and 24 px over Start tracking as Figma has it',
+    bars && locatorBox && Math.abs(bars.y - (locatorBox.y + locatorBox.height) - 24) < 0.5,
     JSON.stringify([locatorBox, bars]),
   );
   {
     const info = await creditsButton(page).boundingBox();
     const bar = await page.getByRole('button', { name: 'Start Tracking' }).boundingBox();
     check(
-      "  the map's ⓘ is 32 px, at the bottom left, 12 px in and 12 px over the Start bar",
+      "  the map's ⓘ is 32 px, at the bottom left, 12 px in and 12 px over the screen's foot",
       info &&
         bar &&
         Math.abs(info.width - 32) < 0.5 &&
         Math.abs(info.x - 12) < 0.5 &&
-        Math.abs(bar.y - (info.y + info.height) - 12) < 0.5,
+        Math.abs(852 - (info.y + info.height) - 12) < 0.5,
       JSON.stringify([info, bar]),
     );
   }
@@ -1628,7 +1775,7 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Resume' }).waitFor();
   check(
     'Stop on a recording left open pauses it too: Resume and Finish, no form',
-    (await page.getByRole('heading', { name: 'About this route' }).count()) === 0 &&
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1,
   );
   check('no page errors', errors.length === 0, errors.join('; '));
@@ -1644,24 +1791,33 @@ const buttons = (page) =>
   // Installed before the form opens, so the form's own timer runs on it.
   await page.clock.install();
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
+  // Never under something the contributor is answering: the sheet holds the two minutes.
+  await page.getByRole('button', { name: 'What did you ride?' }).click();
+  await page.clock.runFor(125_000);
+  check(
+    'the form does not save itself while the ride sheet is open over it',
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1 &&
+      (await page.getByRole('dialog', { name: 'What did you ride?' }).count()) === 1,
+  );
+  await page.keyboard.press('Escape');
   await page.clock.runFor(61_000);
   const sixty = await page.locator('form').innerText();
   check(
-    'the form shows the time left, quietly: Saving in 1:00 after a minute',
-    /Saving in 0:59|Saving in 1:00/.test(sixty),
+    'the form shows the time left, quietly: Saves by itself in 1:00 after a minute',
+    /Saves by itself in (0:59|1:00)/.test(sixty),
   );
   await page.getByLabel('Description').fill('Crowded');
   await page.clock.runFor(2_000);
   check(
     'a hand on the form starts the two minutes again',
-    /Saving in (1:5\d|2:00)/.test(await page.locator('form').innerText()),
-    (await page.locator('form').innerText()).match(/Saving in \d:\d\d/)?.[0],
+    /Saves by itself in (1:5\d|2:00)/.test(await page.locator('form').innerText()),
+    (await page.locator('form').innerText()).match(/Saves by itself in \d:\d\d/)?.[0],
   );
   await page.clock.runFor(116_000);
   check(
     'still on the form a couple of seconds before the time is up',
-    (await page.getByRole('heading', { name: 'About this route' }).count()) === 1,
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
   await page.clock.runFor(3_000);
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor({ timeout: 5000 });
@@ -1689,7 +1845,7 @@ const buttons = (page) =>
   await ride(page, 0, 100);
   await finishRecording(page);
   await page.getByLabel('Description').fill('Reload me');
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await page.getByRole('button', { name: 'Record again' }).click();
   await openHistory(page);
@@ -1714,7 +1870,7 @@ const buttons = (page) =>
     file?.description,
   );
   check(
-    '  History has no Start bar',
+    '  History has no Start tracking',
     (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0,
   );
   await recordTab(page).click();
@@ -1733,31 +1889,6 @@ const FAIL_WRITES = () => {
     return put.apply(this, args);
   };
 };
-/** The recordings and the number of fixes IndexedDB holds. */
-const stored = (page) =>
-  page.evaluate(
-    () =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open('para-contribute');
-        open.onerror = () => reject(open.error);
-        open.onsuccess = () => {
-          const tx = open.result.transaction(['recordings', 'fixes']);
-          const recordings = tx.objectStore('recordings').getAll();
-          const fixes = tx.objectStore('fixes').count();
-          tx.oncomplete = () => {
-            open.result.close();
-            resolve({
-              recordings: recordings.result.map((r) => ({
-                status: r.status,
-                description: r.description,
-                failedFixWrites: r.failedFixWrites ?? 0,
-              })),
-              fixes: fixes.result,
-            });
-          };
-        };
-      }),
-  );
 const setFail = (page, store, on) => page.evaluate(([s, v]) => (window.__fail[s] = v), [store, on]);
 const STORE_PROBLEM = 'This phone could not keep the recording.';
 {
@@ -1772,7 +1903,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await setFail(page, 'fixes', false);
   await page.waitForTimeout(300);
   await finishRecording(page);
-  await page.getByRole('heading', { name: 'About this route' }).waitFor();
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
   const ROOM_WARNING = 'Your phone ran out of room for part of this recording.';
   check(
     'fix writes that failed are noted on the form in one line, with no Download',
@@ -1787,12 +1918,12 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
     await page.waitForTimeout(100);
   }
   await setFail(page, 'recordings', true);
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.waitForTimeout(800);
   const refused = await stored(page);
   check(
     'a save the phone refuses stays on the form, says so, and is not marked saved',
-    (await page.getByRole('heading', { name: 'About this route' }).count()) === 1 &&
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1 &&
       (await page.getByText(STORE_PROBLEM).count()) > 0 &&
       refused.recordings[0]?.status === 'stopped',
     JSON.stringify(refused),
@@ -1812,8 +1943,8 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await page.evaluate(() => {
     const byText = (t) =>
       [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === t);
-    byText('Continue').click();
-    byText('Skip').click();
+    byText('Save recording').click();
+    byText('Save recording').click();
   });
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor({ timeout: 5000 });
   await page.waitForTimeout(300);
@@ -1829,6 +1960,211 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   );
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
+}
+
+// ------------------------------------- Start tracking becomes the recording card, never holding it up
+/** Every animate() the page starts, with its timing and whether it is the morph's ghost's. */
+const ANIMATIONS = () => {
+  window.__animations = [];
+  const animate = Element.prototype.animate;
+  Element.prototype.animate = function (keyframes, options) {
+    window.__animations.push({
+      isGhost: this.hasAttribute('data-start-morph'),
+      isCard: this.hasAttribute('data-recording-card'),
+      duration: typeof options === 'object' ? options.duration : options,
+      easing: typeof options === 'object' ? (options.easing ?? 'linear') : 'linear',
+      props: Object.keys(Array.isArray(keyframes) ? (keyframes[0] ?? {}) : keyframes),
+      at: performance.now(),
+    });
+    return animate.call(this, keyframes, options);
+  };
+  window.__ghostSeen = false;
+  new MutationObserver(() => {
+    if (document.querySelector('[data-start-morph]')) window.__ghostSeen = true;
+  }).observe(document, { childList: true, subtree: true });
+};
+{
+  const { page, context, errors } = await phone();
+  await page.addInitScript(ANIMATIONS);
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  const tokens = await page.evaluate(() => {
+    const style = getComputedStyle(document.documentElement);
+    const read = (name) => style.getPropertyValue(name).trim();
+    return {
+      quick: parseFloat(read('--transition-duration-quick')),
+      gentle: parseFloat(read('--transition-duration-gentle')),
+      exit: read('--ease-exit'),
+      move: read('--ease-move'),
+    };
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const atTap = await page.evaluate(() => ({
+    watchers: window.__watchers(),
+    ghost: !!document.querySelector('[data-start-morph]'),
+  }));
+  check(
+    'Start tracking starts the recording on the tap: the watch is on while the morph has only begun',
+    atTap.watchers === 1 && atTap.ghost,
+    JSON.stringify(atTap),
+  );
+  await page.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
+    timeout: 5000,
+  });
+  const ghostAnimations = await page.evaluate(() => window.__animations.filter((a) => a.isGhost));
+  const fold = ghostAnimations[0];
+  const open = ghostAnimations[1];
+  check(
+    '  it folds into a pill on duration-quick and ease-exit, then opens into the card on duration-gentle and ease-move',
+    !!fold &&
+      !!open &&
+      fold.duration === tokens.quick &&
+      fold.easing === tokens.exit &&
+      open.duration === tokens.gentle &&
+      open.easing === tokens.move &&
+      fold.props.join() === 'clipPath' &&
+      open.props.join() === 'clipPath',
+    JSON.stringify({ tokens, ghostAnimations }),
+  );
+  check(
+    '  about 450 ms in all, and only clip-path and opacity move',
+    tokens.quick + tokens.gentle >= 400 &&
+      tokens.quick + tokens.gentle <= 450 &&
+      (await page.evaluate(() =>
+        window.__animations.every((a) => a.props.every((p) => ['clipPath', 'opacity'].includes(p))),
+      )),
+  );
+  check(
+    '  then the card stands in its own place, the ghost gone',
+    (await page.getByRole('group', { name: 'Recording so far' }).isVisible()) &&
+      (await page.locator('[data-start-morph]').count()) === 0 &&
+      (await page.evaluate(
+        () => getComputedStyle(document.querySelector('[data-recording-card]')).opacity,
+      )) === '1',
+  );
+
+  // Pause mid-morph: what the ghost covers takes the tap.
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const isMorphing = await page.evaluate(() => !!document.querySelector('[data-start-morph]'));
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 5000 });
+  // Two frames on: the ghost never shows the card as it was before the pause.
+  const ghostAfterPause = await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            resolve(document.querySelector('[data-start-morph]')?.textContent ?? ''),
+          ),
+        ),
+      ),
+  );
+  check(
+    '  a tap on Pause mid-morph pauses the recording, and the morph shows no Pause over Resume',
+    isMorphing &&
+      (await page.getByRole('button', { name: 'Finish', exact: true }).count()) === 1 &&
+      !ghostAfterPause.includes('Pause'),
+    ghostAfterPause,
+  );
+  await page.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
+    timeout: 5000,
+  });
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+
+  // Pause while the pill opens into the card: the copy of the card it shows is out of date, so
+  // the morph ends there and then.
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const pausedWhileOpening = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const look = () => {
+          const ghost = document.querySelector('[data-start-morph]');
+          if (!ghost) return resolve(null);
+          if (!ghost.textContent?.includes('Pause')) return requestAnimationFrame(look);
+          const pause = [...document.querySelectorAll('[data-recording-card] button')].find(
+            (button) => button.textContent?.trim() === 'Pause',
+          );
+          pause?.click();
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              resolve({
+                isGhostGone: !document.querySelector('[data-start-morph]'),
+                isCardShown: getComputedStyle(
+                  document.querySelector('[data-recording-card]') ?? document.body,
+                ).opacity,
+              }),
+            ),
+          );
+        };
+        look();
+      }),
+  );
+  check(
+    '  a Pause while the pill opens into the card ends the morph at once, the real card shown',
+    pausedWhileOpening?.isGhostGone === true &&
+      pausedWhileOpening.isCardShown === '1' &&
+      (await page.getByRole('button', { name: 'Resume' }).count()) === 1,
+    JSON.stringify(pausedWhileOpening),
+  );
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+
+  // A start that fails (a second tab, which records nothing): the card never comes, the button does.
+  const second = await context.newPage();
+  await nodeFetch(second);
+  await bareStyle(second);
+  await second.addInitScript(GPS);
+  await second.addInitScript(ANIMATIONS);
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
+  await second.getByRole('button', { name: 'Start Tracking' }).click();
+  const secondMorphed = await second.evaluate(() => !!document.querySelector('[data-start-morph]'));
+  await second.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
+    timeout: 5000,
+  });
+  await second.waitForTimeout(100);
+  check(
+    '  a start that fails: the pill opens back into Start tracking, shown again, and no card comes',
+    secondMorphed &&
+      (await second.getByRole('group', { name: 'Recording so far' }).count()) === 0 &&
+      (await second.getByRole('button', { name: 'Start Tracking' }).isVisible()) &&
+      (await second.evaluate(
+        () => getComputedStyle(document.querySelector('[data-start-tracking]')).opacity,
+      )) === '1',
+  );
+  await second.close();
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
+
+  // Reduced motion: no ghost, the card only fades in, quickly.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(() => {
+    window.__animations = [];
+    window.__ghostSeen = false;
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await page.waitForTimeout(400);
+  const reduced = await page.evaluate(() => ({
+    ghostSeen: window.__ghostSeen,
+    card: window.__animations.filter((a) => a.isCard),
+  }));
+  check(
+    '  with reduced motion: no fold and no opening, only a quick crossfade of the card',
+    !reduced.ghostSeen &&
+      reduced.card.some((a) => a.duration === tokens.quick && a.props.join() === 'opacity') &&
+      reduced.card.every((a) => a.duration <= tokens.quick && a.props.join() === 'opacity'),
+    JSON.stringify(reduced),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await context.close();
 }
 
 // ------------------------------------------------------------- a second tab
@@ -1860,7 +2196,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   await openHistory(second);
   await finishRecording(page);
   await page.getByLabel('Description').fill('From the first tab');
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   await second
     .getByRole('heading', { level: 1, name: 'History' })
@@ -2002,9 +2338,9 @@ const WAKE = () => {
 
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await finishRecording(page);
-  await page.getByRole('button', { name: 'Skip' }).waitFor();
+  await page.getByRole('button', { name: 'Save recording' }).waitFor();
   check("the Save form keeps the map's corner ⓘ for its credits", await hasCornerCredits());
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   check('Saved has Back to the map, in front of the screen', await hasOneBack());
   check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
