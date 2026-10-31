@@ -16,7 +16,7 @@ Contributors share their location (their rides), and editors and contributors ha
 - **Commuters:** what the public map stores. Nothing is sent: the location stays on the phone (ADR 0004). Say what the offline copy on the phone is.
 - **Contributors:**
   - what a ride records and when it's sent;
-  - where it's kept: Supabase in Singapore, and the weekly encrypted backup at Cloudflare R2 (`src/features/contribute/consent-panel.tsx` holds the wording the consent screen already uses; stay consistent with it);
+  - where it's kept: Supabase in Singapore, and the weekly encrypted backup at Cloudflare R2 (`src/features/contribute/consent/consent-panel.tsx` holds the consent wording; the screen is off while the owner redesigns it (ADR 0004), so stay consistent with that wording);
   - how long it's kept;
   - how to delete rides and the account.
 - **Editors:** the studio account and what it records.

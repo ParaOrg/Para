@@ -1,6 +1,6 @@
 # 11: A short README for `tests/unit/`
 
-Status: ready-for-human
+Status: resolved (#532)
 Type: task
 Size: small
 Blocked by: none
