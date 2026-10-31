@@ -193,6 +193,28 @@ const showBlock = async (page) => {
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 15000 });
 };
 
+/**
+ * Waits until a box is drawn at a point on the screen. The boxes reach the map
+ * apart from the routes (laid out in a worker after the index), so a tap made
+ * before they are drawn lands on the loop's line beneath and opens its trip.
+ */
+const boxDrawnAt = (page, at) =>
+  page.waitForFunction(
+    ([x, y]) =>
+      window.__map.queryRenderedFeatures([x, y], { layers: ['saved-stops-fill'] }).length > 0,
+    [at.x, at.y],
+    { timeout: 15000 },
+  );
+
+/**
+ * Waits until the locator draws a fix of this accuracy: the page has taken the
+ * position the test just set. A fixed wait is too short on a slow runner.
+ */
+const fixTaken = (page, accuracyM) =>
+  page
+    .locator(`[data-testid="locator-overlay"][data-accuracy-m="${accuracyM}"]`)
+    .waitFor({ state: 'attached', timeout: 15000 });
+
 /** A tap on the loop's west edge, away from its boxes: its trip opens. */
 const openTrip = async (page) => {
   await showBlock(page);
@@ -433,7 +455,7 @@ const closeTrip = async (page) => {
     latitude: SUNKEN.at[1],
     accuracy: 800,
   });
-  await page.waitForTimeout(2500);
+  await fixTaken(page, 800);
   await openTrip(page);
   check(
     'a fix vaguer than 200 m chooses nothing: the first place again',
@@ -444,7 +466,7 @@ const closeTrip = async (page) => {
 
   // A coarse fix sharpening on the spot, as a phone's does before its GPS has found itself.
   await context.setGeolocation({ longitude: SUNKEN.at[0], latitude: SUNKEN.at[1], accuracy: 10 });
-  await page.waitForTimeout(2500);
+  await fixTaken(page, 10);
   await openTrip(page);
   check(
     'the same point, vague and then sharp: the sharp one is heard, the tip is Sunken Garden',
@@ -455,7 +477,7 @@ const closeTrip = async (page) => {
 
   // Far away: nothing near the loop.
   await context.setGeolocation({ longitude: 121.01, latitude: 14.5, accuracy: 15 });
-  await page.waitForTimeout(2500);
+  await fixTaken(page, 15);
   await openTrip(page);
   check(
     'a commuter more than 1 km from every box chooses nothing either',
@@ -537,6 +559,7 @@ const closeTrip = async (page) => {
   await page.waitForTimeout(400);
   // A tap inside Engineering's box opens its card.
   const at = await screenOf(page, ENGINEERING.at);
+  await boxDrawnAt(page, at);
   await page.touchscreen.tap(at.x, at.y);
   await page.locator('[data-testid="card"]').first().waitFor({ timeout: 15000 });
   await page.waitForTimeout(500);
