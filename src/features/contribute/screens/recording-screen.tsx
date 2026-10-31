@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type Ref } from 'react';
+import { useEffect, useId, useRef, type Ref } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { CloseIcon } from '@/shared/ui/route-icons';
@@ -8,7 +8,6 @@ import { FoldButton } from './fold-button';
 import { RecordingCard, type RecordingCardState } from './recording-card';
 import { RecordingTint } from './recording-tint';
 import { TrackingButton } from './tracking-button';
-import { ConfirmDelete } from '../common/confirm-delete';
 import { useStackRoom } from '../common/use-stack-room';
 import { CreditsButton } from '../map/credits-button';
 import type { RecordingFigures } from '../recorder/recording-figures';
@@ -28,8 +27,10 @@ interface RecordingScreenProps {
   onModeSwitch: () => void;
   /** Ends the recording and opens the Save form. */
   onFinish: () => void;
-  /** Throws the recording away, once the contributor has said yes. */
-  onDiscard: () => void;
+  /** ✕: pauses the recording and asks, over the whole screen, whether to throw it away. */
+  onAskToStop: () => void;
+  /** ✕, for focus to come back to when the question is answered Keep recording. */
+  discardButtonRef: Ref<HTMLButtonElement>;
   /** The card folded away: the map has the screen, and the recording goes on. */
   isCardFolded: boolean;
   onCardFoldedChange: (isFolded: boolean) => void;
@@ -59,7 +60,8 @@ export function RecordingScreen({
   onResume,
   onModeSwitch,
   onFinish,
-  onDiscard,
+  onAskToStop,
+  discardButtonRef,
   isCardFolded,
   onCardFoldedChange,
   onOpenCredits,
@@ -77,16 +79,6 @@ export function RecordingScreen({
     // Once, as the screen opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a change of the prop alone must not move focus
   }, []);
-  const [isAsking, setIsAsking] = useState(false);
-  const closeRef = useRef<HTMLDivElement>(null);
-  const wasAsking = useRef(false);
-
-  // Back from the question, focus returns to ✕, which asked it.
-  useEffect(() => {
-    if (wasAsking.current && !isAsking) closeRef.current?.querySelector('button')?.focus();
-    wasAsking.current = isAsking;
-  }, [isAsking]);
-
   const state: RecordingCardState = isPaused ? 'paused' : CARD_STATE[mode];
 
   // The recording frames stand the right-hand column 20 in, where Start keeps 16.
@@ -101,16 +93,14 @@ export function RecordingScreen({
   return (
     <>
       <RecordingTint state={state} />
-      <div
-        ref={closeRef}
-        className="absolute top-0 left-0 z-30 pt-[calc(env(safe-area-inset-top)+1.0625rem)] pl-[max(1.25rem,env(safe-area-inset-left))]"
-      >
+      <div className="absolute top-0 left-0 z-30 pt-[calc(env(safe-area-inset-top)+1.0625rem)] pl-[max(1.25rem,env(safe-area-inset-left))]">
         <IconButton
           tooltip="top"
           size="large"
           label="Discard recording"
           icon={<CloseIcon />}
-          onClick={() => setIsAsking(true)}
+          ref={discardButtonRef}
+          onClick={onAskToStop}
         />
       </div>
       <FoldButton isFolded={isCardFolded} controls={cardId} onFoldedChange={onCardFoldedChange} />
@@ -131,14 +121,6 @@ export function RecordingScreen({
         <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
           {isPaused ? 'Recording paused' : 'Recording a route'}
         </h1>
-        {/* At the foot, over the card, so it never covers the page's problem line at the top. */}
-        {isAsking && (
-          <ConfirmDelete
-            question="Throw this recording away?"
-            onConfirm={onDiscard}
-            onKeep={() => setIsAsking(false)}
-          />
-        )}
         {!isAwake && !isPaused && (
           <p className="bg-surface p-2 font-sn-pro text-sm/5 text-content-primary">
             The screen could not be kept awake, so it may sleep and the location may stop.

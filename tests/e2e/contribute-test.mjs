@@ -670,23 +670,124 @@ const buttons = (page) =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' '),
   );
   await ride(page, 310, 330);
+  // ✕ pauses the recording and asks over the whole screen.
+  const stopScreen = page.getByRole('alertdialog', { name: 'Stop and delete this ride?' });
+  const distanceShown = (await page.getByRole('group', { name: 'Recording so far' }).innerText())
+    .match(/Distance\s+(\S+ \S+)|(\S+ (?:m|km))\s+Distance/)
+    ?.slice(1)
+    .find(Boolean);
   await page.getByRole('button', { name: 'Discard recording' }).click();
-  await page.getByRole('group', { name: 'Throw this recording away?' }).waitFor();
+  await stopScreen.waitFor();
   check(
-    '✕ asks once, on the page, with focus on the safe answer, and the recording goes on meanwhile',
-    (await page.evaluate(() => document.activeElement?.textContent === 'Keep it')) &&
-      (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1,
+    '✕ pauses the recording and asks on a screen of its own, with the distance so far, focus on Keep recording',
+    (await page.evaluate(() => window.__watchers())) === 0 &&
+      (await stopScreen.getAttribute('aria-modal')) === 'true' &&
+      (
+        await page.evaluate(() => {
+          const screen = document.querySelector('[role="alertdialog"]');
+          const text = document.getElementById(screen?.getAttribute('aria-describedby') ?? '');
+          return text?.textContent ?? '';
+        })
+      ).startsWith('You’ve recorded ') &&
+      (await stopScreen.innerText()).includes('Recording Paused') &&
+      (await page.evaluate(() => document.activeElement?.textContent === 'Keep recording')) &&
+      (await page.evaluate(
+        () => !!document.querySelector('[aria-label="Discard recording"]')?.closest('[inert]'),
+      )),
+    distanceShown,
   );
-  await page.getByRole('button', { name: 'Keep it' }).click();
-  await page
-    .getByRole('group', { name: 'Throw this recording away?' })
-    .waitFor({ state: 'detached' });
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press('Tab');
   check(
-    '  Keep it closes the question and puts focus back on ✕',
-    await page.evaluate(
-      () => document.activeElement?.getAttribute('aria-label') === 'Discard recording',
-    ),
+    '  Tab goes round its two buttons',
+    await page.evaluate(() => !!document.activeElement?.closest('[role="alertdialog"]')),
   );
+  // Where the question and the figures stand, and whether the screen scrolls to reach them.
+  const stopLayout = () =>
+    page.evaluate(() => {
+      const screen = document.querySelector('[role="alertdialog"]');
+      const box = (testId) =>
+        screen.querySelector(`[data-testid="${testId}"]`).getBoundingClientRect();
+      const question = box('stop-question');
+      const paused = box('stop-paused');
+      return {
+        middle: question.top + question.height / 2,
+        questionBottom: question.bottom,
+        pausedTop: paused.top,
+        pausedBottom: paused.bottom,
+        height: screen.clientHeight,
+        isScrolling: screen.scrollHeight > screen.clientHeight,
+      };
+    });
+  {
+    const layout = await stopLayout();
+    check(
+      "  as the frame has it: the question's middle 40 over the screen's, the figures at its foot, no scroll",
+      Math.abs(layout.middle - (layout.height / 2 - 40)) < 1 &&
+        Math.abs(layout.pausedBottom - layout.height) < 1 &&
+        layout.questionBottom <= layout.pausedTop &&
+        !layout.isScrolling,
+      JSON.stringify(layout),
+    );
+  }
+  // A short phone, or one on its side: the whole screen scrolls, the figures last, nothing overlaps.
+  await page.setViewportSize({ width: 360, height: 480 });
+  await page.waitForTimeout(200);
+  {
+    const layout = await stopLayout();
+    const keep = stopScreen.getByRole('button', { name: 'Keep recording' });
+    const stop = stopScreen.getByRole('button', { name: 'Stop without saving' });
+    await stop.scrollIntoViewIfNeeded();
+    const isStopInView = await stop.evaluate((button) => {
+      const { top, bottom } = button.getBoundingClientRect();
+      return top >= 0 && bottom <= window.innerHeight;
+    });
+    // Scrolled to the end, the figures are whole on the screen.
+    const isPausedInView = await stopScreen.evaluate((screen) => {
+      screen.scrollTop = screen.scrollHeight;
+      const paused = screen.querySelector('[data-testid="stop-paused"]').getBoundingClientRect();
+      return paused.top >= 0 && paused.bottom <= window.innerHeight + 0.5;
+    });
+    await keep.scrollIntoViewIfNeeded();
+    const isKeepInView = await keep.evaluate((button) => {
+      const { top, bottom } = button.getBoundingClientRect();
+      return top >= 0 && bottom <= window.innerHeight;
+    });
+    check(
+      '  at 360×480 the screen scrolls: both answers and the figures are reached, none over another',
+      layout.isScrolling &&
+        layout.questionBottom + 24 <= layout.pausedTop + 0.5 &&
+        isStopInView &&
+        isPausedInView &&
+        isKeepInView,
+      JSON.stringify({ ...layout, isStopInView, isPausedInView, isKeepInView }),
+    );
+  }
+  await page.setViewportSize({ width: 393, height: 852 });
+  await stopScreen.getByRole('button', { name: 'Keep recording' }).click();
+  await stopScreen.waitFor({ state: 'detached' });
+  check(
+    '  Keep recording resumes the recording it paused, and puts focus back on ✕',
+    (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
+      (await page.evaluate(() => window.__watchers())) === 1 &&
+      (await page.evaluate(
+        () => document.activeElement?.getAttribute('aria-label') === 'Discard recording',
+      )),
+  );
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).waitFor();
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  await stopScreen.waitFor();
+  await page.keyboard.press('Escape');
+  await stopScreen.waitFor({ state: 'detached' });
+  check(
+    '  paused before ✕, Escape keeps recording and it stays paused',
+    (await page.getByRole('button', { name: 'Resume' }).count()) === 1 &&
+      (await page.evaluate(
+        () => document.activeElement?.getAttribute('aria-label') === 'Discard recording',
+      )),
+  );
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   await finishRecording(page);
   await page.getByRole('heading', { name: 'About this route' }).waitFor();
   check(
@@ -715,9 +816,13 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('button', { name: 'Discard recording' }).waitFor();
   await page.getByRole('button', { name: 'Discard recording' }).click();
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
-  check('✕ then Delete throws the recording away and returns to Ready', true);
+  check(
+    '✕ then Stop without saving throws the recording away and lands on Start',
+    (await page.getByRole('alertdialog').count()) === 0 &&
+      (await page.evaluate(() => window.__watchers())) === 0,
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -861,7 +966,7 @@ const buttons = (page) =>
   );
   // ✕ is still there with the card folded: discard, and the next recording opens with its card.
   await page.getByRole('button', { name: 'Discard recording' }).click();
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Stop without saving' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await card.waitFor();
   check(
@@ -869,6 +974,30 @@ const buttons = (page) =>
     (await foldButton(page).getAttribute('aria-expanded')) === 'true',
   );
   check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------- Flag a stop not fetched (offline before the worker kept it): the ride goes on
+{
+  const { page, errors } = await phone();
+  // Its code fails to arrive, before Ready fetches it ahead and again when the ride asks for it.
+  await page.route(/flag-stop-button/, (route) => route.abort('internetdisconnected'));
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 60);
+  await page.waitForTimeout(300);
+  check(
+    'Flag a stop not fetched: the recording screen still shows, and records, with no Flag a stop',
+    (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1 &&
+      (await flagButton(page).count()) === 0 &&
+      /Distance\s+\d+ m/.test(
+        await page.getByRole('group', { name: 'Recording so far' }).innerText(),
+      ),
+    (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' '),
+  );
+  check('  and no page error', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
 

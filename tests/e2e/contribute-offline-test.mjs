@@ -200,6 +200,14 @@ try {
   const fake = await standInDatabase(page);
   fake.isOffline = true;
   watch(page);
+  // What the page could not fetch with no signal: said if the recording screen does not come.
+  const offlineFailures = [];
+  page.on('requestfailed', (request) => offlineFailures.push(new URL(request.url()).pathname));
+  page.on('console', (message) => {
+    if (message.type() === 'warning' || message.type() === 'error') {
+      offlineFailures.push(`${message.type()}: ${message.text()}`);
+    }
+  });
   await page.goto(`${base}/contribute/`, { waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   check(
@@ -214,7 +222,14 @@ try {
     ),
   );
   await page.getByRole('button', { name: 'Start Tracking' }).click();
-  await page.getByRole('group', { name: 'Recording so far' }).waitFor({ timeout: 10000 });
+  await page
+    .getByRole('group', { name: 'Recording so far' })
+    .waitFor({ timeout: 10000 })
+    .catch((error) => {
+      console.log(`  offline, not fetched: ${offlineFailures.join(' | ') || 'nothing'}`);
+      console.log(`  page errors: ${errors.join(' | ') || 'none'}`);
+      throw error;
+    });
   await ride(context, page, 6);
   await page.waitForFunction(
     () =>
