@@ -266,3 +266,46 @@ with a console warning; row security refuses a non-editor's writes either way.
   `20261030090000_am_i_editor_revert.sql`. The studio then lets every account in again, as before
   (`verify/am-i-editor.sh` checks the schema afterwards matches the schema before, and that it
   re-applies). Before reverting, check the account is in `private.editor`.
+
+# Applying account_stats to the live project
+
+The numbers for the contributor's Account page, ready before the page is designed (nothing shows
+them yet). Each saved ride keeps its walked and ridden metres and seconds; each contributor's
+lifetime numbers survive the 24-month retirement; `public.get_my_stats()` gives the signed-in
+contributor their own, in one row. Three files, each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261031090000_account_stats_apply.sql` | One transaction: checks `contributor_accounts` is in the ledger (`finish_claim` and `retire_month` exist) and none of this exists yet; applies `migrations/20261031090000_account_stats.sql` (carried unchanged; `verify/account-stats.sh` checks the copy); checks `get_my_stats` and `finish_claim` are definers with a pinned path that only `authenticated` can run, the private helpers and `private.contributor_retired_totals` are closed to the API roles, and `save_contribution` still runs as the caller; writes the ledger row `account_stats`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261031090000_account_stats_check.sql` | Part one adds test phones, an account and rides, proves the behaviour (the split saved and refused, each user's own stats only, anon refused, a hidden ride left out, retiring a 2024 test month leaves every number the same and carries nothing twice, a deleted ride no longer counts, a claim moves the retired totals), and rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 9 rows, all `ok` should be `t`. |
+| `20261031090000_account_stats_revert.sql` | One transaction: drops `get_my_stats`, the helpers, the table and the four columns, and puts `save_contribution`, `retire_month` and `finish_claim` back as their migrations made them. Refuses, changing nothing, while any contribution holds a split or any contributor has retired totals. Safe to run twice. |
+
+## Order
+
+1. `contributor_accounts` first: the apply refuses without it.
+2. This migration, **before** the app that sends `walk_m`, `ride_m`, `walk_s` and `ride_s` ships.
+   Today's `save_contribution` reads only the keys it names and ignores the rest, so that app saves
+   either way; applied late, its rides saved in between simply keep no split (null).
+3. Apps already in the field keep saving after it: the four keys are optional, and a missing one is
+   stored as null.
+
+## Steps
+
+1. Run `20261031090000_account_stats_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261031090000_account_stats_check.sql`: part one ends with `ROLLBACK` and no `FAILED`;
+   part two gives 9 rows, all `ok = t`.
+3. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'account_stats';`) in
+   `migrations/README.md`.
+
+The monthly `select private.retire_month(...)` is run as before; it now adds each contributor's
+numbers for the month to their retired totals first.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and no ride has a split and nobody has retired totals yet: run
+  `20261031090000_account_stats_revert.sql`. `verify/account-stats.sh` checks the schema afterwards
+  matches the schema before, and that it re-applies.
+- Splits or retired totals stored: the revert refuses. Decide with the owner first: dropping them
+  loses numbers that cannot be made again.
