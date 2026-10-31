@@ -36,8 +36,12 @@ const ProfileView = lazy(() =>
 // fetches both as it opens (below), so Start never waits on the network, nor fails without one.
 const loadRecordingScreen = () => import('./screens/recording-screen');
 const loadUnfinishedScreen = () => import('./screens/unfinished-screen');
+const loadStopRecordingScreen = () => import('./screens/stop-recording-screen');
 const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
+);
+const StopRecordingScreen = lazy(() =>
+  loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),
 );
 const UnfinishedScreen = lazy(() =>
   loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),
@@ -108,6 +112,25 @@ export function ContributePage({ locator }: ContributePageProps) {
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
   const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
   const isCardFolded = foldedRecordingId !== null && foldedRecordingId === recording.current?.id;
+  // ✕ pauses the recording and asks over the whole screen: what it was doing then, so Keep
+  // recording puts it back. Focus returns to ✕ once the recording screen is live again.
+  const [stopAskedWhile, setStopAskedWhile] = useState<'recording' | 'paused' | null>(null);
+  const isStopShown = isRecordingShown && stopAskedWhile !== null;
+  const discardButtonRef = useRef<HTMLButtonElement>(null);
+  const askToStop = () => {
+    setStopAskedWhile(phase === 'paused' ? 'paused' : 'recording');
+    if (phase === 'recording') recording.stop();
+  };
+  const keepRecording = () => {
+    const wasRecording = stopAskedWhile === 'recording';
+    flushSync(() => setStopAskedWhile(null));
+    if (wasRecording) recording.resume();
+    discardButtonRef.current?.focus();
+  };
+  const stopWithoutSaving = () => {
+    setStopAskedWhile(null);
+    recording.cancel();
+  };
   // Focus goes back to the ⓘ once Start is live again: the sheet cannot hand it back itself,
   // as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
@@ -130,9 +153,11 @@ export function ContributePage({ locator }: ContributePageProps) {
   // head start: the lazy screen asks again when it is shown.
   useEffect(() => {
     if (phase !== 'ready') return;
-    Promise.all([loadRecordingScreen(), loadUnfinishedScreen()]).catch((error: unknown) => {
-      console.warn('The recording screens could not be fetched ahead of Start.', error);
-    });
+    Promise.all([loadRecordingScreen(), loadUnfinishedScreen(), loadStopRecordingScreen()]).catch(
+      (error: unknown) => {
+        console.warn('The recording screens could not be fetched ahead of Start.', error);
+      },
+    );
   }, [phase]);
 
   // Signing out, or leaving Ready, must not leave #profile to reopen Profile after the next sign-in.
@@ -156,7 +181,9 @@ export function ContributePage({ locator }: ContributePageProps) {
       {/* inert while History, Profile, the permissions screen or the credits cover it: no map
           control can be tabbed to behind the screen. */}
       <div
-        inert={isHistoryShown || isProfileShown || isPermissionsShown || isCreditsShown}
+        inert={
+          isHistoryShown || isProfileShown || isPermissionsShown || isCreditsShown || isStopShown
+        }
         className="contents"
       >
         <ContributeMap
@@ -254,7 +281,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {isRecordingShown && figures && (
             <Suspense fallback={null}>
-              <div inert={isCreditsShown} className="contents">
+              <div inert={isCreditsShown || isStopShown} className="contents">
                 <RecordingScreen
                   figures={figures}
                   mode={recording.mode}
@@ -265,7 +292,8 @@ export function ContributePage({ locator }: ContributePageProps) {
                   onResume={recording.resume}
                   onModeSwitch={recording.switchMode}
                   onFinish={recording.openSave}
-                  onDiscard={recording.cancel}
+                  onAskToStop={askToStop}
+                  discardButtonRef={discardButtonRef}
                   isCardFolded={isCardFolded}
                   onCardFoldedChange={(isFolded) =>
                     setFoldedRecordingId(isFolded ? (recording.current?.id ?? null) : null)
@@ -274,6 +302,15 @@ export function ContributePage({ locator }: ContributePageProps) {
                   creditsButtonRef={creditsButtonRef}
                 />
               </div>
+            </Suspense>
+          )}
+          {isStopShown && figures && (
+            <Suspense fallback={null}>
+              <StopRecordingScreen
+                figures={figures}
+                onKeep={keepRecording}
+                onStop={stopWithoutSaving}
+              />
             </Suspense>
           )}
           {phase === 'form' && (
