@@ -6,6 +6,7 @@ import {
   modeSplit,
   routeRecordingsLabel,
   totalDistanceFigure,
+  totalFareFigure,
   totalTimeFigure,
   type ModeSplit,
 } from './commute-figures';
@@ -19,6 +20,9 @@ export interface CommuteNumbers {
   seconds: number;
   distanceM: number;
   walkM: number;
+  /** Pesos paid over the rides that said their fare, and how many did (0: none known). */
+  farePhpTotal: number;
+  fareRecordings: number;
   ridesByVehicle: VehicleRides;
 }
 
@@ -34,7 +38,8 @@ interface CommuteStatsProps {
 
 /**
  * Figma's Commute Statistics (4511:22712): total time and total distance, and beside them the
- * route recordings with the Sakay and Lakad bar, by distance; under them the rides by vehicle.
+ * routes recorded with the Sakay and Lakad bar, by distance; under them the total fare, then the
+ * rides by vehicle.
  */
 export function CommuteStats({ state }: CommuteStatsProps) {
   return (
@@ -55,8 +60,8 @@ function StatsBody({ state }: CommuteStatsProps) {
     return (
       <div aria-busy="true" className="flex flex-col gap-4">
         <p className="sr-only">Loading your statistics</p>
-        <div className="flex gap-3.75">
-          <div className="flex flex-1 flex-col gap-3.5">
+        <div className="flex gap-4">
+          <div className="flex flex-1 flex-col gap-4">
             <PlaceholderCard />
             <PlaceholderCard />
           </div>
@@ -64,15 +69,17 @@ function StatsBody({ state }: CommuteStatsProps) {
             <span className="mx-auto mt-4 block h-6 w-10 rounded-full bg-surface-tertiary" />
           </div>
         </div>
+        <PlaceholderCard />
         <div aria-hidden className="h-42 rounded-3xl bg-surface shadow-large" />
       </div>
     );
   }
   const { numbers } = state;
+  const fare = totalFareFigure(numbers.farePhpTotal, numbers.fareRecordings);
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-3.75">
-        <div className="flex flex-1 flex-col gap-3.5">
+      <div className="flex gap-4">
+        <div className="flex flex-1 flex-col gap-4">
           <StatCard figure={totalTimeFigure(numbers.seconds)} name="Total time" />
           <StatCard figure={totalDistanceFigure(numbers.distanceM)} name="Total distance" />
         </div>
@@ -84,6 +91,18 @@ function StatsBody({ state }: CommuteStatsProps) {
           />
           <ModeBar split={modeSplit(numbers.distanceM, numbers.walkM)} />
         </div>
+      </div>
+      {/* Figma's Total fare (4519:25331): said in pesos, as the ₱ sign is not read the same everywhere. */}
+      <div className="rounded-3xl bg-surface p-4 shadow-large">
+        <StatFigure
+          value={
+            <>
+              <span aria-hidden>{fare.shown}</span>
+              <span className="sr-only">{fare.spoken}</span>
+            </>
+          }
+          name="Total fare"
+        />
       </div>
       <VehicleGrid rides={numbers.ridesByVehicle} />
     </div>
@@ -119,7 +138,7 @@ interface StatFigureProps {
 /** A figure over its name, read name first as the DOM has it. */
 function StatFigure({ value, name, className }: StatFigureProps) {
   return (
-    <p className={cn('flex flex-col-reverse text-center', className)}>
+    <p className={cn('flex flex-col-reverse gap-0.5 text-center', className)}>
       <span className="text-sm/5 text-content-disabled">{name}</span>
       <span className="text-2xl/8 font-semibold text-content-primary">{value}</span>
     </p>

@@ -16,9 +16,35 @@ export function totalDistanceFigure(metres: number): Figure {
   return { value: WHOLE.format(Math.floor(Math.max(0, metres) / 1000)), unit: 'km' };
 }
 
-/** The recordings' words, as the owner names them: one Route recording, else Route recordings. */
+/** The recordings' words, as the owner names them: one Route recorded, else Routes recorded. */
 export const routeRecordingsLabel = (count: number): string =>
-  count === 1 ? 'Route recording' : 'Route recordings';
+  count === 1 ? 'Route recorded' : 'Routes recorded';
+
+/** Pesos with thousands separators, and centavos only when there are some: `1,240` or `1,240.50`. */
+const PESOS = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const PESOS_AND_CENTAVOS = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** The Total fare card's figure, as shown and as a screen reader says it. */
+export interface FareFigure {
+  shown: string;
+  spoken: string;
+}
+
+/**
+ * The fares paid, over the rides that said what they cost: `₱129`, or `₱1,240.50` with centavos.
+ * With no ride saying its fare it reads `--` ("none"), not `₱0`: nothing is known yet.
+ */
+export function totalFareFigure(farePhpTotal: number, fareRecordings: number): FareFigure {
+  if (fareRecordings <= 0) return { shown: '--', spoken: 'none' };
+  // Whole centavos, so a sum's float noise never shows as centavos.
+  const centavos = Math.round(Math.max(0, farePhpTotal) * 100);
+  const pesos =
+    centavos % 100 === 0 ? PESOS.format(centavos / 100) : PESOS_AND_CENTAVOS.format(centavos / 100);
+  return { shown: `₱${pesos}`, spoken: `${pesos} pesos` };
+}
 
 /** How the distance splits between riding and walking, each a whole percent; null with none. */
 export interface ModeSplit {

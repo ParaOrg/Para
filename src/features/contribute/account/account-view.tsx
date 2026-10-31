@@ -72,6 +72,8 @@ function statsState(data: MyStats | undefined, error: Error | null): CommuteStat
         seconds: data.movingSeconds + data.standingSeconds,
         distanceM: data.distanceM,
         walkM: data.walkM,
+        farePhpTotal: data.farePhpTotal,
+        fareRecordings: data.fareRecordings,
         ridesByVehicle: {
           jeep: data.ridesByVehicle.jeep,
           eJeep: data.ridesByVehicle.eJeep,

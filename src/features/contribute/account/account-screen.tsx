@@ -62,7 +62,7 @@ export function AccountScreen({
       className="absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isLogoutAsked} className="absolute inset-0">
-        <div className="flex h-full flex-col gap-8 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+2rem)] pb-40">
+        <div className="flex h-full flex-col gap-8 overflow-y-auto px-5 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-40">
           <h1 id="account-heading" ref={headingRef} tabIndex={-1} className="sr-only">
             Account
           </h1>

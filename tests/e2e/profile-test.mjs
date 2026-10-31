@@ -383,6 +383,8 @@ async function seed(page, id, name, upload) {
     busRides: 1_204,
     trainRides: 1,
     tricycleRides: 1,
+    farePhpTotal: 1_240.5,
+    fareRecordings: 31,
   };
   await toolbarRecord(page).click();
   await accountTab(page).click();
@@ -392,10 +394,17 @@ async function seed(page, id, name, upload) {
   const statsText = await stats.innerText();
   await shot(page, '2-account-stats');
   check(
-    '  with stats: total time in hours, distance in km with separators, the route recordings counted',
+    '  with stats: total time in hours, distance in km with separators, the routes recorded counted',
     /Total time\s*62\s*hr/.test(statsText) &&
       /Total distance\s*1,240\s*km/.test(statsText) &&
-      /Route recordings\s*6/.test(statsText),
+      /Routes recorded\s*6/.test(statsText),
+    statsText.replace(/\n/g, ' '),
+  );
+  check(
+    '  the total fare in pesos with its centavos, said in pesos, between the cards and the vehicles',
+    /Total fare\s*₱1,240\.50\s*1,240\.50 pesos/.test(statsText) &&
+      statsText.indexOf('Total fare') > statsText.indexOf('Lakad') &&
+      statsText.indexOf('Total fare') < statsText.indexOf('Jeep'),
     statsText.replace(/\n/g, ' '),
   );
   const vehicles = await stats
@@ -445,8 +454,11 @@ async function seed(page, id, name, upload) {
   await stats.getByText('Sakay', { exact: true }).waitFor();
   const zeroText = await stats.innerText();
   check(
-    '  with no recordings: zeros, and Sakay and Lakad with no shares',
-    /Total time\s*0\s*min/.test(zeroText) && /Route recordings\s*0/.test(zeroText),
+    '  with no recordings: zeros, Sakay and Lakad with no shares, and no fare known: --, not ₱0',
+    /Total time\s*0\s*min/.test(zeroText) &&
+      /Routes recorded\s*0/.test(zeroText) &&
+      /Total fare\s*--\s*none/.test(zeroText) &&
+      !zeroText.includes('₱'),
     zeroText.replace(/\n/g, ' '),
   );
 }
