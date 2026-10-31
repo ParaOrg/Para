@@ -49,8 +49,8 @@ const accounts = new Map([
 const ANON_ID = 'aaaaaaaa-0000-4000-8000-000000000001';
 
 /**
- * A phone with nothing stored but its consent to the current text, and the stand-in Supabase. With
- * `anonymousWith` it already has its own anonymous user, and those uploads sent as it.
+ * A phone with nothing stored, and the stand-in Supabase. With `anonymousWith` it already has its
+ * own anonymous user, and those uploads sent as it.
  */
 async function phone({ users = accounts, anonymousWith = [] } = {}) {
   const context = await browser.newContext({
@@ -75,12 +75,6 @@ async function phone({ users = accounts, anonymousWith = [] } = {}) {
     );
   }
   await fakeTurnstile(page);
-  await page.addInitScript(() => {
-    if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('para.contribute.consent', '3');
-      sessionStorage.setItem('seeded', 'yes');
-    }
-  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });

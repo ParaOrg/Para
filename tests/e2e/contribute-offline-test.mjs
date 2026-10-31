@@ -120,7 +120,6 @@ try {
     [AUTH_KEY, session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true })],
   );
   await context.addInitScript(() => {
-    localStorage.setItem('para.contribute.consent', '3');
     window.__persistAsked = false;
     const persist = StorageManager.prototype.persist;
     StorageManager.prototype.persist = function () {
