@@ -835,7 +835,7 @@ async function seed(page, id, name, upload) {
     const png = await page.screenshot({ clip: box });
     return page.evaluate(
       async ({ data, width }) => {
-        const image = new Image();
+        const image = document.createElement('img');
         image.src = `data:image/png;base64,${data}`;
         await image.decode();
         const canvas = document.createElement('canvas');
@@ -954,28 +954,22 @@ async function seed(page, id, name, upload) {
     );
   }
 
-  // A burst: History, then Record while the pill is still on its way. Each frame's pill, and when
-  // each tab took its tap.
+  // A burst: History, then Record while the pill is still on its way. Where the pill is as
+  // Record takes its tap, and the glide that follows: read from the pill's own animations, which
+  // hold whether or not the page is drawing frames (a move's view transition pauses them).
   await noMove();
   await page.waitForTimeout(300);
   await page.evaluate(() => {
-    window.pillFrames = [];
-    window.tabTaps = [];
     const toolbar = document.querySelector('.tab-toolbar');
-    const look = () => {
-      window.pillFrames.push([
-        performance.now(),
-        toolbar.firstElementChild.getBoundingClientRect().left -
-          toolbar.getBoundingClientRect().left,
-      ]);
-      if (window.pillFrames.length < 240) requestAnimationFrame(look);
-    };
-    requestAnimationFrame(look);
     toolbar.addEventListener(
       'click',
       (event) => {
-        const tab = event.target.closest('[data-tab]');
-        if (tab) window.tabTaps.push([performance.now(), tab.dataset.tab]);
+        if (event.target.closest('[data-tab]')?.dataset.tab !== 'record') return;
+        const pill = toolbar.querySelector(':scope > span[aria-hidden]');
+        window.pillAtRecordTap = {
+          x: pill.getBoundingClientRect().left - toolbar.getBoundingClientRect().left,
+          isGliding: pill.getAnimations().some((glide) => glide.playState === 'running'),
+        };
       },
       true,
     );
@@ -989,29 +983,44 @@ async function seed(page, id, name, upload) {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     if (name === 'history') await page.waitForTimeout(120);
   }
+  const turn = await page
+    .waitForFunction(
+      () => {
+        const toolbar = document.querySelector('.tab-toolbar');
+        const pill = toolbar.querySelector(':scope > span[aria-hidden]');
+        const record = toolbar.querySelector('[data-tab="record"]');
+        const history = toolbar.querySelector('[data-tab="history"]');
+        const xOf = (keyframe) => Number(/translateX\(([-\d.]+)px\)/.exec(keyframe.transform)?.[1]);
+        const glides = pill.getAnimations();
+        const toRecord = glides.find(
+          (glide) => xOf(glide.effect.getKeyframes().at(-1)) === record.offsetLeft,
+        );
+        if (!toRecord) return null;
+        return {
+          from: Math.round(xOf(toRecord.effect.getKeyframes()[0])),
+          to: record.offsetLeft,
+          history: history.offsetLeft,
+          others: glides.length - 1,
+        };
+      },
+      null,
+      { timeout: 3000 },
+    )
+    .then((handle) => handle.jsonValue())
+    .catch(() => null);
+  const atTap = await page.evaluate(() => window.pillAtRecordTap ?? null);
   await start(page).waitFor();
-  await noMove();
-  const { frames, tabTaps } = await page.evaluate(() => ({
-    frames: window.pillFrames,
-    tabTaps: window.tabTaps,
-  }));
-  const recordTap = tabTaps.find(([, tab]) => tab === 'record');
-  const atTap = recordTap ? frames.filter(([time]) => time <= recordTap[0]) : [];
-  const afterTap = recordTap ? frames.filter(([time]) => time > recordTap[0]) : [];
-  const [beforeTap, tapped] = atTap.slice(-2);
-  // A new glide's first frame draws its start, where the pill is: the frame after the tap holds,
-  // and the next is on its way back. It never carries on toward History.
-  const [firstFrame, secondFrame] = afterTap;
   check(
-    '  a burst, History then Record mid-glide: the pill stops heading to History at once, and turns to Record the frame after',
-    !!beforeTap &&
-      !!tapped &&
-      beforeTap[1] < tapped[1] &&
-      !!firstFrame &&
-      !!secondFrame &&
-      firstFrame[1] <= tapped[1] &&
-      secondFrame[1] < tapped[1],
-    JSON.stringify({ recordTap, beforeTap, tapped, firstFrame, secondFrame }),
+    '  a burst, History then Record mid-glide: the pill turns to Record from where it is, the glide to History let go',
+    !!atTap &&
+      atTap.isGliding &&
+      !!turn &&
+      // From where it was, give or take the frame before the screen is drawn; never from History,
+      // where it was headed and not yet.
+      Math.abs(turn.from - atTap.x) <= 6 &&
+      turn.from < turn.history &&
+      turn.others === 0,
+    JSON.stringify({ atTap, turn }),
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
