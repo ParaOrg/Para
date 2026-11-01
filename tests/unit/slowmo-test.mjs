@@ -4,7 +4,7 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/slowmo-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { slowmoFactor } from '../../src/features/contribute/common/slowmo.ts';
+import { slowedDuration, slowmoFactor } from '../../src/features/contribute/common/slowmo.ts';
 
 test('?slowmo alone slows by 5', () => {
   assert.equal(slowmoFactor('?slowmo', null), 5);
@@ -40,4 +40,17 @@ test('?slowmo=off turns it off, whatever was kept', () => {
 
 test('the address wins over what was kept', () => {
   assert.equal(slowmoFactor('?slowmo=2', '8'), 2);
+});
+
+test('a duration is slowed in its own unit: seconds, as a build writes them, and milliseconds', () => {
+  assert.equal(slowedDuration('0.3s', 5), '1500ms');
+  assert.equal(slowedDuration(' 300ms', 5), '1500ms');
+  assert.equal(slowedDuration('.2s', 10), '2000ms');
+  assert.equal(slowedDuration('0s', 5), '0ms');
+});
+
+test('a value that is not a duration is left as it is', () => {
+  assert.equal(slowedDuration('', 5), null);
+  assert.equal(slowedDuration('fast', 5), null);
+  assert.equal(slowedDuration('300', 5), null);
 });
