@@ -3,8 +3,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '@/design-system/primitives/button';
 import { AlertCircleIcon } from '@/design-system/primitives/field-icons';
+import { IconButton } from '@/design-system/primitives/icon-button';
 
-import { InformationIcon } from './route-icons';
+import { CloseIcon, InformationIcon } from './route-icons';
 import { ToastHost } from './toast-host';
 import { INFO_TOAST_MS } from './toast-queue';
 import { useToast } from './use-toast';
@@ -261,5 +262,50 @@ export const HiddenByItsId: Story = {
     await userEvent.click(fixed);
     await wait(1500);
     await expect(canvas.queryByTestId('toast')).toBeNull();
+  },
+};
+
+/** A page's own 48 px top row, as the contributor's Recording screen draws one, with its ✕. */
+function TopRow() {
+  return (
+    <div
+      data-testid="top-row"
+      className="flex h-12 items-center justify-between bg-surface px-4 font-sn-pro text-content-primary"
+    >
+      <span className="font-bold">Recording</span>
+      <IconButton icon={<CloseIcon />} label="Stop" size="small" tooltip="top" />
+    </div>
+  );
+}
+
+/**
+ * On a page with its own top row, `--toast-top` (the row's 48 plus 12) puts the card under it, so
+ * the row's ✕ stays in reach.
+ */
+export const UnderATopRow: Story = {
+  args: {
+    children: (
+      <>
+        <TopRow />
+        <Asker />
+      </>
+    ),
+  },
+  decorators: [
+    (Story) => (
+      <div className="h-full [--toast-top:calc(--spacing(12)+--spacing(3))]">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Say a problem' }));
+    await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
+    const row = canvas.getByTestId('top-row').getBoundingClientRect();
+    await waitFor(() =>
+      expect(canvas.getByTestId('toast').getBoundingClientRect().top).toBe(row.bottom + 12),
+    );
+    await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
   },
 };

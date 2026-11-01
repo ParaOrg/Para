@@ -28,6 +28,10 @@ const idOf = (message: ToastMessage): string => message.id ?? `${message.kind}:$
  * until ✕ or its action. Screen readers hear only the words, from two regions that are always
  * there: info politely (role=status), a problem at once (role=alert). The card, with its buttons,
  * sits outside them, so the buttons are not read out with the message.
+ *
+ * The card sits 12 under the safe area. A page whose own top row it would cover sets
+ * `--toast-top` on an ancestor (its row's height plus 12, from spacing tokens), and the card sits
+ * there instead.
  */
 export function ToastHost({ children }: ToastHostProps) {
   const [queue, setQueue] = useState<QueuedToast[]>([]);
@@ -108,7 +112,7 @@ export function ToastHost({ children }: ToastHostProps) {
         <div role="status">{message?.kind === 'info' && words}</div>
         <div role="alert">{message?.kind === 'problem' && words}</div>
       </div>
-      <div className="pointer-events-none fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50">
+      <div className="pointer-events-none fixed inset-x-3 top-[var(--toast-top,calc(env(safe-area-inset-top)+0.75rem))] z-50">
         {current && message && (
           <div
             ref={wrapperRef}
