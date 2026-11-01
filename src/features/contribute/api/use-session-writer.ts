@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 
 import { rememberProfile, type Account } from './account';
 import { accountKeys } from './account-keys';
@@ -15,13 +15,16 @@ export function useSessionWriter(): (account: Account | null) => Promise<void> {
     // must not land over this answer: it is called off, and what it found is dropped.
     await queryClient.cancelQueries({ queryKey: accountKeys.session() });
     const last = queryClient.getQueryData<Account | null>(accountKeys.session());
-    if (last?.id !== account?.id) {
-      queryClient.removeQueries({
-        queryKey: accountKeys.all,
-        predicate: (query) => query.queryKey[1] !== 'session',
-      });
-    }
+    if (last?.id !== account?.id) forgetAccountData(queryClient);
     queryClient.setQueryData(accountKeys.session(), account);
     rememberProfile(account);
   };
+}
+
+/** Drops everything kept for the account (its profile, uploads, stats), all but the session. */
+export function forgetAccountData(queryClient: QueryClient): void {
+  queryClient.removeQueries({
+    queryKey: accountKeys.all,
+    predicate: (query) => query.queryKey[1] !== 'session',
+  });
 }

@@ -97,8 +97,12 @@ const profileRowsSchema = z.array(z.object({ name: z.nullable(z.string()) }));
  * Whether the signed-in account's name is stored, or null when there is no answer (no signal, or
  * the database not having get_profile yet).
  */
-async function knownProfileOf(client: ContributeClient): Promise<boolean | null> {
-  const { data, error, status } = await client.rpc('get_profile');
+async function knownProfileOf(
+  client: ContributeClient,
+  signal?: AbortSignal,
+): Promise<boolean | null> {
+  const asked = client.rpc('get_profile');
+  const { data, error, status } = await (signal ? asked.abortSignal(signal) : asked);
   if (error) {
     if (status !== 0)
       console.warn(`Para did not give the profile (HTTP ${status}):`, error.message);
@@ -125,7 +129,10 @@ function storedAccountId(): string | null {
  * Who is signed in, as Supabase says. `isWanted` is false once the answer is no longer waited
  * for (given up on, or called off by a sign-in or sign-out): then it keeps nothing.
  */
-async function checkedAccount(isWanted: () => boolean): Promise<Account | null> {
+async function checkedAccount(
+  isWanted: () => boolean,
+  signal?: AbortSignal,
+): Promise<Account | null> {
   let client: ContributeClient;
   try {
     client = await requireClient();
@@ -143,7 +150,7 @@ async function checkedAccount(isWanted: () => boolean): Promise<Account | null> 
   }
   // A claim the last sign-in could not finish is tried again at every start, without waiting for it.
   void finishPendingClaim(client);
-  const hasProfile = await knownProfileOf(client);
+  const hasProfile = await knownProfileOf(client, signal);
   if (hasProfile === null) return { ...account, hasProfile: rememberedProfile(account.id) ?? true };
   const checked = { ...account, hasProfile };
   // Kept only while it is still the phone's account: a late answer never writes over another's.
@@ -167,7 +174,7 @@ export async function fetchAccount(signal?: AbortSignal): Promise<Account | null
   });
   try {
     return await Promise.race([
-      checkedAccount(() => !isGivenUp && !(signal?.aborted ?? false)),
+      checkedAccount(() => !isGivenUp && !(signal?.aborted ?? false), signal),
       timedOut,
     ]);
   } finally {

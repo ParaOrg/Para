@@ -1358,13 +1358,17 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts), and held
   // once their code has run, not only once its first file has come.
+  // Played in the page: waitForFunction does not wait out a promise, so the import's answer is
+  // kept on the window and read on each poll.
   await page.waitForFunction(
-    () =>
-      import('/src/features/contribute/screen-loaders.ts').then(
-        (loaders) => loaders.historyChunk.loaded() !== null,
-      ),
+    () => {
+      import('/src/features/contribute/screen-loaders.ts').then((loaders) => {
+        window.isHistoryHeld = loaders.historyChunk.loaded() !== null;
+      });
+      return window.isHistoryHeld === true;
+    },
     null,
-    { timeout: 10000 },
+    { timeout: 15000, polling: 100 },
   );
   const onRecord = await toolbarBox();
   await watchToolbar();

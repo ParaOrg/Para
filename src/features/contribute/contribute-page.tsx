@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import {
   lazy,
   Suspense,
@@ -178,9 +179,29 @@ export function ContributePage({ locator }: ContributePageProps) {
   const accountQuery = useAccountQuery();
   const accountId = accountQuery.data?.id ?? null;
   const accountGate = useAccountGate();
+  // Only a later check (online again, back to the front) can find another account: the watch is
+  // fetched as the page opens, not carried by its opening.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    let stop: (() => void) | null = null;
+    let isLeft = false;
+    import('./api/forget-other-accounts').then(
+      ({ forgetOtherAccounts }) => {
+        if (!isLeft) stop = forgetOtherAccounts(queryClient);
+      },
+      (error: unknown) => {
+        console.warn("The watch for another account's session could not be fetched.", error);
+      },
+    );
+    return () => {
+      isLeft = true;
+      stop?.();
+    };
+  }, [queryClient]);
   // Having an account is the agreement (CONSENT_VERSION 4): nothing is sent until one is signed
   // in, and recordings made before wait on the phone. Start shows on the session the phone
-  // stored; nothing is sent on it until Supabase has said it is still that account's.
+  // stored; nothing is sent until the session check has its answer (use-account-query.ts), and a
+  // send never signs in anonymously.
   const canSend = accountGate === 'ready';
   const canSendNow = canSend && isAccountConfirmed(accountQuery);
   const earlier = useEarlierQuestion(recording.saved, canSend, accountId);
