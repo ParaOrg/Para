@@ -14,7 +14,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
-import { fakeContributions } from './lib/fake-contributions.mjs';
+import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { fakeTurnstile } from './lib/fake-turnstile.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
@@ -437,6 +437,100 @@ const shared = {};
     JSON.stringify(mine),
   );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
+}
+
+// ----------------------------- Start never waits on the network: the stored session decides
+/**
+ * A phone already signed in to an account with its name stored. `storedSession` is what the
+ * phone kept; the page is opened only once `beforeOpen` has set the stand-in up.
+ */
+async function signedInPhone({ storedSession, beforeOpen }) {
+  const context = await browser.newContext({
+    viewport: { width: 393, height: 852 },
+    deviceScaleFactor: 2,
+    hasTouch: true,
+    isMobile: true,
+  });
+  const page = await context.newPage();
+  await nodeFetch(page);
+  await bareStyle(page);
+  const fake = await fakeContributions(page);
+  await fakeTurnstile(page);
+  await page.addInitScript(
+    ([key, stored]) => {
+      if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(stored));
+      // When the map's canvas and Start are first seen, by the page's own clock.
+      window.firstSeen = {};
+      new MutationObserver(() => {
+        const now = performance.now();
+        if (!window.firstSeen.map && document.querySelector('.maplibregl-canvas')) {
+          window.firstSeen.map = now;
+        }
+        const start = [...document.querySelectorAll('button')].find(
+          (button) => button.textContent?.trim().toLowerCase() === 'start tracking',
+        );
+        if (!window.firstSeen.start && start) window.firstSeen.start = now;
+      }).observe(document, { childList: true, subtree: true });
+    },
+    [AUTH_KEY, storedSession],
+  );
+  await beforeOpen?.(page, fake);
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  return { page, context, fake, errors };
+}
+
+{
+  const ACCOUNT_ID = 'dddddddd-0000-4000-8000-000000000001';
+  const account = {
+    email: 'rider@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Rider', phone: '+639171234567' },
+  };
+  // A signal that carries nothing: Para is asked for the profile, and never answers.
+  let profileAsks = 0;
+  const { page, context, errors } = await signedInPhone({
+    storedSession: session(ACCOUNT_ID, { email: account.email, isAccount: true }),
+    beforeOpen: async (opened, fake) => {
+      fake.users.set(ACCOUNT_ID, account);
+      await opened.route('**/rest/v1/rpc/get_profile', () => {
+        profileAsks += 1;
+      });
+    },
+  });
+  await SCREENS.start(page).waitFor({ timeout: 15000 });
+  await page.waitForFunction(() => window.firstSeen.map !== undefined, null, { timeout: 15000 });
+  const firstSeen = await page.evaluate(() => window.firstSeen);
+  check(
+    'with the profile asked for and never answered, Start shows by the map, not after Para',
+    firstSeen.start - firstSeen.map < 1000 && profileAsks <= 1,
+    JSON.stringify({ ...firstSeen, profileAsks }),
+  );
+  check(
+    '  and the toolbar with it',
+    (await page.getByRole('navigation', { name: 'Screens' }).count()) === 1,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await context.close();
+}
+
+{
+  // A session kept from long ago: its token has run out, and Para no longer knows its renewal.
+  const GONE_ID = 'dddddddd-0000-4000-8000-000000000002';
+  const expired = {
+    ...session(GONE_ID, { email: 'gone@example.com', isAccount: true }),
+    expires_at: Math.floor(Date.now() / 1000) - 3600,
+  };
+  const { page, context, errors } = await signedInPhone({ storedSession: expired });
+  await SCREENS.signIn(page).waitFor({ timeout: 15000 });
+  check(
+    'a session Para no longer knows goes to Sign in once Para has said so, with no Start left',
+    (await SCREENS.start(page).count()) === 0,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await context.close();
 }
 
 await browser.close();

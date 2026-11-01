@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 
-import type { Account } from './account';
+import { rememberProfile, type Account } from './account';
 import { accountKeys } from './account-keys';
 
 /**
@@ -19,5 +19,6 @@ export function useSessionWriter(): (account: Account | null) => void {
       });
     }
     queryClient.setQueryData(accountKeys.session(), account);
+    rememberProfile(account);
   };
 }

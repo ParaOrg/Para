@@ -1247,9 +1247,13 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     });
 
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
-  // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts).
+  // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts), and held
+  // once their code has run, not only once its first file has come.
   await page.waitForFunction(
-    () => performance.getEntriesByType('resource').some((e) => /history-view/.test(e.name)),
+    () =>
+      import('/src/features/contribute/screen-loaders.ts').then(
+        (loaders) => loaders.historyChunk.loaded() !== null,
+      ),
     null,
     { timeout: 10000 },
   );
