@@ -135,6 +135,11 @@ if (process.env.PARA_TURNSTILE) {
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   const theCheck = page.getByRole('group', { name: 'Check that you are a person' });
   await theCheck.waitFor({ state: 'attached' });
+  // The group is drawn at once, empty; Cloudflare's script, which loads after it, draws the
+  // widget into it. Read the widget once it is there, or a slow runner reads an empty group.
+  await page
+    .locator('[aria-label="Check that you are a person"][data-appearance]')
+    .waitFor({ state: 'attached' });
   // Each part apart, so a failure says which one went wrong.
   const drawn = await page.evaluate(() => {
     const form = document.querySelector('form');
