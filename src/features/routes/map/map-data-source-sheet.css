@@ -1,0 +1,34 @@
+/*
+ * The Map Data Source sheet rises from below the screen as it opens, over duration/gentle with
+ * ease/enter, a sheet's timing on the Figma Motion page; the dimmed map fades in with it. It sinks
+ * back with ease/exit from wherever it is (map-data-source-sheet.tsx). Transform and opacity only.
+ */
+.map-data-source-sheet {
+  animation: map-data-source-rise var(--transition-duration-gentle) var(--ease-enter) both;
+}
+.map-data-source-scrim {
+  animation: map-data-source-dim var(--transition-duration-gentle) var(--ease-enter) both;
+}
+@keyframes map-data-source-rise {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes map-data-source-dim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Shown at once; it goes at once too (map-data-source-sheet.tsx). */
+@media (prefers-reduced-motion: reduce) {
+  .map-data-source-sheet,
+  .map-data-source-scrim {
+    animation: none;
+  }
+}

@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 import { CreditsButton } from './credits-button';
 
 const meta = {
-  title: 'Features/Contribute/CreditsButton',
+  title: 'Features/Routes/CreditsButton',
   component: CreditsButton,
   // Over a map-coloured box, as it stands at the map's bottom left.
   decorators: [
