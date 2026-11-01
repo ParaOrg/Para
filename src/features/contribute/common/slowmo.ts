@@ -1,5 +1,7 @@
 import * as z from 'zod/mini';
 
+import { cssDurationMs } from '@/shared/utils/css-duration';
+
 import { SLOWMO_KEY } from './slowmo-switch';
 
 /**
@@ -22,6 +24,8 @@ const DURATION_TOKENS = [
   '--transition-duration-sheet',
   '--transition-duration-turn',
   '--transition-duration-slow',
+  '--transition-duration-pill',
+  '--transition-duration-pill-quick',
 ] as const;
 
 const factorSchema = z.pipe(
@@ -93,10 +97,6 @@ export function applySlowmo(): void {
  * milliseconds; null for one that does not read as a duration.
  */
 export function slowedDuration(value: string, factor: number): string | null {
-  const match = /^\s*(-?[\d.]+)(ms|s)\s*$/.exec(value);
-  if (!match) return null;
-  const amount = Number.parseFloat(match[1]);
-  if (!Number.isFinite(amount)) return null;
-  const ms = match[2] === 's' ? amount * 1000 : amount;
-  return `${ms * factor}ms`;
+  const ms = cssDurationMs(value);
+  return ms === null ? null : `${ms * factor}ms`;
 }

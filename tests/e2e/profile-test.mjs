@@ -1166,8 +1166,12 @@ async function seed(page, id, name, upload) {
   const { page, errors } = await phone();
   await start(page).waitFor({ timeout: 30000 });
   const heading = (name) => page.getByRole('heading', { level: 1, name });
-  /** Taps `tab` once the last move is over, and once this one shows, holds it halfway. */
-  const pillHalfway = async (tab) => {
+  /**
+   * Taps `tab` once the last move is over, and once this one shows, holds it a quarter in. The
+   * pill's spring reaches its tab before half its time and overshoots it, so halfway it is at its
+   * tab already; a quarter in, it is well on its way.
+   */
+  const pillPartway = async (tab) => {
     await page.waitForFunction(
       () =>
         !document
@@ -1187,7 +1191,7 @@ async function seed(page, id, name, upload) {
     const at = await page.evaluate(() => {
       for (const animation of document.getAnimations()) {
         animation.pause();
-        animation.currentTime = animation.effect.getComputedTiming().endTime / 2;
+        animation.currentTime = animation.effect.getComputedTiming().endTime / 4;
       }
       const bar = document.querySelector('.tab-toolbar');
       const left = (element) => Math.round(element.getBoundingClientRect().left);
@@ -1206,26 +1210,254 @@ async function seed(page, id, name, upload) {
   const isBetween = (at, from, to) =>
     at.pill > Math.min(at[from], at[to]) && at.pill < Math.max(at[from], at[to]);
 
-  const toAccount = await pillHalfway(accountTab(page));
+  const toAccount = await pillPartway(accountTab(page));
   await heading('Account').waitFor();
   check(
-    'Record to Account: halfway through the move, the pill is between them',
+    'Record to Account: a quarter into the move, the pill is between them',
     isBetween(toAccount, 'record', 'account'),
     JSON.stringify(toAccount),
   );
-  const toRecord = await pillHalfway(toolbarRecord(page));
+  const toRecord = await pillPartway(toolbarRecord(page));
   await start(page).waitFor();
   check(
-    '  Account to Record: halfway, the pill is between them',
+    '  Account to Record: a quarter in, the pill is between them',
     isBetween(toRecord, 'account', 'record'),
     JSON.stringify(toRecord),
   );
-  const toHistory = await pillHalfway(historyTab(page));
+  const toHistory = await pillPartway(historyTab(page));
   await heading('History').waitFor();
   check(
-    '  Record to History: halfway, the pill is between them',
+    '  Record to History: a quarter in, the pill is between them',
     isBetween(toHistory, 'record', 'history'),
     JSON.stringify(toHistory),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
+// --------------- a thumb's tap that drifts is still a tap: the pill glides, and turns at once
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  const cdp = await page.context().newCDPSession(page);
+  const bar = page.locator('.tab-toolbar');
+  const centreOf = async (name) => {
+    const box = await page.locator(`.tab-toolbar [data-tab="${name}"]`).boundingBox();
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const noMove = () =>
+    page.waitForFunction(
+      () =>
+        !document
+          .getAnimations()
+          .some((animation) => animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+  // How long each press on the bar lasted, from the page's own clock: a press as long as the
+  // hold (250 ms) is a hold, not the tap this block is about.
+  await page.evaluate(() => {
+    window.presses = [];
+    let downAt = 0;
+    const toolbar = document.querySelector('.tab-toolbar');
+    toolbar.addEventListener('pointerdown', () => (downAt = performance.now()), true);
+    toolbar.addEventListener(
+      'pointerup',
+      () => window.presses.push(performance.now() - downAt),
+      true,
+    );
+  });
+  /** The pill's painted span on the bar, in CSS px from its left, read from a screenshot. */
+  const pillPainted = async () => {
+    const box = await bar.boundingBox();
+    const png = await page.screenshot({ clip: box });
+    return page.evaluate(
+      async ({ data, width }) => {
+        const image = document.createElement('img');
+        image.src = `data:image/png;base64,${data}`;
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0);
+        const scale = image.width / width;
+        // 6 px down: inside the pill (4 px in), above the tabs' icons, clear of the bar's ends.
+        const row = context.getImageData(0, Math.round(6 * scale), image.width, 1).data;
+        // The longest unbroken run of the pill's grey, not the bar's white: one pill, not a stray
+        // grey pixel of a tab.
+        let best = null;
+        let runStart = null;
+        const last = Math.floor(image.width - 14 * scale);
+        for (let x = Math.round(14 * scale); x <= last; x += 1) {
+          const [red, green, blue] = row.slice(x * 4, x * 4 + 3);
+          const isGrey = x < last && red + green + blue < 3 * 248;
+          if (isGrey && runStart === null) runStart = x;
+          if (!isGrey && runStart !== null) {
+            if (!best || x - runStart > best.to - best.from) best = { from: runStart, to: x };
+            runStart = null;
+          }
+        }
+        return best ? { from: best.from / scale, to: best.to / scale } : null;
+      },
+      { data: png.toString('base64'), width: box.width },
+    );
+  };
+  /**
+   * A touch tap on `name` that drifts `drift` px along the bar before it lifts; once the move
+   * shows, it is held a quarter into the pill's glide and the pill read, from the page and from
+   * its pixels. A press the harness was too slow to keep under the hold is tried again.
+   */
+  const driftedTap = async (name, drift) => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await noMove();
+      await page.waitForTimeout(300);
+      const at = await centreOf(name);
+      await page.evaluate(() => (window.presses.length = 0));
+      const touch = (type, x) =>
+        cdp.send('Input.dispatchTouchEvent', {
+          type,
+          touchPoints: x === null ? [] : [{ x, y: at.y, id: 1 }],
+        });
+      await touch('touchStart', at.x);
+      await touch('touchMove', at.x + drift / 2);
+      await touch('touchMove', at.x + drift);
+      await touch('touchEnd', null);
+      const isMoving = await page
+        .waitForFunction(
+          () =>
+            document
+              .getAnimations()
+              .some(
+                (animation) =>
+                  animation.effect?.pseudoElement?.startsWith('::view-transition') &&
+                  animation.playState === 'running',
+              ) &&
+            document
+              .querySelector('.tab-toolbar')
+              .firstElementChild.getAnimations()
+              .some((animation) => animation.playState === 'running'),
+          null,
+          { timeout: 3000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+      const [pressMs] = await page.evaluate(() => window.presses);
+      if (!isMoving || pressMs >= 250) {
+        await noMove();
+        continue;
+      }
+      const placed = await page.evaluate(() => {
+        for (const animation of document.getAnimations()) {
+          animation.pause();
+          animation.currentTime = animation.effect.getComputedTiming().endTime / 4;
+        }
+        const toolbar = document.querySelector('.tab-toolbar');
+        const barLeft = toolbar.getBoundingClientRect().left;
+        const left = (element) => element.getBoundingClientRect().left - barLeft;
+        return {
+          pill: Math.round(left(toolbar.firstElementChild)),
+          tabs: Object.fromEntries(
+            [...toolbar.querySelectorAll('[data-tab]')].map((tab) => [
+              tab.dataset.tab,
+              { left: Math.round(left(tab)), centre: Math.round(left(tab) + tab.offsetWidth / 2) },
+            ]),
+          ),
+        };
+      });
+      const painted = await pillPainted();
+      await page.evaluate(() => {
+        for (const animation of document.getAnimations()) animation.play();
+      });
+      return { pressMs: Math.round(pressMs), ...placed, painted };
+    }
+    return null;
+  };
+  const isBetween = (value, a, b) => value > Math.min(a, b) + 4 && value < Math.max(a, b) - 4;
+
+  for (const [drift, to, from, shows] of [
+    [9, 'history', 'record', () => heading('History')],
+    [12, 'record', 'history', () => start(page)],
+  ]) {
+    const seen = await driftedTap(to, drift);
+    await shows().waitFor();
+    const paintedCentre = seen?.painted ? (seen.painted.from + seen.painted.to) / 2 : null;
+    check(
+      `${drift === 9 ? '' : '  '}a touch tap that drifts ${drift} px opens ${to === 'history' ? 'History' : 'Record'}, the pill a quarter into its glide between the tabs, not at the end`,
+      !!seen &&
+        isBetween(seen.pill, seen.tabs[from].left, seen.tabs[to].left) &&
+        paintedCentre !== null &&
+        isBetween(paintedCentre, seen.tabs[from].centre, seen.tabs[to].centre),
+      JSON.stringify(seen),
+    );
+  }
+
+  // A burst: History, then Record while the pill is still on its way. Where the pill is as
+  // Record takes its tap, and the glide that follows: read from the pill's own animations, which
+  // hold whether or not the page is drawing frames (a move's view transition pauses them).
+  await noMove();
+  await page.waitForTimeout(300);
+  await page.evaluate(() => {
+    const toolbar = document.querySelector('.tab-toolbar');
+    toolbar.addEventListener(
+      'click',
+      (event) => {
+        if (event.target.closest('[data-tab]')?.dataset.tab !== 'record') return;
+        const pill = toolbar.querySelector(':scope > span[aria-hidden]');
+        window.pillAtRecordTap = {
+          x: pill.getBoundingClientRect().left - toolbar.getBoundingClientRect().left,
+          isGliding: pill.getAnimations().some((glide) => glide.playState === 'running'),
+        };
+      },
+      true,
+    );
+  });
+  for (const name of ['history', 'record']) {
+    const at = await centreOf(name);
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: at.x, y: at.y, id: 1 }],
+    });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    if (name === 'history') await page.waitForTimeout(120);
+  }
+  const turn = await page
+    .waitForFunction(
+      () => {
+        const toolbar = document.querySelector('.tab-toolbar');
+        const pill = toolbar.querySelector(':scope > span[aria-hidden]');
+        const record = toolbar.querySelector('[data-tab="record"]');
+        const history = toolbar.querySelector('[data-tab="history"]');
+        const xOf = (keyframe) => Number(/translateX\(([-\d.]+)px\)/.exec(keyframe.transform)?.[1]);
+        const glides = pill.getAnimations();
+        const toRecord = glides.find(
+          (glide) => xOf(glide.effect.getKeyframes().at(-1)) === record.offsetLeft,
+        );
+        if (!toRecord) return null;
+        return {
+          from: Math.round(xOf(toRecord.effect.getKeyframes()[0])),
+          to: record.offsetLeft,
+          history: history.offsetLeft,
+          others: glides.length - 1,
+        };
+      },
+      null,
+      { timeout: 3000 },
+    )
+    .then((handle) => handle.jsonValue())
+    .catch(() => null);
+  const atTap = await page.evaluate(() => window.pillAtRecordTap ?? null);
+  await start(page).waitFor();
+  check(
+    '  a burst, History then Record mid-glide: the pill turns to Record from where it is, the glide to History let go',
+    !!atTap &&
+      atTap.isGliding &&
+      !!turn &&
+      // From where it was, give or take the frame before the screen is drawn; never from History,
+      // where it was headed and not yet.
+      Math.abs(turn.from - atTap.x) <= 6 &&
+      turn.from < turn.history &&
+      turn.others === 0,
+    JSON.stringify({ atTap, turn }),
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();

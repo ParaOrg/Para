@@ -191,6 +191,45 @@ try {
         () => false,
       ),
   );
+  // ---------------------------------- the built page's motion, as its minified CSS has it
+  // A build writes the Motion tokens in seconds (.39s), the dev server in ms (390ms): read as ms,
+  // the build's pill glided for 0.39 ms, a jump with no spring. Only a build shows it.
+  {
+    const navigation = first.getByRole('navigation', { name: 'Screens' });
+    await navigation.getByRole('button', { name: 'History' }).click();
+    const glide = await first
+      .waitForFunction(
+        () => {
+          const bar = document.querySelector('.tab-toolbar');
+          const moving = bar
+            ?.getAnimations({ subtree: true })
+            .find((animation) =>
+              animation.effect?.getKeyframes().some((frame) => 'transform' in frame),
+            );
+          if (!moving) return null;
+          const style = getComputedStyle(document.documentElement);
+          return {
+            duration: moving.effect.getTiming().duration,
+            easing: moving.effect.getTiming().easing,
+            token: style.getPropertyValue('--transition-duration-pill').trim(),
+            ease: style.getPropertyValue('--ease-pill').trim(),
+          };
+        },
+        null,
+        { timeout: 5000, polling: 'raf' },
+      )
+      .then((handle) => handle.jsonValue())
+      .catch(() => null);
+    check(
+      'on the built page the toolbar pill glides to History for 390 ms on its --ease-pill spring',
+      !!glide &&
+        Math.abs(glide.duration - 390) < 1 &&
+        // The same curve, however each writes its numbers (.34 in the build, 0.34 in WAAPI).
+        String(glide.easing.match(/[\d.]+/g)?.map(Number)) ===
+          String(glide.ease.match(/[\d.]+/g)?.map(Number)),
+      JSON.stringify(glide),
+    );
+  }
   const firstStores = await storeNames(first);
   await first.close();
 
