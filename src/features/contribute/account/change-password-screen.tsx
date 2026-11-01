@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { PasswordField } from '@/design-system/primitives/password-field';
@@ -53,6 +53,12 @@ export function ChangePasswordScreen({
   const onToken = captcha.onToken;
   // The widget goes with the screen; its token must not outlive it.
   useEffect(() => () => onToken(null), [onToken]);
+  // Para's word that the old password is wrong lands on its field, focus with it, so a screen
+  // reader says it: focus was left on Save changes, where nothing changed.
+  const oldPasswordRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (oldPasswordError) oldPasswordRef.current?.querySelector('input')?.focus();
+  }, [oldPasswordError]);
 
   const isTyped =
     fields.currentPassword !== '' || fields.password !== '' || fields.confirmation !== '';
@@ -75,6 +81,7 @@ export function ChangePasswordScreen({
         title="Change password"
         headingId="change-password-heading"
         headingRef={headingRef}
+        isBackDisabled={isBusy}
         onBack={onBack}
       />
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-48">
@@ -88,13 +95,15 @@ export function ChangePasswordScreen({
           }}
           className="flex flex-col gap-5"
         >
-          <PasswordField
-            label="Old password"
-            autoComplete="current-password"
-            value={fields.currentPassword}
-            error={fieldErrors.currentPassword ?? oldPasswordError ?? undefined}
-            onChange={(event) => setField('currentPassword', event.target.value)}
-          />
+          <div ref={oldPasswordRef} className="contents">
+            <PasswordField
+              label="Old password"
+              autoComplete="current-password"
+              value={fields.currentPassword}
+              error={fieldErrors.currentPassword ?? oldPasswordError ?? undefined}
+              onChange={(event) => setField('currentPassword', event.target.value)}
+            />
+          </div>
           <NewPasswordField
             label="New password"
             value={fields.password}
@@ -110,7 +119,12 @@ export function ChangePasswordScreen({
           />
         </form>
         <div className="*:w-full">
-          <Button variant="plain" label="Forgot password?" onClick={onForgotPassword} />
+          <Button
+            variant="plain"
+            label="Forgot password?"
+            disabled={isBusy}
+            onClick={onForgotPassword}
+          />
         </div>
         {captcha.siteKey && (
           <Turnstile

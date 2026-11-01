@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Activity, useState } from 'react';
 
 import { messageOf } from './account-message';
 import { AccountScreen } from './account-screen';
@@ -37,31 +37,35 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
   const stats = useMyStatsQuery();
   const signOut = useSignOutMutation();
 
-  // Inside Account, so their Back returns there, even after a reload.
-  if (changePassword.isOpen) {
+  // Inside Account, so their Back returns there, even after a reload. Account settings stays
+  // drawn, hidden, under Change password: a change not saved yet, or a save on its way, is still
+  // there to come back to.
+  if (settings.isOpen || changePassword.isOpen) {
     return (
-      <ChangePasswordView
-        onBack={() => changePassword.closeTo('#account-settings')}
-        onDone={() => {
-          setIsPasswordChanged(true);
-          changePassword.closeTo('#account-settings');
-        }}
-      />
-    );
-  }
-  if (settings.isOpen) {
-    return (
-      <AccountSettingsView
-        isPasswordChanged={isPasswordChanged}
-        onOpenChangePassword={() => {
-          setIsPasswordChanged(false);
-          changePassword.open();
-        }}
-        onBack={() => {
-          setIsPasswordChanged(false);
-          settings.closeTo('#profile');
-        }}
-      />
+      <>
+        <Activity mode={changePassword.isOpen ? 'hidden' : 'visible'}>
+          <AccountSettingsView
+            isPasswordChanged={isPasswordChanged}
+            onOpenChangePassword={() => {
+              setIsPasswordChanged(false);
+              changePassword.open();
+            }}
+            onBack={() => {
+              setIsPasswordChanged(false);
+              settings.closeTo('#profile');
+            }}
+          />
+        </Activity>
+        {changePassword.isOpen && (
+          <ChangePasswordView
+            onBack={() => changePassword.closeTo('#account-settings')}
+            onDone={() => {
+              setIsPasswordChanged(true);
+              changePassword.closeTo('#account-settings');
+            }}
+          />
+        )}
+      </>
     );
   }
 

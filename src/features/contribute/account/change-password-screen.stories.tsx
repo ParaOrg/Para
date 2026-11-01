@@ -73,6 +73,24 @@ export const ForgotPassword: Story = {
 /** The old password given is not the account's: said on its field. */
 export const WrongOldPassword: Story = {
   args: { oldPasswordError: 'That’s not your current password' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Focus goes to the field, so a screen reader says what is wrong with it.
+    await expect(canvas.getByLabelText('Old password')).toHaveFocus();
+    await expect(canvas.getByLabelText('Old password')).toHaveAccessibleDescription(
+      /not your current password/,
+    );
+  },
+};
+
+/** Saving: Back and Forgot password? wait, so the answer is not lost. */
+export const SavingHoldsTheWayOut: Story = {
+  args: { isBusy: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Back' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Forgot password?' })).toBeDisabled();
+  },
 };
 
 /** Saving: the sheet stays up, its Save changes saying so. */

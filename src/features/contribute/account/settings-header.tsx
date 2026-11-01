@@ -12,6 +12,8 @@ interface SettingsHeaderProps {
   headingRef: Ref<HTMLHeadingElement>;
   /** A line the heading reads out with it, focused: news a live region would miss on arrival. */
   describedBy?: string;
+  /** While a save is under way: leaving would lose what it says when it ends. */
+  isBackDisabled?: boolean;
   onBack: () => void;
 }
 
@@ -24,11 +26,18 @@ export function SettingsHeader({
   headingId,
   headingRef,
   describedBy,
+  isBackDisabled = false,
   onBack,
 }: SettingsHeaderProps) {
   return (
     <header className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-2">
-      <IconButton tooltip="top" label="Back" icon={<ArrowLeftIcon />} onClick={onBack} />
+      <IconButton
+        tooltip="top"
+        label="Back"
+        icon={<ArrowLeftIcon />}
+        disabled={isBackDisabled}
+        onClick={onBack}
+      />
       <h1
         id={headingId}
         ref={headingRef}
