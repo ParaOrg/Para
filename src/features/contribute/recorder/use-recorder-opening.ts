@@ -41,7 +41,10 @@ export function useRecorderOpening({
 }: RecorderOpeningOptions): void {
   useEffect(() => {
     let isCancelled = false;
-    const open = () =>
+    // Handed over, the tab opens again as a fresh page does: Start waits in 'loading' until what
+    // the phone holds is read, and the warning stays until then. A Start pressed meanwhile would
+    // write a new ride that the other tab's, taken back a moment later, then replaced.
+    const open = (isHandedOver = false) =>
       openRecorder({
         isCancelled: () => isCancelled,
         onListed: listSaved,
@@ -53,13 +56,14 @@ export function useRecorderOpening({
       })
         .then((opening) => {
           if (opening === null) return;
+          if (isHandedOver) clearOtherTab();
           if (opening.kind === 'other-tab') {
             showOtherTab();
             setPhase('ready');
             void whenRecorderFreed().then(() => {
               if (isCancelled) return;
-              clearOtherTab();
-              open();
+              setPhase('loading');
+              void open(true);
             });
           } else if (opening.kind === 'open') {
             const { recording, rows } = opening;
@@ -73,10 +77,11 @@ export function useRecorderOpening({
         })
         .catch((error: unknown) => {
           if (isCancelled) return;
+          if (isHandedOver) clearOtherTab();
           reportStore(error);
           setPhase('ready');
         });
-    open();
+    void open();
     return () => {
       isCancelled = true;
     };
