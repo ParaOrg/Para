@@ -260,6 +260,21 @@ try {
         )),
     ),
   );
+  // A smoke test, not a guard: reloaded with no signal, the page may ask for the recorder before
+  // the page it replaces has let go of it, and then must be handed it. The race is timing-bound and
+  // this passes without the fix too; contribute-test's two-tab handovers are the ones that guard it.
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  check(
+    '  (smoke) reloaded with the network off, it opens on Start again, with no "open in another tab" left',
+    await page
+      .getByText('Para is open in another tab')
+      .waitFor({ state: 'detached', timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      ),
+  );
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page
     .getByRole('group', { name: 'Recording so far' })

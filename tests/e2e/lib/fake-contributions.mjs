@@ -36,6 +36,10 @@
 //   stats = 'offline'           get_my_stats fails as with no signal
 //   deleteAccount = 'offline'   delete_my_account fails as with no signal
 //   deleteAccount = 'hold'      delete_my_account waits until `fake.release()` (a delete in flight)
+//   deleteAccount = 'lostAnswer' delete_my_account deletes, then the answer is lost on the way back
+//   deleteAccount = 'ownsMapRows' delete_my_account is refused P0001 owns_map_rows, as the migration
+//                 does for an account that still owns rows of the map
+//   deleteAccount = 'notAnAccount' delete_my_account is refused 42501 not_an_account
 //   logout = 'hold'             the sign-out waits until `fake.release()` (a Logout in flight)
 //
 // get_my_stats answers `fake.stats`, the account's numbers as one row; left null, the function is
@@ -165,6 +169,8 @@ export async function fakeContributions(page) {
     deleteAccountRequests: 0,
     /** The accounts delete_my_account deleted, in order. */
     deletedAccounts: [],
+    /** Each delete_my_account's delete_uploads, as sent (true when left out). */
+    deleteUploadsAsked: [],
     claims: [],
     /** begin_claim, verify, update_password, finish_claim and logout, in the order they came. */
     order: [],
@@ -340,8 +346,28 @@ export async function fakeContributions(page) {
       delete fake.next.deleteAccount;
       if (fault === 'offline') return route.abort('internetdisconnected');
       if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
-      // As the migration does: an anonymous user or an editor is refused, 42501.
       const user = userOf(request);
+      // As the migration does: a user already gone (an earlier call deleted it, its answer lost)
+      // is answered as deleted.
+      if (user && fake.deletedAccounts.includes(user)) return json(route, 200, null);
+      if (fault === 'ownsMapRows') {
+        return json(route, 400, {
+          code: 'P0001',
+          message:
+            'owns_map_rows: this account still owns rows of the map; the owner moves them first',
+          details: null,
+          hint: null,
+        });
+      }
+      if (fault === 'notAnAccount') {
+        return json(route, 403, {
+          code: '42501',
+          message: 'not_an_account',
+          details: null,
+          hint: null,
+        });
+      }
+      // As the migration does: an anonymous user or an editor is refused, 42501.
       const known = fake.users.get(user ?? '');
       if (!known?.isAccount || known.isEditor) {
         return json(route, 403, {
@@ -351,9 +377,17 @@ export async function fakeContributions(page) {
           hint: null,
         });
       }
-      for (const [id, row] of fake.rows) if (row.by === user) fake.rows.delete(id);
+      // As the migration does: delete_uploads defaults to true; false keeps them, unlinked.
+      const deleteUploads = request.postDataJSON()?.delete_uploads ?? true;
+      fake.deleteUploadsAsked.push(deleteUploads);
+      for (const [id, row] of fake.rows) {
+        if (row.by !== user) continue;
+        if (deleteUploads) fake.rows.delete(id);
+        else row.by = null;
+      }
       fake.users.delete(user);
       fake.deletedAccounts.push(user);
+      if (fault === 'lostAnswer') return route.abort('internetdisconnected');
       return json(route, 200, null);
     }
     if (url.pathname === '/rest/v1/rpc/get_profile' && method === 'POST') {

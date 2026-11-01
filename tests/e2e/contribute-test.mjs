@@ -260,6 +260,194 @@ const buttons = (page) =>
   );
 }
 
+// ------------------------------------------------------------ the tutorial
+{
+  const { page, errors } = await phone({ earlierConsent: true });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
+  const locatorWatchersBefore = await page.evaluate(() => window.__locatorWatchers());
+  const dialog = page.getByRole('dialog');
+  /** The coachmark's spotlight round the control it names, and its card on the near side. */
+  const placement = (name) =>
+    page.evaluate((label) => {
+      const target =
+        label === null
+          ? document.querySelector('[data-start-tracking]')
+          : document.querySelector(`button[aria-label="${label}"]`);
+      const card = document.querySelector('[role="dialog"]');
+      const spot = card?.parentElement?.firstElementChild;
+      if (!target || !card || !spot) return null;
+      const t = target.getBoundingClientRect();
+      const s = spot.getBoundingClientRect();
+      const c = card.getBoundingClientRect();
+      return {
+        isRound:
+          Math.abs(s.left - (t.left - 8)) < 1.5 &&
+          Math.abs(s.top - (t.top - 8)) < 1.5 &&
+          Math.abs(s.width - (t.width + 16)) < 1.5 &&
+          Math.abs(s.height - (t.height + 16)) < 1.5,
+        isBeside: c.bottom <= s.top - 9 || c.top >= s.bottom + 9,
+        isInset: Math.abs(c.left - 32) < 1 && Math.abs(c.right - (innerWidth - 32)) < 1,
+      };
+    }, name);
+  const STEPS = [
+    ['Start tracking', null],
+    ['Lakad or Sakay', 'Switch to Sakay'],
+    ['Flag a stop', 'Flag a stop'],
+    ['Pause anytime', 'Pause'],
+    ['See more of the map', 'Hide the recording card'],
+    ['Stop without saving', 'Discard recording'],
+    ['Finish and save', 'Finish'],
+  ];
+  await page.getByRole('button', { name: 'How to record' }).click();
+  for (const [index, [title, target]] of STEPS.entries()) {
+    await dialog.getByRole('heading', { name: title }).waitFor({ timeout: 10000 });
+    const isLast = index === STEPS.length - 1;
+    const next = dialog.getByRole('button', { name: isLast ? 'Got it' : 'Next' });
+    await page.waitForFunction(
+      () => document.activeElement?.closest('[role="dialog"]') !== null,
+      null,
+      { timeout: 5000 },
+    );
+    const place = await placement(target);
+    const seen = {
+      count: await dialog.getByText(`${index + 1} of 7`).count(),
+      skips: await dialog.getByRole('button', { name: 'Skip' }).count(),
+      focus: await page.evaluate(() => document.activeElement?.textContent),
+      recordingWatchers: await page.evaluate(() => window.__watchers()),
+      locatorWatchers: await page.evaluate(() => window.__locatorWatchers()),
+      // The demo under the overlay: nothing in it can be focused or pressed.
+      isTargetInert:
+        target === null ||
+        (await page.evaluate(
+          (label) => !!document.querySelector(`button[aria-label="${label}"]`)?.closest('[inert]'),
+          target,
+        )),
+    };
+    check(
+      `the tutorial's step ${index + 1}, ${title}: "${index + 1} of 7", ${isLast ? 'Got it alone' : 'Skip and Next'}, focus on ${isLast ? 'Got it' : 'Next'}; the spotlight 8 round ${target ?? 'Start tracking'}, the card 32 in on its near side; no location asked for`,
+      seen.count === 1 &&
+        seen.skips === (isLast ? 0 : 1) &&
+        seen.focus === (isLast ? 'Got it' : 'Next') &&
+        !!place?.isRound &&
+        place.isBeside &&
+        place.isInset &&
+        seen.recordingWatchers === 0 &&
+        seen.locatorWatchers === locatorWatchersBefore &&
+        seen.isTargetInert,
+      JSON.stringify({ seen, place }),
+    );
+    if (index === 0) {
+      // A tap on the dimmed page puts focus nowhere in the card; Tab then finds only the card:
+      // the page under it, Start and the tabs included, is out of reach.
+      await page.mouse.click(196, 200);
+      await page.keyboard.press('Tab');
+      const tabbedTo = await page.evaluate(() => ({
+        isInCard: !!document.activeElement?.closest('[role="dialog"]'),
+        name:
+          document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.textContent,
+      }));
+      // Every button outside the card: none may be reached.
+      const reachable = await page.evaluate(() =>
+        [...document.querySelectorAll('button')]
+          .filter((button) => !button.closest('[role="dialog"]') && !button.closest('[inert]'))
+          .map((button) => button.getAttribute('aria-label') ?? button.textContent?.trim()),
+      );
+      check(
+        '  a tap on the dimmed page, then Tab, lands in the card: no button outside it is reachable',
+        tabbedTo.isInCard && reachable.length === 0,
+        JSON.stringify({ tabbedTo, reachable }),
+      );
+      await next.focus();
+    }
+    if (index === 3) {
+      // Tab goes round the card: from Next back to Skip, never onto the page under it.
+      await page.keyboard.press('Tab');
+      const afterTab = await page.evaluate(() => document.activeElement?.textContent);
+      await page.keyboard.press('Shift+Tab');
+      const afterShiftTab = await page.evaluate(() => document.activeElement?.textContent);
+      check(
+        '  Tab from Next goes to Skip and Shift+Tab back to Next: focus stays in the card',
+        afterTab === 'Skip' && afterShiftTab === 'Next',
+        JSON.stringify([afterTab, afterShiftTab]),
+      );
+    }
+    await next.click();
+  }
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 5000 });
+  check(
+    '  Got it is back on Record: no dialog, no demo, Start tracking pressable, nothing recorded, focus on the ?',
+    (await dialog.count()) === 0 &&
+      (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) ===
+        'How to record' &&
+      (await page.getByRole('button', { name: 'Pause' }).count()) === 0 &&
+      (await flagButton(page).count()) === 0 &&
+      (await page.evaluate(() => window.__watchers())) === 0,
+  );
+
+  // Leaving part-way, by Skip and by Escape, is back on Record too.
+  for (const leave of ['Skip', 'Escape']) {
+    await page.getByRole('button', { name: 'How to record' }).click();
+    await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
+    if (leave === 'Skip') await dialog.getByRole('button', { name: 'Skip' }).click();
+    else await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 5000 });
+    check(
+      `  ${leave} on step 2 is back on Record: no dialog, no demo recording, focus on the ?`,
+      (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) ===
+        'How to record' &&
+        (await dialog.count()) === 0 &&
+        (await page.getByRole('button', { name: 'Switch to Sakay' }).count()) === 0 &&
+        (await flagButton(page).count()) === 0,
+    );
+  }
+  // The phone's Back closes it, on the page: the entry it added is the one taken off.
+  {
+    const before = await page.evaluate(() => ({
+      url: location.href,
+      length: window.history.length,
+    }));
+    await page.getByRole('button', { name: 'How to record' }).click();
+    await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
+    await page.goBack();
+    await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 5000 });
+    const after = await page.evaluate(() => ({
+      url: location.href,
+      focus: document.activeElement?.getAttribute('aria-label'),
+    }));
+    check(
+      "  the phone's Back on step 2 closes it and stays on the page: Record, no demo, focus on the ?",
+      (await dialog.count()) === 0 &&
+        (await page.getByRole('button', { name: 'Switch to Sakay' }).count()) === 0 &&
+        after.url === before.url &&
+        after.focus === 'How to record',
+      JSON.stringify({ before, after }),
+    );
+  }
+  // A move to another screen by its hash (the browser's Forward, say) ends it as well.
+  {
+    await page.getByRole('button', { name: 'How to record' }).click();
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
+    await page.evaluate(() => {
+      window.history.pushState(null, '', `${location.pathname}#history`);
+      window.dispatchEvent(new window.HashChangeEvent('hashchange'));
+    });
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 5000 });
+    check(
+      '  a hash move onto History ends it: History shows with no coachmark and no demo over it',
+      (await dialog.count()) === 0 &&
+        (await page.getByRole('button', { name: 'Switch to Sakay' }).count()) === 0,
+    );
+  }
+  check('  the tutorial raised no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ---------------------------------------------------------------- the loop
 {
   const { page, errors } = await phone();
@@ -294,9 +482,9 @@ const buttons = (page) =>
     JSON.stringify(paraMark),
   );
   check(
-    'Ready: Start, the top right empty until there is a tutorial (no ?, no Back to the map), no saved-recordings list',
+    "Ready: Start, the tutorial's ? at the top right (no Back to the map), no saved-recordings list",
     (await page.getByRole('button', { name: 'Back to the map' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'How to record' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'How to record' }).count()) === 1 &&
       (await page.getByText('Saved on this phone').count()) === 0 &&
       (await page.getByText('No saved recordings yet.').count()) === 0,
   );
@@ -2243,7 +2431,68 @@ const ANIMATIONS = () => {
       })
       .count()) === 1,
   );
+  // The first tab closes: the second is handed the recorder, as a page opened afresh would be.
+  await page.close();
+  await second.keyboard.press('Escape');
+  await recordTab(second).click();
+  await second.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  const handedOver = await second
+    .getByText('Para is open in another tab')
+    .waitFor({ state: 'detached', timeout: 5000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  await second.getByRole('button', { name: 'Start Tracking' }).click();
+  const isRecording = await second
+    .getByRole('group', { name: 'Recording so far' })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    '  once the first tab closes, the second holds the recorder: the warning goes and its Start records',
+    handedOver && isRecording,
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
+  await context.close();
+}
+
+// ------------------------------------------- a second tab, handed a ride left open
+{
+  const { page, context, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 50);
+  const second = await context.newPage();
+  await nodeFetch(second);
+  await bareStyle(second);
+  await second.addInitScript(GPS);
+  await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
+  const before = await stored(page);
+  // The first tab closes mid-ride: the second takes the ride back, as a reload of the first would.
+  await page.close();
+  const handedOver = await second
+    .locator('#unfinished-heading')
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  const after = await stored(second);
+  check(
+    'a ride left open by a tab that closes is taken back by the other: Unfinished, its fixes all there, no second recording, the warning gone',
+    handedOver &&
+      before.recordings.length === 1 &&
+      after.recordings.length === 1 &&
+      after.recordings[0].status === before.recordings[0].status &&
+      after.fixes === before.fixes &&
+      (await second.getByText('Para is open in another tab').count()) === 0,
+    JSON.stringify({ before, after }),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
 

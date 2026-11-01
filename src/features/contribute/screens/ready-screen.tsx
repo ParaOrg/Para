@@ -40,20 +40,18 @@ interface ReadyScreenProps {
   onOpenCredits: () => void;
   /** The ⓘ, for focus to come back to when the credits close. */
   creditsButtonRef: Ref<HTMLButtonElement>;
-  /** The ?: opens the tutorial, once there is one to open (HAS_TUTORIAL). */
+  /** The ?: opens the tutorial. */
   onOpenTutorial?: () => void;
+  /** The ?, for focus to come back to when the tutorial closes. */
+  helpButtonRef?: Ref<HTMLButtonElement>;
 }
-
-// TODO: true once the tutorial screens exist: the ? at the top right (Figma 4520:3471) opens them.
-// Until then nothing stands there, and nothing else moves for it: the ? is laid over the map.
-const HAS_TUTORIAL = false;
 
 /**
  * Before a recording, Figma's Record (4520:3197): at the foot, Start tracking over the Record,
  * History and Account tabs, on the map fading into white, and the map's ⓘ (4494:10300) in the
  * bottom left corner. The map-type and locator column stands at the right, 20 in and 24 over
  * Start tracking. Along the top (Figma's Frame 259, 20 in and 24 under the status bar): Para's mark
- * at the left, and at the right the tutorial's ?, once there is a tutorial (HAS_TUTORIAL).
+ * at the left, and at the right the tutorial's ?, laid over the map: nothing else moves for it.
  */
 export function ReadyScreen({
   earlierQuestion,
@@ -64,6 +62,7 @@ export function ReadyScreen({
   onOpenCredits,
   creditsButtonRef,
   onOpenTutorial,
+  helpButtonRef,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Decided once, as the screen opens: a later change must not move focus again.
@@ -92,9 +91,11 @@ export function ReadyScreen({
     <>
       <div className="pointer-events-none absolute inset-x-5 top-[calc(env(safe-area-inset-top)+1.5rem)] z-20 flex items-center justify-between">
         <ParaMark />
-        {HAS_TUTORIAL && onOpenTutorial && (
+        {/* Not over the earlier recordings' question: the tutorial points at Start, which
+            waits for its answer. */}
+        {onOpenTutorial && !earlierQuestion && (
           <div className="pointer-events-auto">
-            <HelpButton onClick={onOpenTutorial} />
+            <HelpButton ref={helpButtonRef} onClick={onOpenTutorial} />
           </div>
         )}
       </div>
