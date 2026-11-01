@@ -1,12 +1,12 @@
 import type { IControl, MapLibreMap } from 'maplibre-gl';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
 import type { Basemap } from './basemap';
+import { LazyMapStyle, loadMapStyle } from './lazy-map-style';
 import type { LabelsPlace } from './location-labels';
-import { MapStyle } from './map-style';
 import { MapStyleButton } from './map-style-button';
 import { MapTypeIcon } from './map-type-icon';
 import { useMapStyleCard } from './use-map-style-card';
@@ -89,6 +89,10 @@ export function BasemapControl({
     letGo,
   } = useMapStyleCard(map, initial, 'down', labelsPlace);
   const isOpen = card === 'open';
+  // The card's code, fetched once the map (and so this control) is up: here by the first press.
+  useEffect(() => {
+    void loadMapStyle();
+  }, []);
 
   return createPortal(
     <div ref={rootRef} className="flex flex-col items-end gap-2">
@@ -111,18 +115,20 @@ export function BasemapControl({
         />
       )}
       {card !== 'closed' && (
-        <MapStyle
-          basemaps={basemaps}
-          selectedId={current.id}
-          thumbnails={thumbnails}
-          maxHeight={cardRoom}
-          onSelect={select}
-          areLabelsShown={areLabelsShown}
-          onLabelsToggle={toggleLabels}
-          isClosing={card === 'closing'}
-          onClose={close}
-          onClosed={letGo}
-        />
+        <Suspense fallback={null}>
+          <LazyMapStyle
+            basemaps={basemaps}
+            selectedId={current.id}
+            thumbnails={thumbnails}
+            maxHeight={cardRoom}
+            onSelect={select}
+            areLabelsShown={areLabelsShown}
+            onLabelsToggle={toggleLabels}
+            isClosing={card === 'closing'}
+            onClose={close}
+            onClosed={letGo}
+          />
+        </Suspense>
       )}
     </div>,
     corner,

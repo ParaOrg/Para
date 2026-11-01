@@ -1,9 +1,9 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import type { ReactNode } from 'react';
+import { Suspense, useEffect, type ReactNode } from 'react';
 
 import { readBasemap, type Basemap } from '@/features/routes/map/basemap';
+import { LazyMapStyle, loadMapStyle } from '@/features/routes/map/lazy-map-style';
 import type { LabelsPlace } from '@/features/routes/map/location-labels';
-import { MapStyle } from '@/features/routes/map/map-style';
 import { MapStyleButton } from '@/features/routes/map/map-style-button';
 import { useMapStyleCard } from '@/features/routes/map/use-map-style-card';
 
@@ -56,6 +56,10 @@ export function LocationAndMapControl({
     toggleLabels,
     letGo,
   } = useMapStyleCard(map, () => readBasemap(basemaps), 'up', labelsPlace);
+  // The card's code, fetched once the map is up: off the opening, here by the first press.
+  useEffect(() => {
+    if (isMapLoaded) void loadMapStyle();
+  }, [isMapLoaded]);
   return (
     <div ref={rootRef} className="flex flex-col items-end gap-1">
       {card === 'closed' && note}
@@ -63,19 +67,21 @@ export function LocationAndMapControl({
       {card !== 'closed' && (
         // 8 above the pill (CARD_GAP_PX), where the note keeps 4.
         <div className="mb-1">
-          <MapStyle
-            basemaps={basemaps}
-            selectedId={current.id}
-            thumbnails={thumbnails}
-            maxHeight={cardRoom}
-            direction="up"
-            onSelect={select}
-            areLabelsShown={areLabelsShown}
-            onLabelsToggle={toggleLabels}
-            isClosing={card === 'closing'}
-            onClose={close}
-            onClosed={letGo}
-          />
+          <Suspense fallback={null}>
+            <LazyMapStyle
+              basemaps={basemaps}
+              selectedId={current.id}
+              thumbnails={thumbnails}
+              maxHeight={cardRoom}
+              direction="up"
+              onSelect={select}
+              areLabelsShown={areLabelsShown}
+              onLabelsToggle={toggleLabels}
+              isClosing={card === 'closing'}
+              onClose={close}
+              onClosed={letGo}
+            />
+          </Suspense>
         </div>
       )}
       <LocationAndMap>

@@ -171,7 +171,7 @@ export default defineConfig({
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
-                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$)/.test(
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$)/.test(
                   id,
                 ),
             },
