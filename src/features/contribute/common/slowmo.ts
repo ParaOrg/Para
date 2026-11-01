@@ -83,7 +83,20 @@ export function applySlowmo(): void {
   const root = document.documentElement;
   const style = getComputedStyle(root);
   for (const token of DURATION_TOKENS) {
-    const ms = Number.parseFloat(style.getPropertyValue(token));
-    if (Number.isFinite(ms)) root.style.setProperty(token, `${ms * factor}ms`);
+    const slowed = slowedDuration(style.getPropertyValue(token), factor);
+    if (slowed !== null) root.style.setProperty(token, slowed);
   }
+}
+
+/**
+ * A CSS duration (`300ms`, or `0.3s` as a build's minified CSS writes it) slowed by `factor`, in
+ * milliseconds; null for one that does not read as a duration.
+ */
+export function slowedDuration(value: string, factor: number): string | null {
+  const match = /^\s*(-?[\d.]+)(ms|s)\s*$/.exec(value);
+  if (!match) return null;
+  const amount = Number.parseFloat(match[1]);
+  if (!Number.isFinite(amount)) return null;
+  const ms = match[2] === 's' ? amount * 1000 : amount;
+  return `${ms * factor}ms`;
 }

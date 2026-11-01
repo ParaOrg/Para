@@ -28,6 +28,8 @@ interface ContributeMapProps {
   mark: ReactNode;
   /** False while a screen shows its own ⓘ for the credits: MapLibre's corner ⓘ steps aside. */
   areCreditsShown: boolean;
+  /** A screen covers the whole map: the map's own failure panel stays under it. */
+  isCovered: boolean;
   /** The recording whose whole trail to take a picture of, for History's card; null for none. */
   pictureFor: string | null;
   /** The picture taken, a data URL; not called when none could be (no trail, or no tiles). */
@@ -45,6 +47,7 @@ export function ContributeMap({
   locator,
   mark,
   areCreditsShown,
+  isCovered,
   pictureFor,
   onPicture,
 }: ContributeMapProps) {
@@ -93,6 +96,7 @@ export function ContributeMap({
         hasMapStyleButton={false}
         creditsAtBottom
         areCreditsShown={areCreditsShown}
+        isCovered={isCovered}
       />
       {map && locator?.(map, isMapLoaded, isRecording, mark)}
     </>

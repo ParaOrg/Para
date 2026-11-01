@@ -285,7 +285,11 @@ A person with an account on the contributor page: a name, an email, a number
 and a password. The account is the person, not the phone: it keeps its
 recordings across phones. The studio shows a contributor's name; the email and
 number are the owner's, to contact testers, and never reach the studio. A
-commuter becomes one by creating an account on that page only.
+commuter becomes one by creating an account on that page only. Deleting the
+account removes the person (name, email, number, password and stats); their
+contributions stay, tied to no one and without the words they typed, unless
+they choose to delete those too. A kept contribution can then be removed only
+by an editor, on request.
 _Avoid_: driver, user, reporter
 
 **Contribution**:

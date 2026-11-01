@@ -15,6 +15,7 @@ import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 import { checkLocationLabels } from './lib/location-labels.mjs';
+import { mapControlsInTabOrder } from './lib/tab-order.mjs';
 
 const { check, tally } = harness();
 const SHOTS = process.env.PARA_SHOTS;
@@ -225,33 +226,6 @@ const finishRecording = async (page) => {
 /** Start's ⓘ, which opens the map's credits as the Map Data Source sheet. */
 const creditsButton = (page) => page.getByRole('button', { name: 'Map data sources' });
 
-/**
- * The map's controls the keyboard reaches, Tab after Tab from the top of the page, once round:
- * each named as a screen reader would. The map and its controls are the page's first part.
- */
-async function mapControlsInTabOrder(page) {
-  const reached = [];
-  const seen = new Set();
-  // Round the whole page and past the browser's own stop (the body), until a stop comes again.
-  for (let i = 0; i < 80; i += 1) {
-    await page.keyboard.press('Tab');
-    const stop = await page.evaluate(() => {
-      const element = document.activeElement;
-      if (!element || element === document.body) return null;
-      const mapPart = document.querySelector('main.contribute-page > :first-child');
-      return {
-        id: element.outerHTML.slice(0, 160),
-        name: element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 40),
-        isOnMap: Boolean(mapPart?.contains(element)),
-      };
-    });
-    if (!stop) continue;
-    if (seen.has(stop.id)) break;
-    seen.add(stop.id);
-    if (stop.isOnMap) reached.push(stop.name);
-  }
-  return reached;
-}
 /** Flag a stop, at the top of the right-hand column while recording. */
 const flagButton = (page) => page.getByRole('button', { name: 'Flag a stop' });
 /** The tint's state and its edges' colour: "lakad:from-blue-700/10". */
@@ -2317,15 +2291,6 @@ const WAKE = () => {
   const { page, errors } = await phone();
   const back = page.getByRole('button', { name: 'Back to the map' });
   const hasOneBack = async () => (await back.count()) === 1;
-  // Off Start, the licences' credit is MapLibre's corner ⓘ, at the bottom right, with the
-  // OpenStreetMap credit among its links.
-  const hasCornerCredits = async () =>
-    (await page
-      .locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib-button')
-      .isVisible()) &&
-    (await page
-      .locator('.maplibregl-ctrl-attrib a[href="https://www.openstreetmap.org/copyright"]')
-      .count()) === 1;
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
     "Ready has no Back to the map (the browser goes back), no scale bar, and the map's credits behind its ⓘ",
@@ -2348,6 +2313,35 @@ const WAKE = () => {
     (await creditsButton(page).isVisible()) &&
     !(await page.locator('.maplibregl-ctrl-attrib').isVisible());
   check("  and the map's credits behind its own ⓘ while recording", await hasOwnCredits());
+  // How far the map's right-hand buttons stand over the stack of cards (--dock-foot).
+  const mapButtonsOver = async (stackHeading) => {
+    // Once the buttons have come to rest: they slide as the stack's room changes.
+    await page.waitForFunction(() => {
+      const button = document.querySelector('[aria-label="Map design"]');
+      return (
+        button !== null &&
+        !document
+          .getAnimations()
+          .some(
+            (animation) =>
+              animation.playState === 'running' &&
+              animation.effect?.target instanceof Element &&
+              animation.effect.target.contains(button),
+          )
+      );
+    });
+    return page.evaluate((heading) => {
+      const stack = document.querySelector(`[aria-labelledby="${heading}"]`);
+      const buttons = [
+        ...document.querySelectorAll(
+          '[aria-label="Map design"], [aria-label="Turn on my location"], [aria-label="Show where I am"], [aria-label="You are here"]',
+        ),
+      ];
+      const lowest = Math.max(...buttons.map((button) => button.getBoundingClientRect().bottom));
+      return Math.round(stack.getBoundingClientRect().top - lowest);
+    }, stackHeading);
+  };
+  const overRecording = await mapButtonsOver('recording-heading');
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
   check('  and while paused', await hasOwnCredits());
@@ -2370,7 +2364,46 @@ const WAKE = () => {
     `${distanceBefore} / ${await distanceOf()}`,
   );
   check('Unfinished has Back to the map', await hasOneBack());
-  check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
+  // Its credits behind its own ⓘ, as Start's and Recording's are, MapLibre's corner one aside:
+  // 12 in from the left, 12 over the cards, as the ⓘ rides over a card on the public map.
+  const info = await creditsButton(page).boundingBox();
+  const why = await page
+    .getByRole('heading', { name: 'A recording was left open' })
+    .locator('..')
+    .boundingBox();
+  check(
+    "  and the map's credits behind its own ⓘ, 12 in and 12 over the cards, no corner one",
+    (await hasOwnCredits()) &&
+      Math.round(info.x) === 12 &&
+      Math.round(why.y - (info.y + info.height)) === 12,
+    JSON.stringify({ info, why }),
+  );
+  const overUnfinished = await mapButtonsOver('unfinished-heading');
+  check(
+    "  the map's buttons stand as far over Unfinished's cards as over Recording's: the ⓘ takes no room",
+    overUnfinished === overRecording,
+    JSON.stringify({ overRecording, overUnfinished }),
+  );
+  const unfinishedSheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  await creditsButton(page).click();
+  await unfinishedSheet.waitFor();
+  check(
+    '  the ⓘ opens Map Data Source, the card inert under it',
+    await page.evaluate(
+      () =>
+        !!document
+          .querySelector('[aria-labelledby="unfinished-heading"] button')
+          ?.closest('[inert]'),
+    ),
+  );
+  await page.keyboard.press('Escape');
+  await unfinishedSheet.waitFor({ state: 'detached' });
+  check(
+    '  Escape closes it, focus back on the ⓘ',
+    await page.evaluate(
+      () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
+    ),
+  );
   const onUnfinished = await mapControlsInTabOrder(page);
   check(
     "  and the map's own buttons, in sight above its card, still in reach",
@@ -2381,17 +2414,15 @@ const WAKE = () => {
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await finishRecording(page);
   await page.getByRole('button', { name: 'Save recording' }).waitFor();
-  check("the Save form keeps the map's corner ⓘ for its credits", await hasCornerCredits());
   const onForm = await mapControlsInTabOrder(page);
   check(
-    '  and no map control under the form can be tabbed to or read out',
+    'the Save form covers the whole map: no map control under it, its credits included, can be tabbed to or read out',
     onForm.length === 0,
     onForm.join(' | '),
   );
   await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   check('Saved has Back to the map, in front of the screen', await hasOneBack());
-  check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
   const onSaved = await mapControlsInTabOrder(page);
   check(
     '  and no map control under Saved can be tabbed to or read out',

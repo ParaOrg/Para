@@ -256,14 +256,16 @@ export function ContributePage({ locator }: ContributePageProps) {
     !isHistoryShown &&
     !isProfileShown &&
     !isPermissionsShown;
-  // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
-  // Their own ⓘ opens them; every other screen over the map keeps MapLibre's corner ⓘ.
+  // The map's credits, over Start, a recording or one left open: closed by ✕, Escape or a tap on
+  // the dimmed map. Their own ⓘ opens them; every other screen over the map keeps MapLibre's
+  // corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   // Closed and sliding down: still drawn, the page under it live again.
   const [isCreditsLeaving, setIsCreditsLeaving] = useState(false);
   // The recording screen's ⓘ is there once the screen is, with the figures it waits for.
   const hasCreditsButton =
-    isStartShown || (accountGate === 'ready' && isRecordingShown && figures !== null);
+    isStartShown ||
+    (accountGate === 'ready' && (isRecordingShown || phase === 'unfinished') && figures !== null);
   const isCreditsShown = hasCreditsButton && isCreditsOpen;
   const isCreditsDrawn = hasCreditsButton && (isCreditsOpen || isCreditsLeaving);
   // The recording card folded away, by the recording it was folded on: each recording opens with
@@ -451,6 +453,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
           areCreditsShown={!hasCreditsButton}
+          isCovered={isMapCovered}
           pictureFor={phase === 'form' ? (recording.current?.id ?? null) : null}
           onPicture={keepTrailPicture}
           mark={
@@ -586,11 +589,15 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {phase === 'unfinished' && figures && (
             <Suspense fallback={null}>
-              <UnfinishedScreen
-                figures={figures}
-                onResume={recording.resume}
-                onStop={recording.stopAtLastFix}
-              />
+              <div inert={isCreditsShown} className="contents">
+                <UnfinishedScreen
+                  figures={figures}
+                  onResume={recording.resume}
+                  onStop={recording.stopAtLastFix}
+                  onOpenCredits={openCredits}
+                  creditsButtonRef={creditsButtonRef}
+                />
+              </div>
             </Suspense>
           )}
           {isRecordingShown && figures && (

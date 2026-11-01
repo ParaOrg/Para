@@ -16,6 +16,7 @@ import { chromium } from 'playwright';
 
 import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { fakeTurnstile } from './lib/fake-turnstile.mjs';
+import { mapControlsInTabOrder } from './lib/tab-order.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
@@ -97,23 +98,11 @@ async function signOut(page) {
     state: 'attached',
     timeout: 15000,
   });
-  const mapStops = [];
-  for (let i = 0; i < 40; i += 1) {
-    await page.keyboard.press('Tab');
-    const stop = await page.evaluate(() => {
-      const element = document.activeElement;
-      const mapPart = document.querySelector('main.contribute-page > :first-child');
-      return {
-        name: element?.getAttribute('aria-label') ?? element?.textContent?.trim().slice(0, 40),
-        isOnMap: Boolean(element && mapPart?.contains(element)),
-      };
-    });
-    if (stop.isOnMap) mapStops.push(stop.name);
-  }
+  const onSignIn = await mapControlsInTabOrder(page);
   check(
     '  and no map control under it can be tabbed to or read out',
-    mapStops.length === 0,
-    mapStops.join(' | '),
+    onSignIn.length === 0,
+    onSignIn.join(' | '),
   );
   check(
     'with no account the page shows Sign in, Create an account and Forgot password, no way back to the map, and no Start',
@@ -191,6 +180,12 @@ const shared = {};
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   await page.getByRole('button', { name: 'Create an account' }).click();
   await SCREENS.createAccount(page).waitFor();
+  const onCreate = await mapControlsInTabOrder(page);
+  check(
+    '  no map control under Create an account can be tabbed to or read out',
+    onCreate.length === 0,
+    onCreate.join(' | '),
+  );
   await shot(page, '2-create-account');
   check(
     'Create an account asks for Full name, Email, Phone Number and Password, and for nothing else',
@@ -446,6 +441,12 @@ const shared = {};
   await shot(page, '7-profile-step');
   await page.reload({ waitUntil: 'load' });
   await field(page, 'Full name').waitFor({ timeout: 15000 });
+  const onNameStep = await mapControlsInTabOrder(page);
+  check(
+    '  no map control under the name step can be tabbed to or read out',
+    onNameStep.length === 0,
+    onNameStep.join(' | '),
+  );
   check(
     '  a reload lands on the same step: the account is not let in without its name',
     (await SCREENS.start(page).count()) === 0 && (await field(page, 'Phone Number').count()) === 1,
