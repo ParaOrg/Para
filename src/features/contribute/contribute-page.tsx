@@ -109,6 +109,7 @@ function AccountView(props: AccountViewProps) {
 // A fetch ahead that failed offline does not leave them unreachable: each asks again afresh.
 const loadRecordingScreen = retryingImport(() => import('./screens/recording-screen'));
 const loadUnfinishedScreen = retryingImport(() => import('./screens/unfinished-screen'));
+const loadForgetOtherAccounts = retryingImport(() => import('./api/forget-other-accounts'));
 const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-recording-screen'));
 const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 const loadSaveForm = retryingImport(() => import('./screens/save-form'));
@@ -180,21 +181,25 @@ export function ContributePage({ locator }: ContributePageProps) {
   const accountId = accountQuery.data?.id ?? null;
   const accountGate = useAccountGate();
   // Only a later check (online again, back to the front) can find another account: the watch is
-  // fetched as the page opens, not carried by its opening.
+  // fetched as the page opens, not carried by its opening. Not fetched for want of signal, it is
+  // asked for again as the signal comes back, so it is never missing for the page's life.
   const queryClient = useQueryClient();
   useEffect(() => {
     let stop: (() => void) | null = null;
     let isLeft = false;
-    import('./api/forget-other-accounts').then(
-      ({ forgetOtherAccounts }) => {
-        if (!isLeft) stop = forgetOtherAccounts(queryClient);
-      },
-      (error: unknown) => {
-        console.warn("The watch for another account's session could not be fetched.", error);
-      },
-    );
+    const watch = () => {
+      loadForgetOtherAccounts().then(
+        ({ forgetOtherAccounts }) => {
+          if (!isLeft) stop = forgetOtherAccounts(queryClient);
+        },
+        // No signal: asked for again when it comes back.
+        () => window.addEventListener('online', watch, { once: true }),
+      );
+    };
+    watch();
     return () => {
       isLeft = true;
+      window.removeEventListener('online', watch);
       stop?.();
     };
   }, [queryClient]);
