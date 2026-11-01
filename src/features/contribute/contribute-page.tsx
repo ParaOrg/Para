@@ -11,6 +11,7 @@ import {
 import { flushSync } from 'react-dom';
 
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
+import { cn } from '@/shared/utils/cn';
 
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
@@ -18,6 +19,7 @@ import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
 import { retryingImport } from './common/retrying-import';
+import { useIsToolbarHeld } from './common/toolbar-hold';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
@@ -79,16 +81,19 @@ const MapDataSourceView = lazy(() =>
   import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
 );
 
-/** History, at once if its chunk is here, else lazily. */
+/**
+ * History, at once if its chunk is here, else lazily: decided once as it opens, so the chunk
+ * arriving later never swaps it for another and resets its scroll, menus and focus.
+ */
 function HistoryView(props: HistoryViewProps) {
-  const loaded = historyChunk.loaded();
-  return loaded ? <loaded.HistoryView {...props} /> : <LazyHistoryView {...props} />;
+  const [Screen] = useState(() => historyChunk.loaded()?.HistoryView ?? LazyHistoryView);
+  return <Screen {...props} />;
 }
 
-/** Account, at once if its chunk is here, else lazily. */
+/** Account, as History: at once if its chunk is here, else lazily, decided once as it opens. */
 function AccountView(props: AccountViewProps) {
-  const loaded = accountChunk.loaded();
-  return loaded ? <loaded.AccountView {...props} /> : <LazyAccountView {...props} />;
+  const [Screen] = useState(() => accountChunk.loaded()?.AccountView ?? LazyAccountView);
+  return <Screen {...props} />;
 }
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
 // fetches them as it opens (below), so Start never waits on the network, nor fails without one.
@@ -319,6 +324,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       : isStartShown
         ? 'record'
         : null;
+  const isToolbarHeld = useIsToolbarHeld();
   const historyTabRef = useRef<HTMLButtonElement>(null);
   const accountTabRef = useRef<HTMLButtonElement>(null);
   const toolbarOpeners: Record<ToolbarTab, Partial<Record<ToolbarTab, () => void>>> = {
@@ -438,7 +444,14 @@ export function ContributePage({ locator }: ContributePageProps) {
           {isProfileShown && (
             <ErrorBoundary
               key={screenTries}
-              fallback={<ScreenUnavailable name="Account" onTryAgain={tryScreenAgain} />}
+              fallback={
+                <ScreenUnavailable
+                  name="Account"
+                  screenHash="#profile"
+                  hasFetchFailed={accountChunk.hasFailed}
+                  onTryAgain={tryScreenAgain}
+                />
+              }
             >
               <Suspense fallback={null}>
                 <AccountView recordings={recording.saved} statusOf={uploads.statusOf} />
@@ -448,7 +461,14 @@ export function ContributePage({ locator }: ContributePageProps) {
           {isHistoryShown && (
             <ErrorBoundary
               key={screenTries}
-              fallback={<ScreenUnavailable name="History" onTryAgain={tryScreenAgain} />}
+              fallback={
+                <ScreenUnavailable
+                  name="History"
+                  screenHash="#history"
+                  hasFetchFailed={historyChunk.hasFailed}
+                  onTryAgain={tryScreenAgain}
+                />
+              }
             >
               <Suspense fallback={null}>
                 <HistoryView
@@ -461,8 +481,12 @@ export function ContributePage({ locator }: ContributePageProps) {
             </ErrorBoundary>
           )}
           {toolbarTab && (
-            // Out of reach under the credits, as Start is.
-            <div inert={isCreditsShown} className={TOOLBAR_PLACE}>
+            // Out of reach under the credits, as Start is, and out of sight and reach while a
+            // question is asked on the screen under it (toolbar-hold.ts).
+            <div
+              inert={isCreditsShown || isToolbarHeld}
+              className={cn(TOOLBAR_PLACE, isToolbarHeld && 'invisible')}
+            >
               <BottomToolbar
                 current={toolbarTab}
                 onOpenRecord={toolbarOpeners[toolbarTab].record}

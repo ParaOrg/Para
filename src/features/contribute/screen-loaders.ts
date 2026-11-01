@@ -19,23 +19,30 @@ interface ScreenChunk<T> {
   load: () => Promise<T>;
   /** The chunk if it is already here, to be drawn without suspending. */
   loaded: () => T | null;
+  /** Whether the last fetch failed: the screen could not be drawn for want of its code. */
+  hasFailed: () => boolean;
 }
 
 function screenChunk<T>(fetchChunk: () => Promise<T>): ScreenChunk<T> {
   let held: T | null = null;
   let onItsWay: Promise<T> | null = null;
+  let didFail = false;
   const load = (): Promise<T> => {
     if (held) return Promise.resolve(held);
     onItsWay ??= fetchChunk().then(
-      (chunk) => (held = chunk),
+      (chunk) => {
+        didFail = false;
+        return (held = chunk);
+      },
       (error: unknown) => {
         onItsWay = null;
+        didFail = true;
         throw error;
       },
     );
     return onItsWay;
   };
-  return { load, loaded: () => held };
+  return { load, loaded: () => held, hasFailed: () => didFail };
 }
 
 /** History's chunk. */

@@ -1267,6 +1267,33 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await toolbar.getByRole('button', { name: 'Account', exact: true }).click();
   await page.locator('[data-screen-hash="#profile"]').waitFor();
   const onAccount = await toolbarBox();
+  // Logout's question over Account: the toolbar steps out of sight and out of reach.
+  await button(page, 'Logout').click();
+  await logoutQuestion(page).waitFor();
+  const toolbarUnderQuestion = await page.evaluate(() => {
+    const bar = document.querySelector('nav[aria-label="Screens"]');
+    return {
+      isInert: !!bar?.closest('[inert]'),
+      isHidden: !!bar && getComputedStyle(bar).visibility === 'hidden',
+    };
+  });
+  let isTabbedTo = false;
+  for (let i = 0; i < 6; i += 1) {
+    await page.keyboard.press('Tab');
+    if (await page.evaluate(() => !!document.activeElement?.closest('nav[aria-label="Screens"]')))
+      isTabbedTo = true;
+  }
+  check(
+    '  with Logout asked, the toolbar is out of sight and out of reach: no tap, no Tab onto it',
+    toolbarUnderQuestion.isInert && toolbarUnderQuestion.isHidden && !isTabbedTo,
+    JSON.stringify(toolbarUnderQuestion),
+  );
+  await logoutQuestion(page).getByRole('button', { name: 'Cancel' }).click();
+  await logoutQuestion(page).waitFor({ state: 'detached' });
+  check(
+    '  the question gone, the toolbar is back',
+    await toolbar.getByRole('button', { name: 'Record', exact: true }).isVisible(),
+  );
   await toolbar.getByRole('button', { name: 'Record', exact: true }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   await moveOver();
