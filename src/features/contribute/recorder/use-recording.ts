@@ -62,6 +62,7 @@ export function useRecording(): RecordingState {
     reportStore,
     reportNativeLog,
     showOtherTab: problems.showOtherTab,
+    clearOtherTab: problems.clearOtherTab,
     setPhase,
   });
   const { lastSaved, isSaving, save, cancel, recordAgain } = useRecordingSave({

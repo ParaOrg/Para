@@ -19,6 +19,7 @@ import { cn } from '@/shared/utils/cn';
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
 import { useChangePasswordView } from './account/use-change-password-view';
+import { useDeleteAccountView } from './account/use-delete-account-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
@@ -42,7 +43,8 @@ import { START_BUTTON_ATTR } from './screens/start-morph-attrs';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
-import { UploadCheck } from './uploads/upload-check';
+import { TUTORIAL_ENTRY, isTutorialEntry } from './tutorial/tutorial-entry';
+import type { TutorialDemo } from './tutorial/tutorial-steps';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
 
@@ -120,6 +122,13 @@ const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-reco
 const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 const loadSaveForm = retryingImport(() => import('./screens/save-form'));
 const loadSavedScreen = retryingImport(() => import('./screens/saved-screen'));
+// The check before a first upload, with Cloudflare's widget: fetched only when one is asked for.
+const loadUploadCheck = retryingImport(() => import('./uploads/upload-check'));
+const UploadCheck = lazy(() =>
+  loadUploadCheck().then((module) => ({ default: module.UploadCheck })),
+);
+const loadTutorial = retryingImport(() => import('./tutorial/tutorial'));
+const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: module.Tutorial })));
 // Start tracking's morph, off the opening: fetched with the recording screens ahead of Start.
 const loadStartMorph = retryingImport(() => import('./screens/start-morph'));
 const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
@@ -231,8 +240,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   const profile = useProfileView();
   const settings = useAccountSettingsView();
   const changePassword = useChangePasswordView();
-  // Account settings and Change password, which Account shows in its place, with no toolbar.
-  const isInsideAccount = settings.isOpen || changePassword.isOpen;
+  const deleteAccount = useDeleteAccountView();
+  // Account settings and the screens inside it, which Account shows in its place, with no toolbar.
+  const isInsideAccount = settings.isOpen || changePassword.isOpen || deleteAccount.isOpen;
   const { phase, figures } = recording;
   // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
   const [isPermissionsPending, setIsPermissionsPending] = useState(
@@ -262,12 +272,53 @@ export function ContributePage({ locator }: ContributePageProps) {
   const [isProfileKept, setIsProfileKept] = useState(false);
   if (isProfileShown && !isProfileKept) setIsProfileKept(true);
   if (!canSend && isProfileKept) setIsProfileKept(false);
+  // The tutorial, from Record's ?; under its later steps, a demo recording in Record's place.
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [tutorialDemo, setTutorialDemo] = useState<TutorialDemo>(null);
+  // Only over Ready: a ride, or the account gate, taking its place ends it, demo and all.
+  // A hash move (the browser's Forward onto History, say) ends it as a ride does.
+  const isTutorialShown =
+    isTutorialOpen &&
+    phase === 'ready' &&
+    accountGate === 'ready' &&
+    !isHistoryShown &&
+    !isProfileShown &&
+    !isPermissionsShown;
+  if (isTutorialOpen && !isTutorialShown) {
+    setIsTutorialOpen(false);
+    setTutorialDemo(null);
+  }
+  const helpButtonRef = useRef<HTMLButtonElement>(null);
+  // Back on Record, focus goes back to the ? that opened it, as a closed sheet hands it back.
+  const closeTutorialNow = useCallback(() => {
+    flushSync(() => {
+      setTutorialDemo(null);
+      setIsTutorialOpen(false);
+    });
+    helpButtonRef.current?.focus();
+  }, []);
+  // Opened with a history entry of its own, so the phone's Back closes it rather than leaving the
+  // page; its own Skip, Escape and Got it take that entry back off.
+  const openTutorial = () => {
+    window.history.pushState({ [TUTORIAL_ENTRY]: true }, '');
+    setIsTutorialOpen(true);
+  };
+  const closeTutorial = useCallback(() => {
+    if (isTutorialEntry(window.history.state)) window.history.back();
+    else closeTutorialNow();
+  }, [closeTutorialNow]);
+  useEffect(() => {
+    if (!isTutorialOpen) return;
+    window.addEventListener('popstate', closeTutorialNow);
+    return () => window.removeEventListener('popstate', closeTutorialNow);
+  }, [isTutorialOpen, closeTutorialNow]);
   const isStartShown =
     accountGate === 'ready' &&
     phase === 'ready' &&
     !isHistoryShown &&
     !isProfileShown &&
-    !isPermissionsShown;
+    !isPermissionsShown &&
+    tutorialDemo === null;
   // The map's credits, over Start, a recording or one left open: closed by ✕, Escape or a tap on
   // the dimmed map. Their own ⓘ opens them; every other screen over the map keeps MapLibre's
   // corner ⓘ.
@@ -300,6 +351,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     isProfileShown ||
     isPermissionsShown ||
     isCreditsShown ||
+    isTutorialOpen ||
     isStopShown ||
     phase === 'form' ||
     phase === 'saved';
@@ -389,15 +441,16 @@ export function ContributePage({ locator }: ContributePageProps) {
     return () => clearTimeout(later);
   }, [phase]);
 
-  // Signing out, or leaving Ready, must not leave #profile, #account-settings or #change-password
-  // to reopen Account after the next sign-in.
+  // Signing out, or leaving Ready, must not leave #profile or a screen inside Account settings to
+  // reopen Account after the next sign-in.
   useEffect(() => {
     const isUsable = accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
     if (isUsable || accountGate === 'loading') return;
     if (profile.isOpen) profile.close();
     if (settings.isOpen) settings.close();
     if (changePassword.isOpen) changePassword.close();
-  }, [phase, accountGate, profile, settings, changePassword]);
+    if (deleteAccount.isOpen) deleteAccount.close();
+  }, [phase, accountGate, profile, settings, changePassword, deleteAccount]);
 
   // History and Account are tabs on Ready; a build with no accounts has History alone. Ready hands
   // focus back to the tab whose screen was open.
@@ -455,7 +508,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       // (tab-motion.ts).
       data-screens={[
         canSend && '#history',
-        hasAccount && '#profile #account-settings #change-password',
+        hasAccount && '#profile #account-settings #change-password #delete-account',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -482,6 +535,18 @@ export function ContributePage({ locator }: ContributePageProps) {
                   onFlag={recording.markPlace}
                 />
               </Suspense>
+            ) : tutorialDemo ? (
+              // The demo's: where a recording's stands, and it flags nothing. Inert, as the rest of
+              // the demo is: under the tutorial's overlay, never focused or pressed.
+              <div inert className="contents">
+                <Suspense fallback={null}>
+                  <FlagStopButton
+                    isRecording={tutorialDemo === 'recording'}
+                    canFlag
+                    onFlag={() => undefined}
+                  />
+                </Suspense>
+              </div>
             ) : null
           }
         />
@@ -500,7 +565,9 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {uploads.check && (phase === 'ready' || phase === 'saved') && (
-            <UploadCheck check={uploads.check} />
+            <Suspense fallback={null}>
+              <UploadCheck check={uploads.check} />
+            </Suspense>
           )}
           <p role="status" className="sr-only">
             {recording.announcement}
@@ -513,8 +580,9 @@ export function ContributePage({ locator }: ContributePageProps) {
           {/* TODO: show TrackRoutesCard (tutorial/track-routes-card.tsx) over the map here, on Ready
               after the permissions screen, once the tutorial screens it opens are designed. */}
           {isStartShown && (
-            // Inert under the credits, as the map is: nothing of Start is reached behind them.
-            <div inert={isCreditsShown} className="contents">
+            // Inert under the credits and the tutorial, as the map is: nothing of Start is reached
+            // behind them. The tutorial's spotlight only shows Start; it is never pressed there.
+            <div inert={isCreditsShown || isTutorialOpen} className="contents">
               <ReadyScreen
                 earlierQuestion={earlier.question}
                 onStart={() => {
@@ -532,8 +600,15 @@ export function ContributePage({ locator }: ContributePageProps) {
                 accountTabRef={accountTabRef}
                 onOpenCredits={openCredits}
                 creditsButtonRef={creditsButtonRef}
+                onOpenTutorial={openTutorial}
+                helpButtonRef={helpButtonRef}
               />
             </div>
+          )}
+          {isTutorialShown && (
+            <Suspense fallback={null}>
+              <Tutorial onDemoChange={setTutorialDemo} onClose={closeTutorial} />
+            </Suspense>
           )}
           {isCreditsDrawn && (
             <Suspense fallback={null}>
@@ -588,8 +663,8 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Activity>
           )}
           {toolbarTab && (
-            // Out of reach under the credits, as Start is.
-            <ToolbarPlace isOutOfReach={isCreditsShown}>
+            // Out of reach under the credits and the tutorial, as Start is.
+            <ToolbarPlace isOutOfReach={isCreditsShown || isTutorialOpen}>
               <BottomToolbar
                 current={toolbarTab}
                 onOpenRecord={toolbarOpeners[toolbarTab].record}

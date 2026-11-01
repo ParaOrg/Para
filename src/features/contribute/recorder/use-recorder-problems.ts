@@ -10,6 +10,8 @@ export interface RecorderProblems {
   reportStore: (error: unknown) => void;
   /** Says another tab holds the recorder, and keeps saying so on every Start. */
   showOtherTab: () => void;
+  /** This tab was handed the recorder: the other-tab warning goes, and Start records again. */
+  clearOtherTab: () => void;
   /** Whether another tab holds the recorder; if so, says so again. */
   refuseIfOtherTab: () => boolean;
   /** Clears what storage said, once a recording starts afresh or is kept. */
@@ -38,6 +40,12 @@ export function useRecorderProblems(): RecorderProblems {
     setStorageProblem(OTHER_TAB_PROBLEM);
   }, []);
 
+  // The other tab went and this one holds the recorder now: its warning goes, and Start records.
+  const clearOtherTab = useCallback(() => {
+    isOtherTab.current = false;
+    setStorageProblem((problem) => (problem === OTHER_TAB_PROBLEM ? null : problem));
+  }, []);
+
   function refuseIfOtherTab() {
     if (isOtherTab.current) setStorageProblem(OTHER_TAB_PROBLEM);
     return isOtherTab.current;
@@ -47,6 +55,7 @@ export function useRecorderProblems(): RecorderProblems {
     problem: storageProblem ?? locationProblem,
     reportStore,
     showOtherTab,
+    clearOtherTab,
     refuseIfOtherTab,
     clearStorageProblem: () => setStorageProblem(null),
     setLocationProblem,

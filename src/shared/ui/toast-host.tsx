@@ -11,6 +11,8 @@ interface QueuedToast {
   seq: number;
   /** Raised when the same toast is asked again while it shows, to start an info's clock again. */
   asked: number;
+  /** On its way out: ✕, its action, its clock or hideToast. Only the first in the queue leaves. */
+  isLeaving: boolean;
 }
 
 interface ToastHostProps {
@@ -21,20 +23,21 @@ const idOf = (message: ToastMessage): string => message.id ?? `${message.kind}:$
 
 /**
  * Gives its children useToast and shows what they say, one toast at a time, in the order asked;
- * the same toast asked again while it shows or waits is said once. An info toast goes by itself
+ * the same toast asked again while it shows or waits is said once, and hideToast takes one back. An info toast goes by itself
  * after INFO_TOAST_MS, its clock held while a pointer is over it or focus is in it; a problem stays
  * until ✕ or its action. Screen readers hear only the words, from two regions that are always
  * there: info politely (role=status), a problem at once (role=alert). The card, with its buttons,
  * sits outside them, so the buttons are not read out with the message.
+ *
+ * The card sits 12 under the safe area. A page whose own top row it would cover sets
+ * `--toast-top` on an ancestor (its row's height plus 12, from spacing tokens), and the card sits
+ * there instead.
  */
 export function ToastHost({ children }: ToastHostProps) {
   const [queue, setQueue] = useState<QueuedToast[]>([]);
-  const [isLeaving, setIsLeaving] = useState(false);
   const [isPointerOver, setIsPointerOver] = useState(false);
   const [hasFocusWithin, setHasFocusWithin] = useState(false);
   const nextSeq = useRef(0);
-  // Read in showToast's updater, which must not ask a leaving toast to stay.
-  const isLeavingRef = useRef(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Where focus was before it came into the toast, to go back to when the toast goes.
   const returnFocusTo = useRef<HTMLElement | null>(null);
@@ -44,21 +47,28 @@ export function ToastHost({ children }: ToastHostProps) {
     const id = idOf(message);
     setQueue((waiting) => {
       const [showing, ...rest] = waiting;
-      if (showing?.id === id && !isLeavingRef.current) {
+      if (showing?.id === id && !showing.isLeaving) {
         return [{ ...showing, message, asked: showing.asked + 1 }, ...rest];
       }
       if (waiting.some((toast, index) => index > 0 && toast.id === id)) return waiting;
       nextSeq.current += 1;
-      return [...waiting, { message, id, seq: nextSeq.current, asked: 0 }];
+      return [...waiting, { message, id, seq: nextSeq.current, asked: 0, isLeaving: false }];
     });
   }, []);
-  const context = useMemo(() => ({ showToast }), [showToast]);
 
-  // Stable: the info clock's effect depends on it.
+  // The showing toast sets off; the next follows once it has slid out (handleLeft). Stable: the
+  // info clock's effect depends on it.
   const leave = useCallback(() => {
-    isLeavingRef.current = true;
-    setIsLeaving(true);
+    setQueue(([showing, ...rest]) => (showing ? [{ ...showing, isLeaving: true }, ...rest] : []));
   }, []);
+  const hideToast = useCallback((id: string) => {
+    setQueue(([showing, ...rest]) => {
+      if (!showing) return [];
+      const waiting = rest.filter((toast) => toast.id !== id);
+      return [showing.id === id ? { ...showing, isLeaving: true } : showing, ...waiting];
+    });
+  }, []);
+  const context = useMemo(() => ({ showToast, hideToast }), [showToast, hideToast]);
   // Stable: Toast waits on its slide out in an effect that depends on it.
   const handleLeft = useCallback(() => {
     // Its buttons are about to go: a keyboard's place goes back where it came from, not to <body>.
@@ -68,8 +78,6 @@ export function ToastHost({ children }: ToastHostProps) {
       else if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     }
     returnFocusTo.current = null;
-    isLeavingRef.current = false;
-    setIsLeaving(false);
     setQueue((waiting) => waiting.slice(1));
   }, []);
 
@@ -84,6 +92,7 @@ export function ToastHost({ children }: ToastHostProps) {
   }, [currentSeq]);
 
   const isInfo = current?.message.kind === 'info';
+  const isLeaving = current?.isLeaving ?? false;
   const isHeld = isPointerOver || hasFocusWithin;
   const asked = current?.asked;
   // An info toast's clock, run outside React: held while it is pointed at or focused, and started
@@ -103,7 +112,7 @@ export function ToastHost({ children }: ToastHostProps) {
         <div role="status">{message?.kind === 'info' && words}</div>
         <div role="alert">{message?.kind === 'problem' && words}</div>
       </div>
-      <div className="pointer-events-none fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50">
+      <div className="pointer-events-none fixed inset-x-3 top-[var(--toast-top,calc(env(safe-area-inset-top)+0.75rem))] z-50">
         {current && message && (
           <div
             ref={wrapperRef}
