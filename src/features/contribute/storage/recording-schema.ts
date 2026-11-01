@@ -69,7 +69,6 @@ export const uploadMarkSchema = z.union([
     byEditor: z.optional(z.boolean()),
   }),
 ]);
-export type UploadMark = z.infer<typeof uploadMarkSchema>;
 
 /** What every version of a stored recording holds. */
 const recordingShape = {
