@@ -724,6 +724,76 @@ async function seed(page, id, name, upload) {
   await page.context().close();
 }
 
+// ------------------------------- the pill glides from tab to tab, two over included
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  /** Taps `tab` once the last move is over, and once this one shows, holds it halfway. */
+  const pillHalfway = async (tab) => {
+    await page.waitForFunction(
+      () =>
+        !document
+          .getAnimations()
+          .some((animation) => animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+    await tab.click();
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .some(
+          (animation) =>
+            animation.effect?.pseudoElement?.startsWith('::view-transition') &&
+            animation.playState === 'running',
+        ),
+    );
+    const at = await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        animation.pause();
+        animation.currentTime = animation.effect.getComputedTiming().endTime / 2;
+      }
+      const bar = document.querySelector('.tab-toolbar');
+      const left = (element) => Math.round(element.getBoundingClientRect().left);
+      return {
+        pill: left(bar.firstElementChild),
+        ...Object.fromEntries(
+          [...bar.querySelectorAll('[data-tab]')].map((tab) => [tab.dataset.tab, left(tab)]),
+        ),
+      };
+    });
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) animation.play();
+    });
+    return at;
+  };
+  const isBetween = (at, from, to) =>
+    at.pill > Math.min(at[from], at[to]) && at.pill < Math.max(at[from], at[to]);
+
+  const toAccount = await pillHalfway(accountTab(page));
+  await heading('Account').waitFor();
+  check(
+    'Record to Account: halfway through the move, the pill is between them',
+    isBetween(toAccount, 'record', 'account'),
+    JSON.stringify(toAccount),
+  );
+  const toRecord = await pillHalfway(toolbarRecord(page));
+  await start(page).waitFor();
+  check(
+    '  Account to Record: halfway, the pill is between them',
+    isBetween(toRecord, 'account', 'record'),
+    JSON.stringify(toRecord),
+  );
+  const toHistory = await pillHalfway(historyTab(page));
+  await heading('History').waitFor();
+  check(
+    '  Record to History: halfway, the pill is between them',
+    isBetween(toHistory, 'record', 'history'),
+    JSON.stringify(toHistory),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------------------------------------- Account: the Commute Statistics
 {
   const { page, fake, errors } = await phone();
@@ -1717,6 +1787,27 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await backToRecord();
 
   await hold('history');
+  // The pill picked up glides to the finger from the tab it marked: held halfway, it is between.
+  const pickedUp = await page.evaluate(() => {
+    for (const animation of document.getAnimations()) {
+      animation.pause();
+      animation.currentTime = animation.effect.getComputedTiming().endTime / 2;
+    }
+    const bar = document.querySelector('.tab-toolbar');
+    const left = (element) => Math.round(element.getBoundingClientRect().left);
+    const at = {
+      pill: left(bar.firstElementChild),
+      record: left(bar.querySelector('[data-tab="record"]')),
+      history: left(bar.querySelector('[data-tab="history"]')),
+    };
+    for (const animation of document.getAnimations()) animation.play();
+    return at;
+  });
+  check(
+    '  a still hold on another tab glides the pill there from Record, seen halfway between them',
+    pickedUp.pill > pickedUp.record && pickedUp.pill < pickedUp.history,
+    JSON.stringify(pickedUp),
+  );
   await letGo();
   check(
     '  a still hold on another tab, let go there, opens it',

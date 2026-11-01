@@ -162,6 +162,13 @@ let running: ViewTransition | null = null;
  */
 const RUN_MS = 400;
 let lastRunAt = Number.NEGATIVE_INFINITY;
+/** Whether the move under way is one of a run of taps: it shows at once, with no slide. */
+let isRunMove = false;
+
+/** Whether the move under way is one of a run of taps: what moves with it moves quickly. */
+export function isMoveInRun(): boolean {
+  return isRunMove;
+}
 
 /*
  * While a view transition runs, the browser hit-tests its picture of the page, not the page: a
@@ -211,6 +218,7 @@ export function moveBetweenScreens(willChange: () => boolean, change: () => void
   const now = performance.now();
   const isInRun = running !== null || now - lastRunAt < RUN_MS;
   if (isInRun) lastRunAt = now;
+  isRunMove = isInRun;
   running?.skipTransition();
   // No slide left over from the last move; this one's way is set as its hash changes.
   delete document.documentElement.dataset.tabMotion;
