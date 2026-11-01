@@ -93,11 +93,14 @@ export function screenEntryDirection(): MotionDirection | null {
 
 /**
  * Whether the screen for `hash` is on the page: its own `[data-screen-hash]` (History, Account,
- * Account settings), or for Record none of them over the map. A screen the page cannot open now
+ * Account settings) in sight, or for Record none of them over the map. A screen the page cannot open now
  * (its `[data-screens]`) never draws: nothing to wait for.
  */
 function isDrawn(hash: string): boolean {
-  const screens = [...document.querySelectorAll('[data-screen-hash]')];
+  // A screen kept but hidden (contribute-page.tsx) is not drawn.
+  const screens = [...document.querySelectorAll('[data-screen-hash]')].filter((screen) =>
+    screen.checkVisibility(),
+  );
   if (SCREEN_ORDER[hash] === undefined) return true;
   const openable = document.querySelector('[data-screens]')?.getAttribute('data-screens');
   if (
@@ -134,9 +137,15 @@ function hashSettled(): Promise<void> {
       window.removeEventListener('hashchange', handleHashChange);
       window.clearTimeout(changeTimer);
       drawnTimer = window.setTimeout(finish, DRAWN_MS);
-      // React draws the screen in a task after the change: watched for, not guessed.
+      // React draws the screen in a task after the change, or shows one it kept: watched for,
+      // not guessed.
       observer = new MutationObserver(checkDrawn);
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'hidden'],
+      });
       window.setTimeout(checkDrawn, 0);
     }
     const changeTimer = window.setTimeout(finish, SETTLE_MS);
@@ -147,6 +156,40 @@ function hashSettled(): Promise<void> {
 let running: ViewTransition | null = null;
 
 /**
+ * A run of taps starts with one that comes while a move is under way. How soon after a tap of
+ * the run the next still belongs to it: the length of a move (the gentle Motion token, 300) and a
+ * little over. A tap once a move has ended, outside a run, slides as ever.
+ */
+const RUN_MS = 400;
+let lastRunAt = Number.NEGATIVE_INFINITY;
+
+/*
+ * While a view transition runs, the browser hit-tests its picture of the page, not the page: a
+ * tap on the toolbar lands on the document, whatever `::view-transition { pointer-events: none }`
+ * says, and is lost. The toolbar stands still through every move, so the tab under the tap is
+ * the one the person sees there: the tap is handed to it, and its move skips this one's end.
+ */
+document.addEventListener(
+  'click',
+  (event) => {
+    if (!running || event.target !== document.documentElement) return;
+    const tab = [...document.querySelectorAll<HTMLElement>('[data-tab]')].find((candidate) => {
+      const box = candidate.getBoundingClientRect();
+      return (
+        event.clientX >= box.left &&
+        event.clientX <= box.right &&
+        event.clientY >= box.top &&
+        event.clientY <= box.bottom
+      );
+    });
+    if (!tab) return;
+    event.stopPropagation();
+    tab.click();
+  },
+  { capture: true },
+);
+
+/**
  * Moves between the toolbar's screens with `change`, which changes the URL's hash, when
  * `willChange` says it would. Where the browser can, the move is a view transition: the screen over the map slides
  * the way the tabs run, a short way, and fades, while the map stays put (tab-motion.css). A move during
@@ -154,12 +197,18 @@ let running: ViewTransition | null = null;
  * on it: focus and input go to the new screen as it is drawn.
  */
 export function moveBetweenScreens(willChange: () => boolean, change: () => void): void {
+  // Taps faster than the moves: the one under way ends at once, and this one just shows, as a
+  // phone's own tab bar does, and so does every tap of the run that follows it. A slide costs two
+  // pictures of the page before it moves; in a run of taps, the screen comes first.
+  const now = performance.now();
+  const isInRun = running !== null || now - lastRunAt < RUN_MS;
+  if (isInRun) lastRunAt = now;
   running?.skipTransition();
   // No slide left over from the last move; this one's way is set as its hash changes.
   delete document.documentElement.dataset.tabMotion;
   // Nothing to move to (the screen already showing, a second tap): nothing to show.
   if (!willChange()) return;
-  if (!('startViewTransition' in document) || prefersReducedMotion()) {
+  if (isInRun || !('startViewTransition' in document) || prefersReducedMotion()) {
     change();
     return;
   }
