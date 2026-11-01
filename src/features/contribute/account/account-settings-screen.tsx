@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
 
@@ -47,24 +49,13 @@ export function AccountSettingsScreen({
 }: AccountSettingsScreenProps) {
   const headingRef = useFocusHeading();
   const entryRef = useScreenEntry<HTMLElement>();
-  // The email as it is, Password and Delete account: under the name and number once they are
-  // here, on their own while they load.
-  const rest = (
-    <>
-      <TextField label="Email" value={email} disabled readOnly />
-      <div className="flex flex-col gap-1.5">
-        <PasswordButtonField onOpen={onOpenChangePassword} />
-        {isPasswordChanged && (
-          <p id="password-changed" className="text-sm/5 text-content-quaternary">
-            Your password is changed.
-          </p>
-        )}
-      </div>
-      <div className="*:w-full">
-        <Button variant="plain" tone="error" label="Delete account" onClick={onOpenDeleteAccount} />
-      </div>
-    </>
-  );
+  // A save that went through takes its sheet, and the focus on it, away: focus goes to the
+  // heading rather than to the page.
+  const wasSaving = useRef(isSaving);
+  useEffect(() => {
+    if (wasSaving.current && !isSaving && !saveError) headingRef.current?.focus();
+    wasSaving.current = isSaving;
+  }, [isSaving, saveError, headingRef]);
 
   return (
     <section
@@ -81,6 +72,7 @@ export function AccountSettingsScreen({
           // Back from Change password, the heading takes focus as the screen arrives: it reads the
           // news out, where a status line arriving with its words would go unheard.
           describedBy={isPasswordChanged ? 'password-changed' : undefined}
+          isBackDisabled={isSaving}
           onBack={onBack}
         />
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-48">
@@ -97,7 +89,7 @@ export function AccountSettingsScreen({
               <Button variant="secondary" size="small" label="Try again" onClick={onRetry} />
             </div>
           )}
-          {profile ? (
+          {profile && (
             <ProfileForm
               // A saved profile arrives as new values: the form starts again from them.
               key={`${profile.name}|${profile.phone}`}
@@ -105,12 +97,27 @@ export function AccountSettingsScreen({
               isBusy={isSaving}
               error={saveError}
               onSubmit={onSave}
-            >
-              {rest}
-            </ProfileForm>
-          ) : (
-            rest
+            />
           )}
+          {/* Drawn from the first, under the name and number once they are here: nothing in it is
+              drawn again, or loses focus, as they arrive. */}
+          <TextField label="Email" value={email} disabled readOnly />
+          <div className="flex flex-col gap-1.5">
+            <PasswordButtonField onOpen={onOpenChangePassword} />
+            {isPasswordChanged && (
+              <p id="password-changed" className="text-sm/5 text-content-quaternary">
+                Your password is changed.
+              </p>
+            )}
+          </div>
+          <div className="*:w-full">
+            <Button
+              variant="plain"
+              tone="error"
+              label="Delete account"
+              onClick={onOpenDeleteAccount}
+            />
+          </div>
         </div>
       </div>
     </section>

@@ -29,7 +29,7 @@ export function ChangePasswordView({ onBack, onDone }: ChangePasswordViewProps) 
     return (
       <PasswordResetFlow
         captcha={captcha}
-        initialEmail={email}
+        lockedEmail={email}
         onBack={() => setIsResetting(false)}
         onDone={onDone}
       />

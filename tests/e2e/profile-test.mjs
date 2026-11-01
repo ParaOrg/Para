@@ -301,6 +301,38 @@ async function seed(page, id, name, upload) {
       fake.profileRequests === 0,
   );
 
+  // Typed the same as what is stored, in other words: nothing to save.
+  await field(page, 'Name').fill('Tester  ');
+  await field(page, 'Phone number').fill('0917 123 4567');
+  check(
+    '  an edit that changes nothing (spaces, 0917… for the stored +63917…) raises no sheet',
+    (await button(page, 'Save changes').count()) === 0,
+  );
+  await field(page, 'Name').fill('Tester');
+  await field(page, 'Phone number').fill('9171234567');
+
+  // A change not saved yet: kept under Change password, dropped by Back.
+  await field(page, 'Name').fill('Half Typed');
+  await button(page, 'Change password').click();
+  await page.getByRole('heading', { level: 1, name: 'Change password' }).waitFor();
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  check(
+    '  a change not saved yet is still there back from Change password, its sheet up',
+    (await field(page, 'Name').inputValue()) === 'Half Typed' &&
+      (await button(page, 'Save changes').isVisible()),
+  );
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await button(page, 'Account settings').click();
+  await field(page, 'Name').waitFor();
+  check(
+    '  and Back drops it, quietly: Account settings opens again on what is stored',
+    (await field(page, 'Name').inputValue()) === 'Tester' &&
+      (await button(page, 'Save changes').count()) === 0 &&
+      fake.profileRequests === 0,
+  );
+
   await field(page, 'Phone number').fill('12345');
   await button(page, 'Save changes').click();
   await page.getByText('Enter a mobile number like 917 123 4567').waitFor();
@@ -357,8 +389,11 @@ async function seed(page, id, name, upload) {
   await button(page, 'Forgot password?').click();
   await page.getByRole('heading', { level: 1, name: 'Forgot password' }).waitFor();
   check(
-    '  Forgot password? starts the reset by email with the account’s own address',
-    (await field(page, 'Email').inputValue()) === ACCOUNT.email,
+    '  Forgot password? starts the reset by email for the account’s own address, which cannot be changed',
+    // By role: Account settings' own Email is still on the page, hidden under it.
+    (await page.getByRole('textbox', { name: 'Email', exact: true }).inputValue()) ===
+      ACCOUNT.email &&
+      (await page.getByRole('textbox', { name: 'Email', exact: true }).isDisabled()),
   );
   await button(page, 'Back').click();
   await page.getByRole('heading', { level: 1, name: 'Change password' }).waitFor();
@@ -390,6 +425,38 @@ async function seed(page, id, name, upload) {
     database.users.get(ACCOUNT_ID).password === 'n3wpassword' &&
       fake.order.includes('update_password') &&
       (await page.evaluate(() => location.hash)) === '#account-settings',
+  );
+  check(
+    '  its heading, focused, says the password is changed',
+    (await page
+      .getByRole('heading', { level: 1, name: 'Account settings' })
+      .evaluate(
+        (heading) =>
+          document.activeElement === heading &&
+          document.getElementById(heading.getAttribute('aria-describedby') ?? '')?.textContent,
+      )) === 'Your password is changed.',
+  );
+
+  // The reset by email, from Change password, to its end: back on Account settings, which says so.
+  await button(page, 'Change password').click();
+  await button(page, 'Forgot password?').click();
+  await page.getByRole('heading', { level: 1, name: 'Forgot password' }).waitFor();
+  await page.waitForFunction(
+    () =>
+      ![...document.querySelectorAll('button')].find((b) => b.textContent === 'Verify')?.disabled,
+  );
+  await button(page, 'Verify').click();
+  await page.getByRole('heading', { level: 1, name: 'Enter the code' }).waitFor();
+  await field(page, 'Verification code').fill(fake.codes.get(ACCOUNT.email));
+  await field(page, 'New password').fill('r3setpassword');
+  await field(page, 'Confirm password').fill('r3setpassword');
+  await button(page, 'Save').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  check(
+    '  a reset finished from Change password comes back to Account settings, which says so',
+    database.users.get(ACCOUNT_ID).password === 'r3setpassword' &&
+      (await page.evaluate(() => location.hash)) === '#account-settings' &&
+      (await page.getByText('Your password is changed.').count()) === 1,
   );
   database.users.get(ACCOUNT_ID).password = ACCOUNT.password;
 

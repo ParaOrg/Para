@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { PhoneField } from '@/design-system/primitives/phone-field';
 import { TextField } from '@/design-system/primitives/text-field';
@@ -14,8 +15,6 @@ interface ProfileFormProps {
   /** One line about the last try, or null. */
   error: string | null;
   onSubmit: (fields: ProfileFields) => void;
-  /** What the screen shows under the name and number: the email, the password, Delete account. */
-  children: ReactNode;
 }
 
 const FORM_ID = 'profile-form';
@@ -26,7 +25,7 @@ type FieldErrors = Partial<Record<keyof ProfileFields, string>>;
  * Account settings' name and number (Figma 4540:4821). Once either differs from what is stored,
  * the Save changes sheet rises; Cancel puts back what is stored and lowers it.
  */
-export function ProfileForm({ profile, isBusy, error, onSubmit, children }: ProfileFormProps) {
+export function ProfileForm({ profile, isBusy, error, onSubmit }: ProfileFormProps) {
   const stored = { name: profile.name, phone: numberAfterCountryCode(profile.phone) };
   const [fields, setFields] = useState<ProfileFields>(stored);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -41,14 +40,20 @@ export function ProfileForm({ profile, isBusy, error, onSubmit, children }: Prof
     setFieldErrors(checked.isValid ? {} : checked.errors);
     if (checked.isValid) onSubmit(checked.value);
   };
+  const formRef = useRef<HTMLFormElement>(null);
+  // The sheet goes with Cancel: focus, which was on it, goes back to the name.
   const handleCancel = () => {
-    setFields(stored);
-    setFieldErrors({});
+    flushSync(() => {
+      setFields(stored);
+      setFieldErrors({});
+    });
+    formRef.current?.querySelector('input')?.focus();
   };
 
   return (
     <>
       <form
+        ref={formRef}
         id={FORM_ID}
         noValidate
         onSubmit={(event) => {
@@ -71,7 +76,6 @@ export function ProfileForm({ profile, isBusy, error, onSubmit, children }: Prof
           onChange={(event) => setFields({ ...fields, phone: event.target.value })}
         />
       </form>
-      {children}
       {(isChanged || isBusy) && (
         <SaveChangesSheet formId={FORM_ID} isBusy={isBusy} error={error} onCancel={handleCancel} />
       )}
