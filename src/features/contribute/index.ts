@@ -8,5 +8,6 @@ export { connectContributions } from './api/contribute-client';
 export { hasOpenRecording } from './storage/open-recording';
 export { askForPersistentStorage } from './storage/persistent-storage';
 export { applySlowmoIfAsked } from './common/slowmo-switch';
+export { applyBounceIfAsked } from './common/bounce-switch';
 export { isNativeApp, prepareNativeApp } from './native-bridge/native-app';
 export { runEmulatorRide } from './native-bridge/native-emulator-ride';

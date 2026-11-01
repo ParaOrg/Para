@@ -9,8 +9,13 @@ import {
 
 /** How long a finger rests on the bar before it picks the pill up. */
 const HOLD_MS = 250;
-/** How far a finger moves along the bar before its drag picks the pill up, without the hold. */
-const DRAG_PX = 8;
+/**
+ * How far a finger moves along the bar before its drag picks the pill up, without the hold. A
+ * thumb's tap drifts less: it moves nothing, and is still a tap.
+ */
+const SWIPE_PX = 24;
+/** How far a tap may drift before the browser may make no click of it: past it, the tap is ours. */
+const DRIFT_PX = 8;
 /** How far above the bar a sliding finger may go before the slide is called off. */
 const LEAVE_ABOVE_PX = 80;
 /** How soon after a slide's release a click is the release's own, not a new tap. */
@@ -62,9 +67,13 @@ export function attachToolbarSlide({
   let press: {
     pointerId: number;
     startX: number;
+    /** When the finger came down: let go before HOLD_MS, a press is a tap, however it drifted. */
+    pressedAt: number;
     holdTimer: number;
     isSliding: boolean;
     over: HTMLElement;
+    /** Where the finger is now along the bar. */
+    lastX: number;
   } | null = null;
   // When a slide was last let go: the click a release makes (a mouse's) is the slide's, not a tap.
   let releasedAt = Number.NEGATIVE_INFINITY;
@@ -94,7 +103,7 @@ export function attachToolbarSlide({
     if (prefersReducedMotion()) return;
     pill.animate(
       [{ transform: `translateX(${from}px)` }, { transform: `translateX(${on.offsetLeft}px)` }],
-      motionOf('move'),
+      motionOf('pill'),
     );
   };
 
@@ -116,7 +125,7 @@ export function attachToolbarSlide({
     // lands there, the pill seen to go from the tab it marked. The pick-up's own tick stands for
     // reaching that tab.
     const from = pill.style.transform;
-    slideTo(press.startX, false);
+    slideTo(press.lastX, false);
     const to = pill.style.transform;
     if (from && from !== to && !prefersReducedMotion()) {
       pill.animate([{ transform: from }, { transform: to }], {
@@ -149,12 +158,30 @@ export function attachToolbarSlide({
   const end = (isKept: boolean) => {
     if (!press) return;
     window.clearTimeout(press.holdTimer);
-    const { isSliding, over } = press;
+    const { isSliding, over, pressedAt, startX, lastX } = press;
     press = null;
-    if (!isSliding) return;
+    const isQuick = performance.now() - pressedAt < HOLD_MS;
+    const isTapKept = isKept && !bar.closest('[inert]');
+    if (!isSliding) {
+      // A tap that drifted may get no click from the browser: it opens the tab under the finger
+      // here, and a click that does come is this tap's.
+      if (!isTapKept || Math.abs(lastX - startX) < DRIFT_PX) return;
+      releasedAt = performance.now();
+      const name = tabName(tabAt(lastX - bar.getBoundingClientRect().left));
+      if (name && name !== current) onPick(name);
+      return;
+    }
     bar.toggleAttribute('data-sliding', false);
     endSelectionTicks();
     releasedAt = performance.now();
+    // A quick swipe let go before the hold is a tap on the tab it ends on: the screen moves as
+    // for any tap, the pill gliding on from where the swipe left it.
+    if (isTapKept && isQuick) {
+      unpaint();
+      const name = tabName(over);
+      if (name && name !== current) onPick(name);
+      return;
+    }
     // A question took the toolbar mid-slide (toolbar-hold.tsx): the slide is called off.
     const target = isKept && !bar.closest('[inert]') ? over : currentTab;
     const name = tabName(target);
@@ -179,6 +206,8 @@ export function attachToolbarSlide({
     press = {
       pointerId: e.pointerId,
       startX: e.clientX,
+      lastX: e.clientX,
+      pressedAt: performance.now(),
       holdTimer: window.setTimeout(pickUp, HOLD_MS),
       isSliding: false,
       over: currentTab,
@@ -207,7 +236,8 @@ export function attachToolbarSlide({
         abandon();
         return;
       }
-      if (Math.abs(e.clientX - press.startX) < DRAG_PX) return;
+      press.lastX = e.clientX;
+      if (Math.abs(e.clientX - press.startX) < SWIPE_PX) return;
       pickUp();
     }
     if (e.clientY < bar.getBoundingClientRect().top - LEAVE_ABOVE_PX) {

@@ -22,6 +22,8 @@ const DURATION_TOKENS = [
   '--transition-duration-sheet',
   '--transition-duration-turn',
   '--transition-duration-slow',
+  '--transition-duration-pill',
+  '--transition-duration-pill-quick',
 ] as const;
 
 const factorSchema = z.pipe(

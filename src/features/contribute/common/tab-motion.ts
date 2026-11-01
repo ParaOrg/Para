@@ -33,6 +33,10 @@ const MOTION_TOKENS = {
   move: ['--transition-duration-gentle', '--ease-move'],
   /** Something on its way out, quickly: Start tracking folding into its pill. */
   leave: ['--transition-duration-quick', '--ease-exit'],
+  /** The toolbar's pill gliding to its tab, with a soft spring. */
+  pill: ['--transition-duration-pill', '--ease-pill'],
+  /** The pill turning to the newest tap of a run, on the same spring. */
+  pillQuick: ['--transition-duration-pill-quick', '--ease-pill'],
 } as const;
 
 /**
