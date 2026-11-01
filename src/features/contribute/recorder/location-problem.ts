@@ -1,18 +1,21 @@
 import type { WatchError } from './use-geolocation-watch';
 import { isNativeApp } from '../native-bridge/native-app';
+import type { PageProblem } from '../notices/page-problem';
+import {
+  LOCATION_BLOCKED_PROBLEM,
+  LOCATION_OFF_PROBLEM,
+  POSITION_TIMEOUT_PROBLEM,
+  POSITION_UNAVAILABLE_PROBLEM,
+} from '../notices/recorder-problems';
 
 const PERMISSION_DENIED = 1;
 const POSITION_UNAVAILABLE = 2;
 
-/** What a failed location request means for the contributor, in words and what to do. */
-export function locationProblem(error: WatchError): string {
+/** What a failed location request means for the contributor: what happened, and what to do. */
+export function locationProblem(error: WatchError): PageProblem {
   if (error.code === PERMISSION_DENIED) {
-    return isNativeApp()
-      ? 'Location is off for Para. Turn it on in the phone’s Settings, under Apps, Para, Permissions, then start again.'
-      : 'Location is blocked for this page. Allow it in the browser settings, then start again.';
+    return isNativeApp() ? LOCATION_OFF_PROBLEM : LOCATION_BLOCKED_PROBLEM;
   }
-  if (error.code === POSITION_UNAVAILABLE) {
-    return 'The phone could not work out where it is. Check that location is on.';
-  }
-  return 'The phone took too long to find its position.';
+  if (error.code === POSITION_UNAVAILABLE) return POSITION_UNAVAILABLE_PROBLEM;
+  return POSITION_TIMEOUT_PROBLEM;
 }

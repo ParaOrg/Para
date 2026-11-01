@@ -109,6 +109,9 @@ function AccountView(props: AccountViewProps) {
   const [Screen] = useState(() => accountChunk.loaded()?.AccountView ?? LazyAccountView);
   return <Screen {...props} />;
 }
+// The toasts that say what went wrong, fetched the first time something does.
+const loadPageToasts = retryingImport(() => import('./notices/page-toasts'));
+const PageToasts = lazy(() => loadPageToasts().then((module) => ({ default: module.PageToasts })));
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
 // fetches them as it opens (below), so Start never waits on the network, nor fails without one.
 // A fetch ahead that failed offline does not leave them unreachable: each asks again afresh.
@@ -254,6 +257,12 @@ export function ContributePage({ locator }: ContributePageProps) {
     (profile.isOpen || isInsideAccount) &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
+  // What went wrong, said in toasts at the top until closed or fixed: the recorder's problem, and
+  // a recording running with the screen free to sleep. Their code is fetched the first time there
+  // is one, then kept, to take them away once fixed.
+  const isScreenFreeToSleep = phase === 'recording' && recording.isWakeRefused;
+  const [hasHadProblems, setHasHadProblems] = useState(false);
+  if ((recording.problem || isScreenFreeToSleep) && !hasHadProblems) setHasHadProblems(true);
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
   // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
   // rest. Signed out, they go.
@@ -549,13 +558,10 @@ export function ContributePage({ locator }: ContributePageProps) {
       {accountGate === 'ready' && (
         // A question on Record, History or Account holds the toolbar (toolbar-hold.tsx).
         <ToolbarHoldProvider>
-          {recording.problem && (
-            <p
-              role="alert"
-              className="absolute inset-x-4 top-[calc(env(safe-area-inset-top)+5.5rem)] z-30 bg-surface p-2 text-sm/5 text-content-primary"
-            >
-              {recording.problem}
-            </p>
+          {hasHadProblems && (
+            <Suspense fallback={null}>
+              <PageToasts problem={recording.problem} isScreenFreeToSleep={isScreenFreeToSleep} />
+            </Suspense>
           )}
           {uploads.check && (phase === 'ready' || phase === 'saved') && (
             <Suspense fallback={null}>
@@ -689,7 +695,6 @@ export function ContributePage({ locator }: ContributePageProps) {
                   figures={figures}
                   mode={recording.mode}
                   isPaused={phase === 'paused'}
-                  isAwake={recording.isAwake}
                   shouldFocusPause={recording.focusTarget === 'pause'}
                   onPause={recording.stop}
                   onResume={recording.resume}

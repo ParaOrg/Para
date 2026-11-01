@@ -80,7 +80,7 @@ export function useRecording(): RecordingState {
   });
 
   const isRecording = phase === 'recording';
-  const isAwake = useWakeLock(isRecording);
+  const isWakeRefused = useWakeLock(isRecording);
   const { figures, restartClock } = useLiveFigures(current, fixes, isRecording);
 
   /**
@@ -191,7 +191,7 @@ export function useRecording(): RecordingState {
     mode: currentMode(current?.modes ?? []),
     lastSaved,
     saved,
-    isAwake,
+    isWakeRefused,
     problem: problems.problem,
     announcement,
     start,

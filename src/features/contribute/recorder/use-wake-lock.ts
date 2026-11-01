@@ -3,18 +3,19 @@ import { useEffect, useState } from 'react';
 /**
  * Keeps the screen awake while `active`, so the phone does not stop locating
  * on its own. The browser drops the lock whenever the page is hidden, so it is
- * asked for again when the page comes back. Returns whether the lock is held:
- * a browser may refuse (no support, low battery), and the page says so.
+ * asked for again when the page comes back. Returns whether the lock was
+ * refused (no support, low battery), so the page can say so; not while it is
+ * still being asked for, nor while the page is hidden, when it is let go.
  */
 export function useWakeLock(active: boolean): boolean {
-  const [isHeld, setIsHeld] = useState(false);
+  const [isRefused, setIsRefused] = useState(false);
+  const isUnsupported = !('wakeLock' in navigator);
 
   useEffect(() => {
     if (!active || !('wakeLock' in navigator)) return;
     let sentinel: WakeLockSentinel | null = null;
     let isPending = false;
     let isStopped = false;
-    const handleRelease = () => setIsHeld(false);
 
     // One request at a time: a page shown again while the first is pending must not
     // win a second lock that the cleanup would never release.
@@ -28,12 +29,11 @@ export function useWakeLock(active: boolean): boolean {
           return;
         }
         sentinel = granted;
-        setIsHeld(true);
-        granted.addEventListener('release', handleRelease);
+        setIsRefused(false);
       } catch (error) {
         // Refused: the recording goes on, and the page tells the contributor the screen may sleep.
         console.warn('The screen could not be kept awake.', error);
-        setIsHeld(false);
+        if (!isStopped) setIsRefused(true);
       } finally {
         isPending = false;
       }
@@ -47,11 +47,10 @@ export function useWakeLock(active: boolean): boolean {
     return () => {
       isStopped = true;
       document.removeEventListener('visibilitychange', handleVisibility);
-      sentinel?.removeEventListener('release', handleRelease);
       void sentinel?.release();
-      setIsHeld(false);
+      setIsRefused(false);
     };
   }, [active]);
 
-  return isHeld;
+  return active && (isUnsupported || isRefused);
 }

@@ -2,6 +2,7 @@ import type { Fix } from '@/features/routes/model/ride-recording';
 
 import type { RecordingFigures } from './recording-figures';
 import type { Mode } from './recording-rules';
+import type { PageProblem } from '../notices/page-problem';
 import type { Recording, RideKind } from '../storage/recording-schema';
 
 /**
@@ -37,10 +38,10 @@ export interface RecordingState {
   lastSaved: Recording | null;
   /** Every recording saved on this phone, newest first. */
   saved: readonly Recording[];
-  /** Whether the screen is being kept awake. */
-  isAwake: boolean;
-  /** Something the contributor should know went wrong, in words. */
-  problem: string | null;
+  /** The phone refused to keep the screen awake while recording: it may sleep, and stop it. */
+  isWakeRefused: boolean;
+  /** Something the contributor should know went wrong. */
+  problem: PageProblem | null;
   /** What a screen reader hears once: a switch of mode, a mark, or recording again. */
   announcement: string;
   start: () => void;

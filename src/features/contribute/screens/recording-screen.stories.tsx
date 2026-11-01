@@ -10,7 +10,6 @@ const meta = {
     figures: { elapsedSeconds: 42, distanceM: 421 },
     mode: 'walk',
     isPaused: false,
-    isAwake: true,
     shouldFocusPause: false,
     onPause: fn(),
     onResume: fn(),
@@ -47,9 +46,3 @@ export const Sakay: Story = { args: { mode: 'ride' } };
 
 /** The card folded away: the chevron, turned up, at the foot brings it back (4496:10906). */
 export const Folded: Story = { args: { isCardFolded: true } };
-
-/** The screen could not be kept awake: the note stands over the card. */
-export const NotKeptAwake: Story = { args: { isAwake: false } };
-
-/** Folded, with the note that the screen may sleep: it stays in the stack, under the column. */
-export const FoldedNotKeptAwake: Story = { args: { isCardFolded: true, isAwake: false } };

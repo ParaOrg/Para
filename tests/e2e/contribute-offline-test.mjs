@@ -236,6 +236,14 @@ try {
   // ---------------------------------------------------- no signal: record
   await context.setOffline(true);
   const page = await context.newPage();
+  // A phone that will not keep the screen awake: the page's first problem comes with no signal,
+  // so the toast that says it must come from the worker's store, never fetched before.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'wakeLock', {
+      configurable: true,
+      value: { request: () => Promise.reject(new DOMException('Low battery', 'NotAllowedError')) },
+    });
+  });
   const fake = await standInDatabase(page);
   fake.isOffline = true;
   watch(page);
@@ -296,6 +304,24 @@ try {
       await page.screenshot({ path: 'contribute-offline-start.png' });
       throw error;
     });
+  const isToastShown = await page
+    .getByTestId('toast')
+    .filter({ hasText: 'Screen may sleep' })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    '  with no signal, its first problem is still said: the toast, from the worker’s store',
+    isToastShown &&
+      (await page.evaluate(() =>
+        performance
+          .getEntriesByType('resource')
+          .some((entry) => /\/assets\/page-toasts-.*\.js$/.test(entry.name)),
+      )),
+    offlineFailures.filter((failure) => failure.includes('page-toasts')).join(' | '),
+  );
   await ride(context, page, 6);
   await page.waitForFunction(
     () =>

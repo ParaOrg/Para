@@ -4,8 +4,9 @@ import { Button } from '@/design-system/primitives/button';
 import { Switch } from '@/design-system/primitives/switch';
 import { cn } from '@/shared/utils/cn';
 
-import { LocationIcon, NotificationIcon } from './permission-icons';
+import { NotificationIcon } from './permission-icons';
 import type { PermissionRow, PermissionRowView } from './permission-rows';
+import { LocationIcon } from '../common/location-icon';
 import { useFocusHeading } from '../common/use-focus-heading';
 
 const ROW_TEXT = {

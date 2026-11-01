@@ -18,8 +18,6 @@ interface RecordingScreenProps {
   mode: Mode;
   /** Paused for now: Resume and Finish replace Pause and the mode button. */
   isPaused: boolean;
-  /** Whether the screen is being kept awake. */
-  isAwake: boolean;
   /** Focus the Pause bar as the screen opens, not its heading: back from Keep recording. */
   shouldFocusPause: boolean;
   onPause: () => void;
@@ -54,7 +52,6 @@ export function RecordingScreen({
   figures,
   mode,
   isPaused,
-  isAwake,
   shouldFocusPause,
   onPause,
   onResume,
@@ -121,11 +118,6 @@ export function RecordingScreen({
         <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
           {isPaused ? 'Recording paused' : 'Recording a route'}
         </h1>
-        {!isAwake && !isPaused && (
-          <p className="bg-surface p-2 font-sn-pro text-sm/5 text-content-primary">
-            The screen could not be kept awake, so it may sleep and the location may stop.
-          </p>
-        )}
         <div id={cardId} hidden={isCardFolded} data-recording-card={state}>
           <RecordingCard
             elapsedSeconds={figures.elapsedSeconds}

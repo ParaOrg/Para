@@ -142,7 +142,6 @@ export function Tutorial({ onDemoChange, onClose }: TutorialProps) {
             figures={DEMO_FIGURES}
             mode="walk"
             isPaused={step.demo === 'paused'}
-            isAwake
             shouldFocusPause={false}
             onPause={doNothing}
             onResume={doNothing}
