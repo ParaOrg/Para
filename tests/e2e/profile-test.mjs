@@ -1412,8 +1412,13 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   });
   const { page, fake, errors } = await phone({ userId: LEAVER_ID });
   await start(page).waitFor({ timeout: 30000 });
-  // A recording kept on the phone, not sent: it goes with the account.
+  // On the phone: a recording not sent, and one another account sent. Every one goes.
   await seed(page, 'ffffffff-2222-4000-8000-000000000002', 'Only on the phone');
+  await seed(page, 'ffffffff-2222-4000-8000-000000000003', 'Someone else sent it', {
+    state: 'uploaded',
+    at: T0,
+    by: 'ffffffff-0000-4000-8000-0000000000ee',
+  });
   fake.next.save = 'offline';
   await page.reload({ waitUntil: 'load' });
   await start(page).waitFor({ timeout: 30000 });
@@ -1421,26 +1426,60 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await button(page, 'Account settings').click();
   await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
   await button(page, 'Delete account').click();
-  const sheet = page.getByRole('alertdialog', { name: 'Delete your account?' });
+  await page.getByRole('heading', { level: 1, name: 'Delete account' }).waitFor();
+  const screenText = await page.locator('[data-screen-hash="#delete-account"]').innerText();
+  const counting = page.getByRole('button', { name: /^Delete account \(\d\)$/ });
+  check(
+    'Delete account (Figma 4543:5309) is a screen of its own: what goes, what stays, the switch off',
+    (await page.evaluate(() => location.hash)) === '#delete-account' &&
+      /removes your name, email, phone number and password/.test(screenText) &&
+      /stay on Para, with your name taken off them/.test(screenText) &&
+      /all recordings on this phone will be deleted too/.test(screenText) &&
+      (await page
+        .getByRole('switch', { name: 'Also delete my uploaded routes' })
+        .getAttribute('aria-checked')) === 'false',
+    screenText,
+  );
+  const firstCount = await counting.innerText();
+  await counting.click({ force: true });
+  check(
+    '  Delete account counts down from 5, and cannot be pressed until it is done',
+    /^Delete account \([45]\)$/.test(firstCount) &&
+      (await counting.isDisabled()) &&
+      (await page.getByRole('alertdialog').count()) === 0,
+    firstCount,
+  );
+  const ready = button(page, 'Delete account');
+  await ready.waitFor({ timeout: 8000 });
+  check(
+    '  then it can, and says so once, politely',
+    (await ready.isEnabled()) &&
+      (await page
+        .getByRole('status')
+        .filter({ hasText: 'Delete account can be pressed now.' })
+        .count()) === 1,
+  );
+
+  await ready.click();
+  const sheet = page.getByRole('alertdialog', { name: 'Do you want to delete your account?' });
   await sheet.waitFor();
   check(
-    'Delete account asks first, focus on Cancel, and says what goes, the phone’s recordings too',
-    (await page.evaluate(() => document.activeElement?.textContent)) === 'Cancel' &&
-      /sent or not/.test(await sheet.innerText()) &&
+    '  it asks first over the frosted page, focus on No, I change my mind; it can’t be undone',
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'No, I change my mind' &&
       /can’t be undone/.test(await sheet.innerText()),
     await sheet.innerText(),
   );
-  await sheet.getByRole('button', { name: 'Cancel' }).click();
+  await sheet.getByRole('button', { name: 'No, I change my mind' }).click();
   await sheet.waitFor({ state: 'detached' });
   check(
-    '  Cancel deletes nothing, focus back on Delete account',
+    '  No, I change my mind deletes nothing, focus back on Delete account',
     fake.deleteAccountRequests === 0 &&
       (await page.evaluate(() => document.activeElement?.textContent)) === 'Delete account',
   );
 
-  await button(page, 'Delete account').click();
+  await ready.click();
   fake.next.deleteAccount = 'offline';
-  await sheet.getByRole('button', { name: 'Delete account' }).click();
+  await sheet.getByRole('button', { name: 'Delete this account' }).click();
   await sheet.getByRole('alert').waitFor();
   check(
     '  with no signal the question says so in one line, and the account stays',
@@ -1453,16 +1492,15 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     (await page.evaluate(() => localStorage.getItem('para.contributor-deletion'))) === null,
   );
 
-  // While the delete is on its way, nothing cancels it: Cancel, Escape and the dimmed page wait.
+  // While the delete is on its way, nothing cancels it: the safe answer and Escape wait.
   fake.next.deleteAccount = 'hold';
-  await sheet.getByRole('button', { name: 'Delete account' }).click();
+  await sheet.getByRole('button', { name: 'Delete this account' }).click();
   await sheet.getByRole('button', { name: 'Deleting…' }).waitFor();
   await page.keyboard.press('Escape');
-  await page.mouse.click(196, 100);
   check(
-    '  while it is on its way it says so, and Cancel, Escape and a tap on the page do not close it',
+    '  while it is on its way it says so, and No, I change my mind and Escape do not close it',
     (await sheet.count()) === 1 &&
-      (await sheet.getByRole('button', { name: 'Cancel' }).isDisabled()) &&
+      (await sheet.getByRole('button', { name: 'No, I change my mind' }).isDisabled()) &&
       (await sheet.getByRole('button', { name: 'Deleting…' }).isDisabled()),
   );
   fake.release();
@@ -1479,15 +1517,24 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
         };
       }),
   );
+  const keptUpload = database.rows.get('ffffffff-1111-4000-8000-000000000001');
   check(
-    '  deleting it ends on Sign in: the account, its uploads and the phone’s recordings are gone',
+    '  switch off: Para is asked to keep the uploads, which stay with no one’s name; then Sign in, every recording on the phone gone',
     fake.deletedAccounts.join() === LEAVER_ID &&
+      fake.deleteUploadsAsked.join() === 'false' &&
       !database.users.has(LEAVER_ID) &&
-      ![...database.rows.values()].some((row) => row.by === LEAVER_ID) &&
+      !!keptUpload &&
+      keptUpload.by === null &&
       (await page.evaluate((key) => localStorage.getItem(key), AUTH_KEY)) === null &&
       keptRecordings === 0,
-    JSON.stringify({ deleted: fake.deletedAccounts, keptRecordings }),
+    JSON.stringify({
+      deleted: fake.deletedAccounts,
+      asked: fake.deleteUploadsAsked,
+      keptUpload: keptUpload?.by,
+      keptRecordings,
+    }),
   );
+  database.rows.delete('ffffffff-1111-4000-8000-000000000001');
 
   // Another account signs in on the same tab: none of the deleted account's recordings show.
   const NEXT_ID = 'ffffffff-0000-4000-8000-000000000004';
@@ -1518,8 +1565,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await accountTab(page).click();
   await button(page, 'Account settings').click();
   await button(page, 'Delete account').click();
-  const sheet = page.getByRole('alertdialog', { name: 'Delete your account?' });
-  await sheet.getByRole('button', { name: 'Delete account' }).click();
+  await page.getByRole('heading', { level: 1, name: 'Delete account' }).waitFor();
+  await button(page, 'Delete account').waitFor({ timeout: 8000 });
+  await button(page, 'Delete account').click();
+  const sheet = page.getByRole('alertdialog', { name: 'Do you want to delete your account?' });
+  await sheet.getByRole('button', { name: 'Delete this account' }).click();
   await sheet.getByRole('alert').waitFor();
   check(
     'Delete account for an editor is refused in one line, and the account stays',
@@ -1529,6 +1579,53 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       fake.deletedAccounts.length === 0,
     await sheet.getByRole('alert').innerText(),
   );
+}
+{
+  // "Also delete my uploaded routes" on: Para is asked to delete them too, and does.
+  const SWEEPER_ID = 'ffffffff-0000-4000-8000-000000000005';
+  database.users.set(SWEEPER_ID, {
+    email: 'sweeper@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Sweeper', phone: '+639170000005' },
+  });
+  database.rows.set('ffffffff-1111-4000-8000-000000000005', {
+    by: SWEEPER_ID,
+    recording: {
+      id: 'ffffffff-1111-4000-8000-000000000005',
+      started_at: new Date(T0).toISOString(),
+      ended_at: new Date(T0 + 600_000).toISOString(),
+      start_name: 'Sweeping',
+      end_name: 'Cubao',
+      description: '',
+    },
+  });
+  const { page, fake, errors } = await phone({ userId: SWEEPER_ID });
+  await start(page).waitFor({ timeout: 30000 });
+  await accountTab(page).click();
+  await button(page, 'Account settings').click();
+  await button(page, 'Delete account').click();
+  await page.getByRole('heading', { level: 1, name: 'Delete account' }).waitFor();
+  await page.getByRole('switch', { name: 'Also delete my uploaded routes' }).click();
+  const screenText = await page.locator('[data-screen-hash="#delete-account"]').innerText();
+  await button(page, 'Delete account').waitFor({ timeout: 8000 });
+  await button(page, 'Delete account').click();
+  await page
+    .getByRole('alertdialog', { name: 'Do you want to delete your account?' })
+    .getByRole('button', { name: 'Delete this account' })
+    .click();
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
+  check(
+    'with the switch on, the words say the uploads go too, and Para is asked to delete them, and does',
+    /The routes you’ve already uploaded are deleted from Para too/.test(screenText) &&
+      !/stay on Para/.test(screenText) &&
+      fake.deleteUploadsAsked.join() === 'true' &&
+      !database.rows.has('ffffffff-1111-4000-8000-000000000005'),
+    JSON.stringify({ asked: fake.deleteUploadsAsked, screenText }),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 
 // ------------------------------------------------ the toolbar stands still between its screens

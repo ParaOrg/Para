@@ -165,6 +165,8 @@ export async function fakeContributions(page) {
     deleteAccountRequests: 0,
     /** The accounts delete_my_account deleted, in order. */
     deletedAccounts: [],
+    /** Each delete_my_account's delete_uploads, as sent (true when left out). */
+    deleteUploadsAsked: [],
     claims: [],
     /** begin_claim, verify, update_password, finish_claim and logout, in the order they came. */
     order: [],
@@ -351,7 +353,14 @@ export async function fakeContributions(page) {
           hint: null,
         });
       }
-      for (const [id, row] of fake.rows) if (row.by === user) fake.rows.delete(id);
+      // As the migration does: delete_uploads defaults to true; false keeps them, unlinked.
+      const deleteUploads = request.postDataJSON()?.delete_uploads ?? true;
+      fake.deleteUploadsAsked.push(deleteUploads);
+      for (const [id, row] of fake.rows) {
+        if (row.by !== user) continue;
+        if (deleteUploads) fake.rows.delete(id);
+        else row.by = null;
+      }
       fake.users.delete(user);
       fake.deletedAccounts.push(user);
       return json(route, 200, null);

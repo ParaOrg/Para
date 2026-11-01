@@ -1,16 +1,10 @@
-import { useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
-
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import type { ProfileFields } from './account-fields';
-import { DELETE_ACCOUNT_TEXT } from './delete-account-words';
 import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
-import { QuestionSheet } from './question-sheet';
 import { SettingsHeader } from './settings-header';
-import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
 
@@ -28,19 +22,14 @@ interface AccountSettingsScreenProps {
   onRetry: () => void;
   onSave: (fields: ProfileFields) => void;
   onOpenChangePassword: () => void;
-  isDeleting: boolean;
-  /** One line about a Delete account that failed, or null. */
-  deleteError: string | null;
-  /** Delete account's question opens: a last try's error is not carried into it. */
-  onDeleteAsked: () => void;
-  onDeleteAccount: () => void;
+  onOpenDeleteAccount: () => void;
   onBack: () => void;
 }
 
 /**
  * Account settings (Figma 4540:4821), from Account's General: the name and number to change, with
  * Save changes and Cancel rising once either is changed; the email as it is; Password, which
- * opens Change password; and Delete account, which asks first. Shown only on Ready, so never
+ * opens Change password; and Delete account, which opens Delete account. Shown only on Ready, so never
  * while a recording runs.
  */
 export function AccountSettingsScreen({
@@ -53,23 +42,11 @@ export function AccountSettingsScreen({
   onRetry,
   onSave,
   onOpenChangePassword,
-  isDeleting,
-  deleteError,
-  onDeleteAsked,
-  onDeleteAccount,
+  onOpenDeleteAccount,
   onBack,
 }: AccountSettingsScreenProps) {
   const headingRef = useFocusHeading();
   const entryRef = useScreenEntry<HTMLElement>();
-  const [isDeleteAsked, setIsDeleteAsked] = useState(false);
-  useClosedWhenHidden(setIsDeleteAsked, false);
-  const deleteRowRef = useRef<HTMLDivElement>(null);
-  // Back on Delete account once the page is live again: it was inert under the question.
-  const handleDeleteCancel = () => {
-    flushSync(() => setIsDeleteAsked(false));
-    deleteRowRef.current?.querySelector('button')?.focus();
-  };
-
   // The email as it is, Password and Delete account: under the name and number once they are
   // here, on their own while they load.
   const rest = (
@@ -83,16 +60,8 @@ export function AccountSettingsScreen({
           </p>
         )}
       </div>
-      <div ref={deleteRowRef} className="*:w-full">
-        <Button
-          variant="plain"
-          tone="error"
-          label="Delete account"
-          onClick={() => {
-            onDeleteAsked();
-            setIsDeleteAsked(true);
-          }}
-        />
+      <div className="*:w-full">
+        <Button variant="plain" tone="error" label="Delete account" onClick={onOpenDeleteAccount} />
       </div>
     </>
   );
@@ -104,7 +73,7 @@ export function AccountSettingsScreen({
       data-screen-hash="#account-settings"
       className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
-      <div inert={isDeleteAsked} className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <SettingsHeader
           title="Account settings"
           headingId="account-settings-heading"
@@ -144,18 +113,6 @@ export function AccountSettingsScreen({
           )}
         </div>
       </div>
-      {isDeleteAsked && (
-        <QuestionSheet
-          title="Delete your account?"
-          text={DELETE_ACCOUNT_TEXT}
-          confirmLabel="Delete account"
-          busyLabel="Deleting…"
-          isBusy={isDeleting}
-          error={deleteError}
-          onConfirm={onDeleteAccount}
-          onCancel={handleDeleteCancel}
-        />
-      )}
     </section>
   );
 }

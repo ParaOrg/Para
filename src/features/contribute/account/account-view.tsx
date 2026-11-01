@@ -5,8 +5,10 @@ import { AccountScreen } from './account-screen';
 import { AccountSettingsView } from './account-settings-view';
 import { ChangePasswordView } from './change-password-view';
 import type { CommuteStatsState } from './commute-stats';
+import { DeleteAccountView } from './delete-account-view';
 import { useAccountSettingsView } from './use-account-settings-view';
 import { useChangePasswordView } from './use-change-password-view';
+import { useDeleteAccountView } from './use-delete-account-view';
 import { AccountError } from '../api/account-problem';
 import type { MyStats } from '../api/fetch-my-stats';
 import { useAccountQuery } from '../api/use-account-query';
@@ -30,6 +32,7 @@ interface AccountViewProps {
 export function AccountView({ recordings, statusOf }: AccountViewProps) {
   const settings = useAccountSettingsView();
   const changePassword = useChangePasswordView();
+  const deleteAccount = useDeleteAccountView();
   // Said once on Account settings, back from a password changed.
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const account = useAccountQuery();
@@ -49,6 +52,9 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
       />
     );
   }
+  if (deleteAccount.isOpen) {
+    return <DeleteAccountView onBack={() => deleteAccount.closeTo('#account-settings')} />;
+  }
   if (settings.isOpen) {
     return (
       <AccountSettingsView
@@ -57,6 +63,7 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
           setIsPasswordChanged(false);
           changePassword.open();
         }}
+        onOpenDeleteAccount={deleteAccount.open}
         onBack={() => {
           setIsPasswordChanged(false);
           settings.closeTo('#profile');
