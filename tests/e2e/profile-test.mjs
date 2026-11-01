@@ -1201,11 +1201,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   const { page } = await phone();
   const toolbar = page.getByRole('navigation', { name: 'Screens' });
   const toolbarBox = async () => {
-    // Once the move between screens is over: the screens slide, the toolbar never does.
-    await page.waitForFunction(() => !document.documentElement.dataset.tabMotion, null, {
-      timeout: 5000,
-    });
-    await page.waitForTimeout(800);
+    // Once the move between screens is over (a view transition, gentle at most): the screens
+    // slide, the toolbar never does.
+    await page.waitForTimeout(1200);
     return toolbar.locator('> div').boundingBox();
   };
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
