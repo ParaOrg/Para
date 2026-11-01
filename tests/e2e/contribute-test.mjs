@@ -2473,8 +2473,7 @@ const ANIMATIONS = () => {
   await second.keyboard.press('Escape');
   await recordTab(second).click();
   await second.getByRole('button', { name: 'Start Tracking' }).waitFor();
-  const handedOver = await second
-    .getByText('Para is open in another tab')
+  const handedOver = await toastSaying(second, 'Para is open in another tab')
     .waitFor({ state: 'detached', timeout: 5000 })
     .then(
       () => true,
@@ -2507,7 +2506,7 @@ const ANIMATIONS = () => {
   await bareStyle(second);
   await second.addInitScript(GPS);
   await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
+  await toastSaying(second, 'Para is open in another tab').waitFor({ timeout: 10000 });
   const before = await stored(page);
   // The first tab closes mid-ride: the second takes the ride back, as a reload of the first would.
   await page.close();
@@ -2526,7 +2525,7 @@ const ANIMATIONS = () => {
       after.recordings.length === 1 &&
       after.recordings[0].status === before.recordings[0].status &&
       after.fixes === before.fixes &&
-      (await second.getByText('Para is open in another tab').count()) === 0,
+      (await toastSaying(second, 'Para is open in another tab').count()) === 0,
     JSON.stringify({ before, after }),
   );
   check('  no page errors', errors.length === 0, errors.join('; '));
@@ -2661,6 +2660,27 @@ const REFUSING_WAKE = () => {
       said.alert.includes('Screen may sleep. It could not be kept awake') &&
       said.isFocusKept,
     JSON.stringify(said),
+  );
+  // Drawn with its classes on this page, which builds its own CSS: Storybook cannot show that.
+  await toastSettled(page);
+  const looks = await asleep.evaluate((toast) => {
+    const style = getComputedStyle(toast);
+    return {
+      background: style.backgroundColor,
+      radius: style.borderTopLeftRadius,
+      shadow: style.boxShadow,
+      top: toast.getBoundingClientRect().top,
+      left: toast.getBoundingClientRect().left,
+    };
+  });
+  check(
+    "  the toast is drawn as designed on this page: the surface's colour, round corners, a shadow, 12 in and under the top row",
+    looks.background !== 'rgba(0, 0, 0, 0)' &&
+      looks.radius === '16px' &&
+      looks.shadow !== 'none' &&
+      looks.left === 12 &&
+      looks.top === 84,
+    JSON.stringify(looks),
   );
   await asleep.getByRole('button', { name: 'Close' }).click();
   await asleep.waitFor({ state: 'detached', timeout: 5000 });
