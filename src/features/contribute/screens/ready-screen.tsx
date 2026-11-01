@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState, type Ref, type RefObject }
 
 import { CreditsButton } from '@/features/routes/map/credits-button';
 
-import { TOOLBAR_ROOM } from './bottom-toolbar';
+import { TOOLBAR_FOOT, TOOLBAR_ROOM } from './bottom-toolbar';
 import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
@@ -112,7 +112,12 @@ export function ReadyScreen({
         {/* The map fades into white under Start tracking and the tabs (Figma's Frame 393). The
             tabs are the page's own toolbar, over this foot (contribute-page.tsx): room is kept
             for them here, and they stay over the question too. */}
-        <div className="relative flex flex-col gap-3 bg-linear-to-b from-transparent to-surface pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <div
+          className={
+            'relative flex flex-col gap-3 bg-linear-to-b from-transparent to-surface ' +
+            TOOLBAR_FOOT
+          }
+        >
           {/* Figma's ⓘ, 12 in from the frame's left and foot; lifted over the gesture bar where
               the phone has one, so the bar does not take its taps. */}
           <div className="absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 z-10 flex">

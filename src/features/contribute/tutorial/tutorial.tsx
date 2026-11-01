@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/cn';
 import { Coachmark, type CoachmarkFrame, type CoachmarkTarget } from './coachmark';
 import { TUTORIAL_STEPS, type TutorialDemo, type TutorialTarget } from './tutorial-steps';
 import { RecordingScreen } from '../screens/recording-screen';
-import { START_BUTTON_ATTR } from '../screens/start-morph';
+import { START_BUTTON_ATTR } from '../screens/start-morph-attrs';
 
 interface TutorialProps {
   /** What the page shows under the step: Record, or the demo's running or paused recording. */

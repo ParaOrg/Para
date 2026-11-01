@@ -41,10 +41,17 @@ export async function ensureSignedIn(captchaToken?: string): Promise<string> {
   return signedIn.data.user.id;
 }
 
-/** The phone's identity now, or null before its first upload. */
+/**
+ * The phone's identity now, or null when no one is signed in. A session that could not be renewed
+ * for want of signal (an expired token, offline) is no answer, not no session: that throws as
+ * offline, so a send waits for the signal rather than saying the account is signed out.
+ */
 export async function currentIdentity(): Promise<string | null> {
   const client = await requireClient();
-  const { data } = await client.auth.getSession();
+  const { data, error } = await client.auth.getSession();
+  if (error && signInProblemOf(error) === 'offline') {
+    throw new UploadError('offline', `The session could not be renewed: ${error.message}`);
+  }
   return data.session?.user.id ?? null;
 }
 

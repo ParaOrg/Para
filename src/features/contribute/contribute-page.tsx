@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
   lazy,
@@ -17,9 +18,10 @@ import { cn } from '@/shared/utils/cn';
 
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
+import { useChangePasswordView } from './account/use-change-password-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
-import { useAccountQuery } from './api/use-account-query';
+import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { retryingImport } from './common/retrying-import';
 import { ToolbarHoldProvider, useIsToolbarHeld } from './common/toolbar-hold';
 import { useEarlierQuestion } from './consent/use-earlier-question';
@@ -35,7 +37,8 @@ import { BottomToolbar, TOOLBAR_PLACE, type ToolbarTab } from './screens/bottom-
 import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { ScreenUnavailable } from './screens/screen-unavailable';
-import { START_BUTTON_ATTR, morphStartIntoCard } from './screens/start-morph';
+import type { morphStartIntoCard } from './screens/start-morph';
+import { START_BUTTON_ATTR } from './screens/start-morph-attrs';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
@@ -110,12 +113,15 @@ function AccountView(props: AccountViewProps) {
 // A fetch ahead that failed offline does not leave them unreachable: each asks again afresh.
 const loadRecordingScreen = retryingImport(() => import('./screens/recording-screen'));
 const loadUnfinishedScreen = retryingImport(() => import('./screens/unfinished-screen'));
+const loadForgetOtherAccounts = retryingImport(() => import('./api/forget-other-accounts'));
 const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-recording-screen'));
 const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 const loadSaveForm = retryingImport(() => import('./screens/save-form'));
 const loadSavedScreen = retryingImport(() => import('./screens/saved-screen'));
 const loadTutorial = retryingImport(() => import('./tutorial/tutorial'));
 const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: module.Tutorial })));
+// Start tracking's morph, off the opening: fetched with the recording screens ahead of Start.
+const loadStartMorph = retryingImport(() => import('./screens/start-morph'));
 const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
 const SavedScreen = lazy(() =>
   loadSavedScreen().then((module) => ({ default: module.SavedScreen })),
@@ -179,14 +185,41 @@ interface ContributePageProps {
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage({ locator }: ContributePageProps) {
   const recording = useRecording();
-  const accountId = useAccountQuery().data?.id ?? null;
+  const accountQuery = useAccountQuery();
+  const accountId = accountQuery.data?.id ?? null;
   const accountGate = useAccountGate();
+  // Only a later check (online again, back to the front) can find another account: the watch is
+  // fetched as the page opens, not carried by its opening. Not fetched for want of signal, it is
+  // asked for again as the signal comes back, so it is never missing for the page's life.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    let stop: (() => void) | null = null;
+    let isLeft = false;
+    const watch = () => {
+      loadForgetOtherAccounts().then(
+        ({ forgetOtherAccounts }) => {
+          if (!isLeft) stop = forgetOtherAccounts(queryClient);
+        },
+        // No signal: asked for again when it comes back.
+        () => window.addEventListener('online', watch, { once: true }),
+      );
+    };
+    watch();
+    return () => {
+      isLeft = true;
+      window.removeEventListener('online', watch);
+      stop?.();
+    };
+  }, [queryClient]);
   // Having an account is the agreement (CONSENT_VERSION 4): nothing is sent until one is signed
-  // in, and recordings made before wait on the phone.
+  // in, and recordings made before wait on the phone. Start shows on the session the phone
+  // stored; nothing is sent until the session check has its answer (use-account-query.ts), and a
+  // send never signs in anonymously.
   const canSend = accountGate === 'ready';
+  const canSendNow = canSend && isAccountConfirmed(accountQuery);
   const earlier = useEarlierQuestion(recording.saved, canSend, accountId);
   const uploads = useUploads(recording.saved, {
-    hasConsent: canSend,
+    hasConsent: canSendNow,
     earlier: earlier.choice,
   });
   const track = useRecordingTrack(
@@ -197,6 +230,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   const history = useHistoryView();
   const profile = useProfileView();
   const settings = useAccountSettingsView();
+  const changePassword = useChangePasswordView();
+  // Account settings and Change password, which Account shows in its place, with no toolbar.
+  const isInsideAccount = settings.isOpen || changePassword.isOpen;
   const { phase, figures } = recording;
   // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
   const [isPermissionsPending, setIsPermissionsPending] = useState(
@@ -208,8 +244,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     phase === 'ready' &&
     accountGate === 'ready' &&
     canUpload() &&
-    // Account settings is shown by Account, in its place.
-    (profile.isOpen || settings.isOpen) &&
+    (profile.isOpen || isInsideAccount) &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
@@ -300,6 +335,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Focus goes back to the ⓘ as the sheet starts down, once Start is live again: the sheet cannot
   // hand it back itself, as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
+  // The morph once its code is here. It runs in the tap, before the button leaves the screen, so a
+  // tap before then (or with its fetch failed) just starts, with no morph.
+  const morphStartRef = useRef<typeof morphStartIntoCard | null>(null);
   const closeCredits = useCallback(() => {
     flushSync(() => {
       setIsCreditsOpen(false);
@@ -338,6 +376,9 @@ export function ContributePage({ locator }: ContributePageProps) {
       loadFlagStopButton(),
       loadSaveForm(),
       loadSavedScreen(),
+      loadStartMorph().then((module) => {
+        morphStartRef.current = module.morphStartIntoCard;
+      }),
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);
     });
@@ -362,14 +403,15 @@ export function ContributePage({ locator }: ContributePageProps) {
     return () => clearTimeout(later);
   }, [phase]);
 
-  // Signing out, or leaving Ready, must not leave #profile or #account-settings to reopen Account
-  // after the next sign-in.
+  // Signing out, or leaving Ready, must not leave #profile, #account-settings or #change-password
+  // to reopen Account after the next sign-in.
   useEffect(() => {
     const isUsable = accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
     if (isUsable || accountGate === 'loading') return;
     if (profile.isOpen) profile.close();
     if (settings.isOpen) settings.close();
-  }, [phase, accountGate, profile, settings]);
+    if (changePassword.isOpen) changePassword.close();
+  }, [phase, accountGate, profile, settings, changePassword]);
 
   // History and Account are tabs on Ready; a build with no accounts has History alone. Ready hands
   // focus back to the tab whose screen was open.
@@ -390,7 +432,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   // any of the three shows, so it stands still as they slide under it; only its pill moves.
   const toolbarTab: ToolbarTab | null = isHistoryShown
     ? 'history'
-    : isProfileShown && !settings.isOpen
+    : isProfileShown && !isInsideAccount
       ? 'account'
       : isStartShown
         ? 'record'
@@ -425,7 +467,10 @@ export function ContributePage({ locator }: ContributePageProps) {
     <main
       // The toolbar's screens that can open now: a move to any other draws nothing to wait for
       // (tab-motion.ts).
-      data-screens={[canSend && '#history', hasAccount && '#profile #account-settings']
+      data-screens={[
+        canSend && '#history',
+        hasAccount && '#profile #account-settings #change-password',
+      ]
         .filter(Boolean)
         .join(' ')}
       className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"
@@ -509,7 +554,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                   const startButton = document.querySelector<HTMLElement>(`[${START_BUTTON_ATTR}]`);
                   recording.start();
                   // After the start, never before it: the morph holds nothing back.
-                  if (startButton) morphStartIntoCard(startButton);
+                  if (startButton) morphStartRef.current?.(startButton);
                 }}
                 backFrom={openedTab}
                 historyTabRef={historyTabRef}

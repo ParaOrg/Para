@@ -69,6 +69,17 @@ export const Plain: Story = {
   args: { variant: 'plain', firstIcon: undefined, lastIcon: undefined, label: 'Forgot password' },
 };
 
+/** Plain in Content/error, as Account settings' "Delete account" (4540:4316). */
+export const PlainError: Story = {
+  args: {
+    variant: 'plain',
+    tone: 'error',
+    firstIcon: undefined,
+    lastIcon: undefined,
+    label: 'Delete account',
+  },
+};
+
 /** Small exists for Special, Secondary and Primary — on Error it is a compile error. */
 export const SpecialSmall: Story = { args: { variant: 'special', size: 'small' } };
 

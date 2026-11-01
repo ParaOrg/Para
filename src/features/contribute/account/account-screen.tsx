@@ -8,7 +8,7 @@ import { ProfileCard } from './profile-card';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
-import { TOOLBAR_ROOM } from '../screens/bottom-toolbar';
+import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../screens/bottom-toolbar';
 
 interface AccountScreenProps {
   /** The contributor's name, or null while it loads. */
@@ -97,11 +97,14 @@ export function AccountScreen({
             )}
           </section>
         </div>
-        {/* The page fading out under the page's toolbar (4514:23035), which stands over this foot:
-            32 over the screen's edge, as on Record and History, for one height everywhere. */}
+        {/* The page fading out under the page's toolbar (4514:23035), which stands over this foot
+            (TOOLBAR_FOOT), as on Record and History, for one height everywhere. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]"
+          className={
+            'pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6 ' +
+            TOOLBAR_FOOT
+          }
         >
           <div className={TOOLBAR_ROOM} />
         </div>

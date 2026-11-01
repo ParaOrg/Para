@@ -88,7 +88,7 @@ test('an upload error stands for its own problem, and anything else for no signa
 
 test('every failure has a sentence and a brief reason, and only passing ones are tried again', () => {
   const retried = Object.keys(FAILED).filter((reason) => FAILED[reason].willRetry);
-  assert.deepEqual(retried.sort(), ['day-cap', 'not-accepting', 'offline']);
+  assert.deepEqual(retried.sort(), ['day-cap', 'not-accepting', 'offline', 'signed-out']);
   for (const failure of Object.values(FAILED)) {
     assert.ok(failure.message.length > 0 && failure.brief.length > 0);
   }

@@ -1,12 +1,15 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 
 import { isWaitingToGo } from './upload-rules';
 import type { UploadGate, UploadStatus } from './upload-state';
 import { useUploadSending } from './use-upload-sending';
 import { useUploadsStillThere } from './use-uploads-still-there';
+import { accountKeys } from '../api/account-keys';
 import { canUpload } from '../api/contribute-client';
 import { turnstileSiteKey } from '../api/env';
-import { currentIdentity, ensureSignedIn } from '../api/upload-contribution';
+import { currentIdentity } from '../api/upload-contribution';
+import { UploadError } from '../api/upload-problem';
 import type { Recording } from '../storage/recording-schema';
 
 export interface Uploads {
@@ -42,24 +45,19 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
   const [isCheckNeeded, setIsCheckNeeded] = useState(false);
   const [checkRound, setCheckRound] = useState(0);
   const tokenRef = useRef<string | null>(null);
-  const signingIn = useRef<Promise<string> | null>(null);
+  const queryClient = useQueryClient();
 
   /**
-   * This phone's identity, signing in once for every send waiting on it. Null
-   * when the first sign-in needs the bot check and no token is in hand yet.
+   * The account's identity a send goes under. Never an anonymous one (CONSENT_VERSION 4: nothing
+   * is sent until an account is signed in): a session gone since Supabase last said (the account
+   * deleted, or signed out on another phone) has the page ask again, which shows Sign in, and the
+   * recording waits on the phone.
    */
   async function identityForUpload(): Promise<string | null> {
-    if (signingIn.current) return signingIn.current;
     const known = await currentIdentity();
     if (known) return known;
-    if (signingIn.current) return signingIn.current;
-    if (turnstileSiteKey && !tokenRef.current) return null;
-    const token = tokenRef.current ?? undefined;
-    tokenRef.current = null;
-    signingIn.current = ensureSignedIn(token).finally(() => {
-      signingIn.current = null;
-    });
-    return signingIn.current;
+    void queryClient.invalidateQueries({ queryKey: accountKeys.session() });
+    throw new UploadError('signed-out', 'No account is signed in on this phone.');
   }
 
   const sending = useUploadSending({

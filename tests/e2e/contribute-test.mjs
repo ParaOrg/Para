@@ -462,7 +462,7 @@ const buttons = (page) =>
     const tabs = await page.getByRole('navigation', { name: 'Screens' }).boundingBox();
     const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
     check(
-      "  as Figma's Record has it: Start tracking 32 in each side and 48 tall, the tabs 12 under it, 32 over the foot",
+      "  as Figma's Record has it (4520:3197): Start tracking 32 in each side and 48 tall, the tabs 12 under it, 48 over the foot",
       !!start &&
         !!tabs &&
         !!stack &&
@@ -471,7 +471,7 @@ const buttons = (page) =>
         Math.abs(start.width - (393 - 64)) <= 0.5 &&
         Math.abs(start.height - 48) <= 0.5 &&
         Math.abs(tabs.y - (start.y + start.height) - 12) <= 0.5 &&
-        Math.abs(stack.y + stack.height - (tabs.y + tabs.height) - 32) <= 0.5,
+        Math.abs(stack.y + stack.height - (tabs.y + tabs.height) - 48) <= 0.5,
       JSON.stringify([stack, tabs, start]),
     );
     await history.click();
@@ -1508,6 +1508,15 @@ const buttons = (page) =>
   await openHistory(page);
   const card = page.getByRole('listitem').first();
   await card.locator('img').waitFor({ timeout: 10000 });
+  // The card is content-visibility:auto: until the browser's next rendering pass finds it on
+  // screen its contents are skipped, and innerText reads ''. Its picture can arrive before that.
+  await page.waitForFunction(
+    (element) => element.innerText.trim() !== '',
+    await card.elementHandle(),
+    {
+      timeout: 5000,
+    },
+  );
   const shown = {
     src: await card.locator('img').getAttribute('src'),
     text: (await card.innerText()).replace(/\n/g, ' '),
