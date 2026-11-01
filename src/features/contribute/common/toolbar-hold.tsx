@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useState, type ReactNode } from 'react';
 
 /*
  * The page's toolbar stands over Record, History and Account (contribute-page.tsx), above their
@@ -34,10 +34,13 @@ export function ToolbarHoldProvider({ children }: ToolbarHoldProviderProps) {
   );
 }
 
-/** Holds the toolbar for as long as the calling question is on screen; nothing outside a provider. */
+/**
+ * Holds the toolbar for as long as the calling question is on screen; nothing outside a provider.
+ * Before the question is painted, so the toolbar is never seen, nor pressed, over it.
+ */
 export function useHoldToolbar(): void {
   const hold = useContext(ToolbarHoldContext)?.hold;
-  useEffect(() => hold?.(), [hold]);
+  useLayoutEffect(() => hold?.(), [hold]);
 }
 
 /** Whether a question is open, so the toolbar steps aside. */
