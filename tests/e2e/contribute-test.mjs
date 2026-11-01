@@ -315,7 +315,7 @@ const buttons = (page) =>
     const tabs = await page.getByRole('navigation', { name: 'Screens' }).boundingBox();
     const stack = await page.locator('section[aria-labelledby="ready-heading"]').boundingBox();
     check(
-      "  as Figma's Record has it: Start tracking 32 in each side and 48 tall, the tabs 12 under it, 32 over the foot",
+      "  as Figma's Record has it (4520:3197): Start tracking 32 in each side and 48 tall, the tabs 12 under it, 48 over the foot",
       !!start &&
         !!tabs &&
         !!stack &&
@@ -324,7 +324,7 @@ const buttons = (page) =>
         Math.abs(start.width - (393 - 64)) <= 0.5 &&
         Math.abs(start.height - 48) <= 0.5 &&
         Math.abs(tabs.y - (start.y + start.height) - 12) <= 0.5 &&
-        Math.abs(stack.y + stack.height - (tabs.y + tabs.height) - 32) <= 0.5,
+        Math.abs(stack.y + stack.height - (tabs.y + tabs.height) - 48) <= 0.5,
       JSON.stringify([stack, tabs, start]),
     );
     await history.click();
