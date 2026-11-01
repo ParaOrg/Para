@@ -524,13 +524,68 @@ check(
   'no zoom buttons on a touch screen',
   (await page.locator('.maplibregl-ctrl-zoom-in').count()) === 0,
 );
-check(
-  'the attribution control sits top right',
-  (await page.locator('.maplibregl-ctrl-top-right .maplibregl-ctrl-attrib').count()) > 0,
-  (await page.locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').count()) > 0
-    ? 'still bottom right'
-    : '',
-);
+// The map's credits: its own ⓘ at the bottom left (Figma 4494:2048, as on the contributor page's
+// Start), MapLibre's corner credits stepped aside; the ⓘ opens them as the Map Data Source sheet
+// (4494:10177), so the licences' credit is always a tap away.
+{
+  const info = page.getByRole('button', { name: 'Map data sources' });
+  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  const infoBox = await info.boundingBox();
+  check(
+    "the map's ⓘ sits at the bottom left, 12 in, 32 across, and MapLibre's corner credits are gone",
+    !!infoBox &&
+      Math.abs(infoBox.x - 12) < 1 &&
+      Math.abs(infoBox.width - 32) < 1 &&
+      Math.abs(844 - (infoBox.y + infoBox.height) - 12) < 1 &&
+      !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
+    JSON.stringify(infoBox),
+  );
+  const isFocusOnInfo = () =>
+    page
+      .waitForFunction(
+        () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
+        null,
+        { timeout: 5000 },
+      )
+      .then(() => true)
+      .catch(() => false);
+  const isMapInert = () =>
+    page.evaluate(() => !!document.querySelector('[data-testid="map-view"]')?.closest('[inert]'));
+  await info.click();
+  await sheet.waitFor();
+  const links = await sheet
+    .getByRole('link')
+    .evaluateAll((all) => all.map((a) => ({ text: a.textContent, href: a.getAttribute('href') })));
+  check(
+    "  it opens Map Data Source: the map's credits as links, OpenStreetMap's among them, the map inert under it",
+    links.some(
+      (l) =>
+        l.text?.startsWith('© OpenStreetMap contributors') &&
+        l.href === 'https://www.openstreetmap.org/copyright',
+    ) &&
+      links.some((l) => l.text?.startsWith('© Para contributors')) &&
+      // It rises from below the screen (map-data-source-sheet.css), the dimmed map fading in.
+      (await page.evaluate(
+        () =>
+          getComputedStyle(document.querySelector('[role="dialog"].map-data-source-sheet'))
+            .animationName === 'map-data-source-rise',
+      )) &&
+      (await isMapInert()) &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+    JSON.stringify(links),
+  );
+  await sheet.getByRole('button', { name: 'Close' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  ✕ closes it, once it has slid down: focus back on the ⓘ, the map live again',
+    (await isFocusOnInfo()) && !(await isMapInert()),
+  );
+  await info.click();
+  await sheet.waitFor();
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  check('  Escape closes it too, focus back on the ⓘ', await isFocusOnInfo());
+}
 const noHScroll = (p) =>
   p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 check(
@@ -3155,6 +3210,24 @@ if (routeA) {
   }
 
   const trip2 = await tripChecks();
+  // The ⓘ rides 12 over the card's sheet, as the LocatorButton does on the right.
+  if (['middle', 'low'].includes(await sheetState())) {
+    await cardsSettled(page);
+    const above = await page.evaluate(() => {
+      const info = document
+        .querySelector('button[aria-label="Map data sources"]')
+        ?.getBoundingClientRect();
+      const top = document
+        .querySelector('[data-testid="card"]:not([hidden])')
+        ?.getBoundingClientRect().top;
+      return info && top !== undefined ? top - info.bottom : null;
+    });
+    check(
+      "  with a card open the map's ⓘ stands 12 over its sheet",
+      above !== null && Math.abs(above - 12) < 2,
+      String(above),
+    );
+  }
 
   // Negative control: 40 px out is twice as far as the box reaches — but only
   // where the line does not curve back and no hotspot sits on that side, so
@@ -4662,8 +4735,9 @@ check(
   (await dpage.locator('.maplibregl-ctrl-zoom-in, .maplibregl-ctrl-compass').count()) === 0,
 );
 check(
-  'a fine pointer keeps the attribution bottom right',
-  (await dpage.locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').count()) > 0,
+  "a fine pointer gets the same ⓘ at the bottom left, MapLibre's corner credits gone",
+  (await dpage.getByRole('button', { name: 'Map data sources' }).isVisible()) &&
+    !(await dpage.locator('.maplibregl-ctrl-attrib').isVisible()),
 );
 
 if (!routeA) {

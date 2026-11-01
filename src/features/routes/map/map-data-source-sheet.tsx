@@ -1,30 +1,67 @@
-import { useEffect, useId, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import type { MapCredit } from '@/features/routes/map/map-attribution';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
+import type { MapCredit } from './map-attribution';
+
+import './map-data-source-sheet.css';
+
 interface MapDataSourceSheetProps {
   /** The map's credits, from mapCredits: one row each, in its order. */
   credits: readonly MapCredit[];
-  /** ✕, Escape, or a tap on the dimmed map: the sheet goes, and its opener takes focus back. */
+  /**
+   * Once the sheet has gone, after ✕, Escape or a tap on the dimmed map and its slide down: the
+   * opener unmounts it and takes focus back.
+   */
   onClose: () => void;
 }
 
+/** The slide down's own name (map-data-source-sheet.css): the sheet's end, not a child's. */
+const SINK = 'map-data-source-sink';
+/** If the slide down never reports its end (a hidden page), the sheet goes all the same. */
+const SINK_GIVE_UP_MS = 1000;
+
 /**
- * The map's credits on the contributor page (Figma 4494:10177): a
+ * The map's credits (Figma 4494:10177), on the public map and the contributor page: a
  * BottomSheetConfiguration, "Map Data Source", over the map dimmed in
  * Background/surface-transparent. Each row is a link out, in a new tab. It
  * holds the keyboard while open, as a dialog does: focus goes into it, Tab
- * goes round inside it, and focus goes back to the ⓘ when it closes.
+ * goes round inside it, and focus goes back to the ⓘ when it closes. It slides up from below the
+ * screen as it opens and back down as it closes (map-data-source-sheet.css).
  */
 export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
   const titleId = useId();
+  const [isClosing, setIsClosing] = useState(false);
   useDialogFocus(sheetRef, false);
-  useEscape(onClose);
+
+  // Asked to close: it slides down first, then goes. With less motion asked for, at once.
+  const close = useCallback(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) onClose();
+    else setIsClosing(true);
+  }, [onClose]);
+  useEscape(close);
+
+  // Gone once its slide down ends, or is cut short, or never reports: it can't stay stuck. React
+  // has no onAnimationCancel, so both are the DOM's.
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet || !isClosing) return;
+    const handleSinkDone = (e: AnimationEvent) => {
+      if (e.target === sheet && e.animationName === SINK) onClose();
+    };
+    const giveUp = window.setTimeout(onClose, SINK_GIVE_UP_MS);
+    sheet.addEventListener('animationend', handleSinkDone);
+    sheet.addEventListener('animationcancel', handleSinkDone);
+    return () => {
+      window.clearTimeout(giveUp);
+      sheet.removeEventListener('animationend', handleSinkDone);
+      sheet.removeEventListener('animationcancel', handleSinkDone);
+    };
+  }, [isClosing, onClose]);
 
   // A tap anywhere but the sheet, on the dimmed map, closes it: on the tap's click, so the
   // same tap ends on the scrim and presses nothing under it. Not the click that opened it,
@@ -34,11 +71,11 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
     const handleClick = (e: MouseEvent) => {
       if (e.timeStamp < listensFrom) return;
       if (e.target instanceof Node && sheetRef.current?.contains(e.target)) return;
-      onClose();
+      close();
     };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
-  }, [onClose]);
+  }, [close]);
 
   // Tab goes round inside the sheet, from its last link to ✕ and back.
   useEffect(() => {
@@ -63,14 +100,20 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
 
   return (
     <>
-      <div aria-hidden className="absolute inset-0 z-40 bg-surface-transparent" />
+      <div
+        aria-hidden
+        data-closing={isClosing || undefined}
+        className="map-data-source-scrim absolute inset-0 z-40 bg-surface-transparent"
+      />
       <section
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="absolute inset-x-0 bottom-0 z-50 max-h-dvh overflow-y-auto rounded-t-4xl bg-surface font-sn-pro shadow-bottom-sheet-top-shadow outline-none"
+        data-closing={isClosing || undefined}
+        inert={isClosing}
+        className="map-data-source-sheet absolute inset-x-0 bottom-0 z-50 max-h-dvh overflow-y-auto rounded-t-4xl bg-surface font-sn-pro shadow-bottom-sheet-top-shadow outline-none"
       >
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
           <h2 id={titleId} className="min-w-0 flex-1 text-lg/7 font-bold text-content-primary">
@@ -81,7 +124,7 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
             label="Close"
             size="small"
             tooltip="top"
-            onClick={onClose}
+            onClick={close}
           />
         </div>
         <ul className="flex flex-col px-4 pt-2 pb-[max(2rem,env(safe-area-inset-bottom))]">

@@ -1,6 +1,6 @@
-import { mapCredits } from '@/features/routes/map/map-attribution';
 import { basemapHost } from '@/shared/config/env';
 
+import { mapCredits } from './map-attribution';
 import { MapDataSourceSheet } from './map-data-source-sheet';
 
 interface MapDataSourceViewProps {

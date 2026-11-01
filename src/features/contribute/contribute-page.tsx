@@ -38,7 +38,9 @@ const HistoryView = lazy(() =>
 );
 // The map's credits, opened from the ⓘ on Start: fetched on the tap, not with the page.
 const MapDataSourceView = lazy(() =>
-  import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
+  import('@/features/routes/map/map-data-source-view').then((module) => ({
+    default: module.MapDataSourceView,
+  })),
 );
 // Account, with its settings inside it, opened from the Account tab: fetched on the tap.
 const AccountView = lazy(() =>

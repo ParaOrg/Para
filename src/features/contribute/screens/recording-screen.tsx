@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type Ref } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { CreditsButton } from '@/features/routes/map/credits-button';
 import { CloseIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
@@ -9,7 +10,6 @@ import { RecordingCard, type RecordingCardState } from './recording-card';
 import { RecordingTint } from './recording-tint';
 import { TrackingButton } from './tracking-button';
 import { useStackRoom } from '../common/use-stack-room';
-import { CreditsButton } from '../map/credits-button';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { Mode } from '../recorder/recording-rules';
 
