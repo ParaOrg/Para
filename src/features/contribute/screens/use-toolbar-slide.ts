@@ -1,8 +1,9 @@
 import { useEffect, useRef, type RefObject } from 'react';
 
+import { retryingImport } from '@/shared/utils/retrying-import';
+
 import type { ToolbarTab } from './bottom-toolbar';
 import type * as ToolbarSlideChunk from './toolbar-slide';
-import { retryingImport } from '../common/retrying-import';
 
 /*
  * The slide's own code (toolbar-slide.ts) is a chunk of its own, kept off the page's opening: it is

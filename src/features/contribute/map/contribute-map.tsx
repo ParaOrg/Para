@@ -3,10 +3,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { MapView } from '@/features/routes/map/map-view';
 import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
+import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
-import { retryingImport } from '../common/retrying-import';
 import type { MapNote } from '../notices/map-note';
 
 // Fetched when a recording's form opens, not with the page.
