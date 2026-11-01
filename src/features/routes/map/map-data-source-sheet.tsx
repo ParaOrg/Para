@@ -13,16 +13,29 @@ interface MapDataSourceSheetProps {
   /** The map's credits, from mapCredits: one row each, in its order. */
   credits: readonly MapCredit[];
   /**
-   * Once the sheet has gone, after ✕, Escape or a tap on the dimmed map and its slide down: the
-   * opener unmounts it and takes focus back.
+   * ✕, Escape or a tap on the dimmed map, as the sheet starts down: the opener takes focus back
+   * at once, and the page under it is live again.
    */
   onClose: () => void;
+  /** Once the sheet has slid down and gone: the opener unmounts it. */
+  onClosed: () => void;
 }
 
-/** The slide down's own name (map-data-source-sheet.css): the sheet's end, not a child's. */
-const SINK = 'map-data-source-sink';
-/** If the slide down never reports its end (a hidden page), the sheet goes all the same. */
+/** If the slide down never ends (a hidden page), the sheet goes all the same. */
 const SINK_GIVE_UP_MS = 1000;
+
+/** The owner's Motion token for a sheet's move, read as the page has it (tokens.css). */
+function sheetDuration(): number {
+  const style = getComputedStyle(document.documentElement);
+  return Number.parseFloat(style.getPropertyValue('--transition-duration-gentle')) || 0;
+}
+
+/** The leaving ease, as the page has it (tokens.css). */
+function exitEase(): string {
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue('--ease-exit').trim() || 'ease-in'
+  );
+}
 
 /**
  * The map's credits (Figma 4494:10177), on the public map and the contributor page: a
@@ -32,36 +45,45 @@ const SINK_GIVE_UP_MS = 1000;
  * goes round inside it, and focus goes back to the ⓘ when it closes. It slides up from below the
  * screen as it opens and back down as it closes (map-data-source-sheet.css).
  */
-export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps) {
+export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSourceSheetProps) {
   const sheetRef = useRef<HTMLElement>(null);
+  const scrimRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const [isClosing, setIsClosing] = useState(false);
   useDialogFocus(sheetRef, false);
 
-  // Asked to close: it slides down first, then goes. With less motion asked for, at once.
+  // Asked to close: focus goes back to the opener first, so it never drops to the page while
+  // the sheet leaves. Then the sheet slides down from wherever it is (mid-rise too), the dimmed
+  // map clearing with it, and goes. With less motion asked for, it goes at once.
   const close = useCallback(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) onClose();
-    else setIsClosing(true);
-  }, [onClose]);
-  useEscape(close);
-
-  // Gone once its slide down ends, or is cut short, or never reports: it can't stay stuck. React
-  // has no onAnimationCancel, so both are the DOM's.
-  useEffect(() => {
+    if (isClosing) return;
+    onClose();
     const sheet = sheetRef.current;
-    if (!sheet || !isClosing) return;
-    const handleSinkDone = (e: AnimationEvent) => {
-      if (e.target === sheet && e.animationName === SINK) onClose();
-    };
-    const giveUp = window.setTimeout(onClose, SINK_GIVE_UP_MS);
-    sheet.addEventListener('animationend', handleSinkDone);
-    sheet.addEventListener('animationcancel', handleSinkDone);
-    return () => {
+    const scrim = scrimRef.current;
+    if (!sheet || !scrim || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onClosed();
+      return;
+    }
+    setIsClosing(true);
+    const from = getComputedStyle(sheet).transform;
+    const shade = getComputedStyle(scrim).opacity;
+    for (const animation of [...sheet.getAnimations(), ...scrim.getAnimations()])
+      animation.cancel();
+    const timing = { duration: sheetDuration(), easing: exitEase(), fill: 'forwards' } as const;
+    const sink = sheet.animate(
+      [{ transform: from === 'none' ? 'translateY(0)' : from }, { transform: 'translateY(100%)' }],
+      timing,
+    );
+    scrim.animate([{ opacity: shade }, { opacity: 0 }], timing);
+    // Gone once the slide ends, or is cut short, or never ends: it can't stay stuck.
+    const giveUp = window.setTimeout(onClosed, SINK_GIVE_UP_MS);
+    const gone = () => {
       window.clearTimeout(giveUp);
-      sheet.removeEventListener('animationend', handleSinkDone);
-      sheet.removeEventListener('animationcancel', handleSinkDone);
+      onClosed();
     };
-  }, [isClosing, onClose]);
+    sink.finished.then(gone, gone);
+  }, [isClosing, onClose, onClosed]);
+  useEscape(close, !isClosing);
 
   // A tap anywhere but the sheet, on the dimmed map, closes it: on the tap's click, so the
   // same tap ends on the scrim and presses nothing under it. Not the click that opened it,
@@ -101,8 +123,8 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
   return (
     <>
       <div
+        ref={scrimRef}
         aria-hidden
-        data-closing={isClosing || undefined}
         className="map-data-source-scrim absolute inset-0 z-40 bg-surface-transparent"
       />
       <section
@@ -111,7 +133,6 @@ export function MapDataSourceSheet({ credits, onClose }: MapDataSourceSheetProps
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        data-closing={isClosing || undefined}
         inert={isClosing}
         className="map-data-source-sheet absolute inset-x-0 bottom-0 z-50 max-h-dvh overflow-y-auto rounded-t-4xl bg-surface font-sn-pro shadow-bottom-sheet-top-shadow outline-none"
       >

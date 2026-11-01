@@ -84,7 +84,6 @@ flowchart TD
   app_public_map --> features_routes_model
   app_public_map --> features_routes_published
   app_public_map --> shared_hooks
-  app_public_map --> shared_ui
   app_public_map --> shared_utils
   app_public_map --> styles
   app_studio --> features_locator
@@ -274,7 +273,7 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `shared/ui`, `styles` |
-| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `shared/utils`, `styles` |
+| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/utils`, `styles` |
 | `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |

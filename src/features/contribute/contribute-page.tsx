@@ -157,10 +157,13 @@ export function ContributePage({ locator }: ContributePageProps) {
   // The map's credits, over Start or a recording: closed by ✕, Escape or a tap on the dimmed map.
   // Their own ⓘ opens them; every other screen over the map keeps MapLibre's corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
+  // Closed and sliding down: still drawn, the page under it live again.
+  const [isCreditsLeaving, setIsCreditsLeaving] = useState(false);
   // The recording screen's ⓘ is there once the screen is, with the figures it waits for.
   const hasCreditsButton =
     isStartShown || (accountGate === 'ready' && isRecordingShown && figures !== null);
   const isCreditsShown = hasCreditsButton && isCreditsOpen;
+  const isCreditsDrawn = hasCreditsButton && (isCreditsOpen || isCreditsLeaving);
   // The recording card folded away, by the recording it was folded on: each recording opens with
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
   const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
@@ -187,13 +190,24 @@ export function ContributePage({ locator }: ContributePageProps) {
     setStopAskedWhile(null);
     recording.cancel();
   };
-  // Focus goes back to the ⓘ once Start is live again: the sheet cannot hand it back itself,
-  // as the ⓘ turned inert under it the moment it opened.
+  // Focus goes back to the ⓘ as the sheet starts down, once Start is live again: the sheet cannot
+  // hand it back itself, as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
   const closeCredits = useCallback(() => {
-    flushSync(() => setIsCreditsOpen(false));
+    flushSync(() => {
+      setIsCreditsOpen(false);
+      setIsCreditsLeaving(true);
+    });
     creditsButtonRef.current?.focus();
   }, []);
+  const creditsGone = useCallback(() => setIsCreditsLeaving(false), []);
+  // Each opening a sheet of its own, so one opened while the last slides down rises afresh.
+  const [creditsOpenings, setCreditsOpenings] = useState(0);
+  const openCredits = () => {
+    setIsCreditsLeaving(false);
+    setCreditsOpenings((n) => n + 1);
+    setIsCreditsOpen(true);
+  };
 
   // A stale #history (a reload mid-recording, or before signing in) must not open History later,
   // when Record again is pressed or the account signs in. The account is unknown until it has
@@ -321,14 +335,18 @@ export function ContributePage({ locator }: ContributePageProps) {
                 onOpenHistory={handleOpenHistory}
                 onOpenAccount={hasAccount ? handleOpenAccount : undefined}
                 backFrom={openedTab}
-                onOpenCredits={() => setIsCreditsOpen(true)}
+                onOpenCredits={openCredits}
                 creditsButtonRef={creditsButtonRef}
               />
             </div>
           )}
-          {isCreditsShown && (
+          {isCreditsDrawn && (
             <Suspense fallback={null}>
-              <MapDataSourceView onClose={closeCredits} />
+              <MapDataSourceView
+                key={creditsOpenings}
+                onClose={closeCredits}
+                onClosed={creditsGone}
+              />
             </Suspense>
           )}
           {isProfileShown && (
@@ -388,7 +406,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                   onCardFoldedChange={(isFolded) =>
                     setFoldedRecordingId(isFolded ? (recording.current?.id ?? null) : null)
                   }
-                  onOpenCredits={() => setIsCreditsOpen(true)}
+                  onOpenCredits={openCredits}
                   creditsButtonRef={creditsButtonRef}
                 />
               </div>

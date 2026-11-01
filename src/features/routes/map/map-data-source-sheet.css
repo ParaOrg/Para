@@ -1,19 +1,13 @@
 /*
- * The Map Data Source sheet rises from below the screen as it opens and sinks back as it closes,
- * over duration/gentle: ease/enter arriving, ease/exit leaving, a sheet's timing on the Figma
- * Motion page. The dimmed map fades in and out with it. Transform and opacity only.
+ * The Map Data Source sheet rises from below the screen as it opens, over duration/gentle with
+ * ease/enter, a sheet's timing on the Figma Motion page; the dimmed map fades in with it. It sinks
+ * back with ease/exit from wherever it is (map-data-source-sheet.tsx). Transform and opacity only.
  */
 .map-data-source-sheet {
   animation: map-data-source-rise var(--transition-duration-gentle) var(--ease-enter) both;
 }
-.map-data-source-sheet[data-closing] {
-  animation: map-data-source-sink var(--transition-duration-gentle) var(--ease-exit) both;
-}
 .map-data-source-scrim {
   animation: map-data-source-dim var(--transition-duration-gentle) var(--ease-enter) both;
-}
-.map-data-source-scrim[data-closing] {
-  animation: map-data-source-undim var(--transition-duration-gentle) var(--ease-exit) both;
 }
 @keyframes map-data-source-rise {
   from {
@@ -21,14 +15,6 @@
   }
   to {
     transform: translateY(0);
-  }
-}
-@keyframes map-data-source-sink {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
   }
 }
 @keyframes map-data-source-dim {
@@ -39,20 +25,10 @@
     opacity: 1;
   }
 }
-@keyframes map-data-source-undim {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-/* Shown and gone at once: the sheet closes without waiting (map-data-source-sheet.tsx). */
+/* Shown at once; it goes at once too (map-data-source-sheet.tsx). */
 @media (prefers-reduced-motion: reduce) {
   .map-data-source-sheet,
-  .map-data-source-sheet[data-closing],
-  .map-data-source-scrim,
-  .map-data-source-scrim[data-closing] {
+  .map-data-source-scrim {
     animation: none;
   }
 }

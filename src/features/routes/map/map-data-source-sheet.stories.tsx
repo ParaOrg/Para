@@ -9,7 +9,7 @@ import { MapDataSourceSheet } from './map-data-source-sheet';
 const meta = {
   title: 'Features/Routes/MapDataSourceSheet',
   component: MapDataSourceSheet,
-  args: { credits: mapCredits('https://tiles.para-commute.org'), onClose: fn() },
+  args: { credits: mapCredits('https://tiles.para-commute.org'), onClose: fn(), onClosed: fn() },
   // A phone over a map-coloured box: the scrim dims it, the sheet stands at its foot.
   decorators: [
     (Story) => (

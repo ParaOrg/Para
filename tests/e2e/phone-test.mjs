@@ -553,6 +553,24 @@ check(
     page.evaluate(() => !!document.querySelector('[data-testid="map-view"]')?.closest('[inert]'));
   await info.click();
   await sheet.waitFor();
+  // Half way through its rise (map-data-source-sheet.css), held there: the sheet part way up from
+  // below the screen.
+  const midRise = await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"].map-data-source-sheet');
+    const [rise] = dialog?.getAnimations() ?? [];
+    const duration = rise?.effect?.getTiming().duration;
+    if (!dialog || !rise || typeof duration !== 'number') return null;
+    rise.pause();
+    rise.currentTime = duration / 2;
+    const shift = new window.DOMMatrixReadOnly(getComputedStyle(dialog).transform).m42;
+    rise.finish();
+    return { shift: Math.round(shift), height: Math.round(dialog.getBoundingClientRect().height) };
+  });
+  check(
+    '  the sheet rises from below the screen: half way through, part way up',
+    !!midRise && midRise.shift > 0 && midRise.shift < midRise.height,
+    JSON.stringify(midRise),
+  );
   const links = await sheet
     .getByRole('link')
     .evaluateAll((all) => all.map((a) => ({ text: a.textContent, href: a.getAttribute('href') })));
@@ -564,12 +582,6 @@ check(
         l.href === 'https://www.openstreetmap.org/copyright',
     ) &&
       links.some((l) => l.text?.startsWith('© Para contributors')) &&
-      // It rises from below the screen (map-data-source-sheet.css), the dimmed map fading in.
-      (await page.evaluate(
-        () =>
-          getComputedStyle(document.querySelector('[role="dialog"].map-data-source-sheet'))
-            .animationName === 'map-data-source-rise',
-      )) &&
       (await isMapInert()) &&
       (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
     JSON.stringify(links),
@@ -585,6 +597,25 @@ check(
   await page.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
   check('  Escape closes it too, focus back on the ⓘ', await isFocusOnInfo());
+
+  // Less motion asked for: no slide either way, shown and gone at once.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await info.click();
+  await sheet.waitFor();
+  const isStill = await page.evaluate(
+    () =>
+      document
+        .querySelector('[role="dialog"].map-data-source-sheet')
+        ?.getAnimations()
+        .filter((a) => a.playState === 'running').length === 0,
+  );
+  await sheet.getByRole('button', { name: 'Close' }).click();
+  const isGoneAtOnce = (await sheet.count()) === 0;
+  check(
+    '  with less motion asked for, the sheet neither rises nor sinks: shown and gone at once',
+    isStill && isGoneAtOnce && (await isFocusOnInfo()),
+  );
+  await page.emulateMedia({ reducedMotion: null });
 }
 const noHScroll = (p) =>
   p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -3227,6 +3258,44 @@ if (routeA) {
       above !== null && Math.abs(above - 12) < 2,
       String(above),
     );
+
+    // The ⓘ is the licences' credit, MapLibre's corner gone: over any map left showing it stays
+    // reachable, the sheet pulled up to Max and held between Middle and Max alike.
+    const infoReachable = () =>
+      page.evaluate(() => {
+        const info = document.querySelector('button[aria-label="Map data sources"]');
+        const box = info?.getBoundingClientRect();
+        if (!info || !box) return null;
+        const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return { top: Math.round(box.top), isOnTop: !!hit && info.contains(hit) };
+      });
+    const before = await sheetState();
+    const atMax = (await handleTo('max')) ? await infoReachable() : null;
+    check(
+      "  with the card at Max, the map's ⓘ is still in the strip of map above it, reachable",
+      atMax?.isOnTop === true && atMax.top >= 0,
+      JSON.stringify(atMax),
+    );
+    await handleTo('middle');
+    await cardsSettled(page);
+    const grip = await handle().first().boundingBox();
+    let midway = null;
+    if (grip) {
+      await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2 - 150, {
+        steps: 10,
+      });
+      midway = await infoReachable();
+      await page.mouse.up();
+      await cardsSettled(page);
+    }
+    check(
+      "  with the card held between Middle and Max, the map's ⓘ rides over it, reachable",
+      midway?.isOnTop === true,
+      JSON.stringify(midway),
+    );
+    if (before) await handleTo(before);
   }
 
   // Negative control: 40 px out is twice as far as the box reaches — but only

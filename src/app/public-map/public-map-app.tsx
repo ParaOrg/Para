@@ -1,5 +1,13 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from 'react';
 import { flushSync } from 'react-dom';
 
 import { CommuterLocation, useGazeHush } from '@/features/locator';
@@ -43,11 +51,31 @@ import { ContributionCard } from './contribution-card';
 import { MapCreditsDock } from './map-credits-dock';
 import { useStatusBarColour } from './status-bar';
 
+interface CreditsSheetProps {
+  onClose: () => void;
+  onClosed: () => void;
+  /** The sheet's code could not be fetched: the page shows the credits another way. */
+  onUnavailable: () => void;
+}
+
+/** Stands in for the sheet when its code could not be fetched: it hands the credits back. */
+function CreditsUnavailable({ onUnavailable }: CreditsSheetProps) {
+  useEffect(onUnavailable, [onUnavailable]);
+  return null;
+}
+
 // The Map Data Source sheet, fetched on the ⓘ's first tap: the opening page does not carry it.
-const MapDataSourceView = lazy(() =>
-  import('@/features/routes/map/map-data-source-view').then((module) => ({
-    default: module.MapDataSourceView,
-  })),
+// Precached, so it opens offline too; a fetch that fails all the same never blanks the page: the
+// credits go back to MapLibre's corner (CreditsUnavailable). Caught here rather than by an error
+// boundary, which would add its code to what both pages share.
+const MapDataSourceSheet = lazy<ComponentType<CreditsSheetProps>>(() =>
+  import('@/features/routes/map/map-data-source-view').then(
+    (module) => ({ default: module.MapDataSourceView }),
+    (error: unknown) => {
+      console.warn("The map's credits could not be fetched; its corner shows them.", error);
+      return { default: CreditsUnavailable };
+    },
+  ),
 );
 
 /**
@@ -141,12 +169,27 @@ export function PublicMapApp() {
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
-  // are out of reach while it is open, and focus goes back to the ⓘ once it has gone.
-  const [isCreditsOpen, setIsCreditsOpen] = useState(false);
+  // are out of reach while it is open. As it starts down, focus goes back to the ⓘ and the page
+  // is live again; it unmounts once it has gone. Each opening is a sheet of its own, so one
+  // opened while the last slides down rises afresh.
+  const [credits, setCredits] = useState<'shut' | 'open' | 'leaving'>('shut');
+  const [creditsOpenings, setCreditsOpenings] = useState(0);
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
+  const openCredits = () => {
+    setCreditsOpenings((n) => n + 1);
+    setCredits('open');
+  };
   const closeCredits = useCallback(() => {
-    flushSync(() => setIsCreditsOpen(false));
+    flushSync(() => setCredits('leaving'));
     creditsButtonRef.current?.focus();
+  }, []);
+  const creditsGone = useCallback(() => setCredits('shut'), []);
+  // The sheet's code could not be fetched: MapLibre's corner credits come back in the ⓘ's place,
+  // so the licences' credit stays on the map.
+  const [isCreditsSheetMissing, setIsCreditsSheetMissing] = useState(false);
+  const creditsSheetMissing = useCallback(() => {
+    setIsCreditsSheetMissing(true);
+    setCredits('shut');
   }, []);
 
   return (
@@ -161,7 +204,7 @@ export function PublicMapApp() {
       className="@container relative h-full w-full overflow-clip"
     >
       {/* Out of reach under the credits, the map and every card alike. */}
-      <div inert={isCreditsOpen} className="contents">
+      <div inert={credits === 'open'} className="contents">
         {/*
         No count of routes and hotspots in a corner, and no +, − or compass:
         the owner leaves them off as clutter for commuters.
@@ -178,14 +221,12 @@ export function PublicMapApp() {
           zoomButtons={false}
           maxBounds={METRO_MANILA}
           openOn={openOnRoutes}
-          areCreditsShown={false}
+          areCreditsShown={isCreditsSheetMissing}
           hasMapStyleButton={false}
         />
-        <MapCreditsDock
-          isDocked={cards.open}
-          onOpen={() => setIsCreditsOpen(true)}
-          buttonRef={creditsButtonRef}
-        />
+        {!isCreditsSheetMissing && (
+          <MapCreditsDock isDocked={cards.open} onOpen={openCredits} buttonRef={creditsButtonRef} />
+        )}
         {/*
         The commuter's own position, and the camera with them, kept clear of
         the card on show; the dot gazes at what was just picked.
@@ -287,7 +328,8 @@ export function PublicMapApp() {
           needRefresh={needRefresh}
           onUpdate={reloadToUpdate}
         />
-        {install.shouldShow && (
+        {/* Held while the credits are open: one dialog at a time. */}
+        {install.shouldShow && credits === 'shut' && (
           <InstallPrompt onInstall={install.install} onLater={install.postpone} />
         )}
         {saved.selected && tripLivery && timeline && (
@@ -392,9 +434,14 @@ export function PublicMapApp() {
           />
         )}
       </div>
-      {isCreditsOpen && (
+      {credits !== 'shut' && (
         <Suspense fallback={null}>
-          <MapDataSourceView onClose={closeCredits} />
+          <MapDataSourceSheet
+            key={creditsOpenings}
+            onClose={closeCredits}
+            onClosed={creditsGone}
+            onUnavailable={creditsSheetMissing}
+          />
         </Suspense>
       )}
     </div>
