@@ -7,9 +7,9 @@ const meta = {
   title: 'Features/PublishedMap/Notices',
   component: Notices,
   // They sit over the map, so give them a map-sized box to sit in. `@container`
-  // is what their `@wide:` classes measure: from 640 wide the failed load and
-  // the age move to the top; the `phone` parameter shrinks the box to a
-  // handset so they show along the bottom.
+  // is what their `@wide:` classes measure: from 640 wide the age moves to the
+  // top; the `phone` parameter shrinks the box to a handset so it shows along
+  // the bottom.
   decorators: [
     (Story, ctx) => (
       <div
@@ -25,10 +25,6 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
-    loadFailed: false,
-    tooNew: false,
-    onTryAgain: fn(),
-    onReloadNewer: fn(),
     offline: false,
     age: { publishedAt: '2026-10-11T09:00:00Z', stale: false },
     needRefresh: false,
@@ -43,31 +39,6 @@ type Story = StoryObj<typeof meta>;
 export const Nothing: Story = {
   play: async ({ canvasElement }) => {
     await expect(canvasElement.querySelector('button, [data-testid]')).toBeNull();
-  },
-};
-
-/** The load failed: what happened, and Try again. */
-export const LoadFailed: Story = {
-  args: { loadFailed: true },
-  play: async ({ args, canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Try again' }));
-    await expect(args.onTryAgain).toHaveBeenCalledOnce();
-  },
-};
-
-/** On a phone the failed load sits along the bottom, centred. */
-export const LoadFailedPhone: Story = {
-  args: { loadFailed: true },
-  parameters: { phone: true },
-};
-
-/** A map published for a newer app: loading it again cannot help, so Reload fetches the newer app. */
-export const TooNew: Story = {
-  args: { loadFailed: true, tooNew: true },
-  play: async ({ args, canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Reload' }));
-    await expect(args.onReloadNewer).toHaveBeenCalledOnce();
-    await expect(args.onTryAgain).not.toHaveBeenCalled();
   },
 };
 
@@ -105,8 +76,8 @@ export const UpdateWaiting: Story = {
   },
 };
 
-/** Everything at once on a phone: a failed refresh offline, with an update waiting. */
+/** Everything at once on a phone: offline, with an update waiting. */
 export const AllAtOncePhone: Story = {
-  args: { loadFailed: true, offline: true, needRefresh: true },
+  args: { offline: true, needRefresh: true },
   parameters: { phone: true },
 };

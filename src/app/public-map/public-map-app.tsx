@@ -10,9 +10,10 @@ import {
 } from 'react';
 import { flushSync } from 'react-dom';
 
-import { CommuterLocation, useGazeHush } from '@/features/locator';
+import { CommuterLocation, useGazeHush, type LocatorNote } from '@/features/locator';
 import {
   InstallPrompt,
+  loadProblemToast,
   loadProblems,
   reloadForNewerApp,
   reloadToUpdate,
@@ -47,9 +48,11 @@ import {
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { ContributionCard } from './contribution-card';
 import { MapCreditsDock } from './map-credits-dock';
+import type { PageToastsProps, SaidNote } from './page-toasts';
 import { useStatusBarColour } from './status-bar';
 
 interface CreditsSheetProps {
@@ -101,6 +104,24 @@ const MapDataSourceSheet = lazy<ComponentType<CreditsSheetProps>>(() =>
   ),
 );
 
+/** Stands in for the toasts when their code could not be fetched: the page goes on without them. */
+function ToastsUnavailable(): null {
+  return null;
+}
+
+// The toasts, fetched the first time the page has something to say: the opening page does not
+// carry them. Precached, so they come offline too; a fetch that fails all the same never blanks
+// the page, as the credits' does not.
+const PageToasts = lazy<ComponentType<PageToastsProps>>(() =>
+  retryingImport(() => import('./page-toasts'))().then(
+    (module) => ({ default: module.PageToasts }),
+    (error: unknown) => {
+      console.warn("The page's toasts could not be fetched.", error);
+      return { default: ToastsUnavailable };
+    },
+  ),
+);
+
 /**
  * The routes' framing the map opens on: their box as the index or the copy
  * kept from an earlier visit has them (openingDirections), the box the
@@ -109,6 +130,9 @@ const MapDataSourceSheet = lazy<ComponentType<CreditsSheetProps>>(() =>
  */
 const openOnRoutes = () =>
   openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
+
+/** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
+const handleReloadNewer = () => void reloadForNewerApp();
 
 /**
  * The public map at /. Everything published so far and a card for whatever is
@@ -131,6 +155,24 @@ export function PublicMapApp() {
   const hotspots = useSavedHotspots(map, loadHotspotsFromFile, { muted: !!saved.selected });
   // A load problem, and a published map too new for this app (loadProblems).
   const problems = loadProblems([saved, hotspots]);
+  // Each Try again answered: one that fails again says so again, after its toast closed.
+  const [loadTries, setLoadTries] = useState(0);
+  const handleTryAgain = () => {
+    void problems.tryAgain().then(() => setLoadTries((n) => n + 1));
+  };
+  // What the locator has to say, and how many times it has said it (Locator's onNote).
+  const [locatorNote, setLocatorNote] = useState<SaidNote | null>(null);
+  const handleLocatorNote = (note: LocatorNote | null) => {
+    setLocatorNote((last) => note && { note, saying: (last?.saying ?? 0) + 1 });
+  };
+  // The toasts' code comes with the first of them, and stays.
+  const [hasToasts, setHasToasts] = useState(false);
+  const loadToast = loadProblemToast(problems, {
+    tries: loadTries,
+    onTryAgain: handleTryAgain,
+    onReloadNewer: handleReloadNewer,
+  });
+  if ((locatorNote || loadToast) && !hasToasts) setHasToasts(true);
 
   // Where the commuter is, as CommuterLocation tells it (the first fix, then
   // each 50 m), kept in memory only, for the tip of a loop's trip: where its
@@ -282,6 +324,7 @@ export function PublicMapApp() {
           }}
           hushedAt={hushedAt}
           onWhere={handleWhere}
+          onNote={handleLocatorNote}
         />
         {/*
         Each lit ride's ends, named over their circles; with no trip open, a
@@ -346,21 +389,14 @@ export function PublicMapApp() {
           />
         )}
 
-        {/*
-        A load problem is a banner, never a blank page. On a phone it sits at
-        the bottom, over the map's ⓘ; on a wide map, at the top. With no map
-        loaded there is no card to share the bottom with.
-      */}
-        <Notices
-          loadFailed={problems.loadFailed}
-          tooNew={problems.tooNew}
-          onTryAgain={problems.tryAgain}
-          onReloadNewer={() => void reloadForNewerApp()}
-          offline={offline}
-          age={age}
-          needRefresh={needRefresh}
-          onUpdate={reloadToUpdate}
-        />
+        {/* How old the map is, and a new version waiting. */}
+        <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
+        {/* What went wrong, at the top: the locator's note and a failed load. */}
+        {hasToasts && (
+          <Suspense fallback={null}>
+            <PageToasts locatorNote={locatorNote} load={loadToast} />
+          </Suspense>
+        )}
         {/* Held while the credits are open: one dialog at a time. */}
         {install.shouldShow && credits === 'shut' && (
           <InstallPrompt onInstall={install.install} onLater={install.postpone} />

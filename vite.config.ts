@@ -166,12 +166,16 @@ export default defineConfig({
             //    page reads them only once its map has settled (its faint
             //    routes), so in `shared` they would ride along on its opening.
             //    Left out, they are a chunk of their own that the public page
-            //    opens with and the contributor page fetches later.
+            //    opens with and the contributor page fetches later. Nor the
+            //    toast, its host and the location drawing a location problem
+            //    leads with: the public page fetches them the first time it has
+            //    something to say, and in `shared` they would ride along on its
+            //    opening.
             {
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
-                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$)/.test(
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/]location-icon\.tsx$)/.test(
                   id,
                 ),
             },
