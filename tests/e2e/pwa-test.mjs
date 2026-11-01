@@ -409,8 +409,8 @@ try {
   page.off('response', countTiles);
   check(`offline: tiles came from the worker's cache (${tilesFromWorker})`, tilesFromWorker > 0);
   check(
-    'offline: no routes-could-not-be-loaded banner',
-    !(await page.evaluate(() => document.body.innerText.includes('could not be loaded'))),
+    'offline: no routes-could-not-load toast',
+    !(await page.evaluate(() => document.body.innerText.includes('The routes could not load'))),
   );
   await page.screenshot({ path: 'pwa-offline.png' });
 
@@ -499,7 +499,7 @@ try {
   await page.goto(`${base}/`, { waitUntil: 'load' });
   await page.waitForTimeout(1000);
 
-  // A map published for a newer app: the banner says so and offers Reload,
+  // A map published for a newer app: a problem toast says so and offers Reload,
   // which goes through the worker (pwa.ts, reloadForNewerApp) and, with no
   // newer app waiting, reloads — here onto a map this app reads again.
   const newer = (route) =>
@@ -510,20 +510,23 @@ try {
     });
   await ctx.route('**/data/index.v5.json', newer);
   await page.reload({ waitUntil: 'load' });
-  const banner = page.getByText('This map was published for a newer version of the app.');
-  const bannerShown = await banner.waitFor({ timeout: 15000 }).then(
+  const tooNewToast = page
+    .locator('[data-testid="toast"]')
+    .filter({ hasText: 'This map needs a newer Para' });
+  const tooNewShown = await tooNewToast.waitFor({ timeout: 15000 }).then(
     () => true,
     () => false,
   );
   check(
-    'a map published for a newer app: the banner says so, with Reload',
-    bannerShown && (await page.getByRole('button', { name: 'Reload', exact: true }).count()) > 0,
+    'a map published for a newer app: a toast says so, with Reload',
+    tooNewShown &&
+      (await tooNewToast.getByRole('button', { name: 'Reload', exact: true }).count()) > 0,
   );
   await ctx.unroute('**/data/index.v5.json', newer);
-  if (bannerShown) {
+  if (tooNewShown) {
     await Promise.all([
       page.waitForEvent('load', { timeout: 20000 }).catch(() => {}),
-      page.getByRole('button', { name: 'Reload', exact: true }).first().click(),
+      tooNewToast.getByRole('button', { name: 'Reload', exact: true }).click(),
     ]);
     const back = await arrived.waitFor({ state: 'attached', timeout: 20000 }).then(
       () => true,
@@ -531,7 +534,7 @@ try {
     );
     check(
       '  its Reload reloads, and a map this app reads draws again',
-      back && (await banner.count()) === 0,
+      back && (await tooNewToast.count()) === 0,
     );
   }
 

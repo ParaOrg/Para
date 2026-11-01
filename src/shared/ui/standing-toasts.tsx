@@ -16,7 +16,7 @@ export interface StandingToast {
   saying: number;
 }
 
-interface StandingToastsProps {
+export interface StandingToastsProps {
   /** Every toast as the page has it now. */
   toasts: readonly StandingToast[];
 }

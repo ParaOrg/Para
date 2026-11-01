@@ -48,11 +48,13 @@ import {
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { retryingLazy } from '@/shared/lib/retrying-lazy';
+import { cn } from '@/shared/utils/cn';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { ContributionCard } from './contribution-card';
 import { MapCreditsDock } from './map-credits-dock';
-import type { PageToastsProps, SaidNote } from './page-toasts';
+import type { SaidNote } from './page-toasts';
 import { useStatusBarColour } from './status-bar';
 
 interface CreditsSheetProps {
@@ -104,22 +106,11 @@ const MapDataSourceSheet = lazy<ComponentType<CreditsSheetProps>>(() =>
   ),
 );
 
-/** Stands in for the toasts when their code could not be fetched: the page goes on without them. */
-function ToastsUnavailable(): null {
-  return null;
-}
-
 // The toasts, fetched the first time the page has something to say: the opening page does not
 // carry them. Precached, so they come offline too; a fetch that fails all the same never blanks
-// the page, as the credits' does not.
-const PageToasts = lazy<ComponentType<PageToastsProps>>(() =>
-  retryingImport(() => import('./page-toasts'))().then(
-    (module) => ({ default: module.PageToasts }),
-    (error: unknown) => {
-      console.warn("The page's toasts could not be fetched.", error);
-      return { default: ToastsUnavailable };
-    },
-  ),
+// the page, and is asked for again (retryingLazy).
+const PageToasts = retryingLazy(() =>
+  retryingImport(() => import('./page-toasts'))().then((module) => module.PageToasts),
 );
 
 /**
@@ -271,12 +262,17 @@ export function PublicMapApp() {
     // `data-directions`: how many the index brought, for the suites on a
     // production build, where the map itself is out of their reach.
     // `data-dock-host`: the open card's sheet says where its top is here,
-    // for the LocatorButton to follow (BottomSheet).
+    // for the LocatorButton to follow (BottomSheet). While "Update Para!"
+    // waits, a toast sits 12 under it rather than over it: the button's 24
+    // from the top and its 40 tall (Notices), `--toast-top` (ToastHost).
     <div
       ref={root}
       data-dock-host
       data-directions={saved.directions.length}
-      className="@container relative h-full w-full overflow-clip"
+      className={cn(
+        '@container relative h-full w-full overflow-clip',
+        needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
+      )}
     >
       {/* Out of reach under the credits, the map and every card alike. */}
       <div inert={credits === 'open'} className="contents">
