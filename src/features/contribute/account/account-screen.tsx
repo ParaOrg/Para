@@ -5,6 +5,7 @@ import { CommuteStats, type CommuteStatsState } from './commute-stats';
 import { GeneralBar } from './general-bar';
 import { LogoutConfirm } from './logout-confirm';
 import { ProfileCard } from './profile-card';
+import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
 import { TOOLBAR_ROOM } from '../screens/bottom-toolbar';
@@ -45,6 +46,7 @@ export function AccountScreen({
   const headingRef = useFocusHeading();
   const entryRef = useScreenEntry<HTMLElement>();
   const [isLogoutAsked, setIsLogoutAsked] = useState(false);
+  useClosedWhenHidden(setIsLogoutAsked, false);
   const logoutRef = useRef<HTMLButtonElement>(null);
   // Back on the Logout row once the page is live again: it was inert under the question.
   const handleLogoutCancel = () => {

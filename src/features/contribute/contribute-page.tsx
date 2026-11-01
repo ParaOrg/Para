@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  Activity,
   lazy,
   Suspense,
   useCallback,
@@ -237,6 +238,15 @@ export function ContributePage({ locator }: ContributePageProps) {
     (profile.isOpen || settings.isOpen) &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
+  // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
+  // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
+  // rest. Signed out, they go.
+  const [isHistoryKept, setIsHistoryKept] = useState(false);
+  if (isHistoryShown && !isHistoryKept) setIsHistoryKept(true);
+  if (!canSend && isHistoryKept) setIsHistoryKept(false);
+  const [isProfileKept, setIsProfileKept] = useState(false);
+  if (isProfileShown && !isProfileKept) setIsProfileKept(true);
+  if (!canSend && isProfileKept) setIsProfileKept(false);
   const isStartShown =
     accountGate === 'ready' &&
     phase === 'ready' &&
@@ -508,44 +518,48 @@ export function ContributePage({ locator }: ContributePageProps) {
               />
             </Suspense>
           )}
-          {isProfileShown && (
-            <ErrorBoundary
-              key={screenTries}
-              fallback={
-                <ScreenUnavailable
-                  name="Account"
-                  screenHash="#profile"
-                  hasFetchFailed={accountChunk.hasFailed}
-                  onTryAgain={tryScreenAgain}
-                />
-              }
-            >
-              <Suspense fallback={null}>
-                <AccountView recordings={recording.saved} statusOf={uploads.statusOf} />
-              </Suspense>
-            </ErrorBoundary>
+          {isProfileKept && (
+            <Activity mode={isProfileShown ? 'visible' : 'hidden'}>
+              <ErrorBoundary
+                key={screenTries}
+                fallback={
+                  <ScreenUnavailable
+                    name="Account"
+                    screenHash="#profile"
+                    hasFetchFailed={accountChunk.hasFailed}
+                    onTryAgain={tryScreenAgain}
+                  />
+                }
+              >
+                <Suspense fallback={null}>
+                  <AccountView recordings={recording.saved} statusOf={uploads.statusOf} />
+                </Suspense>
+              </ErrorBoundary>
+            </Activity>
           )}
-          {isHistoryShown && (
-            <ErrorBoundary
-              key={screenTries}
-              fallback={
-                <ScreenUnavailable
-                  name="History"
-                  screenHash="#history"
-                  hasFetchFailed={historyChunk.hasFailed}
-                  onTryAgain={tryScreenAgain}
-                />
-              }
-            >
-              <Suspense fallback={null}>
-                <HistoryView
-                  recordings={recording.saved}
-                  uploads={uploads}
-                  onOpenRecord={openRecordFromHistory}
-                  onRemoveFromPhone={recording.deleteSaved}
-                />
-              </Suspense>
-            </ErrorBoundary>
+          {isHistoryKept && (
+            <Activity mode={isHistoryShown ? 'visible' : 'hidden'}>
+              <ErrorBoundary
+                key={screenTries}
+                fallback={
+                  <ScreenUnavailable
+                    name="History"
+                    screenHash="#history"
+                    hasFetchFailed={historyChunk.hasFailed}
+                    onTryAgain={tryScreenAgain}
+                  />
+                }
+              >
+                <Suspense fallback={null}>
+                  <HistoryView
+                    recordings={recording.saved}
+                    uploads={uploads}
+                    onOpenRecord={openRecordFromHistory}
+                    onRemoveFromPhone={recording.deleteSaved}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            </Activity>
           )}
           {toolbarTab && (
             // Out of reach under the credits, as Start is.
