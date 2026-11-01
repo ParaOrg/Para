@@ -3,15 +3,22 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '@/design-system/primitives/button';
 import { AlertCircleIcon } from '@/design-system/primitives/field-icons';
+import { IconButton } from '@/design-system/primitives/icon-button';
 
-import { InformationIcon } from './route-icons';
+import { CloseIcon, InformationIcon } from './route-icons';
 import { ToastHost } from './toast-host';
 import { INFO_TOAST_MS } from './toast-queue';
 import { useToast } from './use-toast';
 
-/** Buttons a screen might have: an info, a problem, and a problem with an action. */
+/** The problem a fix takes back: hideToast names it by the id it was shown with. */
+const FIX_ID = 'location-off';
+
+/**
+ * Buttons a screen might have: an info, a problem, word that the fix landed (a second later, as a
+ * screen hears it), and a problem with an action.
+ */
 function Asker() {
-  const { showToast } = useToast();
+  const { showToast, hideToast } = useToast();
   return (
     <div className="flex flex-wrap gap-3 p-4 pt-32">
       <Button
@@ -35,11 +42,17 @@ function Asker() {
       />
       <Button
         variant="secondary"
+        label="Fixed in a second"
+        onClick={() => window.setTimeout(() => hideToast(FIX_ID), 1000)}
+      />
+      <Button
+        variant="secondary"
         label="Say a fix"
         onClick={() =>
           showToast({
             kind: 'problem',
             icon: <AlertCircleIcon />,
+            id: FIX_ID,
             title: 'Location is off',
             action: { label: 'Retry', onAction: () => undefined },
           })
@@ -212,5 +225,87 @@ export const ProblemStaysUntilItsAction: Story = {
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull());
     await expect(sayFix).toHaveFocus();
+  },
+};
+
+/**
+ * hideToast takes a toast back. Showing, it leaves as ✕ makes it, though focus and the pointer are
+ * in it, and focus goes back where it came from; waiting, it leaves the queue and never shows.
+ */
+export const HiddenByItsId: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sayFix = canvas.getByRole('button', { name: 'Say a fix' });
+    const fixed = canvas.getByRole('button', { name: 'Fixed in a second' });
+    // Showing, held both ways.
+    await userEvent.click(sayFix);
+    await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
+    await userEvent.click(fixed);
+    sayFix.focus();
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Retry' })).toHaveFocus();
+    await userEvent.hover(canvas.getByTestId('toast'));
+    await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull(), { timeout: 3000 });
+    await expect(sayFix).toHaveFocus();
+    // Waiting behind an info: it never shows.
+    await userEvent.click(canvas.getByRole('button', { name: 'Say info' }));
+    await userEvent.click(sayFix);
+    await userEvent.click(fixed);
+    await wait(1500);
+    await userEvent.click(
+      within(canvas.getByTestId('toast')).getByRole('button', { name: 'Close' }),
+    );
+    await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull());
+    await wait(500);
+    await expect(canvas.queryByTestId('toast')).toBeNull();
+    // An id the host does not have does nothing.
+    await userEvent.click(fixed);
+    await wait(1500);
+    await expect(canvas.queryByTestId('toast')).toBeNull();
+  },
+};
+
+/** A page's own 48 px top row, as the contributor's Recording screen draws one, with its ✕. */
+function TopRow() {
+  return (
+    <div
+      data-testid="top-row"
+      className="flex h-12 items-center justify-between bg-surface px-4 font-sn-pro text-content-primary"
+    >
+      <span className="font-bold">Recording</span>
+      <IconButton icon={<CloseIcon />} label="Stop" size="small" tooltip="top" />
+    </div>
+  );
+}
+
+/**
+ * On a page with its own top row, `--toast-top` (the row's 48 plus 12) puts the card under it, so
+ * the row's ✕ stays in reach.
+ */
+export const UnderATopRow: Story = {
+  args: {
+    children: (
+      <>
+        <TopRow />
+        <Asker />
+      </>
+    ),
+  },
+  decorators: [
+    (Story) => (
+      <div className="h-full [--toast-top:calc(--spacing(12)+--spacing(3))]">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Say a problem' }));
+    await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
+    const row = canvas.getByTestId('top-row').getBoundingClientRect();
+    await waitFor(() =>
+      expect(canvas.getByTestId('toast').getBoundingClientRect().top).toBe(row.bottom + 12),
+    );
+    await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
   },
 };

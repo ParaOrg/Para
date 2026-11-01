@@ -14,6 +14,11 @@ export interface ToastContextValue {
    * not queued twice: showing, it is refreshed in place (an info's clock starts again).
    */
   showToast: (message: ToastMessage) => void;
+  /**
+   * Takes back the toast with this id (its `id`, or its kind and title): showing, it leaves as ✕
+   * makes it, held or not; waiting, it leaves the queue. An id the host does not have does nothing.
+   */
+  hideToast: (id: string) => void;
 }
 
 /** The host's queue, for useToast. Null outside a ToastHost. */
