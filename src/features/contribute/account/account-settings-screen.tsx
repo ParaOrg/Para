@@ -11,6 +11,7 @@ import { DELETE_ACCOUNT_TEXT } from './delete-account-words';
 import { ProfileForm } from './profile-form';
 import { QuestionSheet } from './question-sheet';
 import type { Captcha } from './use-captcha';
+import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
 
@@ -72,6 +73,7 @@ export function AccountSettingsScreen({
   const headingRef = useFocusHeading();
   const entryRef = useScreenEntry<HTMLElement>();
   const [isDeleteAsked, setIsDeleteAsked] = useState(false);
+  useClosedWhenHidden(setIsDeleteAsked, false);
   const deleteRowRef = useRef<HTMLDivElement>(null);
   // Back on Delete account once the page is live again: it was inert under the question.
   const handleDeleteCancel = () => {

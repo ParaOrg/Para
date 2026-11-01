@@ -174,6 +174,14 @@ document.addEventListener(
   (event) => {
     if (!running || event.target !== document.documentElement) return;
     const tab = [...document.querySelectorAll<HTMLElement>('[data-tab]')].find((candidate) => {
+      // A toolbar out of reach (held by a question, under the credits) takes no tap this way
+      // either: it is hidden or inert, and so is its tab.
+      if (
+        candidate.closest('[inert]') ||
+        !candidate.checkVisibility({ visibilityProperty: true })
+      ) {
+        return false;
+      }
       const box = candidate.getBoundingClientRect();
       return (
         event.clientX >= box.left &&

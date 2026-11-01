@@ -6,6 +6,7 @@ import { CardMenu, hasMenuItems, type Asking, type CardActions } from './card-me
 import type { CardStatus } from './card-status';
 import { CardStatusLine } from './card-status-line';
 import { MoreIcon } from './history-icons';
+import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 
 interface CardStatusRowProps {
   status: CardStatus;
@@ -34,6 +35,7 @@ export function CardStatusRow({
   onAsk,
 }: CardStatusRowProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  useClosedWhenHidden(setIsMenuOpen, false);
   const areaRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 

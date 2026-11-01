@@ -627,7 +627,7 @@ async function seed(page, id, name, upload) {
   await toolbarRecord(page).click();
   await start(page).waitFor();
   // Every tap's tab, from where it landed (a tap mid-move lands on the page, not the tab), and
-  // whether that tab came to be marked after it.
+  // whether that tab came to be marked before the next tap.
   await page.evaluate(() => {
     window.burst = [];
     const tabAt = (x, y) =>
@@ -649,7 +649,10 @@ async function seed(page, id, name, upload) {
     const frame = () => {
       const marked = document.querySelector('nav[aria-label="Screens"] [aria-current="page"]')
         ?.dataset.tab;
-      for (const tap of window.burst) if (marked === tap.to) tap.isMarked = true;
+      // Each tap is credited only while it is the latest: a lost tap is never covered by a
+      // later one to the same tab.
+      const latest = window.burst[window.burst.length - 1];
+      if (latest && marked === latest.to) latest.isMarked = true;
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
@@ -1519,6 +1522,23 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       .waitFor({ state: 'visible', timeout: 5000 })
       .then(() => true)
       .catch(() => false),
+  );
+  // Asked again, then left by the phone's Back: Account is kept hidden, and its question with
+  // it must not be there on the way back.
+  await button(page, 'Logout').click();
+  await logoutQuestion(page).waitFor();
+  await page.goBack();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  await toolbar.getByRole('button', { name: 'Account', exact: true }).click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  check(
+    '  left with its question open, Account comes back without it, and with the toolbar',
+    (await logoutQuestion(page).count()) === 0 &&
+      (await toolbar
+        .getByRole('button', { name: 'Record', exact: true })
+        .waitFor({ state: 'visible', timeout: 5000 })
+        .then(() => true)
+        .catch(() => false)),
   );
   await toolbar.getByRole('button', { name: 'Record', exact: true }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
