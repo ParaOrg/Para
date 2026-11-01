@@ -190,6 +190,20 @@ account_stats paste files, then `../apply/20261031100000_delete_my_account_apply
 second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
 raise nothing and leave no row behind, and its 5 read-only rows must be `t`. On a second database,
 apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## delete-account-keep-uploads.sh
+
+`migrations/20261101090000_delete_account_keep_uploads.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/delete-account-keep-uploads.sh
+
+It applies every earlier migration and the contributor paste files as live has them (account_stats,
+delete_my_account, contribution_fare), then `../apply/20261101090000_delete_account_keep_uploads_apply.sql`
+twice (the second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour
+part must raise nothing and leave no row behind, and its 6 read-only rows must be `t`. On a second
+database, apply then revert twice leaves the schema as before, and re-applying passes the check. On a
+third, a ride kept from a deleted account makes the revert refuse and change nothing.
+
 ## contribution-fare.sh
 
 `migrations/20261031110000_contribution_fare.sql` on databases of its own, run last by `run.sh` or alone:

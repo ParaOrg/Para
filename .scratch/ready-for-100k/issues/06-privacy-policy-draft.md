@@ -18,7 +18,7 @@ Contributors share their location (their rides), and editors and contributors ha
   - what a ride records and when it's sent;
   - where it's kept: Supabase in Singapore, and the weekly encrypted backup at Cloudflare R2 (`src/features/contribute/consent/consent-panel.tsx` holds the consent wording; the screen is off while the owner redesigns it (ADR 0004), so stay consistent with that wording);
   - how long it's kept;
-  - how to delete rides and the account.
+  - how to delete rides and the account. Deleting an account removes the name, email, phone number and password; the uploaded routes stay, unlinked from the person, unless they tick "Also delete my uploaded routes"; their stats and the recordings on the phone not yet sent are deleted (the owner, 2026-11-01; ADR 0004).
 - **Editors:** the studio account and what it records.
 - **Third parties:** Cloudflare (hosting, Turnstile), Supabase, Resend (password-reset email), and OpenStreetMap for the map data.
 - **Rights under RA 10173:** access, correction, erasure, objection, and how to ask.

@@ -389,3 +389,47 @@ contributor builder add E-Jeep and UV Express to the ride-kind picker.
   re-applies.
 - Fares stored: the revert refuses. Decide with the owner first: dropping them loses what
   contributors entered.
+
+# Applying delete_account_keep_uploads to the live project
+
+Delete account keeps the uploads by default (the owner, 2026-11-01). This replaces
+`public.delete_my_account()` with `public.delete_my_account(delete_uploads boolean default true)`:
+
+- **`false`:** the person goes (their auth user, contributor row with name and number, retired totals,
+  claim tokens and `gps_session` rows). Their contributions stay, with their points, hintos and uses,
+  unlinked (`contributor_id` null) and stamped in a new column, `contribution.unlinked_at`.
+- **`true`, or no argument:** exactly as before, so the app already on phones keeps doing what it says.
+
+`private.retire_month` also takes a ride with `unlinked_at` set, and clears it as it retires the ride.
+Without that, a kept ride would look already retired and never have its ends cut at 24 months.
+Same refusals as before. One column, no row changes. Three files, each pasted whole into the SQL
+editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261101090000_delete_account_keep_uploads_apply.sql` | One transaction. Checks `delete_my_account` is in the ledger and this is not, `unlinked_at` does not exist yet, `retire_month` and `carry_retired_month` exist, and `postgres` may delete from `auth.users`. Applies `migrations/20261101090000_delete_account_keep_uploads.sql` (carried unchanged; `verify/delete-account-keep-uploads.sh` checks the copy). Checks the zero-argument function is gone, the new one is a definer with a pinned path for `authenticated` only with its default, no ride is stamped, and `retire_month` takes kept rides. Writes the ledger row `delete_account_keep_uploads`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261101090000_delete_account_keep_uploads_check.sql` | Part one adds nine test users with a row in every table, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. With no argument and with `true` an account goes with every upload, as before. With `false` the person goes, the uploads stay unlinked and stamped, and no row names them. Retries answer as deleted. The usual refusals hold with either answer. A former editor's hidden upload stays hidden. `retire_month` retires a kept ride (in a 2024 month) and skips it on a second run. Part two is read-only: 6 rows, all `ok` should be `t`. |
+| `20261101090000_delete_account_keep_uploads_revert.sql` | One transaction: puts back `delete_my_account()` and `retire_month` as they were, drops `contribution.unlinked_at`, removes the ledger row. Refused while any ride was kept from a deleted account: without the column, `retire_month` would take it for one already retired. Safe to run twice. |
+
+## Steps
+
+1. `delete_my_account` first: the apply refuses without it.
+2. Run `20261101090000_delete_account_keep_uploads_apply.sql`. It ends with `COMMIT`; an error means
+   nothing changed.
+3. Run `20261101090000_delete_account_keep_uploads_check.sql`: part one ends with `ROLLBACK` and no
+   `FAILED`; part two gives 6 rows, all `ok = t`.
+4. Regenerate `src/shared/types/database.types.ts` (`delete_my_account` gains `delete_uploads?: boolean`;
+   `contribution` gains `unlinked_at`), and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'delete_account_keep_uploads';`)
+   in `migrations/README.md`.
+
+The app on phones keeps working through it: its call has no argument, which means `true`. The new
+screen's "Also delete my uploaded routes" ships after this is applied.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261101090000_delete_account_keep_uploads_revert.sql`.
+  `verify/delete-account-keep-uploads.sh` checks the schema afterwards matches the schema before, and
+  that it re-applies. If anyone has already kept their uploads, the revert refuses: decide with the
+  owner first whether to retire those rides or delete them.

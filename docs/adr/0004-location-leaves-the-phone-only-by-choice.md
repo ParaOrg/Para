@@ -35,6 +35,12 @@ recording only after it is saved.
 - Raw points are kept 24 months, then only the cleaned line, the times and the
   hintos, cut short at each end and unlinked from the phone. A contributor can
   delete their recordings.
+- Deleting an account (the owner, 2026-11-01) removes the person: their name,
+  email, number and password. Their uploaded routes stay, unlinked from them as
+  an old one is at 24 months, unless they tick "Also delete my uploaded
+  routes". Their stats, and the recordings on the phone not yet sent, are
+  deleted. A route kept this way is still cut short at each end at 24 months
+  (`supabase/migrations/20261101090000_delete_account_keep_uploads.sql`).
 - Train tracking (planned) keeps its own rule: its features use the phone's
   location on the phone only.
 - Rejected: sharing a location live; sign-in with an email (more friction, more
