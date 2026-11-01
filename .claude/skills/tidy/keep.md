@@ -16,4 +16,3 @@ Things a `/tidy` scan finds that look unused but stay. A later scan doesn't repo
 | Tricycle in `RIDE_KINDS` | `src/features/contribute/storage/recording-schema.ts` | A ride kind the data keeps, though the ride sheet doesn't offer it. | 2026-10-31 |
 | `ConsentPanel` | `src/features/contribute/consent/consent-panel.tsx` | Shown nowhere today; its TODO says the owner's redesign reuses it. | 2026-10-31 |
 | `usePersistentStorage` and the answer it reads | `src/features/contribute/storage/persistent-storage.ts` | Waiting on the owner's storage-warning decision: whether Ready warns when the browser may wipe unsent recordings. | 2026-11-01 |
-| `HelpButton` and `HAS_TUTORIAL` | `src/features/contribute/screens/help-button.tsx`, `ready-screen.tsx` | Built and hidden until the tutorial is designed. | 2026-10-31 |

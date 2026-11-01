@@ -48,6 +48,7 @@ export type Database = {
           standing_s: number
           start_name: string | null
           started_at: string
+          unlinked: boolean
           vehicle: string | null
           walk_m: number | null
           walk_s: number | null
@@ -83,6 +84,7 @@ export type Database = {
           standing_s: number
           start_name?: string | null
           started_at: string
+          unlinked?: boolean
           vehicle?: string | null
           walk_m?: number | null
           walk_s?: number | null
@@ -118,6 +120,7 @@ export type Database = {
           standing_s?: number
           start_name?: string | null
           started_at?: string
+          unlinked?: boolean
           vehicle?: string | null
           walk_m?: number | null
           walk_s?: number | null
@@ -1953,7 +1956,10 @@ export type Database = {
         }
         Returns: Json
       }
-      delete_my_account: { Args: never; Returns: undefined }
+      delete_my_account: {
+        Args: { delete_uploads?: boolean }
+        Returns: undefined
+      }
       discard_draft: {
         Args: { p_draft: string; p_revision?: number }
         Returns: Json

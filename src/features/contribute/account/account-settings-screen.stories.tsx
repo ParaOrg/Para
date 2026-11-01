@@ -17,10 +17,7 @@ const meta = {
     onRetry: fn(),
     onSave: fn(),
     onOpenChangePassword: fn(),
-    isDeleting: false,
-    deleteError: null,
-    onDeleteAsked: fn(),
-    onDeleteAccount: fn(),
+    onOpenDeleteAccount: fn(),
     onBack: fn(),
   },
   decorators: [
@@ -137,25 +134,11 @@ export const ShortPhone: Story = {
   ],
 };
 
-/** Delete account asks first, focus on Cancel; Cancel puts focus back on Delete account. */
-export const DeleteAsked: Story = {
+/** Delete account opens Delete account. */
+export const OpensDeleteAccount: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Delete account' }));
-    const sheet = within(canvas.getByRole('alertdialog', { name: 'Delete your account?' }));
-    await expect(sheet.getByRole('button', { name: 'Cancel' })).toHaveFocus();
-    await userEvent.click(sheet.getByRole('button', { name: 'Cancel' }));
-    await expect(canvas.getByRole('button', { name: 'Delete account' })).toHaveFocus();
-    await expect(args.onDeleteAccount).not.toHaveBeenCalled();
-  },
-};
-
-/** Delete account failed: the line shows in the open question. */
-export const DeleteFailed: Story = {
-  args: { deleteError: 'No signal — try again when you’re online' },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Delete account' }));
-    await expect(within(canvas.getByRole('alertdialog')).getByText(/No signal/)).toBeVisible();
+    await expect(args.onOpenDeleteAccount).toHaveBeenCalled();
   },
 };

@@ -1,57 +1,38 @@
-import * as z from 'zod/mini';
-
 import {
   dropDeletion,
   keepDeletion,
   nextDeletionStep,
   readDeletion,
-  recordingsOfAccount,
+  recordingsToForget,
   type AccountDeletion,
 } from './account-deletion';
 import { accountErrorOf } from './account-errors';
 import { AccountError } from './account-problem';
 import { dropPendingClaim } from './claim-token';
-import { CONTRIBUTOR_AUTH_KEY, type ContributeClient } from './contribute-client';
+import { CONTRIBUTOR_AUTH_KEY } from './contribute-client';
 import { requireClient } from './require-client';
-import { answerError } from './upload-contribution';
 import { deleteRecording, loadRecordings } from '../storage/recording-store';
 import { tellSavedRecordingsChanged } from '../storage/saved-recordings-channel';
 
-/** PostgREST's longest page, by default. */
-const PAGE = 1000;
-
-const idRowsSchema = z.array(z.object({ id: z.string() }));
-
-/** The ids of every upload Para holds for the account, whichever identity sent it. */
-async function accountUploadIds(client: ContributeClient, accountId: string): Promise<string[]> {
-  const ids: string[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error, status } = await client
-      .from('contribution')
-      .select('id')
-      .eq('contributor_id', accountId)
-      .order('id')
-      .range(from, from + PAGE - 1);
-    if (error) throw accountErrorOf(answerError(error, status));
-    const page = idRowsSchema.parse(data).map((row) => row.id);
-    ids.push(...page);
-    if (page.length < PAGE) return ids;
-  }
+export interface DeleteAccountChoice {
+  /** "Also delete my uploaded routes": off, they stay on Para with no one’s name on them. */
+  deleteUploads: boolean;
 }
 
 /**
- * Deletes the signed-in account from Para, with everything of it there: its profile, its uploads
- * with their points and hintos, and its lifetime stats (delete_my_account). Then forgets it on
- * this phone: the session, an unfinished claim, the answers kept for it, and its recordings
- * (recordingsOfAccount). Needs signal; nothing is forgotten on the phone unless Para deleted it.
+ * Deletes the signed-in account from Para (delete_my_account): its name, email, number and
+ * password, and its stats; its uploads too when `deleteUploads`, else they stay, unlinked. Then
+ * forgets it on this phone: the session, an unfinished claim, the answers kept for it, and every
+ * saved recording (recordingsToForget). Needs signal; nothing is forgotten on the phone unless
+ * Para deleted it.
  *
- * Safe to repeat: what Para held is read before asking, and kept on the phone once Para has
- * deleted it, so clearing the phone that failed is finished by the next try, even after a reload.
- * A try whose answer was lost is asked again while the session lasts: Para answers an account it
- * already deleted as deleted. With no answer kept, a lapsed session clears nothing.
+ * Safe to repeat: the deletion is kept on the phone once Para has said yes, so clearing the phone
+ * that failed is finished by the next try, even after a reload. A try whose answer was lost is
+ * asked again while the session lasts: Para answers an account it already deleted as deleted.
+ * With no answer kept, a lapsed session clears nothing.
  * Not while a recording is running: the screen calls it from Account settings only.
  */
-export async function deleteAccount(): Promise<void> {
+export async function deleteAccount({ deleteUploads }: DeleteAccountChoice): Promise<void> {
   let deletion: AccountDeletion;
   try {
     const client = await requireClient();
@@ -61,11 +42,10 @@ export async function deleteAccount(): Promise<void> {
     if (step.kind === 'forget') {
       deletion = step.deletion;
     } else {
-      deletion = step.kept ?? {
-        accountId: step.accountId,
-        uploadIds: await accountUploadIds(client, step.accountId),
-      };
-      const { error, status } = await client.rpc('delete_my_account');
+      deletion = step.kept ?? { accountId: step.accountId };
+      const { error, status } = await client.rpc('delete_my_account', {
+        delete_uploads: deleteUploads,
+      });
       if (error) {
         if (status === 0) throw new AccountError('offline', error.message);
         // An anonymous phone, an editor, or an account that still owns rows of the map.
@@ -101,12 +81,12 @@ async function forgetAccountOnPhone(deletion: AccountDeletion): Promise<void> {
   dropPendingClaim();
   try {
     const recordings = await loadRecordings();
-    await Promise.all(recordingsOfAccount(recordings, deletion).map((r) => deleteRecording(r.id)));
+    await Promise.all(recordingsToForget(recordings).map((r) => deleteRecording(r.id)));
     dropDeletion();
   } catch (error) {
     // The account is gone from Para all the same. The deletion stays kept for a later call to
     // finish; the person can also delete them one by one.
-    console.warn("The phone could not delete the deleted account's recordings.", error);
+    console.warn('The phone could not delete its recordings with the deleted account.', error);
   }
   // Every list of saved recordings, this tab's own too, reads them again, whatever was deleted:
   // none of the deleted account's may show to whoever signs in next.
