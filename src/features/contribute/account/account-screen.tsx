@@ -62,6 +62,7 @@ export function AccountScreen({
     <section
       ref={entryRef}
       aria-labelledby="account-heading"
+      data-screen-hash="#profile"
       className="tab-screen absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isLogoutAsked} className="absolute inset-0">
@@ -100,8 +101,9 @@ export function AccountScreen({
             )}
           </section>
         </div>
-        {/* The toolbar over the page's foot, the page fading out under it (4514:23035). */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface px-4 pt-6 pb-[max(3rem,env(safe-area-inset-bottom))] *:pointer-events-auto">
+        {/* The toolbar over the page's foot, the page fading out under it (4514:23035), 32 over the
+            foot as on Record and History, so it stays put between the tabs. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] *:pointer-events-auto">
           <BottomToolbar
             current="account"
             onOpenRecord={onOpenRecord}

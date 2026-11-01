@@ -1196,5 +1196,41 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
 }
 
+// ------------------------------------------------ the toolbar stands still between its screens
+{
+  const { page } = await phone();
+  const toolbar = page.getByRole('navigation', { name: 'Screens' });
+  const toolbarBox = async () => {
+    // Once the move between screens is over: the screens slide, the toolbar never does.
+    await page.waitForFunction(() => !document.documentElement.dataset.tabMotion, null, {
+      timeout: 5000,
+    });
+    await page.waitForTimeout(800);
+    return toolbar.locator('> div').boundingBox();
+  };
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  const onRecord = await toolbarBox();
+  await openHistory(page);
+  await page.getByRole('heading', { name: 'History' }).waitFor();
+  const onHistory = await toolbarBox();
+  await toolbar.getByRole('button', { name: 'Account', exact: true }).click();
+  await page.locator('[data-screen-hash="#profile"]').waitFor();
+  const onAccount = await toolbarBox();
+  const same = (a, b) =>
+    !!a &&
+    !!b &&
+    Math.abs(a.x - b.x) < 1 &&
+    Math.abs(a.y - b.y) < 1 &&
+    Math.abs(a.width - b.width) < 1 &&
+    Math.abs(a.height - b.height) < 1;
+  check(
+    'the toolbar stands in one place on Record, History and Account: 32 over the foot on each',
+    same(onRecord, onHistory) &&
+      same(onRecord, onAccount) &&
+      Math.abs(852 - (onRecord.y + onRecord.height) - 32) < 1,
+    JSON.stringify({ onRecord, onHistory, onAccount }),
+  );
+}
+
 await browser.close();
 tally();

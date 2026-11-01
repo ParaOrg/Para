@@ -3,6 +3,7 @@ import type { ReactNode, Ref } from 'react';
 import { cn } from '@/shared/utils/cn';
 
 import { useSlidingPill } from './use-sliding-pill';
+import { warmScreen } from '../common/screen-loaders';
 
 import './start-icons.css';
 
@@ -112,6 +113,8 @@ function Tab({ name, isCurrent, onClick, ref, children }: TabProps) {
       ref={ref}
       data-tab={name}
       type="button"
+      // A finger landing on the tab fetches its screen, if Start's fetch ahead has not.
+      onPointerDown={() => warmScreen(name)}
       onClick={onClick}
       className={cn(TAB, 'text-content-quaternary')}
     >

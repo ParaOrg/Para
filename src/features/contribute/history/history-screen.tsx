@@ -54,6 +54,7 @@ export function HistoryScreen({
     <section
       ref={entryRef}
       aria-labelledby={HISTORY_HEADING_ID}
+      data-screen-hash="#history"
       className="tab-screen absolute inset-0 z-20 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <header
@@ -111,7 +112,7 @@ export function HistoryScreen({
         )}
       </div>
       {/* The toolbar over the page's foot, the list fading out under it (4518:24829). */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface px-4 pt-6 pb-[max(3rem,env(safe-area-inset-bottom))] *:pointer-events-auto">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] *:pointer-events-auto">
         <BottomToolbar
           current="history"
           onOpenRecord={onOpenRecord}

@@ -403,6 +403,7 @@ export default defineConfig([
       'scripts/preview/browser-demo.mjs',
       'scripts/research/phone-speed.mjs',
       'scripts/research/shots.mjs',
+      'scripts/research/tab-speed.mjs',
       'tests/e2e/**/*.mjs',
     ],
     languageOptions: { globals: { ...readonly(NODE_GLOBALS), ...readonly(BROWSER_GLOBALS) } },

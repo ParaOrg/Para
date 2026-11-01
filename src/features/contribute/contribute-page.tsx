@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ComponentProps,
   type ComponentType,
 } from 'react';
 import { flushSync } from 'react-dom';
@@ -15,6 +16,13 @@ import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
 import { retryingImport } from './common/retrying-import';
+import {
+  loadAccountView,
+  loadHistoryView,
+  loadedAccountView,
+  loadedHistoryView,
+  warmScreen,
+} from './common/screen-loaders';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
@@ -32,18 +40,31 @@ import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
 
-// Opened from buttons, so the page's first load does not carry them.
-const HistoryView = lazy(() =>
-  import('./history/history-view').then((module) => ({ default: module.HistoryView })),
+// Opened from the toolbar, so the page's first load does not carry them; fetched ahead once Start
+// is idle (below) and as a finger lands on their tab (screen-loaders.ts).
+const LazyHistoryView = lazy(() =>
+  loadHistoryView().then((module) => ({ default: module.HistoryView })),
 );
 // The map's credits, opened from the ⓘ on Start: fetched on the tap, not with the page.
 const MapDataSourceView = lazy(() =>
   import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
 );
-// Account, with its settings inside it, opened from the Account tab: fetched on the tap.
-const AccountView = lazy(() =>
-  import('./account/account-view').then((module) => ({ default: module.AccountView })),
+// Account, with its settings inside it, opened from the Account tab.
+const LazyAccountView = lazy(() =>
+  loadAccountView().then((module) => ({ default: module.AccountView })),
 );
+
+/** History, drawn at once when its chunk is already here (screen-loaders.ts), else lazily. */
+function HistoryView(props: ComponentProps<typeof LazyHistoryView>) {
+  const loaded = loadedHistoryView();
+  return loaded ? <loaded.HistoryView {...props} /> : <LazyHistoryView {...props} />;
+}
+
+/** Account, drawn at once when its chunk is already here (screen-loaders.ts), else lazily. */
+function AccountView(props: ComponentProps<typeof LazyAccountView>) {
+  const loaded = loadedAccountView();
+  return loaded ? <loaded.AccountView {...props} /> : <LazyAccountView {...props} />;
+}
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
 // fetches them as it opens (below), so Start never waits on the network, nor fails without one.
 // A fetch ahead that failed offline does not leave them unreachable: each asks again afresh.
@@ -97,6 +118,9 @@ const PermissionsOnboarding =
         })),
       )
     : null;
+
+/** How long Start waits for the browser's idle time before fetching History and Account anyway. */
+const WARM_SCREENS_WITHIN_MS = 2000;
 
 /** Keeps the picture of a recording's trail for History's card; without it the card draws the trail. */
 function keepTrailPicture(recordingId: string, picture: string): void {
@@ -218,6 +242,23 @@ export function ContributePage({ locator }: ContributePageProps) {
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);
     });
+  }, [phase]);
+
+  // History and Account fetched ahead once Start has settled, in the browser's idle time, so the
+  // first tap on their tab finds them here: its move starts at once, on the real screen.
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    const warm = () => {
+      warmScreen('history');
+      if (canUpload()) warmScreen('account');
+    };
+    if ('requestIdleCallback' in window) {
+      const idle = window.requestIdleCallback(warm, { timeout: WARM_SCREENS_WITHIN_MS });
+      return () => window.cancelIdleCallback(idle);
+    }
+    // Safari has no idle callback: a plain wait stands in for it.
+    const later = setTimeout(warm, WARM_SCREENS_WITHIN_MS);
+    return () => clearTimeout(later);
   }, [phase]);
 
   // Signing out, or leaving Ready, must not leave #profile or #account-settings to reopen Account
