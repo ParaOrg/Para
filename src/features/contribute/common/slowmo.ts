@@ -1,5 +1,7 @@
 import * as z from 'zod/mini';
 
+import { SLOWMO_KEY } from './slowmo-switch';
+
 /**
  * A test switch for looking at the page's motion slowly: `/contribute/?slowmo` multiplies every
  * motion duration by 5, `?slowmo=N` by N (1 to 10), and `?slowmo=off` turns it off. Kept for the
@@ -7,7 +9,6 @@ import * as z from 'zod/mini';
  * in any build, so it needs no build flag.
  */
 
-const SLOWMO_KEY = 'para.slowmo';
 const DEFAULT_FACTOR = 5;
 const MIN_FACTOR = 1;
 const MAX_FACTOR = 10;
