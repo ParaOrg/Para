@@ -12,6 +12,14 @@ alter default privileges in schema public grant usage, select, update on sequenc
 create schema auth;
 grant usage on schema auth to anon, authenticated;
 create table auth.users (id uuid primary key, is_anonymous boolean not null default false);
+-- GoTrue's audit log, as the live project has it: its payload names the actor by id and email.
+create table auth.audit_log_entries (
+  instance_id uuid,
+  id uuid primary key,
+  payload json,
+  created_at timestamptz,
+  ip_address varchar(64) not null default ''
+);
 create function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
 $$;
