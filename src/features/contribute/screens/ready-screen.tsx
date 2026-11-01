@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type Ref, type RefObject } from 'react';
 
+import { CreditsButton } from '@/features/routes/map/credits-button';
+
 import { TOOLBAR_ROOM } from './bottom-toolbar';
 import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
@@ -7,7 +9,6 @@ import { StartBar } from './start-bar';
 import { useStackRoom } from '../common/use-stack-room';
 import { useToolbarLift } from '../common/use-toolbar-lift';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
-import { CreditsButton } from '../map/credits-button';
 
 // The update gate exists in the Android app's build only: on the web this is null and the chunk is
 // never built, so the page's first load does not carry it.

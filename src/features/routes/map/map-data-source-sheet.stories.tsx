@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
-import { mapCredits } from '@/features/routes/map/map-attribution';
 import { OPENFREEMAP_HOST } from '@/shared/config/basemap-host';
 
+import { mapCredits } from './map-attribution';
 import { MapDataSourceSheet } from './map-data-source-sheet';
 
 const meta = {
-  title: 'Features/Contribute/MapDataSourceSheet',
+  title: 'Features/Routes/MapDataSourceSheet',
   component: MapDataSourceSheet,
-  args: { credits: mapCredits('https://tiles.para-commute.org'), onClose: fn() },
+  args: { credits: mapCredits('https://tiles.para-commute.org'), onClose: fn(), onClosed: fn() },
   // A phone over a map-coloured box: the scrim dims it, the sheet stands at its foot.
   decorators: [
     (Story) => (

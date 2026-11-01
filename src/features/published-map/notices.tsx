@@ -34,7 +34,7 @@ export function Notices({
   return (
     <>
       {loadFailed && (
-        <div className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-max max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-3 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200 @wide:top-[calc(1rem+env(safe-area-inset-top))] @wide:bottom-auto @wide:max-w-xl">
+        <div className="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-1/2 z-20 flex w-max max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-3 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200 @wide:top-[calc(1rem+env(safe-area-inset-top))] @wide:bottom-auto @wide:max-w-xl">
           {tooNew ? (
             // The file is a shape this installed app does not know. Loading
             // it again cannot help; the newer app can, fetched through the
@@ -67,13 +67,13 @@ export function Notices({
       {/*
         Honesty about age. With no signal, or a network too slow to answer in
         time, the map is whatever the phone kept, and the date comes from inside
-        the file itself, so it is exact. It sits bottom left above the scale on a phone
-        (the credit line opens across the top there), top left on a wide map.
+        the file itself, so it is exact. It sits bottom left over the map's ⓘ on a
+        phone, top left on a wide map.
       */}
       {(offline || age.stale) && (
         <div
           data-testid="offline"
-          className="absolute bottom-[calc(2.5rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] z-10 rounded-full bg-neutral-800/90 px-3 py-1.5 text-xs text-content-inverse shadow backdrop-blur @wide:top-[calc(1rem+env(safe-area-inset-top))] @wide:bottom-auto"
+          className="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] z-10 rounded-full bg-neutral-800/90 px-3 py-1.5 text-xs text-content-inverse shadow backdrop-blur @wide:top-[calc(1rem+env(safe-area-inset-top))] @wide:bottom-auto"
         >
           {offline ? 'Offline' : 'Not refreshed'}
           {age.publishedAt && <> · map as of {shortDate(age.publishedAt)}</>}

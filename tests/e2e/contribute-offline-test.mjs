@@ -225,9 +225,21 @@ try {
   await page
     .getByRole('group', { name: 'Recording so far' })
     .waitFor({ timeout: 10000 })
-    .catch((error) => {
+    .catch(async (error) => {
       console.log(`  offline, not fetched: ${offlineFailures.join(' | ') || 'nothing'}`);
       console.log(`  page errors: ${errors.join(' | ') || 'none'}`);
+      // What the phone showed instead: CI keeps the picture with the suite's screenshots.
+      const shown = await page.evaluate(() => ({
+        hash: location.hash,
+        headings: [...document.querySelectorAll('h1, h2, [role="dialog"], [role="alert"]')].map(
+          (element) => element.textContent?.trim().slice(0, 80),
+        ),
+        isStartThere: [...document.querySelectorAll('button')].some(
+          (button) => button.textContent?.trim() === 'Start Tracking',
+        ),
+      }));
+      console.log(`  shown instead: ${JSON.stringify(shown)}`);
+      await page.screenshot({ path: 'contribute-offline-start.png' });
       throw error;
     });
   await ride(context, page, 6);

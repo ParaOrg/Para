@@ -524,13 +524,120 @@ check(
   'no zoom buttons on a touch screen',
   (await page.locator('.maplibregl-ctrl-zoom-in').count()) === 0,
 );
-check(
-  'the attribution control sits top right',
-  (await page.locator('.maplibregl-ctrl-top-right .maplibregl-ctrl-attrib').count()) > 0,
-  (await page.locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').count()) > 0
-    ? 'still bottom right'
-    : '',
-);
+// The map's credits: its own ⓘ at the bottom left (Figma 4494:2048, as on the contributor page's
+// Start), MapLibre's corner credits stepped aside; the ⓘ opens them as the Map Data Source sheet
+// (4494:10177), so the licences' credit is always a tap away.
+{
+  const info = page.getByRole('button', { name: 'Map data sources' });
+  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  const infoBox = await info.boundingBox();
+  check(
+    "the map's ⓘ sits at the bottom left, 12 in, 32 across, and MapLibre's corner credits are gone",
+    !!infoBox &&
+      Math.abs(infoBox.x - 12) < 1 &&
+      Math.abs(infoBox.width - 32) < 1 &&
+      Math.abs(844 - (infoBox.y + infoBox.height) - 12) < 1 &&
+      !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
+    JSON.stringify(infoBox),
+  );
+  const isFocusOnInfo = () =>
+    page
+      .waitForFunction(
+        () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
+        null,
+        { timeout: 5000 },
+      )
+      .then(() => true)
+      .catch(() => false);
+  const isMapInert = () =>
+    page.evaluate(() => !!document.querySelector('[data-testid="map-view"]')?.closest('[inert]'));
+  await info.click();
+  await sheet.waitFor();
+  // Half way through its rise (map-data-source-sheet.css), held there: the sheet part way up from
+  // below the screen.
+  const midRise = await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"].map-data-source-sheet');
+    const [rise] = dialog?.getAnimations() ?? [];
+    const duration = rise?.effect?.getTiming().duration;
+    if (!dialog || !rise || typeof duration !== 'number') return null;
+    rise.pause();
+    rise.currentTime = duration / 2;
+    const shift = new window.DOMMatrixReadOnly(getComputedStyle(dialog).transform).m42;
+    rise.finish();
+    return { shift: Math.round(shift), height: Math.round(dialog.getBoundingClientRect().height) };
+  });
+  check(
+    '  the sheet rises from below the screen: half way through, part way up',
+    !!midRise && midRise.shift > 0 && midRise.shift < midRise.height,
+    JSON.stringify(midRise),
+  );
+  const links = await sheet
+    .getByRole('link')
+    .evaluateAll((all) => all.map((a) => ({ text: a.textContent, href: a.getAttribute('href') })));
+  check(
+    "  it opens Map Data Source: the map's credits as links, OpenStreetMap's among them, the map inert under it",
+    links.some(
+      (l) =>
+        l.text?.startsWith('© OpenStreetMap contributors') &&
+        l.href === 'https://www.openstreetmap.org/copyright',
+    ) &&
+      links.some((l) => l.text?.startsWith('© Para contributors')) &&
+      (await isMapInert()) &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+    JSON.stringify(links),
+  );
+  await sheet.getByRole('button', { name: 'Close' }).click();
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  ✕ closes it, once it has slid down: focus back on the ⓘ, the map live again',
+    (await isFocusOnInfo()) && !(await isMapInert()),
+  );
+  await info.click();
+  await sheet.waitFor();
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  check('  Escape closes it too, focus back on the ⓘ', await isFocusOnInfo());
+
+  // Closed mid-rise, it goes down from where it is; opened again by keyboard while it slides
+  // down, the new sheet stays open: the old one's slide is not the new one's close.
+  await info.click();
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  const isBackAfterMidRise = await isFocusOnInfo();
+  await info.focus();
+  await page.keyboard.press('Enter');
+  await sheet.waitFor();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1200);
+  check(
+    '  closed mid-rise it goes, focus on the ⓘ; reopened by keyboard while it slides down, the new sheet stays, focus in it',
+    isBackAfterMidRise &&
+      (await sheet.count()) === 1 &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+  );
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+
+  // Less motion asked for: no slide either way, shown and gone at once.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await info.click();
+  await sheet.waitFor();
+  const isStill = await page.evaluate(
+    () =>
+      document
+        .querySelector('[role="dialog"].map-data-source-sheet')
+        ?.getAnimations()
+        .filter((a) => a.playState === 'running').length === 0,
+  );
+  await sheet.getByRole('button', { name: 'Close' }).click();
+  const isGoneAtOnce = (await sheet.count()) === 0;
+  check(
+    '  with less motion asked for, the sheet neither rises nor sinks: shown and gone at once',
+    isStill && isGoneAtOnce && (await isFocusOnInfo()),
+  );
+  await page.emulateMedia({ reducedMotion: null });
+}
 const noHScroll = (p) =>
   p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 check(
@@ -3155,6 +3262,62 @@ if (routeA) {
   }
 
   const trip2 = await tripChecks();
+  // The ⓘ rides 12 over the card's sheet, as the LocatorButton does on the right.
+  if (['middle', 'low'].includes(await sheetState())) {
+    await cardsSettled(page);
+    const above = await page.evaluate(() => {
+      const info = document
+        .querySelector('button[aria-label="Map data sources"]')
+        ?.getBoundingClientRect();
+      const top = document
+        .querySelector('[data-testid="card"]:not([hidden])')
+        ?.getBoundingClientRect().top;
+      return info && top !== undefined ? top - info.bottom : null;
+    });
+    check(
+      "  with a card open the map's ⓘ stands 12 over its sheet",
+      above !== null && Math.abs(above - 12) < 2,
+      String(above),
+    );
+
+    // The ⓘ is the licences' credit, MapLibre's corner gone: over any map left showing it stays
+    // reachable, the sheet pulled up to Max and held between Middle and Max alike.
+    const infoReachable = () =>
+      page.evaluate(() => {
+        const info = document.querySelector('button[aria-label="Map data sources"]');
+        const box = info?.getBoundingClientRect();
+        if (!info || !box) return null;
+        const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return { top: Math.round(box.top), isOnTop: !!hit && info.contains(hit) };
+      });
+    const before = await sheetState();
+    const atMax = (await handleTo('max')) ? await infoReachable() : null;
+    check(
+      "  with the card at Max, the map's ⓘ is still in the strip of map above it, reachable",
+      atMax?.isOnTop === true && atMax.top >= 0,
+      JSON.stringify(atMax),
+    );
+    await handleTo('middle');
+    await cardsSettled(page);
+    const grip = await handle().first().boundingBox();
+    let midway = null;
+    if (grip) {
+      await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2 - 150, {
+        steps: 10,
+      });
+      midway = await infoReachable();
+      await page.mouse.up();
+      await cardsSettled(page);
+    }
+    check(
+      "  with the card held between Middle and Max, the map's ⓘ rides over it, reachable",
+      midway?.isOnTop === true,
+      JSON.stringify(midway),
+    );
+    if (before) await handleTo(before);
+  }
 
   // Negative control: 40 px out is twice as far as the box reaches — but only
   // where the line does not curve back and no hotspot sits on that side, so
@@ -4662,9 +4825,37 @@ check(
   (await dpage.locator('.maplibregl-ctrl-zoom-in, .maplibregl-ctrl-compass').count()) === 0,
 );
 check(
-  'a fine pointer keeps the attribution bottom right',
-  (await dpage.locator('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib').count()) > 0,
+  "a fine pointer gets the same ⓘ at the bottom left, MapLibre's corner credits gone",
+  (await dpage.getByRole('button', { name: 'Map data sources' }).isVisible()) &&
+    !(await dpage.locator('.maplibregl-ctrl-attrib').isVisible()),
 );
+
+// The sheet's code out of reach (offline before the worker kept it): the ⓘ's tap hands the
+// credits back to MapLibre's corner, focus on it, and the page is live, not blank.
+{
+  const fpage = await desktop.newPage();
+  await nodeFetch(fpage);
+  await fpage.route(/map-data-source-view/, (route) => route.abort('internetdisconnected'));
+  await fpage.goto(`${BASE}/`, { waitUntil: 'load' });
+  const info = fpage.getByRole('button', { name: 'Map data sources' });
+  await info.waitFor({ timeout: 30000 });
+  await info.click();
+  await fpage
+    .locator('.maplibregl-ctrl-attrib')
+    .waitFor({ state: 'visible', timeout: 10000 })
+    .catch(() => {});
+  check(
+    "the sheet's code out of reach: MapLibre's corner credits come back, focus on them, the page live",
+    (await fpage.locator('.maplibregl-ctrl-attrib').isVisible()) &&
+      (await info.count()) === 0 &&
+      (await fpage.evaluate(
+        () =>
+          !!document.activeElement?.closest('.maplibregl-ctrl-attrib') &&
+          !document.querySelector('[data-testid="map-view"]')?.closest('[inert]'),
+      )),
+  );
+  await fpage.close();
+}
 
 if (!routeA) {
   skip('a mouse click 4 px beside the line selects it', 'no lone route vertex to click');
