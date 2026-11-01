@@ -33,6 +33,16 @@ export const SpecialWithoutIcon: Story = { args: { firstIcon: undefined } };
 /** Secondary: Special's surface in Medium. */
 export const Secondary: Story = { args: { variant: 'secondary' } };
 
+/** The words alone (4451:14022). */
+export const Plain: Story = {
+  args: { variant: 'plain', firstIcon: undefined, label: 'Forgot password' },
+};
+
+/** Plain in Content/error. */
+export const PlainError: Story = {
+  args: { variant: 'plain', tone: 'error', firstIcon: undefined, label: 'Delete account' },
+};
+
 /** Primary, brand blue. */
 export const Primary: Story = {
   args: { variant: 'primary', firstIcon: undefined, lastIcon: ArrowIcon },

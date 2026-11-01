@@ -10,7 +10,7 @@ import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
-import { TOOLBAR_ROOM } from '../screens/bottom-toolbar';
+import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
 
@@ -73,7 +73,10 @@ export function HistoryScreen({
         onScroll={(event) => setIsScrolled(event.currentTarget.scrollTop > 0)}
         className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 pt-6 pb-40"
       >
-        {load.state !== 'ready' && <HistoryLoadLine load={load} />}
+        {/* Over a list already drawn, Loading waits under it: going, it moves no card. */}
+        {(load.state === 'error' || (load.state === 'loading' && recordings.length === 0)) && (
+          <HistoryLoadLine load={load} />
+        )}
         {recordings.length === 0 && load.state === 'ready' && (
           <div className="flex flex-col items-center gap-4 pt-16 text-center">
             <p className="text-base/6 text-content-quaternary">No recordings yet.</p>
@@ -107,12 +110,16 @@ export function HistoryScreen({
             })}
           </ul>
         )}
+        {load.state === 'loading' && recordings.length > 0 && <HistoryLoadLine load={load} />}
       </div>
-      {/* The list fading out under the page's toolbar (4518:24829), which stands over this foot,
-          32 over the screen's edge on all three tabs, so it never moves between them. */}
+      {/* The list fading out under the page's toolbar (4518:24829), which stands over this foot
+          (TOOLBAR_FOOT) on all three tabs, so it never moves between them. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]"
+        className={cn(
+          'pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6',
+          TOOLBAR_FOOT,
+        )}
       >
         <div className={TOOLBAR_ROOM} />
       </div>

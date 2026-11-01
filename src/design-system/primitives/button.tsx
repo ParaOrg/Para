@@ -36,6 +36,7 @@ export function Button({
   variant,
   size = 'base',
   fill = 'brand',
+  tone,
   label,
   firstIcon,
   lastIcon,
@@ -43,7 +44,7 @@ export function Button({
   ...rest
 }: Props) {
   return (
-    <button {...rest} type={type} className={buttonClasses({ variant, size, fill })}>
+    <button {...rest} type={type} className={buttonClasses({ variant, size, fill, tone })}>
       {/* The label is the accessible name; icons only decorate it. */}
       {firstIcon && (
         <span aria-hidden className={ICON[size] + ' *:size-full'}>

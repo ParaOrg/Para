@@ -25,13 +25,14 @@ export function ButtonLink({
   variant,
   size = 'base',
   fill = 'brand',
+  tone,
   label,
   firstIcon,
   lastIcon,
   ...rest
 }: ButtonLinkProps) {
   return (
-    <a {...rest} className={buttonClasses({ variant, size, fill })}>
+    <a {...rest} className={buttonClasses({ variant, size, fill, tone })}>
       {firstIcon && (
         <span aria-hidden className={ICON[size] + ' *:size-full'}>
           {firstIcon}

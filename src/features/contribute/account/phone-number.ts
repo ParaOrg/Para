@@ -14,3 +14,8 @@ export function normalisePhoneNumber(text: string): string | null {
   if (LOCAL_MOBILE.test(digits)) return `+63${digits.slice(1)}`;
   return INTERNATIONAL_MOBILE.test(digits) ? digits : null;
 }
+
+/** A stored +639XXXXXXXXX as PhoneField shows it, after its +63; anything else as it is. */
+export function numberAfterCountryCode(stored: string): string {
+  return stored.startsWith('+63') ? stored.slice(3) : stored;
+}

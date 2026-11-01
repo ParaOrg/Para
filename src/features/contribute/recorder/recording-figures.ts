@@ -1,4 +1,4 @@
-import type { RideSummary } from '@/features/routes/model/ride-recording';
+import { summarize, type Fix, type RideSummary } from '@/features/routes/model/ride-recording';
 
 import type { Recording } from '../storage/recording-schema';
 
@@ -37,4 +37,13 @@ export function liveFigures(
     elapsedSeconds: Math.max(0, (end - recording.startedAt) / 1000 - summary.pausedSeconds),
     distanceM: summary.distanceM,
   };
+}
+
+/**
+ * How far a recording went, in metres, from its fixes, as History shows it: worked out to its
+ * Stop (or its save), its walked and ridden runs counted alike.
+ */
+export function distanceOf(recording: Recording, fixes: readonly Fix[]): number {
+  const end = recording.stoppedAt ?? recording.savedAt ?? recording.startedAt;
+  return summarize(fixes, recording.gaps, recording.startedAt, end, recording.modes).distanceM;
 }

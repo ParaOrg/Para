@@ -4,7 +4,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { RecordingCard } from './recording-card';
 import { StartBar } from './start-bar';
-import { START_BUTTON_ATTR, START_MORPH_ATTR, morphStartIntoCard } from './start-morph';
+import { START_MORPH_ATTR, morphStartIntoCard } from './start-morph';
+import { START_BUTTON_ATTR } from './start-morph-attrs';
 import { TrackingButton } from './tracking-button';
 
 /** Start tracking, and once tapped the recording card in its place, as the page swaps them. */

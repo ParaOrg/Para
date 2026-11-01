@@ -10,6 +10,8 @@ import type { Captcha } from './use-captcha';
 interface ForgotPasswordScreenProps {
   /** The email to start with: what was typed before, on coming back from the code. */
   initialEmail: string;
+  /** Signed in, from Change password: the email is the account's own and cannot be changed. */
+  isEmailLocked?: boolean;
   isBusy: boolean;
   /** One line about the last try, or null. */
   error: string | null;
@@ -22,6 +24,7 @@ interface ForgotPasswordScreenProps {
 /** A password reset's first step (Figma 4461:4689): the email the code goes to. */
 export function ForgotPasswordScreen({
   initialEmail,
+  isEmailLocked = false,
   isBusy,
   error,
   captcha,
@@ -60,6 +63,8 @@ export function ForgotPasswordScreen({
         autoComplete="email"
         value={email}
         error={emailError}
+        disabled={isEmailLocked}
+        readOnly={isEmailLocked}
         onChange={(event) => setEmail(event.target.value)}
       />
     </AccountPage>
