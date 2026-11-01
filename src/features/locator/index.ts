@@ -4,3 +4,4 @@
 export { useGazeHush } from './dot-gaze';
 export { CommuterLocation } from './commuter-location';
 export { ContributorLocation } from './contributor-location';
+export type { LocatorNote } from './locator-note';

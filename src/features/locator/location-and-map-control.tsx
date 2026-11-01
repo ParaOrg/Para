@@ -20,9 +20,7 @@ interface LocationAndMapControlProps {
   thumbnails: Readonly<Record<string, string>>;
   /** Whose Location Labels choice the card keeps: the studio's own, or the public pages'. */
   labelsPlace: LabelsPlace;
-  /** The locator's note, above the pill; hidden while the card is open, which takes its place. */
-  note: ReactNode;
-  /** Directly above the pill, under the note; hidden while the card is open. */
+  /** Directly above the pill; hidden while the card is open. */
   above?: ReactNode;
   /** The LocatorButton, the pill's bottom half. */
   children: ReactNode;
@@ -39,7 +37,6 @@ export function LocationAndMapControl({
   basemaps,
   thumbnails,
   labelsPlace,
-  note,
   above,
   children,
 }: LocationAndMapControlProps) {
@@ -62,10 +59,9 @@ export function LocationAndMapControl({
   }, [isMapLoaded]);
   return (
     <div ref={rootRef} className="flex flex-col items-end gap-1">
-      {card === 'closed' && note}
       {card === 'closed' && above}
       {card !== 'closed' && (
-        // 8 above the pill (CARD_GAP_PX), where the note keeps 4.
+        // 8 above the pill (CARD_GAP_PX), where `above` keeps 4.
         <div className="mb-1">
           <Suspense fallback={null}>
             <LazyMapStyle

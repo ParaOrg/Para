@@ -1724,6 +1724,57 @@ if (PART === 1) {
   await p.close();
 }
 
+// 7. A load that fails: never a blank page, but a problem toast at the top with Try again, which
+// reads the map again; it loads, and the toast has gone.
+if (PART === 1) {
+  const p = await b.newPage({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  await nodeFetch(p);
+  p.on('pageerror', (e) => errors.push(String(e)));
+  let isFailing = true;
+  await p.route(/\/data\/index\.v5\.json/, (route) =>
+    isFailing ? route.abort('internetdisconnected') : route.continue(),
+  );
+  await p.goto(`${BASE}/`, { waitUntil: 'load' });
+  const toast = p.locator('[data-testid="toast"]');
+  const toastWords = async () => ((await toast.count()) ? await toast.innerText() : '');
+  const said = await until(
+    toastWords,
+    (words) => words.includes('The routes could not load'),
+    20000,
+  );
+  check(
+    'a load that fails says so in one problem toast, with Try again',
+    said.includes('The routes could not load') &&
+      (await toast.count()) === 1 &&
+      (await toast.getByRole('button', { name: 'Try again' }).count()) === 1,
+    said || 'no toast',
+  );
+  check(
+    '  a screen reader hears it at once',
+    ((await p.getByRole('alert').textContent()) ?? '').includes('The routes could not load'),
+  );
+  isFailing = false;
+  if ((await toast.count()) === 1) await toast.getByRole('button', { name: 'Try again' }).click();
+  const loaded = await until(
+    async () => ({
+      directions: Number(await p.locator('[data-directions]').getAttribute('data-directions')),
+      toasts: await toast.count(),
+    }),
+    (now) => now.directions > 0 && now.toasts === 0,
+    20000,
+  );
+  check(
+    '  Try again loads the routes, and the toast goes',
+    loaded.directions > 0 && loaded.toasts === 0,
+    `${loaded.directions} direction(s), ${loaded.toasts} toast(s)`,
+  );
+  await p.close();
+}
+
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 
 await b.close();

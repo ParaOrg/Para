@@ -7,6 +7,7 @@ import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 
 import { Locator } from './locator';
+import type { LocatorNote } from './locator-note';
 import type { Locator as State } from './use-locator';
 
 /** A hand-made hook state: the Locator is pure display over it. */
@@ -30,6 +31,8 @@ interface Args {
   state: State;
   wide?: boolean;
   isMapLoaded?: boolean;
+  /** What the locator has to say: the page's toast says it. */
+  onNote?: (note: LocatorNote | null) => void;
 }
 
 /**
@@ -37,7 +40,7 @@ interface Args {
  * where its top is here. `wide`: 1280 × 800, past `@float:`, the card
  * floating in the corner.
  */
-function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx }: Args) {
+function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx, onNote }: Args) {
   return (
     <div
       data-dock-host
@@ -59,6 +62,7 @@ function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx }:
         basemapThumbnails={BASEMAP_THUMBNAILS}
         labelsPlace="map"
         docked={snap !== null}
+        onNote={onNote}
       />
       {snap !== null && (
         <BottomSheet
@@ -79,7 +83,7 @@ const meta = {
   title: 'Features/Locator/Locator',
   component: Specimen,
   parameters: { layout: 'fullscreen' },
-  args: { snap: 'middle', state: locator() },
+  args: { snap: 'middle', state: locator(), onNote: fn() },
 } satisfies Meta<typeof Specimen>;
 
 export default meta;
@@ -110,9 +114,49 @@ export const NoCard: Story = {
   args: { snap: null, state: locator({ camera: 'tracked', mode: 'TrackedLocation', heading: 30 }) },
 };
 
-/** The browser said no: a short note above the button. */
+/** Location on, a fix in: nothing to say. */
+export const NothingToSay: Story = {
+  play: async ({ args }) => {
+    await expect(args.onNote).not.toHaveBeenCalled();
+  },
+};
+
+/** The browser said no: the page is told, for its toast, and the button stays as it was. */
 export const Denied: Story = {
   args: { state: locator({ status: 'denied', fix: null, mode: 'LocationOff' }) },
+  play: async ({ args }) => {
+    await waitFor(() =>
+      expect(args.onNote).toHaveBeenCalledWith({
+        id: 'location',
+        title: 'Location is off for this site',
+        body: 'Allow it in your browser settings, then try again.',
+      }),
+    );
+  },
+};
+
+/** This browser has no location to give. */
+export const Unavailable: Story = {
+  args: { state: locator({ status: 'unavailable', fix: null, mode: 'LocationOff' }) },
+  play: async ({ args }) => {
+    await waitFor(() =>
+      expect(args.onNote).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'location', title: 'Can’t get a location' }),
+      ),
+    );
+  },
+};
+
+/** Still asking, and the browser has said "no fix" with none yet. */
+export const NoFixYet: Story = {
+  args: { state: locator({ status: 'asking', noFix: true, fix: null, mode: 'LocationOff' }) },
+  play: async ({ args }) => {
+    await waitFor(() =>
+      expect(args.onNote).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'location', title: 'No fix yet' }),
+      ),
+    );
+  },
 };
 
 /** The map-style half tapped: the Map Style card opens up from the pill, the sheet below it. */
@@ -140,17 +184,6 @@ export const MapNotLoaded: Story = {
   args: { isMapLoaded: false },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('button', { name: 'Map design' })).toBeDisabled();
-  },
-};
-
-/** The browser said no, then the card opened: the card takes the note's place. */
-export const DeniedWithMapStyleOpen: Story = {
-  args: { state: locator({ status: 'denied', fix: null, mode: 'LocationOff' }) },
-  play: async ({ canvas, userEvent }) => {
-    await expect(canvas.getByTestId('where-note')).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Map design' }));
-    await waitFor(() => expect(canvas.getByRole('dialog', { name: 'Map Style' })).toBeVisible());
-    await expect(canvas.queryByTestId('where-note')).toBeNull();
   },
 };
 

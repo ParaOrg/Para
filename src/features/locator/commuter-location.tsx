@@ -11,6 +11,7 @@ import type { Snap } from '@/shared/ui/sheet-gesture';
 
 import { gazeSubjects, type Picks } from './dot-gaze';
 import { Locator } from './locator';
+import type { LocatorNote } from './locator-note';
 import { LocatorOnMap } from './locator-on-map';
 import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
@@ -45,6 +46,8 @@ interface Props {
    * loop's tip.
    */
   onWhere?: (where: CommuterWhere | null) => void;
+  /** What the locator has to say, for the page's problem toast; null once a fix comes (Locator). */
+  onNote?: (note: LocatorNote | null) => void;
 }
 
 /**
@@ -72,6 +75,7 @@ export function CommuterLocation({
   picks,
   hushedAt,
   onWhere,
+  onNote,
 }: Props) {
   const locator = useLocator(map, { compass: coarse, snap, offset, cameraTurn });
   // How the dot feels: glad as the location comes, a boing at a tap on the
@@ -109,6 +113,7 @@ export function CommuterLocation({
           basemapThumbnails={basemapThumbnails}
           labelsPlace={labelsPlace}
           docked={docked}
+          onNote={onNote}
         />
       )}
       {map && locator.fix && (
