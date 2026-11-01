@@ -49,7 +49,9 @@ and runs the checks that cost little, and takes a third of the hotspots. Unset,
 it runs whole, as on your machine. The studio's save flows are three suites, save-test,
 save-ikot-test and save-edit-test, a job each: each opens its own page on the stand-in
 in `lib/save-studio.mjs` and draws its own ground. A pull request runs only what
-its files can reach: docs alone run nothing, `src/app/studio/` or `src/features/studio/`
+its files can reach: docs alone run nothing; `docs/architecture.md`, `tests/unit/` and the scripts only the
+build job runs (`scripts/checks/check-build.mjs` and its guards, `scripts/docs/`, `scripts/node/ts-resolve*.mjs`)
+run the build job alone, no suite; `src/app/studio/` or `src/features/studio/`
 alone skips the public suites, the public map's own folders (`src/app/public-map/`,
 `src/features/locator/`, `src/features/published-map/`) and `public/` alone skip the
 studio's, `src/app/contribute/` or `src/features/contribute/` alone runs the build and the
