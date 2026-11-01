@@ -1,16 +1,15 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import { Button } from '@/design-system/primitives/button';
-import { IconButton } from '@/design-system/primitives/icon-button';
-import { ChevronLeftIcon } from '@/shared/ui/route-icons';
+import { TextField } from '@/design-system/primitives/text-field';
 
-import type { ChangePasswordFields, ProfileFields } from './account-fields';
-import { ChangePasswordForm } from './change-password-form';
+import type { ProfileFields } from './account-fields';
 import { DELETE_ACCOUNT_TEXT } from './delete-account-words';
+import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
 import { QuestionSheet } from './question-sheet';
-import type { Captcha } from './use-captcha';
+import { SettingsHeader } from './settings-header';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
@@ -24,18 +23,11 @@ interface AccountSettingsScreenProps {
   isSaving: boolean;
   /** One line about the last save, or null. */
   saveError: string | null;
-  isChangingPassword: boolean;
-  /** One line about the last password change, or null. */
-  passwordError: string | null;
-  /** The current password given was not the account's: said on its field. */
-  currentPasswordError: string | null;
-  /** The bot check the password change's sign-in needs. */
-  captcha: Captcha;
-  /** When the last password change went through, or null: each one clears the fields. */
-  passwordChangedAt: number | null;
+  /** The password was just changed, on Change password: said once, under Password. */
+  isPasswordChanged: boolean;
   onRetry: () => void;
   onSave: (fields: ProfileFields) => void;
-  onChangePassword: (fields: ChangePasswordFields) => void;
+  onOpenChangePassword: () => void;
   isDeleting: boolean;
   /** One line about a Delete account that failed, or null. */
   deleteError: string | null;
@@ -46,9 +38,10 @@ interface AccountSettingsScreenProps {
 }
 
 /**
- * Account settings, from Account's General: the name and number to change, the email as it is,
- * a new password, and Delete account, which asks first. No Figma of its own yet, so it keeps the
- * profile form's look. Shown only on Ready, so never while a recording runs.
+ * Account settings (Figma 4540:4821), from Account's General: the name and number to change, with
+ * Save changes and Cancel rising once either is changed; the email as it is; Password, which
+ * opens Change password; and Delete account, which asks first. Shown only on Ready, so never
+ * while a recording runs.
  */
 export function AccountSettingsScreen({
   email,
@@ -56,14 +49,10 @@ export function AccountSettingsScreen({
   loadError,
   isSaving,
   saveError,
-  isChangingPassword,
-  passwordError,
-  currentPasswordError,
-  captcha,
-  passwordChangedAt,
+  isPasswordChanged,
   onRetry,
   onSave,
-  onChangePassword,
+  onOpenChangePassword,
   isDeleting,
   deleteError,
   onDeleteAsked,
@@ -80,72 +69,71 @@ export function AccountSettingsScreen({
     flushSync(() => setIsDeleteAsked(false));
     deleteRowRef.current?.querySelector('button')?.focus();
   };
+  // A save that went through takes its sheet, and the focus on it, away: focus goes to the
+  // heading rather than to the page.
+  const wasSaving = useRef(isSaving);
+  useEffect(() => {
+    if (wasSaving.current && !isSaving && !saveError) headingRef.current?.focus();
+    wasSaving.current = isSaving;
+  }, [isSaving, saveError, headingRef]);
 
   return (
     <section
       ref={entryRef}
       aria-labelledby="account-settings-heading"
       data-screen-hash="#account-settings"
-      className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface-secondary font-sn-pro text-content-primary"
+      className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isDeleteAsked} className="flex min-h-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 pt-[max(1rem,env(safe-area-inset-top))] pr-4 pb-3 pl-[max(1rem,env(safe-area-inset-left))]">
-          <IconButton
-            tooltip="top"
-            size="large"
-            label="Back"
-            icon={<ChevronLeftIcon />}
-            onClick={onBack}
-          />
-          <h1
-            id="account-settings-heading"
-            ref={headingRef}
-            tabIndex={-1}
-            className="text-2xl/8 font-extrabold focus:outline-none"
-          >
-            Account settings
-          </h1>
-        </header>
-        <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="flex flex-col gap-4">
-            <p className="text-base/6 break-words">{email}</p>
-            {!profile && !loadError && (
-              <p role="status" className="text-base/6 text-content-quaternary">
-                Loading…
+        <SettingsHeader
+          title="Account settings"
+          headingId="account-settings-heading"
+          headingRef={headingRef}
+          // Back from Change password, the heading takes focus as the screen arrives: it reads the
+          // news out, where a status line arriving with its words would go unheard.
+          describedBy={isPasswordChanged ? 'password-changed' : undefined}
+          isBackDisabled={isSaving}
+          onBack={onBack}
+        />
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-48">
+          {!profile && !loadError && (
+            <p role="status" className="text-base/6 text-content-quaternary">
+              Loading…
+            </p>
+          )}
+          {loadError && (
+            <div className="flex flex-col items-start gap-2">
+              <p role="alert" className="text-base/6 text-content-quaternary">
+                {loadError}
+              </p>
+              <Button variant="secondary" size="small" label="Try again" onClick={onRetry} />
+            </div>
+          )}
+          {profile && (
+            <ProfileForm
+              // A saved profile arrives as new values: the form starts again from them.
+              key={`${profile.name}|${profile.phone}`}
+              profile={profile}
+              isBusy={isSaving}
+              error={saveError}
+              onSubmit={onSave}
+            />
+          )}
+          {/* Drawn from the first, under the name and number once they are here: nothing in it is
+              drawn again, or loses focus, as they arrive. */}
+          <TextField label="Email" value={email} disabled readOnly />
+          <div className="flex flex-col gap-1.5">
+            <PasswordButtonField onOpen={onOpenChangePassword} />
+            {isPasswordChanged && (
+              <p id="password-changed" className="text-sm/5 text-content-quaternary">
+                Your password is changed.
               </p>
             )}
-            {loadError && (
-              <div className="flex flex-col items-start gap-2">
-                <p role="alert" className="text-base/6 text-content-quaternary">
-                  {loadError}
-                </p>
-                <Button variant="secondary" size="small" label="Try again" onClick={onRetry} />
-              </div>
-            )}
-            {profile && (
-              <ProfileForm
-                // A saved profile arrives as new values: the form starts again from them.
-                key={`${profile.name}|${profile.phone}`}
-                profile={profile}
-                isBusy={isSaving}
-                error={saveError}
-                onSubmit={onSave}
-              />
-            )}
           </div>
-          <ChangePasswordForm
-            // A changed password clears the fields: the form starts again empty.
-            key={passwordChangedAt ?? 'unchanged'}
-            isBusy={isChangingPassword}
-            error={passwordError}
-            currentPasswordError={currentPasswordError}
-            captcha={captcha}
-            isDone={passwordChangedAt !== null}
-            onSubmit={onChangePassword}
-          />
-          <div ref={deleteRowRef}>
+          <div ref={deleteRowRef} className="*:w-full">
             <Button
-              variant="error"
+              variant="plain"
+              tone="error"
               label="Delete account"
               onClick={() => {
                 onDeleteAsked();

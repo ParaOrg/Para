@@ -16,8 +16,15 @@ type Step = 'email' | 'code' | 'new-password';
 
 interface PasswordResetFlowProps {
   captcha: Captcha;
-  /** Back from the email step: to Sign in. */
+  /**
+   * Signed in, from Change password: the account's own email, the only one the reset may go to.
+   * A code for another address would switch the phone to that account behind this one's screens.
+   */
+  lockedEmail?: string;
+  /** Back from the email step: to Sign in, or to Change password. */
   onBack: () => void;
+  /** The new password is saved and the session written: from Change password, back there. */
+  onDone?: () => void;
 }
 
 /**
@@ -28,9 +35,14 @@ interface PasswordResetFlowProps {
  * last step, the phone opens signed in with the old password; the code already proved the email
  * is theirs.
  */
-export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
+export function PasswordResetFlow({
+  captcha,
+  lockedEmail,
+  onBack,
+  onDone,
+}: PasswordResetFlowProps) {
   const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(lockedEmail ?? '');
   // The account the code signed in to, written to the session when the new password is saved.
   const [verifiedAccount, setVerifiedAccount] = useState<Account | null>(null);
   const requestCode = useRequestPasswordCodeMutation();
@@ -47,7 +59,15 @@ export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
         isBusy={setNewPassword.isPending}
         error={messageOf(setNewPassword.error)}
         onSubmit={({ password }) =>
-          setNewPassword.mutate({ password }, { onSuccess: () => writeSession(verifiedAccount) })
+          setNewPassword.mutate(
+            { password },
+            {
+              onSuccess: () => {
+                writeSession(verifiedAccount);
+                onDone?.();
+              },
+            },
+          )
         }
       />
     );
@@ -98,12 +118,14 @@ export function PasswordResetFlow({ captcha, onBack }: PasswordResetFlowProps) {
   return (
     <ForgotPasswordScreen
       initialEmail={email}
+      isEmailLocked={lockedEmail !== undefined}
       isBusy={requestCode.isPending}
       error={messageOf(requestCode.error)}
       captcha={captcha}
       onSubmit={(fields) => {
-        setEmail(fields.email);
-        sendCode(fields.email, () => setStep('code'));
+        const to = lockedEmail ?? fields.email;
+        setEmail(to);
+        sendCode(to, () => setStep('code'));
       }}
       onBack={onBack}
     />
