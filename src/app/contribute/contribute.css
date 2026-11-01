@@ -23,6 +23,8 @@
 @source '../../features/routes/map/map-view.tsx';
 @source '../../features/routes/cards/livery-card.ts';
 @source '../../design-system/primitives/';
+@source '../../shared/ui/toast.tsx';
+@source '../../shared/ui/toast-host.tsx';
 @source not '../../**/*.stories.tsx';
 
 /*

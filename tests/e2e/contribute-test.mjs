@@ -40,6 +40,21 @@ const GPS = () => {
       getCurrentPosition: () => {},
     },
   });
+  // A phone that keeps the screen awake when asked, as most do; headless Chromium refuses. The
+  // wake lock block below puts its own in place.
+  Object.defineProperty(navigator, 'wakeLock', {
+    configurable: true,
+    value: {
+      request: async () => {
+        const sentinel = new EventTarget();
+        sentinel.released = false;
+        sentinel.release = async () => {
+          sentinel.released = true;
+        };
+        return sentinel;
+      },
+    },
+  });
   // The page's own clock, held by the suite: a fix and a tap then agree on when they happened.
   let now = Date.UTC(2026, 9, 17, 6, 0, 0);
   Date.now = () => now;
@@ -235,6 +250,19 @@ const tintOf = (page) =>
     const from = tint?.firstElementChild?.className.match(/from-\S+/)?.[0];
     return `${tint?.getAttribute('data-tint')}:${from}`;
   });
+/** The toast at the top saying these words: a problem the page tells of until it is fixed. */
+const toastSaying = (page, words) => page.getByTestId('toast').filter({ hasText: words });
+/** Once the toast has slid into place: where it stands, measured, not where it came from. */
+const toastSettled = (page) =>
+  page.waitForFunction(() => {
+    const toast = document.querySelector('[data-testid="toast"]');
+    return !!toast && toast.getAnimations({ subtree: true }).length === 0;
+  });
+/**
+ * What the page's status regions say, together: its own announcer, and the toasts' polite one
+ * (empty but for info toasts) once a problem has brought the toasts in.
+ */
+const statusText = async (page) => (await page.getByRole('status').allInnerTexts()).join('');
 /** The fold: the chevron at the left over the card, or at the foot with it folded away. */
 const foldButton = (page) => page.getByRole('button', { name: /^(Hide|Show) the recording card$/ });
 const buttons = (page) =>
@@ -446,9 +474,9 @@ const buttons = (page) =>
       ).every((c) => c === 1),
   );
   check(
-    '  the stats are not a live region; the one status region is empty',
+    '  the stats are not a live region; every status region is empty',
     (await page.locator('[aria-live]').count()) === 0 &&
-      (await page.getByRole('status').innerText()) === '',
+      (await page.getByRole('status').allInnerTexts()).every((text) => text === ''),
   );
 
   // Out 1.2 km, a fix every 100 m.
@@ -540,9 +568,9 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Switch to Lakad' }).waitFor();
   check(
     'the mode switch is announced once, politely, and the stats now say Sakay',
-    (await page.getByRole('status').innerText()) === 'Switched to Sakay' &&
+    (await statusText(page)) === 'Switched to Sakay' &&
       (await page.getByRole('group', { name: 'Recording so far' }).innerText()).includes('Sakay'),
-    `${await page.getByRole('status').innerText()} / ${(await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ')}`,
+    `${await statusText(page)} / ${(await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ')}`,
   );
   const afterSwitch = await mapSource(page);
   check(
@@ -1085,10 +1113,9 @@ const buttons = (page) =>
     fold: await foldButton(page).boundingBox(),
     locator: await locate(page).boundingBox(),
     stack: await page.locator('section[aria-labelledby="recording-heading"]').boundingBox(),
-    isAwakeNoteShown: (await page.getByText('The screen could not be kept awake').count()) > 0,
   };
-  // Folded, the stack is Figma's 40 under the column, less the column's 16 over it; here the
-  // headless browser's note that the screen may sleep stands in it too.
+  // Folded, the stack is Figma's 40 under the column, less the column's 16 over it. That the
+  // screen may sleep is a toast at the top, not in the stack.
   const foldedFoot = 852 - (folded.locator.y + folded.locator.height);
   check(
     '  folded: the card hides, and the column and the chevron, turned up, slide down to 16 over what is left of the stack',
@@ -1096,7 +1123,7 @@ const buttons = (page) =>
       (await foldButton(page).getAttribute('aria-expanded')) === 'false' &&
       folded.locator.y + folded.locator.height > open.locator.y + open.locator.height + 100 &&
       Math.abs(folded.stack.y - (folded.locator.y + folded.locator.height) - 16) < 0.5 &&
-      (folded.isAwakeNoteShown || Math.abs(foldedFoot - 40) < 0.5) &&
+      Math.abs(foldedFoot - 40) < 0.5 &&
       Math.abs(folded.fold.y + folded.fold.height - (folded.locator.y + folded.locator.height)) <
         0.5 &&
       (await page.evaluate(() => document.activeElement?.getAttribute('aria-expanded'))) ===
@@ -1578,9 +1605,8 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
     'Resume on the form: back on the recording screen, Pause focused, "Recording again" said',
-    (await activeName()) === 'Pause' &&
-      (await page.getByRole('status').innerText()) === 'Recording again',
-    `${await activeName()} / ${await page.getByRole('status').innerText()}`,
+    (await activeName()) === 'Pause' && (await statusText(page)) === 'Recording again',
+    `${await activeName()} / ${await statusText(page)}`,
   );
   const seconds = recordedSeconds(await stats());
   check(
@@ -1904,7 +1930,7 @@ const FAIL_WRITES = () => {
   };
 };
 const setFail = (page, store, on) => page.evaluate(([s, v]) => (window.__fail[s] = v), [store, on]);
-const STORE_PROBLEM = 'This phone could not keep the recording.';
+const STORE_PROBLEM = 'Recording not kept';
 {
   const { page, errors } = await phone();
   await page.addInitScript(FAIL_WRITES);
@@ -1938,7 +1964,7 @@ const STORE_PROBLEM = 'This phone could not keep the recording.';
   check(
     'a save the phone refuses stays on the form, says so, and is not marked saved',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1 &&
-      (await page.getByText(STORE_PROBLEM).count()) > 0 &&
+      (await toastSaying(page, STORE_PROBLEM).count()) > 0 &&
       refused.recordings[0]?.status === 'stopped',
     JSON.stringify(refused),
   );
@@ -2142,7 +2168,7 @@ const ANIMATIONS = () => {
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
+  await toastSaying(second, 'Para is open in another tab').waitFor({ timeout: 10000 });
   await second.getByRole('button', { name: 'Start Tracking' }).click();
   const secondMorphed = await second.evaluate(() => !!document.querySelector('[data-start-morph]'));
   await second.waitForFunction(() => !document.querySelector('[data-start-morph]'), null, {
@@ -2197,7 +2223,25 @@ const ANIMATIONS = () => {
   await bareStyle(second);
   await second.addInitScript(GPS);
   await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
+  await toastSaying(second, 'Para is open in another tab').waitFor({ timeout: 10000 });
+  {
+    // On Ready the toast floats under the top row: Para's mark and the ? stay in sight.
+    await toastSettled(second);
+    const toastBox = await second.getByTestId('toast').boundingBox();
+    const topRow = await second
+      .locator('[data-para-mark], button[aria-label="How to record"]')
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return { name: element.getAttribute('aria-label') ?? 'mark', bottom: box.bottom };
+        }),
+      );
+    check(
+      "  on Ready the warning toast sits under the top row: Para's mark (and the ?) uncovered",
+      !!toastBox && topRow.length > 0 && topRow.every((item) => toastBox.y >= item.bottom),
+      JSON.stringify({ toast: toastBox?.y, topRow }),
+    );
+  }
   check(
     'a second tab does not reopen the ride the first is recording',
     (await second.getByRole('button', { name: 'Resume' }).count()) === 0,
@@ -2208,10 +2252,16 @@ const ANIMATIONS = () => {
   check(
     '  and its Start records nothing: still one recording, and the warning stays',
     (await second.getByRole('group', { name: 'Recording so far' }).count()) === 0 &&
-      (await second.getByText('Para is open in another tab').count()) > 0 &&
+      (await toastSaying(second, 'Para is open in another tab').count()) > 0 &&
       both.recordings.length === 1,
     JSON.stringify(both.recordings),
   );
+  // The warning toast stays until closed: closed, as a contributor would, to reach History's cards.
+  {
+    const warning = toastSaying(second, 'Para is open in another tab');
+    await warning.getByRole('button', { name: 'Close' }).click();
+    await warning.waitFor({ state: 'detached' });
+  }
   await openHistory(second);
   await finishRecording(page);
   await page.getByLabel('Description').fill('From the first tab');
@@ -2295,7 +2345,7 @@ const WAKE = () => {
   await page.context().close();
 }
 
-// ------------------- a screen the phone will not keep awake: said once refused, not while asked
+// --------------------- a screen the phone will not keep awake: a toast, until closed or fixed
 const REFUSING_WAKE = () => {
   window.__wakeAnswer = 'refuse';
   window.__wakeAsks = 0;
@@ -2334,34 +2384,90 @@ const REFUSING_WAKE = () => {
   const { page, errors } = await phone();
   await page.addInitScript(REFUSING_WAKE);
   await page.reload({ waitUntil: 'load' });
-  const note = page.getByText('The screen could not be kept awake');
+  const asleep = toastSaying(page, 'Screen may sleep');
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await page.waitForFunction(() => window.__wakeAsks === 1);
   await page.waitForTimeout(300);
   check(
-    'while the phone is still asked to keep the screen awake, nothing says it may sleep',
-    (await note.count()) === 0,
+    'while the phone is still asked to keep the screen awake, no toast: nothing flashes on every start',
+    (await page.getByTestId('toast').count()) === 0,
   );
+  const focusBefore = await page.evaluate(() => {
+    window.__focusBefore = document.activeElement;
+    return document.activeElement?.tagName;
+  });
+  await page.evaluate(() => window.__answerWake());
+  await asleep.waitFor({ timeout: 5000 });
+  const said = {
+    focusBefore,
+    isFocusKept: await page.evaluate(() => document.activeElement === window.__focusBefore),
+    words: await asleep.innerText(),
+    alert: (await page.getByRole('alert').allInnerTexts()).join(' | '),
+  };
+  check(
+    '  refused: a toast at the top says the screen may sleep and why, read out at once, taking no focus',
+    /Screen may sleep/.test(said.words) &&
+      /recording may stop when it sleeps/.test(said.words) &&
+      said.alert.includes('Screen may sleep. It could not be kept awake') &&
+      said.isFocusKept,
+    JSON.stringify(said),
+  );
+  await asleep.getByRole('button', { name: 'Close' }).click();
+  await asleep.waitFor({ state: 'detached', timeout: 5000 });
+  await page.waitForTimeout(500);
+  check(
+    '  ✕ closes it, and it does not come back while the same refusal stands',
+    (await page.getByTestId('toast').count()) === 0,
+  );
+  // Paused, the lock is let go and the problem with it; recording again asks afresh.
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await page.waitForFunction(() => window.__wakeAsks === 2);
   await page.evaluate(() => window.__answerWake());
   check(
-    '  refused, it says so',
-    await note.waitFor({ timeout: 5000 }).then(
+    '  refused again after a Resume, it is new: the toast comes back',
+    await asleep.waitFor({ timeout: 5000 }).then(
       () => true,
       () => false,
     ),
   );
-  // The phone says yes when the page is shown again: the note goes.
+  // Under the top row: the recording's ✕ beside it is still there to press.
+  await toastSettled(page);
+  const [toastBox, discardBox] = await Promise.all([
+    asleep.boundingBox(),
+    page.getByRole('button', { name: 'Discard recording' }).boundingBox(),
+  ]);
+  await page.getByRole('button', { name: 'Discard recording' }).click({ timeout: 5000 });
+  const stopScreen = page.getByRole('alertdialog', { name: 'Stop and delete this ride?' });
+  check(
+    '  the toast sits under the top row: Discard ✕ is clear of it, and pressing it asks to stop',
+    !!toastBox &&
+      !!discardBox &&
+      toastBox.y >= discardBox.y + discardBox.height &&
+      (await stopScreen.waitFor({ timeout: 5000 }).then(
+        () => true,
+        () => false,
+      )),
+    JSON.stringify({ toastBox, discardBox }),
+  );
+  // ✕ paused it, so the lock was let go with the problem; Keep recording asks again, refused.
+  await stopScreen.getByRole('button', { name: 'Keep recording' }).click();
+  await stopScreen.waitFor({ state: 'detached' });
+  await page.waitForFunction(() => window.__wakeAsks === 3);
+  await page.evaluate(() => window.__answerWake());
+  await asleep.waitFor({ timeout: 5000 });
+  // The phone says yes when the page is shown again: fixed, the toast goes by itself.
   await page.evaluate(() => {
     window.__wakeAnswer = 'grant';
     window.__show('hidden');
     window.__show('visible');
   });
-  await page.waitForFunction(() => window.__wakeAsks === 2);
+  await page.waitForFunction(() => window.__wakeAsks === 4);
   await page.evaluate(() => window.__answerWake());
   check(
-    '  granted later, it says so no more',
-    await note.waitFor({ state: 'detached', timeout: 5000 }).then(
+    '  granted later, the toast goes by itself, with no ✕',
+    await asleep.waitFor({ state: 'detached', timeout: 5000 }).then(
       () => true,
       () => false,
     ),

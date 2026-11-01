@@ -1,13 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 
-const STORE_PROBLEM =
-  'This phone could not keep the recording. Close other tabs of this page and try again.';
-const OTHER_TAB_PROBLEM =
-  'Para is open in another tab. Record in that tab, or close it and reload this one.';
+import type { PageProblem } from '../notices/page-problem';
+import { OTHER_TAB_PROBLEM, STORAGE_PROBLEM } from '../notices/recorder-problems';
 
 export interface RecorderProblems {
-  /** What the contributor should know went wrong, in words: storage first, then location. */
-  problem: string | null;
+  /** What the contributor should know went wrong: storage first, then location. */
+  problem: PageProblem | null;
   /** Says the phone could not keep the recording. */
   reportStore: (error: unknown) => void;
   /** Says another tab holds the recorder, and keeps saying so on every Start. */
@@ -16,8 +14,8 @@ export interface RecorderProblems {
   refuseIfOtherTab: () => boolean;
   /** Clears what storage said, once a recording starts afresh or is kept. */
   clearStorageProblem: () => void;
-  /** What the last location request came to: a problem in words, or null once a fix arrives. */
-  setLocationProblem: (problem: string | null) => void;
+  /** What the last location request came to: a problem, or null once a fix arrives. */
+  setLocationProblem: (problem: PageProblem | null) => void;
 }
 
 /**
@@ -25,14 +23,14 @@ export interface RecorderProblems {
  * failure: storage stays until a new recording starts, location clears when the next fix arrives.
  */
 export function useRecorderProblems(): RecorderProblems {
-  const [storageProblem, setStorageProblem] = useState<string | null>(null);
-  const [locationProblem, setLocationProblem] = useState<string | null>(null);
+  const [storageProblem, setStorageProblem] = useState<PageProblem | null>(null);
+  const [locationProblem, setLocationProblem] = useState<PageProblem | null>(null);
   // Another tab holds the recorder: this one shows why and starts nothing.
   const isOtherTab = useRef(false);
 
   const reportStore = useCallback((error: unknown) => {
     console.error('IndexedDB failed.', error);
-    setStorageProblem(STORE_PROBLEM);
+    setStorageProblem(STORAGE_PROBLEM);
   }, []);
 
   const showOtherTab = useCallback(() => {
