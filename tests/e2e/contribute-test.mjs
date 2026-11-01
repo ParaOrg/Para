@@ -1343,10 +1343,18 @@ const buttons = (page) =>
     .catch(() => {});
   const [picture] = await thumbnails();
   const size = picture ? Buffer.from(picture.url.split(',')[1], 'base64').length : 0;
+  // The capture gives up quietly (no idle map within 8 s, a tile failed, the frame moved): what
+  // the map was doing says which, if the picture is missing.
+  const mapWhenAsked = await page.evaluate(() => ({
+    isLoaded: window.__map.loaded(),
+    areTilesLoaded: window.__map.areTilesLoaded(),
+    isMoving: window.__map.isMoving(),
+    zoom: window.__map.getZoom(),
+  }));
   check(
     'as the form opens, a picture of the trail is kept for History: small, a WebP or JPEG',
     !!picture && /^data:image\/(webp|jpeg);base64,/.test(picture.url) && size > 0 && size < 40_000,
-    `${picture?.url.slice(0, 22)} ${size} bytes`,
+    `${picture?.url.slice(0, 22)} ${size} bytes ${picture ? '' : JSON.stringify(mapWhenAsked)}`,
   );
   // The locator keeps the map on the rider under the form; the picture's framing is put back.
   const centre = await page.evaluate(() => window.__map.getCenter().toArray());
@@ -1401,19 +1409,24 @@ const buttons = (page) =>
     '  with no picture, the card draws the trail from its fixes instead',
     (await card.locator('img').count()) === 0 && (await card.locator('path[stroke]').count()) > 0,
   );
-  // Kept again, so removing the recording below has a picture to take with it.
-  await page.evaluate(
-    (row) =>
-      new Promise((resolve) => {
-        const open = indexedDB.open('para-contribute');
-        open.onsuccess = () => {
-          const tx = open.result.transaction('thumbnails', 'readwrite');
-          tx.objectStore('thumbnails').put(row);
-          tx.oncomplete = resolve;
-        };
-      }),
-    { recordingId: picture?.id, dataUrl: picture?.url },
-  );
+  // Kept again, so removing the recording below has a picture to take with it. With none taken
+  // above (already a FAIL), there is none to keep: a row with no key would never be written, and
+  // the wait for it would hang the suite until the job's own time ran out.
+  if (picture) {
+    await page.evaluate(
+      (row) =>
+        new Promise((resolve, reject) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const tx = open.result.transaction('thumbnails', 'readwrite');
+            tx.objectStore('thumbnails').put(row);
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          };
+        }),
+      { recordingId: picture.id, dataUrl: picture.url },
+    );
+  }
   check('  (its picture kept again)', (await thumbnails()).length === 1);
   await openCardMenu(page);
   await page.getByRole('button', { name: /^Remove from this phone, / }).click();
