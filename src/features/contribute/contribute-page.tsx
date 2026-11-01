@@ -15,6 +15,7 @@ import { flushSync } from 'react-dom';
 
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { cn } from '@/shared/utils/cn';
+import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
@@ -23,7 +24,6 @@ import { useDeleteAccountView } from './account/use-delete-account-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
-import { retryingImport } from './common/retrying-import';
 import { ToolbarHoldProvider, useIsToolbarHeld } from './common/toolbar-hold';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';

@@ -1,5 +1,6 @@
+import { retryingImport } from '@/shared/utils/retrying-import';
+
 import type * as AccountViewChunk from './account/account-view';
-import { retryingImport } from './common/retrying-import';
 import type * as HistoryViewChunk from './history/history-view';
 
 /*

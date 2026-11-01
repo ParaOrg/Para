@@ -1,7 +1,7 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect } from 'react';
 
-import { retryingImport } from '../common/retrying-import';
+import { retryingImport } from '@/shared/utils/retrying-import';
 
 // Not on the page's opening path: fetched once the map has drawn its first view.
 const loadPublishedRoutes = retryingImport(() => import('./published-routes'));
