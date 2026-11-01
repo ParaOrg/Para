@@ -43,36 +43,21 @@ import { useUploads } from './uploads/use-uploads';
 
 /*
  * History and Account, drawn at once when their chunk is already here (screen-loaders.ts), else
- * through React.lazy. A lazy screen whose fetch failed stays failed for good, so a failure makes
- * a fresh one for the next try (ScreenUnavailable's Try again), and shows that instead of taking
- * the page down.
+ * through React.lazy. A lazy screen whose fetch failed stays failed for good: ScreenUnavailable's
+ * Try again makes fresh ones (makeLazyScreens) before it draws the screen again. Not on the
+ * failure itself: React renders a failed screen a second time, and a fresh one there would fetch
+ * again, fail again, and never stop.
  */
-function lazyScreen<TProps extends object>(
-  load: () => Promise<ComponentType<TProps>>,
-  onFailed: () => void,
-) {
-  return lazy(() =>
-    load().then(
-      (Screen) => ({ default: Screen }),
-      (error: unknown) => {
-        onFailed();
-        throw error;
-      },
-    ),
-  );
-}
 const lazyHistory = () =>
-  lazyScreen(
-    () => historyChunk.load().then((chunk) => chunk.HistoryView),
-    () => (LazyHistoryView = lazyHistory()),
-  );
+  lazy(() => historyChunk.load().then((chunk) => ({ default: chunk.HistoryView })));
 const lazyAccount = () =>
-  lazyScreen(
-    () => accountChunk.load().then((chunk) => chunk.AccountView),
-    () => (LazyAccountView = lazyAccount()),
-  );
+  lazy(() => accountChunk.load().then((chunk) => ({ default: chunk.AccountView })));
 let LazyHistoryView = lazyHistory();
 let LazyAccountView = lazyAccount();
+function makeLazyScreens(): void {
+  LazyHistoryView = lazyHistory();
+  LazyAccountView = lazyAccount();
+}
 
 type HistoryViewProps = ComponentProps<typeof LazyHistoryView>;
 type AccountViewProps = ComponentProps<typeof LazyAccountView>;
@@ -364,7 +349,10 @@ export function ContributePage({ locator }: ContributePageProps) {
   // A screen whose code could not be fetched shows ScreenUnavailable; its Try again draws the
   // screen afresh, with a fresh fetch.
   const [screenTries, setScreenTries] = useState(0);
-  const tryScreenAgain = () => setScreenTries((n) => n + 1);
+  const tryScreenAgain = () => {
+    makeLazyScreens();
+    setScreenTries((n) => n + 1);
+  };
 
   return (
     // The page never scrolls, not even from code (contribute.css, .contribute-page).
