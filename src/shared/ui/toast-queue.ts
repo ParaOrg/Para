@@ -1,12 +1,18 @@
 import { createContext } from 'react';
 
-import type { ToastProps } from './toast';
+import type { ToastContent } from './toast';
 
-/** What a screen asks the host to say: the toast's own words, icon and action. */
-export type ToastMessage = Pick<ToastProps, 'kind' | 'icon' | 'title' | 'body' | 'action'>;
+/**
+ * What a screen asks the host to say. Asked again while it shows or waits, it is said once: `id`
+ * names it, by default its kind and title.
+ */
+export type ToastMessage = ToastContent & { id?: string };
 
 export interface ToastContextValue {
-  /** Says it once the toast before it has gone; one shows at a time. */
+  /**
+   * Says it once the toast before it has gone; one shows at a time. The same toast asked again is
+   * not queued twice: showing, it is refreshed in place (an info's clock starts again).
+   */
   showToast: (message: ToastMessage) => void;
 }
 

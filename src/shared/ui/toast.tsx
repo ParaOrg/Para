@@ -8,28 +8,35 @@ import { CloseIcon } from './route-icons';
 /** Info hides itself; a problem stays until it is closed. */
 export type ToastKind = 'info' | 'problem';
 
-/** A small button on the toast's right, and what it does. */
+/** A small button on a problem toast's right, and what it does; the toast closes after it. */
 export interface ToastAction {
   label: string;
   onAction: () => void;
 }
 
-export interface ToastProps {
-  kind: ToastKind;
+interface ToastWords {
   /** A 24 px drawing in currentColor: location, warning, info. A problem colours it, never the card. */
   icon: ReactNode;
   /** One line, bold: what happened. */
   title: string;
   /** One more line, in Content/secondary: what to do about it. */
   body?: string;
-  /** A small button on the right, with its words. */
-  action?: ToastAction;
+}
+
+/**
+ * What a toast says. Only a problem, which stays until it is closed, may carry an action: a button
+ * on a toast that hides itself would be gone before some people could reach it (WCAG's timing).
+ */
+export type ToastContent = ToastWords &
+  ({ kind: 'info'; action?: never } | { kind: 'problem'; action?: ToastAction });
+
+export type ToastProps = ToastContent & {
   /** ✕, and how the host takes it away. */
   onClose: () => void;
   /** Set to slide it out; `onLeft` follows once the slide has finished. */
   isLeaving?: boolean;
   onLeft?: () => void;
-}
+};
 
 const ICON_TONE = {
   info: 'text-content-primary',
@@ -75,6 +82,12 @@ export function Toast({
     };
   }, [isLeaving, onLeft]);
 
+  // The action does its thing, then the toast goes: it has said what it had to.
+  const handleAction = () => {
+    action?.onAction();
+    onClose();
+  };
+
   return (
     <div
       ref={cardRef}
@@ -99,7 +112,7 @@ export function Toast({
       </div>
       {action && (
         <span className="shrink-0">
-          <Button variant="secondary" size="small" label={action.label} onClick={action.onAction} />
+          <Button variant="secondary" size="small" label={action.label} onClick={handleAction} />
         </span>
       )}
       <span className="shrink-0">

@@ -26,7 +26,7 @@ const meta = {
 } satisfies Meta<typeof Toast>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof Toast>;
 
 /** Info: an icon and a title; it goes by itself in a host. ✕ closes it sooner. */
 export const Info: Story = {
@@ -51,7 +51,7 @@ export const Problem: Story = {
   },
 };
 
-/** With a small action on the right, before ✕. */
+/** A problem with a small action on the right, before ✕: it does its thing, then closes the toast. */
 export const WithAction: Story = {
   args: {
     kind: 'problem',
@@ -63,12 +63,15 @@ export const WithAction: Story = {
   play: async ({ args, canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole('button', { name: 'Settings' }));
     await expect(args.action?.onAction).toHaveBeenCalledOnce();
+    await expect(args.onClose).toHaveBeenCalledOnce();
   },
 };
 
-/** Long words: the title stays on one line, cut; the line under it wraps; ✕ stays in place. */
+/** Long words, on a problem with an action: the title stays on one line, cut; the line under it wraps; ✕ stays put. */
 export const LongText: Story = {
   args: {
+    kind: 'problem',
+    icon: <AlertCircleIcon />,
     title: 'Your recording from Fairview Teraccess Transport Terminal was saved on this phone',
     body:
       'It goes up to Para by itself the next time this phone has signal, so you can keep riding ' +

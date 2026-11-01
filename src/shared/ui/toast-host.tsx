@@ -3,39 +3,62 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { Toast } from './toast';
 import { INFO_TOAST_MS, ToastContext, type ToastMessage } from './toast-queue';
 
-interface QueuedToast extends ToastMessage {
-  id: number;
+interface QueuedToast {
+  message: ToastMessage;
+  /** What makes two asks the same toast. */
+  id: string;
+  /** Unique to each ask that reached the queue: the card's key. */
+  seq: number;
+  /** Raised when the same toast is asked again while it shows, to start an info's clock again. */
+  asked: number;
 }
 
 interface ToastHostProps {
   children: ReactNode;
 }
 
+const idOf = (message: ToastMessage): string => message.id ?? `${message.kind}:${message.title}`;
+
 /**
- * Gives its children useToast and shows what they say, one toast at a time, in the order asked.
- * An info toast goes by itself after INFO_TOAST_MS, the clock starting again while a pointer is
- * over it or focus is in it; a problem stays until ✕ or its action. Info is spoken politely
- * (role=status), a problem at once (role=alert): both regions are always there, so a screen
- * reader hears what arrives in them.
+ * Gives its children useToast and shows what they say, one toast at a time, in the order asked;
+ * the same toast asked again while it shows or waits is said once. An info toast goes by itself
+ * after INFO_TOAST_MS, its clock held while a pointer is over it or focus is in it; a problem stays
+ * until ✕ or its action. Screen readers hear only the words, from two regions that are always
+ * there: info politely (role=status), a problem at once (role=alert). The card, with its buttons,
+ * sits outside them, so the buttons are not read out with the message.
  */
 export function ToastHost({ children }: ToastHostProps) {
   const [queue, setQueue] = useState<QueuedToast[]>([]);
   const [isLeaving, setIsLeaving] = useState(false);
-  const [isHeld, setIsHeld] = useState(false);
-  const nextId = useRef(0);
+  const [isPointerOver, setIsPointerOver] = useState(false);
+  const [hasFocusWithin, setHasFocusWithin] = useState(false);
+  const nextSeq = useRef(0);
+  // Read in showToast's updater, which must not ask a leaving toast to stay.
+  const isLeavingRef = useRef(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Where focus was before it came into the toast, to go back to when the toast goes.
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const current = queue.at(0);
 
   const showToast = useCallback((message: ToastMessage) => {
-    nextId.current += 1;
-    const id = nextId.current;
-    setQueue((waiting) => [...waiting, { ...message, id }]);
+    const id = idOf(message);
+    setQueue((waiting) => {
+      const [showing, ...rest] = waiting;
+      if (showing?.id === id && !isLeavingRef.current) {
+        return [{ ...showing, message, asked: showing.asked + 1 }, ...rest];
+      }
+      if (waiting.some((toast, index) => index > 0 && toast.id === id)) return waiting;
+      nextSeq.current += 1;
+      return [...waiting, { message, id, seq: nextSeq.current, asked: 0 }];
+    });
   }, []);
   const context = useMemo(() => ({ showToast }), [showToast]);
 
-  const handleClose = () => setIsLeaving(true);
+  // Stable: the info clock's effect depends on it.
+  const leave = useCallback(() => {
+    isLeavingRef.current = true;
+    setIsLeaving(true);
+  }, []);
   // Stable: Toast waits on its slide out in an effect that depends on it.
   const handleLeft = useCallback(() => {
     // Its buttons are about to go: a keyboard's place goes back where it came from, not to <body>.
@@ -45,66 +68,69 @@ export function ToastHost({ children }: ToastHostProps) {
       else if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     }
     returnFocusTo.current = null;
-    setQueue((waiting) => waiting.slice(1));
+    isLeavingRef.current = false;
     setIsLeaving(false);
-    setIsHeld(false);
+    setQueue((waiting) => waiting.slice(1));
   }, []);
 
-  const currentId = current?.id;
-  const isInfo = current?.kind === 'info';
-  // An info toast's clock, run outside React; held while it is pointed at or focused.
+  const currentSeq = current?.seq;
+  // Syncs with the DOM: a new toast under a pointer that has not moved gets no pointerenter, so
+  // whether it is pointed at, or holds focus, is read from the page as it arrives.
   useEffect(() => {
-    if (currentId === undefined || !isInfo || isHeld || isLeaving) return;
-    const timer = window.setTimeout(() => setIsLeaving(true), INFO_TOAST_MS);
+    const wrapper = wrapperRef.current;
+    if (currentSeq === undefined || !wrapper) return;
+    setIsPointerOver(wrapper.matches(':hover'));
+    setHasFocusWithin(wrapper.contains(document.activeElement));
+  }, [currentSeq]);
+
+  const isInfo = current?.message.kind === 'info';
+  const isHeld = isPointerOver || hasFocusWithin;
+  const asked = current?.asked;
+  // An info toast's clock, run outside React: held while it is pointed at or focused, and started
+  // again when the same toast is asked again (`asked`).
+  useEffect(() => {
+    if (currentSeq === undefined || !isInfo || isHeld || isLeaving) return;
+    const timer = window.setTimeout(leave, INFO_TOAST_MS);
     return () => window.clearTimeout(timer);
-  }, [currentId, isInfo, isHeld, isLeaving]);
+  }, [currentSeq, asked, isInfo, isHeld, isLeaving, leave]);
 
-  const toast = current && (
-    <div
-      ref={wrapperRef}
-      onPointerEnter={() => setIsHeld(true)}
-      onPointerLeave={() => setIsHeld(false)}
-      onFocus={(event) => {
-        if (
-          !event.currentTarget.contains(event.relatedTarget) &&
-          event.relatedTarget instanceof HTMLElement
-        ) {
-          returnFocusTo.current = event.relatedTarget;
-        }
-        setIsHeld(true);
-      }}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setIsHeld(false);
-      }}
-    >
-      <Toast
-        key={current.id}
-        kind={current.kind}
-        icon={current.icon}
-        title={current.title}
-        body={current.body}
-        action={
-          current.action && {
-            label: current.action.label,
-            onAction: () => {
-              current.action?.onAction();
-              setIsLeaving(true);
-            },
-          }
-        }
-        onClose={handleClose}
-        isLeaving={isLeaving}
-        onLeft={handleLeft}
-      />
-    </div>
-  );
-
+  const message = current?.message;
+  const words = message ? [message.title, message.body].filter(Boolean).join('. ') : '';
   return (
     <ToastContext value={context}>
       {children}
+      <div className="sr-only">
+        <div role="status">{message?.kind === 'info' && words}</div>
+        <div role="alert">{message?.kind === 'problem' && words}</div>
+      </div>
       <div className="pointer-events-none fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50">
-        <div role="status">{current?.kind === 'info' && toast}</div>
-        <div role="alert">{current?.kind === 'problem' && toast}</div>
+        {current && message && (
+          <div
+            ref={wrapperRef}
+            onPointerEnter={() => setIsPointerOver(true)}
+            onPointerLeave={() => setIsPointerOver(false)}
+            onFocus={(event) => {
+              if (
+                !event.currentTarget.contains(event.relatedTarget) &&
+                event.relatedTarget instanceof HTMLElement
+              ) {
+                returnFocusTo.current = event.relatedTarget;
+              }
+              setHasFocusWithin(true);
+            }}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) setHasFocusWithin(false);
+            }}
+          >
+            <Toast
+              key={current.seq}
+              {...message}
+              onClose={leave}
+              isLeaving={isLeaving}
+              onLeft={handleLeft}
+            />
+          </div>
+        )}
       </div>
     </ToastContext>
   );
