@@ -143,7 +143,10 @@ const actionsOf = async (page, name) => {
   return row(page, name).getByRole('button');
 };
 /** A card's status line, the one under its date: Uploaded, Only on this phone, … */
-const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
+// Its text, not its rendered text: a card off screen is not drawn (content-visibility), and its
+// words are there all the same, as a screen reader finds them.
+const statusOf = async (page, name) =>
+  ((await row(page, name).locator('[aria-live]').textContent()) ?? '').trim();
 
 /** A saved recording of this phone, put straight into its database as an earlier visit would. */
 async function seed(page, id, name, upload) {
@@ -272,46 +275,92 @@ async function seed(page, id, name, upload) {
   await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
   await field(page, 'Name').waitFor();
   check(
-    'Account settings shows the email as it is, the name and number to change, and a new password',
-    (await page.getByText(ACCOUNT.email, { exact: true }).count()) === 1 &&
-      (await page.locator('input').count()) === 5 &&
+    'Account settings (Figma 4540:4821): the name, the number after +63, the email as it is, Password a button',
+    (await field(page, 'Email').inputValue()) === ACCOUNT.email &&
+      (await field(page, 'Email').isDisabled()) &&
+      (await page.locator('input').count()) === 3 &&
       (await page.evaluate(() => location.hash)) === '#account-settings' &&
       (await field(page, 'Name').inputValue()) === 'Tester' &&
-      (await field(page, 'Number').inputValue()) === '+639171234567',
+      (await field(page, 'Phone number').inputValue()) === '9171234567' &&
+      (await button(page, 'Change password').count()) === 1 &&
+      (await button(page, 'Delete account').count()) === 1,
   );
   check(
-    '  its heading has focus, and Save waits for a change',
+    '  its heading has focus, and no Save changes until something changes',
     (await page.evaluate(() => document.activeElement?.textContent)) === 'Account settings' &&
-      (await button(page, 'Save').isDisabled()),
+      (await button(page, 'Save changes').count()) === 0,
   );
   await shot(page, '2-account');
 
-  await field(page, 'Number').fill('12345');
-  await button(page, 'Save').click();
+  await field(page, 'Name').fill('Someone Else');
+  const isSheetUp =
+    (await button(page, 'Save changes').isVisible()) && (await button(page, 'Cancel').isVisible());
+  await button(page, 'Cancel').click();
+  check(
+    '  a change raises Save changes and Cancel; Cancel puts back what is stored and lowers them',
+    isSheetUp &&
+      (await field(page, 'Name').inputValue()) === 'Tester' &&
+      (await button(page, 'Save changes').count()) === 0 &&
+      fake.profileRequests === 0,
+  );
+
+  // Typed the same as what is stored, in other words: nothing to save.
+  await field(page, 'Name').fill('Tester  ');
+  await field(page, 'Phone number').fill('0917 123 4567');
+  check(
+    '  an edit that changes nothing (spaces, 0917… for the stored +63917…) raises no sheet',
+    (await button(page, 'Save changes').count()) === 0,
+  );
+  await field(page, 'Name').fill('Tester');
+  await field(page, 'Phone number').fill('9171234567');
+
+  // A change not saved yet: kept under Change password, dropped by Back.
+  await field(page, 'Name').fill('Half Typed');
+  await button(page, 'Change password').click();
+  await page.getByRole('heading', { level: 1, name: 'Change password' }).waitFor();
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  check(
+    '  a change not saved yet is still there back from Change password, its sheet up',
+    (await field(page, 'Name').inputValue()) === 'Half Typed' &&
+      (await button(page, 'Save changes').isVisible()),
+  );
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  await button(page, 'Account settings').click();
+  await field(page, 'Name').waitFor();
+  check(
+    '  and Back drops it, quietly: Account settings opens again on what is stored',
+    (await field(page, 'Name').inputValue()) === 'Tester' &&
+      (await button(page, 'Save changes').count()) === 0 &&
+      fake.profileRequests === 0,
+  );
+
+  await field(page, 'Phone number').fill('12345');
+  await button(page, 'Save changes').click();
   await page.getByText('Enter a mobile number like 917 123 4567').waitFor();
   check('  a bad number is named and nothing is sent', fake.profileRequests === 0);
 
   await field(page, 'Name').fill('Tester Two');
-  await field(page, 'Number').fill('0918 765 4321');
+  await field(page, 'Phone number').fill('918 765 4321');
   fake.next.profile = 'offline';
-  await button(page, 'Save').click();
+  await button(page, 'Save changes').click();
   await page.getByRole('alert').waitFor();
   check(
-    '  with no signal Save says so in one line and keeps what was typed',
+    '  with no signal Save changes says so in one line and keeps what was typed',
     (await page.getByRole('alert').innerText()).startsWith('No signal') &&
       (await field(page, 'Name').inputValue()) === 'Tester Two' &&
-      (await button(page, 'Save').isEnabled()),
+      (await button(page, 'Save changes').isEnabled()),
   );
 
-  await button(page, 'Save').click();
-  await page.waitForFunction(() => document.querySelector('input')?.value === 'Tester Two');
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll('button')].some((b) => b.textContent === 'Save' && b.disabled),
-  );
+  await button(page, 'Save changes').click();
+  await button(page, 'Save changes').waitFor({ state: 'detached' });
   const stored = database.users.get(ACCOUNT_ID).profile;
   check(
-    '  saving stores the number as +639XXXXXXXXX, and Save is spent again',
-    stored.name === 'Tester Two' && stored.phone === '+639187654321',
+    '  saving stores the number as +639XXXXXXXXX, and the sheet goes down',
+    stored.name === 'Tester Two' &&
+      stored.phone === '+639187654321' &&
+      (await field(page, 'Name').inputValue()) === 'Tester Two',
     JSON.stringify(stored),
   );
   await page.reload({ waitUntil: 'load' });
@@ -319,27 +368,98 @@ async function seed(page, id, name, upload) {
   check(
     '  a reload stays on Account settings, with the saved values',
     (await field(page, 'Name').inputValue()) === 'Tester Two' &&
-      (await field(page, 'Number').inputValue()) === '+639187654321',
+      (await field(page, 'Phone number').inputValue()) === '9187654321',
   );
 
-  // Change password asks for the current one: a phone left unlocked cannot change it.
-  await field(page, 'Current password').fill('not-it-123');
-  await field(page, 'New password').fill('n3wpassword');
-  await field(page, 'Confirm password').fill('n3wpassword');
+  // Password opens Change password, a screen of its own inside Account settings.
   await button(page, 'Change password').click();
+  await page.getByRole('heading', { level: 1, name: 'Change password' }).waitFor();
+  check(
+    '  Password opens Change password, at #change-password, its heading focused, no Save changes yet',
+    (await page.evaluate(() => location.hash)) === '#change-password' &&
+      (await page.evaluate(() => document.activeElement?.textContent)) === 'Change password' &&
+      (await button(page, 'Save changes').count()) === 0,
+  );
+  await field(page, 'Old password').fill('x');
+  await button(page, 'Cancel').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  check(
+    '  its Cancel goes back to Account settings',
+    (await page.evaluate(() => location.hash)) === '#account-settings',
+  );
+
+  await button(page, 'Change password').click();
+  await button(page, 'Forgot password?').click();
+  await page.getByRole('heading', { level: 1, name: 'Forgot password' }).waitFor();
+  check(
+    '  Forgot password? starts the reset by email for the account’s own address, which cannot be changed',
+    // By role: Account settings' own Email is still on the page, hidden under it.
+    (await page.getByRole('textbox', { name: 'Email', exact: true }).inputValue()) ===
+      ACCOUNT.email &&
+      (await page.getByRole('textbox', { name: 'Email', exact: true }).isDisabled()),
+  );
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Change password' }).waitFor();
+
+  // Change password asks for the old one: a phone left unlocked cannot change it.
+  await field(page, 'Old password').fill(ACCOUNT.password);
+  await field(page, 'New password').fill('n3wpassword');
+  await field(page, 'Confirm password').fill('n3wpassword-not');
+  await button(page, 'Save changes').click();
+  await page.getByText("The passwords don't match").waitFor();
+  check(
+    "  the new password typed twice differently: The passwords don't match, and nothing is sent",
+    !fake.order.includes('update_password'),
+  );
+  await field(page, 'Old password').fill('not-it-123');
+  await field(page, 'Confirm password').fill('n3wpassword');
+  await button(page, 'Save changes').click();
   await page.getByText('That’s not your current password').waitFor();
   check(
-    '  Change password: a wrong current password is said on its field, and nothing changes',
+    '  a wrong old password is said on its field, and nothing changes',
     database.users.get(ACCOUNT_ID).password === ACCOUNT.password &&
       !fake.order.includes('update_password'),
   );
-  await field(page, 'Current password').fill(ACCOUNT.password);
-  await button(page, 'Change password').click();
+  await field(page, 'Old password').fill(ACCOUNT.password);
+  await button(page, 'Save changes').click();
   await page.getByText('Your password is changed.').waitFor();
   check(
-    '  the right current password changes it, checked first by signing in with it',
+    '  the right old password changes it, checked first by signing in with it, and it is back on Account settings',
     database.users.get(ACCOUNT_ID).password === 'n3wpassword' &&
-      fake.order.includes('update_password'),
+      fake.order.includes('update_password') &&
+      (await page.evaluate(() => location.hash)) === '#account-settings',
+  );
+  check(
+    '  its heading, focused, says the password is changed',
+    (await page
+      .getByRole('heading', { level: 1, name: 'Account settings' })
+      .evaluate(
+        (heading) =>
+          document.activeElement === heading &&
+          document.getElementById(heading.getAttribute('aria-describedby') ?? '')?.textContent,
+      )) === 'Your password is changed.',
+  );
+
+  // The reset by email, from Change password, to its end: back on Account settings, which says so.
+  await button(page, 'Change password').click();
+  await button(page, 'Forgot password?').click();
+  await page.getByRole('heading', { level: 1, name: 'Forgot password' }).waitFor();
+  await page.waitForFunction(
+    () =>
+      ![...document.querySelectorAll('button')].find((b) => b.textContent === 'Verify')?.disabled,
+  );
+  await button(page, 'Verify').click();
+  await page.getByRole('heading', { level: 1, name: 'Enter the code' }).waitFor();
+  await field(page, 'Verification code').fill(fake.codes.get(ACCOUNT.email));
+  await field(page, 'New password').fill('r3setpassword');
+  await field(page, 'Confirm password').fill('r3setpassword');
+  await button(page, 'Save').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  check(
+    '  a reset finished from Change password comes back to Account settings, which says so',
+    database.users.get(ACCOUNT_ID).password === 'r3setpassword' &&
+      (await page.evaluate(() => location.hash)) === '#account-settings' &&
+      (await page.getByText('Your password is changed.').count()) === 1,
   );
   database.users.get(ACCOUNT_ID).password = ACCOUNT.password;
 
@@ -614,6 +734,219 @@ async function seed(page, id, name, upload) {
   await page.context().close();
 }
 
+// ------------- History with a hundred recordings: every fact at once, and nothing moving
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const COUNT = 100;
+  const FIXES = 300;
+  const LEGACY_ID = 'eeeeeeee-0000-4000-8000-000000000000';
+  const PICTURE =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  // A straight ride north, a fix a second 8 m apart; all but the oldest kept their distance as
+  // they were saved, and most a picture. The oldest is from before the distance was kept.
+  await page.evaluate(
+    ({ count, fixCount, legacyId, picture }) =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open('para-contribute');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction(['recordings', 'fixes', 'thumbnails'], 'readwrite');
+          for (let n = 0; n < count; n += 1) {
+            const id =
+              n === 0 ? legacyId : `eeeeeeee-0000-4000-8000-${String(n).padStart(12, '0')}`;
+            const startedAt = Date.UTC(2026, 8, 1) + n * 86_400_000;
+            const stoppedAt = startedAt + fixCount * 1000;
+            tx.objectStore('recordings').put({
+              version: 2,
+              id,
+              status: 'saved',
+              startedAt,
+              stoppedAt,
+              savedAt: stoppedAt + 5000,
+              gaps: [],
+              modes: [{ time: startedAt, to: n % 4 === 0 ? 'walk' : 'ride' }],
+              startPointName: `From ${n}`,
+              endPointName: `To ${n}`,
+              description: '',
+              rideKind: n % 4 === 0 ? null : 'Jeep',
+              upload: { state: 'uploaded', at: stoppedAt + 6000, by: 'phone' },
+              ...(n === 0 ? {} : { distanceM: 2392 }),
+            });
+            for (let seq = 0; seq < fixCount; seq += 1) {
+              tx.objectStore('fixes').put({
+                recordingId: id,
+                seq,
+                time: startedAt + seq * 1000,
+                lng: 121.05,
+                lat: 14.6 + (seq * 8) / 111_320,
+                accuracyM: 5,
+              });
+            }
+            // The oldest has its picture, so only its distance sends History to its fixes.
+            if (n === 0 || n % 10 !== 0)
+              tx.objectStore('thumbnails').put({ recordingId: id, dataUrl: picture });
+          }
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    { count: COUNT, fixCount: FIXES, legacyId: LEGACY_ID, picture: PICTURE },
+  );
+  await page.reload({ waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 30000 });
+  // Played in the page: waitForFunction does not wait out a promise, so the import's answer is
+  // kept on the window and read on each poll.
+  await page.waitForFunction(
+    () => {
+      import('/src/features/contribute/screen-loaders.ts').then((loaders) => {
+        window.isHistoryHeld = loaders.historyChunk.loaded() !== null;
+      });
+      return window.isHistoryHeld === true;
+    },
+    null,
+    { timeout: 15000, polling: 100 },
+  );
+  // A mid-range phone: four times slower than this machine.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.evaluate(() => {
+    window.historyOpening = { shift: 0, tappedAt: 0, shownAtFirstList: null };
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (!entry.hadRecentInput) window.historyOpening.shift += entry.value;
+      }
+    }).observe({ type: 'layout-shift' });
+    document.addEventListener(
+      'pointerdown',
+      () => {
+        window.historyOpening.tappedAt ||= performance.now();
+      },
+      { capture: true },
+    );
+    // How many distances the list has in the first frame it is drawn.
+    const watch = () => {
+      const cards = document.querySelectorAll('ul[aria-label="Recordings"] > li');
+      if (cards.length === 0) {
+        requestAnimationFrame(watch);
+        return;
+      }
+      window.historyOpening.shownAtFirstList = [...cards].filter(
+        (card) => /\d (m|km)/.test(card.textContent) && !card.querySelector('.invisible'),
+      ).length;
+    };
+    requestAnimationFrame(watch);
+  });
+  await openHistory(page);
+  // A card's distance is shown when it is in the card and no room is still held for it
+  // (card-meta.tsx). Every kept one is, at once; the oldest's is worked out from its fixes, once.
+  const shownWithin = (count) =>
+    page
+      .waitForFunction(
+        (wanted) => {
+          const cards = [...document.querySelectorAll('ul[aria-label="Recordings"] > li')];
+          const shown = cards.filter(
+            (card) => /\d (m|km)/.test(card.textContent) && !card.querySelector('.invisible'),
+          ).length;
+          return shown >= wanted ? performance.now() - window.historyOpening.tappedAt : false;
+        },
+        count,
+        { polling: 'raf', timeout: 30000 },
+      )
+      .then((handle) => handle.jsonValue());
+  const keptIn = await shownWithin(COUNT - 1);
+  const allIn = await shownWithin(COUNT);
+  // Until the oldest's distance is kept on the phone: the last thing the opening does.
+  /** The oldest recording's distance as the phone keeps it, read in the page; null for none. */
+  const keptDistance = () =>
+    page.evaluate(
+      (id) =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const get = open.result.transaction('recordings').objectStore('recordings').get(id);
+            get.onsuccess = () => {
+              open.result.close();
+              resolve(get.result?.distanceM ?? null);
+            };
+          };
+        }),
+      LEGACY_ID,
+    );
+  // Played in the page: waitForFunction does not wait out a promise, so IndexedDB's answer is
+  // kept on the window and read on each poll.
+  await page.waitForFunction(
+    (id) => {
+      const open = indexedDB.open('para-contribute');
+      open.onsuccess = () => {
+        const get = open.result.transaction('recordings').objectStore('recordings').get(id);
+        get.onsuccess = () => {
+          open.result.close();
+          window.isLegacyDistanceKept = get.result?.distanceM !== undefined;
+        };
+      };
+      return window.isLegacyDistanceKept === true;
+    },
+    LEGACY_ID,
+    { timeout: 15000, polling: 100 },
+  );
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  const opening = await page.evaluate(() => window.historyOpening);
+  // The dev server's React and unbundled modules run several times slower than the build, so
+  // the time is only said here; what must hold is that the list never waits on the fixes.
+  check(
+    'History with a hundred recordings: every kept distance is there in the first frame of the list',
+    opening.shownAtFirstList === COUNT - 1,
+    `${opening.shownAtFirstList} of ${COUNT - 1}, all but one in ${Math.round(keptIn)} ms, the one worked out from its fixes in ${Math.round(allIn)} ms (4× slower CPU, dev server)`,
+  );
+  check(
+    '  and nothing on it moves as the facts come: layout shift under 0.01',
+    opening.shift < 0.01,
+    String(opening.shift),
+  );
+
+  const legacy = await keptDistance();
+  const legacyCard = await page
+    .locator('ul[aria-label="Recordings"] > li')
+    .filter({ hasText: 'From 0' })
+    .textContent();
+  const kilometres = legacy === null ? '' : `${(Math.round(legacy) / 1000).toFixed(1)} km`;
+  check(
+    '  a recording saved before its distance was kept shows it, worked out from its fixes, and keeps it now',
+    legacy !== null && legacy > 2000 && legacy < 2600 && legacyCard.includes(kilometres),
+    `${legacy} m, card: ${legacyCard}`,
+  );
+  // Once: opened again, after a reload, History reads none of its fixes for it.
+  await page.addInitScript((id) => {
+    window.legacyFixReads = 0;
+    const getAll = IDBObjectStore.prototype.getAll;
+    IDBObjectStore.prototype.getAll = function (query, count) {
+      if (this.name === 'fixes' && query instanceof window.IDBKeyRange && query.lower?.[0] === id) {
+        window.legacyFixReads += 1;
+      }
+      return getAll.call(this, query, count);
+    };
+  }, LEGACY_ID);
+  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 30000 });
+  await openHistory(page);
+  await page
+    .locator('ul[aria-label="Recordings"] > li')
+    .filter({ hasText: 'From 0' })
+    .getByText(kilometres)
+    .waitFor({ timeout: 15000 });
+  check(
+    '  and only once: opened again after a reload, History reads none of its fixes for it',
+    (await page.evaluate(() => window.legacyFixReads)) === 0,
+    String(await page.evaluate(() => window.legacyFixReads)),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------------------- taps faster than the moves, by touch: every one lands, the last wins
 {
   const { page, errors } = await phone();
@@ -722,6 +1055,94 @@ async function seed(page, id, name, upload) {
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
+}
+
+// ------------- a recording deleted while History works its distance out is not brought back
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const GONE_ID = 'eeeeeeee-0000-4000-8000-00000000dead';
+  /** Writes, or with `isDeleting` deletes, the recording and its fixes in the page's database. */
+  const store = (isDeleting) =>
+    page.evaluate(
+      ([id, isDelete]) =>
+        new Promise((resolve, reject) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const tx = open.result.transaction(['recordings', 'fixes'], 'readwrite');
+            const fixes = window.IDBKeyRange.bound([id, 0], [id, Number.MAX_SAFE_INTEGER]);
+            if (isDelete) {
+              tx.objectStore('recordings').delete(id);
+              tx.objectStore('fixes').delete(fixes);
+            } else {
+              const startedAt = Date.UTC(2026, 8, 1);
+              tx.objectStore('recordings').put({
+                version: 2,
+                id,
+                status: 'saved',
+                startedAt,
+                stoppedAt: startedAt + 60_000,
+                savedAt: startedAt + 65_000,
+                gaps: [],
+                modes: [{ time: startedAt, to: 'ride' }],
+                startPointName: 'Gone',
+                endPointName: 'Away',
+                description: '',
+                rideKind: 'Jeep',
+                consentVersion: 4,
+              });
+              for (let seq = 0; seq < 30; seq += 1) {
+                tx.objectStore('fixes').put({
+                  recordingId: id,
+                  seq,
+                  time: startedAt + seq * 2000,
+                  lng: 121.05,
+                  lat: 14.6 + (seq * 8) / 111_320,
+                  accuracyM: 5,
+                });
+              }
+            }
+            tx.oncomplete = () => {
+              open.result.close();
+              resolve();
+            };
+            tx.onerror = () => reject(tx.error);
+          };
+        }),
+      [GONE_ID, isDeleting],
+    );
+  const isKept = () =>
+    page.evaluate(
+      (id) =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const get = open.result.transaction('recordings').objectStore('recordings').get(id);
+            get.onsuccess = () => {
+              open.result.close();
+              resolve(get.result !== undefined);
+            };
+          };
+        }),
+      GONE_ID,
+    );
+  await store(false);
+  await page.reload({ waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 30000 });
+  // Deleted (another tab, say) after the page listed it, before History works its distance out.
+  await store(true);
+  await openHistory(page);
+  const card = page.locator('ul[aria-label="Recordings"] > li').filter({ hasText: 'Gone' });
+  // The distance, worked out from what it found of the fixes (none), is on the card.
+  await card.getByText(/\d (m|km)/).waitFor({ timeout: 15000 });
+  check(
+    'a recording deleted while History works its distance out is not brought back by its write',
+    !(await isKept()),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+  // It went up as the page opened: the database the blocks below share keeps none of it.
+  database.rows.delete(GONE_ID);
 }
 
 // ------------------------------- the pill glides from tab to tab, two over included
@@ -1436,7 +1857,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check(
     'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
     kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
-    JSON.stringify(kept),
+    JSON.stringify({ kept, claims: fake.claims }),
   );
 }
 
@@ -1670,6 +2091,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       keptRecordings === 0,
     JSON.stringify({ deleted: fake.deletedAccounts, keptRecordings }),
   );
+  check(
+    '  and the phone keeps nothing of whether the account had its name',
+    (await page.evaluate(() => localStorage.getItem('para.contributor-profile'))) === null,
+  );
 
   // Another account signs in on the same tab: none of the deleted account's recordings show.
   const NEXT_ID = 'ffffffff-0000-4000-8000-000000000004';
@@ -1766,11 +2191,19 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     });
 
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
-  // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts).
+  // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts), and held
+  // once their code has run, not only once its first file has come.
+  // Played in the page: waitForFunction does not wait out a promise, so the import's answer is
+  // kept on the window and read on each poll.
   await page.waitForFunction(
-    () => performance.getEntriesByType('resource').some((e) => /history-view/.test(e.name)),
+    () => {
+      import('/src/features/contribute/screen-loaders.ts').then((loaders) => {
+        window.isHistoryHeld = loaders.historyChunk.loaded() !== null;
+      });
+      return window.isHistoryHeld === true;
+    },
     null,
-    { timeout: 10000 },
+    { timeout: 15000, polling: 100 },
   );
   const onRecord = await toolbarBox();
   await watchToolbar();
@@ -1854,10 +2287,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     Math.abs(a.width - b.width) < 1 &&
     Math.abs(a.height - b.height) < 1;
   check(
-    'the toolbar stands in one place on Record, History and Account: 32 over the foot on each',
+    'the toolbar stands in one place on Record, History and Account: 48 over the foot on each, as Figma draws it',
     same(onRecord, onHistory) &&
       same(onRecord, onAccount) &&
-      Math.abs(height - (onRecord.y + onRecord.height) - 32) < 1,
+      Math.abs(height - (onRecord.y + onRecord.height) - 48) < 1,
     JSON.stringify({ onRecord, onHistory, onAccount }),
   );
   check(

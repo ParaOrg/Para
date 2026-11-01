@@ -1,8 +1,12 @@
+import { Activity, useState } from 'react';
+
 import { messageOf } from './account-message';
 import { AccountScreen } from './account-screen';
 import { AccountSettingsView } from './account-settings-view';
+import { ChangePasswordView } from './change-password-view';
 import type { CommuteStatsState } from './commute-stats';
 import { useAccountSettingsView } from './use-account-settings-view';
+import { useChangePasswordView } from './use-change-password-view';
 import { AccountError } from '../api/account-problem';
 import type { MyStats } from '../api/fetch-my-stats';
 import { useAccountQuery } from '../api/use-account-query';
@@ -25,13 +29,45 @@ interface AccountViewProps {
  */
 export function AccountView({ recordings, statusOf }: AccountViewProps) {
   const settings = useAccountSettingsView();
+  const changePassword = useChangePasswordView();
+  // Said once on Account settings, back from a password changed.
+  const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const account = useAccountQuery();
   const profile = useProfileQuery();
   const stats = useMyStatsQuery();
   const signOut = useSignOutMutation();
 
-  // Inside Account, so its Back returns there, even after a reload.
-  if (settings.isOpen) return <AccountSettingsView onBack={() => settings.closeTo('#profile')} />;
+  // Inside Account, so their Back returns there, even after a reload. Account settings stays
+  // drawn, hidden, under Change password: a change not saved yet, or a save on its way, is still
+  // there to come back to.
+  if (settings.isOpen || changePassword.isOpen) {
+    return (
+      <>
+        <Activity mode={changePassword.isOpen ? 'hidden' : 'visible'}>
+          <AccountSettingsView
+            isPasswordChanged={isPasswordChanged}
+            onOpenChangePassword={() => {
+              setIsPasswordChanged(false);
+              changePassword.open();
+            }}
+            onBack={() => {
+              setIsPasswordChanged(false);
+              settings.closeTo('#profile');
+            }}
+          />
+        </Activity>
+        {changePassword.isOpen && (
+          <ChangePasswordView
+            onBack={() => changePassword.closeTo('#account-settings')}
+            onDone={() => {
+              setIsPasswordChanged(true);
+              changePassword.closeTo('#account-settings');
+            }}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <AccountScreen

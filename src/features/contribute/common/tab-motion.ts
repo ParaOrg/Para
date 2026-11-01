@@ -2,13 +2,15 @@ import './tab-motion.css';
 
 /**
  * Where each screen sits in the toolbar's order, by its hash: Record (no hash), History, Account,
- * and Account settings inside Account. Moving to a higher one goes right, to a lower one left.
+ * Account settings inside Account, and Change password inside Account settings. Moving to a
+ * higher one goes right, to a lower one left.
  */
 const SCREEN_ORDER: Readonly<Record<string, number>> = {
   '': 0,
   '#history': 1,
   '#profile': 2,
   '#account-settings': 3,
+  '#change-password': 4,
 };
 
 /** How long a move waits for its hash to change before it is shown anyway. */

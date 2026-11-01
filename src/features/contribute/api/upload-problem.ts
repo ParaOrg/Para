@@ -10,7 +10,14 @@
  *   its settings turn uploads away. Tried again later.
  */
 export type UploadProblem =
-  'offline' | 'day-cap' | 'refused' | 'blocked' | 'check-failed' | 'unavailable' | 'not-accepting';
+  | 'offline'
+  | 'day-cap'
+  | 'refused'
+  | 'blocked'
+  | 'check-failed'
+  | 'unavailable'
+  | 'not-accepting'
+  | 'signed-out';
 
 export class UploadError extends Error {
   readonly problem: UploadProblem;
