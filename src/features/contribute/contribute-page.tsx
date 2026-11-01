@@ -19,6 +19,7 @@ import { cn } from '@/shared/utils/cn';
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
 import { useChangePasswordView } from './account/use-change-password-view';
+import { useDeleteAccountView } from './account/use-delete-account-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
@@ -228,8 +229,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   const profile = useProfileView();
   const settings = useAccountSettingsView();
   const changePassword = useChangePasswordView();
-  // Account settings and Change password, which Account shows in its place, with no toolbar.
-  const isInsideAccount = settings.isOpen || changePassword.isOpen;
+  const deleteAccount = useDeleteAccountView();
+  // Account settings and the screens inside it, which Account shows in its place, with no toolbar.
+  const isInsideAccount = settings.isOpen || changePassword.isOpen || deleteAccount.isOpen;
   const { phase, figures } = recording;
   // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
   const [isPermissionsPending, setIsPermissionsPending] = useState(
@@ -380,15 +382,16 @@ export function ContributePage({ locator }: ContributePageProps) {
     return () => clearTimeout(later);
   }, [phase]);
 
-  // Signing out, or leaving Ready, must not leave #profile, #account-settings or #change-password
-  // to reopen Account after the next sign-in.
+  // Signing out, or leaving Ready, must not leave #profile or a screen inside Account settings to
+  // reopen Account after the next sign-in.
   useEffect(() => {
     const isUsable = accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
     if (isUsable || accountGate === 'loading') return;
     if (profile.isOpen) profile.close();
     if (settings.isOpen) settings.close();
     if (changePassword.isOpen) changePassword.close();
-  }, [phase, accountGate, profile, settings, changePassword]);
+    if (deleteAccount.isOpen) deleteAccount.close();
+  }, [phase, accountGate, profile, settings, changePassword, deleteAccount]);
 
   // History and Account are tabs on Ready; a build with no accounts has History alone. Ready hands
   // focus back to the tab whose screen was open.
@@ -446,7 +449,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       // (tab-motion.ts).
       data-screens={[
         canSend && '#history',
-        hasAccount && '#profile #account-settings #change-password',
+        hasAccount && '#profile #account-settings #change-password #delete-account',
       ]
         .filter(Boolean)
         .join(' ')}
