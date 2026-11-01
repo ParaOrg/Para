@@ -405,7 +405,10 @@ const buttons = (page) =>
   }
   // The phone's Back closes it, on the page: the entry it added is the one taken off.
   {
-    const before = await page.evaluate(() => ({ url: location.href, length: window.history.length }));
+    const before = await page.evaluate(() => ({
+      url: location.href,
+      length: window.history.length,
+    }));
     await page.getByRole('button', { name: 'How to record' }).click();
     await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
     await dialog.getByRole('button', { name: 'Next' }).click();
