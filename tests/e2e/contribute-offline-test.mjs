@@ -232,20 +232,6 @@ try {
   }
   const firstStores = await storeNames(first);
   await first.close();
-  // A closed tab's recorder lock is let go by the browser a moment after close() returns. A tab
-  // opened before then is, rightly, a second tab ("Para is open in another tab") and records
-  // nothing: wait, on a page of the same origin outside the app, until no tab holds it.
-  {
-    const probe = await context.newPage();
-    await probe.goto(`${base}/icons/favicon.png`);
-    await probe.waitForFunction(
-      async () =>
-        !(await navigator.locks.query()).held?.some((lock) => lock.name === 'para-recorder'),
-      null,
-      { timeout: 10000, polling: 100 },
-    );
-    await probe.close();
-  }
 
   // ---------------------------------------------------- no signal: record
   await context.setOffline(true);
