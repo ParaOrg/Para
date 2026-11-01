@@ -1204,7 +1204,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check(
     'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
     kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
-    JSON.stringify(kept),
+    JSON.stringify({ kept, claims: fake.claims }),
   );
 }
 
@@ -1438,6 +1438,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       keptRecordings === 0,
     JSON.stringify({ deleted: fake.deletedAccounts, keptRecordings }),
   );
+  check(
+    '  and the phone keeps nothing of whether the account had its name',
+    (await page.evaluate(() => localStorage.getItem('para.contributor-profile'))) === null,
+  );
 
   // Another account signs in on the same tab: none of the deleted account's recordings show.
   const NEXT_ID = 'ffffffff-0000-4000-8000-000000000004';
@@ -1534,11 +1538,19 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     });
 
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
-  // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts).
+  // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts), and held
+  // once their code has run, not only once its first file has come.
+  // Played in the page: waitForFunction does not wait out a promise, so the import's answer is
+  // kept on the window and read on each poll.
   await page.waitForFunction(
-    () => performance.getEntriesByType('resource').some((e) => /history-view/.test(e.name)),
+    () => {
+      import('/src/features/contribute/screen-loaders.ts').then((loaders) => {
+        window.isHistoryHeld = loaders.historyChunk.loaded() !== null;
+      });
+      return window.isHistoryHeld === true;
+    },
     null,
-    { timeout: 10000 },
+    { timeout: 15000, polling: 100 },
   );
   const onRecord = await toolbarBox();
   await watchToolbar();
