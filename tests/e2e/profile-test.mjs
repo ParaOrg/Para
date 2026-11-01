@@ -1270,6 +1270,13 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   // Logout's question over Account: the toolbar steps out of sight and out of reach.
   await button(page, 'Logout').click();
   await logoutQuestion(page).waitFor();
+  await page
+    .waitForFunction(
+      () => !!document.querySelector('nav[aria-label="Screens"]')?.closest('[inert]'),
+      null,
+      { timeout: 5000 },
+    )
+    .catch(() => {});
   const toolbarUnderQuestion = await page.evaluate(() => {
     const bar = document.querySelector('nav[aria-label="Screens"]');
     return {
