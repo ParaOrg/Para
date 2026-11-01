@@ -795,8 +795,20 @@ const keepOnPhone = (page, key, stored) =>
       });
     },
   });
+  // Every renewal's answer, with when it came against the steps below: if Sign in never comes,
+  // this says whether supabase-js asked again at all.
+  const tokenAnswers = [];
+  let step = 'opening';
+  page.on('response', (response) => {
+    if (response.url().includes('/auth/v1/token'))
+      tokenAnswers.push(`${step}:${response.status()}`);
+  });
+  page.on('requestfailed', (request) => {
+    if (request.url().includes('/auth/v1/token')) tokenAnswers.push(`${step}:failed`);
+  });
   await isRenewing;
   await SCREENS.start(page).waitFor({ timeout: 15000 });
+  step = 'gave-up';
   // Past the check's 8 s: it gives up, and the stored session stands.
   await page.clock.fastForward(9000);
   // Para answers the renewal now: no such session. supabase-js's next try hears it. Listened for
@@ -811,12 +823,15 @@ const keepOnPhone = (page, key, stored) =>
       () => false,
     );
   await page.unroute('**/auth/v1/token**');
+  step = 'unrouted';
   await page.clock.fastForward(30_000);
+  step = 'later';
   const isGoneHeard = await isGone;
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
   const isStartStill = (await SCREENS.start(page).count()) === 1;
   // The signal back, as the phone tells the page (its offline and online events; turning the
   // browser's own network off would also cut short the page's fetches of its code).
+  step = 'online';
   await page.evaluate(() => {
     window.dispatchEvent(new Event('offline'));
     window.dispatchEvent(new Event('online'));
@@ -830,7 +845,7 @@ const keepOnPhone = (page, key, stored) =>
   check(
     'the check gives up and the stored session stands; back online, the session gone: Sign in',
     isGoneHeard && isStartStill && isSignInShown && (await SCREENS.start(page).count()) === 0,
-    JSON.stringify({ renewals, isGoneHeard, isStartStill, isSignInShown }),
+    JSON.stringify({ renewals, isGoneHeard, isStartStill, isSignInShown, tokenAnswers }),
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await context.close();
