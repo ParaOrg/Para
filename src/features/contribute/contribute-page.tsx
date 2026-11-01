@@ -17,6 +17,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
+import { useChangePasswordView } from './account/use-change-password-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
@@ -194,6 +195,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   const history = useHistoryView();
   const profile = useProfileView();
   const settings = useAccountSettingsView();
+  const changePassword = useChangePasswordView();
+  // Account settings and Change password, which Account shows in its place, with no toolbar.
+  const isInsideAccount = settings.isOpen || changePassword.isOpen;
   const { phase, figures } = recording;
   // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
   const [isPermissionsPending, setIsPermissionsPending] = useState(
@@ -205,8 +209,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     phase === 'ready' &&
     accountGate === 'ready' &&
     canUpload() &&
-    // Account settings is shown by Account, in its place.
-    (profile.isOpen || settings.isOpen) &&
+    (profile.isOpen || isInsideAccount) &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
@@ -339,14 +342,15 @@ export function ContributePage({ locator }: ContributePageProps) {
     return () => clearTimeout(later);
   }, [phase]);
 
-  // Signing out, or leaving Ready, must not leave #profile or #account-settings to reopen Account
-  // after the next sign-in.
+  // Signing out, or leaving Ready, must not leave #profile, #account-settings or #change-password
+  // to reopen Account after the next sign-in.
   useEffect(() => {
     const isUsable = accountGate === 'ready' && (phase === 'loading' || phase === 'ready');
     if (isUsable || accountGate === 'loading') return;
     if (profile.isOpen) profile.close();
     if (settings.isOpen) settings.close();
-  }, [phase, accountGate, profile, settings]);
+    if (changePassword.isOpen) changePassword.close();
+  }, [phase, accountGate, profile, settings, changePassword]);
 
   // History and Account are tabs on Ready; a build with no accounts has History alone. Ready hands
   // focus back to the tab whose screen was open.
@@ -367,7 +371,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   // any of the three shows, so it stands still as they slide under it; only its pill moves.
   const toolbarTab: ToolbarTab | null = isHistoryShown
     ? 'history'
-    : isProfileShown && !settings.isOpen
+    : isProfileShown && !isInsideAccount
       ? 'account'
       : isStartShown
         ? 'record'
@@ -402,7 +406,10 @@ export function ContributePage({ locator }: ContributePageProps) {
     <main
       // The toolbar's screens that can open now: a move to any other draws nothing to wait for
       // (tab-motion.ts).
-      data-screens={[canSend && '#history', hasAccount && '#profile #account-settings']
+      data-screens={[
+        canSend && '#history',
+        hasAccount && '#profile #account-settings #change-password',
+      ]
         .filter(Boolean)
         .join(' ')}
       className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"

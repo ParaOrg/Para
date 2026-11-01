@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { AccountSettingsScreen } from './account-settings-screen';
-import { NO_CAPTCHA } from './account-stories-args';
 
 const meta = {
   title: 'Features/Contribute/AccountSettingsScreen',
@@ -14,14 +13,10 @@ const meta = {
     loadError: null,
     isSaving: false,
     saveError: null,
-    isChangingPassword: false,
-    passwordError: null,
-    currentPasswordError: null,
-    captcha: NO_CAPTCHA,
-    passwordChangedAt: null,
+    isPasswordChanged: false,
     onRetry: fn(),
     onSave: fn(),
-    onChangePassword: fn(),
+    onOpenChangePassword: fn(),
     isDeleting: false,
     deleteError: null,
     onDeleteAsked: fn(),
@@ -30,7 +25,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="relative h-[844px] w-97.5 overflow-hidden">
+      <div className="relative h-[852px] w-[393px] overflow-hidden">
         <Story />
       </div>
     ),
@@ -40,14 +35,52 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Save waits until the name or number changes. */
+/** Figma's first frame: no Save changes until the name or number changes. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('heading', { level: 1, name: 'Account settings' })).toHaveFocus();
-    await expect(canvas.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await expect(canvas.queryByRole('button', { name: 'Save changes' })).toBeNull();
+    await expect(canvas.getByLabelText('Phone number')).toHaveValue('9171234567');
+  },
+};
+
+/** Figma's second frame: a change raises Save changes and Cancel; Cancel puts it back. */
+export const Edited: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Name'), ' Jr.');
-    await expect(canvas.getByRole('button', { name: 'Save' })).toBeEnabled();
+    await expect(canvas.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+    await expect(canvas.getByLabelText('Name')).toHaveValue('Juan dela Cruz');
+    await expect(canvas.queryByRole('button', { name: 'Save changes' })).toBeNull();
+    await userEvent.type(canvas.getByLabelText('Name'), ' Jr.');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save changes' }));
+    await expect(args.onSave).toHaveBeenCalledWith({
+      name: 'Juan dela Cruz Jr.',
+      phone: '+639171234567',
+    });
+  },
+};
+
+/** A number that is not a Philippine mobile is named on its field, and nothing is sent. */
+export const BadNumber: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const phone = canvas.getByLabelText('Phone number');
+    await userEvent.clear(phone);
+    await userEvent.type(phone, '12345');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save changes' }));
+    await expect(args.onSave).not.toHaveBeenCalled();
+  },
+};
+
+/** Password opens Change password. */
+export const OpensChangePassword: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Change password' }));
+    await expect(args.onOpenChangePassword).toHaveBeenCalled();
   },
 };
 
@@ -57,44 +90,30 @@ export const LoadFailed: Story = {
   args: { profile: null, loadError: "No signal — try again when you're online" },
 };
 
-export const Saving: Story = { args: { isSaving: true } };
+/** Saving: the sheet stays up, its Save changes saying so. */
+export const Saving: Story = {
+  args: { isSaving: true },
+};
 
+/** A save that did not go through: said over Save changes, the change kept. */
 export const NotSaved: Story = {
   args: { saveError: "No signal — try again when you're online" },
-};
-
-/** The current password being checked, then the new one sent. */
-export const ChangingPassword: Story = { args: { isChangingPassword: true } };
-
-/** The current password given is not the account's: said on its field. */
-export const WrongCurrentPassword: Story = {
-  args: { currentPasswordError: 'That’s not your current password' },
-};
-
-/** The fields checked on the phone: a current password missing, a new one with no digit. */
-export const PasswordFieldsChecked: Story = {
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('New password'), 'onlyletters');
-    await userEvent.type(canvas.getByLabelText('Confirm password'), 'onlyletters');
-    await userEvent.click(canvas.getByRole('button', { name: 'Change password' }));
-    await expect(canvas.getByText('Enter your current password')).toBeVisible();
-    await expect(
-      canvas.getByText('Use at least 8 characters, with letters and numbers'),
-    ).toBeVisible();
-    await expect(args.onChangePassword).not.toHaveBeenCalled();
+    await userEvent.type(canvas.getByLabelText('Name'), ' Jr.');
+    await expect(canvas.getByRole('alert')).toHaveTextContent(/No signal/);
   },
 };
 
-/** Waiting on the bot check: Change password stays off until it passes. */
-export const WaitingForCheck: Story = {
-  args: { captcha: { ...NO_CAPTCHA, siteKey: '1x00000000000000000000AA', isReady: false } },
-};
-
-export const PasswordChanged: Story = { args: { passwordChangedAt: 1 } };
-
-export const PasswordNotChanged: Story = {
-  args: { passwordError: "That's already your password. Choose a new one." },
+/** Back from Change password, done: the focused heading reads the news out with it. */
+export const PasswordChanged: Story = {
+  args: { isPasswordChanged: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const heading = canvas.getByRole('heading', { level: 1, name: 'Account settings' });
+    await expect(heading).toHaveFocus();
+    await expect(heading).toHaveAccessibleDescription('Your password is changed.');
+  },
 };
 
 export const LongName: Story = {
@@ -111,7 +130,7 @@ export const LongName: Story = {
 export const ShortPhone: Story = {
   decorators: [
     (Story) => (
-      <div className="relative h-[560px] w-[360px] overflow-hidden bg-surface-secondary">
+      <div className="relative h-[560px] w-[360px] overflow-hidden">
         <Story />
       </div>
     ),

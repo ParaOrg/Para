@@ -272,46 +272,60 @@ async function seed(page, id, name, upload) {
   await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
   await field(page, 'Name').waitFor();
   check(
-    'Account settings shows the email as it is, the name and number to change, and a new password',
-    (await page.getByText(ACCOUNT.email, { exact: true }).count()) === 1 &&
-      (await page.locator('input').count()) === 5 &&
+    'Account settings (Figma 4540:4821): the name, the number after +63, the email as it is, Password a button',
+    (await field(page, 'Email').inputValue()) === ACCOUNT.email &&
+      (await field(page, 'Email').isDisabled()) &&
+      (await page.locator('input').count()) === 3 &&
       (await page.evaluate(() => location.hash)) === '#account-settings' &&
       (await field(page, 'Name').inputValue()) === 'Tester' &&
-      (await field(page, 'Number').inputValue()) === '+639171234567',
+      (await field(page, 'Phone number').inputValue()) === '9171234567' &&
+      (await button(page, 'Change password').count()) === 1 &&
+      (await button(page, 'Delete account').count()) === 1,
   );
   check(
-    '  its heading has focus, and Save waits for a change',
+    '  its heading has focus, and no Save changes until something changes',
     (await page.evaluate(() => document.activeElement?.textContent)) === 'Account settings' &&
-      (await button(page, 'Save').isDisabled()),
+      (await button(page, 'Save changes').count()) === 0,
   );
   await shot(page, '2-account');
 
-  await field(page, 'Number').fill('12345');
-  await button(page, 'Save').click();
+  await field(page, 'Name').fill('Someone Else');
+  const isSheetUp =
+    (await button(page, 'Save changes').isVisible()) && (await button(page, 'Cancel').isVisible());
+  await button(page, 'Cancel').click();
+  check(
+    '  a change raises Save changes and Cancel; Cancel puts back what is stored and lowers them',
+    isSheetUp &&
+      (await field(page, 'Name').inputValue()) === 'Tester' &&
+      (await button(page, 'Save changes').count()) === 0 &&
+      fake.profileRequests === 0,
+  );
+
+  await field(page, 'Phone number').fill('12345');
+  await button(page, 'Save changes').click();
   await page.getByText('Enter a mobile number like 917 123 4567').waitFor();
   check('  a bad number is named and nothing is sent', fake.profileRequests === 0);
 
   await field(page, 'Name').fill('Tester Two');
-  await field(page, 'Number').fill('0918 765 4321');
+  await field(page, 'Phone number').fill('918 765 4321');
   fake.next.profile = 'offline';
-  await button(page, 'Save').click();
+  await button(page, 'Save changes').click();
   await page.getByRole('alert').waitFor();
   check(
-    '  with no signal Save says so in one line and keeps what was typed',
+    '  with no signal Save changes says so in one line and keeps what was typed',
     (await page.getByRole('alert').innerText()).startsWith('No signal') &&
       (await field(page, 'Name').inputValue()) === 'Tester Two' &&
-      (await button(page, 'Save').isEnabled()),
+      (await button(page, 'Save changes').isEnabled()),
   );
 
-  await button(page, 'Save').click();
-  await page.waitForFunction(() => document.querySelector('input')?.value === 'Tester Two');
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll('button')].some((b) => b.textContent === 'Save' && b.disabled),
-  );
+  await button(page, 'Save changes').click();
+  await button(page, 'Save changes').waitFor({ state: 'detached' });
   const stored = database.users.get(ACCOUNT_ID).profile;
   check(
-    '  saving stores the number as +639XXXXXXXXX, and Save is spent again',
-    stored.name === 'Tester Two' && stored.phone === '+639187654321',
+    '  saving stores the number as +639XXXXXXXXX, and the sheet goes down',
+    stored.name === 'Tester Two' &&
+      stored.phone === '+639187654321' &&
+      (await field(page, 'Name').inputValue()) === 'Tester Two',
     JSON.stringify(stored),
   );
   await page.reload({ waitUntil: 'load' });
@@ -319,27 +333,63 @@ async function seed(page, id, name, upload) {
   check(
     '  a reload stays on Account settings, with the saved values',
     (await field(page, 'Name').inputValue()) === 'Tester Two' &&
-      (await field(page, 'Number').inputValue()) === '+639187654321',
+      (await field(page, 'Phone number').inputValue()) === '9187654321',
   );
 
-  // Change password asks for the current one: a phone left unlocked cannot change it.
-  await field(page, 'Current password').fill('not-it-123');
-  await field(page, 'New password').fill('n3wpassword');
-  await field(page, 'Confirm password').fill('n3wpassword');
+  // Password opens Change password, a screen of its own inside Account settings.
   await button(page, 'Change password').click();
+  await page.getByRole('heading', { level: 1, name: 'Change password' }).waitFor();
+  check(
+    '  Password opens Change password, at #change-password, its heading focused, no Save changes yet',
+    (await page.evaluate(() => location.hash)) === '#change-password' &&
+      (await page.evaluate(() => document.activeElement?.textContent)) === 'Change password' &&
+      (await button(page, 'Save changes').count()) === 0,
+  );
+  await field(page, 'Old password').fill('x');
+  await button(page, 'Cancel').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  check(
+    '  its Cancel goes back to Account settings',
+    (await page.evaluate(() => location.hash)) === '#account-settings',
+  );
+
+  await button(page, 'Change password').click();
+  await button(page, 'Forgot password?').click();
+  await page.getByRole('heading', { level: 1, name: 'Forgot password' }).waitFor();
+  check(
+    '  Forgot password? starts the reset by email with the account’s own address',
+    (await field(page, 'Email').inputValue()) === ACCOUNT.email,
+  );
+  await button(page, 'Back').click();
+  await page.getByRole('heading', { level: 1, name: 'Change password' }).waitFor();
+
+  // Change password asks for the old one: a phone left unlocked cannot change it.
+  await field(page, 'Old password').fill(ACCOUNT.password);
+  await field(page, 'New password').fill('n3wpassword');
+  await field(page, 'Confirm password').fill('n3wpassword-not');
+  await button(page, 'Save changes').click();
+  await page.getByText("The passwords don't match").waitFor();
+  check(
+    "  the new password typed twice differently: The passwords don't match, and nothing is sent",
+    !fake.order.includes('update_password'),
+  );
+  await field(page, 'Old password').fill('not-it-123');
+  await field(page, 'Confirm password').fill('n3wpassword');
+  await button(page, 'Save changes').click();
   await page.getByText('That’s not your current password').waitFor();
   check(
-    '  Change password: a wrong current password is said on its field, and nothing changes',
+    '  a wrong old password is said on its field, and nothing changes',
     database.users.get(ACCOUNT_ID).password === ACCOUNT.password &&
       !fake.order.includes('update_password'),
   );
-  await field(page, 'Current password').fill(ACCOUNT.password);
-  await button(page, 'Change password').click();
+  await field(page, 'Old password').fill(ACCOUNT.password);
+  await button(page, 'Save changes').click();
   await page.getByText('Your password is changed.').waitFor();
   check(
-    '  the right current password changes it, checked first by signing in with it',
+    '  the right old password changes it, checked first by signing in with it, and it is back on Account settings',
     database.users.get(ACCOUNT_ID).password === 'n3wpassword' &&
-      fake.order.includes('update_password'),
+      fake.order.includes('update_password') &&
+      (await page.evaluate(() => location.hash)) === '#account-settings',
   );
   database.users.get(ACCOUNT_ID).password = ACCOUNT.password;
 
