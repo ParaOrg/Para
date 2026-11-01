@@ -509,6 +509,168 @@ async function seed(page, id, name, upload) {
   await page.context().close();
 }
 
+// ------------- History with a hundred recordings: every fact at once, and nothing moving
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const COUNT = 100;
+  const FIXES = 300;
+  const LEGACY_ID = 'eeeeeeee-0000-4000-8000-000000000000';
+  const PICTURE =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  // A straight ride north, a fix a second 8 m apart; all but the oldest kept their distance as
+  // they were saved, and most a picture. The oldest is from before the distance was kept.
+  await page.evaluate(
+    ({ count, fixCount, legacyId, picture }) =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open('para-contribute');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction(['recordings', 'fixes', 'thumbnails'], 'readwrite');
+          for (let n = 0; n < count; n += 1) {
+            const id =
+              n === 0 ? legacyId : `eeeeeeee-0000-4000-8000-${String(n).padStart(12, '0')}`;
+            const startedAt = Date.UTC(2026, 8, 1) + n * 86_400_000;
+            const stoppedAt = startedAt + fixCount * 1000;
+            tx.objectStore('recordings').put({
+              version: 2,
+              id,
+              status: 'saved',
+              startedAt,
+              stoppedAt,
+              savedAt: stoppedAt + 5000,
+              gaps: [],
+              modes: [{ time: startedAt, to: n % 4 === 0 ? 'walk' : 'ride' }],
+              startPointName: `From ${n}`,
+              endPointName: `To ${n}`,
+              description: '',
+              rideKind: n % 4 === 0 ? null : 'Jeep',
+              upload: { state: 'uploaded', at: stoppedAt + 6000, by: 'phone' },
+              ...(n === 0 ? {} : { distanceM: 2392 }),
+            });
+            for (let seq = 0; seq < fixCount; seq += 1) {
+              tx.objectStore('fixes').put({
+                recordingId: id,
+                seq,
+                time: startedAt + seq * 1000,
+                lng: 121.05,
+                lat: 14.6 + (seq * 8) / 111_320,
+                accuracyM: 5,
+              });
+            }
+            if (n % 10 !== 0)
+              tx.objectStore('thumbnails').put({ recordingId: id, dataUrl: picture });
+          }
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    { count: COUNT, fixCount: FIXES, legacyId: LEGACY_ID, picture: PICTURE },
+  );
+  await page.reload({ waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 30000 });
+  await page.waitForFunction(
+    () =>
+      import('/src/features/contribute/screen-loaders.ts').then(
+        (loaders) => loaders.historyChunk.loaded() !== null,
+      ),
+    null,
+    { timeout: 15000 },
+  );
+  // A mid-range phone: four times slower than this machine.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.evaluate(() => {
+    window.historyOpening = { shift: 0, tappedAt: 0, shownAtFirstList: null };
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (!entry.hadRecentInput) window.historyOpening.shift += entry.value;
+      }
+    }).observe({ type: 'layout-shift' });
+    document.addEventListener(
+      'pointerdown',
+      () => {
+        window.historyOpening.tappedAt ||= performance.now();
+      },
+      { capture: true },
+    );
+    // How many distances the list has in the first frame it is drawn.
+    const watch = () => {
+      const cards = document.querySelectorAll('ul[aria-label="Recordings"] > li');
+      if (cards.length === 0) {
+        requestAnimationFrame(watch);
+        return;
+      }
+      window.historyOpening.shownAtFirstList = [...cards].filter(
+        (card) => /\d (m|km)/.test(card.textContent) && !card.querySelector('.invisible'),
+      ).length;
+    };
+    requestAnimationFrame(watch);
+  });
+  await openHistory(page);
+  // A card's distance is shown when it is in the card and no room is still held for it
+  // (card-meta.tsx). Every kept one is, at once; the oldest's is worked out from its fixes, once.
+  const shownWithin = (count) =>
+    page
+      .waitForFunction(
+        (wanted) => {
+          const cards = [...document.querySelectorAll('ul[aria-label="Recordings"] > li')];
+          const shown = cards.filter(
+            (card) => /\d (m|km)/.test(card.textContent) && !card.querySelector('.invisible'),
+          ).length;
+          return shown >= wanted ? performance.now() - window.historyOpening.tappedAt : false;
+        },
+        count,
+        { polling: 'raf', timeout: 30000 },
+      )
+      .then((handle) => handle.jsonValue());
+  const keptIn = await shownWithin(COUNT - 1);
+  const allIn = await shownWithin(COUNT);
+  // A moment for anything late to land, and shift if it would.
+  await page.waitForTimeout(1500);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  const opening = await page.evaluate(() => window.historyOpening);
+  // The dev server's React and unbundled modules run several times slower than the build, so
+  // the time is only said here; what must hold is that the list never waits on the fixes.
+  check(
+    'History with a hundred recordings: every kept distance is there in the first frame of the list',
+    opening.shownAtFirstList === COUNT - 1,
+    `${opening.shownAtFirstList} of ${COUNT - 1}, all but one in ${Math.round(keptIn)} ms, the one worked out from its fixes in ${Math.round(allIn)} ms (4× slower CPU, dev server)`,
+  );
+  check(
+    '  and nothing on it moves as the facts come: layout shift under 0.01',
+    opening.shift < 0.01,
+    String(opening.shift),
+  );
+
+  const legacy = await page.evaluate(
+    (id) =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const get = open.result.transaction('recordings').objectStore('recordings').get(id);
+          get.onsuccess = () => resolve(get.result?.distanceM ?? null);
+        };
+      }),
+    LEGACY_ID,
+  );
+  const legacyCard = await page
+    .locator('ul[aria-label="Recordings"] > li')
+    .filter({ hasText: 'From 0' })
+    .textContent();
+  const kilometres = legacy === null ? '' : `${(Math.round(legacy) / 1000).toFixed(1)} km`;
+  check(
+    '  a recording saved before its distance was kept shows it, worked out from its fixes, and keeps it now',
+    legacy !== null && legacy > 2000 && legacy < 2600 && legacyCard.includes(kilometres),
+    `${legacy} m, card: ${legacyCard}`,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------------------------------------- Account: the Commute Statistics
 {
   const { page, fake, errors } = await phone();

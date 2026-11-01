@@ -1,10 +1,12 @@
 import { useRef, useState, type RefObject } from 'react';
 
 import { clearNativeFixes } from './native-fixes';
+import { distanceOf } from './recording-figures';
+import { fixOfRow } from './recording-fixes';
 import type { Phase, RecordingDetails } from './recording-state';
 import { savedRecording } from './recording-transitions';
 import type { Recording } from '../storage/recording-schema';
-import { deleteRecording, putRecording } from '../storage/recording-store';
+import { deleteRecording, loadFixes, putRecording } from '../storage/recording-store';
 
 interface RecordingSaveOptions {
   currentRef: RefObject<Recording | null>;
@@ -58,7 +60,10 @@ export function useRecordingSave({
     isSaving.current = true;
     try {
       await writeAllFixes();
-      const kept = savedRecording(recording, details, Date.now(), failedFixWrites());
+      const saved = savedRecording(recording, details, Date.now(), failedFixWrites());
+      // Kept with it, so History shows it without reading every fix again.
+      const fixes = (await loadFixes(recording.id)).map(fixOfRow);
+      const kept: Recording = { ...saved, distanceM: distanceOf(saved, fixes) };
       await putRecording(kept);
       clearStorageProblem();
       setLastSaved(kept);

@@ -18,7 +18,7 @@ const NO_PICTURES: ReadonlyMap<string, string> = new Map();
  * trails' pictures are read as it opens. A card with no picture draws its trail.
  */
 export function HistoryView({ recordings, uploads, ...actions }: HistoryViewProps) {
-  const items = useHistoryItems(recordings, uploads);
   const pictures = useTrailPicturesQuery();
+  const items = useHistoryItems(recordings, uploads, pictures.data);
   return <HistoryScreen items={items} pictures={pictures.data ?? NO_PICTURES} {...actions} />;
 }

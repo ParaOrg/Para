@@ -1,15 +1,16 @@
-import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { historyKeys } from './history-keys';
 import { mergeHistory } from './history-merge';
-import { rideFactsOf, uploadFactsOf, type RideFacts } from './ride-facts';
+import { rideFactsOf, storedFactsOf, uploadFactsOf, type RideFacts } from './ride-facts';
 import { accountKeys } from '../api/account-keys';
 import { UploadError } from '../api/upload-problem';
 import { useAccountUploadsQuery } from '../api/use-account-uploads-query';
 import { useRemoveAccountUploadMutation } from '../api/use-remove-account-upload-mutation';
 import { fixOfRow } from '../recorder/recording-fixes';
 import type { Recording } from '../storage/recording-schema';
-import { loadFixes } from '../storage/recording-store';
+import { loadFixes, updateRecording } from '../storage/recording-store';
 import type { UploadStatus } from '../uploads/upload-state';
 import type { Uploads } from '../uploads/use-uploads';
 
@@ -52,23 +53,60 @@ const removeBriefOf = (error: unknown): string =>
     : "Para isn't taking this now";
 
 /**
- * What History lists: this phone's recordings merged with the account's uploads from the
- * database, whichever phone sent them. Any upload the account owns can be removed.
+ * A recording's facts from its fixes, the one read History makes of them: for its trail, when it
+ * has no picture, and for its distance, when it was saved before the distance was kept. That
+ * distance is written back, so the next opening need not read the fixes for it.
  */
-export function useHistoryItems(saved: readonly Recording[], uploads: Uploads): HistoryItems {
+async function factsFromFixes(recording: Recording): Promise<RideFacts> {
+  const facts = rideFactsOf(recording, (await loadFixes(recording.id)).map(fixOfRow));
+  if (recording.distanceM === undefined) {
+    updateRecording(recording.id, (stored) => ({ ...stored, distanceM: facts.distanceM })).catch(
+      (error: unknown) => {
+        // Not kept: the next opening works it out again. Nothing on the card is lost.
+        console.warn("A recording's distance could not be kept on the phone.", error);
+      },
+    );
+  }
+  return facts;
+}
+
+/**
+ * What History lists: this phone's recordings merged with the account's uploads from the
+ * database, whichever phone sent them. Any upload the account owns can be removed. A recording's
+ * fixes are read only when its card needs them: no distance kept, or no picture to show
+ * (`pictures`, unknown until they are read).
+ */
+export function useHistoryItems(
+  saved: readonly Recording[],
+  uploads: Uploads,
+  pictures: ReadonlyMap<string, string> | undefined,
+): HistoryItems {
   const queryClient = useQueryClient();
   const query = useAccountUploadsQuery();
   const removal = useRemoveAccountUploadMutation();
-  // A saved recording's fixes never change, so each is read once a History opening.
-  const factsQueries = useQueries({
-    queries: saved.map((recording) => ({
-      queryKey: historyKeys.facts(recording.id),
-      queryFn: async () => rideFactsOf(recording, (await loadFixes(recording.id)).map(fixOfRow)),
-      staleTime: Infinity,
-    })),
+  const needsFixes = saved.filter(
+    (recording) =>
+      recording.distanceM === undefined || (pictures !== undefined && !pictures.has(recording.id)),
+  );
+  // Read in one go and drawn once: a query a recording redrew the whole list as each came.
+  const factsQuery = useQuery({
+    queryKey: historyKeys.facts(needsFixes.map((recording) => recording.id)),
+    queryFn: async () =>
+      new Map(
+        await Promise.all(
+          needsFixes.map(
+            async (recording) => [recording.id, await factsFromFixes(recording)] as const,
+          ),
+        ),
+      ),
+    enabled: needsFixes.length > 0,
+    // A saved recording's fixes never change, so they are read once a History opening.
+    staleTime: Infinity,
   });
-  const keptFacts = new Map(
-    saved.map((recording, index) => [recording.id, factsQueries[index]?.data]),
+  // A stable reference for each, so a card's facts change only when they do.
+  const storedFacts = useMemo(
+    () => new Map(saved.map((recording) => [recording.id, storedFactsOf(recording)])),
+    [saved],
   );
   const accountUploads = query.data ?? [];
   const ownedIds = new Set(accountUploads.map((upload) => upload.id));
@@ -105,7 +143,9 @@ export function useHistoryItems(saved: readonly Recording[], uploads: Uploads): 
     uploads: { ...uploads, statusOf, canRemove, removeUploaded },
     isOnPhone,
     factsOf: (recording) => {
-      if (isOnPhone(recording)) return keptFacts.get(recording.id) ?? null;
+      if (isOnPhone(recording)) {
+        return factsQuery.data?.get(recording.id) ?? storedFacts.get(recording.id) ?? null;
+      }
       const upload = uploadById.get(recording.id);
       return upload ? uploadFactsOf(upload) : null;
     },
