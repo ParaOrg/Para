@@ -7,6 +7,7 @@ import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
 import { retryingImport } from '../common/retrying-import';
+import type { MapNote } from '../notices/map-note';
 
 // Fetched when a recording's form opens, not with the page.
 const loadCapture = retryingImport(() => import('./capture-trail-picture'));
@@ -17,6 +18,8 @@ export type ContributeLocatorSlot = (
   isMapLoaded: boolean,
   isRecording: boolean,
   mark: ReactNode,
+  /** The locator's note for the page to say, given again on each tap; null once it is not true. */
+  onNote: (note: MapNote | null) => void,
 ) => ReactNode;
 
 interface ContributeMapProps {
@@ -26,6 +29,8 @@ interface ContributeMapProps {
   locator?: ContributeLocatorSlot;
   /** The mark button, for the locator's column: null when nothing is recording. */
   mark: ReactNode;
+  /** The locator's note, passed on to the page's toasts. */
+  onMapNote: (note: MapNote | null) => void;
   /** False while a screen shows its own ⓘ for the credits: MapLibre's corner ⓘ steps aside. */
   areCreditsShown: boolean;
   /** A screen covers the whole map: the map's own failure panel stays under it. */
@@ -46,6 +51,7 @@ export function ContributeMap({
   isRecording,
   locator,
   mark,
+  onMapNote,
   areCreditsShown,
   isCovered,
   pictureFor,
@@ -98,7 +104,7 @@ export function ContributeMap({
         areCreditsShown={areCreditsShown}
         isCovered={isCovered}
       />
-      {map && locator?.(map, isMapLoaded, isRecording, mark)}
+      {map && locator?.(map, isMapLoaded, isRecording, mark, onMapNote)}
     </>
   );
 }
