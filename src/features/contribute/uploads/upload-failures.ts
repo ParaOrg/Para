@@ -40,6 +40,11 @@ export const FAILED: Record<UploadProblem | PackRefusal, UploadFailure> = {
     brief: 'Uploading is not available here',
     willRetry: false,
   },
+  'signed-out': {
+    message: 'Not uploaded yet: sign in again to send it. It stays on this phone.',
+    brief: 'Signed out',
+    willRetry: true,
+  },
   'not-accepting': {
     message:
       'Not uploaded yet: Para cannot take uploads right now. It stays on this phone. It tries again later.',

@@ -8,9 +8,10 @@ import {
   TrainIcon,
   UvExpressIcon,
 } from '@/shared/ui/route-icons';
+import { cn } from '@/shared/utils/cn';
 
 import { FootstepsIcon } from './history-icons';
-import type { RideFacts } from './ride-facts';
+import { isWalkOnlyOf, type RideFacts } from './ride-facts';
 import { cardDistanceText, dayText, hoursMinutesText } from '../common/format';
 import type { Recording, RideKind } from '../storage/recording-schema';
 
@@ -24,6 +25,9 @@ const VEHICLE_ICONS: Partial<Record<RideKind, ComponentType>> = {
   Ferry: FerryIcon,
 };
 
+/** As wide as most distances, held while the distance is read. */
+const DISTANCE_ROOM = '9.9 km';
+
 interface CardMetaProps {
   recording: Recording;
   /** Its distance, and whether it was walked the whole way; null until read. */
@@ -36,14 +40,12 @@ interface CardMetaProps {
  */
 export function CardMeta({ recording, facts }: CardMetaProps) {
   const seconds = ((recording.stoppedAt ?? recording.startedAt) - recording.startedAt) / 1000;
-  const VehicleIcon = facts?.isWalkOnly
+  // Known from the recording itself, so the icon is there from the first frame.
+  const isWalkOnly = facts?.isWalkOnly ?? isWalkOnlyOf(recording);
+  const VehicleIcon = isWalkOnly
     ? FootstepsIcon
     : recording.rideKind && VEHICLE_ICONS[recording.rideKind];
-  const meta = [
-    dayText(recording.startedAt),
-    hoursMinutesText(seconds),
-    ...(facts ? [cardDistanceText(facts.distanceM)] : []),
-  ];
+  const meta = [dayText(recording.startedAt), hoursMinutesText(seconds)];
 
   return (
     <p className="flex items-center gap-2 text-xs/4 text-content-tertiary">
@@ -52,10 +54,8 @@ export function CardMeta({ recording, facts }: CardMetaProps) {
           <VehicleIcon />
         </span>
       )}
-      {facts?.isWalkOnly && <span className="sr-only">Walked,</span>}
-      {!facts?.isWalkOnly && recording.rideKind && (
-        <span className="sr-only">{recording.rideKind},</span>
-      )}
+      {isWalkOnly && <span className="sr-only">Walked,</span>}
+      {!isWalkOnly && recording.rideKind && <span className="sr-only">{recording.rideKind},</span>}
       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
         {meta.map((text, index) => (
           <span key={text} className="flex items-center gap-1.5 whitespace-nowrap">
@@ -65,6 +65,14 @@ export function CardMeta({ recording, facts }: CardMetaProps) {
             {text}
           </span>
         ))}
+        {/* The distance, or its room until it is read, so the line never moves when it comes. */}
+        <span
+          aria-hidden={facts ? undefined : true}
+          className={cn('flex items-center gap-1.5 whitespace-nowrap', !facts && 'invisible')}
+        >
+          <span aria-hidden className="size-0.5 rounded-full bg-content-tertiary" />
+          {facts ? cardDistanceText(facts.distanceM) : DISTANCE_ROOM}
+        </span>
       </span>
     </p>
   );

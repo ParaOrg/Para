@@ -1,10 +1,12 @@
 import { useRef, useState, type RefObject } from 'react';
 
 import { clearNativeFixes } from './native-fixes';
+import { distanceOf } from './recording-figures';
+import { fixOfRow } from './recording-fixes';
 import type { Phase, RecordingDetails } from './recording-state';
 import { savedRecording } from './recording-transitions';
 import type { Recording } from '../storage/recording-schema';
-import { deleteRecording, putRecording } from '../storage/recording-store';
+import { deleteRecording, loadFixes, putRecording } from '../storage/recording-store';
 
 interface RecordingSaveOptions {
   currentRef: RefObject<Recording | null>;
@@ -28,6 +30,21 @@ export interface RecordingSave {
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
   recordAgain: () => void;
+}
+
+/**
+ * The recording's distance, kept with it so History shows it without reading every fix again.
+ * Never in the save's way: if the fixes cannot be read back, or give no finite distance, the
+ * recording is saved without it, and History works it out later.
+ */
+async function keptDistance(recording: Recording): Promise<Pick<Recording, 'distanceM'>> {
+  try {
+    const distanceM = distanceOf(recording, (await loadFixes(recording.id)).map(fixOfRow));
+    return Number.isFinite(distanceM) ? { distanceM } : {};
+  } catch (error) {
+    console.warn("A recording's distance could not be worked out as it was saved.", error);
+    return {};
+  }
 }
 
 /** How a recording in hand ends: saved on the phone, or thrown away. */
@@ -58,7 +75,8 @@ export function useRecordingSave({
     isSaving.current = true;
     try {
       await writeAllFixes();
-      const kept = savedRecording(recording, details, Date.now(), failedFixWrites());
+      const saved = savedRecording(recording, details, Date.now(), failedFixWrites());
+      const kept: Recording = { ...saved, ...(await keptDistance(saved)) };
       await putRecording(kept);
       clearStorageProblem();
       setLastSaved(kept);
