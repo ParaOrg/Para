@@ -1258,6 +1258,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       keptRecordings === 0,
     JSON.stringify({ deleted: fake.deletedAccounts, keptRecordings }),
   );
+  check(
+    '  and the phone keeps nothing of whether the account had its name',
+    (await page.evaluate(() => localStorage.getItem('para.contributor-profile'))) === null,
+  );
 
   // Another account signs in on the same tab: none of the deleted account's recordings show.
   const NEXT_ID = 'ffffffff-0000-4000-8000-000000000004';

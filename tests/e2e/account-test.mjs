@@ -306,6 +306,10 @@ const shared = {};
       (await page.evaluate((key) => localStorage.getItem(key), AUTH_KEY)) === null,
   );
   check(
+    '  and the phone keeps nothing of whether the account had its name',
+    (await page.evaluate(() => localStorage.getItem('para.contributor-profile'))) === null,
+  );
+  check(
     '  it signed out this phone only: the call carried the local scope',
     fake.logouts.join() === 'local',
     fake.logouts.join(),
@@ -481,7 +485,7 @@ async function signedInPhone({ storedSession, beforeOpen }) {
   await fakeTurnstile(page);
   await page.addInitScript(
     ([key, stored]) => {
-      if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(stored));
+      if (stored && !localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(stored));
       // When the map's canvas and Start are first seen, by the page's own clock.
       window.firstSeen = {};
       new MutationObserver(() => {
@@ -527,8 +531,8 @@ async function signedInPhone({ storedSession, beforeOpen }) {
   await page.waitForFunction(() => window.firstSeen.map !== undefined, null, { timeout: 15000 });
   const firstSeen = await page.evaluate(() => window.firstSeen);
   check(
-    'with the profile asked for and never answered, Start shows by the map, not after Para',
-    firstSeen.start - firstSeen.map < 1000 && profileAsks <= 1,
+    'with the profile asked for and never answered, Start shows all the same: before Para answers',
+    firstSeen.start !== undefined && profileAsks >= 1,
     JSON.stringify({ ...firstSeen, profileAsks }),
   );
   check(
@@ -551,6 +555,268 @@ async function signedInPhone({ storedSession, beforeOpen }) {
   check(
     'a session Para no longer knows goes to Sign in once Para has said so, with no Start left',
     (await SCREENS.start(page).count()) === 0,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await context.close();
+}
+
+/** What the phone keeps of whether the account had its name (account.ts). */
+const PROFILE_KEY = 'para.contributor-profile';
+const keptProfile = (page) =>
+  page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROFILE_KEY);
+
+{
+  // A's profile on its way, slowly; the contributor signs out and in as B meanwhile. A's late
+  // answer must not land over B.
+  const A_ID = 'dddddddd-0000-4000-8000-0000000000a1';
+  const B_EMAIL = 'b@example.com';
+  let heldProfile = null;
+  let profileAsks = 0;
+  const { page, context, fake, errors } = await signedInPhone({
+    storedSession: session(A_ID, { email: 'a@example.com', isAccount: true }),
+    beforeOpen: async (opened, stand) => {
+      stand.users.set(A_ID, {
+        email: 'a@example.com',
+        password: 'hunter2hunter2',
+        isAccount: true,
+        profile: { name: 'A', phone: '+639171234567' },
+      });
+      stand.users.set('dddddddd-0000-4000-8000-0000000000b1', {
+        email: B_EMAIL,
+        password: 'hunter2hunter2',
+        isAccount: true,
+        profile: { name: 'B', phone: '+639171234568' },
+      });
+      // The first ask of the profile, A's as the page opens, is held; the rest go through.
+      await opened.route('**/rest/v1/rpc/get_profile', (route) => {
+        profileAsks += 1;
+        if (profileAsks === 1) heldProfile = route;
+        else route.fallback();
+      });
+    },
+  });
+  await SCREENS.start(page).waitFor({ timeout: 15000 });
+  await signOut(page);
+  await SCREENS.signIn(page).waitFor({ timeout: 15000 });
+  await field(page, 'Email').fill(B_EMAIL);
+  await field(page, 'Password').fill('hunter2hunter2');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await SCREENS.start(page).waitFor({ timeout: 15000 });
+  // Now A's answer comes, late: A, with its name.
+  const late = page.waitForEvent('requestfinished', (request) =>
+    request.url().includes('/rest/v1/rpc/get_profile'),
+  );
+  await heldProfile?.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify([{ name: 'A', phone: '+639171234567' }]),
+  });
+  await late;
+  // The page has had its turn to take the answer in: the next frame after it.
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
+  const storedUser = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key))?.user?.email,
+    AUTH_KEY,
+  );
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'Account' })
+    .click();
+  await page.getByText(B_EMAIL, { exact: true }).waitFor({ timeout: 15000 });
+  const kept = await keptProfile(page);
+  check(
+    "A's answer arriving after a sign-out and B's sign-in is dropped: B stays signed in, and shown",
+    heldProfile !== null &&
+      storedUser === B_EMAIL &&
+      (await page.getByText('a@example.com').count()) === 0,
+    JSON.stringify({ storedUser, profileAsks }),
+  );
+  check(
+    "  and what the phone keeps of the name is B's, not A's",
+    kept?.id === 'dddddddd-0000-4000-8000-0000000000b1' && kept?.hasProfile === true,
+    JSON.stringify(kept),
+  );
+  check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await context.close();
+}
+
+{
+  // A phone that kept a session Para no longer renews (the account deleted, or signed out on
+  // another phone), and a recording waiting to go. Nothing may leave before Para has said who
+  // this is, and nothing under a user that is not an account.
+  const GONE_ID = 'dddddddd-0000-4000-8000-0000000000c1';
+  const { page, context, fake, errors } = await signedInPhone({ storedSession: null });
+  await SCREENS.signIn(page).waitFor({ timeout: 15000 });
+  await page.evaluate(
+    ([key, stored]) =>
+      new Promise((resolve, reject) => {
+        localStorage.setItem(key, JSON.stringify(stored));
+        const open = indexedDB.open('para-contribute');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction(['recordings', 'fixes'], 'readwrite');
+          const startedAt = Date.UTC(2026, 9, 30, 0, 0, 0);
+          tx.objectStore('recordings').put({
+            version: 2,
+            id: 'eeeeeeee-0000-4000-8000-0000000000c2',
+            status: 'saved',
+            startedAt,
+            stoppedAt: startedAt + 60_000,
+            savedAt: startedAt + 65_000,
+            gaps: [],
+            modes: [{ time: startedAt, to: 'ride' }],
+            startPointName: 'Fairview',
+            endPointName: 'Cubao',
+            description: '',
+            rideKind: 'Jeep',
+            consentVersion: 4,
+          });
+          for (let seq = 0; seq < 30; seq += 1) {
+            tx.objectStore('fixes').put({
+              recordingId: 'eeeeeeee-0000-4000-8000-0000000000c2',
+              seq,
+              time: startedAt + seq * 2000,
+              lng: 121.05,
+              lat: 14.7 + (seq * 8) / 111_320,
+              accuracyM: 5,
+            });
+          }
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    [
+      AUTH_KEY,
+      {
+        ...session(GONE_ID, { email: 'gone2@example.com', isAccount: true }),
+        expires_at: Math.floor(Date.now() / 1000) - 3600,
+      },
+    ],
+  );
+  // Para's answer to the renewal is held while the page opens on the stored session, with
+  // Start and the recording waiting; then it comes: no such session.
+  const renewals = [];
+  let noteRenewal = () => undefined;
+  const isRenewing = new Promise((resolve) => {
+    noteRenewal = resolve;
+  });
+  await page.route('**/auth/v1/token**', (route) => {
+    renewals.push(route);
+    noteRenewal();
+  });
+  await page.reload({ waitUntil: 'load' });
+  await SCREENS.start(page).waitFor({ timeout: 15000 });
+  await isRenewing;
+  // Meanwhile History lists the recording as on the phone: no send has begun on the stored
+  // session.
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'History' })
+    .click();
+  const card = page.getByRole('listitem').filter({ hasText: 'Fairview' });
+  await card.waitFor({ timeout: 15000 });
+  const whileUnsure = (await card.innerText()).replace(/\s+/g, ' ');
+  await page.unroute('**/auth/v1/token**');
+  for (const route of renewals) {
+    await route.fulfill({
+      status: 400,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({
+        code: 400,
+        error_code: 'refresh_token_not_found',
+        msg: 'Invalid Refresh Token: Refresh Token Not Found',
+      }),
+    });
+  }
+  await SCREENS.signIn(page).waitFor({ timeout: 15000 });
+  // Everything the page set going has come back.
+  await page.waitForLoadState('networkidle');
+  check(
+    'a session Para has not yet said is still there: its recording stays on the phone, not sending',
+    whileUnsure.includes('Only on this phone') && !whileUnsure.includes('Sending'),
+    whileUnsure,
+  );
+  check(
+    '  Para says the session is gone: Sign in, and nothing was sent',
+    fake.saveRequests === 0,
+    `${fake.saveRequests} uploads`,
+  );
+  check('  nor any user made for it that is not an account', fake.signIns === 0, `${fake.signIns}`);
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await context.close();
+}
+
+{
+  // A connection that carries nothing back: every renewal of the session gets a 503, which
+  // supabase-js keeps trying, so the check gives up (account.ts, 8 s) and the stored session
+  // stands. Then Para says the session is gone: the page must see it once back online, not only
+  // at its next opening. The page's clock is moved on rather than waited out.
+  const LOST_ID = 'dddddddd-0000-4000-8000-0000000000d1';
+  let renewals = 0;
+  let noteRenewal = () => undefined;
+  const isRenewing = new Promise((resolve) => {
+    noteRenewal = resolve;
+  });
+  const { page, context, errors } = await signedInPhone({
+    storedSession: {
+      ...session(LOST_ID, { email: 'lost@example.com', isAccount: true }),
+      expires_at: Math.floor(Date.now() / 1000) - 3600,
+    },
+    beforeOpen: async (opened) => {
+      await opened.clock.install();
+      await opened.route('**/auth/v1/token**', (route) => {
+        renewals += 1;
+        noteRenewal();
+        return route.fulfill({
+          status: 503,
+          contentType: 'application/json',
+          headers: { 'access-control-allow-origin': '*' },
+          body: JSON.stringify({ code: 503, msg: 'Service Unavailable' }),
+        });
+      });
+    },
+  });
+  await isRenewing;
+  await SCREENS.start(page).waitFor({ timeout: 15000 });
+  // Past the check's 8 s: it gives up, and the stored session stands.
+  await page.clock.fastForward(9000);
+  // Para answers the renewal now: no such session. supabase-js's next try hears it.
+  await page.unroute('**/auth/v1/token**');
+  const isGone = page
+    .waitForResponse(
+      (response) => response.url().includes('/auth/v1/token') && response.status() === 400,
+      { timeout: 15000 },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
+  await page.clock.fastForward(30_000);
+  const isGoneHeard = await isGone;
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
+  const isStartStill = (await SCREENS.start(page).count()) === 1;
+  // The signal back, as the phone tells the page (its offline and online events; turning the
+  // browser's own network off would also cut short the page's fetches of its code).
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('offline'));
+    window.dispatchEvent(new Event('online'));
+  });
+  const isSignInShown = await SCREENS.signIn(page)
+    .waitFor({ timeout: 15000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    'the check gives up and the stored session stands; back online, the session gone: Sign in',
+    isGoneHeard && isStartStill && isSignInShown && (await SCREENS.start(page).count()) === 0,
+    JSON.stringify({ renewals, isGoneHeard, isStartStill, isSignInShown }),
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await context.close();

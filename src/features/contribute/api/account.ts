@@ -116,8 +116,16 @@ export async function hasProfileOf(client: ContributeClient): Promise<boolean> {
   return (await knownProfileOf(client)) ?? true;
 }
 
-/** Who is signed in, as Supabase says. */
-async function checkedAccount(): Promise<Account | null> {
+/** The account the phone's stored session names now, or null: what a late answer is held to. */
+function storedAccountId(): string | null {
+  return storedAccount()?.id ?? null;
+}
+
+/**
+ * Who is signed in, as Supabase says. `isWanted` is false once the answer is no longer waited
+ * for (given up on, or called off by a sign-in or sign-out): then it keeps nothing.
+ */
+async function checkedAccount(isWanted: () => boolean): Promise<Account | null> {
   let client: ContributeClient;
   try {
     client = await requireClient();
@@ -130,7 +138,7 @@ async function checkedAccount(): Promise<Account | null> {
   if (error) return storedAccount();
   const account = accountOf(data.session?.user, true);
   if (!account) {
-    rememberProfile(null);
+    if (isWanted()) rememberProfile(null);
     return null;
   }
   // A claim the last sign-in could not finish is tried again at every start, without waiting for it.
@@ -138,21 +146,30 @@ async function checkedAccount(): Promise<Account | null> {
   const hasProfile = await knownProfileOf(client);
   if (hasProfile === null) return { ...account, hasProfile: rememberedProfile(account.id) ?? true };
   const checked = { ...account, hasProfile };
-  rememberProfile(checked);
+  // Kept only while it is still the phone's account: a late answer never writes over another's.
+  if (isWanted() && storedAccountId() === account.id) rememberProfile(checked);
   return checked;
 }
 
 /**
  * Who is signed in to an account on this phone, or null. A connection that never answers (a
- * signal that carries nothing) cannot hold it: after a while the stored session stands.
+ * signal that carries nothing) cannot hold it: after a while the stored session stands, and the
+ * check, if it ever answers, keeps nothing. Called off by `signal`, it keeps nothing either.
  */
-export async function fetchAccount(): Promise<Account | null> {
+export async function fetchAccount(signal?: AbortSignal): Promise<Account | null> {
   let timer = 0;
+  let isGivenUp = false;
   const timedOut = new Promise<Account | null>((resolve) => {
-    timer = window.setTimeout(() => resolve(storedAccount()), ACCOUNT_CHECK_MS);
+    timer = window.setTimeout(() => {
+      isGivenUp = true;
+      resolve(storedAccount());
+    }, ACCOUNT_CHECK_MS);
   });
   try {
-    return await Promise.race([checkedAccount(), timedOut]);
+    return await Promise.race([
+      checkedAccount(() => !isGivenUp && !(signal?.aborted ?? false)),
+      timedOut,
+    ]);
   } finally {
     window.clearTimeout(timer);
   }

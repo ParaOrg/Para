@@ -18,7 +18,7 @@ import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
-import { useAccountQuery } from './api/use-account-query';
+import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { retryingImport } from './common/retrying-import';
 import { ToolbarHoldProvider, useIsToolbarHeld } from './common/toolbar-hold';
 import { useEarlierQuestion } from './consent/use-earlier-question';
@@ -175,14 +175,17 @@ interface ContributePageProps {
 /** The contributor's page: a map with the recording drawn on it, and the screen for where the recording is. */
 export function ContributePage({ locator }: ContributePageProps) {
   const recording = useRecording();
-  const accountId = useAccountQuery().data?.id ?? null;
+  const accountQuery = useAccountQuery();
+  const accountId = accountQuery.data?.id ?? null;
   const accountGate = useAccountGate();
   // Having an account is the agreement (CONSENT_VERSION 4): nothing is sent until one is signed
-  // in, and recordings made before wait on the phone.
+  // in, and recordings made before wait on the phone. Start shows on the session the phone
+  // stored; nothing is sent on it until Supabase has said it is still that account's.
   const canSend = accountGate === 'ready';
+  const canSendNow = canSend && isAccountConfirmed(accountQuery);
   const earlier = useEarlierQuestion(recording.saved, canSend, accountId);
   const uploads = useUploads(recording.saved, {
-    hasConsent: canSend,
+    hasConsent: canSendNow,
     earlier: earlier.choice,
   });
   const track = useRecordingTrack(
