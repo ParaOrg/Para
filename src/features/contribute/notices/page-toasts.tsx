@@ -1,12 +1,13 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 
 import { AlertCircleIcon } from '@/design-system/primitives/field-icons';
+import { LocationIcon } from '@/design-system/primitives/location-icon';
 import { ToastHost } from '@/shared/ui/toast-host';
 import { useToast } from '@/shared/ui/use-toast';
 
+import type { MapNoteGiven } from './map-note';
 import type { PageProblem, PageProblemIcon } from './page-problem';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
-import { LocationIcon } from '../common/location-icon';
 
 const ICONS = {
   location: <LocationIcon />,
@@ -18,6 +19,8 @@ interface PageToastsProps {
   problem: PageProblem | null;
   /** A recording runs with the screen free to sleep: the wake lock was refused. */
   isScreenFreeToSleep: boolean;
+  /** The map locator's note, or null: said as a problem of its own id. */
+  mapNote: MapNoteGiven | null;
 }
 
 interface ProblemsSaidProps {
@@ -30,8 +33,14 @@ interface ProblemsSaidProps {
  * each until ✕ or until it is fixed. One closed with ✕ is not said again until it has cleared and
  * come back, or says something else. Loaded the first time the page has a problem.
  */
-export function PageToasts({ problem, isScreenFreeToSleep }: PageToastsProps) {
-  const problems = [problem, isScreenFreeToSleep ? SCREEN_AWAKE_PROBLEM : null].filter(
+export function PageToasts({ problem, isScreenFreeToSleep, mapNote }: PageToastsProps) {
+  // The recorder and the locator both say what is wrong with location, under one id: one toast.
+  // The recorder's, when both have one, as it knows more; either going leaves the other's.
+  const noteProblem: PageProblem | null =
+    mapNote && mapNote.note.id !== problem?.id
+      ? { ...mapNote.note, icon: 'location', timesAsked: mapNote.timesGiven }
+      : null;
+  const problems = [problem, noteProblem, isScreenFreeToSleep ? SCREEN_AWAKE_PROBLEM : null].filter(
     (each) => each !== null,
   );
   return (
@@ -54,11 +63,12 @@ function ProblemsSaid({ problems }: ProblemsSaidProps) {
       hideToast(id);
     }
     for (const problem of problems) {
-      const words = `${problem.title}\n${problem.body ?? ''}`;
+      // Asked again counts as new words: said again in place, never a second toast.
+      const words = `${problem.title}\n${problem.body ?? ''}\n${problem.timesAsked ?? 0}`;
       const wereSaid = said.current.get(problem.id);
       if (wereSaid === words) continue;
-      // New words for a problem already said: the host keeps a waiting toast's first words, so
-      // the old one goes and the new one is said in its place.
+      // New words for a problem already said, or asked again: the host keeps a waiting toast's
+      // first words, so the old one goes and the new one is said in its place.
       if (wereSaid !== undefined) hideToast(problem.id);
       said.current.set(problem.id, words);
       showToast({

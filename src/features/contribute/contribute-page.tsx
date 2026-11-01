@@ -31,6 +31,7 @@ import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map'
 import { useRecordingTrack } from './map/use-recording-track';
 import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
+import type { MapNote, MapNoteGiven } from './notices/map-note';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { accountChunk, historyChunk, warmScreen } from './screen-loaders';
@@ -261,8 +262,14 @@ export function ContributePage({ locator }: ContributePageProps) {
   // a recording running with the screen free to sleep. Their code is fetched the first time there
   // is one, then kept, to take them away once fixed.
   const isScreenFreeToSleep = phase === 'recording' && recording.isWakeRefused;
+  // The locator's note: what it says, and a count that grows with each tap, said again each time.
+  const [mapNote, setMapNote] = useState<MapNoteGiven | null>(null);
+  const handleMapNote = (note: MapNote | null) =>
+    setMapNote((given) => (note ? { note, timesGiven: (given?.timesGiven ?? 0) + 1 } : null));
   const [hasHadProblems, setHasHadProblems] = useState(false);
-  if ((recording.problem || isScreenFreeToSleep) && !hasHadProblems) setHasHadProblems(true);
+  if ((recording.problem || isScreenFreeToSleep || mapNote) && !hasHadProblems) {
+    setHasHadProblems(true);
+  }
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
   // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
   // rest. Signed out, they go.
@@ -521,6 +528,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
           locator={locator}
+          onMapNote={handleMapNote}
           areCreditsShown={!hasCreditsButton}
           isCovered={isMapCovered}
           pictureFor={phase === 'form' ? (recording.current?.id ?? null) : null}
@@ -560,7 +568,11 @@ export function ContributePage({ locator }: ContributePageProps) {
         <ToolbarHoldProvider>
           {hasHadProblems && (
             <Suspense fallback={null}>
-              <PageToasts problem={recording.problem} isScreenFreeToSleep={isScreenFreeToSleep} />
+              <PageToasts
+                problem={recording.problem}
+                isScreenFreeToSleep={isScreenFreeToSleep}
+                mapNote={mapNote}
+              />
             </Suspense>
           )}
           {uploads.check && (phase === 'ready' || phase === 'saved') && (

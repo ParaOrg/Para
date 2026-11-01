@@ -12,4 +12,6 @@ export interface PageProblem {
   title: string;
   /** One more line, if any: what to do about it. */
   body?: string;
+  /** Grows each time the contributor asks again (a second tap): said again, even once closed. */
+  timesAsked?: number;
 }

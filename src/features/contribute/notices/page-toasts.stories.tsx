@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import type { MapNoteGiven } from './map-note';
 import { PageToasts } from './page-toasts';
 import {
   LOCATION_BLOCKED_PROBLEM,
@@ -22,7 +23,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { problem: null, isScreenFreeToSleep: false },
+  args: { problem: null, isScreenFreeToSleep: false, mapNote: null },
 } satisfies Meta<typeof PageToasts>;
 
 export default meta;
@@ -59,6 +60,42 @@ export const ScreenMaySleep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('toast')).toHaveTextContent('Screen may sleep');
+  },
+};
+
+/** The locator's note when the browser refuses it (its words are the locator's, locator-note.ts). */
+const LOCATOR_NOTE: MapNoteGiven = {
+  note: {
+    id: 'location',
+    title: 'Location is off for this site',
+    body: 'Allow it in your browser settings, then try again.',
+  },
+  timesGiven: 1,
+};
+
+/** The map's locator has a note (the locate button tapped with location off): the location arrow. */
+export const LocatorNote: Story = {
+  args: { mapNote: LOCATOR_NOTE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent(
+      'Location is off for this site',
+    );
+  },
+};
+
+/** The recorder and the locator both say location is wrong: one toast, the recorder's. */
+export const RecorderAndLocator: Story = {
+  args: { problem: LOCATION_BLOCKED_PROBLEM, mapNote: LOCATOR_NOTE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Location is blocked');
+    // Closed, no second location toast waits behind it.
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull());
+    // Long enough for a waiting toast to have come in after the closed one's exit.
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await expect(canvas.queryByTestId('toast')).toBeNull();
   },
 };
 

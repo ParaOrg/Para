@@ -2756,6 +2756,98 @@ const REFUSING_WAKE = () => {
   await page.context().close();
 }
 
+// ------------------ the locator refused: its note a toast, one with the recorder's, never stacked
+const REFUSING_LOCATION = () => {
+  const refuse = (error) =>
+    setTimeout(() => error?.({ code: 1, PERMISSION_DENIED: 1, message: 'User denied' }), 50);
+  window.__locationAsks = 0;
+  Object.defineProperty(navigator, 'geolocation', {
+    configurable: true,
+    value: {
+      watchPosition: (_ok, error) => {
+        window.__locationAsks++;
+        refuse(error);
+        return window.__locationAsks;
+      },
+      clearWatch: () => {},
+      getCurrentPosition: (_ok, error) => refuse(error),
+    },
+  });
+};
+{
+  const { page, errors } = await phone();
+  await page.addInitScript(REFUSING_LOCATION);
+  await page.reload({ waitUntil: 'load' });
+  const where = page.getByTestId('where');
+  const refused = toastSaying(page, 'Location is off for this site');
+  const tapRefused = async () => {
+    const asks = await page.evaluate(() => window.__locationAsks);
+    await where.click();
+    await page.waitForFunction((before) => window.__locationAsks > before, asks);
+    await page.waitForTimeout(300);
+  };
+  await tapRefused();
+  check(
+    "the locate button refused: the locator's note is a problem toast at the top, with its drawing",
+    await refused.waitFor({ timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
+  check(
+    '  the dark note is gone: nothing but the toast says it',
+    (await page.getByTestId('where-note').count()) === 0,
+  );
+  await tapRefused();
+  await tapRefused();
+  check(
+    '  tapped twice more, still refused: the same toast, never a second',
+    (await page.getByTestId('toast').count()) === 1 && (await refused.count()) === 1,
+    `${await page.getByTestId('toast').count()} toast(s)`,
+  );
+  await refused.getByRole('button', { name: 'Close' }).click();
+  await refused.waitFor({ state: 'detached', timeout: 5000 });
+  await tapRefused();
+  check(
+    '  closed with ✕, a tap still refused says it again',
+    await refused.waitFor({ timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
+  // The recorder is refused too: one location problem, one toast, in the recorder's words.
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const blocked = toastSaying(page, 'Location is blocked');
+  check(
+    "  Start refused as well: the recorder's words take the one location toast",
+    await blocked.waitFor({ timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
+  await blocked.getByRole('button', { name: 'Close' }).click();
+  await blocked.waitFor({ state: 'detached', timeout: 5000 });
+  await page.waitForTimeout(1000);
+  check(
+    "  closed, no second location toast waits behind it: the locator's note is not said twice",
+    (await page.getByTestId('toast').count()) === 0,
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------- Back to the map on Unfinished and Saved, not on Start or Recording; a ride kept
 {
   const { page, errors } = await phone();
