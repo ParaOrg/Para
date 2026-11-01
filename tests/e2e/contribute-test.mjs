@@ -2221,6 +2221,30 @@ const ANIMATIONS = () => {
       })
       .count()) === 1,
   );
+  // The first tab closes: the second is handed the recorder, as a page opened afresh would be.
+  await page.close();
+  await second.keyboard.press('Escape');
+  await recordTab(second).click();
+  await second.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  const handedOver = await second
+    .getByText('Para is open in another tab')
+    .waitFor({ state: 'detached', timeout: 5000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  await second.getByRole('button', { name: 'Start Tracking' }).click();
+  const isRecording = await second
+    .getByRole('group', { name: 'Recording so far' })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    '  once the first tab closes, the second holds the recorder: the warning goes and its Start records',
+    handedOver && isRecording,
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
