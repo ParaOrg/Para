@@ -509,6 +509,111 @@ async function seed(page, id, name, upload) {
   await page.context().close();
 }
 
+// ------------------------------------------- the toolbar stays in sight through every move
+// The DOM can't see this: the toolbar element is there, but a screen's snapshot can paint over
+// it. So the move is held halfway and the toolbar's pixels are looked at: its labels' and icons'
+// ink must be there as it is before and after.
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  // Each screen's code fetched once, so the moves below are a phone's after its first.
+  await historyTab(page).click();
+  await heading('History').waitFor();
+  await accountTab(page).click();
+  await heading('Account').waitFor();
+  await toolbarRecord(page).click();
+  await start(page).waitFor();
+
+  // Whether the page has a view transition's parts moving (tab-motion.ts).
+  const movesOver = () =>
+    page.waitForFunction(
+      () =>
+        !document
+          .getAnimations()
+          .some((animation) => animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+  const box = await page.locator('.tab-toolbar').boundingBox();
+  /** The toolbar's ink: its pixels darker than mid-grey, as the page shows them now. */
+  const toolbarInk = async () => {
+    const png = await page.screenshot({ clip: box });
+    return page.evaluate(async (base64) => {
+      const image = await createImageBitmap(
+        await (await fetch(`data:image/png;base64,${base64}`)).blob(),
+      );
+      const canvas = new OffscreenCanvas(image.width, image.height);
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0);
+      const { data } = context.getImageData(0, 0, image.width, image.height);
+      let ink = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        if (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2] < 128) ink += 1;
+      }
+      return ink;
+    }, png.toString('base64'));
+  };
+  /** Taps `tab`, holds the move halfway, and reads the toolbar's ink there; then lets it end. */
+  const inkHalfway = async (tab) => {
+    await movesOver();
+    await tab.click();
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .some((animation) => animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        if (!animation.effect?.pseudoElement?.startsWith('::view-transition')) continue;
+        animation.pause();
+        animation.currentTime = animation.effect.getComputedTiming().endTime / 2;
+      }
+    });
+    const ink = await toolbarInk();
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        if (animation.effect?.pseudoElement?.startsWith('::view-transition')) animation.play();
+      }
+    });
+    await movesOver();
+    return ink;
+  };
+
+  await movesOver();
+  const onRecord = await toolbarInk();
+  // The two moves from Record, where the screen exists only in the new page, and the moves
+  // between screens and back to Record as controls.
+  const ink = {
+    recordToHistory: await inkHalfway(historyTab(page)),
+    historyToAccount: await inkHalfway(accountTab(page)),
+    accountToHistory: await inkHalfway(historyTab(page)),
+    historyToRecord: await inkHalfway(toolbarRecord(page)),
+    recordToAccount: await inkHalfway(accountTab(page)),
+    accountToRecord: await inkHalfway(toolbarRecord(page)),
+  };
+  const isInSight = (halfway) => halfway > 0.7 * onRecord;
+  const said = JSON.stringify({ onRecord, ...ink });
+  check(
+    'Record to History: halfway through the move the toolbar is in sight, not under History',
+    isInSight(ink.recordToHistory),
+    said,
+  );
+  check(
+    '  Record to Account: halfway, the toolbar is in sight too',
+    isInSight(ink.recordToAccount),
+    said,
+  );
+  check(
+    '  and between History and Account, and back to Record from each, as before',
+    isInSight(ink.historyToAccount) &&
+      isInSight(ink.accountToHistory) &&
+      isInSight(ink.historyToRecord) &&
+      isInSight(ink.accountToRecord),
+    said,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------------------------------------- Account: the Commute Statistics
 {
   const { page, fake, errors } = await phone();
@@ -1357,6 +1462,170 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     '  back in reach, Try again opens History in place, with no reload: a failed fetch is not kept failed',
     (await unavailable.count()) === 0 &&
       (await page.locator('[data-screen-hash="#history"]').count()) === 1,
+  );
+}
+
+// ------------------------------------------------ hold the toolbar and slide to another tab
+// A finger's touches through CDP, as a phone sends them: no mouse, and no click Playwright adds.
+{
+  const { page } = await phone();
+  const cdp = await page.context().newCDPSession(page);
+  const toolbar = page.getByRole('navigation', { name: 'Screens' });
+  const bar = toolbar.locator('[data-tab]').first().locator('..');
+  const centre = async (name) => {
+    const box = await toolbar.locator(`[data-tab="${name}"]`).boundingBox();
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const FINGER_REST_MS = 100;
+  const touch = async (type, point) => {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: point ? [{ x: point.x, y: point.y, id: 1 }] : [],
+    });
+  };
+  const isOn = (hash) =>
+    page.evaluate(
+      (h) =>
+        h === ''
+          ? document.querySelectorAll('[data-screen-hash]').length === 0
+          : !!document.querySelector(`[data-screen-hash="${h}"]`),
+      hash,
+    );
+  /** Whether the screen at `hash` comes up, without throwing when it never does. */
+  const opens = (hash) =>
+    page
+      .locator(`[data-screen-hash="${hash}"]`)
+      .waitFor({ timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      );
+  const marked = () => toolbar.locator('[aria-current="page"]').getAttribute('data-tab');
+  const sliding = toolbar.locator('[data-sliding]');
+  // While screens move, a view transition's layer takes every touch (tab-motion.ts): a finger
+  // goes down once the move is over, as it would on the bar the person sees settle.
+  const movesOver = () =>
+    page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .every((animation) => !animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+  /** Puts a finger on `from` and waits for the hold to pick the pill up. */
+  const hold = async (from) => {
+    await movesOver();
+    const start = await centre(from);
+    await touch('touchStart', start);
+    await sliding.waitFor({ timeout: 5000 });
+    return start;
+  };
+  /** Slides a held finger through `via`, a few steps between each. */
+  const slideThrough = async (from, via) => {
+    let at = from;
+    for (const name of via) {
+      const to = await centre(name);
+      for (let step = 1; step <= 6; step++) {
+        await touch('touchMove', {
+          x: at.x + ((to.x - at.x) * step) / 6,
+          y: at.y + ((to.y - at.y) * step) / 6,
+        });
+      }
+      at = to;
+    }
+    // The finger rests before it lifts. Let go mid-move, Chrome reads a fling, and the next tap
+    // only stops the fling, with no click. Its velocity looks back about 100 ms; one frame of
+    // rest is not enough.
+    await touch('touchMove', at);
+    await page.waitForTimeout(FINGER_REST_MS);
+    return at;
+  };
+  /** Lets go, and waits for the slide to be over. */
+  const letGo = async (type = 'touchEnd') => {
+    await touch(type);
+    await sliding.waitFor({ state: 'detached', timeout: 5000 });
+  };
+  /** A finger's tap: down and up at once, as a phone makes a click of it. */
+  const tap = async (name) => {
+    const at = await centre(name);
+    await movesOver();
+    await touch('touchStart', at);
+    await touch('touchEnd');
+  };
+  /** Back to Record by a tap, for the next case to start from. */
+  const backToRecord = async () => {
+    if (await isOn('')) return;
+    await tap('record');
+    await page.waitForFunction(() => !document.querySelector('[data-screen-hash]'));
+  };
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  const pillLeft = () =>
+    // The pill is the bar's first child (bottom-toolbar.tsx).
+    bar.evaluate((element) => Math.round(element.firstElementChild.getBoundingClientRect().left));
+
+  const restingLeft = await pillLeft();
+  const start = await hold('record');
+  await slideThrough(start, ['history', 'account', 'history', 'record']);
+  await letGo();
+  check(
+    'held and slid along the toolbar and back to Record, it lets go where it started: still on Record',
+    (await isOn('')) && (await marked()) === 'record',
+  );
+  await tap('history');
+  check(
+    '  and the very next tap on another tab opens it: the release kept no click',
+    await opens('#history'),
+  );
+  await backToRecord();
+
+  await slideThrough(await hold('record'), ['history', 'account']);
+  await letGo();
+  check(
+    'held on Record and slid to Account, it opens Account on release, the pill under Account',
+    (await opens('#profile')) && (await marked()) === 'account',
+  );
+  await backToRecord();
+
+  await hold('history');
+  await letGo();
+  check(
+    '  a still hold on another tab, let go there, opens it',
+    (await opens('#history')) && (await marked()) === 'history',
+  );
+  await backToRecord();
+
+  await slideThrough(await hold('record'), ['history', 'account']);
+  await letGo('touchCancel');
+  await page.waitForFunction(
+    (left) => {
+      const pill = document.querySelector('nav[aria-label="Screens"] [data-tab]')?.parentElement
+        ?.firstElementChild;
+      return !!pill && Math.round(pill.getBoundingClientRect().left) === left;
+    },
+    restingLeft,
+    { timeout: 5000 },
+  );
+  check(
+    '  a slide the phone calls off puts the pill back on Record, and Record stays',
+    (await isOn('')) && (await marked()) === 'record',
+  );
+
+  await tap('history');
+  check('  a plain tap on a tab still opens its screen', await opens('#history'));
+  await backToRecord();
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await slideThrough(await hold('record'), ['history']);
+  await letGo('touchCancel');
+  const pillAnimations = await bar.evaluate(
+    (element) =>
+      element.getAnimations({ subtree: true }).filter((animation) => {
+        const target = animation.effect?.target;
+        return !!target && !target.matches('[data-tab], [data-tab] *');
+      }).length,
+  );
+  check(
+    '  with less motion asked for, the pill snaps back: no slide plays',
+    pillAnimations === 0 && (await pillLeft()) === restingLeft,
+    pillAnimations,
   );
 }
 

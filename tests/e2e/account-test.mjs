@@ -92,6 +92,29 @@ async function signOut(page) {
   const { page, fake, errors } = await phone();
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   await shot(page, '1-sign-in');
+  // The map and its controls are the page's first part; Sign in covers it all.
+  await page.getByRole('button', { name: 'Map design', includeHidden: true }).waitFor({
+    state: 'attached',
+    timeout: 15000,
+  });
+  const mapStops = [];
+  for (let i = 0; i < 40; i += 1) {
+    await page.keyboard.press('Tab');
+    const stop = await page.evaluate(() => {
+      const element = document.activeElement;
+      const mapPart = document.querySelector('main.contribute-page > :first-child');
+      return {
+        name: element?.getAttribute('aria-label') ?? element?.textContent?.trim().slice(0, 40),
+        isOnMap: Boolean(element && mapPart?.contains(element)),
+      };
+    });
+    if (stop.isOnMap) mapStops.push(stop.name);
+  }
+  check(
+    '  and no map control under it can be tabbed to or read out',
+    mapStops.length === 0,
+    mapStops.join(' | '),
+  );
   check(
     'with no account the page shows Sign in, Create an account and Forgot password, no way back to the map, and no Start',
     (await field(page, 'Email').count()) === 1 &&
