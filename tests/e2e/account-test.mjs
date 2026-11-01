@@ -824,9 +824,20 @@ const keepOnPhone = (page, key, stored) =>
     );
   await page.unroute('**/auth/v1/token**');
   step = 'unrouted';
-  await page.clock.fastForward(30_000);
+  // A second at a time, the clock keeping inside supabase-js's retry window (30 s from the first
+  // try): its next retry reaches Para. One jump past the window let the try still on its way when
+  // the route went (answered 503 by it) end the retries, and supabase-js then keeps that failure
+  // for REFRESH_FAILURE_COOLDOWN_MS (60 s), asking nothing on the signal's return either.
+  let isGoneHeard = false;
+  const heard = isGone.then((isHeard) => {
+    isGoneHeard = isHeard;
+  });
+  for (let second = 0; second < 15 && !isGoneHeard; second += 1) {
+    await page.clock.fastForward(1000);
+    await Promise.race([heard, page.waitForTimeout(300)]);
+  }
   step = 'later';
-  const isGoneHeard = await isGone;
+  await heard;
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
   const isStartStill = (await SCREENS.start(page).count()) === 1;
   // The signal back, as the phone tells the page (its offline and online events; turning the
