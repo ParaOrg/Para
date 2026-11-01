@@ -1367,16 +1367,12 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     const box = await toolbar.locator(`[data-tab="${name}"]`).boundingBox();
     return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   };
-  // Chrome makes no click of a tap begun within its double-tap window of the last finger's
-  // lift, as no finger could; a tap waits that long after the last lift, as a person would.
-  const TAP_AFTER_LIFT_MS = 350;
-  let liftedAt = 0;
+  const FINGER_REST_MS = 100;
   const touch = async (type, point) => {
     await cdp.send('Input.dispatchTouchEvent', {
       type,
       touchPoints: point ? [{ x: point.x, y: point.y, id: 1 }] : [],
     });
-    if (type === 'touchEnd' || type === 'touchCancel') liftedAt = Date.now();
   };
   const isOn = (hash) =>
     page.evaluate(
@@ -1426,6 +1422,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       }
       at = to;
     }
+    // The finger rests before it lifts. Let go mid-move, Chrome reads a fling, and the next tap
+    // only stops the fling, with no click. Its velocity looks back about 100 ms; one frame of
+    // rest is not enough.
+    await touch('touchMove', at);
+    await page.waitForTimeout(FINGER_REST_MS);
     return at;
   };
   /** Lets go, and waits for the slide to be over. */
@@ -1436,7 +1437,6 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   /** A finger's tap: down and up at once, as a phone makes a click of it. */
   const tap = async (name) => {
     const at = await centre(name);
-    await page.waitForTimeout(Math.max(0, liftedAt + TAP_AFTER_LIFT_MS - Date.now()));
     await movesOver();
     await touch('touchStart', at);
     await touch('touchEnd');

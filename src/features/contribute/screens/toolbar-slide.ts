@@ -112,10 +112,11 @@ export function attachToolbarSlide({
     }
     bar.toggleAttribute('data-sliding', true);
     startSelectionTicks();
-    // The pill comes to the finger: a still hold on another tab lands there.
-    slideTo(press.startX);
+    // The pill comes to the finger: a still hold on another tab lands there. The pick-up's own
+    // tick stands for reaching that tab.
+    slideTo(press.startX, false);
   };
-  const slideTo = (clientX: number) => {
+  const slideTo = (clientX: number, isTicked = true) => {
     if (!press) return;
     const barLeft = bar.getBoundingClientRect().left;
     const x = clientX - barLeft;
@@ -132,7 +133,7 @@ export function attachToolbarSlide({
     if (over === press.over) return;
     press.over = over;
     paint(over);
-    selectionTick();
+    if (isTicked) selectionTick();
     const name = tabName(over);
     if (name) onTabReached?.(name);
   };
@@ -155,6 +156,7 @@ export function attachToolbarSlide({
     }
     // The picked tab keeps its colours until its screen takes over (the toolbar's `current`
     // changes and this slide is let go), so the move never shows the old tab marked again.
+    window.clearTimeout(paintKept);
     paintKept = window.setTimeout(unpaint, PAINT_KEPT_MS);
     // The next screen's toolbar starts its pill where this one let it go.
     notePillAt(name, target.offsetLeft);
