@@ -9,6 +9,14 @@ import { motionOf, prefersReducedMotion } from '../common/tab-motion';
 let last: { tab: string; left: number } | null = null;
 
 /**
+ * Where a slid pill was let go (use-toolbar-slide.ts): the next screen's toolbar starts it there,
+ * already under its tab, rather than sliding it again from the screen before.
+ */
+export function notePillAt(tab: string, left: number): void {
+  last = { tab, left };
+}
+
+/**
  * The toolbar's pill (the mark under the screen showing), put under the tab named `current` and,
  * when the last toolbar had it under another, slid there from it. The two tabs' icons and words
  * cross-fade their colour in the same time. Transform and colour only; nothing for less motion.

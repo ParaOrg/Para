@@ -224,6 +224,34 @@ const finishRecording = async (page) => {
 };
 /** Start's ⓘ, which opens the map's credits as the Map Data Source sheet. */
 const creditsButton = (page) => page.getByRole('button', { name: 'Map data sources' });
+
+/**
+ * The map's controls the keyboard reaches, Tab after Tab from the top of the page, once round:
+ * each named as a screen reader would. The map and its controls are the page's first part.
+ */
+async function mapControlsInTabOrder(page) {
+  const reached = [];
+  const seen = new Set();
+  // Round the whole page and past the browser's own stop (the body), until a stop comes again.
+  for (let i = 0; i < 80; i += 1) {
+    await page.keyboard.press('Tab');
+    const stop = await page.evaluate(() => {
+      const element = document.activeElement;
+      if (!element || element === document.body) return null;
+      const mapPart = document.querySelector('main.contribute-page > :first-child');
+      return {
+        id: element.outerHTML.slice(0, 160),
+        name: element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 40),
+        isOnMap: Boolean(mapPart?.contains(element)),
+      };
+    });
+    if (!stop) continue;
+    if (seen.has(stop.id)) break;
+    seen.add(stop.id);
+    if (stop.isOnMap) reached.push(stop.name);
+  }
+  return reached;
+}
 /** Flag a stop, at the top of the right-hand column while recording. */
 const flagButton = (page) => page.getByRole('button', { name: 'Flag a stop' });
 /** The tint's state and its edges' colour: "lakad:from-blue-700/10". */
@@ -2343,15 +2371,33 @@ const WAKE = () => {
   );
   check('Unfinished has Back to the map', await hasOneBack());
   check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
+  const onUnfinished = await mapControlsInTabOrder(page);
+  check(
+    "  and the map's own buttons, in sight above its card, still in reach",
+    onUnfinished.includes('Map design'),
+    onUnfinished.join(' | '),
+  );
 
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await finishRecording(page);
   await page.getByRole('button', { name: 'Save recording' }).waitFor();
   check("the Save form keeps the map's corner ⓘ for its credits", await hasCornerCredits());
+  const onForm = await mapControlsInTabOrder(page);
+  check(
+    '  and no map control under the form can be tabbed to or read out',
+    onForm.length === 0,
+    onForm.join(' | '),
+  );
   await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
   check('Saved has Back to the map, in front of the screen', await hasOneBack());
   check("  and the map's corner ⓘ for its credits", await hasCornerCredits());
+  const onSaved = await mapControlsInTabOrder(page);
+  check(
+    '  and no map control under Saved can be tabbed to or read out',
+    onSaved.length === 0,
+    onSaved.join(' | '),
+  );
   await back.click();
   await page.waitForURL((url) => url.pathname === '/');
   check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
