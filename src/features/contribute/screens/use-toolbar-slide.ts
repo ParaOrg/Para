@@ -27,14 +27,24 @@ interface ToolbarSlideOptions {
   current: ToolbarTab;
   /** The tab the pill was let go on, when it is not the one showing: its screen opens. */
   onPick: (tab: ToolbarTab) => void;
+  /** The pill reaching another tab on its way: the page may fetch that tab's screen ahead. */
+  onTabReached?: (tab: ToolbarTab) => void;
 }
 
 /** Hold the toolbar and slide its pill to another tab (toolbar-slide.ts). */
-export function useToolbarSlide({ barRef, pillRef, current, onPick }: ToolbarSlideOptions) {
-  // The latest handler, read on release: the bar's listeners stay put across renders.
+export function useToolbarSlide({
+  barRef,
+  pillRef,
+  current,
+  onPick,
+  onTabReached,
+}: ToolbarSlideOptions) {
+  // The latest handlers, read as they are needed: the bar's listeners stay put across renders.
   const onPickRef = useRef(onPick);
+  const onTabReachedRef = useRef(onTabReached);
   useEffect(() => {
     onPickRef.current = onPick;
+    onTabReachedRef.current = onTabReached;
   });
 
   useEffect(() => {
@@ -49,6 +59,7 @@ export function useToolbarSlide({ barRef, pillRef, current, onPick }: ToolbarSli
         pill,
         current,
         onPick: (tab) => onPickRef.current(tab),
+        onTabReached: (tab) => onTabReachedRef.current?.(tab),
         first,
       });
     };

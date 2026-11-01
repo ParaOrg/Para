@@ -1200,22 +1200,109 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
 {
   const { page } = await phone();
   const toolbar = page.getByRole('navigation', { name: 'Screens' });
+  /** Once the move between screens is over: no view transition, no animation still running. */
+  const moveOver = () =>
+    page.waitForFunction(
+      () =>
+        !document.documentElement.matches(':active-view-transition') &&
+        document.getAnimations().every((a) => a.playState !== 'running'),
+      null,
+      { timeout: 10000 },
+    );
   const toolbarBox = async () => {
-    // Once the move between screens is over: the screens slide, the toolbar never does.
-    await page.waitForFunction(() => !document.documentElement.dataset.tabMotion, null, {
-      timeout: 5000,
-    });
-    await page.waitForTimeout(800);
+    await moveOver();
     return toolbar.locator('> div').boundingBox();
   };
+  // The one toolbar: the same element from Record to History to Account, never taken off the page.
+  const watchToolbar = () =>
+    page.evaluate(() => {
+      const bar = document.querySelector('nav[aria-label="Screens"]');
+      window.__toolbar = { bar, wasRemoved: false };
+      new MutationObserver(() => {
+        if (!bar?.isConnected) window.__toolbar.wasRemoved = true;
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+  const isSameToolbar = () =>
+    page.evaluate(
+      () =>
+        !window.__toolbar.wasRemoved &&
+        window.__toolbar.bar === document.querySelector('nav[aria-label="Screens"]'),
+    );
+  // The move's view transition, as the page starts it: whether History was in its new state.
+  const watchTransition = () =>
+    page.evaluate(() => {
+      window.__screenAtReady = null;
+      const start = document.startViewTransition.bind(document);
+      document.startViewTransition = (update) => {
+        const transition = start(update);
+        transition.ready
+          .then(() => {
+            window.__screenAtReady = document.querySelector('[data-screen-hash]')
+              ? document.querySelector('[data-screen-hash]').getAttribute('data-screen-hash')
+              : '';
+          })
+          .catch(() => {});
+        return transition;
+      };
+    });
+
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  // Start idle a moment: History and Account are fetched ahead (screen-loaders.ts).
+  await page.waitForFunction(
+    () => performance.getEntriesByType('resource').some((e) => /history-view/.test(e.name)),
+    null,
+    { timeout: 10000 },
+  );
   const onRecord = await toolbarBox();
+  await watchToolbar();
+  await watchTransition();
   await openHistory(page);
   await page.getByRole('heading', { name: 'History' }).waitFor();
   const onHistory = await toolbarBox();
+  check(
+    'a first tap on History, fetched ahead, slides in the real History: it is drawn by the time the move starts',
+    (await page.evaluate(() => window.__screenAtReady)) === '#history',
+    String(await page.evaluate(() => window.__screenAtReady)),
+  );
   await toolbar.getByRole('button', { name: 'Account', exact: true }).click();
   await page.locator('[data-screen-hash="#profile"]').waitFor();
   const onAccount = await toolbarBox();
+  // Logout's question over Account: the toolbar steps out of sight and out of reach.
+  await button(page, 'Logout').click();
+  await logoutQuestion(page).waitFor();
+  const toolbarUnderQuestion = await page.evaluate(() => {
+    const bar = document.querySelector('nav[aria-label="Screens"]');
+    return {
+      isInert: !!bar?.closest('[inert]'),
+      isHidden: !!bar && getComputedStyle(bar).visibility === 'hidden',
+    };
+  });
+  let isTabbedTo = false;
+  for (let i = 0; i < 6; i += 1) {
+    await page.keyboard.press('Tab');
+    if (await page.evaluate(() => !!document.activeElement?.closest('nav[aria-label="Screens"]')))
+      isTabbedTo = true;
+  }
+  check(
+    '  with Logout asked, the toolbar is out of sight and out of reach: no tap, no Tab onto it',
+    toolbarUnderQuestion.isInert && toolbarUnderQuestion.isHidden && !isTabbedTo,
+    JSON.stringify(toolbarUnderQuestion),
+  );
+  await logoutQuestion(page).getByRole('button', { name: 'Cancel' }).click();
+  await logoutQuestion(page).waitFor({ state: 'detached' });
+  check(
+    '  the question gone, the toolbar is back',
+    // Let go as the question leaves the page, a render later.
+    await toolbar
+      .getByRole('button', { name: 'Record', exact: true })
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false),
+  );
+  await toolbar.getByRole('button', { name: 'Record', exact: true }).click();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  await moveOver();
+  const height = page.viewportSize()?.height ?? 0;
   const same = (a, b) =>
     !!a &&
     !!b &&
@@ -1227,8 +1314,38 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     'the toolbar stands in one place on Record, History and Account: 32 over the foot on each',
     same(onRecord, onHistory) &&
       same(onRecord, onAccount) &&
-      Math.abs(852 - (onRecord.y + onRecord.height) - 32) < 1,
+      Math.abs(height - (onRecord.y + onRecord.height) - 32) < 1,
     JSON.stringify({ onRecord, onHistory, onAccount }),
+  );
+  check(
+    '  and it is one toolbar: the same element through Record, History, Account and back, never taken off',
+    await isSameToolbar(),
+  );
+}
+
+// ------------------------------------------------ a screen whose code cannot be fetched, then can
+{
+  const { page } = await phone();
+  // History's chunk out of reach, as offline before the page kept it: every ask for it fails.
+  const blockHistory = (route) => route.abort('internetdisconnected');
+  await page.route(/history-view\.tsx/, blockHistory);
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await openHistory(page);
+  const unavailable = page.getByRole('heading', { name: 'History could not be opened' });
+  await unavailable.waitFor({ timeout: 10000 });
+  check(
+    "History's code out of reach: the tap shows History could not be opened, with Try again, the page and its toolbar still there",
+    (await page.getByRole('button', { name: 'Try again' }).count()) === 1 &&
+      (await page.getByRole('navigation', { name: 'Screens' }).count()) === 1,
+  );
+  await page.unroute(/history-view\.tsx/, blockHistory);
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await page.getByRole('heading', { name: 'History', exact: true }).waitFor({ timeout: 10000 });
+  check(
+    '  back in reach, Try again opens History in place, with no reload: a failed fetch is not kept failed',
+    (await unavailable.count()) === 0 &&
+      (await page.locator('[data-screen-hash="#history"]').count()) === 1,
   );
 }
 

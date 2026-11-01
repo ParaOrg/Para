@@ -1,6 +1,5 @@
 import type { ToolbarTab } from './bottom-toolbar';
 import { notePillAt } from './use-sliding-pill';
-import { warmScreen } from '../common/screen-loaders';
 import { motionOf, prefersReducedMotion } from '../common/tab-motion';
 import {
   endSelectionTicks,
@@ -21,6 +20,8 @@ interface ToolbarSlide {
   current: ToolbarTab;
   /** The tab the pill was let go on, when it is not the one showing: its screen opens. */
   onPick: (tab: ToolbarTab) => void;
+  /** The pill reaching another tab on its way: the page may fetch that tab's screen ahead. */
+  onTabReached?: (tab: ToolbarTab) => void;
   /** The press that fetched this code, if any: the slide begins from it. */
   first?: PointerEvent;
 }
@@ -38,6 +39,7 @@ export function attachToolbarSlide({
   pill,
   current,
   onPick,
+  onTabReached,
   first,
 }: ToolbarSlide): () => void {
   const tabs = () => [...bar.querySelectorAll<HTMLElement>('[data-tab]')];
@@ -116,7 +118,7 @@ export function attachToolbarSlide({
     paint(over);
     selectionTick();
     const name = tabName(over);
-    if (name) warmScreen(name);
+    if (name) onTabReached?.(name);
   };
   const end = (isKept: boolean) => {
     if (!press) return;

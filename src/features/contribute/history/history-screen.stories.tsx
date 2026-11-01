@@ -3,6 +3,7 @@ import { expect, fn, within } from 'storybook/test';
 
 import { HistoryScreen } from './history-screen';
 import type { HistoryItems, HistoryLoad } from './use-history-items';
+import { BottomToolbar, TOOLBAR_PLACE } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
 import type { Uploads } from '../uploads/use-uploads';
@@ -85,13 +86,16 @@ const meta = {
     items: itemsOf(rides, allOf(UPLOADED)),
     pictures: new Map(),
     onOpenRecord: fn(),
-    onOpenAccount: fn(),
     onRemoveFromPhone: fn(),
   },
   decorators: [
     (Story) => (
       <div className="relative h-211 w-97.5 overflow-hidden">
         <Story />
+        {/* The page's toolbar over its foot, as contribute-page.tsx stands it. */}
+        <div className={TOOLBAR_PLACE}>
+          <BottomToolbar current="history" onOpenRecord={fn()} onOpenAccount={fn()} />
+        </div>
       </div>
     ),
   ],

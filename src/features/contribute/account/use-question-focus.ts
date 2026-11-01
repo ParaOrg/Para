@@ -2,11 +2,14 @@ import { useEffect, type RefObject } from 'react';
 
 import { useEscape } from '@/shared/hooks/use-escape';
 
+import { useHoldToolbar } from '../common/toolbar-hold';
+
 /**
  * Focus for a question before an act that ends something (QuestionSheet, LogoutConfirm): Cancel,
  * the safe answer, has it as the question opens, and Tab goes round the buttons that can be
  * pressed. Escape cancels. Once the answer is under way nothing cancels it: Escape waits, and the
  * question's heading holds focus while both buttons are off, so it never drops out of the dialog.
+ * The page's toolbar steps aside while it is open (toolbar-hold.ts).
  */
 export function useQuestionFocus(
   dialogRef: RefObject<HTMLElement | null>,
@@ -14,6 +17,7 @@ export function useQuestionFocus(
   isBusy: boolean,
   onCancel: () => void,
 ) {
+  useHoldToolbar();
   // While the answer is under way it cannot be taken back: Cancel would only hide that it goes on.
   useEscape(onCancel, !isBusy);
 

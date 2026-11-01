@@ -87,6 +87,9 @@ async function phone({ earlierConsent = false, granted = false } = {}) {
   // Saved recordings upload: to the stand-in, never to a real project (upload-test covers it).
   await fakeContributions(page);
   await page.addInitScript(GPS);
+  // Checks read the requests the page made: room for all of them, tiles and the screens fetched
+  // ahead at idle included, where the browser keeps 250 by default and drops the rest.
+  await page.addInitScript(() => performance.setResourceTimingBufferSize(5000));
   if (earlierConsent) {
     await page.addInitScript(() => localStorage.setItem('para.contribute.consent', 'yes'));
   }

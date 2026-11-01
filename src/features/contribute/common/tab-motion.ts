@@ -93,11 +93,20 @@ export function screenEntryDirection(): MotionDirection | null {
 
 /**
  * Whether the screen for `hash` is on the page: its own `[data-screen-hash]` (History, Account,
- * Account settings), or for Record none of them over the map.
+ * Account settings), or for Record none of them over the map. A screen the page cannot open now
+ * (its `[data-screens]`) never draws: nothing to wait for.
  */
 function isDrawn(hash: string): boolean {
   const screens = [...document.querySelectorAll('[data-screen-hash]')];
   if (SCREEN_ORDER[hash] === undefined) return true;
+  const openable = document.querySelector('[data-screens]')?.getAttribute('data-screens');
+  if (
+    hash !== '' &&
+    openable !== null &&
+    openable !== undefined &&
+    !openable.split(' ').includes(hash)
+  )
+    return true;
   if (hash === '') return screens.length === 0;
   return screens.some((screen) => screen.getAttribute('data-screen-hash') === hash);
 }

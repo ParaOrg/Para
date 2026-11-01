@@ -1,10 +1,11 @@
-import { lazy, Suspense, useEffect, useRef, useState, type Ref } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type Ref, type RefObject } from 'react';
 
-import { BottomToolbar } from './bottom-toolbar';
+import { TOOLBAR_ROOM } from './bottom-toolbar';
 import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
 import { useStackRoom } from '../common/use-stack-room';
+import { useToolbarLift } from '../common/use-toolbar-lift';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
 import { CreditsButton } from '../map/credits-button';
 
@@ -28,11 +29,12 @@ const StartGate =
 interface ReadyScreenProps {
   earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
-  onOpenHistory: () => void;
-  /** Opens Account from the Account tab; left out in a build with no accounts. */
-  onOpenAccount?: () => void;
   /** The tab whose screen was open before this one: focus goes back to it. */
   backFrom: 'history' | 'account' | null;
+  /** The page's History tab (contribute-page.tsx), for focus to come back to from History. */
+  historyTabRef: RefObject<HTMLButtonElement | null>;
+  /** The page's Account tab, for focus to come back to from Account. */
+  accountTabRef: RefObject<HTMLButtonElement | null>;
   /** The ⓘ: opens the map's credits, the Map Data Source sheet. */
   onOpenCredits: () => void;
   /** The ⓘ, for focus to come back to when the credits close. */
@@ -55,23 +57,23 @@ const HAS_TUTORIAL = false;
 export function ReadyScreen({
   earlierQuestion,
   onStart,
-  onOpenHistory,
-  onOpenAccount,
   backFrom,
+  historyTabRef,
+  accountTabRef,
   onOpenCredits,
   creditsButtonRef,
   onOpenTutorial,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const historyRef = useRef<HTMLButtonElement>(null);
-  const accountRef = useRef<HTMLButtonElement>(null);
   // Decided once, as the screen opens: a later change must not move focus again.
   const [focusTab] = useState(backFrom);
   useEffect(() => {
-    const tabRefs = { history: historyRef, account: accountRef };
-    ((focusTab && tabRefs[focusTab].current) ?? headingRef.current)?.focus();
-  }, [focusTab]);
+    const tab = { history: historyTabRef, account: accountTabRef };
+    ((focusTab && tab[focusTab].current) ?? headingRef.current)?.focus();
+  }, [focusTab, historyTabRef, accountTabRef]);
   const stackRef = useStackRoom();
+  // The page's toolbar stands over the earlier-recordings question, as over Start.
+  const liftRef = useToolbarLift();
 
   // Figma's Record stands the right-hand column 20 in and 24 over Start tracking.
   useEffect(() => {
@@ -106,7 +108,8 @@ export function ReadyScreen({
           </h1>
         )}
         {/* The map fades into white under Start tracking and the tabs (Figma's Frame 393). The
-            tabs stay over the question too: History and Account are always a tap away. */}
+            tabs are the page's own toolbar, over this foot (contribute-page.tsx): room is kept
+            for them here, and they stay over the question too. */}
         <div className="relative flex flex-col gap-3 bg-linear-to-b from-transparent to-surface pb-[max(2rem,env(safe-area-inset-bottom))]">
           {/* Figma's ⓘ, 12 in from the frame's left and foot; lifted over the gesture bar where
               the phone has one, so the bar does not take its taps. */}
@@ -121,14 +124,13 @@ export function ReadyScreen({
             </Suspense>
           )}
           {!earlierQuestion && !AppUpdateGate && startBar}
-          <BottomToolbar
-            historyRef={historyRef}
-            accountRef={accountRef}
-            onOpenHistory={onOpenHistory}
-            onOpenAccount={onOpenAccount}
-          />
+          <div aria-hidden className={TOOLBAR_ROOM} />
         </div>
-        {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+        {earlierQuestion && (
+          <div ref={liftRef}>
+            <EarlierRecordingsPanel {...earlierQuestion} />
+          </div>
+        )}
       </section>
     </>
   );

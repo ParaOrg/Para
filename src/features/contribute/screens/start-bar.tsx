@@ -1,4 +1,4 @@
-import { PlayIcon } from './tracking-icons';
+import { PlayIcon } from './play-icon';
 
 interface StartBarProps {
   onClick: () => void;

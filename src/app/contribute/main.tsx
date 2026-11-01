@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './contribute.css';
 
 import {
+  applySlowmoIfAsked,
   askForPersistentStorage,
   connectContributions,
   prepareNativeApp,
@@ -19,6 +20,8 @@ import { registerContributeWorker } from './register-worker.ts';
 // studio code here, which scripts/checks/check-build.mjs proves for this
 // page's chunks.
 connectContributions();
+// The test switch for watching the motion slowly (?slowmo), fetched only when it is asked for.
+applySlowmoIfAsked();
 const root = document.getElementById('root');
 if (!root) throw new Error('contribute/index.html has no #root element to mount the page in.');
 
