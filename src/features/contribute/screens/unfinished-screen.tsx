@@ -42,8 +42,9 @@ export function UnfinishedScreen({
         className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-4 pb-[calc(1.5rem+max(2.125rem,env(safe-area-inset-bottom)))]"
       >
         {/* The map's ⓘ, its licences' credit, 12 in from the frame's left and 12 over the cards,
-            as it rides over a card on the public map; MapLibre's corner one steps aside. */}
-        <div className="mb-1 -ml-1 flex">
+            as it rides over a card on the public map; MapLibre's corner one steps aside. Out of
+            the stack's flow, so the room kept for it (--stack-room) is the cards' alone. */}
+        <div className="absolute bottom-full left-3 mb-3 flex">
           <CreditsButton ref={creditsButtonRef} onClick={onOpenCredits} />
         </div>
         <div className="rounded-4xl bg-surface px-4 pt-4 pb-2 font-sn-pro text-content-primary">

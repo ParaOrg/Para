@@ -16,6 +16,7 @@ import { chromium } from 'playwright';
 
 import { fakeContributions } from './lib/fake-contributions.mjs';
 import { fakeTurnstile } from './lib/fake-turnstile.mjs';
+import { mapControlsInTabOrder } from './lib/tab-order.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 
 const { check, tally } = harness();
@@ -85,34 +86,6 @@ async function signOut(page) {
     .getByRole('alertdialog', { name: 'Are you sure you want to logout?' })
     .getByRole('button', { name: 'Logout' })
     .click();
-}
-
-/**
- * The map's controls the keyboard reaches, Tab after Tab round the whole page and past the
- * browser's own stop, until a stop comes again: each named as a screen reader would. The map and
- * its controls are the page's first part.
- */
-async function mapControlsInTabOrder(page) {
-  const reached = [];
-  const seen = new Set();
-  for (let i = 0; i < 80; i += 1) {
-    await page.keyboard.press('Tab');
-    const stop = await page.evaluate(() => {
-      const element = document.activeElement;
-      if (!element || element === document.body) return null;
-      const mapPart = document.querySelector('main.contribute-page > :first-child');
-      return {
-        id: element.outerHTML.slice(0, 160),
-        name: element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 40),
-        isOnMap: Boolean(mapPart?.contains(element)),
-      };
-    });
-    if (!stop) continue;
-    if (seen.has(stop.id)) break;
-    seen.add(stop.id);
-    if (stop.isOnMap) reached.push(stop.name);
-  }
-  return reached;
 }
 
 // ------------------------------------------------ no account: only Sign in

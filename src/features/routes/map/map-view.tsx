@@ -180,8 +180,9 @@ interface Props {
    */
   areCreditsShown?: boolean;
   /**
-   * True while a screen of the page covers the whole map (the contributor page's Save form,
-   * Saved): what the map says of itself, its failure included, stays under it.
+   * True while a screen or question of the page covers the map (the contributor page's
+   * isMapCovered: its account gate, History, Account, the Save form, Saved and the rest): what
+   * the map says of itself, its failure included, stays under it.
    */
   isCovered?: boolean;
 }

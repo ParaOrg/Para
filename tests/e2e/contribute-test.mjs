@@ -15,6 +15,7 @@ import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
 import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
 import { checkLocationLabels } from './lib/location-labels.mjs';
+import { mapControlsInTabOrder } from './lib/tab-order.mjs';
 
 const { check, tally } = harness();
 const SHOTS = process.env.PARA_SHOTS;
@@ -225,33 +226,6 @@ const finishRecording = async (page) => {
 /** Start's ⓘ, which opens the map's credits as the Map Data Source sheet. */
 const creditsButton = (page) => page.getByRole('button', { name: 'Map data sources' });
 
-/**
- * The map's controls the keyboard reaches, Tab after Tab from the top of the page, once round:
- * each named as a screen reader would. The map and its controls are the page's first part.
- */
-async function mapControlsInTabOrder(page) {
-  const reached = [];
-  const seen = new Set();
-  // Round the whole page and past the browser's own stop (the body), until a stop comes again.
-  for (let i = 0; i < 80; i += 1) {
-    await page.keyboard.press('Tab');
-    const stop = await page.evaluate(() => {
-      const element = document.activeElement;
-      if (!element || element === document.body) return null;
-      const mapPart = document.querySelector('main.contribute-page > :first-child');
-      return {
-        id: element.outerHTML.slice(0, 160),
-        name: element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 40),
-        isOnMap: Boolean(mapPart?.contains(element)),
-      };
-    });
-    if (!stop) continue;
-    if (seen.has(stop.id)) break;
-    seen.add(stop.id);
-    if (stop.isOnMap) reached.push(stop.name);
-  }
-  return reached;
-}
 /** Flag a stop, at the top of the right-hand column while recording. */
 const flagButton = (page) => page.getByRole('button', { name: 'Flag a stop' });
 /** The tint's state and its edges' colour: "lakad:from-blue-700/10". */
@@ -2339,6 +2313,35 @@ const WAKE = () => {
     (await creditsButton(page).isVisible()) &&
     !(await page.locator('.maplibregl-ctrl-attrib').isVisible());
   check("  and the map's credits behind its own ⓘ while recording", await hasOwnCredits());
+  // How far the map's right-hand buttons stand over the stack of cards (--dock-foot).
+  const mapButtonsOver = async (stackHeading) => {
+    // Once the buttons have come to rest: they slide as the stack's room changes.
+    await page.waitForFunction(() => {
+      const button = document.querySelector('[aria-label="Map design"]');
+      return (
+        button !== null &&
+        !document
+          .getAnimations()
+          .some(
+            (animation) =>
+              animation.playState === 'running' &&
+              animation.effect?.target instanceof Element &&
+              animation.effect.target.contains(button),
+          )
+      );
+    });
+    return page.evaluate((heading) => {
+      const stack = document.querySelector(`[aria-labelledby="${heading}"]`);
+      const buttons = [
+        ...document.querySelectorAll(
+          '[aria-label="Map design"], [aria-label="Turn on my location"], [aria-label="Show where I am"], [aria-label="You are here"]',
+        ),
+      ];
+      const lowest = Math.max(...buttons.map((button) => button.getBoundingClientRect().bottom));
+      return Math.round(stack.getBoundingClientRect().top - lowest);
+    }, stackHeading);
+  };
+  const overRecording = await mapButtonsOver('recording-heading');
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
   check('  and while paused', await hasOwnCredits());
@@ -2374,6 +2377,12 @@ const WAKE = () => {
       Math.round(info.x) === 12 &&
       Math.round(why.y - (info.y + info.height)) === 12,
     JSON.stringify({ info, why }),
+  );
+  const overUnfinished = await mapButtonsOver('unfinished-heading');
+  check(
+    "  the map's buttons stand as far over Unfinished's cards as over Recording's: the ⓘ takes no room",
+    overUnfinished === overRecording,
+    JSON.stringify({ overRecording, overUnfinished }),
   );
   const unfinishedSheet = page.getByRole('dialog', { name: 'Map Data Source' });
   await creditsButton(page).click();
