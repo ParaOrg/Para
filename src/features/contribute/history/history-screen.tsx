@@ -10,7 +10,7 @@ import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
-import { BottomToolbar } from '../screens/bottom-toolbar';
+import { TOOLBAR_ROOM } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
 
@@ -25,23 +25,20 @@ interface HistoryScreenProps {
   items: HistoryItems;
   /** The pictures of the trails kept on this phone, by recording. */
   pictures: ReadonlyMap<string, string>;
-  /** Record: back to Start, wherever History was opened from. */
+  /** Record a route, with nothing recorded yet: back to Start. */
   onOpenRecord: () => void;
-  /** Account. Left out in a build with no accounts, which has no Account tab. */
-  onOpenAccount?: () => void;
   onRemoveFromPhone: (recording: Recording) => void;
 }
 
 /**
  * Figma's History (4518:24819), a tab like Account: the large title, its shadow once the list
  * scrolls under it, and every recording newest first, this phone's and the account's uploads from
- * its other phones alike, over the toolbar with History marked.
+ * its other phones alike, over the page's toolbar (contribute-page.tsx) with History marked.
  */
 export function HistoryScreen({
   items,
   pictures,
   onOpenRecord,
-  onOpenAccount,
   onRemoveFromPhone,
 }: HistoryScreenProps) {
   const headingRef = useFocusHeading();
@@ -111,13 +108,13 @@ export function HistoryScreen({
           </ul>
         )}
       </div>
-      {/* The toolbar over the page's foot, the list fading out under it (4518:24829). */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] *:pointer-events-auto">
-        <BottomToolbar
-          current="history"
-          onOpenRecord={onOpenRecord}
-          onOpenAccount={onOpenAccount}
-        />
+      {/* The list fading out under the page's toolbar (4518:24829), which stands over this foot,
+          32 over the screen's edge on all three tabs, so it never moves between them. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]"
+      >
+        <div className={TOOLBAR_ROOM} />
       </div>
     </section>
   );

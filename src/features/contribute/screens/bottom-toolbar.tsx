@@ -3,49 +3,53 @@ import type { ReactNode, Ref } from 'react';
 import { cn } from '@/shared/utils/cn';
 
 import { useSlidingPill } from './use-sliding-pill';
-import { warmScreen } from '../common/screen-loaders';
 
 import './start-icons.css';
 
 /** The screen the toolbar is shown on: its tab is the marked one. */
 export type ToolbarTab = 'record' | 'history' | 'account';
 
-interface ToolbarCommonProps {
-  /** Record, from History or Account: back to Start. */
+interface BottomToolbarProps {
+  /** The screen showing: its tab is the marked one. */
+  current?: ToolbarTab;
+  /** Record: back to Start. */
   onOpenRecord?: () => void;
-  /** Account. Left out in a build with no accounts, which has no Account tab, and on Account. */
+  /** History. */
+  onOpenHistory?: () => void;
+  /** Account. Left out in a build with no accounts, which has no Account tab. */
   onOpenAccount?: () => void;
+  /** A finger landing on a tab, before its tap: the page fetches that tab's screen ahead. */
+  onTabPointerDown?: (tab: ToolbarTab) => void;
   /** The History tab, so focus can come back to it when History closes. */
   historyRef?: Ref<HTMLButtonElement>;
   /** The Account tab, so focus can come back to it when Account closes. */
   accountRef?: Ref<HTMLButtonElement>;
 }
 
-/** On History, its tab is the marked one: there is nothing for it to open. */
-interface OnHistoryProps extends ToolbarCommonProps {
-  current: 'history';
-  onOpenHistory?: never;
-}
+/** The toolbar's height, kept free at the foot of each tab's screen for the page's toolbar. */
+export const TOOLBAR_ROOM = 'h-14 shrink-0';
 
-/** Anywhere else, the History tab opens History. */
-interface ElsewhereProps extends ToolbarCommonProps {
-  current?: Exclude<ToolbarTab, 'history'>;
-  onOpenHistory: () => void;
-}
-
-type BottomToolbarProps = OnHistoryProps | ElsewhereProps;
+/**
+ * Where the page stands its one toolbar (contribute-page.tsx): over the foot of Record, History
+ * and Account alike, 32 over the screen's edge (Figma's Record and History), clear of a phone's
+ * gesture bar. Over the tab screens, under the sheets and dialogs over them.
+ */
+export const TOOLBAR_PLACE =
+  'pointer-events-none absolute inset-x-0 bottom-0 z-25 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] *:pointer-events-auto';
 
 const TAB = 'relative flex min-w-18 flex-col items-center rounded-full py-1 text-xs/4 font-medium';
 
 /**
- * Figma's BottomToolbar (4496:10482): Record, History and Account, the screen showing marked. A
- * pill over the map, centred under Start tracking, and at the foot of History and Account.
+ * Figma's BottomToolbar (4496:10482): Record, History and Account, the screen showing marked. The
+ * page draws one, over Record, History and Account alike, and never draws it again between them:
+ * the screens slide under it, and only its pill moves, to the tab of the screen showing.
  */
 export function BottomToolbar({
   current = 'record',
   onOpenRecord,
   onOpenHistory,
   onOpenAccount,
+  onTabPointerDown,
   historyRef,
   accountRef,
 }: BottomToolbarProps) {
@@ -62,7 +66,12 @@ export function BottomToolbar({
           aria-hidden
           className="absolute inset-y-1 left-0 rounded-full bg-surface-tertiary"
         />
-        <Tab name="record" isCurrent={current === 'record'} onClick={onOpenRecord}>
+        <Tab
+          name="record"
+          isCurrent={current === 'record'}
+          onClick={onOpenRecord}
+          onPointerDown={onTabPointerDown}
+        >
           <span aria-hidden className="start-icon start-icon-record size-6" />
           Record
         </Tab>
@@ -70,6 +79,7 @@ export function BottomToolbar({
           name="history"
           isCurrent={current === 'history'}
           onClick={onOpenHistory}
+          onPointerDown={onTabPointerDown}
           ref={historyRef}
         >
           <span aria-hidden className="start-icon start-icon-history-tab size-6" />
@@ -80,6 +90,7 @@ export function BottomToolbar({
             name="account"
             isCurrent={current === 'account'}
             onClick={onOpenAccount}
+            onPointerDown={onTabPointerDown}
             ref={accountRef}
           >
             <span aria-hidden className="start-icon start-icon-account-tab size-6" />
@@ -95,12 +106,13 @@ interface TabProps {
   name: ToolbarTab;
   isCurrent: boolean;
   onClick: (() => void) | undefined;
+  onPointerDown: ((tab: ToolbarTab) => void) | undefined;
   ref?: Ref<HTMLButtonElement>;
   children: ReactNode;
 }
 
 /** The screen showing is marked, not a button, since there is nowhere for it to go. */
-function Tab({ name, isCurrent, onClick, ref, children }: TabProps) {
+function Tab({ name, isCurrent, onClick, onPointerDown, ref, children }: TabProps) {
   if (isCurrent) {
     return (
       <span data-tab={name} aria-current="page" className={cn(TAB, 'text-content-primary')}>
@@ -113,8 +125,7 @@ function Tab({ name, isCurrent, onClick, ref, children }: TabProps) {
       ref={ref}
       data-tab={name}
       type="button"
-      // A finger landing on the tab fetches its screen, if Start's fetch ahead has not.
-      onPointerDown={() => warmScreen(name)}
+      onPointerDown={() => onPointerDown?.(name)}
       onClick={onClick}
       className={cn(TAB, 'text-content-quaternary')}
     >

@@ -29,9 +29,13 @@ export function createHashView(hash: string): () => HashView {
 
   const isOpenNow = (): boolean => window.location.hash === hash;
 
+  // A history entry of its own, so Back returns to the screen under it. Pushed rather than set as
+  // `location.hash`, whose hashchange comes a task later: every screen's store is told at once, so
+  // the move's view transition draws the new screen in the tap's own turn (tab-motion.ts).
   const openNow = () => {
     hasPushedEntry = true;
-    window.location.hash = hash;
+    window.history.pushState(null, '', window.location.pathname + window.location.search + hash);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
   };
 
   const closeNow = () => {

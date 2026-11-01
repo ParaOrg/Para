@@ -10,19 +10,14 @@ import {
 } from 'react';
 import { flushSync } from 'react-dom';
 
+import { ErrorBoundary } from '@/shared/ui/error-boundary';
+
 import { useAccountGate } from './account/use-account-gate';
 import { useAccountSettingsView } from './account/use-account-settings-view';
 import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
 import { retryingImport } from './common/retrying-import';
-import {
-  loadAccountView,
-  loadHistoryView,
-  loadedAccountView,
-  loadedHistoryView,
-  warmScreen,
-} from './common/screen-loaders';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
@@ -31,8 +26,11 @@ import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
+import { accountChunk, historyChunk, warmScreen } from './screen-loaders';
+import { BottomToolbar, TOOLBAR_PLACE, type ToolbarTab } from './screens/bottom-toolbar';
 import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
+import { ScreenUnavailable } from './screens/screen-unavailable';
 import { START_BUTTON_ATTR, morphStartIntoCard } from './screens/start-morph';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { putThumbnail } from './storage/recording-store';
@@ -40,29 +38,56 @@ import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
 
-// Opened from the toolbar, so the page's first load does not carry them; fetched ahead once Start
-// is idle (below) and as a finger lands on their tab (screen-loaders.ts).
-const LazyHistoryView = lazy(() =>
-  loadHistoryView().then((module) => ({ default: module.HistoryView })),
-);
+/*
+ * History and Account, drawn at once when their chunk is already here (screen-loaders.ts), else
+ * through React.lazy. A lazy screen whose fetch failed stays failed for good, so a failure makes
+ * a fresh one for the next try (ScreenUnavailable's Try again), and shows that instead of taking
+ * the page down.
+ */
+function lazyScreen<TProps extends object>(
+  load: () => Promise<ComponentType<TProps>>,
+  onFailed: () => void,
+) {
+  return lazy(() =>
+    load().then(
+      (Screen) => ({ default: Screen }),
+      (error: unknown) => {
+        onFailed();
+        throw error;
+      },
+    ),
+  );
+}
+const lazyHistory = () =>
+  lazyScreen(
+    () => historyChunk.load().then((chunk) => chunk.HistoryView),
+    () => (LazyHistoryView = lazyHistory()),
+  );
+const lazyAccount = () =>
+  lazyScreen(
+    () => accountChunk.load().then((chunk) => chunk.AccountView),
+    () => (LazyAccountView = lazyAccount()),
+  );
+let LazyHistoryView = lazyHistory();
+let LazyAccountView = lazyAccount();
+
+type HistoryViewProps = ComponentProps<typeof LazyHistoryView>;
+type AccountViewProps = ComponentProps<typeof LazyAccountView>;
+
 // The map's credits, opened from the ⓘ on Start: fetched on the tap, not with the page.
 const MapDataSourceView = lazy(() =>
   import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
 );
-// Account, with its settings inside it, opened from the Account tab.
-const LazyAccountView = lazy(() =>
-  loadAccountView().then((module) => ({ default: module.AccountView })),
-);
 
-/** History, drawn at once when its chunk is already here (screen-loaders.ts), else lazily. */
-function HistoryView(props: ComponentProps<typeof LazyHistoryView>) {
-  const loaded = loadedHistoryView();
+/** History, at once if its chunk is here, else lazily. */
+function HistoryView(props: HistoryViewProps) {
+  const loaded = historyChunk.loaded();
   return loaded ? <loaded.HistoryView {...props} /> : <LazyHistoryView {...props} />;
 }
 
-/** Account, drawn at once when its chunk is already here (screen-loaders.ts), else lazily. */
-function AccountView(props: ComponentProps<typeof LazyAccountView>) {
-  const loaded = loadedAccountView();
+/** Account, at once if its chunk is here, else lazily. */
+function AccountView(props: AccountViewProps) {
+  const loaded = accountChunk.loaded();
   return loaded ? <loaded.AccountView {...props} /> : <LazyAccountView {...props} />;
 }
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
@@ -282,10 +307,50 @@ export function ContributePage({ locator }: ContributePageProps) {
     setOpenedTab('account');
     profile.open();
   };
+  // Record, from History, goes to Start wherever History was opened from.
+  const openRecordFromHistory = () => history.replaceWith('');
+
+  // The page's one toolbar, over Record, History and Account alike: drawn once and kept while
+  // any of the three shows, so it stands still as they slide under it; only its pill moves.
+  const toolbarTab: ToolbarTab | null = isHistoryShown
+    ? 'history'
+    : isProfileShown && !settings.isOpen
+      ? 'account'
+      : isStartShown
+        ? 'record'
+        : null;
+  const historyTabRef = useRef<HTMLButtonElement>(null);
+  const accountTabRef = useRef<HTMLButtonElement>(null);
+  const toolbarOpeners: Record<ToolbarTab, Partial<Record<ToolbarTab, () => void>>> = {
+    record: { history: handleOpenHistory, account: hasAccount ? handleOpenAccount : undefined },
+    history: {
+      record: openRecordFromHistory,
+      // Account takes History's place.
+      account: hasAccount
+        ? () => {
+            setOpenedTab('account');
+            history.replaceWith('#profile');
+          }
+        : undefined,
+    },
+    account: { record: profile.close, history: history.open },
+  };
+
+  // A screen whose code could not be fetched shows ScreenUnavailable; its Try again draws the
+  // screen afresh, with a fresh fetch.
+  const [screenTries, setScreenTries] = useState(0);
+  const tryScreenAgain = () => setScreenTries((n) => n + 1);
 
   return (
     // The page never scrolls, not even from code (contribute.css, .contribute-page).
-    <main className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro">
+    <main
+      // The toolbar's screens that can open now: a move to any other draws nothing to wait for
+      // (tab-motion.ts).
+      data-screens={[canSend && '#history', hasAccount && '#profile #account-settings']
+        .filter(Boolean)
+        .join(' ')}
+      className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"
+    >
       {/* inert while History, Profile, the permissions screen or the credits cover it: no map
           control can be tabbed to behind the screen. */}
       <div
@@ -357,9 +422,9 @@ export function ContributePage({ locator }: ContributePageProps) {
                   // After the start, never before it: the morph holds nothing back.
                   if (startButton) morphStartIntoCard(startButton);
                 }}
-                onOpenHistory={handleOpenHistory}
-                onOpenAccount={hasAccount ? handleOpenAccount : undefined}
                 backFrom={openedTab}
+                historyTabRef={historyTabRef}
+                accountTabRef={accountTabRef}
                 onOpenCredits={() => setIsCreditsOpen(true)}
                 creditsButtonRef={creditsButtonRef}
               />
@@ -371,33 +436,43 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {isProfileShown && (
-            <Suspense fallback={null}>
-              <AccountView
-                recordings={recording.saved}
-                statusOf={uploads.statusOf}
-                onOpenHistory={history.open}
-                onOpenRecord={profile.close}
-              />
-            </Suspense>
+            <ErrorBoundary
+              key={screenTries}
+              fallback={<ScreenUnavailable name="Account" onTryAgain={tryScreenAgain} />}
+            >
+              <Suspense fallback={null}>
+                <AccountView recordings={recording.saved} statusOf={uploads.statusOf} />
+              </Suspense>
+            </ErrorBoundary>
           )}
           {isHistoryShown && (
-            <Suspense fallback={null}>
-              <HistoryView
-                recordings={recording.saved}
-                uploads={uploads}
-                // Record goes to Start, wherever History was opened from; Account takes History's place.
-                onOpenRecord={() => history.replaceWith('')}
-                onOpenAccount={
-                  hasAccount
-                    ? () => {
-                        setOpenedTab('account');
-                        history.replaceWith('#profile');
-                      }
-                    : undefined
-                }
-                onRemoveFromPhone={recording.deleteSaved}
+            <ErrorBoundary
+              key={screenTries}
+              fallback={<ScreenUnavailable name="History" onTryAgain={tryScreenAgain} />}
+            >
+              <Suspense fallback={null}>
+                <HistoryView
+                  recordings={recording.saved}
+                  uploads={uploads}
+                  onOpenRecord={openRecordFromHistory}
+                  onRemoveFromPhone={recording.deleteSaved}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+          {toolbarTab && (
+            // Out of reach under the credits, as Start is.
+            <div inert={isCreditsShown} className={TOOLBAR_PLACE}>
+              <BottomToolbar
+                current={toolbarTab}
+                onOpenRecord={toolbarOpeners[toolbarTab].record}
+                onOpenHistory={toolbarOpeners[toolbarTab].history}
+                onOpenAccount={toolbarOpeners[toolbarTab].account}
+                onTabPointerDown={warmScreen}
+                historyRef={historyTabRef}
+                accountRef={accountTabRef}
               />
-            </Suspense>
+            </div>
           )}
           {phase === 'unfinished' && figures && (
             <Suspense fallback={null}>
