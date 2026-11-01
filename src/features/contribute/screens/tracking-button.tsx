@@ -5,7 +5,8 @@ import blobPrimary from '@/features/routes/cards/route-card-blob-primary.svg';
 import { ReloadIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
-import { FinishIcon, PauseIcon, PlayIcon } from './tracking-icons';
+import { PlayIcon } from './play-icon';
+import { FinishIcon, PauseIcon } from './tracking-icons';
 
 /**
  * Which bar. Lakad and Sakay are the mode button, named for the mode a tap

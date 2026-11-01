@@ -7,7 +7,7 @@ import { LogoutConfirm } from './logout-confirm';
 import { ProfileCard } from './profile-card';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
-import { BottomToolbar } from '../screens/bottom-toolbar';
+import { TOOLBAR_ROOM } from '../screens/bottom-toolbar';
 
 interface AccountScreenProps {
   /** The contributor's name, or null while it loads. */
@@ -20,20 +20,16 @@ interface AccountScreenProps {
   isLoggingOut: boolean;
   /** One line about the last Logout, or null. */
   error: string | null;
-  /** History, in the toolbar. */
-  onOpenHistory: () => void;
   onOpenSettings: () => void;
   onLogout: () => void;
   /** The Logout question opens: a last Logout's error is not carried into it. */
   onLogoutAsked: () => void;
-  /** Record, in the toolbar: back to Start. */
-  onOpenRecord: () => void;
 }
 
 /**
  * Account (Figma 4496:10455): the profile card, the Commute Statistics, and General: Account
- * settings and Logout, which asks first. The toolbar at the foot marks Account; Record goes back
- * to Start, History opens History.
+ * settings and Logout, which asks first, under the page's toolbar (contribute-page.tsx) with
+ * Account marked.
  */
 export function AccountScreen({
   name,
@@ -42,11 +38,9 @@ export function AccountScreen({
   unsentCount,
   isLoggingOut,
   error,
-  onOpenHistory,
   onOpenSettings,
   onLogout,
   onLogoutAsked,
-  onOpenRecord,
 }: AccountScreenProps) {
   const headingRef = useFocusHeading();
   const entryRef = useScreenEntry<HTMLElement>();
@@ -62,6 +56,7 @@ export function AccountScreen({
     <section
       ref={entryRef}
       aria-labelledby="account-heading"
+      data-screen-hash="#profile"
       className="tab-screen absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isLogoutAsked} className="absolute inset-0">
@@ -100,13 +95,13 @@ export function AccountScreen({
             )}
           </section>
         </div>
-        {/* The toolbar over the page's foot, the page fading out under it (4514:23035). */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface px-4 pt-6 pb-[max(3rem,env(safe-area-inset-bottom))] *:pointer-events-auto">
-          <BottomToolbar
-            current="account"
-            onOpenRecord={onOpenRecord}
-            onOpenHistory={onOpenHistory}
-          />
+        {/* The page fading out under the page's toolbar (4514:23035), which stands over this foot:
+            32 over the screen's edge, as on Record and History, for one height everywhere. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]"
+        >
+          <div className={TOOLBAR_ROOM} />
         </div>
       </div>
       {isLogoutAsked && (

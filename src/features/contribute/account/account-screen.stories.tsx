@@ -3,6 +3,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { AccountScreen } from './account-screen';
 import type { VehicleRides } from './vehicle-grid';
+import { BottomToolbar, TOOLBAR_PLACE } from '../screens/bottom-toolbar';
 
 /** The frame's counts: no UV Express or ferry ride. */
 const FRAME_RIDES: VehicleRides = {
@@ -36,16 +37,18 @@ const meta = {
     unsentCount: 0,
     isLoggingOut: false,
     error: null,
-    onOpenHistory: fn(),
     onOpenSettings: fn(),
     onLogout: fn(),
     onLogoutAsked: fn(),
-    onOpenRecord: fn(),
   },
   decorators: [
     (Story) => (
       <div className="relative h-[852px] w-[393px] overflow-hidden">
         <Story />
+        {/* The page's toolbar over its foot, as contribute-page.tsx stands it. */}
+        <div className={TOOLBAR_PLACE}>
+          <BottomToolbar current="account" onOpenRecord={fn()} onOpenHistory={fn()} />
+        </div>
       </div>
     ),
   ],

@@ -11,8 +11,14 @@ const SCREEN_ORDER: Readonly<Record<string, number>> = {
   '#account-settings': 3,
 };
 
-/** How long a move waits for its screen to be drawn before it is shown anyway. */
+/** How long a move waits for its hash to change before it is shown anyway. */
 const SETTLE_MS = 150;
+
+/**
+ * How long a move waits for its new screen to be drawn (its chunk fetched, React's commit) before
+ * the transition goes on without it. Fetched ahead (screen-loaders.ts), it is there at once.
+ */
+const DRAWN_MS = 300;
 
 /** How long after a move a screen that mounts still counts as arriving by it. */
 const MOVE_MS = 500;
@@ -85,17 +91,56 @@ export function screenEntryDirection(): MotionDirection | null {
   return performance.now() - lastMove.at < MOVE_MS ? lastMove.direction : null;
 }
 
-/** Settles once the hash has changed and React has drawn the screen for it, or soon after. */
+/**
+ * Whether the screen for `hash` is on the page: its own `[data-screen-hash]` (History, Account,
+ * Account settings), or for Record none of them over the map. A screen the page cannot open now
+ * (its `[data-screens]`) never draws: nothing to wait for.
+ */
+function isDrawn(hash: string): boolean {
+  const screens = [...document.querySelectorAll('[data-screen-hash]')];
+  if (SCREEN_ORDER[hash] === undefined) return true;
+  const openable = document.querySelector('[data-screens]')?.getAttribute('data-screens');
+  if (
+    hash !== '' &&
+    openable !== null &&
+    openable !== undefined &&
+    !openable.split(' ').includes(hash)
+  )
+    return true;
+  if (hash === '') return screens.length === 0;
+  return screens.some((screen) => screen.getAttribute('data-screen-hash') === hash);
+}
+
+/**
+ * Settles once the hash has changed and React has drawn the screen for it, so the view transition
+ * shows the real screen, never a blank one; or after SETTLE_MS with no change, or DRAWN_MS with the
+ * screen still on its way.
+ */
 function hashSettled(): Promise<void> {
   return new Promise((resolve) => {
-    const done = () => {
-      window.removeEventListener('hashchange', done);
-      window.clearTimeout(timer);
-      // React draws the screen in the task after the change.
-      window.setTimeout(resolve, 0);
+    let observer: MutationObserver | null = null;
+    let drawnTimer = 0;
+    const finish = () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.clearTimeout(changeTimer);
+      window.clearTimeout(drawnTimer);
+      observer?.disconnect();
+      resolve();
     };
-    const timer = window.setTimeout(done, SETTLE_MS);
-    window.addEventListener('hashchange', done);
+    const checkDrawn = () => {
+      if (isDrawn(window.location.hash)) finish();
+    };
+    function handleHashChange() {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.clearTimeout(changeTimer);
+      drawnTimer = window.setTimeout(finish, DRAWN_MS);
+      // React draws the screen in a task after the change: watched for, not guessed.
+      observer = new MutationObserver(checkDrawn);
+      observer.observe(document.body, { childList: true, subtree: true });
+      window.setTimeout(checkDrawn, 0);
+    }
+    const changeTimer = window.setTimeout(finish, SETTLE_MS);
+    window.addEventListener('hashchange', handleHashChange);
   });
 }
 

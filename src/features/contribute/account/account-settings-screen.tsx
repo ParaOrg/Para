@@ -83,6 +83,7 @@ export function AccountSettingsScreen({
     <section
       ref={entryRef}
       aria-labelledby="account-settings-heading"
+      data-screen-hash="#account-settings"
       className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface-secondary font-sn-pro text-content-primary"
     >
       <div inert={isDeleteAsked} className="flex min-h-0 flex-1 flex-col">

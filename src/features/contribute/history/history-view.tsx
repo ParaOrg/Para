@@ -8,7 +8,6 @@ interface HistoryViewProps {
   recordings: readonly Recording[];
   uploads: Uploads;
   onOpenRecord: () => void;
-  onOpenAccount?: () => void;
   onRemoveFromPhone: (recording: Recording) => void;
 }
 
