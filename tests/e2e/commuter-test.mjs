@@ -1724,6 +1724,48 @@ if (PART === 1) {
   await p.close();
 }
 
+// 7. A load that fails: never a blank page, but a problem toast at the top with Try again, which
+// reads the map again; it loads, and the toast has gone.
+if (PART === 1) {
+  const p = await b.newPage({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  await nodeFetch(p);
+  p.on('pageerror', (e) => errors.push(String(e)));
+  let isFailing = true;
+  await p.route(/\/data\/index\.v5\.json/, (route) =>
+    isFailing ? route.abort('internetdisconnected') : route.continue(),
+  );
+  await p.goto(`${BASE}/`, { waitUntil: 'load' });
+  const toast = p.locator('[data-testid="toast"]');
+  const said = await until(
+    async () =>
+      (await toast.count()) === 1 && /The routes could not load/.test(await toast.innerText()),
+    20000,
+  );
+  check(
+    'a load that fails says so in one problem toast, with Try again',
+    said && (await toast.getByRole('button', { name: 'Try again' }).count()) === 1,
+    (await toast.count()) ? await toast.innerText() : 'no toast',
+  );
+  check(
+    '  a screen reader hears it at once',
+    /The routes could not load/.test((await p.getByRole('alert').textContent()) ?? ''),
+  );
+  isFailing = false;
+  if (said) await toast.getByRole('button', { name: 'Try again' }).click();
+  const directions = async () =>
+    Number(await p.locator('[data-directions]').getAttribute('data-directions'));
+  check(
+    '  Try again loads the routes, and the toast goes',
+    await until(async () => (await directions()) > 0 && (await toast.count()) === 0, 20000),
+    `${await directions()} direction(s), ${await toast.count()} toast(s)`,
+  );
+  await p.close();
+}
+
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 
 await b.close();

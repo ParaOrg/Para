@@ -21,7 +21,8 @@
 // up again, and the next tilts again; an app camera move lets go; a route
 // tapped draws the dot's gaze, and the card it opened set to another height
 // while the camera follows keeps the camera on the commuter; a browser
-// that refuses says so; a GPS with no fix says so without a second watch;
+// that refuses says so in one toast, however often tapped, and ✕ closes it;
+// a GPS with no fix says so without a second watch;
 // with no compass read, TrackedLocation's tap only comes back;
 // and with a mouse there is no compass, the button sitting bottom right.
 import { chromium } from 'playwright';
@@ -694,18 +695,46 @@ const ctx2 = await b.newContext({
 const page2 = await ctx2.newPage();
 await stubTiles(page2);
 await open(page2);
-await page2.locator('[data-testid="where"]').click();
-const note = page2.locator('[data-testid="where-note"]');
+const where2 = page2.locator('[data-testid="where"]');
+await where2.click();
+const toast2 = page2.locator('[data-testid="toast"]');
+const toastSays = async (page, title) => {
+  const toast = page.locator('[data-testid="toast"]');
+  return (await toast.count()) === 1 && (await toast.innerText()).includes(title);
+};
 check(
-  'a browser that refuses: a note above the button, and no overlay',
-  (await until(async () => (await note.count()) === 1, 8000)) &&
+  'a browser that refuses: one problem toast says so, and no overlay',
+  (await until(() => toastSays(page2, 'Location is off for this site'), 8000)) &&
     (await overlay(page2).count()) === 0,
-  (await note.count()) ? await note.innerText() : 'no note',
+  (await toast2.count()) ? await toast2.innerText() : 'no toast',
 );
 check(
   '  the button stays LocationOff, to try after the setting changes',
-  (await page2.locator('[data-testid="where"]').getAttribute('data-state')) === 'denied' &&
-    (await page2.locator('[data-testid="where"]').getAttribute('data-mode')) === 'LocationOff',
+  (await where2.getAttribute('data-state')) === 'denied' &&
+    (await where2.getAttribute('data-mode')) === 'LocationOff',
+);
+// Tapped twice more, refused each time: the same toast, refreshed, never a second.
+await where2.click();
+await until(async () => (await where2.getAttribute('data-state')) === 'denied', 3000);
+await where2.click();
+await until(async () => (await where2.getAttribute('data-state')) === 'denied', 3000);
+await page2.waitForTimeout(600);
+check(
+  '  tapped again twice: still exactly one toast',
+  (await toast2.count()) === 1,
+  `${await toast2.count()} toast(s)`,
+);
+await toast2.getByRole('button', { name: 'Close' }).click();
+check(
+  '  ✕ closes it',
+  await until(async () => (await toast2.count()) === 0, 3000),
+  `${await toast2.count()} toast(s)`,
+);
+await where2.click();
+check(
+  '  a tap still refused says it again',
+  await until(() => toastSays(page2, 'Location is off for this site'), 5000),
+  `${await toast2.count()} toast(s)`,
 );
 await ctx2.close();
 
@@ -757,13 +786,13 @@ await stubTiles(page3);
 await open(page3);
 const where3 = page3.locator('[data-testid="where"]');
 await where3.click();
-const note3 = page3.locator('[data-testid="where-note"]');
+const toast3 = page3.locator('[data-testid="toast"]');
 check(
-  'a GPS that only times out: a note, still asking, LocationOff',
-  (await until(async () => (await note3.count()) === 1, 8000)) &&
+  'a GPS that only times out: a toast says no fix yet, still asking, LocationOff',
+  (await until(() => toastSays(page3, 'No fix yet'), 8000)) &&
     (await where3.getAttribute('data-state')) === 'asking' &&
     (await where3.getAttribute('data-mode')) === 'LocationOff',
-  `${await where3.getAttribute('data-state')}; ${(await note3.count()) ? await note3.innerText() : 'no note'}`,
+  `${await where3.getAttribute('data-state')}; ${(await toast3.count()) ? await toast3.innerText() : 'no toast'}`,
 );
 await where3.click();
 // A second watch, it would have started in the tap's own frame.

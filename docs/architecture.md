@@ -78,6 +78,7 @@ flowchart TD
   app_contribute --> shared_lib
   app_contribute --> shared_ui
   app_contribute --> styles
+  app_public_map --> design_system_primitives
   app_public_map --> features_locator
   app_public_map --> features_published_map
   app_public_map --> features_routes_cards
@@ -85,8 +86,10 @@ flowchart TD
   app_public_map --> features_routes_model
   app_public_map --> features_routes_published
   app_public_map --> shared_hooks
+  app_public_map --> shared_ui
   app_public_map --> shared_utils
   app_public_map --> styles
+  app_studio --> design_system_primitives
   app_studio --> features_locator
   app_studio --> features_routes_cards
   app_studio --> features_routes_map
@@ -94,6 +97,8 @@ flowchart TD
   app_studio --> features_studio
   app_studio --> shared_hooks
   app_studio --> shared_types
+  app_studio --> shared_ui
+  app_studio --> shared_utils
   app_studio --> styles
   features_contribute --> features_contribute_account
   features_contribute --> features_contribute_api
@@ -210,6 +215,7 @@ flowchart TD
   features_published_map --> design_system_primitives
   features_published_map --> features_routes_map
   features_published_map --> features_routes_published
+  features_published_map --> shared_ui
   features_published_map --> shared_utils
   features_routes_cards --> design_system_primitives
   features_routes_cards --> features_routes_model
@@ -287,8 +293,8 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `shared/ui`, `styles` |
-| `app/public-map` | `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/utils`, `styles` |
-| `app/studio` | `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `styles` |
+| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `shared/utils`, `styles` |
+| `app/studio` | `design-system/primitives`, `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `shared/ui`, `shared/utils`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `features/contribute/tutorial`, `features/contribute/uploads`, `features/routes/map`, `shared/ui`, `shared/utils` |
@@ -308,7 +314,7 @@ flowchart TD
 | `features/contribute/tutorial` | `design-system/primitives`, `features/contribute/screens`, `shared/hooks`, `shared/utils` |
 | `features/contribute/uploads` | `features/contribute/api`, `features/contribute/consent`, `features/contribute/recorder`, `features/contribute/storage`, `shared/ui` |
 | `features/locator` | `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/utils` |
+| `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/ui`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/geo` | `shared/utils` |
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/config`, `shared/hooks`, `shared/ui`, `shared/utils` |
@@ -341,11 +347,11 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/locator`
 
-`useGazeHush`, `CommuterLocation`, `ContributorLocation`
+`useGazeHush`, `CommuterLocation`, `ContributorLocation`, `LocatorNote`
 
 ### `features/published-map`
 
-`listenForInstallOffer`, `InstallPrompt`, `loadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
+`listenForInstallOffer`, `InstallPrompt`, `loadProblemToast`, `LoadProblemToast`, `loadProblems`, `LoadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
 
 ### `features/studio`
 

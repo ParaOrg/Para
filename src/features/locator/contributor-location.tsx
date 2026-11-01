@@ -7,6 +7,7 @@ import { coarse } from '@/features/routes/map/map-view';
 
 import { isLocationGranted } from './location-permission';
 import { Locator } from './locator';
+import type { LocatorNote } from './locator-note';
 import { LocatorOnMap } from './locator-on-map';
 import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
@@ -19,6 +20,8 @@ interface ContributorLocationProps {
   isRecording: boolean;
   /** What stands above the button in its column; the contributor's mark button. */
   above?: ReactNode;
+  /** What the locator has to say, for the page's problem toast; null once a fix comes (Locator). */
+  onNote?: (note: LocatorNote | null) => void;
 }
 
 /**
@@ -47,6 +50,7 @@ export function ContributorLocation({
   isMapLoaded,
   isRecording,
   above,
+  onNote,
 }: ContributorLocationProps) {
   const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
@@ -92,6 +96,7 @@ export function ContributorLocation({
           labelsPlace="map"
           docked={false}
           above={above}
+          onNote={onNote}
         />
       )}
       {map && locator.fix && (

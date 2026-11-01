@@ -3,7 +3,8 @@
 // inner files (.claude/CLAUDE.md, Import rules).
 export { listenForInstallOffer } from './install-offer';
 export { InstallPrompt } from './install-prompt';
-export { loadProblems } from './load-problems';
+export { loadProblemToast, type LoadProblemToast } from './load-problem-toast';
+export { loadProblems, type LoadProblems } from './load-problems';
 export { Notices } from './notices';
 export { registerServiceWorker, reloadForNewerApp, reloadToUpdate, useNeedRefresh } from './pwa';
 export { useMapAge, useOffline } from './status';
