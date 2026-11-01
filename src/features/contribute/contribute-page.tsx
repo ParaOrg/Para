@@ -7,6 +7,7 @@ import {
   useState,
   type ComponentProps,
   type ComponentType,
+  type ReactNode,
 } from 'react';
 import { flushSync } from 'react-dom';
 
@@ -19,7 +20,7 @@ import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { useAccountQuery } from './api/use-account-query';
 import { retryingImport } from './common/retrying-import';
-import { useIsToolbarHeld } from './common/toolbar-hold';
+import { ToolbarHoldProvider, useIsToolbarHeld } from './common/toolbar-hold';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
@@ -80,6 +81,25 @@ type AccountViewProps = ComponentProps<typeof LazyAccountView>;
 const MapDataSourceView = lazy(() =>
   import('./map/map-data-source-view').then((module) => ({ default: module.MapDataSourceView })),
 );
+
+interface ToolbarPlaceProps {
+  /** Under something that holds the page (the credits): out of reach, still in sight. */
+  isOutOfReach: boolean;
+  children: ReactNode;
+}
+
+/**
+ * Where the page's toolbar stands (TOOLBAR_PLACE): out of sight and out of reach while a question
+ * is asked on the screen under it (toolbar-hold.tsx).
+ */
+function ToolbarPlace({ isOutOfReach, children }: ToolbarPlaceProps) {
+  const isHeld = useIsToolbarHeld();
+  return (
+    <div inert={isOutOfReach || isHeld} className={cn(TOOLBAR_PLACE, isHeld && 'invisible')}>
+      {children}
+    </div>
+  );
+}
 
 /**
  * History, at once if its chunk is here, else lazily: decided once as it opens, so the chunk
@@ -324,7 +344,6 @@ export function ContributePage({ locator }: ContributePageProps) {
       : isStartShown
         ? 'record'
         : null;
-  const isToolbarHeld = useIsToolbarHeld();
   const historyTabRef = useRef<HTMLButtonElement>(null);
   const accountTabRef = useRef<HTMLButtonElement>(null);
   const toolbarOpeners: Record<ToolbarTab, Partial<Record<ToolbarTab, () => void>>> = {
@@ -391,7 +410,8 @@ export function ContributePage({ locator }: ContributePageProps) {
         </Suspense>
       )}
       {accountGate === 'ready' && (
-        <>
+        // A question on Record, History or Account holds the toolbar (toolbar-hold.tsx).
+        <ToolbarHoldProvider>
           {recording.problem && (
             <p
               role="alert"
@@ -481,12 +501,8 @@ export function ContributePage({ locator }: ContributePageProps) {
             </ErrorBoundary>
           )}
           {toolbarTab && (
-            // Out of reach under the credits, as Start is, and out of sight and reach while a
-            // question is asked on the screen under it (toolbar-hold.ts).
-            <div
-              inert={isCreditsShown || isToolbarHeld}
-              className={cn(TOOLBAR_PLACE, isToolbarHeld && 'invisible')}
-            >
+            // Out of reach under the credits, as Start is.
+            <ToolbarPlace isOutOfReach={isCreditsShown}>
               <BottomToolbar
                 current={toolbarTab}
                 onOpenRecord={toolbarOpeners[toolbarTab].record}
@@ -496,7 +512,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 historyRef={historyTabRef}
                 accountRef={accountTabRef}
               />
-            </div>
+            </ToolbarPlace>
           )}
           {phase === 'unfinished' && figures && (
             <Suspense fallback={null}>
@@ -568,7 +584,7 @@ export function ContributePage({ locator }: ContributePageProps) {
               />
             </Suspense>
           )}
-        </>
+        </ToolbarHoldProvider>
       )}
     </main>
   );
