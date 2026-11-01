@@ -1292,7 +1292,12 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await logoutQuestion(page).waitFor({ state: 'detached' });
   check(
     '  the question gone, the toolbar is back',
-    await toolbar.getByRole('button', { name: 'Record', exact: true }).isVisible(),
+    // Let go as the question leaves the page, a render later.
+    await toolbar
+      .getByRole('button', { name: 'Record', exact: true })
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false),
   );
   await toolbar.getByRole('button', { name: 'Record', exact: true }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();

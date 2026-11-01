@@ -2535,6 +2535,9 @@ const PUBLISHED_PAINT = {
 };
 /** When the map first settled, in the page's own time: the routes come after it. */
 const FIRST_IDLE = () => {
+  // The checks below read the requests the page made: room for all of them, tiles and the screens
+  // fetched ahead at idle included, where the browser keeps 250 by default and drops the rest.
+  performance.setResourceTimingBufferSize(5000);
   const watch = setInterval(() => {
     if (!window.__map) return;
     clearInterval(watch);
