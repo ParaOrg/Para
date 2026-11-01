@@ -5,7 +5,6 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './contribute.css';
 
 import {
-  applyBounceIfAsked,
   applySlowmoIfAsked,
   askForPersistentStorage,
   connectContributions,
@@ -23,8 +22,6 @@ import { registerContributeWorker } from './register-worker.ts';
 connectContributions();
 // The test switch for watching the motion slowly (?slowmo), fetched only when it is asked for.
 applySlowmoIfAsked();
-// The preview switch for picking the toolbar pill's spring (?bounce).
-applyBounceIfAsked();
 const root = document.getElementById('root');
 if (!root) throw new Error('contribute/index.html has no #root element to mount the page in.');
 
