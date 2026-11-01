@@ -79,6 +79,9 @@ interface TurnstileProps {
  * Cloudflare's check that a person, not a script, is at the page. Most people
  * see a tick and nothing to do. Remount it (a new `key`) for a fresh token
  * after each request, since Supabase accepts a token once.
+ *
+ * A page that builds its own Tailwind with source(none) must @source this file: its
+ * classes are not seen otherwise (contribute.css does).
  */
 export function Turnstile({
   siteKey,
