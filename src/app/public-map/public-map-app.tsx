@@ -211,13 +211,14 @@ export function PublicMapApp() {
   // so the licences' credit stays on the map.
   const [isCreditsSheetMissing, setIsCreditsSheetMissing] = useState(false);
   const creditsSheetMissing = useCallback(() => {
-    flushSync(() => {
-      setIsCreditsSheetMissing(true);
-      setCredits('shut');
-    });
-    // Focus to the credits as they are now: MapLibre's corner ⓘ, back in the map.
+    setIsCreditsSheetMissing(true);
+    setCredits('shut');
+  }, []);
+  // Focus to the credits as they are now: MapLibre's corner ⓘ, back in the map.
+  useEffect(() => {
+    if (!isCreditsSheetMissing) return;
     root.current?.querySelector<HTMLElement>('.maplibregl-ctrl-attrib-button')?.focus();
-  }, [root]);
+  }, [isCreditsSheetMissing, root]);
   // Called off while the sheet's code was still on its way.
   const cancelCredits = useCallback(() => {
     flushSync(() => setCredits('shut'));
