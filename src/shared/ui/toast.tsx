@@ -49,6 +49,9 @@ const ICON_TONE = {
  * the top as it arrives (`starting:`, ease/enter over duration/gentle) and back up as it leaves
  * (ease/exit over duration/quick); with reduced motion it just appears and goes. It never takes
  * focus. Who says it, and for how long, is the host's (ToastHost).
+ *
+ * A page that builds its own Tailwind with source(none) must @source this file and toast-host.tsx: its
+ * classes are not seen otherwise (contribute.css does).
  */
 export function Toast({
   kind,

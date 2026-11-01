@@ -32,6 +32,9 @@ const idOf = (message: ToastMessage): string => message.id ?? `${message.kind}:$
  * The card sits 12 under the safe area. A page whose own top row it would cover sets
  * `--toast-top` on an ancestor (its row's height plus 12, from spacing tokens), and the card sits
  * there instead.
+ *
+ * A page that builds its own Tailwind with source(none) must @source this file and toast.tsx: its
+ * classes are not seen otherwise (contribute.css does).
  */
 export function ToastHost({ children }: ToastHostProps) {
   const [queue, setQueue] = useState<QueuedToast[]>([]);
