@@ -36,7 +36,8 @@ import { BottomToolbar, TOOLBAR_PLACE, type ToolbarTab } from './screens/bottom-
 import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { ScreenUnavailable } from './screens/screen-unavailable';
-import { START_BUTTON_ATTR, morphStartIntoCard } from './screens/start-morph';
+import type { morphStartIntoCard } from './screens/start-morph';
+import { START_BUTTON_ATTR } from './screens/start-morph-attrs';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
@@ -115,6 +116,8 @@ const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-reco
 const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 const loadSaveForm = retryingImport(() => import('./screens/save-form'));
 const loadSavedScreen = retryingImport(() => import('./screens/saved-screen'));
+// Start tracking's morph, off the opening: fetched with the recording screens ahead of Start.
+const loadStartMorph = retryingImport(() => import('./screens/start-morph'));
 const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
 const SavedScreen = lazy(() =>
   loadSavedScreen().then((module) => ({ default: module.SavedScreen })),
@@ -304,6 +307,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Focus goes back to the ⓘ as the sheet starts down, once Start is live again: the sheet cannot
   // hand it back itself, as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
+  // The morph once its code is here. It runs in the tap, before the button leaves the screen, so a
+  // tap before then (or with its fetch failed) just starts, with no morph.
+  const morphStartRef = useRef<typeof morphStartIntoCard | null>(null);
   const closeCredits = useCallback(() => {
     flushSync(() => {
       setIsCreditsOpen(false);
@@ -342,6 +348,9 @@ export function ContributePage({ locator }: ContributePageProps) {
       loadFlagStopButton(),
       loadSaveForm(),
       loadSavedScreen(),
+      loadStartMorph().then((module) => {
+        morphStartRef.current = module.morphStartIntoCard;
+      }),
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);
     });
@@ -499,7 +508,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                   const startButton = document.querySelector<HTMLElement>(`[${START_BUTTON_ATTR}]`);
                   recording.start();
                   // After the start, never before it: the morph holds nothing back.
-                  if (startButton) morphStartIntoCard(startButton);
+                  if (startButton) morphStartRef.current?.(startButton);
                 }}
                 backFrom={openedTab}
                 historyTabRef={historyTabRef}
