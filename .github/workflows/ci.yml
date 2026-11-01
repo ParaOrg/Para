@@ -4,8 +4,11 @@
 # Fast by design, so it never holds up shipping. Three ideas:
 #
 #   1. Only what a change can reach. `changes` reads the files a pull request
-#      touches: docs and Markdown alone run nothing (except docs/architecture.md,
-#      which the build job's architecture step checks); src/app/studio/,
+#      touches: docs and Markdown alone run nothing. Files only the build job
+#      reads run the build job alone, no suite: docs/architecture.md (its
+#      architecture step), tests/unit/ (its unit checks) and the scripts it
+#      alone runs (scripts/checks/check-build.mjs, build-weight.mjs and build/,
+#      scripts/docs/, scripts/node/ts-resolve*.mjs). src/app/studio/,
 #      src/features/studio/ and the studio's suites alone skip the public
 #      suites; src/app/public-map/, src/features/published-map/, public/ and
 #      the public suites alone skip the studio's; src/app/contribute/,
@@ -74,6 +77,8 @@ jobs:
       public: ${{ steps.scope.outputs.public }}
       studio: ${{ steps.scope.outputs.studio }}
       contribute: ${{ steps.scope.outputs.contribute }}
+      # The build job: on with any of the three above, or alone for a file only it reads.
+      build: ${{ steps.scope.outputs.build }}
       drawing: ${{ steps.scope.outputs.drawing }}
       preview: ${{ steps.scope.outputs.preview }}
     steps:
@@ -95,6 +100,7 @@ jobs:
             echo "public=true" >> "$GITHUB_OUTPUT"
             echo "studio=true" >> "$GITHUB_OUTPUT"
             echo "contribute=true" >> "$GITHUB_OUTPUT"
+            echo "build=true" >> "$GITHUB_OUTPUT"
             echo "drawing=true" >> "$GITHUB_OUTPUT"
             echo "preview=$ALL_PREVIEWS" >> "$GITHUB_OUTPUT"
             exit 0
@@ -102,11 +108,13 @@ jobs:
           echo "drawing=false" >> "$GITHUB_OUTPUT"
           files=$(git diff --name-only "$BASE...$HEAD")
           echo "Changed:"; echo "$files" | sed 's/^/  /'
-          public=false; studio=false; contribute=false
+          public=false; studio=false; contribute=false; build=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
             case "$f" in
-              docs/architecture.md) public=true; studio=true ;;
+              # Read by the build job alone: its architecture step, its unit checks, its guards.
+              docs/architecture.md|tests/unit/*|scripts/checks/check-build.mjs|scripts/checks/build-weight.mjs|scripts/checks/build/*|scripts/docs/*|scripts/node/ts-resolve.mjs|scripts/node/ts-resolve-hook.mjs)
+                build=true ;;
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
@@ -119,19 +127,22 @@ jobs:
           done <<< "$files"
           # The public map's suites include the contributor page's.
           [ "$public" = true ] && contribute=true
+          # Every suite's change also needs the build job.
+          if [ "$public" = true ] || [ "$studio" = true ] || [ "$contribute" = true ]; then build=true; fi
           preview='[]'
           [ "$contribute" = true ] && preview=$CONTRIBUTE_PREVIEWS
           [ "$public" = true ] && preview=$ALL_PREVIEWS
           echo "public=$public" >> "$GITHUB_OUTPUT"
           echo "studio=$studio" >> "$GITHUB_OUTPUT"
           echo "contribute=$contribute" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
           echo "preview=$preview" >> "$GITHUB_OUTPUT"
-          echo "public=$public studio=$studio contribute=$contribute"
+          echo "public=$public studio=$studio contribute=$contribute build=$build"
 
   build:
     name: Build and unit checks
     needs: changes
-    if: needs.changes.outputs.public == 'true' || needs.changes.outputs.studio == 'true' || needs.changes.outputs.contribute == 'true'
+    if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
