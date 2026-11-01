@@ -2230,7 +2230,68 @@ const ANIMATIONS = () => {
       })
       .count()) === 1,
   );
+  // The first tab closes: the second is handed the recorder, as a page opened afresh would be.
+  await page.close();
+  await second.keyboard.press('Escape');
+  await recordTab(second).click();
+  await second.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  const handedOver = await second
+    .getByText('Para is open in another tab')
+    .waitFor({ state: 'detached', timeout: 5000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  await second.getByRole('button', { name: 'Start Tracking' }).click();
+  const isRecording = await second
+    .getByRole('group', { name: 'Recording so far' })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    '  once the first tab closes, the second holds the recorder: the warning goes and its Start records',
+    handedOver && isRecording,
+  );
   check('no page errors', errors.length === 0, errors.join('; '));
+  await context.close();
+}
+
+// ------------------------------------------- a second tab, handed a ride left open
+{
+  const { page, context, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 50);
+  const second = await context.newPage();
+  await nodeFetch(second);
+  await bareStyle(second);
+  await second.addInitScript(GPS);
+  await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await second.getByText('Para is open in another tab').waitFor({ timeout: 10000 });
+  const before = await stored(page);
+  // The first tab closes mid-ride: the second takes the ride back, as a reload of the first would.
+  await page.close();
+  const handedOver = await second
+    .locator('#unfinished-heading')
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  const after = await stored(second);
+  check(
+    'a ride left open by a tab that closes is taken back by the other: Unfinished, its fixes all there, no second recording, the warning gone',
+    handedOver &&
+      before.recordings.length === 1 &&
+      after.recordings.length === 1 &&
+      after.recordings[0].status === before.recordings[0].status &&
+      after.fixes === before.fixes &&
+      (await second.getByText('Para is open in another tab').count()) === 0,
+    JSON.stringify({ before, after }),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
 
