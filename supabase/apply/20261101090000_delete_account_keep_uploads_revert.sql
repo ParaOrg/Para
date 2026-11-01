@@ -1,16 +1,16 @@
 -- ParaPo — undo the delete_account_keep_uploads migration: puts back delete_my_account() and
 -- private.retire_month as 20261031100000_delete_my_account and 20261031090000_account_stats left
--- them, drops contribution.unlinked_at, and removes the ledger row. Safe to run twice.
+-- them, drops contribution.unlinked (and its check), and removes the ledger row. Safe to run twice.
 --
--- Refused while any ride was kept from a deleted account (unlinked_at set): without that column
+-- Refused while any ride was kept from a deleted account (unlinked): without that column
 -- retire_month would take such a ride for one already retired, and never cut its ends. Decide with
 -- the owner first (retire those rides, or delete them); nothing is changed then.
 begin;
 do $$
 begin
   if exists (select 1 from information_schema.columns
-             where table_schema = 'public' and table_name = 'contribution' and column_name = 'unlinked_at') then
-    if exists (select 1 from public.contribution where unlinked_at is not null) then
+             where table_schema = 'public' and table_name = 'contribution' and column_name = 'unlinked') then
+    if exists (select 1 from public.contribution where unlinked) then
       raise exception 'delete_account_keep_uploads revert: rides kept from deleted accounts exist. Nothing was changed.';
     end if;
   end if;
@@ -130,6 +130,6 @@ begin
   );
 end $$;
 revoke all on function private.retire_month(date, integer) from public, anon, authenticated;
-alter table public.contribution drop column if exists unlinked_at;
+alter table public.contribution drop column if exists unlinked;
 delete from supabase_migrations.schema_migrations where name = 'delete_account_keep_uploads';
 commit;

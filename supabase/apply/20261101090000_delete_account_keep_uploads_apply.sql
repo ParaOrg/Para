@@ -11,7 +11,7 @@
 --
 -- Order: after 20261031100000_delete_my_account (step 1 refuses without it).
 --
--- Adds one column (contribution.unlinked_at, null on every row), replaces
+-- Adds one column (contribution.unlinked, false on every row), replaces
 -- delete_my_account() with delete_my_account(delete_uploads boolean default true), and
 -- teaches private.retire_month to retire a ride kept from a deleted account. No row changes.
 
@@ -28,16 +28,22 @@ begin
     raise exception 'delete_account_keep_uploads: 20261031100000_delete_my_account is not applied here. Nothing was changed.';
   end if;
   if exists (select 1 from information_schema.columns
-             where table_schema = 'public' and table_name = 'contribution' and column_name = 'unlinked_at') then
-    raise exception 'delete_account_keep_uploads: contribution.unlinked_at already exists. Nothing was changed.';
+             where table_schema = 'public' and table_name = 'contribution' and column_name = 'unlinked') then
+    raise exception 'delete_account_keep_uploads: contribution.unlinked already exists. Nothing was changed.';
   end if;
   if to_regprocedure('private.retire_month(date, integer)') is null
      or to_regprocedure('private.carry_retired_month(date)') is null then
     raise exception 'delete_account_keep_uploads: private.retire_month or carry_retired_month is missing. Nothing was changed.';
   end if;
-  -- The function runs as its owner, the role applying this.
-  if not has_table_privilege(current_user, 'auth.users', 'delete') then
-    raise exception 'delete_account_keep_uploads: % cannot delete from auth.users. Nothing was changed.', current_user;
+  -- The function runs as its owner, the role applying this: it locks and deletes the user, and
+  -- deletes GoTrue's audit log entries about them.
+  if not has_table_privilege(current_user, 'auth.users', 'delete')
+     or not has_table_privilege(current_user, 'auth.users', 'update') then
+    raise exception 'delete_account_keep_uploads: % cannot lock and delete auth.users rows. Nothing was changed.', current_user;
+  end if;
+  if to_regclass('auth.audit_log_entries') is not null
+     and not has_table_privilege(current_user, 'auth.audit_log_entries', 'delete') then
+    raise exception 'delete_account_keep_uploads: % cannot delete from auth.audit_log_entries. Nothing was changed.', current_user;
   end if;
 end $$;
 
@@ -56,10 +62,11 @@ end $$;
 --                            tokens with it through the cascades.
 --   delete_uploads = false   first unlinks every contribution of theirs:
 --                            contributor_id null, as retirement leaves an old one
---                            ("anyone's"), and unlinked_at stamped. Then the same
---                            delete. The contribution, point_batch, hinto and
---                            contribution_use rows stay; nothing on them names the
---                            person any more:
+--                            ("anyone's"), unlinked marked true, and the words they
+--                            typed (start_name, end_name, description) cleared.
+--                            Then the same delete. The contribution, point_batch,
+--                            hinto and contribution_use rows stay; nothing on them
+--                            names the person any more:
 --                              contribution.contributor_id   null (above)
 --                              contribution.hidden_by        the editor who hid it,
 --                                                            never the contributor
@@ -72,20 +79,29 @@ end $$;
 --                            and their stats, their claim tokens (one they used on
 --                            another phone keeps claimed_by null), gps_session,
 --                            and GoTrue's user, sessions and identities.
---                            The words they typed on a ride (start_name, end_name,
---                            description) stay with the ride until it retires.
+--                            Once kept, a ride is no one's: its person can no
+--                            longer remove it themselves; an editor can, on request.
+-- Either way, GoTrue's audit log entries about the user (auth.audit_log_entries,
+-- whose payload holds their email) are deleted with them: deleting auth.users
+-- directly does not touch that log.
 --
 -- The default is true so the contributor app already on phones, which calls it
 -- with no argument and tells people their uploads are deleted, keeps doing
 -- exactly what it says. The new app passes the box's answer.
 --
--- contribution.unlinked_at (new): when a ride was kept from a deleted account.
--- retire_month treats a null contributor_id as "already retired" to skip a done
--- month, so without a mark of its own an unlinked ride would never be retired:
--- its ends never cut and its words never cleared at 24 months, as ADR 0004
--- promises. private.retire_month now also takes a ride with unlinked_at set, and
--- clears it as it retires the ride, so a second run still skips a done month.
--- Its retired totals have nobody to go to: carry_retired_month reads only rides
+-- The person's rows are locked first (their auth user and contributor row, for
+-- update), so a claim or an upload committing meanwhile waits, and either lands
+-- before the unlink sees it or fails on the deleted contributor: never deleted
+-- when the person asked to keep their uploads.
+--
+-- contribution.unlinked (new, false on every row, true only with no contributor):
+-- a ride kept from a deleted account. A yes or no, not a time: a shared stamp would group one person's
+-- rides together again. retire_month treats a null contributor_id as "already
+-- retired" to skip a done month, so without a mark of its own a kept ride would
+-- never be retired: its ends never cut at 24 months, as ADR 0004 promises.
+-- private.retire_month now also takes a ride marked unlinked, and clears the
+-- mark as it retires the ride, so a second run still skips a done month. Its
+-- retired totals have nobody to go to: carry_retired_month reads only rides
 -- that still have a contributor, as before.
 --
 -- Same refusals as before (42501 not_signed_in, not_an_account, is_editor; P0001
@@ -103,7 +119,9 @@ end $$;
 -- regenerates src/shared/types/database.types.ts.
 
 alter table public.contribution
-  add column unlinked_at timestamptz;
+  add column unlinked boolean not null default false,
+  -- Only on a ride no one owns: a phone cannot insert a ride of its own marked kept.
+  add constraint contribution_unlinked_unowned check (not unlinked or contributor_id is null);
 
 drop function public.delete_my_account();
 
@@ -115,10 +133,13 @@ begin
   if who is null then
     raise exception 'not_signed_in' using errcode = '42501';
   end if;
+  -- Locked first, so a claim or an upload of theirs committing meanwhile waits for this.
+  perform 1 from auth.users where id = who for update;
   -- Gone already: an earlier call deleted it and its answer was lost.
-  if not exists (select 1 from auth.users where id = who) then
+  if not found then
     return;
   end if;
+  perform 1 from public.contributor where id = who for update;
   if not (select private.is_account()) then
     raise exception 'not_an_account' using errcode = '42501';
   end if;
@@ -133,17 +154,23 @@ begin
   end if;
   -- Kept: unlinked before the contributor row goes, so the cascade finds none of theirs.
   if delete_uploads is false then
-    update public.contribution set contributor_id = null, unlinked_at = now()
+    update public.contribution
+      set contributor_id = null, unlinked = true, start_name = null, end_name = null, description = null
       where contributor_id = who;
   end if;
   delete from public.gps_session where owner_id = who;
+  -- GoTrue's log of their sign-ins and changes, which names them by email.
+  if to_regclass('auth.audit_log_entries') is not null then
+    delete from auth.audit_log_entries
+      where payload ->> 'actor_id' = who::text or payload -> 'traits' ->> 'user_id' = who::text;
+  end if;
   delete from auth.users where id = who;
 end $$;
 revoke all on function public.delete_my_account(boolean) from public, anon;
 grant execute on function public.delete_my_account(boolean) to authenticated;
 
--- As 20261031090000_account_stats.sql's, but a ride unlinked from a deleted
--- account (unlinked_at set) is retired too, and unlinked_at is cleared as it is.
+-- As 20261031090000_account_stats.sql's, but a ride kept from a deleted account
+-- (unlinked) is retired too, and the mark is cleared as it is.
 create or replace function private.retire_month(target_month date, min_age_months integer default 24)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
@@ -169,7 +196,7 @@ begin
   perform 1 from public.contribution
     where (received_at at time zone 'UTC') >= first_day
       and (received_at at time zone 'UTC') < next_day
-      and (contributor_id is not null or unlinked_at is not null)
+      and (contributor_id is not null or unlinked)
     for update;
   -- The contributors' lifetime numbers keep what this month's rows are about to lose.
   perform private.carry_retired_month(first_day);
@@ -179,7 +206,7 @@ begin
     where (received_at at time zone 'UTC') >= first_day
       and (received_at at time zone 'UTC') < next_day
       -- Retirement leaves both null, so a second run skips a done month.
-      and (contributor_id is not null or unlinked_at is not null)
+      and (contributor_id is not null or unlinked)
     for update
   loop
     if r.line is not null and jsonb_typeof(r.line -> 'coordinates') = 'array' then
@@ -202,7 +229,7 @@ begin
       south = (select min((c -> 1)::text::double precision) from jsonb_array_elements(trimmed -> 'coordinates') c),
       north = (select max((c -> 1)::text::double precision) from jsonb_array_elements(trimmed -> 'coordinates') c),
       start_name = null, end_name = null, description = null,
-      contributor_id = null, unlinked_at = null
+      contributor_id = null, unlinked = false
       where id = r.id;
     contributions := contributions + 1;
   end loop;
@@ -230,8 +257,8 @@ end $$;
 revoke all on function private.retire_month(date, integer) from public, anon, authenticated;
 -- <<< supabase/migrations/20261101090000_delete_account_keep_uploads.sql
 
--- 2. After: one delete_my_account, a definer with a pinned path for authenticated only; the column;
---    retire_month taking kept rides.
+-- 2. After: one delete_my_account, a definer with a pinned path for authenticated only; the column,
+--    which no API role may write; retire_month taking kept rides.
 do $$
 begin
   if to_regprocedure('public.delete_my_account()') is not null then
@@ -248,10 +275,14 @@ begin
   ) then
     raise exception 'delete_account_keep_uploads: not a definer with a pinned path for authenticated only, with its default. Nothing was changed.';
   end if;
-  if exists (select 1 from public.contribution where unlinked_at is not null) then
-    raise exception 'delete_account_keep_uploads: a ride already has unlinked_at. Nothing was changed.';
+  if exists (select 1 from public.contribution where unlinked) then
+    raise exception 'delete_account_keep_uploads: a ride is already marked unlinked. Nothing was changed.';
   end if;
-  if (select position('unlinked_at is not null' in prosrc) = 0 from pg_proc
+  if has_column_privilege('authenticated', 'public.contribution', 'unlinked', 'update')
+     or has_column_privilege('anon', 'public.contribution', 'unlinked', 'update') then
+    raise exception 'delete_account_keep_uploads: an API role may write contribution.unlinked. Nothing was changed.';
+  end if;
+  if (select position('or unlinked)' in prosrc) = 0 from pg_proc
       where oid = 'private.retire_month(date, integer)'::regprocedure) then
     raise exception 'delete_account_keep_uploads: retire_month does not take kept rides. Nothing was changed.';
   end if;

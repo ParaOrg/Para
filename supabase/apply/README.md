@@ -397,19 +397,22 @@ Delete account keeps the uploads by default (the owner, 2026-11-01). This replac
 
 - **`false`:** the person goes (their auth user, contributor row with name and number, retired totals,
   claim tokens and `gps_session` rows). Their contributions stay, with their points, hintos and uses,
-  unlinked (`contributor_id` null) and stamped in a new column, `contribution.unlinked_at`.
+  unlinked (`contributor_id` null), marked in a new column, `contribution.unlinked` (a yes or no, not a
+  time, so one person's rides are not grouped by a shared stamp), with the words they typed cleared.
 - **`true`, or no argument:** exactly as before, so the app already on phones keeps doing what it says.
 
-`private.retire_month` also takes a ride with `unlinked_at` set, and clears it as it retires the ride.
+Either way, GoTrue's audit log entries about the user (`auth.audit_log_entries`, which name them by
+email) go too, and their rows are locked first so an upload committing meanwhile is kept, not lost.
+`private.retire_month` also takes a ride marked `unlinked`, and clears the mark as it retires the ride.
 Without that, a kept ride would look already retired and never have its ends cut at 24 months.
 Same refusals as before. One column, no row changes. Three files, each pasted whole into the SQL
 editor as `postgres`:
 
 | File | What it does |
 | --- | --- |
-| `20261101090000_delete_account_keep_uploads_apply.sql` | One transaction. Checks `delete_my_account` is in the ledger and this is not, `unlinked_at` does not exist yet, `retire_month` and `carry_retired_month` exist, and `postgres` may delete from `auth.users`. Applies `migrations/20261101090000_delete_account_keep_uploads.sql` (carried unchanged; `verify/delete-account-keep-uploads.sh` checks the copy). Checks the zero-argument function is gone, the new one is a definer with a pinned path for `authenticated` only with its default, no ride is stamped, and `retire_month` takes kept rides. Writes the ledger row `delete_account_keep_uploads`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
-| `20261101090000_delete_account_keep_uploads_check.sql` | Part one adds nine test users with a row in every table, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. With no argument and with `true` an account goes with every upload, as before. With `false` the person goes, the uploads stay unlinked and stamped, and no row names them. Retries answer as deleted. The usual refusals hold with either answer. A former editor's hidden upload stays hidden. `retire_month` retires a kept ride (in a 2024 month) and skips it on a second run. Part two is read-only: 6 rows, all `ok` should be `t`. |
-| `20261101090000_delete_account_keep_uploads_revert.sql` | One transaction: puts back `delete_my_account()` and `retire_month` as they were, drops `contribution.unlinked_at`, removes the ledger row. Refused while any ride was kept from a deleted account: without the column, `retire_month` would take it for one already retired. Safe to run twice. |
+| `20261101090000_delete_account_keep_uploads_apply.sql` | One transaction. Checks `delete_my_account` is in the ledger and this is not, `unlinked` does not exist yet, `retire_month` and `carry_retired_month` exist, and `postgres` may lock and delete `auth.users` rows and delete from `auth.audit_log_entries`. Applies `migrations/20261101090000_delete_account_keep_uploads.sql` (carried unchanged; `verify/delete-account-keep-uploads.sh` checks the copy). Checks the zero-argument function is gone, the new one is a definer with a pinned path for `authenticated` only with its default, no ride is marked, no API role may update the column, and `retire_month` takes kept rides. Writes the ledger row `delete_account_keep_uploads`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261101090000_delete_account_keep_uploads_check.sql` | Part one adds nine test users with a row in every table, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. With no argument and with `true` an account goes with every upload, as before. With `false` the person goes, the uploads stay unlinked and marked with their typed words cleared, and no row names them: every foreign key column to a user or contributor, read from the catalogue, and the audit log. Another contributor cannot read a kept ride; an editor can; a phone cannot insert one of its own marked kept. Retries answer as deleted. The usual refusals hold with either answer. A former editor's hidden upload stays hidden. With the real 24-month guard, `retire_month` leaves this month's kept ride alone, retires it once moved to a 2024 month, and skips it on a second run. Part two is read-only: 7 rows, all `ok` should be `t`. |
+| `20261101090000_delete_account_keep_uploads_revert.sql` | One transaction: puts back `delete_my_account()` and `retire_month` as they were, drops `contribution.unlinked`, removes the ledger row. Refused while any ride was kept from a deleted account: without the column, `retire_month` would take it for one already retired. Safe to run twice. |
 
 ## Steps
 
@@ -417,9 +420,9 @@ editor as `postgres`:
 2. Run `20261101090000_delete_account_keep_uploads_apply.sql`. It ends with `COMMIT`; an error means
    nothing changed.
 3. Run `20261101090000_delete_account_keep_uploads_check.sql`: part one ends with `ROLLBACK` and no
-   `FAILED`; part two gives 6 rows, all `ok = t`.
+   `FAILED`; part two gives 7 rows, all `ok = t`.
 4. Regenerate `src/shared/types/database.types.ts` (`delete_my_account` gains `delete_uploads?: boolean`;
-   `contribution` gains `unlinked_at`), and record the ledger version
+   `contribution` gains `unlinked`), and record the ledger version
    (`select version from supabase_migrations.schema_migrations where name = 'delete_account_keep_uploads';`)
    in `migrations/README.md`.
 

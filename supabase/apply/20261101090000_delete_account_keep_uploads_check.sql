@@ -8,17 +8,21 @@
 --     taken before the delete. A token they used keeps claimed_by null.
 --   - delete_uploads => true does the same.
 --   - delete_uploads => false deletes the person (user, contributor row with its
---     name and number, retired totals, claim tokens, gps_session) and keeps the
---     uploads: the contribution, its point batch, hinto and use stay, unlinked
---     (contributor_id null, unlinked_at set), and no row names the person.
+--     name and number, retired totals, claim tokens, gps_session, GoTrue's audit
+--     log entries) and keeps the uploads: the contribution, its point batch, hinto
+--     and use stay, unlinked (contributor_id null, unlinked true), the words they
+--     typed cleared, and no row names the person: every column with a foreign key
+--     to auth.users or public.contributor is counted, and the audit log.
+--   - another contributor cannot read a kept ride; an editor can.
 --   - a retry after a lost answer is answered as deleted, either way.
 --   - another account keeps everything.
 --   - anon cannot call it; no caller, an anonymous phone, an editor and an owner
 --     of a map row are refused, with either answer, and keep everything.
 --   - a former editor who hid an upload deletes itself; the upload stays hidden,
 --     with hidden_by null.
---   - retire_month retires a kept ride (its words cleared, unlinked_at cleared)
---     and a second run skips it.
+--   - retire_month leaves a kept ride younger than 24 months alone (it refuses
+--     the month), retires it once old (ends cut, mark cleared) and skips it on a
+--     second run.
 -- The second part is read-only: one row per check, every ok should be t.
 
 -- Part one: the behaviour, rolled back.
@@ -89,16 +93,31 @@ create function pg_temp.kept_uploads_only(who uuid) returns boolean language sql
                        then value::integer > 0 else value::integer = 0 end)
   from jsonb_each_text(pg_temp.holdings(who));
 $$;
--- Any row anywhere that still names the user.
-create function pg_temp.named_anywhere(who uuid) returns integer language sql as $$
-  select ((select count(*) from auth.users where id = who)
-    + (select count(*) from public.contributor where id = who or blocked_by = who)
-    + (select count(*) from public.contribution where contributor_id = who or hidden_by = who)
-    + (select count(*) from public.contribution_use where editor_id = who)
-    + (select count(*) from private.claim_token where anonymous_id = who or claimed_by = who)
-    + (select count(*) from private.contributor_retired_totals where contributor_id = who)
-    + (select count(*) from public.gps_session where owner_id = who))::integer;
-$$;
+-- Any row anywhere that still names the user: every single-column foreign key to auth.users or
+-- public.contributor, read from the catalogue so a new one is counted too, and GoTrue's audit log.
+create function pg_temp.named_anywhere(who uuid) returns integer language plpgsql as $$
+declare
+  r record;
+  n integer;
+  total integer := (select count(*) from auth.users where id = who);
+begin
+  for r in
+    select c.conrelid::regclass as tab, a.attname as col
+    from pg_constraint c join pg_attribute a on a.attrelid = c.conrelid and a.attnum = c.conkey[1]
+    where c.contype = 'f' and cardinality(c.conkey) = 1
+      and c.confrelid in ('auth.users'::regclass, 'public.contributor'::regclass)
+      and c.conparentid = 0
+  loop
+    execute format('select count(*) from %s where %I = $1', r.tab, r.col) into n using who;
+    total := total + n;
+  end loop;
+  if to_regclass('auth.audit_log_entries') is not null then
+    execute 'select count(*) from auth.audit_log_entries where payload ->> ''actor_id'' = $1::text'
+      || ' or payload -> ''traits'' ->> ''user_id'' = $1::text' into n using who;
+    total := total + n;
+  end if;
+  return total;
+end $$;
 
 insert into auth.users (id, is_anonymous) values
   ('00000000-0000-0000-0000-0000000de2a1', false),
@@ -136,6 +155,17 @@ update public.contribution set start_name = 'Cubao', end_name = 'Quiapo', descri
   where id = '11111111-0000-0000-0000-0000000de2c8';
 update public.contribution_use set editor_id = '00000000-0000-0000-0000-0000000de2a4'
   where contribution_id = '11111111-0000-0000-0000-0000000de2c8';
+-- GoTrue's audit log: a sign-in each for the first, second and eighth, naming them by email.
+do $$
+begin
+  if to_regclass('auth.audit_log_entries') is not null then
+    insert into auth.audit_log_entries (id, payload, created_at)
+    select gen_random_uuid(), json_build_object('action', 'login', 'actor_id', u, 'actor_username', 'check@example.invalid',
+      'traits', json_build_object('user_id', u)), now()
+    from unnest(array['00000000-0000-0000-0000-0000000de2a1', '00000000-0000-0000-0000-0000000de2a2',
+                      '00000000-0000-0000-0000-0000000de2a8']) u;
+  end if;
+end $$;
 -- The fourth is an editor; the fifth still owns a route of the map.
 insert into private.editor (user_id) values ('00000000-0000-0000-0000-0000000de2a4');
 insert into public.route (owner_id, signboard, is_loop)
@@ -217,19 +247,50 @@ select pg_temp.check(pg_temp.holds_nothing('00000000-0000-0000-0000-0000000de2a9
 select pg_temp.check(pg_temp.kept_uploads_only('00000000-0000-0000-0000-0000000de2a8'),
   'with false the person is gone and the uploads stay: ' || pg_temp.holdings('00000000-0000-0000-0000-0000000de2a8')::text);
 select pg_temp.check(pg_temp.named_anywhere('00000000-0000-0000-0000-0000000de2a8') = 0,
-  'no row names the person who kept their uploads');
-select pg_temp.check((select contributor_id is null and unlinked_at is not null and start_name = 'Cubao'
+  'no row names the person who kept their uploads, audit log included');
+select pg_temp.check(pg_temp.named_anywhere('00000000-0000-0000-0000-0000000de2a1') = 0
+    and pg_temp.named_anywhere('00000000-0000-0000-0000-0000000de2a9') = 0,
+  'no row names the people who deleted everything, audit log included');
+select pg_temp.check((select contributor_id is null and unlinked
+    and start_name is null and end_name is null and description is null
+    and line -> 'coordinates' -> 0 = '[121.0, 14.6]'::jsonb
     from public.contribution where id = '11111111-0000-0000-0000-0000000de2c8'),
-  'the kept upload is unlinked and stamped, its words still with it');
+  'the kept upload is unlinked and marked, its typed words cleared, its line whole');
 select pg_temp.check((select editor_id = '00000000-0000-0000-0000-0000000de2a4' from public.contribution_use
     where contribution_id = '11111111-0000-0000-0000-0000000de2c8'),
   'the editor''s use of the kept upload stays the editor''s');
 select pg_temp.check((select claimed_by is null from private.claim_token
     where anonymous_id = '00000000-0000-0000-0000-0000000de2a3'),
   'the token the eighth used on another identity stays, its claimed_by null');
-select pg_temp.check((select count(*) = 0 from public.contribution where unlinked_at is not null
+select pg_temp.check((select count(*) = 0 from public.contribution where unlinked
     and id <> '11111111-0000-0000-0000-0000000de2c8'),
-  'only the kept upload is stamped');
+  'only the kept upload is marked');
+select pg_temp.check(to_regclass('auth.audit_log_entries') is null
+    or (select count(*) = 1 from auth.audit_log_entries
+        where payload ->> 'actor_id' = '00000000-0000-0000-0000-0000000de2a2'),
+  'another account''s audit log entry stays');
+
+-- Who reads a kept ride: no contributor, not even another account; an editor does.
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000de2a2', false);
+select pg_temp.check((select count(*) = 0 from public.contribution where id = '11111111-0000-0000-0000-0000000de2c8')
+    and (select count(*) = 0 from public.point_batch where contribution_id = '11111111-0000-0000-0000-0000000de2c8')
+    and (select count(*) = 0 from public.hinto where contribution_id = '11111111-0000-0000-0000-0000000de2c8'),
+  'another contributor cannot read the kept ride, its points or its hinto');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000de2a4', false);
+select pg_temp.check((select count(*) = 1 from public.contribution where id = '11111111-0000-0000-0000-0000000de2c8'),
+  'an editor reads the kept ride');
+-- A phone cannot add a ride of its own marked kept.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000de2a2', false);
+do $$ begin
+  insert into public.contribution (id, contributor_id, format_version, rules_version, consent_version,
+    started_at, ended_at, sent_at, distance_m, moving_s, standing_s, lost_s, point_count, events, gaps, unlinked)
+  values ('11111111-0000-0000-0000-0000000de2d2', '00000000-0000-0000-0000-0000000de2a2', 2, 2, 1,
+    now() - interval '2 hours', now() - interval '1 hour', now(), 100, 60, 10, 0, 0, '[]', '[]', true);
+  raise exception 'FAILED: a phone added a ride of its own marked kept';
+exception when check_violation then null;
+end $$;
+reset role;
 select pg_temp.check(pg_temp.holds_all('00000000-0000-0000-0000-0000000de2a2'),
   'another account keeps everything: ' || pg_temp.holdings('00000000-0000-0000-0000-0000000de2a2')::text);
 select pg_temp.check((select hidden_at is not null and hidden_by is null and hidden_note = 'check'
@@ -242,18 +303,27 @@ select pg_temp.check(pg_temp.holds_all('00000000-0000-0000-0000-0000000de2a3')
     and pg_temp.holds_all('00000000-0000-0000-0000-0000000de2a5'),
   'the refused phone, editor and map owner keep everything');
 
--- Retiring: the kept ride, moved to an old month, is retired like any other, then skipped.
+-- Retiring, with the real 24-month guard: this month's kept ride is too young, and stays as it is.
+do $$ begin
+  perform private.retire_month(date_trunc('month', now() at time zone 'UTC')::date);
+  raise exception 'FAILED: retire_month took this month';
+exception when raise_exception then
+  if sqlerrm not like 'too_soon%' then raise exception 'FAILED: this month refused as %', sqlerrm; end if;
+end $$;
+select pg_temp.check((select unlinked and line -> 'coordinates' -> 0 = '[121.0, 14.6]'::jsonb
+    from public.contribution where id = '11111111-0000-0000-0000-0000000de2c8'),
+  'a kept ride younger than 24 months is not retired');
+-- Moved to a month over 24 months old, it is retired like any other, then skipped.
 update public.contribution set received_at = timestamptz '2024-05-15 12:00+00'
   where id = '11111111-0000-0000-0000-0000000de2c8';
 select pg_temp.check((select (r ->> 'contributions')::integer = 1
-  from (select private.retire_month(date '2024-05-01', 0) r) x), 'the month retires the kept ride');
-select pg_temp.check((select contributor_id is null and unlinked_at is null
-    and start_name is null and end_name is null and description is null
+  from (select private.retire_month(date '2024-05-01') r) x), 'the old month retires the kept ride');
+select pg_temp.check((select contributor_id is null and not unlinked
     and line -> 'coordinates' -> 0 <> '[121.0, 14.6]'::jsonb
     from public.contribution where id = '11111111-0000-0000-0000-0000000de2c8'),
-  'the kept ride is retired: words cleared, ends cut, unlinked_at cleared');
+  'the kept ride is retired: ends cut, mark cleared');
 select pg_temp.check((select (r ->> 'contributions')::integer = 0
-  from (select private.retire_month(date '2024-05-01', 0) r) x), 'a second run skips it');
+  from (select private.retire_month(date '2024-05-01') r) x), 'a second run skips it');
 
 rollback;
 
@@ -272,14 +342,20 @@ select * from (values
   (3, 'its owner may delete auth users',
    (select has_table_privilege(proowner::regrole::text, 'auth.users', 'delete')
       from pg_proc where oid = 'public.delete_my_account(boolean)'::regprocedure)),
-  (4, 'contribution.unlinked_at is there, and no one but the database writes it',
+  (4, 'contribution.unlinked is there, only on a ride no one owns, and no API role updates it',
    (select count(*) = 1 from information_schema.columns
-      where table_schema = 'public' and table_name = 'contribution' and column_name = 'unlinked_at')
-   and not has_column_privilege('authenticated', 'public.contribution', 'unlinked_at', 'update')
-   and not has_column_privilege('anon', 'public.contribution', 'unlinked_at', 'update')),
+      where table_schema = 'public' and table_name = 'contribution' and column_name = 'unlinked'
+        and data_type = 'boolean' and is_nullable = 'NO')
+   and exists (select 1 from pg_constraint where conname = 'contribution_unlinked_unowned'
+      and conrelid = 'public.contribution'::regclass)
+   and not has_column_privilege('authenticated', 'public.contribution', 'unlinked', 'update')
+   and not has_column_privilege('anon', 'public.contribution', 'unlinked', 'update')),
   (5, 'retire_month takes a kept ride and clears its mark',
-   (select position('unlinked_at is not null' in prosrc) > 0 and position('unlinked_at = null' in prosrc) > 0
+   (select position('or unlinked)' in prosrc) > 0 and position('unlinked = false' in prosrc) > 0
       from pg_proc where oid = 'private.retire_month(date, integer)'::regprocedure)),
-  (6, 'the ledger row is there once',
+  (6, 'the function locks the person first and deletes GoTrue''s audit log entries about them',
+   (select position('for update' in prosrc) > 0 and position('auth.audit_log_entries' in prosrc) > 0
+      from pg_proc where oid = 'public.delete_my_account(boolean)'::regprocedure)),
+  (7, 'the ledger row is there once',
    (select count(*) = 1 from supabase_migrations.schema_migrations where name = 'delete_account_keep_uploads'))
 ) as c(n, what, ok) order by n;

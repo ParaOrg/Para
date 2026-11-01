@@ -36,10 +36,16 @@ recording only after it is saved.
   hintos, cut short at each end and unlinked from the phone. A contributor can
   delete their recordings.
 - Deleting an account (the owner, 2026-11-01) removes the person: their name,
-  email, number and password. Their uploaded routes stay, unlinked from them as
-  an old one is at 24 months, unless they tick "Also delete my uploaded
-  routes". Their stats, and the recordings on the phone not yet sent, are
-  deleted. A route kept this way is still cut short at each end at 24 months
+  email, number and password, their stats, the recordings on the phone not yet
+  sent, and the sign-in log that names them. Their uploaded routes stay,
+  unlinked from them as an old one is at 24 months, unless they tick "Also
+  delete my uploaded routes". What stays of a kept route: its points, times,
+  hintos and what was ridden, with the words they typed (start, end,
+  description) cleared at once; at 24 months its raw points go and its ends are
+  cut, as for any route. Once kept, a route is no one's: the person can no
+  longer remove it themselves, and an editor removes it on request (the right
+  to erasure under RA 10173). The weekly backups still hold the account for up
+  to 60 days, then it is gone from those too
   (`supabase/migrations/20261101090000_delete_account_keep_uploads.sql`).
 - Train tracking (planned) keeps its own rule: its features use the phone's
   location on the phone only.
