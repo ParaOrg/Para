@@ -135,22 +135,30 @@ if (process.env.PARA_TURNSTILE) {
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   const theCheck = page.getByRole('group', { name: 'Check that you are a person' });
   await theCheck.waitFor({ state: 'attached' });
-  const isLast = await page.evaluate(() => {
+  // Each part apart, so a failure says which one went wrong.
+  const drawn = await page.evaluate(() => {
     const form = document.querySelector('form');
     const widget = document.querySelector('[aria-label="Check that you are a person"]');
     const buttons = [...(form?.querySelectorAll('button') ?? [])];
-    return (
-      !!widget &&
-      buttons.every(
+    return {
+      hasWidget: !!widget,
+      buttonsBefore: buttons.filter(
         (button) =>
+          !!widget &&
           button.compareDocumentPosition(widget) & window.Node.DOCUMENT_POSITION_FOLLOWING,
-      ) &&
-      widget.dataset.appearance === 'interaction-only'
-    );
+      ).length,
+      buttons: buttons.length,
+      appearance: widget?.getAttribute('data-appearance') ?? null,
+    };
   });
+  const tapLines = await page.getByText('Tap the check at the bottom first').count();
   check(
     'the bot check is drawn interaction-only, after every button on Sign in',
-    isLast && (await page.getByText('Tap the check at the bottom first').count()) === 0,
+    drawn.hasWidget &&
+      drawn.buttonsBefore === drawn.buttons &&
+      drawn.appearance === 'interaction-only' &&
+      tapLines === 0,
+    JSON.stringify({ ...drawn, tapLines }),
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
