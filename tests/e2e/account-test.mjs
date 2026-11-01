@@ -799,8 +799,8 @@ const keepOnPhone = (page, key, stored) =>
   await SCREENS.start(page).waitFor({ timeout: 15000 });
   // Past the check's 8 s: it gives up, and the stored session stands.
   await page.clock.fastForward(9000);
-  // Para answers the renewal now: no such session. supabase-js's next try hears it.
-  await page.unroute('**/auth/v1/token**');
+  // Para answers the renewal now: no such session. supabase-js's next try hears it. Listened for
+  // before the route goes: the try the clock let go may already be on its way.
   const isGone = page
     .waitForResponse(
       (response) => response.url().includes('/auth/v1/token') && response.status() === 400,
@@ -810,6 +810,7 @@ const keepOnPhone = (page, key, stored) =>
       () => true,
       () => false,
     );
+  await page.unroute('**/auth/v1/token**');
   await page.clock.fastForward(30_000);
   const isGoneHeard = await isGone;
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));

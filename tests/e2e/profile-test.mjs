@@ -1204,7 +1204,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   check(
     'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
     kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
-    JSON.stringify(kept),
+    JSON.stringify({ kept, claims: fake.claims }),
   );
 }
 
