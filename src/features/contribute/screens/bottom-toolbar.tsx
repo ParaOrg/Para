@@ -3,6 +3,7 @@ import type { ReactNode, Ref } from 'react';
 import { cn } from '@/shared/utils/cn';
 
 import { useSlidingPill } from './use-sliding-pill';
+import { useToolbarSlide } from './use-toolbar-slide';
 import { warmScreen } from '../common/screen-loaders';
 
 import './start-icons.css';
@@ -50,11 +51,19 @@ export function BottomToolbar({
   accountRef,
 }: BottomToolbarProps) {
   const { barRef, pillRef } = useSlidingPill(current);
+  // Hold and slide the pill along the bar to another tab (use-toolbar-slide.ts).
+  const openers: Record<ToolbarTab, (() => void) | undefined> = {
+    record: onOpenRecord,
+    history: onOpenHistory,
+    account: onOpenAccount,
+  };
+  useToolbarSlide({ barRef, pillRef, current, onPick: (tab) => openers[tab]?.() });
   return (
     <nav aria-label="Screens" className="flex justify-center">
       <div
         ref={barRef}
-        className="tab-toolbar relative flex items-center rounded-full bg-surface p-1 font-sn-pro shadow-large"
+        // No pan, scroll or text selection from a finger on the bar: it slides the pill.
+        className="tab-toolbar relative flex touch-none items-center rounded-full bg-surface p-1 font-sn-pro shadow-large select-none"
       >
         {/* The pill under the screen showing: placed, and slid, by useSlidingPill. */}
         <span

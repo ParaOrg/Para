@@ -35,6 +35,7 @@ import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { START_BUTTON_ATTR, morphStartIntoCard } from './screens/start-morph';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
+import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
 import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
@@ -245,12 +246,14 @@ export function ContributePage({ locator }: ContributePageProps) {
   }, [phase]);
 
   // History and Account fetched ahead once Start has settled, in the browser's idle time, so the
-  // first tap on their tab finds them here: its move starts at once, on the real screen.
+  // first tap on their tab finds them here: its move starts at once, on the real screen. The
+  // toolbar's slide comes with them.
   useEffect(() => {
     if (phase !== 'ready') return;
     const warm = () => {
       warmScreen('history');
       if (canUpload()) warmScreen('account');
+      warmToolbarSlide();
     };
     if ('requestIdleCallback' in window) {
       const idle = window.requestIdleCallback(warm, { timeout: WARM_SCREENS_WITHIN_MS });

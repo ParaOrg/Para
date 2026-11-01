@@ -1232,5 +1232,53 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
 }
 
+// ------------------------------------------------ hold the toolbar and slide to another tab
+{
+  const { page } = await phone();
+  const toolbar = page.getByRole('navigation', { name: 'Screens' });
+  const centre = async (name) => {
+    const box = await toolbar.locator(`[data-tab="${name}"]`).boundingBox();
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const isOn = (hash) =>
+    page.evaluate(
+      (h) =>
+        h === ''
+          ? document.querySelectorAll('[data-screen-hash]').length === 0
+          : !!document.querySelector(`[data-screen-hash="${h}"]`),
+      hash,
+    );
+  /** Holds the finger on `from`, slides it through `via` and lets go there. */
+  const slide = async (from, via) => {
+    const start = await centre(from);
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.waitForTimeout(350);
+    for (const name of via) {
+      const to = await centre(name);
+      await page.mouse.move(to.x, to.y, { steps: 8 });
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(900);
+  };
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+
+  await slide('record', ['history', 'account', 'history', 'record']);
+  check(
+    'held and slid along the toolbar and back to Record, it lets go where it started: still on Record',
+    await isOn(''),
+  );
+  await slide('record', ['history', 'account']);
+  await page.locator('[data-screen-hash="#profile"]').waitFor({ timeout: 5000 });
+  check(
+    '  held on Record and slid to Account, it opens Account on release, the pill under Account',
+    (await isOn('#profile')) &&
+      (await toolbar.locator('[data-tab="account"]').getAttribute('aria-current')) === 'page',
+  );
+  await toolbar.getByRole('button', { name: 'History', exact: true }).click();
+  await page.locator('[data-screen-hash="#history"]').waitFor({ timeout: 5000 });
+  check('  a plain tap on a tab still opens its screen', await isOn('#history'));
+}
+
 await browser.close();
 tally();
