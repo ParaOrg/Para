@@ -598,6 +598,27 @@ check(
   await sheet.waitFor({ state: 'detached' });
   check('  Escape closes it too, focus back on the ⓘ', await isFocusOnInfo());
 
+  // Closed mid-rise, it goes down from where it is; opened again by keyboard while it slides
+  // down, the new sheet stays open: the old one's slide is not the new one's close.
+  await info.click();
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  const isBackAfterMidRise = await isFocusOnInfo();
+  await info.focus();
+  await page.keyboard.press('Enter');
+  await sheet.waitFor();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1200);
+  check(
+    '  closed mid-rise it goes, focus on the ⓘ; reopened by keyboard while it slides down, the new sheet stays, focus in it',
+    isBackAfterMidRise &&
+      (await sheet.count()) === 1 &&
+      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+  );
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+
   // Less motion asked for: no slide either way, shown and gone at once.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await info.click();
@@ -4808,6 +4829,33 @@ check(
   (await dpage.getByRole('button', { name: 'Map data sources' }).isVisible()) &&
     !(await dpage.locator('.maplibregl-ctrl-attrib').isVisible()),
 );
+
+// The sheet's code out of reach (offline before the worker kept it): the ⓘ's tap hands the
+// credits back to MapLibre's corner, focus on it, and the page is live, not blank.
+{
+  const fpage = await desktop.newPage();
+  await nodeFetch(fpage);
+  await fpage.route(/map-data-source-view/, (route) => route.abort('internetdisconnected'));
+  await fpage.goto(`${BASE}/`, { waitUntil: 'load' });
+  const info = fpage.getByRole('button', { name: 'Map data sources' });
+  await info.waitFor({ timeout: 30000 });
+  await info.click();
+  await fpage
+    .locator('.maplibregl-ctrl-attrib')
+    .waitFor({ state: 'visible', timeout: 10000 })
+    .catch(() => {});
+  check(
+    "the sheet's code out of reach: MapLibre's corner credits come back, focus on them, the page live",
+    (await fpage.locator('.maplibregl-ctrl-attrib').isVisible()) &&
+      (await info.count()) === 0 &&
+      (await fpage.evaluate(
+        () =>
+          !!document.activeElement?.closest('.maplibregl-ctrl-attrib') &&
+          !document.querySelector('[data-testid="map-view"]')?.closest('[inert]'),
+      )),
+  );
+  await fpage.close();
+}
 
 if (!routeA) {
   skip('a mouse click 4 px beside the line selects it', 'no lone route vertex to click');

@@ -50,6 +50,18 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
   const scrimRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const [isClosing, setIsClosing] = useState(false);
+  // The slide down under way, so a sheet taken off mid-way (a new one opened over it) stops it
+  // and never reports a close that is not its own.
+  const sinking = useRef<{ animation: Animation; giveUp: number } | null>(null);
+  useEffect(
+    () => () => {
+      if (!sinking.current) return;
+      window.clearTimeout(sinking.current.giveUp);
+      sinking.current.animation.cancel();
+      sinking.current = null;
+    },
+    [],
+  );
   useDialogFocus(sheetRef, false);
 
   // Asked to close: focus goes back to the opener first, so it never drops to the page while
@@ -75,12 +87,15 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
       timing,
     );
     scrim.animate([{ opacity: shade }, { opacity: 0 }], timing);
-    // Gone once the slide ends, or is cut short, or never ends: it can't stay stuck.
-    const giveUp = window.setTimeout(onClosed, SINK_GIVE_UP_MS);
+    // Gone once the slide ends, or never ends: it can't stay stuck. Not if the sheet was taken off
+    // first: its cleanup cancels the slide and lets go of it.
     const gone = () => {
-      window.clearTimeout(giveUp);
+      if (sinking.current?.animation !== sink) return;
+      window.clearTimeout(sinking.current.giveUp);
+      sinking.current = null;
       onClosed();
     };
+    sinking.current = { animation: sink, giveUp: window.setTimeout(gone, SINK_GIVE_UP_MS) };
     sink.finished.then(gone, gone);
   }, [isClosing, onClose, onClosed]);
   useEscape(close, !isClosing);

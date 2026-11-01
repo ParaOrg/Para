@@ -46,6 +46,7 @@ import {
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
+import { useEscape } from '@/shared/hooks/use-escape';
 
 import { ContributionCard } from './contribution-card';
 import { MapCreditsDock } from './map-credits-dock';
@@ -56,6 +57,28 @@ interface CreditsSheetProps {
   onClosed: () => void;
   /** The sheet's code could not be fetched: the page shows the credits another way. */
   onUnavailable: () => void;
+}
+
+interface CreditsOnTheirWayProps {
+  /** Escape or a tap while the sheet's code is on its way: the open is called off. */
+  onCancel: () => void;
+}
+
+/**
+ * While the sheet's code is on its way the page is out of reach under it: Escape or a tap calls
+ * the open off rather than leave the page stuck.
+ */
+function CreditsOnTheirWay({ onCancel }: CreditsOnTheirWayProps) {
+  useEscape(onCancel);
+  useEffect(() => {
+    const listensFrom = performance.now();
+    const handleClick = (e: MouseEvent) => {
+      if (e.timeStamp >= listensFrom) onCancel();
+    };
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, [onCancel]);
+  return null;
 }
 
 /** Stands in for the sheet when its code could not be fetched: it hands the credits back. */
@@ -188,8 +211,17 @@ export function PublicMapApp() {
   // so the licences' credit stays on the map.
   const [isCreditsSheetMissing, setIsCreditsSheetMissing] = useState(false);
   const creditsSheetMissing = useCallback(() => {
-    setIsCreditsSheetMissing(true);
-    setCredits('shut');
+    flushSync(() => {
+      setIsCreditsSheetMissing(true);
+      setCredits('shut');
+    });
+    // Focus to the credits as they are now: MapLibre's corner ⓘ, back in the map.
+    root.current?.querySelector<HTMLElement>('.maplibregl-ctrl-attrib-button')?.focus();
+  }, [root]);
+  // Called off while the sheet's code was still on its way.
+  const cancelCredits = useCallback(() => {
+    flushSync(() => setCredits('shut'));
+    creditsButtonRef.current?.focus();
   }, []);
 
   return (
@@ -435,7 +467,7 @@ export function PublicMapApp() {
         )}
       </div>
       {credits !== 'shut' && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<CreditsOnTheirWay onCancel={cancelCredits} />}>
           <MapDataSourceSheet
             key={creditsOpenings}
             onClose={closeCredits}
