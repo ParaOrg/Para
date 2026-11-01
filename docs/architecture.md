@@ -344,7 +344,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/published-map`
 
-`listenForInstallOffer`, `InstallPrompt`, `loadProblemToast`, `loadProblems`, `LoadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
+`listenForInstallOffer`, `InstallPrompt`, `loadProblemToast`, `LoadProblemToast`, `loadProblems`, `LoadProblems`, `Notices`, `registerServiceWorker`, `reloadForNewerApp`, `reloadToUpdate`, `useNeedRefresh`, `useMapAge`, `useOffline`, `useInstallPrompt`
 
 ### `features/studio`
 
