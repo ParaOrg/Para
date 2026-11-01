@@ -135,22 +135,30 @@ if (process.env.PARA_TURNSTILE) {
   await SCREENS.signIn(page).waitFor({ timeout: 30000 });
   const theCheck = page.getByRole('group', { name: 'Check that you are a person' });
   await theCheck.waitFor({ state: 'attached' });
-  const isLast = await page.evaluate(() => {
+  // Each part apart, so a failure says which one went wrong.
+  const drawn = await page.evaluate(() => {
     const form = document.querySelector('form');
     const widget = document.querySelector('[aria-label="Check that you are a person"]');
     const buttons = [...(form?.querySelectorAll('button') ?? [])];
-    return (
-      !!widget &&
-      buttons.every(
+    return {
+      hasWidget: !!widget,
+      buttonsBefore: buttons.filter(
         (button) =>
+          !!widget &&
           button.compareDocumentPosition(widget) & window.Node.DOCUMENT_POSITION_FOLLOWING,
-      ) &&
-      widget.dataset.appearance === 'interaction-only'
-    );
+      ).length,
+      buttons: buttons.length,
+      appearance: widget?.getAttribute('data-appearance') ?? null,
+    };
   });
+  const tapLines = await page.getByText('Tap the check at the bottom first').count();
   check(
     'the bot check is drawn interaction-only, after every button on Sign in',
-    isLast && (await page.getByText('Tap the check at the bottom first').count()) === 0,
+    drawn.hasWidget &&
+      drawn.buttonsBefore === drawn.buttons &&
+      drawn.appearance === 'interaction-only' &&
+      tapLines === 0,
+    JSON.stringify({ ...drawn, tapLines }),
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
@@ -824,9 +832,20 @@ const keepOnPhone = (page, key, stored) =>
     );
   await page.unroute('**/auth/v1/token**');
   step = 'unrouted';
-  await page.clock.fastForward(30_000);
+  // A second at a time, the clock keeping inside supabase-js's retry window (30 s from the first
+  // try): its next retry reaches Para. One jump past the window let the try still on its way when
+  // the route went (answered 503 by it) end the retries, and supabase-js then keeps that failure
+  // for REFRESH_FAILURE_COOLDOWN_MS (60 s), asking nothing on the signal's return either.
+  let isGoneHeard = false;
+  const heard = isGone.then((isHeard) => {
+    isGoneHeard = isHeard;
+  });
+  for (let second = 0; second < 15 && !isGoneHeard; second += 1) {
+    await page.clock.fastForward(1000);
+    await Promise.race([heard, page.waitForTimeout(300)]);
+  }
   step = 'later';
-  const isGoneHeard = await isGone;
+  await heard;
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
   const isStartStill = (await SCREENS.start(page).count()) === 1;
   // The signal back, as the phone tells the page (its offline and online events; turning the
