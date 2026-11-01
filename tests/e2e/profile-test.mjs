@@ -580,28 +580,35 @@ async function seed(page, id, name, upload) {
 
   await movesOver();
   const onRecord = await toolbarInk();
-  const toHistory = await inkHalfway(historyTab(page));
-  const onHistory = await toolbarInk();
-  await toolbarRecord(page).click();
-  await start(page).waitFor();
-  const toAccount = await inkHalfway(accountTab(page));
-  const onAccount = await toolbarInk();
-  const fromAccount = await inkHalfway(toolbarRecord(page));
-  const ink = { onRecord, toHistory, onHistory, toAccount, onAccount, fromAccount };
+  // The two moves from Record, where the screen exists only in the new page, and the moves
+  // between screens and back to Record as controls.
+  const ink = {
+    recordToHistory: await inkHalfway(historyTab(page)),
+    historyToAccount: await inkHalfway(accountTab(page)),
+    accountToHistory: await inkHalfway(historyTab(page)),
+    historyToRecord: await inkHalfway(toolbarRecord(page)),
+    recordToAccount: await inkHalfway(accountTab(page)),
+    accountToRecord: await inkHalfway(toolbarRecord(page)),
+  };
+  const isInSight = (halfway) => halfway > 0.7 * onRecord;
+  const said = JSON.stringify({ onRecord, ...ink });
   check(
     'Record to History: halfway through the move the toolbar is in sight, not under History',
-    toHistory > 0.7 * Math.min(onRecord, onHistory),
-    JSON.stringify(ink),
+    isInSight(ink.recordToHistory),
+    said,
   );
   check(
     '  Record to Account: halfway, the toolbar is in sight too',
-    toAccount > 0.7 * Math.min(onRecord, onAccount),
-    JSON.stringify(ink),
+    isInSight(ink.recordToAccount),
+    said,
   );
   check(
-    '  and Account back to Record',
-    fromAccount > 0.7 * Math.min(onRecord, onAccount),
-    JSON.stringify(ink),
+    '  and between History and Account, and back to Record from each, as before',
+    isInSight(ink.historyToAccount) &&
+      isInSight(ink.accountToHistory) &&
+      isInSight(ink.historyToRecord) &&
+      isInSight(ink.accountToRecord),
+    said,
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
