@@ -1740,28 +1740,37 @@ if (PART === 1) {
   );
   await p.goto(`${BASE}/`, { waitUntil: 'load' });
   const toast = p.locator('[data-testid="toast"]');
+  const toastWords = async () => ((await toast.count()) ? await toast.innerText() : '');
   const said = await until(
-    async () =>
-      (await toast.count()) === 1 && /The routes could not load/.test(await toast.innerText()),
+    toastWords,
+    (words) => words.includes('The routes could not load'),
     20000,
   );
   check(
     'a load that fails says so in one problem toast, with Try again',
-    said && (await toast.getByRole('button', { name: 'Try again' }).count()) === 1,
-    (await toast.count()) ? await toast.innerText() : 'no toast',
+    said.includes('The routes could not load') &&
+      (await toast.count()) === 1 &&
+      (await toast.getByRole('button', { name: 'Try again' }).count()) === 1,
+    said || 'no toast',
   );
   check(
     '  a screen reader hears it at once',
-    /The routes could not load/.test((await p.getByRole('alert').textContent()) ?? ''),
+    ((await p.getByRole('alert').textContent()) ?? '').includes('The routes could not load'),
   );
   isFailing = false;
-  if (said) await toast.getByRole('button', { name: 'Try again' }).click();
-  const directions = async () =>
-    Number(await p.locator('[data-directions]').getAttribute('data-directions'));
+  if ((await toast.count()) === 1) await toast.getByRole('button', { name: 'Try again' }).click();
+  const loaded = await until(
+    async () => ({
+      directions: Number(await p.locator('[data-directions]').getAttribute('data-directions')),
+      toasts: await toast.count(),
+    }),
+    (now) => now.directions > 0 && now.toasts === 0,
+    20000,
+  );
   check(
     '  Try again loads the routes, and the toast goes',
-    await until(async () => (await directions()) > 0 && (await toast.count()) === 0, 20000),
-    `${await directions()} direction(s), ${await toast.count()} toast(s)`,
+    loaded.directions > 0 && loaded.toasts === 0,
+    `${loaded.directions} direction(s), ${loaded.toasts} toast(s)`,
   );
   await p.close();
 }

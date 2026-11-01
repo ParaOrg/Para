@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { lazy, Suspense, useState, type ComponentProps, type ComponentType } from 'react';
+import { Suspense, useState, type ComponentProps } from 'react';
 
 import { LocationIcon } from '@/design-system/primitives/location-icon';
 import { CommuterLocation, type LocatorNote } from '@/features/locator';
@@ -11,6 +11,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
 import type { Turn } from '@/shared/hooks/commit-turn';
+import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import type { StandingToast } from '@/shared/ui/standing-toasts';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
@@ -26,23 +27,16 @@ interface WorkshopLocationProps {
   hushedAt: ComponentProps<typeof CommuterLocation>['hushedAt'];
 }
 
-interface ToastsProps {
-  toasts: readonly StandingToast[];
-}
-
-/** Stands in for the toasts when their code could not be fetched: the studio goes on without them. */
-function ToastsUnavailable(): null {
-  return null;
+/** What the locator last said, and how many times: each says it again (Locator's onNote). */
+interface SaidNote {
+  note: LocatorNote;
+  saying: number;
 }
 
 // The locator's toast, fetched the first time it has something to say, as the public map's is.
-const StandingToasts = lazy<ComponentType<ToastsProps>>(() =>
+const StandingToasts = retryingLazy(() =>
   retryingImport(() => import('@/shared/ui/standing-toasts'))().then(
-    (module) => ({ default: module.StandingToasts }),
-    (error: unknown) => {
-      console.warn("The locator's toast could not be fetched.", error);
-      return { default: ToastsUnavailable };
-    },
+    (module) => module.StandingToasts,
   ),
 );
 
@@ -63,7 +57,7 @@ export function WorkshopLocation({
 }: WorkshopLocationProps) {
   const { ride, clearOfOpen } = camera;
   // What the locator last said, and how many times (Locator's onNote).
-  const [said, setSaid] = useState<{ note: LocatorNote; saying: number } | null>(null);
+  const [said, setSaid] = useState<SaidNote | null>(null);
   const handleNote = (note: LocatorNote | null) => {
     setSaid((last) => note && { note, saying: (last?.saying ?? 0) + 1 });
   };

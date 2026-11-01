@@ -85,6 +85,7 @@ flowchart TD
   app_public_map --> features_routes_model
   app_public_map --> features_routes_published
   app_public_map --> shared_hooks
+  app_public_map --> shared_lib
   app_public_map --> shared_ui
   app_public_map --> shared_utils
   app_public_map --> styles
@@ -95,6 +96,7 @@ flowchart TD
   app_studio --> features_routes_model
   app_studio --> features_studio
   app_studio --> shared_hooks
+  app_studio --> shared_lib
   app_studio --> shared_types
   app_studio --> shared_ui
   app_studio --> shared_utils
@@ -287,8 +289,8 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `shared/ui`, `styles` |
-| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/ui`, `shared/utils`, `styles` |
-| `app/studio` | `design-system/primitives`, `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/types`, `shared/ui`, `shared/utils`, `styles` |
+| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/lib`, `shared/ui`, `shared/utils`, `styles` |
+| `app/studio` | `design-system/primitives`, `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/lib`, `shared/types`, `shared/ui`, `shared/utils`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `features/contribute/tutorial`, `features/contribute/uploads`, `features/routes/map`, `shared/ui`, `shared/utils` |
