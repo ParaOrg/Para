@@ -2055,10 +2055,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     Math.abs(a.width - b.width) < 1 &&
     Math.abs(a.height - b.height) < 1;
   check(
-    'the toolbar stands in one place on Record, History and Account: 32 over the foot on each',
+    'the toolbar stands in one place on Record, History and Account: 48 over the foot on each, as Figma draws it',
     same(onRecord, onHistory) &&
       same(onRecord, onAccount) &&
-      Math.abs(height - (onRecord.y + onRecord.height) - 32) < 1,
+      Math.abs(height - (onRecord.y + onRecord.height) - 48) < 1,
     JSON.stringify({ onRecord, onHistory, onAccount }),
   );
   check(

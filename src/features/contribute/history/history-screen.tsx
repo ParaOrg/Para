@@ -10,7 +10,7 @@ import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../common/use-screen-entry';
-import { TOOLBAR_ROOM } from '../screens/bottom-toolbar';
+import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
 
@@ -112,11 +112,14 @@ export function HistoryScreen({
         )}
         {load.state === 'loading' && recordings.length > 0 && <HistoryLoadLine load={load} />}
       </div>
-      {/* The list fading out under the page's toolbar (4518:24829), which stands over this foot,
-          32 over the screen's edge on all three tabs, so it never moves between them. */}
+      {/* The list fading out under the page's toolbar (4518:24829), which stands over this foot
+          (TOOLBAR_FOOT) on all three tabs, so it never moves between them. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]"
+        className={cn(
+          'pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-surface pt-6',
+          TOOLBAR_FOOT,
+        )}
       >
         <div className={TOOLBAR_ROOM} />
       </div>
