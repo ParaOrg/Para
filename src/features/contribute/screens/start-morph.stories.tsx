@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { cssDurationMs } from '@/shared/utils/css-duration';
+
 import { RecordingCard } from './recording-card';
 import { StartBar } from './start-bar';
 import { START_MORPH_ATTR, morphStartIntoCard } from './start-morph';
@@ -54,8 +56,9 @@ export const Default: Story = {
     const ghost = document.querySelector(`[${START_MORPH_ATTR}]`);
     await expect(ghost).not.toBeNull();
     const [fold] = ghost?.getAnimations() ?? [];
+    // In milliseconds, as WAAPI takes it, whether the CSS says 150ms or a build's .15s.
     await expect(fold?.effect?.getTiming().duration).toBe(
-      Number.parseFloat(token('--transition-duration-quick')),
+      cssDurationMs(token('--transition-duration-quick')),
     );
     await expect(fold?.effect?.getTiming().easing).toBe(token('--ease-exit'));
     await waitFor(() => expect(document.querySelector(`[${START_MORPH_ATTR}]`)).toBeNull(), {

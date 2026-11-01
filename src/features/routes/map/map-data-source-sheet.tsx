@@ -4,6 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
 import { CloseIcon } from '@/shared/ui/route-icons';
+import { cssDurationMs } from '@/shared/utils/css-duration';
 
 import type { MapCredit } from './map-attribution';
 
@@ -27,7 +28,7 @@ const SINK_GIVE_UP_MS = 1000;
 /** The owner's Motion token for a sheet's move, read as the page has it (tokens.css). */
 function sheetDuration(): number {
   const style = getComputedStyle(document.documentElement);
-  return Number.parseFloat(style.getPropertyValue('--transition-duration-gentle')) || 0;
+  return cssDurationMs(style.getPropertyValue('--transition-duration-gentle')) ?? 0;
 }
 
 /** The leaving ease, as the page has it (tokens.css). */

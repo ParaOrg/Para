@@ -1,3 +1,5 @@
+import { cssDurationMs } from '@/shared/utils/css-duration';
+
 import './tab-motion.css';
 
 /**
@@ -49,7 +51,7 @@ export function motionOf(kind: keyof typeof MOTION_TOKENS): { duration: number; 
   const style = getComputedStyle(document.documentElement);
   const [duration, easing] = MOTION_TOKENS[kind];
   return {
-    duration: Number.parseFloat(style.getPropertyValue(duration)) || 0,
+    duration: cssDurationMs(style.getPropertyValue(duration)) ?? 0,
     easing: style.getPropertyValue(easing).trim() || 'ease-out',
   };
 }
