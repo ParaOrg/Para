@@ -67,14 +67,25 @@ export function useToolbarSlide({
       attach(slideChunk);
       return () => detach?.();
     }
-    // Not here yet: the first press fetches it, and the slide begins from that press.
+    // Not here yet: the first press fetches it, and the slide begins from that press if its
+    // finger is still down when it comes; a tap already over is left to the tab's click.
     const handleFirstPress = (e: PointerEvent) => {
       bar.removeEventListener('pointerdown', handleFirstPress);
+      let isLifted = false;
+      const handleLift = (lift: PointerEvent) => {
+        if (lift.pointerId === e.pointerId) isLifted = true;
+      };
+      window.addEventListener('pointerup', handleLift);
+      window.addEventListener('pointercancel', handleLift);
       loadSlide().then(
         (chunk) => {
-          if (!isGone) attach(chunk, e);
+          window.removeEventListener('pointerup', handleLift);
+          window.removeEventListener('pointercancel', handleLift);
+          if (!isGone) attach(chunk, isLifted ? undefined : e);
         },
         (error: unknown) => {
+          window.removeEventListener('pointerup', handleLift);
+          window.removeEventListener('pointercancel', handleLift);
           console.warn("The toolbar's slide could not be fetched; its tabs work as taps.", error);
         },
       );

@@ -13,6 +13,10 @@ const HOLD_MS = 250;
 const DRAG_PX = 8;
 /** How far above the bar a sliding finger may go before the slide is called off. */
 const LEAVE_ABOVE_PX = 80;
+/** How soon after a slide's release a click is the release's own, not a new tap. */
+const RELEASE_CLICK_MS = 100;
+/** How long the pill keeps its tab's colours after a pick, if the screen never takes over. */
+const PAINT_KEPT_MS = 1000;
 
 interface ToolbarSlide {
   bar: HTMLDivElement;
@@ -62,7 +66,9 @@ export function attachToolbarSlide({
     isSliding: boolean;
     over: HTMLElement;
   } | null = null;
-  let swallowClick = false;
+  // When a slide was last let go: the click a release makes (a mouse's) is the slide's, not a tap.
+  let releasedAt = Number.NEGATIVE_INFINITY;
+  let paintKept = 0;
 
   /** The tab whose span holds the bar-relative x, the nearest at either end. */
   const tabAt = (x: number): HTMLElement => {
@@ -96,8 +102,18 @@ export function attachToolbarSlide({
     if (!press) return;
     press.isSliding = true;
     window.clearTimeout(press.holdTimer);
-    bar.setPointerCapture(press.pointerId);
+    try {
+      bar.setPointerCapture(press.pointerId);
+    } catch (error) {
+      // The finger already lifted (the pointer is gone): there is no slide to pick up.
+      console.warn('The toolbar could not hold the finger; the press is let go.', error);
+      press = null;
+      return;
+    }
+    bar.toggleAttribute('data-sliding', true);
     startSelectionTicks();
+    // The pill comes to the finger: a still hold on another tab lands there.
+    slideTo(press.startX);
   };
   const slideTo = (clientX: number) => {
     if (!press) return;
@@ -126,19 +142,28 @@ export function attachToolbarSlide({
     const { isSliding, over } = press;
     press = null;
     if (!isSliding) return;
+    bar.toggleAttribute('data-sliding', false);
     endSelectionTicks();
-    swallowClick = true;
-    const target = isKept ? over : currentTab;
+    releasedAt = performance.now();
+    // A question took the toolbar mid-slide (toolbar-hold.tsx): the slide is called off.
+    const target = isKept && !bar.closest('[inert]') ? over : currentTab;
     const name = tabName(target);
     settle(target);
-    unpaint();
-    if (!name || name === current) return;
+    if (!name || name === current) {
+      unpaint();
+      return;
+    }
+    // The picked tab keeps its colours until its screen takes over (the toolbar's `current`
+    // changes and this slide is let go), so the move never shows the old tab marked again.
+    paintKept = window.setTimeout(unpaint, PAINT_KEPT_MS);
     // The next screen's toolbar starts its pill where this one let it go.
     notePillAt(name, target.offsetLeft);
     onPick(name);
   };
 
   const handlePointerDown = (e: PointerEvent) => {
+    // A new press: any click from here on is its own, however soon after the last release.
+    releasedAt = Number.NEGATIVE_INFINITY;
     if (e.button !== 0 || press) return;
     press = {
       pointerId: e.pointerId,
@@ -148,9 +173,29 @@ export function attachToolbarSlide({
       over: currentTab,
     };
   };
+  /** A finger that leaves the bar before its hold picks nothing up. */
+  const abandon = () => {
+    if (!press || press.isSliding) return;
+    window.clearTimeout(press.holdTimer);
+    press = null;
+  };
+  // A mouse's leaving; a finger is held by the tab it pressed, so its moves say it (below).
+  const handlePointerLeave = (e: PointerEvent) => {
+    if (press && e.pointerId === press.pointerId) abandon();
+  };
   const handlePointerMove = (e: PointerEvent) => {
     if (!press || e.pointerId !== press.pointerId) return;
     if (!press.isSliding) {
+      const box = bar.getBoundingClientRect();
+      const isOnBar =
+        e.clientX >= box.left &&
+        e.clientX <= box.right &&
+        e.clientY >= box.top &&
+        e.clientY <= box.bottom;
+      if (!isOnBar) {
+        abandon();
+        return;
+      }
       if (Math.abs(e.clientX - press.startX) < DRAG_PX) return;
       pickUp();
     }
@@ -166,23 +211,35 @@ export function attachToolbarSlide({
   const handlePointerCancel = (e: PointerEvent) => {
     if (press && e.pointerId === press.pointerId) end(false);
   };
-  // The click a slide's release makes is the slide's, not the tab's under the finger.
+  // The click a slide's release makes (a mouse's; a finger's drag or long press makes none) is
+  // the slide's, not the tab's under it. A click after the next press, or a key's later on, is a
+  // tap.
   const handleClick = (e: MouseEvent) => {
-    if (!swallowClick) return;
-    swallowClick = false;
+    if (e.timeStamp - releasedAt > RELEASE_CLICK_MS) return;
     e.preventDefault();
     e.stopPropagation();
   };
 
   if (first) handlePointerDown(first);
   bar.addEventListener('pointerdown', handlePointerDown);
+  bar.addEventListener('pointerleave', handlePointerLeave);
   bar.addEventListener('pointermove', handlePointerMove);
   bar.addEventListener('pointerup', handlePointerUp);
   bar.addEventListener('pointercancel', handlePointerCancel);
   bar.addEventListener('click', handleClick, true);
   return () => {
-    if (press) window.clearTimeout(press.holdTimer);
+    // Let go mid-slide (the toolbar drawn for another tab, a second finger's tap): nothing of it
+    // stays on the bar.
+    if (press) {
+      window.clearTimeout(press.holdTimer);
+      if (press.isSliding) endSelectionTicks();
+      press = null;
+    }
+    window.clearTimeout(paintKept);
+    bar.toggleAttribute('data-sliding', false);
+    unpaint();
     bar.removeEventListener('pointerdown', handlePointerDown);
+    bar.removeEventListener('pointerleave', handlePointerLeave);
     bar.removeEventListener('pointermove', handlePointerMove);
     bar.removeEventListener('pointerup', handlePointerUp);
     bar.removeEventListener('pointercancel', handlePointerCancel);
