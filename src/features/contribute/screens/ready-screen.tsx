@@ -5,6 +5,7 @@ import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
 import { useStackRoom } from '../common/use-stack-room';
+import { useToolbarLift } from '../common/use-toolbar-lift';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
 import { CreditsButton } from '../map/credits-button';
 
@@ -71,6 +72,8 @@ export function ReadyScreen({
     ((focusTab && tab[focusTab].current) ?? headingRef.current)?.focus();
   }, [focusTab, historyTabRef, accountTabRef]);
   const stackRef = useStackRoom();
+  // The page's toolbar stands over the earlier-recordings question, as over Start.
+  const liftRef = useToolbarLift();
 
   // Figma's Record stands the right-hand column 20 in and 24 over Start tracking.
   useEffect(() => {
@@ -123,7 +126,11 @@ export function ReadyScreen({
           {!earlierQuestion && !AppUpdateGate && startBar}
           <div aria-hidden className={TOOLBAR_ROOM} />
         </div>
-        {earlierQuestion && <EarlierRecordingsPanel {...earlierQuestion} />}
+        {earlierQuestion && (
+          <div ref={liftRef}>
+            <EarlierRecordingsPanel {...earlierQuestion} />
+          </div>
+        )}
       </section>
     </>
   );

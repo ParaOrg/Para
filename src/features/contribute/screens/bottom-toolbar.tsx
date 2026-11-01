@@ -32,10 +32,11 @@ export const TOOLBAR_ROOM = 'h-14 shrink-0';
 /**
  * Where the page stands its one toolbar (contribute-page.tsx): over the foot of Record, History
  * and Account alike, 32 over the screen's edge (Figma's Record and History), clear of a phone's
- * gesture bar. Over the tab screens, under the sheets and dialogs over them.
+ * gesture bar; lifted over the earlier-recordings question where Record shows it
+ * (`--toolbar-lift`). Over the tab screens, under the sheets and dialogs over them.
  */
 export const TOOLBAR_PLACE =
-  'pointer-events-none absolute inset-x-0 bottom-0 z-25 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] *:pointer-events-auto';
+  'pointer-events-none absolute inset-x-0 bottom-[var(--toolbar-lift,0px)] z-25 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] *:pointer-events-auto';
 
 const TAB = 'relative flex min-w-18 flex-col items-center rounded-full py-1 text-xs/4 font-medium';
 
