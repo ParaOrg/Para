@@ -149,6 +149,22 @@ const statusOf = async (page, name) =>
   ((await row(page, name).locator('[aria-live]').textContent()) ?? '').trim();
 
 /** A saved recording of this phone, put straight into its database as an earlier visit would. */
+/** How many recordings this phone keeps, read from IndexedDB as History reads them. */
+const recordingsOnPhone = (page) =>
+  page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onsuccess = () => {
+          const get = open.result.transaction('recordings').objectStore('recordings').getAll();
+          get.onsuccess = () => {
+            open.result.close();
+            resolve(get.result.length);
+          };
+        };
+      }),
+  );
+
 async function seed(page, id, name, upload) {
   const recording = {
     version: 1,
@@ -1796,6 +1812,8 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await accountTab(page).click();
   await button(page, 'Account settings').click();
   await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  // The countdown runs on the suite's clock, not the runner's speed.
+  await page.clock.install();
   await button(page, 'Delete account').click();
   await page.getByRole('heading', { level: 1, name: 'Delete account' }).waitFor();
   const screenText = await page.locator('[data-screen-hash="#delete-account"]').innerText();
@@ -1821,6 +1839,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     firstCount,
   );
   const ready = button(page, 'Delete account');
+  await page.clock.fastForward(5000);
   await ready.waitFor({ timeout: 8000 });
   check(
     '  then it can, and says so once, politely',
@@ -1862,6 +1881,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     '  and the phone keeps no deletion from it: Para never said yes, so nothing may later clear the phone',
     (await page.evaluate(() => localStorage.getItem('para.contributor-deletion'))) === null,
   );
+  check(
+    '  and both recordings are still on the phone',
+    (await recordingsOnPhone(page)) === 2,
+    String(await recordingsOnPhone(page)),
+  );
 
   // While the delete is on its way, nothing cancels it: the safe answer and Escape wait.
   fake.next.deleteAccount = 'hold';
@@ -1874,20 +1898,25 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       (await sheet.getByRole('button', { name: 'No, I change my mind' }).isDisabled()) &&
       (await sheet.getByRole('button', { name: 'Deleting…' }).isDisabled()),
   );
+  // The phone's Back mid-delete: the screen and its question stay, so the answer is seen.
+  await page.goBack();
+  const isHashBack = await page
+    .waitForFunction(() => location.hash === '#delete-account', null, { timeout: 5000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    "  the phone's Back while it is on its way leaves Delete account and its question up",
+    isHashBack &&
+      (await page.getByRole('heading', { level: 1, name: 'Delete account' }).count()) === 1 &&
+      (await sheet.getByRole('button', { name: 'Deleting…' }).count()) === 1,
+  );
   fake.release();
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
-  const keptRecordings = await page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        const open = indexedDB.open('para-contribute');
-        open.onsuccess = () => {
-          const get = open.result.transaction('recordings').objectStore('recordings').getAll();
-          get.onsuccess = () => resolve(get.result.length);
-        };
-      }),
-  );
+  const keptRecordings = await recordingsOnPhone(page);
   const keptUpload = database.rows.get('ffffffff-1111-4000-8000-000000000001');
   check(
     '  switch off: Para is asked to keep the uploads, which stay with no one’s name; then Sign in, every recording on the phone gone',
@@ -1937,6 +1966,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   // An editor's account is not deleted from the contributor page: it says where to go.
   const { page, fake } = await phone({ userId: EDITOR_ID });
   await start(page).waitFor({ timeout: 30000 });
+  await seed(page, 'ffffffff-2222-4000-8000-000000000010', 'The editor’s own ride');
   await accountTab(page).click();
   await button(page, 'Account settings').click();
   await button(page, 'Delete account').click();
@@ -1951,9 +1981,70 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     (await sheet.getByRole('alert').innerText()) ===
       "This account can't be deleted here. Ask Para's team to remove it." &&
       database.users.has(EDITOR_ID) &&
-      fake.deletedAccounts.length === 0,
+      fake.deletedAccounts.length === 0 &&
+      (await recordingsOnPhone(page)) === 1,
     await sheet.getByRole('alert').innerText(),
   );
+}
+{
+  // Refused for owning rows of the map, or as no account: one line each, nothing gone anywhere.
+  // Then an answer lost on the way back: Para deleted it, so the try again hears it gone already.
+  const OWNER_ID = 'ffffffff-0000-4000-8000-000000000006';
+  database.users.set(OWNER_ID, {
+    email: 'owner@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Owner', phone: '+639170000006' },
+  });
+  const { page, fake, errors } = await phone({ userId: OWNER_ID });
+  await start(page).waitFor({ timeout: 30000 });
+  await seed(page, 'ffffffff-2222-4000-8000-000000000011', 'Still here');
+  await accountTab(page).click();
+  await button(page, 'Account settings').click();
+  await page.clock.install();
+  await button(page, 'Delete account').click();
+  await page.getByRole('heading', { level: 1, name: 'Delete account' }).waitFor();
+  await page.clock.fastForward(5000);
+  await button(page, 'Delete account').waitFor({ timeout: 8000 });
+  await button(page, 'Delete account').click();
+  const sheet = page.getByRole('alertdialog', { name: 'Do you want to delete your account?' });
+  const refusal = "This account can't be deleted here. Ask Para's team to remove it.";
+  for (const fault of ['ownsMapRows', 'notAnAccount']) {
+    fake.next.deleteAccount = fault;
+    await sheet.getByRole('button', { name: 'Delete this account' }).click();
+    await sheet.getByRole('alert').filter({ hasText: refusal }).waitFor();
+    check(
+      `refused (${fault}): one line, the account stays in Para, its recording stays on the phone, no deletion kept`,
+      database.users.has(OWNER_ID) &&
+        fake.deletedAccounts.length === 0 &&
+        (await recordingsOnPhone(page)) === 1 &&
+        (await page.evaluate(() => localStorage.getItem('para.contributor-deletion'))) === null,
+      await sheet.getByRole('alert').innerText(),
+    );
+  }
+  fake.next.deleteAccount = 'lostAnswer';
+  await sheet.getByRole('button', { name: 'Delete this account' }).click();
+  await sheet.getByRole('alert').filter({ hasText: 'No signal' }).waitFor();
+  check(
+    '  an answer lost on the way back says no signal; Para has deleted it, the phone still keeps everything',
+    !database.users.has(OWNER_ID) &&
+      fake.deletedAccounts.join() === OWNER_ID &&
+      (await recordingsOnPhone(page)) === 1 &&
+      (await page.evaluate(() => localStorage.getItem('para.contributor-deletion'))) === null,
+  );
+  await sheet.getByRole('button', { name: 'Delete this account' }).click();
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 15000 });
+  check(
+    '  tried again, Para answers it gone already: Sign in, nothing left on the phone, deleted once',
+    fake.deletedAccounts.join() === OWNER_ID &&
+      fake.deleteAccountRequests === 4 &&
+      (await recordingsOnPhone(page)) === 0 &&
+      (await page.evaluate((key) => localStorage.getItem(key), AUTH_KEY)) === null,
+    JSON.stringify({ requests: fake.deleteAccountRequests, deleted: fake.deletedAccounts }),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 {
   // "Also delete my uploaded routes" on: Para is asked to delete them too, and does.

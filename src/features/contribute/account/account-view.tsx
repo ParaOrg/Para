@@ -1,4 +1,5 @@
-import { Activity, useState } from 'react';
+import { useIsMutating } from '@tanstack/react-query';
+import { Activity, useEffect, useState } from 'react';
 
 import { messageOf } from './account-message';
 import { AccountScreen } from './account-screen';
@@ -9,6 +10,7 @@ import { DeleteAccountView } from './delete-account-view';
 import { useAccountSettingsView } from './use-account-settings-view';
 import { useChangePasswordView } from './use-change-password-view';
 import { useDeleteAccountView } from './use-delete-account-view';
+import { accountKeys } from '../api/account-keys';
 import { AccountError } from '../api/account-problem';
 import type { MyStats } from '../api/fetch-my-stats';
 import { useAccountQuery } from '../api/use-account-query';
@@ -39,11 +41,20 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
   const profile = useProfileQuery();
   const stats = useMyStatsQuery();
   const signOut = useSignOutMutation();
+  // A delete on its way keeps its screen up whatever the hash does (the phone's Back, the
+  // browser's): its answer, a failure above all, is always seen where it was asked for.
+  const isDeleting = useIsMutating({ mutationKey: accountKeys.deleteAccount() }) > 0;
+  const isDeleteLeft = isDeleting && !deleteAccount.isOpen;
+  const putDeleteBack = settings.replaceWith;
+  useEffect(() => {
+    // Back from it lands on Account settings: the URL is put back as the screen still shows.
+    if (isDeleteLeft) putDeleteBack('#delete-account');
+  }, [isDeleteLeft, putDeleteBack]);
 
   // Inside Account, so their Back returns there, even after a reload. Account settings stays
   // drawn, hidden, under Change password: a change not saved yet, or a save on its way, is still
   // there to come back to.
-  if (deleteAccount.isOpen) {
+  if (deleteAccount.isOpen || isDeleting) {
     return <DeleteAccountView onBack={() => deleteAccount.closeTo('#account-settings')} />;
   }
   if (settings.isOpen || changePassword.isOpen) {

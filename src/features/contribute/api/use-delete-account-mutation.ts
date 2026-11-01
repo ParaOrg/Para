@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 
+import { accountKeys } from './account-keys';
 import { deleteAccount, type DeleteAccountChoice } from './delete-account';
 import { useSessionWriter } from './use-session-writer';
 
@@ -11,6 +12,7 @@ import { useSessionWriter } from './use-session-writer';
 export function useDeleteAccountMutation() {
   const write = useSessionWriter();
   return useMutation({
+    mutationKey: accountKeys.deleteAccount(),
     mutationFn: (choice: DeleteAccountChoice) => deleteAccount(choice),
     onSuccess: () => write(null),
     networkMode: 'always',
