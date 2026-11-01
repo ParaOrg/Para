@@ -235,6 +235,18 @@ export function ContributePage({ locator }: ContributePageProps) {
   const [stopAskedWhile, setStopAskedWhile] = useState<StopAskedWhile>(null);
   if (stopQuestionIn(phase, stopAskedWhile) !== stopAskedWhile) setStopAskedWhile(null);
   const isStopShown = isStopQuestionShown(phase, stopAskedWhile);
+  const isAccountGateShown = accountGate === 'needs-account' || accountGate === 'needs-profile';
+  // Every screen drawn over the whole map, and the questions that must be answered first.
+  // Unfinished is not one: its card leaves the map and its buttons in sight, and in use.
+  const isMapCovered =
+    isAccountGateShown ||
+    isHistoryShown ||
+    isProfileShown ||
+    isPermissionsShown ||
+    isCreditsShown ||
+    isStopShown ||
+    phase === 'form' ||
+    phase === 'saved';
   const discardButtonRef = useRef<HTMLButtonElement>(null);
   const askToStop = () => {
     setStopAskedWhile(phase === 'paused' ? 'paused' : 'recording');
@@ -383,14 +395,9 @@ export function ContributePage({ locator }: ContributePageProps) {
         .join(' ')}
       className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"
     >
-      {/* inert while History, Profile, the permissions screen or the credits cover it: no map
-          control can be tabbed to behind the screen. */}
-      <div
-        inert={
-          isHistoryShown || isProfileShown || isPermissionsShown || isCreditsShown || isStopShown
-        }
-        className="contents"
-      >
+      {/* inert while a screen or a question covers it: no map control can be tabbed to, or
+          found by a screen reader, behind it. */}
+      <div inert={isMapCovered} className="contents">
         <ContributeMap
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
@@ -411,7 +418,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           }
         />
       </div>
-      {(accountGate === 'needs-account' || accountGate === 'needs-profile') && (
+      {isAccountGateShown && (
         <Suspense fallback={null}>
           <AccountGate needsProfile={accountGate === 'needs-profile'} />
         </Suspense>
