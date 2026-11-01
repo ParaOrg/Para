@@ -2295,6 +2295,81 @@ const WAKE = () => {
   await page.context().close();
 }
 
+// ------------------- a screen the phone will not keep awake: said once refused, not while asked
+const REFUSING_WAKE = () => {
+  window.__wakeAnswer = 'refuse';
+  window.__wakeAsks = 0;
+  let visible = 'visible';
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visible });
+  window.__show = (state) => {
+    visible = state;
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
+  // Held until the suite answers it, as a phone thinking it over: 'refuse' or 'grant'.
+  const waiting = [];
+  window.__answerWake = () =>
+    waiting.splice(0).forEach(({ resolve, reject }) => {
+      if (window.__wakeAnswer === 'refuse') {
+        reject(new DOMException('Low battery', 'NotAllowedError'));
+        return;
+      }
+      const sentinel = new EventTarget();
+      sentinel.released = false;
+      sentinel.release = async () => {
+        sentinel.released = true;
+      };
+      resolve(sentinel);
+    });
+  Object.defineProperty(navigator, 'wakeLock', {
+    configurable: true,
+    value: {
+      request: () => {
+        window.__wakeAsks++;
+        return new Promise((resolve, reject) => waiting.push({ resolve, reject }));
+      },
+    },
+  });
+};
+{
+  const { page, errors } = await phone();
+  await page.addInitScript(REFUSING_WAKE);
+  await page.reload({ waitUntil: 'load' });
+  const note = page.getByText('The screen could not be kept awake');
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await page.waitForFunction(() => window.__wakeAsks === 1);
+  await page.waitForTimeout(300);
+  check(
+    'while the phone is still asked to keep the screen awake, nothing says it may sleep',
+    (await note.count()) === 0,
+  );
+  await page.evaluate(() => window.__answerWake());
+  check(
+    '  refused, it says so',
+    await note.waitFor({ timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
+  // The phone says yes when the page is shown again: the note goes.
+  await page.evaluate(() => {
+    window.__wakeAnswer = 'grant';
+    window.__show('hidden');
+    window.__show('visible');
+  });
+  await page.waitForFunction(() => window.__wakeAsks === 2);
+  await page.evaluate(() => window.__answerWake());
+  check(
+    '  granted later, it says so no more',
+    await note.waitFor({ state: 'detached', timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------- Back to the map on Unfinished and Saved, not on Start or Recording; a ride kept
 {
   const { page, errors } = await phone();

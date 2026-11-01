@@ -37,8 +37,8 @@ export interface RecordingState {
   lastSaved: Recording | null;
   /** Every recording saved on this phone, newest first. */
   saved: readonly Recording[];
-  /** Whether the screen is being kept awake. */
-  isAwake: boolean;
+  /** The phone refused to keep the screen awake while recording: it may sleep, and stop it. */
+  isWakeRefused: boolean;
   /** Something the contributor should know went wrong, in words. */
   problem: string | null;
   /** What a screen reader hears once: a switch of mode, a mark, or recording again. */

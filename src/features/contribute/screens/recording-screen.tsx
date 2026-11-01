@@ -18,8 +18,8 @@ interface RecordingScreenProps {
   mode: Mode;
   /** Paused for now: Resume and Finish replace Pause and the mode button. */
   isPaused: boolean;
-  /** Whether the screen is being kept awake. */
-  isAwake: boolean;
+  /** The phone refused to keep the screen awake: the note says it may sleep. */
+  isWakeRefused: boolean;
   /** Focus the Pause bar as the screen opens, not its heading: back from Keep recording. */
   shouldFocusPause: boolean;
   onPause: () => void;
@@ -54,7 +54,7 @@ export function RecordingScreen({
   figures,
   mode,
   isPaused,
-  isAwake,
+  isWakeRefused,
   shouldFocusPause,
   onPause,
   onResume,
@@ -121,7 +121,7 @@ export function RecordingScreen({
         <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
           {isPaused ? 'Recording paused' : 'Recording a route'}
         </h1>
-        {!isAwake && !isPaused && (
+        {isWakeRefused && !isPaused && (
           <p className="bg-surface p-2 font-sn-pro text-sm/5 text-content-primary">
             The screen could not be kept awake, so it may sleep and the location may stop.
           </p>

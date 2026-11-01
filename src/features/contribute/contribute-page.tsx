@@ -614,7 +614,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                   figures={figures}
                   mode={recording.mode}
                   isPaused={phase === 'paused'}
-                  isAwake={recording.isAwake}
+                  isWakeRefused={recording.isWakeRefused}
                   shouldFocusPause={recording.focusTarget === 'pause'}
                   onPause={recording.stop}
                   onResume={recording.resume}
