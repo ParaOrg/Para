@@ -509,6 +509,111 @@ async function seed(page, id, name, upload) {
   await page.context().close();
 }
 
+// ------------------------------------------- the toolbar stays in sight through every move
+// The DOM can't see this: the toolbar element is there, but a screen's snapshot can paint over
+// it. So the move is held halfway and the toolbar's pixels are looked at: its labels' and icons'
+// ink must be there as it is before and after.
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  // Each screen's code fetched once, so the moves below are a phone's after its first.
+  await historyTab(page).click();
+  await heading('History').waitFor();
+  await accountTab(page).click();
+  await heading('Account').waitFor();
+  await toolbarRecord(page).click();
+  await start(page).waitFor();
+
+  // Whether the page has a view transition's parts moving (tab-motion.ts).
+  const movesOver = () =>
+    page.waitForFunction(
+      () =>
+        !document
+          .getAnimations()
+          .some((animation) => animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+  const box = await page.locator('.tab-toolbar').boundingBox();
+  /** The toolbar's ink: its pixels darker than mid-grey, as the page shows them now. */
+  const toolbarInk = async () => {
+    const png = await page.screenshot({ clip: box });
+    return page.evaluate(async (base64) => {
+      const image = await createImageBitmap(
+        await (await fetch(`data:image/png;base64,${base64}`)).blob(),
+      );
+      const canvas = new OffscreenCanvas(image.width, image.height);
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0);
+      const { data } = context.getImageData(0, 0, image.width, image.height);
+      let ink = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        if (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2] < 128) ink += 1;
+      }
+      return ink;
+    }, png.toString('base64'));
+  };
+  /** Taps `tab`, holds the move halfway, and reads the toolbar's ink there; then lets it end. */
+  const inkHalfway = async (tab) => {
+    await movesOver();
+    await tab.click();
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .some((animation) => animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        if (!animation.effect?.pseudoElement?.startsWith('::view-transition')) continue;
+        animation.pause();
+        animation.currentTime = animation.effect.getComputedTiming().endTime / 2;
+      }
+    });
+    const ink = await toolbarInk();
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        if (animation.effect?.pseudoElement?.startsWith('::view-transition')) animation.play();
+      }
+    });
+    await movesOver();
+    return ink;
+  };
+
+  await movesOver();
+  const onRecord = await toolbarInk();
+  // The two moves from Record, where the screen exists only in the new page, and the moves
+  // between screens and back to Record as controls.
+  const ink = {
+    recordToHistory: await inkHalfway(historyTab(page)),
+    historyToAccount: await inkHalfway(accountTab(page)),
+    accountToHistory: await inkHalfway(historyTab(page)),
+    historyToRecord: await inkHalfway(toolbarRecord(page)),
+    recordToAccount: await inkHalfway(accountTab(page)),
+    accountToRecord: await inkHalfway(toolbarRecord(page)),
+  };
+  const isInSight = (halfway) => halfway > 0.7 * onRecord;
+  const said = JSON.stringify({ onRecord, ...ink });
+  check(
+    'Record to History: halfway through the move the toolbar is in sight, not under History',
+    isInSight(ink.recordToHistory),
+    said,
+  );
+  check(
+    '  Record to Account: halfway, the toolbar is in sight too',
+    isInSight(ink.recordToAccount),
+    said,
+  );
+  check(
+    '  and between History and Account, and back to Record from each, as before',
+    isInSight(ink.historyToAccount) &&
+      isInSight(ink.accountToHistory) &&
+      isInSight(ink.historyToRecord) &&
+      isInSight(ink.accountToRecord),
+    said,
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------------------------------------- Account: the Commute Statistics
 {
   const { page, fake, errors } = await phone();
