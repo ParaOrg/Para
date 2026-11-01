@@ -512,8 +512,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       ]
         .filter(Boolean)
         .join(' ')}
-      // Toasts float under the top row (Para's mark and the ?, a recording's ✕), 12 under its 48.
-      className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro [--toast-top:calc(env(safe-area-inset-top)+--spacing(21))]"
+      className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"
     >
       {/* inert while a screen or a question covers it: no map control can be tabbed to, or
           found by a screen reader, behind it. */}

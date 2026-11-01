@@ -2412,24 +2412,6 @@ const ANIMATIONS = () => {
   await second.addInitScript(GPS);
   await second.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
   await toastSaying(second, 'Para is open in another tab').waitFor({ timeout: 10000 });
-  {
-    // On Ready the toast floats under the top row: Para's mark and the ? stay in sight.
-    await toastSettled(second);
-    const toastBox = await second.getByTestId('toast').boundingBox();
-    const topRow = await second
-      .locator('[data-para-mark], button[aria-label="How to record"]')
-      .evaluateAll((elements) =>
-        elements.map((element) => {
-          const box = element.getBoundingClientRect();
-          return { name: element.getAttribute('aria-label') ?? 'mark', bottom: box.bottom };
-        }),
-      );
-    check(
-      "  on Ready the warning toast sits under the top row: Para's mark (and the ?) uncovered",
-      !!toastBox && topRow.length > 0 && topRow.every((item) => toastBox.y >= item.bottom),
-      JSON.stringify({ toast: toastBox?.y, topRow }),
-    );
-  }
   check(
     'a second tab does not reopen the ride the first is recording',
     (await second.getByRole('button', { name: 'Resume' }).count()) === 0,
@@ -2674,12 +2656,12 @@ const REFUSING_WAKE = () => {
     };
   });
   check(
-    "  the toast is drawn as designed on this page: the surface's colour, round corners, a shadow, 12 in and under the top row",
+    "  the toast is drawn as designed on this page: the surface's colour, round corners, a shadow, 12 in and 12 down, over the top row",
     looks.background !== 'rgba(0, 0, 0, 0)' &&
       looks.radius === '16px' &&
       looks.shadow !== 'none' &&
       looks.left === 12 &&
-      looks.top === 84,
+      looks.top === 12,
     JSON.stringify(looks),
   );
   await asleep.getByRole('button', { name: 'Close' }).click();
@@ -2701,24 +2683,40 @@ const REFUSING_WAKE = () => {
       () => false,
     ),
   );
-  // Under the top row: the recording's ✕ beside it is still there to press.
+  // Over the top row: where the toast meets the recording's ✕, the toast is what a tap reaches.
   await toastSettled(page);
-  const [toastBox, discardBox] = await Promise.all([
-    asleep.boundingBox(),
-    page.getByRole('button', { name: 'Discard recording' }).boundingBox(),
-  ]);
+  const overTopRow = await page.evaluate(() => {
+    const toast = document.querySelector('[data-testid="toast"]');
+    const discard = document.querySelector('button[aria-label="Discard recording"]');
+    if (!toast || !discard) return { isOver: false, reason: 'missing' };
+    const box = discard.getBoundingClientRect();
+    const toastBox = toast.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    const isUnderToast =
+      x >= toastBox.left && x <= toastBox.right && y >= toastBox.top && y <= toastBox.bottom;
+    return {
+      isOver: isUnderToast && toast.contains(document.elementFromPoint(x, y)),
+      discard: { x, y },
+      toast: { top: toastBox.top, bottom: toastBox.bottom },
+    };
+  });
+  check(
+    "  the toast sits over the top row: over the recording's ✕ while it shows",
+    overTopRow.isOver,
+    JSON.stringify(overTopRow),
+  );
+  // Closed with its own ✕, the recording's ✕ under it is there to press.
+  await asleep.getByRole('button', { name: 'Close' }).click();
+  await asleep.waitFor({ state: 'detached', timeout: 5000 });
   await page.getByRole('button', { name: 'Discard recording' }).click({ timeout: 5000 });
   const stopScreen = page.getByRole('alertdialog', { name: 'Stop and delete this ride?' });
   check(
-    '  the toast sits under the top row: Discard ✕ is clear of it, and pressing it asks to stop',
-    !!toastBox &&
-      !!discardBox &&
-      toastBox.y >= discardBox.y + discardBox.height &&
-      (await stopScreen.waitFor({ timeout: 5000 }).then(
-        () => true,
-        () => false,
-      )),
-    JSON.stringify({ toastBox, discardBox }),
+    "  closed, the recording's ✕ under it is pressed and asks to stop",
+    await stopScreen.waitFor({ timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
   );
   // ✕ paused it, so the lock was let go with the problem; Keep recording asks again, refused.
   await stopScreen.getByRole('button', { name: 'Keep recording' }).click();
