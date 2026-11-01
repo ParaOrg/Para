@@ -44,7 +44,6 @@ import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
 import { TUTORIAL_ENTRY, isTutorialEntry } from './tutorial/tutorial-entry';
 import type { TutorialDemo } from './tutorial/tutorial-steps';
-import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
 
@@ -119,6 +118,11 @@ const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-reco
 const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 const loadSaveForm = retryingImport(() => import('./screens/save-form'));
 const loadSavedScreen = retryingImport(() => import('./screens/saved-screen'));
+// The check before a first upload, with Cloudflare's widget: fetched only when one is asked for.
+const loadUploadCheck = retryingImport(() => import('./uploads/upload-check'));
+const UploadCheck = lazy(() =>
+  loadUploadCheck().then((module) => ({ default: module.UploadCheck })),
+);
 const loadTutorial = retryingImport(() => import('./tutorial/tutorial'));
 const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: module.Tutorial })));
 // Start tracking's morph, off the opening: fetched with the recording screens ahead of Start.
@@ -551,7 +555,9 @@ export function ContributePage({ locator }: ContributePageProps) {
             </p>
           )}
           {uploads.check && (phase === 'ready' || phase === 'saved') && (
-            <UploadCheck check={uploads.check} />
+            <Suspense fallback={null}>
+              <UploadCheck check={uploads.check} />
+            </Suspense>
           )}
           <p role="status" className="sr-only">
             {recording.announcement}
