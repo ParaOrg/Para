@@ -17,21 +17,13 @@ interface AccountViewProps {
   /** This phone's saved recordings, so Logout can warn about those not sent yet. */
   recordings: readonly Recording[];
   statusOf: (recording: Recording) => UploadStatus;
-  onOpenHistory: () => void;
-  /** Record, in the toolbar: back to Start. */
-  onOpenRecord: () => void;
 }
 
 /**
  * Account with its data: the email, the name, the stats, and logging out. Account settings opens
  * in its place, so the page fetches the two together, on the Account tab's tap.
  */
-export function AccountView({
-  recordings,
-  statusOf,
-  onOpenHistory,
-  onOpenRecord,
-}: AccountViewProps) {
+export function AccountView({ recordings, statusOf }: AccountViewProps) {
   const settings = useAccountSettingsView();
   const account = useAccountQuery();
   const profile = useProfileQuery();
@@ -49,11 +41,9 @@ export function AccountView({
       unsentCount={recordings.filter((recording) => isNotSent(statusOf(recording))).length}
       isLoggingOut={signOut.isPending}
       error={messageOf(signOut.error)}
-      onOpenHistory={onOpenHistory}
       onOpenSettings={settings.open}
       onLogout={() => signOut.mutate()}
       onLogoutAsked={() => signOut.reset()}
-      onOpenRecord={onOpenRecord}
     />
   );
 }

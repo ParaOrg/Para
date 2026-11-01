@@ -1,13 +1,5 @@
-// Figma's `play`, `pause` and `finish` icons (the tracking bars' 24px icons), as the bars draw them: currentColor.
-
-/** Figma's `play`, on Start and Resume. */
-export function PlayIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M13.9993 6.16543C15.6818 7.12122 17.0038 7.87231 17.9457 8.56033C18.894 9.25308 19.5954 9.97711 19.8466 10.9318C20.0308 11.6318 20.0308 12.3682 19.8466 13.0682C19.5954 14.0229 18.894 14.7468 17.9457 15.4396C17.0038 16.1276 15.6818 16.8787 13.9994 17.8345C12.3742 18.7578 11.0037 19.5364 9.96332 19.979C8.91458 20.425 7.95846 20.6511 7.02921 20.3878C6.34629 20.1942 5.72491 19.8269 5.22434 19.3219C4.54499 18.6365 4.2723 17.6892 4.14328 16.5491C4.01521 15.4174 4.01522 13.9359 4.01523 12.0516V11.9484C4.01522 10.0641 4.01521 8.58259 4.14328 7.45087C4.2723 6.31081 4.54499 5.36346 5.22434 4.67805C5.72491 4.17302 6.34629 3.80571 7.02921 3.61219C7.95846 3.34887 8.91458 3.57496 9.96332 4.02103C11.0037 4.46355 12.3742 5.24213 13.9993 6.16543Z" />
-    </svg>
-  );
-}
+// Figma's `pause` and `finish` icons (the tracking bars' 24px icons), as the bars draw them: currentColor.
+// `play`, which Start uses too, is its own file (play-icon.tsx).
 
 /** Figma's `pause`, on Pause, and on Stop when a recording was left open. */
 export function PauseIcon() {
