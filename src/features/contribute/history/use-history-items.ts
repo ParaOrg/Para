@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { historyKeys } from './history-keys';
@@ -59,7 +59,7 @@ const removeBriefOf = (error: unknown): string =>
  */
 async function factsFromFixes(recording: Recording): Promise<RideFacts> {
   const facts = rideFactsOf(recording, (await loadFixes(recording.id)).map(fixOfRow));
-  if (recording.distanceM === undefined) {
+  if (recording.distanceM === undefined && Number.isFinite(facts.distanceM)) {
     updateRecording(recording.id, (stored) => ({ ...stored, distanceM: facts.distanceM })).catch(
       (error: unknown) => {
         // Not kept: the next opening works it out again. Nothing on the card is lost.
@@ -99,7 +99,10 @@ export function useHistoryItems(
           ),
         ),
       ),
-    enabled: needsFixes.length > 0,
+    // Once the pictures are known, so the cards that need a trail are; then each change of that
+    // list (a delete, a new save) keeps the facts read so far while the new ones are read.
+    enabled: needsFixes.length > 0 && pictures !== undefined,
+    placeholderData: keepPreviousData,
     // A saved recording's fixes never change, so they are read once a History opening.
     staleTime: Infinity,
   });

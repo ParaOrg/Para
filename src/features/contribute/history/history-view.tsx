@@ -19,6 +19,8 @@ const NO_PICTURES: ReadonlyMap<string, string> = new Map();
  */
 export function HistoryView({ recordings, uploads, ...actions }: HistoryViewProps) {
   const pictures = useTrailPicturesQuery();
-  const items = useHistoryItems(recordings, uploads, pictures.data);
-  return <HistoryScreen items={items} pictures={pictures.data ?? NO_PICTURES} {...actions} />;
+  // Pictures that could not be read are none: every card draws its trail instead.
+  const known = pictures.isError ? NO_PICTURES : pictures.data;
+  const items = useHistoryItems(recordings, uploads, known);
+  return <HistoryScreen items={items} pictures={known ?? NO_PICTURES} {...actions} />;
 }

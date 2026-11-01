@@ -143,7 +143,10 @@ const actionsOf = async (page, name) => {
   return row(page, name).getByRole('button');
 };
 /** A card's status line, the one under its date: Uploaded, Only on this phone, … */
-const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
+// Its text, not its rendered text: a card off screen is not drawn (content-visibility), and its
+// words are there all the same, as a screen reader finds them.
+const statusOf = async (page, name) =>
+  ((await row(page, name).locator('[aria-live]').textContent()) ?? '').trim();
 
 /** A saved recording of this phone, put straight into its database as an earlier visit would. */
 async function seed(page, id, name, upload) {
@@ -663,7 +666,8 @@ async function seed(page, id, name, upload) {
                 accuracyM: 5,
               });
             }
-            if (n % 10 !== 0)
+            // The oldest has its picture, so only its distance sends History to its fixes.
+            if (n === 0 || n % 10 !== 0)
               tx.objectStore('thumbnails').put({ recordingId: id, dataUrl: picture });
           }
           tx.oncomplete = () => {
@@ -677,13 +681,17 @@ async function seed(page, id, name, upload) {
   );
   await page.reload({ waitUntil: 'load' });
   await start(page).waitFor({ timeout: 30000 });
+  // Played in the page: waitForFunction does not wait out a promise, so the import's answer is
+  // kept on the window and read on each poll.
   await page.waitForFunction(
-    () =>
-      import('/src/features/contribute/screen-loaders.ts').then(
-        (loaders) => loaders.historyChunk.loaded() !== null,
-      ),
+    () => {
+      import('/src/features/contribute/screen-loaders.ts').then((loaders) => {
+        window.isHistoryHeld = loaders.historyChunk.loaded() !== null;
+      });
+      return window.isHistoryHeld === true;
+    },
     null,
-    { timeout: 15000 },
+    { timeout: 15000, polling: 100 },
   );
   // A mid-range phone: four times slower than this machine.
   const cdp = await page.context().newCDPSession(page);
@@ -734,8 +742,40 @@ async function seed(page, id, name, upload) {
       .then((handle) => handle.jsonValue());
   const keptIn = await shownWithin(COUNT - 1);
   const allIn = await shownWithin(COUNT);
-  // A moment for anything late to land, and shift if it would.
-  await page.waitForTimeout(1500);
+  // Until the oldest's distance is kept on the phone: the last thing the opening does.
+  /** The oldest recording's distance as the phone keeps it, read in the page; null for none. */
+  const keptDistance = () =>
+    page.evaluate(
+      (id) =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const get = open.result.transaction('recordings').objectStore('recordings').get(id);
+            get.onsuccess = () => {
+              open.result.close();
+              resolve(get.result?.distanceM ?? null);
+            };
+          };
+        }),
+      LEGACY_ID,
+    );
+  // Played in the page: waitForFunction does not wait out a promise, so IndexedDB's answer is
+  // kept on the window and read on each poll.
+  await page.waitForFunction(
+    (id) => {
+      const open = indexedDB.open('para-contribute');
+      open.onsuccess = () => {
+        const get = open.result.transaction('recordings').objectStore('recordings').get(id);
+        get.onsuccess = () => {
+          open.result.close();
+          window.isLegacyDistanceKept = get.result?.distanceM !== undefined;
+        };
+      };
+      return window.isLegacyDistanceKept === true;
+    },
+    LEGACY_ID,
+    { timeout: 15000, polling: 100 },
+  );
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   const opening = await page.evaluate(() => window.historyOpening);
   // The dev server's React and unbundled modules run several times slower than the build, so
@@ -751,17 +791,7 @@ async function seed(page, id, name, upload) {
     String(opening.shift),
   );
 
-  const legacy = await page.evaluate(
-    (id) =>
-      new Promise((resolve) => {
-        const open = indexedDB.open('para-contribute');
-        open.onsuccess = () => {
-          const get = open.result.transaction('recordings').objectStore('recordings').get(id);
-          get.onsuccess = () => resolve(get.result?.distanceM ?? null);
-        };
-      }),
-    LEGACY_ID,
-  );
+  const legacy = await keptDistance();
   const legacyCard = await page
     .locator('ul[aria-label="Recordings"] > li')
     .filter({ hasText: 'From 0' })
@@ -772,8 +802,120 @@ async function seed(page, id, name, upload) {
     legacy !== null && legacy > 2000 && legacy < 2600 && legacyCard.includes(kilometres),
     `${legacy} m, card: ${legacyCard}`,
   );
+  // Once: opened again, after a reload, History reads none of its fixes for it.
+  await page.addInitScript((id) => {
+    window.legacyFixReads = 0;
+    const getAll = IDBObjectStore.prototype.getAll;
+    IDBObjectStore.prototype.getAll = function (query, count) {
+      if (this.name === 'fixes' && query instanceof window.IDBKeyRange && query.lower?.[0] === id) {
+        window.legacyFixReads += 1;
+      }
+      return getAll.call(this, query, count);
+    };
+  }, LEGACY_ID);
+  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 30000 });
+  await openHistory(page);
+  await page
+    .locator('ul[aria-label="Recordings"] > li')
+    .filter({ hasText: 'From 0' })
+    .getByText(kilometres)
+    .waitFor({ timeout: 15000 });
+  check(
+    '  and only once: opened again after a reload, History reads none of its fixes for it',
+    (await page.evaluate(() => window.legacyFixReads)) === 0,
+    String(await page.evaluate(() => window.legacyFixReads)),
+  );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
+}
+
+// ------------- a recording deleted while History works its distance out is not brought back
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const GONE_ID = 'eeeeeeee-0000-4000-8000-00000000dead';
+  /** Writes, or with `isDeleting` deletes, the recording and its fixes in the page's database. */
+  const store = (isDeleting) =>
+    page.evaluate(
+      ([id, isDelete]) =>
+        new Promise((resolve, reject) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const tx = open.result.transaction(['recordings', 'fixes'], 'readwrite');
+            const fixes = window.IDBKeyRange.bound([id, 0], [id, Number.MAX_SAFE_INTEGER]);
+            if (isDelete) {
+              tx.objectStore('recordings').delete(id);
+              tx.objectStore('fixes').delete(fixes);
+            } else {
+              const startedAt = Date.UTC(2026, 8, 1);
+              tx.objectStore('recordings').put({
+                version: 2,
+                id,
+                status: 'saved',
+                startedAt,
+                stoppedAt: startedAt + 60_000,
+                savedAt: startedAt + 65_000,
+                gaps: [],
+                modes: [{ time: startedAt, to: 'ride' }],
+                startPointName: 'Gone',
+                endPointName: 'Away',
+                description: '',
+                rideKind: 'Jeep',
+                consentVersion: 4,
+              });
+              for (let seq = 0; seq < 30; seq += 1) {
+                tx.objectStore('fixes').put({
+                  recordingId: id,
+                  seq,
+                  time: startedAt + seq * 2000,
+                  lng: 121.05,
+                  lat: 14.6 + (seq * 8) / 111_320,
+                  accuracyM: 5,
+                });
+              }
+            }
+            tx.oncomplete = () => {
+              open.result.close();
+              resolve();
+            };
+            tx.onerror = () => reject(tx.error);
+          };
+        }),
+      [GONE_ID, isDeleting],
+    );
+  const isKept = () =>
+    page.evaluate(
+      (id) =>
+        new Promise((resolve) => {
+          const open = indexedDB.open('para-contribute');
+          open.onsuccess = () => {
+            const get = open.result.transaction('recordings').objectStore('recordings').get(id);
+            get.onsuccess = () => {
+              open.result.close();
+              resolve(get.result !== undefined);
+            };
+          };
+        }),
+      GONE_ID,
+    );
+  await store(false);
+  await page.reload({ waitUntil: 'load' });
+  await start(page).waitFor({ timeout: 30000 });
+  // Deleted (another tab, say) after the page listed it, before History works its distance out.
+  await store(true);
+  await openHistory(page);
+  const card = page.locator('ul[aria-label="Recordings"] > li').filter({ hasText: 'Gone' });
+  // The distance, worked out from what it found of the fixes (none), is on the card.
+  await card.getByText(/\d (m|km)/).waitFor({ timeout: 15000 });
+  check(
+    'a recording deleted while History works its distance out is not brought back by its write',
+    !(await isKept()),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+  // It went up as the page opened: the database the blocks below share keeps none of it.
+  database.rows.delete(GONE_ID);
 }
 
 // ------------------------------------------- Account: the Commute Statistics

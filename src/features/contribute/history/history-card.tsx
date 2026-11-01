@@ -77,10 +77,12 @@ export function HistoryCard({
 
   return (
     // Off screen, the browser skips its layout and paint until it is scrolled near: a hundred
-    // cards open as fast as a handful. 7.5rem is a card's height (Figma 4518:24588), held for it
-    // until it is first drawn, then its own, so the scroll never jumps. That skipping clips the
-    // card to itself, so while its ⋮ menu is open, over the cards below, it is drawn whole.
-    <li className="flex flex-col gap-2 [contain-intrinsic-size:auto_7.5rem] [content-visibility:auto] has-[[aria-expanded=true]]:[content-visibility:visible]">
+    // cards open as fast as a handful. It clips the card's painting to its box, so the box has
+    // room for the card's shadow (shadow-sm: 12 blur, 3 down), padded and pulled back by as much.
+    // 9.25rem is a card's height (Figma 4518:24588) with that room, held for it until it is first
+    // drawn, then its own, so the scroll never jumps. While its ⋮ menu is open, over the cards
+    // below, it is drawn whole.
+    <li className="-mx-4 -mt-3 -mb-4 flex flex-col gap-2 px-4 pt-3 pb-4 [contain-intrinsic-size:auto_9.25rem] [content-visibility:auto] has-[[aria-expanded=true]]:[content-visibility:visible]">
       <article
         aria-labelledby={titleId}
         className="flex rounded-2xl bg-surface font-sn-pro text-content-primary shadow-sm"

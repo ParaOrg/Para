@@ -32,6 +32,21 @@ export interface RecordingSave {
   recordAgain: () => void;
 }
 
+/**
+ * The recording's distance, kept with it so History shows it without reading every fix again.
+ * Never in the save's way: if the fixes cannot be read back, or give no finite distance, the
+ * recording is saved without it, and History works it out later.
+ */
+async function keptDistance(recording: Recording): Promise<Pick<Recording, 'distanceM'>> {
+  try {
+    const distanceM = distanceOf(recording, (await loadFixes(recording.id)).map(fixOfRow));
+    return Number.isFinite(distanceM) ? { distanceM } : {};
+  } catch (error) {
+    console.warn("A recording's distance could not be worked out as it was saved.", error);
+    return {};
+  }
+}
+
 /** How a recording in hand ends: saved on the phone, or thrown away. */
 export function useRecordingSave({
   currentRef,
@@ -61,9 +76,7 @@ export function useRecordingSave({
     try {
       await writeAllFixes();
       const saved = savedRecording(recording, details, Date.now(), failedFixWrites());
-      // Kept with it, so History shows it without reading every fix again.
-      const fixes = (await loadFixes(recording.id)).map(fixOfRow);
-      const kept: Recording = { ...saved, distanceM: distanceOf(saved, fixes) };
+      const kept: Recording = { ...saved, ...(await keptDistance(saved)) };
       await putRecording(kept);
       clearStorageProblem();
       setLastSaved(kept);
