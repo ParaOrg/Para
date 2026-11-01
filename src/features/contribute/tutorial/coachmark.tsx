@@ -57,6 +57,7 @@ export function Coachmark({
 }: CoachmarkProps) {
   const titleId = useId();
   const bodyId = useId();
+  const countId = useId();
   const cardRef = useRef<HTMLElement>(null);
   const isLast = stepNumber === stepCount;
 
@@ -119,7 +120,7 @@ export function Coachmark({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={bodyId}
+        aria-describedby={`${bodyId} ${countId}`}
         className="absolute inset-x-8 flex flex-col gap-4 rounded-3xl bg-surface p-4 shadow-large"
         style={
           isAbove
@@ -136,7 +137,7 @@ export function Coachmark({
           </p>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-sm/5 text-content-tertiary">
+          <p id={countId} className="text-sm/5 text-content-tertiary">
             {stepNumber} of {stepCount}
           </p>
           <div className="flex items-center gap-2">

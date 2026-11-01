@@ -27,6 +27,17 @@ interface CoachmarkPlace {
  */
 const TARGET_WAIT_MS = 3000;
 
+/** How many frames a control's box must keep still before it is taken as settled. */
+const SETTLED_FRAMES = 10;
+
+const isSamePlace = (a: CoachmarkPlace, b: CoachmarkPlace): boolean =>
+  a.target.left === b.target.left &&
+  a.target.top === b.target.top &&
+  a.target.width === b.target.width &&
+  a.target.height === b.target.height &&
+  a.frame.width === b.frame.width &&
+  a.frame.height === b.frame.height;
+
 const DEMO_FIGURES = { elapsedSeconds: 0, distanceM: 0 };
 
 const doNothing = () => undefined;
@@ -53,42 +64,63 @@ export function Tutorial({ onDemoChange, onClose }: TutorialProps) {
   const discardRef = useRef<HTMLButtonElement>(null);
   const creditsRef = useRef<HTMLButtonElement>(null);
 
-  // The control's box, followed each frame: the demo's card and the map's column settle into
-  // place after they are drawn, and a phone turned or resized moves them.
+  // The control's box, measured while it settles (the demo's card and the map's column move into
+  // place after they are drawn), then again only when the page is resized or scrolled. A control
+  // not drawn, or drawn with no size (display: none), is waited for, then the tutorial ends.
   useEffect(() => {
     if (!step) return;
     let frameId = 0;
-    let last = '';
+    let stillFrames = 0;
+    let last: CoachmarkPlace | null = null;
     const askedAt = performance.now();
-    const follow = () => {
+    const measure = (): 'placed' | 'missing' => {
       const overlay = overlayRef.current;
       const element = findTarget(step.target);
-      if (overlay && element) {
-        const box = element.getBoundingClientRect();
-        const frame = overlay.getBoundingClientRect();
-        const next = {
-          target: {
-            left: box.left - frame.left,
-            top: box.top - frame.top,
-            width: box.width,
-            height: box.height,
-          },
-          frame: { width: frame.width, height: frame.height },
-        };
-        const key = JSON.stringify(next);
-        if (key !== last) {
-          last = key;
-          setPlace(next);
-        }
-      } else if (!element && performance.now() - askedAt > TARGET_WAIT_MS) {
+      const box = element?.getBoundingClientRect();
+      if (!overlay || !box || box.width === 0 || box.height === 0) return 'missing';
+      const frame = overlay.getBoundingClientRect();
+      const next: CoachmarkPlace = {
+        target: {
+          left: box.left - frame.left,
+          top: box.top - frame.top,
+          width: box.width,
+          height: box.height,
+        },
+        frame: { width: frame.width, height: frame.height },
+      };
+      if (last && isSamePlace(last, next)) {
+        stillFrames += 1;
+      } else {
+        stillFrames = 0;
+        last = next;
+        setPlace(next);
+      }
+      return 'placed';
+    };
+    const settle = () => {
+      if (measure() === 'missing' && performance.now() - askedAt > TARGET_WAIT_MS) {
         console.warn('The tutorial could not find its step on the page.', step.target);
         onClose();
         return;
       }
-      frameId = requestAnimationFrame(follow);
+      if (stillFrames < SETTLED_FRAMES) frameId = requestAnimationFrame(settle);
     };
-    follow();
-    return () => cancelAnimationFrame(frameId);
+    const settleAgain = () => {
+      cancelAnimationFrame(frameId);
+      stillFrames = 0;
+      frameId = requestAnimationFrame(settle);
+    };
+    settle();
+    const resizes = new ResizeObserver(settleAgain);
+    resizes.observe(document.documentElement);
+    window.addEventListener('resize', settleAgain);
+    window.addEventListener('scroll', settleAgain, true);
+    return () => {
+      cancelAnimationFrame(frameId);
+      resizes.disconnect();
+      window.removeEventListener('resize', settleAgain);
+      window.removeEventListener('scroll', settleAgain, true);
+    };
   }, [step, onClose]);
 
   if (!step) return null;

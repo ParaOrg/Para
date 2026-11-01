@@ -403,6 +403,44 @@ const buttons = (page) =>
         (await flagButton(page).count()) === 0,
     );
   }
+  // The phone's Back closes it, on the page: the entry it added is the one taken off.
+  {
+    const before = await page.evaluate(() => ({ url: location.href, length: window.history.length }));
+    await page.getByRole('button', { name: 'How to record' }).click();
+    await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
+    await page.goBack();
+    await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 5000 });
+    const after = await page.evaluate(() => ({
+      url: location.href,
+      focus: document.activeElement?.getAttribute('aria-label'),
+    }));
+    check(
+      "  the phone's Back on step 2 closes it and stays on the page: Record, no demo, focus on the ?",
+      (await dialog.count()) === 0 &&
+        (await page.getByRole('button', { name: 'Switch to Sakay' }).count()) === 0 &&
+        after.url === before.url &&
+        after.focus === 'How to record',
+      JSON.stringify({ before, after }),
+    );
+  }
+  // A move to another screen by its hash (the browser's Forward, say) ends it as well.
+  {
+    await page.getByRole('button', { name: 'How to record' }).click();
+    await dialog.getByRole('button', { name: 'Next' }).click();
+    await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
+    await page.evaluate(() => {
+      window.history.pushState(null, '', `${location.pathname}#history`);
+      window.dispatchEvent(new window.HashChangeEvent('hashchange'));
+    });
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor({ timeout: 5000 });
+    check(
+      '  a hash move onto History ends it: History shows with no coachmark and no demo over it',
+      (await dialog.count()) === 0 &&
+        (await page.getByRole('button', { name: 'Switch to Sakay' }).count()) === 0,
+    );
+  }
   check('  the tutorial raised no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
 }

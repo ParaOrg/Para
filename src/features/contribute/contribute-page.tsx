@@ -42,6 +42,7 @@ import { START_BUTTON_ATTR } from './screens/start-morph-attrs';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
+import { TUTORIAL_ENTRY, isTutorialEntry } from './tutorial/tutorial-entry';
 import type { TutorialDemo } from './tutorial/tutorial-steps';
 import { UploadCheck } from './uploads/upload-check';
 import { uploadStatusText } from './uploads/upload-status';
@@ -260,20 +261,42 @@ export function ContributePage({ locator }: ContributePageProps) {
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [tutorialDemo, setTutorialDemo] = useState<TutorialDemo>(null);
   // Only over Ready: a ride, or the account gate, taking its place ends it, demo and all.
-  const isTutorialShown = isTutorialOpen && phase === 'ready' && accountGate === 'ready';
+  // A hash move (the browser's Forward onto History, say) ends it as a ride does.
+  const isTutorialShown =
+    isTutorialOpen &&
+    phase === 'ready' &&
+    accountGate === 'ready' &&
+    !isHistoryShown &&
+    !isProfileShown &&
+    !isPermissionsShown;
   if (isTutorialOpen && !isTutorialShown) {
     setIsTutorialOpen(false);
     setTutorialDemo(null);
   }
   const helpButtonRef = useRef<HTMLButtonElement>(null);
   // Back on Record, focus goes back to the ? that opened it, as a closed sheet hands it back.
-  const closeTutorial = useCallback(() => {
+  const closeTutorialNow = useCallback(() => {
     flushSync(() => {
       setTutorialDemo(null);
       setIsTutorialOpen(false);
     });
     helpButtonRef.current?.focus();
   }, []);
+  // Opened with a history entry of its own, so the phone's Back closes it rather than leaving the
+  // page; its own Skip, Escape and Got it take that entry back off.
+  const openTutorial = () => {
+    window.history.pushState({ [TUTORIAL_ENTRY]: true }, '');
+    setIsTutorialOpen(true);
+  };
+  const closeTutorial = useCallback(() => {
+    if (isTutorialEntry(window.history.state)) window.history.back();
+    else closeTutorialNow();
+  }, [closeTutorialNow]);
+  useEffect(() => {
+    if (!isTutorialOpen) return;
+    window.addEventListener('popstate', closeTutorialNow);
+    return () => window.removeEventListener('popstate', closeTutorialNow);
+  }, [isTutorialOpen, closeTutorialNow]);
   const isStartShown =
     accountGate === 'ready' &&
     phase === 'ready' &&
@@ -561,7 +584,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 accountTabRef={accountTabRef}
                 onOpenCredits={openCredits}
                 creditsButtonRef={creditsButtonRef}
-                onOpenTutorial={() => setIsTutorialOpen(true)}
+                onOpenTutorial={openTutorial}
                 helpButtonRef={helpButtonRef}
               />
             </div>
