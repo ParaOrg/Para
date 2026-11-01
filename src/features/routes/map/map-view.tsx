@@ -179,6 +179,11 @@ interface Props {
    * the moment it is true again, so the licences' credit is always a tap away.
    */
   areCreditsShown?: boolean;
+  /**
+   * True while a screen of the page covers the whole map (the contributor page's Save form,
+   * Saved): what the map says of itself, its failure included, stays under it.
+   */
+  isCovered?: boolean;
 }
 
 /**
@@ -205,6 +210,7 @@ export function MapView({
   labelsPlace = 'map',
   creditsAtBottom = false,
   areCreditsShown = true,
+  isCovered = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -488,7 +494,7 @@ export function MapView({
         </div>
       )}
 
-      {error && (
+      {error && !isCovered && (
         <div className="absolute inset-x-0 top-0 z-30 m-4 rounded-lg bg-red-50 p-4 text-sm text-red-900 shadow ring-1 ring-red-200">
           <p className="font-medium">The map failed to load.</p>
           <p className="mt-1 break-words">{error}</p>
