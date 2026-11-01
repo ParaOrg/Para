@@ -1361,6 +1361,15 @@ const buttons = (page) =>
   await openHistory(page);
   const card = page.getByRole('listitem').first();
   await card.locator('img').waitFor({ timeout: 10000 });
+  // The card is content-visibility:auto: until the browser's next rendering pass finds it on
+  // screen its contents are skipped, and innerText reads ''. Its picture can arrive before that.
+  await page.waitForFunction(
+    (element) => element.innerText.trim() !== '',
+    await card.elementHandle(),
+    {
+      timeout: 5000,
+    },
+  );
   const shown = {
     src: await card.locator('img').getAttribute('src'),
     text: (await card.innerText()).replace(/\n/g, ' '),

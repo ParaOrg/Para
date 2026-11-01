@@ -93,6 +93,12 @@ const recordingShape = {
   farePhp: z.optional(z.number()),
   /** The consent text's version agreed to when it began; absent on one made before consent version 2. */
   consentVersion: z.optional(z.number()),
+  /**
+   * How far it went, in metres, worked out from its fixes as it was saved, so History need not
+   * read them. Absent on one saved before it was kept: History works it out and writes it back.
+   * Only ever written finite (use-recording-save.ts, use-history-items.ts): a NaN would not read.
+   */
+  distanceM: z.optional(z.number()),
   upload: z.optional(uploadMarkSchema),
 };
 
