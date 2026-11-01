@@ -112,9 +112,18 @@ export function attachToolbarSlide({
     }
     bar.toggleAttribute('data-sliding', true);
     startSelectionTicks();
-    // The pill comes to the finger: a still hold on another tab lands there. The pick-up's own
-    // tick stands for reaching that tab.
+    // The pill comes to the finger, gliding there: a still hold, or a slow tap, on another tab
+    // lands there, the pill seen to go from the tab it marked. The pick-up's own tick stands for
+    // reaching that tab.
+    const from = pill.style.transform;
     slideTo(press.startX, false);
+    const to = pill.style.transform;
+    if (from && from !== to && !prefersReducedMotion()) {
+      pill.animate([{ transform: from }, { transform: to }], {
+        ...motionOf('move'),
+        duration: motionOf('leave').duration,
+      });
+    }
   };
   const slideTo = (clientX: number, isTicked = true) => {
     if (!press) return;

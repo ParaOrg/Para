@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 
-import { motionOf, prefersReducedMotion } from '../common/tab-motion';
+import { isMoveInRun, motionOf, prefersReducedMotion } from '../common/tab-motion';
 
 /**
  * Where the last toolbar drawn had its pill, and which tab that was. Each screen draws a toolbar of
@@ -36,8 +36,10 @@ export function useSlidingPill(current: string) {
     const from = last;
     last = { tab: current, left: tab.offsetLeft };
     if (!from || from.tab === current || prefersReducedMotion()) return;
-    // The owner's Motion for something on screen changing place (tokens.css).
-    const slide = motionOf('move');
+    // The owner's Motion for something on screen changing place (tokens.css); in a run of taps,
+    // as quick as a thing leaving, so it keeps up with them.
+    const move = motionOf('move');
+    const slide = isMoveInRun() ? { ...move, duration: motionOf('leave').duration } : move;
     pill.animate(
       [
         { transform: `translateX(${from.left}px)` },

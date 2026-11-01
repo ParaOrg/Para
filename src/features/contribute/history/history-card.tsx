@@ -9,6 +9,7 @@ import { ArrowRightIcon } from './history-icons';
 import type { RideFacts } from './ride-facts';
 import { ConfirmDelete } from '../common/confirm-delete';
 import { fullDateTimeText } from '../common/format';
+import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
 import {
@@ -49,6 +50,7 @@ export function HistoryCard({
   onRemoveFromPhone,
 }: HistoryCardProps) {
   const [asking, setAsking] = useState<Asking>(null);
+  useClosedWhenHidden(setAsking, null);
   const moreRef = useRef<HTMLButtonElement>(null);
   const shouldReturnFocus = useRef(false);
   const titleId = useId();

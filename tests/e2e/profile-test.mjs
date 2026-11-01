@@ -830,6 +830,116 @@ async function seed(page, id, name, upload) {
   await page.context().close();
 }
 
+// ------------------------- taps faster than the moves, by touch: every one lands, the last wins
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  // Each tab once, as a phone has after its first minute.
+  await historyTab(page).click();
+  await heading('History').waitFor();
+  await accountTab(page).click();
+  await heading('Account').waitFor();
+  await toolbarRecord(page).click();
+  await start(page).waitFor();
+  // Every tap's tab, from where it landed (a tap mid-move lands on the page, not the tab), and
+  // whether that tab came to be marked before the next tap.
+  await page.evaluate(() => {
+    window.burst = [];
+    const tabAt = (x, y) =>
+      [...document.querySelectorAll('[data-tab]')].find((tab) => {
+        const box = tab.getBoundingClientRect();
+        return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+      })?.dataset.tab ?? null;
+    document.addEventListener(
+      'pointerdown',
+      (event) => {
+        window.burst.push({
+          to: tabAt(event.clientX, event.clientY),
+          isOnTab: Boolean(event.target.closest?.('[data-tab]')),
+          isMarked: false,
+        });
+      },
+      { capture: true },
+    );
+    const frame = () => {
+      const marked = document.querySelector('nav[aria-label="Screens"] [aria-current="page"]')
+        ?.dataset.tab;
+      // Each tap is credited only while it is the latest: a lost tap is never covered by a
+      // later one to the same tab.
+      const latest = window.burst[window.burst.length - 1];
+      if (latest && marked === latest.to) latest.isMarked = true;
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+  const cdp = await page.context().newCDPSession(page);
+  const points = {};
+  for (const name of ['record', 'history', 'account']) {
+    const box = await page.locator(`nav[aria-label="Screens"] [data-tab="${name}"]`).boundingBox();
+    points[name] = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  }
+  const RUN = [
+    'history',
+    'account',
+    'history',
+    'record',
+    'account',
+    'record',
+    'history',
+    'account',
+  ];
+  // A tap every 150 ms: the run's pace, not a wait on the page.
+  const TAP_EVERY_MS = 150;
+  for (const name of RUN) {
+    const at = points[name];
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: at.x, y: at.y, id: 1 }],
+    });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.waitForTimeout(TAP_EVERY_MS);
+  }
+  await page
+    .waitForFunction(
+      (count) => window.burst.length === count && window.burst.every((tap) => tap.isMarked),
+      RUN.length,
+      { timeout: 10000 },
+    )
+    .catch(() => null);
+  const burst = await page.evaluate(() => window.burst);
+  check(
+    'taps faster than the moves, by touch: every one lands, the ones mid-move too',
+    burst.length === RUN.length &&
+      burst.every((tap, index) => tap.to === RUN[index] && tap.isMarked),
+    JSON.stringify(burst),
+  );
+  check(
+    '  some of them did come mid-move, onto the page and not the tab',
+    burst.some((tap) => !tap.isOnTab),
+    JSON.stringify(burst.map((tap) => tap.isOnTab)),
+  );
+  await heading('Account').waitFor();
+  const shown = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-screen-hash]')]
+      .filter((screen) => screen.checkVisibility())
+      .map((screen) => screen.dataset.screenHash),
+  );
+  check(
+    '  and the run ends where the last tap points: Account, and only Account in sight',
+    JSON.stringify(shown) === '["#profile"]' &&
+      (await page.evaluate(() => location.hash)) === '#profile',
+    JSON.stringify(shown),
+  );
+  check(
+    '  History, kept from before, is hidden: out of sight, and nothing in it can be reached',
+    (await page.locator('[data-screen-hash="#history"]').count()) === 1 &&
+      !(await page.locator('[data-screen-hash="#history"]').isVisible()),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
+}
+
 // ------------- a recording deleted while History works its distance out is not brought back
 {
   const { page, errors } = await phone();
@@ -916,6 +1026,76 @@ async function seed(page, id, name, upload) {
   await page.context().close();
   // It went up as the page opened: the database the blocks below share keeps none of it.
   database.rows.delete(GONE_ID);
+}
+
+// ------------------------------- the pill glides from tab to tab, two over included
+{
+  const { page, errors } = await phone();
+  await start(page).waitFor({ timeout: 30000 });
+  const heading = (name) => page.getByRole('heading', { level: 1, name });
+  /** Taps `tab` once the last move is over, and once this one shows, holds it halfway. */
+  const pillHalfway = async (tab) => {
+    await page.waitForFunction(
+      () =>
+        !document
+          .getAnimations()
+          .some((animation) => animation.effect?.pseudoElement?.startsWith('::view-transition')),
+    );
+    await tab.click();
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .some(
+          (animation) =>
+            animation.effect?.pseudoElement?.startsWith('::view-transition') &&
+            animation.playState === 'running',
+        ),
+    );
+    const at = await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        animation.pause();
+        animation.currentTime = animation.effect.getComputedTiming().endTime / 2;
+      }
+      const bar = document.querySelector('.tab-toolbar');
+      const left = (element) => Math.round(element.getBoundingClientRect().left);
+      return {
+        pill: left(bar.firstElementChild),
+        ...Object.fromEntries(
+          [...bar.querySelectorAll('[data-tab]')].map((tab) => [tab.dataset.tab, left(tab)]),
+        ),
+      };
+    });
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) animation.play();
+    });
+    return at;
+  };
+  const isBetween = (at, from, to) =>
+    at.pill > Math.min(at[from], at[to]) && at.pill < Math.max(at[from], at[to]);
+
+  const toAccount = await pillHalfway(accountTab(page));
+  await heading('Account').waitFor();
+  check(
+    'Record to Account: halfway through the move, the pill is between them',
+    isBetween(toAccount, 'record', 'account'),
+    JSON.stringify(toAccount),
+  );
+  const toRecord = await pillHalfway(toolbarRecord(page));
+  await start(page).waitFor();
+  check(
+    '  Account to Record: halfway, the pill is between them',
+    isBetween(toRecord, 'account', 'record'),
+    JSON.stringify(toRecord),
+  );
+  const toHistory = await pillHalfway(historyTab(page));
+  await heading('History').waitFor();
+  check(
+    '  Record to History: halfway, the pill is between them',
+    isBetween(toHistory, 'record', 'history'),
+    JSON.stringify(toHistory),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
 }
 
 // ------------------------------------------- Account: the Commute Statistics
@@ -1646,9 +1826,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
         const transition = start(update);
         transition.ready
           .then(() => {
-            window.__screenAtReady = document.querySelector('[data-screen-hash]')
-              ? document.querySelector('[data-screen-hash]').getAttribute('data-screen-hash')
-              : '';
+            // The screen in sight: History and Account, once opened, stay on the page hidden.
+            const shown = [...document.querySelectorAll('[data-screen-hash]')].find((screen) =>
+              screen.checkVisibility(),
+            );
+            window.__screenAtReady = shown ? shown.getAttribute('data-screen-hash') : '';
           })
           .catch(() => {});
         return transition;
@@ -1714,6 +1896,23 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       .waitFor({ state: 'visible', timeout: 5000 })
       .then(() => true)
       .catch(() => false),
+  );
+  // Asked again, then left by the phone's Back: Account is kept hidden, and its question with
+  // it must not be there on the way back.
+  await button(page, 'Logout').click();
+  await logoutQuestion(page).waitFor();
+  await page.goBack();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  await toolbar.getByRole('button', { name: 'Account', exact: true }).click();
+  await page.getByRole('heading', { level: 1, name: 'Account' }).waitFor();
+  check(
+    '  left with its question open, Account comes back without it, and with the toolbar',
+    (await logoutQuestion(page).count()) === 0 &&
+      (await toolbar
+        .getByRole('button', { name: 'Record', exact: true })
+        .waitFor({ state: 'visible', timeout: 5000 })
+        .then(() => true)
+        .catch(() => false)),
   );
   await toolbar.getByRole('button', { name: 'Record', exact: true }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
@@ -1787,8 +1986,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     page.evaluate(
       (h) =>
         h === ''
-          ? document.querySelectorAll('[data-screen-hash]').length === 0
-          : !!document.querySelector(`[data-screen-hash="${h}"]`),
+          ? ![...document.querySelectorAll('[data-screen-hash]')].some((screen) =>
+              screen.checkVisibility(),
+            )
+          : Boolean(document.querySelector(`[data-screen-hash="${h}"]`)?.checkVisibility()),
       hash,
     );
   /** Whether the screen at `hash` comes up, without throwing when it never does. */
@@ -1854,7 +2055,12 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   const backToRecord = async () => {
     if (await isOn('')) return;
     await tap('record');
-    await page.waitForFunction(() => !document.querySelector('[data-screen-hash]'));
+    await page.waitForFunction(
+      () =>
+        ![...document.querySelectorAll('[data-screen-hash]')].some((screen) =>
+          screen.checkVisibility(),
+        ),
+    );
   };
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   const pillLeft = () =>
@@ -1885,6 +2091,27 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await backToRecord();
 
   await hold('history');
+  // The pill picked up glides to the finger from the tab it marked: held halfway, it is between.
+  const pickedUp = await page.evaluate(() => {
+    for (const animation of document.getAnimations()) {
+      animation.pause();
+      animation.currentTime = animation.effect.getComputedTiming().endTime / 2;
+    }
+    const bar = document.querySelector('.tab-toolbar');
+    const left = (element) => Math.round(element.getBoundingClientRect().left);
+    const at = {
+      pill: left(bar.firstElementChild),
+      record: left(bar.querySelector('[data-tab="record"]')),
+      history: left(bar.querySelector('[data-tab="history"]')),
+    };
+    for (const animation of document.getAnimations()) animation.play();
+    return at;
+  });
+  check(
+    '  a still hold on another tab glides the pill there from Record, seen halfway between them',
+    pickedUp.pill > pickedUp.record && pickedUp.pill < pickedUp.history,
+    JSON.stringify(pickedUp),
+  );
   await letGo();
   check(
     '  a still hold on another tab, let go there, opens it',
