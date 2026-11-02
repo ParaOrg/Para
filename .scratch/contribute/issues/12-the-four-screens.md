@@ -1,6 +1,6 @@
 # 12: The four screens, from the owner's Figma
 
-Status: needs-info
+Status: resolved
 Type: task
 Wave: 4
 Who: Opus with the owner, through the `ds-component` skill, which stops to ask
@@ -27,3 +27,7 @@ Waiting on: the owner's Figma for Ready (with the consent screen), Recording, St
 - `npm run check` passes.
 
 ## Comments
+
+## Answer
+
+Built from the owner's Figma: Ready (Start) and Recording on Lakad or Sakay (#548, #549), and Paused (#631). The Saved screen was removed in #630: a toast now says the route was recorded.
