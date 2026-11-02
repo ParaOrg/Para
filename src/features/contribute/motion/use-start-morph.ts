@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
 import type { morphStartIntoCard } from './start-morph';
-import { START_BUTTON_ATTR } from './start-morph-attrs';
+import { START_BUTTON_ATTR } from '../common/data-attributes';
 
 // Start tracking's morph, off the opening: fetched with the recording screens ahead of Start.
 const loadStartMorph = retryingImport(() => import('./start-morph'));

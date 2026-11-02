@@ -2,6 +2,7 @@ import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
 import type { ToolbarTab } from './bottom-toolbar';
 import { notePillAt } from './use-sliding-pill';
+import { TOOLBAR_TAB_ATTR } from '../common/data-attributes';
 import { PILL, SHIFT } from '../motion/motion';
 import {
   endSelectionTicks,
@@ -53,9 +54,9 @@ export function attachToolbarSlide({
   onTabReached,
   first,
 }: ToolbarSlide): () => void {
-  const tabs = () => [...bar.querySelectorAll<HTMLElement>('[data-tab]')];
+  const tabs = () => [...bar.querySelectorAll<HTMLElement>(`[${TOOLBAR_TAB_ATTR}]`)];
   const tabName = (tab: HTMLElement): ToolbarTab | null => {
-    const name = tab.dataset.tab;
+    const name = tab.getAttribute(TOOLBAR_TAB_ATTR);
     return name === 'record' || name === 'history' || name === 'account' ? name : null;
   };
   const currentTab = tabs().find((tab) => tabName(tab) === current);

@@ -5,7 +5,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { cssDurationMs } from '@/shared/utils/css-duration';
 
 import { START_MORPH_ATTR, morphStartIntoCard } from './start-morph';
-import { START_BUTTON_ATTR } from './start-morph-attrs';
+import { RECORDING_CARD_ATTR, START_BUTTON_ATTR } from '../common/data-attributes';
 import { RecordingCard } from '../screens/recording-card';
 import { StartBar } from '../screens/start-bar';
 import { TrackingButton } from '../screens/tracking-button';
@@ -21,7 +21,7 @@ function MorphDemo() {
   return (
     <div className="relative flex h-[852px] w-[393px] flex-col justify-end bg-surface-quaternary pb-8">
       {isRecording ? (
-        <div data-recording-card className="px-5 pb-1.5">
+        <div {...{ [RECORDING_CARD_ATTR]: true }} className="px-5 pb-1.5">
           <RecordingCard elapsedSeconds={0} distanceM={0} state="lakad">
             <TrackingButton variant="pause" corner="bottom-left" onClick={() => undefined} />
             <TrackingButton variant="sakay" corner="bottom-right" onClick={() => undefined} />
