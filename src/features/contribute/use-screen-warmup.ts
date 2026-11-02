@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { canUpload } from './api/contribute-client';
+import { canUpload } from './api/contribute-config';
 import {
   loadFlagStopButton,
   loadRecordingScreen,
@@ -11,6 +11,7 @@ import {
 import type { Phase } from './recorder/recording-state';
 import { warmScreen } from './screen-loaders';
 import { warmToolbarSlide } from './toolbar/use-toolbar-slide';
+import { loadPacking } from './uploads/packing/load-packing';
 
 /** How long Start waits for the browser's idle time before fetching History and Account anyway. */
 const WARM_SCREENS_WITHIN_MS = 2000;
@@ -22,9 +23,10 @@ const WARM_SCREENS_WITHIN_MS = 2000;
  *   fetched with the recording screens. A stable reference.
  */
 export function useScreenWarmup(phase: Phase, fetchStartMorph: () => Promise<void>): void {
-  // On Ready the recording screens are fetched ahead of Start, and the save screens too, also when
-  // the page opens on a ride already under way, so stopping one never waits on the network. A
-  // failure here is only a missed head start: the lazy screen asks again when it is shown.
+  // On Ready the recording screens are fetched ahead of Start, and the save screens and the upload's
+  // packing too, also when the page opens on a ride already under way, so stopping and sending one
+  // never wait on the network. A failure here is only a missed head start: the lazy screen asks
+  // again when it is shown, and a send when it packs.
   useEffect(() => {
     if (phase !== 'ready' && phase !== 'recording' && phase !== 'paused') return;
     Promise.all([
@@ -33,6 +35,7 @@ export function useScreenWarmup(phase: Phase, fetchStartMorph: () => Promise<voi
       loadStopRecordingScreen(),
       loadFlagStopButton(),
       loadSaveForm(),
+      loadPacking(),
       fetchStartMorph(),
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);
