@@ -1,6 +1,6 @@
 # 07: Walk versus ride, and several jeepneys in one recording
 
-Status: needs-info (owner: a product decision)
+Status: resolved
 Type: product decision
 Who: the owner
 Source: the owner's phone test of the app, 2026-10-26, feedback (b)
@@ -22,3 +22,7 @@ Do option 1 now and say it in the first-run copy (ticket 11). Keep option 2 as t
 - Is "one recording = one jeepney" acceptable for the testers?
 - If Sakay/Baba is wanted: the words, the look, and whether one recording can hold several rides or the markers only trim the walk at both ends.
 - What does the studio do today with a walk at the ends of a recording?
+
+## Answer
+
+The owner chose modes: a recording switches between Lakad (on foot) and Sakay (on a vehicle) as often as the contributor walks and boards, and hintos count only on Sakay (#546, #547, #548, #549; CONTEXT.md, Lakad / Sakay).

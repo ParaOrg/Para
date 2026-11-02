@@ -98,3 +98,13 @@ service with a visible "Para is recording" notification.
 - Rejected: a wrapped web page (a Trusted Web Activity), which can't record
   with the screen off; a separate native app, which would rewrite the recorder;
   an iPhone build, for now.
+
+## Amendment, 2026-11-02
+
+- **The ride's notification is Para's own card**, not the plugin's "Para is recording" (#632,
+  #638): the app builds it (`RideNotification`) and its actions (`RideActionReceiver`): Pause
+  and Lakad or Sakay while recording, Resume and Finish while paused.
+- **The plugin is pinned to exactly `1.3.1`** in `package.json`. The app swaps the plugin's
+  notification for its own through `ParaServiceWatchers.java`, which sits in the plugin's own
+  package (`com.equimaps.capacitor_background_geolocation`) to reach the service's watchers, so a
+  new plugin version must be checked against it before the pin moves.
