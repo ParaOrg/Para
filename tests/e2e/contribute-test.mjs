@@ -748,8 +748,70 @@ const buttons = (page) =>
       pausedCard.includes('--'),
     pausedCard.replace(/\n/g, ' '),
   );
+  // Paused, the map frosts over; the card and the map's own buttons stay crisp over it.
+  const frost = page.locator('[data-map-frost]');
+  await frost.waitFor({ state: 'attached', timeout: 5000 });
+  await page.waitForFunction(
+    () => getComputedStyle(document.querySelector('[data-map-frost]')).opacity === '1',
+    null,
+    { timeout: 5000 },
+  );
+  const frosted = await page.evaluate(() => {
+    const layer = document.querySelector('[data-map-frost]');
+    const style = getComputedStyle(layer);
+    // What a tap at an element's middle reaches, and whether any of its ancestors is filtered.
+    const crisp = (el) => {
+      if (!el) return 'missing';
+      const box = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      for (let node = el; node; node = node.parentElement) {
+        if (getComputedStyle(node).filter !== 'none') return 'filtered';
+      }
+      return hit && (el === hit || el.contains(hit)) ? 'crisp' : 'covered';
+    };
+    return {
+      blur: style.backdropFilter,
+      wash: style.backgroundColor,
+      card: crisp(document.querySelector('[aria-label="Recording so far"]')),
+      resume: crisp([...document.querySelectorAll('button')].find((b) => b.innerText === 'Resume')),
+      mapDesign: crisp(document.querySelector('button[aria-label="Map design"]')),
+    };
+  });
+  check(
+    '  paused, the map is frosted (a 6 px blur and a faint white wash), the card and map buttons crisp over it',
+    frosted.blur === 'blur(6px)' &&
+      // The surface's white at 25%, however the browser writes the colour.
+      /[,/] ?0\.25\)$/.test(frosted.wash) &&
+      frosted.card === 'crisp' &&
+      frosted.resume === 'crisp' &&
+      frosted.mapDesign === 'crisp',
+    JSON.stringify(frosted),
+  );
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
+  check(
+    '  Resume clears the frost: gone from the page, not painted',
+    await frost.waitFor({ state: 'detached', timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
+  check(
+    '  and the frost layer is invisible, nothing left over the map',
+    await page
+      .waitForFunction(
+        () => {
+          const layer = document.querySelector('[data-testid="map-view"] ~ div[aria-hidden]');
+          return !!layer && getComputedStyle(layer).visibility === 'hidden';
+        },
+        null,
+        { timeout: 5000 },
+      )
+      .then(
+        () => true,
+        () => false,
+      ),
+  );
 
   // The mode button.
   await page.getByRole('button', { name: 'Switch to Sakay' }).click();
