@@ -8,6 +8,7 @@ import { ProfileCard } from './profile-card';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
+import { SCREENS } from '../navigation/screen-routes';
 import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 
 interface AccountScreenProps {
@@ -58,7 +59,7 @@ export function AccountScreen({
     <section
       ref={entryRef}
       aria-labelledby="account-heading"
-      data-screen-hash="#profile"
+      data-screen-hash={SCREENS.profile.hash}
       className="tab-screen absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isLogoutAsked} className="absolute inset-0">

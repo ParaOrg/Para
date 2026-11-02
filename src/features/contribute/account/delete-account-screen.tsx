@@ -16,6 +16,7 @@ import { useCountdown } from './use-countdown';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
+import { SCREENS } from '../navigation/screen-routes';
 
 /** How long Delete account waits, counting down, before it can be pressed. */
 const WAIT_SECONDS = 5;
@@ -61,7 +62,7 @@ export function DeleteAccountScreen({
     <section
       ref={entryRef}
       aria-labelledby="delete-account-heading"
-      data-screen-hash="#delete-account"
+      data-screen-hash={SCREENS.deleteAccount.hash}
       className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isAsked} className="flex min-h-0 flex-1 flex-col">
