@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { AccountGateState } from './account/use-account-gate';
+import { useLatch } from './common/use-latch';
 import type { MapNote, MapNoteGiven } from './notices/map-note';
 import type { PageToastsProps } from './notices/page-toasts';
 import {
@@ -81,18 +82,14 @@ export function usePageNotices({
   const uploadProblem = recording.lastSaved
     ? uploadFailedProblem(statusOf(recording.lastSaved))
     : null;
-  const [hasHadToasts, setHasHadToasts] = useState(false);
-  if (
-    (recording.problem ||
+  const hasHadToasts = useLatch(
+    recording.problem !== null ||
       isScreenFreeToSleep ||
-      mapNote ||
-      stopsFlagged ||
-      routeRecorded ||
-      uploadProblem) &&
-    !hasHadToasts
-  ) {
-    setHasHadToasts(true);
-  }
+      mapNote !== null ||
+      stopsFlagged !== 0 ||
+      routeRecorded !== null ||
+      uploadProblem !== null,
+  );
   return {
     toasts: {
       problem: recording.problem,
