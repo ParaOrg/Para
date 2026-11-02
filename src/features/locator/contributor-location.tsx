@@ -9,6 +9,7 @@ import { isLocationGranted } from './location-permission';
 import { Locator } from './locator';
 import type { LocatorNote } from './locator-note';
 import { LocatorOnMap } from './locator-on-map';
+import { circleRadius, type Fix } from './locator-rules';
 import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
 
@@ -22,6 +23,14 @@ interface ContributorLocationProps {
   above?: ReactNode;
   /** What the locator has to say, for the page's problem toast; null once a fix comes (Locator). */
   onNote?: (note: LocatorNote | null) => void;
+  /** Where the dot is, at each fix: its place and its accuracy ring's radius in metres. */
+  onWhere?: (where: LocatorWhere | null) => void;
+}
+
+/** Where the contributor's dot is drawn: the page's paused frost clears round it. */
+export interface LocatorWhere {
+  at: Fix['at'];
+  ringM: number;
 }
 
 /**
@@ -51,10 +60,16 @@ export function ContributorLocation({
   isRecording,
   above,
   onNote,
+  onWhere,
 }: ContributorLocationProps) {
   const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
-  const { tap, status, camera } = locator;
+  const { tap, status, camera, fix } = locator;
+
+  // The dot's place and ring, for the page: told at each fix, and that there is none.
+  useEffect(() => {
+    onWhere?.(fix ? { at: fix.at, ringM: circleRadius(fix.accuracy) } : null);
+  }, [fix, onWhere]);
 
   // The latest tap, for effects that must not re-run when the hook hands out a new one.
   const latestTap = useRef(tap);
