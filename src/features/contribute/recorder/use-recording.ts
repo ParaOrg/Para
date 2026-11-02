@@ -21,8 +21,13 @@ import { useRecorderProblems } from './use-recorder-problems';
 import { useRecordingFixWrites } from './use-recording-fix-writes';
 import { useRecordingInHand } from './use-recording-in-hand';
 import { useRecordingSave } from './use-recording-save';
+import { useRideNotice } from './use-ride-notice';
 import { useWakeLock } from './use-wake-lock';
 import { useSavedRecordings } from '../storage/use-saved-recordings';
+
+/** The app's ride notification: the web build has none, and drops the hook and its code with it. */
+const useRideNoticeInApp: typeof useRideNotice =
+  import.meta.env.MODE === 'apk' ? useRideNotice : () => undefined;
 
 /**
  * The page's whole state: what phase it is in, the recording being made and
@@ -136,6 +141,8 @@ export function useRecording(): RecordingState {
       },
     );
   }
+  useRideNoticeInApp({ phase, recording: current, currentRef, keep, finish, setPhase });
+
   const stop = () => finish(Date.now(), 'paused');
   const stopAtLastFix = () => finish(fixes[fixes.length - 1]?.time ?? Date.now(), 'paused');
 

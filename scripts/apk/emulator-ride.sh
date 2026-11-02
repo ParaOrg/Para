@@ -29,7 +29,9 @@ set -u
 
 APK=$1
 OUT=$2
-PKG=ph.para.contributor
+# The debug build has its own id, so it installs beside the real app (android/app/build.gradle).
+PKG=ph.para.contributor.debug
+ACTIVITY=ph.para.contributor.MainActivity
 OFF_AFTER=60
 KILL_AT=900
 TOTAL=1200
@@ -92,7 +94,7 @@ FEED_PID=$!
 # A step of the test's own, marked in logcat for the checker.
 mark() { adb shell log -t PARA_RIDE_TEST "$1"; }
 
-adb shell am start -n "$PKG/.MainActivity"
+adb shell am start -n "$PKG/$ACTIVITY"
 sleep 20
 mark rebuild
 adb shell settings put system font_scale 1.15
@@ -113,6 +115,8 @@ sleep $((KILL_AT / 2 - 5))
 # The kill. The count is read just before, so the fixes the service had kept are known.
 PID_BEFORE=$(adb shell pidof "$PKG" | tr -d '\r')
 KEPT_AT_KILL=$(native_fixes)
+# The log itself, for a count that does not match the ride's.
+adb shell "run-as $PKG cat files/fixlog.ndjson" > "$OUT/fixlog-at-kill.ndjson" 2> /dev/null
 mark kill
 if [ -n "$PID_BEFORE" ]; then adb shell "kill -9 $PID_BEFORE" || adb shell am force-stop "$PKG"; fi
 sleep 3
@@ -122,7 +126,7 @@ echo "pid before the kill: ${PID_BEFORE:-none}; right after: ${PID_AFTER_KILL:-n
 # Opened again, on the screen, as a rider unlocking the phone would.
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
-adb shell am start -n "$PKG/.MainActivity"
+adb shell am start -n "$PKG/$ACTIVITY"
 sleep 40
 adb exec-out screencap -p > "$OUT/screen-reopened.png"
 adb shell input keyevent KEYCODE_SLEEP
@@ -151,6 +155,12 @@ started = [i for i, r in ride if r.startswith("started")]
 imports = [(i, fields(r)) for i, r in ride if r.startswith("imported")]
 # Every import before the kill followed a rebuilt activity: the test's two, and any of Android's own.
 rebuilt = [f for i, f in imports if i < kill_at]
+# The test's own rebuilds follow its mark. Android may rebuild the activity on its own as the app
+# first opens (a system change landing on it, seen with the launcher rebuilt at the same moment),
+# when the ride is seconds old and the service may have kept no fix yet: that one must catch up
+# and keep the order too, but may find none.
+ours = [f for i, f in imports if rebuild_at < i < kill_at]
+androids = [f for i, f in imports if i < rebuild_at]
 imported = [f for i, f in imports if i > kill_at]
 reports = [fields(r) for i, r in ride if r.startswith("report ")]
 ride = [r for _, r in ride]
@@ -166,10 +176,12 @@ checks = {
     "the ride started, once, before the activity was rebuilt": len(started) == 1
     and started[0] < rebuild_at
     and all(started[0] < i for i, _ in imports),
-    f"each rebuilt activity found every fix the service had kept ({len(rebuilt)} rebuilt)": len(rebuilt) >= 2
-    and all(keeps_every_fix(f) for f in rebuilt),
+    f"each rebuilt activity found every fix the service had kept ({len(ours)} rebuilt by the test)": len(ours) >= 2
+    and all(keeps_every_fix(f) for f in ours)
+    and all(f.get("caught") == "true" and f.get("sorted") == "true" for f in androids),
     "the service ran in the foreground with the screen off": "isForeground=true" in services,
-    "the notice 'Para is recording' was up": "Para is recording" in notification,
+    # The ride's notification (RideNotification.java) holds the service's own id: its title.
+    "the ride's notification, Recording, was up": bool(re.search(r"android\.title=.*Recording", notification)),
     "the app's process was killed": bool(pid_before) and pid_before != pid_after,
     f"the service had kept at least 0.5 fixes a second until the kill ({kept_at_kill})": kept_at_kill >= 0.5 * (900 - 65),
     f"every fix the service kept is in the ride after reopening ({rows_after_import} >= {kept_at_kill})": bool(imported) and rows_after_import >= kept_at_kill,

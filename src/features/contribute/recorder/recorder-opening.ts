@@ -1,5 +1,6 @@
 import { importNativeFixes } from './native-fixes';
 import { holdRecorderLock } from './recorder-lock';
+import { applyOpeningRideTaps } from './ride-notice-bridge';
 import type { FixRow, Recording } from '../storage/recording-schema';
 import { loadFixes, loadRecordings } from '../storage/recording-store';
 
@@ -7,7 +8,13 @@ import { loadFixes, loadRecordings } from '../storage/recording-store';
 export type RecorderOpening =
   | { kind: 'other-tab' }
   | { kind: 'nothing-open' }
-  | { kind: 'open'; recording: Recording; rows: FixRow[] };
+  | {
+      kind: 'open';
+      recording: Recording;
+      rows: FixRow[];
+      /** Finished from the app's notification: it opens on its Save form. */
+      isFinished: boolean;
+    };
 
 interface OpeningSteps {
   /** Whether the page went away meanwhile: then nothing more is read or written. */
@@ -33,15 +40,19 @@ export async function openRecorder({
   if (isCancelled()) return null;
   onListed(all);
   if (!isOurs) return { kind: 'other-tab' };
-  const open = all.find((r) => r.status !== 'saved') ?? null;
-  if (open) {
-    try {
-      await importNativeFixes(open);
-    } catch (error) {
-      onNativeLogProblem(error);
-    }
+  const found = all.find((r) => r.status !== 'saved') ?? null;
+  let open = found;
+  let isFinished = false;
+  try {
+    if (found) await importNativeFixes(found);
+    // The taps made on the app's notification while the page was gone.
+    const tapped = await applyOpeningRideTaps(found);
+    open = tapped.recording;
+    isFinished = tapped.isFinished;
+  } catch (error) {
+    onNativeLogProblem(error);
   }
   const rows = open ? await loadFixes(open.id) : [];
   if (isCancelled()) return null;
-  return open ? { kind: 'open', recording: open, rows } : { kind: 'nothing-open' };
+  return open ? { kind: 'open', recording: open, rows, isFinished } : { kind: 'nothing-open' };
 }
