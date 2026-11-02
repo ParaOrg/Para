@@ -1,7 +1,7 @@
 name: Prepare the emulator
 description: >
   Installs the Android Emulator and one system image, from the cache when it holds these versions,
-  with retries, and checks they run, before android-emulator-runner starts them. Run after
+  with retries, and checks they are whole, before android-emulator-runner starts them. Run after
   prepare-app-build. When it can't, the job stops with "Emulator setup failed, no test ran".
 inputs:
   api-level:

@@ -11,7 +11,7 @@
 # Each tries three times. sdkmanager can leave a broken package behind and still exit 0, printing
 # only "Warning: An error occurred while preparing SDK package Android Emulator: Error on ZipFile
 # unknown archive"; the emulator then never starts and the job fails much later on "could not
-# connect to TCP port 5554". So a try counts only when the emulator runs and the image is whole.
+# connect to TCP port 5554". So a try counts only when the emulator and the image are whole.
 # Before each new try the half-installed packages and sdkmanager's partial downloads are deleted,
 # so the next try downloads them afresh.
 #
@@ -69,10 +69,12 @@ print_versions() {
   setup_failed "the Android SDK's package list could not be read after $TRIES tries."
 }
 
-# Why the installed packages can't run, or nothing when they can.
+# Why the installed packages are incomplete, or nothing when they are whole. sdkmanager writes a
+# package's package.xml only once it is all unpacked. `emulator -version` is no check: on the
+# runner it fails even with a whole emulator.
 problem_with_install() {
-  if ! "$SDK/emulator/emulator" -version > /dev/null 2>&1; then
-    echo "the emulator does not run"
+  if [ ! -f "$SDK/emulator/package.xml" ] || [ ! -x "$SDK/emulator/emulator" ]; then
+    echo "the emulator is incomplete"
   elif [ ! -f "$IMAGE_DIR/package.xml" ] || [ ! -s "$IMAGE_DIR/system.img" ]; then
     echo "the system image $IMAGE is incomplete"
   fi
@@ -94,6 +96,7 @@ install_packages() {
     fi
     if [ -z "$problem" ]; then
       echo "The emulator and $IMAGE are installed."
+      "$SDK/emulator/emulator" -version 2>&1 | head -5 || true
       return 0
     fi
     echo "Try $try of $TRIES failed: $problem."
