@@ -25,8 +25,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * The ride's one notification: the recording card (Time, the mode, Distance) with its controls,
- * Lakad or Sakay, Pause or Resume, and Finish, on the lock screen too. It is the location
+ * The ride's one notification: the recording card (Time, the mode, Distance), on the lock screen
+ * too, and opened, the card's own bars under it: Pause and Lakad or Sakay while recording, Resume
+ * and Finish while paused. It is the location
  * service's own foreground notification, taken over: posted under the service's id
  * (BackgroundGeolocationService's 28351) on its channel, so there is only ever one. Paused and
  * finished, the service is gone and the same id carries it as an ordinary notification.
@@ -95,6 +96,51 @@ final class RideNotification {
         }
 
         RemoteViews card = new RemoteViews(context.getPackageName(), R.layout.ride_notification);
+        fillCard(context, card, state, time, distance);
+        RemoteViews opened = new RemoteViews(context.getPackageName(), R.layout.ride_notification_expanded);
+        fillCard(context, opened, state, time, distance);
+
+        // The card's own bars (recording-screen.tsx): Pause and the mode a tap switches to while
+        // recording, Resume and Finish while paused.
+        Bar left = isRecording
+            ? new Bar("Pause", "Pause", R.drawable.ride_icon_pause, R.drawable.ride_bar_brand,
+                action(context, RideActionReceiver.PAUSE))
+            : new Bar("Resume", "Resume", R.drawable.ride_icon_play, R.drawable.ride_bar_brand,
+                resume(context, state));
+        Bar right;
+        if (!isRecording) {
+            right = new Bar("Finish", "Finish", R.drawable.ride_icon_finish, R.drawable.ride_bar_finish,
+                action(context, RideActionReceiver.FINISH));
+        } else if ("ride".equals(state.mode)) {
+            right = new Bar("Lakad", "Switch to Lakad", R.drawable.ride_icon_switch, R.drawable.ride_bar_lakad,
+                action(context, RideActionReceiver.SWITCH));
+        } else {
+            right = new Bar("Sakay", "Switch to Sakay", R.drawable.ride_icon_switch, R.drawable.ride_bar_sakay,
+                action(context, RideActionReceiver.SWITCH));
+        }
+        left.into(opened, R.id.ride_bar_left, R.id.ride_bar_left_icon, R.id.ride_bar_left_text);
+        right.into(opened, R.id.ride_bar_right, R.id.ride_bar_right_icon, R.id.ride_bar_right_text);
+
+        builder
+            // Said by screen readers and by watches, which do not show the card.
+            .setContentTitle(isRecording ? "Recording · " + mode : "Paused")
+            .setContentText(time + " · " + distance)
+            .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+            .setCustomContentView(card)
+            .setCustomBigContentView(opened)
+            .setOngoing(true)
+            // Where the card is not shown (a watch), the same taps as plain actions; on the phone the
+            // bars are the controls, so no action row repeats them under the card.
+            .extend(new NotificationCompat.WearableExtender()
+                .addAction(left.asAction())
+                .addAction(right.asAction()));
+        return builder.build();
+    }
+
+    /** The figures, as the card shows them: the same ids in the closed card and the opened one. */
+    private static void fillCard(Context context, RemoteViews card, RideState state, String time, String distance) {
+        boolean isRecording = RideState.RECORDING.equals(state.phase);
+        String mode = "ride".equals(state.mode) ? "Sakay" : "Lakad";
         card.setTextViewText(R.id.ride_time, figure(context, time));
         card.setTextViewText(R.id.ride_distance, figure(context, distance));
         card.setTextViewText(R.id.ride_mode, isRecording ? mode : "--");
@@ -104,23 +150,35 @@ final class RideNotification {
         int dot = !isRecording ? R.color.ride_paused_dot : "ride".equals(state.mode) ? R.color.ride_sakay_dot : R.color.ride_lakad_dot;
         card.setInt(R.id.ride_dot_ring, "setColorFilter", color(context, ring));
         card.setInt(R.id.ride_dot, "setColorFilter", color(context, dot));
+    }
 
-        builder
-            // Said by screen readers and by watches, which do not show the card.
-            .setContentTitle(isRecording ? "Recording · " + mode : "Paused")
-            .setContentText(time + " · " + distance)
-            .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(card)
-            .setCustomBigContentView(card)
-            .setOngoing(true);
-        if (isRecording) {
-            builder.addAction(0, "ride".equals(state.mode) ? "Lakad" : "Sakay", action(context, RideActionReceiver.SWITCH));
-            builder.addAction(0, "Pause", action(context, RideActionReceiver.PAUSE));
-        } else {
-            builder.addAction(0, "Resume", resume(context, state));
+    /** One of the card's bars: its words, what a screen reader says, its icon, colour and tap. */
+    private static final class Bar {
+        final String text;
+        final String name;
+        final int icon;
+        final int surface;
+        final PendingIntent tap;
+
+        Bar(String text, String name, int icon, int surface, PendingIntent tap) {
+            this.text = text;
+            this.name = name;
+            this.icon = icon;
+            this.surface = surface;
+            this.tap = tap;
         }
-        builder.addAction(0, "Finish", action(context, RideActionReceiver.FINISH));
-        return builder.build();
+
+        void into(RemoteViews views, int bar, int iconView, int textView) {
+            views.setInt(bar, "setBackgroundResource", surface);
+            views.setImageViewResource(iconView, icon);
+            views.setTextViewText(textView, text);
+            views.setContentDescription(bar, name);
+            views.setOnClickPendingIntent(bar, tap);
+        }
+
+        NotificationCompat.Action asAction() {
+            return new NotificationCompat.Action.Builder(0, text, tap).build();
+        }
     }
 
     /** "12 min" with its unit in the card's lighter colour, as the card's Stat draws it. */

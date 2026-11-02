@@ -2,7 +2,8 @@
 <!--
   The recording card in the notification (RideNotification; the card is recording-card.tsx, Figma
   4482:24091): Time, the mode with its dot and whether it is recording, and Distance, each figure
-  over its name. The notification's own actions stand under it, as the card's bars do.
+  over its name: the notification closed, and the lock screen. Opened, it stands over the card's bars
+  (ride_notification_expanded.xml).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -75,8 +76,10 @@
                 android:id="@+id/ride_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textColor="@color/ride_content_disabled"
-                android:textSize="13sp" />
+                android:textSize="@dimen/ride_status_text" />
         </LinearLayout>
     </LinearLayout>
 

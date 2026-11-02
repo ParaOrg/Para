@@ -7,13 +7,16 @@
 #
 # The APK is the emulator ride's (VITE_EMULATOR_RIDE=1, src/features/contribute/native/emulator-ride.ts):
 # it starts a ride with no taps and hands the notification its state. A jeep ride is fed to the
-# emulator's GPS once a second. The taps are the notification's own (RideActionReceiver), sent as
-# root, as its actions send them; the notification is checked to carry those actions.
+# emulator's GPS once a second. The opened notification is the card with its bars, read from the
+# shade (uiautomator) and pictured for the owner (notification-recording.png, -paused.png). Sakay is
+# the bar on the screen, tapped; the other taps are the notification's own (RideActionReceiver),
+# sent as root, as its bars send them.
 #
 #   0:00  the ride starts; the notification is the location service's, in the foreground
-#   ~1:00 the phone's dark theme on: the card is still white (light always), then off again
-#   1:00  Sakay
-#   1:10  Pause: no fix is kept from then on, and the service leaves the foreground
+#   1:00  the shade: the card's bars, Pause and Sakay; Sakay tapped there
+#   ~1:10 the phone's dark theme on: the card is still white (light always), then off again
+#   1:30  Pause: no fix is kept from then on, and the service leaves the foreground; the shade:
+#         Resume and Finish
 #   1:40  Resume: the service is in the foreground again and fixes are kept
 #   2:10  Finish: no fix after it, and the notification says the ride waits to be saved
 #
@@ -43,6 +46,37 @@ ride_events() {
 # Whether the location service is in the foreground now.
 is_foreground() {
   adb shell dumpsys activity services "$PKG" | tr -d '\r' | grep -q 'isForeground=true'
+}
+# The shade opened, read and pictured as $OUT/<name>.xml and .png.
+shade() {
+  adb shell cmd statusbar expand-notifications
+  sleep 3
+  adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
+  adb pull /sdcard/ui.xml "$OUT/$1.xml" > /dev/null 2>&1
+  adb exec-out screencap -p > "$OUT/$1.png"
+}
+# The words on one of the card's bars (left or right) in a shade read by shade().
+bar_text() {
+  grep -o "text=\"[^\"]*\" resource-id=\"$PKG:id/ride_bar_$2_text\"" "$OUT/$1.xml" | head -1 | sed 's/^text="\([^"]*\)".*/\1/'
+}
+# The middle of one of the card's bars, as "x y".
+bar_middle() {
+  grep -o "resource-id=\"$PKG:id/ride_bar_$2\"[^>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" "$OUT/$1.xml" | head -1 \
+    | sed 's/.*bounds="\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]"/\1 \2 \3 \4/' \
+    | awk '{ printf "%d %d", ($1 + $3) / 2, ($2 + $4) / 2 }'
+}
+# The height of one of the card's bars: both are one line high, so a wrapped word shows as a taller bar.
+bar_height() {
+  grep -o "resource-id=\"$PKG:id/ride_bar_$2\"[^>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" "$OUT/$1.xml" | head -1 \
+    | sed 's/.*bounds="\[[0-9]*,\([0-9]*\)\]\[[0-9]*,\([0-9]*\)\]"/\1 \2/' | awk '{ print $2 - $1 }'
+}
+# Both bars in a shade read by shade() the same height, each word on one line.
+bars_level() {
+  local left right
+  left=$(bar_height "$1" left)
+  right=$(bar_height "$1" right)
+  [ -n "$left" ] && [ "$left" = "$right" ] && pass "$2: both bars one line, $left px high" \
+    || fail "$2: the bars are '$left' and '$right' px high (a word wrapped?)"
 }
 tap() {
   adb shell am broadcast -n "$PKG/$RECEIVER" -a "ph.para.contributor.ride.$1" > /dev/null
@@ -75,12 +109,25 @@ sleep 60
 adb shell dumpsys notification --noredact > "$OUT/notification-recording.txt"
 grep -q 'Recording' "$OUT/notification-recording.txt" && pass "the notification shows the ride recording" \
   || fail "no recording notification"
-for action in Sakay Pause Finish; do
-  # dumpsys lists each action as: [0] "Pause" -> PendingIntent{…}
-  grep -q "\"$action\" ->" "$OUT/notification-recording.txt" \
-    && pass "the notification carries $action" || fail "the notification has no $action"
-done
 is_foreground && pass "the location service is in the foreground" || fail "the service is not in the foreground"
+
+# Opened, the card has its bars as the app's card does: Pause and Sakay while recording on Lakad.
+shade notification-recording
+LEFT=$(bar_text notification-recording left)
+RIGHT=$(bar_text notification-recording right)
+[ "$LEFT" = Pause ] && [ "$RIGHT" = Sakay ] && pass "opened, the card's bars: $LEFT and $RIGHT" \
+  || fail "opened, the card's bars are '$LEFT' and '$RIGHT', not Pause and Sakay"
+bars_level notification-recording "opened"
+# Sakay, tapped on the screen: the bar's own tap.
+SAKAY_AT=$(bar_middle notification-recording right)
+if [ -n "$SAKAY_AT" ]; then
+  adb shell input tap $SAKAY_AT
+  sleep 3
+  pass "Sakay tapped on the bar, at $SAKAY_AT"
+else
+  fail "no Sakay bar on the screen to tap"
+fi
+adb shell cmd statusbar collapse
 
 # Light always (the owner, 2026-11-02): with the phone's dark theme on, the card is still white.
 adb shell cmd uimode night yes > /dev/null
@@ -135,8 +182,6 @@ echo "$CARD" | grep -Eq '^2(4[5-9]|5[0-5]),2(4[5-9]|5[0-5]),2(4[5-9]|5[0-5]) ' \
 adb shell cmd statusbar collapse
 adb shell cmd uimode night no > /dev/null
 
-tap SWITCH
-sleep 7
 tap PAUSE
 PAUSED_AT=$(native_fixes)
 sleep 27
@@ -146,8 +191,16 @@ STILL=$(native_fixes)
 is_foreground && fail "paused, the service is still in the foreground (the plugin's internals changed?)" \
   || pass "paused: the service has left the foreground"
 adb shell dumpsys notification --noredact > "$OUT/notification-paused.txt"
-grep -q 'Paused' "$OUT/notification-paused.txt" && pass "the notification says Paused, with Resume" \
+grep -q 'Paused' "$OUT/notification-paused.txt" && pass "the notification says Paused" \
   || fail "no Paused notification"
+sleep 2   # the notification posted again after the pause (RideNotification.postAgainSoon)
+shade notification-paused
+LEFT=$(bar_text notification-paused left)
+RIGHT=$(bar_text notification-paused right)
+[ "$LEFT" = Resume ] && [ "$RIGHT" = Finish ] && pass "paused, the card's bars: $LEFT and $RIGHT" \
+  || fail "paused, the card's bars are '$LEFT' and '$RIGHT', not Resume and Finish"
+bars_level notification-paused "paused"
+adb shell cmd statusbar collapse
 
 tap RESUME
 RESUMED_AT=$(native_fixes)

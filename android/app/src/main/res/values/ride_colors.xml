@@ -6,6 +6,9 @@
   its status dot: blue-100 round blue-700 on Lakad, green-200 round green-700 on Sakay,
   surface-tertiary (neutral-150) round content-primary while paused.
   Light always (the owner, 2026-11-02): the card draws its own white surface in a dark theme too.
+  Its bars (tracking-button.tsx), each a surface with a border of the next shade and white words:
+  Pause and Resume the brand (parabrand-900 on 950), Sakay green-700 on 800, Lakad blue-700 on
+  800, Finish content-secondary (neutral-800) on content-primary.
 -->
 <resources>
     <color name="ride_surface">#ffffff</color>
@@ -18,4 +21,13 @@
     <color name="ride_sakay_dot">#008236</color>
     <color name="ride_paused_ring">#f0f0f0</color>
     <color name="ride_paused_dot">#171717</color>
+    <color name="ride_content_inverse">#ffffff</color>
+    <color name="ride_brand_surface">#3b009a</color>
+    <color name="ride_brand_border">#1c0058</color>
+    <color name="ride_sakay_surface">#008236</color>
+    <color name="ride_sakay_border">#016630</color>
+    <color name="ride_lakad_surface">#1447e6</color>
+    <color name="ride_lakad_border">#193cb8</color>
+    <color name="ride_finish_surface">#262626</color>
+    <color name="ride_finish_border">#171717</color>
 </resources>
