@@ -1,0 +1,35 @@
+import { cssDurationMs } from './css-duration';
+
+/** A Motion duration's name after `--transition-duration-` (tokens.css; motion-durations.ts lists them). */
+export type MotionDuration =
+  'instant' | 'quick' | 'base' | 'gentle' | 'sheet' | 'turn' | 'slow' | 'pill' | 'pill-quick';
+
+/** A motion: one of the owner's Motion durations with one of the easings (`--ease-*`), by name. */
+export type Motion = readonly [duration: MotionDuration, easing: string];
+
+/*
+ * Each motion a script plays is one of these, named by what moves, in the owner's tokens
+ * (tokens.css): CSS reads the same tokens, so a script and a stylesheet never part. Here the ones
+ * the public map plays; the contributor page's own are in features/contribute/common/motion.ts,
+ * so the public map does not carry them (the shared chunk takes any module two chunks import).
+ */
+/** A sheet going down, with its scrim. */
+export const SINK: Motion = ['gentle', 'exit'];
+
+/** A Motion duration's custom property, as tokens.css names it. */
+export const durationToken = (name: MotionDuration): string => `--transition-duration-${name}`;
+
+/** A motion's duration in milliseconds and its easing, read from the tokens as the page has them. */
+export function motionOf([duration, easing]: Motion): { duration: number; easing: string } {
+  const style = getComputedStyle(document.documentElement);
+  return {
+    duration: cssDurationMs(style.getPropertyValue(durationToken(duration))) ?? 0,
+    easing: style.getPropertyValue(`--ease-${easing}`).trim() || 'ease-out',
+  };
+}
+
+/** Whether the person asked their device for less motion: then things change without moving. */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
