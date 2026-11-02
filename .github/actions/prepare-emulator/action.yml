@@ -1,0 +1,58 @@
+name: Prepare the emulator
+description: >
+  Installs the Android Emulator and one system image, from the cache when it holds these versions,
+  with retries, and checks they are whole, before android-emulator-runner starts them. Run after
+  prepare-app-build. When it can't, the job stops with "Emulator setup failed, no test ran".
+inputs:
+  api-level:
+    description: The system image's API level, as given to android-emulator-runner.
+    required: true
+  target:
+    description: The system image's target, as given to android-emulator-runner.
+    required: true
+  arch:
+    description: The system image's architecture, as given to android-emulator-runner.
+    required: true
+runs:
+  using: composite
+  steps:
+    # The stable channel's versions, read now so the cache is keyed on what would be installed.
+    - name: Read the emulator's and the system image's versions
+      id: versions
+      shell: bash
+      run: |
+        bash scripts/android/install-emulator-packages.sh versions \
+          '${{ inputs.api-level }}' '${{ inputs.target }}' '${{ inputs.arch }}' >> "$GITHUB_OUTPUT"
+        echo "sdk=$ANDROID_HOME" >> "$GITHUB_OUTPUT"
+
+    # The runner image's own emulator is removed, so a cached one is never unpacked over another
+    # version. android-emulator-runner would replace it with the latest anyway.
+    - name: Remove the runner image's emulator
+      shell: bash
+      run: rm -rf "$ANDROID_HOME/emulator"
+
+    - name: Restore the emulator and the system image
+      id: cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ${{ steps.versions.outputs.sdk }}/emulator
+          ${{ steps.versions.outputs.sdk }}/system-images/android-${{ inputs.api-level }}/${{ inputs.target }}/${{ inputs.arch }}
+        key: android-emulator-${{ runner.os }}-${{ steps.versions.outputs.emulator }}-android-${{ inputs.api-level }}-${{ inputs.target }}-${{ inputs.arch }}-${{ steps.versions.outputs.system-image }}
+
+    # With a cache hit sdkmanager finds both installed and only checks them.
+    - name: Install the emulator and the system image
+      shell: bash
+      run: |
+        bash scripts/android/install-emulator-packages.sh install \
+          '${{ inputs.api-level }}' '${{ inputs.target }}' '${{ inputs.arch }}'
+
+    # Saved now, not at the job's end, so a failed test still leaves them cached.
+    - name: Cache the emulator and the system image
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ${{ steps.versions.outputs.sdk }}/emulator
+          ${{ steps.versions.outputs.sdk }}/system-images/android-${{ inputs.api-level }}/${{ inputs.target }}/${{ inputs.arch }}
+        key: ${{ steps.cache.outputs.cache-primary-key }}
