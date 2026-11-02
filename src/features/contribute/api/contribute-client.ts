@@ -17,8 +17,20 @@ export const CONTRIBUTOR_AUTH_KEY = 'para.contributor-auth';
 
 let client: Promise<ContributeClient> | null = null;
 
+/** A client handed in by setContributeClient: the unit checks' stand-in. */
+let standIn: ContributeClient | null = null;
+
+/**
+ * Hands the page a client made elsewhere, in place of its own: the unit checks' stand-in, which
+ * answers each database call as the check needs.
+ */
+export function setContributeClient(next: ContributeClient): void {
+  standIn = next;
+}
+
 /** This page's client, loaded on first use, or null when it cannot upload. */
 export function contributeClient(): Promise<ContributeClient> | null {
+  if (standIn) return Promise.resolve(standIn);
   const config = contributeConfig;
   if (!canUpload() || !config) return null;
   client ??= import('@supabase/supabase-js').then(({ createClient }) =>
