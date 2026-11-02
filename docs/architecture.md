@@ -186,6 +186,7 @@ flowchart TD
   features_contribute_recorder --> features_contribute_storage
   features_contribute_recorder --> features_routes_map
   features_contribute_recorder --> features_routes_model
+  features_contribute_recorder --> shared_config
   features_contribute_recorder --> shared_utils
   features_contribute_screens --> design_system_primitives
   features_contribute_screens --> features_contribute_api
@@ -312,7 +313,7 @@ flowchart TD
 | `features/contribute/native` | `design-system/primitives`, `features/contribute/common`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `shared/utils` |
 | `features/contribute/native-bridge` | `features/contribute/app-update`, `features/contribute/native` |
 | `features/contribute/notices` | `design-system/primitives`, `features/contribute/history`, `features/contribute/screens`, `features/contribute/uploads`, `shared/ui` |
-| `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `shared/utils` |
+| `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `shared/config`, `shared/utils` |
 | `features/contribute/screens` | `design-system/primitives`, `features/contribute/api`, `features/contribute/app-update`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/cards`, `features/routes/map`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/storage` | `features/routes/model` |
 | `features/contribute/tutorial` | `design-system/primitives`, `features/contribute/screens`, `shared/hooks`, `shared/utils` |

@@ -24,10 +24,13 @@ public final class ParaServiceWatchers {
 
     /**
      * Starts the watcher again under the page's own id, so its fixes still reach the page's
-     * callback; `notification` is the one the service shows in the foreground.
+     * callback; `notification` is the one the service shows in the foreground. One already running
+     * under that id is stopped first: the plugin would keep both, and stop only one of them.
      */
     public static void add(IBinder binder, String watcherId, Notification notification) {
-        ((BackgroundGeolocationService.LocalBinder) binder).addWatcher(watcherId, notification, 0f);
+        BackgroundGeolocationService.LocalBinder service = (BackgroundGeolocationService.LocalBinder) binder;
+        service.removeWatcher(watcherId);
+        service.addWatcher(watcherId, notification, 0f);
     }
 
     /** The service the page binds to, for binding to it from a notification's tap. */

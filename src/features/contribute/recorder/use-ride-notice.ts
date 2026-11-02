@@ -70,15 +70,22 @@ export function useRideNotice({
   useEffect(() => {
     if (noticePhase === 'none' || recordingId === '') return;
     let isApplying = false;
+    // A tap heard while the last ones are being applied is applied right after, not dropped.
+    let isTappedMeanwhile = false;
     const apply = () => {
-      if (isApplying) return;
+      if (isApplying) {
+        isTappedMeanwhile = true;
+        return;
+      }
       isApplying = true;
+      isTappedMeanwhile = false;
       applyTaps()
         .catch((error: unknown) => {
           console.error('The taps on the ride notification could not be applied.', error);
         })
         .finally(() => {
           isApplying = false;
+          if (isTappedMeanwhile) apply();
         });
     };
     const applyTaps = async () => {

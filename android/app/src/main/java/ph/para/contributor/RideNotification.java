@@ -42,6 +42,7 @@ final class RideNotification {
 
     private static final long TICK_UNDER_A_MINUTE_MS = 10_000;
     private static final long MINUTE_MS = 60_000;
+    private static final long REPOST_AFTER_MS = 800;
 
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
     private static Runnable tick = null;
@@ -116,7 +117,7 @@ final class RideNotification {
             builder.addAction(0, "ride".equals(state.mode) ? "Lakad" : "Sakay", action(context, RideActionReceiver.SWITCH));
             builder.addAction(0, "Pause", action(context, RideActionReceiver.PAUSE));
         } else {
-            builder.addAction(0, "Resume", resume(context));
+            builder.addAction(0, "Resume", resume(context, state));
         }
         builder.addAction(0, "Finish", action(context, RideActionReceiver.FINISH));
         return builder.build();
@@ -181,12 +182,20 @@ final class RideNotification {
     }
 
     /**
-     * Resume: done here while the page is alive (frozen or not), as the service it starts again
-     * hands its fixes to the page. With the page gone it opens the app, where Resume is one tap:
-     * Android lets a notification open an app only from its own tap, not from a receiver.
+     * Whether Resume can be done here: the page is alive (frozen or not) and its watcher was let go
+     * by a tap here, so the service started again hands its fixes to the page's own callback. A
+     * ride the page paused itself holds no watcher (watcherId ''): its Resume is the page's.
      */
-    private static PendingIntent resume(Context context) {
-        return RidePlugin.isPageAlive() ? action(context, RideActionReceiver.RESUME) : openApp(context);
+    static boolean canResumeHere(RideState state) {
+        return RidePlugin.isPageAlive() && state.watcherId != null && !state.watcherId.isEmpty();
+    }
+
+    /**
+     * Resume: done here when it can be (canResumeHere). Otherwise it opens the app, where Resume
+     * is one tap: Android lets a notification open an app only from its own tap, not a receiver.
+     */
+    private static PendingIntent resume(Context context, RideState state) {
+        return canResumeHere(state) ? action(context, RideActionReceiver.RESUME) : openApp(context);
     }
 
     private static PendingIntent openApp(Context context) {
@@ -216,6 +225,32 @@ final class RideNotification {
         long wait = elapsed < MINUTE_MS ? TICK_UNDER_A_MINUTE_MS : MINUTE_MS - (elapsed % MINUTE_MS);
         tick = () -> post(context);
         HANDLER.postDelayed(tick, wait);
+    }
+
+    /**
+     * Posts again shortly: the service's leaving the foreground (Pause, Finish) removes its
+     * notification inside the system after our post may have landed, and nothing else re-posts a
+     * notification that does not tick.
+     */
+    static void postAgainSoon(Context context) {
+        Context app = context.getApplicationContext();
+        HANDLER.postDelayed(() -> post(app), REPOST_AFTER_MS);
+    }
+
+    /**
+     * The page is gone (its activity destroyed): the service stopped with it, so a ride recording
+     * records no more. Its notification goes, as the location service's own went; a paused or
+     * finished ride keeps its notification, which opens the app.
+     */
+    static void pageGone(Context context) {
+        Context app = context.getApplicationContext();
+        RideState state = RideState.read(app);
+        if (RideState.RECORDING.equals(state.phase)) {
+            state.phase = RideState.NONE;
+            state.watcherId = "";
+            state.write(app);
+        }
+        post(app);
     }
 
     private static void stopTicking() {

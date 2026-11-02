@@ -41,7 +41,7 @@ public class RidePlugin extends Plugin {
         synchronized (RidePlugin.class) {
             if (page == this) page = null;
         }
-        RideNotification.post(getContext());
+        RideNotification.pageGone(getContext());
     }
 
     @PluginMethod

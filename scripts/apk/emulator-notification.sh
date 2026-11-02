@@ -11,6 +11,7 @@
 # root, as its actions send them; the notification is checked to carry those actions.
 #
 #   0:00  the ride starts; the notification is the location service's, in the foreground
+#   ~1:00 the phone's dark theme on: the card is still white (light always), then off again
 #   1:00  Sakay
 #   1:10  Pause: no fix is kept from then on, and the service leaves the foreground
 #   1:40  Resume: the service is in the foreground again and fixes are kept
@@ -51,7 +52,9 @@ tap() {
 adb wait-for-device
 until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 sleep 90   # Play Services settling, as emulator-ride.sh waits for it
-adb root > /dev/null 2>&1 && adb wait-for-device
+adb root > /dev/null 2>&1; adb wait-for-device
+# The taps reach the receiver, which is not exported, only as root: without it every tap is lost.
+[ "$(adb shell id -u | tr -d '\r')" = 0 ] || { echo "FAIL: adb is not root" | tee "$OUT/summary.txt"; exit 1; }
 adb install -r "$APK" || { echo "FAIL: install failed" | tee "$OUT/summary.txt"; exit 1; }
 for permission in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS; do
   adb shell pm grant "$PKG" "android.permission.$permission" || echo "could not grant $permission"
@@ -73,10 +76,64 @@ adb shell dumpsys notification --noredact > "$OUT/notification-recording.txt"
 grep -q 'Recording' "$OUT/notification-recording.txt" && pass "the notification shows the ride recording" \
   || fail "no recording notification"
 for action in Sakay Pause Finish; do
-  grep -q "\"$action\"\|title=$action\|$action" "$OUT/notification-recording.txt" \
+  # dumpsys lists each action as: [0] "Pause" -> PendingIntent{…}
+  grep -q "\"$action\" ->" "$OUT/notification-recording.txt" \
     && pass "the notification carries $action" || fail "the notification has no $action"
 done
 is_foreground && pass "the location service is in the foreground" || fail "the service is not in the foreground"
+
+# Light always (the owner, 2026-11-02): with the phone's dark theme on, the card is still white.
+adb shell cmd uimode night yes > /dev/null
+sleep 15   # the next quiet update (every 10 s under a minute, and the theme change) redraws it
+adb shell cmd statusbar expand-notifications
+sleep 3
+adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
+adb pull /sdcard/ui.xml "$OUT/ui-night.xml" > /dev/null 2>&1
+adb exec-out screencap -p > "$OUT/night.png"
+CARD=$(python3 - "$OUT/ui-night.xml" "$OUT/night.png" "$PKG" << 'PY'
+import re, struct, sys, zlib
+xml, png, pkg = sys.argv[1:4]
+nodes = open(xml, errors="replace").read()
+found = re.search(r'resource-id="' + re.escape(pkg) + r':id/ride_time"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', nodes)
+if not found:
+    print("no card in the shade"); sys.exit()
+left, top, right, bottom = map(int, found.groups())
+# A plain PNG reader: screencap writes 8-bit RGBA, not interlaced.
+data = open(png, "rb").read()
+pos, idat, width, height = 8, b"", 0, 0
+while pos < len(data):
+    length, kind = struct.unpack(">I4s", data[pos:pos + 8])
+    chunk = data[pos + 8:pos + 8 + length]
+    if kind == b"IHDR":
+        width, height = struct.unpack(">II", chunk[:8])
+    elif kind == b"IDAT":
+        idat += chunk
+    pos += 12 + length
+raw, stride, rows, prev = zlib.decompress(idat), width * 4, [], bytearray(width * 4)
+for y in range(height):
+    kind, line = raw[y * (stride + 1)], bytearray(raw[y * (stride + 1) + 1:(y + 1) * (stride + 1)])
+    for x in range(stride):
+        a = line[x - 4] if x >= 4 else 0
+        b = prev[x]
+        c = prev[x - 4] if x >= 4 else 0
+        if kind == 1: line[x] = (line[x] + a) & 255
+        elif kind == 2: line[x] = (line[x] + b) & 255
+        elif kind == 3: line[x] = (line[x] + (a + b) // 2) & 255
+        elif kind == 4:
+            p = a + b - c; pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+            line[x] = (line[x] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+    rows.append(line); prev = line
+# The card's own background: just left of the Time figure, at its middle.
+x, y = max(0, left - 6), (top + bottom) // 2
+r, g, b = rows[y][x * 4:x * 4 + 3]
+print(f"{r},{g},{b} at {x},{y}")
+PY
+)
+echo "card background in the dark theme: $CARD" | tee "$OUT/night.txt"
+echo "$CARD" | grep -Eq '^2(4[5-9]|5[0-5]),2(4[5-9]|5[0-5]),2(4[5-9]|5[0-5]) ' \
+  && pass "dark theme on, the card is still white ($CARD)" || fail "dark theme on, the card is not white: $CARD"
+adb shell cmd statusbar collapse
+adb shell cmd uimode night no > /dev/null
 
 tap SWITCH
 sleep 7

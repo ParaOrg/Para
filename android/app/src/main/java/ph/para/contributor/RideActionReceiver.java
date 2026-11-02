@@ -61,15 +61,35 @@ public class RideActionReceiver extends BroadcastReceiver {
                     return;
                 case RESUME:
                     if (!RideState.PAUSED.equals(state.phase)) break;
-                    state.phase = RideState.RECORDING;
-                    state.pausedMs += now - state.pausedSince;
-                    state.pausedSince = 0;
-                    state.write(app);
-                    RideState.addEvent(app, "resume", now, null);
-                    FixLog.begin(app, state.recordingId);
-                    withService(app, state.watcherId,
-                        binder -> ParaServiceWatchers.add(binder, state.watcherId, RideNotification.build(app, state)),
-                        () -> done(app, pending, "resume"));
+                    // A Resume posted while the page was alive may be tapped after it is gone, or
+                    // after the page paused the ride itself: then it is the app's to do.
+                    if (!RideNotification.canResumeHere(state)) break;
+                    RideState resumed = RideState.read(app);
+                    resumed.phase = RideState.RECORDING;
+                    resumed.pausedMs += now - resumed.pausedSince;
+                    resumed.pausedSince = 0;
+                    final boolean[] isResumed = {false};
+                    // The ride records again only once the service has the watcher back.
+                    withService(app, state.watcherId, binder -> {
+                        try {
+                            FixLog.begin(app, state.recordingId);
+                        } catch (java.io.IOException | org.json.JSONException error) {
+                            // No log to keep the fixes in: the ride stays paused.
+                            throw new IllegalStateException("The fix log could not be opened.", error);
+                        }
+                        ParaServiceWatchers.add(binder, state.watcherId, RideNotification.build(app, resumed));
+                        resumed.write(app);
+                        RideState.addEvent(app, "resume", now, null);
+                        isResumed[0] = true;
+                    }, () -> {
+                        if (isResumed[0]) {
+                            done(app, pending, "resume");
+                            return;
+                        }
+                        Log.w(TAG, "Resume: the location service is not running; the app resumes.");
+                        RideNotification.post(app);
+                        pending.finish();
+                    });
                     return;
                 case FINISH:
                     boolean wasRecording = RideState.RECORDING.equals(state.phase);
@@ -105,6 +125,7 @@ public class RideActionReceiver extends BroadcastReceiver {
         Log.i(TAG, "tap " + what);
         RidePlugin.tellPage();
         RideNotification.post(context);
+        if (!what.equals("resume") && !what.startsWith("mode")) RideNotification.postAgainSoon(context);
         pending.finish();
     }
 
@@ -132,6 +153,11 @@ public class RideActionReceiver extends BroadcastReceiver {
         ServiceConnection connection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder binder) {
+                if (isDone[0]) {
+                    // Timed out already: the work is not done late.
+                    context.unbindService(this);
+                    return;
+                }
                 try {
                     work.run(binder);
                 } catch (Exception error) {

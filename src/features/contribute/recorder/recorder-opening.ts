@@ -1,10 +1,8 @@
 import { importNativeFixes } from './native-fixes';
 import { holdRecorderLock } from './recorder-lock';
-import { stoppedRecording } from './recording-transitions';
-import { withRideTaps } from './ride-events';
-import { dropRideTaps, readRideTaps } from './ride-notice-bridge';
+import { applyOpeningRideTaps } from './ride-notice-bridge';
 import type { FixRow, Recording } from '../storage/recording-schema';
-import { loadFixes, loadRecordings, putRecording } from '../storage/recording-store';
+import { loadFixes, loadRecordings } from '../storage/recording-store';
 
 /** What the page finds on this phone as it opens. */
 export type RecorderOpening =
@@ -45,40 +43,16 @@ export async function openRecorder({
   const found = all.find((r) => r.status !== 'saved') ?? null;
   let open = found;
   let isFinished = false;
-  if (found) {
-    try {
-      await importNativeFixes(found);
-      const tapped = await applyRideTaps(found);
-      open = tapped.recording;
-      isFinished = tapped.isFinished;
-    } catch (error) {
-      onNativeLogProblem(error);
-    }
-  } else {
-    // Taps on a ride the page no longer holds open have nothing to apply to.
-    await dropRideTaps(Date.now()).catch(onNativeLogProblem);
+  try {
+    if (found) await importNativeFixes(found);
+    // The taps made on the app's notification while the page was gone.
+    const tapped = await applyOpeningRideTaps(found);
+    open = tapped.recording;
+    isFinished = tapped.isFinished;
+  } catch (error) {
+    onNativeLogProblem(error);
   }
   const rows = open ? await loadFixes(open.id) : [];
   if (isCancelled()) return null;
   return open ? { kind: 'open', recording: open, rows, isFinished } : { kind: 'nothing-open' };
-}
-
-/**
- * The open ride with the taps made on the app's notification while the page was gone: its
- * switches, its pauses, and the Stop of a pause or a Finish not yet resumed. Stored, then the taps
- * are forgotten.
- */
-async function applyRideTaps(
-  recording: Recording,
-): Promise<{ recording: Recording; isFinished: boolean }> {
-  const taps = await readRideTaps(recording.id);
-  if (!taps) return { recording, isFinished: false };
-  const tapped = withRideTaps(recording, taps);
-  const applied =
-    tapped.stopAt === null
-      ? tapped.recording
-      : stoppedRecording(tapped.recording, tapped.stopAt, tapped.recording.failedFixWrites ?? 0);
-  await putRecording(applied);
-  await dropRideTaps(taps.lastTime);
-  return { recording: applied, isFinished: tapped.isFinished };
 }
