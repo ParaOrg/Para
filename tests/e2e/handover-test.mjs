@@ -20,6 +20,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { until } from './lib/harness.mjs';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
 const { chromium } = require('playwright');
@@ -120,8 +122,13 @@ try {
     if (!ours) await page.waitForTimeout(500);
   }
   check("this app's worker took over from the old one", ours);
+  // Time for an "Update Para!" or a reload that must not come, then the worker settling in.
   await page.waitForTimeout(2000);
-  const after = await state(page);
+  const after = await until(
+    () => state(page),
+    (now) => now.controlled && now.controllerState === 'activated' && !now.waiting,
+    20000,
+  );
   check(
     "this app's worker controls the page, and nothing waits",
     after.controlled && after.controllerState === 'activated' && !after.waiting,
@@ -154,8 +161,11 @@ try {
       // Not a tap: with the basemap unreachable its failure banner sits over the button.
       page.locator('[data-testid="update"]').dispatchEvent('click'),
     ]);
-    await page.waitForTimeout(1500);
-    const done = await state(page);
+    const done = await until(
+      () => state(page),
+      (now) => !now.waiting && now.controlled && !now.update,
+      20000,
+    );
     check(
       'tapping Reload brings it in and the button goes',
       !done.waiting && done.controlled && !done.update,

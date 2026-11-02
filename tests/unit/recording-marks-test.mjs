@@ -7,8 +7,8 @@ import assert from 'node:assert/strict';
 
 import {
   MAX_MARKS,
+  markFixIndexes,
   markedRecording,
-  markPlaces,
   marksThatFit,
   withMark,
 } from '../../src/features/contribute/recorder/recording-marks.ts';
@@ -19,16 +19,15 @@ const fix = (time, lng) => ({ time, at: [lng, 14.6], accuracyM: 5 });
 const FIXES = [fix(1000, 121.0), fix(2000, 121.001), fix(3000, 121.002)];
 
 test('a mark sits on the latest fix at or before the tap', () => {
-  assert.deepEqual(markPlaces(FIXES, [{ time: 2500 }, { time: 3000 }, { time: 9000 }]), [
-    [121.001, 14.6],
-    [121.002, 14.6],
-    [121.002, 14.6],
-  ]);
+  assert.deepEqual(
+    markFixIndexes(FIXES, [{ time: 2500 }, { time: 3000 }, { time: 9000 }]),
+    [1, 2, 2],
+  );
 });
 
 test('a tap before the first fix takes the first fix; with no fix there is no pin', () => {
-  assert.deepEqual(markPlaces(FIXES, [{ time: 10 }]), [[121.0, 14.6]]);
-  assert.deepEqual(markPlaces([], [{ time: 10 }]), []);
+  assert.deepEqual(markFixIndexes(FIXES, [{ time: 10 }]), [0]);
+  assert.deepEqual(markFixIndexes([], [{ time: 10 }]), []);
 });
 
 test('a mark is added at its time, in order', () => {

@@ -8,8 +8,7 @@ const BACKGROUND_LOCATION_SDK = 29;
 export const PERMISSION_REASONS = {
   notifications: {
     title: 'Show the recording notice',
-    reason:
-      'While you record, Android shows a notice that says Para is recording. It is how you know the recording is on.',
+    reason: 'While you record, the notice shows your ride. It is how you know the recording is on.',
     refusedTitle: 'The recording notice is off',
     refused:
       'Without it, Para cannot show its recording notice. You can still record, but the notice that tells you it is on will not show.',

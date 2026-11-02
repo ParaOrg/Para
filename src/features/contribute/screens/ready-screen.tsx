@@ -7,8 +7,7 @@ import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
 import { START_BUTTON_ATTR } from './start-morph-attrs';
-import { useStackRoom } from '../common/use-stack-room';
-import { useToolbarLift } from '../common/use-toolbar-lift';
+import { useHeightVar } from '../common/use-height-var';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
 
 // The update gate exists in the Android app's build only: on the web this is null and the chunk is
@@ -66,7 +65,7 @@ export function ReadyScreen({
   helpButtonRef,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const stackRef = useStackRoom();
+  const stackRef = useHeightVar('--stack-room');
   // Decided once, as the screen opens: a later change must not move focus again.
   const [focusFrom] = useState(backFrom);
   useEffect(() => {
@@ -79,7 +78,7 @@ export function ReadyScreen({
     ((focusFrom && target[focusFrom]) ?? headingRef.current)?.focus();
   }, [focusFrom, historyTabRef, accountTabRef]);
   // The page's toolbar stands over the earlier-recordings question, as over Start.
-  const liftRef = useToolbarLift();
+  const liftRef = useHeightVar('--toolbar-lift');
 
   // Figma's Record stands the right-hand column 20 in and 24 over Start tracking.
   useEffect(() => {

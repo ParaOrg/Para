@@ -5,6 +5,10 @@ import type { RideNoticeState } from '../native/ride-notice';
 import { isNativeApp } from '../native-bridge/native-app';
 import type { Recording } from '../storage/recording-schema';
 
+// The emulator ride's build is skipped: its driver (native/emulator-ride.ts) holds the
+// notification itself and leaves the taps to the native side, as a page asleep does, which is what
+// emulator-notification.sh checks. native-fixes.ts is not skipped there: the emulator ride proves it.
+
 /*
  * What the recorder asks of the app's ride notification (native/ride-notice.ts). As in
  * native-fixes.ts, the checks sit here, in the page's own code, so the web build drops the native
