@@ -145,7 +145,7 @@ Tick each once, and look again each year.
 - [ ] The backup's private GPG key and the app key passphrase in the password manager and on an offline copy. Without the first every backup is unreadable; without the second the contributor app can't be updated.
 - [ ] Namecheap's registrar lock on, and auto-renew on with a card that won't expire before 2026-12-23.
 - [ ] A second trusted person who can reach these accounts if the owner can't (owner to decide who, and how: a shared vault, or an invitation as admin on each service).
-- [ ] The old Villaralvorovic2 Cloudflare account: move the Turnstile widget to the Para account (a new widget means a new site key in `.env.production` and `.env.apk`, and its secret in Supabase), then delete the old `parapo` Worker. Until then, keep two-factor on that account too.
+- [ ] The old Villaralvorovic2 Cloudflare account: first turn the old `parapo` addresses into redirects to `www.para-commute.org` and delete `parapo-studio-review-preview` ([retire-old-site.md](operations/retire-old-site.md)); then move the Turnstile widget to the Para account (a new widget means a new site key in `.env.production` and `.env.apk`, and its secret in Supabase). Until then, keep two-factor on that account too.
 - [ ] GitHub: only "Nightly publish" has a deploy key with write access (`docs/agents/main-protection.md`).
 - [ ] DNSSEC on (ticket 07): Cloudflare → DNS → Settings, then the DS record at Namecheap. Off today.
 - [ ] The privacy policy, which the owner holds, still matches what Para collects and where it keeps it, whenever a service in the table above changes.
