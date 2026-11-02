@@ -4,11 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  ringCentroid,
-  ringCrossesItself,
-  ringToPolygon,
-} from '../../src/features/routes/geo/ring.ts';
+import { ringToPolygon } from '../../src/features/routes/geo/ring.ts';
+import { ringCentroid, ringCrossesItself } from '../../src/features/studio/data/hotspot-ring.ts';
 import { haversine } from '../../src/shared/utils/geo.ts';
 import {
   NEW_PLACE_SIDE_M,

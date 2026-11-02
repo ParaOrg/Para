@@ -18,11 +18,11 @@ import assert from 'node:assert/strict';
 import { PASS_WITHIN_M, passIndex } from '../../src/features/routes/geo/pass.ts';
 import { hotspotRing } from '../../src/features/routes/model/hotspots.ts';
 import {
-  entryDistance,
   firstTouchIndex,
   pointInRing,
   segmentsIntersect,
 } from '../../src/features/routes/geo/ring.ts';
+import { entryDistance } from '../../src/features/studio/data/hotspot-ring.ts';
 import { lineBounds } from '../../src/shared/utils/geo.ts';
 import { fileURLToPath } from 'node:url';
 import { readPublished } from '../../scripts/checks/check-map-data.mjs';
