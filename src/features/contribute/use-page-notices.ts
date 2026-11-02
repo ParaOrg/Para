@@ -4,12 +4,8 @@ import type { AccountGateState } from './account/use-account-gate';
 import { useLatch } from './common/use-latch';
 import type { MapNote, MapNoteGiven } from './notices/map-note';
 import type { PageToastsProps } from './notices/page-toasts';
-import {
-  pointsLostWords,
-  routeRecordedWords,
-  uploadFailedProblem,
-  type RouteRecordedGiven,
-} from './notices/route-recorded';
+import type { RouteRecordedGiven } from './notices/route-recorded';
+import { uploadFailedProblem } from './notices/upload-failed-problem';
 import type { RecordingState } from './recorder/recording-state';
 import type { Uploads } from './uploads/use-uploads';
 
@@ -71,9 +67,15 @@ export function usePageNotices({
     setToldOfSave(recording.lastSaved);
     const saved = recording.lastSaved;
     if (saved) {
-      const words = routeRecordedWords(statusOf(saved), navigator.onLine);
-      const pointsLost = pointsLostWords(saved.failedFixWrites ?? 0);
-      setRouteRecorded((told) => ({ words, pointsLost, times: (told?.times ?? 0) + 1 }));
+      const status = statusOf(saved);
+      const isOnline = navigator.onLine;
+      const failedFixWrites = saved.failedFixWrites ?? 0;
+      setRouteRecorded((told) => ({
+        status,
+        isOnline,
+        failedFixWrites,
+        times: (told?.times ?? 0) + 1,
+      }));
       onRouteRecorded();
     }
   }
