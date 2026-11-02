@@ -76,8 +76,10 @@
                 android:id="@+id/ride_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textColor="@color/ride_content_disabled"
-                android:textSize="13sp" />
+                android:textSize="@dimen/ride_status_text" />
         </LinearLayout>
     </LinearLayout>
 

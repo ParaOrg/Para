@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- On a phone narrower than 360dp the card's sizes would wrap: "Resume" on the notification's bars
+     (ride_notification_expanded.xml), and "Recording" by the mode's dot (ride_notification.xml).
+     They are smaller there. -->
+<resources>
+    <dimen name="ride_bar_text">15sp</dimen>
+    <dimen name="ride_status_text">11sp</dimen>
+</resources>

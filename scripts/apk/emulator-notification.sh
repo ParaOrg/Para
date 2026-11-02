@@ -65,6 +65,19 @@ bar_middle() {
     | sed 's/.*bounds="\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]"/\1 \2 \3 \4/' \
     | awk '{ printf "%d %d", ($1 + $3) / 2, ($2 + $4) / 2 }'
 }
+# The height of one of the card's bars: both are one line high, so a wrapped word shows as a taller bar.
+bar_height() {
+  grep -o "resource-id=\"$PKG:id/ride_bar_$2\"[^>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" "$OUT/$1.xml" | head -1 \
+    | sed 's/.*bounds="\[[0-9]*,\([0-9]*\)\]\[[0-9]*,\([0-9]*\)\]"/\1 \2/' | awk '{ print $2 - $1 }'
+}
+# Both bars in a shade read by shade() the same height, each word on one line.
+bars_level() {
+  local left right
+  left=$(bar_height "$1" left)
+  right=$(bar_height "$1" right)
+  [ -n "$left" ] && [ "$left" = "$right" ] && pass "$2: both bars one line, $left px high" \
+    || fail "$2: the bars are '$left' and '$right' px high (a word wrapped?)"
+}
 tap() {
   adb shell am broadcast -n "$PKG/$RECEIVER" -a "ph.para.contributor.ride.$1" > /dev/null
   sleep 3
@@ -104,6 +117,7 @@ LEFT=$(bar_text notification-recording left)
 RIGHT=$(bar_text notification-recording right)
 [ "$LEFT" = Pause ] && [ "$RIGHT" = Sakay ] && pass "opened, the card's bars: $LEFT and $RIGHT" \
   || fail "opened, the card's bars are '$LEFT' and '$RIGHT', not Pause and Sakay"
+bars_level notification-recording "opened"
 # Sakay, tapped on the screen: the bar's own tap.
 SAKAY_AT=$(bar_middle notification-recording right)
 if [ -n "$SAKAY_AT" ]; then
@@ -185,6 +199,7 @@ LEFT=$(bar_text notification-paused left)
 RIGHT=$(bar_text notification-paused right)
 [ "$LEFT" = Resume ] && [ "$RIGHT" = Finish ] && pass "paused, the card's bars: $LEFT and $RIGHT" \
   || fail "paused, the card's bars are '$LEFT' and '$RIGHT', not Resume and Finish"
+bars_level notification-paused "paused"
 adb shell cmd statusbar collapse
 
 tap RESUME
