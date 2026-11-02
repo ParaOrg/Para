@@ -1,4 +1,4 @@
-// The upload's packing (src/features/contribute/api/pack-recording.ts): a saved
+// The upload's packing (src/features/contribute/uploads/packing/pack-recording.ts): a saved
 // recording in the database's shape, with the points the database would refuse
 // dropped beforehand, so a real ride is never refused whole for one bad fix.
 //
@@ -6,7 +6,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { packRecording, VEHICLE_OF } from '../../src/features/contribute/api/pack-recording.ts';
+import { VEHICLE_OF } from '../../src/features/contribute/api/contribution-vehicles.ts';
+import { packRecording } from '../../src/features/contribute/uploads/packing/pack-recording.ts';
 import { RIDE_KINDS } from '../../src/features/contribute/storage/recording-schema.ts';
 import { UPLOAD_LIMITS } from '../../src/features/contribute/recorder/recording-limits.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';

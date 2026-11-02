@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
+import { loadPacking } from './packing/load-packing';
 import { FAILED, problemOfError } from './upload-failures';
 import { isSentOnItsOwn, storedUploadStatus } from './upload-rules';
 import type { UploadGate, UploadStatus } from './upload-state';
-import { packRecording } from '../api/pack-recording';
 import { removeUpload, uploadContribution } from '../api/upload-contribution';
 import { UploadError } from '../api/upload-problem';
 import { sentConsentVersion } from '../consent/consent-version';
@@ -76,6 +76,9 @@ export function useUploadSending({
     setStatus(recording.id, { state: 'uploading' });
     try {
       const rows = await loadFixes(recording.id);
+      // Not fetched (offline before the worker kept it): the catch below takes it as no signal,
+      // so the send is tried again when the phone is back online.
+      const { packRecording } = await loadPacking();
       const packed = packRecording(
         recording,
         rows.map(fixOfRow),

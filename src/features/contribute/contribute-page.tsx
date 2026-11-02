@@ -18,7 +18,7 @@ import { cn } from '@/shared/utils/cn';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { useAccountGate } from './account/use-account-gate';
-import { canUpload } from './api/contribute-client';
+import { canUpload } from './api/contribute-config';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { OPENABLE_SCREENS_ATTR } from './common/data-attributes';
 import { useEarlierQuestion } from './consent/use-earlier-question';
@@ -50,6 +50,7 @@ import { TOOLBAR_PLACE } from './toolbar/toolbar-place';
 import { warmToolbarSlide } from './toolbar/use-toolbar-slide';
 import { TUTORIAL_ENTRY, isTutorialEntry } from './tutorial/tutorial-entry';
 import type { TutorialDemo } from './tutorial/tutorial-steps';
+import { loadPacking } from './uploads/packing/load-packing';
 import { useUploads } from './uploads/use-uploads';
 
 /*
@@ -441,9 +442,10 @@ export function ContributePage({ locator }: ContributePageProps) {
     }
   }, [accountGate, phase, canSend, history]);
 
-  // On Ready the recording screens are fetched ahead of Start, and the save screens too, also when
-  // the page opens on a ride already under way, so stopping one never waits on the network. A
-  // failure here is only a missed head start: the lazy screen asks again when it is shown.
+  // On Ready the recording screens are fetched ahead of Start, and the save screens and the upload's
+  // packing too, also when the page opens on a ride already under way, so stopping and sending one
+  // never wait on the network. A failure here is only a missed head start: the lazy screen asks
+  // again when it is shown, and a send when it packs.
   useEffect(() => {
     if (phase !== 'ready' && phase !== 'recording' && phase !== 'paused') return;
     Promise.all([
@@ -452,6 +454,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       loadStopRecordingScreen(),
       loadFlagStopButton(),
       loadSaveForm(),
+      loadPacking(),
       fetchStartMorph(),
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);

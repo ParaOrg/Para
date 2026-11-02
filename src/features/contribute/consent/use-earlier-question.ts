@@ -1,7 +1,7 @@
 import { isEarlierRecording, shouldAskAboutEarlier } from './consent-version';
 import type { EarlierQuestion } from './earlier-recordings-panel';
 import { useEarlierChoice, type EarlierChoice } from './use-earlier-choice';
-import { canUpload } from '../api/contribute-client';
+import { canUpload } from '../api/contribute-config';
 import type { Recording } from '../storage/recording-schema';
 
 interface EarlierQuestionState {

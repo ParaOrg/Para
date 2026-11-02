@@ -312,6 +312,9 @@ const retryButton = (page, name) =>
       stored.recording.vehicle === null,
     `${stored.recording.point_count} points`,
   );
+  // The stand-in holds the row as the request arrives; the phone marks its copy only once the
+  // answer is back, and shows Uploaded after that mark is kept.
+  await waitForStatus(page, 'SM Fairview', UPLOADED);
   check(
     '  the phone keeps its copy, marked uploaded',
     (await storedUpload(page, stored.recording.id)) === 'uploaded',
@@ -322,7 +325,6 @@ const retryButton = (page, name) =>
       (await page.evaluate((k) => localStorage.getItem(k), STUDIO_KEY)) === studioBefore &&
       (await page.evaluate(() => localStorage.getItem('para.contributor-auth'))) !== null,
   );
-  await waitForStatus(page, 'SM Fairview', UPLOADED);
   await shot(page, '1-uploaded');
   await page.reload({ waitUntil: 'load' });
   await waitForStatus(page, 'SM Fairview', UPLOADED);
