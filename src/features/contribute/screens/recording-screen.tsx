@@ -9,6 +9,7 @@ import { FoldButton } from './fold-button';
 import { RecordingCard, type RecordingCardState } from './recording-card';
 import { RecordingTint } from './recording-tint';
 import { TrackingButton } from './tracking-button';
+import { RECORDING_CARD_ATTR } from '../common/data-attributes';
 import { useHeightVar } from '../common/use-height-var';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { Mode } from '../recorder/recording-rules';
@@ -118,7 +119,7 @@ export function RecordingScreen({
         <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
           {isPaused ? 'Recording paused' : 'Recording a route'}
         </h1>
-        <div id={cardId} hidden={isCardFolded} data-recording-card={state}>
+        <div id={cardId} hidden={isCardFolded} {...{ [RECORDING_CARD_ATTR]: state }}>
           <RecordingCard
             elapsedSeconds={figures.elapsedSeconds}
             distanceM={figures.distanceM}

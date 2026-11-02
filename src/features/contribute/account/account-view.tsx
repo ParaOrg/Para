@@ -7,9 +7,6 @@ import { AccountSettingsView } from './account-settings-view';
 import { ChangePasswordView } from './change-password-view';
 import type { CommuteStatsState } from './commute-stats';
 import { DeleteAccountView } from './delete-account-view';
-import { useAccountSettingsView } from './use-account-settings-view';
-import { useChangePasswordView } from './use-change-password-view';
-import { useDeleteAccountView } from './use-delete-account-view';
 import { accountKeys } from '../api/account-keys';
 import { AccountError } from '../api/account-problem';
 import type { MyStats } from '../api/fetch-my-stats';
@@ -17,6 +14,8 @@ import { useAccountQuery } from '../api/use-account-query';
 import { useMyStatsQuery } from '../api/use-my-stats-query';
 import { useProfileQuery } from '../api/use-profile-query';
 import { useSignOutMutation } from '../api/use-sign-out-mutation';
+import { SCREENS } from '../navigation/screen-routes';
+import { useScreenView } from '../navigation/use-screen-view';
 import type { Recording } from '../storage/recording-schema';
 import { isNotSent } from '../uploads/upload-rules';
 import type { UploadStatus } from '../uploads/upload-state';
@@ -32,9 +31,9 @@ interface AccountViewProps {
  * in its place, so the page fetches the two together, on the Account tab's tap.
  */
 export function AccountView({ recordings, statusOf }: AccountViewProps) {
-  const settings = useAccountSettingsView();
-  const changePassword = useChangePasswordView();
-  const deleteAccount = useDeleteAccountView();
+  const settings = useScreenView('accountSettings');
+  const changePassword = useScreenView('changePassword');
+  const deleteAccount = useScreenView('deleteAccount');
   // Said once on Account settings, back from a password changed.
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const account = useAccountQuery();
@@ -48,14 +47,14 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
   const putDeleteBack = settings.replaceWith;
   useEffect(() => {
     // Back from it lands on Account settings: the URL is put back as the screen still shows.
-    if (isDeleteLeft) putDeleteBack('#delete-account');
+    if (isDeleteLeft) putDeleteBack(SCREENS.deleteAccount.hash);
   }, [isDeleteLeft, putDeleteBack]);
 
   // Inside Account, so their Back returns there, even after a reload. Account settings stays
   // drawn, hidden, under Change password: a change not saved yet, or a save on its way, is still
   // there to come back to.
   if (deleteAccount.isOpen || isDeleting) {
-    return <DeleteAccountView onBack={() => deleteAccount.closeTo('#account-settings')} />;
+    return <DeleteAccountView onBack={() => deleteAccount.closeTo(SCREENS.accountSettings.hash)} />;
   }
   if (settings.isOpen || changePassword.isOpen) {
     return (
@@ -70,16 +69,16 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
             onOpenDeleteAccount={deleteAccount.open}
             onBack={() => {
               setIsPasswordChanged(false);
-              settings.closeTo('#profile');
+              settings.closeTo(SCREENS.profile.hash);
             }}
           />
         </Activity>
         {changePassword.isOpen && (
           <ChangePasswordView
-            onBack={() => changePassword.closeTo('#account-settings')}
+            onBack={() => changePassword.closeTo(SCREENS.accountSettings.hash)}
             onDone={() => {
               setIsPasswordChanged(true);
-              changePassword.closeTo('#account-settings');
+              changePassword.closeTo(SCREENS.accountSettings.hash);
             }}
           />
         )}

@@ -9,9 +9,11 @@ import { HistoryLoadLine } from './history-load-line';
 import { HistorySkeleton } from './history-skeleton';
 import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
+import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useIsSlowLoad } from '../common/use-is-slow-load';
 import { useScreenEntry } from '../motion/use-screen-entry';
+import { SCREENS } from '../navigation/screen-routes';
 import type { Recording } from '../storage/recording-schema';
 import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 import type { UploadStatus } from '../uploads/upload-state';
@@ -56,7 +58,7 @@ export function HistoryScreen({
     <section
       ref={entryRef}
       aria-labelledby={HISTORY_HEADING_ID}
-      data-screen-hash="#history"
+      {...{ [SCREEN_HASH_ATTR]: SCREENS.history.hash }}
       className="tab-screen absolute inset-0 z-20 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <header

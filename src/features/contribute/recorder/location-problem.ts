@@ -1,5 +1,5 @@
-import type { WatchError } from './use-geolocation-watch';
 import { isNativeApp } from '../native-bridge/native-app';
+import type { WatchError } from '../native-bridge/native-contract';
 import type { PageProblem } from '../notices/page-problem';
 import {
   LOCATION_BLOCKED_PROBLEM,

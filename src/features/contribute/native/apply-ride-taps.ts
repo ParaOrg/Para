@@ -1,11 +1,12 @@
 import { dropRideEvents, readRideEvents } from './ride-notice';
+import type { RideTaps } from '../native-bridge/native-contract';
 import { stoppedRecording } from '../recorder/recording-transitions';
-import { foldRideEvents, withRideTaps, type RideTaps } from '../recorder/ride-events';
+import { foldRideEvents, withRideTaps } from '../recorder/ride-events';
 import type { Recording } from '../storage/recording-schema';
 import { putRecording } from '../storage/recording-store';
 
 /** The taps on the notification for `recordingId` not applied yet, folded; null when none. */
-export async function readRideTaps(recordingId: string): Promise<RideTaps | null> {
+export async function foldUnappliedTaps(recordingId: string): Promise<RideTaps | null> {
   const events = await readRideEvents();
   return events.length > 0 ? foldRideEvents(events, recordingId) : null;
 }
@@ -22,7 +23,7 @@ export async function applyOpeningTaps(
     await dropRideEvents(Date.now());
     return { recording, isFinished: false };
   }
-  const taps = await readRideTaps(recording.id);
+  const taps = await foldUnappliedTaps(recording.id);
   if (!taps) return { recording, isFinished: false };
   const tapped = withRideTaps(recording, taps);
   const applied =

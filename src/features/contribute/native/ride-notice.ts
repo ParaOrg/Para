@@ -1,43 +1,24 @@
-import * as z from 'zod/mini';
-
-import { nativePlugin } from '../native-bridge/native-app';
-import type { RideEvent } from '../recorder/ride-events';
-
-/** Where the ride is, as the app's notification shows it (RidePlugin.java setState). */
-export interface RideNoticeState {
-  recordingId: string;
-  phase: 'recording' | 'paused' | 'none';
-  mode: 'walk' | 'ride';
-  startedAt: number;
-  /** Time paused before now, the pause now running left out. */
-  pausedSeconds: number;
-  /** Where a paused ride stopped. */
-  stoppedAt: number | null;
-}
+import { lazyPlugin } from '../native-bridge/native-app';
+import {
+  PLUGIN_NAMES,
+  rideEventsSchema,
+  RIDE_EVENT_NAME,
+  type RideEvent,
+  type RideNoticeState,
+  type RideState,
+} from '../native-bridge/native-contract';
 
 interface RidePlugin {
-  setState: (state: RideNoticeState & { watcherId: string }) => Promise<void>;
+  setState: (state: RideState) => Promise<void>;
   events: () => Promise<unknown>;
   dropEvents: (options: { time: number }) => Promise<void>;
   addListener: (
-    event: 'rideEvent',
+    event: typeof RIDE_EVENT_NAME,
     listener: () => void,
   ) => Promise<{ remove: () => Promise<void> }>;
 }
 
-const eventsSchema = z.object({
-  events: z.array(
-    z.object({
-      kind: z.enum(['mode', 'pause', 'resume', 'finish']),
-      time: z.number(),
-      to: z.optional(z.enum(['walk', 'ride'])),
-      recordingId: z.string(),
-    }),
-  ),
-});
-
-let plugin: RidePlugin | null = null;
-const getPlugin = () => (plugin ??= nativePlugin<RidePlugin>('Ride'));
+const getPlugin = lazyPlugin<RidePlugin>(PLUGIN_NAMES.ride);
 
 // The page's watcher (native-location.ts) and the last state said: the notification needs both,
 // and they change apart.
@@ -67,7 +48,7 @@ export function noteRideWatcher(id: string): void {
 
 /** The taps made on the notification that the page has not applied yet, oldest first. */
 export async function readRideEvents(): Promise<RideEvent[]> {
-  return eventsSchema.parse(await getPlugin().events()).events;
+  return rideEventsSchema.parse(await getPlugin().events()).events;
 }
 
 /** Forgets the taps up to `time`: the page has applied them. */
@@ -77,7 +58,7 @@ export function dropRideEvents(time: number): Promise<void> {
 
 /** Hears a tap on the notification while the page is awake; returns what stops hearing. */
 export function onRideEvent(listener: () => void): () => void {
-  const handle = getPlugin().addListener('rideEvent', listener);
+  const handle = getPlugin().addListener(RIDE_EVENT_NAME, listener);
   return () => {
     void handle.then((h) => h.remove());
   };

@@ -1,5 +1,5 @@
-import type { PageProblem } from './page-problem';
 import type { UploadStatus } from '../uploads/upload-state';
+import { UPLOAD_WORDS } from '../uploads/upload-words';
 
 /** A toast's words: its title, and one more line. */
 export interface ToastWords {
@@ -7,17 +7,20 @@ export interface ToastWords {
   body: string;
 }
 
-/** What the page says after a save, and how many saves it has said it for. */
+/**
+ * A save the page tells of, as it stood the moment it was saved, and how many saves it has told
+ * of. Its words are made where the toasts are drawn, so they load with the toasts' code and not in
+ * the page's opening.
+ */
 export interface RouteRecordedGiven {
-  words: ToastWords;
-  /** Points the phone could not keep of this ride, as its own problem toast; null if none. */
-  pointsLost: ToastWords | null;
+  /** The saved route's upload. */
+  status: UploadStatus;
+  /** Whether the phone had a connection. */
+  isOnline: boolean;
+  /** Points the phone could not keep of this ride, said as their own problem toast. */
+  failedFixWrites: number;
   times: number;
 }
-
-const ON_ITS_WAY = 'Thanks! It’s on its way to Para.';
-const SENDS_ONLINE = 'Kept on this phone. It sends when you’re online.';
-const KEPT = 'Kept on this phone.';
 
 /** Where the saved route's upload goes from here, by its state the moment it was saved. */
 function uploadWords(status: UploadStatus, isOnline: boolean): string {
@@ -26,17 +29,19 @@ function uploadWords(status: UploadStatus, isOnline: boolean): string {
     case 'uploading':
     case 'uploaded':
     case 'checking':
-      return ON_ITS_WAY;
+      return UPLOAD_WORDS[status.state].toast;
     // Failed: sent again by itself, as a waiting one is; History says why it failed.
     case 'waiting':
     case 'failed':
-      return isOnline ? ON_ITS_WAY : SENDS_ONLINE;
+      return isOnline
+        ? UPLOAD_WORDS[status.state].toast.online
+        : UPLOAD_WORDS[status.state].toast.offline;
     // Not sent by itself: no consent to the current terms yet, or uploads off here.
     case 'held':
     case 'unavailable':
     case 'removing':
     case 'removed':
-      return KEPT;
+      return UPLOAD_WORDS[status.state].toast;
   }
 }
 
@@ -52,16 +57,5 @@ export function pointsLostWords(failedFixWrites: number): ToastWords | null {
   return {
     title: 'Part of the ride wasn’t kept',
     body: `The phone couldn’t keep ${points} of this recording.`,
-  };
-}
-
-/** The just-saved route's upload failed: a problem, in the failure's own plain words. */
-export function uploadFailedProblem(status: UploadStatus): PageProblem | null {
-  if (status.state !== 'failed') return null;
-  return {
-    id: 'upload-failed',
-    icon: 'warning',
-    title: 'Upload didn’t go through',
-    body: status.message,
   };
 }

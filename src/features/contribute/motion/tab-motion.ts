@@ -1,22 +1,14 @@
 import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
 import { MOVE } from './motion';
+import {
+  OPENABLE_SCREENS_ATTR,
+  SCREEN_HASH_ATTR,
+  TOOLBAR_TAB_ATTR,
+} from '../common/data-attributes';
+import { orderOf, SCREENS } from '../navigation/screen-routes';
 
 import './tab-motion.css';
-
-/**
- * Where each screen sits in the toolbar's order, by its hash: Record (no hash), History, Account,
- * Account settings inside Account, and Change password and Delete account inside Account
- * settings. Moving to a higher one goes right, to a lower one left.
- */
-const SCREEN_ORDER: Readonly<Record<string, number>> = {
-  '': 0,
-  '#history': 1,
-  '#profile': 2,
-  '#account-settings': 3,
-  '#change-password': 4,
-  '#delete-account': 4,
-};
 
 /** How long a move waits for its hash to change before it is shown anyway. */
 const SETTLE_MS = 150;
@@ -37,8 +29,8 @@ export const tabShift = (sign: 1 | -1): string =>
   `translateX(calc(${sign} * ${getComputedStyle(document.documentElement).getPropertyValue('--tab-motion-shift').trim() || '0px'}))`;
 
 const directionOf = (from: string, to: string): MotionDirection | null => {
-  const a = SCREEN_ORDER[from];
-  const b = SCREEN_ORDER[to];
+  const a = orderOf(from);
+  const b = orderOf(to);
   if (a === undefined || b === undefined || a === b) return null;
   return b > a ? 'forward' : 'back';
 };
@@ -77,20 +69,22 @@ export function screenEntryDirection(): MotionDirection | null {
  */
 function isDrawn(hash: string): boolean {
   // A screen kept but hidden (contribute-page.tsx) is not drawn.
-  const screens = [...document.querySelectorAll('[data-screen-hash]')].filter((screen) =>
+  const screens = [...document.querySelectorAll(`[${SCREEN_HASH_ATTR}]`)].filter((screen) =>
     screen.checkVisibility(),
   );
-  if (SCREEN_ORDER[hash] === undefined) return true;
-  const openable = document.querySelector('[data-screens]')?.getAttribute('data-screens');
+  if (orderOf(hash) === undefined) return true;
+  const openable = document
+    .querySelector(`[${OPENABLE_SCREENS_ATTR}]`)
+    ?.getAttribute(OPENABLE_SCREENS_ATTR);
   if (
-    hash !== '' &&
+    hash !== SCREENS.record.hash &&
     openable !== null &&
     openable !== undefined &&
     !openable.split(' ').includes(hash)
   )
     return true;
-  if (hash === '') return screens.length === 0;
-  return screens.some((screen) => screen.getAttribute('data-screen-hash') === hash);
+  if (hash === SCREENS.record.hash) return screens.length === 0;
+  return screens.some((screen) => screen.getAttribute(SCREEN_HASH_ATTR) === hash);
 }
 
 /**
@@ -160,23 +154,25 @@ document.addEventListener(
   'click',
   (event) => {
     if (!running || event.target !== document.documentElement) return;
-    const tab = [...document.querySelectorAll<HTMLElement>('[data-tab]')].find((candidate) => {
-      // A toolbar out of reach (held by a question, under the credits) takes no tap this way
-      // either: it is hidden or inert, and so is its tab.
-      if (
-        candidate.closest('[inert]') ||
-        !candidate.checkVisibility({ visibilityProperty: true })
-      ) {
-        return false;
-      }
-      const box = candidate.getBoundingClientRect();
-      return (
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom
-      );
-    });
+    const tab = [...document.querySelectorAll<HTMLElement>(`[${TOOLBAR_TAB_ATTR}]`)].find(
+      (candidate) => {
+        // A toolbar out of reach (held by a question, under the credits) takes no tap this way
+        // either: it is hidden or inert, and so is its tab.
+        if (
+          candidate.closest('[inert]') ||
+          !candidate.checkVisibility({ visibilityProperty: true })
+        ) {
+          return false;
+        }
+        const box = candidate.getBoundingClientRect();
+        return (
+          event.clientX >= box.left &&
+          event.clientX <= box.right &&
+          event.clientY >= box.top &&
+          event.clientY <= box.bottom
+        );
+      },
+    );
     if (!tab) return;
     event.stopPropagation();
     tab.click();

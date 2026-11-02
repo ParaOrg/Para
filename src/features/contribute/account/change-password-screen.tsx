@@ -9,8 +9,10 @@ import { NewPasswordField } from './new-password-field';
 import { SaveChangesSheet } from './save-changes-sheet';
 import { SettingsHeader } from './settings-header';
 import type { Captcha } from './use-captcha';
+import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
+import { SCREENS } from '../navigation/screen-routes';
 
 interface ChangePasswordScreenProps {
   isBusy: boolean;
@@ -74,7 +76,7 @@ export function ChangePasswordScreen({
     <section
       ref={entryRef}
       aria-labelledby="change-password-heading"
-      data-screen-hash="#change-password"
+      {...{ [SCREEN_HASH_ATTR]: SCREENS.changePassword.hash }}
       className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <SettingsHeader

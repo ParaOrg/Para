@@ -8,7 +8,7 @@ import { useToast } from '@/shared/ui/use-toast';
 
 import type { MapNoteGiven } from './map-note';
 import type { PageProblem, PageProblemIcon } from './page-problem';
-import type { RouteRecordedGiven } from './route-recorded';
+import { pointsLostWords, routeRecordedWords, type RouteRecordedGiven } from './route-recorded';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
 import { FlagStopIcon } from '../common/flag-stop-icon';
 import { CheckIcon } from '../common/history-icons';
@@ -18,7 +18,7 @@ const ICONS = {
   warning: <AlertCircleIcon />,
 } satisfies Record<PageProblemIcon, ReactNode>;
 
-interface PageToastsProps {
+export interface PageToastsProps {
   /** The recorder's problem as it stands, or null: fixed, it is taken away. */
   problem: PageProblem | null;
   /** A recording runs with the screen free to sleep: the wake lock was refused. */
@@ -73,6 +73,7 @@ export function PageToasts({
     isScreenFreeToSleep ? SCREEN_AWAKE_PROBLEM : null,
     uploadProblem,
   ].filter((each) => each !== null);
+  const pointsLost = routeRecorded && pointsLostWords(routeRecorded.failedFixWrites);
   return (
     <ToastHost>
       <ProblemsSaid problems={problems} />
@@ -95,18 +96,18 @@ export function PageToasts({
               id: 'route-recorded',
               kind: 'info',
               icon: <CheckIcon />,
-              ...routeRecorded.words,
+              ...routeRecordedWords(routeRecorded.status, routeRecorded.isOnline),
             }}
             times={routeRecorded.times}
           />
           {/* After "Route recorded", in the host's order, and until ✕: part of the ride is gone. */}
-          {routeRecorded.pointsLost && (
+          {pointsLost && (
             <NewsSaid
               message={{
                 id: 'points-lost',
                 kind: 'problem',
                 icon: <AlertCircleIcon />,
-                ...routeRecorded.pointsLost,
+                ...pointsLost,
               }}
               times={routeRecorded.times}
             />

@@ -1,18 +1,19 @@
 import { isEmulatorRide } from '@/shared/config/env';
 
-import type { RideTaps } from './ride-events';
-import type { RideNoticeState } from '../native/ride-notice';
-import { isNativeApp } from '../native-bridge/native-app';
+import { isNativeApp } from './native-app';
+import type { RideNoticeState, RideTaps } from './native-contract';
 import type { Recording } from '../storage/recording-schema';
-
-// The emulator ride's build is skipped: its driver (native/emulator-ride.ts) holds the
-// notification itself and leaves the taps to the native side, as a page asleep does, which is what
-// emulator-notification.sh checks. native-fixes.ts is not skipped there: the emulator ride proves it.
 
 /*
  * What the recorder asks of the app's ride notification (native/ride-notice.ts). As in
  * native-fixes.ts, the checks sit here, in the page's own code, so the web build drops the native
  * module behind them; the mode check is repeated in each function for the bundler to see it.
+ *
+ * In the emulator ride's build every function here does nothing. That build's driver
+ * (native/emulator-ride.ts) holds the notification itself and leaves its taps to the native side,
+ * as they are left while the page is asleep, and that is what emulator-notification.sh checks.
+ * native-fixes.ts keeps working in that build, because its fix log is what the emulator ride is
+ * there to prove.
  */
 
 /** Tells the notification where the ride is. Nothing on the web. */
@@ -28,8 +29,8 @@ export async function tellRideNotice(state: RideNoticeState): Promise<void> {
  */
 export async function readRideTaps(recordingId: string): Promise<RideTaps | null> {
   if (import.meta.env.MODE !== 'apk' || !isNativeApp() || isEmulatorRide) return null;
-  const { readRideTaps: read } = await import('../native/apply-ride-taps');
-  return read(recordingId);
+  const { foldUnappliedTaps } = await import('../native/apply-ride-taps');
+  return foldUnappliedTaps(recordingId);
 }
 
 /**

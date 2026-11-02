@@ -1,6 +1,6 @@
-import { importNativeFixes } from './native-fixes';
 import { holdRecorderLock } from './recorder-lock';
-import { applyOpeningRideTaps } from './ride-notice-bridge';
+import { importNativeFixes } from '../native-bridge/native-fixes';
+import { applyOpeningRideTaps } from '../native-bridge/ride-notice-bridge';
 import type { FixRow, Recording } from '../storage/recording-schema';
 import { loadFixes, loadRecordings } from '../storage/recording-store';
 

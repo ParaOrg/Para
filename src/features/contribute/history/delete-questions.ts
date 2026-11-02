@@ -1,4 +1,4 @@
-import type { UploadStatus } from './upload-state';
+import type { UploadStatus } from '../uploads/upload-state';
 
 /** The question before deleting the phone's copy: whether a copy stays with Para decides the words. */
 export function deleteFromPhoneQuestion(status: UploadStatus): string {

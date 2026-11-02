@@ -1,11 +1,15 @@
 import { useEffect, useRef, type RefObject } from 'react';
 
-import { mergeGaps } from '@/features/routes/model/ride-recording';
-
+import { pausedSecondsOf } from './recording-figures';
 import { currentMode } from './recording-rules';
 import type { Phase } from './recording-state';
 import { withRideTaps } from './ride-events';
-import { dropRideTaps, onRideTap, readRideTaps, tellRideNotice } from './ride-notice-bridge';
+import {
+  dropRideTaps,
+  onRideTap,
+  readRideTaps,
+  tellRideNotice,
+} from '../native-bridge/ride-notice-bridge';
 import type { Recording } from '../storage/recording-schema';
 
 interface RideNoticeOptions {
@@ -16,12 +20,6 @@ interface RideNoticeOptions {
   /** The recorder's own Stop, at a time, then the phase after it. */
   finish: (at: number, next: 'paused' | 'form') => void;
   setPhase: (phase: Phase) => void;
-}
-
-/** The time a ride has stood paused, its pauses joined where they touch. */
-function pausedSecondsOf(recording: Recording): number {
-  const paused = mergeGaps(recording.gaps.filter((gap) => gap.reasons.includes('paused')));
-  return paused.reduce((sum, gap) => sum + (gap.to - gap.from) / 1000, 0);
 }
 
 /**

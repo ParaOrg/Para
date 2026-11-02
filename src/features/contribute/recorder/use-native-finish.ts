@@ -2,8 +2,12 @@ import { useRef, type RefObject } from 'react';
 
 import type { Fix } from '@/features/routes/model/ride-recording';
 
-import { endNativeFixes, keepsRecordingInBackground, readNativeFixes } from './native-fixes';
-import type { WatchedFix } from './use-geolocation-watch';
+import type { WatchedFix } from '../native-bridge/native-contract';
+import {
+  endNativeFixes,
+  keepsRecordingInBackground,
+  readNativeFixes,
+} from '../native-bridge/native-fixes';
 import type { Recording } from '../storage/recording-schema';
 
 export interface NativeFinish {

@@ -1,10 +1,10 @@
 import { useRef, useState, type RefObject } from 'react';
 
-import { clearNativeFixes } from './native-fixes';
 import { distanceOf } from './recording-figures';
 import { fixOfRow } from './recording-fixes';
 import type { Phase, RecordingDetails } from './recording-state';
 import { savedRecording } from './recording-transitions';
+import { clearNativeFixes } from '../native-bridge/native-fixes';
 import type { Recording } from '../storage/recording-schema';
 import { deleteRecording, loadFixes, putRecording } from '../storage/recording-store';
 

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { accountKeys } from './account-keys';
 import { fetchAccountUploads } from './account-uploads';
-import { canUpload } from './contribute-client';
+import { canUpload } from './contribute-config';
 import { slowloaded } from '../common/slowload-switch';
 
 /** The account's uploads from the database, asked again each time History opens. */

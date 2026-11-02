@@ -1,11 +1,16 @@
 import type { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
 
 import { createFixCatchUp } from './fix-catch-up';
-import { beginFixLog, NO_ACCURACY_M, readFixLog } from './native-fix-log';
+import { beginFixLog, readFixLog } from './native-fix-log';
 import { noteRideWatcher } from './ride-notice';
 import { watchErrorOf, watchErrorOfThrown } from './watch-error';
-import { nativePlugin } from '../native-bridge/native-app';
-import type { WatchedFix, WatchError } from '../recorder/use-geolocation-watch';
+import { lazyPlugin } from '../native-bridge/native-app';
+import {
+  NO_ACCURACY_M,
+  PLUGIN_NAMES,
+  type WatchedFix,
+  type WatchError,
+} from '../native-bridge/native-contract';
 
 const RECORDING_NOTIFICATION = {
   title: 'Recording your route',
@@ -18,9 +23,7 @@ interface NativeWatchHandlers {
   onError: (error: WatchError) => void;
 }
 
-let plugin: BackgroundGeolocationPlugin | null = null;
-const getPlugin = () =>
-  (plugin ??= nativePlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation'));
+const getPlugin = lazyPlugin<BackgroundGeolocationPlugin>(PLUGIN_NAMES.backgroundGeolocation);
 
 /**
  * Starts the foreground service that keeps the notification up and the fixes coming with the

@@ -5,6 +5,11 @@ import { CardMeta } from './card-meta';
 import { CardPicture } from './card-picture';
 import { HISTORY_HEADING_ID, cardStatusOf } from './card-status';
 import { CardStatusRow } from './card-status-row';
+import {
+  DELETE_ONLY_COPY_QUESTION,
+  REMOVE_UPLOAD_QUESTION,
+  deleteFromPhoneQuestion,
+} from './delete-questions';
 import type { RideFacts } from './ride-facts';
 import { ConfirmDelete } from '../common/confirm-delete';
 import { fullDateTimeText } from '../common/format';
@@ -12,11 +17,6 @@ import { ArrowRightIcon } from '../common/history-icons';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';
-import {
-  DELETE_ONLY_COPY_QUESTION,
-  REMOVE_UPLOAD_QUESTION,
-  deleteFromPhoneQuestion,
-} from '../uploads/upload-status';
 
 interface HistoryCardProps {
   recording: Recording;

@@ -1,5 +1,6 @@
 import { FAILED } from '../uploads/upload-failures';
 import type { UploadStatus } from '../uploads/upload-state';
+import { UPLOAD_WORDS } from '../uploads/upload-words';
 
 /** The id of History's heading, which focus returns to after a card is deleted from it. */
 export const HISTORY_HEADING_ID = 'history-heading';
@@ -31,36 +32,40 @@ export function cardStatusOf(
   switch (status.state) {
     case 'waiting':
       // Queued: for the signal when the phone has none, else for its turn.
-      return { tone: 'quiet', words: isOnline ? 'Waiting to send' : 'Waiting for signal' };
+      return {
+        tone: 'quiet',
+        words: isOnline ? UPLOAD_WORDS.waiting.card.online : UPLOAD_WORDS.waiting.card.offline,
+      };
     case 'checking':
     case 'uploading':
-      return { tone: 'quiet', words: 'Sending…' };
+      return { tone: 'quiet', words: UPLOAD_WORDS[status.state].card };
     case 'removing':
-      return { tone: 'quiet', words: 'Removing…' };
+      return { tone: 'quiet', words: UPLOAD_WORDS.removing.card };
     case 'failed':
       if (status.willRetry) {
         return {
           tone: 'quiet',
-          words: status.brief === FAILED.offline.brief ? 'Waiting for signal' : status.brief,
+          words:
+            status.brief === FAILED.offline.brief ? UPLOAD_WORDS.failed.card.offline : status.brief,
         };
       }
       // Too long or too large never fits, however often it is sent: no retry to offer.
       return NEVER_FITS.has(status.brief)
         ? { tone: 'problem', words: status.brief }
-        : { tone: 'retry', words: 'Tap retry upload' };
+        : { tone: 'retry', words: UPLOAD_WORDS.failed.card.retry };
     case 'uploaded':
       if (status.problem) return { tone: 'problem', words: status.problem };
       // Sent under an identity this phone no longer has: it says why it cannot be deleted here.
       return canDeleteFromPara
-        ? { tone: 'uploaded', words: 'Uploaded' }
-        : { tone: 'uploaded', words: 'Uploaded from an earlier sign-in' };
+        ? { tone: 'uploaded', words: UPLOAD_WORDS.uploaded.card.deletable }
+        : { tone: 'uploaded', words: UPLOAD_WORDS.uploaded.card.fromEarlierSignIn };
     case 'removed':
       return status.byEditor
-        ? { tone: 'quiet', words: 'Removed by an editor' }
-        : { tone: 'quiet', words: 'Only on this phone' };
+        ? { tone: 'quiet', words: UPLOAD_WORDS.removed.card.byEditor }
+        : { tone: 'quiet', words: UPLOAD_WORDS.removed.card.byYou };
     case 'held':
     case 'unavailable':
-      return { tone: 'quiet', words: 'Only on this phone' };
+      return { tone: 'quiet', words: UPLOAD_WORDS[status.state].card };
   }
 }
 

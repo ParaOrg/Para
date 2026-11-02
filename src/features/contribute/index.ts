@@ -4,7 +4,7 @@
 export { ContributePage } from './contribute-page';
 export { PageErrorScreen } from './screens/page-error-screen';
 export type { ContributeLocatorSlot } from './map/contribute-map';
-export { connectContributions } from './api/contribute-client';
+export { connectContributions } from './api/contribute-config';
 export { hasOpenRecording } from './storage/open-recording';
 export { askForPersistentStorage } from './storage/persistent-storage';
 export { applySlowloadIfAsked } from './common/slowload-switch';
