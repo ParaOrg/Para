@@ -6,7 +6,7 @@ import type { UploadGate, UploadStatus } from './upload-state';
 import { useUploadSending } from './use-upload-sending';
 import { useUploadsStillThere } from './use-uploads-still-there';
 import { accountKeys } from '../api/account-keys';
-import { canUpload } from '../api/contribute-client';
+import { canUpload } from '../api/contribute-config';
 import { turnstileSiteKey } from '../api/env';
 import { currentIdentity } from '../api/upload-contribution';
 import { UploadError } from '../api/upload-problem';

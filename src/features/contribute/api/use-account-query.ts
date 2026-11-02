@@ -2,7 +2,7 @@ import { useQuery, type Query } from '@tanstack/react-query';
 
 import { fetchAccount, storedAccount, type Account } from './account';
 import { accountKeys } from './account-keys';
-import { canUpload } from './contribute-client';
+import { canUpload } from './contribute-config';
 
 /**
  * Who is signed in to an account on this phone: null for no account, an anonymous phone included.

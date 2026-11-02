@@ -20,8 +20,15 @@ export function distanceFigure(metres: number): Figure {
     : { value: kilometresText(whole), unit: 'km' };
 }
 
-/** Metres as kilometres to one decimal: `4.2`. */
-export const kilometresText = (metres: number): string => (metres / 1000).toFixed(1);
+/**
+ * Metres as kilometres to one decimal, a half rounded up: `4.2`, and 1150 m `1.2`. Counted in
+ * whole tenths, as the ride's notification does (RideNotification.distanceText), so the card and
+ * the notification always agree. toFixed would round the binary fraction: 1150 m as 1.1.
+ */
+export function kilometresText(metres: number): string {
+  const tenths = Math.round(metres / 100);
+  return `${Math.floor(tenths / 10)}.${tenths % 10}`;
+}
 
 /** Seconds as a clock: `1:42`. */
 export function countdownText(seconds: number): string {

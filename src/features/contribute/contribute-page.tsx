@@ -13,7 +13,7 @@ import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { cn } from '@/shared/utils/cn';
 
 import { useAccountGate } from './account/use-account-gate';
-import { canUpload } from './api/contribute-client';
+import { canUpload } from './api/contribute-config';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { OPENABLE_SCREENS_ATTR } from './common/data-attributes';
 import { useLatch } from './common/use-latch';

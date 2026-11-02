@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
 import { trailOf } from '../../src/features/contribute/recorder/recording-rules.ts';
-import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { packRecording } from '../../src/features/contribute/uploads/packing/pack-recording.ts';
 import { displayFixes } from '../../src/features/routes/model/display-path.ts';
 import { keptFixes, modesOf } from '../../src/features/routes/model/ride-recording.ts';
 

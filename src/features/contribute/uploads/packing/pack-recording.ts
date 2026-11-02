@@ -1,12 +1,13 @@
 import { keptFixes, mergeGaps, summarize, type Fix } from '@/features/routes/model/ride-recording';
 import { overviewOf, type LngLat } from '@/shared/utils/geo';
 
-import type { ContributionPayload, PointBatch } from './contribution-payload-schema';
-import { uploadedFare } from './upload-fare';
 import { walkRideSplit } from './walk-ride-split';
-import { UPLOAD_LIMITS } from '../recorder/recording-limits';
-import { marksThatFit } from '../recorder/recording-marks';
-import { RECORDING_VERSION, type Recording, type RideKind } from '../storage/recording-schema';
+import type { ContributionPayload, PointBatch } from '../../api/contribution-payload-schema';
+import { VEHICLE_OF } from '../../api/contribution-vehicles';
+import { uploadedFare } from '../../api/upload-fare';
+import { UPLOAD_LIMITS } from '../../recorder/recording-limits';
+import { marksThatFit } from '../../recorder/recording-marks';
+import { RECORDING_VERSION, type Recording } from '../../storage/recording-schema';
 
 /**
  * The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them.
@@ -26,18 +27,6 @@ export type PackRefusal = 'too-long' | 'line-too-large';
 export type PackResult =
   | { ok: true; payload: ContributionPayload; droppedPoints: number }
   | { ok: false; reason: PackRefusal };
-
-/** The vehicles the database's contribution check takes, by the name the phone keeps. */
-export const VEHICLE_OF = {
-  Jeep: 'jeep',
-  'E-Jeep': 'e_jeep',
-  'UV Express': 'uv_express',
-  Bus: 'bus',
-  Train: 'train',
-  Ferry: 'ferry',
-  Tricycle: 'tricycle',
-  Other: 'other',
-} as const satisfies Record<RideKind, string>;
 
 const iso = (ms: number): string => new Date(ms).toISOString();
 const inBox = (lat: number, lng: number): boolean =>
