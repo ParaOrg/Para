@@ -428,6 +428,13 @@
 }
 
 /*
+ * Blur. backdrop-blur-frost: the map frosted under a paused recording, still readable through it.
+ */
+@theme {
+  --blur-frost: 6px;
+}
+
+/*
  * Motion. Figma: the Motion collection (the Motion page there plays each one).
  * Tailwind turns these namespaces into duration-quick, delay-tooltip, ease-enter.
  * Every transition takes one duration and one ease from here, nothing in

@@ -5,6 +5,7 @@ import { MapView } from '@/features/routes/map/map-view';
 import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
+import { MapFrost } from './map-frost';
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
 import type { MapNote } from '../notices/map-note';
@@ -26,6 +27,8 @@ interface ContributeMapProps {
   track: RecordingTrack;
   /** Whether a recording is on the screen. */
   isRecording: boolean;
+  /** The recording is paused: the map frosts over, its buttons and every screen over it crisp. */
+  isFrosted: boolean;
   locator?: ContributeLocatorSlot;
   /** The mark button, for the locator's column: null when nothing is recording. */
   mark: ReactNode;
@@ -49,6 +52,7 @@ interface ContributeMapProps {
 export function ContributeMap({
   track,
   isRecording,
+  isFrosted,
   locator,
   mark,
   onMapNote,
@@ -104,6 +108,8 @@ export function ContributeMap({
         areCreditsShown={areCreditsShown}
         isCovered={isCovered}
       />
+      {/* Over the map's canvas, under the locator's buttons (drawn after it) and every screen. */}
+      <MapFrost isFrosted={isFrosted} />
       {map && locator?.(map, isMapLoaded, isRecording, mark, onMapNote)}
     </>
   );

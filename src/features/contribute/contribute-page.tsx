@@ -562,6 +562,7 @@ export function ContributePage({ locator }: ContributePageProps) {
         <ContributeMap
           track={track}
           isRecording={phase === 'recording' || phase === 'paused'}
+          isFrosted={phase === 'paused'}
           locator={locator}
           onMapNote={handleMapNote}
           areCreditsShown={!hasCreditsButton}
