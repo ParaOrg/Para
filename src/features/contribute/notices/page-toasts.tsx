@@ -7,7 +7,9 @@ import { useToast } from '@/shared/ui/use-toast';
 
 import type { MapNoteGiven } from './map-note';
 import type { PageProblem, PageProblemIcon } from './page-problem';
+import type { RouteRecordedGiven } from './route-recorded';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
+import { CheckIcon } from '../history/history-icons';
 import { FlagStopIcon } from '../screens/flag-stop-icon';
 
 const ICONS = {
@@ -24,12 +26,22 @@ interface PageToastsProps {
   mapNote: MapNoteGiven | null;
   /** How many stops have been flagged on the page: each one more says "Stop flagged". */
   stopsFlagged: number;
+  /** The last route saved, in words, and how many have been: each one more says them. */
+  routeRecorded: RouteRecordedGiven | null;
+  /** The just-saved route's upload failing, as it stands: said until it goes, or ✕. */
+  uploadProblem: PageProblem | null;
 }
 
-interface FlagsSaidProps {
-  stopsFlagged: number;
-  /** A problem stands: a flag now is not said, then or later, as it would only wait behind it. */
-  isQuiet: boolean;
+interface NewsSaidProps {
+  id: string;
+  kind: 'info' | 'problem';
+  icon: ReactNode;
+  title: string;
+  body?: string;
+  /** How many times it has happened on the page: each one more says it. */
+  times: number;
+  /** A problem stands: news now is not said, then or later, as it would only wait behind it. */
+  isQuiet?: boolean;
 }
 
 interface ProblemsSaidProps {
@@ -48,6 +60,8 @@ export function PageToasts({
   isScreenFreeToSleep,
   mapNote,
   stopsFlagged,
+  routeRecorded,
+  uploadProblem,
 }: PageToastsProps) {
   // The recorder and the locator both say what is wrong with location, under one id: one toast.
   // The recorder's, when both have one, as it knows more; either going leaves the other's.
@@ -55,33 +69,67 @@ export function PageToasts({
     mapNote && mapNote.note.id !== problem?.id
       ? { ...mapNote.note, icon: 'location', timesAsked: mapNote.timesGiven }
       : null;
-  const problems = [problem, noteProblem, isScreenFreeToSleep ? SCREEN_AWAKE_PROBLEM : null].filter(
-    (each) => each !== null,
-  );
+  const problems = [
+    problem,
+    noteProblem,
+    isScreenFreeToSleep ? SCREEN_AWAKE_PROBLEM : null,
+    uploadProblem,
+  ].filter((each) => each !== null);
   return (
     <ToastHost>
       <ProblemsSaid problems={problems} />
-      <FlagsSaid stopsFlagged={stopsFlagged} isQuiet={problems.length > 0} />
+      <NewsSaid
+        id="stop-flagged"
+        kind="info"
+        icon={<FlagStopIcon />}
+        title="Stop flagged"
+        times={stopsFlagged}
+        isQuiet={problems.length > 0}
+      />
+      {routeRecorded && (
+        <>
+          <NewsSaid
+            id="route-recorded"
+            kind="info"
+            icon={<CheckIcon />}
+            title={routeRecorded.words.title}
+            body={routeRecorded.words.body}
+            times={routeRecorded.times}
+          />
+          {/* After "Route recorded", in the host's order, and until ✕: part of the ride is gone. */}
+          {routeRecorded.pointsLost && (
+            <NewsSaid
+              id="points-lost"
+              kind="problem"
+              icon={<AlertCircleIcon />}
+              title={routeRecorded.pointsLost.title}
+              body={routeRecorded.pointsLost.body}
+              times={routeRecorded.times}
+            />
+          )}
+        </>
+      )}
     </ToastHost>
   );
 }
 
 /**
- * "Stop flagged", a small info toast that leaves by itself. Under one id, so a flag while it shows
- * says it again in place, its clock started afresh, and never stacks a second.
+ * Something that just happened ("Stop flagged", "Route recorded"): an info toast that leaves by
+ * itself, or a problem that stays until ✕ ("Part of the ride wasn't kept"). Under one id, so the
+ * same again while it shows is said in place, an info's clock started afresh, and never stacks.
  */
-function FlagsSaid({ stopsFlagged, isQuiet }: FlagsSaidProps) {
+function NewsSaid({ id, kind, icon, title, body, times, isQuiet = false }: NewsSaidProps) {
   const { showToast } = useToast();
-  // The count it last said at: the same count, as on a render with no new flag, says nothing.
+  // The count it last said at: the same count, as on a render with nothing new, says nothing.
   const saidAt = useRef(0);
   // Tells the host's queue, which is told rather than rendered.
   useEffect(() => {
-    if (stopsFlagged <= saidAt.current) return;
-    saidAt.current = stopsFlagged;
+    if (times <= saidAt.current) return;
+    saidAt.current = times;
     // The host shows one toast at a time: behind a standing problem it would come late, if ever.
     if (isQuiet) return;
-    showToast({ id: 'stop-flagged', kind: 'info', icon: <FlagStopIcon />, title: 'Stop flagged' });
-  }, [stopsFlagged, isQuiet, showToast]);
+    showToast({ id, kind, icon, title, body });
+  }, [times, id, kind, icon, title, body, isQuiet, showToast]);
   return null;
 }
 

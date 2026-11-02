@@ -32,6 +32,12 @@ import { useRecordingTrack } from './map/use-recording-track';
 import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import type { MapNote, MapNoteGiven } from './notices/map-note';
+import {
+  pointsLostWords,
+  routeRecordedWords,
+  uploadFailedProblem,
+  type RouteRecordedGiven,
+} from './notices/route-recorded';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { accountChunk, historyChunk, warmScreen } from './screen-loaders';
@@ -46,7 +52,6 @@ import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
 import { TUTORIAL_ENTRY, isTutorialEntry } from './tutorial/tutorial-entry';
 import type { TutorialDemo } from './tutorial/tutorial-steps';
-import { uploadStatusText } from './uploads/upload-status';
 import { useUploads } from './uploads/use-uploads';
 
 /*
@@ -122,7 +127,6 @@ const loadForgetOtherAccounts = retryingImport(() => import('./api/forget-other-
 const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-recording-screen'));
 const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 const loadSaveForm = retryingImport(() => import('./screens/save-form'));
-const loadSavedScreen = retryingImport(() => import('./screens/saved-screen'));
 // The check before a first upload, with Cloudflare's widget: fetched only when one is asked for.
 const loadUploadCheck = retryingImport(() => import('./uploads/upload-check'));
 const UploadCheck = lazy(() =>
@@ -133,9 +137,6 @@ const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: module.T
 // Start tracking's morph, off the opening: fetched with the recording screens ahead of Start.
 const loadStartMorph = retryingImport(() => import('./screens/start-morph'));
 const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
-const SavedScreen = lazy(() =>
-  loadSavedScreen().then((module) => ({ default: module.SavedScreen })),
-);
 const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
 );
@@ -273,8 +274,39 @@ export function ContributePage({ locator }: ContributePageProps) {
   const handleFlag = () => {
     if (recording.markPlace()) setStopsFlagged((flagged) => flagged + 1);
   };
+  // Where Ready puts focus as it opens: back on the tab whose screen was open, on Start tracking
+  // after a save, else its heading.
+  const [openedTab, setOpenedTab] = useState<'history' | 'account' | 'save' | null>(null);
+  // Each route saved: back on Record, a toast says so and where it goes next, in words fixed at
+  // the save. Back to none while the toasts are not drawn, as the flags are.
+  const [routeRecorded, setRouteRecorded] = useState<RouteRecordedGiven | null>(null);
+  const [toldOfSave, setToldOfSave] = useState(recording.lastSaved);
+  if (recording.lastSaved !== toldOfSave) {
+    setToldOfSave(recording.lastSaved);
+    const saved = recording.lastSaved;
+    if (saved) {
+      const words = routeRecordedWords(uploads.statusOf(saved), navigator.onLine);
+      const pointsLost = pointsLostWords(saved.failedFixWrites ?? 0);
+      setRouteRecorded((told) => ({ words, pointsLost, times: (told?.times ?? 0) + 1 }));
+      // Record opens with focus on Start tracking, the toast read out politely.
+      setOpenedTab('save');
+    }
+  }
+  if (accountGate !== 'ready' && routeRecorded) setRouteRecorded(null);
+  // The just-saved route's upload failing reaches the contributor on Record, not only in History.
+  const uploadProblem = recording.lastSaved
+    ? uploadFailedProblem(uploads.statusOf(recording.lastSaved))
+    : null;
   const [hasHadToasts, setHasHadToasts] = useState(false);
-  if ((recording.problem || isScreenFreeToSleep || mapNote || stopsFlagged) && !hasHadToasts) {
+  if (
+    (recording.problem ||
+      isScreenFreeToSleep ||
+      mapNote ||
+      stopsFlagged ||
+      routeRecorded ||
+      uploadProblem) &&
+    !hasHadToasts
+  ) {
     setHasHadToasts(true);
   }
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
@@ -367,8 +399,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     isCreditsShown ||
     isTutorialOpen ||
     isStopShown ||
-    phase === 'form' ||
-    phase === 'saved';
+    phase === 'form';
   const discardButtonRef = useRef<HTMLButtonElement>(null);
   const askToStop = () => {
     setStopAskedWhile(phase === 'paused' ? 'paused' : 'recording');
@@ -407,7 +438,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   };
 
   // A stale #history (a reload mid-recording, or before signing in) must not open History later,
-  // when Record again is pressed or the account signs in. The account is unknown until it has
+  // when a save returns to Record or the account signs in. The account is unknown until it has
   // loaded; closing then would shut History on every reload.
   useEffect(() => {
     if (accountGate === 'loading') return;
@@ -427,7 +458,6 @@ export function ContributePage({ locator }: ContributePageProps) {
       loadStopRecordingScreen(),
       loadFlagStopButton(),
       loadSaveForm(),
-      loadSavedScreen(),
       loadStartMorph().then((module) => {
         morphStartRef.current = module.morphStartIntoCard;
       }),
@@ -466,9 +496,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     if (deleteAccount.isOpen) deleteAccount.close();
   }, [phase, accountGate, profile, settings, changePassword, deleteAccount]);
 
-  // History and Account are tabs on Ready; a build with no accounts has History alone. Ready hands
-  // focus back to the tab whose screen was open.
-  const [openedTab, setOpenedTab] = useState<'history' | 'account' | null>(null);
+  // History and Account are tabs on Ready; a build with no accounts has History alone.
   const hasAccount = canUpload();
   const handleOpenHistory = () => {
     setOpenedTab('history');
@@ -580,10 +608,12 @@ export function ContributePage({ locator }: ContributePageProps) {
                 isScreenFreeToSleep={isScreenFreeToSleep}
                 mapNote={mapNote}
                 stopsFlagged={stopsFlagged}
+                routeRecorded={routeRecorded}
+                uploadProblem={uploadProblem}
               />
             </Suspense>
           )}
-          {uploads.check && (phase === 'ready' || phase === 'saved') && (
+          {uploads.check && phase === 'ready' && (
             <Suspense fallback={null}>
               <UploadCheck check={uploads.check} />
             </Suspense>
@@ -749,22 +779,6 @@ export function ContributePage({ locator }: ContributePageProps) {
                 onDiscard={recording.cancel}
                 onKeepRecording={recording.keepRecording}
                 onSave={recording.save}
-              />
-            </Suspense>
-          )}
-          {phase === 'saved' && (
-            <Suspense fallback={null}>
-              <SavedScreen
-                failedFixWrites={recording.lastSaved?.failedFixWrites ?? 0}
-                uploadText={
-                  recording.lastSaved
-                    ? uploadStatusText(
-                        uploads.statusOf(recording.lastSaved),
-                        uploads.canRemove(recording.lastSaved),
-                      )
-                    : ''
-                }
-                onRecordAgain={recording.recordAgain}
               />
             </Suspense>
           )}

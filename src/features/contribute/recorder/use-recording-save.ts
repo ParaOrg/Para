@@ -23,13 +23,12 @@ interface RecordingSaveOptions {
 }
 
 export interface RecordingSave {
-  /** The recording just saved, until the contributor records again. */
+  /** The recording saved last on this page: each save is a new one, for the page to tell of it. */
   lastSaved: Recording | null;
   /** Whether a save is under way: its fix writes are settled, so no new ones may start. */
   isSaving: () => boolean;
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
-  recordAgain: () => void;
 }
 
 /**
@@ -83,7 +82,8 @@ export function useRecordingSave({
       addSaved(kept);
       forget();
       if (!hasNativeLogProblemRef.current) void clearNativeFixes().catch(reportNativeLog);
-      setPhase('saved');
+      // Straight back to Record: the page tells of the save in a toast.
+      setPhase('ready');
     } catch (error) {
       reportStore(error);
       noteFailedWrites(failedFixWrites());
@@ -103,16 +103,10 @@ export function useRecordingSave({
     setPhase('ready');
   }
 
-  function recordAgain() {
-    setLastSaved(null);
-    setPhase('ready');
-  }
-
   return {
     lastSaved,
     isSaving: () => isSaving.current,
     save: (details) => void saveNow(details),
     cancel,
-    recordAgain,
   };
 }

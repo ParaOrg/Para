@@ -7,10 +7,9 @@ import type { Recording, RideKind } from '../storage/recording-schema';
 
 /**
  * Where the page is. Recording and paused are one screen (Pause pauses, Resume
- * carries on); form is the Save form, however it was reached; saved is the
- * thank-you.
+ * carries on); form is the Save form, however it was reached. A save goes back to ready.
  */
-export type Phase = 'loading' | 'ready' | 'unfinished' | 'recording' | 'paused' | 'form' | 'saved';
+export type Phase = 'loading' | 'ready' | 'unfinished' | 'recording' | 'paused' | 'form';
 
 /** What the contributor may say about a ride when they save it; all of it optional. */
 export interface RecordingDetails {
@@ -34,7 +33,7 @@ export interface RecordingState {
   figures: RecordingFigures | null;
   /** The mode the recording is on now: walk is Lakad, ride is Sakay. */
   mode: Mode;
-  /** The recording just saved, until the contributor records again. */
+  /** The recording saved last on this page: each save is a new one, for the page to tell of it. */
   lastSaved: Recording | null;
   /** Every recording saved on this phone, newest first. */
   saved: readonly Recording[];
@@ -62,8 +61,6 @@ export interface RecordingState {
   /** Saves the recording; with no details, as it is. */
   save: (details: RecordingDetails | null) => void;
   cancel: () => void;
-  /** Back to Ready after a save. */
-  recordAgain: () => void;
   /** Deletes a saved recording and its fixes from this phone. An uploaded copy is not touched. */
   deleteSaved: (recording: Recording) => void;
 }

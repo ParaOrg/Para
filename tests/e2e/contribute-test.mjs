@@ -5,7 +5,7 @@
 //   node tests/e2e/contribute-test.mjs
 //
 // PARA_SHOTS=dir keeps screenshots of Ready, Recording (Lakad, then
-// Sakay), the Save form and Successfully recorded at 393×852.
+// Sakay), the Save form and the Route recorded toast on Record at 393×852.
 //
 // The GPS is a stand-in navigator.geolocation the suite feeds fix by fix, with
 // timestamps of its own (a second apart), so a kilometre out and back takes
@@ -949,15 +949,54 @@ const buttons = (page) =>
   );
   await shot(page, '4-form');
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  const recorded = toastSaying(page, 'Route recorded');
+  await recorded.waitFor({ timeout: 5000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(
-    'Save recording with nothing typed saves, and Successfully recorded keeps no list',
-    (await page.getByRole('button', { name: 'Record again' }).count()) === 1 &&
+    'Save recording with nothing typed saves and is straight back on Record: no Saved screen',
+    (await page.getByRole('heading', { name: 'Successfully recorded' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Record again' }).count()) === 0 &&
       (await page.getByText('Saved on this phone').count()) === 0,
   );
-  await shot(page, '5-success');
+  // This build uploads nothing, so the route stays on the phone.
   check(
-    'Successfully recorded offers no Download: the ride is kept on the phone, nothing handed over',
+    '  one "Route recorded" info toast, with the check, saying it is kept on this phone, read politely',
+    (await page.getByTestId('toast').count()) === 1 &&
+      (await recorded.getAttribute('data-kind')) === 'info' &&
+      (await recorded.innerText()).includes('Kept on this phone.') &&
+      (await page.getByRole('status').filter({ hasText: 'Route recorded' }).count()) === 1,
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
+  check(
+    '  focus lands on Start tracking',
+    await page.evaluate(() => document.activeElement?.hasAttribute('data-start-tracking') ?? false),
+    await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 80) ?? 'none'),
+  );
+  await shot(page, '5-route-recorded');
+  // Nothing of the recording stays over Record: no card, no Start morph's ghost, and nothing of
+  // the page's fixed over the screen but the toasts' own place (ToastHost's, at --toast-top).
+  const leftOver = await page.evaluate(() => ({
+    card: document.querySelectorAll('[data-recording-card]').length,
+    ghost: document.querySelectorAll('[data-start-morph]').length,
+    recordingGroup: document.querySelectorAll('[aria-label="Recording so far"]').length,
+    fixed: [...document.querySelectorAll('body *')]
+      .filter((el) => getComputedStyle(el).position === 'fixed')
+      .filter((el) => !el.closest('[class*="--toast-top"]'))
+      .map((el) => `${el.tagName.toLowerCase()}.${el.className}`.slice(0, 80)),
+  }));
+  check(
+    '  no recording card, pill or ghost is left over Record after the save',
+    leftOver.card === 0 &&
+      leftOver.ghost === 0 &&
+      leftOver.recordingGroup === 0 &&
+      leftOver.fixed.length === 0,
+    JSON.stringify(leftOver),
+  );
+  check(
+    'Record offers no Download after a save: the ride is kept on the phone, nothing handed over',
     (await page.getByRole('button', { name: /download/i }).count()) === 0,
   );
   const file = await lastSavedRide(page);
@@ -976,11 +1015,13 @@ const buttons = (page) =>
     file.marks.length === 2 && file.marks.every((mark) => Number.isFinite(mark.time)),
     `${file.marks.length} marks`,
   );
-  await page.getByRole('button', { name: 'Record again' }).click();
-  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  check('  and no Flag a stop on Record', (await flagButton(page).count()) === 0);
   check(
-    'Record again is Ready, with nothing kept on the screen, and no Flag a stop',
-    (await flagButton(page).count()) === 0,
+    '  "Route recorded" leaves by itself',
+    await recorded.waitFor({ state: 'detached', timeout: 8000 }).then(
+      () => true,
+      () => false,
+    ),
   );
   check('no page errors on the loop', errors.length === 0, errors.join('; '));
   await page.context().close();
@@ -1220,7 +1261,7 @@ const buttons = (page) =>
   await rideField.click();
   await page.getByRole('radio', { name: 'Jeep', exact: true }).click();
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
   const file = await lastSavedRide(page);
   check(
     'Save recording saves with the details, the fare among them',
@@ -1232,7 +1273,6 @@ const buttons = (page) =>
   );
 
   // Discard's Stop without saving throws the stopped recording away.
-  await page.getByRole('button', { name: 'Record again' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 100);
@@ -1521,7 +1561,7 @@ const buttons = (page) =>
   page.on('console', (message) => {
     if (message.type() === 'warning') warnings.push(message.text());
   });
-  const SAVE_SCREENS = /screens\/(save-form|saved-screen)/;
+  const SAVE_SCREENS = /screens\/save-form/;
   await page.route(SAVE_SCREENS, (route) => route.abort('internetdisconnected'));
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
@@ -1549,9 +1589,8 @@ const buttons = (page) =>
     await page.getByRole('button', { name: 'Save recording' }).click();
   }
   check(
-    '  and Save recording saves it, Successfully recorded',
-    await page
-      .getByRole('heading', { name: 'Successfully recorded' })
+    '  and Save recording saves it: Route recorded, back on Record',
+    await toastSaying(page, 'Route recorded')
       .waitFor({ timeout: 10000 })
       .then(() => true)
       .catch(() => false),
@@ -1617,8 +1656,7 @@ const buttons = (page) =>
     JSON.stringify(centre),
   );
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  await page.getByRole('button', { name: 'Record again' }).click();
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
   await openHistory(page);
   const card = page.getByRole('listitem').first();
   await card.locator('img').waitFor({ timeout: 10000 });
@@ -1800,8 +1838,7 @@ const buttons = (page) =>
   await ride(page, 0, 200);
   await finishRecording(page);
   await page.getByRole('button', { name: 'Save recording' }).click();
-  const isSaved = await page
-    .getByRole('heading', { name: 'Successfully recorded' })
+  const isSaved = await toastSaying(page, 'Route recorded')
     .waitFor({ timeout: 10000 })
     .then(() => true)
     .catch(() => false);
@@ -1867,7 +1904,7 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await finishRecording(page);
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
   const counts = await page.evaluate(
     () =>
       new Promise((resolve) => {
@@ -1883,7 +1920,6 @@ const buttons = (page) =>
     counts.length === 1 && counts[0] === 'saved',
     JSON.stringify(counts),
   );
-  await page.getByRole('button', { name: 'Record again' }).click();
 
   // (b) a Save by hand, then Keep recording.
   await page.getByRole('button', { name: 'Start Tracking' }).click();
@@ -2099,7 +2135,7 @@ const buttons = (page) =>
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
   await page.clock.runFor(3_000);
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor({ timeout: 5000 });
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
   check('left alone for two minutes, the form closes and saves', true);
   await page.clock.resume();
   const file = await lastSavedRide(page);
@@ -2125,8 +2161,7 @@ const buttons = (page) =>
   await finishRecording(page);
   await page.getByLabel('Description').fill('Reload me');
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  await page.getByRole('button', { name: 'Record again' }).click();
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
   await openHistory(page);
   await openCardMenu(page);
   const rowRemoves = page.getByRole('button', {
@@ -2225,7 +2260,7 @@ const STORE_PROBLEM = 'Recording not kept';
     byText('Save recording').click();
     byText('Save recording').click();
   });
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor({ timeout: 5000 });
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
   await page.waitForTimeout(300);
   const saved = await stored(page);
   check(
@@ -2487,7 +2522,7 @@ const ANIMATIONS = () => {
   await finishRecording(page);
   await page.getByLabel('Description').fill('From the first tab');
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
   await second
     .getByRole('heading', { level: 1, name: 'History' })
     .waitFor({ timeout: 5000 })
@@ -2902,7 +2937,7 @@ const REFUSING_LOCATION = () => {
   await page.context().close();
 }
 
-// ------------------- Back to the map on Unfinished and Saved, not on Start or Recording; a ride kept
+// ------------------- Back to the map on Unfinished, not on Start or Recording, nor after a save; a ride kept
 {
   const { page, errors } = await phone();
   const back = page.getByRole('button', { name: 'Back to the map' });
@@ -3037,17 +3072,14 @@ const REFUSING_LOCATION = () => {
     onForm.join(' | '),
   );
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  check('Saved has Back to the map, in front of the screen', await hasOneBack());
-  const onSaved = await mapControlsInTabOrder(page);
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
+  const afterSave = await mapControlsInTabOrder(page);
   check(
-    '  and no map control under Saved can be tabbed to or read out',
-    onSaved.length === 0,
-    onSaved.join(' | '),
+    'saved, it is straight back on Record, as Start is: no Back to the map, the map in reach again',
+    (await back.count()) === 0 && afterSave.includes('Map design'),
+    afterSave.join(' | '),
   );
-  await back.click();
-  await page.waitForURL((url) => url.pathname === '/');
-  check('  and it leaves for the public map', new URL(page.url()).pathname === '/');
   check('no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

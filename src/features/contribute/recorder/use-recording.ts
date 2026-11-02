@@ -65,7 +65,7 @@ export function useRecording(): RecordingState {
     clearOtherTab: problems.clearOtherTab,
     setPhase,
   });
-  const { lastSaved, isSaving, save, cancel, recordAgain } = useRecordingSave({
+  const { lastSaved, isSaving, save, cancel } = useRecordingSave({
     currentRef,
     hasNativeLogProblemRef,
     writeAllFixes,
@@ -206,7 +206,6 @@ export function useRecording(): RecordingState {
     focusTarget,
     save,
     cancel,
-    recordAgain,
     deleteSaved,
   };
 }

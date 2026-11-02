@@ -111,9 +111,15 @@ async function recordAndSave(page, name, lat, seconds = 40) {
   await page.getByLabel('Start point name').fill(`${name} ${RUN}`);
   await page.getByLabel('End point name').fill('Cubao');
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  await page.getByText(/Uploaded to Para|refused|no signal/).waitFor({ timeout: 20000 });
-  return page.getByText('Uploaded to Para').count();
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
+  // Back on Record: the upload is read from the database itself, as this phone may read it.
+  const startName = encodeURIComponent(`${name} ${RUN}`);
+  for (let tries = 0; tries < 100; tries += 1) {
+    const own = await phoneRead(page, `contribution?select=id&start_name=eq.${startName}`);
+    if (own.status === 200 && own.body.length > 0) return own.body.length;
+    await page.waitForTimeout(200);
+  }
+  return 0;
 }
 
 /** A REST read with this page's phone session, as the phone itself could make it. */
@@ -136,12 +142,10 @@ check(
   (await recordAndSave(a.page, 'Fairview A', 14.7)) === 1,
 );
 await shot(a.page, '1-phone-uploaded');
-await a.page.getByRole('button', { name: 'Record again' }).click();
 check(
   'phone A: a second ride is uploaded too',
   (await recordAndSave(a.page, 'Lagro A', 14.72)) === 1,
 );
-await a.page.getByRole('button', { name: 'Record again' }).click();
 await openHistory(a.page);
 await a.page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
 await shot(a.page, '2-phone-list');

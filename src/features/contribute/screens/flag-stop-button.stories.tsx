@@ -44,6 +44,8 @@ function WithPageToasts(props: FlagStopButtonProps) {
         isScreenFreeToSleep={false}
         mapNote={null}
         stopsFlagged={stopsFlagged}
+        routeRecorded={null}
+        uploadProblem={null}
       />
       <FlagStopButton {...props} onFlag={handleFlag} />
     </>

@@ -11,6 +11,13 @@ import {
   POSITION_UNAVAILABLE_PROBLEM,
   STORAGE_PROBLEM,
 } from './recorder-problems';
+import {
+  pointsLostWords,
+  routeRecordedWords,
+  uploadFailedProblem,
+  type RouteRecordedGiven,
+} from './route-recorded';
+import type { UploadStatus } from '../uploads/upload-state';
 
 const meta = {
   title: 'Features/Contribute/PageToasts',
@@ -23,7 +30,14 @@ const meta = {
       </div>
     ),
   ],
-  args: { problem: null, isScreenFreeToSleep: false, mapNote: null, stopsFlagged: 0 },
+  args: {
+    problem: null,
+    isScreenFreeToSleep: false,
+    mapNote: null,
+    stopsFlagged: 0,
+    routeRecorded: null,
+    uploadProblem: null,
+  },
 } satisfies Meta<typeof PageToasts>;
 
 export default meta;
@@ -111,5 +125,61 @@ export const StopFlagged: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('toast')).toHaveTextContent('Stop flagged');
     await expect(canvas.getByRole('status')).toHaveTextContent('Stop flagged');
+  },
+};
+
+/** A save, as the page says it: the words built by route-recorded.ts, as the page builds them. */
+const saved = (
+  status: UploadStatus,
+  isOnline: boolean,
+  failedFixWrites = 0,
+): RouteRecordedGiven => ({
+  words: routeRecordedWords(status, isOnline),
+  pointsLost: pointsLostWords(failedFixWrites),
+  times: 1,
+});
+
+/** A route just saved and on its way: "Route recorded", with the check, leaving by itself. */
+export const RouteRecordedOnItsWay: Story = {
+  args: { routeRecorded: saved({ state: 'uploading' }, true) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Route recorded');
+    await expect(canvas.getByRole('status')).toHaveTextContent(/^Route recorded\. Thanks!/);
+  },
+};
+
+/** Saved with no signal: kept on the phone until it is online. */
+export const RouteRecordedOffline: Story = {
+  args: { routeRecorded: saved({ state: 'waiting' }, false) },
+};
+
+/** Saved where it is not sent by itself (uploads off, or no consent yet): kept on the phone. */
+export const RouteRecordedKept: Story = {
+  args: { routeRecorded: saved({ state: 'unavailable' }, true) },
+};
+
+/** Saved with points the phone could not keep: "Route recorded", then the problem, until ✕. */
+export const RouteRecordedPointsLost: Story = {
+  args: { routeRecorded: saved({ state: 'uploading' }, true, 3) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Route recorded');
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    // Once it has slid in: it starts at opacity 0.
+    await waitFor(() => expect(canvas.getByText('Part of the ride wasn’t kept')).toBeVisible());
+    await expect(canvas.getByRole('alert')).toHaveTextContent('couldn’t keep 3 points');
+  },
+};
+
+/** The just-saved route's upload failed: a problem, in the failure's own words, until it goes. */
+export const UploadFailed: Story = {
+  args: {
+    uploadProblem: uploadFailedProblem({
+      state: 'failed',
+      message: "Para's checks refused this recording. It stays on this phone.",
+      brief: "Refused by Para's checks",
+      willRetry: false,
+    }),
   },
 };
