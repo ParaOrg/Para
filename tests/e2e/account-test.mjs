@@ -543,6 +543,11 @@ async function signedInPhone({ storedSession, beforeOpen }) {
   });
   await SCREENS.start(page).waitFor({ timeout: 15000 });
   await page.waitForFunction(() => window.firstSeen.map !== undefined, null, { timeout: 15000 });
+  // The ask goes out once the page's client has loaded (on first need), which may come after the
+  // map shows: wait for it, not for the map. Para never answers, so Start is shown before it does.
+  for (let waited = 0; profileAsks === 0 && waited < 15000; waited += 100) {
+    await page.waitForTimeout(100);
+  }
   const firstSeen = await page.evaluate(() => window.firstSeen);
   check(
     'with the profile asked for and never answered, Start shows all the same: before Para answers',

@@ -155,6 +155,12 @@ started = [i for i, r in ride if r.startswith("started")]
 imports = [(i, fields(r)) for i, r in ride if r.startswith("imported")]
 # Every import before the kill followed a rebuilt activity: the test's two, and any of Android's own.
 rebuilt = [f for i, f in imports if i < kill_at]
+# The test's own rebuilds follow its mark. Android may rebuild the activity on its own as the app
+# first opens (a system change landing on it, seen with the launcher rebuilt at the same moment),
+# when the ride is seconds old and the service may have kept no fix yet: that one must catch up
+# and keep the order too, but may find none.
+ours = [f for i, f in imports if rebuild_at < i < kill_at]
+androids = [f for i, f in imports if i < rebuild_at]
 imported = [f for i, f in imports if i > kill_at]
 reports = [fields(r) for i, r in ride if r.startswith("report ")]
 ride = [r for _, r in ride]
@@ -170,8 +176,9 @@ checks = {
     "the ride started, once, before the activity was rebuilt": len(started) == 1
     and started[0] < rebuild_at
     and all(started[0] < i for i, _ in imports),
-    f"each rebuilt activity found every fix the service had kept ({len(rebuilt)} rebuilt)": len(rebuilt) >= 2
-    and all(keeps_every_fix(f) for f in rebuilt),
+    f"each rebuilt activity found every fix the service had kept ({len(ours)} rebuilt by the test)": len(ours) >= 2
+    and all(keeps_every_fix(f) for f in ours)
+    and all(f.get("caught") == "true" and f.get("sorted") == "true" for f in androids),
     "the service ran in the foreground with the screen off": "isForeground=true" in services,
     # The ride's notification (RideNotification.java) holds the service's own id: its title.
     "the ride's notification, Recording, was up": bool(re.search(r"android\.title=.*Recording", notification)),
