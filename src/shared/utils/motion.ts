@@ -14,7 +14,7 @@ export type Motion = readonly [
 /*
  * Each motion a script plays is one of these, named by what moves, in the owner's tokens
  * (tokens.css): CSS reads the same tokens, so a script and a stylesheet never part. Here the ones
- * the public map plays; the contributor page's own are in features/contribute/common/motion.ts,
+ * the public map plays; the contributor page's own are in features/contribute/motion/motion.ts,
  * so the public map does not carry them (the shared chunk takes any module two chunks import).
  */
 /** A sheet going down, with its scrim. */

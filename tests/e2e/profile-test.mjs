@@ -572,8 +572,8 @@ async function seed(page, id, name, upload) {
   // Every value is the owner's Motion token, read by the script's fallbacks from the same place.
   const timing = await page.evaluate(async () => {
     const { motionOf } = await import('/src/shared/utils/motion.ts');
-    const { ARRIVE, MOVE, PILL } = await import('/src/features/contribute/common/motion.ts');
-    const { tabShift } = await import('/src/features/contribute/common/tab-motion.ts');
+    const { ARRIVE, MOVE, PILL } = await import('/src/features/contribute/motion/motion.ts');
+    const { tabShift } = await import('/src/features/contribute/motion/tab-motion.ts');
     return {
       arrive: motionOf(ARRIVE),
       move: motionOf(MOVE),
@@ -595,7 +595,7 @@ async function seed(page, id, name, upload) {
 
   // A move to where the phone already is (a second tap) shows nothing: no slide replayed.
   const noMove = await page.evaluate(() =>
-    import('/src/features/contribute/common/tab-motion.ts').then((motion) => {
+    import('/src/features/contribute/motion/tab-motion.ts').then((motion) => {
       motion.moveBetweenScreens(
         () => false,
         () => {},

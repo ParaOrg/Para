@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-import { moveBetweenScreens } from './tab-motion';
+import { moveBetweenScreens } from '../motion/tab-motion';
 
 export interface HashView {
   isOpen: boolean;

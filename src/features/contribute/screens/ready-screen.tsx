@@ -6,9 +6,9 @@ import { TOOLBAR_FOOT, TOOLBAR_ROOM } from './bottom-toolbar';
 import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
-import { START_BUTTON_ATTR } from './start-morph-attrs';
 import { useHeightVar } from '../common/use-height-var';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
+import { START_BUTTON_ATTR } from '../motion/start-morph-attrs';
 
 // The update gate exists in the Android app's build only: on the web this is null and the chunk is
 // never built, so the page's first load does not carry it.

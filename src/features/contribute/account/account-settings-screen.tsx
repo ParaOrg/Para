@@ -8,7 +8,7 @@ import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
 import { SettingsHeader } from './settings-header';
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useScreenEntry } from '../common/use-screen-entry';
+import { useScreenEntry } from '../motion/use-screen-entry';
 
 interface AccountSettingsScreenProps {
   email: string;

@@ -29,6 +29,7 @@ import { useEarlierQuestion } from './consent/use-earlier-question';
 import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
+import { useStartMorph } from './motion/use-start-morph';
 import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import type { MapNote, MapNoteGiven } from './notices/map-note';
@@ -45,8 +46,6 @@ import { BottomToolbar, TOOLBAR_PLACE, type ToolbarTab } from './screens/bottom-
 import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { ScreenUnavailable } from './screens/screen-unavailable';
-import type { morphStartIntoCard } from './screens/start-morph';
-import { START_BUTTON_ATTR } from './screens/start-morph-attrs';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
 import { warmToolbarSlide } from './screens/use-toolbar-slide';
 import { putThumbnail } from './storage/recording-store';
@@ -134,8 +133,6 @@ const UploadCheck = lazy(() =>
 );
 const loadTutorial = retryingImport(() => import('./tutorial/tutorial'));
 const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: module.Tutorial })));
-// Start tracking's morph, off the opening: fetched with the recording screens ahead of Start.
-const loadStartMorph = retryingImport(() => import('./screens/start-morph'));
 const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
 const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
@@ -418,9 +415,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Focus goes back to the ⓘ as the sheet starts down, once Start is live again: the sheet cannot
   // hand it back itself, as the ⓘ turned inert under it the moment it opened.
   const creditsButtonRef = useRef<HTMLButtonElement>(null);
-  // The morph once its code is here. It runs in the tap, before the button leaves the screen, so a
-  // tap before then (or with its fetch failed) just starts, with no morph.
-  const morphStartRef = useRef<typeof morphStartIntoCard | null>(null);
+  const { fetchAhead: fetchStartMorph, startWithMorph } = useStartMorph();
   const closeCredits = useCallback(() => {
     flushSync(() => {
       setIsCreditsOpen(false);
@@ -458,13 +453,11 @@ export function ContributePage({ locator }: ContributePageProps) {
       loadStopRecordingScreen(),
       loadFlagStopButton(),
       loadSaveForm(),
-      loadStartMorph().then((module) => {
-        morphStartRef.current = module.morphStartIntoCard;
-      }),
+      fetchStartMorph(),
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);
     });
-  }, [phase]);
+  }, [phase, fetchStartMorph]);
 
   // History and Account fetched ahead once Start has settled, in the browser's idle time, so the
   // first tap on their tab finds them here: its move starts at once, on the real screen. The
@@ -638,12 +631,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 onStart={() => {
                   // A ride begun: the next Start opens fresh, focus on its heading, not the tab.
                   setOpenedTab(null);
-                  // The button as it stands at the tap, for the morph: read before the
-                  // recording begins, which takes it off the screen.
-                  const startButton = document.querySelector<HTMLElement>(`[${START_BUTTON_ATTR}]`);
-                  recording.start();
-                  // After the start, never before it: the morph holds nothing back.
-                  if (startButton) morphStartRef.current?.(startButton);
+                  startWithMorph(() => recording.start());
                 }}
                 backFrom={openedTab}
                 historyTabRef={historyTabRef}

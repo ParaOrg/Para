@@ -15,7 +15,7 @@ import { SettingsHeader } from './settings-header';
 import { useCountdown } from './use-countdown';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useScreenEntry } from '../common/use-screen-entry';
+import { useScreenEntry } from '../motion/use-screen-entry';
 
 /** How long Delete account waits, counting down, before it can be pressed. */
 const WAIT_SECONDS = 5;
