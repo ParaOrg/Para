@@ -54,13 +54,18 @@ interface SignInError {
   code?: string;
 }
 
+/** Whether a failed Auth call got no answer at all: the fetch itself failed, which is no signal. */
+export function isNoAnswer(error: Pick<SignInError, 'name' | 'status'>): boolean {
+  return (
+    error.name === 'TypeError' || error.name === 'AuthRetryableFetchError' || error.status === 0
+  );
+}
+
 /**
  * Sorts a failed anonymous sign-in. No answer (the fetch itself failed) is no
  * signal; any answer, such as sign-ups turned off, is Para not accepting uploads.
  */
 export function signInProblemOf(error: SignInError): UploadProblem {
   if (error.code === 'captcha_failed' || /captcha/i.test(error.message)) return 'check-failed';
-  const isNoAnswer =
-    error.name === 'TypeError' || error.name === 'AuthRetryableFetchError' || error.status === 0;
-  return isNoAnswer ? 'offline' : 'not-accepting';
+  return isNoAnswer(error) ? 'offline' : 'not-accepting';
 }

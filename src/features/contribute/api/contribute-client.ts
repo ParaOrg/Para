@@ -31,8 +31,18 @@ export function canUpload(): boolean {
   return isConnected;
 }
 
+/**
+ * Hands the page a client made elsewhere, in place of its own: the unit checks' stand-in, which
+ * answers each database call as the check needs.
+ */
+export function setContributeClient(next: ContributeClient): void {
+  isConnected = true;
+  client = Promise.resolve(next);
+}
+
 /** This page's client, loaded on first use, or null when it cannot upload. */
 export function contributeClient(): Promise<ContributeClient> | null {
+  if (isConnected && client) return client;
   const config = contributeConfig;
   if (!isConnected || !config) return null;
   client ??= import('@supabase/supabase-js').then(({ createClient }) =>

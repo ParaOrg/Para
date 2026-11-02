@@ -1,8 +1,8 @@
 import * as z from 'zod/mini';
 
+import { accountClient } from './account-client';
 import { AccountError } from './account-problem';
-import { requireClient } from './require-client';
-import { UploadError } from './upload-problem';
+import { callRpc } from './call-rpc';
 
 const statsRowSchema = z.pipe(
   z.object({
@@ -87,26 +87,17 @@ export function myStatsOf(data: unknown): MyStats | null {
  * project has no get_my_stats yet, which the Account page takes as no stats to show.
  */
 export async function fetchMyStats(): Promise<MyStats> {
-  let client;
-  try {
-    client = await requireClient();
-  } catch (error) {
-    if (error instanceof UploadError && error.problem === 'offline') {
-      throw new AccountError('offline', error.message);
-    }
-    throw new AccountError('unavailable', String(error));
-  }
-  const { data, error, status } = await client.rpc('get_my_stats');
-  if (error) {
-    if (status === 0) throw new AccountError('offline', error.message);
+  const result = await callRpc(await accountClient(), 'get_my_stats');
+  if (result.kind === 'failure') {
+    if (result.isOffline) throw new AccountError('offline', result.message);
     // get_my_stats not there yet (before its migration is applied): no stats to show, not a fault.
-    if (status === 404 || error.code === 'PGRST202') {
-      throw new AccountError('unavailable', error.message);
+    if (result.status === 404 || result.code === 'PGRST202') {
+      throw new AccountError('unavailable', result.message);
     }
-    console.warn(`Para did not give the stats (HTTP ${status}):`, error.message);
-    throw new AccountError('not-accepting', error.message);
+    console.warn(`Para did not give the stats (HTTP ${result.status}):`, result.message);
+    throw new AccountError('not-accepting', result.message);
   }
-  const stats = myStatsOf(data);
+  const stats = myStatsOf(result.data);
   if (!stats) throw new AccountError('not-accepting', 'The stats are not in the form expected.');
   return stats;
 }
