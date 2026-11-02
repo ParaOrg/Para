@@ -1,6 +1,8 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
+import { prefersReducedMotion } from '@/shared/utils/motion';
+
 import { applyBasemap, rememberBasemap, type Basemap } from './basemap';
 import { readLocationLabels, rememberLocationLabels, type LabelsPlace } from './location-labels';
 
@@ -22,8 +24,7 @@ const CARD_EDGE_PX = 10;
  * goes, unless the device asks for no motion; then at once, as there is no
  * animation to wait for.
  */
-const afterClose = (): CardState =>
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'closed' : 'closing';
+const afterClose = (): CardState => (prefersReducedMotion() ? 'closed' : 'closing');
 
 export interface MapStyleCard {
   /** The design the map shows now. */

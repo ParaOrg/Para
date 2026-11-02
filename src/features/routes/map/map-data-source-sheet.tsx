@@ -4,7 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
 import { CloseIcon } from '@/shared/ui/route-icons';
-import { cssDurationMs } from '@/shared/utils/css-duration';
+import { motionOf, prefersReducedMotion, SINK } from '@/shared/utils/motion';
 
 import type { MapCredit } from './map-attribution';
 
@@ -24,19 +24,6 @@ interface MapDataSourceSheetProps {
 
 /** If the slide down never ends (a hidden page), the sheet goes all the same. */
 const SINK_GIVE_UP_MS = 1000;
-
-/** The owner's Motion token for a sheet's move, read as the page has it (tokens.css). */
-function sheetDuration(): number {
-  const style = getComputedStyle(document.documentElement);
-  return cssDurationMs(style.getPropertyValue('--transition-duration-gentle')) ?? 0;
-}
-
-/** The leaving ease, as the page has it (tokens.css). */
-function exitEase(): string {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue('--ease-exit').trim() || 'ease-in'
-  );
-}
 
 /**
  * The map's credits (Figma 4494:10177), on the public map and the contributor page: a
@@ -73,7 +60,7 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
     onClose();
     const sheet = sheetRef.current;
     const scrim = scrimRef.current;
-    if (!sheet || !scrim || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!sheet || !scrim || prefersReducedMotion()) {
       onClosed();
       return;
     }
@@ -82,7 +69,7 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
     const shade = getComputedStyle(scrim).opacity;
     for (const animation of [...sheet.getAnimations(), ...scrim.getAnimations()])
       animation.cancel();
-    const timing = { duration: sheetDuration(), easing: exitEase(), fill: 'forwards' } as const;
+    const timing = { ...motionOf(SINK), fill: 'forwards' } as const;
     const sink = sheet.animate(
       [{ transform: from === 'none' ? 'translateY(0)' : from }, { transform: 'translateY(100%)' }],
       timing,
