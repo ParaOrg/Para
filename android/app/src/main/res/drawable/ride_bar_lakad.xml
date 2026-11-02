@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A bar at the foot of the notification's card (ride_notification_expanded.xml), its outer corner
+     rounded as the card's: lakad. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/ride_lakad_surface" />
+    <stroke android:width="0.6dp" android:color="@color/ride_lakad_border" />
+    <corners android:bottomRightRadius="16dp" />
+</shape>
