@@ -8,8 +8,8 @@ import { nativePlugin } from '../native-bridge/native-app';
 import type { WatchedFix, WatchError } from '../recorder/use-geolocation-watch';
 
 const RECORDING_NOTIFICATION = {
-  title: 'Para is recording',
-  message: 'Your route is being recorded. Open Para and tap Stop to finish.',
+  title: 'Recording your route',
+  message: 'Open Para to pause or finish.',
 } as const;
 
 interface NativeWatchHandlers {
