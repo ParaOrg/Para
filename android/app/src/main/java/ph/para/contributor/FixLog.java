@@ -2,6 +2,7 @@ package ph.para.contributor;
 
 import android.content.Context;
 import android.location.Location;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,6 +33,12 @@ final class FixLog {
     // Set by end() and cleared by begin(): a stopped recording takes no more fixes. Only ever
     // true in a process that is still running, and a process that died has no service to log for.
     private static boolean isSealed = false;
+    // The time of the last fix logged, read from the file once a process first needs it. A fix not
+    // newer than it is the same fix again (a location request starting is handed the last known
+    // location, which another request already gave), and the page would drop it too
+    // (recording-fixes.ts takeWatchedFixes): the log keeps the fixes the page will.
+    private static long lastTime = Long.MIN_VALUE;
+    private static boolean isLastTimeKnown = false;
 
     private FixLog() {}
 
@@ -58,12 +65,22 @@ final class FixLog {
         File file = fileOf(context);
         if (file.exists() && recordingIdOf(file).equals(recordingId)) return;
         write(file, new JSONObject().put("recordingId", recordingId).toString(), false);
+        lastTime = Long.MIN_VALUE;
+        isLastTimeKnown = true;
     }
 
     /** Appends one fix, if a recording is being logged. */
     static synchronized void append(Context context, Location location) {
         File file = fileOf(context);
         if (isSealed || !file.exists()) return;
+        if (!isLastTimeKnown) {
+            lastTime = lastTimeOf(file);
+            isLastTimeKnown = true;
+        }
+        if (location.getTime() <= lastTime) {
+            Log.i("ParaFixLog", "a fix not newer than the last logged one, not logged again: " + location.getTime());
+            return;
+        }
         try {
             JSONObject line = new JSONObject()
                 .put("time", location.getTime())
@@ -71,6 +88,7 @@ final class FixLog {
                 .put("lat", location.getLatitude());
             if (location.hasAccuracy()) line.put("accuracyM", location.getAccuracy());
             write(file, line.toString(), true);
+            lastTime = location.getTime();
         } catch (IOException | JSONException ignored) {
             // The page still gets this fix live; losing it here must not stop the service.
         }
@@ -115,6 +133,7 @@ final class FixLog {
      */
     static synchronized void end(Context context, long time) throws IOException, JSONException {
         isSealed = true;
+        isLastTimeKnown = false;
         File file = fileOf(context);
         if (!file.exists()) return;
         String[] lines = readText(file).split("\n");
@@ -138,6 +157,7 @@ final class FixLog {
     static synchronized void clear(Context context) {
         //noinspection ResultOfMethodCallIgnored
         fileOf(context).delete();
+        isLastTimeKnown = false;
     }
 
     private static String readText(File file) throws IOException {
@@ -147,6 +167,24 @@ final class FixLog {
             while ((line = reader.readLine()) != null) text.append(line).append("\n");
             return text.toString();
         }
+    }
+
+    /** The time of the file's last whole fix, or Long.MIN_VALUE for none. */
+    private static long lastTimeOf(File file) {
+        long last = Long.MIN_VALUE;
+        try {
+            String[] lines = readText(file).split("\n");
+            for (int index = 1; index < lines.length; index++) {
+                try {
+                    last = Math.max(last, new JSONObject(lines[index]).getLong("time"));
+                } catch (JSONException cutShort) {
+                    // The last line, cut short by a kill.
+                }
+            }
+        } catch (IOException unreadable) {
+            // Nothing read: every fix is new to it.
+        }
+        return last;
     }
 
     private static String recordingIdOf(File file) {

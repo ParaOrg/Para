@@ -115,6 +115,8 @@ sleep $((KILL_AT / 2 - 5))
 # The kill. The count is read just before, so the fixes the service had kept are known.
 PID_BEFORE=$(adb shell pidof "$PKG" | tr -d '\r')
 KEPT_AT_KILL=$(native_fixes)
+# The log itself, for a count that does not match the ride's.
+adb shell "run-as $PKG cat files/fixlog.ndjson" > "$OUT/fixlog-at-kill.ndjson" 2> /dev/null
 mark kill
 if [ -n "$PID_BEFORE" ]; then adb shell "kill -9 $PID_BEFORE" || adb shell am force-stop "$PKG"; fi
 sleep 3
@@ -171,7 +173,8 @@ checks = {
     f"each rebuilt activity found every fix the service had kept ({len(rebuilt)} rebuilt)": len(rebuilt) >= 2
     and all(keeps_every_fix(f) for f in rebuilt),
     "the service ran in the foreground with the screen off": "isForeground=true" in services,
-    "the notice 'Para is recording' was up": "Para is recording" in notification,
+    # The ride's notification (RideNotification.java) holds the service's own id: its title.
+    "the ride's notification, Recording, was up": bool(re.search(r"android\.title=.*Recording", notification)),
     "the app's process was killed": bool(pid_before) and pid_before != pid_after,
     f"the service had kept at least 0.5 fixes a second until the kill ({kept_at_kill})": kept_at_kill >= 0.5 * (900 - 65),
     f"every fix the service kept is in the ride after reopening ({rows_after_import} >= {kept_at_kill})": bool(imported) and rows_after_import >= kept_at_kill,
