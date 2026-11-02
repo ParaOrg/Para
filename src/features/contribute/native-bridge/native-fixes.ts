@@ -1,5 +1,5 @@
-import type { WatchedFix } from './use-geolocation-watch';
-import { isNativeApp } from '../native-bridge/native-app';
+import { isNativeApp } from './native-app';
+import type { WatchedFix } from '../recorder/watched-fix';
 import type { Recording } from '../storage/recording-schema';
 
 /*

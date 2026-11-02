@@ -1,4 +1,4 @@
-import type { WatchError } from './use-geolocation-watch';
+import type { WatchError } from './watched-fix';
 import { isNativeApp } from '../native-bridge/native-app';
 import type { PageProblem } from '../notices/page-problem';
 import {

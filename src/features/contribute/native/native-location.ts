@@ -4,8 +4,8 @@ import { createFixCatchUp } from './fix-catch-up';
 import { beginFixLog, NO_ACCURACY_M, readFixLog } from './native-fix-log';
 import { noteRideWatcher } from './ride-notice';
 import { watchErrorOf, watchErrorOfThrown } from './watch-error';
-import { nativePlugin } from '../native-bridge/native-app';
-import type { WatchedFix, WatchError } from '../recorder/use-geolocation-watch';
+import { lazyPlugin } from '../native-bridge/native-app';
+import type { WatchedFix, WatchError } from '../recorder/watched-fix';
 
 const RECORDING_NOTIFICATION = {
   title: 'Recording your route',
@@ -18,9 +18,7 @@ interface NativeWatchHandlers {
   onError: (error: WatchError) => void;
 }
 
-let plugin: BackgroundGeolocationPlugin | null = null;
-const getPlugin = () =>
-  (plugin ??= nativePlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation'));
+const getPlugin = lazyPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
 
 /**
  * Starts the foreground service that keeps the notification up and the fixes coming with the

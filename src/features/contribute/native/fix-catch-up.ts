@@ -1,4 +1,4 @@
-import type { WatchedFix } from '../recorder/use-geolocation-watch';
+import type { WatchedFix } from '../recorder/watched-fix';
 
 /** A silence this long between live fixes means the page slept through some: read the log. */
 export const GAP_MS = 5_000;

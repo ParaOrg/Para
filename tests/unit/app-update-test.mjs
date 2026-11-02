@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { updateOf } from '../../src/features/contribute/app-update/app-version.ts';
 import { versionCodeOf } from '../../src/features/contribute/app-update/version-code.ts';
 import { readLatestRelease } from '../../src/features/contribute/app-update/fetch-latest-release.ts';
-import { textOfResponse } from '../../src/features/contribute/app-update/response-text.ts';
+import { textOfResponse } from '../../src/features/contribute/native-bridge/response-text.ts';
 import { latestReleaseSchema } from '../../src/features/contribute/app-update/latest-release-schema.ts';
 import { latestReleaseText } from '../../scripts/publish/app-release-file.mjs';
 

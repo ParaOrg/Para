@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 
-import { nativePlugin } from '../native-bridge/native-app';
+import { lazyPlugin } from '../native-bridge/native-app';
 
 export type NativePermission = 'notifications' | 'location' | 'backgroundLocation';
 export type NativePermissionState = 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale';
@@ -27,8 +27,7 @@ interface NativePermissionsPlugin {
   openAppSettings: () => Promise<void>;
 }
 
-let plugin: NativePermissionsPlugin | null = null;
-const getPlugin = () => (plugin ??= nativePlugin<NativePermissionsPlugin>('NativePermissions'));
+const getPlugin = lazyPlugin<NativePermissionsPlugin>('NativePermissions');
 
 export async function checkNativePermissions(): Promise<NativePermissionStates> {
   return statesSchema.parse(await getPlugin().checkPermissions());
