@@ -16,6 +16,8 @@
 @source '../../features/contribute/';
 @source '../../features/locator/';
 @source '../../features/routes/map/basemap-control.tsx';
+@source '../../features/routes/map/credits-button.tsx';
+@source '../../features/routes/map/map-data-source-sheet.tsx';
 @source '../../features/routes/map/map-style.tsx';
 @source '../../features/routes/map/location-labels-row.tsx';
 @source '../../features/routes/map/map-style-button.tsx';

@@ -1,7 +1,10 @@
 // The contributor page builds its own Tailwind (src/app/contribute/contribute.css: `source(none)`
-// and a list of @source paths). A shared/ui file the page draws but the list leaves out gets
-// none of its classes on the page: the toast came out unstyled. So every shared/ui file the page
-// reaches, statically or lazily, that writes class names must be in the list.
+// and a list of @source paths). A file the page draws but the list leaves out gets none of its
+// classes from it: the toast came out unstyled. On the web build the public map's own Tailwind
+// (global.css, scanning all of src/) can hide that, through the CSS of a chunk both pages load;
+// the Android app's build (vite.apk.config.ts) has no public map, so there it shows: the Map Data
+// Source sheet's rows lost their spacing. So every file the page reaches, statically or lazily,
+// that writes class names must be in the list, and both builds start from the same page.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/contribute-css-sources-test.mjs
 import { test } from 'node:test';
@@ -14,6 +17,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const src = join(root, 'src');
 const cssFile = join(src, 'app', 'contribute', 'contribute.css');
 const entry = join(src, 'app', 'contribute', 'main.tsx');
+const page = join(root, 'contribute', 'index.html');
+const apkConfig = join(root, 'vite.apk.config.ts');
 
 const SPECIFIERS = [
   /\bimport\s+(?:type\s+)?[^'"]*?from\s+['"]([^'"]+)['"]/g,
@@ -62,13 +67,18 @@ function scanned() {
   );
 }
 
-const writesClasses = (file) => /className=|\bcn\(/.test(readFileSync(file, 'utf8'));
+// A class list written, or cn() called; not cn's own definition (`cn(...classes`).
+const writesClasses = (file) => /className=|\bcn\((?!\.\.\.)/.test(readFileSync(file, 'utf8'));
 
-test('every shared/ui file the contributor page draws is in its CSS sources', () => {
+test('both builds of the contributor page start from its one entry', () => {
+  assert.match(readFileSync(page, 'utf8'), /src="\/src\/app\/contribute\/main\.tsx"/);
+  assert.match(readFileSync(apkConfig, 'utf8'), /contribute: 'contribute\/index\.html'/);
+});
+
+test('every file the contributor page draws is in its CSS sources', () => {
   const sources = scanned();
-  const sharedUi = join(src, 'shared', 'ui');
   const missing = [...reachedFrom(entry)]
-    .filter((file) => file.startsWith(sharedUi) && writesClasses(file))
+    .filter((file) => !file.endsWith('.stories.tsx') && writesClasses(file))
     .filter((file) => !sources.some((source) => file === source || file.startsWith(`${source}/`)))
     .map((file) => relative(root, file));
   assert.deepEqual(missing, [], `add to contribute.css: ${missing.join(', ')}`);
