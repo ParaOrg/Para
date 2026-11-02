@@ -1,5 +1,4 @@
 import type { Fix } from '@/features/routes/model/ride-recording';
-import type { LngLat } from '@/shared/utils/geo';
 
 import { UPLOAD_LIMITS } from './recording-limits';
 import type { MarkRow, Recording } from '../storage/recording-schema';
@@ -40,11 +39,6 @@ export function markFixIndexes(kept: readonly Fix[], marks: readonly MarkRow[]):
     }
     return low;
   });
-}
-
-/** Where each mark is on the map: the fix it sits on. */
-export function markPlaces(kept: readonly Fix[], marks: readonly MarkRow[]): LngLat[] {
-  return markFixIndexes(kept, marks).map((index) => kept[index].at);
 }
 
 /**
