@@ -90,3 +90,39 @@ export const Leaving: Story = {
     await waitFor(() => expect(args.onLeft).toHaveBeenCalledOnce());
   },
 };
+
+/**
+ * Compact: a pill that hugs its icon and one-line title, centred, with no ✕. Info alone, and only
+ * with a title: it goes by itself in a host.
+ */
+export const Compact: Story = {
+  args: { size: 'compact', title: 'Route reversed' },
+  play: async ({ canvasElement }) => {
+    const toast = within(canvasElement).getByTestId('toast');
+    await waitFor(() => expect(toast).toBeVisible());
+    await expect(within(toast).queryByRole('button')).toBeNull();
+    // It hugs its words, centred in the width it has.
+    const box = toast.getBoundingClientRect();
+    const room = toast.parentElement?.getBoundingClientRect();
+    await expect(box.width).toBeLessThan((room?.width ?? 0) - 40);
+    await expect(
+      Math.abs(box.left + box.width / 2 - ((room?.left ?? 0) + (room?.width ?? 0) / 2)),
+    ).toBeLessThan(1);
+  },
+};
+
+/** Compact with a title too long for the screen: the pill takes the width it has and cuts the title. */
+export const CompactLongTitle: Story = {
+  args: {
+    size: 'compact',
+    title:
+      'Fairview Teraccess Transport Terminal is now the end of this route, the other way round',
+  },
+  play: async ({ canvasElement }) => {
+    const toast = within(canvasElement).getByTestId('toast');
+    const title = within(toast).getByText(/^Fairview/);
+    await waitFor(() => expect(toast).toBeVisible());
+    await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
+    await expect(title.getBoundingClientRect().height).toBeLessThan(30);
+  },
+};
