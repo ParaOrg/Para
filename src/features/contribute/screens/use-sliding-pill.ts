@@ -2,8 +2,8 @@ import { useLayoutEffect, useRef } from 'react';
 
 import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
-import { PILL, PILL_FADE, PILL_QUICK, PILL_QUICK_FADE } from '../common/motion';
-import { isMoveInRun } from '../common/tab-motion';
+import { PILL, PILL_FADE, PILL_QUICK, PILL_QUICK_FADE } from '../motion/motion';
+import { isMoveInRun } from '../motion/tab-motion';
 
 /**
  * Where the last toolbar drawn had its pill, and which tab that was. Each screen draws a toolbar of

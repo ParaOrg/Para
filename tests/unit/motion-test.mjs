@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 
 import * as motion from '../../src/shared/utils/motion.ts';
-import * as contributeMotion from '../../src/features/contribute/common/motion.ts';
+import * as contributeMotion from '../../src/features/contribute/motion/motion.ts';
 
 const { MOTION_DURATIONS } = contributeMotion;
 

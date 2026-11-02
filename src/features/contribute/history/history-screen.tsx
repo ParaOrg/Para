@@ -9,7 +9,7 @@ import { HistoryLoadLine } from './history-load-line';
 import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useScreenEntry } from '../common/use-screen-entry';
+import { useScreenEntry } from '../motion/use-screen-entry';
 import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
 import type { UploadStatus } from '../uploads/upload-state';

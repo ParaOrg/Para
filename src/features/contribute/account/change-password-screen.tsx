@@ -10,7 +10,7 @@ import { SaveChangesSheet } from './save-changes-sheet';
 import { SettingsHeader } from './settings-header';
 import type { Captcha } from './use-captcha';
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useScreenEntry } from '../common/use-screen-entry';
+import { useScreenEntry } from '../motion/use-screen-entry';
 
 interface ChangePasswordScreenProps {
   isBusy: boolean;

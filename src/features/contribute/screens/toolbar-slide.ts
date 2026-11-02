@@ -2,7 +2,7 @@ import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
 import type { ToolbarTab } from './bottom-toolbar';
 import { notePillAt } from './use-sliding-pill';
-import { PILL, SHIFT } from '../common/motion';
+import { PILL, SHIFT } from '../motion/motion';
 import {
   endSelectionTicks,
   selectionTick,
