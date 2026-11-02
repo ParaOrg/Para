@@ -17,13 +17,14 @@ export function ContributeApp() {
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary fallback={<PageErrorScreen />}>
         <ContributePage
-          locator={(map, isMapLoaded, isRecording, mark, onNote) => (
+          locator={(map, isMapLoaded, isRecording, mark, onNote, onWhere) => (
             <ContributorLocation
               map={map}
               isMapLoaded={isMapLoaded}
               isRecording={isRecording}
               above={mark}
               onNote={onNote}
+              onWhere={onWhere}
             />
           )}
         />
