@@ -11,12 +11,8 @@ import {
   POSITION_UNAVAILABLE_PROBLEM,
   STORAGE_PROBLEM,
 } from './recorder-problems';
-import {
-  pointsLostWords,
-  routeRecordedWords,
-  uploadFailedProblem,
-  type RouteRecordedGiven,
-} from './route-recorded';
+import type { RouteRecordedGiven } from './route-recorded';
+import { uploadFailedProblem } from './upload-failed-problem';
 import type { UploadStatus } from '../uploads/upload-state';
 
 const meta = {
@@ -128,16 +124,12 @@ export const StopFlagged: Story = {
   },
 };
 
-/** A save, as the page says it: the words built by route-recorded.ts, as the page builds them. */
+/** A save, as the page tells of it: the toasts put it in words (route-recorded.ts). */
 const saved = (
   status: UploadStatus,
   isOnline: boolean,
   failedFixWrites = 0,
-): RouteRecordedGiven => ({
-  words: routeRecordedWords(status, isOnline),
-  pointsLost: pointsLostWords(failedFixWrites),
-  times: 1,
-});
+): RouteRecordedGiven => ({ status, isOnline, failedFixWrites, times: 1 });
 
 /** A route just saved and on its way: "Route recorded", with the check, leaving by itself. */
 export const RouteRecordedOnItsWay: Story = {
