@@ -42,7 +42,7 @@ export const PageToasts = lazy(() =>
   loadPageToasts().then((module) => ({ default: module.PageToasts })),
 );
 // Shown only once a recording is under way or found open, never on the page's first paint. Ready
-// fetches them as it opens (contribute-page.tsx), so Start never waits on the network, nor fails
+// fetches them as it opens (use-screen-warmup.ts), so Start never waits on the network, nor fails
 // without one. A fetch ahead that failed offline does not leave them unreachable: each asks again
 // afresh.
 export const loadRecordingScreen = retryingImport(() => import('./screens/recording-screen'));
