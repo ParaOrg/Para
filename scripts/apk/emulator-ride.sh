@@ -29,7 +29,9 @@ set -u
 
 APK=$1
 OUT=$2
-PKG=ph.para.contributor
+# The debug build has its own id, so it installs beside the real app (android/app/build.gradle).
+PKG=ph.para.contributor.debug
+ACTIVITY=ph.para.contributor.MainActivity
 OFF_AFTER=60
 KILL_AT=900
 TOTAL=1200
@@ -92,7 +94,7 @@ FEED_PID=$!
 # A step of the test's own, marked in logcat for the checker.
 mark() { adb shell log -t PARA_RIDE_TEST "$1"; }
 
-adb shell am start -n "$PKG/.MainActivity"
+adb shell am start -n "$PKG/$ACTIVITY"
 sleep 20
 mark rebuild
 adb shell settings put system font_scale 1.15
@@ -122,7 +124,7 @@ echo "pid before the kill: ${PID_BEFORE:-none}; right after: ${PID_AFTER_KILL:-n
 # Opened again, on the screen, as a rider unlocking the phone would.
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
-adb shell am start -n "$PKG/.MainActivity"
+adb shell am start -n "$PKG/$ACTIVITY"
 sleep 40
 adb exec-out screencap -p > "$OUT/screen-reopened.png"
 adb shell input keyevent KEYCODE_SLEEP

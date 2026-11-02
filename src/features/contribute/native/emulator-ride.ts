@@ -1,5 +1,6 @@
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
+import { setRideNoticeState } from './ride-notice';
 import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
 import { newRecording } from '../recorder/recording-transitions';
 import type { Recording } from '../storage/recording-schema';
@@ -80,6 +81,16 @@ export async function runEmulatorRide(): Promise<void> {
       putFixes(rows).catch((error: unknown) => say(`write-failed ${String(error)}`));
     },
     onError: (error) => say(`error ${error.message}`),
+  });
+  // The ride's notification, held as the recorder holds it; its taps are left to the native side,
+  // as a page asleep leaves them (scripts/apk/emulator-notification.sh).
+  await setRideNoticeState({
+    recordingId,
+    phase: 'recording',
+    mode: 'walk',
+    startedAt: recording.startedAt,
+    pausedSeconds: 0,
+    stoppedAt: null,
   });
   say(`${open ? 'resumed' : 'watching'} id=${recordingId}`);
   window.setInterval(() => {

@@ -35,6 +35,10 @@ android {
         }
     }
     buildTypes {
+        // The test build sits beside the real app, as "Para (test)" (src/debug/res/values/strings.xml).
+        debug {
+            applicationIdSuffix ".debug"
+        }
         release {
             if (hasReleaseKey) signingConfig = signingConfigs.release
             minifyEnabled false

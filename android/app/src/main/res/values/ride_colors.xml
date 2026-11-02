@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The recording card's colours, for the ride's notification (RideNotification): tokens.css and
+  Tailwind's palette as hex, as map-colours.ts mirrors them for the map. The card: surface,
+  content-primary (neutral-900), content-quaternary (neutral-600), content-disabled (neutral-500);
+  its status dot: blue-100 round blue-700 on Lakad, green-200 round green-700 on Sakay,
+  surface-tertiary (neutral-150) round content-primary while paused.
+-->
+<resources>
+    <color name="ride_content_primary">#171717</color>
+    <color name="ride_content_quaternary">#525252</color>
+    <color name="ride_content_disabled">#737373</color>
+    <color name="ride_lakad_ring">#dbeafe</color>
+    <color name="ride_lakad_dot">#1447e6</color>
+    <color name="ride_sakay_ring">#b9f8cf</color>
+    <color name="ride_sakay_dot">#008236</color>
+    <color name="ride_paused_ring">#f0f0f0</color>
+    <color name="ride_paused_dot">#171717</color>
+</resources>

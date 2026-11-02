@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
         // Our own plugins are not found by Capacitor's sync, so they are registered here.
         registerPlugin(NativePermissionsPlugin.class);
         registerPlugin(FixLogPlugin.class);
+        registerPlugin(RidePlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

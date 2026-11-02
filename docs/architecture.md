@@ -180,7 +180,7 @@ flowchart TD
   features_contribute_notices --> features_contribute_uploads
   features_contribute_notices --> shared_ui
   features_contribute_recorder --> features_contribute_consent
-  features_contribute_recorder -.-> features_contribute_native
+  features_contribute_recorder --> features_contribute_native
   features_contribute_recorder --> features_contribute_native_bridge
   features_contribute_recorder --> features_contribute_notices
   features_contribute_recorder --> features_contribute_storage

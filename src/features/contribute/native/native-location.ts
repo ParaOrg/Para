@@ -2,6 +2,7 @@ import type { BackgroundGeolocationPlugin } from '@capacitor-community/backgroun
 
 import { createFixCatchUp } from './fix-catch-up';
 import { beginFixLog, NO_ACCURACY_M, readFixLog } from './native-fix-log';
+import { noteRideWatcher } from './ride-notice';
 import { watchErrorOf, watchErrorOfThrown } from './watch-error';
 import { nativePlugin } from '../native-bridge/native-app';
 import type { WatchedFix, WatchError } from '../recorder/use-geolocation-watch';
@@ -73,6 +74,8 @@ export async function startNativeWatch({
     return () => undefined;
   }
 
+  // The ride's notification stops and starts this watcher by its id, from its Pause and Resume.
+  noteRideWatcher(watcherId);
   const handleVisibility = () => {
     if (document.visibilityState === 'visible') readLog();
   };
@@ -80,6 +83,7 @@ export async function startNativeWatch({
   readLog();
   return () => {
     document.removeEventListener('visibilitychange', handleVisibility);
+    noteRideWatcher('');
     void getPlugin().removeWatcher({ id: watcherId });
   };
 }

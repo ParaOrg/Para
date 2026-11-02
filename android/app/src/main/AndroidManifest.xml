@@ -28,6 +28,12 @@
 
         </activity>
 
+        <!-- The ride notification's taps (RideNotification): only the app's own notification
+             reaches it. -->
+        <receiver
+            android:name=".RideActionReceiver"
+            android:exported="false" />
+
         <!-- The emulator test lost the app when Play Services' font provider died: Android kills an
              app that holds a provider in a dying process, even one with a foreground service.
              Emoji support (AndroidX's emoji2) is what connects to it at start, and a WebView page
