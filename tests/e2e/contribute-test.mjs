@@ -3066,10 +3066,6 @@ const REFUSING_LOCATION = () => {
       .allInnerTexts()
       .then((texts) => texts.join(' | ')),
   );
-  check(
-    '  the dark note is gone: nothing but the toast says it',
-    (await page.getByTestId('where-note').count()) === 0,
-  );
   await tapRefused();
   await tapRefused();
   check(

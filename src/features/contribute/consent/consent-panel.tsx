@@ -1,7 +1,7 @@
 import { Button } from '@/design-system/primitives/button';
 
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useStackRoom } from '../common/use-stack-room';
+import { useHeightVar } from '../common/use-height-var';
 
 interface ConsentPanelProps {
   onAgree: () => void;
@@ -63,7 +63,7 @@ const CONSENT_LINES: readonly ConsentLine[] = [
 /** What the page records and where it goes, before anything is asked of the phone. */
 export function ConsentPanel({ onAgree, onDecline }: ConsentPanelProps) {
   const headingRef = useFocusHeading();
-  const stackRef = useStackRoom();
+  const stackRef = useHeightVar('--stack-room');
   return (
     <section
       ref={stackRef}

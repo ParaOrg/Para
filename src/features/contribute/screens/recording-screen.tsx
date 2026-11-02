@@ -9,7 +9,7 @@ import { FoldButton } from './fold-button';
 import { RecordingCard, type RecordingCardState } from './recording-card';
 import { RecordingTint } from './recording-tint';
 import { TrackingButton } from './tracking-button';
-import { useStackRoom } from '../common/use-stack-room';
+import { useHeightVar } from '../common/use-height-var';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { Mode } from '../recorder/recording-rules';
 
@@ -66,7 +66,7 @@ export function RecordingScreen({
 }: RecordingScreenProps) {
   const cardId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const stackRef = useStackRoom();
+  const stackRef = useHeightVar('--stack-room');
   const pauseRef = useRef<HTMLButtonElement>(null);
   // The heading takes focus as the screen opens, a screen reader starting at its top; back from
   // Keep recording it is the Pause bar, where the contributor was before, unless the card is

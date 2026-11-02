@@ -36,7 +36,7 @@ interface ContributeMapProps {
   /** The recording is paused: the map frosts over, its buttons and every screen over it crisp. */
   isFrosted: boolean;
   locator?: ContributeLocatorSlot;
-  /** The mark button, for the locator's column: null when nothing is recording. */
+  /** The Flag a stop button (flag-stop-button.tsx), for the locator's column: null when nothing is recording. */
   mark: ReactNode;
   /** The locator's note, passed on to the page's toasts. */
   onMapNote: (note: MapNote | null) => void;
