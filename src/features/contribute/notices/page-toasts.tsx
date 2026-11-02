@@ -18,7 +18,7 @@ const ICONS = {
   warning: <AlertCircleIcon />,
 } satisfies Record<PageProblemIcon, ReactNode>;
 
-interface PageToastsProps {
+export interface PageToastsProps {
   /** The recorder's problem as it stands, or null: fixed, it is taken away. */
   problem: PageProblem | null;
   /** A recording runs with the screen free to sleep: the wake lock was refused. */
