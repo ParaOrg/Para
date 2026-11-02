@@ -2705,5 +2705,153 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
 }
 
+// ---------------------- skeletons while History and Account load
+{
+  /** Some numbers for Commute Statistics: with none (null) the section is left out. */
+  const SOME_STATS = {
+    rides: 2,
+    distanceM: 12_000,
+    movingS: 3600,
+    standingS: 600,
+    walkM: 2_000,
+    rideM: 10_000,
+    jeepRides: 2,
+    eJeepRides: 0,
+    busRides: 0,
+    trainRides: 0,
+    tricycleRides: 0,
+    farePhpTotal: 26,
+    fareRecordings: 2,
+  };
+  /** Whether a skeleton is drawn and seen (not one still waiting its first moments, unseen). */
+  const seenSkeletons = (page) =>
+    page.evaluate(() => document.querySelectorAll('[data-skeleton]:not(.invisible)').length);
+  /** The skeletons' light: the shimmer animations running on the page. */
+  const shimmers = (page) =>
+    page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter((animation) => animation.animationName === 'skeleton-shimmer').length,
+    );
+  /** From now on, notes whether a seen skeleton ever shows. */
+  const watchForSkeletons = (page) =>
+    page.evaluate(() => {
+      window.__sawSkeleton = false;
+      const look = () => {
+        if (document.querySelector('[data-skeleton]:not(.invisible)')) window.__sawSkeleton = true;
+      };
+      new MutationObserver(look).observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    });
+
+  // A quick load shows none: History and Account open on what loads at once, with no flash.
+  {
+    const { page, fake, errors } = await phone();
+    fake.stats = SOME_STATS;
+    await start(page).waitFor({ timeout: 30000 });
+    await watchForSkeletons(page);
+    await openHistory(page);
+    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+    await page.locator('[aria-busy="true"]').waitFor({ state: 'detached', timeout: 10000 });
+    await toolbarRecord(page).click();
+    await accountTab(page).click();
+    await page
+      .getByRole('region', { name: 'Commute Statistics' })
+      .getByText('Total time')
+      .waitFor();
+    check(
+      'a load quicker than 300 ms shows no skeleton, on History or on Account',
+      (await page.evaluate(() => window.__sawSkeleton)) === false,
+    );
+    check('  no page errors', errors.length === 0, errors.join(' | '));
+  }
+
+  // ?slowload holds the loads back 2 s: the skeletons show in their places, and go.
+  {
+    const { page, fake, errors } = await phone();
+    fake.stats = SOME_STATS;
+    await page.goto(`${BASE}/contribute/?slowload`, { waitUntil: 'load' });
+    await start(page).waitFor({ timeout: 30000 });
+    await openHistory(page);
+    const list = page.locator('[data-history-skeleton]');
+    await list.waitFor({ timeout: 5000 });
+    await page.waitForTimeout(600);
+    const history = await page.evaluate(() => ({
+      cards: document.querySelectorAll('[data-history-skeleton] > li:not(.invisible)').length,
+      busy: !!document.querySelector('[aria-busy="true"] [data-history-skeleton]'),
+      said:
+        document.querySelector('[data-screen-hash="#history"] [role="status"]')?.textContent ??
+        null,
+    }));
+    const historyShimmers = await shimmers(page);
+    await shot(page, '5-history-skeleton');
+    check(
+      '?slowload: History shows four card skeletons, shimmering, in a busy region that says "Loading your rides"',
+      history.cards === 4 &&
+        history.busy &&
+        history.said === 'Loading your rides' &&
+        historyShimmers > 0,
+      JSON.stringify({ ...history, historyShimmers }),
+    );
+    await list.waitFor({ state: 'detached', timeout: 10000 });
+    check(
+      '  and once the uploads are in, the skeleton is gone and nothing is busy',
+      (await seenSkeletons(page)) === 0 && (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
+
+    // Account: the profile card and the stats' tiles, the same height as what replaces them.
+    await toolbarRecord(page).click();
+    await accountTab(page).click();
+    const card = page.locator('[aria-busy="true"]').filter({ hasText: 'Loading your account' });
+    await card.waitFor({ timeout: 5000 });
+    await page.waitForTimeout(600);
+    const stats = page.getByRole('region', { name: 'Commute Statistics' });
+    const loading = {
+      seen: await seenSkeletons(page),
+      card: (await card.boundingBox())?.height,
+      stats: (await stats.boundingBox())?.height,
+    };
+    await shot(page, '6-account-skeleton');
+    await stats.getByText('Total time').waitFor({ timeout: 10000 });
+    const loaded = {
+      seen: await seenSkeletons(page),
+      card: (await page.getByText(ACCOUNT.email).locator('..').locator('..').boundingBox())?.height,
+      stats: (await stats.boundingBox())?.height,
+    };
+    check(
+      '  Account: the profile card and the stats shimmer while they load, then their content takes the same room',
+      loading.seen > 10 &&
+        loaded.seen === 0 &&
+        Math.abs(loading.card - loaded.card) < 1 &&
+        Math.abs(loading.stats - loaded.stats) < 2,
+      JSON.stringify({ loading, loaded }),
+    );
+
+    // Less motion asked for: the shapes stand still.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(`${BASE}/contribute/#account-settings`, { waitUntil: 'load' });
+    const fields = page.locator('[aria-busy="true"]').filter({ hasText: 'Loading your account' });
+    await fields.waitFor({ timeout: 30000 });
+    await page.waitForTimeout(600);
+    const settings = { seen: await seenSkeletons(page), shimmers: await shimmers(page) };
+    check(
+      '  Account settings: its fields shimmer in their places; with less motion asked for, still shapes with no animation',
+      settings.seen === 4 && settings.shimmers === 0,
+      JSON.stringify(settings),
+    );
+    await field(page, 'Name').waitFor({ timeout: 10000 });
+    check(
+      '  then the form takes their place',
+      (await seenSkeletons(page)) === 0 && (await fields.count()) === 0,
+    );
+    check('  no page errors', errors.length === 0, errors.join(' | '));
+  }
+}
+
 await browser.close();
 tally();

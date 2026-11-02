@@ -128,6 +128,7 @@ flowchart TD
   features_contribute_account --> shared_hooks
   features_contribute_account --> shared_ui
   features_contribute_account --> shared_utils
+  features_contribute_api --> features_contribute_common
   features_contribute_api --> features_contribute_recorder
   features_contribute_api --> features_contribute_storage
   features_contribute_api --> features_routes_model
@@ -303,7 +304,7 @@ flowchart TD
 | `design-system/primitives` | — |
 | `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `features/contribute/tutorial`, `features/contribute/uploads`, `features/routes/map`, `shared/ui`, `shared/utils` |
 | `features/contribute/account` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/screens`, `features/contribute/storage`, `features/contribute/uploads`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/contribute/api` | `features/contribute/recorder`, `features/contribute/storage`, `features/routes/model`, `shared/types`, `shared/utils` |
+| `features/contribute/api` | `features/contribute/common`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/model`, `shared/types`, `shared/utils` |
 | `features/contribute/app-update` | `design-system/primitives`, `features/contribute/api`, `features/contribute/native-bridge` |
 | `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/ui`, `shared/utils` |
 | `features/contribute/consent` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/storage` |
@@ -347,7 +348,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `PageErrorScreen`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `applySlowmoIfAsked`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
+`ContributePage`, `PageErrorScreen`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `applySlowloadIfAsked`, `applySlowmoIfAsked`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
 
 ### `features/locator`
 

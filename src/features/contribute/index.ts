@@ -7,6 +7,7 @@ export type { ContributeLocatorSlot } from './map/contribute-map';
 export { connectContributions } from './api/contribute-client';
 export { hasOpenRecording } from './storage/open-recording';
 export { askForPersistentStorage } from './storage/persistent-storage';
+export { applySlowloadIfAsked } from './common/slowload-switch';
 export { applySlowmoIfAsked } from './common/slowmo-switch';
 export { isNativeApp, prepareNativeApp } from './native-bridge/native-app';
 export { runEmulatorRide } from './native-bridge/native-emulator-ride';

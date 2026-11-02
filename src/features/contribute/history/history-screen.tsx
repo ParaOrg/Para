@@ -6,9 +6,11 @@ import { cn } from '@/shared/utils/cn';
 import { HISTORY_HEADING_ID, canUploadFromMenu } from './card-status';
 import { HistoryCard } from './history-card';
 import { HistoryLoadLine } from './history-load-line';
+import { HistorySkeleton } from './history-skeleton';
 import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
+import { useIsSlowLoad } from '../common/use-is-slow-load';
 import { useScreenEntry } from '../common/use-screen-entry';
 import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
@@ -46,6 +48,9 @@ export function HistoryScreen({
   const [isScrolled, setIsScrolled] = useState(false);
   const isOnline = useIsOnline();
   const { recordings, uploads, isOnPhone, factsOf, load } = items;
+  // Nothing to list until the account's uploads come: their cards' shapes stand in for them.
+  const isFirstLoad = load.state === 'loading' && recordings.length === 0;
+  const isSkeletonShown = useIsSlowLoad(isFirstLoad);
 
   return (
     <section
@@ -70,13 +75,12 @@ export function HistoryScreen({
         </h1>
       </header>
       <div
+        aria-busy={load.state === 'loading' || undefined}
         onScroll={(event) => setIsScrolled(event.currentTarget.scrollTop > 0)}
         className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 pt-6 pb-40"
       >
-        {/* Over a list already drawn, Loading waits under it: going, it moves no card. */}
-        {(load.state === 'error' || (load.state === 'loading' && recordings.length === 0)) && (
-          <HistoryLoadLine load={load} />
-        )}
+        {load.state === 'error' && <HistoryLoadLine load={load} />}
+        {isFirstLoad && <HistorySkeleton isShown={isSkeletonShown} />}
         {recordings.length === 0 && load.state === 'ready' && (
           <div className="flex flex-col items-center gap-4 pt-16 text-center">
             <p className="text-base/6 text-content-quaternary">No recordings yet.</p>
@@ -110,6 +114,7 @@ export function HistoryScreen({
             })}
           </ul>
         )}
+        {/* Over a list already drawn, Loading waits under it: going, it moves no card. */}
         {load.state === 'loading' && recordings.length > 0 && <HistoryLoadLine load={load} />}
       </div>
       {/* The list fading out under the page's toolbar (4518:24829), which stands over this foot

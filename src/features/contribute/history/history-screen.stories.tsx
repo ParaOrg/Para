@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 
 import { HistoryScreen } from './history-screen';
 import type { HistoryItems, HistoryLoad } from './use-history-items';
@@ -211,11 +211,17 @@ export const LoadingAlongside: Story = {
   args: { items: itemsOf(rides, allOf(UPLOADED), { load: LOADING }) },
 };
 
-/** Nothing on this phone and the account's uploads not here yet. */
+/**
+ * Nothing on this phone and the account's uploads not here yet: after the first moments, cards'
+ * shapes shimmer where the list comes.
+ */
 export const Loading: Story = {
   args: { items: itemsOf([], allOf(UPLOADED), { load: LOADING }) },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('status')).toHaveTextContent('Loading…');
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent('Loading your rides');
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-skeleton]:not(.invisible)')).not.toBeNull(),
+    );
   },
 };
 

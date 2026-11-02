@@ -2,12 +2,15 @@ import { useEffect, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
+import { cn } from '@/shared/utils/cn';
 
 import type { ProfileFields } from './account-fields';
 import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
 import { SettingsHeader } from './settings-header';
+import { Skeleton } from '../common/skeleton';
 import { useFocusHeading } from '../common/use-focus-heading';
+import { useIsSlowLoad } from '../common/use-is-slow-load';
 import { useScreenEntry } from '../common/use-screen-entry';
 
 interface AccountSettingsScreenProps {
@@ -76,11 +79,7 @@ export function AccountSettingsScreen({
           onBack={onBack}
         />
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-48">
-          {!profile && !loadError && (
-            <p role="status" className="text-base/6 text-content-quaternary">
-              Loading…
-            </p>
-          )}
+          {!profile && !loadError && <ProfileFormSkeleton />}
           {loadError && (
             <div className="flex flex-col items-start gap-2">
               <p role="alert" className="text-base/6 text-content-quaternary">
@@ -123,3 +122,26 @@ export function AccountSettingsScreen({
     </section>
   );
 }
+
+/** The name and number fields while the profile loads (profile-form.tsx), in their sizes. */
+function ProfileFormSkeleton() {
+  const isShown = useIsSlowLoad(true);
+  return (
+    <div aria-busy="true" className="flex flex-col gap-5">
+      <p role="status" className="sr-only">
+        Loading your account
+      </p>
+      {FIELD_LABEL_WIDTHS.map((width) => (
+        <span key={width} aria-hidden className="flex flex-col gap-1.5">
+          <span className="flex h-5 items-center">
+            <Skeleton isShown={isShown} className={cn('h-3.5 rounded-full', width)} />
+          </span>
+          <Skeleton isShown={isShown} className="h-11 rounded-xl" />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Name, then Phone number: each label's length, roughly. */
+const FIELD_LABEL_WIDTHS = ['w-12', 'w-28'];

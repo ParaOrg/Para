@@ -81,6 +81,7 @@ export const OpensChangePassword: Story = {
   },
 };
 
+/** The profile still coming: the two fields' shapes shimmer after the first moments. */
 export const Loading: Story = { args: { profile: null } };
 
 export const LoadFailed: Story = {
