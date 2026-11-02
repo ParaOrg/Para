@@ -3,6 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { AlertCircleIcon } from '@/design-system/primitives/field-icons';
 import { LocationIcon } from '@/design-system/primitives/location-icon';
 import { ToastHost } from '@/shared/ui/toast-host';
+import type { ToastMessage } from '@/shared/ui/toast-queue';
 import { useToast } from '@/shared/ui/use-toast';
 
 import type { MapNoteGiven } from './map-note';
@@ -33,11 +34,8 @@ interface PageToastsProps {
 }
 
 interface NewsSaidProps {
-  id: string;
-  kind: 'info' | 'problem';
-  icon: ReactNode;
-  title: string;
-  body?: string;
+  /** What to say, its id naming it: the same again while it shows is said in place. */
+  message: ToastMessage & { id: string };
   /** How many times it has happened on the page: each one more says it. */
   times: number;
   /** A problem stands: news now is not said, then or later, as it would only wait behind it. */
@@ -78,32 +76,38 @@ export function PageToasts({
   return (
     <ToastHost>
       <ProblemsSaid problems={problems} />
+      {/* Compact: two words, hugging them, no ✕ (the owner's "small toast"). */}
       <NewsSaid
-        id="stop-flagged"
-        kind="info"
-        icon={<FlagStopIcon />}
-        title="Stop flagged"
+        message={{
+          id: 'stop-flagged',
+          kind: 'info',
+          size: 'compact',
+          icon: <FlagStopIcon />,
+          title: 'Stop flagged',
+        }}
         times={stopsFlagged}
         isQuiet={problems.length > 0}
       />
       {routeRecorded && (
         <>
           <NewsSaid
-            id="route-recorded"
-            kind="info"
-            icon={<CheckIcon />}
-            title={routeRecorded.words.title}
-            body={routeRecorded.words.body}
+            message={{
+              id: 'route-recorded',
+              kind: 'info',
+              icon: <CheckIcon />,
+              ...routeRecorded.words,
+            }}
             times={routeRecorded.times}
           />
           {/* After "Route recorded", in the host's order, and until ✕: part of the ride is gone. */}
           {routeRecorded.pointsLost && (
             <NewsSaid
-              id="points-lost"
-              kind="problem"
-              icon={<AlertCircleIcon />}
-              title={routeRecorded.pointsLost.title}
-              body={routeRecorded.pointsLost.body}
+              message={{
+                id: 'points-lost',
+                kind: 'problem',
+                icon: <AlertCircleIcon />,
+                ...routeRecorded.pointsLost,
+              }}
               times={routeRecorded.times}
             />
           )}
@@ -118,9 +122,10 @@ export function PageToasts({
  * itself, or a problem that stays until ✕ ("Part of the ride wasn't kept"). Under one id, so the
  * same again while it shows is said in place, an info's clock started afresh, and never stacks.
  */
-function NewsSaid({ id, kind, icon, title, body, times, isQuiet = false }: NewsSaidProps) {
+function NewsSaid({ message, times, isQuiet = false }: NewsSaidProps) {
   const { showToast } = useToast();
-  // The count it last said at: the same count, as on a render with nothing new, says nothing.
+  // The count it last said at: the same count, as on a render with nothing new (a new copy of
+  // the message only), says nothing.
   const saidAt = useRef(0);
   // Tells the host's queue, which is told rather than rendered.
   useEffect(() => {
@@ -128,8 +133,8 @@ function NewsSaid({ id, kind, icon, title, body, times, isQuiet = false }: NewsS
     saidAt.current = times;
     // The host shows one toast at a time: behind a standing problem it would come late, if ever.
     if (isQuiet) return;
-    showToast({ id, kind, icon, title, body });
-  }, [times, id, kind, icon, title, body, isQuiet, showToast]);
+    showToast(message);
+  }, [message, times, isQuiet, showToast]);
   return null;
 }
 

@@ -807,9 +807,11 @@ const buttons = (page) =>
   const stopFlagged = toastSaying(page, 'Stop flagged');
   await stopFlagged.waitFor({ timeout: 5000 });
   check(
-    '  on Sakay a tap says "Stop flagged" in an info toast at the top, and politely, with no dialog',
+    '  on Sakay a tap says "Stop flagged" in a compact info toast at the top (no ✕), politely, with no dialog',
     (await page.getByTestId('toast').count()) === 1 &&
       (await stopFlagged.getAttribute('data-kind')) === 'info' &&
+      (await stopFlagged.getAttribute('data-size')) === 'compact' &&
+      (await stopFlagged.getByRole('button', { name: 'Close' }).count()) === 0 &&
       (await page.getByRole('status').filter({ hasText: 'Stop flagged' }).count()) === 1 &&
       (await page
         .getByRole('status')
