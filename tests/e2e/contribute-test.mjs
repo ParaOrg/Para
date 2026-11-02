@@ -810,8 +810,11 @@ const buttons = (page) =>
     '  on Sakay a tap says "Stop flagged" in an info toast at the top, and politely, with no dialog',
     (await page.getByTestId('toast').count()) === 1 &&
       (await stopFlagged.getAttribute('data-kind')) === 'info' &&
-      (await page.getByRole('status').filter({ hasText: 'Flagged, 1' }).count()) === 1 &&
       (await page.getByRole('status').filter({ hasText: 'Stop flagged' }).count()) === 1 &&
+      (await page
+        .getByRole('status')
+        .filter({ hasText: /Flagged, \d/ })
+        .count()) === 0 &&
       (await page.getByRole('dialog').count()) === 0,
     await page
       .getByTestId('toast')
@@ -1268,7 +1271,12 @@ const buttons = (page) =>
   await flagButton(page).click();
   check(
     'on Lakad, Flag a stop is enabled and flags the place',
-    (await page.getByRole('status').filter({ hasText: 'Flagged, 1' }).count()) === 1 &&
+    (await toastSaying(page, 'Stop flagged')
+      .waitFor({ timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      )) &&
       (await mapSource(page))?.features.filter((f) => f.properties.kind === 'mark').length === 1,
   );
   // The column's tooltips run past the screen's edge: the page must not slide to them, even from
@@ -2707,12 +2715,28 @@ const REFUSING_WAKE = () => {
       looks.top === 12,
     JSON.stringify(looks),
   );
+  // A flag while the problem stands is not said: no "Stop flagged" now, nor late, after ✕.
+  await flagButton(page).click();
+  await page.waitForTimeout(300);
+  check(
+    '  a flag while it shows says nothing: still the one toast, no "Stop flagged"',
+    (await page.getByTestId('toast').count()) === 1 &&
+      (await toastSaying(page, 'Stop flagged').count()) === 0,
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
   await asleep.getByRole('button', { name: 'Close' }).click();
   await asleep.waitFor({ state: 'detached', timeout: 5000 });
   await page.waitForTimeout(500);
   check(
-    '  ✕ closes it, and it does not come back while the same refusal stands',
+    '  ✕ closes it, and it does not come back while the same refusal stands, nor the flag after it',
     (await page.getByTestId('toast').count()) === 0,
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
   );
   // Paused, the lock is let go and the problem with it; recording again asks afresh.
   await page.getByRole('button', { name: 'Pause', exact: true }).click();

@@ -178,8 +178,8 @@ export function useRecording(): RecordingState {
     if (!recording) return false;
     const marked = markedRecording(recording, Date.now());
     if (!marked) return false;
+    // Said by the page's "Stop flagged" toast, not the status line: one word for one flag.
     keep(marked.recording);
-    setAnnouncement(`Flagged, ${marked.count}`);
     return true;
   }
 

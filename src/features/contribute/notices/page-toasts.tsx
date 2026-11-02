@@ -28,6 +28,8 @@ interface PageToastsProps {
 
 interface FlagsSaidProps {
   stopsFlagged: number;
+  /** A problem stands: a flag now is not said, then or later, as it would only wait behind it. */
+  isQuiet: boolean;
 }
 
 interface ProblemsSaidProps {
@@ -59,7 +61,7 @@ export function PageToasts({
   return (
     <ToastHost>
       <ProblemsSaid problems={problems} />
-      <FlagsSaid stopsFlagged={stopsFlagged} />
+      <FlagsSaid stopsFlagged={stopsFlagged} isQuiet={problems.length > 0} />
     </ToastHost>
   );
 }
@@ -68,7 +70,7 @@ export function PageToasts({
  * "Stop flagged", a small info toast that leaves by itself. Under one id, so a flag while it shows
  * says it again in place, its clock started afresh, and never stacks a second.
  */
-function FlagsSaid({ stopsFlagged }: FlagsSaidProps) {
+function FlagsSaid({ stopsFlagged, isQuiet }: FlagsSaidProps) {
   const { showToast } = useToast();
   // The count it last said at: the same count, as on a render with no new flag, says nothing.
   const saidAt = useRef(0);
@@ -76,8 +78,10 @@ function FlagsSaid({ stopsFlagged }: FlagsSaidProps) {
   useEffect(() => {
     if (stopsFlagged <= saidAt.current) return;
     saidAt.current = stopsFlagged;
+    // The host shows one toast at a time: behind a standing problem it would come late, if ever.
+    if (isQuiet) return;
     showToast({ id: 'stop-flagged', kind: 'info', icon: <FlagStopIcon />, title: 'Stop flagged' });
-  }, [stopsFlagged, showToast]);
+  }, [stopsFlagged, isQuiet, showToast]);
   return null;
 }
 
