@@ -13,6 +13,7 @@ import {
 import { HandQuestion } from './hand-question';
 import { SettingsHeader } from './settings-header';
 import { useCountdown } from './use-countdown';
+import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
@@ -62,7 +63,7 @@ export function DeleteAccountScreen({
     <section
       ref={entryRef}
       aria-labelledby="delete-account-heading"
-      data-screen-hash={SCREENS.deleteAccount.hash}
+      {...{ [SCREEN_HASH_ATTR]: SCREENS.deleteAccount.hash }}
       className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isAsked} className="flex min-h-0 flex-1 flex-col">

@@ -5,7 +5,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { Coachmark, type CoachmarkFrame, type CoachmarkTarget } from './coachmark';
 import { TUTORIAL_STEPS, type TutorialDemo, type TutorialTarget } from './tutorial-steps';
-import { START_BUTTON_ATTR } from '../motion/start-morph-attrs';
+import { START_BUTTON_ATTR } from '../common/data-attributes';
 import { RecordingScreen } from '../screens/recording-screen';
 
 interface TutorialProps {

@@ -5,6 +5,7 @@ import { CommuteStats, type CommuteStatsState } from './commute-stats';
 import { GeneralBar } from './general-bar';
 import { LogoutConfirm } from './logout-confirm';
 import { ProfileCard } from './profile-card';
+import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
@@ -59,7 +60,7 @@ export function AccountScreen({
     <section
       ref={entryRef}
       aria-labelledby="account-heading"
-      data-screen-hash={SCREENS.profile.hash}
+      {...{ [SCREEN_HASH_ATTR]: SCREENS.profile.hash }}
       className="tab-screen absolute inset-0 z-20 bg-surface font-sn-pro text-content-primary"
     >
       <div inert={isLogoutAsked} className="absolute inset-0">

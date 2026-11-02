@@ -1,7 +1,7 @@
 import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
 import { LEAVE, MOVE } from './motion';
-import { RECORDING_CARD_ATTR, START_BUTTON_ATTR } from './start-morph-attrs';
+import { RECORDING_CARD_ATTR, START_BUTTON_ATTR } from '../common/data-attributes';
 
 /** The ghost's own attribute, so a suite can find it while it runs. */
 export const START_MORPH_ATTR = 'data-start-morph';
