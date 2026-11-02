@@ -23,7 +23,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { problem: null, isScreenFreeToSleep: false, mapNote: null },
+  args: { problem: null, isScreenFreeToSleep: false, mapNote: null, stopsFlagged: 0 },
 } satisfies Meta<typeof PageToasts>;
 
 export default meta;
@@ -102,4 +102,14 @@ export const RecorderAndLocator: Story = {
 /** Two at once: one at a time, the recorder's first, the screen's after it is closed. */
 export const TwoAtOnce: Story = {
   args: { problem: POSITION_UNAVAILABLE_PROBLEM, isScreenFreeToSleep: true },
+};
+
+/** A stop just flagged: "Stop flagged" with the flag, an info toast that leaves by itself. */
+export const StopFlagged: Story = {
+  args: { stopsFlagged: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Stop flagged');
+    await expect(canvas.getByRole('status')).toHaveTextContent('Stop flagged');
+  },
 };

@@ -51,8 +51,8 @@ export interface RecordingState {
   stopAtLastFix: () => void;
   resume: () => void;
   switchMode: () => void;
-  /** Marks the place the ride is at: the time of the tap, nothing more. */
-  markPlace: () => void;
+  /** Marks the place the ride is at: the time of the tap, nothing more. False if it marked none. */
+  markPlace: () => boolean;
   /** Stops a running recording, then opens the Save form. */
   openSave: () => void;
   /** From the Save form, back to recording as Resume does: the time on the form is a gap. */

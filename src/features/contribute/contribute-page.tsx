@@ -258,17 +258,24 @@ export function ContributePage({ locator }: ContributePageProps) {
     (profile.isOpen || isInsideAccount) &&
     !isPermissionsShown;
   const isRecordingShown = phase === 'recording' || phase === 'paused';
-  // What went wrong, said in toasts at the top until closed or fixed: the recorder's problem, and
-  // a recording running with the screen free to sleep. Their code is fetched the first time there
-  // is one, then kept, to take them away once fixed.
+  // Said in toasts at the top: what went wrong, until closed or fixed (the recorder's problem, a
+  // recording running with the screen free to sleep), and a stop just flagged. Their code is
+  // fetched the first time there is one, then kept, to take them away once fixed.
   const isScreenFreeToSleep = phase === 'recording' && recording.isWakeRefused;
   // The locator's note: what it says, and a count that grows with each tap, said again each time.
   const [mapNote, setMapNote] = useState<MapNoteGiven | null>(null);
   const handleMapNote = (note: MapNote | null) =>
     setMapNote((given) => (note ? { note, timesGiven: (given?.timesGiven ?? 0) + 1 } : null));
-  const [hasHadProblems, setHasHadProblems] = useState(false);
-  if ((recording.problem || isScreenFreeToSleep || mapNote) && !hasHadProblems) {
-    setHasHadProblems(true);
+  // The stops flagged while the toasts are drawn: one more says "Stop flagged". Back to none while
+  // they are not (signed out), so drawn again they never take an old flag for a new one.
+  const [stopsFlagged, setStopsFlagged] = useState(0);
+  if (accountGate !== 'ready' && stopsFlagged !== 0) setStopsFlagged(0);
+  const handleFlag = () => {
+    if (recording.markPlace()) setStopsFlagged((flagged) => flagged + 1);
+  };
+  const [hasHadToasts, setHasHadToasts] = useState(false);
+  if ((recording.problem || isScreenFreeToSleep || mapNote || stopsFlagged) && !hasHadToasts) {
+    setHasHadToasts(true);
   }
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
   // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
@@ -539,7 +546,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 <FlagStopButton
                   isRecording={phase === 'recording'}
                   canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
-                  onFlag={recording.markPlace}
+                  onFlag={handleFlag}
                 />
               </Suspense>
             ) : tutorialDemo ? (
@@ -566,12 +573,13 @@ export function ContributePage({ locator }: ContributePageProps) {
       {accountGate === 'ready' && (
         // A question on Record, History or Account holds the toolbar (toolbar-hold.tsx).
         <ToolbarHoldProvider>
-          {hasHadProblems && (
+          {hasHadToasts && (
             <Suspense fallback={null}>
               <PageToasts
                 problem={recording.problem}
                 isScreenFreeToSleep={isScreenFreeToSleep}
                 mapNote={mapNote}
+                stopsFlagged={stopsFlagged}
               />
             </Suspense>
           )}

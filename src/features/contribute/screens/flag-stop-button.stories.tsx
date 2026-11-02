@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { useState } from 'react';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { FlagStopButton } from './flag-stop-button';
+import { FlagStopButton, type FlagStopButtonProps } from './flag-stop-button';
+import { PageToasts } from '../notices/page-toasts';
 
 const meta = {
   title: 'Features/Contribute/FlagStopButton',
@@ -19,7 +21,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Recording, on Lakad or Sakay: a tap flags the place, and "Flagged" shows beside it a moment. */
+/** Recording, on Lakad or Sakay: a tap flags the place, and the page says "Stop flagged". */
 export const Default: Story = {};
 
 /** Paused: shown, disabled, as the Paused frame draws it. */
@@ -28,10 +30,45 @@ export const Paused: Story = { args: { isRecording: false } };
 /** The ride holds the most stops it can: it looks as Paused, keeps focus, and a tap does nothing. */
 export const AtTheLimit: Story = { args: { canFlag: false } };
 
-/** Just tapped: "Flagged" beside the button for a moment (no Figma design for the note yet). */
+/** The button as the page has it: each flag says "Stop flagged" in a toast at the top. */
+function WithPageToasts(props: FlagStopButtonProps) {
+  const [stopsFlagged, setStopsFlagged] = useState(0);
+  const handleFlag = () => {
+    props.onFlag();
+    setStopsFlagged((flagged) => flagged + 1);
+  };
+  return (
+    <>
+      <PageToasts
+        problem={null}
+        isScreenFreeToSleep={false}
+        mapNote={null}
+        stopsFlagged={stopsFlagged}
+      />
+      <FlagStopButton {...props} onFlag={handleFlag} />
+    </>
+  );
+}
+
+/** Tapped twice: one "Stop flagged" toast, said again in place, which leaves by itself. */
 export const JustFlagged: Story = {
-  play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Flag a stop' }));
-    await expect(within(canvasElement).getByText('Flagged')).toBeVisible();
+  decorators: [
+    (Story) => (
+      // A phone's screen: the toast floats at its top (transform-gpu holds the fixed toast inside).
+      <div className="h-150 w-97.5 transform-gpu">
+        <Story />
+      </div>
+    ),
+  ],
+  render: (args) => <WithPageToasts {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Flag a stop' });
+    await userEvent.click(button);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Stop flagged');
+    await userEvent.click(button);
+    await expect(args.onFlag).toHaveBeenCalledTimes(2);
+    await expect(canvas.getAllByTestId('toast')).toHaveLength(1);
+    await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull(), { timeout: 6000 });
   },
 };

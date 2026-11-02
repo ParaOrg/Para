@@ -173,13 +173,14 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Switched to ${MODE_LABEL[switched.to]}`);
   }
 
-  function markPlace() {
+  function markPlace(): boolean {
     const recording = currentRef.current;
-    if (!recording) return;
+    if (!recording) return false;
     const marked = markedRecording(recording, Date.now());
-    if (!marked) return;
+    if (!marked) return false;
     keep(marked.recording);
     setAnnouncement(`Flagged, ${marked.count}`);
+    return true;
   }
 
   return {

@@ -790,7 +790,7 @@ const buttons = (page) =>
     (await tintOf(page)) === 'sakay:from-green-700/10',
   );
 
-  // Flag a stop: Figma's flagstop pin where the trail is, a polite "Flagged", nothing to answer.
+  // Flag a stop: Figma's flagstop pin where the trail is, a "Stop flagged" toast, nothing to answer.
   const flagBox = await flagButton(page).boundingBox();
   const locatorBox = await locate(page).boundingBox();
   const styleBox = await page.getByRole('button', { name: 'Map design' }).boundingBox();
@@ -804,12 +804,24 @@ const buttons = (page) =>
     JSON.stringify([flagBox, styleBox, locatorBox]),
   );
   await flagButton(page).click();
-  await page.getByTestId('flagged-note').waitFor();
+  const stopFlagged = toastSaying(page, 'Stop flagged');
+  await stopFlagged.waitFor({ timeout: 5000 });
   check(
-    '  on Sakay a tap says "Flagged" on the screen and politely in the status line, with no dialog',
-    (await page.getByTestId('flagged-note').innerText()) === 'Flagged' &&
+    '  on Sakay a tap says "Stop flagged" in an info toast at the top, and politely, with no dialog',
+    (await page.getByTestId('toast').count()) === 1 &&
+      (await stopFlagged.getAttribute('data-kind')) === 'info' &&
       (await page.getByRole('status').filter({ hasText: 'Flagged, 1' }).count()) === 1 &&
+      (await page.getByRole('status').filter({ hasText: 'Stop flagged' }).count()) === 1 &&
       (await page.getByRole('dialog').count()) === 0,
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
+  check(
+    '  the dark "Flagged" pill beside the button is gone',
+    (await page.getByTestId('flagged-note').count()) === 0 &&
+      (await page.getByText('Flagged', { exact: true }).count()) === 0,
   );
   await shot(page, '3b-flagged');
   const marked = await mapSource(page);
@@ -829,8 +841,21 @@ const buttons = (page) =>
         );
       })),
   );
-  await page.getByTestId('flagged-note').waitFor({ state: 'detached', timeout: 5000 });
-  check('  "Flagged" goes away by itself', true);
+  // A second flag while it shows: the same toast, said again in place, never a second.
+  await flagButton(page).click();
+  await page.waitForTimeout(300);
+  check(
+    '  a second flag while it shows: still exactly one toast',
+    (await page.getByTestId('toast').count()) === 1 && (await stopFlagged.count()) === 1,
+    `${await page.getByTestId('toast').count()} toast(s)`,
+  );
+  check(
+    '  "Stop flagged" leaves by itself',
+    await stopFlagged.waitFor({ state: 'detached', timeout: 8000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
 
   // The locator's cycle: turn with the compass, north up again, a pan lets go, a tap follows.
   await face(page, 270);
@@ -942,7 +967,12 @@ const buttons = (page) =>
       file.savedAt !== null,
     `${file.modes.length} modes, ${file.fixes} fixes`,
   );
-  check('  and its mark', file.marks.length === 1 && Number.isFinite(file.marks[0].time));
+  // Two: the flag, and the second while "Stop flagged" showed.
+  check(
+    '  and its two marks',
+    file.marks.length === 2 && file.marks.every((mark) => Number.isFinite(mark.time)),
+    `${file.marks.length} marks`,
+  );
   await page.getByRole('button', { name: 'Record again' }).click();
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor();
   check(

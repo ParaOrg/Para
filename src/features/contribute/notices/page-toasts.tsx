@@ -8,6 +8,7 @@ import { useToast } from '@/shared/ui/use-toast';
 import type { MapNoteGiven } from './map-note';
 import type { PageProblem, PageProblemIcon } from './page-problem';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
+import { FlagStopIcon } from '../screens/flag-stop-icon';
 
 const ICONS = {
   location: <LocationIcon />,
@@ -21,6 +22,12 @@ interface PageToastsProps {
   isScreenFreeToSleep: boolean;
   /** The map locator's note, or null: said as a problem of its own id. */
   mapNote: MapNoteGiven | null;
+  /** How many stops have been flagged on the page: each one more says "Stop flagged". */
+  stopsFlagged: number;
+}
+
+interface FlagsSaidProps {
+  stopsFlagged: number;
 }
 
 interface ProblemsSaidProps {
@@ -31,9 +38,15 @@ interface ProblemsSaidProps {
 /**
  * The contributor page's problems, as toasts at the top (shared/ui's ToastHost): one at a time,
  * each until ✕ or until it is fixed. One closed with ✕ is not said again until it has cleared and
- * come back, or says something else. Loaded the first time the page has a problem.
+ * come back, or says something else. A flagged stop is said too, briefly. Loaded the first time
+ * the page has one of them to say.
  */
-export function PageToasts({ problem, isScreenFreeToSleep, mapNote }: PageToastsProps) {
+export function PageToasts({
+  problem,
+  isScreenFreeToSleep,
+  mapNote,
+  stopsFlagged,
+}: PageToastsProps) {
   // The recorder and the locator both say what is wrong with location, under one id: one toast.
   // The recorder's, when both have one, as it knows more; either going leaves the other's.
   const noteProblem: PageProblem | null =
@@ -46,8 +59,26 @@ export function PageToasts({ problem, isScreenFreeToSleep, mapNote }: PageToasts
   return (
     <ToastHost>
       <ProblemsSaid problems={problems} />
+      <FlagsSaid stopsFlagged={stopsFlagged} />
     </ToastHost>
   );
+}
+
+/**
+ * "Stop flagged", a small info toast that leaves by itself. Under one id, so a flag while it shows
+ * says it again in place, its clock started afresh, and never stacks a second.
+ */
+function FlagsSaid({ stopsFlagged }: FlagsSaidProps) {
+  const { showToast } = useToast();
+  // The count it last said at: the same count, as on a render with no new flag, says nothing.
+  const saidAt = useRef(0);
+  // Tells the host's queue, which is told rather than rendered.
+  useEffect(() => {
+    if (stopsFlagged <= saidAt.current) return;
+    saidAt.current = stopsFlagged;
+    showToast({ id: 'stop-flagged', kind: 'info', icon: <FlagStopIcon />, title: 'Stop flagged' });
+  }, [stopsFlagged, showToast]);
+  return null;
 }
 
 function ProblemsSaid({ problems }: ProblemsSaidProps) {
