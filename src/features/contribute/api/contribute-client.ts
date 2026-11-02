@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/shared/types/database.types';
 
+import { canUpload } from './contribute-config';
 import { contributeConfig } from './env';
 
 /** The contributor page's client, typed by the generated schema. */
@@ -14,37 +15,24 @@ export type ContributeClient = SupabaseClient<Database>;
  */
 export const CONTRIBUTOR_AUTH_KEY = 'para.contributor-auth';
 
-let isConnected = false;
 let client: Promise<ContributeClient> | null = null;
 
-/**
- * Called by the page's entry point: this page may sign in and upload. The client itself is
- * made when the page first asks who is signed in, and its code is precached, so a signed-in
- * phone opens and records with no signal; only signing in and uploading need it.
- */
-export function connectContributions(): void {
-  isConnected = contributeConfig !== null;
-}
-
-/** Whether this build can upload at all; without config, recordings stay on the phone. */
-export function canUpload(): boolean {
-  return isConnected;
-}
+/** A client handed in by setContributeClient: the unit checks' stand-in. */
+let standIn: ContributeClient | null = null;
 
 /**
  * Hands the page a client made elsewhere, in place of its own: the unit checks' stand-in, which
  * answers each database call as the check needs.
  */
 export function setContributeClient(next: ContributeClient): void {
-  isConnected = true;
-  client = Promise.resolve(next);
+  standIn = next;
 }
 
 /** This page's client, loaded on first use, or null when it cannot upload. */
 export function contributeClient(): Promise<ContributeClient> | null {
-  if (isConnected && client) return client;
+  if (standIn) return Promise.resolve(standIn);
   const config = contributeConfig;
-  if (!isConnected || !config) return null;
+  if (!canUpload() || !config) return null;
   client ??= import('@supabase/supabase-js').then(({ createClient }) =>
     createClient<Database>(config.url, config.key, {
       auth: { storageKey: CONTRIBUTOR_AUTH_KEY, persistSession: true, detectSessionInUrl: false },

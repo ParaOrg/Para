@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 
-import { VEHICLE_OF } from './pack-recording';
+import { VEHICLE_OF } from './contribution-vehicles';
 import { requireClient } from './require-client';
 import { answerError } from './upload-contribution';
 import { UploadError } from './upload-problem';
