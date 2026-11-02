@@ -288,6 +288,45 @@ const buttons = (page) =>
   );
 }
 
+// ------------------------------------ light always: the phone's dark theme changes nothing
+{
+  const { page, errors } = await phone({ earlierConsent: true });
+  const start = page.getByRole('button', { name: 'Start Tracking' });
+  await start.waitFor({ timeout: 20000 });
+  const colours = async () => ({
+    ...(await page.evaluate(() => ({
+      isDark: matchMedia('(prefers-color-scheme: dark)').matches,
+      // Chrome writes "only light" back as "light only".
+      scheme: getComputedStyle(document.documentElement).colorScheme,
+      meta: document.querySelector('meta[name="color-scheme"]')?.getAttribute('content'),
+      page: [document.documentElement, document.body].map(
+        (e) => getComputedStyle(e).backgroundColor,
+      ),
+      text: getComputedStyle(document.body).color,
+    }))),
+    button: await start.evaluate((b) => {
+      const style = getComputedStyle(b);
+      return [style.backgroundColor, style.color];
+    }),
+  });
+  await page.emulateMedia({ colorScheme: 'light' });
+  const light = await colours();
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const dark = await colours();
+  check(
+    'the phone in its dark theme: the contributor page stays light (color-scheme "only light")',
+    dark.isDark && dark.scheme === 'light only' && dark.meta === 'only light',
+    JSON.stringify(dark),
+  );
+  check(
+    '  every colour as in the light theme: the page, its words and Start Tracking',
+    JSON.stringify({ ...light, isDark: null }) === JSON.stringify({ ...dark, isDark: null }),
+    `${JSON.stringify(light)} vs ${JSON.stringify(dark)}`,
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------------------------ the tutorial
 {
   const { page, errors } = await phone({ earlierConsent: true });

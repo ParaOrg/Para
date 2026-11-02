@@ -43,6 +43,8 @@
  * keeps clear of what the page stands there (`--dock-foot`, locator.tsx).
  */
 :root {
+  /* Light only, as index.html says: form controls and scroll bars stay light in a dark theme. */
+  color-scheme: only light;
   --dock-foot: var(--stack-room, 0px);
   /* Figma's Start (4485:24815) stands the map-type and locator column 16px over the tabs and
      16px in from the edge, where the public map keeps 12px. */

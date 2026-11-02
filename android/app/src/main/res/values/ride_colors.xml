@@ -5,8 +5,10 @@
   content-primary (neutral-900), content-quaternary (neutral-600), content-disabled (neutral-500);
   its status dot: blue-100 round blue-700 on Lakad, green-200 round green-700 on Sakay,
   surface-tertiary (neutral-150) round content-primary while paused.
+  Light always (the owner, 2026-11-02): the card draws its own white surface in a dark theme too.
 -->
 <resources>
+    <color name="ride_surface">#ffffff</color>
     <color name="ride_content_primary">#171717</color>
     <color name="ride_content_quaternary">#525252</color>
     <color name="ride_content_disabled">#737373</color>
