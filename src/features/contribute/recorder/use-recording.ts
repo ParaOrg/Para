@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 
 import { locationProblem } from './location-problem';
-import { keepsRecordingInBackground } from './native-fixes';
 import { takeWatchedFixes } from './recording-fixes';
 import { markedRecording } from './recording-marks';
 import { MODE_LABEL, currentMode } from './recording-rules';
@@ -23,6 +22,7 @@ import { useRecordingInHand } from './use-recording-in-hand';
 import { useRecordingSave } from './use-recording-save';
 import { useRideNotice } from './use-ride-notice';
 import { useWakeLock } from './use-wake-lock';
+import { keepsRecordingInBackground } from '../native-bridge/native-fixes';
 import { useSavedRecordings } from '../storage/use-saved-recordings';
 
 /** The app's ride notification: the web build has none, and drops the hook and its code with it. */

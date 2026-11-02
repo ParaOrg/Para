@@ -5,7 +5,12 @@ import { mergeGaps } from '@/features/routes/model/ride-recording';
 import { currentMode } from './recording-rules';
 import type { Phase } from './recording-state';
 import { withRideTaps } from './ride-events';
-import { dropRideTaps, onRideTap, readRideTaps, tellRideNotice } from './ride-notice-bridge';
+import {
+  dropRideTaps,
+  onRideTap,
+  readRideTaps,
+  tellRideNotice,
+} from '../native-bridge/ride-notice-bridge';
 import type { Recording } from '../storage/recording-schema';
 
 interface RideNoticeOptions {

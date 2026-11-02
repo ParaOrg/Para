@@ -2,7 +2,7 @@
 // the build check holds native/ to the app's own build.
 import type { CapacitorGlobal, HttpResponse } from '@capacitor/core';
 
-import { textOfResponse } from '../app-update/response-text';
+import { textOfResponse } from './response-text';
 
 type NativeHttp = (options: { url: string; responseType: 'text' }) => Promise<HttpResponse>;
 
