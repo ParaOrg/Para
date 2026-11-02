@@ -20,6 +20,7 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-client';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
+import { OPENABLE_SCREENS_ATTR } from './common/data-attributes';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
@@ -539,15 +540,17 @@ export function ContributePage({ locator }: ContributePageProps) {
     <main
       // The toolbar's screens that can open now: a move to any other draws nothing to wait for
       // (tab-motion.ts).
-      data-screens={[
-        canSend && SCREENS.history.hash,
-        hasAccount && SCREENS.profile.hash,
-        hasAccount && SCREENS.accountSettings.hash,
-        hasAccount && SCREENS.changePassword.hash,
-        hasAccount && SCREENS.deleteAccount.hash,
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      {...{
+        [OPENABLE_SCREENS_ATTR]: [
+          canSend && SCREENS.history.hash,
+          hasAccount && SCREENS.profile.hash,
+          hasAccount && SCREENS.accountSettings.hash,
+          hasAccount && SCREENS.changePassword.hash,
+          hasAccount && SCREENS.deleteAccount.hash,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      }}
       className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"
     >
       {/* inert while a screen or a question covers it: no map control can be tabbed to, or

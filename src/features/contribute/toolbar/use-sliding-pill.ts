@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 
 import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
+import { TOOLBAR_TAB_ATTR } from '../common/data-attributes';
 import { PILL, PILL_FADE, PILL_QUICK, PILL_QUICK_FADE } from '../motion/motion';
 import { isMoveInRun } from '../motion/tab-motion';
 
@@ -27,7 +28,7 @@ export function notePillAt(tab: string, left: number): void {
  * with.
  */
 function glidePill(bar: HTMLElement, pill: HTMLElement, to: string, isQuick: boolean): void {
-  const tabOf = (name: string) => bar.querySelector<HTMLElement>(`[data-tab="${name}"]`);
+  const tabOf = (name: string) => bar.querySelector<HTMLElement>(`[${TOOLBAR_TAB_ATTR}="${name}"]`);
   const tab = tabOf(to);
   if (!tab) return;
   // Read before the glide under way is let go. A pill not yet placed has no place to start from.
@@ -44,7 +45,7 @@ function glidePill(bar: HTMLElement, pill: HTMLElement, to: string, isQuick: boo
   if (!from || from.tab === to) return;
   // The last move's glide and its tabs' colour fades give way to this one.
   for (const glide of glides) glide.cancel();
-  for (const each of bar.querySelectorAll('[data-tab]')) {
+  for (const each of bar.querySelectorAll(`[${TOOLBAR_TAB_ATTR}]`)) {
     for (const fade of each.getAnimations()) fade.cancel();
   }
   if (prefersReducedMotion()) return;

@@ -1,6 +1,11 @@
 import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
 import { MOVE } from './motion';
+import {
+  OPENABLE_SCREENS_ATTR,
+  SCREEN_HASH_ATTR,
+  TOOLBAR_TAB_ATTR,
+} from '../common/data-attributes';
 import { orderOf, SCREENS } from '../navigation/screen-routes';
 
 import './tab-motion.css';
@@ -64,11 +69,13 @@ export function screenEntryDirection(): MotionDirection | null {
  */
 function isDrawn(hash: string): boolean {
   // A screen kept but hidden (contribute-page.tsx) is not drawn.
-  const screens = [...document.querySelectorAll('[data-screen-hash]')].filter((screen) =>
+  const screens = [...document.querySelectorAll(`[${SCREEN_HASH_ATTR}]`)].filter((screen) =>
     screen.checkVisibility(),
   );
   if (orderOf(hash) === undefined) return true;
-  const openable = document.querySelector('[data-screens]')?.getAttribute('data-screens');
+  const openable = document
+    .querySelector(`[${OPENABLE_SCREENS_ATTR}]`)
+    ?.getAttribute(OPENABLE_SCREENS_ATTR);
   if (
     hash !== SCREENS.record.hash &&
     openable !== null &&
@@ -77,7 +84,7 @@ function isDrawn(hash: string): boolean {
   )
     return true;
   if (hash === SCREENS.record.hash) return screens.length === 0;
-  return screens.some((screen) => screen.getAttribute('data-screen-hash') === hash);
+  return screens.some((screen) => screen.getAttribute(SCREEN_HASH_ATTR) === hash);
 }
 
 /**
@@ -147,23 +154,25 @@ document.addEventListener(
   'click',
   (event) => {
     if (!running || event.target !== document.documentElement) return;
-    const tab = [...document.querySelectorAll<HTMLElement>('[data-tab]')].find((candidate) => {
-      // A toolbar out of reach (held by a question, under the credits) takes no tap this way
-      // either: it is hidden or inert, and so is its tab.
-      if (
-        candidate.closest('[inert]') ||
-        !candidate.checkVisibility({ visibilityProperty: true })
-      ) {
-        return false;
-      }
-      const box = candidate.getBoundingClientRect();
-      return (
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom
-      );
-    });
+    const tab = [...document.querySelectorAll<HTMLElement>(`[${TOOLBAR_TAB_ATTR}]`)].find(
+      (candidate) => {
+        // A toolbar out of reach (held by a question, under the credits) takes no tap this way
+        // either: it is hidden or inert, and so is its tab.
+        if (
+          candidate.closest('[inert]') ||
+          !candidate.checkVisibility({ visibilityProperty: true })
+        ) {
+          return false;
+        }
+        const box = candidate.getBoundingClientRect();
+        return (
+          event.clientX >= box.left &&
+          event.clientX <= box.right &&
+          event.clientY >= box.top &&
+          event.clientY <= box.bottom
+        );
+      },
+    );
     if (!tab) return;
     event.stopPropagation();
     tab.click();

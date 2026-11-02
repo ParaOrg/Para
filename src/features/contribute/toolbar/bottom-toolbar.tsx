@@ -4,6 +4,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { useSlidingPill } from './use-sliding-pill';
 import { useToolbarSlide } from './use-toolbar-slide';
+import { TOOLBAR_TAB_ATTR } from '../common/data-attributes';
 
 import '../screens/start-icons.css';
 
@@ -119,7 +120,11 @@ interface TabProps {
 function Tab({ name, isCurrent, onClick, onPointerDown, ref, children }: TabProps) {
   if (isCurrent) {
     return (
-      <span data-tab={name} aria-current="page" className={cn(TAB, 'text-content-primary')}>
+      <span
+        {...{ [TOOLBAR_TAB_ATTR]: name }}
+        aria-current="page"
+        className={cn(TAB, 'text-content-primary')}
+      >
         {children}
       </span>
     );
@@ -127,7 +132,7 @@ function Tab({ name, isCurrent, onClick, onPointerDown, ref, children }: TabProp
   return (
     <button
       ref={ref}
-      data-tab={name}
+      {...{ [TOOLBAR_TAB_ATTR]: name }}
       type="button"
       onPointerDown={() => onPointerDown?.(name)}
       onClick={onClick}

@@ -7,6 +7,7 @@ import type { ProfileFields } from './account-fields';
 import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
 import { SettingsHeader } from './settings-header';
+import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
@@ -62,7 +63,7 @@ export function AccountSettingsScreen({
     <section
       ref={entryRef}
       aria-labelledby="account-settings-heading"
-      data-screen-hash={SCREENS.accountSettings.hash}
+      {...{ [SCREEN_HASH_ATTR]: SCREENS.accountSettings.hash }}
       className="tab-screen absolute inset-0 z-30 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
       <div className="flex min-h-0 flex-1 flex-col">

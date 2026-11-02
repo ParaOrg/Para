@@ -5,9 +5,9 @@ import { CreditsButton } from '@/features/routes/map/credits-button';
 import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
+import { START_BUTTON_ATTR } from '../common/data-attributes';
 import { useHeightVar } from '../common/use-height-var';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
-import { START_BUTTON_ATTR } from '../motion/start-morph-attrs';
 import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 
 // The update gate exists in the Android app's build only: on the web this is null and the chunk is

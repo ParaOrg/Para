@@ -1,5 +1,6 @@
 import { Button } from '@/design-system/primitives/button';
 
+import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useFocusHeading } from '../common/use-focus-heading';
 import type { ScreenHash } from '../navigation/screen-routes';
 import { TOOLBAR_ROOM } from '../toolbar/toolbar-place';
@@ -30,7 +31,7 @@ export function ScreenUnavailable({
   const headingRef = useFocusHeading();
   return (
     <section
-      data-screen-hash={screenHash}
+      {...{ [SCREEN_HASH_ATTR]: screenHash }}
       aria-labelledby="screen-unavailable-heading"
       className="tab-screen absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-surface px-8 text-center font-sn-pro text-content-primary"
     >
