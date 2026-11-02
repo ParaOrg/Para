@@ -6,7 +6,7 @@ import { RecordingCard } from './recording-card';
 import { TrackingButton } from './tracking-button';
 import { BackToMapButton } from '../common/back-to-map-button';
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useStackRoom } from '../common/use-stack-room';
+import { useHeightVar } from '../common/use-height-var';
 import type { RecordingFigures } from '../recorder/recording-figures';
 
 interface UnfinishedScreenProps {
@@ -32,7 +32,7 @@ export function UnfinishedScreen({
   creditsButtonRef,
 }: UnfinishedScreenProps) {
   const headingRef = useFocusHeading();
-  const stackRef = useStackRoom();
+  const stackRef = useHeightVar('--stack-room');
   return (
     <>
       <BackToMapButton />

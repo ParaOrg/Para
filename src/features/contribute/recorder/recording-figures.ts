@@ -2,7 +2,7 @@ import { summarize, type Fix, type RideSummary } from '@/features/routes/model/r
 
 import type { Recording } from '../storage/recording-schema';
 
-/** What the stats strip shows. */
+/** What the recording card's figures show. */
 export interface RecordingFigures {
   elapsedSeconds: number;
   distanceM: number;

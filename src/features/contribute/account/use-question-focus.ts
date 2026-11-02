@@ -9,7 +9,7 @@ import { useHoldToolbar } from '../common/toolbar-hold';
  * last, has it as the question opens, and Tab goes round the buttons that can be
  * pressed. Escape cancels. Once the answer is under way nothing cancels it: Escape waits, and the
  * question's heading holds focus while both buttons are off, so it never drops out of the dialog.
- * The page's toolbar steps aside while it is open (toolbar-hold.ts).
+ * The page's toolbar steps aside while it is open (toolbar-hold.tsx).
  */
 export function useQuestionFocus(
   dialogRef: RefObject<HTMLElement | null>,
