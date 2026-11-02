@@ -1,17 +1,21 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 
 import { MapView } from '@/features/routes/map/map-view';
 import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
-import { MapFrost } from './map-frost';
+import type { MapWhere } from './map-where';
+import type { PausedFrostProps } from './paused-frost';
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
 import type { MapNote } from '../notices/map-note';
 
 // Fetched when a recording's form opens, not with the page.
 const loadCapture = retryingImport(() => import('./capture-trail-picture'));
+// The paused frost, out of the page's opening: fetched once a recording is on, before any pause,
+// so its first ease in plays.
+const loadFrost = retryingImport(() => import('./paused-frost'));
 
 /** What the page draws on the map besides the trail: the shell's locator, which this feature may not import. */
 export type ContributeLocatorSlot = (
@@ -21,6 +25,8 @@ export type ContributeLocatorSlot = (
   mark: ReactNode,
   /** The locator's note for the page to say, given again on each tap; null once it is not true. */
   onNote: (note: MapNote | null) => void,
+  /** Where the rider's dot is, as it moves; null without a fix. The paused frost clears there. */
+  onWhere: (where: MapWhere | null) => void,
 ) => ReactNode;
 
 interface ContributeMapProps {
@@ -63,6 +69,26 @@ export function ContributeMap({
 }: ContributeMapProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  // The rider's dot, from the locator: the paused frost clears round it, and follows it.
+  const [where, setWhere] = useState<MapWhere | null>(null);
+  // Drawn once its chunk is here, never suspended: a suspended part would hold back the update
+  // that starts the recording, and with it Start's morph into the card.
+  const [PausedFrost, setPausedFrost] = useState<ComponentType<PausedFrostProps> | null>(null);
+  useEffect(() => {
+    if (!isRecording || PausedFrost) return;
+    let isGone = false;
+    loadFrost()
+      .then((chunk) => {
+        if (!isGone) setPausedFrost(() => chunk.PausedFrost);
+      })
+      .catch((error: unknown) => {
+        // Offline: the map stays clear while paused, and the next recording asks again.
+        console.warn('The paused frost could not be loaded; the map stays clear.', error);
+      });
+    return () => {
+      isGone = true;
+    };
+  }, [isRecording, PausedFrost]);
 
   usePublishedRoutes(map, isMapLoaded);
   useRecordingTrail(map, track.trail);
@@ -109,8 +135,8 @@ export function ContributeMap({
         isCovered={isCovered}
       />
       {/* Over the map's canvas, under the locator's buttons (drawn after it) and every screen. */}
-      <MapFrost isFrosted={isFrosted} />
-      {map && locator?.(map, isMapLoaded, isRecording, mark, onMapNote)}
+      {PausedFrost && <PausedFrost map={map} where={where} isFrosted={isFrosted} />}
+      {map && locator?.(map, isMapLoaded, isRecording, mark, onMapNote, setWhere)}
     </>
   );
 }

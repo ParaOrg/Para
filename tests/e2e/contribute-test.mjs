@@ -797,7 +797,6 @@ const buttons = (page) =>
   );
   const frosted = await page.evaluate(() => {
     const layer = document.querySelector('[data-map-frost]');
-    const style = getComputedStyle(layer);
     // What a tap at an element's middle reaches, and whether any of its ancestors is filtered.
     const crisp = (el) => {
       if (!el) return 'missing';
@@ -808,23 +807,87 @@ const buttons = (page) =>
       }
       return hit && (el === hit || el.contains(hit)) ? 'crisp' : 'covered';
     };
+    const box = layer.getBoundingClientRect();
+    const dot = document.querySelector('[data-testid="locator-overlay"]').getBoundingClientRect();
+    const rings = [...layer.querySelectorAll('[data-frost-ring]')].map((ring) => ({
+      blur: Number(/blur\(([\d.]+)px\)/.exec(getComputedStyle(ring).backdropFilter)?.[1]),
+      mask: getComputedStyle(ring).maskImage,
+    }));
     return {
-      blur: style.backdropFilter,
-      wash: style.backgroundColor,
+      centre: [Number(layer.dataset.frostX), Number(layer.dataset.frostY)],
+      clear: Number(layer.dataset.frostClear),
+      dot: [dot.left + dot.width / 2 - box.left, dot.top + dot.height / 2 - box.top],
+      blurs: rings.map((ring) => ring.blur),
+      reached: Math.hypot(...rings.map((ring) => ring.blur)),
+      masked: rings.every((ring) => ring.mask.startsWith('radial-gradient')),
+      wash: getComputedStyle(layer.querySelector('[data-frost-wash]')).backgroundColor,
       card: crisp(document.querySelector('[aria-label="Recording so far"]')),
       resume: crisp([...document.querySelectorAll('button')].find((b) => b.innerText === 'Resume')),
       mapDesign: crisp(document.querySelector('button[aria-label="Map design"]')),
     };
   });
   check(
-    '  paused, the map is frosted (a 6 px blur and a faint white wash), the card and map buttons crisp over it',
-    frosted.blur === 'blur(6px)' &&
+    '  paused, the map is frosted round the dot: clear at it, four layers to an 8 px blur, a faint white wash, the card and map buttons crisp over it',
+    Math.hypot(frosted.centre[0] - frosted.dot[0], frosted.centre[1] - frosted.dot[1]) < 2 &&
+      frosted.clear >= 80 &&
+      frosted.blurs.length === 4 &&
+      Math.abs(frosted.reached - 8) < 0.05 &&
+      frosted.masked &&
       // The surface's white at 25%, however the browser writes the colour.
       /[,/] ?0\.25\)$/.test(frosted.wash) &&
       frosted.card === 'crisp' &&
       frosted.resume === 'crisp' &&
       frosted.mapDesign === 'crisp',
     JSON.stringify(frosted),
+  );
+  // The pixels: the frost against the same moment without it. Round the dot (outside the dot
+  // itself, inside the clear radius) nothing changes; at the map's left edge it does.
+  const mapBox = await page.locator('[data-map-frost]').boundingBox();
+  const mapShot = () => page.screenshot({ clip: mapBox }).then((png) => png.toString('base64'));
+  const withFrost = await mapShot();
+  await page.evaluate(() => {
+    document.querySelector('[data-map-frost]').style.display = 'none';
+  });
+  const withoutFrost = await mapShot();
+  await page.evaluate(() => {
+    document.querySelector('[data-map-frost]').style.display = '';
+  });
+  const changed = await page.evaluate(
+    async ([a, b, [x, y], scale]) => {
+      const pixels = async (src) => {
+        const img = document.createElement('img');
+        img.src = `data:image/png;base64,${src}`;
+        await img.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const context = canvas.getContext('2d');
+        context.drawImage(img, 0, 0);
+        return context.getImageData(0, 0, img.width, img.height);
+      };
+      const [one, two] = await Promise.all([pixels(a), pixels(b)]);
+      const at = (image, px, py) => {
+        const i = (Math.round(py * scale) * image.width + Math.round(px * scale)) * 4;
+        return [image.data[i], image.data[i + 1], image.data[i + 2]];
+      };
+      const differ = (points) =>
+        points.reduce((sum, [px, py]) => {
+          const [p, q] = [at(one, px, py), at(two, px, py)];
+          return sum + Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) + Math.abs(p[2] - q[2]);
+        }, 0) / points.length;
+      const round = [...Array(24)].map((_, k) => [
+        x + 40 * Math.cos((k * Math.PI) / 12),
+        y + 40 * Math.sin((k * Math.PI) / 12),
+      ]);
+      const edge = [...Array(24)].map((_, k) => [4, 40 + k * 10]);
+      return { nearDot: differ(round), edge: differ(edge) };
+    },
+    [withFrost, withoutFrost, frosted.dot, 2],
+  );
+  check(
+    '  the dot’s street keeps its own pixels; the map’s edge is frosted',
+    changed.nearDot < 1 && changed.edge > 2,
+    JSON.stringify(changed),
   );
   await page.getByRole('button', { name: 'Resume' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
