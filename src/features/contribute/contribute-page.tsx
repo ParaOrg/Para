@@ -1,27 +1,45 @@
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
-  lazy,
   Suspense,
   useCallback,
   useEffect,
   useRef,
   useState,
   type ComponentProps,
-  type ComponentType,
   type ReactNode,
 } from 'react';
 import { flushSync } from 'react-dom';
 
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { cn } from '@/shared/utils/cn';
-import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-client';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { OPENABLE_SCREENS_ATTR } from './common/data-attributes';
 import { useEarlierQuestion } from './consent/use-earlier-question';
+import {
+  AccountGate,
+  FlagStopButton,
+  MapDataSourceView,
+  PageToasts,
+  PermissionsOnboarding,
+  RecordingScreen,
+  SaveForm,
+  StopRecordingScreen,
+  Tutorial,
+  UnfinishedScreen,
+  UploadCheck,
+  lazyScreens,
+  loadFlagStopButton,
+  loadForgetOtherAccounts,
+  loadRecordingScreen,
+  loadSaveForm,
+  loadStopRecordingScreen,
+  loadUnfinishedScreen,
+  makeLazyScreens,
+} from './lazy-screens';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
 import { useStartMorph } from './motion/use-start-morph';
@@ -36,10 +54,10 @@ import {
   uploadFailedProblem,
   type RouteRecordedGiven,
 } from './notices/route-recorded';
+import { pageLayout, pageScreens } from './page-layout';
 import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { accountChunk, historyChunk, warmScreen } from './screen-loaders';
-import type { FlagStopButtonProps } from './screens/flag-stop-button';
 import { ReadyScreen } from './screens/ready-screen';
 import { ScreenUnavailable } from './screens/screen-unavailable';
 import { isStopQuestionShown, stopQuestionIn, type StopAskedWhile } from './screens/stop-question';
@@ -52,33 +70,8 @@ import { TUTORIAL_ENTRY, isTutorialEntry } from './tutorial/tutorial-entry';
 import type { TutorialDemo } from './tutorial/tutorial-steps';
 import { useUploads } from './uploads/use-uploads';
 
-/*
- * History and Account, drawn at once when their chunk is already here (screen-loaders.ts), else
- * through React.lazy. A lazy screen whose fetch failed stays failed for good: ScreenUnavailable's
- * Try again makes fresh ones (makeLazyScreens) before it draws the screen again. Not on the
- * failure itself: React renders a failed screen a second time, and a fresh one there would fetch
- * again, fail again, and never stop.
- */
-const lazyHistory = () =>
-  lazy(() => historyChunk.load().then((chunk) => ({ default: chunk.HistoryView })));
-const lazyAccount = () =>
-  lazy(() => accountChunk.load().then((chunk) => ({ default: chunk.AccountView })));
-let LazyHistoryView = lazyHistory();
-let LazyAccountView = lazyAccount();
-function makeLazyScreens(): void {
-  LazyHistoryView = lazyHistory();
-  LazyAccountView = lazyAccount();
-}
-
-type HistoryViewProps = ComponentProps<typeof LazyHistoryView>;
-type AccountViewProps = ComponentProps<typeof LazyAccountView>;
-
-// The map's credits, opened from the ⓘ on Start: fetched on the tap, not with the page.
-const MapDataSourceView = lazy(() =>
-  import('@/features/routes/map/map-data-source-view').then((module) => ({
-    default: module.MapDataSourceView,
-  })),
-);
+type HistoryViewProps = ComponentProps<typeof lazyScreens.history>;
+type AccountViewProps = ComponentProps<typeof lazyScreens.account>;
 
 interface ToolbarPlaceProps {
   /** Under something that holds the page (the credits): out of reach, still in sight. */
@@ -104,75 +97,15 @@ function ToolbarPlace({ isOutOfReach, children }: ToolbarPlaceProps) {
  * arriving later never swaps it for another and resets its scroll, menus and focus.
  */
 function HistoryView(props: HistoryViewProps) {
-  const [Screen] = useState(() => historyChunk.loaded()?.HistoryView ?? LazyHistoryView);
+  const [Screen] = useState(() => historyChunk.loaded()?.HistoryView ?? lazyScreens.history);
   return <Screen {...props} />;
 }
 
 /** Account, as History: at once if its chunk is here, else lazily, decided once as it opens. */
 function AccountView(props: AccountViewProps) {
-  const [Screen] = useState(() => accountChunk.loaded()?.AccountView ?? LazyAccountView);
+  const [Screen] = useState(() => accountChunk.loaded()?.AccountView ?? lazyScreens.account);
   return <Screen {...props} />;
 }
-// The toasts that say what went wrong, fetched the first time something does.
-const loadPageToasts = retryingImport(() => import('./notices/page-toasts'));
-const PageToasts = lazy(() => loadPageToasts().then((module) => ({ default: module.PageToasts })));
-// Shown only once a recording is under way or found open, never on the page's first paint. Ready
-// fetches them as it opens (below), so Start never waits on the network, nor fails without one.
-// A fetch ahead that failed offline does not leave them unreachable: each asks again afresh.
-const loadRecordingScreen = retryingImport(() => import('./screens/recording-screen'));
-const loadUnfinishedScreen = retryingImport(() => import('./screens/unfinished-screen'));
-const loadForgetOtherAccounts = retryingImport(() => import('./api/forget-other-accounts'));
-const loadStopRecordingScreen = retryingImport(() => import('./screens/stop-recording-screen'));
-const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
-const loadSaveForm = retryingImport(() => import('./screens/save-form'));
-// The check before a first upload, with Cloudflare's widget: fetched only when one is asked for.
-const loadUploadCheck = retryingImport(() => import('./uploads/upload-check'));
-const UploadCheck = lazy(() =>
-  loadUploadCheck().then((module) => ({ default: module.UploadCheck })),
-);
-const loadTutorial = retryingImport(() => import('./tutorial/tutorial'));
-const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: module.Tutorial })));
-const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
-const RecordingScreen = lazy(() =>
-  loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
-);
-const StopRecordingScreen = lazy(() =>
-  loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),
-);
-/** Flag a stop's place when its code could not be fetched: nothing, and the ride goes on. */
-function NoFlagStopButton(): null {
-  return null;
-}
-// Not fetched (offline before the worker kept it): the ride records on without the button, rather
-// than the failed load taking the page down with it.
-const FlagStopButton = lazy<ComponentType<FlagStopButtonProps>>(() =>
-  loadFlagStopButton().then(
-    (module) => ({ default: module.FlagStopButton }),
-    (error: unknown) => {
-      console.warn('Flag a stop could not be fetched; the ride records without it.', error);
-      return { default: NoFlagStopButton };
-    },
-  ),
-);
-const UnfinishedScreen = lazy(() =>
-  loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),
-);
-// Sign-in, sign-up and the profile step show only to a phone with no finished account, and bring
-// the form fields and their checks with them: after the first sign-in the page never opens them.
-const AccountGate = lazy(() =>
-  import('./account/account-gate').then((module) => ({ default: module.AccountGate })),
-);
-
-// The permissions screen exists in the Android app's build only: on the web this is null and the
-// chunk is never built.
-const PermissionsOnboarding =
-  import.meta.env.MODE === 'apk'
-    ? lazy(() =>
-        import('./native/permissions-onboarding').then((module) => ({
-          default: module.PermissionsOnboarding,
-        })),
-      )
-    : null;
 
 /** How long Start waits for the browser's idle time before fetching History and Account anyway. */
 const WARM_SCREENS_WITHIN_MS = 2000;
@@ -239,22 +172,12 @@ export function ContributePage({ locator }: ContributePageProps) {
   const settings = useScreenView('accountSettings');
   const changePassword = useScreenView('changePassword');
   const deleteAccount = useScreenView('deleteAccount');
-  // Account settings and the screens inside it, which Account shows in its place, with no toolbar.
-  const isInsideAccount = settings.isOpen || changePassword.isOpen || deleteAccount.isOpen;
   const { phase, figures } = recording;
-  // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
+  // The Android app's permissions screen, once per phone, after sign-in: the screen itself closes
+  // at once if every permission is granted.
   const [isPermissionsPending, setIsPermissionsPending] = useState(
     () => PermissionsOnboarding !== null && isNativeApp() && !hasSeenPermissionsScreen(),
   );
-  const isPermissionsShown = isPermissionsPending && accountGate === 'ready' && phase === 'ready';
-  const isHistoryShown = phase === 'ready' && canSend && history.isOpen && !isPermissionsShown;
-  const isProfileShown =
-    phase === 'ready' &&
-    accountGate === 'ready' &&
-    canUpload() &&
-    (profile.isOpen || isInsideAccount) &&
-    !isPermissionsShown;
-  const isRecordingShown = phase === 'recording' || phase === 'paused';
   // Said in toasts at the top: what went wrong, until closed or fixed (the recorder's problem, a
   // recording running with the screen free to sleep), and a stop just flagged. Their code is
   // fetched the first time there is one, then kept, to take them away once fixed.
@@ -305,31 +228,9 @@ export function ContributePage({ locator }: ContributePageProps) {
   ) {
     setHasHadToasts(true);
   }
-  // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
-  // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
-  // rest. Signed out, they go.
-  const [isHistoryKept, setIsHistoryKept] = useState(false);
-  if (isHistoryShown && !isHistoryKept) setIsHistoryKept(true);
-  if (!canSend && isHistoryKept) setIsHistoryKept(false);
-  const [isProfileKept, setIsProfileKept] = useState(false);
-  if (isProfileShown && !isProfileKept) setIsProfileKept(true);
-  if (!canSend && isProfileKept) setIsProfileKept(false);
   // The tutorial, from Record's ?; under its later steps, a demo recording in Record's place.
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [tutorialDemo, setTutorialDemo] = useState<TutorialDemo>(null);
-  // Only over Ready: a ride, or the account gate, taking its place ends it, demo and all.
-  // A hash move (the browser's Forward onto History, say) ends it as a ride does.
-  const isTutorialShown =
-    isTutorialOpen &&
-    phase === 'ready' &&
-    accountGate === 'ready' &&
-    !isHistoryShown &&
-    !isProfileShown &&
-    !isPermissionsShown;
-  if (isTutorialOpen && !isTutorialShown) {
-    setIsTutorialOpen(false);
-    setTutorialDemo(null);
-  }
   const helpButtonRef = useRef<HTMLButtonElement>(null);
   // Back on Record, focus goes back to the ? that opened it, as a closed sheet hands it back.
   const closeTutorialNow = useCallback(() => {
@@ -354,25 +255,12 @@ export function ContributePage({ locator }: ContributePageProps) {
     window.addEventListener('popstate', closeTutorialNow);
     return () => window.removeEventListener('popstate', closeTutorialNow);
   }, [isTutorialOpen, closeTutorialNow]);
-  const isStartShown =
-    accountGate === 'ready' &&
-    phase === 'ready' &&
-    !isHistoryShown &&
-    !isProfileShown &&
-    !isPermissionsShown &&
-    tutorialDemo === null;
   // The map's credits, over Start, a recording or one left open: closed by ✕, Escape or a tap on
   // the dimmed map. Their own ⓘ opens them; every other screen over the map keeps MapLibre's
   // corner ⓘ.
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   // Closed and sliding down: still drawn, the page under it live again.
   const [isCreditsLeaving, setIsCreditsLeaving] = useState(false);
-  // The recording screen's ⓘ is there once the screen is, with the figures it waits for.
-  const hasCreditsButton =
-    isStartShown ||
-    (accountGate === 'ready' && (isRecordingShown || phase === 'unfinished') && figures !== null);
-  const isCreditsShown = hasCreditsButton && isCreditsOpen;
-  const isCreditsDrawn = hasCreditsButton && (isCreditsOpen || isCreditsLeaving);
   // The recording card folded away, by the recording it was folded on: each recording opens with
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
   const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
@@ -384,18 +272,43 @@ export function ContributePage({ locator }: ContributePageProps) {
   const [stopAskedWhile, setStopAskedWhile] = useState<StopAskedWhile>(null);
   if (stopQuestionIn(phase, stopAskedWhile) !== stopAskedWhile) setStopAskedWhile(null);
   const isStopShown = isStopQuestionShown(phase, stopAskedWhile);
-  const isAccountGateShown = accountGate === 'needs-account' || accountGate === 'needs-profile';
-  // Every screen drawn over the whole map, and the questions that must be answered first.
-  // Unfinished is not one: its card leaves the map and its buttons in sight, and in use.
-  const isMapCovered =
-    isAccountGateShown ||
-    isHistoryShown ||
-    isProfileShown ||
-    isPermissionsShown ||
-    isCreditsShown ||
-    isTutorialOpen ||
-    isStopShown ||
-    phase === 'form';
+  // History and Account are tabs on Ready; a build with no accounts has History alone.
+  const hasAccount = canUpload();
+  const screens = pageScreens({
+    phase,
+    accountGate,
+    hasAccount,
+    isPermissionsPending,
+    isHistoryOpen: history.isOpen,
+    isProfileOpen: profile.isOpen,
+    isAccountSettingsOpen: settings.isOpen,
+    isChangePasswordOpen: changePassword.isOpen,
+    isDeleteAccountOpen: deleteAccount.isOpen,
+  });
+  const layout = pageLayout(screens, {
+    hasFigures: figures !== null,
+    isTutorialOpen,
+    tutorialDemo,
+    isCreditsOpen,
+    isCreditsLeaving,
+    isStopShown,
+  });
+  // Only over Ready: a ride, or the account gate, taking its place ends it, demo and all.
+  // A hash move (the browser's Forward onto History, say) ends it as a ride does.
+  const isTutorialShown = isTutorialOpen && layout.isReadyClear;
+  if (isTutorialOpen && !isTutorialShown) {
+    setIsTutorialOpen(false);
+    setTutorialDemo(null);
+  }
+  // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
+  // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
+  // rest. Signed out, they go.
+  const [isHistoryKept, setIsHistoryKept] = useState(false);
+  if (layout.isHistoryShown && !isHistoryKept) setIsHistoryKept(true);
+  if (!canSend && isHistoryKept) setIsHistoryKept(false);
+  const [isProfileKept, setIsProfileKept] = useState(false);
+  if (layout.isProfileShown && !isProfileKept) setIsProfileKept(true);
+  if (!canSend && isProfileKept) setIsProfileKept(false);
   const discardButtonRef = useRef<HTMLButtonElement>(null);
   const askToStop = () => {
     setStopAskedWhile(phase === 'paused' ? 'paused' : 'recording');
@@ -488,8 +401,6 @@ export function ContributePage({ locator }: ContributePageProps) {
     if (deleteAccount.isOpen) deleteAccount.close();
   }, [phase, accountGate, profile, settings, changePassword, deleteAccount]);
 
-  // History and Account are tabs on Ready; a build with no accounts has History alone.
-  const hasAccount = canUpload();
   const handleOpenHistory = () => {
     setOpenedTab('history');
     history.open();
@@ -501,15 +412,6 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Record, from History, goes to Start wherever History was opened from.
   const openRecordFromHistory = () => history.replaceWith(SCREENS.record.hash);
 
-  // The page's one toolbar, over Record, History and Account alike: drawn once and kept while
-  // any of the three shows, so it stands still as they slide under it; only its pill moves.
-  const toolbarTab: ToolbarTab | null = isHistoryShown
-    ? 'history'
-    : isProfileShown && !isInsideAccount
-      ? 'account'
-      : isStartShown
-        ? 'record'
-        : null;
   const historyTabRef = useRef<HTMLButtonElement>(null);
   const accountTabRef = useRef<HTMLButtonElement>(null);
   const toolbarOpeners: Record<ToolbarTab, Partial<Record<ToolbarTab, () => void>>> = {
@@ -538,36 +440,25 @@ export function ContributePage({ locator }: ContributePageProps) {
   return (
     // The page never scrolls, not even from code (contribute.css, .contribute-page).
     <main
-      // The toolbar's screens that can open now: a move to any other draws nothing to wait for
-      // (tab-motion.ts).
-      {...{
-        [OPENABLE_SCREENS_ATTR]: [
-          canSend && SCREENS.history.hash,
-          hasAccount && SCREENS.profile.hash,
-          hasAccount && SCREENS.accountSettings.hash,
-          hasAccount && SCREENS.changePassword.hash,
-          hasAccount && SCREENS.deleteAccount.hash,
-        ]
-          .filter(Boolean)
-          .join(' '),
-      }}
+      // The toolbar's screens that can open now (tab-motion.ts).
+      {...{ [OPENABLE_SCREENS_ATTR]: layout.openableScreens }}
       className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"
     >
       {/* inert while a screen or a question covers it: no map control can be tabbed to, or
           found by a screen reader, behind it. */}
-      <div inert={isMapCovered} className="contents">
+      <div inert={layout.isMapCovered} className="contents">
         <ContributeMap
           track={track}
-          isRecording={phase === 'recording' || phase === 'paused'}
+          isRecording={layout.isRecordingShown}
           isFrosted={phase === 'paused'}
           locator={locator}
           onMapNote={handleMapNote}
-          areCreditsShown={!hasCreditsButton}
-          isCovered={isMapCovered}
+          areCreditsShown={!layout.hasCreditsButton}
+          isCovered={layout.isMapCovered}
           pictureFor={phase === 'form' ? (recording.current?.id ?? null) : null}
           onPicture={keepTrailPicture}
           mark={
-            isRecordingShown ? (
+            layout.isRecordingShown ? (
               <Suspense fallback={null}>
                 <FlagStopButton
                   isRecording={phase === 'recording'}
@@ -591,7 +482,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           }
         />
       </div>
-      {isAccountGateShown && (
+      {layout.isAccountGateShown && (
         <Suspense fallback={null}>
           <AccountGate needsProfile={accountGate === 'needs-profile'} />
         </Suspense>
@@ -619,17 +510,17 @@ export function ContributePage({ locator }: ContributePageProps) {
           <p role="status" className="sr-only">
             {recording.announcement}
           </p>
-          {isPermissionsShown && PermissionsOnboarding && (
+          {layout.isPermissionsShown && PermissionsOnboarding && (
             <Suspense fallback={<div className="absolute inset-0 z-40 bg-surface" />}>
               <PermissionsOnboarding onDone={() => setIsPermissionsPending(false)} />
             </Suspense>
           )}
           {/* TODO: show TrackRoutesCard (tutorial/track-routes-card.tsx) over the map here, on Ready
               after the permissions screen, once the tutorial screens it opens are designed. */}
-          {isStartShown && (
+          {layout.isStartShown && (
             // Inert under the credits and the tutorial, as the map is: nothing of Start is reached
             // behind them. The tutorial's spotlight only shows Start; it is never pressed there.
-            <div inert={isCreditsShown || isTutorialOpen} className="contents">
+            <div inert={layout.isStartOutOfReach} className="contents">
               <ReadyScreen
                 earlierQuestion={earlier.question}
                 onStart={() => {
@@ -652,7 +543,7 @@ export function ContributePage({ locator }: ContributePageProps) {
               <Tutorial onDemoChange={setTutorialDemo} onClose={closeTutorial} />
             </Suspense>
           )}
-          {isCreditsDrawn && (
+          {layout.isCreditsDrawn && (
             <Suspense fallback={null}>
               <MapDataSourceView
                 key={creditsOpenings}
@@ -662,7 +553,7 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {isProfileKept && (
-            <Activity mode={isProfileShown ? 'visible' : 'hidden'}>
+            <Activity mode={layout.isProfileShown ? 'visible' : 'hidden'}>
               <ErrorBoundary
                 key={screenTries}
                 fallback={
@@ -681,7 +572,7 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Activity>
           )}
           {isHistoryKept && (
-            <Activity mode={isHistoryShown ? 'visible' : 'hidden'}>
+            <Activity mode={layout.isHistoryShown ? 'visible' : 'hidden'}>
               <ErrorBoundary
                 key={screenTries}
                 fallback={
@@ -704,14 +595,15 @@ export function ContributePage({ locator }: ContributePageProps) {
               </ErrorBoundary>
             </Activity>
           )}
-          {toolbarTab && (
-            // Out of reach under the credits and the tutorial, as Start is.
-            <ToolbarPlace isOutOfReach={isCreditsShown || isTutorialOpen}>
+          {layout.toolbarTab && (
+            // Drawn once and kept while Record, History or Account shows, so it stands still as
+            // they slide under it; only its pill moves. Out of reach where Start is.
+            <ToolbarPlace isOutOfReach={layout.isStartOutOfReach}>
               <BottomToolbar
-                current={toolbarTab}
-                onOpenRecord={toolbarOpeners[toolbarTab].record}
-                onOpenHistory={toolbarOpeners[toolbarTab].history}
-                onOpenAccount={toolbarOpeners[toolbarTab].account}
+                current={layout.toolbarTab}
+                onOpenRecord={toolbarOpeners[layout.toolbarTab].record}
+                onOpenHistory={toolbarOpeners[layout.toolbarTab].history}
+                onOpenAccount={toolbarOpeners[layout.toolbarTab].account}
                 onTabPointerDown={warmScreen}
                 historyRef={historyTabRef}
                 accountRef={accountTabRef}
@@ -720,7 +612,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           )}
           {phase === 'unfinished' && figures && (
             <Suspense fallback={null}>
-              <div inert={isCreditsShown} className="contents">
+              <div inert={layout.isCreditsShown} className="contents">
                 <UnfinishedScreen
                   figures={figures}
                   onResume={recording.resume}
@@ -731,9 +623,9 @@ export function ContributePage({ locator }: ContributePageProps) {
               </div>
             </Suspense>
           )}
-          {isRecordingShown && figures && (
+          {layout.isRecordingShown && figures && (
             <Suspense fallback={null}>
-              <div inert={isCreditsShown || isStopShown} className="contents">
+              <div inert={layout.isRecordingOutOfReach} className="contents">
                 <RecordingScreen
                   figures={figures}
                   mode={recording.mode}
@@ -764,7 +656,7 @@ export function ContributePage({ locator }: ContributePageProps) {
               />
             </Suspense>
           )}
-          {phase === 'form' && figures && (
+          {layout.isFormShown && figures && (
             <Suspense fallback={null}>
               <SaveForm
                 figures={figures}
