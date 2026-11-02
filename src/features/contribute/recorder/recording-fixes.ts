@@ -1,6 +1,6 @@
 import type { Fix } from '@/features/routes/model/ride-recording';
 
-import type { WatchedFix } from './watched-fix';
+import type { WatchedFix } from '../native-bridge/native-contract';
 import type { FixRow } from '../storage/recording-schema';
 
 /**

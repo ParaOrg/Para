@@ -1,5 +1,5 @@
 import { isNativeApp } from './native-app';
-import type { WatchedFix } from '../recorder/watched-fix';
+import type { WatchedFix } from './native-contract';
 import type { Recording } from '../storage/recording-schema';
 
 /*

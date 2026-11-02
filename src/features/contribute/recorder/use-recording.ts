@@ -22,7 +22,7 @@ import { useRecordingInHand } from './use-recording-in-hand';
 import { useRecordingSave } from './use-recording-save';
 import { useRideNotice } from './use-ride-notice';
 import { useWakeLock } from './use-wake-lock';
-import type { WatchedFix } from './watched-fix';
+import type { WatchedFix } from '../native-bridge/native-contract';
 import { keepsRecordingInBackground } from '../native-bridge/native-fixes';
 import { useSavedRecordings } from '../storage/use-saved-recordings';
 

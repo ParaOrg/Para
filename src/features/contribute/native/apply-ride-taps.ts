@@ -1,6 +1,7 @@
 import { dropRideEvents, readRideEvents } from './ride-notice';
+import type { RideTaps } from '../native-bridge/native-contract';
 import { stoppedRecording } from '../recorder/recording-transitions';
-import { foldRideEvents, withRideTaps, type RideTaps } from '../recorder/ride-events';
+import { foldRideEvents, withRideTaps } from '../recorder/ride-events';
 import type { Recording } from '../storage/recording-schema';
 import { putRecording } from '../storage/recording-store';
 

@@ -1,4 +1,4 @@
-import type { WatchedFix } from '../recorder/watched-fix';
+import type { WatchedFix } from '../native-bridge/native-contract';
 
 /** A silence this long between live fixes means the page slept through some: read the log. */
 export const GAP_MS = 5_000;

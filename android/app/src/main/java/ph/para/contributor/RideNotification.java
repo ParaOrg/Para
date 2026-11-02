@@ -44,6 +44,11 @@ final class RideNotification {
     private static final long TICK_UNDER_A_MINUTE_MS = 10_000;
     private static final long MINUTE_MS = 60_000;
     private static final long REPOST_AFTER_MS = 800;
+    /**
+     * The accuracy a logged fix with none gets: far past what the card keeps, so it never counts.
+     * The page's NO_ACCURACY_M (native-bridge/native-contract.ts) is the same.
+     */
+    static final double NO_ACCURACY_M = 1_000;
 
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
     private static Runnable tick = null;
@@ -219,7 +224,7 @@ final class RideNotification {
                     fix.getLong("time"),
                     fix.getDouble("lng"),
                     fix.getDouble("lat"),
-                    fix.optDouble("accuracyM", 1_000)
+                    fix.optDouble("accuracyM", NO_ACCURACY_M)
                 ));
             }
             return RideDistance.of(fixes);

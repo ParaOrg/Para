@@ -1,4 +1,4 @@
-import type { WatchError } from '../recorder/watched-fix';
+import type { WatchError } from '../native-bridge/native-contract';
 
 const PERMISSION_DENIED = 1;
 const POSITION_UNAVAILABLE = 2;
