@@ -1,4 +1,4 @@
-import { ringCentroid, ringToPolygon, type Ring } from '@/features/routes/geo/ring';
+import { ringToPolygon, type Ring } from '@/features/routes/geo/ring';
 import {
   hotspotRowSchema,
   toLinkRow,
@@ -14,6 +14,7 @@ import { directionLine, isLoop, type DirectionRow } from '@/features/routes/mode
 import { hintuansAlong } from '@/features/routes/model/timeline';
 import { roundLngLat } from '@/shared/utils/geo';
 
+import { ringCentroid } from './hotspot-ring';
 import { linksThrough, terminalLinks } from './hotspots-geometry';
 import { parsed, readAll } from './read-all';
 import { requireSupabase } from './supabase';
