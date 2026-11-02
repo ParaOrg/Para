@@ -1,6 +1,6 @@
 import type { Fix } from '@/features/routes/model/ride-recording';
 
-import type { WatchedFix } from './use-geolocation-watch';
+import type { WatchedFix } from './watched-fix';
 import type { FixRow } from '../storage/recording-schema';
 
 /**

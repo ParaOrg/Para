@@ -1,6 +1,6 @@
 import type { HapticsPlugin } from '@capacitor/haptics';
 
-import { isNativeApp, nativePlugin } from './native-app';
+import { isNativeApp, lazyPlugin } from './native-app';
 
 /*
  * A light tick under the finger as the toolbar's pill is picked up and as it crosses into another
@@ -13,8 +13,7 @@ import { isNativeApp, nativePlugin } from './native-app';
 /** How long the web's tick lasts: a tap felt, not a buzz. */
 const WEB_TICK_MS = 10;
 
-let haptics: HapticsPlugin | null = null;
-const nativeHaptics = (): HapticsPlugin => (haptics ??= nativePlugin<HapticsPlugin>('Haptics'));
+const nativeHaptics = lazyPlugin<HapticsPlugin>('Haptics');
 
 const warnOnce = (() => {
   let hasWarned = false;
