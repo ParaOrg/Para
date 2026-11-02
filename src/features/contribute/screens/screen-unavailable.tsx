@@ -1,13 +1,14 @@
 import { Button } from '@/design-system/primitives/button';
 
 import { useFocusHeading } from '../common/use-focus-heading';
+import type { ScreenHash } from '../navigation/screen-routes';
 import { TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 
 interface ScreenUnavailableProps {
   /** The screen that could not be opened, as its tab names it: History, Account. */
   name: string;
   /** Its hash, as the screen itself carries it, so a move to it waits for this in its place. */
-  screenHash: string;
+  screenHash: ScreenHash;
   /** Whether its code could not be fetched (offline), rather than something else going wrong. */
   hasFetchFailed: () => boolean;
   /** Fetches the screen again, in place. */

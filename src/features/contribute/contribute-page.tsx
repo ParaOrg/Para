@@ -18,19 +18,16 @@ import { cn } from '@/shared/utils/cn';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { useAccountGate } from './account/use-account-gate';
-import { useAccountSettingsView } from './account/use-account-settings-view';
-import { useChangePasswordView } from './account/use-change-password-view';
-import { useDeleteAccountView } from './account/use-delete-account-view';
-import { useProfileView } from './account/use-profile-view';
 import { canUpload } from './api/contribute-client';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { useEarlierQuestion } from './consent/use-earlier-question';
-import { useHistoryView } from './history/use-history-view';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
 import { useStartMorph } from './motion/use-start-morph';
 import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
+import { SCREENS } from './navigation/screen-routes';
+import { useScreenView } from './navigation/use-screen-view';
 import type { MapNote, MapNoteGiven } from './notices/map-note';
 import {
   pointsLostWords,
@@ -236,11 +233,11 @@ export function ContributePage({ locator }: ContributePageProps) {
     recording.current?.modes,
     recording.current?.marks,
   );
-  const history = useHistoryView();
-  const profile = useProfileView();
-  const settings = useAccountSettingsView();
-  const changePassword = useChangePasswordView();
-  const deleteAccount = useDeleteAccountView();
+  const history = useScreenView('history');
+  const profile = useScreenView('profile');
+  const settings = useScreenView('accountSettings');
+  const changePassword = useScreenView('changePassword');
+  const deleteAccount = useScreenView('deleteAccount');
   // Account settings and the screens inside it, which Account shows in its place, with no toolbar.
   const isInsideAccount = settings.isOpen || changePassword.isOpen || deleteAccount.isOpen;
   const { phase, figures } = recording;
@@ -501,7 +498,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     profile.open();
   };
   // Record, from History, goes to Start wherever History was opened from.
-  const openRecordFromHistory = () => history.replaceWith('');
+  const openRecordFromHistory = () => history.replaceWith(SCREENS.record.hash);
 
   // The page's one toolbar, over Record, History and Account alike: drawn once and kept while
   // any of the three shows, so it stands still as they slide under it; only its pill moves.
@@ -522,7 +519,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       account: hasAccount
         ? () => {
             setOpenedTab('account');
-            history.replaceWith('#profile');
+            history.replaceWith(SCREENS.profile.hash);
           }
         : undefined,
     },
@@ -543,8 +540,11 @@ export function ContributePage({ locator }: ContributePageProps) {
       // The toolbar's screens that can open now: a move to any other draws nothing to wait for
       // (tab-motion.ts).
       data-screens={[
-        canSend && '#history',
-        hasAccount && '#profile #account-settings #change-password #delete-account',
+        canSend && SCREENS.history.hash,
+        hasAccount && SCREENS.profile.hash,
+        hasAccount && SCREENS.accountSettings.hash,
+        hasAccount && SCREENS.changePassword.hash,
+        hasAccount && SCREENS.deleteAccount.hash,
       ]
         .filter(Boolean)
         .join(' ')}
@@ -665,7 +665,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 fallback={
                   <ScreenUnavailable
                     name="Account"
-                    screenHash="#profile"
+                    screenHash={SCREENS.profile.hash}
                     hasFetchFailed={accountChunk.hasFailed}
                     onTryAgain={tryScreenAgain}
                   />
@@ -684,7 +684,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 fallback={
                   <ScreenUnavailable
                     name="History"
-                    screenHash="#history"
+                    screenHash={SCREENS.history.hash}
                     hasFetchFailed={historyChunk.hasFailed}
                     onTryAgain={tryScreenAgain}
                   />

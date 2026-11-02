@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import type { ScreenHash } from './screen-routes';
 import { moveBetweenScreens } from '../motion/tab-motion';
 
 export interface HashView {
@@ -7,9 +8,9 @@ export interface HashView {
   open: () => void;
   close: () => void;
   /** Leaves this screen for the one shown at `hash`, the screen it was opened from. */
-  closeTo: (hash: string) => void;
+  closeTo: (hash: ScreenHash) => void;
   /** Leaves this screen for the one at `hash` in its place, wherever it was opened from. */
-  replaceWith: (hash: string) => void;
+  replaceWith: (hash: ScreenHash) => void;
 }
 
 /**
@@ -17,7 +18,7 @@ export interface HashView {
  * Back returns to the screen under it. A hash never reaches the service worker, which answers
  * the page by its path alone. Each screen has its own store; the hook is made once per screen.
  */
-export function createHashView(hash: string): () => HashView {
+export function createHashView(hash: ScreenHash): () => HashView {
   // Whether opening the screen added a history entry this page load, so the in-page back button
   // can pop it. After a reload there is none to pop: Back would leave the page.
   let hasPushedEntry = false;
@@ -51,7 +52,7 @@ export function createHashView(hash: string): () => HashView {
 
   // Back, when this page load opened the screen from the one at `hash`; after a reload there is no
   // entry to go back to, so the URL is replaced and every screen's store told, as a hashchange.
-  const closeToNow = (target: string) => {
+  const closeToNow = (target: ScreenHash) => {
     if (hasPushedEntry) {
       hasPushedEntry = false;
       window.history.back();
@@ -61,7 +62,7 @@ export function createHashView(hash: string): () => HashView {
   };
 
   // Every screen's store is told, as a hashchange: replaceState itself fires none.
-  const replaceWithNow = (target: string) => {
+  const replaceWithNow = (target: ScreenHash) => {
     hasPushedEntry = false;
     window.history.replaceState(
       null,
@@ -76,8 +77,8 @@ export function createHashView(hash: string): () => HashView {
   const isShut = () => !isOpenNow();
   const open = () => moveBetweenScreens(isShut, openNow);
   const close = () => moveBetweenScreens(isOpenNow, closeNow);
-  const closeTo = (target: string) => moveBetweenScreens(isOpenNow, () => closeToNow(target));
-  const replaceWith = (target: string) =>
+  const closeTo = (target: ScreenHash) => moveBetweenScreens(isOpenNow, () => closeToNow(target));
+  const replaceWith = (target: ScreenHash) =>
     moveBetweenScreens(isOpenNow, () => replaceWithNow(target));
 
   function useHashView(): HashView {
