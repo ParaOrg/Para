@@ -154,16 +154,14 @@ test('distanceText says what the card says, every whole metre to 20 km but those
   });
 });
 
-test(
-  'distanceText says what the card says at metres ending in 50 (1150 m, 1450 m, ...)',
-  { todo: "a known difference: awaits the owner's km rounding, PR #659" },
-  () => {
-    const metres = Array.from({ length: SWEEP_TO_M + 1 }, (_, index) => index).filter(endsIn50);
-    const native = runJava(metres.map((whole) => `distance ${whole}`));
-    const apart = metres.filter((whole, index) => native[index] !== said(distanceFigure(whole)));
-    assert.deepEqual(apart, [], `${apart.length} of ${metres.length} differ`);
-  },
-);
+// A half tenth of a kilometre: both sides count whole tenths, a half rounded up. Rounding the
+// binary fraction instead (toFixed) would read 1150 m as 1.1 on one side only.
+test('distanceText says what the card says at metres ending in 50 (1150 m, 1450 m, ...)', () => {
+  const metres = Array.from({ length: SWEEP_TO_M + 1 }, (_, index) => index).filter(endsIn50);
+  const native = runJava(metres.map((whole) => `distance ${whole}`));
+  const apart = metres.filter((whole, index) => native[index] !== said(distanceFigure(whole)));
+  assert.deepEqual(apart, [], `${apart.length} of ${metres.length} differ`);
+});
 
 // The clock: what the page tells RidePlugin.setState, turned into RideState as it turns it, and
 // as a tap on the notification moves it, against the card's own clock for the same ride.
