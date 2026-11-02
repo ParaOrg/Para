@@ -2,7 +2,7 @@ import { useId } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
-import { FlagStopIcon } from './flag-stop-icon';
+import { FlagStopIcon } from '../common/flag-stop-icon';
 
 export interface FlagStopButtonProps {
   /** False while paused: the button shows, disabled, as the Paused frame draws it. */
