@@ -4,6 +4,7 @@ import { accountErrorOf, authError } from './account-errors';
 import { AccountError, accountProblemOf } from './account-problem';
 import { CONTRIBUTOR_AUTH_KEY, type ContributeClient } from './contribute-client';
 import { finishPendingClaim } from './earlier-identity';
+import { fetchStoredProfile } from './profile';
 import { requireClient } from './require-client';
 import { UploadError } from './upload-problem';
 
@@ -91,25 +92,21 @@ export function storedAccount(): Account | null {
   }
 }
 
-const profileRowsSchema = z.array(z.object({ name: z.nullable(z.string()) }));
-
 /**
  * Whether the signed-in account's name is stored, or null when there is no answer (no signal, or
- * the database not having get_profile yet).
+ * the database not having get_profile yet) or none in the form expected.
  */
 async function knownProfileOf(
   client: ContributeClient,
   signal?: AbortSignal,
 ): Promise<boolean | null> {
-  const asked = client.rpc('get_profile');
-  const { data, error, status } = await (signal ? asked.abortSignal(signal) : asked);
-  if (error) {
-    if (status !== 0)
-      console.warn(`Para did not give the profile (HTTP ${status}):`, error.message);
-    return null;
+  try {
+    return Boolean((await fetchStoredProfile(client, signal)).name);
+  } catch (error) {
+    // Unknown is not "no name": the caller goes by what the phone last knew instead.
+    if (error instanceof AccountError) return null;
+    throw error;
   }
-  const rows = profileRowsSchema.safeParse(data);
-  return rows.success ? Boolean(rows.data[0]?.name) : null;
 }
 
 /**
