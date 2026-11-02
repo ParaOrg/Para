@@ -1,31 +1,6 @@
-import type { Mode } from '@/features/routes/model/ride-recording';
-
 import { currentMode } from './recording-rules';
+import type { RideEvent, RideTaps } from '../native-bridge/native-contract';
 import type { Recording } from '../storage/recording-schema';
-
-/** A tap made on the app's ride notification while the page slept (RideActionReceiver.java). */
-export interface RideEvent {
-  kind: 'mode' | 'pause' | 'resume' | 'finish';
-  time: number;
-  /** The mode switched to, on a `mode` tap. */
-  to?: Mode;
-  /** The recording it was tapped on. */
-  recordingId: string;
-}
-
-/** What a run of taps on the notification did to a ride, in order. */
-export interface RideTaps {
-  /** Each switch of mode, where it was tapped. */
-  switches: { time: number; to: Mode }[];
-  /** Each pause that was resumed: native kept no fix inside it. */
-  pauses: { from: number; to: number }[];
-  /** A pause not resumed yet: the ride stands stopped there. */
-  openPause: number | null;
-  /** Finish: the ride waits for its details. */
-  finishedAt: number | null;
-  /** The last tap's time: those up to it are taken. */
-  lastTime: number;
-}
 
 /** The taps made on `recordingId`, folded in time order. Taps on another recording are not its. */
 export function foldRideEvents(events: readonly RideEvent[], recordingId: string): RideTaps {

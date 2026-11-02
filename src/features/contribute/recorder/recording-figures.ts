@@ -1,4 +1,9 @@
-import { summarize, type Fix, type RideSummary } from '@/features/routes/model/ride-recording';
+import {
+  mergeGaps,
+  summarize,
+  type Fix,
+  type RideSummary,
+} from '@/features/routes/model/ride-recording';
 
 import type { Recording } from '../storage/recording-schema';
 
@@ -37,6 +42,15 @@ export function liveFigures(
     elapsedSeconds: Math.max(0, (end - recording.startedAt) / 1000 - summary.pausedSeconds),
     distanceM: summary.distanceM,
   };
+}
+
+/**
+ * The time a ride has stood paused, its pauses joined where they touch: what the app's
+ * notification is told (pausedSeconds), for its clock to leave out as the card's does.
+ */
+export function pausedSecondsOf(recording: Recording): number {
+  const paused = mergeGaps(recording.gaps.filter((gap) => gap.reasons.includes('paused')));
+  return paused.reduce((sum, gap) => sum + (gap.to - gap.from) / 1000, 0);
 }
 
 /**

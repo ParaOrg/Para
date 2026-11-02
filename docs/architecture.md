@@ -184,9 +184,9 @@ flowchart TD
   features_contribute_native --> features_contribute_screens
   features_contribute_native --> features_contribute_storage
   features_contribute_native --> shared_utils
-  features_contribute_native_bridge --> features_contribute_native
-  features_contribute_native_bridge --> features_contribute_recorder
+  features_contribute_native_bridge -.-> features_contribute_native
   features_contribute_native_bridge --> features_contribute_storage
+  features_contribute_native_bridge --> features_routes_model
   features_contribute_native_bridge --> shared_config
   features_contribute_navigation --> features_contribute_motion
   features_contribute_navigation --> features_contribute_toolbar
@@ -332,7 +332,7 @@ flowchart TD
 | `features/contribute/map` | `design-system/foundation`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/utils` |
 | `features/contribute/motion` | `features/contribute/common`, `features/contribute/navigation`, `shared/utils` |
 | `features/contribute/native` | `design-system/primitives`, `features/contribute/common`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `shared/utils` |
-| `features/contribute/native-bridge` | `features/contribute/native`, `features/contribute/recorder`, `features/contribute/storage`, `shared/config` |
+| `features/contribute/native-bridge` | `features/contribute/native`, `features/contribute/storage`, `features/routes/model`, `shared/config` |
 | `features/contribute/navigation` | `features/contribute/motion`, `features/contribute/toolbar` |
 | `features/contribute/notices` | `design-system/primitives`, `features/contribute/common`, `features/contribute/uploads`, `shared/ui` |
 | `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/storage`, `features/routes/map`, `features/routes/model` |

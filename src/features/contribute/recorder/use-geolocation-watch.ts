@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-import type { WatchedFix, WatchError } from './watched-fix';
 import { isNativeApp } from '../native-bridge/native-app';
+import type { WatchedFix, WatchError } from '../native-bridge/native-contract';
 
 interface GeolocationWatchHandlers {
   /** Fixes in time order; the app may hand over fixes already given, which the recorder skips. */
