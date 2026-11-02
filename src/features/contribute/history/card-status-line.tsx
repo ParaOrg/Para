@@ -4,7 +4,7 @@ import { ReloadIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
 import type { CardStatus, CardStatusTone } from './card-status';
-import { CheckIcon } from './history-icons';
+import { CheckIcon } from '../common/history-icons';
 
 interface CardStatusLineProps {
   status: CardStatus;

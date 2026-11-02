@@ -1,6 +1,8 @@
+import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
+
 import type { ToolbarTab } from './bottom-toolbar';
 import { notePillAt } from './use-sliding-pill';
-import { motionOf, prefersReducedMotion } from '../common/tab-motion';
+import { PILL, SHIFT } from '../motion/motion';
 import {
   endSelectionTicks,
   selectionTick,
@@ -103,7 +105,7 @@ export function attachToolbarSlide({
     if (prefersReducedMotion()) return;
     pill.animate(
       [{ transform: `translateX(${from}px)` }, { transform: `translateX(${on.offsetLeft}px)` }],
-      motionOf('pill'),
+      motionOf(PILL),
     );
   };
 
@@ -128,10 +130,7 @@ export function attachToolbarSlide({
     slideTo(press.lastX, false);
     const to = pill.style.transform;
     if (from && from !== to && !prefersReducedMotion()) {
-      pill.animate([{ transform: from }, { transform: to }], {
-        ...motionOf('move'),
-        duration: motionOf('leave').duration,
-      });
+      pill.animate([{ transform: from }, { transform: to }], motionOf(SHIFT));
     }
   };
   const slideTo = (clientX: number, isTicked = true) => {

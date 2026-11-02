@@ -1,4 +1,6 @@
-import { cssDurationMs } from '@/shared/utils/css-duration';
+import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
+
+import { MOVE } from './motion';
 
 import './tab-motion.css';
 
@@ -30,41 +32,9 @@ const MOVE_MS = 500;
 
 export type MotionDirection = 'forward' | 'back';
 
-/** The owner's Motion tokens a move uses (tokens.css), by what moves. */
-const MOTION_TOKENS = {
-  /** A screen arriving. */
-  arrive: ['--transition-duration-base', '--ease-enter'],
-  /** Something already on screen changing place: the toolbar's pill, the Start pill opening. */
-  move: ['--transition-duration-gentle', '--ease-move'],
-  /** Something on its way out, quickly: Start tracking folding into its pill. */
-  leave: ['--transition-duration-quick', '--ease-exit'],
-  /** The toolbar's pill gliding to its tab, with a soft spring. */
-  pill: ['--transition-duration-pill', '--ease-pill'],
-  /** The pill turning to the newest tap of a run, on the same spring. */
-  pillQuick: ['--transition-duration-pill-quick', '--ease-pill'],
-} as const;
-
-/**
- * A move's timing, read from the same Motion tokens tab-motion.css uses, so the script's
- * fallbacks and the view transitions can never part.
- */
-export function motionOf(kind: keyof typeof MOTION_TOKENS): { duration: number; easing: string } {
-  const style = getComputedStyle(document.documentElement);
-  const [duration, easing] = MOTION_TOKENS[kind];
-  return {
-    duration: cssDurationMs(style.getPropertyValue(duration)) ?? 0,
-    easing: style.getPropertyValue(easing).trim() || 'ease-out',
-  };
-}
-
 /** How far a screen slides on its way in, as tab-motion.css has it: `--tab-motion-shift`. */
 export const tabShift = (sign: 1 | -1): string =>
   `translateX(calc(${sign} * ${getComputedStyle(document.documentElement).getPropertyValue('--tab-motion-shift').trim() || '0px'}))`;
-
-/** Whether the person asked their phone for less motion: then screens and the pill just switch. */
-export function prefersReducedMotion(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
 
 const directionOf = (from: string, to: string): MotionDirection | null => {
   const a = SCREEN_ORDER[from];
@@ -166,10 +136,11 @@ let running: ViewTransition | null = null;
 
 /**
  * A run of taps starts with one that comes while a move is under way. How soon after a tap of
- * the run the next still belongs to it: the length of a move (the gentle Motion token, 300) and a
- * little over. A tap once a move has ended, outside a run, slides as ever.
+ * the run the next still belongs to it: the length of a move (the owner's gentle Motion token) and
+ * a little over. A tap once a move has ended, outside a run, slides as ever.
  */
-const RUN_MS = 400;
+const RUN_MARGIN_MS = 100;
+const runMs = (): number => motionOf(MOVE).duration + RUN_MARGIN_MS;
 let lastRunAt = Number.NEGATIVE_INFINITY;
 /** Whether the move under way is one of a run of taps: it shows at once, with no slide. */
 let isRunMove = false;
@@ -225,7 +196,7 @@ export function moveBetweenScreens(willChange: () => boolean, change: () => void
   // phone's own tab bar does, and so does every tap of the run that follows it. A slide costs two
   // pictures of the page before it moves; in a run of taps, the screen comes first.
   const now = performance.now();
-  const isInRun = running !== null || now - lastRunAt < RUN_MS;
+  const isInRun = running !== null || now - lastRunAt < runMs();
   if (isInRun) lastRunAt = now;
   isRunMove = isInRun;
   running?.skipTransition();

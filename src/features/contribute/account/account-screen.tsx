@@ -7,8 +7,8 @@ import { LogoutConfirm } from './logout-confirm';
 import { ProfileCard } from './profile-card';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { useFocusHeading } from '../common/use-focus-heading';
-import { useScreenEntry } from '../common/use-screen-entry';
-import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../screens/bottom-toolbar';
+import { useScreenEntry } from '../motion/use-screen-entry';
+import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 
 interface AccountScreenProps {
   /** The contributor's name, or null while it loads. */

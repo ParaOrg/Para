@@ -5,7 +5,7 @@ import { useEscape } from '@/shared/hooks/use-escape';
 import { CardMenu, hasMenuItems, type Asking, type CardActions } from './card-menu';
 import type { CardStatus } from './card-status';
 import { CardStatusLine } from './card-status-line';
-import { MoreIcon } from './history-icons';
+import { MoreIcon } from '../common/history-icons';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 
 interface CardStatusRowProps {

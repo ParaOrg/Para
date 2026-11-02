@@ -11,9 +11,9 @@ import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useIsSlowLoad } from '../common/use-is-slow-load';
-import { useScreenEntry } from '../common/use-screen-entry';
-import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../screens/bottom-toolbar';
+import { useScreenEntry } from '../motion/use-screen-entry';
 import type { Recording } from '../storage/recording-schema';
+import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 import type { UploadStatus } from '../uploads/upload-state';
 
 /** In flight: taking the recording off the phone now would cut that short. */

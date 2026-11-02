@@ -1,6 +1,9 @@
 import { useLayoutEffect, useRef } from 'react';
 
-import { isMoveInRun, motionOf, prefersReducedMotion } from '../common/tab-motion';
+import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
+
+import { PILL, PILL_FADE, PILL_QUICK, PILL_QUICK_FADE } from '../motion/motion';
+import { isMoveInRun } from '../motion/tab-motion';
 
 /**
  * Where the last toolbar drawn had its pill, and which tab that was. Each screen draws a toolbar of
@@ -46,7 +49,7 @@ function glidePill(bar: HTMLElement, pill: HTMLElement, to: string, isQuick: boo
   }
   if (prefersReducedMotion()) return;
   // The owner's Motion for the toolbar's pill (tokens.css), a soft spring.
-  const slide = motionOf(isQuick ? 'pillQuick' : 'pill');
+  const slide = motionOf(isQuick ? PILL_QUICK : PILL);
   pill.animate(
     [
       { transform: `translateX(${shownAt ?? from.left}px)` },
@@ -60,7 +63,7 @@ function glidePill(bar: HTMLElement, pill: HTMLElement, to: string, isQuick: boo
   const marked = getComputedStyle(tab).color;
   const unmarked = getComputedStyle(before).color;
   // In the pill's time, without its spring: a colour has nothing to overshoot to.
-  const fade = { duration: slide.duration, easing: motionOf('move').easing };
+  const fade = motionOf(isQuick ? PILL_QUICK_FADE : PILL_FADE);
   tab.animate([{ color: unmarked }, { color: marked }], fade);
   before.animate([{ color: marked }, { color: unmarked }], fade);
 }

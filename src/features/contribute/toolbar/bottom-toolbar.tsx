@@ -5,7 +5,7 @@ import { cn } from '@/shared/utils/cn';
 import { useSlidingPill } from './use-sliding-pill';
 import { useToolbarSlide } from './use-toolbar-slide';
 
-import './start-icons.css';
+import '../screens/start-icons.css';
 
 /** The screen the toolbar is shown on: its tab is the marked one. */
 export type ToolbarTab = 'record' | 'history' | 'account';
@@ -26,25 +26,6 @@ interface BottomToolbarProps {
   /** The Account tab, so focus can come back to it when Account closes. */
   accountRef?: Ref<HTMLButtonElement>;
 }
-
-/** The toolbar's height, kept free at the foot of each tab's screen for the page's toolbar. */
-export const TOOLBAR_ROOM = 'h-14 shrink-0';
-
-/**
- * How far the toolbar stands over the screen's edge, on Record, History and Account alike: 48, as
- * Figma's 852-high frames draw it (4520:3197, 4518:24819), and as much as a phone's gesture bar
- * when that is more. The screens' feet under it are this too, so it sits where they leave room.
- */
-export const TOOLBAR_FOOT = 'pb-[max(3rem,env(safe-area-inset-bottom))]';
-
-/**
- * Where the page stands its one toolbar (contribute-page.tsx): over the foot of Record, History
- * and Account alike (TOOLBAR_FOOT); lifted over the earlier-recordings question where Record shows
- * it (`--toolbar-lift`). Over the tab screens, under the sheets and dialogs over them.
- */
-export const TOOLBAR_PLACE =
-  'pointer-events-none absolute inset-x-0 bottom-[var(--toolbar-lift,0px)] z-25 px-4 *:pointer-events-auto ' +
-  TOOLBAR_FOOT;
 
 const TAB = 'relative flex min-w-18 flex-col items-center rounded-full py-1 text-xs/4 font-medium';
 

@@ -3,8 +3,9 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 
 import { HistoryScreen } from './history-screen';
 import type { HistoryItems, HistoryLoad } from './use-history-items';
-import { BottomToolbar, TOOLBAR_PLACE } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
+import { BottomToolbar } from '../toolbar/bottom-toolbar';
+import { TOOLBAR_PLACE } from '../toolbar/toolbar-place';
 import type { UploadStatus } from '../uploads/upload-state';
 import type { Uploads } from '../uploads/use-uploads';
 

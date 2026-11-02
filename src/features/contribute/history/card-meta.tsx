@@ -10,9 +10,9 @@ import {
 } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
-import { FootstepsIcon } from './history-icons';
 import { isWalkOnlyOf, type RideFacts } from './ride-facts';
 import { cardDistanceText, dayText, hoursMinutesText } from '../common/format';
+import { FootstepsIcon } from '../common/history-icons';
 import type { Recording, RideKind } from '../storage/recording-schema';
 
 /** The vehicles with an icon of their own; Tricycle and Other have none yet. */

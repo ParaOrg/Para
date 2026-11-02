@@ -2,7 +2,7 @@ import { useEffect, type RefObject } from 'react';
 
 import { useEscape } from '@/shared/hooks/use-escape';
 
-import { useHoldToolbar } from '../common/toolbar-hold';
+import { useHoldToolbar } from '../toolbar/toolbar-hold';
 
 /**
  * Focus for a question before an act that ends something (HandQuestion): the safe answer, drawn

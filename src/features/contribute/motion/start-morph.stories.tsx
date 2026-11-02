@@ -4,11 +4,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { cssDurationMs } from '@/shared/utils/css-duration';
 
-import { RecordingCard } from './recording-card';
-import { StartBar } from './start-bar';
 import { START_MORPH_ATTR, morphStartIntoCard } from './start-morph';
 import { START_BUTTON_ATTR } from './start-morph-attrs';
-import { TrackingButton } from './tracking-button';
+import { RecordingCard } from '../screens/recording-card';
+import { StartBar } from '../screens/start-bar';
+import { TrackingButton } from '../screens/tracking-button';
 
 /** Start tracking, and once tapped the recording card in its place, as the page swaps them. */
 function MorphDemo() {

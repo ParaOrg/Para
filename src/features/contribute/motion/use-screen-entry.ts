@@ -1,6 +1,9 @@
 import { useLayoutEffect, useRef } from 'react';
 
-import { motionOf, screenEntryDirection, tabShift } from './tab-motion';
+import { motionOf } from '@/shared/utils/motion';
+
+import { ARRIVE } from './motion';
+import { screenEntryDirection, tabShift } from './tab-motion';
 
 /**
  * A toolbar screen's own way in, from the side the tabs run from, a short way and a fade: where
@@ -17,7 +20,7 @@ export function useScreenEntry<T extends HTMLElement>() {
         { opacity: 0, transform: tabShift(direction === 'forward' ? 1 : -1) },
         { opacity: 1, transform: 'none' },
       ],
-      motionOf('arrive'),
+      motionOf(ARRIVE),
     );
   }, []);
   return ref;

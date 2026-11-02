@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
 import { haversine, metresPerPixel, type LngLat } from '@/shared/utils/geo';
+import { prefersReducedMotion } from '@/shared/utils/motion';
 
 import {
   INSET_PX,
@@ -222,12 +223,6 @@ const SLOW_FOR_MS = 2000;
 const WARM_MS = 1500;
 const AWAY_MS = 2000;
 
-/** Whether this browser has been asked to keep still. */
-function stillPlease(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 /**
  * The chevrons' colour and the rest of the line past a picked hintuan: the
  * selected blue's white chevrons unless the public map says otherwise — a
@@ -363,7 +358,7 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
       markCovered(m, measured);
       measured.push(m);
     }
-    const still = stillPlease();
+    const still = prefersReducedMotion();
     // How far they have flowed, in ms of flowing: not while the map moves.
     let flowed = 0;
     let last = performance.now();

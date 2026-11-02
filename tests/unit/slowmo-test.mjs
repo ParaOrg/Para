@@ -1,10 +1,10 @@
-// The contributor page's ?slowmo test switch (src/features/contribute/common/slowmo.ts): the factor
+// The contributor page's ?slowmo test switch (src/features/contribute/motion/slowmo.ts): the factor
 // it slows the motion by, read from the address or kept for the session.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/slowmo-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { slowedDuration, slowmoFactor } from '../../src/features/contribute/common/slowmo.ts';
+import { slowedDuration, slowmoFactor } from '../../src/features/contribute/motion/slowmo.ts';
 
 test('?slowmo alone slows by 5', () => {
   assert.equal(slowmoFactor('?slowmo', null), 5);

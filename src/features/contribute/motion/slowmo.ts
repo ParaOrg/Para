@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 
 import { cssDurationMs } from '@/shared/utils/css-duration';
 
+import { MOTION_DURATIONS } from './motion';
 import { SLOWMO_KEY } from './slowmo-switch';
 
 /**
@@ -14,19 +15,6 @@ import { SLOWMO_KEY } from './slowmo-switch';
 const DEFAULT_FACTOR = 5;
 const MIN_FACTOR = 1;
 const MAX_FACTOR = 10;
-
-/** The owner's Motion durations (tokens.css): every motion on the page reads one of them. */
-const DURATION_TOKENS = [
-  '--transition-duration-instant',
-  '--transition-duration-quick',
-  '--transition-duration-base',
-  '--transition-duration-gentle',
-  '--transition-duration-sheet',
-  '--transition-duration-turn',
-  '--transition-duration-slow',
-  '--transition-duration-pill',
-  '--transition-duration-pill-quick',
-] as const;
 
 const factorSchema = z.pipe(
   z.string(),
@@ -86,7 +74,7 @@ export function applySlowmo(): void {
   if (factor === null || factor === 1) return;
   const root = document.documentElement;
   const style = getComputedStyle(root);
-  for (const token of DURATION_TOKENS) {
+  for (const token of MOTION_DURATIONS) {
     const slowed = slowedDuration(style.getPropertyValue(token), factor);
     if (slowed !== null) root.style.setProperty(token, slowed);
   }

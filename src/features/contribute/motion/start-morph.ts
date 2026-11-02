@@ -1,12 +1,25 @@
+import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
+
+import { LEAVE, MOVE } from './motion';
 import { RECORDING_CARD_ATTR, START_BUTTON_ATTR } from './start-morph-attrs';
-import { motionOf, prefersReducedMotion } from '../common/tab-motion';
+
 /** The ghost's own attribute, so a suite can find it while it runs. */
 export const START_MORPH_ATTR = 'data-start-morph';
 
 /** How long, after the fold, the morph waits for the card to be drawn before it gives up. */
 const CARD_WAIT_MS = 300;
-/** The card's radius (rounded-4xl). Start tracking's is half its height, as rounded-full draws it. */
-const CARD_RADIUS_PX = 32;
+/**
+ * The card's radius, as rounded-4xl draws it (recording-card.tsx): the theme's --radius-4xl, in
+ * pixels. Start tracking's is half its height, as rounded-full draws it.
+ */
+function cardRadiusPx(): number {
+  const style = getComputedStyle(document.documentElement);
+  const radius = style.getPropertyValue('--radius-4xl').trim();
+  const rem = parseFloat(style.fontSize) || 16;
+  const value = parseFloat(radius);
+  if (!Number.isFinite(value)) return 0;
+  return radius.endsWith('rem') ? value * rem : value;
+}
 
 interface Box {
   left: number;
@@ -83,7 +96,7 @@ function cardDrawn(waitMs: number): Promise<{ card: HTMLElement; showCard: () =>
  */
 export function morphStartIntoCard(button: HTMLElement): void {
   if (prefersReducedMotion()) {
-    const quick = motionOf('leave');
+    const quick = motionOf(LEAVE);
     void cardDrawn(CARD_WAIT_MS).then((drawn) => {
       if (!drawn) return;
       drawn.showCard();
@@ -94,8 +107,8 @@ export function morphStartIntoCard(button: HTMLElement): void {
     });
     return;
   }
-  const fold = motionOf('leave');
-  const open = motionOf('move');
+  const fold = motionOf(LEAVE);
+  const open = motionOf(MOVE);
   const from = boxOf(button);
   // Half the button's height, whatever the phone's text size makes it, so the fold is a pill.
   const pillRadius = from.height / 2;
@@ -110,7 +123,8 @@ export function morphStartIntoCard(button: HTMLElement): void {
   ghost.setAttribute(START_MORPH_ATTR, '');
   ghost.setAttribute('aria-hidden', 'true');
   ghost.style.pointerEvents = 'none';
-  ghost.style.zIndex = '25';
+  // The toolbar's layer (TOOLBAR_PLACE), by the same utility: over the screens, under nothing.
+  ghost.classList.add('z-25');
   place(ghost, from);
   const face = copyOf(button);
   place(face, { left: 0, top: 0, width: from.width, height: from.height });
@@ -220,7 +234,7 @@ export function morphStartIntoCard(button: HTMLElement): void {
     const opening = ghost.animate(
       [
         { clipPath: insetOf(room, pill, pillRadius) },
-        { clipPath: insetOf(room, to, CARD_RADIUS_PX) },
+        { clipPath: insetOf(room, to, cardRadiusPx()) },
       ],
       timing,
     );

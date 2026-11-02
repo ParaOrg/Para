@@ -570,26 +570,32 @@ async function seed(page, id, name, upload) {
   await page.waitForTimeout(400);
 
   // Every value is the owner's Motion token, read by the script's fallbacks from the same place.
-  const timing = await page.evaluate(() =>
-    import('/src/features/contribute/common/tab-motion.ts').then((motion) => ({
-      arrive: motion.motionOf('arrive'),
-      move: motion.motionOf('move'),
-      shift: motion.tabShift(1),
-    })),
-  );
+  const timing = await page.evaluate(async () => {
+    const { motionOf } = await import('/src/shared/utils/motion.ts');
+    const { ARRIVE, MOVE, PILL } = await import('/src/features/contribute/motion/motion.ts');
+    const { tabShift } = await import('/src/features/contribute/motion/tab-motion.ts');
+    return {
+      arrive: motionOf(ARRIVE),
+      move: motionOf(MOVE),
+      pill: motionOf(PILL),
+      shift: tabShift(1),
+    };
+  });
   check(
-    "the moves' timings are the owner's Motion tokens: base on ease-enter, gentle on ease-move, a 7-step shift",
+    "the moves' timings are the owner's Motion tokens: base on ease-enter, gentle on ease-move, the pill's own spring, a 7-step shift",
     timing.arrive.duration === 200 &&
       timing.arrive.easing === 'cubic-bezier(0.22, 1, 0.36, 1)' &&
       timing.move.duration === 300 &&
       timing.move.easing === 'cubic-bezier(0.65, 0, 0.35, 1)' &&
+      timing.pill.duration === 390 &&
+      timing.pill.easing.startsWith('cubic-bezier(') &&
       /calc\(1 \* calc\(.*\* 7\)\)/.test(timing.shift),
     JSON.stringify(timing),
   );
 
   // A move to where the phone already is (a second tap) shows nothing: no slide replayed.
   const noMove = await page.evaluate(() =>
-    import('/src/features/contribute/common/tab-motion.ts').then((motion) => {
+    import('/src/features/contribute/motion/tab-motion.ts').then((motion) => {
       motion.moveBetweenScreens(
         () => false,
         () => {},

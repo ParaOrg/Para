@@ -11,7 +11,7 @@ import { SettingsHeader } from './settings-header';
 import { Skeleton } from '../common/skeleton';
 import { useFocusHeading } from '../common/use-focus-heading';
 import { useIsSlowLoad } from '../common/use-is-slow-load';
-import { useScreenEntry } from '../common/use-screen-entry';
+import { useScreenEntry } from '../motion/use-screen-entry';
 
 interface AccountSettingsScreenProps {
   email: string;
