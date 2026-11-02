@@ -162,12 +162,22 @@ Made in the code, with no ADR yet (candidates):
 - The publish refuses a sudden shrink, and fails loudly through one GitHub issue.
 - The studio snaps lines with the public OSRM demo router.
 
-## 6. Not yet built
+## 6. Contributors and the studio's maps
 
-- **Contributors:** anyone records a ride on their phone at `/contribute/`,
-  and Save sends it to the studio. See
+Built since the pictures above, which do not show them yet:
+
+- **Contributors:** a contributor records a contribution on the contributor page at
+  `/contribute/`, in a browser or in the contributor app, the same page inside an Android shell
+  (ADR 0006). A contributor has an account (name, email, number, password), kept across phones.
+  Save uploads the contribution to Supabase through `features/contribute/api/`, the page's only
+  way to the database; it is never public. See
   [`.scratch/contribute/`](../.scratch/contribute/spec.md).
-- **Studio maps:** Contributors, Playground and Public maps in the studio. See
+- **The studio's maps:** three maps behind one switch. The Contributors map shows every
+  contribution as it came, for editors only. Editors draw on the Playground (Draft, Pending,
+  Approved), and the Public map shows what commuters get. See
   [`.scratch/studio-maps/`](../.scratch/studio-maps/spec.md).
+
+## 7. Not yet built
+
 - **Train tracking:** for LRT and MRT riders, on their own phones. See
   [`.scratch/train-tracking/`](../.scratch/train-tracking/spec.md).

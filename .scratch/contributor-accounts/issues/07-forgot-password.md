@@ -1,6 +1,6 @@
 # 07: Forgot password
 
-Status: ready-for-human (owner: approve the copy, Resend and Supabase email setup)
+Status: ready-for-human (owner: the Resend and Supabase email setup below; the build is resolved)
 Type: task
 Who: a session (`claude/accounts-07-forgot-password`)
 Blocked by: 02 (resolved). The owner sets up email sending in Supabase (below) before it works for real; the code does not wait for it.
@@ -10,7 +10,7 @@ Spec: [../spec.md](../spec.md), "Not now" (password reset was left out; the owne
 ## The owner's decisions (2026-10-26)
 
 - **A 6-digit code, not a link.** On Sign in, a "Forgot password?" button. Then: enter your email (+ Turnstile, as sign-in does) → `resetPasswordForEmail(email, { captchaToken })` → enter the 6-digit code and a new password → `verifyOtp({ email, token, type: 'recovery' })`, then `updateUser({ password })` → signed in, the same end state as `signIn` (profile and History as after it). No deep links, no redirect pages. Works the same on `/contribute/` and in the Android app build.
-- **Look: the same as Sign in and Create account.** Reuse `AccountPanel`, `TextField`, `PasswordField`, `Button`. No new visual style. Plain wording; every new line of copy is listed in the PR for the owner to approve.
+- **Look: the same as Sign in and Create account.** Reuse `AccountPage`, `TextField`, `PasswordField`, `Button`. No new visual style. Plain wording; every new line of copy is listed in the PR for the owner to approve.
 - **Email goes through Resend SMTP** that the owner configures in Supabase, and the owner edits the "Reset password" template to show `{{ .Token }}`. This ticket touches no Supabase setting.
 
 ## What to build
@@ -28,3 +28,9 @@ Spec: [../spec.md](../spec.md), "Not now" (password reset was left out; the owne
 - Size guards pass: the contributor page's first load stays under 30 kB; the account screens load on demand.
 - `npm run check` passes.
 - The PR lists the new copy and the owner's steps: Resend account and verified domain; Supabase → Authentication → Emails → SMTP settings; the Reset password template; Email OTP length 6.
+
+## Answer
+
+The build is resolved: Forgot password in three steps (dcd53a66), checked by `tests/e2e/forgot-password-test.mjs` with Auth mocked.
+
+Still open, for the owner: a Resend account and verified domain; Supabase → Authentication → Emails → SMTP settings; the Reset password template showing `{{ .Token }}`; Email OTP length 6.
