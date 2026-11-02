@@ -70,6 +70,13 @@ export const GROUPS = [
   },
 ];
 
+/**
+ * TanStack Query, the studio's and the contributor page's server state: a vendor chunk of its own
+ * that the public page never loads, so it is not part of the budget above. 11: 10.1 kB gzipped on
+ * 2026-11-02, @tanstack/query-core and react-query.
+ */
+export const TANSTACK_QUERY_MAX_GZ_KB = 11;
+
 /** The bytes of every font file in dist/assets. */
 export function fontBytes(dist) {
   return readdirSync(join(dist, 'assets'))
