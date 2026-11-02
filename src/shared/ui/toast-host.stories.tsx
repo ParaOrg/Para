@@ -15,7 +15,7 @@ const FIX_ID = 'location-off';
 
 /**
  * Buttons a screen might have: an info, a problem, word that the fix landed (a second later, as a
- * screen hears it), and a problem with an action.
+ * screen hears it), a problem with an action, and a compact info.
  */
 function Asker() {
   const { showToast, hideToast } = useToast();
@@ -55,6 +55,18 @@ function Asker() {
             id: FIX_ID,
             title: 'Location is off',
             action: { label: 'Retry', onAction: () => undefined },
+          })
+        }
+      />
+      <Button
+        variant="secondary"
+        label="Say it short"
+        onClick={() =>
+          showToast({
+            kind: 'info',
+            size: 'compact',
+            icon: <InformationIcon />,
+            title: 'Route reversed',
           })
         }
       />
@@ -139,6 +151,21 @@ export const InfoHidesItself: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Say info' }));
     await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
+    await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull(), {
+      timeout: INFO_TOAST_MS + 2000,
+    });
+  },
+};
+
+/** Compact info goes by itself as info does, and screen readers hear it politely. */
+export const CompactHidesItself: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Say it short' }));
+    await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
+    await expect(canvas.getByTestId('toast')).toHaveAttribute('data-size', 'compact');
+    await expect(canvas.getByRole('status')).toHaveTextContent(/^Route reversed$/);
+    await expect(canvas.getByRole('alert')).toHaveTextContent(/^$/);
     await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull(), {
       timeout: INFO_TOAST_MS + 2000,
     });
