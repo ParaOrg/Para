@@ -10,8 +10,8 @@ import type { MapNoteGiven } from './map-note';
 import type { PageProblem, PageProblemIcon } from './page-problem';
 import type { RouteRecordedGiven } from './route-recorded';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
-import { CheckIcon } from '../history/history-icons';
-import { FlagStopIcon } from '../screens/flag-stop-icon';
+import { FlagStopIcon } from '../common/flag-stop-icon';
+import { CheckIcon } from '../common/history-icons';
 
 const ICONS = {
   location: <LocationIcon />,

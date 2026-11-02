@@ -3,7 +3,8 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { AccountScreen } from './account-screen';
 import type { VehicleRides } from './vehicle-grid';
-import { BottomToolbar, TOOLBAR_PLACE } from '../screens/bottom-toolbar';
+import { BottomToolbar } from '../toolbar/bottom-toolbar';
+import { TOOLBAR_PLACE } from '../toolbar/toolbar-place';
 
 /** The frame's counts: no UV Express or ferry ride. */
 const FRAME_RIDES: VehicleRides = {

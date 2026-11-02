@@ -1,7 +1,7 @@
 import { Button } from '@/design-system/primitives/button';
 
-import { TOOLBAR_ROOM } from './bottom-toolbar';
 import { useFocusHeading } from '../common/use-focus-heading';
+import { TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 
 interface ScreenUnavailableProps {
   /** The screen that could not be opened, as its tab names it: History, Account. */
