@@ -796,9 +796,40 @@ const buttons = (page) =>
     (await tintOf(page)) === 'lakad:from-blue-700/10',
   );
 
-  // Pause, and Resume carries on.
+  // Pause, and Resume carries on. Watched from inside the page: the frost is whole in the same
+  // frame Resume first shows, not faded or ringed in after it.
+  await page.evaluate(() => {
+    window.__frostAtPause = new Promise((resolve) => {
+      const seen = new MutationObserver(() => {
+        const isPaused = [...document.querySelectorAll('button')].some(
+          (button) =>
+            button.textContent.trim() === 'Resume' ||
+            button.getAttribute('aria-label') === 'Resume',
+        );
+        if (!isPaused) return;
+        seen.disconnect();
+        const layer = document.querySelector('[data-map-frost]');
+        resolve({
+          visibility: layer ? getComputedStyle(layer).visibility : 'missing',
+          opacity: layer ? getComputedStyle(layer).opacity : 'missing',
+          transition: layer ? getComputedStyle(layer).transitionDuration : 'missing',
+          rings: layer?.querySelectorAll('[data-frost-ring]').length ?? 0,
+        });
+      });
+      seen.observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+  });
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).waitFor();
+  const frostAtPause = await page.evaluate(() => window.__frostAtPause);
+  check(
+    '  the frost is whole the moment Paused shows: visible, all four layers, no fade',
+    frostAtPause.visibility === 'visible' &&
+      frostAtPause.opacity === '1' &&
+      frostAtPause.transition === '0s' &&
+      frostAtPause.rings === 4,
+    JSON.stringify(frostAtPause),
+  );
   check(
     '  Paused tints them neutral/900, and Flag a stop shows, disabled',
     (await tintOf(page)) === 'paused:from-neutral-900/10' && (await flagButton(page).isDisabled()),
@@ -817,11 +848,6 @@ const buttons = (page) =>
   // Paused, the map frosts over; the card and the map's own buttons stay crisp over it.
   const frost = page.locator('[data-map-frost]');
   await frost.waitFor({ state: 'attached', timeout: 5000 });
-  await page.waitForFunction(
-    () => getComputedStyle(document.querySelector('[data-map-frost]')).opacity === '1',
-    null,
-    { timeout: 5000 },
-  );
   const frosted = await page.evaluate(() => {
     const layer = document.querySelector('[data-map-frost]');
     // What a tap at an element's middle reaches, and whether any of its ancestors is filtered.

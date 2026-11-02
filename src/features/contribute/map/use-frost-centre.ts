@@ -20,15 +20,16 @@ function centreOf(map: MapLibreMap, where: MapWhere | null): FrostCentre {
 }
 
 /**
- * The paused frost's centre, following the rider's dot as the map moves or resizes, at most once
- * a frame. Followed only while `isFollowing` (the frost is on): a clear map costs nothing.
+ * The paused frost's centre: the rider's dot on the screen, worked out as it renders, so the
+ * frost is whole in the very frame the pause is drawn. While `isFollowing` (the frost is on) a
+ * move or resize of the map draws it again, at most once a frame; a clear map costs nothing.
  */
 export function useFrostCentre(
   map: MapLibreMap | null,
   where: MapWhere | null,
   isFollowing: boolean,
 ): FrostCentre {
-  const [centre, setCentre] = useState(NOWHERE);
+  const [, setMoves] = useState(0);
   useEffect(() => {
     if (!map || !isFollowing) return;
     let frame = 0;
@@ -36,10 +37,9 @@ export function useFrostCentre(
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
-        setCentre(centreOf(map, where));
+        setMoves((moves) => moves + 1);
       });
     };
-    update();
     map.on('move', update);
     map.on('resize', update);
     return () => {
@@ -47,6 +47,6 @@ export function useFrostCentre(
       map.off('move', update);
       map.off('resize', update);
     };
-  }, [map, where, isFollowing]);
-  return centre;
+  }, [map, isFollowing]);
+  return map && isFollowing ? centreOf(map, where) : NOWHERE;
 }

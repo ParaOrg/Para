@@ -18,9 +18,9 @@ function ringMask(centre: FrostCentre, fromPx: number, toPx: number): string {
  * The map frosted while a recording is paused, so the pause shows at a glance: clear round the
  * rider's dot and blurrier step by step out to the edges (frost-rings.ts), with a faint wash of
  * the surface's white where it is blurred, so the dot's own street keeps its colours. It frosts
- * what is behind it only, so whatever is drawn over it stays crisp. It eases in on gentle and
- * out on quick; with reduced motion it simply appears. Clear, it is invisible: not painted, so
- * no blur is worked out.
+ * what is behind it only, so whatever is drawn over it stays crisp. It comes and goes at once, in
+ * the frame the pause or the resume is drawn: no fade, which would blur the whole map again on
+ * every frame of it. Clear, it is invisible: not painted, so no blur is worked out.
  */
 export function MapFrost({ isFrosted, centre }: MapFrostProps) {
   const rings = centre.width > 0 ? frostRings(centre) : [];
@@ -33,13 +33,7 @@ export function MapFrost({ isFrosted, centre }: MapFrostProps) {
       data-frost-x={Math.round(centre.x)}
       data-frost-y={Math.round(centre.y)}
       data-frost-clear={Math.round(centre.clearPx)}
-      className={cn(
-        'pointer-events-none absolute inset-0',
-        'transition-[opacity,visibility] motion-reduce:transition-none',
-        isFrosted
-          ? 'visible opacity-100 duration-gentle ease-enter'
-          : 'invisible opacity-0 duration-quick ease-exit',
-      )}
+      className={cn('pointer-events-none absolute inset-0', isFrosted ? 'visible' : 'invisible')}
     >
       {rings.map((ring) => {
         const mask = ringMask(centre, ring.fromPx, ring.toPx);
