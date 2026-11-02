@@ -13,7 +13,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
-import { BASE, bareStyle, harness, nodeFetch } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, nodeFetch, until } from './lib/harness.mjs';
 import { checkLocationLabels } from './lib/location-labels.mjs';
 import { mapControlsInTabOrder } from './lib/tab-order.mjs';
 
@@ -116,6 +116,33 @@ async function phone({ earlierConsent = false, granted = false } = {}) {
 }
 
 const shot = (page, name) => (SHOTS ? page.screenshot({ path: `${SHOTS}/${name}.png` }) : null);
+/**
+ * How many rows the phone holds in one of the page's stores (fixes, thumbnails), read in the page.
+ * Waits poll it from here with until(): page.waitForFunction does not await a predicate's promise,
+ * so a wait written that way returns at once, whatever the count.
+ */
+const storedCount = (page, store) =>
+  page.evaluate(
+    (name) =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('para-contribute');
+        open.onerror = () => resolve(-1);
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains(name)) {
+            db.close();
+            resolve(0);
+            return;
+          }
+          const count = db.transaction(name).objectStore(name).count();
+          count.onsuccess = () => {
+            db.close();
+            resolve(count.result);
+          };
+        };
+      }),
+    store,
+  );
 /** One fix of the ride, `metres` east of the start, a second after the last. */
 const emit = (page, metres) => {
   const [lng, lat] = eastOf(metres);
@@ -1596,20 +1623,10 @@ const buttons = (page) =>
   const distanceBefore = await distanceOf();
   // Fixes are written as they arrive: the page goes once the phone holds all 31 ridden, not after
   // a guess at how long the last writes take (the page may be busy, its map settling).
-  await page.waitForFunction(
-    () =>
-      new Promise((resolve) => {
-        const open = indexedDB.open('para-contribute');
-        open.onsuccess = () => {
-          const count = open.result.transaction('fixes').objectStore('fixes').count();
-          count.onsuccess = () => {
-            open.result.close();
-            resolve(count.result >= 31);
-          };
-        };
-      }),
-    null,
-    { timeout: 10000, polling: 100 },
+  await until(
+    () => storedCount(page, 'fixes'),
+    (count) => count >= 31,
+    10000,
   );
   // The recording screen's code no longer arrives, as with no signal before the worker kept it.
   await page.route(/\/screens\/recording-screen\.tsx/, (route) =>
@@ -1727,20 +1744,11 @@ const buttons = (page) =>
   await ride(page, 0, 600);
   await finishRecording(page);
   await page.getByLabel('Description').waitFor();
-  await page
-    .waitForFunction(
-      () =>
-        new Promise((resolve) => {
-          const open = indexedDB.open('para-contribute');
-          open.onsuccess = () => {
-            const count = open.result.transaction('thumbnails').objectStore('thumbnails').count();
-            count.onsuccess = () => resolve(count.result > 0);
-          };
-        }),
-      null,
-      { timeout: 15000 },
-    )
-    .catch(() => {});
+  await until(
+    () => storedCount(page, 'thumbnails'),
+    (count) => count > 0,
+    15000,
+  );
   const [picture] = await thumbnails();
   const size = picture ? Buffer.from(picture.url.split(',')[1], 'base64').length : 0;
   // The capture gives up quietly (no idle map within 8 s, a tile failed, the frame moved): what
