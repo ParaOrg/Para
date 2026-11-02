@@ -16,6 +16,7 @@ import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-client';
 import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { OPENABLE_SCREENS_ATTR } from './common/data-attributes';
+import { useLatch } from './common/use-latch';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import {
   AccountGate,
@@ -199,12 +200,8 @@ export function ContributePage({ locator }: ContributePageProps) {
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
   // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
   // rest. Signed out, they go.
-  const [isHistoryKept, setIsHistoryKept] = useState(false);
-  if (layout.isHistoryShown && !isHistoryKept) setIsHistoryKept(true);
-  if (!canSend && isHistoryKept) setIsHistoryKept(false);
-  const [isProfileKept, setIsProfileKept] = useState(false);
-  if (layout.isProfileShown && !isProfileKept) setIsProfileKept(true);
-  if (!canSend && isProfileKept) setIsProfileKept(false);
+  const isHistoryKept = useLatch(layout.isHistoryShown, !canSend);
+  const isProfileKept = useLatch(layout.isProfileShown, !canSend);
   // The recording card folded away, by the recording it was folded on: each recording opens with
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
   const [foldedRecordingId, setFoldedRecordingId] = useState<string | null>(null);
