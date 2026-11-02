@@ -175,6 +175,9 @@ flowchart TD
   features_contribute_native_bridge --> features_contribute_app_update
   features_contribute_native_bridge -.-> features_contribute_native
   features_contribute_notices --> design_system_primitives
+  features_contribute_notices --> features_contribute_history
+  features_contribute_notices --> features_contribute_screens
+  features_contribute_notices --> features_contribute_uploads
   features_contribute_notices --> shared_ui
   features_contribute_recorder --> features_contribute_consent
   features_contribute_recorder -.-> features_contribute_native
@@ -308,7 +311,7 @@ flowchart TD
 | `features/contribute/map` | `design-system/foundation`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/utils` |
 | `features/contribute/native` | `design-system/primitives`, `features/contribute/common`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `shared/utils` |
 | `features/contribute/native-bridge` | `features/contribute/app-update`, `features/contribute/native` |
-| `features/contribute/notices` | `design-system/primitives`, `shared/ui` |
+| `features/contribute/notices` | `design-system/primitives`, `features/contribute/history`, `features/contribute/screens`, `features/contribute/uploads`, `shared/ui` |
 | `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `shared/utils` |
 | `features/contribute/screens` | `design-system/primitives`, `features/contribute/api`, `features/contribute/app-update`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/cards`, `features/routes/map`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/storage` | `features/routes/model` |

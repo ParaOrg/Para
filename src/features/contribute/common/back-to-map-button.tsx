@@ -13,7 +13,7 @@ const goBackToMap = () => window.location.assign('/');
 export function BackToMapButton() {
   if (isNativeApp()) return null;
   return (
-    // Above the Saved screen, which covers the page.
+    // Above the screen it is drawn with (Unfinished), which covers the page.
     <div className="absolute top-0 left-0 z-30 pt-[max(1rem,env(safe-area-inset-top))] pl-[max(1rem,env(safe-area-inset-left))]">
       <IconButton
         tooltip="top"

@@ -6,6 +6,7 @@ import { TOOLBAR_FOOT, TOOLBAR_ROOM } from './bottom-toolbar';
 import { HelpButton } from './help-button';
 import { ParaMark } from './para-mark';
 import { StartBar } from './start-bar';
+import { START_BUTTON_ATTR } from './start-morph-attrs';
 import { useStackRoom } from '../common/use-stack-room';
 import { useToolbarLift } from '../common/use-toolbar-lift';
 import { EarlierRecordingsPanel, type EarlierQuestion } from '../consent/earlier-recordings-panel';
@@ -30,8 +31,8 @@ const StartGate =
 interface ReadyScreenProps {
   earlierQuestion: EarlierQuestion | null;
   onStart: () => void;
-  /** The tab whose screen was open before this one: focus goes back to it. */
-  backFrom: 'history' | 'account' | null;
+  /** The tab whose screen was open before this one, focus going back to it; or a save, focus going to Start tracking. */
+  backFrom: 'history' | 'account' | 'save' | null;
   /** The page's History tab (contribute-page.tsx), for focus to come back to from History. */
   historyTabRef: RefObject<HTMLButtonElement | null>;
   /** The page's Account tab, for focus to come back to from Account. */
@@ -65,13 +66,18 @@ export function ReadyScreen({
   helpButtonRef,
 }: ReadyScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  // Decided once, as the screen opens: a later change must not move focus again.
-  const [focusTab] = useState(backFrom);
-  useEffect(() => {
-    const tab = { history: historyTabRef, account: accountTabRef };
-    ((focusTab && tab[focusTab].current) ?? headingRef.current)?.focus();
-  }, [focusTab, historyTabRef, accountTabRef]);
   const stackRef = useStackRoom();
+  // Decided once, as the screen opens: a later change must not move focus again.
+  const [focusFrom] = useState(backFrom);
+  useEffect(() => {
+    const start = document.querySelector<HTMLElement>(`[${START_BUTTON_ATTR}]`);
+    const target = {
+      history: historyTabRef.current,
+      account: accountTabRef.current,
+      save: start,
+    };
+    ((focusFrom && target[focusFrom]) ?? headingRef.current)?.focus();
+  }, [focusFrom, historyTabRef, accountTabRef]);
   // The page's toolbar stands over the earlier-recordings question, as over Start.
   const liftRef = useToolbarLift();
 

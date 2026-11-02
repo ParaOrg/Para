@@ -65,7 +65,7 @@ export function useRecording(): RecordingState {
     clearOtherTab: problems.clearOtherTab,
     setPhase,
   });
-  const { lastSaved, isSaving, save, cancel, recordAgain } = useRecordingSave({
+  const { lastSaved, isSaving, save, cancel } = useRecordingSave({
     currentRef,
     hasNativeLogProblemRef,
     writeAllFixes,
@@ -173,13 +173,14 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Switched to ${MODE_LABEL[switched.to]}`);
   }
 
-  function markPlace() {
+  function markPlace(): boolean {
     const recording = currentRef.current;
-    if (!recording) return;
+    if (!recording) return false;
     const marked = markedRecording(recording, Date.now());
-    if (!marked) return;
+    if (!marked) return false;
+    // Said by the page's "Stop flagged" toast, not the status line: one word for one flag.
     keep(marked.recording);
-    setAnnouncement(`Flagged, ${marked.count}`);
+    return true;
   }
 
   return {
@@ -205,7 +206,6 @@ export function useRecording(): RecordingState {
     focusTarget,
     save,
     cancel,
-    recordAgain,
     deleteSaved,
   };
 }

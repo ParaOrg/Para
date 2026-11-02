@@ -242,6 +242,15 @@ const waitForStatus = async (page, name, pattern) => {
   );
 };
 const UPLOADED = /^Uploaded$/;
+/** Whether the stand-in has received the ride saved with this start, within `ms`. */
+const isReceived = async (fake, startName, ms = 15000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) {
+    if ([...fake.rows.values()].some((row) => row.recording.start_name === startName)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return false;
+};
 const NO_SIGNAL = /^Waiting for signal$/;
 const ON_PHONE_ONLY = /^Only on this phone$/;
 /** A true failure's status line, which is its retry button. */
@@ -264,11 +273,18 @@ const retryButton = (page, name) =>
   await page.getByRole('button', { name: 'Finish', exact: true }).click();
   await page.getByLabel('Start point name').fill('SM Fairview');
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-  await page.getByText('Uploaded to Para').waitFor({ timeout: 15000 });
+  const recorded = page.getByTestId('toast').filter({ hasText: 'Route recorded' });
+  await recorded.waitFor();
+  check(
+    'saved, the page is back on Record and its toast says the route is on its way to Para',
+    (await recorded.innerText()).includes('Thanks! It’s on its way to Para.') &&
+      (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 1,
+    await recorded.innerText(),
+  );
+  await isReceived(fake, 'SM Fairview');
   const [stored] = [...fake.rows.values()];
   check(
-    'a saved recording is uploaded on its own, under the current terms (4), and Successfully recorded says so',
+    'a saved recording is uploaded on its own, under the current terms (4)',
     fake.rows.size === 1 &&
       fake.saveRequests === 1 &&
       stored.recording.start_name === 'SM Fairview' &&
@@ -306,7 +322,6 @@ const retryButton = (page, name) =>
       (await page.evaluate((k) => localStorage.getItem(k), STUDIO_KEY)) === studioBefore &&
       (await page.evaluate(() => localStorage.getItem('para.contributor-auth'))) !== null,
   );
-  await page.getByRole('button', { name: 'Record again' }).click();
   await waitForStatus(page, 'SM Fairview', UPLOADED);
   await shot(page, '1-uploaded');
   await page.reload({ waitUntil: 'load' });
@@ -428,6 +443,47 @@ const retryButton = (page, name) =>
   await retryButton(page, 'Refused ride').click();
   await waitForStatus(page, 'Refused ride', /20 recordings sent today/);
   check('  the day cap says it tries again later', fake.rows.size === 0);
+}
+
+// ------------------------------- a save refused by Para's checks: said on Record, not only in History
+{
+  const { page, fake, errors } = await phone();
+  fake.next.save = 'bad_points';
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  for (let s = 0; s < 20; s += 1) {
+    await page.evaluate(
+      ([t, lat]) => window.__fix(121.05, lat, t),
+      [T0 + s * 1000, 14.7 + (s * 8) / 111_320],
+    );
+  }
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.getByLabel('Start point name').fill('Refused on save');
+  await page.getByRole('button', { name: 'Save recording' }).click();
+  const recorded = page.getByTestId('toast').filter({ hasText: 'Route recorded' });
+  await recorded.waitFor();
+  // The refusal comes a moment after the save: it waits its turn behind "Route recorded".
+  const failed = page.getByTestId('toast').filter({ hasText: 'Upload didn’t go through' });
+  check(
+    'a just-saved route refused by Para: back on Record, "Upload didn’t go through" in its own words',
+    await failed.waitFor({ timeout: 15000 }).then(
+      () => true,
+      () => false,
+    ),
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
+  check(
+    '  a problem, read at once, with the refusal’s plain words',
+    (await failed.getAttribute('data-kind')) === 'problem' &&
+      (await failed.innerText()).includes("Para's checks refused this recording.") &&
+      (await page.getByRole('alert').filter({ hasText: 'Upload didn’t go through' }).count()) === 1,
+    await failed.innerText(),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
 }
 
 // -------------------------------------- remove the upload, keep the copy
@@ -794,14 +850,8 @@ const retryButton = (page, name) =>
       await page.getByLabel('Fare').fill('');
       await page.getByRole('button', { name: 'Save recording' }).click();
     }
-    await page.getByRole('heading', { name: 'Successfully recorded' }).waitFor();
-    const isUploaded = await page
-      .getByText('Uploaded to Para')
-      .waitFor({ timeout: 15000 })
-      .then(
-        () => true,
-        () => false,
-      );
+    await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
+    const isUploaded = await isReceived(fake, `On a ${kind}`);
     const stored = [...fake.rows.values()].find(
       (row) => row.recording.start_name === `On a ${kind}`,
     );
@@ -812,7 +862,6 @@ const retryButton = (page, name) =>
         (stored?.recording.fare_php ?? null) === farePhp,
       JSON.stringify([stored?.recording.vehicle, stored?.recording.fare_php]),
     );
-    await page.getByRole('button', { name: 'Record again' }).click();
   }
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }

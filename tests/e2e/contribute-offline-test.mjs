@@ -387,7 +387,7 @@ try {
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Finish', exact: true }).click();
   await page.getByRole('button', { name: 'Save recording' }).click();
-  await page.getByRole('button', { name: 'Record again' }).waitFor({ timeout: 10000 });
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 10000 });
   await page.waitForTimeout(500);
   const reloaded = page.waitForEvent('load', { timeout: 20000 }).then(
     () => true,
