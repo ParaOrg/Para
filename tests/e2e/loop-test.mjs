@@ -269,8 +269,13 @@ const bareCircles = (page) =>
 const near = (value, metres) => Math.abs(value - metres / 1000) <= 0.16;
 /** A click on a row the sheet has scrolled out of the screen: the button's own handler, as a tap would reach it. */
 const press = (locator) => locator.evaluate((el) => el.click());
+// The trip card's own ✕: a toast on the page (the locator's note, say) has a Close of its own.
 const closeTrip = async (page) => {
-  await page.getByRole('button', { name: 'Close' }).first().tap();
+  await page
+    .locator('[data-testid="card"]', { has: page.locator('[data-testid="trip"]') })
+    .getByRole('button', { name: 'Close' })
+    .first()
+    .tap();
   await page.waitForTimeout(400);
 };
 
