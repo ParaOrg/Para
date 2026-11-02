@@ -1,8 +1,8 @@
-import { ringCrossesItself } from '@/features/routes/geo/ring';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { terminalAlreadyAt } from './places';
+import { ringCrossesItself } from '../data/hotspot-ring';
 import type { HotspotKind } from '../drawing/drawing-types';
 
 /**

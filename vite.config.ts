@@ -170,12 +170,16 @@ export default defineConfig({
             //    toast, its host and the location drawing a location problem
             //    leads with: the public page fetches them the first time it has
             //    something to say, and in `shared` they would ride along on its
-            //    opening.
+            //    opening. Nor what only the other pages or a lazy chunk draw: the
+            //    design system's Switch (the Map Style card's, fetched with the
+            //    card), the contributor page's locator (ContributorLocation and
+            //    its permission check) and its css-duration. A module lands in
+            //    `shared` when two chunks import it, whichever pages they are.
             {
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
-                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/]location-icon\.tsx$)/.test(
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/](location-icon|switch)\.tsx$|features[\\/]locator[\\/](contributor-location\.tsx|location-permission\.ts)$|shared[\\/]utils[\\/]css-duration\.ts$)/.test(
                   id,
                 ),
             },

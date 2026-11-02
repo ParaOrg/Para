@@ -19,8 +19,8 @@ export const WORKER_MAX_GZ_KB = 20;
 // it may hold; `vendor` chunks may import no chunk of ours. The locator counts
 // here as both pages draw it: the public page's own chunk is that much lighter,
 // its download no heavier. The Map Style card's Location Labels switch (the
-// design system's Switch, its row and the label rule) is in it; lazy-loading
-// the card would give that room back.
+// design system's Switch) is not: it comes with the card, which is fetched on
+// first use (vite.config.ts, the shared group's exclusions).
 export const SHARED_MAX_GZ_KB = 412;
 export const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
 export const GROUPS = [
