@@ -1,3 +1,5 @@
+import { isNoAnswer } from './upload-problem';
+
 /**
  * Why signing up or signing in did not go through.
  * - `wrong-credentials`: the email and password do not match an account.
@@ -87,7 +89,5 @@ export function accountProblemOf(error: AuthFailure): AccountProblem {
   if (error.code === 'reauthentication_needed') return 'needs-recent-sign-in';
   if (error.code && RATE_LIMIT_CODES.has(error.code)) return 'rate-limited';
   if (error.code === 'captcha_failed' || /captcha/i.test(error.message)) return 'check-failed';
-  const isNoAnswer =
-    error.name === 'TypeError' || error.name === 'AuthRetryableFetchError' || error.status === 0;
-  return isNoAnswer ? 'offline' : 'not-accepting';
+  return isNoAnswer(error) ? 'offline' : 'not-accepting';
 }

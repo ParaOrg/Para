@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { accountKeys } from './account-keys';
-import { fetchProfile } from './profile';
+import { fetchProfile } from './fetch-profile';
 
 /** The signed-in account's name and number; only the update and sign-out mutations change them. */
 export function useProfileQuery() {

@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 
-import { nativePlugin } from '../native-bridge/native-app';
+import { lazyPlugin } from '../native-bridge/native-app';
 import type { RideEvent } from '../recorder/ride-events';
 
 /** Where the ride is, as the app's notification shows it (RidePlugin.java setState). */
@@ -36,8 +36,7 @@ const eventsSchema = z.object({
   ),
 });
 
-let plugin: RidePlugin | null = null;
-const getPlugin = () => (plugin ??= nativePlugin<RidePlugin>('Ride'));
+const getPlugin = lazyPlugin<RidePlugin>('Ride');
 
 // The page's watcher (native-location.ts) and the last state said: the notification needs both,
 // and they change apart.

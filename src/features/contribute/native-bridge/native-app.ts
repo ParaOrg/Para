@@ -2,7 +2,7 @@
 // the build check holds native/ to the app's own build.
 import type { CapacitorGlobal, HttpResponse } from '@capacitor/core';
 
-import { textOfResponse } from '../app-update/response-text';
+import { textOfResponse } from './response-text';
 
 type NativeHttp = (options: { url: string; responseType: 'text' }) => Promise<HttpResponse>;
 
@@ -28,12 +28,18 @@ export function isNativeApp(): boolean {
 }
 
 /**
- * A native plugin's bridge, by the name it registers under. Only inside the app. Capacitor warns
- * each time a name is registered again, so a caller asks once and keeps the answer.
+ * A getter for a native plugin's bridge, by the name it registers under, made on the first call
+ * and kept: Capacitor warns each time a name is registered again. The getter works only inside
+ * the app; making it does not need the app, so a module may make it as it loads.
  */
-export function nativePlugin<T>(name: string): T {
-  if (!capacitor) throw new Error('This page is not running inside the Android app.');
-  return capacitor.registerPlugin<T>(name);
+export function lazyPlugin<T>(name: string): () => T {
+  let plugin: T | null = null;
+  return () => {
+    if (plugin !== null) return plugin;
+    if (!capacitor) throw new Error('This page is not running inside the Android app.');
+    plugin = capacitor.registerPlugin<T>(name);
+    return plugin;
+  };
 }
 
 /**

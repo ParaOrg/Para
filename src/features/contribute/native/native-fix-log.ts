@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 
-import { nativePlugin } from '../native-bridge/native-app';
-import type { WatchedFix } from '../recorder/use-geolocation-watch';
+import { lazyPlugin } from '../native-bridge/native-app';
+import type { WatchedFix } from '../recorder/watched-fix';
 
 /** The accuracy a fix with none gets: far past what the recorder keeps, so it never draws. */
 export const NO_ACCURACY_M = 1_000;
@@ -52,8 +52,7 @@ interface FixLogPlugin {
   clear: () => Promise<void>;
 }
 
-let plugin: FixLogPlugin | null = null;
-const getPlugin = () => (plugin ??= nativePlugin<FixLogPlugin>('FixLog'));
+const getPlugin = lazyPlugin<FixLogPlugin>('FixLog');
 
 /** Starts the native fix log for a recording: the fixes the foreground service reports are kept. */
 export function beginFixLog(recordingId: string): Promise<void> {

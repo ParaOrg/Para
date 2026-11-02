@@ -8,6 +8,7 @@ import {
 } from './account-deletion';
 import { accountErrorOf } from './account-errors';
 import { AccountError } from './account-problem';
+import { callRpc } from './call-rpc';
 import { dropPendingClaim } from './claim-token';
 import { CONTRIBUTOR_AUTH_KEY } from './contribute-client';
 import { requireClient } from './require-client';
@@ -43,18 +44,16 @@ export async function deleteAccount({ deleteUploads }: DeleteAccountChoice): Pro
       deletion = step.deletion;
     } else {
       deletion = step.kept ?? { accountId: step.accountId };
-      const { error, status } = await client.rpc('delete_my_account', {
-        delete_uploads: deleteUploads,
-      });
-      if (error) {
-        if (status === 0) throw new AccountError('offline', error.message);
+      const result = await callRpc(client, 'delete_my_account', { delete_uploads: deleteUploads });
+      if (result.kind === 'failure') {
+        if (result.isOffline) throw new AccountError('offline', result.message);
         // An anonymous phone, an editor, or an account that still owns rows of the map.
-        if (error.code === '42501' || error.message.startsWith('owns_map_rows')) {
+        if (result.code === '42501' || result.message.startsWith('owns_map_rows')) {
           dropDeletion();
-          throw new AccountError('not-deletable', error.message);
+          throw new AccountError('not-deletable', result.message);
         }
-        console.warn(`Para did not delete the account (HTTP ${status}):`, error.message);
-        throw new AccountError('not-accepting', error.message);
+        console.warn(`Para did not delete the account (HTTP ${result.status}):`, result.message);
+        throw new AccountError('not-accepting', result.message);
       }
       // Kept only once Para has said yes: a deletion kept before an answer that never came would
       // let a later tap, its session lapsed meanwhile, clear the phone of an account Para still has.

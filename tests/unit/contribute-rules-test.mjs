@@ -81,3 +81,27 @@ test('the countdown says its figures the way the design reads them', () => {
   assert.equal(countdownText(0.2), '0:01');
   assert.equal(countdownText(-3), '0:00');
 });
+
+test('a half tenth of a kilometre rounds up, as the ride notification rounds it', () => {
+  // Each ends in 50 m: a half tenth, rounded up. toFixed rounds the binary fraction, which reads
+  // some of them down (1150 m as 1.1).
+  for (const [metres, text] of [
+    [1050, '1.1'],
+    [1150, '1.2'],
+    [1450, '1.5'],
+    [1950, '2.0'],
+    [2050, '2.1'],
+    [199_950, '200.0'],
+  ]) {
+    assert.equal(kilometresText(metres), text, `${metres} m`);
+    assert.deepEqual(distanceFigure(metres), { value: text, unit: 'km' }, `${metres} m`);
+  }
+  // And just under a half rounds down.
+  assert.equal(kilometresText(1149), '1.1');
+});
+
+test('the metres-to-kilometres boundary', () => {
+  assert.deepEqual(distanceFigure(999), { value: '999', unit: 'm' });
+  assert.deepEqual(distanceFigure(999.5), { value: '1.0', unit: 'km' });
+  assert.deepEqual(distanceFigure(1000), { value: '1.0', unit: 'km' });
+});
