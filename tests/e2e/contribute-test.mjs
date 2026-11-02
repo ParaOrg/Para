@@ -1705,6 +1705,11 @@ const buttons = (page) =>
 // ------------------- History's picture: the whole trail, taken as the form opens, kept and deleted with it
 {
   const { page, errors } = await phone();
+  // A picture given up says each step of the capture and when it came (capture-trail-picture.ts).
+  const givenUp = [];
+  page.on('console', (message) => {
+    if (message.text().includes('picture was given up')) givenUp.push(message.text());
+  });
   const thumbnails = () =>
     page.evaluate(
       () =>
@@ -1749,7 +1754,7 @@ const buttons = (page) =>
   check(
     'as the form opens, a picture of the trail is kept for History: small, a WebP or JPEG',
     !!picture && /^data:image\/(webp|jpeg);base64,/.test(picture.url) && size > 0 && size < 40_000,
-    `${picture?.url.slice(0, 22)} ${size} bytes ${picture ? '' : JSON.stringify(mapWhenAsked)}`,
+    `${picture?.url.slice(0, 22)} ${size} bytes ${picture ? '' : JSON.stringify(mapWhenAsked)} ${givenUp.join(' | ')}`,
   );
   // The locator keeps the map on the rider under the form; the picture's framing is put back.
   const centre = await page.evaluate(() => window.__map.getCenter().toArray());
