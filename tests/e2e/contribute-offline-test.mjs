@@ -21,7 +21,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fakeContributions, session } from './lib/fake-contributions.mjs';
-import { harness } from './lib/harness.mjs';
+import { harness, until } from './lib/harness.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -323,20 +323,11 @@ try {
     offlineFailures.filter((failure) => failure.includes('page-toasts')).join(' | '),
   );
   await ride(context, page, 6);
-  await page.waitForFunction(
-    () =>
-      new Promise((resolve) => {
-        const open = indexedDB.open('para-contribute');
-        open.onsuccess = () => {
-          const count = open.result.transaction('fixes').objectStore('fixes').count();
-          count.onsuccess = () => {
-            open.result.close();
-            resolve(count.result >= 3);
-          };
-        };
-      }),
-    null,
-    { timeout: 10000 },
+  // Polled from here: page.waitForFunction does not await a predicate's promise.
+  await until(
+    () => storedFixes(page),
+    (count) => count >= 3,
+    10000,
   );
   const fixes = await storedFixes(page);
   check(
