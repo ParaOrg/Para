@@ -35,7 +35,7 @@
 import { writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
-const DEFAULT_SITE = 'https://staging-parapo.villaralvorovic2.workers.dev';
+const DEFAULT_SITE = 'https://staging-para.para-ph-info.workers.dev';
 const DEFAULT_TILES = 'https://tiles.para-commute.org';
 const STYLE_NAME = 'positron';
 // [zoom, tiles across]: 4 + 9 + 16 = 29 tiles a visit.

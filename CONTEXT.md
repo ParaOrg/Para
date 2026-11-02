@@ -10,7 +10,8 @@ they cannot change: the R2 bucket `parapo-tiles` (a bucket cannot be renamed)
 and the tile archives in it (`tiles/parapo-*.pmtiles`, which the live
 `current.json` names), the weekly backups (`parapo-*.sql.gz.gpg`), the
 contributor app's signing key with its secret `PARAPO_KEY_PASSPHRASE`, and the
-old site's addresses on `villaralvorovic2.workers.dev`.
+old site's addresses on `villaralvorovic2.workers.dev`, which now redirect to
+`www.para-commute.org` (`docs/operations/retire-old-site.md`).
 
 ## Language
 

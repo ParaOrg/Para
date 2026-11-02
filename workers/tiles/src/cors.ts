@@ -1,15 +1,12 @@
 const FIXED_ORIGINS = new Set([
-  'https://parapo.villaralvorovic2.workers.dev',
-  'https://staging-parapo.villaralvorovic2.workers.dev',
   'https://para.para-ph-info.workers.dev',
   'https://staging-para.para-ph-info.workers.dev',
   'http://localhost:5173',
 ]);
 // Workers Builds previews: https://<branch>-<worker>.<account>.workers.dev. The site's
-// Worker is `para` on para-ph-info and `parapo` on villaralvorovic2, where the old site runs.
+// Worker is `para` on para-ph-info.
 const PREVIEW_ORIGINS = [
   /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?-para\.para-ph-info\.workers\.dev$/,
-  /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?-parapo\.villaralvorovic2\.workers\.dev$/,
 ];
 
 export function isAllowedOrigin(origin: string, extraOrigins = ''): boolean {
