@@ -1049,6 +1049,20 @@ const fileDirections = published?.directions ?? [];
  */
 const loopIds = new Set(fileDirections.filter((v) => v.route?.isLoop === true).map((v) => v.id));
 /**
+ * The directions of routes with no fare rule (fares.ts hasFareRule: a jeepney's
+ * alone today), such as a point-to-point bus: their trip shows no pesos, so the
+ * checks of a trip's pill and fare tile pick a route that has them.
+ */
+const farelessIds = new Set(
+  await page.evaluate(
+    (directions) =>
+      import('/src/features/routes/model/fares.ts').then(({ hasFareRule }) =>
+        directions.filter((v) => !hasFareRule(v.mode)).map((v) => v.id),
+      ),
+    fileDirections.map((v) => ({ id: v.id, mode: v.route?.mode })),
+  ),
+);
+/**
  * What a trip on direction `id` lists behind its ‹ when it was opened on its
  * own (the owner's ask, 2026-09-29): the directions, drawn and the same way
  * round, of its route and of every route sharing its head or its tail — its
@@ -2953,14 +2967,15 @@ async function openAlone(d) {
 // ------------------------------------------------ 2. a forgiving tap, ±20 px
 // Route A: the vertex with the most clearance from every other route's line,
 // and clear of the hotspot polygons, so only one thing can possibly be there;
-// on a route with two ends, never a loop, for the trip card's checks below.
+// on a route with two ends, never a loop, and with a fare, for the trip card's
+// checks below.
 let routeA = null;
 if (snapshot.routes.length === 0) {
   skip('a tap 14 px beside a lone route line selects it', 'no saved routes on the map today');
 } else {
   let best = null;
   for (const [ri, r] of snapshot.routes.entries()) {
-    if (loopIds.has(r.id)) continue;
+    if (loopIds.has(r.id) || farelessIds.has(r.id)) continue;
     for (const vi of sampleIndices(r.coords.length, 1500 / snapshot.routes.length)) {
       const p = r.coords[vi];
       const k = mPerDegLng(p[1]);
