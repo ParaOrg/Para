@@ -3431,10 +3431,23 @@ if (!shared) {
   const wayBack = [shared.a, shared.b].every(
     (r) => fileDirections.find((d) => d.id === r.id)?.reversed === true,
   );
+  // Every line under the tap is listed: a route with nothing drawn the way
+  // round the list shows is listed by the line that was hit, under the place
+  // that leaves from (chooserDepartures), as SM Fairview → Cubao's stretch
+  // on Novaliches → Tala lists Novaliches → Tala on the outbound list.
+  const isDrawnInFile = (d) => (d.shape?.coordinates?.length ?? 0) > 1;
+  /** Whether the list shows route `r` the way back: the list's way if drawn, else its line hit. */
+  const shownBack = (r) => {
+    const hit = fileDirections.find((d) => d.id === r.id);
+    const drawnThatWay = fileDirections.some(
+      (d) => d.routeId === hit?.routeId && d.reversed === wayBack && isDrawnInFile(d),
+    );
+    return drawnThatWay ? wayBack : hit?.reversed === true;
+  };
   /** Where a route leaves from and goes to, the way round the list shows it. */
   const shownWay = (r) => {
     const [head, tail] = endsOf(r.signboard);
-    return wayBack ? { from: tail, to: head } : { from: head, to: tail };
+    return shownBack(r) ? { from: tail, to: head } : { from: head, to: tail };
   };
   // The owner's route list (2026-09-28) counts its cards, one per place the
   // routes leave from: two routes out of Tala are "1 Route".
@@ -3446,7 +3459,7 @@ if (!shared) {
     chooserText.split('\n')[0] ?? '',
   );
   check(
-    `  it lists both routes ${wayBack ? 'the way back' : 'outbound'}, one row each, under the place each leaves from`,
+    `  it lists both routes ${wayBack ? 'the way back' : 'outbound'} where drawn so, else the way hit, one row each, under the place each leaves from`,
     itemTexts.length === 2 &&
       [shared.a, shared.b].every((r) => {
         const { from, to } = shownWay(r);

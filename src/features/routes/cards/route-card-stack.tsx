@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 
 import { RouteCard } from './route-card';
 import { RouteCardRailway } from './route-card-railway';
-import { routeCards } from '../model/departures';
+import { routeCards, type Listing } from '../model/departures';
 import { cardLiveries, type Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { directionEnds, railLineOf, type Direction } from '../model/routes';
@@ -22,6 +22,8 @@ interface Props {
   routes: readonly Direction[];
   /** Whether they are shown the way back rather than outbound. */
   back: boolean;
+  /** The way round alone, or every line, a route with none drawn that way by its other: the route list's (routeCards). */
+  listing?: Listing;
   /** The card that is Selected, by its key (PickedPlace's card); null when none is. */
   selected: string | null;
   /** A card was picked, or let go (null). */
@@ -56,8 +58,17 @@ function originCodeOf(directions: readonly { v: Direction }[]): string | null {
  * hotspot card under "Routes that pass through", or a terminal's "Routes that
  * stage here" — edge to edge in all three.
  */
-export function RouteCardStack({ routes, back, selected, onSelect, onRoute, testId, end }: Props) {
-  const places = routeCards(routes, back);
+export function RouteCardStack({
+  routes,
+  back,
+  listing = 'way-round',
+  selected,
+  onSelect,
+  onRoute,
+  testId,
+  end,
+}: Props) {
+  const places = routeCards(routes, back, listing);
 
   // Drawn once per stack, not per render. Each card by its rows' routes,
   // its first row's first (routeCards leaves no card empty), after its

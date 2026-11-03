@@ -8,6 +8,7 @@ import { RESTING_LAYERS, ROUTES_LINE } from './rail-rest-layers';
 import { useRouteTaps } from './route-taps';
 import { litOf, shownOf, showingOf, steady } from './routes-shown';
 import { useSavedRoutesLayers } from './use-saved-routes-layers';
+import type { Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 
@@ -103,6 +104,13 @@ export function useSavedRoutes<T extends Direction>(
    */
   const [back, setBack] = useState(false);
   /**
+   * What the list lists: under a tap, every line under the finger, a route
+   * with nothing drawn the way round shown by its other (the owner's call);
+   * behind a trip opened on its own, the routes sharing its end its way round
+   * alone (openList).
+   */
+  const [listing, setListing] = useState<Listing>('every-line');
+  /**
    * The Selected RouteCard, whose directions alone are lit while no trip is
    * open; with none picked, a list lights every direction it shows, so it
    * never lights nothing (the owner's call). SWITCH, a new list, a map tap,
@@ -144,6 +152,7 @@ export function useSavedRoutes<T extends Direction>(
     setSelectedId(null);
     setCandidates([...directions]);
     setBack(way);
+    setListing('way-round');
     setHighlight(null);
   }, []);
 
@@ -221,8 +230,8 @@ export function useSavedRoutes<T extends Direction>(
 
   // What is shown and what is lit (routes-shown.ts).
   const showing = useMemo(
-    () => showingOf(candidates, back, directions, cardShows),
-    [candidates, back, directions, cardShows],
+    () => showingOf(candidates, back, listing, directions, cardShows),
+    [candidates, back, listing, directions, cardShows],
   );
   // Each kept one array while it holds the same (steady): an unrelated
   // line's arrival lights nothing new, and the chevrons flow on.
@@ -320,17 +329,22 @@ export function useSavedRoutes<T extends Direction>(
   useEffect(() => {
     shownRef.current = shown;
   }, [shown]);
+  const backRef = useRef(back);
+  useEffect(() => {
+    backRef.current = back;
+  }, [back]);
 
   // ----------------------------------------------------------------- events
 
   useRouteTaps(
     map,
-    { drawing: drawingRef, byId, shown: shownRef },
+    { drawing: drawingRef, byId, shown: shownRef, back: backRef },
     {
       highlight: setHighlight,
       selectedId: setSelectedId,
       candidates: setCandidates,
       back: setBack,
+      listing: setListing,
     },
   );
 
@@ -348,6 +362,7 @@ export function useSavedRoutes<T extends Direction>(
     openList,
     candidates,
     back,
+    listing,
     flip,
     highlight,
     highlightCard: setHighlight,

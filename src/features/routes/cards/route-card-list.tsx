@@ -4,7 +4,7 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { RouteCardHeader } from './route-card-header';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
-import { drawnDepartures, otherWayHasRoutes, switchWord } from '../model/departures';
+import { listedDepartures, otherWayHasRoutes, switchWord, type Listing } from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { hotspotCount } from '../model/places';
@@ -17,6 +17,12 @@ interface Props {
   hotspots?: readonly Hotspot[];
   /** Whether the way back is showing rather than the way there. */
   back: boolean;
+  /**
+   * Under a tap, `every-line`: a route with nothing drawn the way round
+   * showing is listed by its drawn direction (chooserDepartures). Behind a
+   * trip opened on its own, `way-round`: the routes sharing its end its way.
+   */
+  listing: Listing;
   /** SWITCH: show them all the other way round. */
   onFlip: () => void;
   /** The place whose card is Selected, by name; null when none is. */
@@ -48,8 +54,11 @@ interface Props {
  * map tap or closing let it go. A row opens its trip straight away and picks
  * no card, and the trip's ‹ comes back to every card at rest.
  *
- * Only drawn directions are listed: a row that opens nothing is no row.
- * SWITCH rests disabled when the other way round has nothing drawn.
+ * Only drawn directions are listed: a row that opens nothing is no row. Under
+ * a tap every line under the finger is: a route with nothing drawn the way
+ * round showing is listed by its drawn direction, under the place that leaves
+ * from (chooserDepartures). SWITCH rests disabled when the other way round
+ * has nothing drawn.
  *
  * The hotspots under the tap come first: a box is small and deliberate. They
  * are plain rows, a row a box (TODO: the rows await the owner's hintuan
@@ -64,6 +73,7 @@ export function RouteCardList({
   routes,
   hotspots = [],
   back,
+  listing,
   onFlip,
   selected,
   onSelect,
@@ -74,7 +84,7 @@ export function RouteCardList({
   height,
   end,
 }: Props) {
-  const places = drawnDepartures(routes, back);
+  const places = listedDepartures(routes, back, listing);
   const switchable = otherWayHasRoutes(routes, back);
   const shownDirections = places.flatMap((p) => p.directions.map((d) => d.v));
   const hotspotTotal = hotspotCount(hotspots);
@@ -134,6 +144,7 @@ export function RouteCardList({
         <RouteCardStack
           routes={routes}
           back={back}
+          listing={listing}
           selected={selected}
           onSelect={onSelect}
           onRoute={onRoute}

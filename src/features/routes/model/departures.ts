@@ -55,20 +55,13 @@ export function departures<V extends Direction>(
   directions: readonly V[],
   back: boolean,
 ): Departures<V>[] {
-  const byPlace = new Map<string, Departures<V>>();
-  for (const g of groupByRoute(directions)) {
-    // A loop has one direction and no way back: it is listed both ways round.
-    const v = g.directions.find((d) => isLoop(d) || d.reversed === back);
-    if (!v) continue;
-    const { from } = directionEnds(v);
-    const to = directionRowName(v);
-    // A loop is its own place, never the one a route of the same name leaves from.
-    const key = (isLoop(v) ? 'loop:' : '') + from.toLowerCase();
-    const place = byPlace.get(key) ?? { from, directions: [] };
-    place.directions.push({ v, to, drawn: isDrawn(v) });
-    byPlace.set(key, place);
-  }
-  return [...byPlace.values()];
+  return byPlace(
+    groupByRoute(directions).flatMap((g) => {
+      // A loop has one direction and no way back: it is listed both ways round.
+      const v = g.directions.find((d) => isLoop(d) || d.reversed === back);
+      return v ? [v] : [];
+    }),
+  );
 }
 
 /**
@@ -84,6 +77,62 @@ export function drawnDepartures<V extends Direction>(
     .filter((p) => p.directions.length > 0);
 }
 
+/**
+ * What the route list under a tap lists: `drawnDepartures`, and besides, a
+ * route with nothing drawn the way round shown by its drawn direction, under
+ * the place that one leaves from. Every line under the finger is a row: where
+ * SM Fairview → Cubao runs on Novaliches → Tala, whose Tala → Novaliches is
+ * still a slot, the outbound list holds Novaliches → Tala under Novaliches
+ * (the owner's call). A route with nothing drawn either way is no row. A
+ * place's card lists the way round alone (drawnDepartures).
+ */
+export function chooserDepartures<V extends Direction>(
+  directions: readonly V[],
+  back: boolean,
+): Departures<V>[] {
+  return byPlace(
+    groupByRoute(directions).flatMap((g) => {
+      const v =
+        g.directions.find((d) => isDrawn(d) && (isLoop(d) || d.reversed === back)) ??
+        g.directions.find(isDrawn);
+      return v ? [v] : [];
+    }),
+  );
+}
+
+/** Directions, one per route, gathered by the place each leaves from, in the order met. */
+function byPlace<V extends Direction>(chosen: readonly V[]): Departures<V>[] {
+  const places = new Map<string, Departures<V>>();
+  for (const v of chosen) {
+    const { from } = directionEnds(v);
+    const to = directionRowName(v);
+    // A loop is its own place, never the one a route of the same name leaves from.
+    const key = (isLoop(v) ? 'loop:' : '') + from.toLowerCase();
+    const place = places.get(key) ?? { from, directions: [] };
+    place.directions.push({ v, to, drawn: isDrawn(v) });
+    places.set(key, place);
+  }
+  return [...places.values()];
+}
+
+/**
+ * Which directions a list of routes lists: the way round shown alone
+ * (drawnDepartures), or every line, a route with none drawn that way by its
+ * other (chooserDepartures): the route list under a tap.
+ */
+export type Listing = 'way-round' | 'every-line';
+
+/** The places a list of routes shows and the directions under each, by its `listing`. */
+export function listedDepartures<V extends Direction>(
+  directions: readonly V[],
+  back: boolean,
+  listing: Listing,
+): Departures<V>[] {
+  return listing === 'every-line'
+    ? chooserDepartures(directions, back)
+    : drawnDepartures(directions, back);
+}
+
 /** One RouteCard: a place, and the drawn directions it lists. */
 export interface RouteCardGroup<V extends Direction> extends Departures<V> {
   /** What tells the card from the others in its list, and what a pick keeps as Selected. */
@@ -95,7 +144,7 @@ export interface RouteCardGroup<V extends Direction> extends Departures<V> {
 }
 
 /**
- * The cards a list shows one way round: drawnDepartures, with every place's
+ * The cards a list shows one way round: listedDepartures, with every place's
  * train and ferry directions taken off to a RouteCardRailway each, one card
  * per line and bound: Cubao's LRT-2 Eastbound and its LRT-2 Westbound are two
  * cards, both Cubao. Every road card comes first, then every train card, then
@@ -106,8 +155,9 @@ export interface RouteCardGroup<V extends Direction> extends Departures<V> {
 export function routeCards<V extends Direction>(
   directions: readonly V[],
   back: boolean,
+  listing: Listing = 'way-round',
 ): RouteCardGroup<V>[] {
-  const cards = drawnDepartures(directions, back).flatMap((place) => {
+  const cards = listedDepartures(directions, back, listing).flatMap((place) => {
     const road: RouteCardGroup<V> = {
       card: place.from,
       from: place.from,

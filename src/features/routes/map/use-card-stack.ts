@@ -11,7 +11,7 @@ import { LIT_LINE, LIVERY_LINE, type LineLook } from './livery-line';
 import type { Highlight } from './use-saved-routes';
 import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from '../cards/card-stack';
 import { useTripLivery } from '../cards/trip-card';
-import { routeCards, sharingAnEnd } from '../model/departures';
+import { routeCards, sharingAnEnd, type Listing } from '../model/departures';
 import { cardLiveries, type Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';
 
@@ -21,6 +21,8 @@ interface Routes<V extends Direction> {
   candidates: readonly V[];
   /** Which way round the list shows them. */
   back: boolean;
+  /** Whether the list lists every line, or the way round alone. */
+  listing: Listing;
   highlight: Highlight | null;
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
   openList: (directions: readonly V[], way: boolean) => void;
@@ -81,7 +83,8 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   // route's draw for the visit, and a train's is its line's, so the card
   // reads the same). Only while the list is what is up: behind a place's card
   // it decides nothing (showingOf).
-  const onlyPlace = choosing && !hotspots.selected ? routeCards(saved.candidates, saved.back) : [];
+  const onlyPlace =
+    choosing && !hotspots.selected ? routeCards(saved.candidates, saved.back, saved.listing) : [];
   // Its rows' routes, the first row's first, as RouteCardStack keys the card
   // (a card is never empty; the ids are uuids, with no space to split on).
   const onlyRoutes =
