@@ -1996,6 +1996,14 @@ export type Database = {
           walk_s: number
         }[]
       }
+      get_my_uses: {
+        Args: never
+        Returns: {
+          contribution_id: string
+          kind: string
+          name: string
+        }[]
+      }
       get_profile: {
         Args: never
         Returns: {
