@@ -8,7 +8,7 @@
 //     page, and the page links no manifest (it is not installable)
 //   - the browser is asked to keep the page's data
 //   - with the network off, a new page opens /contribute/ and records: Start, then fixes
-//     from a stand-in GPS reach IndexedDB, and Stop and Save still work
+//     from a stand-in GPS reach IndexedDB, and Pause and Finish still work
 //   - the phone is signed in to an account (the page shows nothing else without one), stored
 //     with its name; offline with no account, the page shows Sign in, not a broken page
 //   - an update (a changed worker) found with a recording open waits, and the page is not
@@ -21,7 +21,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fakeContributions, session } from './lib/fake-contributions.mjs';
-import { harness } from './lib/harness.mjs';
+import { harness, until } from './lib/harness.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -120,7 +120,6 @@ try {
     [AUTH_KEY, session(ACCOUNT_ID, { email: 'tester@example.com', isAccount: true })],
   );
   await context.addInitScript(() => {
-    localStorage.setItem('para.contribute.consent', '3');
     window.__persistAsked = false;
     const persist = StorageManager.prototype.persist;
     StorageManager.prototype.persist = function () {
@@ -131,13 +130,20 @@ try {
   const errors = [];
   // Errors from Cloudflare's own Turnstile frame are not the page's: its script throws now and then
   // under this suite's fake clock (also on staging), and the page cannot catch an error in a frame it embeds.
+  const TURNSTILE_HOST = 'challenges.cloudflare.com';
+  /** Whether a stack frame's script was served by Turnstile's host, read from its URL's hostname. */
+  const isTurnstileFrame = (line) => {
+    const url = /https?:\/\/[^\s)]+/.exec(line)?.[0];
+    if (!url || !URL.canParse(url)) return false;
+    const { hostname } = new URL(url);
+    return hostname === TURNSTILE_HOST || hostname.endsWith(`.${TURNSTILE_HOST}`);
+  };
   const watch = (p) =>
     p.on('pageerror', (e) => {
       const frames = String(e.stack)
         .split('\n')
         .filter((line) => line.trim().startsWith('at '));
-      const isCloudflareOnly =
-        frames.length > 0 && frames.every((line) => line.includes('challenges.cloudflare.com'));
+      const isCloudflareOnly = frames.length > 0 && frames.every(isTurnstileFrame);
       if (!isCloudflareOnly) errors.push(String(e));
     });
 
@@ -146,7 +152,7 @@ try {
   await standInDatabase(first);
   watch(first);
   await first.goto(`${base}/contribute/`, { waitUntil: 'load' });
-  await first.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
+  await first.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   const worker = await first.evaluate(async () => {
     const ready = await navigator.serviceWorker.ready;
     const all = await navigator.serviceWorker.getRegistrations();
@@ -192,17 +198,72 @@ try {
         () => false,
       ),
   );
+  // ---------------------------------- the built page's motion, as its minified CSS has it
+  // A build writes the Motion tokens in seconds (.39s), the dev server in ms (390ms): read as ms,
+  // the build's pill glided for 0.39 ms, a jump with no spring. Only a build shows it.
+  {
+    const navigation = first.getByRole('navigation', { name: 'Screens' });
+    await navigation.getByRole('button', { name: 'History' }).click();
+    const glide = await first
+      .waitForFunction(
+        () => {
+          const bar = document.querySelector('.tab-toolbar');
+          const moving = bar
+            ?.getAnimations({ subtree: true })
+            .find((animation) =>
+              animation.effect?.getKeyframes().some((frame) => 'transform' in frame),
+            );
+          if (!moving) return null;
+          const style = getComputedStyle(document.documentElement);
+          return {
+            duration: moving.effect.getTiming().duration,
+            easing: moving.effect.getTiming().easing,
+            token: style.getPropertyValue('--transition-duration-pill').trim(),
+            ease: style.getPropertyValue('--ease-pill').trim(),
+          };
+        },
+        null,
+        { timeout: 5000, polling: 'raf' },
+      )
+      .then((handle) => handle.jsonValue())
+      .catch(() => null);
+    check(
+      'on the built page the toolbar pill glides to History for 390 ms on its --ease-pill spring',
+      !!glide &&
+        Math.abs(glide.duration - 390) < 1 &&
+        // The same curve, however each writes its numbers (.34 in the build, 0.34 in WAAPI).
+        String(glide.easing.match(/[\d.]+/g)?.map(Number)) ===
+          String(glide.ease.match(/[\d.]+/g)?.map(Number)),
+      JSON.stringify(glide),
+    );
+  }
   const firstStores = await storeNames(first);
   await first.close();
 
   // ---------------------------------------------------- no signal: record
   await context.setOffline(true);
   const page = await context.newPage();
+  // A phone that will not keep the screen awake: the page's first problem comes with no signal,
+  // so the toast that says it must come from the worker's store, never fetched before.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'wakeLock', {
+      configurable: true,
+      value: { request: () => Promise.reject(new DOMException('Low battery', 'NotAllowedError')) },
+    });
+  });
   const fake = await standInDatabase(page);
   fake.isOffline = true;
   watch(page);
+  // What the page could not fetch with no signal: said if the recording screen does not come.
+  const offlineFailures = [];
+  page.on('requestfailed', (request) => offlineFailures.push(new URL(request.url()).pathname));
+  page.on('console', (message) => {
+    if (message.type() === 'warning' || message.type() === 'error') {
+      offlineFailures.push(`${message.type()}: ${message.text()}`);
+    }
+  });
   await page.goto(`${base}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   check(
     'with the network off, /contribute/ opens from the worker',
     await page.evaluate(
@@ -214,23 +275,66 @@ try {
         )),
     ),
   );
-  await page.getByRole('button', { name: 'Start recording' }).click();
-  await page.getByRole('group', { name: 'Recording so far' }).waitFor({ timeout: 10000 });
+  // A smoke test, not a guard: reloaded with no signal, the page may ask for the recorder before
+  // the page it replaces has let go of it, and then must be handed it. The race is timing-bound and
+  // this passes without the fix too; contribute-test's two-tab handovers are the ones that guard it.
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  check(
+    '  (smoke) reloaded with the network off, it opens on Start again, with no "open in another tab" left',
+    await page
+      .getByText('Para is open in another tab')
+      .waitFor({ state: 'detached', timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      ),
+  );
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page
+    .getByRole('group', { name: 'Recording so far' })
+    .waitFor({ timeout: 10000 })
+    .catch(async (error) => {
+      console.log(`  offline, not fetched: ${offlineFailures.join(' | ') || 'nothing'}`);
+      console.log(`  page errors: ${errors.join(' | ') || 'none'}`);
+      // What the phone showed instead: CI keeps the picture with the suite's screenshots.
+      const shown = await page.evaluate(() => ({
+        hash: location.hash,
+        headings: [...document.querySelectorAll('h1, h2, [role="dialog"], [role="alert"]')].map(
+          (element) => element.textContent?.trim().slice(0, 80),
+        ),
+        isStartThere: [...document.querySelectorAll('button')].some(
+          (button) => button.textContent?.trim() === 'Start Tracking',
+        ),
+      }));
+      console.log(`  shown instead: ${JSON.stringify(shown)}`);
+      await page.screenshot({ path: 'contribute-offline-start.png' });
+      throw error;
+    });
+  const isToastShown = await page
+    .getByTestId('toast')
+    .filter({ hasText: 'Screen may sleep' })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    '  with no signal, its first problem is still said: the toast, from the worker’s store',
+    isToastShown &&
+      (await page.evaluate(() =>
+        performance
+          .getEntriesByType('resource')
+          .some((entry) => /\/assets\/page-toasts-.*\.js$/.test(entry.name)),
+      )),
+    offlineFailures.filter((failure) => failure.includes('page-toasts')).join(' | '),
+  );
   await ride(context, page, 6);
-  await page.waitForFunction(
-    () =>
-      new Promise((resolve) => {
-        const open = indexedDB.open('para-contribute');
-        open.onsuccess = () => {
-          const count = open.result.transaction('fixes').objectStore('fixes').count();
-          count.onsuccess = () => {
-            open.result.close();
-            resolve(count.result >= 3);
-          };
-        };
-      }),
-    null,
-    { timeout: 10000 },
+  // Polled from here: page.waitForFunction does not await a predicate's promise.
+  await until(
+    () => storedFixes(page),
+    (count) => count >= 3,
+    10000,
   );
   const fixes = await storedFixes(page);
   check(
@@ -239,8 +343,8 @@ try {
     `${fixes} fixes stored`,
   );
   check(
-    '  with a Stop button on the screen',
-    (await page.getByRole('button', { name: 'Stop', exact: true }).count()) === 1,
+    '  with a Pause button on the screen',
+    (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1,
   );
 
   // ----------------------------------------- an update waits for the ride
@@ -277,11 +381,11 @@ try {
     (await storeNames(page)).includes(firstStores[0]),
   );
 
-  // Stop and Save by hand (Skip: no details), then the update takes over.
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await page.getByRole('button', { name: 'Skip' }).click();
-  await page.getByRole('button', { name: 'Record again' }).waitFor({ timeout: 10000 });
+  // Pause and Finish by hand, saved with no details, then the update takes over.
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.getByRole('button', { name: 'Save recording' }).click();
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 10000 });
   await page.waitForTimeout(500);
   const reloaded = page.waitForEvent('load', { timeout: 20000 }).then(
     () => true,
@@ -289,7 +393,7 @@ try {
   );
   await page.clock.fastForward(95_000);
   check('once the recording is saved, the update takes over and the page reloads', await reloaded);
-  await page.getByRole('button', { name: 'Start recording' }).waitFor({ timeout: 20000 });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   const after = await page.evaluate(() => window.__marker ?? null);
   const stores = await storeNames(page);
   check(
@@ -305,11 +409,13 @@ try {
   await setOffline(context, fake, true);
   await page.evaluate((key) => localStorage.removeItem(key), AUTH_KEY);
   await page.reload({ waitUntil: 'load' });
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 20000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 20000 });
   check(
     'with no signal and no account, the page opens on Sign in, with no Start and no page error',
-    (await page.getByRole('button', { name: 'Start recording' }).count()) === 0 &&
-      (await page.getByRole('button', { name: 'Create account' }).count()) === 1 &&
+    (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 0 &&
+      (await page.getByRole('button', { name: 'Create an account' }).count()) === 1 &&
       errors.length === 0,
     errors.slice(0, 3).join(' | '),
   );

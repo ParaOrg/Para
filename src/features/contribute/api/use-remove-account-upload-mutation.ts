@@ -9,10 +9,13 @@ export function useRemoveAccountUploadMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeUpload,
-    onSuccess: (_result, id) =>
+    onSuccess: (_result, id) => {
       queryClient.setQueryData<AccountUpload[]>(accountKeys.uploads(), (uploads) =>
         uploads?.filter((upload) => upload.id !== id),
-      ),
+      );
+      // The removed ride no longer counts.
+      void queryClient.invalidateQueries({ queryKey: accountKeys.stats() });
+    },
     networkMode: 'always',
   });
 }

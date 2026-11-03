@@ -21,7 +21,11 @@ const payload = (route) => ({
   directions: index.variants
     .filter((direction) => direction.route_id === route.id)
     .map((direction) => {
-      const { shape } = JSON.parse(readFileSync(`public/data/lines/${direction.id}.json`, 'utf8'));
+      // Only a drawn direction has a line file; a slot (no overview in the
+      // index) goes into the draft empty, as the studio stores one.
+      const shape = direction.overview
+        ? JSON.parse(readFileSync(`public/data/lines/${direction.id}.json`, 'utf8')).shape
+        : null;
       return {
         id: direction.id,
         reversed: direction.reversed,

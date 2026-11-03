@@ -1,7 +1,7 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import * as z from 'zod/mini';
 
 import { AccountError } from './account-problem';
+import { callRpc } from './call-rpc';
 import { claimFailureOutcome, type ClaimOutcome } from './claim-outcome';
 import {
   dropPendingClaim,
@@ -13,9 +13,6 @@ import type { ContributeClient } from './contribute-client';
 
 const tokenSchema = z.uuid();
 const movedSchema = z.int();
-
-/** Not in the generated types until ticket 01 is applied and they are regenerated. */
-const untyped = (client: ContributeClient): SupabaseClient => client;
 
 /**
  * Whether the phone's session is its own anonymous user, with uploads of its own that signing in
@@ -31,19 +28,19 @@ async function isAnonymous(client: ContributeClient): Promise<boolean> {
  * database says the phone is not anonymous after all (a stale session): there is nothing to claim.
  */
 async function beginClaim(client: ContributeClient): Promise<string | null> {
-  const { data, error, status } = await untyped(client).rpc('begin_claim');
-  if (error) {
-    if (status === 0) throw new AccountError('offline', error.message);
-    if (error.code === '42501') {
-      console.warn(`Para did not begin a claim (${error.message}); signing in without one.`);
+  const result = await callRpc(client, 'begin_claim');
+  if (result.kind === 'failure') {
+    if (result.isOffline) throw new AccountError('offline', result.message);
+    if (result.code === '42501') {
+      console.warn(`Para did not begin a claim (${result.message}); signing in without one.`);
       return null;
     }
-    console.warn(`Para did not begin the claim (HTTP ${status}):`, error.message);
-    throw new AccountError('not-accepting', error.message);
+    console.warn(`Para did not begin the claim (HTTP ${result.status}):`, result.message);
+    throw new AccountError('not-accepting', result.message);
   }
-  const token = tokenSchema.safeParse(data);
+  const token = tokenSchema.safeParse(result.data);
   if (!token.success) {
-    console.warn('Para gave an unexpected answer to begin_claim:', data);
+    console.warn('Para gave an unexpected answer to begin_claim:', result.data);
     throw new AccountError('not-accepting', 'begin_claim answered with no token');
   }
   return token.data;
@@ -52,11 +49,11 @@ async function beginClaim(client: ContributeClient): Promise<string | null> {
 async function finishClaim(client: ContributeClient, claim: PendingClaim): Promise<ClaimOutcome> {
   // Kept as tried before the request goes: the answer may be lost after the server acted.
   keepPendingClaim({ ...claim, wasTried: true });
-  const { data, error, status } = await untyped(client).rpc('finish_claim', { token: claim.token });
-  if (error) return claimFailureOutcome(error, status, claim.wasTried);
-  const moved = movedSchema.safeParse(data);
+  const result = await callRpc(client, 'finish_claim', { token: claim.token });
+  if (result.kind === 'failure') return claimFailureOutcome(result, result.status, claim.wasTried);
+  const moved = movedSchema.safeParse(result.data);
   if (!moved.success) {
-    console.warn('Para gave an unexpected answer to finish_claim:', data);
+    console.warn('Para gave an unexpected answer to finish_claim:', result.data);
     return { kind: 'retry' };
   }
   return { kind: 'done', moved: moved.data };

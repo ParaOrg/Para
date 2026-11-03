@@ -1,0 +1,44 @@
+import { messageOf } from './account-message';
+import { AccountSettingsScreen } from './account-settings-screen';
+import { useAccountQuery } from '../api/use-account-query';
+import { useProfileQuery } from '../api/use-profile-query';
+import { useUpdateProfileMutation } from '../api/use-update-profile-mutation';
+
+interface AccountSettingsViewProps {
+  /** The password was just changed, on Change password. */
+  isPasswordChanged: boolean;
+  onOpenChangePassword: () => void;
+  onOpenDeleteAccount: () => void;
+  onBack: () => void;
+}
+
+/**
+ * Account settings with its data: the stored name and number, and saving them. Change password
+ * and Delete account are screens of their own.
+ */
+export function AccountSettingsView({
+  isPasswordChanged,
+  onOpenChangePassword,
+  onOpenDeleteAccount,
+  onBack,
+}: AccountSettingsViewProps) {
+  const account = useAccountQuery();
+  const profile = useProfileQuery();
+  const update = useUpdateProfileMutation();
+
+  return (
+    <AccountSettingsScreen
+      email={account.data?.email ?? ''}
+      profile={profile.data ?? null}
+      loadError={profile.isError ? messageOf(profile.error) : null}
+      isSaving={update.isPending}
+      saveError={messageOf(update.error)}
+      isPasswordChanged={isPasswordChanged}
+      onRetry={() => void profile.refetch()}
+      onSave={(fields) => update.mutate(fields)}
+      onOpenChangePassword={onOpenChangePassword}
+      onOpenDeleteAccount={onOpenDeleteAccount}
+      onBack={onBack}
+    />
+  );
+}

@@ -1,10 +1,30 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 
-import type { Account } from './account';
+import { rememberProfile, type Account } from './account';
 import { accountKeys } from './account-keys';
 
-/** Stores a sign-in, sign-up or sign-out's answer where the session query reads it. */
-export function useSessionWriter(): (account: Account | null) => void {
+/**
+ * Stores a sign-in, sign-up or sign-out's answer where the session query reads it. When the
+ * account changes (signed out, or another account signed in) everything kept for the last one
+ * goes first: its profile, uploads and stats must never show for the next, on a shared phone.
+ */
+export function useSessionWriter(): (account: Account | null) => Promise<void> {
   const queryClient = useQueryClient();
-  return (account) => queryClient.setQueryData(accountKeys.session(), account);
+  return async (account) => {
+    // A check of the last session still on its way (the page opening, the phone back online)
+    // must not land over this answer: it is called off, and what it found is dropped.
+    await queryClient.cancelQueries({ queryKey: accountKeys.session() });
+    const last = queryClient.getQueryData<Account | null>(accountKeys.session());
+    if (last?.id !== account?.id) forgetAccountData(queryClient);
+    queryClient.setQueryData(accountKeys.session(), account);
+    rememberProfile(account);
+  };
+}
+
+/** Drops everything kept for the account (its profile, uploads, stats), all but the session. */
+export function forgetAccountData(queryClient: QueryClient): void {
+  queryClient.removeQueries({
+    queryKey: accountKeys.all,
+    predicate: (query) => query.queryKey[1] !== 'session',
+  });
 }

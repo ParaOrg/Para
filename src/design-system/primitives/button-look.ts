@@ -15,13 +15,25 @@ export type Size = 'base' | 'small';
  * `size="small"` on error is a compile error until it is designed.
  */
 export type VariantAndSize =
-  | { variant: 'special' | 'secondary'; size?: Size; fill?: never }
-  | { variant: 'primary'; size?: Size; fill?: 'brand' }
+  | { variant: 'special' | 'secondary'; size?: Size; fill?: never; tone?: never }
+  | { variant: 'primary'; size?: Size; fill?: 'brand'; tone?: never }
   // A card's fill only as the design draws it, Primary Small and enabled
   // (4147:11947): its Base and its Disabled are compile errors until they are
   // designed.
-  | { variant: 'primary'; size: 'small'; fill: CardFill; disabled?: never }
-  | { variant: 'error'; size?: 'base'; fill?: never };
+  | { variant: 'primary'; size: 'small'; fill: CardFill; disabled?: never; tone?: never }
+  | { variant: 'error'; size?: 'base'; fill?: never; tone?: never }
+  // Plain (4451:14022): the words alone, as Sign in's "Forgot password". Only Base Default is
+  // drawn; disabled takes the set's opacity/60, as every voice does. Its words in Content/error
+  // (`tone`) are how Account settings' Delete account overrides it (4540:4316).
+  | { variant: 'plain'; size?: 'base'; fill?: never; tone?: PlainTone };
+
+/** Plain's words: Content/primary, or Content/error for a destructive one. */
+export type PlainTone = 'default' | 'error';
+
+const PLAIN_TONE = {
+  default: 'text-content-primary',
+  error: 'text-content-error',
+} satisfies Record<PlainTone, string>;
 
 const VARIANT = {
   special:
@@ -40,6 +52,8 @@ const VARIANT = {
     'bg-error-surface font-sn-pro font-medium text-content-inverse shadow-primary-button-rest ' +
     'usable:hover:shadow-primary-button-hover ' +
     'usable:active:bg-error-surface-secondary usable:active:shadow-primary-button-pressed',
+  // No fill and no shadow; the set draws no Hover or Pressed for it yet. Its words are its tone's.
+  plain: 'bg-transparent font-sn-pro font-medium',
 } satisfies Record<VariantAndSize['variant'], string>;
 
 /**
@@ -89,16 +103,19 @@ export function buttonClasses({
   variant,
   size = 'base',
   fill = 'brand',
+  tone = 'default',
 }: {
   variant: VariantAndSize['variant'];
   size?: Size;
   fill?: PrimaryFill;
+  tone?: PlainTone;
 }): string {
   return (
     'inline-flex items-center justify-center rounded-full disabled:opacity-60 ' +
     VARIANT[variant] +
     ' ' +
     (variant === 'primary' ? PRIMARY_FILL[fill] + ' ' : '') +
+    (variant === 'plain' ? PLAIN_TONE[tone] + ' ' : '') +
     SIZE[size]
   );
 }

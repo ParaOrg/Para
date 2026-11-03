@@ -1,12 +1,13 @@
-// A recording packed the way the phone sends it (src/features/contribute/api/pack-recording.ts)
-// and read back the way the database adds the batches up comes back within 0.1 m and 1 ms.
+// A recording packed the way the phone sends it
+// (src/features/contribute/uploads/packing/pack-recording.ts) and read back the way the database
+// adds the batches up comes back within 0.1 m and 1 ms.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/recording-round-trip-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
-import { UPLOAD_LIMITS } from '../../src/features/contribute/recording-limits.ts';
+import { packRecording } from '../../src/features/contribute/uploads/packing/pack-recording.ts';
+import { UPLOAD_LIMITS } from '../../src/features/contribute/recorder/recording-limits.ts';
 
 import { T0, rideRecording } from './fixtures/contribution-ride.mjs';
 

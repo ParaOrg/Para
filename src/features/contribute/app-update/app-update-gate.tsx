@@ -16,10 +16,15 @@ interface AppUpdateGateProps {
 export function AppUpdateGate({ children }: AppUpdateGateProps) {
   const { update, downloadUrl } = useAppUpdate();
   if (update === 'current') return children;
+  // Over Start, 2rem clear of it for the bar's rounded corners; in its place, clear of Android's
+  // navigation buttons.
+  const isAvailable = update === 'available';
   return (
     <>
-      <AppUpdateNotice update={update} downloadUrl={downloadUrl} />
-      {update === 'available' && children}
+      <div className={isAvailable ? 'mb-8' : 'pb-[env(safe-area-inset-bottom)]'}>
+        <AppUpdateNotice update={update} downloadUrl={downloadUrl} />
+      </div>
+      {isAvailable && children}
     </>
   );
 }

@@ -8,6 +8,7 @@ import { RESTING_LAYERS, ROUTES_LINE } from './rail-rest-layers';
 import { useRouteTaps } from './route-taps';
 import { litOf, shownOf, showingOf, steady } from './routes-shown';
 import { useSavedRoutesLayers } from './use-saved-routes-layers';
+import type { Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 
@@ -103,6 +104,13 @@ export function useSavedRoutes<T extends Direction>(
    */
   const [back, setBack] = useState(false);
   /**
+   * What the list lists: under a tap, every line under the finger, a route
+   * with nothing drawn the way round shown by its other (the owner's call);
+   * behind a trip opened on its own, the routes sharing its end its way round
+   * alone (openList).
+   */
+  const [listing, setListing] = useState<Listing>('every-line');
+  /**
    * The Selected RouteCard, whose directions alone are lit while no trip is
    * open; with none picked, a list lights every direction it shows, so it
    * never lights nothing (the owner's call). SWITCH, a new list, a map tap,
@@ -144,6 +152,7 @@ export function useSavedRoutes<T extends Direction>(
     setSelectedId(null);
     setCandidates([...directions]);
     setBack(way);
+    setListing('way-round');
     setHighlight(null);
   }, []);
 
@@ -188,10 +197,16 @@ export function useSavedRoutes<T extends Direction>(
   );
   useEffect(() => () => arrivals.current?.clear(), []);
 
+  // Which load is the latest: only its answer is taken. Two loads can be out
+  // at once (the studio reloads after each signboard change), and an earlier
+  // one answering last would put back what the later one no longer has.
+  const latestLoad = useRef(0);
   const reload = useCallback(async () => {
+    const thisLoad = ++latestLoad.current;
     setLoading(true);
     try {
       const next = await load();
+      if (thisLoad !== latestLoad.current) return;
       setRows(next);
       setLines(new Map());
       arrivals.current?.clear();
@@ -199,9 +214,10 @@ export function useSavedRoutes<T extends Direction>(
       failedRef.current.clear();
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (thisLoad === latestLoad.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      // Still loading while a later load is out.
+      if (thisLoad === latestLoad.current) setLoading(false);
     }
   }, [load]);
 
@@ -214,8 +230,8 @@ export function useSavedRoutes<T extends Direction>(
 
   // What is shown and what is lit (routes-shown.ts).
   const showing = useMemo(
-    () => showingOf(candidates, back, directions, cardShows),
-    [candidates, back, directions, cardShows],
+    () => showingOf(candidates, back, listing, directions, cardShows),
+    [candidates, back, listing, directions, cardShows],
   );
   // Each kept one array while it holds the same (steady): an unrelated
   // line's arrival lights nothing new, and the chevrons flow on.
@@ -313,17 +329,22 @@ export function useSavedRoutes<T extends Direction>(
   useEffect(() => {
     shownRef.current = shown;
   }, [shown]);
+  const backRef = useRef(back);
+  useEffect(() => {
+    backRef.current = back;
+  }, [back]);
 
   // ----------------------------------------------------------------- events
 
   useRouteTaps(
     map,
-    { drawing: drawingRef, byId, shown: shownRef },
+    { drawing: drawingRef, byId, shown: shownRef, back: backRef },
     {
       highlight: setHighlight,
       selectedId: setSelectedId,
       candidates: setCandidates,
       back: setBack,
+      listing: setListing,
     },
   );
 
@@ -341,6 +362,7 @@ export function useSavedRoutes<T extends Direction>(
     openList,
     candidates,
     back,
+    listing,
     flip,
     highlight,
     highlightCard: setHighlight,

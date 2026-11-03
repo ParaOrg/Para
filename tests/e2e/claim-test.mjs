@@ -3,7 +3,7 @@
 // finish_claim after, so its uploads become the account's; a claim that cannot finish is kept and
 // finished on the next start. Create account on the same phone claims nothing: the upgrade keeps
 // the user id, so the uploads were the account's all along. Recordings still unsent on the phone
-// upload under the account after sign-in, under the consent they were made with. Supabase is the
+// upload under the account after sign-in, under the terms they were made with. Supabase is the
 // in-memory stand-in (lib/fake-contributions.mjs); nothing reaches a real project.
 //
 //   cp .env.production .env.local && echo VITE_CONTRIBUTIONS=1 >> .env.local
@@ -117,16 +117,12 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
       [AUTH_KEY, session(ANON_ID)],
     );
   }
-  await page.addInitScript(() => {
-    if (!sessionStorage.getItem('seeded')) {
-      localStorage.setItem('para.contribute.consent', '3');
-      sessionStorage.setItem('seeded', 'yes');
-    }
-  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
-  await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 30000 });
+  await page
+    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+    .waitFor({ timeout: 30000 });
   const rides = [
     ...uploaded.map((id, i) =>
       savedRide(id, T0 + i * 3_600_000, {
@@ -142,12 +138,14 @@ async function phone({ shared = database(), isAnonymous = true, uploaded = [], u
   if (rides.length) {
     await seed(page, rides);
     await page.reload({ waitUntil: 'load' });
-    await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 30000 });
+    await page
+      .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+      .waitFor({ timeout: 30000 });
   }
   return { page, context, fake, errors };
 }
 
-const start = (page) => page.getByRole('button', { name: 'Start recording' });
+const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 const field = (page, name) => page.getByLabel(name, { exact: true });
 const claimOf = (page) => page.evaluate((key) => localStorage.getItem(key), CLAIM_KEY);
 const owners = (fake) => [...fake.rows.values()].map((row) => row.by);
@@ -289,7 +287,9 @@ async function signInAs(page) {
       import('/src/features/contribute/api/account.ts').then((account) => account.signOut()),
     );
     await page.reload({ waitUntil: 'load' });
-    await page.getByRole('heading', { name: 'Sign in', level: 1 }).waitFor({ timeout: 15000 });
+    await page
+      .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
+      .waitFor({ timeout: 15000 });
   };
   fake.next.finishClaim = 'offline';
   await signInAs(page);
@@ -298,8 +298,8 @@ async function signInAs(page) {
   await field(page, 'Email').fill('ana@example.com');
   await field(page, 'Password').fill(ACCOUNT.password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  // Consent is each account's own: the second one is asked for it, so Ready is not reached.
-  const signedIn = page.getByRole('heading', { name: 'Before you record' });
+  // No consent step: the second account is on Start at once.
+  const signedIn = start(page);
   await signedIn.waitFor({ timeout: 15000 });
   await page.reload({ waitUntil: 'load' });
   await signedIn.waitFor({ timeout: 15000 });
@@ -355,12 +355,16 @@ async function signInAs(page) {
 // ----------------- Create account on the same phone: the id stays, nothing is claimed
 {
   const { page, fake, errors } = await phone({ shared: { users: new Map() }, uploaded: ['up-1'] });
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await field(page, 'Name').fill('Juan dela Cruz');
+  await page.getByRole('button', { name: 'Create an account' }).click();
+  await field(page, 'Full name').fill('Juan dela Cruz');
   await field(page, 'Email').fill('new@example.com');
-  await field(page, 'Number').fill('09171234567');
+  await field(page, 'Phone Number').fill('917 123 4567');
   await field(page, 'Password').fill('hunter2hunter2');
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page
+    .getByRole('heading', { name: 'Thank you for signing up!' })
+    .waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: 'Continue' }).click();
   await start(page).waitFor({ timeout: 15000 });
   const [[id, user]] = [...fake.users];
   check(

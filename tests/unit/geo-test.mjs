@@ -7,11 +7,17 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   M_PER_DEG,
+  bboxContains,
+  bboxMeetsSegment,
   bboxOf,
   haversine,
   joinSegments,
+  lineLength,
+  metresAlong,
   nearestOnSegment,
+  overviewOf,
   pointToSegmentM,
+  simplifyLine,
 } from '../../src/shared/utils/geo.ts';
 
 test('a degree of latitude is what haversine measures it', () => {
@@ -42,6 +48,49 @@ test('metres to a segment agree with haversine to its nearest point, at street s
   }
 });
 
+/** East along a street, then north at a corner: a line with one bend. */
+const CORNER = [
+  [121.04, 14.7],
+  [121.041, 14.7],
+  [121.042, 14.7],
+  [121.042, 14.701],
+];
+
+test('metres along a line: 0 under two points, about 0 at its start, its length at its end', () => {
+  assert.equal(metresAlong([], [121.04, 14.7]), 0);
+  assert.equal(metresAlong([CORNER[0]], [121.041, 14.7]), 0);
+  assert.ok(metresAlong(CORNER, CORNER[0]) < 0.01);
+  assert.ok(Math.abs(metresAlong(CORNER, CORNER[3]) - lineLength(CORNER)) < 0.01);
+});
+
+test('a straight line is thinned to its first and last points', () => {
+  const straight = [0, 1, 2, 3, 4].map((i) => [121.04 + i * 0.001, 14.7]);
+  assert.deepEqual(simplifyLine(straight, 1), [straight[0], straight[4]]);
+});
+
+test('a corner stays, and so do the first and last points, however loose the thinning', () => {
+  assert.deepEqual(simplifyLine(CORNER, 1), [CORNER[0], CORNER[2], CORNER[3]]);
+  assert.deepEqual(simplifyLine(CORNER, 1_000_000), [CORNER[0], CORNER[3]]);
+});
+
+test('a line of two points comes back as a copy, not the same array', () => {
+  const two = [CORNER[0], CORNER[1]];
+  const thinned = simplifyLine(two, 1);
+  assert.deepEqual(thinned, two);
+  assert.notEqual(thinned, two);
+});
+
+test('an overview rounds its points to five decimals', () => {
+  const line = [
+    [121.040004, 14.700006],
+    [121.041236, 14.700004],
+  ];
+  assert.deepEqual(overviewOf(line), [
+    [121.04, 14.70001],
+    [121.04124, 14.7],
+  ]);
+});
+
 test('a box padded by d metres holds every point within d metres of its corners', () => {
   const [w, s, e, n] = bboxOf(
     [
@@ -53,6 +102,37 @@ test('a box padded by d metres holds every point within d metres of its corners'
   assert.ok(Math.abs(haversine([121.04, s], [121.04, 14.7]) - 10) < 0.01);
   assert.ok(Math.abs(haversine([w, 14.7005], [121.04, 14.7005]) - 10) < 0.05);
   assert.ok(e > 121.041 && n > 14.701);
+});
+
+test('a box holds a point inside it or on its edge, and none beyond any side', () => {
+  const box = [0, 0, 10, 10];
+  assert.ok(bboxContains(box, [5, 5]));
+  assert.ok(bboxContains(box, [0, 5]));
+  assert.ok(bboxContains(box, [10, 10]));
+  for (const outside of [
+    [-1, 5],
+    [11, 5],
+    [5, -1],
+    [5, 11],
+  ]) {
+    assert.ok(!bboxContains(box, outside), `${outside}`);
+  }
+});
+
+test('a segment meets a box inside it, across it or through it, and not from outside', () => {
+  const box = [0, 0, 10, 10];
+  assert.ok(bboxMeetsSegment(box, [2, 2], [8, 8]));
+  assert.ok(bboxMeetsSegment(box, [5, 5], [15, 5]));
+  assert.ok(bboxMeetsSegment(box, [-5, 5], [15, 5]));
+  assert.ok(!bboxMeetsSegment(box, [11, 11], [15, 15]));
+});
+
+// Only the segment's own box is compared with the box. This diagonal passes the
+// corner at [10, 10] without touching the box, but its box overlaps that corner,
+// so it counts. The callers ask it first and measure exactly after, so a wrong
+// yes costs time, not a wrong answer.
+test("a diagonal that misses the box's corner still meets it", () => {
+  assert.ok(bboxMeetsSegment([0, 0, 10, 10], [9, 13], [13, 9]));
 });
 
 // Review of 2026-10-03, finding 7: a routed segment starts where the router

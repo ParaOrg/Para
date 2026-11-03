@@ -4,21 +4,23 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { CASING_EXTRA, litRadius, litWidth } from './line-style';
-import type { Way } from '../model/ride-recording';
+import { FLAG_IMAGE, FLAG_POINT_X, addFlagImage } from './trail-flag';
+import { FOOT_IMAGE, addFootImage } from './trail-foot';
+import type { Mode } from '../model/ride-recording';
 
-/** A run of the trail on one way: outbound is papunta, return is pabalik. */
+/** A run of the trail on one mode: walk is Lakad, ride is Sakay. */
 export interface TrailLine {
-  way: Way;
+  mode: Mode;
   path: readonly LngLat[];
 }
 
-/** A dot where the way switched, ringed in the colour of the way that began there. */
+/** A dot where the mode switched. */
 export interface TrailMarker {
   at: LngLat;
-  way: Way;
+  mode: Mode;
 }
 
-/** A pin where the contributor marked the place they were. */
+/** A flagged stop: a pin where the contributor marked the place they were. */
 export interface TrailMark {
   at: LngLat;
 }
@@ -32,10 +34,13 @@ export interface RecordingTrail {
 
 export const TRAIL_SRC = 'recording-trail';
 const CASING = 'recording-trail-casing';
-const LINE = 'recording-trail-line';
+const RIDE = 'recording-trail-line';
+const WALK = 'recording-trail-walk';
+const FEET = 'recording-trail-feet';
 const MARKERS = 'recording-trail-markers';
 const MARKS = 'recording-trail-marks';
-
+/** The walked line's dash and gap, in line widths, before its round caps. */
+const WALK_DASH = [0.5, 2];
 /** The trail as its source takes it: a line per run, a point per switch, and a point per mark. */
 export function trailData(trail: RecordingTrail) {
   return {
@@ -45,12 +50,12 @@ export function trailData(trail: RecordingTrail) {
         .filter((line) => line.path.length >= 2)
         .map((line) => ({
           type: 'Feature' as const,
-          properties: { way: line.way },
+          properties: { mode: line.mode },
           geometry: { type: 'LineString' as const, coordinates: line.path.map((p) => [...p]) },
         })),
       ...trail.markers.map((marker) => ({
         type: 'Feature' as const,
-        properties: { kind: 'switch', way: marker.way },
+        properties: { kind: 'switch', mode: marker.mode },
         geometry: { type: 'Point' as const, coordinates: [...marker.at] },
       })),
       ...trail.marks.map((mark) => ({
@@ -65,11 +70,15 @@ export function trailData(trail: RecordingTrail) {
 /** Adds the trail's source and layers, empty. A basemap switch carries them across (basemap.ts). */
 export function addRecordingTrail(map: MapLibreMap): void {
   if (map.getSource(TRAIL_SRC)) return;
+  addFootImage(map);
+  addFlagImage(map);
   map.addSource(TRAIL_SRC, {
     type: 'geojson',
     data: trailData({ lines: [], markers: [], marks: [] }),
   });
   const isLine: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
+  const isWalk: FilterSpecification = ['all', isLine, ['==', ['get', 'mode'], 'walk']];
+  const isRide: FilterSpecification = ['all', isLine, ['==', ['get', 'mode'], 'ride']];
   map.addLayer({
     id: CASING,
     type: 'line',
@@ -79,20 +88,43 @@ export function addRecordingTrail(map: MapLibreMap): void {
     paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': litWidth(CASING_EXTRA) },
   });
   map.addLayer({
-    id: LINE,
+    id: RIDE,
     type: 'line',
     source: TRAIL_SRC,
-    filter: isLine,
+    filter: isRide,
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': MAP_COLOURS['Map/Trail/sakay'], 'line-width': litWidth() },
+  });
+  // Walking is dashed with round ends, so it is easy to follow. In line widths: each cap adds half
+  // a width to both ends of its dash, so a dash of WALK_DASH[0] shows one width longer and a gap of
+  // WALK_DASH[1] one width shorter.
+  map.addLayer({
+    id: WALK,
+    type: 'line',
+    source: TRAIL_SRC,
+    filter: isWalk,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: {
-      'line-color': [
-        'match',
-        ['get', 'way'],
-        'return',
-        MAP_COLOURS['Map/Trail/pabalik'],
-        MAP_COLOURS['Map/Trail/papunta'],
-      ],
+      'line-color': MAP_COLOURS['Map/Trail/lakad'],
       'line-width': litWidth(),
+      'line-dasharray': WALK_DASH,
+    },
+  });
+  // A foot every so often along a walked line, its toes turned the way the line runs.
+  map.addLayer({
+    id: FEET,
+    type: 'symbol',
+    source: TRAIL_SRC,
+    filter: isWalk,
+    layout: {
+      'symbol-placement': 'line',
+      'symbol-spacing': 80,
+      'icon-image': FOOT_IMAGE,
+      'icon-rotate': 90,
+      'icon-rotation-alignment': 'map',
+      'icon-keep-upright': false,
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
     },
   });
   map.addLayer({
@@ -103,26 +135,29 @@ export function addRecordingTrail(map: MapLibreMap): void {
     paint: {
       'circle-radius': litRadius(CASING_EXTRA),
       'circle-color': MAP_PAINT['Paint/casing'],
+      // In the colour of the mode the recording switched to.
       'circle-stroke-color': [
         'match',
-        ['get', 'way'],
-        'return',
-        MAP_COLOURS['Map/Trail/pabalik'],
-        MAP_COLOURS['Map/Trail/papunta'],
+        ['get', 'mode'],
+        'walk',
+        MAP_COLOURS['Map/Trail/lakad'],
+        MAP_COLOURS['Map/Trail/sakay'],
       ],
       'circle-stroke-width': 3,
     },
   });
+  // Figma's flagstop pin, its point (the stem's foot) on the place: always drawn, over the rest.
   map.addLayer({
     id: MARKS,
-    type: 'circle',
+    type: 'symbol',
     source: TRAIL_SRC,
     filter: ['==', ['get', 'kind'], 'mark'],
-    paint: {
-      'circle-radius': litRadius(CASING_EXTRA),
-      'circle-color': MAP_COLOURS['Map/Trail/mark'],
-      'circle-stroke-color': MAP_PAINT['Paint/casing'],
-      'circle-stroke-width': 2,
+    layout: {
+      'icon-image': FLAG_IMAGE,
+      'icon-anchor': 'bottom-left',
+      'icon-offset': [-FLAG_POINT_X, 0],
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
     },
   });
 }

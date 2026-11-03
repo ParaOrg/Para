@@ -1,5 +1,5 @@
-import { nativeGetText } from '../native-app';
 import { latestReleaseSchema, type LatestRelease } from './latest-release-schema';
+import { nativeGetText } from '../native-bridge/native-app';
 
 /**
  * Reads and checks the release file with `getText`. Silent when the file cannot be reached (offline

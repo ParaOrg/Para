@@ -1,6 +1,6 @@
 # 10: README's `npm run check` comment forgets a step
 
-Status: ready-for-human
+Status: resolved (#531)
 Type: task
 Size: tiny
 Blocked by: none

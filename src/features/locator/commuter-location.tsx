@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 
 import { BASEMAPS, type Basemap } from '@/features/routes/map/basemap';
 import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
+import type { LabelsPlace } from '@/features/routes/map/location-labels';
 import { coarse } from '@/features/routes/map/map-view';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import type { Turn } from '@/shared/hooks/commit-turn';
@@ -10,6 +11,7 @@ import type { Snap } from '@/shared/ui/sheet-gesture';
 
 import { gazeSubjects, type Picks } from './dot-gaze';
 import { Locator } from './locator';
+import type { LocatorNote } from './locator-note';
 import { LocatorOnMap } from './locator-on-map';
 import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
@@ -26,6 +28,8 @@ interface Props {
   /** The designs MapView was handed, for the pill's card: the public map's by default, the studio's its own. */
   basemaps?: readonly Basemap[];
   basemapThumbnails?: Readonly<Record<string, string>>;
+  /** Whose Location Labels choice the card keeps: the public map's by default, the studio's its own. */
+  labelsPlace?: LabelsPlace;
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
   /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
@@ -42,6 +46,8 @@ interface Props {
    * loop's tip.
    */
   onWhere?: (where: CommuterWhere | null) => void;
+  /** What the locator has to say, for the page's problem toast; null once a fix comes (Locator). */
+  onNote?: (note: LocatorNote | null) => void;
 }
 
 /**
@@ -61,6 +67,7 @@ export function CommuterLocation({
   isMapLoaded,
   basemaps = BASEMAPS,
   basemapThumbnails = BASEMAP_THUMBNAILS,
+  labelsPlace = 'map',
   snap,
   offset,
   docked,
@@ -68,6 +75,7 @@ export function CommuterLocation({
   picks,
   hushedAt,
   onWhere,
+  onNote,
 }: Props) {
   const locator = useLocator(map, { compass: coarse, snap, offset, cameraTurn });
   // How the dot feels: glad as the location comes, a boing at a tap on the
@@ -103,7 +111,9 @@ export function CommuterLocation({
           isMapLoaded={isMapLoaded}
           basemaps={basemaps}
           basemapThumbnails={basemapThumbnails}
+          labelsPlace={labelsPlace}
           docked={docked}
+          onNote={onNote}
         />
       )}
       {map && locator.fix && (

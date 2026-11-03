@@ -1,14 +1,20 @@
 import type { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
 
-import { nativePlugin } from '../native-app';
-import type { WatchedFix, WatchError } from '../use-geolocation-watch';
 import { createFixCatchUp } from './fix-catch-up';
-import { beginFixLog, NO_ACCURACY_M, readFixLog } from './native-fix-log';
+import { beginFixLog, readFixLog } from './native-fix-log';
+import { noteRideWatcher } from './ride-notice';
 import { watchErrorOf, watchErrorOfThrown } from './watch-error';
+import { lazyPlugin } from '../native-bridge/native-app';
+import {
+  NO_ACCURACY_M,
+  PLUGIN_NAMES,
+  type WatchedFix,
+  type WatchError,
+} from '../native-bridge/native-contract';
 
 const RECORDING_NOTIFICATION = {
-  title: 'Para is recording',
-  message: 'Your route is being recorded. Open Para and tap Stop to finish.',
+  title: 'Recording your route',
+  message: 'Open Para to pause or finish.',
 } as const;
 
 interface NativeWatchHandlers {
@@ -17,9 +23,7 @@ interface NativeWatchHandlers {
   onError: (error: WatchError) => void;
 }
 
-let plugin: BackgroundGeolocationPlugin | null = null;
-const getPlugin = () =>
-  (plugin ??= nativePlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation'));
+const getPlugin = lazyPlugin<BackgroundGeolocationPlugin>(PLUGIN_NAMES.backgroundGeolocation);
 
 /**
  * Starts the foreground service that keeps the notification up and the fixes coming with the
@@ -73,6 +77,8 @@ export async function startNativeWatch({
     return () => undefined;
   }
 
+  // The ride's notification stops and starts this watcher by its id, from its Pause and Resume.
+  noteRideWatcher(watcherId);
   const handleVisibility = () => {
     if (document.visibilityState === 'visible') readLog();
   };
@@ -80,6 +86,7 @@ export async function startNativeWatch({
   readLog();
   return () => {
     document.removeEventListener('visibilitychange', handleVisibility);
+    noteRideWatcher('');
     void getPlugin().removeWatcher({ id: watcherId });
   };
 }

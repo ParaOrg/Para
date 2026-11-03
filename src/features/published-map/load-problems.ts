@@ -11,8 +11,8 @@ export interface LoadProblems {
   loadFailed: boolean;
   /** Any of them is a map file newer than this app can read. */
   tooNew: boolean;
-  /** Reads every one of them again, in order. */
-  tryAgain: () => void;
+  /** Reads every one of them again, in order; settled once every read has. */
+  tryAgain: () => Promise<void>;
 }
 
 /** What the page's notices say about loading the published map (Notices). */
@@ -20,8 +20,8 @@ export function loadProblems(sources: readonly MapFileSource[]): LoadProblems {
   return {
     loadFailed: sources.some((s) => !!s.error),
     tooNew: sources.some((s) => s.error === MAP_FILE_TOO_NEW),
-    tryAgain: () => {
-      for (const s of sources) void s.reload();
+    tryAgain: async () => {
+      await Promise.allSettled(sources.map((s) => s.reload()));
     },
   };
 }

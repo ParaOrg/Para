@@ -1,6 +1,6 @@
 // A recorded ride as the contributor page keeps it, for the upload's tests:
-// Fairview to Cubao along a straight street, one fix a second, standing still
-// for two minutes in the middle, with the faults a real phone gives: a jump
+// Fairview to Cubao along a straight street, one fix a second, on Lakad for the
+// first minute and then on Sakay, standing still for two minutes in the middle, with the faults a real phone gives: a jump
 // several hundred metres away, a fix repeated at the same time, and one
 // reported outside the Philippines.
 export const T0 = Date.UTC(2026, 9, 19, 0, 0, 0);
@@ -27,14 +27,17 @@ export function rideFixes(count = 1300) {
 export function rideRecording(id, fixes) {
   const last = fixes[fixes.length - 1].time;
   return {
-    version: 1,
+    version: 2,
     id,
     status: 'saved',
     startedAt: T0,
     stoppedAt: last,
     savedAt: last + 30_000,
     gaps: [],
-    switches: [{ time: T0 + 900_000, to: 'return' }],
+    modes: [
+      { time: T0, to: 'walk' },
+      { time: T0 + 60_000, to: 'ride' },
+    ],
     startPointName: '  Fairview  ',
     endPointName: 'Cubao',
     description: 'Morning jeep',

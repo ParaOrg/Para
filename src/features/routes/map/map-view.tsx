@@ -25,6 +25,7 @@ import {
   within,
   type Bounds,
 } from './framing';
+import { readLocationLabels, type LabelsPlace } from './location-labels';
 import { mapAttribution } from './map-attribution';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
@@ -164,21 +165,40 @@ interface Props {
    * map's sits on the locator (LocationAndMap).
    */
   hasMapStyleButton?: boolean;
+  /** Whose Location Labels choice the map opens with: the public pages', or the studio's own. Read once, as the map is made. */
+  labelsPlace?: LabelsPlace;
   /**
    * The credits always at the bottom right, where a phone would put them top
    * right, under the button: the contributor page keeps that corner for
    * Figma's button. Read once, as the map is made.
    */
   creditsAtBottom?: boolean;
+  /**
+   * False while the page shows the credits itself: the contributor page's ⓘ,
+   * which opens them as the Map Data Source sheet. The corner ⓘ comes back
+   * the moment it is true again, so the licences' credit is always a tap away.
+   */
+  areCreditsShown?: boolean;
+  /**
+   * True while a screen or question of the page covers the map (the contributor page's
+   * isMapCovered: its account gate, History, Account, the Save form, Saved and the rest): what
+   * the map says of itself, its failure included, stays under it.
+   */
+  isCovered?: boolean;
 }
 
 /**
  * Metro Manila with its jeepney hinterland — Bulacan's south, Rizal's
- * slopes, Cavite and Laguna's north — and room to spare: 0.9° by 0.95°, so
- * the opening view at zoom 11 fits inside it on a screen 2,000 px wide.
+ * slopes, Cavite — and Laguna down to Los Baños: 0.9° by 1.45°, so the
+ * opening view at zoom 11 fits inside it on a screen 2,000 px wide. The south
+ * edge is the nearest that lets a phone at its opening view (zoom 9.2) glide
+ * UPLB, the UP Diliman – UPLB bus's end at 14.17°, into the map above a card
+ * at Middle: the map may not show past this edge, and the card covers the
+ * screen's lower half. The monthly tiles build covers this box
+ * (scripts/tiles/area.mjs).
  */
 export const METRO_MANILA: [[number, number], [number, number]] = [
-  [120.6, 14.1],
+  [120.6, 13.6],
   [121.5, 15.05],
 ];
 
@@ -193,7 +213,10 @@ export function MapView({
   basemapThumbnails = BASEMAP_THUMBNAILS,
   buttonStyle = 'round',
   hasMapStyleButton = true,
+  labelsPlace = 'map',
   creditsAtBottom = false,
+  areCreditsShown = true,
+  isCovered = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -218,6 +241,8 @@ export function MapView({
   // The design chosen on this device, read once; the map is built with it so
   // a remembered choice never flashes gray first.
   const [basemap] = useState<Basemap>(() => readBasemap(basemaps));
+  // Read once too: the basemap's labels shown or hidden from the first frame (location-labels.ts).
+  const [areLabelsShown] = useState(() => readLocationLabels(labelsPlace));
   const [ready, setReady] = useState<MapLibreMap | null>(null);
   const isLoaded = ready !== null && error === null;
   const onLoadedChangeRef = useRef(onLoadedChange);
@@ -250,7 +275,7 @@ export function MapView({
       // Beside it, the public map's framing (`openOn`): none if it fails or
       // has not come within OPENING_WAIT_MS.
       const [style, framing] = await Promise.all([
-        initialStyle(basemap),
+        initialStyle(basemap, areLabelsShown),
         openOn ? within(openOn(), OPENING_WAIT_MS, null) : null,
       ]);
       if (cancelled || !containerRef.current) return;
@@ -447,10 +472,12 @@ export function MapView({
 
         `data-loaded`: the map's 'load', for the headless suites on a
         production build, where the map itself is out of their reach.
+        `data-credits-hidden`: the corner credits stepped aside (map-frame.css).
       */}
       <div
         data-testid="map-view"
         data-loaded={isLoaded || undefined}
+        data-credits-hidden={!areCreditsShown || undefined}
         className="absolute inset-0 bg-surface-secondary"
       >
         <div ref={containerRef} className="h-full w-full" />
@@ -462,6 +489,7 @@ export function MapView({
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
           initial={basemap}
+          labelsPlace={labelsPlace}
           buttonStyle={buttonStyle}
         />
       )}
@@ -472,7 +500,7 @@ export function MapView({
         </div>
       )}
 
-      {error && (
+      {error && !isCovered && (
         <div className="absolute inset-x-0 top-0 z-30 m-4 rounded-lg bg-red-50 p-4 text-sm text-red-900 shadow ring-1 ring-red-200">
           <p className="font-medium">The map failed to load.</p>
           <p className="mt-1 break-words">{error}</p>

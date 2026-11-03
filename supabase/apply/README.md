@@ -231,3 +231,208 @@ Applying this alone changes nothing a phone can see. The accounts code (tickets 
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and nobody has a name or number yet: run `20261024090000_contributor_accounts_revert.sql`. `verify/contributor-accounts.sh` checks the schema afterwards matches the schema before, and that it re-applies.
 - Profiles stored: the revert refuses. Decide with the owner what happens to the names and numbers first.
+
+# Applying am_i_editor to the live project
+
+The studio asks, right after a sign-in or a restored session, whether the account is on the editor
+list, and signs a contributor's account out of the studio with a notice. This adds one function,
+`public.am_i_editor()`: security invoker over 0005's `private.is_editor()`, about the caller alone,
+callable by `authenticated` only. No table, no policy, no row. Three files, each pasted whole into
+the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261030090000_am_i_editor_apply.sql` | One transaction: checks it is not in the ledger yet, that `private.is_editor()` exists and that `authenticated` can run it (usage on `private`, execute on the function: the new function runs as the caller); applies `migrations/20261030090000_am_i_editor.sql` (carried unchanged; `verify/am-i-editor.sh` checks the copy); writes the ledger row `am_i_editor`. A failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261030090000_am_i_editor_check.sql` | Read-only, 6 rows, all `ok` should be `t`. |
+| `20261030090000_am_i_editor_revert.sql` | One transaction: drops the function and its ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261030090000_am_i_editor_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261030090000_am_i_editor_check.sql`: 6 rows, all `ok = t`.
+3. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'am_i_editor';`) in
+   `migrations/README.md`.
+4. Sign in to the studio as yourself: you get in as before. A contributor's account is now told it
+   is not an editor and signed out of the studio (the contributor page keeps its own session).
+
+Until step 1 the studio cannot ask (the function is missing), and lets every account in as before,
+with a console warning; row security refuses a non-editor's writes either way.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and the studio turns away someone it should not: run
+  `20261030090000_am_i_editor_revert.sql`. The studio then lets every account in again, as before
+  (`verify/am-i-editor.sh` checks the schema afterwards matches the schema before, and that it
+  re-applies). Before reverting, check the account is in `private.editor`.
+
+# Applying account_stats to the live project
+
+The numbers for the contributor's Account page, ready before the page is designed (nothing shows
+them yet). Each saved ride keeps its walked and ridden metres and seconds; each contributor's
+lifetime numbers survive the 24-month retirement; `public.get_my_stats()` gives the signed-in
+contributor their own, in one row. Three files, each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261031090000_account_stats_apply.sql` | One transaction: checks `contributor_accounts` is in the ledger (`finish_claim` and `retire_month` exist) and none of this exists yet; applies `migrations/20261031090000_account_stats.sql` (carried unchanged; `verify/account-stats.sh` checks the copy); checks `get_my_stats` and `finish_claim` are definers with a pinned path that only `authenticated` can run, the private helpers and `private.contributor_retired_totals` are closed to the API roles, and `save_contribution` still runs as the caller; writes the ledger row `account_stats`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261031090000_account_stats_check.sql` | Part one adds test phones, an account and rides, proves the behaviour (the split saved and refused, each user's own stats only, anon refused, a hidden ride left out, retiring a 2024 test month leaves every number the same and carries nothing twice, a deleted ride no longer counts, a claim moves the retired totals), and rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 9 rows, all `ok` should be `t`. |
+| `20261031090000_account_stats_revert.sql` | One transaction: drops `get_my_stats`, the helpers, the table and the four columns, and puts `save_contribution`, `retire_month` and `finish_claim` back as their migrations made them. Refuses, changing nothing, while any contribution holds a split or any contributor has retired totals. Safe to run twice. |
+
+## Order
+
+1. `contributor_accounts` first: the apply refuses without it.
+2. This migration, **before** the app that sends `walk_m`, `ride_m`, `walk_s` and `ride_s` ships.
+   Today's `save_contribution` reads only the keys it names and ignores the rest, so that app saves
+   either way; applied late, its rides saved in between simply keep no split (null).
+3. Apps already in the field keep saving after it: the four keys are optional, and a missing one is
+   stored as null.
+
+## Steps
+
+1. Run `20261031090000_account_stats_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261031090000_account_stats_check.sql`: part one ends with `ROLLBACK` and no `FAILED`;
+   part two gives 9 rows, all `ok = t`.
+3. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'account_stats';`) in
+   `migrations/README.md`.
+
+The monthly `select private.retire_month(...)` is run as before; it now adds each contributor's
+numbers for the month to their retired totals first.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and no ride has a split and nobody has retired totals yet: run
+  `20261031090000_account_stats_revert.sql`. `verify/account-stats.sh` checks the schema afterwards
+  matches the schema before, and that it re-applies.
+- Splits or retired totals stored: the revert refuses. Decide with the owner first: dropping them
+  loses numbers that cannot be made again.
+
+# Applying delete_my_account to the live project
+
+Account settings → Delete account. This adds one function, `public.delete_my_account()`: a
+definer with a pinned path, callable by `authenticated` only. It deletes the caller's own auth user
+(`auth.uid()`); the foreign keys already in place take their contributor row, contributions with
+their points, hintos and uses, retired totals and claim tokens with it. Its own `gps_session` rows go
+too. A user already gone (an earlier call's answer was lost) is answered as deleted. It refuses an
+anonymous phone, an editor (the owner removes editors) and an account that still owns rows of the
+map. It also changes `private.contribution_hide_stamp` so `hidden_by` may go to null once that user
+is gone: a former editor who hid uploads can be deleted (before, the trigger wrote the dead id
+back and the delete failed). No table, no policy, no row changes. Three files, each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261031100000_delete_my_account_apply.sql` | One transaction: checks `account_stats` is in the ledger, this is not, `private.is_account()` and `private.is_editor()` exist, and `postgres` may delete from `auth.users`; applies `migrations/20261031100000_delete_my_account.sql` (carried unchanged; `verify/delete-my-account.sh` checks the copy); checks the function is a definer with a pinned path for `authenticated` only; writes the ledger row `delete_my_account`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261031100000_delete_my_account_check.sql` | Part one adds seven test users with a row in every table and proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. It proves an account deletes itself and only itself, with every row of theirs gone, counted by the ids taken before; a token it used keeps `claimed_by` null; a second call answers as deleted; anon cannot call it; an anonymous phone, an editor and an owner of a map row are refused and keep everything; and a former editor who hid an upload is deleted while the upload stays hidden. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261031100000_delete_my_account_revert.sql` | One transaction: drops the function, puts `private.contribution_hide_stamp` back as it was, and removes the ledger row. Accounts already deleted stay deleted. Safe to run twice. |
+
+## Steps
+
+1. `account_stats` first: the apply refuses without it.
+2. Run `20261031100000_delete_my_account_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+3. Run `20261031100000_delete_my_account_check.sql`: part one ends with `ROLLBACK` and no `FAILED`;
+   part two gives 5 rows, all `ok = t`.
+4. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'delete_my_account';`) in
+   `migrations/README.md`.
+
+Apply it before the app's Delete account ships: until then the call answers that the function does
+not exist, and nothing is deleted.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and Delete account must be withdrawn: run `20261031100000_delete_my_account_revert.sql`.
+  `verify/delete-my-account.sh` checks the schema afterwards matches the schema before, and that it
+  re-applies. An account already deleted cannot be brought back.
+
+# Applying contribution_fare to the live project
+
+The fare a contributor paid, stored with each recording and added up in their stats, and two more
+vehicle kinds, E-Jeep and UV Express, which the owner's Account design counts. The app does not ask
+for the fare yet (the save form will, once its question is designed), and its ride-kind picker gains
+the two kinds only after this is applied: a phone sending one before would have the whole ride
+refused. `contribution.vehicle` may also be `e_jeep` or `uv_express`; the retired totals and
+`get_my_stats()` count them as `e_jeep_rides` and `uv_express_rides`. `contribution.fare_php`
+(numeric(7,2), 0 to 2000, null when not given) is read by `save_contribution` as an optional key,
+the retired totals gain `fare_php_total` and `fare_recordings`, and `get_my_stats()` returns both
+(live recordings with a fare plus the retired carry, and how many recordings that is). Three files,
+each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261031110000_contribution_fare_apply.sql` | One transaction: checks `account_stats` is in the ledger and this is not; applies `migrations/20261031110000_contribution_fare.sql` (carried unchanged; `verify/contribution-fare.sh` checks the copy); checks `get_my_stats` is a definer with a pinned path for `authenticated` only, the private helpers stay closed to the API roles, and `save_contribution` still runs as the caller; writes the ledger row `contribution_fare`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261031110000_contribution_fare_check.sql` | Part one adds a test phone and its rides, proves a kind from before still saves, an E-Jeep and a UV Express ride save, a kind that is not one is refused, a payload without a fare saves with none, a fare saves, a negative, an over-2000 and an unreadable fare are refused, and the stats add up fares and count the new kinds, live and retired alike, the same after retiring two months in turn, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 7 rows, all `ok` should be `t`. |
+| `20261031110000_contribution_fare_revert.sql` | One transaction: drops the five columns, puts the vehicle check back to the six kinds from before, and puts `save_contribution`, `ride_totals`, `add_retired_totals` and `get_my_stats` back as `account_stats` made them. Refuses, changing nothing, while any contribution holds a fare or is an E-Jeep or UV Express ride, or any retired totals count one. Safe to run twice. |
+
+## Steps
+
+1. `account_stats` first, with its own check: the apply refuses without it, and account_stats'
+   check reads `get_my_stats` as it was before this.
+2. Run `20261031110000_contribution_fare_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+3. Run `20261031110000_contribution_fare_check.sql`: part one ends with `ROLLBACK` and no `FAILED`;
+   part two gives 7 rows, all `ok = t`.
+4. Regenerate `src/shared/types/database.types.ts`, and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'contribution_fare';`) in
+   `migrations/README.md`.
+
+Apps in the field keep saving: they send no fare, and none is stored. Only after step 4 may the
+contributor builder add E-Jeep and UV Express to the ride-kind picker.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and no fare is stored yet: run `20261031110000_contribution_fare_revert.sql`.
+  `verify/contribution-fare.sh` checks the schema afterwards matches the schema before, and that it
+  re-applies.
+- Fares stored: the revert refuses. Decide with the owner first: dropping them loses what
+  contributors entered.
+
+# Applying delete_account_keep_uploads to the live project
+
+Delete account keeps the uploads by default (the owner, 2026-11-01). This replaces
+`public.delete_my_account()` with `public.delete_my_account(delete_uploads boolean default true)`:
+
+- **`false`:** the person goes (their auth user, contributor row with name and number, retired totals,
+  claim tokens and `gps_session` rows). Their contributions stay, with their points, hintos and uses,
+  unlinked (`contributor_id` null), marked in a new column, `contribution.unlinked` (a yes or no, not a
+  time, so one person's rides are not grouped by a shared stamp), with the words they typed cleared.
+- **`true`, or no argument:** exactly as before, so the app already on phones keeps doing what it says.
+
+Either way, GoTrue's audit log entries about the user (`auth.audit_log_entries`, which name them by
+email) go too, and their rows are locked first so an upload committing meanwhile is kept, not lost.
+`private.retire_month` also takes a ride marked `unlinked`, and clears the mark as it retires the ride.
+Without that, a kept ride would look already retired and never have its ends cut at 24 months.
+Same refusals as before. One column, no row changes. Three files, each pasted whole into the SQL
+editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261101090000_delete_account_keep_uploads_apply.sql` | One transaction. Checks `delete_my_account` is in the ledger and this is not, `unlinked` does not exist yet, `retire_month` and `carry_retired_month` exist, and `postgres` may lock and delete `auth.users` rows and delete from `auth.audit_log_entries`. Applies `migrations/20261101090000_delete_account_keep_uploads.sql` (carried unchanged; `verify/delete-account-keep-uploads.sh` checks the copy). Checks the zero-argument function is gone, the new one is a definer with a pinned path for `authenticated` only with its default, no ride is marked, no API role may update the column, and `retire_month` takes kept rides. Writes the ledger row `delete_account_keep_uploads`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261101090000_delete_account_keep_uploads_check.sql` | Part one adds nine test users with a row in every table, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. With no argument and with `true` an account goes with every upload, as before. With `false` the person goes, the uploads stay unlinked and marked with their typed words cleared, and no row names them: every foreign key column to a user or contributor, read from the catalogue, and the audit log. Another contributor cannot read a kept ride; an editor can; a phone cannot insert one of its own marked kept. Retries answer as deleted. The usual refusals hold with either answer. A former editor's hidden upload stays hidden. With the real 24-month guard, `retire_month` leaves this month's kept ride alone, retires it once moved to a 2024 month, and skips it on a second run. Part two is read-only: 7 rows, all `ok` should be `t`. |
+| `20261101090000_delete_account_keep_uploads_revert.sql` | One transaction: puts back `delete_my_account()` and `retire_month` as they were, drops `contribution.unlinked`, removes the ledger row. Refused while any ride was kept from a deleted account: without the column, `retire_month` would take it for one already retired. Safe to run twice. |
+
+## Steps
+
+1. `delete_my_account` first: the apply refuses without it.
+2. Run `20261101090000_delete_account_keep_uploads_apply.sql`. It ends with `COMMIT`; an error means
+   nothing changed.
+3. Run `20261101090000_delete_account_keep_uploads_check.sql`: part one ends with `ROLLBACK` and no
+   `FAILED`; part two gives 7 rows, all `ok = t`.
+4. Regenerate `src/shared/types/database.types.ts` (`delete_my_account` gains `delete_uploads?: boolean`;
+   `contribution` gains `unlinked`), and record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'delete_account_keep_uploads';`)
+   in `migrations/README.md`.
+
+The app on phones keeps working through it: its call has no argument, which means `true`. The new
+screen's "Also delete my uploaded routes" ships after this is applied.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261101090000_delete_account_keep_uploads_revert.sql`.
+  `verify/delete-account-keep-uploads.sh` checks the schema afterwards matches the schema before, and
+  that it re-applies. If anyone has already kept their uploads, the revert refuses: decide with the
+  owner first whether to retire those rides or delete them.

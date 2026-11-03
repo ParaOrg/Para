@@ -1,6 +1,8 @@
 import { passIndex } from '@/features/routes/geo/pass';
-import { entryDistance, firstTouchIndex, type Ring } from '@/features/routes/geo/ring';
+import { firstTouchIndex, type Ring } from '@/features/routes/geo/ring';
 import { servedBy, directionLine, isLoop, type DirectionRow } from '@/features/routes/model/routes';
+
+import { entryDistance } from './hotspot-ring';
 
 // Pure functions, kept apart from the writes (hotspots-write.ts), which need the
 // Supabase client a test cannot load: so they can be unit-tested, and so the

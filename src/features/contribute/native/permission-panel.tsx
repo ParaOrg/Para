@@ -1,8 +1,8 @@
 import { Button } from '@/design-system/primitives/button';
 
-import { useFocusHeading } from '../use-focus-heading';
 import type { NativePermission } from './native-permissions';
 import { PERMISSION_REASONS } from './permission-steps';
+import { useFocusHeading } from '../common/use-focus-heading';
 
 interface PermissionPanelProps {
   permission: NativePermission;

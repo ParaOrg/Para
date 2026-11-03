@@ -143,8 +143,9 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/](@supabase[\\/][^\\/]+|iceberg-js|tslib)[\\/]/,
               priority: 1,
             },
-            //  - tanstack-query: the studio's server state (the review queue
-            //    and the Contributors map), two lazy chunks of the studio's.
+            //  - tanstack-query: the server state of the studio (the review queue
+            //    and the Contributors map) and of the contributor page. Never
+            //    loaded by the public page (check-build.mjs proves it).
             {
               name: 'tanstack-query',
               test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
@@ -156,18 +157,34 @@ export default defineConfig({
             //    no form.
             {
               name: 'fields',
-              test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-icons|text-field|text-area-field|password-field|select-field)\.tsx$/,
+              test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-error|field-icons|text-field|text-area-field|password-field|phone-field|otp-field|select-field)\.tsx$/,
               priority: 1,
             },
             //  - shared never takes the studio's or the contributor page's own
             //    modules, nor Turnstile, which only those two load: two of
             //    their chunks importing one would otherwise put it on the
-            //    public page.
+            //    public page. Nor the published map's fetchers: the contributor
+            //    page reads them only once its map has settled (its faint
+            //    routes), so in `shared` they would ride along on its opening.
+            //    Left out, they are a chunk of their own that the public page
+            //    opens with and the contributor page fetches later. Nor the
+            //    toast, its host and the location drawing a location problem
+            //    leads with: the public page fetches them the first time it has
+            //    something to say, and in `shared` they would ride along on its
+            //    opening. Nor what only the other pages or a lazy chunk draw: the
+            //    design system's Switch (the Map Style card's, fetched with the
+            //    card), the contributor page's locator (ContributorLocation and
+            //    its permission check) and its css-duration. Nor the one
+            //    QueryClient (shared/lib/query-client.ts) the studio and the
+            //    contributor page make: in `shared` it brought TanStack Query
+            //    onto the public page's opening, which never asks a server. A
+            //    module lands in `shared` when two chunks import it, whichever
+            //    pages they are.
             {
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
-                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile)/.test(
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/](location-icon|switch)\.tsx$|features[\\/]locator[\\/](contributor-location\.tsx|location-permission\.ts)$|shared[\\/]utils[\\/]css-duration\.ts$|shared[\\/]lib[\\/]query-client\.ts$)/.test(
                   id,
                 ),
             },

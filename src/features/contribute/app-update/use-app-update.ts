@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { appUpdateConfig } from '../api/app-update-env';
-import { isNativeApp } from '../native-app';
 import { appUpdateKeys } from './app-update-keys';
 import { updateOf, type AppUpdate } from './app-version';
 import { fetchLatestRelease } from './fetch-latest-release';
+import { appUpdateConfig } from '../api/app-update-env';
+import { isNativeApp } from '../native-bridge/native-app';
 
 interface AppUpdateState {
   update: AppUpdate;

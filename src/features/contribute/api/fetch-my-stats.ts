@@ -1,0 +1,103 @@
+import * as z from 'zod/mini';
+
+import { accountClient } from './account-client';
+import { AccountError } from './account-problem';
+import { callRpc } from './call-rpc';
+
+const statsRowSchema = z.pipe(
+  z.object({
+    rides: z.number(),
+    distance_m: z.number(),
+    moving_s: z.number(),
+    standing_s: z.number(),
+    walk_m: z.number(),
+    ride_m: z.number(),
+    walk_s: z.number(),
+    ride_s: z.number(),
+    hinto_s: z.number(),
+    marks: z.number(),
+    jeep_rides: z.number(),
+    // Absent until contribution_fare is applied, with the two fare columns: read as 0.
+    e_jeep_rides: z.optional(z.number()),
+    uv_express_rides: z.optional(z.number()),
+    bus_rides: z.number(),
+    train_rides: z.number(),
+    ferry_rides: z.number(),
+    tricycle_rides: z.number(),
+    other_rides: z.number(),
+    active_days: z.number(),
+    first_ride_at: z.nullable(z.string()),
+    longest_ride_m: z.nullable(z.number()),
+    longest_ride_moving_s: z.nullable(z.number()),
+    routes_helped: z.number(),
+    hintuans_helped: z.number(),
+    fare_php_total: z.optional(z.number()),
+    fare_recordings: z.optional(z.number()),
+  }),
+  z.transform((row) => ({
+    rides: row.rides,
+    distanceM: row.distance_m,
+    movingSeconds: row.moving_s,
+    standingSeconds: row.standing_s,
+    walkM: row.walk_m,
+    rideM: row.ride_m,
+    walkSeconds: row.walk_s,
+    rideSeconds: row.ride_s,
+    hintoSeconds: row.hinto_s,
+    marks: row.marks,
+    ridesByVehicle: {
+      jeep: row.jeep_rides,
+      eJeep: row.e_jeep_rides ?? 0,
+      uvExpress: row.uv_express_rides ?? 0,
+      bus: row.bus_rides,
+      train: row.train_rides,
+      ferry: row.ferry_rides,
+      tricycle: row.tricycle_rides,
+      other: row.other_rides,
+    },
+    activeDays: row.active_days,
+    firstRideAt: row.first_ride_at === null ? null : Date.parse(row.first_ride_at),
+    longestRide:
+      row.longest_ride_m === null || row.longest_ride_moving_s === null
+        ? null
+        : { distanceM: row.longest_ride_m, movingSeconds: row.longest_ride_moving_s },
+    routesHelped: row.routes_helped,
+    hintuansHelped: row.hintuans_helped,
+    /** Pesos paid over the rides that say what they cost; fareRecordings is how many (0: none known). */
+    farePhpTotal: row.fare_php_total ?? 0,
+    fareRecordings: row.fare_recordings ?? 0,
+  })),
+);
+
+/**
+ * The signed-in contributor's lifetime numbers, their rides older than 24 months included. Rides
+ * saved before the walk and ride split count in neither walkM nor rideM, so the two can add up to
+ * less than distanceM. Nothing about a ride an editor hid.
+ */
+export type MyStats = z.infer<typeof statsRowSchema>;
+
+/** The one row get_my_stats answers, read; null when it is not in the form expected. */
+export function myStatsOf(data: unknown): MyStats | null {
+  const rows = z.array(statsRowSchema).safeParse(data);
+  return (rows.success ? rows.data[0] : undefined) ?? null;
+}
+
+/**
+ * The signed-in contributor's own stats, from get_my_stats. Needs signal. `unavailable` when the
+ * project has no get_my_stats yet, which the Account page takes as no stats to show.
+ */
+export async function fetchMyStats(): Promise<MyStats> {
+  const result = await callRpc(await accountClient(), 'get_my_stats');
+  if (result.kind === 'failure') {
+    if (result.isOffline) throw new AccountError('offline', result.message);
+    // get_my_stats not there yet (before its migration is applied): no stats to show, not a fault.
+    if (result.status === 404 || result.code === 'PGRST202') {
+      throw new AccountError('unavailable', result.message);
+    }
+    console.warn(`Para did not give the stats (HTTP ${result.status}):`, result.message);
+    throw new AccountError('not-accepting', result.message);
+  }
+  const stats = myStatsOf(result.data);
+  if (!stats) throw new AccountError('not-accepting', 'The stats are not in the form expected.');
+  return stats;
+}

@@ -67,14 +67,7 @@ export function PlaygroundTools({
   onDrawReturnTrip,
   onDone,
 }: PlaygroundToolsProps) {
-  const {
-    isSignedIn,
-    isSigningIn,
-    setIsSigningIn,
-    isChangingPassword,
-    setIsChangingPassword,
-    isResetting,
-  } = auth;
+  const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
   const { isSaving, toast, setToast } = saveFlow;
 
   return (
@@ -84,27 +77,22 @@ export function PlaygroundTools({
           routes={routeCount}
           hotspots={hotspots.hotspots.length > 0 ? hotspotCount(hotspots.hotspots) : 0}
           email={session ? (session.user.email ?? '') : null}
-          onSignIn={() => setIsSigningIn(true)}
-          onPassword={() => setIsChangingPassword(true)}
+          onSignIn={openSignIn}
+          onPassword={openPasswordChange}
           onSignOut={() => void getSupabase()?.auth.signOut()}
         />
       )}
 
-      {isSignedIn &&
-        !draw.drawing &&
-        !isSaving &&
-        !isSigningIn &&
-        !isChangingPassword &&
-        !isResetting && (
-          <StudioReview
-            key={session?.user.id}
-            map={map}
-            onChanged={() => {
-              void saved.reload();
-              void hotspots.reload();
-            }}
-          />
-        )}
+      {isSignedIn && !draw.drawing && !isSaving && !isAccountDialogOpen && (
+        <StudioReview
+          key={session?.user.id}
+          map={map}
+          onChanged={() => {
+            void saved.reload();
+            void hotspots.reload();
+          }}
+        />
+      )}
 
       {contribution.start && (
         <ContributionHint start={contribution.start} onForget={contribution.forget} />
@@ -125,7 +113,7 @@ export function PlaygroundTools({
         <DrawToolbar
           draw={draw}
           onDone={onDone}
-          keys={isPlayground && !isSaving && !isSigningIn && !isChangingPassword && !isResetting}
+          keys={isPlayground && !isSaving && !isAccountDialogOpen}
           ends={extendEnds}
           loop={loop}
         />

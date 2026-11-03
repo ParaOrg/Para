@@ -1,8 +1,9 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import type { ReactNode } from 'react';
+import { Suspense, useEffect, type ReactNode } from 'react';
 
 import { readBasemap, type Basemap } from '@/features/routes/map/basemap';
-import { MapStyle } from '@/features/routes/map/map-style';
+import { LazyMapStyle, loadMapStyle } from '@/features/routes/map/lazy-map-style';
+import type { LabelsPlace } from '@/features/routes/map/location-labels';
 import { MapStyleButton } from '@/features/routes/map/map-style-button';
 import { useMapStyleCard } from '@/features/routes/map/use-map-style-card';
 
@@ -17,9 +18,9 @@ interface LocationAndMapControlProps {
   basemaps: readonly Basemap[];
   /** Each design's picture on the card, by its id. */
   thumbnails: Readonly<Record<string, string>>;
-  /** The locator's note, above the pill; hidden while the card is open, which takes its place. */
-  note: ReactNode;
-  /** Directly above the pill, under the note; hidden while the card is open. */
+  /** Whose Location Labels choice the card keeps: the studio's own, or the public pages'. */
+  labelsPlace: LabelsPlace;
+  /** Directly above the pill; hidden while the card is open. */
   above?: ReactNode;
   /** The LocatorButton, the pill's bottom half. */
   children: ReactNode;
@@ -35,34 +36,48 @@ export function LocationAndMapControl({
   isMapLoaded,
   basemaps,
   thumbnails,
-  note,
+  labelsPlace,
   above,
   children,
 }: LocationAndMapControlProps) {
   // The design MapView opened on: both read the one remembered.
-  const { current, card, cardRoom, rootRef, toggle, close, select, letGo } = useMapStyleCard(
-    map,
-    () => readBasemap(basemaps),
-    'up',
-  );
+  const {
+    current,
+    areLabelsShown,
+    card,
+    cardRoom,
+    rootRef,
+    toggle,
+    close,
+    select,
+    toggleLabels,
+    letGo,
+  } = useMapStyleCard(map, () => readBasemap(basemaps), 'up', labelsPlace);
+  // The card's code, fetched once the map is up: off the opening, here by the first press.
+  useEffect(() => {
+    if (isMapLoaded) void loadMapStyle();
+  }, [isMapLoaded]);
   return (
     <div ref={rootRef} className="flex flex-col items-end gap-1">
-      {card === 'closed' && note}
       {card === 'closed' && above}
       {card !== 'closed' && (
-        // 8 above the pill (CARD_GAP_PX), where the note keeps 4.
+        // 8 above the pill (CARD_GAP_PX), where `above` keeps 4.
         <div className="mb-1">
-          <MapStyle
-            basemaps={basemaps}
-            selectedId={current.id}
-            thumbnails={thumbnails}
-            maxHeight={cardRoom}
-            direction="up"
-            onSelect={select}
-            isClosing={card === 'closing'}
-            onClose={close}
-            onClosed={letGo}
-          />
+          <Suspense fallback={null}>
+            <LazyMapStyle
+              basemaps={basemaps}
+              selectedId={current.id}
+              thumbnails={thumbnails}
+              maxHeight={cardRoom}
+              direction="up"
+              onSelect={select}
+              areLabelsShown={areLabelsShown}
+              onLabelsToggle={toggleLabels}
+              isClosing={card === 'closing'}
+              onClose={close}
+              onClosed={letGo}
+            />
+          </Suspense>
         </div>
       )}
       <LocationAndMap>

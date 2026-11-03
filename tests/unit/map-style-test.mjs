@@ -38,7 +38,7 @@ test('a basemap switch skips the check too: MapLibreâ€™s setStyle takes the mapâ
       _diffStyle: (style, options) => asked.push({ way: 'diff', style, options }),
       _updateStyle: (style, options) => asked.push({ way: 'rebuild', style, options }),
     });
-    applyBasemap(map, b);
+    applyBasemap(map, b, false);
     assert.equal(asked.length, 1, b.id);
     assert.equal(asked[0].way, 'diff', b.id);
     assert.equal(asked[0].style, b.url, b.id);
@@ -297,7 +297,7 @@ async function initialStyleOf(basemap, body) {
   const realFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify(body));
   try {
-    return await initialStyle(basemap);
+    return await initialStyle(basemap, true);
   } finally {
     globalThis.fetch = realFetch;
   }

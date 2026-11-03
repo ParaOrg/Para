@@ -179,6 +179,7 @@ const meta = {
   args: {
     routes: talaRoutes,
     back: false,
+    listing: 'every-line',
     selected: null,
     onFlip: fn(),
     onSelect: fn(),
@@ -216,6 +217,41 @@ export const ManyPlaces: Story = { args: { routes: many } };
 
 /** The other way round is not drawn yet: SWITCH rests disabled. */
 export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
+
+/**
+ * SM Fairview → Cubao runs on Novaliches → Tala, whose Tala → Novaliches is
+ * still a slot: a tap there lists both lines on the outbound list, Novaliches
+ * → Tala under Novaliches. "2 Routes".
+ */
+const underOneFinger: Direction[] = [
+  direction('n', 'Tala – Novaliches', 'Tala → Novaliches', 8.4, false, false),
+  direction('n', 'Tala – Novaliches', 'Novaliches → Tala', 8.4, true),
+  direction('f', 'SM Fairview – Cubao', 'SM Fairview → Cubao', 12),
+  direction('f', 'SM Fairview – Cubao', 'Cubao → SM Fairview', 12, true),
+];
+
+export const EveryLineUnderTheTap: Story = {
+  args: { routes: underOneFinger },
+  play: async ({ canvasElement }) => {
+    const list = within(canvasElement);
+    await expect(list.getByText('2 Routes')).toBeInTheDocument();
+    await expect(list.getByText('Novaliches')).toBeInTheDocument();
+    await expect(list.getByText('Tala')).toBeInTheDocument();
+  },
+};
+
+/**
+ * The same routes behind a trip opened on its own (`way-round`): only the way
+ * round the trip goes is listed, so Novaliches → Tala is not.
+ */
+export const WayRoundOnly: Story = {
+  args: { routes: underOneFinger, listing: 'way-round' },
+  play: async ({ canvasElement }) => {
+    const list = within(canvasElement);
+    await expect(list.getByText('1 Route')).toBeInTheDocument();
+    await expect(list.queryByText('Novaliches')).toBeNull();
+  },
+};
 
 /**
  * A tap on a hotspot with routes running through it: the hotspot first, as a

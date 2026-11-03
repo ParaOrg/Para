@@ -1,6 +1,6 @@
 # 06: A story for `RideMark`
 
-Status: ready-for-human
+Status: resolved (#527)
 Type: task
 Size: small
 Blocked by: none

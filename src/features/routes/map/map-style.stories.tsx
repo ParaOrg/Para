@@ -21,6 +21,8 @@ const meta = {
     selectedId: 'positron',
     thumbnails: BASEMAP_THUMBNAILS,
     onSelect: fn(),
+    areLabelsShown: false,
+    onLabelsToggle: fn(),
     onClose: fn(),
     onClosed: fn(),
   },
@@ -29,8 +31,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The public map's three, Monochrome shown: Figma 4179:10790. */
+/** The public map's three, Monochrome shown, Location Labels off: Figma 4179:10790. */
 export const Default: Story = {};
+
+/** Location Labels on: the basemap's own labels shown. */
+export const LabelsShown: Story = { args: { areLabelsShown: true } };
 
 /** Colour shown. */
 export const ColourSelected: Story = { args: { selectedId: 'liberty' } };

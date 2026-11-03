@@ -7,6 +7,9 @@ import { apart, compassHeading } from './locator-motion';
 /** A compass reading moves the camera only past this: the sensor shivers by a degree or two. */
 const TURN_DEG = 3;
 
+// TODO: treat ~5 s with no reading as no heading, so a sensor that stops hides the beam and lets
+// the eyes wander; held back until it is known that every browser keeps sending while the phone
+// is still, or a phone held still would lose its heading.
 /**
  * The phone's compass heading while `on`, or null — no sensor, a laptop,
  * permission refused. Readings closer than TURN_DEG to the last are left

@@ -1,12 +1,12 @@
 // The studio's Contributors map, apart from the browser: an upload's trail
-// decoded as the phone packed it (src/features/contribute/api/pack-recording.ts),
+// decoded as the phone packed it (src/features/contribute/uploads/packing/pack-recording.ts),
 // and the map drawing exactly the uploads the list holds.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/contributions-read-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { packRecording } from '../../src/features/contribute/uploads/packing/pack-recording.ts';
 import { decodeTrail } from '../../src/features/studio/data/contributions-read.ts';
 import { uploadsData } from '../../src/features/studio/contributors/contribution-layers.ts';
 
@@ -17,7 +17,7 @@ test('the studio decodes the trail the phone packed, point for point', () => {
   const { payload } = packRecording(rideRecording('x', fixes), fixes, 1, T0);
   const trail = decodeTrail([...payload.batches].reverse());
   assert.equal(trail.length, payload.point_count);
-  assert.deepEqual(trail[0], { time: T0, at: [121.05, 14.7] });
+  assert.deepEqual(trail[0], { time: T0, at: [121.05, 14.7], accuracyM: 6 });
   for (let i = 1; i < trail.length; i += 1) assert.ok(trail[i].time > trail[i - 1].time);
   const last = trail.at(-1);
   const fix = fixes.filter((f) => f.time === last.time)[0];

@@ -1,6 +1,6 @@
 # 05: A story for `TripSignboards`
 
-Status: ready-for-human
+Status: resolved (#526)
 Type: task
 Size: small
 Blocked by: none

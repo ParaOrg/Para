@@ -1,8 +1,7 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { signedInAccount, type Account } from './account';
 import { accountErrorOf, authError } from './account-errors';
 import { AccountError } from './account-problem';
+import { callRpc } from './call-rpc';
 import type { ContributeClient } from './contribute-client';
 import { requireClient } from './require-client';
 import { ensureSignedIn } from './upload-contribution';
@@ -21,13 +20,11 @@ async function sendProfile(
   client: ContributeClient,
   { name, phone }: Pick<SignUpInput, 'name' | 'phone'>,
 ): Promise<void> {
-  // TODO: typed rpc once 01 is applied and database types are regenerated.
-  const untyped: SupabaseClient = client;
-  const { error, status } = await untyped.rpc('set_profile', { name, phone });
-  if (error) {
-    if (status === 0) throw new AccountError('offline', error.message);
-    console.warn(`Para did not take the profile (HTTP ${status}):`, error.message);
-    throw new AccountError('profile-not-saved', error.message);
+  const result = await callRpc(client, 'set_profile', { name, phone });
+  if (result.kind === 'failure') {
+    if (result.isOffline) throw new AccountError('offline', result.message);
+    console.warn(`Para did not take the profile (HTTP ${result.status}):`, result.message);
+    throw new AccountError('profile-not-saved', result.message);
   }
 }
 

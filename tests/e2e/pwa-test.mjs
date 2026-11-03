@@ -23,6 +23,7 @@ import { createRequire } from 'node:module';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { until } from './lib/harness.mjs';
 import { OPENFREEMAP_HOST, builtBasemapHost, startOwnTilesStandIn } from './own-tiles-stand-in.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -296,15 +297,24 @@ try {
   check(`online: the published map's ${routeCount} directions arrive`, online);
   await page.waitForSelector('canvas.maplibregl-canvas', { timeout: 20000 });
   await mapLoad(page);
-  await page.waitForTimeout(4000);
+  // The worker stores what came as each response lands, a tile from the basemap's host as slowly
+  // as that host answers: read the caches until a tile is in, for up to 20 s.
+  const readCaches = () =>
+    page.evaluate(async () => {
+      const names = await window.caches.keys();
+      const out = {};
+      for (const n of names)
+        out[n] = (await (await window.caches.open(n)).keys()).map((r) => r.url);
+      return out;
+    });
+  const caches = await until(
+    readCaches,
+    (now) =>
+      Object.entries(now).some(([n, urls]) => n.includes('basemap-tiles') && urls.length > 0),
+    20000,
+  );
   check('online: no offline notice', (await page.locator('[data-testid="offline"]').count()) === 0);
 
-  const caches = await page.evaluate(async () => {
-    const names = await window.caches.keys();
-    const out = {};
-    for (const n of names) out[n] = (await (await window.caches.open(n)).keys()).map((r) => r.url);
-    return out;
-  });
   const names = Object.keys(caches);
   const mapFile = names.find((n) => n.includes('map-file'));
   const meta = names.find((n) => n.includes('basemap-meta'));
@@ -405,12 +415,16 @@ try {
     "offline: the map's 'load' comes: the design button up, no failure banner, no \"Loading map…\"",
     loaded,
   );
-  await page.waitForTimeout(2000);
+  await until(
+    async () => tilesFromWorker,
+    (count) => count > 0,
+    20000,
+  );
   page.off('response', countTiles);
   check(`offline: tiles came from the worker's cache (${tilesFromWorker})`, tilesFromWorker > 0);
   check(
-    'offline: no routes-could-not-be-loaded banner',
-    !(await page.evaluate(() => document.body.innerText.includes('could not be loaded'))),
+    'offline: no routes-could-not-load toast',
+    !(await page.evaluate(() => document.body.innerText.includes('The routes could not load'))),
   );
   await page.screenshot({ path: 'pwa-offline.png' });
 
@@ -434,10 +448,12 @@ try {
   await ctx.setOffline(false);
   // Back to the bare address, with no card open.
   await page.goto(`${base}/`, { waitUntil: 'load' });
+  // Time for an "Update Para!" that must not come, below.
   await page.waitForTimeout(2000);
+  const offlineNotices = () => page.locator('[data-testid="offline"]').count();
   check(
     'back online: the notice is gone',
-    (await page.locator('[data-testid="offline"]').count()) === 0,
+    (await until(offlineNotices, (n) => n === 0, 20000)) === 0,
   );
   check(
     'no "Update Para!" button on an unchanged build',
@@ -470,8 +486,7 @@ try {
   );
   await ctx.unroute('**/data/index.v5.json', slow);
   await page.reload({ waitUntil: 'load' });
-  await page.waitForTimeout(2000);
-  check('fast again: no notice', (await page.locator('[data-testid="offline"]').count()) === 0);
+  check('fast again: no notice', (await until(offlineNotices, (n) => n === 0, 20000)) === 0);
 
   // A trip opened reads its direction's full line, and the worker keeps it.
   // Opened by a tap, as a commuter opens one: trip links (?r=<id>) went on
@@ -484,22 +499,26 @@ try {
       'no trip opened: no route line found on the screen to tap',
     );
   else {
-    await page.waitForTimeout(2500);
-    const kept = await page.evaluate(async (ids) => {
-      const name = (await window.caches.keys()).find((n) => n.includes('map-lines'));
-      return (
-        !!name &&
-        (await (await window.caches.open(name)).keys()).some((r) =>
-          ids.some((id) => r.url.endsWith(`/data/lines/${id}.json`)),
-        )
-      );
-    }, opened.ids);
+    const kept = await until(
+      () =>
+        page.evaluate(async (ids) => {
+          const name = (await window.caches.keys()).find((n) => n.includes('map-lines'));
+          return (
+            !!name &&
+            (await (await window.caches.open(name)).keys()).some((r) =>
+              ids.some((id) => r.url.endsWith(`/data/lines/${id}.json`)),
+            )
+          );
+        }, opened.ids),
+      (isKept) => isKept,
+      20000,
+    );
     check('an opened trip reads its full line, and the worker keeps it', kept, `"${opened.name}"`);
   }
   await page.goto(`${base}/`, { waitUntil: 'load' });
   await page.waitForTimeout(1000);
 
-  // A map published for a newer app: the banner says so and offers Reload,
+  // A map published for a newer app: a problem toast says so and offers Reload,
   // which goes through the worker (pwa.ts, reloadForNewerApp) and, with no
   // newer app waiting, reloads — here onto a map this app reads again.
   const newer = (route) =>
@@ -510,20 +529,23 @@ try {
     });
   await ctx.route('**/data/index.v5.json', newer);
   await page.reload({ waitUntil: 'load' });
-  const banner = page.getByText('This map was published for a newer version of the app.');
-  const bannerShown = await banner.waitFor({ timeout: 15000 }).then(
+  const tooNewToast = page
+    .locator('[data-testid="toast"]')
+    .filter({ hasText: 'This map needs a newer Para' });
+  const tooNewShown = await tooNewToast.waitFor({ timeout: 15000 }).then(
     () => true,
     () => false,
   );
   check(
-    'a map published for a newer app: the banner says so, with Reload',
-    bannerShown && (await page.getByRole('button', { name: 'Reload', exact: true }).count()) > 0,
+    'a map published for a newer app: a toast says so, with Reload',
+    tooNewShown &&
+      (await tooNewToast.getByRole('button', { name: 'Reload', exact: true }).count()) > 0,
   );
   await ctx.unroute('**/data/index.v5.json', newer);
-  if (bannerShown) {
+  if (tooNewShown) {
     await Promise.all([
       page.waitForEvent('load', { timeout: 20000 }).catch(() => {}),
-      page.getByRole('button', { name: 'Reload', exact: true }).first().click(),
+      tooNewToast.getByRole('button', { name: 'Reload', exact: true }).click(),
     ]);
     const back = await arrived.waitFor({ state: 'attached', timeout: 20000 }).then(
       () => true,
@@ -531,7 +553,7 @@ try {
     );
     check(
       '  its Reload reloads, and a map this app reads draws again',
-      back && (await banner.count()) === 0,
+      back && (await tooNewToast.count()) === 0,
     );
   }
 
@@ -563,15 +585,19 @@ try {
         page.waitForEvent('load', { timeout: 15000 }).catch(() => {}),
         page.locator('[data-testid="update"]').click(),
       ]);
-      await page.waitForTimeout(1500);
-      const after = await page.evaluate(async () => {
-        const reg = await navigator.serviceWorker.getRegistration();
-        return {
-          waiting: !!reg?.waiting,
-          controlled: !!navigator.serviceWorker.controller,
-          button: !!document.querySelector('[data-testid="update"]'),
-        };
-      });
+      const after = await until(
+        () =>
+          page.evaluate(async () => {
+            const reg = await navigator.serviceWorker.getRegistration();
+            return {
+              waiting: !!reg?.waiting,
+              controlled: !!navigator.serviceWorker.controller,
+              button: !!document.querySelector('[data-testid="update"]'),
+            };
+          }),
+        (now) => !now.waiting && now.controlled && !now.button,
+        20000,
+      );
       check(
         'tapping Reload brings the new worker in and the button goes',
         !after.waiting && after.controlled && !after.button,

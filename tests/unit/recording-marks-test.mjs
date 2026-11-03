@@ -1,4 +1,4 @@
-// The mark button's rules (src/features/contribute/recording-marks.ts): where a
+// The mark button's rules (src/features/contribute/recorder/recording-marks.ts): where a
 // mark is on the map, and how many a ride keeps.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/recording-marks-test.mjs
@@ -7,27 +7,27 @@ import assert from 'node:assert/strict';
 
 import {
   MAX_MARKS,
-  markPlaces,
+  markFixIndexes,
+  markedRecording,
   marksThatFit,
   withMark,
-} from '../../src/features/contribute/recording-marks.ts';
-import { recordingSchema } from '../../src/features/contribute/recording-schema.ts';
+} from '../../src/features/contribute/recorder/recording-marks.ts';
+import { recordingSchema } from '../../src/features/contribute/storage/recording-schema.ts';
 import { rideRecording, rideFixes } from './fixtures/contribution-ride.mjs';
 
 const fix = (time, lng) => ({ time, at: [lng, 14.6], accuracyM: 5 });
 const FIXES = [fix(1000, 121.0), fix(2000, 121.001), fix(3000, 121.002)];
 
 test('a mark sits on the latest fix at or before the tap', () => {
-  assert.deepEqual(markPlaces(FIXES, [{ time: 2500 }, { time: 3000 }, { time: 9000 }]), [
-    [121.001, 14.6],
-    [121.002, 14.6],
-    [121.002, 14.6],
-  ]);
+  assert.deepEqual(
+    markFixIndexes(FIXES, [{ time: 2500 }, { time: 3000 }, { time: 9000 }]),
+    [1, 2, 2],
+  );
 });
 
 test('a tap before the first fix takes the first fix; with no fix there is no pin', () => {
-  assert.deepEqual(markPlaces(FIXES, [{ time: 10 }]), [[121.0, 14.6]]);
-  assert.deepEqual(markPlaces([], [{ time: 10 }]), []);
+  assert.deepEqual(markFixIndexes(FIXES, [{ time: 10 }]), [0]);
+  assert.deepEqual(markFixIndexes([], [{ time: 10 }]), []);
 });
 
 test('a mark is added at its time, in order', () => {
@@ -51,4 +51,25 @@ test('a stored recording parses with marks, and an older one without them', () =
   const recording = rideRecording('id-1', rideFixes(5));
   assert.ok(recordingSchema.safeParse({ ...recording, marks: [{ time: 5 }] }).success);
   assert.ok(recordingSchema.safeParse(recording).success);
+});
+
+test('a running recording takes a mark at the tap and counts it', () => {
+  const recording = {
+    ...rideRecording('id-1', rideFixes(5)),
+    status: 'recording',
+    marks: [{ time: 1 }],
+  };
+  const marked = markedRecording(recording, 9);
+  assert.deepEqual(marked.recording.marks, [{ time: 1 }, { time: 9 }]);
+  assert.equal(marked.count, 2);
+  assert.deepEqual(recording.marks, [{ time: 1 }], 'the recording given is left as it was');
+  const older = { ...recording, marks: undefined };
+  assert.deepEqual(markedRecording(older, 9).recording.marks, [{ time: 9 }]);
+});
+
+test('a stopped recording, or one holding the most marks, takes no mark', () => {
+  const recording = { ...rideRecording('id-1', rideFixes(5)), status: 'recording' };
+  assert.equal(markedRecording({ ...recording, status: 'stopped' }, 9), null);
+  const full = Array.from({ length: MAX_MARKS }, (_, time) => ({ time }));
+  assert.equal(markedRecording({ ...recording, marks: full }, 9_999), null);
 });

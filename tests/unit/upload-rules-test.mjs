@@ -1,5 +1,5 @@
 // What the contributor page decides about an upload before and after sending it
-// (src/features/contribute/upload-rules.ts, upload-failures.ts): which recordings go on their own,
+// (src/features/contribute/uploads/upload-rules.ts, upload-failures.ts): which recordings go on their own,
 // where an upload stands by what the phone keeps, which still have to go, which an editor has
 // removed from Para, and what an upload error stands for.
 //
@@ -7,15 +7,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { CONSENT_VERSION } from '../../src/features/contribute/consent-version.ts';
+import { CONSENT_VERSION } from '../../src/features/contribute/consent/consent-version.ts';
 import { UploadError } from '../../src/features/contribute/api/upload-problem.ts';
-import { FAILED, problemOfError } from '../../src/features/contribute/upload-failures.ts';
+import { FAILED, problemOfError } from '../../src/features/contribute/uploads/upload-failures.ts';
 import {
   isGoneFromPara,
+  isNotSent,
   isSentOnItsOwn,
   isWaitingToGo,
   storedUploadStatus,
-} from '../../src/features/contribute/upload-rules.ts';
+} from '../../src/features/contribute/uploads/upload-rules.ts';
 
 const consented = { hasConsent: true, earlier: null };
 const current = (upload) => ({ id: 'ride-1', consentVersion: CONSENT_VERSION, upload });
@@ -61,6 +62,15 @@ test('waiting, checking, uploading and failed still have to go; the rest do not'
   }
 });
 
+test('not sent: those still to go, and those held back as made before the current consent', () => {
+  for (const state of ['waiting', 'checking', 'uploading', 'failed', 'held']) {
+    assert.equal(isNotSent({ state }), true, state);
+  }
+  for (const state of ['uploaded', 'removing', 'removed', 'unavailable']) {
+    assert.equal(isNotSent({ state }), false, state);
+  }
+});
+
 test('an upload is gone from Para only when this identity made it and Para no longer has it', () => {
   const mine = current({ state: 'uploaded', at: 5, by: 'me' });
   assert.equal(isGoneFromPara(mine, 'me', new Set()), true);
@@ -78,7 +88,7 @@ test('an upload error stands for its own problem, and anything else for no signa
 
 test('every failure has a sentence and a brief reason, and only passing ones are tried again', () => {
   const retried = Object.keys(FAILED).filter((reason) => FAILED[reason].willRetry);
-  assert.deepEqual(retried.sort(), ['day-cap', 'not-accepting', 'offline']);
+  assert.deepEqual(retried.sort(), ['day-cap', 'not-accepting', 'offline', 'signed-out']);
   for (const failure of Object.values(FAILED)) {
     assert.ok(failure.message.length > 0 && failure.brief.length > 0);
   }

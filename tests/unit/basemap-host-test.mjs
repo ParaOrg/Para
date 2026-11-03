@@ -114,11 +114,11 @@ test("the preconnect follows the host and index.html names OpenFreeMap's", () =>
 
 test('the credits keep OpenStreetMap whoever serves the tiles, and OpenMapTiles with ours', () => {
   const ofm = mapAttribution(OPENFREEMAP_HOST);
-  assert.match(ofm, /© OpenStreetMap<\/a> contributors/);
+  assert.match(ofm, />© OpenStreetMap contributors<\/a>/);
   assert.match(ofm, />OpenFreeMap</);
   const own = mapAttribution(OWN);
-  assert.match(own, /© OpenStreetMap<\/a> contributors/);
+  assert.match(own, />© OpenStreetMap contributors<\/a>/);
   assert.match(own, /© OpenMapTiles/);
   assert.ok(!own.includes('OpenFreeMap'));
-  assert.match(own, /Route data © Para contributors, ODbL/);
+  assert.match(own, /© Para contributors · ODbL/);
 });

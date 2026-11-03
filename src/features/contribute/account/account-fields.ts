@@ -16,18 +16,28 @@ const phoneSchema = z
   .check(
     z.refine(
       (text) => normalisePhoneNumber(text) !== null,
-      'Enter a mobile number like 09171234567',
+      'Enter a mobile number like 917 123 4567',
     ),
   );
+/** The rule under a new password's field, always shown. */
+export const PASSWORD_RULE = 'At least 8 characters, with letters and numbers';
+const PASSWORD_RULE_ERROR = 'Use at least 8 characters, with letters and numbers';
+// The project's "Letters and digits" setting: one of a-z or A-Z, and one of 0-9. It looks for
+// those exact characters, so ñ or é is not a letter to it, and neither is a non-Latin digit.
+const LETTER = /[A-Za-z]/;
+const DIGIT = /[0-9]/;
+
 // Supabase hashes with bcrypt, which reads no further than 72 bytes: a longer one is cut short.
 const newPasswordSchema = z.string().check(
-  z.minLength(8, 'Use at least 8 characters'),
+  z.minLength(8, PASSWORD_RULE_ERROR),
   z.refine((text) => text.length <= 72, 'Use 72 characters or fewer'),
+  z.refine((text) => LETTER.test(text) && DIGIT.test(text), PASSWORD_RULE_ERROR),
 );
 const codeSchema = z
   .string()
   .check(z.refine((text) => /^[0-9]{6}$/.test(text), 'Enter the 6-digit code'));
 const passwordSchema = z.string().check(z.minLength(1, 'Enter your password'));
+const currentPasswordSchema = z.string().check(z.minLength(1, 'Enter your current password'));
 
 export interface SignInFields {
   email: string;
@@ -38,9 +48,19 @@ export interface ForgotPasswordFields {
   email: string;
 }
 
-export interface ResetPasswordFields {
+export interface CodeFields {
   code: string;
+}
+
+export interface NewPasswordFields {
   password: string;
+  /** The password typed again: checked on the phone, never sent. */
+  confirmation: string;
+}
+
+/** A password change from Account settings: the current password first, then the new one twice. */
+export interface ChangePasswordFields extends NewPasswordFields {
+  currentPassword: string;
 }
 
 export interface ProfileFields {
@@ -118,11 +138,25 @@ export function checkForgotPassword(fields: ForgotPasswordFields): Checked<Forgo
   return collect({ email }, { email: problemOf(emailSchema, email) });
 }
 
-/** The emailed code, with the spaces a person types or pastes taken out, and the new password. */
-export function checkResetPassword(fields: ResetPasswordFields): Checked<ResetPasswordFields> {
+/** The emailed code, with any spaces a person types or pastes taken out. */
+export function checkCode(fields: CodeFields): Checked<CodeFields> {
   const code = fields.code.replace(/\s/g, '');
-  return collect(
-    { code, password: fields.password },
-    { code: problemOf(codeSchema, code), password: problemOf(newPasswordSchema, fields.password) },
-  );
+  return collect({ code }, { code: problemOf(codeSchema, code) });
+}
+
+/** The new password, and the same password typed again. */
+export function checkNewPassword(fields: NewPasswordFields): Checked<NewPasswordFields> {
+  return collect(fields, {
+    password: problemOf(newPasswordSchema, fields.password),
+    confirmation: fields.confirmation === fields.password ? undefined : "The passwords don't match",
+  });
+}
+
+/** The current password, given at all, and the new one held to the reset's rules. */
+export function checkChangePassword(fields: ChangePasswordFields): Checked<ChangePasswordFields> {
+  return collect(fields, {
+    currentPassword: problemOf(currentPasswordSchema, fields.currentPassword),
+    password: problemOf(newPasswordSchema, fields.password),
+    confirmation: fields.confirmation === fields.password ? undefined : "The passwords don't match",
+  });
 }

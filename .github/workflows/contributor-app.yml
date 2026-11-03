@@ -29,6 +29,7 @@ on:
     paths:
       - '.github/workflows/contributor-app.yml'
       - '.github/actions/prepare-app-build/**'
+      - '.github/actions/prepare-emulator/**'
       - 'android/**'
       - 'scripts/android/**'
       - 'scripts/apk/**'
@@ -61,6 +62,12 @@ permissions:
 defaults:
   run:
     shell: bash
+
+# The emulator jobs' system image, given both to prepare-emulator and to android-emulator-runner.
+env:
+  EMULATOR_API_LEVEL: 34
+  EMULATOR_TARGET: google_apis
+  EMULATOR_ARCH: x86_64
 
 jobs:
   debug:
@@ -115,12 +122,20 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # Installs the emulator and its image with retries, and stops the job with "Emulator setup
+      # failed, no test ran" when it can't, rather than letting adb fail to connect later.
+      - uses: ./.github/actions/prepare-emulator
+        with:
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
+          target: ${{ env.EMULATOR_TARGET }}
+          arch: ${{ env.EMULATOR_ARCH }}
+
       - name: Ride with the screen off
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
+          target: ${{ env.EMULATOR_TARGET }}
+          arch: ${{ env.EMULATOR_ARCH }}
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: bash scripts/apk/emulator-ride.sh android/app/build/outputs/apk/debug/app-debug.apk emulator-out
@@ -128,6 +143,10 @@ jobs:
       - name: Show the result
         if: always()
         run: |
+          # The ride's script makes this folder first: without it, no test ran.
+          if [ ! -d emulator-out ]; then
+            echo "::error title=Emulator setup failed::Emulator setup failed, no test ran: the emulator never came up. See the steps above."
+          fi
           cat emulator-out/summary.txt | tee -a "$GITHUB_STEP_SUMMARY" || true
           grep -a "PARA_RIDE" emulator-out/logcat.txt | tail -40 || true
 
@@ -136,6 +155,67 @@ jobs:
         with:
           name: emulator-ride
           path: emulator-out
+          if-no-files-found: warn
+          retention-days: 14
+
+  # The ride notification's taps on an emulator (scripts/apk/emulator-notification.sh): Lakad or
+  # Sakay, Pause, Resume and Finish, done natively with the page leaving them, as a page asleep
+  # does; and the location service in the foreground, or not, after each, as the plugin's internals
+  # make it (ParaServiceWatchers.java). The emulator ride's APK, with its driver.
+  emulator-notification:
+    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare-app-build
+
+      - name: Build the page with the ride's driver, and the debug APK
+        env:
+          VITE_EMULATOR_RIDE: '1'
+        run: |
+          npx vite build -c vite.apk.config.ts --mode apk
+          npx cap sync android
+          cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Installs the emulator and its image with retries, and stops the job with "Emulator setup
+      # failed, no test ran" when it can't, rather than letting adb fail to connect later.
+      - uses: ./.github/actions/prepare-emulator
+        with:
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
+          target: ${{ env.EMULATOR_TARGET }}
+          arch: ${{ env.EMULATOR_ARCH }}
+
+      - name: Tap the ride's notification
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
+          target: ${{ env.EMULATOR_TARGET }}
+          arch: ${{ env.EMULATOR_ARCH }}
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/apk/emulator-notification.sh android/app/build/outputs/apk/debug/app-debug.apk notification-out
+
+      - name: Show the result
+        if: always()
+        run: |
+          # The script makes this folder first: without it, no test ran.
+          if [ ! -d notification-out ]; then
+            echo "::error title=Emulator setup failed::Emulator setup failed, no test ran: the emulator never came up. See the steps above."
+          fi
+          cat notification-out/summary.txt | tee -a "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-notification
+          path: notification-out
           if-no-files-found: warn
           retention-days: 14
 

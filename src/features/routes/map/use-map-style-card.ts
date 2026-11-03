@@ -1,7 +1,10 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
+import { prefersReducedMotion } from '@/shared/utils/motion';
+
 import { applyBasemap, rememberBasemap, type Basemap } from './basemap';
+import { readLocationLabels, rememberLocationLabels, type LabelsPlace } from './location-labels';
 
 /**
  * Which way the card opens from its button: down from the top-right corner
@@ -21,12 +24,13 @@ const CARD_EDGE_PX = 10;
  * goes, unless the device asks for no motion; then at once, as there is no
  * animation to wait for.
  */
-const afterClose = (): CardState =>
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'closed' : 'closing';
+const afterClose = (): CardState => (prefersReducedMotion() ? 'closed' : 'closing');
 
 export interface MapStyleCard {
   /** The design the map shows now. */
   current: Basemap;
+  /** Whether the basemap's own labels show (the card's Location Labels switch). */
+  areLabelsShown: boolean;
   card: CardState;
   /** How tall the card may grow, in px, measured as it opens. */
   cardRoom: number | undefined;
@@ -35,6 +39,8 @@ export interface MapStyleCard {
   toggle: () => void;
   close: () => void;
   select: (basemap: Basemap) => void;
+  /** The Location Labels switch: the basemap's labels shown or hidden, and remembered. */
+  toggleLabels: () => void;
   /** The card's leaving is over: it goes. */
   letGo: () => void;
 }
@@ -44,14 +50,17 @@ export interface MapStyleCard {
  * for whichever button opens it. The toggle is the root's
  * `aria-haspopup="dialog"` button, which MapStyleButton and the studio's
  * IconButton both are. A pick switches the map (`applyBasemap`) and is
- * remembered for the next visit.
+ * remembered for the next visit, as is the Location Labels switch.
  */
 export function useMapStyleCard(
   map: MapLibreMap | null,
   initial: Basemap | (() => Basemap),
   direction: MapStyleDirection,
+  labelsPlace: LabelsPlace,
 ): MapStyleCard {
   const [current, setCurrent] = useState<Basemap>(initial);
+  // The one MapView built the map with: both read the one remembered.
+  const [areLabelsShown, setAreLabelsShown] = useState(() => readLocationLabels(labelsPlace));
   const [card, setCard] = useState<CardState>('closed');
   const [cardRoom, setCardRoom] = useState<number | undefined>(undefined);
   const isOpen = card === 'open';
@@ -115,17 +124,27 @@ export function useMapStyleCard(
     if (b.id === current.id || !map) return;
     setCurrent(b);
     rememberBasemap(b);
-    applyBasemap(map, b);
+    applyBasemap(map, b, areLabelsShown);
+  };
+
+  const toggleLabels = () => {
+    if (!map) return;
+    const next = !areLabelsShown;
+    setAreLabelsShown(next);
+    rememberLocationLabels(labelsPlace, next);
+    applyBasemap(map, current, next);
   };
 
   return {
     current,
+    areLabelsShown,
     card,
     cardRoom,
     rootRef,
     toggle: () => (isOpen ? close() : open()),
     close,
     select,
+    toggleLabels,
     letGo: () => setCard('closed'),
   };
 }

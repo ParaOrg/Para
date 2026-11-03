@@ -78,9 +78,9 @@ service with a visible "Para is recording" notification.
   skipped), when it is shown again and when the app reopens, before anything reads the ride, so a
   ride Android killed comes back as Unfinished with every fix up to the kill. The plugin is not
   forked; the broadcast is its in-process contract, and the version is pinned by the lockfile.
-  **Auto-stop "back at the start" runs when the page wakes**, over what it imports, and stops the
-  ride at the first fix that satisfies it, so the ride is cut there but the stop itself is seen
-  only on waking. The fix rate is the plugin's one a second (its request interval is fixed at
+  **Auto-stop "back at the start" ran when the page woke**, over what it imported; it went with
+  Papunta and Pabalik on 2026-10-30 (Lakad and Sakay have no way back to arm it), and a ride now
+  ends only on the contributor's Save. The fix rate is the plugin's one a second (its request interval is fixed at
   1000 ms); the emulator ride checks it while moving.
 - **Permissions and battery.** The Start bar in the app (`native/start-gate.tsx`) asks in order for
   notifications (Android 13+), location, then "Allow all the time" (Android 10+), each after a plain
@@ -98,3 +98,13 @@ service with a visible "Para is recording" notification.
 - Rejected: a wrapped web page (a Trusted Web Activity), which can't record
   with the screen off; a separate native app, which would rewrite the recorder;
   an iPhone build, for now.
+
+## Amendment, 2026-11-02
+
+- **The ride's notification is Para's own card**, not the plugin's "Para is recording" (#632,
+  #638): the app builds it (`RideNotification`) and its actions (`RideActionReceiver`): Pause
+  and Lakad or Sakay while recording, Resume and Finish while paused.
+- **The plugin is pinned to exactly `1.3.1`** in `package.json`. The app swaps the plugin's
+  notification for its own through `ParaServiceWatchers.java`, which sits in the plugin's own
+  package (`com.equimaps.capacitor_background_geolocation`) to reach the service's watchers, so a
+  new plugin version must be checked against it before the pin moves.

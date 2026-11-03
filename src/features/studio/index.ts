@@ -2,12 +2,13 @@
 // when something outside the feature needs more; nothing outside imports its
 // inner files (.claude/CLAUDE.md, Import rules).
 export { AuthDialogs } from './auth/auth-dialogs';
+export { NotEditor } from './auth/not-editor';
 export { SignIn } from './auth/sign-in';
 export { skipSignInForTests } from './auth/test-bypass';
 export { useAuthFlow } from './auth/use-auth-flow';
 export { usePasswordRecovery } from './auth/use-password-recovery';
 export { StudioSessionProvider } from './auth/studio-session-provider';
-export { useSession } from './auth/use-session';
+export { useEditorSession } from './auth/use-editor-session';
 export { loadHotspotsFromSupabase } from './data/hotspots-read';
 export { lineOf, listDirections } from './data/live';
 export { getSupabase, setSupabase, supabaseConfig, supabaseConfigError } from './data/supabase';

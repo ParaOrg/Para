@@ -18,8 +18,10 @@ export const WORKER_MAX_GZ_KB = 20;
 // `packages` is what the chunk may hold from node_modules, `only` the files
 // it may hold; `vendor` chunks may import no chunk of ours. The locator counts
 // here as both pages draw it: the public page's own chunk is that much lighter,
-// its download no heavier.
-export const SHARED_MAX_GZ_KB = 410;
+// its download no heavier. The Map Style card's Location Labels switch (the
+// design system's Switch) is not: it comes with the card, which is fetched on
+// first use (vite.config.ts, the shared group's exclusions).
+export const SHARED_MAX_GZ_KB = 412;
 export const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
 export const GROUPS = [
   {
@@ -48,10 +50,11 @@ export const GROUPS = [
   // Zod validates the published index as the public map reads it (ticket 08
   // of the restructure follow-ups, 2026-10-07): zod/mini, the tree-shakeable
   // API, since the classic one weighed 24.3 kB gzipped over these schemas.
-  // Its own chunk, so its weight is read here on every build.
+  // Its own chunk, so its weight is read here on every build. 11, not 10:
+  // zod 4.6.7, the fix for a high-severity advisory in 4.6.5, weighs 10.3 kB.
   {
     name: 'zod',
-    maxGzKb: 10,
+    maxGzKb: 11,
     vendor: true,
     packages: ['zod'],
     holds: 'zod alone, and imports none of our code',
@@ -66,6 +69,13 @@ export const GROUPS = [
     holds: 'our shared code and no package but maplibre-gl',
   },
 ];
+
+/**
+ * TanStack Query, the studio's and the contributor page's server state: a vendor chunk of its own
+ * that the public page never loads, so it is not part of the budget above. 11: 10.1 kB gzipped on
+ * 2026-11-02, @tanstack/query-core and react-query.
+ */
+export const TANSTACK_QUERY_MAX_GZ_KB = 11;
 
 /** The bytes of every font file in dist/assets. */
 export function fontBytes(dist) {

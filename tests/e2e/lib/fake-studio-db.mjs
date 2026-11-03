@@ -14,6 +14,8 @@
 //   db.fault         (method, table, url) → bool: the next match is refused once with a 500
 //   db.meanwhile     { when(method, table, url) → bool, run() }: run() changes the
 //                    tables once, just before the first matching request is served
+//   db.notEditors    a Set of account ids am_i_editor answers no for; every other
+//                    signed-in caller is an editor
 //
 // The review workflow's three calls are answered as 0022 answers them,
 // enough for two editors to meet over one draft: claim_draft (one draft per
@@ -77,6 +79,7 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
     log: [],
     fault: null,
     seq: 0,
+    notEditors: new Set(),
   };
   const { tables } = db;
   const newId = () => `00000000-0000-4000-8000-${String(++db.seq).padStart(12, '0')}`;
@@ -248,6 +251,9 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
   };
 
   const rpc = (name, body, caller) => {
+    // 20261030090000: about the caller alone; no account, no.
+    if (name === 'am_i_editor')
+      return { status: 200, body: caller !== null && !db.notEditors.has(caller) };
     if (name === 'claim_draft') {
       const same = (d) => d.kind === body.p_kind && d.subject_id === body.p_subject_id;
       const kept = tables.draft.find(same);

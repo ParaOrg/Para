@@ -32,6 +32,7 @@ import {
   waitForSource,
 } from './lib/harness.mjs';
 import { routesFraming } from './lib/framing.mjs';
+import { checkLocationLabels } from './lib/location-labels.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
   colourOf,
@@ -127,10 +128,13 @@ const findVertexOutsideHotspots = (routes, polys) => {
   return null;
 };
 // A route vertex outside every box where another route runs within 3 m: a
-// road two routes share, where one tap lists them both.
-const findSharedVertexOutsideHotspots = (routes, polys) => {
-  for (const r of routes) {
-    const others = routes.filter((o) => o.routeId !== r.routeId);
+// road two routes share, where one tap lists them both. Neither is a loop
+// (`loopRouteIds`): a loop's card marks no ends until its trip is opened, and
+// 4a checks the ends a picked card's routes are ringed in.
+const findSharedVertexOutsideHotspots = (routes, polys, loopRouteIds = new Set()) => {
+  const twoEnded = routes.filter((r) => !loopRouteIds.has(r.routeId));
+  for (const r of twoEnded) {
+    const others = twoEnded.filter((o) => o.routeId !== r.routeId);
     for (const c of r.coords) {
       if (polys.some((p) => pointInPolygon(c, p.ring))) continue;
       if (others.some((o) => metresToLine(c, o.coords) < 3)) return c;
@@ -875,7 +879,15 @@ if (PART !== 1) {
 // list, the routes as RouteCards and nothing else (the owner, 2026-09-29:
 // the Chooser that asked here before is the list now), and a route's row
 // opens its card. SKIP if no such vertex exists.
-const hit = findSharedVertexOutsideHotspots(snapshot.routes, snapshot.polys);
+const loopRouteIds = new Set(
+  await page.evaluate(() =>
+    import('/src/features/routes/published/fetch-index.ts')
+      .then((f) => f.fetchIndex())
+      .then((index) => index.directions.filter((v) => v.route?.isLoop).map((v) => v.routeId))
+      .catch(() => []),
+  ),
+);
+const hit = findSharedVertexOutsideHotspots(snapshot.routes, snapshot.polys, loopRouteIds);
 if (PART !== 1) {
   // Part 1's, with 4b.
 } else if (!hit) {
@@ -1707,6 +1719,73 @@ check(
   mapFileStatuses.length === 1 && (mapFileStatuses[0] === 200 || mapFileStatuses[0] === 304),
   `${mapFileStatuses.length} response(s): ${mapFileStatuses.join(', ') || 'none'}`,
 );
+
+// 6. The Map Style card's Location Labels switch: part 1's, on a page of its own, as its choice
+// is kept in the storage section 5 holds empty. Only the basemap's labels go; ours stay.
+if (PART === 1) {
+  const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
+  await nodeFetch(p);
+  p.on('pageerror', (e) => errors.push(String(e)));
+  const waitForMap = (q) =>
+    q.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+  await p.goto(`${BASE}/`, { waitUntil: 'load' });
+  await waitForMap(p);
+  await mapIdle(p);
+  await checkLocationLabels(p, { check, prefix: 'public map', waitForMap });
+  await p.close();
+}
+
+// 7. A load that fails: never a blank page, but a problem toast at the top with Try again, which
+// reads the map again; it loads, and the toast has gone.
+if (PART === 1) {
+  const p = await b.newPage({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  await nodeFetch(p);
+  p.on('pageerror', (e) => errors.push(String(e)));
+  let isFailing = true;
+  await p.route(/\/data\/index\.v5\.json/, (route) =>
+    isFailing ? route.abort('internetdisconnected') : route.continue(),
+  );
+  await p.goto(`${BASE}/`, { waitUntil: 'load' });
+  const toast = p.locator('[data-testid="toast"]');
+  const toastWords = async () => ((await toast.count()) ? await toast.innerText() : '');
+  const said = await until(
+    toastWords,
+    (words) => words.includes('The routes could not load'),
+    20000,
+  );
+  check(
+    'a load that fails says so in one problem toast, with Try again',
+    said.includes('The routes could not load') &&
+      (await toast.count()) === 1 &&
+      (await toast.getByRole('button', { name: 'Try again' }).count()) === 1,
+    said || 'no toast',
+  );
+  check(
+    '  a screen reader hears it at once',
+    ((await p.getByRole('alert').textContent()) ?? '').includes('The routes could not load'),
+  );
+  isFailing = false;
+  if ((await toast.count()) === 1) await toast.getByRole('button', { name: 'Try again' }).click();
+  const loaded = await until(
+    async () => ({
+      directions: Number(await p.locator('[data-directions]').getAttribute('data-directions')),
+      toasts: await toast.count(),
+    }),
+    (now) => now.directions > 0 && now.toasts === 0,
+    20000,
+  );
+  check(
+    '  Try again loads the routes, and the toast goes',
+    loaded.directions > 0 && loaded.toasts === 0,
+    `${loaded.directions} direction(s), ${loaded.toasts} toast(s)`,
+  );
+  await p.close();
+}
+
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 
 await b.close();

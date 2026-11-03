@@ -55,3 +55,19 @@ body,
   bottom: env(safe-area-inset-bottom);
   right: env(safe-area-inset-right);
 }
+
+/*
+ * The corner credits stepped aside while the page shows them itself (MapView's
+ * areCreditsShown): the page's own ⓘ opens them as a sheet, on the public map and on the
+ * contributor page's Start and recording.
+ */
+[data-credits-hidden] .maplibregl-ctrl.maplibregl-ctrl-attrib {
+  display: none;
+}
+/*
+ * The page's ⓘ stands in the bottom-left corner, 12 in and 32 across (the public map's
+ * MapCreditsDock): the scale steps to its right, so both are read.
+ */
+[data-credits-hidden] .maplibregl-ctrl-bottom-left {
+  left: calc(env(safe-area-inset-left) + 3rem);
+}

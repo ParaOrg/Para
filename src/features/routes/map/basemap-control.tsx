@@ -1,11 +1,12 @@
 import type { IControl, MapLibreMap } from 'maplibre-gl';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 
 import type { Basemap } from './basemap';
-import { MapStyle } from './map-style';
+import { LazyMapStyle, loadMapStyle } from './lazy-map-style';
+import type { LabelsPlace } from './location-labels';
 import { MapStyleButton } from './map-style-button';
 import { MapTypeIcon } from './map-type-icon';
 import { useMapStyleCard } from './use-map-style-card';
@@ -28,6 +29,8 @@ interface BasemapControlProps {
   initial: Basemap;
   /** Which button opens the card. */
   buttonStyle?: MapButtonStyle;
+  /** Whose Location Labels choice the card keeps: the public pages' by default. */
+  labelsPlace?: LabelsPlace;
 }
 
 /**
@@ -70,14 +73,26 @@ export function BasemapControl({
   thumbnails,
   initial,
   buttonStyle = 'round',
+  labelsPlace = 'map',
 }: BasemapControlProps) {
   const corner = useTopRightControl(map, CORNER_MARGIN[buttonStyle]);
-  const { current, card, cardRoom, rootRef, toggle, close, select, letGo } = useMapStyleCard(
-    map,
-    initial,
-    'down',
-  );
+  const {
+    current,
+    areLabelsShown,
+    card,
+    cardRoom,
+    rootRef,
+    toggle,
+    close,
+    select,
+    toggleLabels,
+    letGo,
+  } = useMapStyleCard(map, initial, 'down', labelsPlace);
   const isOpen = card === 'open';
+  // The card's code, fetched once the map (and so this control) is up: here by the first press.
+  useEffect(() => {
+    void loadMapStyle();
+  }, []);
 
   return createPortal(
     <div ref={rootRef} className="flex flex-col items-end gap-2">
@@ -100,16 +115,20 @@ export function BasemapControl({
         />
       )}
       {card !== 'closed' && (
-        <MapStyle
-          basemaps={basemaps}
-          selectedId={current.id}
-          thumbnails={thumbnails}
-          maxHeight={cardRoom}
-          onSelect={select}
-          isClosing={card === 'closing'}
-          onClose={close}
-          onClosed={letGo}
-        />
+        <Suspense fallback={null}>
+          <LazyMapStyle
+            basemaps={basemaps}
+            selectedId={current.id}
+            thumbnails={thumbnails}
+            maxHeight={cardRoom}
+            onSelect={select}
+            areLabelsShown={areLabelsShown}
+            onLabelsToggle={toggleLabels}
+            isClosing={card === 'closing'}
+            onClose={close}
+            onClosed={letGo}
+          />
+        </Suspense>
       )}
     </div>,
     corner,

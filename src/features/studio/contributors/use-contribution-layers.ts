@@ -1,16 +1,20 @@
-import type { MapLibreMap, MapLayerMouseEvent } from 'maplibre-gl';
+import type { MapLibreMap, MapLayerMouseEvent, MapStyleImageMissingEvent } from 'maplibre-gl';
 import { useEffect } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
 import {
+  OPENED_COLOUR,
   UPLOADS_LINE,
   UPLOADS_SRC,
   addContributionLayers,
+  keepFeetUnderPins,
   removeContributionLayers,
   setOpened,
   setUploads,
 } from './contribution-layers';
+import { FOOT_ICON, addFootIcon } from './foot-icon';
+import { setRideHighlight } from './ride-highlight';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
 /**
@@ -24,11 +28,28 @@ export function useContributionLayers(
   openedId: string | null,
   detail: ContributionDetail | null,
   onOpen: (id: string) => void,
+  /** The opened upload's ride whose row is pointed at or focused, by its trail part; null for none. */
+  highlightedPiece: number | null,
 ) {
   useEffect(() => {
     if (!map) return;
     addContributionLayers(map);
     return () => removeContributionLayers(map);
+  }, [map]);
+
+  // A basemap switch carries the layers across, but not the images and not their order (basemap.ts).
+  useEffect(() => {
+    if (!map) return;
+    const handleMissing = (event: MapStyleImageMissingEvent) => {
+      if (event.id === FOOT_ICON) addFootIcon(map, OPENED_COLOUR);
+    };
+    const handleStyleLoad = () => keepFeetUnderPins(map);
+    map.on('styleimagemissing', handleMissing);
+    map.on('style.load', handleStyleLoad);
+    return () => {
+      map.off('styleimagemissing', handleMissing);
+      map.off('style.load', handleStyleLoad);
+    };
   }, [map]);
 
   useEffect(() => {
@@ -45,6 +66,10 @@ export function useContributionLayers(
   useEffect(() => {
     if (map) setOpened(map, detail);
   }, [map, detail]);
+
+  useEffect(() => {
+    if (map) setRideHighlight(map, highlightedPiece);
+  }, [map, highlightedPiece]);
 
   // The opened upload in view: its box, or its whole trail once read.
   const opened = contributions.find((c) => c.id === openedId) ?? null;

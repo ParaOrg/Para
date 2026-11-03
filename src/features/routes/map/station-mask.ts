@@ -71,7 +71,7 @@ const isBasemapPlace = (l: LayerSpecification): boolean =>
   l.type === 'symbol' && 'source-layer' in l && l['source-layer'] === 'poi';
 
 /** A filter in MapLibre's expression syntax, the one a mask can join. */
-type ExpressionFilter = boolean | ExpressionSpecification;
+export type ExpressionFilter = boolean | ExpressionSpecification;
 
 /**
  * Whether a filter is written as an expression rather than in the legacy
@@ -79,7 +79,7 @@ type ExpressionFilter = boolean | ExpressionSpecification;
  * isExpressionFilter). OpenFreeMap's and ours all are; a legacy one, which
  * an expression cannot join, keeps its layer unmasked.
  */
-function isExpressionFilter(f: unknown): f is ExpressionFilter {
+export function isExpressionFilter(f: unknown): f is ExpressionFilter {
   if (typeof f === 'boolean') return true;
   if (!Array.isArray(f) || f.length === 0) return false;
   const [op, a, b]: unknown[] = f;

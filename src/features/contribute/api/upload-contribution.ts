@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 
+import { callRpc } from './call-rpc';
 import type { ContributionPayload } from './contribution-payload-schema';
 import { requireClient } from './require-client';
 import { UploadError, problemOf, signInProblemOf, type DatabaseError } from './upload-problem';
@@ -41,10 +42,17 @@ export async function ensureSignedIn(captchaToken?: string): Promise<string> {
   return signedIn.data.user.id;
 }
 
-/** The phone's identity now, or null before its first upload. */
+/**
+ * The phone's identity now, or null when no one is signed in. A session that could not be renewed
+ * for want of signal (an expired token, offline) is no answer, not no session: that throws as
+ * offline, so a send waits for the signal rather than saying the account is signed out.
+ */
 export async function currentIdentity(): Promise<string | null> {
   const client = await requireClient();
-  const { data } = await client.auth.getSession();
+  const { data, error } = await client.auth.getSession();
+  if (error && signInProblemOf(error) === 'offline') {
+    throw new UploadError('offline', `The session could not be renewed: ${error.message}`);
+  }
   return data.session?.user.id ?? null;
 }
 
@@ -58,12 +66,12 @@ export async function uploadContribution(
   payload: ContributionPayload,
 ): Promise<'saved' | 'already saved'> {
   const client = await requireClient();
-  const { data, error, status } = await client.rpc('save_contribution', { recording: payload });
-  if (error) throw answerError(error, status);
-  const answer = saveAnswerSchema.safeParse(data);
+  const result = await callRpc(client, 'save_contribution', { recording: payload });
+  if (result.kind === 'failure') throw answerError(result, result.status);
+  const answer = saveAnswerSchema.safeParse(result.data);
   if (!answer.success) {
-    console.warn('Para gave an unexpected answer to an upload:', data);
-    throw new UploadError('not-accepting', `Unexpected answer: ${String(data)}`);
+    console.warn('Para gave an unexpected answer to an upload:', result.data);
+    throw new UploadError('not-accepting', `Unexpected answer: ${String(result.data)}`);
   }
   return answer.data;
 }

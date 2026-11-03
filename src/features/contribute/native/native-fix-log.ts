@@ -1,22 +1,11 @@
-import * as z from 'zod/mini';
-
-import { nativePlugin } from '../native-app';
-import type { WatchedFix } from '../use-geolocation-watch';
-
-/** The accuracy a fix with none gets: far past what the recorder keeps, so it never draws. */
-export const NO_ACCURACY_M = 1_000;
-
-const fixSchema = z.object({
-  time: z.number(),
-  lng: z.number(),
-  lat: z.number(),
-  accuracyM: z.optional(z.number()),
-});
-
-const logSchema = z.object({
-  recordingId: z.nullable(z.string()),
-  fixes: z.array(z.unknown()),
-});
+import { lazyPlugin } from '../native-bridge/native-app';
+import {
+  fixLineSchema,
+  fixLogSchema,
+  NO_ACCURACY_M,
+  PLUGIN_NAMES,
+  type WatchedFix,
+} from '../native-bridge/native-contract';
 
 export interface FixLog {
   recordingId: string | null;
@@ -28,10 +17,10 @@ export interface FixLog {
  * must not lose the ride.
  */
 export function parseFixLog(raw: unknown): FixLog {
-  const log = logSchema.parse(raw);
+  const log = fixLogSchema.parse(raw);
   const fixes: WatchedFix[] = [];
   for (const item of log.fixes) {
-    const read = fixSchema.safeParse(item);
+    const read = fixLineSchema.safeParse(item);
     if (!read.success) {
       console.warn('A fix in the native log could not be read and was left out.', read.error);
       continue;
@@ -52,8 +41,7 @@ interface FixLogPlugin {
   clear: () => Promise<void>;
 }
 
-let plugin: FixLogPlugin | null = null;
-const getPlugin = () => (plugin ??= nativePlugin<FixLogPlugin>('FixLog'));
+const getPlugin = lazyPlugin<FixLogPlugin>(PLUGIN_NAMES.fixLog);
 
 /** Starts the native fix log for a recording: the fixes the foreground service reports are kept. */
 export function beginFixLog(recordingId: string): Promise<void> {

@@ -2,12 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { HintoList } from './hinto-list';
-import { STORY_DETAIL } from '../contributor-story-data';
+import { STORY_DETAIL, STORY_DETAIL_WALKED } from '../contributor-story-data';
 
 const meta = {
   title: 'Features/Studio/HintoList',
   component: HintoList,
-  args: { hintos: STORY_DETAIL.hintos, onStart: fn() },
+  args: { hintos: STORY_DETAIL.hintos, parts: STORY_DETAIL.parts, onStart: fn() },
   decorators: [
     (Story) => (
       <div className="w-96 bg-surface p-4 font-sn-pro text-sm text-content-secondary">
@@ -41,3 +41,13 @@ export const Several: Story = {
 };
 
 export const None: Story = { args: { hintos: [] } };
+
+/** A hinto made while walking is listed, but offers no hintuan. */
+export const WhileWalking: Story = {
+  args: { hintos: STORY_DETAIL_WALKED.hintos, parts: STORY_DETAIL_WALKED.parts },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('While walking: not a hintuan.')).toBeVisible();
+    await expect(canvas.getAllByRole('button', { name: 'Draw a hintuan here' })).toHaveLength(1);
+  },
+};

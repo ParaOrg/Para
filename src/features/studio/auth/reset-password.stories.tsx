@@ -52,6 +52,23 @@ export const PasswordsDiffer: Story = {
   },
 };
 
+/** A password without a number: refused before anything is sent, in the rule's own words. */
+export const RuleBroken: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByPlaceholderText('New password')).toHaveAccessibleDescription(
+      'At least 8 characters, with letters and numbers',
+    );
+    await userEvent.type(canvas.getByPlaceholderText('New password'), 'only-letters');
+    await userEvent.type(canvas.getByPlaceholderText('Confirm new password'), 'only-letters');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save password' }));
+    await expect(
+      canvas.getByText('Use at least 8 characters, with letters and numbers'),
+    ).toBeVisible();
+    await expect(args.onDone).not.toHaveBeenCalled();
+  },
+};
+
 /** Back from an invite: the account's first password, with no Skip. */
 export const Invite: Story = {
   args: { isInvite: true },

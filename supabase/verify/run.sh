@@ -108,3 +108,8 @@ PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributions.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contribution-use.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash signup-hook.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contributor-accounts.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash am-i-editor.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash account-stats.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash delete-my-account.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contribution-fare.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash delete-account-keep-uploads.sh

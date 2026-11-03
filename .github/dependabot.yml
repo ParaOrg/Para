@@ -1,0 +1,35 @@
+# Dependabot opens pull requests into staging when an npm package or a
+# workflow action has a newer version, the same way a person's change
+# would go in. Minor and patch bumps come grouped, one pull request a week
+# per ecosystem, so they don't pile up; a major bump gets its own pull
+# request, since it can break things and wants a closer look.
+#
+# Security fixes are separate from these weekly bumps: GitHub opens them as
+# soon as an advisory lands, once the owner turns on Dependabot security
+# updates in the repository's settings.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: staging
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Asia/Manila
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: staging
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Asia/Manila
+    groups:
+      actions:
+        patterns: ['*']

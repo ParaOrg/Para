@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 
 import { marksOf } from '../../src/features/studio/data/contribution-events.ts';
 import { placeMark } from '../../src/features/studio/contributors/mark-placement.ts';
-import { openedData } from '../../src/features/studio/contributors/contribution-layers.ts';
+import { openedData } from '../../src/features/studio/contributors/opened-data.ts';
 
 import { T0 } from './fixtures/contribution-ride.mjs';
 
@@ -62,7 +62,7 @@ test('a ride with no fixes places nothing', () => {
 });
 
 test('the opened upload gets one pin per mark, and none when it has none', () => {
-  const detail = { trail, hintos: [], marks: [T0 + 5_000, T0 + 20_000] };
+  const detail = { trail, hintos: [], marks: [T0 + 5_000, T0 + 20_000], parts: [] };
   const pins = openedData(detail).features.filter((f) => f.properties.kind === 'mark');
   assert.equal(pins.length, 2);
   assert.deepEqual(pins[1].geometry.coordinates, [121.2, 14.2]);

@@ -1,6 +1,6 @@
 # 04: A story for `TripTiles`
 
-Status: ready-for-human
+Status: resolved (#525)
 Type: task
 Size: small
 Blocked by: none

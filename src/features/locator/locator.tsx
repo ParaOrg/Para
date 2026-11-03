@@ -1,11 +1,13 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 import type { Basemap } from '@/features/routes/map/basemap';
+import type { LabelsPlace } from '@/features/routes/map/location-labels';
 import { slide } from '@/shared/ui/sheet-gesture';
 
 import { LocationAndMapControl } from './location-and-map-control';
 import { LocatorButton } from './locator-button';
+import { noteFor, type LocatorNote } from './locator-note';
 import type { Locator as State } from './use-locator';
 
 interface Props {
@@ -17,10 +19,17 @@ interface Props {
   /** The designs the pill's card offers, and their pictures: MapView's. */
   basemaps: readonly Basemap[];
   basemapThumbnails: Readonly<Record<string, string>>;
+  /** Whose Location Labels choice the card keeps: the studio's own, or the public pages'. */
+  labelsPlace: LabelsPlace;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
   /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
   above?: ReactNode;
+  /**
+   * What the locator has to say, for the page to show as a problem toast: said as the browser
+   * refuses or gives no fix, again at each tap while it still does, and null once a fix comes.
+   */
+  onNote?: (note: LocatorNote | null) => void;
 }
 
 /** What each look says it will do, for a screen reader. */
@@ -30,15 +39,6 @@ const LABEL = {
   TrackedLocation: 'Turn the map the way I face',
   TracksTheMapBasedOnCompassFacing: 'Put north up',
 } as const;
-
-/** What the note says for the locator's state, or null for none. */
-function noteFor(status: State['status'], noFix: boolean): string | null {
-  if (status === 'denied')
-    return 'Location is off for this site. Allow it in your browser settings, then try again.';
-  if (status === 'unavailable') return 'This browser cannot give a location.';
-  if (noFix) return 'No fix yet. Try again outdoors, or check that location is on.';
-  return null;
-}
 
 /**
  * LocationAndMap (4245:1966), the map-style button over the LocatorButton,
@@ -51,8 +51,8 @@ function noteFor(status: State['status'], noFix: boolean): string | null {
  * BottomSheet says where its top is as `--dock-y` on the page; this layer
  * slides the same way, by the same length.
  *
- * Denied or unavailable: a short note above it, and the button stays as it
- * was, to try again once the browser's setting is changed.
+ * Denied, unavailable or no fix yet: it tells the page (onNote), and the
+ * button stays as it was, to try again once the browser's setting is changed.
  */
 export function Locator({
   locator,
@@ -60,26 +60,38 @@ export function Locator({
   isMapLoaded,
   basemaps,
   basemapThumbnails,
+  labelsPlace,
   docked,
   above,
+  onNote,
 }: Props) {
-  const { status, noFix, mode, heading, compass, tap } = locator;
-  const [note, setNote] = useState(() => noteFor(status, noFix));
-  // Each change of the state says its note afresh, even one the timer below has hidden.
-  const [noted, setNoted] = useState({ status, noFix });
-  if (noted.status !== status || noted.noFix !== noFix) {
-    setNoted({ status, noFix });
-    setNote(noteFor(status, noFix));
-  }
+  const { status, noFix, mode, heading, compass, tap, taps } = locator;
+  // The page's toast is outside React's reach from here: it is told, not rendered.
+  const latestOnNote = useRef(onNote);
   useEffect(() => {
-    if (!note) return;
-    const t = window.setTimeout(() => setNote(null), 5000);
-    return () => window.clearTimeout(t);
-  }, [note]);
+    latestOnNote.current = onNote;
+  });
+  // A note is out, so a fix has one to take back.
+  const hasSaidRef = useRef(false);
+  useEffect(() => {
+    const note = noteFor(status, noFix);
+    if (note === undefined) return;
+    if (note === null) {
+      if (!hasSaidRef.current) return;
+      hasSaidRef.current = false;
+      latestOnNote.current?.(null);
+      return;
+    }
+    // Each tap still refused says it again: the toast comes back if it was closed.
+    hasSaidRef.current = true;
+    latestOnNote.current?.(note);
+  }, [status, noFix, taps]);
 
   // Never above Middle's top. With no card, the map's foot: short of a
   // phone's home bar, and of what the page stands in the corner (`--dock-foot`,
-  // the studio's New buttons).
+  // the studio's New buttons). `--dock-gap` and `--dock-right` set the column's
+  // gap over that foot and from the right edge; the contributor page sets them,
+  // the public map keeps 0.75rem each.
   const y = docked
     ? `max(var(--dock-y, 100%), ${slide('middle')})`
     : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
@@ -93,25 +105,14 @@ export function Locator({
       }
       style={{ translate: `0 ${y}` }}
     >
-      <div className="pointer-events-auto absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-full mb-3 flex flex-col items-end gap-1 @float:right-3 @float:bottom-[max(2.5rem,calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
+      <div className="pointer-events-auto absolute right-[calc(var(--dock-right,0.75rem)+env(safe-area-inset-right))] bottom-full mb-[var(--dock-gap,0.75rem)] flex flex-col items-end gap-1 @float:right-3 @float:bottom-[max(2.5rem,calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
         <LocationAndMapControl
           map={map}
           isMapLoaded={isMapLoaded}
           basemaps={basemaps}
           thumbnails={basemapThumbnails}
+          labelsPlace={labelsPlace}
           above={above}
-          note={
-            // No Figma design for the note yet, so it uses the raw palette.
-            note && (
-              <p
-                role="status"
-                data-testid="where-note"
-                className="max-w-[14rem] rounded-lg bg-neutral-900/90 px-3 py-2 text-right text-xs text-content-inverse shadow backdrop-blur"
-              >
-                {note}
-              </p>
-            )
-          }
         >
           <LocatorButton
             mode={mode}

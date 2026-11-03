@@ -1,6 +1,6 @@
 # 07: A story for `TimelineDisclosure`
 
-Status: ready-for-human
+Status: resolved (#528)
 Type: task
 Size: small
 Blocked by: none

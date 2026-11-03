@@ -27,10 +27,23 @@
 // Faults, set on `fake.next` before the request they are for:
 //   recover = 'rateLimit'      POST /recover is answered 429 over_email_send_rate_limit
 //   verify = 'expired'         POST /verify is answered 403 otp_expired whatever the code
+//   verify = 'hold'            POST /verify waits until `fake.release()` (a code check in flight)
 //   signupDisabled the sign-in is answered 422, as with sign-ups turned off
 //   passwordSignIn = 'offline'  the password sign-in fails as with no signal
 //   updateUser = 'emailTaken'   the upgrade to an account is answered 422 email_exists
+//   updateUser = 'hold'         the upgrade waits until `fake.release()` (a sign-up in flight)
 //   profile = 'offline'         set_profile fails as with no signal
+//   stats = 'offline'           get_my_stats fails as with no signal
+//   deleteAccount = 'offline'   delete_my_account fails as with no signal
+//   deleteAccount = 'hold'      delete_my_account waits until `fake.release()` (a delete in flight)
+//   deleteAccount = 'lostAnswer' delete_my_account deletes, then the answer is lost on the way back
+//   deleteAccount = 'ownsMapRows' delete_my_account is refused P0001 owns_map_rows, as the migration
+//                 does for an account that still owns rows of the map
+//   deleteAccount = 'notAnAccount' delete_my_account is refused 42501 not_an_account
+//   logout = 'hold'             the sign-out waits until `fake.release()` (a Logout in flight)
+//
+// get_my_stats answers `fake.stats`, the account's numbers as one row; left null, the function is
+// not there (404 PGRST202), as before its migration is applied.
 //   offline       the save request fails as with no signal
 //   lostAnswer    the save is stored, then the answer is lost on the way back
 //   hold          the save waits until `fake.release()` (an upload in flight)
@@ -75,6 +88,69 @@ export const session = (userId, { email = null, isAccount = false } = {}) => ({
   },
 });
 
+/**
+ * get_my_stats's one row, as migration account_stats answers it, from the few numbers a suite sets:
+ * `{ rides, distanceM, movingS, standingS, walkM, rideM }`, the rest zero.
+ */
+/** The vehicles the contribution table takes (migration contribution_fare). */
+const DATABASE_VEHICLES = [
+  'jeep',
+  'e_jeep',
+  'uv_express',
+  'bus',
+  'train',
+  'ferry',
+  'tricycle',
+  'other',
+];
+
+function statsRow({
+  rides = 0,
+  distanceM = 0,
+  movingS = 0,
+  standingS = 0,
+  walkM = 0,
+  rideM = 0,
+  jeepRides = 0,
+  eJeepRides = 0,
+  uvExpressRides = 0,
+  busRides = 0,
+  trainRides = 0,
+  ferryRides = 0,
+  tricycleRides = 0,
+  farePhpTotal = 0,
+  fareRecordings = 0,
+}) {
+  return {
+    rides,
+    distance_m: distanceM,
+    moving_s: movingS,
+    standing_s: standingS,
+    walk_m: walkM,
+    ride_m: rideM,
+    walk_s: 0,
+    ride_s: 0,
+    hinto_s: 0,
+    marks: 0,
+    jeep_rides: jeepRides,
+    e_jeep_rides: eJeepRides,
+    uv_express_rides: uvExpressRides,
+    bus_rides: busRides,
+    train_rides: trainRides,
+    ferry_rides: ferryRides,
+    tricycle_rides: tricycleRides,
+    other_rides: 0,
+    active_days: 0,
+    first_ride_at: null,
+    longest_ride_m: null,
+    longest_ride_moving_s: null,
+    routes_helped: 0,
+    hintuans_helped: 0,
+    fare_php_total: farePhpTotal,
+    fare_recordings: fareRecordings,
+  };
+}
+
 /** Routes `page`'s Supabase requests to a fresh stand-in. Register after any other https route. */
 export async function fakeContributions(page) {
   const fake = {
@@ -87,6 +163,14 @@ export async function fakeContributions(page) {
     /** The scope of each sign-out the page sent: 'local' signs out this phone only. */
     logouts: [],
     profileRequests: 0,
+    /** The account's numbers for get_my_stats, as statsRow takes them; null: no such function. */
+    stats: null,
+    statsRequests: 0,
+    deleteAccountRequests: 0,
+    /** The accounts delete_my_account deleted, in order. */
+    deletedAccounts: [],
+    /** Each delete_my_account's delete_uploads, as sent (true when left out). */
+    deleteUploadsAsked: [],
     claims: [],
     /** begin_claim, verify, update_password, finish_claim and logout, in the order they came. */
     order: [],
@@ -164,6 +248,7 @@ export async function fakeContributions(page) {
       const body = request.postDataJSON() ?? {};
       const fault = fake.next.updateUser;
       delete fake.next.updateUser;
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
       const taken = accountByEmail(body.email);
       if (fault === 'emailTaken' || (taken && taken[0] !== id)) {
         return authError(
@@ -236,6 +321,7 @@ export async function fakeContributions(page) {
       fake.captchaTokens.push(body.gotrue_meta_security?.captcha_token ?? null);
       const fault = fake.next.verify;
       delete fake.next.verify;
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
       const found = accountByEmail(body.email);
       if (fault === 'expired' || !found || fake.codes.get(body.email) !== body.token) {
         return authError(route, 403, 'otp_expired', 'Token has expired or is invalid');
@@ -247,9 +333,62 @@ export async function fakeContributions(page) {
       return json(route, 200, session(found[0], { email: found[1].email, isAccount: true }));
     }
     if (url.pathname === '/auth/v1/logout' && method === 'POST') {
+      const fault = fake.next.logout;
+      delete fake.next.logout;
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
       fake.logouts.push(url.searchParams.get('scope'));
       fake.order.push('logout');
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    if (url.pathname === '/rest/v1/rpc/delete_my_account' && method === 'POST') {
+      fake.deleteAccountRequests += 1;
+      const fault = fake.next.deleteAccount;
+      delete fake.next.deleteAccount;
+      if (fault === 'offline') return route.abort('internetdisconnected');
+      if (fault === 'hold') await new Promise((resolve) => (fake.held = resolve));
+      const user = userOf(request);
+      // As the migration does: a user already gone (an earlier call deleted it, its answer lost)
+      // is answered as deleted.
+      if (user && fake.deletedAccounts.includes(user)) return json(route, 200, null);
+      if (fault === 'ownsMapRows') {
+        return json(route, 400, {
+          code: 'P0001',
+          message:
+            'owns_map_rows: this account still owns rows of the map; the owner moves them first',
+          details: null,
+          hint: null,
+        });
+      }
+      if (fault === 'notAnAccount') {
+        return json(route, 403, {
+          code: '42501',
+          message: 'not_an_account',
+          details: null,
+          hint: null,
+        });
+      }
+      // As the migration does: an anonymous user or an editor is refused, 42501.
+      const known = fake.users.get(user ?? '');
+      if (!known?.isAccount || known.isEditor) {
+        return json(route, 403, {
+          code: '42501',
+          message: 'not_deletable',
+          details: null,
+          hint: null,
+        });
+      }
+      // As the migration does: delete_uploads defaults to true; false keeps them, unlinked.
+      const deleteUploads = request.postDataJSON()?.delete_uploads ?? true;
+      fake.deleteUploadsAsked.push(deleteUploads);
+      for (const [id, row] of fake.rows) {
+        if (row.by !== user) continue;
+        if (deleteUploads) fake.rows.delete(id);
+        else row.by = null;
+      }
+      fake.users.delete(user);
+      fake.deletedAccounts.push(user);
+      if (fault === 'lostAnswer') return route.abort('internetdisconnected');
+      return json(route, 200, null);
     }
     if (url.pathname === '/rest/v1/rpc/get_profile' && method === 'POST') {
       const known = fake.users.get(userOf(request) ?? '');
@@ -257,6 +396,22 @@ export async function fakeContributions(page) {
       return json(route, 200, [
         { name: known.profile?.name ?? null, phone: known.profile?.phone ?? null },
       ]);
+    }
+    if (url.pathname === '/rest/v1/rpc/get_my_stats' && method === 'POST') {
+      fake.statsRequests += 1;
+      if (fake.next.stats === 'offline') {
+        delete fake.next.stats;
+        return route.abort('internetdisconnected');
+      }
+      if (fake.stats === null) {
+        return json(route, 404, {
+          code: 'PGRST202',
+          message: 'Could not find the function public.get_my_stats without parameters',
+          details: null,
+          hint: null,
+        });
+      }
+      return json(route, 200, [statsRow(fake.stats)]);
     }
     if (url.pathname === '/rest/v1/rpc/set_profile' && method === 'POST') {
       fake.profileRequests += 1;
@@ -359,6 +514,16 @@ export async function fakeContributions(page) {
         return json(route, 400, { code: 'P0001', message, details: null, hint: null });
       }
       const recording = request.postDataJSON().recording;
+      // The contribution table's vehicle check (contribution_fare): anything else is refused.
+      if (recording.vehicle !== null && !DATABASE_VEHICLES.includes(recording.vehicle)) {
+        return json(route, 400, {
+          code: '23514',
+          message:
+            'new row for relation "contribution" violates check constraint "contribution_vehicle_check"',
+          details: null,
+          hint: null,
+        });
+      }
       const existing = fake.rows.get(recording.id);
       if (existing && existing.by !== user) {
         return json(route, 400, { code: 'P0001', message: 'id_taken', details: null, hint: null });

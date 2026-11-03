@@ -285,7 +285,11 @@ A person with an account on the contributor page: a name, an email, a number
 and a password. The account is the person, not the phone: it keeps its
 recordings across phones. The studio shows a contributor's name; the email and
 number are the owner's, to contact testers, and never reach the studio. A
-commuter becomes one by creating an account on that page only.
+commuter becomes one by creating an account on that page only. Deleting the
+account removes the person (name, email, number, password and stats); their
+contributions stay, tied to no one and without the words they typed, unless
+they choose to delete those too. A kept contribution can then be removed only
+by an editor, on request.
 _Avoid_: driver, user, reporter
 
 **Contribution**:
@@ -295,9 +299,21 @@ contributor typed: a start point name, an end point name, a description, what
 was ridden. Never public.
 _Avoid_: trip and ride (both taken), ikot (said of a contribution it would be wrong: Ikot is the word shown for a loop, a route; see Loop), biyahe, session, track, trace
 
+**Lakad** / **Sakay**:
+The two modes a contribution is recorded in: on foot (Lakad, `walk` in code),
+and on a vehicle (Sakay, `ride`). A recording starts on Lakad; the mode button
+switches, as often as the contributor walks and boards. On the map walking is
+dashed with a foot along it, riding solid. Distance and time are the whole
+trip, walked and ridden; hintos count only on Sakay. A recording with no modes
+(one made before modes) is all Sakay. They replace Papunta and Pabalik for
+recordings only: a route's directions keep their own words (see Outbound /
+Return, SWITCH).
+_Avoid_: Papunta / Pabalik (for a recording), leg, way
+
 **Hinto**:
-A time the phone stood still in one spot during a contribution: 8 seconds or
-more within 25 metres, for now. Many hintos at one spot, across many
+A time the phone stood still in one spot while on Sakay: 8 seconds or more
+within 25 metres, for now. Standing on Lakad is no hinto: on foot a person
+stands for their own reasons. Many hintos at one spot, across many
 contributions, suggest a hintuan. The database uses the same word.
 _Avoid_: stop (the database's name for a hotspot), dwell, idle
 
@@ -308,8 +324,9 @@ Not a Stop, which the contributor chose.
 _Avoid_: pause; lost signal (only one of its causes)
 
 **Contributor page**:
-The page at `/contribute/` where a contribution is recorded: Ready, Recording,
-Stopped, Saved. A page of its own, so the public map carries none of it.
+The page at `/contribute/` where a contribution is recorded: Start, Recording
+(on Lakad or Sakay), Paused, Saved, and Account (the profile, with History
+inside it). A page of its own, so the public map carries none of it.
 _Avoid_: driver app, driver link, tracker
 
 **Contributor button**:

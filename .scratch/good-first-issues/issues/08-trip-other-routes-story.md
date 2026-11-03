@@ -1,6 +1,6 @@
 # 08: A story for `TripOtherRoutes`
 
-Status: ready-for-human
+Status: resolved (#529)
 Type: task
 Size: small
 Blocked by: none

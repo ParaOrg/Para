@@ -165,3 +165,56 @@ nothing), requires `…_check.sql` all `t`, and runs `after-contributor-accounts
 
 The revert refuses over a stored name. On a second database, apply then revert twice leaves the
 schema as before, and re-applying passes the check.
+
+## account-stats.sh
+
+`migrations/20261031090000_account_stats.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/account-stats.sh
+
+It applies every earlier migration, the contributions, contribution_use and contributor_accounts
+paste files, then `../apply/20261031090000_account_stats_apply.sql` twice (the second run must stop
+and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must raise nothing and
+leave no row behind, and its 9 read-only rows must be `t`. The revert refuses over a stored split
+and over retired totals. On a second database, apply then revert twice leaves the schema as before,
+and re-applying passes the check.
+
+## delete-my-account.sh
+
+`migrations/20261031100000_delete_my_account.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/delete-my-account.sh
+
+It applies every earlier migration, the contributions, contribution_use, contributor_accounts and
+account_stats paste files, then `../apply/20261031100000_delete_my_account_apply.sql` twice (the
+second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
+raise nothing and leave no row behind, and its 5 read-only rows must be `t`. On a second database,
+apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## delete-account-keep-uploads.sh
+
+`migrations/20261101090000_delete_account_keep_uploads.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/delete-account-keep-uploads.sh
+
+It applies every earlier migration and the contributor paste files as live has them (account_stats,
+delete_my_account, contribution_fare), then `../apply/20261101090000_delete_account_keep_uploads_apply.sql`
+twice (the second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour
+part must raise nothing and leave no row behind, and its 7 read-only rows must be `t`. On a second
+database, apply then revert twice leaves the schema as before, and re-applying passes the check. On a
+third, a ride kept from a deleted account makes the revert refuse and change nothing. On a fourth,
+an upload still committing when its person deletes their account and keeps their uploads is kept,
+not deleted. `bootstrap.sql` has a stand-in for GoTrue's `auth.audit_log_entries` for it.
+
+## contribution-fare.sh
+
+`migrations/20261031110000_contribution_fare.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/contribution-fare.sh
+
+It applies every earlier migration, the contributions, contribution_use, contributor_accounts and
+account_stats paste files, then `../apply/20261031110000_contribution_fare_apply.sql` twice (the
+second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
+raise nothing and leave no row behind, and its 7 read-only rows must be `t`. The revert refuses over a
+stored fare, over retired totals counting one and over an E-Jeep ride. On a second database, apply then revert twice
+leaves the schema as before, and re-applying passes the check.

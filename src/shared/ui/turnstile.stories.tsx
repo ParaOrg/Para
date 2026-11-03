@@ -36,3 +36,11 @@ export const Loading: Story = {
 export const CannotLoad: Story = {
   args: { scriptUrl: 'data:text/javascript,throw new Error("blocked")' },
 };
+
+/**
+ * Interaction-only, as the contributor's account pages use it: nothing is drawn unless Cloudflare
+ * needs the person to tap, and the always-pass key never does.
+ */
+export const InteractionOnly: Story = {
+  args: { appearance: 'interaction-only', onNeedsTap: fn() },
+};

@@ -342,6 +342,8 @@ function TokensPage() {
           token="Map/LocatorIndicatorOverlay (15%, border 75%)"
           cls="bg-map-locator-indicator-overlay-surface"
         />
+        <Swatch box="bg-map-trail-lakad" token="Map/Trail/lakad" cls="bg-map-trail-lakad" />
+        <Swatch box="bg-map-trail-sakay" token="Map/Trail/sakay" cls="bg-map-trail-sakay" />
       </Group>
 
       <Group title="Map — the train lines, LRT-1, LRT-2 and MRT-3 (in map-colours.ts, for the map to paint)">
@@ -404,6 +406,14 @@ function TokensPage() {
           box="bg-map-ferry-timeline-surface"
           token="…/Ferry/Timeline"
           cls="bg-map-ferry-timeline-surface"
+        />
+      </Group>
+
+      <Group title="Border width">
+        <Swatch
+          box="border-0-6 border-border-primary bg-surface"
+          token="border-width/0-6"
+          cls="border-0-6"
         />
       </Group>
 
@@ -513,6 +523,7 @@ function TokensPage() {
           token="LocatorDotShadow"
           cls="shadow-locator-dot-shadow"
         />
+        <Swatch box="bg-surface shadow-large" token="shadow-large" cls="shadow-large" />
       </Group>
 
       <Group title="Type — SN Pro">

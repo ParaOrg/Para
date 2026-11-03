@@ -68,9 +68,11 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
             ? 'That email and password do not match an account.'
             : error.message,
         );
-        setBusy(false);
       }
-      // On success the auth listener in useSession replaces this panel.
+      // On success an editor's session replaces this panel (useEditorSession).
+      // Ready again either way: an account that is not an editor is signed
+      // out, and may come back to this panel to try another.
+      setBusy(false);
       return;
     }
 

@@ -146,6 +146,10 @@
   --text-sm-lower--line-height: calc(1.25 / 0.8125);
   --text-3xl: 1.75rem;
   --text-3xl--line-height: calc(2.25 / 1.75);
+
+  /* Border width: Figma's border-width/0-6, the hairline the Switch is drawn with. Tailwind's
+     own widths are whole pixels, so this one is ours: border-0-6. */
+  --border-width-0-6: 0.6px;
 }
 
 /*
@@ -265,13 +269,20 @@
   --map-locator-indicator-overlay-surface: var(--color-parabrand-500);
   /* Its circle's hairline, at 75%, and the beam's colour (3870:5247). */
   --map-locator-indicator-overlay-border: var(--color-parabrand-800);
-  /* The trail a contributor's recording draws as they ride (/contribute/): papunta in the
-     blue the brand surface wears, pabalik in the orange of Card/orange/surface, so the
-     leg button and the line agree. Provisional: not named in Figma yet. */
+  /* The studio's Contributors map, where a contribution's ways show: papunta in blue/700,
+     pabalik in the orange of Card/orange/surface. Provisional: not named in Figma yet. */
   --map-trail-papunta: var(--color-blue-700);
   --map-trail-pabalik: var(--color-orange-700);
+  /* The contributor page's own trail: walked (Lakad: round dashes, a foot along it) in the blue
+     and ridden (Sakay: solid) in the green of the recording tint's Lakad and Sakay states
+     (OverlayIndicator, 4493:1697), so the line and the map's edges say the same mode.
+     Provisional: not named in Figma yet. */
+  --map-trail-lakad: var(--color-blue-700);
+  --map-trail-sakay: var(--color-green-700);
   /* The pin a contributor leaves where they marked a place: in neither way's colour. */
   --map-trail-mark: var(--color-purple-700);
+  /* The contributor page's flagged stop: Figma's flagstop pin (4496:18697), in Card/red/surface. */
+  --map-trail-flag: var(--color-red-800);
   /* The train lines, each in its own colour: LRT-1, LRT-2 and MRT-3 as Figma
      names them, LightRailWayOne… Their RouteCards (4074:7402, 4080:4124,
      4080:4241) wear surface and border-primary, as a livery's card does. */
@@ -380,7 +391,10 @@
   --color-map-locator-indicator-overlay-border: var(--map-locator-indicator-overlay-border);
   --color-map-trail-papunta: var(--map-trail-papunta);
   --color-map-trail-pabalik: var(--map-trail-pabalik);
+  --color-map-trail-lakad: var(--map-trail-lakad);
+  --color-map-trail-sakay: var(--map-trail-sakay);
   --color-map-trail-mark: var(--map-trail-mark);
+  --color-map-trail-flag: var(--map-trail-flag);
   --color-map-rail-light-rail-way-one-surface: var(--map-rail-light-rail-way-one-surface);
   --color-map-rail-light-rail-way-one-surface-pale: var(--map-rail-light-rail-way-one-surface-pale);
   --color-map-rail-light-rail-way-one-border-primary: var(
@@ -430,12 +444,47 @@
   --transition-duration-sheet: 313ms; /* the sheet's glide: 250 ms reads too fast, so 8/10 speed */
   --transition-duration-turn: 500ms; /* the fare tile's ↻: 300 ms reads fast, so 6/10 speed */
   --transition-duration-slow: 450ms; /* big moves, full screen */
+  --transition-duration-pill: 390ms; /* the toolbar's pill gliding to its tab: gentle × 1.3 */
+  --transition-duration-pill-quick: 195ms; /* the pill turning to a tap of a run: quick × 1.3 */
 
   --transition-delay-tooltip: 800ms; /* hover before a tooltip shows */
 
   --ease-enter: cubic-bezier(0.22, 1, 0.36, 1); /* arriving: fast start, soft landing */
   --ease-exit: cubic-bezier(0.55, 0, 1, 0.45); /* leaving: gentle start, clean finish */
   --ease-move: cubic-bezier(0.65, 0, 0.35, 1); /* already on screen, changing place */
+  --ease-pill: cubic-bezier(
+    0.34,
+    1.45,
+    0.64,
+    1
+  ); /* the toolbar's pill: a soft spring, about 6% past its tab */
+
+  /* A full screen arriving over another: it fades in, once (animate-fade-in). Behind motion-safe:. */
+  --animate-fade-in: fade-in var(--transition-duration-slow) var(--ease-enter);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* A refusal: a short side-to-side shake, once (animate-shake). Use it behind motion-safe:. */
+  --animate-shake: shake var(--transition-duration-gentle) var(--ease-move);
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-6px);
+    }
+    40%,
+    80% {
+      transform: translateX(6px);
+    }
+  }
 }
 
 /*
@@ -479,6 +528,9 @@
    * effect style is named BottomToolbar/TopShadow). */
   --shadow-bottom-sheet-top-shadow: 0 -3px 8px 0 rgb(43 43 43 / 0.08);
 
+  /* A screen's header with its page scrolled under it: History's (BottomShadow, 4518:25024). */
+  --shadow-bottom-shadow: 0 3px 8px 0 rgb(43 43 43 / 0.08);
+
   /* A hintuan's name lifted off the map (3847:11760). Mirrored from Figma; nothing wears it
    * now (HintuanLabel, 4068:4791, draws names flat). */
   --shadow-selected-hintuan-route-title: 0 2px 8px 0 rgb(0 0 0 / 0.32);
@@ -486,6 +538,9 @@
   /* A card floating over the map: the Map Style card (shadow-sm, 4179:10790).
    * Figma's own shadow-sm, in place of Tailwind's, which nothing wore. */
   --shadow-sm: 0 3px 12px 0 rgb(43 43 43 / 0.12);
+
+  /* A card raised high over the map: the "Track your routes" card (shadow-large, 4461:2601). */
+  --shadow-large: 0 -1px 12px 0 rgb(0 0 0 / 0.04), 0 8px 16px 2px rgb(43 43 43 / 0.09);
 
   /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);

@@ -1,6 +1,6 @@
 # 12: `.env.local.example` should say who needs it
 
-Status: ready-for-human
+Status: resolved (#533)
 Type: task
 Size: tiny
 Blocked by: none

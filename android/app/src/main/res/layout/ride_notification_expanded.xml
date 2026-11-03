@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The notification opened (RideNotification): the recording card (ride_notification.xml) with its
+  two bars at the foot, as the card in the app has them (recording-screen.tsx, tracking-button.tsx):
+  Pause and Lakad or Sakay while recording, Resume and Finish while paused. Each bar's colour, icon,
+  words and tap are set by RideNotification; the outer corners round as the card's. One line
+  each: the words are the card's 18sp from a 360dp-wide phone up, smaller below (ride_dimens.xml).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/ride_card"
+    android:orientation="vertical">
+
+    <include layout="@layout/ride_notification" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/ride_bar_left"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/ride_bar_brand"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="14dp">
+            <ImageView
+                android:id="@+id/ride_bar_left_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="6dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ride_icon_pause" />
+            <TextView
+                android:id="@+id/ride_bar_left_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                android:maxLines="1"
+                android:textColor="@color/ride_content_inverse"
+                android:textSize="@dimen/ride_bar_text"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ride_bar_right"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/ride_bar_sakay"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="14dp">
+            <ImageView
+                android:id="@+id/ride_bar_right_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="6dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ride_icon_switch" />
+            <TextView
+                android:id="@+id/ride_bar_right_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                android:maxLines="1"
+                android:textColor="@color/ride_content_inverse"
+                android:textSize="@dimen/ride_bar_text"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

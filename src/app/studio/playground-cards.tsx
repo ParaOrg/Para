@@ -154,6 +154,7 @@ export function PlaygroundCards({
           routes={saved.candidates}
           hotspots={hotspots.candidates}
           back={saved.back}
+          listing={saved.listing}
           onFlip={flipList}
           selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
           onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}

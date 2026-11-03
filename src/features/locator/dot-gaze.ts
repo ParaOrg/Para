@@ -9,8 +9,9 @@ import { M_PER_DEG, nearestOnSegment, type LngLat } from '@/shared/utils/geo';
 /**
  * The dot's gaze at what was just picked: routes, and hintuans too, and still
  * when what it looks at is off the screen. Its eyes leave their wandering for
- * the way to it, hold there, and wander again (locator.css). The face it wears
- * stays: only the eyes turn.
+ * the way to it, hold there, and go back to the way the phone faces, or wander
+ * with no heading (eyesDeg; locator.css). The face it wears stays: only the
+ * eyes turn.
  */
 
 /** How long the dot gazes before its eyes wander again. */
@@ -42,11 +43,23 @@ export function gazeToward(from: LngLat, to: LngLat): number | null {
 /**
  * Where the eyes go for a gaze, in px from the middle: x right, y down, on the
  * dot as it lies on the map, north up (LocatorOnMap). Always GAZE_PX out, so
- * no gaze takes them out of the dot.
+ * no gaze takes them out of the dot. A point on a circle, so 359° and 1° are
+ * a hair apart and the eyes' turn between them is the short way round.
  */
 export function gazeOffset(deg: number): { x: number; y: number } {
   const r = (n: number) => Math.round(n * 10) / 10 || 0;
   return { x: r(GAZE_PX * Math.sin(toRad(deg))), y: r(-GAZE_PX * Math.cos(toRad(deg))) };
+}
+
+/**
+ * Which way the eyes look, in degrees from north: at what was just picked
+ * while the gaze lasts, else the way the phone faces, the beam's heading;
+ * null, with neither, and they wander. The dot lies on the map north up and
+ * turns with it, so a heading holds at any map bearing: in the compass view,
+ * where the map turns with the phone, the eyes look up the screen.
+ */
+export function eyesDeg(gazeDeg: number | null, headingDeg: number | null): number | null {
+  return gazeDeg ?? headingDeg;
 }
 
 /** The point of these lines nearest `p`: where on the routes to gaze. Null with no line. */

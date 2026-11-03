@@ -244,29 +244,34 @@ export interface RideSummary {
   lostSeconds: number;
   /** The contributor's own Stop and Resume pauses, which are neither moving nor lost. */
   pausedSeconds: number;
+  /** Where the vehicle stood: the stands made on ride (rideHintos). */
   hintos: Hinto[];
   /** The gaps, merged, without the pauses. */
   gaps: Gap[];
 }
 
-/**
- * The totals of a recording. `logged` are the gaps the page saw happen
- * (hidden, resumed after a reload, paused between a Stop and a Resume); the
- * silent ones are found from the fixes. Standing is the hintos' time that was
- * neither lost nor paused, and moving is what is left of the recorded span
- * once standing, lost and paused time are taken out.
- */
+/** The parts of `gap` that fall inside each of `within`. */
 function overlapsWith(gap: Gap, within: readonly Gap[]): Gap[] {
   return within
     .map((w) => ({ ...gap, from: Math.max(gap.from, w.from), to: Math.min(gap.to, w.to) }))
     .filter((g) => g.to > g.from);
 }
 
+/**
+ * The totals of a recording. `logged` are the gaps the page saw happen
+ * (hidden, resumed after a reload, paused between a Stop and a Resume); the
+ * silent ones are found from the fixes. Standing is the time stood still, on
+ * foot or riding, that was neither lost nor paused, and moving is what is left
+ * of the recorded span once standing, lost and paused time are taken out.
+ * Distance and time are the whole recording's, walked and ridden; `modes`
+ * only decides which stands are hintos (rideHintos), and none means all ride.
+ */
 export function summarize(
   fixes: readonly Fix[],
   logged: readonly Gap[],
   from: number,
   now: number,
+  modes: readonly ModeSwitch[] = [],
 ): RideSummary {
   const clip = (g: Gap): Gap => ({ ...g, from: Math.max(g.from, from), to: Math.min(g.to, now) });
   const inside = (g: Gap): boolean => g.to > g.from;
@@ -300,50 +305,160 @@ export function summarize(
     standingSeconds,
     lostSeconds,
     pausedSeconds,
-    hintos,
+    hintos: rideHintos(hintos, modes),
     gaps,
   };
 }
 
 /*
- * One recording holds an outbound way (papunta) and then a return (pabalik),
- * because a jeepney route is often a loop. A recording starts outbound; a
- * switch flips the way and leaves a marker at the fix it happened on. Flipping
- * back is an undo: only where the recording is now counts. The functions below
- * take fixes that count (keptFixes), in time order, as hintosOf does.
+ * One recording holds the contributor's walking (Lakad) and riding (Sakay),
+ * in turns. A recording starts on walk; a switch flips the mode and leaves a
+ * marker at the fix it happened on. A recording with no switches at all is all
+ * ride: one made before modes, when every recording was a ride. The functions
+ * below take fixes that count (keptFixes), in time order, as hintosOf does.
  */
 
-/** Which way the contributor is riding: toward the destination (papunta), or back (pabalik). */
-export type Way = 'outbound' | 'return';
+/** How the contributor is moving: on foot (Lakad), or on a vehicle (Sakay). */
+export type Mode = 'walk' | 'ride';
 
-/** The contributor pressing the switch: from then on the ride is on `to`. */
-export interface WaySwitch {
+/** The contributor pressing the switch, or starting: from then on the recording is on `to`. */
+export interface ModeSwitch {
   time: number;
-  to: Way;
+  to: Mode;
 }
 
-/** Where a switch left its mark: the fix it happened on, and the way that began there. */
-export interface WayMarker {
+/** Where a switch left its mark: the fix it happened on, and the mode that began there. */
+export interface ModeMarker {
   /** When the contributor pressed the switch. */
   time: number;
   at: LngLat;
-  to: Way;
+  to: Mode;
 }
 
-/** The ride split by way, ready to draw as two trails. */
-export interface RecordedWays {
-  /** Each run of fixes on the outbound way, as a line. A switch back makes more than one. */
-  outboundLines: LngLat[][];
-  returnLines: LngLat[][];
-  markers: WayMarker[];
-  /** Where the contributor last switched to the return; null while the recording is on the outbound way. */
-  endPoint: LngLat | null;
+/** The recording split by mode, ready to draw as walked and ridden lines. */
+export interface RecordedModes {
+  /** Each run of fixes on foot, as a line. Every switch back to walk makes another. */
+  walkLines: LngLat[][];
+  rideLines: LngLat[][];
+  /** One per switch after the first fix; the mode a recording starts on leaves none. */
+  markers: ModeMarker[];
 }
 
-/** The ride is armed to stop on its own once it has been this far (straight line) from where it began. */
-export const AUTO_STOP_ARM_M = 1000;
-/** Once armed, coming back within this of where the ride began stops it; the owner may widen it to 500 m. */
-export const AUTO_STOP_RADIUS_M = 300;
+/** A stretch of time, in milliseconds since the epoch. */
+export interface TimeSpan {
+  from: number;
+  to: number;
+}
+
+/**
+ * The switches that change the mode, in time order. The mode before the first
+ * is ride, so a switch to ride with none before it is dropped, and so is one to
+ * the mode already on.
+ */
+function effectiveSwitches(switches: readonly ModeSwitch[]): ModeSwitch[] {
+  let mode: Mode = 'ride';
+  return [...switches]
+    .sort((a, b) => a.time - b.time)
+    .filter((modeSwitch) => {
+      if (modeSwitch.to === mode) return false;
+      mode = modeSwitch.to;
+      return true;
+    });
+}
+
+/** The mode the recording is on now: the last switch that changed it, or ride with none. */
+export function currentMode(switches: readonly ModeSwitch[]): Mode {
+  return effectiveSwitches(switches).at(-1)?.to ?? 'ride';
+}
+
+interface PlacedSwitch extends ModeSwitch {
+  /** The fix the switch happened on: the last one at or before it. */
+  index: number;
+}
+
+/**
+ * Where the switches fall among the fixes. Switches at or before the first fix
+ * set the mode it starts on. Each later one is placed on the last fix at or
+ * before it.
+ */
+function placedModes(
+  fixes: readonly Fix[],
+  switches: readonly ModeSwitch[],
+): { first: Mode; placed: PlacedSwitch[] } {
+  const effective = effectiveSwitches(switches);
+  const firstTime = fixes[0]?.time ?? Infinity;
+  const first = effective.filter((s) => s.time <= firstTime).at(-1)?.to ?? 'ride';
+  const placed: PlacedSwitch[] = [];
+  let index = 0;
+  for (const modeSwitch of effective) {
+    if (modeSwitch.time <= firstTime) continue;
+    while (index + 1 < fixes.length && fixes[index + 1].time <= modeSwitch.time) index++;
+    placed.push({ ...modeSwitch, index });
+  }
+  return { first, placed };
+}
+
+/** The index, among these fixes, of the fix each switch happened on: where its marker sits. */
+export function modeFixIndexes(fixes: readonly Fix[], switches: readonly ModeSwitch[]): number[] {
+  return placedModes(fixes, switches).placed.map((placed) => placed.index);
+}
+
+/**
+ * The fixes split into walked and ridden lines. The fix a switch is placed on
+ * ends the old line and begins the new, so the two meet there with no gap, and
+ * carries its marker; the mode the recording starts on leaves none. A run of
+ * one fix is no line and is left out.
+ */
+export function modesOf(fixes: readonly Fix[], switches: readonly ModeSwitch[]): RecordedModes {
+  const modes: RecordedModes = { walkLines: [], rideLines: [], markers: [] };
+  const { first, placed } = placedModes(fixes, switches);
+  let mode = first;
+  let run: LngLat[] = [];
+  const close = () => {
+    if (run.length >= 2) (mode === 'walk' ? modes.walkLines : modes.rideLines).push(run);
+  };
+  fixes.forEach((fix, i) => {
+    run.push(fix.at);
+    for (const modeSwitch of placed) {
+      if (modeSwitch.index !== i) continue;
+      close();
+      modes.markers.push({ time: modeSwitch.time, at: fix.at, to: modeSwitch.to });
+      mode = modeSwitch.to;
+      run = [fix.at];
+    }
+  });
+  close();
+  return modes;
+}
+
+/** The stretches of `from`–`to` the recording was on ride, in time order. */
+export function rideSpans(switches: readonly ModeSwitch[], from: number, to: number): TimeSpan[] {
+  const spans: TimeSpan[] = [];
+  let mode: Mode = 'ride';
+  let since = from;
+  for (const modeSwitch of effectiveSwitches(switches)) {
+    const time = Math.min(Math.max(modeSwitch.time, from), to);
+    if (mode === 'ride' && time > since) spans.push({ from: since, to: time });
+    mode = modeSwitch.to;
+    since = time;
+  }
+  if (mode === 'ride' && to > since) spans.push({ from: since, to });
+  return spans;
+}
+
+/**
+ * The hintos made while riding: a hinto is where a vehicle stood, and on foot
+ * the contributor stands for their own reasons. A hinto that runs across a
+ * switch keeps the part on ride, if that part alone is long enough to be one.
+ */
+export function rideHintos(hintos: readonly Hinto[], switches: readonly ModeSwitch[]): Hinto[] {
+  return hintos.flatMap((hinto) =>
+    rideSpans(switches, hinto.from, hinto.to)
+      .filter((span) => (span.to - span.from) / 1000 >= HINTO_MIN_SECONDS)
+      .map((span) => ({ ...span, at: hinto.at })),
+  );
+}
+
 /**
  * A direction of travel needs the recent fixes' older and newer halves to sit
  * this far apart (their averages, not single fixes); less is the phone's
@@ -364,100 +479,6 @@ export const BEARING_WINDOW_S = 10;
  * 20 m between the halves is rare where between two single fixes it is not.
  */
 const BEARING_MIN_FIXES_PER_HALF = 2;
-
-interface PlacedSwitch {
-  time: number;
-  to: Way;
-  /** The fix the switch happened on: the last one at or before it, or the first if it came before any. */
-  index: number;
-}
-
-/** The switches that change the way, in time order; one to the way already on is dropped. */
-function effectiveSwitches(switches: readonly WaySwitch[]): WaySwitch[] {
-  let way: Way = 'outbound';
-  return [...switches]
-    .sort((a, b) => a.time - b.time)
-    .filter((waySwitch) => {
-      if (waySwitch.to === way) return false;
-      way = waySwitch.to;
-      return true;
-    });
-}
-
-/** The way the recording is on now: the last switch that changed it, or outbound with none. */
-export function currentWay(switches: readonly WaySwitch[]): Way {
-  return effectiveSwitches(switches).at(-1)?.to ?? 'outbound';
-}
-
-/** The switches that change the way, in time order, each placed on a fix. */
-function placeSwitches(fixes: readonly Fix[], switches: readonly WaySwitch[]): PlacedSwitch[] {
-  if (fixes.length === 0) return [];
-  return effectiveSwitches(switches).map((waySwitch) => {
-    let index = 0;
-    while (index + 1 < fixes.length && fixes[index + 1].time <= waySwitch.time) index++;
-    return { time: waySwitch.time, to: waySwitch.to, index };
-  });
-}
-
-/** The index, among these fixes, of the fix each way switch happened on: where its marker sits. */
-export function switchFixIndexes(fixes: readonly Fix[], switches: readonly WaySwitch[]): number[] {
-  return placeSwitches(fixes, switches).map((placed) => placed.index);
-}
-
-/**
- * The fixes split into outbound and return lines. The fix a switch happened on
- * ends the old line and begins the new one, so the two trails meet there with
- * no gap. A run of one fix is no line and is left out. The end point is where
- * the contributor last switched to the return, and null while the recording is
- * on the outbound way: a mistaken tap flipped back leaves no end point.
- */
-export function waysOf(fixes: readonly Fix[], switches: readonly WaySwitch[]): RecordedWays {
-  const ways: RecordedWays = { outboundLines: [], returnLines: [], markers: [], endPoint: null };
-  const placed = placeSwitches(fixes, switches);
-  let way: Way = 'outbound';
-  let run: LngLat[] = [];
-  const close = () => {
-    if (run.length >= 2) (way === 'outbound' ? ways.outboundLines : ways.returnLines).push(run);
-  };
-  fixes.forEach((fix, i) => {
-    run.push(fix.at);
-    for (const waySwitch of placed) {
-      if (waySwitch.index !== i) continue;
-      close();
-      ways.markers.push({ time: waySwitch.time, at: fix.at, to: waySwitch.to });
-      way = waySwitch.to;
-      run = [fix.at];
-    }
-  });
-  close();
-  const last = ways.markers[ways.markers.length - 1];
-  ways.endPoint = last?.to === 'return' ? last.at : null;
-  return ways;
-}
-
-/**
- * Whether the ride has come full circle and should stop. It is armed only
- * while the recording is on the return, from the later of the first fix more
- * than AUTO_STOP_ARM_M from the first fix and the latest switch to the return,
- * and fires at the first fix after that within AUTO_STOP_RADIUS_M of the first
- * fix (exactly that far still stops). A switch to the return made already
- * inside that radius stops the ride on the next fix: the contributor forgot at
- * the turnaround, and that is kept. Flipping back to outbound disarms it.
- *
- * Pure, so it answers true for every call after it first fires. The caller
- * asks until it is true, then remembers that it fired and stops asking: a
- * Resume after an auto-stop must not stop again.
- */
-export function shouldAutoStop(fixes: readonly Fix[], switches: readonly WaySwitch[]): boolean {
-  if (fixes.length < 2) return false;
-  const start = fixes[0].at;
-  const placed = placeSwitches(fixes, switches);
-  const latest = placed[placed.length - 1];
-  const away = fixes.find((fix) => distanceM(start, fix.at) > AUTO_STOP_ARM_M);
-  if (currentWay(switches) !== 'return' || !latest || !away) return false;
-  const armedAt = Math.max(latest.time, away.time);
-  return fixes.some((fix) => fix.time > armedAt && distanceM(start, fix.at) <= AUTO_STOP_RADIUS_M);
-}
 
 /** The initial great-circle bearing from one point to another, in degrees clockwise from north. */
 function bearingBetween([lng1, lat1]: LngLat, [lng2, lat2]: LngLat): number {

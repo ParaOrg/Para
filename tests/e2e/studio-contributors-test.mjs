@@ -14,10 +14,12 @@
 // `contribution_use` (direction) against the direction it wrote; Draw a
 // hintuan here begins a box, and a save records one `contribution_use`
 // (hintuan) for each upload with a hinto inside the box, none for one outside;
+// an upload of two rides offers each on its own, its row highlighting it on
+// the map and its Use this line copying its own line;
 // a drawing in progress is never replaced.
 import { chromium } from 'playwright';
 
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, waitFor } from './lib/harness.mjs';
 import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
 
@@ -26,7 +28,7 @@ const { check, tally } = harness();
 // ------------------------------------------------------------- the tables
 const PHONE_A = 'aaaaaa01-0000-4000-8000-000000000001';
 const PHONE_B = 'bbbbbb02-0000-4000-8000-000000000002';
-const [C1, C2, C3] = [1, 2, 3].map((n) => `c0000000-0000-4000-8000-00000000000${n}`);
+const [C1, C2, C3, C4, C5] = [1, 2, 3, 4, 5].map((n) => `c0000000-0000-4000-8000-00000000000${n}`);
 /** Where the ride starts, 14.7 N 121.05 E, and ends 1.1 km north. */
 const START = [121.05, 14.7];
 const END = [121.05, 14.71];
@@ -71,12 +73,48 @@ const trailBatch = (contribution) => {
     dt_ms: [0, 60_000, 60_000, 60_000],
     dlat: [0, 3500, 3500, 3000],
     dlng: [0, 500, -1500, 100],
+    accuracy_m: [6, 6, 6, 6],
   };
 };
-const hinto = (contribution, lng, lat, seconds) => ({
-  contribution_id: contribution,
+/**
+ * C4, 2 km east of the others: walked 2 min to the jeep, rode 3 min north, walked 1 min.
+ * One fix a minute; the one at minute 3 is 1 km off to the east and too vague to count.
+ */
+const C4_START = Date.now() - 5 * HOUR;
+const C4_TRAIL = [0, 1, 2, 3, 4, 5, 6].map((n) => [n === 3 ? 121.08 : 121.07, 14.7 + n * 0.002]);
+const C4_ACCURACY = C4_TRAIL.map((_, n) => (n === 3 ? 120 : 6));
+const c4Batch = {
+  contribution_id: C4,
   seq: 0,
-  started_at: iso(Date.now() - 2.5 * HOUR),
+  first_at: iso(C4_START),
+  first_lat: Math.round(C4_TRAIL[0][1] * 1e6),
+  first_lng: Math.round(C4_TRAIL[0][0] * 1e6),
+  dt_ms: C4_TRAIL.map((_, n) => (n === 0 ? 0 : 60_000)),
+  dlat: C4_TRAIL.map((_, n) => (n === 0 ? 0 : 2000)),
+  dlng: C4_TRAIL.map(([lng], n) => (n === 0 ? 0 : Math.round((lng - C4_TRAIL[n - 1][0]) * 1e6))),
+  accuracy_m: C4_ACCURACY,
+};
+/**
+ * C5, 4 km east: walked a minute, rode 3 north, walked a minute to change, rode 2 more.
+ * One fix a minute, every one accurate.
+ */
+const C5_START = Date.now() - 6 * HOUR;
+const C5_TRAIL = [0, 1, 2, 3, 4, 5, 6, 7].map((n) => [121.09, 14.7 + n * 0.002]);
+const c5Batch = {
+  contribution_id: C5,
+  seq: 0,
+  first_at: iso(C5_START),
+  first_lat: Math.round(C5_TRAIL[0][1] * 1e6),
+  first_lng: Math.round(C5_TRAIL[0][0] * 1e6),
+  dt_ms: C5_TRAIL.map((_, n) => (n === 0 ? 0 : 60_000)),
+  dlat: C5_TRAIL.map((_, n) => (n === 0 ? 0 : 2000)),
+  dlng: C5_TRAIL.map(() => 0),
+  accuracy_m: C5_TRAIL.map(() => 6),
+};
+const hinto = (contribution, lng, lat, seconds, started = Date.now() - 2.5 * HOUR, seq = 0) => ({
+  contribution_id: contribution,
+  seq,
+  started_at: iso(started),
   seconds,
   lat,
   lng,
@@ -110,9 +148,12 @@ const b = await chromium.launch();
 const page = await b.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
+// Once the map is up, MapLibre's errors reach the console as warnings (map-view.tsx).
+const warnings = [];
 page.on('console', (msg) => {
   if (msg.type() === 'error' && !/Failed to load resource/.test(msg.text()))
     errors.push(msg.text().slice(0, 160));
+  if (msg.type() === 'warning') warnings.push(msg.text().slice(0, 160));
 });
 await bareStyle(page);
 await signInAsEditor(page);
@@ -144,13 +185,53 @@ const db = await fakeStudioDb(page, {
       received_at: iso(Date.now() - 2 * HOUR),
     }),
     upload(C3, PHONE_A, { description: 'Far away', received_at: iso(Date.now() - 3 * HOUR) }),
+    upload(C4, PHONE_B, {
+      start_name: 'Bahay',
+      end_name: 'Opisina',
+      started_at: iso(C4_START),
+      ended_at: iso(C4_START + 6 * 60_000),
+      received_at: iso(Date.now() - 4 * HOUR),
+      line: { type: 'LineString', coordinates: C4_TRAIL },
+      west: 121.07,
+      south: 14.7,
+      east: 121.07,
+      north: 14.712,
+      events: [
+        { kind: 'mode', at: iso(C4_START), to: 'walk' },
+        { kind: 'mode', at: iso(C4_START + 2 * 60_000), to: 'ride' },
+        { kind: 'switch', at: iso(C4_START + 3 * 60_000), to: 'return' },
+        { kind: 'mode', at: iso(C4_START + 5 * 60_000), to: 'walk' },
+        { kind: 'mode', at: 'junk', to: 'ride' },
+      ],
+    }),
+    upload(C5, PHONE_B, {
+      start_name: 'Palengke',
+      end_name: 'Eskwela',
+      started_at: iso(C5_START),
+      ended_at: iso(C5_START + 7 * 60_000),
+      received_at: iso(Date.now() - 5 * HOUR),
+      line: { type: 'LineString', coordinates: C5_TRAIL },
+      west: 121.09,
+      south: 14.7,
+      east: 121.09,
+      north: 14.714,
+      events: [
+        { kind: 'mode', at: iso(C5_START), to: 'walk' },
+        { kind: 'mode', at: iso(C5_START + 60_000), to: 'ride' },
+        { kind: 'mode', at: iso(C5_START + 4 * 60_000), to: 'walk' },
+        { kind: 'mode', at: iso(C5_START + 5 * 60_000), to: 'ride' },
+      ],
+    }),
   ],
   // C2's hinto is 7 m from C1's, inside a box round it; C3's is 600 m north, outside.
-  point_batch: [trailBatch(C1)],
+  point_batch: [trailBatch(C1), c4Batch, c5Batch],
   hinto: [
     hinto(C1, ...HINTO, 240),
     hinto(C2, HINTO[0] + 0.00006, HINTO[1], 120),
     hinto(C3, HINTO[0], HINTO[1] + 0.0055, 300),
+    // C4's first hinto is while walking, its second while riding.
+    hinto(C4, ...C4_TRAIL[1], 60, C4_START + 60_000),
+    hinto(C4, ...C4_TRAIL[3], 90, C4_START + 3 * 60_000, 1),
   ],
   stop: [
     terminal('55555555-0000-4000-8000-000000000001', 'Fairview Terminal', START),
@@ -169,13 +250,6 @@ await page.goto(`${BASE}/studio/?map=contributors`, { waitUntil: 'load' });
 const list = page.getByRole('list', { name: 'Uploads' });
 await list.waitFor({ timeout: 30000 });
 const body = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-const waitFor = async (fn, ms = 8000) => {
-  for (let t = 0; t < ms; t += 100) {
-    if (await fn()) return true;
-    await page.waitForTimeout(100);
-  }
-  return false;
-};
 const open = async (name) => {
   await page
     .getByRole('button', { name: new RegExp(name) })
@@ -366,6 +440,189 @@ check(
 check(
   '  and none for an upload whose hinto is outside it',
   !hintuanUses.some((u) => u.contribution_id === C3),
+);
+
+// ------------------------------------------------ walk and ride parts
+const trailModes = () =>
+  page.evaluate(async () => {
+    const data = await window.__src('studio-contribution-opened');
+    return (data?.features ?? [])
+      .filter((f) => f.properties.kind === 'trail')
+      .map((f) => f.properties.mode);
+  });
+await page.getByText('Contributors', { exact: true }).click();
+await list.waitFor();
+await open('SM Fairview to Cubao');
+check(
+  'an upload without mode events reads as all ride: one ride line, no walking said',
+  await waitFor(async () => JSON.stringify(await trailModes()) === '["ride"]'),
+  JSON.stringify(await trailModes()),
+);
+check('  and no note of walking left out', !(await body()).includes('Walking is left out'));
+await page.getByRole('button', { name: 'Close' }).click();
+await open('Bahay to Opisina');
+check(
+  'an upload of walk and ride parts draws each part, walk, ride, walk',
+  await waitFor(async () => JSON.stringify(await trailModes()) === '["walk","ride","walk"]'),
+  JSON.stringify(await trailModes()),
+);
+const walkLook = await page.evaluate(() => {
+  const m = window.__map;
+  return {
+    dashes: m.getPaintProperty('studio-contribution-walk', 'line-dasharray'),
+    placement: m.getLayoutProperty('studio-contribution-walk-feet', 'symbol-placement'),
+    icon: m.getLayoutProperty('studio-contribution-walk-feet', 'icon-image'),
+    hasFoot: m.hasImage('studio-walk-foot'),
+  };
+});
+check(
+  '  the walking dashed, with a foot repeated along it',
+  Array.isArray(walkLook.dashes) &&
+    walkLook.placement === 'line' &&
+    walkLook.icon === 'studio-walk-foot' &&
+    walkLook.hasFoot,
+  JSON.stringify(walkLook),
+);
+// Counted from now: the check below waits for the new style, not the old one still showing.
+await page.evaluate(() => {
+  window.__styleLoads = 0;
+  window.__map.on('style.load', () => (window.__styleLoads += 1));
+});
+await page.getByTestId('basemap').click();
+await page.getByRole('button', { name: 'Dark' }).click();
+const switched = await waitFor(() => page.evaluate(() => window.__styleLoads > 0));
+const afterSwitch = async () =>
+  page.evaluate(() => {
+    const m = window.__map;
+    const order = m.getStyle().layers.map((l) => l.id);
+    return {
+      hasFoot: m.hasImage('studio-walk-foot'),
+      feetUnderPins:
+        order.indexOf('studio-contribution-walk-feet') <
+          order.indexOf('studio-contribution-hintos') &&
+        order.indexOf('studio-contribution-hintos') < order.indexOf('studio-contribution-marks'),
+    };
+  });
+check(
+  '  a basemap switch keeps the foot, and the feet under the hintos and pins',
+  switched &&
+    (await waitFor(async () => {
+      const now = await afterSwitch();
+      return now.hasFoot && now.feetUnderPins;
+    })),
+  JSON.stringify({ switched, ...(await afterSwitch()) }),
+);
+check(
+  '  with no error of an image or layer added twice',
+  ![...errors, ...warnings].some((e) => /already exists/.test(e)),
+  [...errors, ...warnings].filter((e) => /already exists/.test(e)).join(' | '),
+);
+check(
+  '  and says its parts in text',
+  /In 1 ride and 2 walks: [\d.]+ km riding, [\d.]+ km walking, the walking dashed\./.test(
+    await body(),
+  ),
+  (await body()).match(/In \d.{60}/)?.[0],
+);
+check(
+  '  its walking hinto offers no hintuan, its riding one does',
+  (await body()).includes('While walking: not a hintuan.') &&
+    (await page.getByRole('button', { name: 'Draw a hintuan here' }).count()) === 1,
+);
+check(
+  '  and Use this line says the walking is left out',
+  (await body()).includes('Walking is left out: Use this line takes the ride only.'),
+);
+await page.getByRole('button', { name: 'Use this line' }).click();
+await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+const rideOnly = await draft();
+check(
+  '  which begins the direction at the ride: from the 2nd minute to the 5th',
+  Math.abs(rideOnly.controlPoints[0][1] - C4_TRAIL[2][1]) < 1e-6 &&
+    Math.abs(rideOnly.controlPoints.at(-1)[1] - C4_TRAIL[5][1]) < 1e-6,
+  JSON.stringify(rideOnly?.controlPoints),
+);
+check(
+  '  and never through the fix too vague to place the ride',
+  !rideOnly.controlPoints.some(([lng]) => Math.abs(lng - 121.08) < 1e-6),
+  JSON.stringify(rideOnly?.controlPoints),
+);
+await shot('5-walk-and-ride');
+await page.getByTitle('Discard this route').click();
+await waitFor(
+  async () => (await page.getByRole('region', { name: 'From an upload' }).count()) === 0,
+);
+
+// ------------------------------------------------ two rides, each on its own
+await page.getByText('Contributors', { exact: true }).click();
+await list.waitFor();
+await open('Palengke to Eskwela');
+const useButtons = page.getByRole('button', { name: /^Use this line: Ride \d$/ });
+await waitFor(async () => (await useButtons.count()) === 2);
+check(
+  'an upload of two rides offers each on its own: two Use this line, named Ride 1 and Ride 2',
+  (await useButtons.count()) === 2 &&
+    (await body()).includes('Walking is left out: each ride can be used on its own.') &&
+    /Ride 1 · [\d.]+ km/.test(await body()) &&
+    /Ride 2 · [\d.]+ km/.test(await body()),
+  (await body()).match(/Walking is left out.{0,120}/)?.[0],
+);
+const highlighted = () =>
+  page.evaluate(() => JSON.stringify(window.__map.getFilter('studio-contribution-ride-highlight')));
+await page.getByRole('list', { name: 'Rides' }).getByRole('listitem').nth(1).hover();
+const pointedAt = await highlighted();
+check(
+  "  pointing at a ride's row highlights that ride on the map (trail part 3, the second ride)",
+  /"piece"\],3\]/.test(pointedAt),
+  pointedAt,
+);
+// Focused, then closed without the focus moving (a script's click): the row goes
+// with no blur, so only closing can clear what it highlighted.
+await page.getByRole('button', { name: 'Use this line: Ride 2', exact: true }).focus();
+await page.evaluate(() =>
+  [...document.querySelectorAll('button')].find((b) => b.textContent === 'Close')?.click(),
+);
+await open('Palengke to Eskwela');
+await waitFor(async () => (await useButtons.count()) === 2);
+const afterReopen = await highlighted();
+check(
+  '  closing the upload clears its highlight: reopened, no ride is highlighted',
+  /"piece"\],-1\]/.test(afterReopen),
+  afterReopen,
+);
+/** The control points a ride's Use this line begins, read off the draft. */
+const useRide = async (n) => {
+  await useButtons.nth(n).click();
+  await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+  const points = (await draft())?.controlPoints ?? [];
+  await page.getByTitle('Discard this route').click();
+  await waitFor(
+    async () => (await page.getByRole('region', { name: 'From an upload' }).count()) === 0,
+  );
+  return points;
+};
+const startsAt = (points, n) => Math.abs((points[0]?.[1] ?? 0) - C5_TRAIL[n][1]) < 1e-6;
+const endsAt = (points, n) => Math.abs((points.at(-1)?.[1] ?? 0) - C5_TRAIL[n][1]) < 1e-6;
+check(
+  '  each button says its ride to a screen reader',
+  (await page.getByRole('button', { name: 'Use this line: Ride 1', exact: true }).count()) === 1 &&
+    (await page.getByRole('button', { name: 'Use this line: Ride 2', exact: true }).count()) === 1,
+);
+const secondRide = await useRide(1);
+check(
+  "  the second ride's Use this line copies its own line: the 5th minute to the 7th",
+  startsAt(secondRide, 5) && endsAt(secondRide, 7),
+  JSON.stringify(secondRide),
+);
+await page.getByText('Contributors', { exact: true }).click();
+await list.waitFor();
+await open('Palengke to Eskwela');
+await waitFor(async () => (await useButtons.count()) === 2);
+const firstRide = await useRide(0);
+check(
+  "  the first ride's copies its own: the 1st minute to the 4th, where the walk began",
+  startsAt(firstRide, 1) && endsAt(firstRide, 4),
+  JSON.stringify(firstRide),
 );
 
 // ------------------------------------- a drawing in progress is kept

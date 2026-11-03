@@ -23,10 +23,14 @@ export const MAP_COLOURS = {
   'Map/HotspotsCard/Terminal/border-primary': '#024a70', // sky/900
   'Map/LocatorIndicatorOverlay/surface': '#8b7aff', // parabrand/500, at 15%
   'Map/LocatorIndicatorOverlay/border': '#4900be', // parabrand/800, at 75%
-  // Provisional: not named in Figma yet. A contributor's trail, as /contribute/ draws it live.
-  'Map/Trail/papunta': '#1447e6', // blue/700, the blue of brand-surface
+  // Provisional: not named in Figma yet. papunta and pabalik colour the studio's Contributors map;
+  // lakad and sakay are /contribute/'s own trail as it is drawn live.
+  'Map/Trail/papunta': '#1447e6', // blue/700
   'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface
+  'Map/Trail/lakad': '#1447e6', // blue/700, the contributor page's walked line: the tint's Lakad
+  'Map/Trail/sakay': '#008236', // green/700, its ridden line: the tint's Sakay
   'Map/Trail/mark': '#8200db', // purple/700, apart from both ways
+  'Map/Trail/flag': '#9f0712', // red/800, Card/red/surface: the contributor page's flagged stop
   'Map/Rail/LightRailWayOne/surface': '#1d7739', // light-rail-way-one/600
   'Map/Rail/LightRailWayOne/surface-pale': '#b7f5ca', // light-rail-way-one/200
   'Map/Rail/LightRailWayOne/border-primary': '#12612a', // light-rail-way-one/700

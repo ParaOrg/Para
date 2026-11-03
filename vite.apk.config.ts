@@ -10,7 +10,7 @@ import { defineConfig, type Plugin } from 'vite';
  * of the public map's data. Capacitor serves dist-apk/ from its root, so the page moves from
  * dist-apk/contribute/index.html to dist-apk/index.html. The mode is `apk`, which reads .env.apk
  * (public values only) and never .env.production, and turns on the Capacitor import in
- * features/contribute/native-app.ts.
+ * features/contribute/native-bridge/native-app.ts.
  */
 function pageAtTheRoot(): Plugin {
   return {

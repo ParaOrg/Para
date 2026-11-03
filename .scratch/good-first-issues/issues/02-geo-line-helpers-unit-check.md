@@ -1,6 +1,6 @@
 # 02: Unit checks for `metresAlong`, `simplifyLine` and `overviewOf`
 
-Status: ready-for-human
+Status: resolved (#523)
 Type: task
 Size: small
 Blocked by: none
