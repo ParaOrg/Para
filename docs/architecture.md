@@ -136,6 +136,7 @@ flowchart TD
   features_contribute_account --> shared_hooks
   features_contribute_account --> shared_ui
   features_contribute_account --> shared_utils
+  features_contribute_api --> features_contribute_common
   features_contribute_api --> features_contribute_storage
   features_contribute_api --> shared_types
   features_contribute_app_update --> design_system_primitives
@@ -144,6 +145,7 @@ flowchart TD
   features_contribute_common --> design_system_primitives
   features_contribute_common --> features_contribute_native_bridge
   features_contribute_common --> shared_ui
+  features_contribute_common --> shared_utils
   features_contribute_consent --> design_system_primitives
   features_contribute_consent --> features_contribute_api
   features_contribute_consent --> features_contribute_common
@@ -323,9 +325,9 @@ flowchart TD
 | `design-system/primitives` | — |
 | `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/motion`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/navigation`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/tutorial`, `features/contribute/uploads`, `features/routes/map`, `shared/ui`, `shared/utils` |
 | `features/contribute/account` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/motion`, `features/contribute/navigation`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/uploads`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/contribute/api` | `features/contribute/storage`, `shared/types` |
+| `features/contribute/api` | `features/contribute/common`, `features/contribute/storage`, `shared/types` |
 | `features/contribute/app-update` | `design-system/primitives`, `features/contribute/api`, `features/contribute/native-bridge` |
-| `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/ui` |
+| `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/ui`, `shared/utils` |
 | `features/contribute/consent` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/storage` |
 | `features/contribute/history` | `design-system/foundation`, `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/motion`, `features/contribute/navigation`, `features/contribute/recorder`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/uploads`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/map` | `design-system/foundation`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/utils` |
@@ -370,7 +372,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `PageErrorScreen`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `applySlowmoIfAsked`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
+`ContributePage`, `PageErrorScreen`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `applySlowloadIfAsked`, `applySlowmoIfAsked`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
 
 ### `features/locator`
 

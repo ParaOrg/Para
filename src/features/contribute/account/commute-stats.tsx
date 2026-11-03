@@ -12,6 +12,8 @@ import {
 } from './commute-figures';
 import { VehicleGrid, type VehicleRides } from './vehicle-grid';
 import type { Figure } from '../common/format';
+import { Skeleton } from '../common/skeleton';
+import { useIsSlowLoad } from '../common/use-is-slow-load';
 
 /** The numbers the section shows, from the contributor's stats. */
 export interface CommuteNumbers {
@@ -56,24 +58,7 @@ function StatsBody({ state }: CommuteStatsProps) {
   if (state.kind === 'failed') {
     return <p className="text-sm/5 text-content-quaternary">{state.message}</p>;
   }
-  if (state.kind === 'loading') {
-    return (
-      <div aria-busy="true" className="flex flex-col gap-4">
-        <p className="sr-only">Loading your statistics</p>
-        <div className="flex gap-4">
-          <div className="flex flex-1 flex-col gap-4">
-            <PlaceholderCard />
-            <PlaceholderCard />
-          </div>
-          <div aria-hidden className="flex-1 rounded-3xl bg-surface shadow-large">
-            <span className="mx-auto mt-4 block h-6 w-10 rounded-full bg-surface-tertiary" />
-          </div>
-        </div>
-        <PlaceholderCard />
-        <div aria-hidden className="h-42 rounded-3xl bg-surface shadow-large" />
-      </div>
-    );
-  }
+  if (state.kind === 'loading') return <StatsSkeleton />;
   const { numbers } = state;
   const fare = totalFareFigure(numbers.farePhpTotal, numbers.fareRecordings);
   return (
@@ -145,15 +130,60 @@ function StatFigure({ value, name, className }: StatFigureProps) {
   );
 }
 
-function PlaceholderCard() {
+/** The figures' tiles while the stats load, in their sizes, shimmering once the wait is long enough to see. */
+function StatsSkeleton() {
+  const isShown = useIsSlowLoad(true);
   return (
-    <div
-      aria-hidden
-      className="flex flex-col items-center gap-2 rounded-3xl bg-surface p-4 shadow-large"
-    >
-      <span className="h-6 w-16 rounded-full bg-surface-tertiary" />
-      <span className="h-4 w-20 rounded-full bg-surface-tertiary" />
+    <div aria-busy="true" className="flex flex-col gap-4">
+      <p className="sr-only">Loading your statistics</p>
+      <div aria-hidden className={cn('flex flex-col gap-4', !isShown && 'invisible')}>
+        <div className="flex gap-4">
+          <div className="flex flex-1 flex-col gap-4">
+            <TileSkeleton isShown={isShown} />
+            <TileSkeleton isShown={isShown} />
+          </div>
+          <div className="flex flex-1 flex-col items-center rounded-3xl bg-surface pt-4 shadow-large">
+            <FigureSkeleton isShown={isShown} />
+          </div>
+        </div>
+        <TileSkeleton isShown={isShown} />
+        {/* The rides by vehicle (vehicle-grid.tsx): two rows of three, as tall as its own. */}
+        <div className="grid grid-cols-3 gap-y-8 rounded-3xl bg-surface px-2 py-4 shadow-large">
+          {VEHICLE_CELLS.map((key) => (
+            <FigureSkeleton key={key} isShown={isShown} />
+          ))}
+        </div>
+      </div>
     </div>
+  );
+}
+
+const VEHICLE_CELLS = ['jeep', 'e-jeep', 'uv-express', 'bus', 'train', 'ferry'];
+
+interface ShownProps {
+  isShown: boolean;
+}
+
+/** A tile as StatCard draws it: its figure over its name. */
+function TileSkeleton({ isShown }: ShownProps) {
+  return (
+    <div className="rounded-3xl bg-surface p-4 shadow-large">
+      <FigureSkeleton isShown={isShown} />
+    </div>
+  );
+}
+
+/** A figure over its name, each in its line's height (StatFigure). */
+function FigureSkeleton({ isShown }: ShownProps) {
+  return (
+    <span className="flex flex-col items-center gap-0.5">
+      <span className="flex h-8 items-center">
+        <Skeleton isShown={isShown} className="h-6 w-16 rounded-full" />
+      </span>
+      <span className="flex h-5 items-center">
+        <Skeleton isShown={isShown} className="h-4 w-20 rounded-full" />
+      </span>
+    </span>
   );
 }
 

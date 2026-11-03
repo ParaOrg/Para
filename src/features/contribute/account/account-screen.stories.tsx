@@ -61,7 +61,7 @@ type Story = StoryObj<typeof meta>;
 /** Figma's Account (4496:10455). */
 export const Default: Story = {};
 
-/** The name and the numbers still coming. */
+/** The name and the numbers still coming: their shapes shimmer after the first moments. */
 export const Loading: Story = { args: { name: null, stats: { kind: 'loading' } } };
 
 /** The project has no stats to give yet: the section is left out. */
