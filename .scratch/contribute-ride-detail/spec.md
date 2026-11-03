@@ -23,7 +23,7 @@ The owner's answers (2026-11-03):
 
 - The ride's screen is at `#ride/<id>`, so a reload stays on it and Back returns to History. It sits inside History: no toolbar, and History's list is kept as it was under it.
 - It draws over the map, which stays live: the sheet covers its foot, the back button and the map's own buttons stand on it.
-- A ride whose id is not in History (deleted, or the link is stale) shows a short line and Back, never an empty sheet.
+- A ride whose id is not in History (deleted, or the link is stale) goes straight back to History, with no message; while a reloaded ride is still being found, Back stands alone over the map (the owner, 2026-11-03).
 
 ### What the sheet shows
 

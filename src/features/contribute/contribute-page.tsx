@@ -182,7 +182,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     hasAccount,
     isPermissionsPending,
     isHistoryOpen: history.isOpen,
-    isRideOpen: ride.rideId !== null,
+    isRideDetailOpen: ride.rideId !== null,
     isProfileOpen: profile.isOpen,
     isAccountSettingsOpen: settings.isOpen,
     isChangePasswordOpen: changePassword.isOpen,
@@ -203,7 +203,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
   // rest. Signed out, they go.
   // A ride's screen is History's too: it finds the ride among History's.
-  const isHistoryKept = useLatch(layout.isHistoryShown || layout.isRideShown, !canSend);
+  const isHistoryKept = useLatch(layout.isHistoryShown || layout.isRideDetailShown, !canSend);
   const isProfileKept = useLatch(layout.isProfileShown, !canSend);
   // The recording card folded away, by the recording it was folded on: each recording opens with
   // its card out, and the contributor's choice holds through its switches, pauses and the form.
@@ -297,7 +297,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           onMapNote={notices.handleMapNote}
           areCreditsShown={!layout.hasCreditsButton}
           isCovered={layout.isMapCovered}
-          isDocked={layout.isRideShown}
+          isDocked={layout.isRideDetailShown}
           pictureFor={phase === 'form' ? (recording.current?.id ?? null) : null}
           onPicture={keepTrailPicture}
           mark={
@@ -408,7 +408,9 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Activity>
           )}
           {isHistoryKept && (
-            <Activity mode={layout.isHistoryShown || layout.isRideShown ? 'visible' : 'hidden'}>
+            <Activity
+              mode={layout.isHistoryShown || layout.isRideDetailShown ? 'visible' : 'hidden'}
+            >
               <ErrorBoundary
                 key={screenTries}
                 fallback={
@@ -424,11 +426,11 @@ export function ContributePage({ locator }: ContributePageProps) {
                   <HistoryView
                     recordings={recording.saved}
                     uploads={uploads}
-                    rideId={layout.isRideShown ? ride.rideId : null}
+                    rideId={layout.isRideDetailShown ? ride.rideId : null}
                     onOpenRecord={openRecordFromHistory}
                     onOpenRide={ride.open}
                     onCloseRide={() => ride.closeTo(SCREENS.history.hash)}
-                    onRideGone={() => ride.replaceWith(SCREENS.history.hash)}
+                    onRideGone={() => ride.closeTo(SCREENS.history.hash)}
                     onRemoveFromPhone={recording.deleteSaved}
                   />
                 </Suspense>

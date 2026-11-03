@@ -11,7 +11,7 @@ import { ArrowRightIcon } from '../common/history-icons';
 import { SCREENS } from '../navigation/screen-routes';
 import type { Recording } from '../storage/recording-schema';
 
-interface RideScreenProps {
+interface RideDetailScreenProps {
   /** The ride, or null while History is still finding it (a reload on its address). */
   recording: Recording | null;
   /** Back, Escape, or the sheet flicked down past its fold: History again. */
@@ -24,13 +24,12 @@ interface RideScreenProps {
  * went, at its Low height. The page's one map draws behind it (contribute-page.tsx). While the
  * ride is still being found, the back button stands alone.
  */
-export function RideScreen({ recording, onBack }: RideScreenProps) {
+export function RideDetailScreen({ recording, onBack }: RideDetailScreenProps) {
   // Folded, as the frame draws it: the name and where it went, the map above.
   const [snap, setSnap] = useState<Snap>('low');
 
   return (
     <section
-      aria-label={recording ? `Your ride: ${rideTitleOf(recording)}` : 'Your ride'}
       {...{ [SCREEN_HASH_ATTR]: SCREENS.ride.hash }}
       className="pointer-events-none absolute inset-0 z-20 font-sn-pro text-content-primary"
     >

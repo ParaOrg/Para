@@ -1,7 +1,7 @@
-import { Activity, useEffect } from 'react';
+import { Activity, useEffect, useRef } from 'react';
 
 import { HistoryScreen } from './history-screen';
-import { RideScreen } from './ride-screen';
+import { RideDetailScreen } from './ride-detail-screen';
 import { useHistoryItems } from './use-history-items';
 import { useTrailPicturesQuery } from './use-trail-pictures-query';
 import type { Recording } from '../storage/recording-schema';
@@ -53,6 +53,16 @@ export function HistoryView({
     if (isRideGone) onRideGone();
   }, [isRideGone, onRideGone]);
 
+  // Back from a ride hands focus to the card that opened it, after History's own heading took it
+  // as History showed again (a parent's effects run after its children's).
+  const lastRideIdRef = useRef(rideId);
+  useEffect(() => {
+    const closed = lastRideIdRef.current;
+    lastRideIdRef.current = rideId;
+    if (rideId !== null || closed === null) return;
+    document.querySelector<HTMLElement>(`[data-ride-card="${closed}"]`)?.focus();
+  }, [rideId]);
+
   return (
     <>
       <Activity mode={rideId === null ? 'visible' : 'hidden'}>
@@ -63,7 +73,7 @@ export function HistoryView({
           {...actions}
         />
       </Activity>
-      {rideId !== null && !isRideGone && <RideScreen recording={ride} onBack={onCloseRide} />}
+      {rideId !== null && !isRideGone && <RideDetailScreen recording={ride} onBack={onCloseRide} />}
     </>
   );
 }

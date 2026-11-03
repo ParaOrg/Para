@@ -13,7 +13,7 @@ const READY = {
   hasAccount: true,
   isPermissionsPending: false,
   isHistoryOpen: false,
-  isRideOpen: false,
+  isRideDetailOpen: false,
   isProfileOpen: false,
   isAccountSettingsOpen: false,
   isChangePasswordOpen: false,
@@ -192,8 +192,8 @@ test('the Save form covers the map', () => {
 });
 
 test('#ride/<id> on Ready shows the ride over the live map, with no toolbar', () => {
-  const layout = layoutOf({ isRideOpen: true });
-  assert.equal(layout.isRideShown, true);
+  const layout = layoutOf({ isRideDetailOpen: true });
+  assert.equal(layout.isRideDetailShown, true);
   assert.equal(layout.isHistoryShown, false);
   assert.equal(layout.isStartShown, false);
   assert.equal(layout.isReadyClear, false);
@@ -204,6 +204,9 @@ test('#ride/<id> on Ready shows the ride over the live map, with no toolbar', ()
 });
 
 test('#ride/<id> shows nothing while signed out or recording', () => {
-  assert.equal(layoutOf({ isRideOpen: true, accountGate: 'needs-account' }).isRideShown, false);
-  assert.equal(layoutOf({ isRideOpen: true, phase: 'recording' }).isRideShown, false);
+  assert.equal(
+    layoutOf({ isRideDetailOpen: true, accountGate: 'needs-account' }).isRideDetailShown,
+    false,
+  );
+  assert.equal(layoutOf({ isRideDetailOpen: true, phase: 'recording' }).isRideDetailShown, false);
 });

@@ -101,6 +101,7 @@ export function HistoryCard({
                   buttons stand above it. */}
               <button
                 type="button"
+                data-ride-card={recording.id}
                 onClick={onOpen}
                 className="line-clamp-2 w-full text-left break-words after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-brand-surface"
               >
@@ -121,7 +122,9 @@ export function HistoryCard({
           </div>
           <div className="flex flex-col gap-2">
             <CardMeta recording={recording} facts={facts} />
-            <div className="relative z-10">
+            {/* Only the row's buttons stand above the card's press area: a tap on its words
+                opens the ride, as anywhere else on the card. */}
+            <div className="pointer-events-none relative z-10 [&_button]:pointer-events-auto">
               <CardStatusRow
                 status={cardStatusOf(status, actions.canDeleteFromPara, isOnline)}
                 actions={actions}

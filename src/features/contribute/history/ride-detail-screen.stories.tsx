@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { RideScreen } from './ride-screen';
+import { RideDetailScreen } from './ride-detail-screen';
 import type { Recording } from '../storage/recording-schema';
 
 const T0 = Date.UTC(2026, 0, 25, 0, 0, 0);
@@ -21,8 +21,8 @@ const recording: Recording = {
 };
 
 const meta = {
-  title: 'Features/Contribute/RideScreen',
-  component: RideScreen,
+  title: 'Features/Contribute/RideDetailScreen',
+  component: RideDetailScreen,
   // The screen stands over the page's map: a phone-sized box marked `@container` and
   // `data-dock-host`, as the contributor page is, the map's grey in its place.
   decorators: [
@@ -37,7 +37,7 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: { recording, onBack: fn() },
-} satisfies Meta<typeof RideScreen>;
+} satisfies Meta<typeof RideDetailScreen>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
