@@ -1,4 +1,5 @@
-import { isDrawn, isLoop, type Direction } from '../model/routes';
+import { listedDepartures, type Listing } from '../model/departures';
+import { isDrawn, type Direction } from '../model/routes';
 
 /*
  * What the saved directions show and light, worked out from what the sheet
@@ -7,7 +8,9 @@ import { isDrawn, isLoop, type Direction } from '../model/routes';
 
 /**
  * What is shown: what a hotspot's card shows, while one is open — else the
- * routes under the tap, the way round the list is showing them.
+ * routes the list holds, every direction it shows: the way round it is
+ * showing them, and with `every-line`, a route with none drawn that way by
+ * its other (chooserDepartures).
  *
  * The card first: a place opened from a trip's end keeps the list the trip
  * came from behind both, for ‹ (openPlace, keepList), and the hidden list
@@ -18,12 +21,15 @@ import { isDrawn, isLoop, type Direction } from '../model/routes';
 export function showingOf<T extends Direction>(
   candidates: readonly T[],
   back: boolean,
+  listing: Listing,
   directions: readonly T[],
   cardShows: readonly string[] | null,
 ): T[] {
   if (cardShows) return directions.filter((v) => cardShows.includes(v.id) && isDrawn(v));
-  // A loop has one direction and no way back: it shows whichever way round the list is.
-  return candidates.filter((v) => (v.reversed === back || isLoop(v)) && isDrawn(v));
+  const listed = new Set(
+    listedDepartures(candidates, back, listing).flatMap((p) => p.directions.map((d) => d.v.id)),
+  );
+  return candidates.filter((v) => listed.has(v.id));
 }
 
 /**

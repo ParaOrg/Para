@@ -3,7 +3,7 @@ import { useEffect, type RefObject } from 'react';
 
 import { ROUTES_HIT_LAYER, bindHover, resolveTap, tapTargets } from './tap';
 import type { Highlight } from './use-saved-routes';
-import { directionToOpen } from '../model/departures';
+import { directionToOpen, type Listing } from '../model/departures';
 import { isLoop, type Direction } from '../model/routes';
 
 /*
@@ -15,9 +15,9 @@ const HIT = ROUTES_HIT_LAYER;
 /**
  * Binds the map's click once, and the pointer over a line where a pointer
  * can hover, from when one can (bindHover). The handler reads today's
- * directions, what is shown and whether the editor is drawing through
- * `read`, and answers through the hook's setters (`set`), which never
- * change.
+ * directions, what is shown, the way round the list shows it and whether the
+ * editor is drawing through `read`, and answers through the hook's setters
+ * (`set`), which never change.
  */
 export function useRouteTaps<T extends Direction>(
   map: MapLibreMap | null,
@@ -25,21 +25,24 @@ export function useRouteTaps<T extends Direction>(
     drawing: RefObject<boolean>;
     byId: RefObject<Map<string, T>>;
     shown: RefObject<readonly string[]>;
+    back: RefObject<boolean>;
   },
   set: {
     highlight: (h: Highlight | null) => void;
     selectedId: (id: string | null) => void;
     candidates: (c: T[]) => void;
     back: (b: boolean) => void;
+    listing: (l: Listing) => void;
   },
 ) {
   // Refs and setters: the same each render, so the click is bound once per map.
-  const { drawing, byId, shown } = read;
+  const { drawing, byId, shown, back } = read;
   const {
     highlight: setHighlight,
     selectedId: setSelectedId,
     candidates: setCandidates,
     back: setBack,
+    listing: setListing,
   } = set;
   useEffect(() => {
     if (!map || !map.getLayer(HIT)) return;
@@ -76,6 +79,8 @@ export function useRouteTaps<T extends Direction>(
         const keys = new Set(out.routeKeys);
         setSelectedId(null);
         setCandidates(all.filter((v) => keys.has(v.routeId)));
+        // Every line under the finger is listed, whichever way round it runs.
+        setListing('every-line');
         // The way round under the finger, as for one route: outbound where an
         // outbound line was hit, the way back where only ways back were — so
         // a tap on the light-blue way back switches to it — and, where a line
@@ -84,8 +89,12 @@ export function useRouteTaps<T extends Direction>(
         const hit = out.routeIds
           .map((id) => byId.current.get(id))
           .filter((v): v is T => !!v && !isLoop(v));
+        // The list shows a route with nothing drawn its way round by its other
+        // direction (chooserDepartures), so the lines shown that were hit can
+        // go both ways round: then the list's own way round holds.
         if (hit.length > 0) {
-          const shownHit = hit.find((v) => shown.current.includes(v.id));
+          const shownHits = hit.filter((v) => shown.current.includes(v.id));
+          const shownHit = shownHits.find((v) => v.reversed === back.current) ?? shownHits[0];
           setBack(shownHit ? shownHit.reversed : hit.every((v) => v.reversed));
         }
       } else {
@@ -110,5 +119,16 @@ export function useRouteTaps<T extends Direction>(
       map.off('click', onMapClick);
       unhover();
     };
-  }, [map, drawing, byId, shown, setHighlight, setSelectedId, setCandidates, setBack]);
+  }, [
+    map,
+    drawing,
+    byId,
+    shown,
+    back,
+    setHighlight,
+    setSelectedId,
+    setCandidates,
+    setBack,
+    setListing,
+  ]);
 }
