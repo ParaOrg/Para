@@ -27,6 +27,8 @@ export type ContributeLocatorSlot = (
   onNote: (note: MapNote | null) => void,
   /** Where the rider's dot is, as it moves; null without a fix. The paused frost clears there. */
   onWhere: (where: MapWhere | null) => void,
+  /** A sheet is on the map (a ride's): the buttons stand on it, following it as it moves. */
+  isDocked: boolean,
 ) => ReactNode;
 
 interface ContributeMapProps {
@@ -44,6 +46,8 @@ interface ContributeMapProps {
   areCreditsShown: boolean;
   /** A screen covers the whole map: the map's own failure panel stays under it. */
   isCovered: boolean;
+  /** A sheet is on the map (a ride's): the locator's buttons stand on it. */
+  isDocked: boolean;
   /** The recording whose whole trail to take a picture of, for History's card; null for none. */
   pictureFor: string | null;
   /** The picture taken, a data URL; not called when none could be (no trail, or no tiles). */
@@ -64,6 +68,7 @@ export function ContributeMap({
   onMapNote,
   areCreditsShown,
   isCovered,
+  isDocked,
   pictureFor,
   onPicture,
 }: ContributeMapProps) {
@@ -136,7 +141,7 @@ export function ContributeMap({
       />
       {/* Over the map's canvas, under the locator's buttons (drawn after it) and every screen. */}
       {PausedFrost && <PausedFrost map={map} where={where} isFrosted={isFrosted} />}
-      {map && locator?.(map, isMapLoaded, isRecording, mark, onMapNote, setWhere)}
+      {map && locator?.(map, isMapLoaded, isRecording, mark, onMapNote, setWhere, isDocked)}
     </>
   );
 }

@@ -11,6 +11,7 @@ import {
   deleteFromPhoneQuestion,
 } from './delete-questions';
 import type { RideFacts } from './ride-facts';
+import { rideTitleOf } from './ride-title';
 import { ConfirmDelete } from '../common/confirm-delete';
 import { fullDateTimeText } from '../common/format';
 import { ArrowRightIcon } from '../common/history-icons';
@@ -28,6 +29,8 @@ interface HistoryCardProps {
   picture: string | null;
   /** Whether the phone has a connection: queued reads "Waiting for signal" without one. */
   isOnline: boolean;
+  /** A tap on the card: the ride's own screen. */
+  onOpen: () => void;
   onUpload: () => void;
   onDeleteFromPara: () => void;
   onRemoveFromPhone: () => void;
@@ -35,8 +38,8 @@ interface HistoryCardProps {
 
 /**
  * Figma's HistoryCard (4518:24588): the trail's picture, where the ride began and ended, the
- * vehicle, day, time and distance, and the upload's one line. ⋮ holds what else can be done, each
- * delete asked first under the card. Tapping the card itself does nothing.
+ * vehicle, day, time and distance, and the upload's one line. A tap on the card opens the ride's
+ * screen; ⋮ holds what else can be done, each delete asked first under the card.
  */
 export function HistoryCard({
   recording,
@@ -45,6 +48,7 @@ export function HistoryCard({
   facts,
   picture,
   isOnline,
+  onOpen,
   onUpload,
   onDeleteFromPara,
   onRemoveFromPhone,
@@ -54,7 +58,7 @@ export function HistoryCard({
   const moreRef = useRef<HTMLButtonElement>(null);
   const shouldReturnFocus = useRef(false);
   const titleId = useId();
-  const title = recording.startPointName || recording.description || 'Recording';
+  const title = rideTitleOf(recording);
   const fullName = `the recording of ${fullDateTimeText(recording.startedAt)}, ${title}`;
 
   // The question took the menu's place, so Keep it hands focus back to the ⋮ that led to it.
@@ -87,13 +91,21 @@ export function HistoryCard({
     <li className="-mx-4 -mt-3 -mb-4 flex flex-col gap-2 px-4 pt-3 pb-4 [contain-intrinsic-size:auto_9.25rem] [content-visibility:auto] has-[[aria-expanded=true]]:[content-visibility:visible]">
       <article
         aria-labelledby={titleId}
-        className="flex rounded-2xl bg-surface font-sn-pro text-content-primary shadow-sm"
+        className="relative flex rounded-2xl bg-surface font-sn-pro text-content-primary shadow-sm"
       >
         <CardPicture picture={picture} trail={facts?.trail ?? null} />
         <div className="flex min-w-0 flex-1 flex-col gap-3 p-3">
           <div className="flex flex-col">
-            <h2 id={titleId} className="line-clamp-2 text-base/6 font-extrabold break-words">
-              {title}
+            <h2 id={titleId} className="text-base/6 font-extrabold">
+              {/* The whole card is its press area (the ::after over it); the status row's own
+                  buttons stand above it. */}
+              <button
+                type="button"
+                onClick={onOpen}
+                className="line-clamp-2 w-full text-left break-words after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-brand-surface"
+              >
+                {title}
+              </button>
             </h2>
             {recording.endPointName && (
               <p className="flex items-center gap-1 text-sm/5">
@@ -109,15 +121,17 @@ export function HistoryCard({
           </div>
           <div className="flex flex-col gap-2">
             <CardMeta recording={recording} facts={facts} />
-            <CardStatusRow
-              status={cardStatusOf(status, actions.canDeleteFromPara, isOnline)}
-              actions={actions}
-              fullName={fullName}
-              isAsking={asking !== null}
-              moreRef={moreRef}
-              onUpload={onUpload}
-              onAsk={setAsking}
-            />
+            <div className="relative z-10">
+              <CardStatusRow
+                status={cardStatusOf(status, actions.canDeleteFromPara, isOnline)}
+                actions={actions}
+                fullName={fullName}
+                isAsking={asking !== null}
+                moreRef={moreRef}
+                onUpload={onUpload}
+                onAsk={setAsking}
+              />
+            </div>
           </div>
         </div>
       </article>

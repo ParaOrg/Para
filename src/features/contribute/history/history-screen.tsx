@@ -31,6 +31,8 @@ interface HistoryScreenProps {
   pictures: ReadonlyMap<string, string>;
   /** Record a route, with nothing recorded yet: back to Start. */
   onOpenRecord: () => void;
+  /** A card tapped: its ride's screen. */
+  onOpenRide: (recording: Recording) => void;
   onRemoveFromPhone: (recording: Recording) => void;
 }
 
@@ -43,6 +45,7 @@ export function HistoryScreen({
   items,
   pictures,
   onOpenRecord,
+  onOpenRide,
   onRemoveFromPhone,
 }: HistoryScreenProps) {
   const headingRef = useFocusHeading();
@@ -108,6 +111,7 @@ export function HistoryScreen({
                   facts={factsOf(recording)}
                   picture={pictures.get(recording.id) ?? null}
                   isOnline={isOnline}
+                  onOpen={() => onOpenRide(recording)}
                   onUpload={() => uploads.upload(recording)}
                   onDeleteFromPara={() => void uploads.removeUploaded(recording)}
                   onRemoveFromPhone={() => onRemoveFromPhone(recording)}

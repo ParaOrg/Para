@@ -87,6 +87,7 @@ const meta = {
     items: itemsOf(rides, allOf(UPLOADED)),
     pictures: new Map(),
     onOpenRecord: fn(),
+    onOpenRide: fn(),
     onRemoveFromPhone: fn(),
   },
   decorators: [
