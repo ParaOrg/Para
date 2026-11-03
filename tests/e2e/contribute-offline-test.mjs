@@ -130,13 +130,20 @@ try {
   const errors = [];
   // Errors from Cloudflare's own Turnstile frame are not the page's: its script throws now and then
   // under this suite's fake clock (also on staging), and the page cannot catch an error in a frame it embeds.
+  const TURNSTILE_HOST = 'challenges.cloudflare.com';
+  /** Whether a stack frame's script was served by Turnstile's host, read from its URL's hostname. */
+  const isTurnstileFrame = (line) => {
+    const url = /https?:\/\/[^\s)]+/.exec(line)?.[0];
+    if (!url || !URL.canParse(url)) return false;
+    const { hostname } = new URL(url);
+    return hostname === TURNSTILE_HOST || hostname.endsWith(`.${TURNSTILE_HOST}`);
+  };
   const watch = (p) =>
     p.on('pageerror', (e) => {
       const frames = String(e.stack)
         .split('\n')
         .filter((line) => line.trim().startsWith('at '));
-      const isCloudflareOnly =
-        frames.length > 0 && frames.every((line) => line.includes('challenges.cloudflare.com'));
+      const isCloudflareOnly = frames.length > 0 && frames.every(isTurnstileFrame);
       if (!isCloudflareOnly) errors.push(String(e));
     });
 
