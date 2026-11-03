@@ -106,6 +106,15 @@ export const Uploaded: Story = {
   },
 };
 
+/** An editor drew a route from this ride: the card says which, so the contributor sees it used. */
+export const UsedOnTheMap: Story = {
+  args: { usedFor: ['SM Fairview → Cubao'] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('On the map: SM Fairview → Cubao')).toBeInTheDocument();
+  },
+};
+
 /** A true failure: the whole line is the retry button (4518:24587). */
 export const TapRetry: Story = {
   args: {

@@ -7,6 +7,7 @@ import { rideFactsOf, storedFactsOf, uploadFactsOf, type RideFacts } from './rid
 import { accountKeys } from '../api/account-keys';
 import { UploadError } from '../api/upload-problem';
 import { useAccountUploadsQuery } from '../api/use-account-uploads-query';
+import { useMyUsesQuery } from '../api/use-my-uses-query';
 import { useRemoveAccountUploadMutation } from '../api/use-remove-account-upload-mutation';
 import { fixOfRow } from '../recorder/recording-fixes';
 import type { Recording } from '../storage/recording-schema';
@@ -28,6 +29,8 @@ export interface HistoryItems {
   isOnPhone: (recording: Recording) => boolean;
   /** Its distance and trail: read from its fixes on this phone, or what the database keeps of an upload from another; null until read. */
   factsOf: (recording: Recording) => RideFacts | null;
+  /** What an editor made of it on the map, by name: route directions and hintuans; empty for nothing yet. */
+  usedOf: (recording: Recording) => readonly string[];
   load: HistoryLoad;
 }
 
@@ -46,6 +49,8 @@ const loadMessageOf = (error: unknown): string =>
   error instanceof UploadError && error.problem === 'offline'
     ? "No signal — can't load your uploads"
     : "Can't load your uploads right now";
+
+const NONE: readonly string[] = [];
 
 const removeBriefOf = (error: unknown): string =>
   error instanceof UploadError && error.problem === 'offline'
@@ -84,6 +89,7 @@ export function useHistoryItems(
   const queryClient = useQueryClient();
   const query = useAccountUploadsQuery();
   const removal = useRemoveAccountUploadMutation();
+  const uses = useMyUsesQuery().data;
   const needsFixes = saved.filter(
     (recording) =>
       recording.distanceM === undefined || (pictures !== undefined && !pictures.has(recording.id)),
@@ -152,6 +158,7 @@ export function useHistoryItems(
       const upload = uploadById.get(recording.id);
       return upload ? uploadFactsOf(upload) : null;
     },
+    usedOf: (recording) => uses?.get(recording.id) ?? NONE,
     load: {
       state: loadStateOf(query),
       message: query.isError ? loadMessageOf(query.error) : null,

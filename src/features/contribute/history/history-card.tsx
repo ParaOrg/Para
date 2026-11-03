@@ -24,6 +24,8 @@ interface HistoryCardProps {
   actions: CardActions;
   /** Its distance and trail; null until read, and for an upload the database told nothing of. */
   facts: RideFacts | null;
+  /** What an editor made of it on the map, by name; empty until one uses it. */
+  usedFor?: readonly string[];
   /** The picture of its whole trail on the map, taken as its form opened; null for none. */
   picture: string | null;
   /** Whether the phone has a connection: queued reads "Waiting for signal" without one. */
@@ -43,6 +45,7 @@ export function HistoryCard({
   status,
   actions,
   facts,
+  usedFor = [],
   picture,
   isOnline,
   onUpload,
@@ -109,6 +112,11 @@ export function HistoryCard({
           </div>
           <div className="flex flex-col gap-2">
             <CardMeta recording={recording} facts={facts} />
+            {usedFor.length > 0 && (
+              <p className="line-clamp-2 text-xs/4 break-words text-content-success">
+                On the map: {usedFor.join(', ')}
+              </p>
+            )}
             <CardStatusRow
               status={cardStatusOf(status, actions.canDeleteFromPara, isOnline)}
               actions={actions}
