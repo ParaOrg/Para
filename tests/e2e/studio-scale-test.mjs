@@ -399,8 +399,16 @@ check(
   `${linkPages.length} request(s); gaps ${gaps.map((g) => `${g}`).join(' ')} ms`,
 );
 
-// A click on a line at zoom 14: how long until its route is lit.
-const v = variants.find((x) => x.shape && x.shape.coordinates.length > 40) ?? variants[0];
+// A click on a line at zoom 14: how long until its route is lit. The line is
+// the first drawn jeepney line in the index: the budgets below are set for a
+// jeepney line, and the first line of all may be anything (a 78 km
+// point-to-point bus line's drawing alone is 0.3 MB).
+const jeepneyIds = new Set(
+  m.variants.filter((x) => x.route?.mode === 'jeepney').map((x) => `${x.id}-0`),
+);
+const isLong = (x) => x.shape && x.shape.coordinates.length > 40;
+const v =
+  variants.find((x) => jeepneyIds.has(x.id) && isLong(x)) ?? variants.find(isLong) ?? variants[0];
 const mid = v.shape.coordinates[Math.floor(v.shape.coordinates.length / 2)];
 await page.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 14 }), [mid]);
 await page.waitForFunction(() => window.__map.loaded(), null, { timeout: 30000 });

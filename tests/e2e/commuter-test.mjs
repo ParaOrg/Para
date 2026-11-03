@@ -128,10 +128,13 @@ const findVertexOutsideHotspots = (routes, polys) => {
   return null;
 };
 // A route vertex outside every box where another route runs within 3 m: a
-// road two routes share, where one tap lists them both.
-const findSharedVertexOutsideHotspots = (routes, polys) => {
-  for (const r of routes) {
-    const others = routes.filter((o) => o.routeId !== r.routeId);
+// road two routes share, where one tap lists them both. Neither is a loop
+// (`loopRouteIds`): a loop's card marks no ends until its trip is opened, and
+// 4a checks the ends a picked card's routes are ringed in.
+const findSharedVertexOutsideHotspots = (routes, polys, loopRouteIds = new Set()) => {
+  const twoEnded = routes.filter((r) => !loopRouteIds.has(r.routeId));
+  for (const r of twoEnded) {
+    const others = twoEnded.filter((o) => o.routeId !== r.routeId);
     for (const c of r.coords) {
       if (polys.some((p) => pointInPolygon(c, p.ring))) continue;
       if (others.some((o) => metresToLine(c, o.coords) < 3)) return c;
@@ -876,7 +879,15 @@ if (PART !== 1) {
 // list, the routes as RouteCards and nothing else (the owner, 2026-09-29:
 // the Chooser that asked here before is the list now), and a route's row
 // opens its card. SKIP if no such vertex exists.
-const hit = findSharedVertexOutsideHotspots(snapshot.routes, snapshot.polys);
+const loopRouteIds = new Set(
+  await page.evaluate(() =>
+    import('/src/features/routes/published/fetch-index.ts')
+      .then((f) => f.fetchIndex())
+      .then((index) => index.directions.filter((v) => v.route?.isLoop).map((v) => v.routeId))
+      .catch(() => []),
+  ),
+);
+const hit = findSharedVertexOutsideHotspots(snapshot.routes, snapshot.polys, loopRouteIds);
 if (PART !== 1) {
   // Part 1's, with 4b.
 } else if (!hit) {
