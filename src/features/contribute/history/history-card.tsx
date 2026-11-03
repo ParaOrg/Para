@@ -124,7 +124,7 @@ export function HistoryCard({
             <CardMeta recording={recording} facts={facts} />
             {/* Only the row's buttons stand above the card's press area: a tap on its words
                 opens the ride, as anywhere else on the card. */}
-            <div className="pointer-events-none relative z-10 [&_button]:pointer-events-auto">
+            <div className="pointer-events-none relative z-10 [&_button]:pointer-events-auto [&_ul]:pointer-events-auto">
               <CardStatusRow
                 status={cardStatusOf(status, actions.canDeleteFromPara, isOnline)}
                 actions={actions}

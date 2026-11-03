@@ -46,8 +46,11 @@ export function orderOf(hash: string): number | undefined {
   return Object.values(SCREENS).find((screen) => screen.hash === own)?.order;
 }
 
-/** A recording's id, as every recording is made (crypto.randomUUID). */
-const rideIdSchema = z.uuid();
+/**
+ * A recording's id: any 128-bit hex id, as the database's uuid column takes it. Not z.uuid()'s
+ * RFC check, which an upload made by another app could fail, and its card would then open nothing.
+ */
+const rideIdSchema = z.guid();
 
 /** The URL hash of the ride screen for the recording `rideId`. */
 export const rideHashOf = (rideId: string): string => `${SCREENS.ride.hash}/${rideId}`;

@@ -22,6 +22,11 @@ test('a hash that is not a ride, or names no recording, opens none', () => {
   assert.equal(rideIdOf('#ride'), null);
   assert.equal(rideIdOf('#ride/'), null);
   assert.equal(rideIdOf('#ride/not-an-id'), null);
+  // Any 128-bit hex id opens, as the database's uuid column takes one: not only RFC 4122's.
+  assert.equal(
+    rideIdOf('#ride/00000000-0000-0000-0000-000000000001'),
+    '00000000-0000-0000-0000-000000000001',
+  );
   assert.equal(rideIdOf(`#rides/${ID}`), null);
 });
 
