@@ -118,7 +118,7 @@ jobs:
       PG_MAJOR: '17'
       PUBLIC_KEY_FILE: .github/backup/owner-public-key.asc
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Check the public key and the secrets
         env:
@@ -225,11 +225,11 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           sparse-checkout: scripts/watch
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Open or update the alert issue
