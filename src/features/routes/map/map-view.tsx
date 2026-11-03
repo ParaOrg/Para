@@ -189,11 +189,16 @@ interface Props {
 
 /**
  * Metro Manila with its jeepney hinterland — Bulacan's south, Rizal's
- * slopes, Cavite and Laguna's north — and room to spare: 0.9° by 0.95°, so
- * the opening view at zoom 11 fits inside it on a screen 2,000 px wide.
+ * slopes, Cavite — and Laguna down to Los Baños: 0.9° by 1.45°, so the
+ * opening view at zoom 11 fits inside it on a screen 2,000 px wide. The south
+ * edge is the nearest that lets a phone at its opening view (zoom 9.2) glide
+ * UPLB, the UP Diliman – UPLB bus's end at 14.17°, into the map above a card
+ * at Middle: the map may not show past this edge, and the card covers the
+ * screen's lower half. The monthly tiles build covers this box
+ * (scripts/tiles/area.mjs).
  */
 export const METRO_MANILA: [[number, number], [number, number]] = [
-  [120.6, 14.1],
+  [120.6, 13.6],
   [121.5, 15.05],
 ];
 
