@@ -26,6 +26,8 @@ export const SELECTED_LAYER = 'draw-point-selected';
 export const AREA_FILL_LAYER = 'draw-area-fill';
 
 export const ROUTE_COLOUR = MAP_PAINT['Paint/draw-line'];
+/** The line's width in pixels: its chevrons (draw-arrows.ts) are cut to it. */
+export const DRAW_LINE_WIDTH = 4;
 
 /** Whether a source the drawing looked up is a GeoJSON one it can set data on. */
 export const isGeoJSON = (source: Source | undefined): source is GeoJSONSource =>
@@ -93,7 +95,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       source: LINE_SRC,
       filter: ['==', ['get', 'snap'], 'snapped'],
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': ROUTE_COLOUR, 'line-width': 4 },
+      paint: { 'line-color': ROUTE_COLOUR, 'line-width': DRAW_LINE_WIDTH },
     });
     map.addLayer({
       id: LAYERS.drawFreehand,
@@ -103,7 +105,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
         'line-color': ROUTE_COLOUR,
-        'line-width': 4,
+        'line-width': DRAW_LINE_WIDTH,
         'line-dasharray': [2, 1.5],
       },
     });

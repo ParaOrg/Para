@@ -1,5 +1,5 @@
 import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
 import { haversine, metresPerPixel, type LngLat } from '@/shared/utils/geo';
@@ -343,136 +343,159 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
     addDirectionArrows(map);
   }, [map, hitReady]);
 
-  const frame = useRef(0);
   useEffect(() => {
     const src = map?.getSource<GeoJSONSource>(SRC);
     if (!map || !src) return;
-    const drawn = lines.filter((l) => l.length > 1);
-    if (drawn.length === 0) {
-      src.setData({ type: 'FeatureCollection', features: [] });
-      return;
+    return flowChevrons(map, src, lines, litAcross);
+  }, [map, lines, hitReady]);
+}
+
+/** The lit line's width at `zoom`, less INSET_PX a side: what a public chevron is cut to. */
+const litAcross = (zoom: number) => Math.max(0, litWidthAt(zoom) - 2 * INSET_PX);
+
+/** How far the chevrons have flowed, in ms of flowing: held by a caller whose flow must survive a change of lines. */
+export interface FlowClock {
+  flowed: number;
+}
+
+/**
+ * Chevrons flowing along `lines` in `src`, for as long as they are there,
+ * each cut to `across(zoom)` pixels: the flow, the rest when steps come too
+ * slow, and the drawing again as the map moves (useDirectionArrows, and the
+ * studio's drawing). A `clock` passed in carries the flow on from where it
+ * was; without one, it starts afresh. Returns the clean-up.
+ */
+export function flowChevrons(
+  map: MapLibreMap,
+  src: GeoJSONSource,
+  lines: readonly (readonly LngLat[])[],
+  across: (zoom: number) => number,
+  clock: FlowClock = { flowed: 0 },
+): () => void {
+  const drawn = lines.filter((l) => l.length > 1);
+  if (drawn.length === 0) {
+    src.setData({ type: 'FeatureCollection', features: [] });
+    return () => undefined;
+  }
+  const measured: Measured[] = [];
+  for (const l of drawn) {
+    const m = measure(l);
+    markCovered(m, measured);
+    measured.push(m);
+  }
+  const still = prefersReducedMotion();
+  let frame = 0;
+  let last = performance.now();
+  let moving = false;
+  /** How long the steps have come late, one after another. */
+  let slow = 0;
+  let warmUntil = last + WARM_MS;
+  /** The zoom they rested at, or null while they flow; and the zoom the map last came to rest at. */
+  let restedAt: number | null = null;
+  let zoomAt = map.getZoom();
+  /** What they were last drawn for while the map moves, a screen wider each way (held), or null: the view itself. And at what zoom. */
+  let held: View | null = null;
+  let drawnAt = zoomAt;
+  /** Drawn for the view on screen, or for it `wide`ned a screen each way. */
+  const draw = (wide = false) => {
+    const now = viewOf(map);
+    const view = wide ? widened(now) : now;
+    const zoom = view.zoom;
+    held = wide ? view : null;
+    drawnAt = zoom;
+    const width = across(zoom);
+    const features: Chevron[] = [];
+    for (const m of measured) {
+      const mpp = metresPerPixel(m.lat, zoom);
+      const spacing = spacingPx(zoom) * mpp;
+      const offset = still ? spacing / 2 : ((clock.flowed / 1000) * SPEED_PX_PER_S * mpp) % spacing;
+      chevronsAt(m, offset, spacing, width, view, features);
     }
-    const measured: Measured[] = [];
-    for (const l of drawn) {
-      const m = measure(l);
-      markCovered(m, measured);
-      measured.push(m);
-    }
-    const still = prefersReducedMotion();
-    // How far they have flowed, in ms of flowing: not while the map moves.
-    let flowed = 0;
-    let last = performance.now();
-    let moving = false;
-    /** How long the steps have come late, one after another. */
-    let slow = 0;
-    let warmUntil = last + WARM_MS;
-    /** The zoom they rested at, or null while they flow; and the zoom the map last came to rest at. */
-    let restedAt: number | null = null;
-    let zoomAt = map.getZoom();
-    /** What they were last drawn for while the map moves, a screen wider each way (held), or null: the view itself. And at what zoom. */
-    let held: View | null = null;
-    let drawnAt = zoomAt;
-    /** Drawn for the view on screen, or for it `wide`ned a screen each way. */
-    const draw = (wide = false) => {
-      const now = viewOf(map);
-      const view = wide ? widened(now) : now;
-      const zoom = view.zoom;
-      held = wide ? view : null;
-      drawnAt = zoom;
-      const across = Math.max(0, litWidthAt(zoom) - 2 * INSET_PX);
-      const features: Chevron[] = [];
-      for (const m of measured) {
-        const mpp = metresPerPixel(m.lat, zoom);
-        const spacing = spacingPx(zoom) * mpp;
-        const offset = still ? spacing / 2 : ((flowed / 1000) * SPEED_PX_PER_S * mpp) % spacing;
-        chevronsAt(m, offset, spacing, across, view, features);
-      }
-      src.setData({ type: 'FeatureCollection', features });
-    };
-    // Moved, the map draws them again where they are: a zoom changes their
-    // size and spacing, a pan brings new line on screen. A pan at one zoom
-    // finds them drawn a screen wider each way as it began, and draws them
-    // again only once it leaves that (onAMove); they do not flow while the
-    // map moves, so what is on screen is the same.
-    const onMove = () => {
-      const how = onAMove(held, drawnAt, viewOf(map));
-      if (how !== 'hold') draw(how === 'wide');
-    };
-    // A camera call made while another moves the map stops that one, which
-    // says 'moveend', and says 'movestart' at once for its own (MapLibre's
-    // easeTo: _stop, then _prepareEase): the compass camera eases at every
-    // turn of the phone of 3° or more (use-compass.ts), thirty times for a
-    // quarter turn made in a second. So the draw back to the view waits for
-    // the next frame, and is dropped if a move starts first; and a move that
-    // starts inside what is held, at its zoom, draws nothing. Back to back,
-    // such eases cost no draw, where each would cost two, one of them nine
-    // screens' worth. What is on screen is the same: what is held has every
-    // chevron a draw for the view makes.
-    let settle = 0;
-    const onStart = () => {
-      moving = true;
-      cancelAnimationFrame(settle);
-      settle = 0;
-      if (onAMove(held, drawnAt, viewOf(map)) !== 'hold') draw(true);
-    };
-    const onEnd = () => {
-      // Back to the view itself once it stops, as the steps draw them: a
-      // frame on, and only if nothing has drawn them since.
-      if (held)
-        settle = requestAnimationFrame(() => {
-          settle = 0;
-          if (held) draw();
-        });
-      moving = false;
-      last = performance.now();
-      const zoom = map.getZoom();
-      if (restedAt === null) {
-        // Zoomed: the new view's first frames are warm-up, its count afresh.
-        if (Math.abs(zoom - zoomAt) >= 1) {
-          slow = 0;
-          warmUntil = last + WARM_MS;
-        }
-      } else if (Math.abs(zoom - restedAt) >= 1) {
-        // Rested for being slow, and another view now: they try again.
-        restedAt = null;
+    src.setData({ type: 'FeatureCollection', features });
+  };
+  // Moved, the map draws them again where they are: a zoom changes their
+  // size and spacing, a pan brings new line on screen. A pan at one zoom
+  // finds them drawn a screen wider each way as it began, and draws them
+  // again only once it leaves that (onAMove); they do not flow while the
+  // map moves, so what is on screen is the same.
+  const onMove = () => {
+    const how = onAMove(held, drawnAt, viewOf(map));
+    if (how !== 'hold') draw(how === 'wide');
+  };
+  // A camera call made while another moves the map stops that one, which
+  // says 'moveend', and says 'movestart' at once for its own (MapLibre's
+  // easeTo: _stop, then _prepareEase): the compass camera eases at every
+  // turn of the phone of 3° or more (use-compass.ts), thirty times for a
+  // quarter turn made in a second. So the draw back to the view waits for
+  // the next frame, and is dropped if a move starts first; and a move that
+  // starts inside what is held, at its zoom, draws nothing. Back to back,
+  // such eases cost no draw, where each would cost two, one of them nine
+  // screens' worth. What is on screen is the same: what is held has every
+  // chevron a draw for the view makes.
+  let settle = 0;
+  const onStart = () => {
+    moving = true;
+    cancelAnimationFrame(settle);
+    settle = 0;
+    if (onAMove(held, drawnAt, viewOf(map)) !== 'hold') draw(true);
+  };
+  const onEnd = () => {
+    // Back to the view itself once it stops, as the steps draw them: a
+    // frame on, and only if nothing has drawn them since.
+    if (held)
+      settle = requestAnimationFrame(() => {
+        settle = 0;
+        if (held) draw();
+      });
+    moving = false;
+    last = performance.now();
+    const zoom = map.getZoom();
+    if (restedAt === null) {
+      // Zoomed: the new view's first frames are warm-up, its count afresh.
+      if (Math.abs(zoom - zoomAt) >= 1) {
         slow = 0;
         warmUntil = last + WARM_MS;
-        frame.current = requestAnimationFrame(tick);
       }
-      zoomAt = zoom;
-    };
-    const tick = (now: number) => {
-      if (moving || now - last < STEP_MS) {
-        frame.current = requestAnimationFrame(tick);
-        return;
-      }
-      const gap = now - last;
-      if (gap > AWAY_MS) warmUntil = now + WARM_MS;
-      slow = now < warmUntil ? 0 : gap > SLOW_STEP_MS ? slow + gap : 0;
-      // Too slow to flow: they rest where they are.
-      if (slow >= SLOW_FOR_MS) {
-        restedAt = map.getZoom();
-        return;
-      }
-      frame.current = requestAnimationFrame(tick);
-      // Back from a hidden page, or a long frame: one step on, not a leap.
-      flowed += Math.min(gap, 2 * STEP_MS);
-      last = now;
-      draw();
-    };
+    } else if (Math.abs(zoom - restedAt) >= 1) {
+      // Rested for being slow, and another view now: they try again.
+      restedAt = null;
+      slow = 0;
+      warmUntil = last + WARM_MS;
+      frame = requestAnimationFrame(tick);
+    }
+    zoomAt = zoom;
+  };
+  const tick = (now: number) => {
+    if (moving || now - last < STEP_MS) {
+      frame = requestAnimationFrame(tick);
+      return;
+    }
+    const gap = now - last;
+    if (gap > AWAY_MS) warmUntil = now + WARM_MS;
+    slow = now < warmUntil ? 0 : gap > SLOW_STEP_MS ? slow + gap : 0;
+    // Too slow to flow: they rest where they are.
+    if (slow >= SLOW_FOR_MS) {
+      restedAt = map.getZoom();
+      return;
+    }
+    frame = requestAnimationFrame(tick);
+    // Back from a hidden page, or a long frame: one step on, not a leap.
+    clock.flowed += Math.min(gap, 2 * STEP_MS);
+    last = now;
     draw();
-    map.on('move', onMove);
-    map.on('movestart', onStart);
-    map.on('moveend', onEnd);
-    // Still, when the browser is asked to keep still; and a hidden page
-    // runs no frames at all.
-    if (!still) frame.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frame.current);
-      cancelAnimationFrame(settle);
-      map.off('move', onMove);
-      map.off('movestart', onStart);
-      map.off('moveend', onEnd);
-    };
-  }, [map, lines, hitReady]);
+  };
+  draw();
+  map.on('move', onMove);
+  map.on('movestart', onStart);
+  map.on('moveend', onEnd);
+  // Still, when the browser is asked to keep still; and a hidden page
+  // runs no frames at all.
+  if (!still) frame = requestAnimationFrame(tick);
+  return () => {
+    cancelAnimationFrame(frame);
+    cancelAnimationFrame(settle);
+    map.off('move', onMove);
+    map.off('movestart', onStart);
+    map.off('moveend', onEnd);
+  };
 }
