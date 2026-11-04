@@ -101,7 +101,10 @@ export function cutAt(
     if (head.length < 2) return { controlPoints: points, segments: kept };
     return {
       controlPoints: [...points, spot.point],
-      segments: [...kept, { ...s, coordinates: head, streets: trimStreets(s.streets, 0, cutM) }],
+      segments: [
+        ...kept,
+        { ...cut(s), coordinates: head, streets: trimStreets(s.streets, 0, cutM) },
+      ],
     };
   }
 
@@ -112,8 +115,21 @@ export function cutAt(
   if (tail.length < 2) return { controlPoints: points, segments: kept };
   return {
     controlPoints: [spot.point, ...points],
-    segments: [{ ...s, coordinates: tail, streets: trimStreets(s.streets, cutM, total) }, ...kept],
+    segments: [
+      { ...cut(s), coordinates: tail, streets: trimStreets(s.streets, cutM, total) },
+      ...kept,
+    ],
   };
+}
+
+/**
+ * A segment cut part way: a curve's handles belong to the whole of it, so
+ * the part kept is the line as it lies, without them.
+ */
+function cut(s: Segment): Segment {
+  const rest = { ...s };
+  delete rest.handles;
+  return rest;
 }
 
 /**
@@ -131,6 +147,7 @@ export function reverseDrawing(
       ...s,
       coordinates: [...s.coordinates].reverse(),
       streets: s.streets ? [...s.streets].reverse() : undefined,
+      ...(s.handles ? { handles: [s.handles[1], s.handles[0]] } : {}),
     })),
   };
 }

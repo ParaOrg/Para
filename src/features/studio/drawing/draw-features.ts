@@ -1,6 +1,7 @@
 import { directionLine } from '@/features/routes/model/routes';
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
+import { isOnPoint } from './curves';
 import { CLOSING } from './draw-layers';
 import type { AreaTarget, Picking } from './drawing-types';
 import type { UTurn } from './uturns';
@@ -129,7 +130,7 @@ type HandleFeature = Feature<LineString | Point, Record<string, never>>;
 
 /** A handle: the arm from its point, and the dot at its end. */
 function handleOf(point: LngLat, handle: LngLat): HandleFeature[] {
-  if (point[0] === handle[0] && point[1] === handle[1]) return [];
+  if (isOnPoint(handle, point)) return [];
   return [
     {
       type: 'Feature',

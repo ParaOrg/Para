@@ -12,6 +12,7 @@ import {
   bend,
   carryHandles,
   curveSegment,
+  keptFirstHandle,
   mergeAcross,
   mirror,
   outHandle,
@@ -119,4 +120,11 @@ test("the handle a point sends its next stretch: the drag's, else its smooth mir
   const smoothIn = curveSegment(A, B, A, [121.009, 14.699]);
   assert.ok(near(outHandle(B, smoothIn, null), [121.011, 14.701]));
   assert.equal(outHandle(B, curveSegment(A, B, UP, B), null), null, 'a corner sends none');
+});
+
+test('a lone first point keeps the handle it drew with when its stretch goes', () => {
+  const out = [121.001, 14.702];
+  assert.deepEqual(keptFirstHandle(curveSegment(A, B, out, B), A), out);
+  assert.equal(keptFirstHandle(curveSegment(A, B, A, [121.009, 14.702]), A), null, 'a corner');
+  assert.equal(keptFirstHandle({ snap: 'snapped', coordinates: [A, B] }, A), null);
 });

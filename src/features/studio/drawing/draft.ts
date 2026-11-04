@@ -117,7 +117,15 @@ export function restoredState(d: Draft): {
   return {
     area,
     controlPoints: d.controlPoints,
-    segments: saved.map((s) => (s?.pending ? { snap: s.snap, coordinates: s.coordinates } : s)),
+    segments: saved.map((s) =>
+      s?.pending
+        ? {
+            snap: s.snap,
+            coordinates: s.coordinates,
+            ...(s.handles ? { handles: s.handles } : {}),
+          }
+        : s,
+    ),
     target: d.target ?? { routeId: null, directionId: null },
     borrow: d.borrow ?? null,
     join: typeof d.join === 'number' ? (d.controlPoints[d.join] ?? null) : null,

@@ -10,7 +10,7 @@ import {
   type SnapMode,
 } from '@/shared/utils/geo';
 
-import { curveSegment, mirror, outHandle } from './curves';
+import { curveSegment, keptFirstHandle, mirror, outHandle } from './curves';
 import { readDraft, restoredState, useDraftSaving } from './draft';
 import { useDrawArrows } from './draw-arrows';
 import { useDrawLayers } from './draw-layers';
@@ -145,6 +145,10 @@ export function useDrawing(
   const writePoints = useCallback(
     (pts: LngLat[]) => {
       if (pts.length !== cpRef.current.length) select(null);
+      // Back to its first point alone: a smooth one keeps the handle it drew with.
+      const first = pts.length === 1 && pts[0] === cpRef.current[0] ? pts[0] : null;
+      const kept = first && keptFirstHandle(segRef.current[0], first);
+      if (first && kept) pendingOutRef.current = { point: first, out: kept };
       cpRef.current = pts;
       setControlPoints(pts);
     },

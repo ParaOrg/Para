@@ -1,4 +1,4 @@
-import type { LngLat, Segment } from '@/shared/utils/geo';
+import { roundLngLat, type LngLat, type Segment } from '@/shared/utils/geo';
 
 /*
  * Curves in Draw, the way a pen tool makes them: a Draw stretch may bend as a
@@ -12,7 +12,22 @@ import type { LngLat, Segment } from '@/shared/utils/geo';
 /** Points a curve is flattened into, its two ends among them: smooth at street zoom, light in a save. */
 export const CURVE_STEPS = 24;
 
-const same = (a: LngLat, b: LngLat) => a[0] === b[0] && a[1] === b[1];
+/** A handle this near its point (about 0.1 m, a save's rounding) is on it: no handle. */
+const ON_POINT_DEG = 1e-6;
+const same = (a: LngLat, b: LngLat) =>
+  Math.abs(a[0] - b[0]) <= ON_POINT_DEG && Math.abs(a[1] - b[1]) <= ON_POINT_DEG;
+
+/** Whether a handle sits on its point: a corner's, which has none to show. */
+export const isOnPoint = same;
+
+/**
+ * The handle a lone first point keeps when the stretch it began goes (an
+ * undo, a delete): that stretch's first handle, when it was off the point.
+ */
+export function keptFirstHandle(first: Segment | undefined, point: LngLat): LngLat | null {
+  const c1 = first?.snap === 'freehand' ? first.handles?.[0] : undefined;
+  return c1 && !same(c1, point) ? c1 : null;
+}
 
 /** `handle` turned half round `about`: a smooth point's other handle. */
 export function mirror(handle: LngLat, about: LngLat): LngLat {
@@ -40,7 +55,8 @@ export function curveSegment(from: LngLat, to: LngLat, c1: LngLat, c2: LngLat): 
   for (let i = 1; i < CURVE_STEPS - 1; i++)
     coordinates.push(cubicAt(from, c1, c2, to, i / (CURVE_STEPS - 1)));
   coordinates.push(to);
-  return { snap: 'freehand', coordinates, handles: [c1, c2] };
+  // Kept as a save keeps a coordinate: six decimals.
+  return { snap: 'freehand', coordinates, handles: [roundLngLat(c1), roundLngLat(c2)] };
 }
 
 /**
