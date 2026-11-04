@@ -347,25 +347,42 @@ let chosenPin;
   const page = await context.newPage();
   await fakeContributions(page);
   await page.addInitScript(() => localStorage.setItem('para.contribute.consent', 'yes'));
+  // When the map loaded, by the page's own clock: the moment MapView hands the suites the map,
+  // in its 'load' handler. The hotspots' chunk is asked for on the first 'idle' after that.
+  await page.addInitScript(() => {
+    let map;
+    Object.defineProperty(window, '__map', {
+      configurable: true,
+      get: () => map,
+      set: (value) => {
+        window.__mapLoadedAt ??= Date.now();
+        map = value;
+      },
+    });
+  });
   const scripts = [];
   page.on('request', (r) => {
-    if (r.resourceType() === 'script') scripts.push(r.url());
+    if (r.resourceType() === 'script') scripts.push(r);
   });
   const errors = await open(page, '/contribute/');
-  const opening = scripts.length;
   const { count } = await lonePin(page);
   check(
     'contributor page: the hotspots come in after the map, a pin point for every box',
     count === index.stops.filter((s) => s.area).length,
     `${count}`,
   );
+  // Timed by the browser's own clocks rather than by where the suite happens to look: whether
+  // the chunk was asked for before open() saw the map loaded is a race the page may win, and
+  // proves nothing about the page.
+  const mapLoadedAt = await page.evaluate(() => window.__mapLoadedAt);
+  // The chunk's own file, not use-published-hotspots.ts, which the page imports at its opening.
+  const chunks = scripts.filter((r) => /\/published-hotspots[.-]/.test(new URL(r.url()).pathname));
+  for (const r of chunks) await r.response();
+  const askedAt = chunks.map((r) => r.timing().startTime);
   check(
     "  in a chunk of their own, fetched after the page's opening",
-    scripts.slice(opening).some((u) => /published-hotspots/.test(u)),
-    scripts
-      .slice(opening)
-      .map((u) => u.split('/').pop())
-      .join(', '),
+    chunks.length > 0 && askedAt.every((t) => t >= mapLoadedAt),
+    `the map loaded at ${mapLoadedAt}; the chunk asked for at ${askedAt.join(', ') || 'never'}`,
   );
   await checkOrder(page, 'contributor page');
   const { id } = chosenPin.properties;
