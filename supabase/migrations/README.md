@@ -1,6 +1,10 @@
 # Migrations
 
-The files here are numbered (`0001` to `0018`, then `0021`; `0019` and `0020` are planned, `.scratch/contribute/database.md` §10). The project's ledger,
+The files here are numbered `0001` to `0018`, then `0021` and `0022`; from
+`20261018112757_reviewed_draft_approval.sql` on they carry the ledger's own timestamp in their
+names. `0019` and `0020` were never written under those numbers: they became the timestamped
+`contributions` and `backup_reader` files (`.scratch/contribute/database.md` §10 has the original
+order). The project's ledger,
 `supabase_migrations.schema_migrations`, is timestamped. This table says which
 ledger version each file is. Nothing here is applied by a session: the owner
 applies each file, one at a time, and regenerates `src/shared/types/database.types.ts`
