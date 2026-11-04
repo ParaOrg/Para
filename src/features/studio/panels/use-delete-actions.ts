@@ -21,11 +21,18 @@ interface DeleteActionsOptions {
   setNotice: (text: string | null) => void;
 }
 
+/** What a delete says when it joined a draft the editor already had of the route. */
+function addedToDraft(v: DirectionRow): string {
+  return `Added to your draft of "${v.route?.name ?? 'this route'}". Review it in Drafts: the map changes once it is approved.`;
+}
+
 /**
  * Delete on a trip's card and on a hotspot's: who may, what is refused and
  * what is said. Each confirms first, then writes, closes the card and reloads;
- * a failure is a notice. With drafts on, a trip's delete is approved at once; if
- * the approval is refused, the removal draft stays in Drafts and the notice says why.
+ * a failure is a notice. With drafts on, a trip's delete is approved at once
+ * when it is the route draft's only change; if the editor already had a draft
+ * of the route, the delete joins it unapproved. If the approval is refused, the
+ * removal draft stays in Drafts and the notice says why.
  */
 export function useDeleteActions({
   signedIn,
@@ -79,12 +86,21 @@ export function useDeleteActions({
     if (!window.confirm(confirmation)) return;
     try {
       if (STUDIO_DRAFTS) {
+        // Read before the delete is stored: once it is, a draft exists either way.
+        const hasDraftAlready = (await draftOf('route', v.routeId)) !== null;
         const stored = await deleteDirectionDraft(v);
         const refusal = draftRefusal(stored);
         if (refusal) throw new Error(refusal);
         saved.select(null);
-        // The confirm above is the review: a delete the editor asked for is approved in the
-        // same press, so it is gone and not parked in Drafts, where Discard would undo it.
+        // The confirm reviewed the delete and nothing else. A draft the editor already
+        // had holds changes nobody has reviewed, and approving it would publish them with
+        // the delete, so the delete joins that draft and waits in Drafts with the rest.
+        if (hasDraftAlready) {
+          setNotice(addedToDraft(v));
+          return;
+        }
+        // The delete is the draft's only change: approved in the same press, so it is gone
+        // and not parked in Drafts, where Discard would undo it.
         const approved =
           stored.draft && (await runReviewCommand({ action: 'approve', draft: stored.draft }));
         if (approved?.code === 'approved') {
