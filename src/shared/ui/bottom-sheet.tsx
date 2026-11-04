@@ -62,6 +62,12 @@ interface Props {
    * (Figma 4560:12422): the map stays in sight above it. Off for every other card.
    */
   fits?: boolean;
+  /**
+   * Off: a pull or a flick down from Low leaves it at Low, and only Escape or the page's own way
+   * back closes it. For a card that is a screen of its own, as a contributor's ride is, where
+   * closing means leaving it. On for every other card: down from Low, it closes.
+   */
+  closesOnPull?: boolean;
   children: ReactNode;
 }
 
@@ -124,6 +130,7 @@ export function BottomSheet({
   floats = 'corner',
   height,
   fits = false,
+  closesOnPull = true,
   children,
 }: Props) {
   const own = useRef<HTMLDivElement>(null);
@@ -230,6 +237,7 @@ export function BottomSheet({
     show,
     docked,
     fitted,
+    closesOnPull,
   });
   const handleLabel = fitted
     ? FITTED_HANDLE_LABEL[snap === 'low' ? 'low' : 'open']

@@ -46,6 +46,8 @@ interface SheetGesturesOptions {
   docked: () => boolean;
   /** Set for a fitted sheet: it moves between Low and open only. Null for Low, Middle and Max. */
   fitted: FittedSheet | null;
+  /** False: a pull or a flick down from Low rests at Low, and only Escape (or the page) closes it. */
+  closesOnPull: boolean;
 }
 
 interface SheetGestures {
@@ -75,10 +77,14 @@ export function useSheetGestures({
   show,
   docked,
   fitted,
+  closesOnPull,
 }: SheetGesturesOptions): SheetGestures {
-  // A fitted sheet has no Middle or Max of its own: what would land there lands open.
-  const landing = (next: Snap | 'close'): Snap | 'close' =>
-    fitted && (next === 'middle' || next === 'max') ? fitted.open : next;
+  // A fitted sheet has no Middle or Max of its own: what would land there lands open. A sheet that
+  // does not close on a pull rests at Low instead.
+  const landing = (next: Snap | 'close'): Snap | 'close' => {
+    if (next === 'close') return closesOnPull ? 'close' : 'low';
+    return fitted && (next === 'middle' || next === 'max') ? fitted.open : next;
+  };
   const settle = (next: Snap | 'close') => {
     setDragging(false);
     const at = landing(next);
