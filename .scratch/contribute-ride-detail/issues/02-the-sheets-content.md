@@ -1,6 +1,6 @@
 # 02: The sheet's content
 
-Status: ready-for-agent
+Status: resolved (#679, #680)
 Type: task
 Blocked by: 01
 

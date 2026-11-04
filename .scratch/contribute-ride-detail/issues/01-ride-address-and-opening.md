@@ -1,6 +1,6 @@
 # 01: The ride's address and opening it
 
-Status: claimed
+Status: resolved (#677, #679)
 Type: task
 Blocked by: —
 

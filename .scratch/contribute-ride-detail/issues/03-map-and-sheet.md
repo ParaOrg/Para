@@ -1,6 +1,6 @@
 # 03: The trail on the map, and the sheet folding
 
-Status: ready-for-agent
+Status: resolved (#680, #681)
 Type: task
 Blocked by: 01
 
