@@ -39,7 +39,6 @@ function uploadWords(status: UploadStatus, isOnline: boolean): string {
     // Not sent by itself: no consent to the current terms yet, or uploads off here.
     case 'held':
     case 'unavailable':
-    case 'removing':
     case 'removed':
       return UPLOAD_WORDS[status.state].toast;
   }

@@ -35,8 +35,6 @@ export function cardStatusOf(status: UploadStatus, isOnline: boolean): CardStatu
     case 'checking':
     case 'uploading':
       return { tone: 'quiet', words: UPLOAD_WORDS[status.state].card };
-    case 'removing':
-      return { tone: 'quiet', words: UPLOAD_WORDS.removing.card };
     case 'failed':
       if (status.willRetry) {
         return {
@@ -50,7 +48,6 @@ export function cardStatusOf(status: UploadStatus, isOnline: boolean): CardStatu
         ? { tone: 'problem', words: status.brief }
         : { tone: 'retry', words: UPLOAD_WORDS.failed.card.retry };
     case 'uploaded':
-      if (status.problem) return { tone: 'problem', words: status.problem };
       return { tone: 'uploaded', words: UPLOAD_WORDS.uploaded.card };
     case 'removed':
       return status.byEditor
@@ -64,7 +61,7 @@ export function cardStatusOf(status: UploadStatus, isOnline: boolean): CardStatu
 
 /** Mid-upload: deleting the phone's copy now would cut the upload short. */
 export const isMidUpload = (status: UploadStatus): boolean =>
-  status.state === 'checking' || status.state === 'uploading' || status.state === 'removing';
+  status.state === 'checking' || status.state === 'uploading';
 
 /** Whether a recording on this phone that is not on Para can be sent: kept back, or taken off Para. */
 const canUploadAgain = (status: UploadStatus): boolean =>

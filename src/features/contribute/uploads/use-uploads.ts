@@ -18,10 +18,6 @@ export interface Uploads {
   waitingCount: number;
   /** Sends one now: a retry after a failure, or again after its upload was removed. */
   upload: (recording: Recording) => void;
-  /** Removes the uploaded copy from Para. The phone's copy stays. Settles whether or not it worked. */
-  removeUploaded: (recording: Recording) => Promise<void>;
-  /** Whether this phone's identity made the upload, so it may remove it. */
-  canRemove: (recording: Recording) => boolean;
   /** The bot check before this phone's first upload, while one is needed. */
   check: UploadCheck | null;
 }
@@ -40,7 +36,6 @@ export interface UploadCheck {
  * tried again then too. The phone's copy is never deleted here.
  */
 export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploads {
-  const [identity, setIdentity] = useState<string | null>(null);
   const isAvailable = canUpload();
   const [isCheckNeeded, setIsCheckNeeded] = useState(false);
   const [checkRound, setCheckRound] = useState(0);
@@ -69,7 +64,6 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
       if (isRefused) setCheckRound((round) => round + 1);
       setIsCheckNeeded(true);
     },
-    onIdentity: setIdentity,
   });
   const { statusOf } = sending;
 
@@ -80,7 +74,6 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
     shouldAsk: isAvailable && hasUploads && gate.hasConsent,
     savedRef: sending.savedRef,
     isBusy: sending.isBusy,
-    onIdentity: setIdentity,
     setStatus: sending.setStatus,
   });
 
@@ -88,11 +81,6 @@ export function useUploads(saved: readonly Recording[], gate: UploadGate): Uploa
     statusOf,
     waitingCount: saved.filter((r) => isWaitingToGo(statusOf(r))).length,
     upload: (recording) => void sending.send(recording),
-    removeUploaded: (recording) => sending.remove(recording),
-    canRemove: (recording) => {
-      const status = statusOf(recording);
-      return status.state === 'uploaded' && identity !== null && status.by === identity;
-    },
     check:
       turnstileSiteKey && isCheckNeeded
         ? {

@@ -1753,19 +1753,6 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     (await page.getByRole('listitem').count()) === 1,
     String(await page.getByRole('listitem').count()),
   );
-  const others = [...database.rows.keys()].filter((id) => id !== mine);
-  await page.evaluate(
-    (ids) =>
-      import('/src/features/contribute/api/upload-contribution.ts').then((upload) =>
-        Promise.all(ids.map((id) => upload.removeUpload(id))),
-      ),
-    others,
-  );
-  check(
-    "  and removing someone else's upload does nothing, though the session could delete it",
-    others.length > 0 && others.every((id) => database.rows.has(id)),
-    `${others.length} others`,
-  );
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
 
