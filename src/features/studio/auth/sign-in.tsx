@@ -5,6 +5,7 @@ import { TextField } from '@/design-system/primitives/text-field';
 import { coarse } from '@/features/routes/map/map-view';
 import { Turnstile } from '@/shared/ui/turnstile';
 
+import { authErrorMessage } from './auth-error-message';
 import { useCaptcha } from './use-captcha';
 import { getSupabase, supabaseConfigError } from '../data/supabase';
 
@@ -63,11 +64,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
         options: captcha.takeToken(),
       });
       if (error) {
-        setError(
-          error.message === 'Invalid login credentials'
-            ? 'That email and password do not match an account.'
-            : error.message,
-        );
+        setError(authErrorMessage(error, 'That email and password do not match an account.'));
       }
       // On success an editor's session replaces this panel (useEditorSession).
       // Ready again either way: an account that is not an editor is signed
@@ -82,7 +79,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
       ...captcha.takeToken(),
     });
     if (error) {
-      setError(error.message);
+      setError(authErrorMessage(error, 'That email was not accepted. Check it and try again.'));
       setBusy(false);
       return;
     }

@@ -4,6 +4,7 @@ import { PasswordField } from '@/design-system/primitives/password-field';
 import { coarse } from '@/features/routes/map/map-view';
 import { Turnstile } from '@/shared/ui/turnstile';
 
+import { authErrorMessage } from './auth-error-message';
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_RULE_ERROR,
@@ -62,11 +63,7 @@ export function ChangePassword({ email, onDone }: { email: string; onDone: () =>
       options: captcha.takeToken(),
     });
     if (check.error) {
-      setError(
-        check.error.message === 'Invalid login credentials'
-          ? 'That is not your current password.'
-          : check.error.message,
-      );
+      setError(authErrorMessage(check.error, 'That is not your current password.'));
       setBusy(false);
       return;
     }
