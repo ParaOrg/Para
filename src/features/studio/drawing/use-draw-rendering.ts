@@ -1,7 +1,6 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect } from 'react';
 
-import { HOTSPOT_COLOUR } from '@/features/routes/map/colours';
 import { LAYERS } from '@/features/routes/map/layers';
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
@@ -17,10 +16,7 @@ import {
   AREA_SRC,
   BORROW_SRC,
   LINE_SRC,
-  POINT_LAYER,
   POINT_SRC,
-  ROUTE_COLOUR,
-  SELECTED_LAYER,
   UTURN_SRC,
   isGeoJSON,
 } from './draw-layers';
@@ -39,8 +35,8 @@ interface DrawRenderingState {
 /**
  * The drawing on the map: its segments (routed and freehand), points, a
  * hotspot's fill and closing edge, the U-turns ringed, the line being picked
- * for Extend, the point a finger selected ringed, and the colours of a route
- * or a hotspot's kind. What each source holds is draw-features.ts'.
+ * for Extend, and the point a finger selected ringed. What each source holds
+ * is draw-features.ts'.
  */
 export function useDrawRendering(
   map: MapLibreMap | null,
@@ -66,16 +62,11 @@ export function useDrawRendering(
     src.setData(borrowFeatures(picking));
   }, [map, picking]);
 
-  // Route traces are rose; a hotspot trace takes its kind's colour, and its
-  // straight edges are drawn solid rather than in the freehand dash.
+  // A hotspot trace's straight edges are drawn solid rather than in the
+  // freehand dash. Both kinds are drawn in the route's colour: the kind shows
+  // once the box is saved.
   useEffect(() => {
     if (!map || !map.getLayer(AREA_FILL_LAYER)) return;
-    const colour = area ? HOTSPOT_COLOUR[area.kind] : ROUTE_COLOUR;
-    map.setPaintProperty(LAYERS.drawSnapped, 'line-color', colour);
-    map.setPaintProperty(LAYERS.drawFreehand, 'line-color', colour);
     map.setPaintProperty(LAYERS.drawFreehand, 'line-dasharray', area ? [1, 0] : [2, 1.5]);
-    map.setPaintProperty(POINT_LAYER, 'circle-stroke-color', colour);
-    map.setPaintProperty(SELECTED_LAYER, 'circle-stroke-color', colour);
-    map.setPaintProperty(AREA_FILL_LAYER, 'fill-color', colour);
   }, [map, area]);
 }

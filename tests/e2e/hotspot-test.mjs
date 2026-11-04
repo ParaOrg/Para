@@ -151,8 +151,8 @@ check(
   `${probe.lineFeatures} features, closing=${probe.hasClosing}`,
 );
 check(
-  'hintuan colour is green',
-  probe.fillColor === '#00c951' && probe.lineColor === '#00c951',
+  'a new hotspot is drawn in the brand colour',
+  probe.fillColor === '#4900be' && probe.lineColor === '#4900be',
   `${probe.fillColor}/${probe.lineColor}`,
 );
 check('no router calls made while tracing an area', routerCalls === 0, `${routerCalls}`);
@@ -297,7 +297,7 @@ check(
 );
 check('route: geometry is road-following (>2 coords)', route.coords > 2, `${route.coords} coords`);
 check('route: no polygon fill in route mode', route.polygons === 0);
-check('route: rose colour restored', route.lineColor === '#e11d48', route.lineColor);
+check('route: brand colour', route.lineColor === '#4900be', route.lineColor);
 check(
   'route: freehand toggle + distance readout back',
   route.freehandVisible && route.distanceShown,
