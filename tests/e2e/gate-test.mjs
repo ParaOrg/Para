@@ -83,7 +83,7 @@ check(
     (await page.getByText(/Save this terminal/).count()) === 0,
 );
 await page.getByRole('button', { name: 'Cancel' }).click();
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: 'Discard this hotspot' }).click();
 
 // 3. An auth result arriving at / goes to /studio/ untouched.
 await page.goto(`${BASE}/?type=recovery&probe=1#frag=2`, { waitUntil: 'load' });
