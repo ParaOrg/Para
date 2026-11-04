@@ -57,8 +57,8 @@ export type MarkRow = z.infer<typeof markSchema>;
 /**
  * What became of a saved recording's upload, as this phone last knew it. Absent
  * until the first upload goes through. `by` is the phone's identity at the time:
- * a removal is only possible from that identity. `removed` keeps the phone's
- * copy and stops it being sent again unless the contributor asks.
+ * only that identity can tell whether Para still has it. `removed` keeps the
+ * phone's copy and stops it being sent again unless the contributor asks.
  */
 export const uploadMarkSchema = z.union([
   z.object({ state: z.literal('uploaded'), at: z.number(), by: z.string() }),

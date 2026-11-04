@@ -51,18 +51,6 @@ const CASES = [
     toast: ON_ITS_WAY,
   },
   {
-    name: 'uploaded, its removal failed',
-    status: { state: 'uploaded', at: 1, by: 'p', problem: 'Not removed' },
-    card: ['problem', 'Not removed'],
-    toast: ON_ITS_WAY,
-  },
-  {
-    name: 'removing',
-    status: { state: 'removing' },
-    card: ['quiet', 'Removing…'],
-    toast: KEPT,
-  },
-  {
     name: 'removed',
     status: { state: 'removed' },
     card: ['quiet', 'Only on this phone'],

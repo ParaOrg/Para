@@ -57,8 +57,6 @@ const uploadsOf = (statuses: Record<string, UploadStatus>, fallback: UploadStatu
     statusOf,
     waitingCount: 0,
     upload: fn(),
-    removeUploaded: fn(() => Promise.resolve()),
-    canRemove: (recording) => statusOf(recording).state === 'uploaded',
     check: null,
   };
 };
