@@ -88,7 +88,6 @@ const meta = {
     pictures: new Map(),
     onOpenRecord: fn(),
     onOpenRide: fn(),
-    onRemoveFromPhone: fn(),
   },
   decorators: [
     (Story) => (

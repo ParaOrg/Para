@@ -5,15 +5,22 @@ import { Button } from '@/design-system/primitives/button';
 import raisedHand from './raised-hand.svg';
 import { useQuestionFocus } from './use-question-focus';
 
+/**
+ * How the two answers stand. `primary` and `error`: the act leads, in Logout's brand blue or
+ * Delete account's red, over a secondary safe answer. `plain-error`: the safe answer leads in brand
+ * blue, the act under it in plain red words (Delete this record, 4569:5015).
+ */
+type HandAnswerLook = 'primary' | 'error' | 'plain-error';
+
 interface HandQuestionProps {
   title: string;
   /** One grey line under the question, or null. */
   text: string | null;
   /** One line about an answer that failed, or null: said here, where the person is. */
   error: string | null;
-  /** The answer that goes ahead, and how it looks: Logout's brand blue, Delete's red. */
+  /** The answer that goes ahead, and how it looks (`HandAnswerLook`). */
   confirmLabel: string;
-  confirmVariant: 'primary' | 'error';
+  confirmVariant: HandAnswerLook;
   /** The answer's words while it is under way. */
   busyLabel: string;
   /** The safe answer. */
@@ -27,7 +34,7 @@ interface HandQuestionProps {
 /**
  * The question before an act that ends something, over the frosted page (Logout, 4521:3500;
  * Delete account, 4543:5154): a raised hand, the question and a grey line, then the answer above
- * the safe one. Focus starts on the safe answer and goes round inside; once the answer is under
+ * the safe one, or under it (`plain-error`). Focus starts on the safe answer and goes round inside; once the answer is under
  * way nothing cancels it.
  */
 export function HandQuestion({
@@ -82,15 +89,40 @@ export function HandQuestion({
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-3">
-          <Button
-            variant={confirmVariant}
-            label={isBusy ? busyLabel : confirmLabel}
-            disabled={isBusy}
-            onClick={onConfirm}
-          />
-          <Button variant="secondary" label={cancelLabel} disabled={isBusy} onClick={onCancel} />
-        </div>
+        {confirmVariant === 'plain-error' ? (
+          <div className="flex flex-col gap-3">
+            <Button
+              variant="primary"
+              label={cancelLabel}
+              disabled={isBusy}
+              onClick={onCancel}
+              data-safe-answer
+            />
+            <Button
+              variant="plain"
+              tone="error"
+              label={isBusy ? busyLabel : confirmLabel}
+              disabled={isBusy}
+              onClick={onConfirm}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <Button
+              variant={confirmVariant}
+              label={isBusy ? busyLabel : confirmLabel}
+              disabled={isBusy}
+              onClick={onConfirm}
+            />
+            <Button
+              variant="secondary"
+              label={cancelLabel}
+              disabled={isBusy}
+              onClick={onCancel}
+              data-safe-answer
+            />
+          </div>
+        )}
       </div>
     </section>
   );

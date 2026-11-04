@@ -441,7 +441,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                     onOpenRide={ride.open}
                     onCloseRide={() => ride.closeTo(SCREENS.history.hash)}
                     onRideGone={() => ride.closeTo(SCREENS.history.hash)}
-                    onRemoveFromPhone={recording.deleteSaved}
+                    onDeleteFromPhone={recording.deleteSaved}
                   />
                 </Suspense>
               </ErrorBoundary>

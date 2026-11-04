@@ -75,14 +75,11 @@ const meta = {
   args: {
     recording,
     status: UPLOADED,
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: true, isBusy: false },
     facts: FACTS,
     picture: null,
     isOnline: true,
     onOpen: fn(),
-    onUpload: fn(),
-    onDeleteFromPara: fn(),
-    onRemoveFromPhone: fn(),
+    onRetry: fn(),
   },
   decorators: [
     (Story) => (
@@ -107,14 +104,13 @@ export const Uploaded: Story = {
   },
 };
 
-/** A tap anywhere on the card opens the ride's screen; the ⋮ beside it still opens its menu. */
+/** A tap anywhere on the card opens the ride's screen, where it can be deleted: no ⋮. */
 export const OpensItsRide: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Cubao via Marcos Highway' }));
     await expect(args.onOpen).toHaveBeenCalledTimes(1);
-    await userEvent.click(canvas.getByRole('button', { name: /More/ }));
-    await expect(args.onOpen).toHaveBeenCalledTimes(1);
+    await expect(canvas.queryByRole('button', { name: /More actions/ })).toBeNull();
   },
 };
 
@@ -122,11 +118,11 @@ export const OpensItsRide: Story = {
 export const TapRetry: Story = {
   args: {
     status: REFUSED,
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
   },
   play: async ({ canvasElement, args }) => {
     await userEvent.click(within(canvasElement).getByRole('button', { name: /^Tap retry upload/ }));
-    await expect(args.onUpload).toHaveBeenCalled();
+    await expect(args.onRetry).toHaveBeenCalled();
+    await expect(args.onOpen).not.toHaveBeenCalled();
   },
 };
 
@@ -134,7 +130,6 @@ export const TapRetry: Story = {
 export const WaitingToSend: Story = {
   args: {
     status: { state: 'waiting' },
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
   },
 };
 
@@ -142,30 +137,19 @@ export const WaitingToSend: Story = {
 export const WaitingForSignal: Story = {
   args: {
     status: OFFLINE,
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
   },
 };
 
-/** In flight: no retry, and nothing to remove until it settles. */
+/** In flight: no retry. */
 export const Sending: Story = {
   args: {
     status: { state: 'uploading' },
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: true },
   },
 };
 
-/** Kept back from sending: on this phone alone, with Upload to Para in the menu. */
+/** Kept back from sending: on this phone alone. Its ride's screen offers Tap to upload. */
 export const OnlyOnThisPhone: Story = {
-  args: {
-    status: { state: 'held' },
-    actions: { canUpload: true, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
-    await expect(canvas.getByRole('button', { name: /^Upload to Para/ })).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: /^Delete from Para/ })).toBeNull();
-  },
+  args: { status: { state: 'held' } },
 };
 
 /** Walked the whole way: the foot in place of a vehicle. */
@@ -187,78 +171,10 @@ export const LongNames: Story = {
   },
 };
 
-/** Delete from Para on an upload with no copy here says it will be gone for good. */
-export const AskingBeforeDeletingTheOnlyCopy: Story = {
-  args: {
-    facts: { ...FACTS, trail: null },
-    actions: { canUpload: false, isOnPhone: false, canDeleteFromPara: true, isBusy: false },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
-    await userEvent.click(canvas.getByRole('button', { name: /^Delete from Para/ }));
-    await expect(
-      canvas.getByText(
-        "Delete this recording from Para? There's no copy on this phone, so it will be gone for good.",
-      ),
-    ).toBeInTheDocument();
-  },
-};
-
-/** Delete from Para with the copy kept here says so. */
-export const AskingBeforeDeletingFromPara: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
-    await userEvent.click(canvas.getByRole('button', { name: /^Delete from Para/ }));
-    await expect(
-      canvas.getByText('Delete this recording from Para? The copy on this phone stays.'),
-    ).toBeInTheDocument();
-  },
-};
-
 /** No picture and no trail: an upload from another phone, the plain ground in the picture's place. */
 export const NoPicture: Story = {
   args: {
     facts: { ...FACTS, trail: null },
-    actions: { canUpload: false, isOnPhone: false, canDeleteFromPara: true, isBusy: false },
-  },
-};
-
-/** ⋮ open: only what applies to an uploaded recording kept here, the deletes in red; no Download. */
-export const MenuOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
-    await expect(canvas.queryByRole('button', { name: /^Download recording/ })).toBeNull();
-    await expect(canvas.getByRole('button', { name: /^Delete from Para/ })).toBeInTheDocument();
-    await expect(
-      canvas.getByRole('button', { name: /^Remove from this phone/ }),
-    ).toBeInTheDocument();
-  },
-};
-
-/** Each delete asks first, and Keep it hands focus back to ⋮. */
-export const AskingBeforeRemove: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: /More actions/ }));
-    await userEvent.click(canvas.getByRole('button', { name: /^Remove from this phone/ }));
-    await expect(canvas.getByRole('button', { name: 'Keep it' })).toHaveFocus();
-    await userEvent.click(canvas.getByRole('button', { name: 'Keep it' }));
-    await expect(canvas.getByRole('button', { name: /More actions/ })).toHaveFocus();
-  },
-};
-
-/** A failed removal from Para: it says so in red, and stays uploaded. */
-export const NotRemoved: Story = {
-  args: { status: { ...UPLOADED, problem: 'Not removed. No signal' } },
-};
-
-/** Sent under a sign-in this phone no longer has: it says why ⋮ offers no Delete from Para. */
-export const UploadedFromEarlierSignIn: Story = {
-  args: {
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
   },
 };
 
@@ -271,23 +187,13 @@ export const TooLong: Story = {
       brief: 'Longer than 6 hours',
       willRetry: false,
     },
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
   },
 };
 
-/** Being taken off Para. */
-export const Removing: Story = {
-  args: {
-    status: { state: 'removing' },
-    actions: { canUpload: false, isOnPhone: true, canDeleteFromPara: false, isBusy: true },
-  },
-};
-
-/** An editor deleted it in the studio: kept here, with Upload to Para in the menu. */
+/** An editor deleted it in the studio: kept here. Its ride's screen offers Tap to upload. */
 export const RemovedByAnEditor: Story = {
   args: {
     status: { state: 'removed', byEditor: true },
-    actions: { canUpload: true, isOnPhone: true, canDeleteFromPara: false, isBusy: false },
   },
 };
 
@@ -308,16 +214,6 @@ export const FactsNotReadYet: Story = { args: { facts: null } };
 
 /** No end named on the form: no arrow line. */
 export const NoEndName: Story = { args: { recording: { ...recording, endPointName: '' } } };
-
-/** Nothing to do from here (an upload from another phone, not this account's to delete): no ⋮. */
-export const NoMenu: Story = {
-  args: {
-    actions: { canUpload: false, isOnPhone: false, canDeleteFromPara: false, isBusy: false },
-  },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).queryByRole('button', { name: /More actions/ })).toBeNull();
-  },
-};
 
 /** A tricycle: no icon of its own yet, so none before the day. */
 export const Tricycle: Story = { args: { recording: { ...recording, rideKind: 'Tricycle' } } };

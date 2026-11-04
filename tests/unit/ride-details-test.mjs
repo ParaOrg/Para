@@ -91,9 +91,33 @@ test('an upload from another phone keeps the fare it was sent with', async () =>
     rideM: null,
     farePhp: 30,
   };
-  const [withFare] = mergeHistory([], [upload]);
+  const [withFare] = mergeHistory([], [upload], new Set());
   assert.equal(rowsOf(withFare).Fare, '₱30');
-  const [noFare] = mergeHistory([], [{ ...upload, farePhp: null }]);
+  const [noFare] = mergeHistory([], [{ ...upload, farePhp: null }], new Set());
   assert.equal(noFare.farePhp, undefined);
   assert.equal(rowsOf(noFare).Fare, undefined);
+});
+
+test("a ride deleted from History here is not brought back by the account's uploads", async () => {
+  const { mergeHistory } = await import('../../src/features/contribute/history/history-merge.ts');
+  const upload = (id, startedAt) => ({
+    id,
+    startedAt,
+    stoppedAt: startedAt + 600_000,
+    startPointName: 'Cubao',
+    endPointName: 'Cogeo',
+    description: '',
+    rideKind: 'Jeep',
+    distanceM: 12_700,
+    walkM: null,
+    rideM: null,
+    farePhp: null,
+  });
+  const kept = '22222222-0000-4000-8000-000000000002';
+  const deleted = '33333333-0000-4000-8000-000000000003';
+  const merged = mergeHistory([], [upload(kept, T0), upload(deleted, T0 + 1)], new Set([deleted]));
+  assert.deepEqual(
+    merged.map((ride) => ride.id),
+    [kept],
+  );
 });

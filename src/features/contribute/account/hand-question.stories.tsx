@@ -51,6 +51,25 @@ export const Logout: Story = {
   },
 };
 
+/**
+ * Delete this record's question (4569:5015): the title alone, Keep recording leading in brand
+ * blue and the act under it in plain red words. Focus is on Keep recording all the same.
+ */
+export const KeepFirst: Story = {
+  args: {
+    title: 'You want to remove this recording?',
+    text: null,
+    confirmLabel: 'Delete this record',
+    confirmVariant: 'plain-error',
+    busyLabel: 'Delete this record',
+    cancelLabel: 'Keep recording',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Keep recording' })).toHaveFocus();
+  },
+};
+
 /** The answer on its way: it says so, and neither answer can be pressed. */
 export const Busy: Story = {
   args: { isBusy: true },

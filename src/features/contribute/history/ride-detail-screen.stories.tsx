@@ -33,6 +33,8 @@ const ride: RideDetail = {
   facts: { distanceM: 12_700, isWalkOnly: false, trail: null },
   status: UPLOADED,
   onRetry: fn(),
+  canDelete: true,
+  onDelete: fn(),
 };
 
 const meta = {
@@ -77,17 +79,81 @@ export const Folded: Story = {
   },
 };
 
-/** Opened (4560:12422): as tall as its content, the map above; six rows, Status last, and the Description. */
+/**
+ * Opened (4569:4974): as tall as its content, the map above, Close in Back's place; six rows,
+ * Status last, the Description and Delete this record.
+ */
 export const Open: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     await openSheet(canvasElement);
     const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Delete this record' })).toBeVisible();
     await expect(canvas.getByRole('heading', { name: 'Commute Information' })).toBeVisible();
     await expect(canvas.getByText('4 hr 30 mins and 40 secs')).toBeInTheDocument();
     await expect(canvas.getByText('Jan 25, 2026')).toBeInTheDocument();
     await expect(canvas.getByText('12.7 km')).toBeInTheDocument();
     await expect(canvas.getByRole('heading', { name: 'Description' })).toBeInTheDocument();
     await expect(canvas.getByText('Status')).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await expect(args.onBack).toHaveBeenCalledTimes(1);
+  },
+};
+
+/**
+ * Delete this record asks first (4569:5015), focus on Keep recording, the sheet out of reach
+ * under it. Keep recording hands focus back; Delete this record deletes.
+ */
+export const DeleteAsksFirst: Story = {
+  play: async ({ args, canvasElement }) => {
+    await openSheet(canvasElement);
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete this record' }));
+    const question = canvas.getByRole('alertdialog', {
+      name: 'You want to remove this recording?',
+    });
+    const keep = within(question).getByRole('button', { name: 'Keep recording' });
+    await expect(keep).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    await expect(canvas.queryByRole('alertdialog')).toBeNull();
+    await expect(args.onBack).not.toHaveBeenCalled();
+    await expect(canvas.getByRole('button', { name: 'Delete this record' })).toHaveFocus();
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete this record' }));
+    await userEvent.click(
+      within(canvas.getByRole('alertdialog')).getByRole('button', { name: 'Delete this record' }),
+    );
+    await expect(args.ride?.onDelete).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The question alone, as Figma draws it over the ride (4569:5015). */
+export const DeleteQuestion: Story = {
+  play: async ({ canvasElement }) => {
+    await openSheet(canvasElement);
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: 'Delete this record' }),
+    );
+  },
+};
+
+/** Mid-upload, deleting would cut it short: the button waits. */
+export const DeleteWaitsWhileSending: Story = {
+  args: { ride: { ...ride, status: { tone: 'quiet', words: 'Sending…' }, canDelete: false } },
+  play: async ({ canvasElement }) => {
+    await openSheet(canvasElement);
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'Delete this record' }),
+    ).toBeDisabled();
+  },
+};
+
+/** Kept back, or taken off Para: the line sends it, as a retry's does. */
+export const TapToUpload: Story = {
+  args: { ride: { ...ride, status: { tone: 'retry', words: 'Tap to upload' } } },
+  play: async ({ args, canvasElement }) => {
+    await openSheet(canvasElement);
+    await userEvent.click(within(canvasElement).getByRole('button', { name: /^Tap to upload/ }));
+    await expect(args.ride?.onRetry).toHaveBeenCalledTimes(1);
   },
 };
 
