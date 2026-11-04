@@ -338,6 +338,16 @@ function TokensPage() {
           cls="bg-map-hotspots-card-terminal-surface"
         />
         <Swatch
+          box="bg-map-pin-terminal-surface"
+          token="Map/Pin/Terminal/surface"
+          cls="bg-map-pin-terminal-surface"
+        />
+        <Swatch
+          box="bg-map-pin-hintuan-surface"
+          token="Map/Pin/Hintuan/surface"
+          cls="bg-map-pin-hintuan-surface"
+        />
+        <Swatch
           box="bg-map-locator-indicator-overlay-surface/15 border-[0.6px] border-map-locator-indicator-overlay-border/75"
           token="Map/LocatorIndicatorOverlay (15%, border 75%)"
           cls="bg-map-locator-indicator-overlay-surface"

@@ -1,6 +1,7 @@
 import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
+import { PINS_SRC, hotspotPinsData } from './hotspot-pins';
 import { boxState, type BoxMark } from './hotspots-shown';
 import { useLayerSwitch } from './layer-switch';
 import { applyHidden, layOutOnce } from './layers';
@@ -16,6 +17,7 @@ import {
   hiddenHotspotFilters,
 } from './saved-hotspots-layers';
 import { maskStations } from './station-mask';
+import { useHotspotPins } from './use-hotspot-pins';
 import { ringToPolygon, type Ring } from '../geo/ring';
 import type { Hotspot } from '../model/hotspots';
 
@@ -50,6 +52,7 @@ export function useSavedHotspotsLayers(
     if (!src) return;
     layOutOnce(laidOut, hotspots, (next) => {
       src.setData(hotspotsData(next));
+      map.getSource<GeoJSONSource>(PINS_SRC)?.setData(hotspotPinsData(next));
       // The basemap's stations beside ours, hidden (station-mask.ts).
       maskStations(map, next);
     });
@@ -100,12 +103,16 @@ export function useSavedHotspotsLayers(
 
   // The hotspot being edited is drawn by the editor; hide the saved copy.
   // Set only once there is one, and once more to show it again
-  // (applyHidden): the public map never hides one, and sets no filter.
+  // (applyHidden): the public map never hides one, and sets no filter. The
+  // pins' layer, added once its chunk is here, takes what is hidden then.
   const hiddenNow = useRef<string | null>(null);
   useEffect(() => {
     if (!map || !map.getLayer(FILL)) return;
     applyHidden(hiddenNow, hiddenHotspotId, (hidden) => {
-      for (const [id, filter] of hiddenHotspotFilters(hidden)) map.setFilter(id, filter);
+      for (const [id, filter] of hiddenHotspotFilters(hidden)) {
+        if (map.getLayer(id)) map.setFilter(id, filter);
+      }
     });
   }, [map, hiddenHotspotId]);
+  useHotspotPins(map, hiddenNow);
 }
