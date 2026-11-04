@@ -4,4 +4,6 @@ export const historyKeys = {
   pictures: () => [...historyKeys.all, 'pictures'] as const,
   /** The facts of the recordings whose cards need their fixes read, by their ids. */
   facts: (recordingIds: readonly string[]) => [...historyKeys.all, 'facts', recordingIds] as const,
+  /** The whole trail of one saved ride, for its screen's map. */
+  trail: (recordingId: string) => [...historyKeys.all, 'trail', recordingId] as const,
 };

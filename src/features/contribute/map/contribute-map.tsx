@@ -2,11 +2,14 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 
 import { MapView } from '@/features/routes/map/map-view';
+import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
+import { prefersReducedMotion } from '@/shared/utils/motion';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
 import type { MapWhere } from './map-where';
 import type { PausedFrostProps } from './paused-frost';
+import { RIDE_FRAME_PADDING, trailBounds } from './trail-picture-frame';
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
 import type { MapNote } from '../notices/map-note';
@@ -31,8 +34,16 @@ export type ContributeLocatorSlot = (
   isDocked: boolean,
 ) => ReactNode;
 
+/** A saved ride whose screen shows: its trail is drawn in the recording's place, and framed. */
+export interface ShownRide {
+  id: string;
+  trail: RecordingTrail;
+}
+
 interface ContributeMapProps {
   track: RecordingTrack;
+  /** The ride whose screen shows, with its trail read; null with none, or none read. */
+  ride: ShownRide | null;
   /** Whether a recording is on the screen. */
   isRecording: boolean;
   /** The recording is paused: the map frosts over, its buttons and every screen over it crisp. */
@@ -61,6 +72,7 @@ interface ContributeMapProps {
  */
 export function ContributeMap({
   track,
+  ride,
   isRecording,
   isFrosted,
   locator,
@@ -96,7 +108,28 @@ export function ContributeMap({
   }, [isRecording, PausedFrost]);
 
   usePublishedRoutes(map, isMapLoaded);
-  useRecordingTrail(map, track.trail);
+  useRecordingTrail(map, ride?.trail ?? track.trail);
+
+  // Once each time a ride's screen opens, its whole trail framed above the folded sheet. A ride
+  // with no trail here (uploaded from another phone) leaves the map where it was.
+  const framedRideId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ride) {
+      framedRideId.current = null;
+      return;
+    }
+    if (!map || !isMapLoaded || framedRideId.current === ride.id) return;
+    const bounds = trailBounds(ride.trail);
+    if (!bounds) return;
+    framedRideId.current = ride.id;
+    map.fitBounds(bounds, {
+      padding: RIDE_FRAME_PADDING,
+      bearing: 0,
+      pitch: 0,
+      maxZoom: 17,
+      duration: prefersReducedMotion() ? 0 : 600,
+    });
+  }, [map, isMapLoaded, ride]);
 
   // Once each time a recording's form opens, the trail whole on the map under it: the form covers
   // the map, so framing the trail for the picture moves nothing the rider sees. The ref keeps a

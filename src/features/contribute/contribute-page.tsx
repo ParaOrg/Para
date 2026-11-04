@@ -36,6 +36,7 @@ import {
 } from './lazy-screens';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
+import { useRideTrail } from './map/use-ride-trail';
 import { useStartMorph } from './motion/use-start-morph';
 import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
@@ -199,6 +200,12 @@ export function ContributePage({ locator }: ContributePageProps) {
     isCreditsLeaving: credits.isLeaving,
     isStopShown: stopQuestion.isShown,
   });
+  // The ride whose screen shows, when it is saved on this phone: the map draws its trail and
+  // frames it. One uploaded from another phone has no fixes here, and no trail.
+  const shownRide = layout.isRideDetailShown
+    ? (recording.saved.find((saved) => saved.id === ride.rideId) ?? null)
+    : null;
+  const shownRideTrail = useRideTrail(shownRide);
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
   // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
   // rest. Signed out, they go.
@@ -291,6 +298,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       <div inert={layout.isMapCovered} className="contents">
         <ContributeMap
           track={track}
+          ride={shownRide && shownRideTrail ? { id: shownRide.id, trail: shownRideTrail } : null}
           isRecording={layout.isRecordingShown}
           isFrosted={phase === 'paused'}
           locator={locator}
