@@ -139,6 +139,8 @@ export function draftRefusal(r: ReviewResult): string | null {
     case 'payload_incomplete':
       return 'The draft was refused as incomplete. Nothing was saved.';
     default:
-      return `Nothing was saved (${r.code}).`;
+      // The code says which rule refused; the editor gets what to do, the console the code.
+      console.warn(`A draft save was refused: ${r.code}`);
+      return 'Nothing was saved. Refresh and try again.';
   }
 }

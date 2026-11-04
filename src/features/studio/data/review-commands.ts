@@ -59,7 +59,19 @@ export function reviewMessage(result: ReviewResult): string {
       return 'The draft has conflicting directions. Discard it and draw it again.';
     case 'busy':
       return 'Another change is in progress. Refresh before trying again.';
-    default:
-      return `The operation was refused (${result.code}). Refresh before trying again.`;
+    case 'ok':
+    case 'submitted':
+      return 'Saved. The draft is waiting for review.';
+    case 'sent_back':
+      return 'Sent back to its editor with your note.';
+    case 'taken_down':
+    case 'put_back':
+      return 'Updated approved data. Waiting for publication.';
+    case 'not_approved':
+      return 'This is not approved any more, so there is nothing to take down. Refresh to check its current state.';
+    case 'not_taken_down':
+      return 'This is not taken down any more, so there is nothing to put back. Refresh to check its current state.';
+    case 'refused':
+      return 'Nothing was changed. Refresh and try again.';
   }
 }
