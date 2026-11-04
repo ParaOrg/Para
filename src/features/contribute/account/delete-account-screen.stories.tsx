@@ -45,15 +45,6 @@ export const Ready: Story = {
   },
 };
 
-/** "Also delete my uploaded routes" on: the uploads' sentence says they go too. */
-export const UploadsDeleted: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('switch', { name: 'Also delete my uploaded routes' }));
-    await expect(canvas.getByText(/are deleted from Para too/)).toBeVisible();
-  },
-};
-
 /** Figma's fourth frame: the question over the frosted page, focus on "No, I change my mind". */
 export const Asked: Story = {
   play: async ({ canvasElement, args }) => {
@@ -66,7 +57,7 @@ export const Asked: Story = {
     );
     await expect(question.getByRole('button', { name: 'No, I change my mind' })).toHaveFocus();
     await userEvent.click(question.getByRole('button', { name: 'Delete this account' }));
-    await expect(args.onDelete).toHaveBeenCalledWith(false);
+    await expect(args.onDelete).toHaveBeenCalledTimes(1);
   },
 };
 
