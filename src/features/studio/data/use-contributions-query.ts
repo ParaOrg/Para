@@ -37,8 +37,8 @@ export function useDeleteContributionMutation() {
     onSuccess: (_, id) => {
       client.removeQueries({ queryKey: contributionKeys.detail(id) });
       // The phone's count of uploads drops with it.
-      void client.invalidateQueries({ queryKey: [...contributionKeys.all, 'phone'] });
-      return client.invalidateQueries({ queryKey: [...contributionKeys.all, 'list'] });
+      void client.invalidateQueries({ queryKey: contributionKeys.phones() });
+      return client.invalidateQueries({ queryKey: contributionKeys.lists() });
     },
   });
 }
@@ -49,6 +49,6 @@ export function useHideContributionMutation() {
   return useMutation({
     mutationFn: ({ id, isHiding, note }: { id: string; isHiding: boolean; note: string }) =>
       isHiding ? hideContribution(id, note) : showContribution(id),
-    onSuccess: () => client.invalidateQueries({ queryKey: [...contributionKeys.all, 'list'] }),
+    onSuccess: () => client.invalidateQueries({ queryKey: contributionKeys.lists() }),
   });
 }
