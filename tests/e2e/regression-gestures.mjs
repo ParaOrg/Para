@@ -289,7 +289,7 @@ check(
   'reloading the page restores the route draft',
   (await pts()) === 3 && (await page.getByRole('button', { name: /Done/ }).count()) === 1,
 );
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: /^Discard this/ }).click();
 await page.waitForTimeout(200);
 check(
   'cancel returns to idle',
@@ -371,7 +371,7 @@ check(
   `${routerCalls - before} during hotspots, ${before} while drawing the route`,
 );
 check('Done enabled for the outline', await page.getByRole('button', { name: /Done/ }).isEnabled());
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: /^Discard this/ }).click();
 await page.waitForTimeout(200);
 check(
   'cancel returns to idle with the New +',

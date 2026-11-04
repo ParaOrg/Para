@@ -57,6 +57,8 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     adoptHotspot: fn(),
     cancel: fn(),
     undo: fn(),
+    redo: fn(),
+    canRedo: false,
     addPoint: fn(),
     insertPoint: fn(),
     deletePoint: fn(),

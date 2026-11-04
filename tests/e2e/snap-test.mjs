@@ -232,7 +232,7 @@ const newRoute = async () => {
   await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 5000 });
 };
 const discard = async () => {
-  await page.getByRole('button', { name: '✕' }).click();
+  await page.getByRole('button', { name: /^Discard this/ }).click();
   await page
     .getByRole('button', { name: 'New route, terminal or hintuan' })
     .waitFor({ timeout: 5000 });
