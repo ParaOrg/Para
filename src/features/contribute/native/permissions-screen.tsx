@@ -3,11 +3,11 @@ import type { ReactNode } from 'react';
 import { Button } from '@/design-system/primitives/button';
 import { LocationIcon } from '@/design-system/primitives/location-icon';
 import { Switch } from '@/design-system/primitives/switch';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { cn } from '@/shared/utils/cn';
 
 import { NotificationIcon } from './permission-icons';
 import type { PermissionRow, PermissionRowView } from './permission-rows';
-import { useFocusHeading } from '../common/use-focus-heading';
 
 const ROW_TEXT = {
   notification: {
