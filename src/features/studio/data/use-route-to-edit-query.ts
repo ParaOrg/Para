@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { DirectionRow } from '@/features/routes/model/routes';
 
 import { draftOf } from './drafts';
 import { STUDIO_DRAFTS } from './flags';
 import { reviewKeys } from './review-keys';
+import type { DraftRow } from './review-schema';
 import { routeToEdit } from './route-to-edit';
 
 /**
@@ -21,4 +22,19 @@ export function useRouteToEditQuery(route: DirectionRow['route'] | null) {
     select: (draft) => (route ? routeToEdit(route, draft) : null),
     enabled: STUDIO_DRAFTS && route !== null,
   });
+}
+
+/**
+ * Reads a route's draft for Edit route through the cache, fresh at the press:
+ * the drawing opens from it (drawing-to-edit.ts), and the save form's query
+ * (above) then starts from the same read, not from one older than the last save.
+ */
+export function useReadRouteDraft() {
+  const client = useQueryClient();
+  return (routeId: string): Promise<DraftRow | null> =>
+    client.fetchQuery({
+      queryKey: reviewKeys.draftOf('route', routeId),
+      queryFn: () => draftOf('route', routeId),
+      staleTime: 0,
+    });
 }

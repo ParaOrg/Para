@@ -418,7 +418,7 @@ check(
 
 // ---- 3a. Edit again before approval: the editor's own draft opens, not the approved line
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
-await load();
+// No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
 // The draft's line is drawn over the approved one, and a tap on it opens Drafts as well.
 const reviewDialog = page.locator('dialog[open]');

@@ -14,6 +14,7 @@ import { lineToFollow } from './borrow';
 import type { Drawing } from './use-drawing';
 import { drawingToEdit } from '../data/drawing-to-edit';
 import { withDrawing } from '../data/live';
+import { useReadRouteDraft } from '../data/use-route-to-edit-query';
 
 /** What a right-click on an ikot's line says: it is not followed. */
 export const NO_END_TO_FOLLOW = 'An ikot has no end to go on from.';
@@ -42,6 +43,7 @@ export function useFollow({
   target: FollowTarget;
   setNotice: (text: string) => void;
 }) {
+  const readRouteDraft = useReadRouteDraft();
   /**
    * A right-click on saved lines while drawing, or a finger's Follow chip
    * (point-bar.tsx): join the one going the way
@@ -104,7 +106,7 @@ export function useFollow({
     { isToEdit = false }: { isToEdit?: boolean } = {},
   ) => {
     try {
-      then(await (isToEdit ? drawingToEdit(v) : withDrawing(v)));
+      then(await (isToEdit ? drawingToEdit(v, readRouteDraft) : withDrawing(v)));
     } catch (e) {
       setNotice(
         `Couldn't open ${v.name ?? 'this direction'}: ${e instanceof Error ? e.message : String(e)}`,
