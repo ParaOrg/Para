@@ -79,6 +79,7 @@ const meta = {
     facts: FACTS,
     picture: null,
     isOnline: true,
+    onOpen: fn(),
     onUpload: fn(),
     onDeleteFromPara: fn(),
     onRemoveFromPhone: fn(),
@@ -103,6 +104,17 @@ export const Uploaded: Story = {
     await expect(canvas.getByText('Jan 25, 2026')).toBeInTheDocument();
     await expect(canvas.getByText('0h 12m')).toBeInTheDocument();
     await expect(canvas.getByText('34 km')).toBeInTheDocument();
+  },
+};
+
+/** A tap anywhere on the card opens the ride's screen; the ⋮ beside it still opens its menu. */
+export const OpensItsRide: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Cubao via Marcos Highway' }));
+    await expect(args.onOpen).toHaveBeenCalledTimes(1);
+    await userEvent.click(canvas.getByRole('button', { name: /More/ }));
+    await expect(args.onOpen).toHaveBeenCalledTimes(1);
   },
 };
 

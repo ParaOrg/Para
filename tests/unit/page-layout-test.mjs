@@ -13,6 +13,7 @@ const READY = {
   hasAccount: true,
   isPermissionsPending: false,
   isHistoryOpen: false,
+  isRideDetailOpen: false,
   isProfileOpen: false,
   isAccountSettingsOpen: false,
   isChangePasswordOpen: false,
@@ -78,13 +79,13 @@ test('a build with no accounts never shows Account, nor lists its screens as ope
   const layout = layoutOf({ hasAccount: false, isProfileOpen: true });
   assert.equal(layout.isProfileShown, false);
   assert.equal(layout.isStartShown, true);
-  assert.equal(layout.openableScreens, '#history');
+  assert.equal(layout.openableScreens, '#history #ride');
 });
 
-test('the openable screens: History once signed in, Account and its screens with accounts', () => {
+test('the openable screens: History and a ride once signed in, Account and its screens with accounts', () => {
   assert.equal(
     layoutOf({}).openableScreens,
-    '#history #profile #account-settings #change-password #delete-account',
+    '#history #ride #profile #account-settings #change-password #delete-account',
   );
   assert.equal(
     layoutOf({ accountGate: 'loading' }).openableScreens,
@@ -188,4 +189,24 @@ test('the Save form covers the map', () => {
   assert.equal(layout.isFormShown, true);
   assert.equal(layout.isMapCovered, true);
   assert.equal(layout.hasCreditsButton, false);
+});
+
+test('#ride/<id> on Ready shows the ride over the live map, with no toolbar', () => {
+  const layout = layoutOf({ isRideDetailOpen: true });
+  assert.equal(layout.isRideDetailShown, true);
+  assert.equal(layout.isHistoryShown, false);
+  assert.equal(layout.isStartShown, false);
+  assert.equal(layout.isReadyClear, false);
+  assert.equal(layout.toolbarTab, null);
+  assert.equal(layout.isMapCovered, false);
+  assert.equal(layout.hasCreditsButton, false);
+  assert.ok(layout.openableScreens.split(' ').includes('#ride'));
+});
+
+test('#ride/<id> shows nothing while signed out or recording', () => {
+  assert.equal(
+    layoutOf({ isRideDetailOpen: true, accountGate: 'needs-account' }).isRideDetailShown,
+    false,
+  );
+  assert.equal(layoutOf({ isRideDetailOpen: true, phase: 'recording' }).isRideDetailShown, false);
 });
