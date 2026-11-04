@@ -76,11 +76,10 @@ export function useSavePanel({
   const fareNote = parent?.fareNote ?? '';
   const [via, setVia] = useState(parent?.via ?? '');
   // An ikot is made one or not and stays so (0021): an edit, a return trip or
-  // a retried save keeps what the route is. A new line starts ticked when it
-  // was closed on its own first point.
-  const [isLoop, setIsLoop] = useState(() =>
-    parent ? parent.isLoop === true : isClosedLine(draw.line),
-  );
+  // a retried save keeps what the route is. A new line is ticked while it is
+  // closed on its own first point, until the editor ticks or unticks it.
+  const [pickedLoop, setIsLoop] = useState<boolean | null>(null);
+  const isLoop = parent ? parent.isLoop === true : (pickedLoop ?? isClosedLine(draw.line));
 
   // What this line is, as the panel and the save see it.
   const facts = useSaveFacts({
