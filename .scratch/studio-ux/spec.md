@@ -68,7 +68,7 @@ The owner's decisions on 2026-11-04. Felt was dropped; `felt-research.md` stays 
     - The handles and points are worked around in `parabrand-800`.
     - Stored as a third kind of segment, with its handles, in the existing `segments` jsonb. It needs no migration: the column checks nothing. The publish flattens a curve into points, so the public map doesn't change.
     - The biggest item here, likely a few PRs.
-13. **The route's sheet open while drawing**, instead of only after Done. Its layout is waiting on the owner's answer.
+13. **The route's sheet open while drawing** (the owner's 1a and 3, 2026-11-04). On a computer, a panel stays on the side of the screen the whole time a route is drawn. The map stays usable beside it, and Done becomes Save inside the panel. Its fields fill themselves as the line is drawn: when the line reaches a place, the panel shows that place as an end at once, so the route's name is seen before finishing. The phone isn't designed for: editors use laptops, and there's no phone design. On a phone it must keep working, with no layout of its own. Worked around until the owner designs it.
 
 ### Wave 3b: polish, from the owner's designs
 
