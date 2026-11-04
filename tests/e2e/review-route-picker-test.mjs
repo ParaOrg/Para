@@ -34,7 +34,9 @@ await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.mouse.click(180, 400);
 await page.mouse.click(250, 450);
 await page.mouse.click(300, 420);
-await page.getByRole('button', { name: /Done/ }).click();
+// On a computer the route's form already stands beside the map; narrower, Done opens it.
+if (!(await page.getByTestId('route-panel').isVisible()))
+  await page.getByRole('button', { name: /Done/ }).click();
 await page.getByTestId('save-head').selectOption({ label: '+ New place here…' });
 const group = page.getByRole('group', { name: 'New place for the head', exact: true });
 await group.getByLabel(/Ground name/).fill('Preview route head');

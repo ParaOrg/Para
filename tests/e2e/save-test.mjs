@@ -30,6 +30,7 @@ import { readFileSync } from 'node:fs';
 
 import { waitFor } from './lib/harness.mjs';
 import {
+  backToMap,
   at,
   BACK,
   body,
@@ -265,6 +266,69 @@ check(
   );
 }
 
+// ---- 3a. On a computer, the route's form stands beside the map while the line is drawn
+{
+  await go(at(0, 0), 15);
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
+  await page.waitForTimeout(300);
+  const panel = page.getByTestId('route-panel');
+  const save = panel.getByRole('button', { name: 'Save' });
+  check(
+    "the route's form is beside the map from the first click, named by its heading",
+    (await panel.isVisible()) &&
+      (await page.getByRole('form', { name: 'Save this route' }).isVisible()),
+  );
+  check(
+    '  the map beside it is live, and the toolbar has no Done: Save is Done',
+    !(await page.locator('[data-map-box]').evaluate((e) => e.inert)) &&
+      (await page.getByRole('button', { name: 'Done' }).count()) === 0,
+  );
+  check(
+    '  Save waits for a line, and says so',
+    (await save.isDisabled()) && (await panel.innerText()).includes('Add at least 2 points'),
+  );
+  await clickAt(OUT[0], 300);
+  check(
+    '  one point is no line yet: no end is guessed',
+    (await page.getByTestId('save-head').inputValue()) === '',
+  );
+  for (const p of OUT.slice(1)) await clickAt(p, 300);
+  await idle();
+  await page.waitForTimeout(300);
+  check(
+    '  as the line reaches its places, both ends and the name show at once',
+    (await page.getByTestId('save-head').inputValue()) !== '' &&
+      (await page.getByTestId('save-tail').inputValue()) !== '' &&
+      (await page.getByTestId('save-direction').innerText()).includes('→') &&
+      (await save.isEnabled()),
+    await page.getByTestId('save-direction').innerText(),
+  );
+  // Tab from the toolbar's last button walks on into the form: it follows the map in the page.
+  await page.getByTitle('Discard this route').focus();
+  let tabs = 0;
+  while (tabs < 40 && !(await panel.evaluate((e) => e.contains(document.activeElement)))) {
+    await page.keyboard.press('Tab');
+    tabs += 1;
+  }
+  check(
+    '  Tab from the toolbar reaches the form',
+    await panel.evaluate((e) => e.contains(document.activeElement)),
+    `${tabs} tabs`,
+  );
+  await page.setViewportSize({ width: 900, height: 800 });
+  await page.waitForTimeout(300);
+  check(
+    '  narrower than a computer, the form leaves and Done comes back',
+    !(await panel.isVisible()) && (await page.getByRole('button', { name: 'Done' }).isVisible()),
+  );
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(300);
+  await page.getByTitle('Discard this route').click();
+  await page.waitForTimeout(300);
+  check('  ✕ takes the form away with the line', !(await panel.isVisible()));
+}
+
 // ---- 3. A route between them, saved with its slot
 await drawLine(OUT, async () =>
   check(
@@ -274,7 +338,7 @@ await drawLine(OUT, async () =>
   ),
 );
 check(
-  'Done opens the save panel, the ends guessed from where the line runs',
+  'the save panel has the ends guessed from where the line runs',
   (await page.getByTestId('save-head').inputValue()) !== '' &&
     (await page.getByTestId('save-tail').inputValue()) !== '',
 );
@@ -393,7 +457,7 @@ check(
   /^The return trip ends \d+ m from where papunta began\. Close the loop\?$/.test(gapNotice.trim()),
   gapNotice,
 );
-await page.getByRole('button', { name: 'Back to map' }).click();
+await backToMap();
 await page.waitForTimeout(300);
 await closeLoop().click();
 await idle();
@@ -503,7 +567,7 @@ check(
     (await page.getByTestId('save-tail').count()) === 1 &&
     (await body()).includes('Update this direction'),
 );
-await page.getByRole('button', { name: 'Back to map' }).click();
+await backToMap();
 await page.keyboard.press('Control+z');
 await waitFor(async () => (await pointsShown()) === OUT.length + 1);
 await go(at(0, 0), 15);

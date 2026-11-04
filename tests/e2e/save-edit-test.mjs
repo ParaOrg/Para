@@ -21,6 +21,7 @@
 // no React warnings (the duplicate key).
 import { waitFor } from './lib/harness.mjs';
 import {
+  backToMap,
   at,
   BACK,
   body,
@@ -35,7 +36,6 @@ import {
   go,
   hintuan,
   holdRequests,
-  idle,
   log,
   open,
   openCard,
@@ -175,7 +175,7 @@ check(
   (await body()).slice(-200),
 );
 check('  and nothing is written', writesSince(n).length === 0, said(writesSince(n)));
-await page.getByRole('button', { name: 'Back to map' }).click();
+await backToMap();
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
 
@@ -245,9 +245,7 @@ await page.waitForTimeout(300);
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of L) await clickAt(p, 300);
-  await idle();
-  await page.getByRole('button', { name: /Done/ }).click();
-  await page.waitForTimeout(600);
+  await done();
   const draftBefore = await draftOf();
   // Where the clicks landed, a pixel's worth off the points asked for.
   const line = JSON.parse(draftBefore).controlPoints;
@@ -394,9 +392,7 @@ await page.waitForTimeout(300);
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of L) await clickAt(p, 300);
-  await idle();
-  await page.getByRole('button', { name: /Done/ }).click();
-  await page.waitForTimeout(600);
+  await done();
   const draftBefore = await draftOf();
   const routesBefore = tables.route.length;
   const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
@@ -526,7 +522,7 @@ await page.waitForTimeout(300);
     'Stand-in Retry',
   ])
     for (const r of stopsNamed(name)) remove('stop', [r]);
-  await page.getByRole('button', { name: 'Back to map' }).click();
+  await backToMap();
   await page.getByTitle('Discard this route').click();
   await page.waitForTimeout(300);
 }
@@ -590,7 +586,7 @@ check(
     (await page.getByTestId('save-head').inputValue()) ===
       (await page.getByTestId('save-tail').inputValue()),
 );
-await page.getByRole('button', { name: 'Back to map' }).click();
+await backToMap();
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
 // ---- 12. On a phone: 390×844, a notch of 47 px and a home bar of 34
@@ -650,7 +646,13 @@ await phone
   .catch(() => {});
 await phone.getByRole('button', { name: /Done/ }).tap();
 await phone.waitForTimeout(600);
-const sheet = await rect(phone.locator('form').filter({ has: phone.getByTestId('save-head') }));
+// The sheet is the frame round the form (SaveSheetFrame).
+const sheet = await rect(
+  phone
+    .locator('form')
+    .filter({ has: phone.getByTestId('save-head') })
+    .locator('..'),
+);
 check(
   'phone: the save panel fills the screen',
   !!sheet && sheet.x === 0 && sheet.width === 390 && sheet.height === 844,

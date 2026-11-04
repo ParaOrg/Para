@@ -229,7 +229,7 @@ const view = async (points) => {
 const newRoute = async () => {
   await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
   await page.getByRole('menuitem', { name: /Routes/ }).click();
-  await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 5000 });
+  await page.getByTestId('draw-toolbar').waitFor({ timeout: 5000 });
 };
 const discard = async () => {
   await page.getByRole('button', { name: /^Discard this/ }).click();

@@ -195,9 +195,11 @@ const idle = () =>
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
 const pointsShown = async () => Number((await body()).match(/(\d+) points?\b/)?.[1] ?? 0);
+// On a computer the route's form already stands beside the map; a hotspot still presses Done.
 const done = async () => {
   await idle();
-  await page.getByRole('button', { name: /Done/ }).click();
+  if (!(await page.getByTestId('route-panel').isVisible()))
+    await page.getByRole('button', { name: /Done/ }).click();
   await page.waitForTimeout(600);
 };
 const saveButton = () => page.getByRole('button', { name: /^(Save|Update)$/ });

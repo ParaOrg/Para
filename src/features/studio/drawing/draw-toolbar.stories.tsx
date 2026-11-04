@@ -286,6 +286,16 @@ export const WithAStraightStretch: Story = {
   },
 };
 
+/** Beside the route's form on a computer, whose Save is Done: no Done here, and Enter does nothing. */
+export const BesideTheForm: Story = {
+  args: { onDone: undefined },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'Done' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Snap' })).toBeVisible();
+  },
+};
+
 /** Waiting for the router: snapping… in rose, and Done rests until the line is road. */
 export const Snapping: Story = {
   args: { draw: drawn({ snapping: 1 }) },

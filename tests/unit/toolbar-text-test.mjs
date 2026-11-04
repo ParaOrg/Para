@@ -12,6 +12,7 @@ import {
   isTyping,
   keepOptions,
   uTurnWarning,
+  whyCannotSave,
   whyNotDone,
 } from '../../src/features/studio/drawing/toolbar-text.ts';
 
@@ -88,4 +89,21 @@ test('a key typed into a field is the field’s', () => {
   assert.equal(isTyping({ tagName: 'TEXTAREA', isContentEditable: false }), true);
   assert.equal(isTyping({ tagName: 'DIV', isContentEditable: true }), true);
   assert.equal(isTyping({ tagName: 'BUTTON', isContentEditable: false }), false);
+});
+
+test("whyCannotSave: Done's and the beside form's Save's one rule, a route's or a hotspot's", () => {
+  const route = (points, extra = {}) => ({
+    controlPoints: Array.from({ length: points }),
+    area: null,
+    snapping: 0,
+    unresolved: false,
+    ...extra,
+  });
+  assert.equal(whyCannotSave(route(1)), 'Add at least 2 points');
+  assert.equal(whyCannotSave(route(2)), null);
+  assert.equal(whyCannotSave(route(2, { snapping: 1 })), 'Waiting for the router');
+  assert.equal(whyCannotSave(route(2, { unresolved: true })), 'Waiting for the router');
+  const hotspot = { kind: 'hintuan', hotspotId: null };
+  assert.equal(whyCannotSave(route(2, { area: hotspot })), 'Add at least 3 corners');
+  assert.equal(whyCannotSave(route(3, { area: hotspot })), null);
 });

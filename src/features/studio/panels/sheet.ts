@@ -2,7 +2,8 @@
  * The studio's dialogs on a phone (narrower than 40rem): a sheet that fills
  * the screen, clear of the notch and the home bar, with its buttons held at
  * its foot while the form scrolls, so the keyboard never hides Save. Wider,
- * they stay a card in the middle of the map.
+ * they stay a card in the middle of the map. On a computer a route's form is
+ * not a dialog at all but a panel beside the map (BESIDE).
  */
 
 /** The dimmed layer over the map, holding the dialog. */
@@ -18,3 +19,11 @@ export const PANEL =
 export const FOOTER =
   'mt-5 flex gap-2 max-sm:sticky max-sm:-bottom-6 max-sm:-mx-6 max-sm:border-t max-sm:border-neutral-200 ' +
   'max-sm:bg-white max-sm:px-6 max-sm:pt-3 max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]';
+
+/** A route's form beside the map on a computer: the full height, scrolling on its own. */
+export const BESIDE =
+  'w-96 shrink-0 overflow-y-auto border-l border-border-primary bg-surface px-6 pt-6';
+
+/** That form's Save, held at the panel's foot while the form scrolls. */
+export const FOOTER_BESIDE =
+  'sticky bottom-0 -mx-6 mt-5 flex gap-2 border-t border-border-primary bg-surface px-6 py-4';

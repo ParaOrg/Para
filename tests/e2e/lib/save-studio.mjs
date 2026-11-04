@@ -629,10 +629,25 @@ export const idle = () =>
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
 export const pointsShown = async () => Number((await body()).match(/(\d+) points?\b/)?.[1] ?? 0);
+/**
+ * Done: on a computer the route's form already stands beside the map, whose
+ * Save is Done, so the toolbar has none; a hotspot, a phone or a signed-out
+ * editor still press it.
+ */
 export const done = async () => {
   await idle();
+  if (await page.getByTestId('route-panel').isVisible()) {
+    await page.waitForTimeout(600);
+    return;
+  }
   await page.getByRole('button', { name: /Done/ }).click();
   await page.waitForTimeout(600);
+};
+export const routePanel = () => page.getByTestId('route-panel');
+/** Back to the map from a form that covers it; beside the map there is nothing to go back from. */
+export const backToMap = async () => {
+  const back = page.getByRole('button', { name: 'Back to map' });
+  if (await back.isVisible()) await back.click();
 };
 export const saveButton = () => page.getByRole('button', { name: /^(Save|Update)$/ });
 export const toast = () => page.getByTestId('toast').filter({ hasText: /^Saved/ });

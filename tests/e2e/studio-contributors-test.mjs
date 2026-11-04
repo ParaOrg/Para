@@ -350,7 +350,7 @@ await open('SM Fairview to Cubao');
 await shot('1-contributors-opened');
 const before = writes().length;
 await page.getByRole('button', { name: 'Use this line' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const draft = async () =>
   page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null'));
 await page
@@ -379,7 +379,9 @@ check(
 );
 check('  nothing is written yet', writes().length === before);
 await shot('2-use-this-line');
-await page.getByRole('button', { name: /Done/ }).click();
+// On a computer the route's form already stands beside the map; narrower, Done opens it.
+if (!(await page.getByTestId('route-panel').isVisible()))
+  await page.getByRole('button', { name: /Done/ }).click();
 await page.getByTestId('save-head').waitFor({ timeout: 10000 });
 await page.getByTestId('save-head').selectOption({ label: 'Fairview Terminal' });
 await page.getByTestId('save-tail').selectOption({ label: 'Cubao Terminal' });
@@ -411,7 +413,7 @@ await page.getByText('Contributors', { exact: true }).click();
 await list.waitFor();
 await open('SM Fairview to Cubao');
 await page.getByRole('button', { name: 'Draw a hintuan here' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const box = await draft();
 check(
   'Draw a hintuan here opens the Playground with a box begun round the hinto',
@@ -534,7 +536,7 @@ check(
   (await body()).includes('Walking is left out: Use this line takes the ride only.'),
 );
 await page.getByRole('button', { name: 'Use this line' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const rideOnly = await draft();
 check(
   '  which begins the direction at the ride: from the 2nd minute to the 5th',
@@ -593,7 +595,7 @@ check(
 /** The control points a ride's Use this line begins, read off the draft. */
 const useRide = async (n) => {
   await useButtons.nth(n).click();
-  await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+  await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
   const points = (await draft())?.controlPoints ?? [];
   await page.getByTitle('Discard this route').click();
   await waitFor(
@@ -630,7 +632,7 @@ await page.getByText('Contributors', { exact: true }).click();
 await list.waitFor();
 await open('SM Fairview to Cubao');
 await page.getByRole('button', { name: 'Use this line' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const first = await draft();
 await page.getByText('Contributors', { exact: true }).click();
 await open('Fairview to Cubao');
