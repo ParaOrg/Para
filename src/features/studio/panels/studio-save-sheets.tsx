@@ -8,6 +8,7 @@ import type { DirectionRow } from '@/features/routes/model/routes';
 import { HotspotPanel } from './hotspot-panel';
 import { SavePanel } from './save-panel';
 import type { SaveTarget } from './use-save-target';
+import { useHotspotToEditQuery } from '../data/use-hotspot-to-edit-query';
 import type { Drawing } from '../drawing/use-drawing';
 
 type Saved = ReturnType<typeof useSavedRoutes<DirectionRow>>;
@@ -43,17 +44,25 @@ export function StudioSaveSheets({
   onCancel,
 }: StudioSaveSheetsProps) {
   // The hotspot being edited, when the area trace came from a saved one.
-  const editingHotspot = draw.area?.hotspotId
+  const approvedHotspot = draw.area?.hotspotId
     ? (hotspots.hotspots.find((s) => s.id === draw.area?.hotspotId) ?? null)
     : null;
+  // As the editor's own draft has it, when there is one: what the save builds on.
+  const toEdit = useHotspotToEditQuery(approvedHotspot);
+  const editingHotspot = toEdit.data?.hotspot ?? approvedHotspot;
 
   return (
     <>
       {isSaving && draw.drawing && draw.area && (
         <HotspotPanel
+          // The form takes its fields once: started again when the draft's arrive.
+          key={toEdit.data ? 'drafted' : 'approved'}
           draw={draw}
           existing={editingHotspot}
-          existingLinks={editingHotspot ? hotspots.linkedDirectionIds(editingHotspot.id) : []}
+          existingLinks={
+            toEdit.data?.linkedDirectionIds ??
+            (editingHotspot ? hotspots.linkedDirectionIds(editingHotspot.id) : [])
+          }
           directions={saved.directions}
           hotspots={hotspots.hotspots}
           onSaved={onSavedHotspot}

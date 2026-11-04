@@ -674,6 +674,8 @@ async function editHintuan(spot, name) {
   await edit.click();
   await page.waitForTimeout(400);
   await done();
+  // The name the form opened with: the editor's own draft's, when there is one.
+  shownName = await nameField().inputValue();
   await nameField().fill(name);
   const from = log.length;
   await page.getByRole('button', { name: 'Save changes' }).click();
@@ -681,6 +683,7 @@ async function editHintuan(spot, name) {
   await page.waitForTimeout(300);
   return writesSince(from);
 }
+let shownName = '';
 const tailRevision = tables.stop.find((x) => x.id === tail?.id)?.revision;
 w = await editHintuan(P2, 'Stand-in Tail Renamed');
 const tailDraft = draftOf('hotspot', tail?.id);
@@ -695,6 +698,11 @@ check(
 );
 check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
 w = await editHintuan(P2, 'Stand-in Tail Twice');
+check(
+  "  edited again, the form opens on the editor's draft: the name saved before",
+  shownName === 'Stand-in Tail Renamed',
+  shownName,
+);
 const tailDraftAgain = draftOf('hotspot', tail?.id);
 check(
   '  edited again, the draft kept for it is updated in place: same draft, its revision on',

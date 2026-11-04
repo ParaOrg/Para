@@ -11,6 +11,7 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { CardActions } from './card-actions';
 import { HotspotCard } from './hotspot-card';
 import type { useDeleteActions } from './use-delete-actions';
+import { useHotspotToEditQuery } from '../data/use-hotspot-to-edit-query';
 import type { Drawing } from '../drawing/use-drawing';
 import { DraftLockNotice } from '../review/draft-lock-notice';
 import { useDraftLock } from '../review/use-draft-lock';
@@ -59,6 +60,10 @@ export function StudioHotspotCard({
 }: StudioHotspotCardProps) {
   // Another editor's draft of this hotspot: it can be looked at, not changed.
   const { lock, retry } = useDraftLock('hotspot', hotspot.id);
+  // Edit opens the editor's own draft of the box when there is one: a save builds on it.
+  const toEdit = useHotspotToEditQuery(hotspot);
+  // A draft that cannot be read as a box is not opened over: the card says it could not check.
+  const held = toEdit.isError ? { state: 'unknown' as const } : lock;
   return (
     <HotspotCard
       routeCards={{
@@ -81,8 +86,14 @@ export function StudioHotspotCard({
       }}
       actions={
         canEdit &&
-        (lock ? (
-          <DraftLockNotice lock={lock} onRetry={retry} />
+        (held ? (
+          <DraftLockNotice
+            lock={held}
+            onRetry={() => {
+              retry();
+              void toEdit.refetch();
+            }}
+          />
         ) : (
           <CardActions
             editLabel={hotspot.kind === 'terminal' ? 'Edit terminal' : 'Edit hintuan'}
@@ -97,7 +108,8 @@ export function StudioHotspotCard({
               // the map stays where it is.
               if (map && map.getZoom() < 16)
                 map.flyTo({ center: s.point.coordinates, zoom: 16 }, APP_MOVE);
-              draw.loadArea(s.kind, s.id, hotspotRing(s));
+              const opened = toEdit.data?.hotspot ?? s;
+              draw.loadArea(opened.kind, opened.id, hotspotRing(opened));
             }}
             onDelete={() => {
               if (hotspots.selected) void onDeleteHotspot(hotspots.selected);
