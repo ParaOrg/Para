@@ -458,7 +458,31 @@ check(
   said(w),
 );
 check('  and leaves the file in the bucket: the approved map may still list it', bucket.has(board));
-await approveAll();
+
+// ---- 4a. Delete while the editor already has a draft of the route: it joins the draft
+// The signboard's draft is still the editor's, unreviewed. Approving the delete in the same
+// press would publish that draft with it, so the delete is stored in it and waits in Drafts.
+n = log.length;
+await page.getByRole('button', { name: 'Delete' }).click();
+await waitFor(async () => (await body()).includes('Added to your draft of'));
+w = writesSince(n);
+check(
+  'Delete with a draft already open joins that draft, unapproved',
+  draftOf('route', route?.id)?.id === boardDraft?.id &&
+    draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.shape ===
+      null &&
+    rpcs(w, 'submit_draft').length === 0 &&
+    rpcs(w, 'approve_reviewed_draft').length === 0 &&
+    approvedWrites(w).length === 0,
+  said(w),
+);
+check(
+  '  and the approved direction keeps its line until the draft is approved',
+  !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+);
+// The stand-in drops the draft so the next flow starts from the approved map with OUT drawn.
+tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
+await load();
 
 // ---- 4b. An approval on a stale base is refused, and the studio says so
 // Another editor's change lands between Delete's draft and its approval: the
