@@ -56,6 +56,7 @@ import {
   P2,
   page,
   pointsShown,
+  px,
   returnTrip,
   said,
   saveButton,
@@ -366,6 +367,19 @@ check(
   '  "Close the loop" is on the toolbar, enabled: there is a point to come from',
   (await closeLoop().count()) === 1 && (await closeLoop().isEnabled()),
 );
+{
+  // Nearing where papunta began, the connect badge shows there: a click would close the loop.
+  const [sx, sy] = await px(outLine[0]);
+  await page.mouse.move(sx + 6, sy + 6, { steps: 3 });
+  await page.waitForTimeout(150);
+  const near = await page.getByTestId('connect-hint').count();
+  await page.mouse.move(sx + 80, sy + 80, { steps: 3 });
+  check(
+    "  nearing the outbound's start shows the connect badge, away from it none",
+    near === 1 && (await page.getByTestId('connect-hint').count()) === 0,
+    `near ${near}`,
+  );
+}
 // Two more clicks leave the line well short of where papunta began.
 await clickAt(BACK[1], 300);
 await clickAt(at(-0.002, -0.0015), 300);
