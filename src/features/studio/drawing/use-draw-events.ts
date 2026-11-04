@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 
 import { clickHandlers } from './draw-clicks';
 import type { DrawActions, DrawContext, DrawRefs } from './draw-context';
-import { HIT_LAYER, POINT_LAYER } from './draw-layers';
+import { handleDragHandlers } from './draw-handle-drag';
+import { HANDLE_DOT_LAYER, HIT_LAYER, POINT_LAYER } from './draw-layers';
 import { mouseHandlers } from './draw-mouse';
 import { penHandlers } from './draw-pen';
 import { touchHandlers } from './draw-touch';
@@ -88,6 +89,7 @@ export function useDrawEvents(
       mouse,
     );
     const detachPen = penHandlers(ctx).attach();
+    const detachHandles = handleDragHandlers(ctx).attach(HANDLE_DOT_LAYER, POINT_LAYER);
 
     // The line's handler first: MapLibre calls click listeners in the order
     // they were added, and a tap on the line that closes the point bar must
@@ -108,6 +110,7 @@ export function useDrawEvents(
 
     return () => {
       detachPen();
+      detachHandles();
       map.off('click', onMapClick);
       map.off('click', HIT_LAYER, onLineClick);
       map.off('mousedown', POINT_LAYER, onPointDown);

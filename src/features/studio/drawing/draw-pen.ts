@@ -5,7 +5,7 @@ import type { LngLat } from '@/shared/utils/geo';
 import { mirror } from './curves';
 import type { DrawContext } from './draw-context';
 import { handleFeatures, handleLines } from './draw-features';
-import { HANDLE_SRC, HIT_LAYER, POINT_LAYER, isGeoJSON } from './draw-layers';
+import { HANDLE_DOT_LAYER, HANDLE_SRC, HIT_LAYER, POINT_LAYER, isGeoJSON } from './draw-layers';
 import { isTyping } from './toolbar-text';
 import { isNearClose, closeTargetOf } from './use-connect-hint';
 
@@ -74,7 +74,8 @@ export function penHandlers(ctx: DrawContext) {
     if (e.originalEvent.button !== 0 || isSpaceDown) return;
     if (!refs.freehand.current || refs.area.current || refs.picking.current) return;
     // A point is dragged, the line inserted into, the first point clicked to close.
-    if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER, HIT_LAYER] }).length > 0) return;
+    const under = [POINT_LAYER, HIT_LAYER, HANDLE_DOT_LAYER];
+    if (map.queryRenderedFeatures(e.point, { layers: under }).length > 0) return;
     const closeAt = closeTargetOf(map);
     if (closeAt && isNearClose(map, e.point, closeAt)) return;
     press = {

@@ -20,6 +20,8 @@ export const UTURN_SRC = 'draw-uturns';
 export const BORROW_SRC = 'draw-borrow';
 /** A curve's handles: each an arm from its point and a dot at its end. */
 export const HANDLE_SRC = 'draw-handles';
+/** A handle's dot: what a drag takes hold of (draw-handle-drag.ts). */
+export const HANDLE_DOT_LAYER = 'draw-handle-dots';
 /** The drawing's points, and the wide invisible line a click finds: the events' layers. */
 export const POINT_LAYER = 'draw-point-dots';
 export const HIT_LAYER = 'draw-line-hit';
@@ -152,11 +154,16 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       paint: { 'line-color': ROUTE_COLOUR, 'line-width': 1.5 },
     });
     map.addLayer({
-      id: 'draw-handle-dots',
+      id: HANDLE_DOT_LAYER,
       type: 'circle',
       source: HANDLE_SRC,
       filter: ['==', ['geometry-type'], 'Point'],
-      paint: { 'circle-radius': 3.5, 'circle-color': ROUTE_COLOUR },
+      paint: {
+        'circle-radius': 4,
+        'circle-color': ROUTE_COLOUR,
+        'circle-stroke-color': MAP_PAINT['Paint/casing'],
+        'circle-stroke-width': 1,
+      },
     });
     map.addLayer({
       id: POINT_LAYER,
