@@ -15,8 +15,8 @@ interface RideDetailBodyProps {
 }
 
 /**
- * The ride sheet's body, under its name (Figma 4560:12422): the upload's line, Commute
- * Information and the Description, read only. The Description is left out when none was written.
+ * The ride sheet's body, under its name (Figma 4560:12422): Commute Information, the upload's
+ * Status its last row, and the Description, read only. The Description is left out when none was written.
  */
 export function RideDetailBody({
   status,
@@ -29,9 +29,6 @@ export function RideDetailBody({
   const descriptionHeadingId = useId();
   return (
     <div className="flex flex-col gap-8 px-5 pb-8">
-      <div className="flex">
-        <CardStatusLine status={status} size="sheet" fullName={fullName} onRetry={onRetry} />
-      </div>
       <section aria-labelledby={commuteHeadingId} className="flex flex-col gap-2">
         <h2 id={commuteHeadingId} className="text-xl/7 font-semibold">
           Commute Information
@@ -52,6 +49,12 @@ export function RideDetailBody({
               </dd>
             </div>
           ))}
+          <div className="flex">
+            <dt className="w-35 shrink-0 font-medium">Status</dt>
+            <dd className="flex min-w-0 flex-1">
+              <CardStatusLine status={status} size="sheet" fullName={fullName} onRetry={onRetry} />
+            </dd>
+          </div>
         </dl>
       </section>
       {description.trim() !== '' && (

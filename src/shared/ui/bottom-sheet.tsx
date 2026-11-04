@@ -13,6 +13,8 @@ import { useEscape } from '@/shared/hooks/use-escape';
 
 import {
   MAX_STRIP_PX,
+  fitHeightsFor,
+  fitSnap,
   measureSafeTop,
   slide,
   slideShowing,
@@ -21,7 +23,7 @@ import {
   type Snap,
   type SnapName,
 } from './sheet-gesture';
-import { useSheetGestures } from './use-sheet-gestures';
+import { useSheetGestures, type FittedSheet } from './use-sheet-gestures';
 
 interface Props {
   /** What a screen reader calls it: the list by its count, a trip by its direction, a card by its place. */
@@ -55,6 +57,12 @@ interface Props {
    * Without it, the sheet keeps its own.
    */
   height?: SheetHeight;
+  /**
+   * Two heights, not three: Low, and open at its content's height, never above Max (where the
+   * content scrolls). For a card whose content is short and known, as a contributor's ride is
+   * (Figma 4560:12422): the map stays in sight above it. Off for every other card.
+   */
+  fits?: boolean;
   children: ReactNode;
 }
 
@@ -116,15 +124,45 @@ export function BottomSheet({
   ref,
   floats = 'corner',
   height,
+  fits = false,
   children,
 }: Props) {
   const own = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLButtonElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [ownSnap, setOwnSnap] = useState<Snap>('middle');
-  const snap = height?.snap ?? ownSnap;
   const setSnap = height?.onSnap ?? setOwnSnap;
+  // A fitted sheet's measure: the map's height, and its handle, header and content's together.
+  const [fit, setFit] = useState<{ mapPx: number; contentPx: number } | null>(null);
+  useLayoutEffect(() => {
+    const sheet = own.current;
+    const content = contentRef.current;
+    if (!fits || !sheet || !content) return;
+    const measure = () =>
+      setFit({
+        mapPx: sheet.offsetHeight,
+        contentPx:
+          (handleRef.current?.offsetHeight ?? 0) +
+          (headRef.current?.offsetHeight ?? 0) +
+          content.offsetHeight,
+      });
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const el of [sheet, headRef.current, content]) if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, [fits]);
+  const fitted: FittedSheet | null =
+    fits && fit
+      ? {
+          heightsFor: (h) => fitHeightsFor(h, fit.contentPx),
+          open: fitSnap(fit.mapPx, fit.contentPx),
+        }
+      : null;
+  const keptSnap = height?.snap ?? ownSnap;
+  // Open, a fitted sheet stands at its content's height as it is now: the content can change.
+  const snap = fitted && keptSnap !== 'low' ? fitted.open : keptSnap;
   // A finger on it: the glide is off, and --sheet-y is the drag's, written
   // straight onto the sheet move by move rather than rendered.
   const [dragging, setDragging] = useState(false);
@@ -192,7 +230,11 @@ export function BottomSheet({
     setDragging,
     show,
     docked,
+    fitted,
   });
+  const handleLabel = fitted
+    ? FITTED_HANDLE_LABEL[snap === 'low' ? 'low' : 'open']
+    : HANDLE_LABEL[snapName(snap)];
 
   const setRefs = useCallback(
     (el: HTMLDivElement | null) => {
@@ -235,9 +277,11 @@ export function BottomSheet({
         ref={handleRef}
         type="button"
         data-testid="dock-handle"
-        aria-label={HANDLE_LABEL[snapName(snap)]}
-        title={HANDLE_LABEL[snapName(snap)]}
-        onClick={() => setSnap(snapAfterTap(snap))}
+        aria-label={handleLabel}
+        title={handleLabel}
+        onClick={() =>
+          setSnap(fitted ? (snap === 'low' ? fitted.open : 'low') : snapAfterTap(snap))
+        }
         // HandleNotch: 8 above the bar, 4 below (Figma 3742:1049).
         className="flex w-full shrink-0 touch-none justify-center pt-2 pb-1 sheet-floating:hidden"
       >
@@ -261,7 +305,7 @@ export function BottomSheet({
             : undefined
         }
       >
-        {children}
+        {fits ? <div ref={contentRef}>{children}</div> : children}
       </div>
     </div>
   );
@@ -277,3 +321,9 @@ const HANDLE_LABEL = {
   max: 'Sheet at full screen. Lower it',
   free: 'Sheet raised past half the screen. Raise to full screen',
 } satisfies Record<SnapName, string>;
+
+/** The same for a fitted sheet, which has two heights: lowered, and raised to its content. */
+const FITTED_HANDLE_LABEL = {
+  low: 'Sheet lowered. Raise it',
+  open: 'Sheet raised. Lower it',
+} as const;

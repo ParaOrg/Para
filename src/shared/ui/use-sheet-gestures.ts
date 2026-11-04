@@ -10,11 +10,21 @@ import {
   DRAG_PX,
   aboveMiddle,
   follow,
+  heightsFor,
   shownAt,
   snapAfterTap,
   swallowTheTapsClick,
+  type SheetHeights,
   type Snap,
 } from './sheet-gesture';
+
+/** A sheet whose open height is its content's (BottomSheet's `fits`): Low, and open. */
+export interface FittedSheet {
+  /** Its two heights, as magnets, for a map `h` tall (fitHeightsFor). */
+  heightsFor: (h: number) => SheetHeights;
+  /** Where it rests open (fitSnap). */
+  open: Snap;
+}
 
 interface SheetGesturesOptions {
   /** The sheet itself. */
@@ -34,6 +44,8 @@ interface SheetGesturesOptions {
   show: (shown: number) => void;
   /** Docked, not floating. */
   docked: () => boolean;
+  /** Set for a fitted sheet: it moves between Low and open only. Null for Low, Middle and Max. */
+  fitted: FittedSheet | null;
 }
 
 interface SheetGestures {
@@ -60,17 +72,27 @@ export function useSheetGestures({
   setDragging,
   show,
   docked,
+  fitted,
 }: SheetGesturesOptions): SheetGestures {
+  // A fitted sheet has no Middle or Max of its own: what would land there lands open.
+  const landing = (next: Snap | 'close'): Snap | 'close' =>
+    fitted && (next === 'middle' || next === 'max') ? fitted.open : next;
   const settle = (next: Snap | 'close') => {
     setDragging(false);
-    if (next === 'close') onClose();
-    else setSnap(next);
+    const at = landing(next);
+    if (at === 'close') onClose();
+    else setSnap(at);
   };
-  // Read by the listeners bound once below: today's snap and settle,
+  /** Where a tap on the handle goes: round the three heights, or a fitted sheet's two. */
+  const afterTap = (from: Snap): Snap =>
+    fitted ? (from === 'low' ? fitted.open : 'low') : snapAfterTap(from);
+  /** The magnets of a sheet on a map `h` tall. */
+  const heightsOf = (h: number): SheetHeights => (fitted ? fitted.heightsFor(h) : heightsFor(h));
+  // Read by the listeners bound once below: today's snap, settle and magnets,
   // written as the render commits, before a finger or a wheel can come.
-  const now = useRef({ snap, settle });
+  const now = useRef({ snap, settle, heightsOf, isFitted: fitted !== null });
   useLayoutEffect(() => {
-    now.current = { snap, settle };
+    now.current = { snap, settle, heightsOf, isFitted: fitted !== null };
   });
 
   // When a finger or a mouse last pressed on the sheet: focus that follows a
@@ -106,7 +128,7 @@ export function useSheetGestures({
         }
         if (y - pull.startY <= DRAG_PX / 3) return;
         const h = sheet.offsetHeight;
-        pull.track = follow(pull.startY, pull.t, shownAt('max', h), h);
+        pull.track = follow(pull.startY, pull.t, shownAt('max', h), h, now.current.heightsOf(h));
         setDragging(true);
       }
       e.preventDefault();
@@ -136,7 +158,7 @@ export function useSheetGestures({
       pushed += e.deltaY;
       if (aboveMiddle(at) && pushed < -DRAG_PX) {
         pushed = 0;
-        now.current.settle('middle');
+        now.current.settle(now.current.isFitted ? 'low' : 'middle');
       } else if (at !== 'max' && at !== 'low' && pushed > DRAG_PX) {
         pushed = 0;
         now.current.settle('max');
@@ -170,7 +192,7 @@ export function useSheetGestures({
     const raises =
       handle.contains(target) || (snap === 'low' && !!bodyRef.current?.contains(target));
     const h = sheet.offsetHeight;
-    const track = follow(e.clientY, e.timeStamp, shownAt(snap, h), h);
+    const track = follow(e.clientY, e.timeStamp, shownAt(snap, h), h, heightsOf(h));
     let moving = false;
 
     // Followed on the window, not the sheet: a finger or a mouse dragged
@@ -190,7 +212,7 @@ export function useSheetGestures({
       hotspot();
       if (moving || raises) swallowTheTapsClick(ev.clientX, ev.clientY);
       if (moving) now.current.settle(track.release(ev.timeStamp, ev.clientY));
-      else if (raises) now.current.settle(snapAfterTap(snap));
+      else if (raises) now.current.settle(afterTap(snap));
     };
     const cancel = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
@@ -214,7 +236,8 @@ export function useSheetGestures({
   // it is.
   const onBodyFocus = (e: ReactFocusEvent<HTMLDivElement>) => {
     const fromKeys = e.timeStamp - lastPress.current > 800 && e.target.matches(':focus-visible');
-    if (snap !== 'max' && fromKeys && docked()) setSnap('max');
+    const top = fitted ? fitted.open : 'max';
+    if (snap !== top && fromKeys && docked()) setSnap(top);
   };
 
   return { onPointerDown, onBodyFocus };

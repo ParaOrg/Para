@@ -132,6 +132,30 @@ export function heightsFor(h: number): Record<SnapName & ('low' | 'middle' | 'ma
   };
 }
 
+/** A sheet's magnets: what it shows at Low, Middle and Max (heightsFor), or a fitted sheet's (fitHeightsFor). */
+export type SheetHeights = ReturnType<typeof heightsFor>;
+
+/**
+ * A fitted sheet's two heights, as `heights` (BottomSheet's `fits`): Low, and open at its
+ * content's height, `contentPx`, never above Max nor below Low. Middle and Max are both the
+ * open height, so a drag that would reach either lands open.
+ */
+export function fitHeightsFor(h: number, contentPx: number): SheetHeights {
+  const { low, max } = heightsFor(h);
+  const open = Math.max(low, Math.min(max, Math.round(contentPx)));
+  return { low, middle: open, max: open };
+}
+
+/**
+ * A fitted sheet's open snap, for a map `h` tall and content `contentPx` tall: the share of Max
+ * its content needs, or Max itself when the content needs all of it (and then scrolls).
+ */
+export function fitSnap(h: number, contentPx: number): Snap {
+  const { max } = heightsFor(h);
+  if (max <= 0 || contentPx >= max) return 'max';
+  return Math.max(LOW_PX, contentPx) / max;
+}
+
 /** What a sheet `h` tall shows at `snap`, a free height's included: a share of Max's. */
 export function shownAt(snap: Snap, h: number): number {
   return typeof snap === 'number' ? Math.round(heightsFor(h).max * snap) : heightsFor(h)[snap];
@@ -161,8 +185,13 @@ export function slideShowing(shown: number): string {
  * however fast it began; held still 80 ms before lifting, it is a
  * placement, not a flick. The touch pull at Max and the pointer drag share it.
  */
-export function follow(startY: number, t: number, from: number, h: number) {
-  const heights = heightsFor(h);
+export function follow(
+  startY: number,
+  t: number,
+  from: number,
+  h: number,
+  heights: SheetHeights = heightsFor(h),
+) {
   const max = heights.max;
   let y = startY;
   let last = t;
@@ -203,7 +232,7 @@ export function follow(startY: number, t: number, from: number, h: number) {
 export function snapFor(
   shown: number,
   velocity: number,
-  heights: ReturnType<typeof heightsFor>,
+  heights: SheetHeights,
   from: number,
 ): Snap | 'close' {
   if (velocity >= FLICK) return 'max';
@@ -222,7 +251,7 @@ export function snapFor(
 }
 
 /** The height that shows closest to `shown`: Low, Middle or Max. */
-function nearest(shown: number, heights: ReturnType<typeof heightsFor>): 'low' | 'middle' | 'max' {
+function nearest(shown: number, heights: SheetHeights): 'low' | 'middle' | 'max' {
   const stops = ['low', 'middle', 'max'] as const;
   return stops.reduce((best, stop) =>
     Math.abs(heights[stop] - shown) < Math.abs(heights[best] - shown) ? stop : best,

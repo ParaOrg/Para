@@ -23,6 +23,12 @@ interface Props {
   labelsPlace: LabelsPlace;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
+  /**
+   * Docked, it follows the sheet up to Middle and stays there, the sheet covering it above
+   * (`middle`, the public map's). A fitted sheet's open height is its content's, the map in sight
+   * above it, so the button rides on it all the way (`none`, the contributor's ride).
+   */
+  dockCap?: 'middle' | 'none';
   /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
   above?: ReactNode;
   /**
@@ -62,6 +68,7 @@ export function Locator({
   basemapThumbnails,
   labelsPlace,
   docked,
+  dockCap = 'middle',
   above,
   onNote,
 }: Props) {
@@ -93,7 +100,9 @@ export function Locator({
   // gap over that foot and from the right edge; the contributor page sets them,
   // the public map keeps 0.75rem each.
   const y = docked
-    ? `max(var(--dock-y, 100%), ${slide('middle')})`
+    ? dockCap === 'none'
+      ? 'var(--dock-y, 100%)'
+      : `max(var(--dock-y, 100%), ${slide('middle')})`
     : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
   return (
     <div
