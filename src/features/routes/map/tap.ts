@@ -14,6 +14,12 @@ const TAP_HALF_PX = { coarse: 20, fine: 5 } as const;
 /** The hit layers the two hooks draw (layers.ts), under the names the hooks have used. */
 export const ROUTES_HIT_LAYER = LAYERS.routesHit;
 export const HOTSPOTS_FILL_LAYER = LAYERS.hotspotsFill;
+/**
+ * What a tap on a hotspot can land on, topmost first: its pin (zoomed in) or
+ * its dot (zoomed out), each a box's own, then the box. A pin's head stands
+ * above its box, so a tap there is the box's too.
+ */
+export const HOTSPOT_TAP_LAYERS = [LAYERS.hotspotsPin, LAYERS.hotspotsDot, HOTSPOTS_FILL_LAYER];
 
 /**
  * Whether the tap that raised `event` came from a finger. The event itself
@@ -155,7 +161,10 @@ function queryTargets(
   const box = tapBox(point, event);
   const features = (layer: string, where: typeof box | [number, number] = box) =>
     map.getLayer(layer) ? map.queryRenderedFeatures(where, { layers: [layer] }) : [];
-  const inside = idsInOrder(features(HOTSPOTS_FILL_LAYER, [point.x, point.y]));
+  // A pin, a dot or a box under the tap, in that order: each one the box's.
+  const hotspots = (where: typeof box | [number, number] = box) =>
+    idsInOrder(HOTSPOT_TAP_LAYERS.flatMap((layer) => features(layer, where)));
+  const inside = hotspots([point.x, point.y]);
   if (inside.length > 0) return { routeIds: [], routeKeys: [], hotspotIds: inside };
   const routes = features(ROUTES_HIT_LAYER);
   if (routes.length > 0)
@@ -164,7 +173,7 @@ function queryTargets(
       routeKeys: idsInOrder(routes, 'routeId'),
       hotspotIds: [],
     };
-  return { routeIds: [], routeKeys: [], hotspotIds: idsInOrder(features(HOTSPOTS_FILL_LAYER)) };
+  return { routeIds: [], routeKeys: [], hotspotIds: hotspots() };
 }
 
 /**

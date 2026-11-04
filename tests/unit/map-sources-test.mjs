@@ -86,11 +86,14 @@ const BUFFERED = ['direction-arrows'];
  * 2026-10-05: the cut point is rounded to the tile's grid and kept where
  * the rest of a line is simplified, so the stretch inside turns a little),
  * and the place wash, whose dashes count from where its ring was cut. The
- * rest of a ride past a picked hintuan is a line too (2026-10-12).
+ * rest of a ride past a picked hintuan is a line too (2026-10-12). The
+ * hotspots' pins, whose dots share their points, stand 48 px above them:
+ * past 32.
  */
 const DEFAULT_BUFFER = [
   'saved-routes',
   'saved-stops',
+  'saved-stops-pins',
   'place-wash',
   'saved-routes-pass',
   'babaan-side',

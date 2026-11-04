@@ -10,6 +10,7 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 import type { MapWhere } from './map-where';
 import type { PausedFrostProps } from './paused-frost';
 import { RIDE_FRAME_PADDING, trailBounds } from './trail-picture-frame';
+import { usePublishedHotspots } from './use-published-hotspots';
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
 import type { MapNote } from '../notices/map-note';
@@ -67,7 +68,8 @@ interface ContributeMapProps {
 
 /**
  * The map under every screen: the public map's own view, with the published
- * routes faint on it, the recording's trail over them and the shell's locator
+ * routes faint on it and the published hotspots (boxes and pins, display-only),
+ * the recording's trail over them and the shell's locator
  * (the dot, and the button with the map-style picker) on top.
  */
 export function ContributeMap({
@@ -108,6 +110,7 @@ export function ContributeMap({
   }, [isRecording, PausedFrost]);
 
   usePublishedRoutes(map, isMapLoaded);
+  usePublishedHotspots(map, isMapLoaded);
   useRecordingTrail(map, ride?.trail ?? track.trail);
 
   // Once each time a ride's screen opens, its whole trail framed above the folded sheet. A ride

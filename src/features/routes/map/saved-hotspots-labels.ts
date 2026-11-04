@@ -18,7 +18,7 @@ const SCALE_PX = 100;
 /** The most ground the bar's width may cover with the names on. */
 const NAMES_WITHIN_M = 700;
 /** Metres a pixel spans at zoom 0 over Metro Manila (14.6° N), MapLibre's tiles being 512 px. */
-const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / 512;
+export const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / 512;
 
 /**
  * Hotspot names, terminals' and hintuans' alike, once the scale bar's width
@@ -63,9 +63,13 @@ export function namePaint(kind: HotspotKind) {
 
 /**
  * The two name layers of the hotspots' `source`, the hintuans' under the
- * terminals', added on top of everything.
+ * terminals', added on top of everything, or under `before` when given.
  */
-export function addHotspotLabels(map: Pick<MapLibreMap, 'addLayer'>, source: string): void {
+export function addHotspotLabels(
+  map: Pick<MapLibreMap, 'addLayer'>,
+  source: string,
+  before?: string,
+): void {
   // Labels go on top of everything: a name is never worth hiding under a line.
   // The terminals' above the hintuans', so where two collide the terminal
   // keeps its name.
@@ -73,25 +77,28 @@ export function addHotspotLabels(map: Pick<MapLibreMap, 'addLayer'>, source: str
     [HINTUAN_LABEL, 'hintuan'],
     [LABEL, 'terminal'],
   ] as const) {
-    map.addLayer({
-      id,
-      type: 'symbol',
-      source,
-      minzoom: NAMES_FROM,
-      filter: labelsOf(kind),
-      // The same size at every zoom; 12, SemiBold as near as the map's fonts
-      // come, two lines over some 92 px as drawn, a white halo round it
-      // (namePaint).
-      layout: {
-        'text-field': ['get', 'name'],
-        'text-size': 12,
-        'text-font': ['Noto Sans Bold'],
-        'text-anchor': 'center',
-        'text-justify': 'center',
-        'text-max-width': 8,
-        'text-allow-overlap': false,
+    map.addLayer(
+      {
+        id,
+        type: 'symbol',
+        source,
+        minzoom: NAMES_FROM,
+        filter: labelsOf(kind),
+        // The same size at every zoom; 12, SemiBold as near as the map's fonts
+        // come, two lines over some 92 px as drawn, a white halo round it
+        // (namePaint).
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 12,
+          'text-font': ['Noto Sans Bold'],
+          'text-anchor': 'center',
+          'text-justify': 'center',
+          'text-max-width': 8,
+          'text-allow-overlap': false,
+        },
+        paint: namePaint(kind),
       },
-      paint: namePaint(kind),
-    });
+      before,
+    );
   }
 }

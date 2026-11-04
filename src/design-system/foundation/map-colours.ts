@@ -21,6 +21,8 @@ export const MAP_COLOURS = {
   'Map/HotspotsCard/Hintuan/border-primary': '#0d542b', // green/900
   'Map/HotspotsCard/Terminal/surface': '#0069a8', // sky/700
   'Map/HotspotsCard/Terminal/border-primary': '#024a70', // sky/900
+  'Map/Pin/Terminal/surface': '#1447e6', // blue/700
+  'Map/Pin/Hintuan/surface': '#008236', // green/700
   'Map/LocatorIndicatorOverlay/surface': '#8b7aff', // parabrand/500, at 15%
   'Map/LocatorIndicatorOverlay/border': '#4900be', // parabrand/800, at 75%
   // Provisional: not named in Figma yet. papunta and pabalik colour the studio's Contributors map;

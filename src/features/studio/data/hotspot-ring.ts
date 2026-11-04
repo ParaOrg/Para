@@ -8,8 +8,8 @@ import {
 import { haversine, lineLength, type LngLat } from '@/shared/utils/geo';
 
 // What only the studio asks of a hotspot's ring, apart from routes/geo/ring.ts so that no page
-// that only reads the map carries it: a box that crosses itself, where a line enters a box, and
-// a box's centroid.
+// that only reads the map carries it: a box that crosses itself, and where a line enters a box.
+// A box's centroid is routes/geo/box-centre.ts's: the map's pins stand on it too.
 
 /**
  * Whether two edges of the ring that do not share a corner touch or cross: a
@@ -71,46 +71,4 @@ export function entryDistance(line: LngLat[], ring: Ring): number {
     if (p) best = Math.min(best, haversine(a, p));
   }
   return upTo + (Number.isFinite(best) ? best : haversine(a, b));
-}
-
-/**
- * Area-weighted centroid. Falls back to the vertex average for a degenerate
- * (zero-area) ring so a bad trace still gets a usable label point.
- *
- * The shoelace sums are taken from the ring's first corner, not from 0°, and
- * the corner added back at the end, as signedArea2 in right-of-line.ts does.
- * From 0° every term is about 121 × 14.7 while a box's area is about 1e-8, so
- * the sums would cancel away the digits that matter (measured: a 10 m box at
- * Manila had its centroid some 60 m off, and 23 of the 102 published hotspots
- * had their point outside their own box). From the corner the terms are the
- * box's own size, and the degenerate test below compares an area in square
- * degrees that actually means something (1e-12 is about 0.01 m²).
- */
-export function ringCentroid(ring: Ring): LngLat {
-  const n = ring.length;
-  if (n === 0) return [0, 0];
-  const [ox, oy] = ring[0];
-  let a2 = 0;
-  let cx = 0;
-  let cy = 0;
-  for (let i = 0; i < n; i++) {
-    const x1 = ring[i][0] - ox;
-    const y1 = ring[i][1] - oy;
-    const x2 = ring[(i + 1) % n][0] - ox;
-    const y2 = ring[(i + 1) % n][1] - oy;
-    const f = x1 * y2 - x2 * y1;
-    a2 += f;
-    cx += (x1 + x2) * f;
-    cy += (y1 + y2) * f;
-  }
-  if (Math.abs(a2) < EPS) {
-    let sx = 0;
-    let sy = 0;
-    for (const [x, y] of ring) {
-      sx += x - ox;
-      sy += y - oy;
-    }
-    return [ox + sx / n, oy + sy / n];
-  }
-  return [ox + cx / (3 * a2), oy + cy / (3 * a2)];
 }
