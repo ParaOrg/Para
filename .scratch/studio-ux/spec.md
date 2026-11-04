@@ -8,6 +8,8 @@ One small pull request per task, into `staging`. Each task gets its own `issues/
 
 ## Decisions so far
 
+(The drawing decisions of 2026-11-04 are under wave 3.)
+
 - **Only a draft's maker can discard it** (the owner's 1a, 2026-11-04). Another editor never discards it, not even after 7 days. This settles the 7-day rule left open in `../studio-maps/issues/05-playground-drafts.md` and finding studio-09 in `../codebase-review/studio.md`.
 - **A delete made while the editor has a draft of that route goes into the draft** (the owner's yes, 2026-11-04). It isn't approved in the same press. The notice says it was added to the draft, to review in Drafts. A delete with no draft open is approved at once, as today (studio-01).
 
@@ -44,16 +46,38 @@ Checked against `staging` at 2c01bcc on 2026-11-04. The findings are in `../code
 
 5. **Real dialogs** for the save sheet, the hotspot panel and the sign-in, change-password and reset-password panels: `role="dialog"`, an accessible name, focus trapped inside and returned on close (`.claude/CLAUDE.md`, Accessibility). One shared dialog in `shared/ui/` if two or more can use it. The look doesn't change.
 
-### Wave 3: polish, from the owner's designs
+### Wave 3: drawing, the owner's asks of 2026-11-04
 
-6. **The map's draft markers** say "Draft: NAME" for every draft. Whether they show Pending or who is changing it is the owner's design.
-7. **The hotspot card**: the rest of the card (the TODO in `panels/hotspot-card.tsx`).
-8. **Ideas from Felt**: see `felt-research.md`, once the owner picks which ones to design.
-9. **The owner's list** of what bothers them in the studio.
+The owner's decisions on 2026-11-04. Felt was dropped; `felt-research.md` stays for reference only. Where there's no Figma design yet, the owner said to work around it for now: build from the existing look and the owner's words, and the owner restyles later.
+
+6. **Brand colour on the drawing.**
+   - The line being drawn, its points' rims and a new hotspot box's fill: `parabrand-800` (the primary). Today they are rose/600.
+   - Extend's borrowed stretch: `parabrand-300` (the paler one). Today it's blue/600.
+   - The Start pill is green and the End pill red, each with its own colour.
+   - The U-turn mark stays amber.
+   - Any other blue left in the drawing goes; it isn't used any more.
+7. **The general route line in brand colour.** Figma's `Map/RouteLine/surface-default` becomes `parabrand-300` and `Map/RouteLine/surface-selected` becomes `parabrand-800`. This session changes the variables in the owner's Figma file, as the owner asked, then runs `sync-tokens`. It changes the public map too. The terminal pin, the Papunta trail and the walked line stay as they are.
+8. **Arrows on the drawn line.** The public map's moving chevrons (`routes/map/direction-arrows.ts`), on the line's solid stretches only: not on the preview, and not on dashed stretches.
+9. **A live preview in Snap.** While the cursor rests, the routed path from the last point to the cursor shows as a solid `parabrand-300` trail. A click makes it part of the line. There's no preview in Draw. It uses today's public router, asked only when the cursor pauses, at most once a second. Measured on 2026-11-04 at about 0.4 s an answer, so the trail shows about 0.5–1.5 s after the cursor stops. A routing server of our own (a few hundredths of a second, no limit) is not planned. The owner decides after trying the preview, and moving would change only `drawing/snap.ts`.
+10. **The Snap | Draw toolbar** from the owner's Figma frame (node 4304:21645). It is a flattened capture: Undo / Redo in one pill, and Snap | Draw | Done in another. The owner said to work from the picture for now. "Tap" becomes "Snap".
+11. **Closing a loop by its first point.** When the cursor nears the line's first point, a small "connect" icon shows. A click closes the line, and the route becomes an Ikot: no Start or End on the line, and the save sheet asks for the signboard instead of the two ends. The same icon appears where a return trip's line reaches its outbound's start (this session's call, as the owner allowed). The icon is worked around, after researching the pattern on Mobbin. An ikot's timeline keeps today's Tip rule (`CONTEXT.md`, Tip), the owner's 7a: no fixed start, nothing random.
+12. **Curves in Draw, the way Figma's pen tool makes them.**
+    - Click places a corner. Click and drag places a smooth point with mirrored handles. Alt-drag moves one handle alone, and double-clicking a point switches it between corner and smooth.
+    - Afterwards, an editor can drag a point, a handle or the line itself.
+    - Only Draw's stretches bend, never a snapped one (the owner's 1).
+    - The handles and points are worked around in `parabrand-800`.
+    - Stored as a third kind of segment, with its handles, in the existing `segments` jsonb. It needs no migration: the column checks nothing. The publish flattens a curve into points, so the public map doesn't change.
+    - The biggest item here, likely a few PRs.
+13. **The route's sheet open while drawing**, instead of only after Done. Its layout is waiting on the owner's answer.
+
+### Wave 3b: polish, from the owner's designs
+
+14. **The map's draft markers** say "Draft: NAME" for every draft. Whether they show Pending or who is changing it is the owner's design.
+15. **The hotspot card**: the rest of the card (the TODO in `panels/hotspot-card.tsx`).
 
 ### Wave 4: housekeeping, beside the rest
 
-10. **Split the long files**, biggest first, one file per PR, after the wave 1 fixes in the same files have landed: `drawing/use-drawing.ts` (519 lines), `data/routes-write.ts` (365), `app/studio/workshop.tsx` (308), `panels/use-save-facts.ts` (261), and so on.
+16. **Split the long files**, biggest first, one file per PR, after the wave 1 fixes in the same files have landed: `drawing/use-drawing.ts` (519 lines), `data/routes-write.ts` (365), `app/studio/workshop.tsx` (308), `panels/use-save-facts.ts` (261), and so on.
 
 ### Needs the owner's OK: database
 

@@ -13,7 +13,7 @@ Five projects for now and one for later, planned with the owner on 2026-10-15; p
 | 7 | para-commute.org | [custom-domain/spec.md](custom-domain/spec.md) | `www.para-commute.org` serves `main` from Cloudflare, `tiles.para-commute.org` turns the tiles cache on, and the old app's phones move over | The owner: the site on Para, Vercel's records, the nameservers |
 | 8 | The commuter app in the stores | [commuter-app/spec.md](commuter-app/spec.md) | The commuter side as a React Native (Expo) app on the App Store and Google Play, from the polished web design, aiming for December 2026 | The owner: the web polish first, the store accounts, go for the map spike |
 | 9 | A database of its own for staging | [staging-backend/spec.md](staging-backend/spec.md) | Staging talks to a second Supabase project, so testing never touches live data, and migrations are tried there first | Parked: needs Supabase Pro or a free slot (2026-10-29) |
-| 10 | Studio UX | [studio-ux/spec.md](studio-ux/spec.md) | The bugs that lose an editor's work first, then real dialogs, then polish from the owner's designs and ideas from Felt | The owner: designs for wave 3, the OK on two database fixes |
+| 10 | Studio UX | [studio-ux/spec.md](studio-ux/spec.md) | The bugs that lose an editor's work first, then real dialogs, then the owner's drawing asks: brand colour, arrows, a live Snap preview, loops closed by their first point, curves in Draw | The owner: the live sheet's layout, the OK on two database fixes |
 | Later | Train tracking | [train-tracking/spec.md](train-tracking/spec.md) | "My train ride" (stations left, an alert before yours) and trains estimated from the timetable | The owner deciding when; timetables |
 
 ## Order
