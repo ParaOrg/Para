@@ -1716,9 +1716,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await openHistory(page);
   await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
-    'another phone signed in to the account sees its uploads, with none of its own',
-    (await page.getByRole('listitem').count()) === 2 &&
+    'another phone signed in to the account sees all its uploads, those deleted on the first phone too (Para keeps them), with none of its own',
+    (await page.getByRole('listitem').count()) === 4 &&
+      (await statusOf(page, 'From phone A')) === 'Uploaded' &&
       (await statusOf(page, 'Also phone A')) === 'Uploaded' &&
+      (await statusOf(page, 'Here and there')) === 'Uploaded' &&
       (await statusOf(page, 'Only here')) === 'Uploaded',
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));

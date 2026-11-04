@@ -598,13 +598,6 @@ const retryButton = (page, name) =>
     fake.signIns === 0,
     `${fake.signIns} sign-ins`,
   );
-  await page.reload({ waitUntil: 'load' });
-  await openHistory(page);
-  await row(page, localName).waitFor();
-  check(
-    '  after a reload the deleted upload does not come back',
-    (await row(page, upName).count()) === 0,
-  );
   await openRide(page, localName);
   await deleteRecord(page);
   await page.waitForFunction(() => document.querySelectorAll('li').length === 0);
@@ -615,6 +608,14 @@ const retryButton = (page, name) =>
   check(
     '  one never uploaded is deleted from the phone for good',
     (await storedUpload(page, localId)) === 'gone' && !fake.rows.has(localId),
+  );
+  // Reloaded, the deleted upload would come back from the account's list, were its id not kept.
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await page.waitForTimeout(1500);
+  check(
+    '  after a reload the deleted upload does not come back',
+    (await page.getByRole('listitem').count()) === 0 && fake.rows.has(upId),
   );
 }
 
