@@ -220,13 +220,24 @@ export async function withDrawing(v: DirectionRow): Promise<DirectionDrawing> {
     .eq('id', v.id)
     .single();
   if (error) throw new Error(error.message);
+  return drawingOf(v, data);
+}
+
+/**
+ * The direction with a drawing read from a row or a draft's payload, which
+ * store it alike: `control_points`, `segments` and `shape`.
+ */
+export function drawingOf(
+  v: DirectionRow,
+  raw: { control_points: unknown; segments: unknown; shape: unknown },
+): DirectionDrawing {
   // Read as unknown: the drawing columns are stored as given and no schema
   // for a segment exists yet, so the generated Json type proves nothing here.
-  const controlPoints: unknown = data.control_points;
-  const segments: unknown = data.segments;
+  const controlPoints: unknown = raw.control_points;
+  const segments: unknown = raw.segments;
   return {
     ...v,
-    shape: parsed(lineShapeSchema, [data], 'direction line')[0]?.shape ?? null,
+    shape: parsed(lineShapeSchema, [{ shape: raw.shape }], 'direction line')[0]?.shape ?? null,
     controlPoints: Array.isArray(controlPoints)
       ? (controlPoints as DirectionDrawing['controlPoints'])
       : [],
