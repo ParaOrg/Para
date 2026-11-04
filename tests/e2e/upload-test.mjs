@@ -214,19 +214,28 @@ const openHistory = async (page) => {
   await tab.click();
   await heading.waitFor();
 };
-/** A card's ⋮ menu, opened unless it is open, then the item named by `pattern`. */
-const openMenu = async (page, name) => {
-  const more = row(page, name).getByRole('button', { name: /^More actions/ });
-  if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
+/** A card opened: its ride's screen, with the sheet folded. */
+const openRide = async (page, name) => {
+  await row(page, name).locator('[data-ride-card]').click();
+  await page.getByTestId('dock-handle').waitFor();
 };
-const act = async (page, name, pattern) => {
-  await openMenu(page, name);
-  await row(page, name).getByRole('button', { name: pattern }).click();
+/** The ride's sheet raised, so its Status row and Delete this record can be reached. */
+const raiseSheet = async (page) => {
+  await page.getByTestId('dock-handle').click();
+  await page.getByRole('button', { name: 'Delete this record' }).waitFor();
 };
-const countOf = async (page, name, pattern) => {
-  await openMenu(page, name);
-  return row(page, name).getByRole('button', { name: pattern }).count();
+const deleteQuestion = (page) =>
+  page.getByRole('alertdialog', { name: 'You want to remove this recording?' });
+/** Delete this record asked and confirmed on the open ride's sheet: back on History. */
+const deleteRecord = async (page) => {
+  await raiseSheet(page);
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  await deleteQuestion(page).getByRole('button', { name: 'Delete this record' }).click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
 };
+/** The open ride's Status row button: Tap to upload, or Tap retry upload. */
+const rideStatusButton = (page) =>
+  page.getByRole('button', { name: /^(Tap to upload|Tap retry upload), / });
 /** Waits for the card named `name` whose status line, the one under its date, matches `pattern`. */
 const waitForStatus = async (page, name, pattern) => {
   await openHistory(page);
@@ -402,17 +411,20 @@ const retryButton = (page, name) =>
   }
   await page.waitForTimeout(500);
   check(
-    'while an upload is in flight, coming online or to the front sends nothing more; no retry, and no ⋮: nothing to upload or remove',
-    fake.saveRequests === 1 &&
-      (await retryButton(page, 'Held ride').count()) === 0 &&
-      (await row(page, 'Held ride')
-        .getByRole('button', { name: /^More actions/ })
-        .count()) === 0 &&
-      (await row(page, 'Held ride')
-        .getByRole('button', { name: /^(Upload to Para|Remove from this phone)/ })
-        .count()) === 0,
+    'while an upload is in flight, coming online or to the front sends nothing more, and offers no retry',
+    fake.saveRequests === 1 && (await retryButton(page, 'Held ride').count()) === 0,
     `${fake.saveRequests} sends`,
   );
+  // Deleting would cut the upload short: the ride's Delete this record waits, and nothing is sendable.
+  await openRide(page, 'Held ride');
+  await raiseSheet(page);
+  check(
+    "  and the ride's sheet has Delete this record waiting, and no Tap to upload",
+    (await page.getByRole('button', { name: 'Delete this record' }).isDisabled()) &&
+      (await rideStatusButton(page).count()) === 0,
+  );
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   fake.release();
   await waitForStatus(page, 'Held ride', UPLOADED);
   check('  released, it is uploaded once', fake.rows.size === 1 && fake.saveRequests === 1);
@@ -436,12 +448,20 @@ const retryButton = (page, name) =>
     await statusOf(page, 'Refused ride'),
   );
   check(
-    '  its status line is the retry button, and its ⋮ still offers Remove from this phone',
+    "  its status line is the retry button, and its ride's sheet still offers Delete this record",
     (await retryButton(page, 'Refused ride').count()) === 1 &&
-      (await countOf(page, 'Refused ride', /^Remove from this phone/)) === 1,
+      (await (async () => {
+        await openRide(page, 'Refused ride');
+        await raiseSheet(page);
+        const isOffered = await page
+          .getByRole('button', { name: 'Delete this record' })
+          .isEnabled();
+        await page.getByRole('button', { name: 'Close' }).click();
+        await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+        return isOffered;
+      })()),
   );
   fake.next.save = 'day_cap';
-  await page.keyboard.press('Escape');
   await retryButton(page, 'Refused ride').click();
   await waitForStatus(page, 'Refused ride', /20 recordings sent today/);
   check('  the day cap says it tries again later', fake.rows.size === 0);
@@ -488,43 +508,32 @@ const retryButton = (page, name) =>
   await page.context().close();
 }
 
-// -------------------------------------- remove the upload, keep the copy
+// -------------------------------------- an upload Para dropped, sent again from its ride's sheet
 {
   const id = 'aaaaaaaa-0000-4000-8000-000000000005';
   const { page, fake } = await phone();
   await seed(page, [savedRide(id, T0, { name: 'Remove me' })]);
   await page.reload({ waitUntil: 'load' });
   await waitForStatus(page, 'Remove me', UPLOADED);
-  await act(page, 'Remove me', /^Delete from Para/);
-  const question = await row(page, 'Remove me').getByRole('group').innerText();
-  check(
-    'Delete from Para asks first, says the phone keeps its copy, and focuses Keep it',
-    question.includes('Delete this recording from Para? The copy on this phone stays.') &&
-      (await page.evaluate(() => document.activeElement?.textContent)) === 'Keep it',
-  );
-  await shot(page, '3-remove-question');
-  await row(page, 'Remove me').getByRole('button', { name: 'Keep it' }).click();
-  check('  Keep it removes nothing', fake.rows.size === 1 && fake.deleteRequests === 0);
-  fake.next.remove = 'removeOffline';
-  await act(page, 'Remove me', /^Delete from Para/);
-  await row(page, 'Remove me').getByRole('button', { name: 'Delete', exact: true }).click();
-  await waitForStatus(page, 'Remove me', /Not removed/);
-  check('  with no signal it says it was not removed', fake.rows.size === 1);
-  await act(page, 'Remove me', /^Delete from Para/);
-  await row(page, 'Remove me').getByRole('button', { name: 'Delete', exact: true }).click();
-  await waitForStatus(page, 'Remove me', ON_PHONE_ONLY);
-  check(
-    '  removed from Para; the phone keeps its copy, marked removed',
-    fake.rows.size === 0 && (await storedUpload(page, id)) === 'removed',
-  );
+  // Nothing in the app deletes an upload from Para, so its row goes the way an editor's delete does.
+  fake.rows.delete(id);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Remove me', ON_PHONE_ONLY);
+  await waitForStatus(page, 'Remove me', /Removed by an editor/);
   await page.waitForTimeout(500);
   const sendsBefore = fake.saveRequests;
   check('  a reload does not send it again on its own', fake.rows.size === 0 && sendsBefore === 1);
-  await act(page, 'Remove me', /^Upload to Para/);
+  await openRide(page, 'Remove me');
+  await raiseSheet(page);
+  await shot(page, '3-tap-to-upload');
+  const tapToUpload = page.getByRole('button', { name: /^Tap to upload, / });
+  check(
+    "  its ride's sheet reads Tap to upload on the Status row, a button",
+    (await tapToUpload.count()) === 1,
+  );
+  await tapToUpload.click();
+  await page.getByRole('button', { name: 'Close' }).click();
   await waitForStatus(page, 'Remove me', UPLOADED);
-  check('  Upload to Para, in its menu, sends it back', fake.rows.size === 1);
+  check('  Tap to upload sends it back', fake.rows.size === 1 && fake.saveRequests === 2);
 }
 
 // ------------------------------------------- delete the phone's copy
@@ -544,53 +553,69 @@ const retryButton = (page, name) =>
   const [upName, localName, upId, localId] = fake.rows.has(uploaded)
     ? ['Uploaded one', 'Local one', uploaded, local]
     : ['Local one', 'Uploaded one', local, uploaded];
-  await act(page, upName, /^Remove from this phone/);
+  await openRide(page, upName);
+  await raiseSheet(page);
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  const question = deleteQuestion(page);
+  await question.waitFor();
   check(
-    "Remove from this phone on an uploaded recording says Para's copy stays",
-    (await row(page, upName).getByRole('group').innerText()).includes(
-      'Remove this recording from this phone? The copy uploaded to Para stays.',
-    ),
+    'Delete this record asks first, and focuses Keep recording',
+    (await page.evaluate(() => document.activeElement?.textContent)) === 'Keep recording',
   );
   await shot(page, '4-delete-question');
-  await row(page, upName).getByRole('button', { name: 'Remove', exact: true }).click();
-  // Para's copy is still the account's, so its card stays, now without a copy on this phone.
+  await question.getByRole('button', { name: 'Keep recording' }).click();
+  await question.waitFor({ state: 'detached' });
+  check(
+    '  Keep recording deletes nothing, and the ride stays open',
+    (await storedUpload(page, upId)) !== 'gone' &&
+      (await page.getByRole('button', { name: 'Delete this record' }).count()) === 1,
+  );
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  await question.waitFor();
+  await page.keyboard.press('Escape');
+  await question.waitFor({ state: 'detached' });
+  check('  Escape does the same', (await storedUpload(page, upId)) !== 'gone');
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  await question.getByRole('button', { name: 'Delete this record' }).click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  // Para's copy is never deleted; the id is kept so the account's list does not bring it back.
   await page.waitForFunction(
-    (n) =>
-      [...document.querySelectorAll('li')].some(
-        (li) => li.textContent.includes(n) && !li.textContent.includes('Remove this recording'),
-      ),
+    (n) => ![...document.querySelectorAll('li')].some((li) => li.textContent.includes(n)),
     upName,
   );
   check(
-    "  and its card stays as the account's upload, with only Delete from Para in its menu",
-    (await countOf(page, upName, /^Remove from this phone/)) === 0 &&
-      (await countOf(page, upName, /^Delete from Para/)) === 1,
+    "  the phone's copy is gone and so is its card; Para's copy is not, and is not asked to go",
+    (await storedUpload(page, upId)) === 'gone' && fake.rows.has(upId) && fake.deleteRequests === 0,
+  );
+  check(
+    '  its id is kept in the phone’s hidden list',
+    (
+      await page.evaluate(() => JSON.parse(localStorage.getItem('para-hidden-rides') ?? '[]'))
+    ).includes(upId),
   );
   check(
     '  two recordings waiting at once sent as the account, with no sign-in of their own',
     fake.signIns === 0,
     `${fake.signIns} sign-ins`,
   );
+  await page.reload({ waitUntil: 'load' });
+  await openHistory(page);
+  await row(page, localName).waitFor();
   check(
-    "  the phone's copy is gone; Para's is not",
-    (await storedUpload(page, upId)) === 'gone' && fake.rows.has(upId),
+    '  after a reload the deleted upload does not come back',
+    (await row(page, upName).count()) === 0,
   );
-  await page.keyboard.press('Escape');
-  await act(page, localName, /^Remove from this phone/);
-  const localQuestion = await row(page, localName).getByRole('group').innerText();
-  check(
-    '  on one never uploaded, it says it will be gone for good',
-    localQuestion.includes('It has not been uploaded, so it will be gone for good.') &&
-      !fake.rows.has(localId),
-    localQuestion,
-  );
-  await row(page, localName).getByRole('button', { name: 'Remove', exact: true }).click();
-  await page.waitForFunction(() => document.querySelectorAll('li').length === 1);
+  await openRide(page, localName);
+  await deleteRecord(page);
+  await page.waitForFunction(() => document.querySelectorAll('li').length === 0);
   check(
     "  focus lands on History's heading, not the page",
     (await page.evaluate(() => document.activeElement?.textContent)) === 'History',
   );
-  check('  deleted from the phone', (await storedUpload(page, localId)) === 'gone');
+  check(
+    '  one never uploaded is deleted from the phone for good',
+    (await storedUpload(page, localId)) === 'gone' && !fake.rows.has(localId),
+  );
 }
 
 // ------------------------------------- an upload an editor has deleted
@@ -621,21 +646,23 @@ const retryButton = (page, name) =>
     }),
   ]);
   await page.reload({ waitUntil: 'load' });
-  await waitForStatus(page, 'Old identity', /^Uploaded from an earlier sign-in$/);
+  await waitForStatus(page, 'Old identity', UPLOADED);
   check(
-    'an upload made by an earlier identity on this phone offers no Delete from Para, and says why',
-    (await countOf(page, 'Old identity', /^Delete from Para/)) === 0 &&
-      (await statusOf(page, 'Old identity')).includes('Uploaded from an earlier sign-in'),
+    'an upload made by an earlier identity on this phone reads plain Uploaded, as any upload does',
+    (await statusOf(page, 'Old identity')) === 'Uploaded',
+  );
+  await openRide(page, 'Old identity');
+  await raiseSheet(page);
+  check(
+    "  and its ride's sheet offers Delete this record, and nothing to upload",
+    (await page.getByRole('button', { name: 'Delete this record' }).isEnabled()) &&
+      (await rideStatusButton(page).count()) === 0,
   );
   await page.keyboard.press('Escape');
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   check(
-    "  Escape closes the card's menu and puts focus back on its ⋮",
-    (await row(page, 'Old identity')
-      .getByRole('button', { name: /^More actions/ })
-      .getAttribute('aria-expanded')) === 'false' &&
-      (
-        await page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? '')
-      ).startsWith('More actions'),
+    '  Escape on the ride goes back to History',
+    (await row(page, 'Old identity').count()) === 1,
   );
 }
 
@@ -778,10 +805,13 @@ const retryButton = (page, name) =>
     (await SCREENS.earlier(page).count()) === 0 && fake.saveRequests === 0,
   );
   await openHistory(page);
-  await act(page, 'Earlier one', /^Upload to Para,/);
+  await openRide(page, 'Earlier one');
+  await raiseSheet(page);
+  await page.getByRole('button', { name: /^Tap to upload, / }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
   await waitForStatus(page, 'Earlier one', UPLOADED);
   check(
-    '  it can still be sent from History, one at a time, from its menu',
+    "  it can still be sent from History, one at a time, from its ride's sheet",
     fake.rows.size === 1 &&
       fake.rows.has(a) &&
       (await statusOf(page, 'Earlier two')) === 'Only on this phone',

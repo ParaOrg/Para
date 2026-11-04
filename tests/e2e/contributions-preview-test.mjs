@@ -369,11 +369,12 @@ await a.page
   .getByText('Removed by an editor')
   .waitFor({ timeout: 20000 });
 const lagroRow = a.page.getByRole('listitem').filter({ hasText: `Lagro A ${RUN}` });
-await lagroRow.getByRole('button', { name: /^More actions / }).click();
+await lagroRow.locator('[data-ride-card]').click();
+await a.page.getByTestId('dock-handle').click();
 check(
-  '  the phone, reopened, says an editor removed it, keeps its copy, and offers Upload to Para',
-  (await lagroRow.getByRole('button', { name: /^Remove from this phone/ }).count()) === 1 &&
-    (await lagroRow.getByRole('button', { name: /^Upload to Para/ }).count()) === 1,
+  "  the phone, reopened, says an editor removed it, keeps its copy, and its ride's sheet offers Tap to upload and Delete this record",
+  (await a.page.getByRole('button', { name: /^Tap to upload, / }).count()) === 1 &&
+    (await a.page.getByRole('button', { name: 'Delete this record' }).isEnabled()),
 );
 await shot(a.page, '8-phone-removed-by-editor');
 
