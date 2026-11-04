@@ -218,3 +218,17 @@ second run must stop and change nothing), and runs `…_check.sql`: its rolled-b
 raise nothing and leave no row behind, and its 7 read-only rows must be `t`. The revert refuses over a
 stored fare, over retired totals counting one and over an E-Jeep ride. On a second database, apply then revert twice
 leaves the schema as before, and re-applying passes the check.
+
+## delete-account-refuse-uploads.sh
+
+`migrations/20261105090000_delete_account_refuse_uploads.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/delete-account-refuse-uploads.sh
+
+It applies every earlier migration and the contributor paste files as live will have them
+(account_stats, delete_my_account, contribution_fare, delete_account_keep_uploads), then
+`../apply/20261105090000_delete_account_refuse_uploads_apply.sql` twice (the second run must stop and
+change nothing), and runs `…_check.sql`: its rolled-back behaviour part must raise nothing and leave
+no row behind, and its 5 read-only rows must be `t`. On a second database, without
+delete_account_keep_uploads, the apply refuses and writes no ledger row. On a third, apply then revert
+twice leaves the schema as before, and re-applying passes the check.
