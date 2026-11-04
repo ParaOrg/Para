@@ -122,8 +122,14 @@ export function ContributeMap({
     const bounds = trailBounds(ride.trail);
     if (!bounds) return;
     framedRideId.current = ride.id;
+    // The status bar and a phone's home bar, as the sheet and Back stand clear of them.
+    const insets = screenInsets(map.getContainer());
     map.fitBounds(bounds, {
-      padding: RIDE_FRAME_PADDING,
+      padding: {
+        ...RIDE_FRAME_PADDING,
+        top: RIDE_FRAME_PADDING.top + insets.top,
+        bottom: RIDE_FRAME_PADDING.bottom + insets.bottom,
+      },
       bearing: 0,
       pitch: 0,
       maxZoom: 17,
@@ -177,4 +183,23 @@ export function ContributeMap({
       {map && locator?.(map, isMapLoaded, isRecording, mark, onMapNote, setWhere, isDocked)}
     </>
   );
+}
+
+/**
+ * The page's status bar (`--map-safe-top`) and a phone's home bar (`safe-area-inset-bottom`), in
+ * pixels, as `host` sees them: both 0 in a browser that keeps clear of them itself.
+ */
+function screenInsets(host: HTMLElement): { top: number; bottom: number } {
+  const probe = document.createElement('div');
+  probe.style.cssText =
+    'position:absolute;visibility:hidden;padding-top:var(--map-safe-top, 0px);' +
+    'padding-bottom:env(safe-area-inset-bottom, 0px)';
+  host.appendChild(probe);
+  const style = getComputedStyle(probe);
+  const insets = {
+    top: parseFloat(style.paddingTop) || 0,
+    bottom: parseFloat(style.paddingBottom) || 0,
+  };
+  probe.remove();
+  return insets;
 }
