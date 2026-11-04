@@ -261,7 +261,6 @@ const isReceived = async (fake, startName, ms = 15000) => {
   return false;
 };
 const NO_SIGNAL = /^Waiting for signal$/;
-const ON_PHONE_ONLY = /^Only on this phone$/;
 /** A true failure's status line, which is its retry button. */
 const retryButton = (page, name) =>
   row(page, name).getByRole('button', { name: /^Tap retry upload, / });
