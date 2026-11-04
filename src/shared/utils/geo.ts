@@ -91,6 +91,34 @@ export function lineLength(coords: readonly LngLat[]): number {
 }
 
 /**
+ * The stretch of a line from `fromM` to `toM` metres along it, its ends cut
+ * where those distances fall (straight between fixes, which are metres
+ * apart). Out-of-range distances are clamped; an empty stretch has no points.
+ */
+export function sliceLine(line: readonly LngLat[], fromM: number, toM: number): LngLat[] {
+  const out: LngLat[] = [];
+  let walked = 0;
+  for (let i = 1; i < line.length; i++) {
+    const [a, b] = [line[i - 1], line[i]];
+    const d = haversine(a, b);
+    const at = (m: number): LngLat => {
+      const t = d === 0 ? 0 : (m - walked) / d;
+      return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    };
+    if (out.length === 0 && fromM <= walked + d) out.push(fromM <= walked ? a : at(fromM));
+    if (out.length > 0) {
+      if (toM <= walked + d) {
+        out.push(at(Math.max(toM, walked)));
+        return toM > fromM ? out : [];
+      }
+      out.push(b);
+    }
+    walked += d;
+  }
+  return toM > fromM ? out : [];
+}
+
+/**
  * Metres one screen pixel covers at this latitude and zoom, on MapLibre's
  * map: Web Mercator with 512 px tiles, so the equator's 40,075 km span 512 px
  * at zoom 0 — half the 156,543 m figure quoted for 256 px tiles. One function
