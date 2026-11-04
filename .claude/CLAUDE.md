@@ -190,7 +190,7 @@ Choose the right home for each piece of state:
 
 | State | Where it lives |
 | --- | --- |
-| Data from Supabase or any server | TanStack Query, nowhere else |
+| Data from Supabase or any server | TanStack Query, nowhere else. The one exception is the published map (see Hooks and effects) |
 | UI state for one component | `useState` / `useReducer` |
 | UI state shared inside one feature | React context in that feature, provided as low in the tree as possible |
 | Shareable or bookmarkable state (filters, selected route, search text) | The URL |
@@ -261,6 +261,7 @@ Never put secrets in the frontend. Only the Supabase URL, the publishable key an
 - Custom hooks do one thing and are named for it: `useRouteSearch`, not `useRouteStuff`.
 - Use `useEffect` **only to sync with something outside React**: MapLibre, the DOM, subscriptions, timers. Every effect that subscribes, listens or schedules also cleans up.
 - Never use an effect to derive state, transform data or fetch data. Compute during render or use TanStack Query.
+  - The one exception is the published map's reads (`features/routes/published/` and the hooks that load them, such as `use-saved-routes.ts`). They load in an effect because the public page carries no TanStack Query, to keep it small; `scripts/checks/check-build.mjs` proves it.
 - Use `useMemo` and `useCallback` only for a measured performance problem, or when a stable reference is genuinely required (an effect dependency, a memoized child).
 - Wrap imperative libraries like MapLibre in one component or hook that owns the instance in a `useRef`. The rest of the app talks to it through props and callbacks, never by reaching into the instance.
 
