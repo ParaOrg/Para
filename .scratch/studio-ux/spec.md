@@ -15,22 +15,29 @@ One small pull request per task, into `staging`. Each task gets its own `issues/
 
 ## Where the 2026-10-28 review stands
 
-Checked against `staging` at 2c01bcc on 2026-11-04. The findings are in `../codebase-review/studio.md`.
+Checked against `staging` on the night of 2026-11-04, after wave 1's pull requests. The findings are in `../codebase-review/studio.md`.
 
 | Finding | State |
 | --- | --- |
-| studio-01: delete approves the editor's other unreviewed changes | Open: wave 1 |
-| studio-02: Edit and the signboard editor open the approved version, then overwrite the editor's own draft | Open: wave 1 |
+| studio-01: delete approves the editor's other unreviewed changes | Fixed (#695): a delete joins the editor's open draft |
+| studio-02: Edit and the signboard editor open the approved version, then overwrite the editor's own draft | Fixed for the line (#699), the signboards (#703) and the hotspot (#710). Left: the save panel's facts after "Edit draft details", after the live route sheet (wave 3, item 13) lands in `save-panel.tsx` |
 | studio-03: every approval rewrites links, causing false conflicts | Open, database: needs the owner's OK |
-| studio-04: sheets aren't modal | Partly fixed: the map is `inert` while a sheet is open. Dialog semantics are wave 2 |
+| studio-04: sheets aren't modal | Partly fixed: the map is `inert` while a sheet is open. Dialog semantics are wave 2; the route sheet stops being a modal with item 13 |
 | studio-05: Close the loop offered after Extend | Fixed |
-| studio-06: a Follow reply joins onto a drawing that has moved on | To check: wave 1 |
+| studio-06: a Follow reply joins onto a drawing that has moved on | Fixed: `connect` refuses a line that arrives after the drawing changed |
 | studio-07: false "This draft changed" after Edit draft details | Fixed |
 | studio-08: editors can rewrite any column of their draft | Open, database: needs the owner's OK |
-| studio-09: any editor can discard any draft | Open: wave 1, decided above |
+| studio-09: any editor can discard any draft | Fixed in the UI (#696). The database check waits on the owner's OK |
 | studio-10: four query caches | Fixed: one client in `studio-session-provider.tsx` |
 | studio-11: aborted router requests keep their turn | Fixed: `router-queue.ts` |
-| studio-12 to studio-19: tests, validation, messages, paging | To check: wave 1, one PR each where still open |
+| studio-12: the two-editors suite's load never waited | Fixed |
+| studio-13: browser suites test the drafts-off path | Partly fixed: `save-drafts-test` runs the core flows with drafts on. Retiring the drafts-off copies waits on retiring the flag |
+| studio-14: the review flow never ran in CI | Fixed: "Review suites on the isolated preview" |
+| studio-15: two two-editors checks could not fail | Fixed |
+| studio-16: stale database types, `as never`, env without Zod | Env fixed (#706). Left: regenerate `database.types.ts` and drop `as never` in `drafts.ts` |
+| studio-17: the stored drawing and the router's replies unvalidated | Fixed |
+| studio-18: raw codes on screen, inline query keys | Fixed (#705, #711). Left: Supabase's own auth sentences in sign-in and change-password, and two nested ternaries |
+| studio-19: the direction list pages by a changing column | Fixed |
 | studio-20: five files far over the size limit | Wave 4 |
 
 ## Waves
