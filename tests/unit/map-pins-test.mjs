@@ -1,13 +1,15 @@
 // A hotspot's pin (src/features/routes/map/hotspot-pins.ts): where it stands,
 // the middle of its box and always inside it, however the box bends
 // (src/features/routes/geo/box-centre.ts, boxCentre); the zoom it comes in at,
-// the one where a 393 px phone spans 500 m at Manila's latitude, with its dot
-// below it and never both; and a tap on a pin or a dot, the box's own, even
+// the one where the scale bar first reads 500 m at Manila's latitude, with its
+// dot below it, never both, growing from 6 px to 16 px; the names a zoom later,
+// where the bar first reads 300 m; and a tap on a pin or a dot, the box's own, even
 // where a route runs under it (src/features/routes/map/tap.ts).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/map-pins-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createPropertyExpression, latest } from '@maplibre/maplibre-gl-style-spec';
 import { boxCentre, ringCentroid } from '../../src/features/routes/geo/box-centre.ts';
 import { pointInRing } from '../../src/features/routes/geo/ring.ts';
 import {
@@ -18,6 +20,7 @@ import {
   addHotspotPins,
   hotspotPinsData,
 } from '../../src/features/routes/map/hotspot-pins.ts';
+import { NAMES_FROM } from '../../src/features/routes/map/saved-hotspots-labels.ts';
 import {
   HOTSPOTS_FILL_LAYER,
   ROUTES_HIT_LAYER,
@@ -108,11 +111,50 @@ test('each box with an area gets one pin point, inside it, with its id and kind'
 
 // ------------------------------------------------------------ the zoom
 
-test('the pins come in where a 393 px phone spans 500 m at Manila, 512 px tiles', () => {
-  const metresPerPx = (zoom) =>
-    (40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / (512 * 2 ** zoom);
-  assert.ok(Math.abs(393 * metresPerPx(PINS_FROM_ZOOM) - 500) < 1e-6);
-  assert.ok(Math.abs(PINS_FROM_ZOOM - 15.86) < 0.01, `${PINS_FROM_ZOOM}`);
+/** Metres the scale bar's 100 px cover at Manila (14.6° N), MapLibre's tiles being 512 px. */
+const barMetres = (zoom) =>
+  (100 * 40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / (512 * 2 ** zoom);
+
+/** What MapLibre's ScaleControl reads over `metres`: the largest 1, 2, 3 or 5 × 10ⁿ in it. */
+const barReads = (metres) => {
+  const tens = 10 ** Math.floor(Math.log10(metres));
+  return [5, 3, 2, 1].find((step) => step * tens <= metres) * tens;
+};
+
+test('the pins come in the moment the scale bar first reads 500 m: its 100 px under 1000 m', () => {
+  assert.ok(Math.abs(barMetres(PINS_FROM_ZOOM) - 1000) < 1e-6);
+  assert.ok(Math.abs(PINS_FROM_ZOOM - 12.89) < 0.01, `${PINS_FROM_ZOOM}`);
+  assert.equal(barReads(barMetres(PINS_FROM_ZOOM - 0.01)), 1000);
+  assert.equal(barReads(barMetres(PINS_FROM_ZOOM + 0.01)), 500);
+});
+
+test('the names come in the moment the scale bar first reads 300 m: its 100 px under 500 m', () => {
+  assert.ok(Math.abs(barMetres(NAMES_FROM) - 500) < 1e-6);
+  assert.ok(Math.abs(NAMES_FROM - 13.89) < 0.01, `${NAMES_FROM}`);
+  assert.equal(barReads(barMetres(NAMES_FROM - 0.01)), 500);
+  assert.equal(barReads(barMetres(NAMES_FROM + 0.01)), 300);
+  assert.ok(NAMES_FROM > PINS_FROM_ZOOM, 'the pins before the names');
+});
+
+test('the dot is 6 px across to zoom 11, grows evenly to 16 px at the pins, and never past it', () => {
+  const layers = [];
+  addHotspotPins({ addSource: () => {}, addLayer: (l) => layers.push(l) }, []);
+  const dot = layers.find((l) => l.id === DOT);
+  const radius = createPropertyExpression(
+    dot.paint['circle-radius'],
+    'paint',
+    latest.paint_circle['circle-radius'],
+  );
+  assert.equal(radius.result, 'success');
+  const at = (zoom) => radius.value.evaluate({ zoom });
+  assert.equal(at(8), 3, 'zoom 8');
+  assert.equal(at(11), 3, 'zoom 11');
+  const halfway = (11 + PINS_FROM_ZOOM) / 2;
+  assert.ok(Math.abs(at(halfway) - 5.5) < 1e-9, `halfway, zoom ${halfway}: ${at(halfway)}`);
+  assert.ok(Math.abs(at(PINS_FROM_ZOOM) - 8) < 1e-9, `at the pins: ${at(PINS_FROM_ZOOM)}`);
+  for (let z = 0; z <= 24; z += 0.25) assert.ok(at(z) <= 8, `16 px across at most, zoom ${z}`);
+  for (let z = 11; z < PINS_FROM_ZOOM - 0.25; z += 0.25)
+    assert.ok(at(z + 0.25) > at(z), `growing, zoom ${z}`);
 });
 
 test('the dot below that zoom and the pin from it: one or the other, never both', () => {
@@ -124,12 +166,11 @@ test('the dot below that zoom and the pin from it: one or the other, never both'
   assert.equal(pin.source, dot.source, 'one source of points');
   // MapLibre draws a layer from its minzoom, inclusive, to its maxzoom, exclusive.
   const drawn = (l, z) => z >= (l.minzoom ?? 0) && z < (l.maxzoom ?? 24);
-  for (const z of [10, 13.4, 15.85, PINS_FROM_ZOOM, 15.9, 17, 20]) {
+  for (const z of [10, 12.5, 12.88, PINS_FROM_ZOOM, 12.9, 13.9, 15.9, 17, 20]) {
     assert.equal(drawn(dot, z) + drawn(pin, z), 1, `zoom ${z}`);
     assert.equal(drawn(pin, z), z >= PINS_FROM_ZOOM, `zoom ${z}`);
   }
   assert.equal(dot.type, 'circle');
-  assert.equal(dot.paint['circle-radius'], 8, '16 px across');
   assert.equal(pin.layout['icon-anchor'], 'bottom-left');
   assert.deepEqual(pin.layout['icon-offset'], [-2, 0], "the stem's middle on the point");
 });

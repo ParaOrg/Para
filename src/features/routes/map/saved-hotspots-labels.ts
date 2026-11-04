@@ -6,6 +6,7 @@ import type {
 } from 'maplibre-gl';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
+import { zoomForScale } from '@/shared/utils/geo';
 
 import { HOTSPOT_CONTENT } from './colours';
 import { LAYERS } from './layers';
@@ -13,25 +14,26 @@ import type { HotspotKind } from '../model/hotspots';
 
 export const LABEL = 'saved-stops-label';
 export const HINTUAN_LABEL = LAYERS.hotspotsHintuanLabel;
-/** The scale bar's width (MapView's ScaleControl, MapLibre's default maxWidth). */
-const SCALE_PX = 100;
-/** The most ground the bar's width may cover with the names on. */
-const NAMES_WITHIN_M = 700;
-/** Metres a pixel spans at zoom 0 over Metro Manila (14.6° N), MapLibre's tiles being 512 px. */
-export const METRES_PER_PX_AT_ZOOM_0 = (40_075_016.686 * Math.cos((14.6 * Math.PI) / 180)) / 512;
+/**
+ * The latitude the scale bar's rules are worked out at: Metro Manila's,
+ * 14.6° N. A bar's reading is the zoom's at a given latitude, so a rule on
+ * the bar is a zoom for a layer here (zoomForScale), one for the whole map.
+ */
+export const SCALE_RULE_LAT = 14.6;
+
+/** The most ground the scale bar's width may cover with the names on. */
+const NAMES_WITHIN_M = 500;
 
 /**
- * Hotspot names, terminals' and hintuans' alike, once the scale bar's width
- * covers 700 m or less (the owner's choice): zoom 13.40. The bar steps 1, 2,
- * 3, 5, so it never reads 700 m: it reads 500 m there, the names coming in
- * halfway through its 500 m. Close in only, but near enough to the overview
- * that a name may sit over the line's stretch through its hotspot; where
- * names meet, MapLibre keeps one. A bar's reading is the zoom's at a given
- * latitude, so the bar's rule is a zoom for a layer here (station-labels.tsx
- * measures it live, for markers). Two layers, one a kind, so each can be set
- * apart.
+ * Hotspot names, terminals' and hintuans' alike, from the moment the scale
+ * bar first reads 300 m (the owner's choice): once its width covers less than
+ * 500 m, zoom 13.89. The bar steps 1, 2, 3, 5, so it reads 500 m down to 500
+ * m and 300 m below that. Close in only, but near enough to the overview that
+ * a name may sit over the line's stretch through its hotspot; where names
+ * meet, MapLibre keeps one. station-labels.tsx measures the bar live, for
+ * markers. Two layers, one a kind, so each can be set apart.
  */
-const NAMES_FROM = Math.log2((METRES_PER_PX_AT_ZOOM_0 * SCALE_PX) / NAMES_WITHIN_M);
+export const NAMES_FROM = zoomForScale(NAMES_WITHIN_M, SCALE_RULE_LAT);
 
 /**
  * The label points of one kind, less the one of the hotspot being edited. A

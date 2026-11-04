@@ -115,7 +115,25 @@ const drawnMap = async (root: HTMLElement): Promise<MapLibreMap> => {
   return map;
 };
 
-/** Zoomed in (a phone spanning under 500 m): each box with its pin, the stem's foot on its middle. */
+/**
+ * Each dot's edge, `radius` px out: a query just inside it finds the dot, one
+ * just outside does not. Probed on the side away from the other box (the
+ * terminal's to the west, the hintuan's to the east), so the two dots, a few
+ * px apart zoomed out, never answer for each other.
+ */
+const expectDotRadius = async (map: MapLibreMap, inside: number, outside: number) => {
+  for (const dot of map.queryRenderedFeatures({ layers: [DOT] })) {
+    if (dot.geometry.type !== 'Point') continue;
+    const { x, y } = map.project([dot.geometry.coordinates[0], dot.geometry.coordinates[1]]);
+    const away = dot.properties.kind === 'terminal' ? -1 : 1;
+    const idsAt = (dx: number) =>
+      map.queryRenderedFeatures([x + away * dx, y], { layers: [DOT] }).map((f) => f.properties.id);
+    await expect(idsAt(inside)).toContain(dot.properties.id);
+    await expect(idsAt(outside)).not.toContain(dot.properties.id);
+  }
+};
+
+/** Zoomed in (the scale bar under 500 m): each box with its pin, the stem's foot on its middle. */
 export const ZoomedIn: Story = {
   args: { zoom: 17.2 },
   play: async ({ canvasElement }) => {
@@ -126,20 +144,55 @@ export const ZoomedIn: Story = {
   },
 };
 
-/** Zoomed out (a phone spanning over 500 m): each box with a 16 px dot, no pin. */
+/** Just short of the pins (the scale bar at 1 km): each box with its dot all but 16 px across, no pin. */
 export const ZoomedOut: Story = {
-  args: { zoom: Math.floor(PINS_FROM_ZOOM * 10) / 10 - 0.6 },
+  args: { zoom: Math.floor(PINS_FROM_ZOOM * 10) / 10 - 0.1 },
   play: async ({ canvasElement }) => {
     const map = await drawnMap(canvasElement);
     await waitFor(() => expect(map.queryRenderedFeatures({ layers: [DOT] }).length).toBe(2));
     await expect(map.queryRenderedFeatures({ layers: [PIN] })).toHaveLength(0);
+    await expectDotRadius(map, 6.5, 9);
+  },
+};
+
+/**
+ * Zoomed far out, near the public map's opening view of all of Metro
+ * Manila: each box with a 6 px dot, the smallest. The two boxes, some 100 m
+ * apart, are a few px apart here, so their dots overlap.
+ */
+export const SmallDot: Story = {
+  args: { zoom: 11 },
+  play: async ({ canvasElement }) => {
+    const map = await drawnMap(canvasElement);
+    await waitFor(() => expect(map.queryRenderedFeatures({ layers: [DOT] }).length).toBe(2));
+    await expectDotRadius(map, 2, 4.5);
+  },
+};
+
+/** Halfway out (zoom 12): each dot partway grown, some 11 px across. */
+export const MidDot: Story = {
+  args: { zoom: 12 },
+  play: async ({ canvasElement }) => {
+    const map = await drawnMap(canvasElement);
+    await waitFor(() => expect(map.queryRenderedFeatures({ layers: [DOT] }).length).toBe(2));
+    await expectDotRadius(map, 4.5, 7);
+  },
+};
+
+/** Zoom 13, just past the pins' zoom (the scale bar at 500 m): each box with its pin, the farthest out a pin is drawn. */
+export const PinsComeIn: Story = {
+  args: { zoom: 13 },
+  play: async ({ canvasElement }) => {
+    const map = await drawnMap(canvasElement);
+    await waitFor(() => expect(map.queryRenderedFeatures({ layers: [PIN] }).length).toBe(2));
+    await expect(map.getLayer(DOT)?.isHidden(map.getZoom())).toBe(true);
   },
 };
 
 /**
  * Right at the threshold: the pins, and the dots' layer hidden. (A query still
- * finds the dots there, laid out in the zoom-15 tile under them: the same
- * box's, so a tap on one means what a tap on its pin does.)
+ * finds the dots there, laid out in the tile under them: the same box's, so a
+ * tap on one means what a tap on its pin does.)
  */
 export const AtTheThreshold: Story = {
   args: { zoom: PINS_FROM_ZOOM },
