@@ -140,4 +140,5 @@ export const MAP_PAINT = {
   'Paint/draw-line': '#4900be', // parabrand/800: the line being drawn, its points' rims, a new hotspot's fill
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
   'Paint/draw-borrow': '#c1bfff', // parabrand/300: the stretch an Extend borrows
+  'Paint/draw-preview': '#c1bfff', // parabrand/300: Snap's road from the last point to the resting cursor
 } as const satisfies Record<`Paint/${string}`, string>;

@@ -27,6 +27,7 @@ import { useDrawEvents } from './use-draw-events';
 import { useDrawRendering } from './use-draw-rendering';
 import { useLineBorrowing } from './use-line-borrowing';
 import { usePointBar } from './use-point-bar';
+import { useSnapPreview } from './use-snap-preview';
 import { findUTurns } from './uturns';
 
 /**
@@ -504,6 +505,22 @@ export function useDrawing(
 
   useDrawRendering(map, { segments, controlPoints, area, uTurns, picking, selected });
   useDrawArrows(map, segments, area, isStandIn);
+  useSnapPreview(
+    map,
+    drawing,
+    controlPoints,
+    freehand,
+    useMemo(
+      () => ({
+        points: cpRef,
+        freehand: freehandRef,
+        area: areaRef,
+        picking: pickingRef,
+        join: joinRef,
+      }),
+      [],
+    ),
+  );
 
   return {
     drawing,
