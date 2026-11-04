@@ -10,6 +10,7 @@ import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
 import type { SaveTarget } from './use-save-target';
 import { useHotspotToEditQuery } from '../data/use-hotspot-to-edit-query';
+import { useRouteToEditQuery } from '../data/use-route-to-edit-query';
 import { whyCannotSave } from '../drawing/toolbar-text';
 import type { Drawing } from '../drawing/use-drawing';
 
@@ -60,10 +61,15 @@ export function StudioSaveSheets({
   const toEdit = useHotspotToEditQuery(approvedHotspot);
   const editingHotspot = toEdit.data?.hotspot ?? approvedHotspot;
 
+  // The route's facts as the editor's own draft has them, when there is one: a save builds on
+  // the draft, so the form must start from it (route-to-edit.ts).
+  const approvedRoute = target.editing?.route ?? target.parentRoute;
+  const routeToEdit = useRouteToEditQuery(approvedRoute);
+  const draftedRoute = routeToEdit.data ?? approvedRoute;
   const routeForm = {
     draw,
-    existing: target.editing,
-    route: target.parentRoute,
+    existing: target.editing && draftedRoute ? { ...target.editing, route: draftedRoute } : null,
+    route: target.parentRoute ? draftedRoute : null,
     slotReversed: target.slotReversed,
     hotspots: hotspots.hotspots,
     directions: saved.directions,
@@ -98,8 +104,9 @@ export function StudioSaveSheets({
       {isBeside && draw.drawing && !draw.area && (
         <SaveBesideFrame>
           <SavePanel
-            // A new line is a new form: what was typed for the last one doesn't carry over.
-            key={`${draw.target.routeId}:${draw.target.directionId}`}
+            // A new line is a new form: what was typed for the last one doesn't carry over. The
+            // form takes the route's facts once, so it starts again when the draft's are read.
+            key={`${draw.target.routeId}:${draw.target.directionId}:${routeToEdit.isSuccess ? 'read' : 'reading'}`}
             {...routeForm}
             saveBlocked={whyCannotSave(draw)}
           />
@@ -108,7 +115,11 @@ export function StudioSaveSheets({
 
       {!isBeside && isSaving && draw.drawing && !draw.area && (
         <SaveSheetFrame>
-          <SavePanel {...routeForm} onCancel={onCancel} />
+          <SavePanel
+            key={routeToEdit.isSuccess ? 'read' : 'reading'}
+            {...routeForm}
+            onCancel={onCancel}
+          />
         </SaveSheetFrame>
       )}
     </>

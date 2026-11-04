@@ -387,6 +387,9 @@ check(
   '  the panel says it updates this direction',
   (await body()).includes('Update this direction'),
 );
+// A via in this edit: a route fact, kept in the draft, for 3a to find again.
+const viaField = () => page.getByPlaceholder('Zabarte');
+await viaField().fill('Zabarte');
 n = log.length;
 const revisionBefore = route?.revision;
 await saveButton().click();
@@ -433,6 +436,11 @@ await go(at(0, 0), 15);
 await clickAt(at(0.006, 0.001), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 2);
 await done();
+check(
+  "  and its form opens on the draft's route facts: the via saved before",
+  (await viaField().inputValue()) === 'Zabarte',
+  await viaField().inputValue(),
+);
 n = log.length;
 await saveButton().click();
 await drafted();
@@ -443,6 +451,7 @@ check(
     draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.control_points
       .length ===
       OUT.length + 2 &&
+    draftOf('route', route?.id)?.payload.route.via === 'Zabarte' &&
     approvedWrites(w).length === 0,
   said(w),
 );
