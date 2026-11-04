@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { PasswordField } from '@/design-system/primitives/password-field';
 import { TextField } from '@/design-system/primitives/text-field';
 import { coarse } from '@/features/routes/map/map-view';
 import { Turnstile } from '@/shared/ui/turnstile';
 
+import { AuthDialog } from './auth-dialog';
 import { authErrorMessage } from './auth-error-message';
 import { useCaptcha } from './use-captcha';
 import { getSupabase, supabaseConfigError } from '../data/supabase';
@@ -37,6 +38,7 @@ interface Props {
  * ResetPassword, not here.
  */
 export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: Props) {
+  const headingId = useId();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -114,124 +116,122 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
       : 'Send reset link';
 
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center bg-black/30 p-6">
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-        {sent ? (
-          <>
-            <h2 className="text-base font-medium text-neutral-900">Check your email</h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              {`If an account exists for ${email}, a reset link is on its way. Open it on this device to choose a new password.`}
-            </p>
-            <button
-              type="button"
-              onClick={afterSent}
-              className="mt-5 w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white"
-            >
-              Done
-            </button>
-          </>
-        ) : (
-          <form onSubmit={submit}>
-            <h2 className="text-base font-medium text-neutral-900">{heading}</h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              {mode === 'forgot'
-                ? 'Enter your email and we will send you a link to choose a new password.'
-                : 'Anyone can see the routes. Only you can save or change them. Your drawing is kept on this device while you sign in.'}
-            </p>
+    <AuthDialog labelledBy={headingId} onDismiss={onDismiss}>
+      {sent ? (
+        <>
+          <h2 id={headingId} className="text-base font-medium text-neutral-900">
+            Check your email
+          </h2>
+          <p className="mt-2 text-sm text-neutral-600">
+            {`If an account exists for ${email}, a reset link is on its way. Open it on this device to choose a new password.`}
+          </p>
+          <button
+            type="button"
+            onClick={afterSent}
+            className="mt-5 w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white"
+          >
+            Done
+          </button>
+        </>
+      ) : (
+        <form onSubmit={submit}>
+          <h2 id={headingId} className="text-base font-medium text-neutral-900">
+            {heading}
+          </h2>
+          <p className="mt-2 text-sm text-neutral-600">
+            {mode === 'forgot'
+              ? 'Enter your email and we will send you a link to choose a new password.'
+              : 'Anyone can see the routes. Only you can save or change them. Your drawing is kept on this device while you sign in.'}
+          </p>
 
-            <div className="mt-4">
-              <TextField
-                label="Email"
-                type="email"
-                onClear={() => setEmail('')}
+          <div className="mt-4">
+            <TextField
+              label="Email"
+              type="email"
+              onClear={() => setEmail('')}
+              required
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
+              autoFocus={!coarse}
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
+          </div>
+
+          {mode === 'signin' && (
+            <div className="mt-2">
+              <PasswordField
+                label="Password"
                 required
-                // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
-                autoFocus={!coarse}
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
               />
             </div>
+          )}
 
-            {mode === 'signin' && (
-              <div className="mt-2">
-                <PasswordField
-                  label="Password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                />
-              </div>
-            )}
-
-            {mode === 'signin' && (
-              <div className="mt-2 text-right">
-                <button
-                  type="button"
-                  onClick={() => switchMode('forgot')}
-                  className="text-xs text-neutral-500 underline underline-offset-2 hover:text-neutral-900"
-                >
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-
-            {captcha.siteKey && (
-              <div className="mt-4">
-                <Turnstile
-                  key={captcha.round}
-                  siteKey={captcha.siteKey}
-                  onToken={captcha.setToken}
-                />
-              </div>
-            )}
-
-            <div className="mt-4 flex gap-2">
-              {onDismiss ? (
-                <button
-                  type="button"
-                  onClick={onDismiss}
-                  className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-600 ring-1 ring-neutral-300"
-                >
-                  Cancel
-                </button>
-              ) : (
-                <a
-                  href="/"
-                  className="flex-1 rounded-lg px-4 py-2.5 text-center text-sm font-medium text-neutral-600 ring-1 ring-neutral-300"
-                >
-                  Public map
-                </a>
-              )}
+          {mode === 'signin' && (
+            <div className="mt-2 text-right">
               <button
-                type="submit"
-                disabled={busy || !captcha.isReady}
-                className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+                type="button"
+                onClick={() => switchMode('forgot')}
+                className="text-xs text-neutral-500 underline underline-offset-2 hover:text-neutral-900"
               >
-                {submitLabel}
+                Forgot password?
               </button>
             </div>
+          )}
 
-            {mode === 'forgot' && (
-              <p className="mt-4 text-center text-sm text-neutral-600">
-                Remembered it?{' '}
-                <button
-                  type="button"
-                  onClick={() => switchMode('signin')}
-                  className="font-medium text-neutral-900 underline underline-offset-2"
-                >
-                  Sign in
-                </button>
-              </p>
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+          {captcha.siteKey && (
+            <div className="mt-4">
+              <Turnstile key={captcha.round} siteKey={captcha.siteKey} onToken={captcha.setToken} />
+            </div>
+          )}
+
+          <div className="mt-4 flex gap-2">
+            {onDismiss ? (
+              <button
+                type="button"
+                onClick={onDismiss}
+                className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-600 ring-1 ring-neutral-300"
+              >
+                Cancel
+              </button>
+            ) : (
+              <a
+                href="/"
+                className="flex-1 rounded-lg px-4 py-2.5 text-center text-sm font-medium text-neutral-600 ring-1 ring-neutral-300"
+              >
+                Public map
+              </a>
             )}
-          </form>
-        )}
-      </div>
-    </div>
+            <button
+              type="submit"
+              disabled={busy || !captcha.isReady}
+              className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {submitLabel}
+            </button>
+          </div>
+
+          {mode === 'forgot' && (
+            <p className="mt-4 text-center text-sm text-neutral-600">
+              Remembered it?{' '}
+              <button
+                type="button"
+                onClick={() => switchMode('signin')}
+                className="font-medium text-neutral-900 underline underline-offset-2"
+              >
+                Sign in
+              </button>
+            </p>
+          )}
+        </form>
+      )}
+    </AuthDialog>
   );
 }
