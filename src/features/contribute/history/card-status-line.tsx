@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/cn';
 import type { CardStatus, CardStatusTone } from './card-status';
 import { CheckIcon } from '../common/history-icons';
 
-/** The card's own line, or the ride sheet's larger one (Figma 4560:12422). */
+/** The card's own line, or the ride sheet's larger one (Figma 4569:4974). */
 type CardStatusLineSize = 'card' | 'sheet';
 
 interface CardStatusLineProps {
@@ -26,12 +26,7 @@ const TONE_CLASSES: Record<CardStatusTone, string> = {
 
 const LINE_CLASSES: Record<CardStatusLineSize, string> = {
   card: 'gap-2 text-xs/4',
-  sheet: 'gap-2 text-sm/5',
-};
-
-const ICON_CLASSES: Record<CardStatusLineSize, string> = {
-  card: 'size-4',
-  sheet: 'size-5',
+  sheet: 'gap-1.5 text-sm/5',
 };
 
 const TONE_ICONS: Partial<Record<CardStatusTone, ComponentType>> = {
@@ -49,7 +44,7 @@ export function CardStatusLine({ status, size = 'card', fullName, onRetry }: Car
   const content = (
     <>
       {Icon && (
-        <span aria-hidden className={cn(ICON_CLASSES[size], 'shrink-0 *:size-full')}>
+        <span aria-hidden className={'size-4 shrink-0 *:size-full'}>
           <Icon />
         </span>
       )}

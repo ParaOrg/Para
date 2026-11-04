@@ -43,10 +43,15 @@ A ride uploaded from another phone (History lists the account's uploads that thi
 
 ### Deleting
 
-- **Delete this record** asks first (the raised hand, `account/hand-question.tsx`): "Delete this record?", then "It's removed from this phone. Your upload stays on Para." or, never uploaded, "It hasn't been uploaded, so it will be gone for good." Buttons **Keep it** and **Delete this record**.
-- It deletes the phone's copy, if there is one. An uploaded ride's id is also kept in a list of rides hidden on this phone, so History does not bring it back from the account's uploads (`history/history-merge.ts`). A ride from another phone is only hidden.
-- Then back to History.
-- Nothing in the app deletes a single upload from Para any more. Deleting the account with "Also delete my uploaded routes" still removes them all.
+Figma moved to the page "Contributor Interface Final": the section is now 4569:4932, folded 4569:4933, opened 4569:4974, the question 4569:5015.
+
+- Opened, the sheet's way out is **Close** (✕) in Back's place; folded, it is still **Back**. Both go to History (the owner, 2026-11-04).
+- **Delete this record**, plain red words with the trash icon at the sheet's foot, asks first (the raised hand, `account/hand-question.tsx`, its `plain-error` look): "You want to remove this recording?", the title alone. **Keep recording** in brand blue leads, focused; **Delete this record** in plain red under it. Nothing says whether Para keeps an upload: delete means delete on this phone, kept minimal (the owner, 2026-11-04).
+- It deletes the phone's copy, if there is one, and keeps the ride's id in a list of rides hidden on this phone (`storage/hidden-rides.ts`), so History does not bring it back from the account's uploads (`history/history-merge.ts`). A ride from another phone is only hidden. Para's copy is never touched.
+- While an upload is under way (checking or uploading) the button waits.
+- Then back to History, by the screen's own "ride gone" path, so the URL steps back once.
+- Nothing in the app deletes a single upload from Para any more. Deleting the account keeps the uploads too (#678).
+- With the ⋮ gone, a ride kept back or taken off Para by an editor is sent from its sheet: the Status row reads **Tap to upload**, the line its button, as Tap retry upload's is (the owner, 2026-11-04).
 
 ## Tickets
 

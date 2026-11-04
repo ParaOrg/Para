@@ -1,8 +1,11 @@
-import { useId } from 'react';
+import { useId, type RefObject } from 'react';
+
+import { Button } from '@/design-system/primitives/button';
 
 import type { CardStatus } from './card-status';
 import { CardStatusLine } from './card-status-line';
 import type { RideDetailRow } from './ride-details';
+import { DeleteIcon } from '../common/history-icons';
 
 interface RideDetailBodyProps {
   /** Its upload's line, as its History card shows it. */
@@ -12,11 +15,17 @@ interface RideDetailBodyProps {
   /** The ride in words, so the retry button says which one it sends. */
   fullName: string;
   onRetry: () => void;
+  /** Mid-upload, deleting would cut it short: the button waits. */
+  canDelete: boolean;
+  /** Keep it hands focus back to the button that asked. */
+  deleteRef: RefObject<HTMLDivElement | null>;
+  onDelete: () => void;
 }
 
 /**
- * The ride sheet's body, under its name (Figma 4560:12422): Commute Information, the upload's
- * Status its last row, and the Description, read only. The Description is left out when none was written.
+ * The ride sheet's body, under its name (Figma 4569:4974): Commute Information, the upload's
+ * Status its last row, the Description, read only and left out when none was written, and Delete
+ * this record.
  */
 export function RideDetailBody({
   status,
@@ -24,16 +33,19 @@ export function RideDetailBody({
   description,
   fullName,
   onRetry,
+  canDelete,
+  deleteRef,
+  onDelete,
 }: RideDetailBodyProps) {
   const commuteHeadingId = useId();
   const descriptionHeadingId = useId();
   return (
     <div className="flex flex-col gap-8 px-5 pb-8">
-      <section aria-labelledby={commuteHeadingId} className="flex flex-col gap-2">
+      <section aria-labelledby={commuteHeadingId} className="flex flex-col gap-2.5">
         <h2 id={commuteHeadingId} className="text-xl/7 font-semibold">
           Commute Information
         </h2>
-        <dl className="flex flex-col gap-2 text-sm/5 text-content-quaternary">
+        <dl className="flex flex-col gap-2.5 text-sm/5 text-content-quaternary">
           {rows.map((row) => (
             <div key={row.label} className="flex">
               <dt className="w-35 shrink-0 font-medium">{row.label}</dt>
@@ -67,6 +79,16 @@ export function RideDetailBody({
           </p>
         </section>
       )}
+      <div ref={deleteRef} className="flex flex-col">
+        <Button
+          variant="plain"
+          tone="error"
+          label="Delete this record"
+          firstIcon={<DeleteIcon />}
+          disabled={!canDelete}
+          onClick={onDelete}
+        />
+      </div>
     </div>
   );
 }
