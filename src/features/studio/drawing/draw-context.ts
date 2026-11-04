@@ -20,6 +20,9 @@ export const ECHO_MS = 700;
  */
 export const CLICK_AFTER_MS = 50;
 
+/** A mouse press that moves this far is a drag (the pen's, a bend's): MapLibre's click tolerance. */
+export const DRAG_PX = 3;
+
 /** A feature of the drawing's layers, carrying its point's or its gap's index. */
 export interface IndexedFeature {
   properties?: { index?: number };
@@ -69,6 +72,8 @@ export interface DrawContext {
   canvas: HTMLCanvasElement;
   refs: DrawRefs;
   actions: DrawActions;
+  /** Space held: a press on the map pans, as in a pen tool, rather than shaping a curve (draw-pen.ts). */
+  pan: { isSpaceHeld: boolean };
   /** The point being dragged, by mouse or finger, whether it has moved, and its stretches' modes. */
   drag: { idx: number | null; moved: boolean; modes: ModesAround };
   /**

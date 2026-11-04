@@ -235,3 +235,34 @@ test('a routed stretch is never bent by a drag', () => {
   const routed = { snap: 'snapped', coordinates: [A, C] };
   assert.equal(bendThrough(routed, 0.5, [0, 0.004]), routed);
 });
+
+test('a straight Draw stretch grabbed a quarter of the way along bends through the pointer there', () => {
+  const straight = { snap: 'freehand', coordinates: [A, C] };
+  const grab = [121.005, 14.7];
+  const t = grabAt(straight, grab);
+  assert.ok(Math.abs(t - 0.25) < 1e-9, `${t}`);
+  const by = [0, 0.003];
+  const bent = bendThrough(straight, t, by);
+  const target = [grab[0] + by[0], grab[1] + by[1]];
+  const toPiece = (p, a, b) => {
+    const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+    const u = Math.max(
+      0,
+      Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)),
+    );
+    return Math.hypot(a[0] + dx * u - p[0], a[1] + dy * u - p[1]);
+  };
+  const miss = Math.min(
+    ...bent.coordinates.slice(1).map((b, i) => toPiece(target, bent.coordinates[i], b)),
+  );
+  assert.ok(miss < 2e-5, `the line passes ${miss} degrees from the pointer`);
+});
+
+test('a curve grabbed off its middle bends through the pointer there', () => {
+  const curve = curveSegment(A, C, [121.002, 14.706], [121.018, 14.7]);
+  const grab = curve.coordinates[5];
+  const t = grabAt(curve, grab);
+  const by = [0.001, -0.002];
+  const bent = bendThrough(curve, t, by);
+  assert.ok(near(bent.coordinates[5], [grab[0] + by[0], grab[1] + by[1]], 1e-9));
+});

@@ -18,7 +18,8 @@ import { touchHandlers } from './draw-touch';
  * beside a point selects it for the point bar (draw-touch.ts). In Draw, a
  * mouse's press and drag places a smooth point (draw-pen.ts), and a curve's
  * handle is dragged, or a point double-clicked between corner and smooth
- * (draw-handle-drag.ts), and a Draw stretch bent by its line (draw-line-bend.ts). The arithmetic they share is draw-gestures.ts.
+ * (draw-handle-drag.ts), and a Draw stretch bent by its line
+ * (draw-line-bend.ts). The arithmetic they share is draw-gestures.ts.
  *
  * The handlers are bound once per drawing and read the drawing through its
  * refs, which every mutator keeps current. They share one context, `ctx`:
@@ -84,6 +85,7 @@ export function useDrawEvents(
         setFollowOffer,
       },
       drag: { idx: null, moved: false, modes: [undefined, undefined] },
+      pan: { isSpaceHeld: false },
       echo: { until: -Infinity, lastTouchEnd: -Infinity },
     };
     const { onMapClick, onLineClick, onPointContext, onMapContext } = clickHandlers(ctx);

@@ -3,7 +3,7 @@ import type { MapMouseEvent } from 'maplibre-gl';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { mirror } from './curves';
-import { CLICK_AFTER_MS, type DrawContext } from './draw-context';
+import { CLICK_AFTER_MS, DRAG_PX, type DrawContext } from './draw-context';
 import { handleFeatures, handleLines } from './draw-features';
 import { HANDLE_DOT_LAYER, HANDLE_SRC, HIT_LAYER, POINT_LAYER, isGeoJSON } from './draw-layers';
 import { isTyping } from './toolbar-text';
@@ -18,13 +18,9 @@ import { isNearClose, closeTargetOf } from './use-connect-hint';
  * pen tool, or pan in Snap. A mouse's: a finger places corners.
  */
 
-/** A press that moves this far is a drag: MapLibre's own click tolerance. */
-const DRAG_PX = 3;
-
 export function penHandlers(ctx: DrawContext) {
   const { map, canvas, refs } = ctx;
   const { addSmoothPoint } = ctx.actions;
-  let isSpaceDown = false;
   /** The press: where on the map, where on the page, and the handle the drag has pulled. */
   let press: {
     at: LngLat;
@@ -65,7 +61,7 @@ export function penHandlers(ctx: DrawContext) {
   };
 
   const onDown = (e: MapMouseEvent) => {
-    if (e.originalEvent.button !== 0 || isSpaceDown) return;
+    if (e.originalEvent.button !== 0 || ctx.pan.isSpaceHeld) return;
     if (!refs.freehand.current || refs.area.current || refs.picking.current) return;
     // A point is dragged, the line inserted into, the first point clicked to close.
     const under = [POINT_LAYER, HIT_LAYER, HANDLE_DOT_LAYER];
@@ -89,8 +85,8 @@ export function penHandlers(ctx: DrawContext) {
   // Space held pans, unless it is typed into a field or presses a control;
   // let go, or the window left, and the pen is back.
   const release = () => {
-    if (!isSpaceDown) return;
-    isSpaceDown = false;
+    if (!ctx.pan.isSpaceHeld) return;
+    ctx.pan.isSpaceHeld = false;
     if (canvas.style.cursor === 'grab' && ctx.drag.idx === null) canvas.style.cursor = 'crosshair';
   };
   const onKeyDown = (e: KeyboardEvent) => {
@@ -99,8 +95,8 @@ export function penHandlers(ctx: DrawContext) {
     if (e.target instanceof Element && e.target.closest('button, a, [role="button"]')) return;
     // Not a scroll of the page under the map.
     e.preventDefault();
-    if (isSpaceDown) return;
-    isSpaceDown = true;
+    if (ctx.pan.isSpaceHeld) return;
+    ctx.pan.isSpaceHeld = true;
     if (ctx.drag.idx === null) canvas.style.cursor = 'grab';
   };
   const onKeyUp = (e: KeyboardEvent) => {

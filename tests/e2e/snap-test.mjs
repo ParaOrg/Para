@@ -623,6 +623,31 @@ check(
     nearest < 6,
   `the line passes ${nearest.toFixed(1)} px from the pointer`,
 );
+// A press with no drag is a click, and inserts a point on the curve.
+const [ix, iy] = await proj(pulled.coordinates[pulled.coordinates.length >> 2]);
+await page.mouse.click(box0.x + ix, box0.y + iy);
+await page.waitForTimeout(300);
+check(
+  'curves: a press on a Draw stretch with no drag still inserts a point',
+  (await cps()).length === 4,
+);
+// A routed stretch is not held: a drag on it leaves the line as it was.
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
+await clickAt(D);
+await settle();
+// The router's answer in, so nothing but the drag could change the line.
+for (let i = 0; i < 30 && !(await drafted()).at(-1)?.streets; i++) await page.waitForTimeout(300);
+const routedLine = (await drafted()).at(-1);
+const segmentsBefore = JSON.stringify(await drafted());
+// The middle of one of its pieces: never one of its points, which a drag moves.
+const k = Math.max(1, routedLine.coordinates.length >> 1);
+const [p0, p1] = [routedLine.coordinates[k - 1], routedLine.coordinates[k]];
+await dragFrom([(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2], 0, 60);
+check(
+  'curves: a drag on a routed stretch never bends it',
+  routedLine.snap === 'snapped' && JSON.stringify(await drafted()) === segmentsBefore,
+  routedLine.snap,
+);
 await discard();
 
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
