@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 
 import { draftOf } from './drafts';
 import { STUDIO_DRAFTS } from './flags';
-import { hotspotToEdit } from './hotspot-to-edit';
+import { hotspotToEdit, type HotspotToEdit } from './hotspot-to-edit';
 import { reviewKeys } from './review-keys';
 
 /**
@@ -21,4 +21,23 @@ export function useHotspotToEditQuery(hotspot: HotspotRow | null) {
     select: (draft) => (hotspot ? hotspotToEdit(hotspot, draft) : null),
     enabled: STUDIO_DRAFTS && hotspot !== null,
   });
+}
+
+/**
+ * Reads the hotspot as Edit opens it at the moment Edit is pressed, never from
+ * the cache: a draft saved a moment ago may not be in it yet, and opening the
+ * outline from before that save would save it over the draft. The read lands
+ * in the cache, so the save sheet's query (above) starts from it.
+ */
+export function useFetchHotspotToEdit() {
+  const client = useQueryClient();
+  return async (hotspot: HotspotRow): Promise<HotspotToEdit> => {
+    if (!STUDIO_DRAFTS) return hotspotToEdit(hotspot, null);
+    const draft = await client.fetchQuery({
+      queryKey: reviewKeys.draftOf('hotspot', hotspot.id),
+      queryFn: () => draftOf('hotspot', hotspot.id),
+      staleTime: 0,
+    });
+    return hotspotToEdit(hotspot, draft);
+  };
 }

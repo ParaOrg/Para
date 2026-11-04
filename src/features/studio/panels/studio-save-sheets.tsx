@@ -47,7 +47,8 @@ export function StudioSaveSheets({
   const approvedHotspot = draw.area?.hotspotId
     ? (hotspots.hotspots.find((s) => s.id === draw.area?.hotspotId) ?? null)
     : null;
-  // As the editor's own draft has it, when there is one: what the save builds on.
+  // As the editor's own draft has it, when there is one: what the save builds on. The card's
+  // Edit read it fresh into the cache just before, so it is here from the first render.
   const toEdit = useHotspotToEditQuery(approvedHotspot);
   const editingHotspot = toEdit.data?.hotspot ?? approvedHotspot;
 
@@ -55,8 +56,8 @@ export function StudioSaveSheets({
     <>
       {isSaving && draw.drawing && draw.area && (
         <HotspotPanel
-          // The form takes its fields once: started again when the draft's arrive.
-          key={toEdit.data ? 'drafted' : 'approved'}
+          // The form takes its fields once: started again if the read lands after it opened.
+          key={toEdit.isSuccess ? 'read' : 'reading'}
           draw={draw}
           existing={editingHotspot}
           existingLinks={
