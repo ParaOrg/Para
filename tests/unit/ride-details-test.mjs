@@ -59,7 +59,7 @@ test('a free ride says ₱0, not nothing', () => {
 
 test('walked the whole way: Lakad, whatever vehicle was picked', () => {
   const walked = { ...RIDE, modes: [{ time: T0, to: 'walk' }] };
-  assert.equal(rowsOf(walked, { ...FACTS, isWalkOnly: true })['Transport mode'], 'Lakad (walked)');
+  assert.equal(rowsOf(walked, { ...FACTS, isWalkOnly: true })['Transport mode'], 'Lakad (walking)');
 });
 
 test('an upload from another phone: the distance the database kept', () => {
@@ -74,4 +74,26 @@ test('the trip time in words, zero parts left out', () => {
   assert.equal(tripTimeText(3600 + 5), '1 hr and 5 secs');
   assert.equal(tripTimeText(0.4), '0 secs');
   assert.equal(tripTimeText(-3), '0 secs');
+});
+
+test('an upload from another phone keeps the fare it was sent with', async () => {
+  const { mergeHistory } = await import('../../src/features/contribute/history/history-merge.ts');
+  const upload = {
+    id: '22222222-0000-4000-8000-000000000002',
+    startedAt: T0,
+    stoppedAt: T0 + 600_000,
+    startPointName: 'Cubao',
+    endPointName: 'Cogeo',
+    description: '',
+    rideKind: 'Jeep',
+    distanceM: 12_700,
+    walkM: null,
+    rideM: null,
+    farePhp: 30,
+  };
+  const [withFare] = mergeHistory([], [upload]);
+  assert.equal(rowsOf(withFare).Fare, '₱30');
+  const [noFare] = mergeHistory([], [{ ...upload, farePhp: null }]);
+  assert.equal(noFare.farePhp, undefined);
+  assert.equal(rowsOf(noFare).Fare, undefined);
 });

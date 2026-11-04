@@ -20,6 +20,8 @@ export interface AccountUpload {
   /** Walked (Lakad) and ridden (Sakay), adding up to distanceM; null on uploads from before the split was kept. */
   walkM: number | null;
   rideM: number | null;
+  /** What it cost, in pesos, as typed on its phone; null when nothing was said. */
+  farePhp: number | null;
 }
 
 /** The phone's name for a vehicle as the database keeps it. */
@@ -41,6 +43,7 @@ const uploadRowsSchema = z.array(
     // Null on uploads from before the walk and ride split was kept.
     walk_m: z.nullable(z.number()),
     ride_m: z.nullable(z.number()),
+    fare_php: z.nullable(z.number()),
   }),
 );
 
@@ -56,7 +59,7 @@ export async function fetchAccountUploads(): Promise<AccountUpload[]> {
   const { data, error, status } = await client
     .from('contribution')
     .select(
-      'id, started_at, ended_at, start_name, end_name, description, vehicle, distance_m, walk_m, ride_m',
+      'id, started_at, ended_at, start_name, end_name, description, vehicle, distance_m, walk_m, ride_m, fare_php',
     )
     .eq('contributor_id', auth.session.user.id)
     .order('started_at', { ascending: false })
@@ -73,5 +76,6 @@ export async function fetchAccountUploads(): Promise<AccountUpload[]> {
     distanceM: row.distance_m,
     walkM: row.walk_m,
     rideM: row.ride_m,
+    farePhp: row.fare_php,
   }));
 }

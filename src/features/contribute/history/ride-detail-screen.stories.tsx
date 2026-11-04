@@ -118,18 +118,44 @@ export const NothingTyped: Story = {
   },
 };
 
-/** Uploaded from another phone: what Para keeps of it, no fare known here. */
+/** Uploaded from another phone: what Para keeps of it, the fare it was sent with included. */
 export const FromAnotherPhone: Story = {
   args: {
     ride: {
       ...ride,
-      recording: { ...recording, farePhp: undefined, distanceM: undefined },
+      recording: { ...recording, farePhp: 13.5, distanceM: undefined },
       facts: { distanceM: 850, isWalkOnly: false, trail: null },
     },
   },
   play: async ({ canvasElement }) => {
     await openSheet(canvasElement);
-    await expect(within(canvasElement).getByText('850 m')).toBeInTheDocument();
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('850 m')).toBeInTheDocument();
+    await expect(canvas.getByText('₱13.50')).toBeInTheDocument();
+  },
+};
+
+/** Walked the whole way: Lakad in the vehicle's place. */
+export const Walked: Story = {
+  args: {
+    ride: {
+      ...ride,
+      recording: { ...recording, modes: [{ time: T0, to: 'walk' }], farePhp: undefined },
+      facts: { distanceM: 1_400, isWalkOnly: true, trail: null },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await openSheet(canvasElement);
+    await expect(within(canvasElement).getByText('Lakad (walking)')).toBeInTheDocument();
+  },
+};
+
+/** Saved, not sent yet: the quiet line, as its card says it. */
+export const WaitingForSignal: Story = {
+  args: { ride: { ...ride, status: { tone: 'quiet', words: 'Waiting for signal' } } },
+  play: async ({ canvasElement }) => {
+    await openSheet(canvasElement);
+    await expect(within(canvasElement).getByText('Waiting for signal')).toBeInTheDocument();
   },
 };
 

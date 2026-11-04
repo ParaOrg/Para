@@ -20,7 +20,7 @@ export interface RideDetailRow {
 export function rideDetailsOf(recording: Recording, facts: RideFacts | null): RideDetailRow[] {
   const rows: RideDetailRow[] = [];
   const isWalkOnly = facts?.isWalkOnly ?? isWalkOnlyOf(recording);
-  if (isWalkOnly) rows.push({ label: 'Transport mode', value: 'Lakad (walked)' });
+  if (isWalkOnly) rows.push({ label: 'Transport mode', value: 'Lakad (walking)' });
   else if (recording.rideKind) {
     rows.push({ label: 'Transport mode', value: RIDE_LABEL[recording.rideKind] });
   }
