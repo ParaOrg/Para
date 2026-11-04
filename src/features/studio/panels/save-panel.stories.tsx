@@ -5,6 +5,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { RouteRow, DirectionRow } from '@/features/routes/model/routes';
 import { M_PER_DEG, type LngLat, type Segment } from '@/shared/utils/geo';
 
+import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
 import type { Drawing } from '../drawing/use-drawing';
 
@@ -79,13 +80,24 @@ const routed = (streets?: Segment['streets']): Segment => ({
 const meta = {
   title: 'Features/Studio/SavePanel',
   component: SavePanel,
-  // The panel covers the map it sits over, so give it a map-sized box.
+  // The panel covers the map it sits over, so give it a map-sized box. The
+  // `beside` parameter stands it beside the map instead, as on a computer.
   decorators: [
-    (Story) => (
-      <div className="relative h-[44rem] bg-neutral-200">
-        <Story />
-      </div>
-    ),
+    (Story, ctx) =>
+      ctx.parameters.beside ? (
+        <div className="flex h-176 bg-neutral-200">
+          <div className="flex-1" />
+          <SaveBesideFrame>
+            <Story />
+          </SaveBesideFrame>
+        </div>
+      ) : (
+        <div className="relative h-176 bg-neutral-200">
+          <SaveSheetFrame>
+            <Story />
+          </SaveSheetFrame>
+        </div>
+      ),
   ],
   parameters: { layout: 'fullscreen' },
   args: {
@@ -455,5 +467,40 @@ export const EditIkot: Story = {
     await expect(toggle).toBeChecked();
     await expect(toggle).toBeDisabled();
     await expect(canvas.getByRole('heading', { name: 'Update this ikot' })).toBeVisible();
+  },
+};
+
+/**
+ * At a phone's width: the sheet fills the screen, Save held at its foot. The
+ * sheet's `max-sm` reads the viewport, not the box, hence the phone viewport.
+ */
+export const Phone: Story = {
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};
+
+/** Beside the map on a computer: no Back to map, and Save is the drawing's Done. */
+export const BesideTheMap: Story = {
+  parameters: { beside: true },
+  args: { onCancel: undefined, saveBlocked: null },
+};
+
+/** Beside the map before the line is long enough: Save waits, and says why. */
+export const BesideTheMapTooShort: Story = {
+  parameters: { beside: true },
+  args: {
+    draw: {
+      ...drawing([]),
+      controlPoints: [[121.043326, 14.742006]],
+      line: [[121.043326, 14.742006]],
+      metres: 0,
+    },
+    onCancel: undefined,
+    saveBlocked: 'Add at least 2 points',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await expect(canvas.getByText('Add at least 2 points')).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Back to map' })).toBeNull();
   },
 };

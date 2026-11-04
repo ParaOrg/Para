@@ -40,7 +40,8 @@ interface PlaygroundToolsProps {
   onNewMenuOpenChange: (isOpen: boolean) => void;
   canDrawReturnTrip: boolean;
   onDrawReturnTrip: (routeId: string) => void;
-  onDone: () => void;
+  /** Done on the toolbar; absent while the route's form stands beside the map, whose Save is Done. */
+  onDone?: () => void;
 }
 
 /**

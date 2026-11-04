@@ -9,7 +9,7 @@ import { PILL, TOOL } from './draw-toolbar-look';
 import { PickBar } from './pick-bar';
 import { FollowChip, PointBar, PutBack } from './point-bar';
 import { SnapDraw } from './snap-draw';
-import { drawHint, uTurnWarning, whyNotDone, type ExtendEnds } from './toolbar-text';
+import { drawHint, uTurnWarning, whyCannotSave, type ExtendEnds } from './toolbar-text';
 import { UndoRedo } from './undo-redo';
 import { useDrawKeys } from './use-draw-keys';
 import type { Drawing } from './use-drawing';
@@ -17,7 +17,12 @@ import type { LoopPlan } from './use-loop-closing';
 
 interface DrawToolbarProps {
   draw: Drawing;
-  onDone: () => void;
+  /**
+   * Done, opening the save form. Absent while the route's form stands beside
+   * the map, where its Save is Done: then the toolbar has no Done, and Enter
+   * does nothing.
+   */
+  onDone?: () => void;
   /** Whether the keyboard shortcuts may act. False while a panel is open. */
   keys?: boolean;
   /**
@@ -64,18 +69,14 @@ function Toolbar({
   loop,
 }: {
   draw: Drawing;
-  onDone: () => void;
+  onDone: (() => void) | undefined;
   keys: boolean;
   loop: LoopPlan | null;
 }) {
   const points = draw.controlPoints.length;
   const area = draw.area;
-  const minPoints = area ? 3 : 2;
   const noun = area ? 'corner' : 'point';
   const uTurns = draw.uTurns.length;
-  // A stand-in still on the line is not road geometry yet, and must not be saved.
-  const waiting = draw.snapping > 0 || draw.unresolved;
-  const canDone = points >= minPoints && !waiting;
   // A phone has no hover for a title, no right-click and no shift key: it is
   // told what a finger does, asked before ✕ throws the drawing away, and
   // gets the point bar (point-bar.tsx) for what the mouse's clicks do.
@@ -83,10 +84,18 @@ function Toolbar({
   const [confirming, setConfirming] = useState(false);
   const [uTurnHelp, setUTurnHelp] = useState(false);
   const uTurnText = uTurnWarning(uTurns);
-  const doneReason = whyNotDone(points, minPoints, noun, waiting);
+  const doneReason = whyCannotSave(draw);
+  const canDone = doneReason === null;
 
   // While ✕ asks, Enter must not save what is about to be thrown away.
-  useDrawKeys({ draw, isOn: keys && !confirming, points, canDone, isArea: !!area, onDone });
+  useDrawKeys({
+    draw,
+    isOn: keys && !confirming,
+    points,
+    canDone: canDone && onDone !== undefined,
+    isArea: !!area,
+    onDone: () => onDone?.(),
+  });
 
   const hint = drawHint({
     uTurnHelp: uTurnHelp ? uTurnText : null,
@@ -154,15 +163,19 @@ function Toolbar({
 
           <div className={PILL}>
             {!area && <SnapDraw draw={draw} />}
-            <button
-              type="button"
-              onClick={onDone}
-              disabled={!canDone}
-              title={doneReason ?? (area ? 'Save this hotspot (Enter)' : 'Save this route (Enter)')}
-              className="rounded-full bg-parabrand-800 px-4 py-1.5 text-sm font-medium text-content-inverse disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Done
-            </button>
+            {onDone && (
+              <button
+                type="button"
+                onClick={onDone}
+                disabled={!canDone}
+                title={
+                  doneReason ?? (area ? 'Save this hotspot (Enter)' : 'Save this route (Enter)')
+                }
+                className="rounded-full bg-parabrand-800 px-4 py-1.5 text-sm font-medium text-content-inverse disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Done
+              </button>
+            )}
           </div>
 
           <div className={PILL}>

@@ -1,3 +1,5 @@
+import type { AreaTarget } from './drawing-types';
+
 /**
  * What the drawing's toolbar says, pure, so tests/unit/toolbar-text-test.mjs can hold it.
  */
@@ -60,6 +62,29 @@ export function whyNotDone(
 ): string | null {
   if (points < minPoints) return `Add at least ${minPoints} ${noun}s`;
   return isWaiting ? 'Waiting for the router' : null;
+}
+
+/** What whyCannotSave reads of a drawing: its points, whether it is a hotspot, and the router's debt. */
+export interface SaveableDrawing {
+  controlPoints: readonly unknown[];
+  area: AreaTarget | null;
+  snapping: number;
+  unresolved: boolean;
+}
+
+/**
+ * Why the drawing can't be saved yet, or null when it can: the toolbar's Done
+ * and, beside the map, the route form's Save ask the same question. A
+ * stand-in still on the line is not road geometry yet, and must not be saved.
+ */
+export function whyCannotSave(draw: SaveableDrawing): string | null {
+  const isArea = draw.area !== null;
+  return whyNotDone(
+    draw.controlPoints.length,
+    isArea ? 3 : 2,
+    isArea ? 'corner' : 'point',
+    draw.snapping > 0 || draw.unresolved,
+  );
 }
 
 /** What the drawing toolbar's hint reads from. */

@@ -12,6 +12,8 @@ import {
 
 interface PlaygroundSaveSheetsProps {
   isPlayground: boolean;
+  /** A route's form beside the map while it is drawn (StudioSaveSheets). */
+  isBeside: boolean;
   draw: ReturnType<typeof useDrawing>;
   saved: ReturnType<typeof useSavedRoutes<DirectionRow>>;
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -26,6 +28,7 @@ interface PlaygroundSaveSheetsProps {
  */
 export function PlaygroundSaveSheets({
   isPlayground,
+  isBeside,
   draw,
   saved,
   hotspots,
@@ -39,6 +42,7 @@ export function PlaygroundSaveSheets({
     <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
       <StudioSaveSheets
         isSaving={isSaving}
+        isBeside={isBeside}
         draw={draw}
         saved={saved}
         hotspots={hotspots}

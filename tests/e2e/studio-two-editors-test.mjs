@@ -197,14 +197,15 @@ const writesOf = (db, from = 0) =>
   db.log.slice(from).filter((r) => r.method !== 'GET' && r.method !== 'HEAD');
 const APPROVED_TABLES = ['route', 'route_variant', 'route_stop', 'stop'];
 
-/** Edit route → Done → Update: the editor's own save, which becomes a draft. */
+/** Edit route → Update: the editor's own save, which becomes a draft. On a computer the form is beside the map, with no Done. */
 async function editAndSave(page) {
   await page.getByRole('button', { name: 'Edit route' }).click();
   await page.waitForFunction(() => /\d+ points?\b/.test(document.body.innerText));
   await page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-  await page.getByRole('button', { name: /Done/ }).click();
+  if (!(await page.getByTestId('route-panel').isVisible()))
+    await page.getByRole('button', { name: /Done/ }).click();
   await page.getByRole('button', { name: /^(Save|Update)$/ }).click();
   await page.getByText('Saved as a draft').waitFor({ timeout: 10000 });
 }
@@ -347,7 +348,8 @@ db.tables.draft.push({
   submitted_at: null,
 });
 const staleWrites = writesOf(db).length;
-await b.page.getByRole('button', { name: /Done/ }).click();
+if (!(await b.page.getByTestId('route-panel').isVisible()))
+  await b.page.getByRole('button', { name: /Done/ }).click();
 await b.page.getByRole('button', { name: /^(Save|Update)$/ }).click();
 await b.page.getByText('This is being changed by Marisol').waitFor({ timeout: 10000 });
 check(
