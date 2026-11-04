@@ -27,6 +27,7 @@ import {
   RecordingScreen,
   SaveForm,
   StopRecordingScreen,
+  TrackRoutesOffer,
   Tutorial,
   UnfinishedScreen,
   UploadCheck,
@@ -361,8 +362,15 @@ export function ContributePage({ locator }: ContributePageProps) {
               <PermissionsOnboarding onDone={() => setIsPermissionsPending(false)} />
             </Suspense>
           )}
-          {/* TODO: show TrackRoutesCard (tutorial/track-routes-card.tsx) over the map here, on Ready
-              after the permissions screen, once the tutorial screens it opens are designed. */}
+          {tutorial.isOfferShown && !earlier.question && (
+            <Suspense fallback={null}>
+              <TrackRoutesOffer
+                onTutorial={tutorial.open}
+                onClose={tutorial.closeOffer}
+                helpButtonRef={tutorial.helpButtonRef}
+              />
+            </Suspense>
+          )}
           {layout.isStartShown && (
             // Inert under the credits and the tutorial, as the map is: nothing of Start is reached
             // behind them. The tutorial's spotlight only shows Start; it is never pressed there.
@@ -379,7 +387,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 accountTabRef={accountTabRef}
                 onOpenCredits={credits.open}
                 creditsButtonRef={credits.buttonRef}
-                onOpenTutorial={tutorial.open}
+                onOpenTutorial={tutorial.openOffer}
                 helpButtonRef={tutorial.helpButtonRef}
               />
             </div>

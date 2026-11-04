@@ -59,6 +59,10 @@ export const UploadCheck = lazy(() =>
   loadUploadCheck().then((module) => ({ default: module.UploadCheck })),
 );
 const loadTutorial = retryingImport(() => import('./tutorial/tutorial'));
+const loadTrackRoutesOffer = retryingImport(() => import('./tutorial/track-routes-offer'));
+export const TrackRoutesOffer = lazy(() =>
+  loadTrackRoutesOffer().then((module) => ({ default: module.TrackRoutesOffer })),
+);
 export const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: module.Tutorial })));
 export const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
 export const RecordingScreen = lazy(() =>

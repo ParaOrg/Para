@@ -371,6 +371,13 @@ const buttons = (page) =>
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   const locatorWatchersBefore = await page.evaluate(() => window.__locatorWatchers());
   const dialog = page.getByRole('dialog');
+  const help = page.getByRole('button', { name: 'How to record' });
+  const offer = page.getByRole('region', { name: 'Track your routes' });
+  /** The ?, then the card's Start Tutorial: the way into the tutorial. */
+  const openTutorial = async () => {
+    await help.click();
+    await offer.getByRole('button', { name: 'Start Tutorial' }).click();
+  };
   /** The coachmark's spotlight round the control it names, and its card on the near side. */
   const placement = (name) =>
     page.evaluate((label) => {
@@ -403,7 +410,7 @@ const buttons = (page) =>
     ['Stop without saving', 'Discard recording'],
     ['Finish and save', 'Finish'],
   ];
-  await page.getByRole('button', { name: 'How to record' }).click();
+  await openTutorial();
   for (const [index, [title, target]] of STEPS.entries()) {
     await dialog.getByRole('heading', { name: title }).waitFor({ timeout: 10000 });
     const isLast = index === STEPS.length - 1;
@@ -489,9 +496,42 @@ const buttons = (page) =>
       (await page.evaluate(() => window.__watchers())) === 0,
   );
 
+  // The ? offers the tutorial first: Later, Escape and a tap outside close the offer and nothing else.
+  {
+    await help.click();
+    await offer.waitFor({ timeout: 5000 });
+    const open = {
+      isFocusInCard: await page.evaluate(
+        () => !!document.activeElement?.closest('section[aria-labelledby]'),
+      ),
+      texts: await offer.locator('button').allTextContents(),
+      dialogs: await dialog.count(),
+    };
+    check(
+      '  the ? opens the "Track your routes" card with Later then Start Tutorial, focus in it, no tutorial yet',
+      open.isFocusInCard && open.texts.join('|') === 'Later|Start Tutorial' && open.dialogs === 0,
+      JSON.stringify(open),
+    );
+    for (const close of ['Later', 'Escape', 'outside']) {
+      if (close === 'Later') await offer.getByRole('button', { name: 'Later' }).click();
+      else if (close === 'Escape') await page.keyboard.press('Escape');
+      else await page.mouse.click(196, 600);
+      await offer.waitFor({ state: 'detached', timeout: 5000 });
+      check(
+        `  ${close} closes the card: no tutorial, focus on the ?`,
+        (await dialog.count()) === 0 &&
+          (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) ===
+            'How to record',
+      );
+      await help.click();
+      await offer.waitFor({ timeout: 5000 });
+    }
+    await page.keyboard.press('Escape');
+    await offer.waitFor({ state: 'detached', timeout: 5000 });
+  }
   // Leaving part-way, by Skip and by Escape, is back on Record too.
   for (const leave of ['Skip', 'Escape']) {
-    await page.getByRole('button', { name: 'How to record' }).click();
+    await openTutorial();
     await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
     await dialog.getByRole('button', { name: 'Next' }).click();
     await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
@@ -513,7 +553,7 @@ const buttons = (page) =>
       url: location.href,
       length: window.history.length,
     }));
-    await page.getByRole('button', { name: 'How to record' }).click();
+    await openTutorial();
     await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
     await dialog.getByRole('button', { name: 'Next' }).click();
     await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
@@ -534,7 +574,7 @@ const buttons = (page) =>
   }
   // A move to another screen by its hash (the browser's Forward, say) ends it as well.
   {
-    await page.getByRole('button', { name: 'How to record' }).click();
+    await openTutorial();
     await dialog.getByRole('button', { name: 'Next' }).click();
     await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
     await page.evaluate(() => {

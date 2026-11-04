@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { TrackRoutesCard } from './track-routes-card';
 
@@ -7,30 +7,40 @@ const meta = {
   title: 'Features/Contribute/TrackRoutesCard',
   component: TrackRoutesCard,
   args: { onTutorial: fn(), onLater: fn() },
+  decorators: [
+    (Story) => (
+      <div className="w-[353px]">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof TrackRoutesCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The card alone, at phone width less the 16px either side it sits in (361px). */
-export const Default: Story = {
+/** The card at Figma's width: a 393 screen less 20 either side. */
+export const Default: Story = {};
+
+/** The narrowest phone: the words wrap in their column and the buttons stay equal. */
+export const NarrowPhone: Story = {
   decorators: [
     (Story) => (
-      <div className="w-[361px]">
+      <div className="w-[280px]">
         <Story />
       </div>
     ),
   ],
 };
 
-/** A phone specimen: the card at the foot of the map's space, as frame 4451:514 places it. */
-export const PhoneSpecimen: Story = {
-  parameters: { layout: 'fullscreen' },
-  decorators: [
-    (Story) => (
-      <div className="@container flex h-[852px] w-[393px] flex-col justify-end bg-surface-quaternary p-4 pb-24">
-        <Story />
-      </div>
-    ),
-  ],
+/** Later and Start Tutorial each call their own handler, once. */
+export const ButtonsCallTheirHandlers: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Later' }));
+    await expect(args.onLater).toHaveBeenCalledTimes(1);
+    await expect(args.onTutorial).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole('button', { name: 'Start Tutorial' }));
+    await expect(args.onTutorial).toHaveBeenCalledTimes(1);
+  },
 };

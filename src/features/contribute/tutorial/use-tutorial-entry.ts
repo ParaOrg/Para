@@ -14,6 +14,11 @@ export interface TutorialEntry {
   changeDemo: (demo: TutorialDemo) => void;
   /** Record's ?, which opens it: focus goes back to it as it closes. */
   helpButtonRef: RefObject<HTMLButtonElement | null>;
+  /** The "Track your routes" card, which the ? opens first, shown over Ready. */
+  isOfferShown: boolean;
+  openOffer: () => void;
+  /** Later, Escape or a tap outside: focus goes back to the ?. A stable reference. */
+  closeOffer: () => void;
   open: () => void;
   /** Skip, Escape or Got it. A stable reference. */
   close: () => void;
@@ -35,7 +40,14 @@ export function useTutorialEntry(isReadyClear: boolean): TutorialEntry {
     setIsOpen(false);
     setDemo(null);
   }
+  const [isOfferOpen, setIsOfferOpen] = useState(false);
+  const isOfferShown = isOfferOpen && isReadyClear;
+  if (isOfferOpen && !isOfferShown) setIsOfferOpen(false);
   const helpButtonRef = useRef<HTMLButtonElement>(null);
+  const closeOffer = useCallback(() => {
+    flushSync(() => setIsOfferOpen(false));
+    helpButtonRef.current?.focus();
+  }, []);
   // Back on Record, focus goes back to the ? that opened it, as a closed sheet hands it back.
   const closeNow = useCallback(() => {
     flushSync(() => {
@@ -45,6 +57,7 @@ export function useTutorialEntry(isReadyClear: boolean): TutorialEntry {
     helpButtonRef.current?.focus();
   }, []);
   const open = () => {
+    setIsOfferOpen(false);
     window.history.pushState({ [TUTORIAL_ENTRY]: true }, '');
     setIsOpen(true);
   };
@@ -58,5 +71,16 @@ export function useTutorialEntry(isReadyClear: boolean): TutorialEntry {
     window.addEventListener('popstate', closeNow);
     return () => window.removeEventListener('popstate', closeNow);
   }, [isOpen, closeNow]);
-  return { isOpen, isShown, demo, changeDemo: setDemo, helpButtonRef, open, close };
+  return {
+    isOpen,
+    isShown,
+    demo,
+    changeDemo: setDemo,
+    helpButtonRef,
+    isOfferShown,
+    openOffer: () => setIsOfferOpen(true),
+    closeOffer,
+    open,
+    close,
+  };
 }
