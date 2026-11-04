@@ -2057,14 +2057,12 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   const screenText = await page.locator('[data-screen-hash="#delete-account"]').innerText();
   const counting = page.getByRole('button', { name: /^Delete account \(\d\)$/ });
   check(
-    'Delete account (Figma 4543:5309) is a screen of its own: what goes, what stays, the switch off',
+    'Delete account (Figma 4543:5309) is a screen of its own: what goes, what stays, no switch to delete the uploads',
     (await page.evaluate(() => location.hash)) === '#delete-account' &&
       /removes your name, email, phone number and password/.test(screenText) &&
       /stay on Para, with your name taken off them/.test(screenText) &&
       /all recordings on this phone will be deleted too/.test(screenText) &&
-      (await page
-        .getByRole('switch', { name: 'Also delete my uploaded routes' })
-        .getAttribute('aria-checked')) === 'false',
+      (await page.getByRole('switch').count()) === 0,
     screenText,
   );
   const firstCount = await counting.innerText();
@@ -2284,54 +2282,6 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
-{
-  // "Also delete my uploaded routes" on: Para is asked to delete them too, and does.
-  const SWEEPER_ID = 'ffffffff-0000-4000-8000-000000000005';
-  database.users.set(SWEEPER_ID, {
-    email: 'sweeper@example.com',
-    password: 'hunter2hunter2',
-    isAccount: true,
-    profile: { name: 'Sweeper', phone: '+639170000005' },
-  });
-  database.rows.set('ffffffff-1111-4000-8000-000000000005', {
-    by: SWEEPER_ID,
-    recording: {
-      id: 'ffffffff-1111-4000-8000-000000000005',
-      started_at: new Date(T0).toISOString(),
-      ended_at: new Date(T0 + 600_000).toISOString(),
-      start_name: 'Sweeping',
-      end_name: 'Cubao',
-      description: '',
-    },
-  });
-  const { page, fake, errors } = await phone({ userId: SWEEPER_ID });
-  await start(page).waitFor({ timeout: 30000 });
-  await accountTab(page).click();
-  await button(page, 'Account settings').click();
-  await button(page, 'Delete account').click();
-  await page.getByRole('heading', { level: 1, name: 'Delete account' }).waitFor();
-  await page.getByRole('switch', { name: 'Also delete my uploaded routes' }).click();
-  const screenText = await page.locator('[data-screen-hash="#delete-account"]').innerText();
-  await button(page, 'Delete account').waitFor({ timeout: 8000 });
-  await button(page, 'Delete account').click();
-  await page
-    .getByRole('alertdialog', { name: 'Do you want to delete your account?' })
-    .getByRole('button', { name: 'Delete this account' })
-    .click();
-  await page
-    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
-    .waitFor({ timeout: 15000 });
-  check(
-    'with the switch on, the words say the uploads go too, and Para is asked to delete them, and does',
-    /The routes you’ve already uploaded are deleted from Para too/.test(screenText) &&
-      !/stay on Para/.test(screenText) &&
-      fake.deleteUploadsAsked.join() === 'true' &&
-      !database.rows.has('ffffffff-1111-4000-8000-000000000005'),
-    JSON.stringify({ asked: fake.deleteUploadsAsked, screenText }),
-  );
-  check('  no page errors', errors.length === 0, errors.join(' | '));
-}
-
 // ------------------------------------------------ the toolbar stands still between its screens
 {
   const { page } = await phone();
