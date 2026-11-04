@@ -137,10 +137,20 @@ const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 /** The Sakay or Lakad row of the Commute Statistics' legend. */
 const legendRow = (stats, word) => stats.getByRole('listitem').filter({ hasText: word });
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
-const moreOf = (page, name) => row(page, name).getByRole('button', { name: /^More actions/ });
-const actionsOf = async (page, name) => {
-  await moreOf(page, name).click();
-  return row(page, name).getByRole('button');
+/** A card opened: its ride's screen, with the sheet folded. */
+const openRide = async (page, name) => {
+  await row(page, name).locator('[data-ride-card]').click();
+  await page.getByTestId('dock-handle').waitFor();
+};
+/** The ride's sheet raised, its Delete this record asked, and confirmed: back on History. */
+const deleteRecord = async (page) => {
+  await page.getByTestId('dock-handle').click();
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  await page
+    .getByRole('alertdialog', { name: 'You want to remove this recording?' })
+    .getByRole('button', { name: 'Delete this record' })
+    .click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
 };
 /** A card's status line, the one under its date: Uploaded, Only on this phone, … */
 // Its text, not its rendered text: a card off screen is not drawn (content-visibility), and its
@@ -1619,47 +1629,41 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     fromA.includes('Jeep,') && fromA.includes('4.2 km') && fromA.includes('0h 10m'),
     fromA,
   );
-  const buttons = await actionsOf(page, 'From phone A');
-  const names = await buttons.evaluateAll((all) =>
-    all.map((b) => b.getAttribute('aria-label') ?? b.textContent),
-  );
-  check(
-    '  an upload from another phone can be deleted from Para, and offers no Remove from this phone',
-    names.some((name) => name.startsWith('Delete from Para')) &&
-      !names.some((name) => name.startsWith('Remove from this phone')),
-    names.join(' | '),
-  );
-  await row(page, 'From phone A')
-    .getByRole('button', { name: /^Delete from Para/ })
-    .click();
-  await row(page, 'From phone A').getByRole('button', { name: 'Delete', exact: true }).click();
+  // Nothing deletes an upload from Para: deleting takes it off this phone and out of History, and
+  // the id is kept so the account's list never brings it back here.
+  await openRide(page, 'From phone A');
+  await deleteRecord(page);
   await row(page, 'From phone A').waitFor({ state: 'detached' });
   check(
-    '  Delete takes it out of Para and off the list',
-    !database.rows.has('dddddddd-0000-4000-8000-000000000001') && fake.deleteRequests === 1,
+    "  an upload from another phone can be deleted here: off the list, Para's row stays",
+    database.rows.has('dddddddd-0000-4000-8000-000000000001') && fake.deleteRequests === 0,
+  );
+  // A reload on #history lands on History itself.
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await row(page, 'Also phone A').waitFor({ timeout: 15000 });
+  check(
+    '  and after a reload it does not come back',
+    (await row(page, 'From phone A').count()) === 0,
   );
 
-  const here = await actionsOf(page, 'Here and there');
+  await openRide(page, 'Here and there');
+  await deleteRecord(page);
+  await row(page, 'Here and there').waitFor({ state: 'detached' });
   check(
-    "  an upload this phone sent under an earlier sign-in is the account's: it can be deleted from Para",
-    await here.evaluateAll((all) =>
-      all.some((b) => b.getAttribute('aria-label')?.startsWith('Delete from Para')),
-    ),
+    "  an upload this phone sent under an earlier sign-in is deleted the same way: gone from History and the phone, Para's row stays",
+    database.rows.has('dddddddd-0000-4000-8000-000000000003') &&
+      fake.deleteRequests === 0 &&
+      (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 0,
   );
-  await row(page, 'Here and there')
-    .getByRole('button', { name: /^Delete from Para/ })
-    .click();
-  await row(page, 'Here and there').getByRole('button', { name: 'Delete', exact: true }).click();
-  await page.waitForFunction(
-    () =>
-      [...document.querySelectorAll('li')]
-        .find((li) => li.textContent.includes('Here and there'))
-        ?.querySelector('[aria-live]')?.textContent === 'Only on this phone',
-  );
+  // A reload on #history lands on History itself.
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
-    '  and reads Only on this phone, kept, once it is deleted from Para',
-    !database.rows.has('dddddddd-0000-4000-8000-000000000003') &&
-      (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 1,
+    '  and it stays hidden after a reload',
+    (await row(page, 'Here and there').count()) === 0 &&
+      (await row(page, 'Only here').count()) === 1,
   );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
   check('  no page errors', errors.length === 0, errors.join(' | '));
@@ -1712,9 +1716,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await openHistory(page);
   await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
-    'another phone signed in to the account sees its uploads, with none of its own',
-    (await page.getByRole('listitem').count()) === 2 &&
+    'another phone signed in to the account sees all its uploads, those deleted on the first phone too (Para keeps them), with none of its own',
+    (await page.getByRole('listitem').count()) === 4 &&
+      (await statusOf(page, 'From phone A')) === 'Uploaded' &&
       (await statusOf(page, 'Also phone A')) === 'Uploaded' &&
+      (await statusOf(page, 'Here and there')) === 'Uploaded' &&
       (await statusOf(page, 'Only here')) === 'Uploaded',
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));

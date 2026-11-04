@@ -194,10 +194,20 @@ const openHistory = async (page) => {
   await history.click();
   await heading.waitFor();
 };
-/** The first card's ⋮ menu opened, so its Remove from this phone is there to press. */
-const openCardMenu = async (page) => {
-  const more = page.getByRole('button', { name: /^More actions/ }).first();
-  if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
+/** The first card opened: its ride's screen, the sheet folded. */
+const openFirstRide = async (page) => {
+  await page.locator('[data-ride-card]').first().click();
+  await page.getByTestId('dock-handle').waitFor();
+};
+/** The open ride's sheet raised, Delete this record asked and confirmed: back on History. */
+const deleteRecord = async (page) => {
+  await page.getByTestId('dock-handle').click();
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  await page
+    .getByRole('alertdialog', { name: 'You want to remove this recording?' })
+    .getByRole('button', { name: 'Delete this record' })
+    .click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
 };
 /**
  * The newest saved recording on this phone, read back from IndexedDB as History reads it, with
@@ -1924,9 +1934,8 @@ const buttons = (page) =>
     );
   }
   check('  (its picture kept again)', (await thumbnails()).length === 1);
-  await openCardMenu(page);
-  await page.getByRole('button', { name: /^Remove from this phone, / }).click();
-  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await openFirstRide(page);
+  await deleteRecord(page);
   await page.getByText('No recordings yet.').waitFor();
   check('  deleting the recording deletes its picture', (await thumbnails()).length === 0);
   check('  no page error', errors.length === 0, errors.join('; '));
@@ -2368,20 +2377,13 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
   await openHistory(page);
-  await openCardMenu(page);
-  const rowRemoves = page.getByRole('button', {
-    name: /^Remove from this phone, the recording of .*, Reload me$/,
-  });
-  await rowRemoves.first().waitFor();
-  check('the recording just saved is listed in History', (await rowRemoves.count()) === 1);
-  check(
-    '  and its ⋮ offers no Download',
-    (await page.getByRole('button', { name: /^Download recording/ }).count()) === 0,
-  );
+  const rowTitles = page.locator('[data-ride-card]').filter({ hasText: 'Reload me' });
+  await rowTitles.first().waitFor();
+  check('the recording just saved is listed in History', (await rowTitles.count()) === 1);
   await page.reload({ waitUntil: 'load' });
   await openHistory(page);
-  await openCardMenu(page);
-  check('after a reload it is still listed', (await rowRemoves.count()) === 1);
+  await rowTitles.first().waitFor();
+  check('after a reload it is still listed', (await rowTitles.count()) === 1);
   const file = await lastSavedRide(page);
   check(
     '  and the phone still holds that recording',
@@ -2732,14 +2734,10 @@ const ANIMATIONS = () => {
     .getByRole('heading', { level: 1, name: 'History' })
     .waitFor({ timeout: 5000 })
     .catch(() => {});
-  await openCardMenu(second);
   check(
     '  once the first tab saves, the second lists it without a reload',
-    (await second
-      .getByRole('button', {
-        name: /^Remove from this phone, the recording of .*, From the first tab$/,
-      })
-      .count()) === 1,
+    (await second.locator('[data-ride-card]').filter({ hasText: 'From the first tab' }).count()) ===
+      1,
   );
   // The first tab closes: the second is handed the recorder, as a page opened afresh would be.
   await page.close();

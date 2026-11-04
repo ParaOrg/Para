@@ -1,7 +1,6 @@
 // Every word the contributor page says about an upload, pinned literally, state by state: History's
 // card (src/features/contribute/history/card-status.ts) beside the "Route recorded" toast
-// (notices/route-recorded.ts), both worded in uploads/upload-words.ts; the questions History asks
-// before deleting (history/delete-questions.ts); and the save's other toasts. A word changed by
+// (notices/route-recorded.ts), both worded in uploads/upload-words.ts; and the save's other toasts. A word changed by
 // accident fails here.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/upload-words-test.mjs
@@ -9,11 +8,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { cardStatusOf } from '../../src/features/contribute/history/card-status.ts';
-import {
-  DELETE_ONLY_COPY_QUESTION,
-  REMOVE_UPLOAD_QUESTION,
-  deleteFromPhoneQuestion,
-} from '../../src/features/contribute/history/delete-questions.ts';
 import {
   pointsLostWords,
   routeRecordedWords,
@@ -28,7 +22,7 @@ const SENDS_WHEN_ONLINE = 'Kept on this phone. It sends when you’re online.';
 const KEPT = 'Kept on this phone.';
 
 /**
- * Each state, with what its card says (online and offline, deletable from Para or not) and what
+ * Each state, with what its card says (online and offline) and what
  * the toast says (online and offline). Card: [tone, words].
  */
 const CASES = [
@@ -51,16 +45,9 @@ const CASES = [
     toast: ON_ITS_WAY,
   },
   {
-    name: 'uploaded, deletable from Para',
+    name: 'uploaded',
     status: { state: 'uploaded', at: 1, by: 'p' },
     card: ['uploaded', 'Uploaded'],
-    toast: ON_ITS_WAY,
-  },
-  {
-    name: 'uploaded, by an earlier sign-in',
-    status: { state: 'uploaded', at: 1, by: 'p' },
-    canDeleteFromPara: false,
-    card: ['uploaded', 'Uploaded from an earlier sign-in'],
     toast: ON_ITS_WAY,
   },
   {
@@ -129,11 +116,11 @@ test('every failure reason is pinned', () => {
   assert.deepEqual(Object.keys(FAILED_CARDS).sort(), Object.keys(FAILED).sort());
 });
 
-for (const { name, status, canDeleteFromPara = true, card, toast } of CASES) {
+for (const { name, status, card, toast } of CASES) {
   test(`${name}: History's card and the "Route recorded" toast`, () => {
     for (const isOnline of [true, false]) {
       const [tone, words] = onlineOrNot(card, isOnline);
-      assert.deepEqual(cardStatusOf(status, canDeleteFromPara, isOnline), { tone, words });
+      assert.deepEqual(cardStatusOf(status, isOnline), { tone, words });
       assert.deepEqual(routeRecordedWords(status, isOnline), {
         title: 'Route recorded',
         body: onlineOrNot(toast, isOnline),
@@ -141,34 +128,6 @@ for (const { name, status, canDeleteFromPara = true, card, toast } of CASES) {
     }
   });
 }
-
-test('the questions History asks before deleting', () => {
-  const kept = 'Remove this recording from this phone? The copy uploaded to Para stays.';
-  const gone = 'Remove this recording from this phone? It will be gone for good.';
-  const neverSent =
-    'Remove this recording from this phone? It has not been uploaded, so it will be gone for good.';
-  assert.equal(deleteFromPhoneQuestion({ state: 'uploaded', at: 1, by: 'p' }), kept);
-  assert.equal(deleteFromPhoneQuestion({ state: 'removed' }), gone);
-  assert.equal(deleteFromPhoneQuestion({ state: 'unavailable' }), gone);
-  for (const status of [
-    { state: 'waiting' },
-    { state: 'checking' },
-    { state: 'uploading' },
-    { state: 'removing' },
-    { state: 'held' },
-    failed('refused'),
-  ]) {
-    assert.equal(deleteFromPhoneQuestion(status), neverSent, status.state);
-  }
-  assert.equal(
-    REMOVE_UPLOAD_QUESTION,
-    'Delete this recording from Para? The copy on this phone stays.',
-  );
-  assert.equal(
-    DELETE_ONLY_COPY_QUESTION,
-    "Delete this recording from Para? There's no copy on this phone, so it will be gone for good.",
-  );
-});
 
 test('the save says the points it could not keep, and an upload that failed', () => {
   assert.equal(pointsLostWords(0), null);

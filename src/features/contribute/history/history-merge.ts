@@ -23,13 +23,17 @@ function recordingOf(upload: AccountUpload): Recording {
 
 /**
  * This phone's recordings with the account's uploads from other phones, newest first. An upload
- * this phone also holds is its recording, not a second card.
+ * this phone also holds is its recording, not a second card; one deleted from History here
+ * (`hidden`) is not shown again.
  */
 export function mergeHistory(
   saved: readonly Recording[],
   accountUploads: readonly AccountUpload[],
+  hidden: ReadonlySet<string>,
 ): Recording[] {
   const onPhone = new Set(saved.map((recording) => recording.id));
-  const elsewhere = accountUploads.filter((upload) => !onPhone.has(upload.id)).map(recordingOf);
+  const elsewhere = accountUploads
+    .filter((upload) => !onPhone.has(upload.id) && !hidden.has(upload.id))
+    .map(recordingOf);
   return [...saved, ...elsewhere].sort((a, b) => b.startedAt - a.startedAt);
 }
