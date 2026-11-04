@@ -2,7 +2,7 @@
 
 Research for the owner, 2026-11-04. Felt (felt.com) is a collaborative web map editor. Almost everything here comes from its help centre (help.felt.com, changelog dated 3 Nov 2026). Anything not checked is marked **unverified**.
 
-These are ideas, not decisions. The owner picks which to design. Nothing is built until there's a Figma design and a ticket (`spec.md`, wave 3).
+Dropped by the owner on 2026-11-04 ("give up felt"); kept for reference. These were ideas, not decisions. The owner picks which to design. Nothing is built until there's a Figma design and a ticket (`spec.md`, wave 3).
 
 ## What the studio already has
 
