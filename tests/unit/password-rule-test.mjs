@@ -40,7 +40,15 @@ test("Supabase's weak_password is said as the rule; other errors as they come", 
       code: 'same_password',
       message: 'New password should be different.',
     }),
-    'New password should be different.',
+    'The new password is the same as the current one.',
   );
-  assert.equal(setPasswordErrorMessage({ message: 'Failed to fetch' }), 'Failed to fetch');
+  // Never Supabase's own sentence: no answer is said as no connection.
+  assert.equal(
+    setPasswordErrorMessage({
+      name: 'AuthRetryableFetchError',
+      message: 'Failed to fetch',
+      status: 0,
+    }),
+    'No connection to Para. Check your internet, then try again.',
+  );
 });
