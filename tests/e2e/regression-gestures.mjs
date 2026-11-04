@@ -316,9 +316,9 @@ for (const [dx, dy] of [
 }
 check('terminal: 4 corners, fill present', (await pts()) === 4 && (await pts('draw-area')) === 1);
 check(
-  'terminal colour is sky',
+  'a new terminal is drawn in the brand colour',
   (await page.evaluate(() => window.__map.getPaintProperty('draw-area-fill', 'fill-color'))) ===
-    '#00a6f4',
+    '#4900be',
 );
 c = await cp();
 p1 = await proj(c[1]);

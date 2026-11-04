@@ -6,8 +6,8 @@ import { LAYERS } from '@/features/routes/map/layers';
 
 /**
  * What the drawing paints on the map: its sources and layers, laid once
- * (useDrawLayers); the data and colours they show as the drawing changes are
- * useDrawRendering's (use-draw-rendering.ts), from draw-features.ts. The
+ * (useDrawLayers), with their colours; the data they show as the drawing
+ * changes is useDrawRendering's (use-draw-rendering.ts), from draw-features.ts. The
  * `draw-*` ids are a contract — the suites read them — and never change.
  */
 
@@ -55,15 +55,16 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       source: AREA_SRC,
       paint: { 'fill-color': ROUTE_COLOUR, 'fill-opacity': 0.18 },
     });
-    // The direction being extended, while its spot is picked: wide and pale,
-    // so the tap has something to land on, with the spot as a ringed dot.
+    // The direction being extended, while its spot is picked: wide, in the
+    // brand's pale shade, so the tap has something to land on, with the spot
+    // as a ringed dot.
     map.addLayer({
       id: 'draw-borrow-line',
       type: 'line',
       source: BORROW_SRC,
       filter: ['==', ['geometry-type'], 'LineString'],
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': BORROW_COLOUR, 'line-width': 10, 'line-opacity': 0.35 },
+      paint: { 'line-color': BORROW_COLOUR, 'line-width': 10, 'line-opacity': 0.9 },
     });
     map.addLayer({
       id: 'draw-borrow-spot',

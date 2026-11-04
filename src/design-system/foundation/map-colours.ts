@@ -137,7 +137,7 @@ export const MAP_PAINT = {
   'Paint/daylight-avenue-edge': '#ced2d9', // a shade darker
   'Paint/daylight-street': '#ffffff', // streets and service roads, white
   'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
-  'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims
+  'Paint/draw-line': '#4900be', // parabrand/800: the line being drawn, its points' rims, a new hotspot's fill
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
-  'Paint/draw-borrow': '#2563eb', // blue/600: the stretch an Extend borrows
+  'Paint/draw-borrow': '#c1bfff', // parabrand/300: the stretch an Extend borrows
 } as const satisfies Record<`Paint/${string}`, string>;
