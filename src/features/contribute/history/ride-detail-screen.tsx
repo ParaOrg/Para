@@ -50,7 +50,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
       className="pointer-events-none absolute inset-0 z-20 font-sn-pro text-content-primary"
     >
       {/* Rides on the sheet's top all the way up, as the locator's buttons do (Locator's
-          dockCap `top`), up to just under the status bar: a sheet whose content fills the
+          dockCap `top`), up to DOCK_TOP_CSS, room for it under the status bar: a sheet whose content fills the
           screen covers it, and pulled down, brings it back. */}
       <div
         className="absolute inset-0 transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none"

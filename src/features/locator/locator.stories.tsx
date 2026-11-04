@@ -115,7 +115,7 @@ export const AtMax: Story = { args: { snap: 'max' } };
 /** Over a fitted sheet raised past Middle (`dockCap` top): it rides on the sheet, in sight. */
 export const AboveMiddleOverFitted: Story = { args: { snap: 0.8, dockCap: 'top' } };
 
-/** Over a fitted sheet at Max: it stops just under the status bar, and the sheet covers it. */
+/** Over a fitted sheet at Max: it stops at DOCK_TOP_CSS, room for it under the status bar, and the sheet covers it. */
 export const AtMaxOverFitted: Story = { args: { snap: 'max', dockCap: 'top' } };
 
 /** Wide, the card in the corner: bottom right, clear of the credit line, wherever the card is. */
