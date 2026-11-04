@@ -52,6 +52,8 @@ interface SheetGestures {
   onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
   /** The body's onFocus rule: focus from the keyboard below Max raises the sheet; a press's does not. */
   onBodyFocus: (e: ReactFocusEvent<HTMLDivElement>) => void;
+  /** Where a tap on the handle takes the sheet from `from`: a pointer's and Enter's alike. */
+  afterTap: (from: Snap) => Snap;
 }
 
 /**
@@ -240,5 +242,5 @@ export function useSheetGestures({
     if (snap !== top && fromKeys && docked()) setSnap(top);
   };
 
-  return { onPointerDown, onBodyFocus };
+  return { onPointerDown, onBodyFocus, afterTap };
 }

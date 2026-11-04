@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
-import type { Snap } from '@/shared/ui/sheet-gesture';
+import { DOCK_TOP_CSS, type Snap } from '@/shared/ui/sheet-gesture';
 
 import type { CardStatus } from './card-status';
 import { RideDetailBody } from './ride-detail-body';
@@ -50,11 +50,12 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
       className="pointer-events-none absolute inset-0 z-20 font-sn-pro text-content-primary"
     >
       {/* Rides on the sheet's top all the way up, as the locator's buttons do (Locator's
-          dockCap `none`): the sheet only ever opens to its content's height. */}
+          dockCap `top`), up to just under the status bar: a sheet whose content fills the
+          screen covers it, and pulled down, brings it back. */}
       <div
         className="absolute inset-0 transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none"
         // With no sheet yet (the ride still being found), at the map's foot.
-        style={{ translate: '0 var(--dock-y, 100%)' }}
+        style={{ translate: `0 max(var(--dock-y, 100%), ${DOCK_TOP_CSS})` }}
       >
         <div className="pointer-events-auto absolute bottom-full left-[calc(1rem+env(safe-area-inset-left))] mb-4">
           <IconButton

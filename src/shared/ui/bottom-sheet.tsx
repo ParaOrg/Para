@@ -18,7 +18,6 @@ import {
   measureSafeTop,
   slide,
   slideShowing,
-  snapAfterTap,
   snapName,
   type Snap,
   type SnapName,
@@ -219,7 +218,7 @@ export function BottomSheet({
   /** Docked, not floating: the notch is drawn only then. */
   const docked = () => handleRef.current?.offsetParent != null;
   const show = (shown: number) => at(slideShowing(shown));
-  const { onPointerDown, onBodyFocus } = useSheetGestures({
+  const { onPointerDown, onBodyFocus, afterTap } = useSheetGestures({
     sheet: own,
     handle: handleRef,
     head: headRef,
@@ -279,9 +278,7 @@ export function BottomSheet({
         data-testid="dock-handle"
         aria-label={handleLabel}
         title={handleLabel}
-        onClick={() =>
-          setSnap(fitted ? (snap === 'low' ? fitted.open : 'low') : snapAfterTap(snap))
-        }
+        onClick={() => setSnap(afterTap(snap))}
         // HandleNotch: 8 above the bar, 4 below (Figma 3742:1049).
         className="flex w-full shrink-0 touch-none justify-center pt-2 pb-1 sheet-floating:hidden"
       >
@@ -323,7 +320,10 @@ const HANDLE_LABEL = {
 } satisfies Record<SnapName, string>;
 
 /** The same for a fitted sheet, which has two heights: lowered, and raised to its content. */
+/** A fitted sheet's two heights, as its handle names them. */
+type FittedSnapName = 'low' | 'open';
+
 const FITTED_HANDLE_LABEL = {
   low: 'Sheet lowered. Raise it',
   open: 'Sheet raised. Lower it',
-} as const;
+} satisfies Record<FittedSnapName, string>;

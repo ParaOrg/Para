@@ -28,6 +28,8 @@ interface Args {
   snap: Snap | null;
   /** What the page stands in the corner, as the studio's New buttons say it: the pill keeps above. */
   dockFootPx?: number;
+  /** Locator's dockCap: `top` over a fitted sheet, the contributor's ride. */
+  dockCap?: 'middle' | 'top';
   state: State;
   wide?: boolean;
   isMapLoaded?: boolean;
@@ -40,7 +42,15 @@ interface Args {
  * where its top is here. `wide`: 1280 × 800, past `@float:`, the card
  * floating in the corner.
  */
-function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx, onNote }: Args) {
+function Specimen({
+  snap,
+  state,
+  wide = false,
+  isMapLoaded = true,
+  dockFootPx,
+  dockCap,
+  onNote,
+}: Args) {
   return (
     <div
       data-dock-host
@@ -62,6 +72,7 @@ function Specimen({ snap, state, wide = false, isMapLoaded = true, dockFootPx, o
         basemapThumbnails={BASEMAP_THUMBNAILS}
         labelsPlace="map"
         docked={snap !== null}
+        dockCap={dockCap}
         onNote={onNote}
       />
       {snap !== null && (
@@ -100,6 +111,12 @@ export const AboveMiddle: Story = { args: { snap: 0.8 } };
 
 /** At Max: the sheet covers it. */
 export const AtMax: Story = { args: { snap: 'max' } };
+
+/** Over a fitted sheet raised past Middle (`dockCap` top): it rides on the sheet, in sight. */
+export const AboveMiddleOverFitted: Story = { args: { snap: 0.8, dockCap: 'top' } };
+
+/** Over a fitted sheet at Max: it stops just under the status bar, and the sheet covers it. */
+export const AtMaxOverFitted: Story = { args: { snap: 'max', dockCap: 'top' } };
 
 /** Wide, the card in the corner: bottom right, clear of the credit line, wherever the card is. */
 export const Wide: Story = {

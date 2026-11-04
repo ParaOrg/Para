@@ -132,6 +132,13 @@ export function heightsFor(h: number): Record<SnapName & ('low' | 'middle' | 'ma
   };
 }
 
+/**
+ * The highest the buttons on the map ride over a fitted sheet (Locator's dockCap `top`, the ride's
+ * Back): room for the locator's column under the status bar. A sheet raised past it covers them,
+ * as Middle does on the public map; pulled down, it brings them back.
+ */
+export const DOCK_TOP_CSS = 'calc(var(--map-safe-top) + 128px)';
+
 /** A sheet's magnets: what it shows at Low, Middle and Max (heightsFor), or a fitted sheet's (fitHeightsFor). */
 export type SheetHeights = ReturnType<typeof heightsFor>;
 

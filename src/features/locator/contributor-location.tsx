@@ -113,7 +113,7 @@ export function ContributorLocation({
           basemapThumbnails={BASEMAP_THUMBNAILS}
           labelsPlace="map"
           docked={isDocked}
-          dockCap="none"
+          dockCap="top"
           above={above}
           onNote={onNote}
         />
