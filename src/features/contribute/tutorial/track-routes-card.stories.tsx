@@ -23,7 +23,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** The narrowest phone: the words wrap in their column and the buttons stay equal. */
-export const LongText: Story = {
+export const NarrowPhone: Story = {
   decorators: [
     (Story) => (
       <div className="w-[280px]">
