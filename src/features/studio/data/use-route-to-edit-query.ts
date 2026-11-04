@@ -7,6 +7,7 @@ import { STUDIO_DRAFTS } from './flags';
 import { reviewKeys } from './review-keys';
 import type { DraftRow } from './review-schema';
 import { routeToEdit } from './route-to-edit';
+import { useStudioSession } from '../auth/use-studio-session';
 
 /**
  * The route's facts as the save panel starts from them (route-to-edit.ts),
@@ -15,11 +16,12 @@ import { routeToEdit } from './route-to-edit';
  * Off with drafts off, and with no route.
  */
 export function useRouteToEditQuery(route: DirectionRow['route'] | null) {
+  const userId = useStudioSession()?.user.id ?? null;
   const routeId = route?.id ?? '';
   return useQuery({
     queryKey: reviewKeys.draftOf('route', routeId),
     queryFn: () => draftOf('route', routeId),
-    select: (draft) => (route ? routeToEdit(route, draft) : null),
+    select: (draft) => (route ? routeToEdit(route, draft, userId) : null),
     enabled: STUDIO_DRAFTS && route !== null,
   });
 }

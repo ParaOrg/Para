@@ -17,8 +17,9 @@ const approved = {
   headHotspotId: 'tala',
   tailHotspotId: 'fairview',
 };
-const draftOf = (route) => ({
+const draftOf = (route, editor_id = 'me') => ({
   id: 'd1',
+  editor_id,
   kind: 'route',
   subject_id: 'r1',
   is_new: false,
@@ -28,7 +29,7 @@ const draftOf = (route) => ({
 });
 
 test('with no draft, the form starts from the approved route', () => {
-  assert.equal(routeToEdit(approved, null), approved);
+  assert.equal(routeToEdit(approved, null, 'me'), approved);
 });
 
 test("with the editor's draft, the form starts from the draft's facts, the name kept", () => {
@@ -43,6 +44,7 @@ test("with the editor's draft, the form starts from the draft's facts, the name 
       tail_stop_id: 'nova',
       is_loop: false,
     }),
+    'me',
   );
   assert.equal(edited.via, 'Zabarte');
   assert.equal(edited.signboard, 'TALA – NOVA');
@@ -51,4 +53,9 @@ test("with the editor's draft, the form starts from the draft's facts, the name 
   assert.equal(edited.tailHotspotId, 'nova');
   assert.equal(edited.name, approved.name);
   assert.equal('isLoop' in edited, false);
+});
+
+test("another editor's draft is not started from: the approved route stands", () => {
+  const theirs = draftOf({ via: 'Elsewhere' }, 'someone-else');
+  assert.equal(routeToEdit(approved, theirs, 'me'), approved);
 });

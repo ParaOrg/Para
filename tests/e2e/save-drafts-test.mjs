@@ -445,6 +445,8 @@ check(
 await waitFor(async () => await saveButton().isEnabled());
 n = log.length;
 await saveButton().click();
+// The first save's "Saved as a draft" may still be up: wait for this save's own write.
+await waitFor(async () => writesSince(n).some((x) => x.table === 'draft'));
 await drafted();
 w = writesSince(n);
 check(
