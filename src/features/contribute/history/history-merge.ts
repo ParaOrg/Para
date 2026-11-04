@@ -16,6 +16,7 @@ function recordingOf(upload: AccountUpload): Recording {
     endPointName: upload.endPointName,
     description: upload.description,
     rideKind: upload.rideKind,
+    farePhp: upload.farePhp ?? undefined,
     upload: { state: 'uploaded', at: upload.startedAt, by: '' },
   };
 }
