@@ -200,12 +200,14 @@ export function ContributePage({ locator }: ContributePageProps) {
     isCreditsLeaving: credits.isLeaving,
     isStopShown: stopQuestion.isShown,
   });
-  // The ride whose screen shows, when it is saved on this phone: the map draws its trail and
-  // frames it. One uploaded from another phone has no fixes here, and no trail.
-  const shownRide = layout.isRideDetailShown
-    ? (recording.saved.find((saved) => saved.id === ride.rideId) ?? null)
-    : null;
-  const shownRideTrail = useRideTrail(shownRide);
+  // The ride whose screen shows: the map draws an overview of its whole trail and frames it, from
+  // its fixes when this phone keeps it, else from the line Para keeps of the upload.
+  const shownRideId = layout.isRideDetailShown ? ride.rideId : null;
+  const shownRideSaved =
+    shownRideId === null
+      ? null
+      : (recording.saved.find((saved) => saved.id === shownRideId) ?? null);
+  const shownRideTrail = useRideTrail(shownRideId, shownRideSaved);
   // History and Account stay drawn once opened, hidden while another screen shows (<Activity>):
   // going back is a show, with no fetch, read or layout again. Hidden, their effects and queries
   // rest. Signed out, they go.
@@ -298,7 +300,7 @@ export function ContributePage({ locator }: ContributePageProps) {
       <div inert={layout.isMapCovered} className="contents">
         <ContributeMap
           track={track}
-          ride={shownRide && shownRideTrail ? { id: shownRide.id, trail: shownRideTrail } : null}
+          ride={shownRideId && shownRideTrail ? { id: shownRideId, trail: shownRideTrail } : null}
           isRecording={layout.isRecordingShown}
           isFrosted={phase === 'paused'}
           locator={locator}

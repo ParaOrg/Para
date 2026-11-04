@@ -29,7 +29,7 @@ export interface RideDetail {
 interface RideDetailScreenProps {
   /** The ride, or null while History is still finding it (a reload on its address). */
   ride: RideDetail | null;
-  /** Back, Escape, or the sheet flicked down past its fold: History again. */
+  /** Back or Escape: History again. A pull down rests the sheet at its fold, never leaves. */
   onBack: () => void;
 }
 
@@ -74,6 +74,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
             testId="card"
             height={{ snap, onSnap: setSnap }}
             fits
+            closesOnPull={false}
             onClose={onBack}
             header={<RideHeader recording={ride.recording} />}
           >

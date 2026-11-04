@@ -9,33 +9,51 @@ import { trailOf } from '../recorder/recording-rules';
 import type { Recording } from '../storage/recording-schema';
 import { loadFixes } from '../storage/recording-store';
 
-/** A saved ride's whole trail, from its fixes on this phone. */
-async function fetchRideTrail(recording: Recording): Promise<RecordingTrail> {
+/**
+ * A ride's whole trail: from its fixes when it is saved on this phone (Lakad and Sakay drawn
+ * apart); else the line Para keeps of the upload, drawn as one ride, read by a chunk of its own so
+ * the page opens without it. Null when neither has a trail.
+ */
+async function fetchRideTrail(
+  rideId: string,
+  saved: Recording | null,
+): Promise<RecordingTrail | null> {
   try {
-    const fixes = (await loadFixes(recording.id)).map(fixOfRow);
-    return trailOf(keptFixes(fixes), recording.modes, recording.marks ?? []);
+    if (saved) {
+      const fixes = (await loadFixes(saved.id)).map(fixOfRow);
+      return trailOf(keptFixes(fixes), saved.modes, saved.marks ?? []);
+    }
+    const { fetchRideLine } = await import('../api/fetch-ride-line');
+    const line = await fetchRideLine(rideId);
+    return line && line.length >= 2
+      ? { lines: [{ mode: 'ride', path: line }], markers: [], marks: [] }
+      : null;
   } catch (error) {
     // The screen still shows the ride, with no trail on its map: said here, so it is not lost.
-    console.warn("A ride's trail could not be read from this phone; its map shows none.", error);
+    console.warn("A ride's trail could not be read; its map shows none.", error);
     throw error;
   }
 }
 
 /**
- * The trail of the ride whose screen shows, for the map to draw and frame: read once from this
- * phone's storage, as its fixes never change once saved. Null with no ride open, while it is read,
- * for a ride uploaded from another phone, whose fixes this phone does not have, and when the read
- * failed (warned in fetchRideTrail): the screen works the same, its map without the trail.
+ * The trail of the ride whose screen shows, `rideId`, for the map to draw and frame: an overview
+ * of the whole ride, read once, as a saved ride's fixes and an upload's line never change. `saved`
+ * is the ride when this phone keeps it. Null with no ride open, while it is read, when the ride has
+ * no trail anywhere, and when the read failed (warned in fetchRideTrail): the screen works the
+ * same, its map without the trail.
  */
-export function useRideTrail(recording: Recording | null): RecordingTrail | null {
+export function useRideTrail(
+  rideId: string | null,
+  saved: Recording | null,
+): RecordingTrail | null {
   const query = useQuery({
-    queryKey: historyKeys.trail(recording?.id ?? ''),
+    queryKey: historyKeys.trail(rideId ?? ''),
     queryFn: () => {
-      if (!recording) throw new Error('No ride to read the trail of.');
-      return fetchRideTrail(recording);
+      if (rideId === null) throw new Error('No ride to read the trail of.');
+      return fetchRideTrail(rideId, saved);
     },
-    enabled: recording !== null,
+    enabled: rideId !== null,
     staleTime: Infinity,
   });
-  return recording ? (query.data ?? null) : null;
+  return rideId === null ? null : (query.data ?? null);
 }
