@@ -1,8 +1,2 @@
-import { useEffect, useRef } from 'react';
-
-/** A ref for a screen's heading, which takes focus as the screen opens so a screen reader starts at its top. */
-export function useFocusHeading() {
-  const ref = useRef<HTMLHeadingElement>(null);
-  useEffect(() => ref.current?.focus(), []);
-  return ref;
-}
+// TODO: delete this re-export once history/ imports the hook from '@/shared/hooks/use-focus-heading' (that folder is being built elsewhere).
+export { useFocusHeading } from '@/shared/hooks/use-focus-heading';

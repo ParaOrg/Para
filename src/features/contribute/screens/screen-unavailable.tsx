@@ -1,7 +1,7 @@
 import { Button } from '@/design-system/primitives/button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
-import { useFocusHeading } from '../common/use-focus-heading';
 import type { ScreenHash } from '../navigation/screen-routes';
 import { TOOLBAR_ROOM } from '../toolbar/toolbar-place';
 

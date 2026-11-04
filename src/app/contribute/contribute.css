@@ -29,6 +29,7 @@
 @source '../../shared/ui/toast.tsx';
 @source '../../shared/ui/turnstile.tsx';
 @source '../../shared/ui/toast-host.tsx';
+@source '../../shared/ui/page-error-screen.tsx';
 @source not '../../**/*.stories.tsx';
 
 /*

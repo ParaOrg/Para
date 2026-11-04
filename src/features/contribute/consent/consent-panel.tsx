@@ -1,6 +1,6 @@
 import { Button } from '@/design-system/primitives/button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useHeightVar } from '../common/use-height-var';
 
 interface ConsentPanelProps {

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { cn } from '@/shared/utils/cn';
 
 import type { ProfileFields } from './account-fields';
@@ -10,7 +11,6 @@ import { ProfileForm } from './profile-form';
 import { SettingsHeader } from './settings-header';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { Skeleton } from '../common/skeleton';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useIsSlowLoad } from '../common/use-is-slow-load';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
