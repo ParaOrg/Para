@@ -2,12 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { keptFixes } from '@/features/routes/model/ride-recording';
+import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { historyKeys } from '../history/history-keys';
 import { fixOfRow } from '../recorder/recording-fixes';
 import { trailOf } from '../recorder/recording-rules';
 import type { Recording } from '../storage/recording-schema';
 import { loadFixes } from '../storage/recording-store';
+
+/** The upload's line reader, its own chunk; retried fresh if a fetch of it failed (retryingImport). */
+const loadRideLine = retryingImport(() => import('../api/fetch-ride-line'));
 
 /**
  * A ride's whole trail: from its fixes when it is saved on this phone (Lakad and Sakay drawn
@@ -23,7 +27,7 @@ async function fetchRideTrail(
       const fixes = (await loadFixes(saved.id)).map(fixOfRow);
       return trailOf(keptFixes(fixes), saved.modes, saved.marks ?? []);
     }
-    const { fetchRideLine } = await import('../api/fetch-ride-line');
+    const { fetchRideLine } = await loadRideLine();
     const line = await fetchRideLine(rideId);
     return line && line.length >= 2
       ? { lines: [{ mode: 'ride', path: line }], markers: [], marks: [] }
@@ -47,7 +51,9 @@ export function useRideTrail(
   saved: Recording | null,
 ): RecordingTrail | null {
   const query = useQuery({
-    queryKey: historyKeys.trail(rideId ?? ''),
+    // Where it is read from is in the key: a ride read from its upload while this phone's list was
+    // still unknown is read again from its fixes once it is known.
+    queryKey: historyKeys.trail(rideId ?? '', saved ? 'phone' : 'upload'),
     queryFn: () => {
       if (rideId === null) throw new Error('No ride to read the trail of.');
       return fetchRideTrail(rideId, saved);
