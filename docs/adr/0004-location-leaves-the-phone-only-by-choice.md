@@ -51,3 +51,11 @@ recording only after it is saved.
   location on the phone only.
 - Rejected: sharing a location live; sign-in with an email (more friction, more
   personal data); invite-only links (too few contributors).
+
+## Amendment, 2026-11-04
+
+- **An account's uploads always stay.** The owner's call of 2026-11-04: Delete account no longer
+  offers "Also delete my uploaded routes". The uploads stay, unlinked from the person, with the
+  words they typed cleared (commit 71d6f805).
+- **Deleting a ride in the contributor app deletes it on that phone only** (#683). The upload stays
+  on Para.
