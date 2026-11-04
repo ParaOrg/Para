@@ -4,16 +4,31 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import { slide, type Snap } from '@/shared/ui/sheet-gesture';
 
-import { rideTitleOf } from './ride-title';
+import type { CardStatus } from './card-status';
+import { RideDetailBody } from './ride-detail-body';
+import { rideDetailsOf } from './ride-details';
+import type { RideFacts } from './ride-facts';
+import { rideFullNameOf, rideTitleOf } from './ride-title';
 import { ArrowLeftIcon } from '../account/arrow-left-icon';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { ArrowRightIcon } from '../common/history-icons';
 import { SCREENS } from '../navigation/screen-routes';
 import type { Recording } from '../storage/recording-schema';
 
+/** The ride the screen shows, with what History knows of it. */
+export interface RideDetail {
+  recording: Recording;
+  /** Its distance and whether it was walked, as History read them; null until read. */
+  facts: RideFacts | null;
+  /** Its upload's line, as its History card shows it. */
+  status: CardStatus;
+  /** Tap retry upload: sends it again. */
+  onRetry: () => void;
+}
+
 interface RideDetailScreenProps {
   /** The ride, or null while History is still finding it (a reload on its address). */
-  recording: Recording | null;
+  ride: RideDetail | null;
   /** Back, Escape, or the sheet flicked down past its fold: History again. */
   onBack: () => void;
 }
@@ -21,10 +36,11 @@ interface RideDetailScreenProps {
 /**
  * Figma's Route Information (4558:11792): the ride's map, live under it, with the back button and
  * the map's own buttons standing on the sheet, and the sheet folded to the ride's name, where it
- * went, at its Low height. The page's one map draws behind it (contribute-page.tsx). While the
- * ride is still being found, the back button stands alone.
+ * went, at its Low height. Pulled up (4560:12422), it shows the upload's line, Commute
+ * Information and the Description. The page's one map draws behind it (contribute-page.tsx).
+ * While the ride is still being found, the back button stands alone.
  */
-export function RideDetailScreen({ recording, onBack }: RideDetailScreenProps) {
+export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
   // Folded, as the frame draws it: the name and where it went, the map above.
   const [snap, setSnap] = useState<Snap>('low');
 
@@ -49,17 +65,22 @@ export function RideDetailScreen({ recording, onBack }: RideDetailScreenProps) {
           />
         </div>
       </div>
-      {recording && (
+      {ride && (
         <div className="pointer-events-auto">
           <BottomSheet
-            label={`Your ride: ${rideTitleOf(recording)}`}
+            label={`Your ride: ${rideTitleOf(ride.recording)}`}
             testId="card"
             height={{ snap, onSnap: setSnap }}
             onClose={onBack}
-            header={<RideHeader recording={recording} />}
+            header={<RideHeader recording={ride.recording} />}
           >
-            {/* TODO: the Commute Information rows and the description (ride-detail ticket 02). */}
-            {null}
+            <RideDetailBody
+              status={ride.status}
+              rows={rideDetailsOf(ride.recording, ride.facts)}
+              description={ride.recording.description}
+              fullName={rideFullNameOf(ride.recording)}
+              onRetry={ride.onRetry}
+            />
           </BottomSheet>
         </div>
       )}

@@ -11,9 +11,8 @@ import {
   deleteFromPhoneQuestion,
 } from './delete-questions';
 import type { RideFacts } from './ride-facts';
-import { rideTitleOf } from './ride-title';
+import { rideFullNameOf, rideTitleOf } from './ride-title';
 import { ConfirmDelete } from '../common/confirm-delete';
-import { fullDateTimeText } from '../common/format';
 import { ArrowRightIcon } from '../common/history-icons';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import type { Recording } from '../storage/recording-schema';
@@ -59,7 +58,7 @@ export function HistoryCard({
   const shouldReturnFocus = useRef(false);
   const titleId = useId();
   const title = rideTitleOf(recording);
-  const fullName = `the recording of ${fullDateTimeText(recording.startedAt)}, ${title}`;
+  const fullName = rideFullNameOf(recording);
 
   // The question took the menu's place, so Keep it hands focus back to the ⋮ that led to it.
   useEffect(() => {

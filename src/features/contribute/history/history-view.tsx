@@ -1,8 +1,10 @@
 import { Activity, useEffect, useRef } from 'react';
 
+import { cardStatusOf } from './card-status';
 import { HistoryScreen } from './history-screen';
-import { RideDetailScreen } from './ride-detail-screen';
+import { RideDetailScreen, type RideDetail } from './ride-detail-screen';
 import { useHistoryItems } from './use-history-items';
+import { useIsOnline } from './use-is-online';
 import { useTrailPicturesQuery } from './use-trail-pictures-query';
 import type { Recording } from '../storage/recording-schema';
 import type { Uploads } from '../uploads/use-uploads';
@@ -45,6 +47,13 @@ export function HistoryView({
     rideId === null
       ? null
       : (items.recordings.find((candidate) => candidate.id === rideId) ?? null);
+  const isOnline = useIsOnline();
+  const detail: RideDetail | null = ride && {
+    recording: ride,
+    facts: items.factsOf(ride),
+    status: cardStatusOf(uploads.statusOf(ride), uploads.canRemove(ride), isOnline),
+    onRetry: () => uploads.upload(ride),
+  };
   // Until the account's uploads come, a ride from another phone may still be on its way.
   const isRideGone = rideId !== null && ride === null && items.load.state !== 'loading';
 
@@ -73,7 +82,7 @@ export function HistoryView({
           {...actions}
         />
       </Activity>
-      {rideId !== null && !isRideGone && <RideDetailScreen recording={ride} onBack={onCloseRide} />}
+      {rideId !== null && !isRideGone && <RideDetailScreen ride={detail} onBack={onCloseRide} />}
     </>
   );
 }
